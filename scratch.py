@@ -29,7 +29,17 @@ class SubstrateType:
         self.name = name
 
 
-class Deployment:
+class MetaDeployment(type):
+
+    def __new__(cls, name, bases, dct):
+        x = super().__new__(cls, name, bases, dct)
+
+        # TODO - Use inspect to allow only legal operations
+        print(inspect.getmembers(x, predicate=inspect.isfunction))
+        return x
+
+
+class Deployment(metaclass=MetaDeployment):
     substrate = SubstrateType()
 
     def add_substrate(self, substrate):
