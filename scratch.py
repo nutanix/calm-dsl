@@ -2,19 +2,19 @@ import ast
 import inspect
 
 
-class Service(object):
+class Service:
 
     def dump(self, dct):
         dump("service", self, dct)
 
 
-class Substrate(object):
+class Substrate:
 
     def dump(self, dct):
         dump("substrate", self, dct)
 
 
-class Deployment(object):
+class Deployment:
 
     def __init__(self):
         self.substrate = None
@@ -38,7 +38,7 @@ class Deployment(object):
         return dct
 
 
-class Profile(object):
+class Profile:
 
     def __init__(self):
         self.deployments = []
@@ -58,7 +58,7 @@ class Profile(object):
 
 
 
-class Blueprint(object):
+class Blueprint:
 
     def __init__(self):
         self.profiles = []
