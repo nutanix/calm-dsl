@@ -7,20 +7,17 @@ import json
 
 from scratch import Service, Substrate, Deployment, Profile, Blueprint
 
+#TODO - Add Variable, Port classes
 
 
 class MySQL(Service):
-
-    def __init__(self):
-        super().__init__()
-        self.foo = "foo"
-        self.bar = "bar"
+    #TODO - Add a sample mysql config with install/uninstall scripts
+    pass
 
 
 class AHVMedVM(Substrate):
-
-    def __init__(self):
-        super().__init__()
+    #TODO - Add code to load the right yaml file for create spec
+    pass
 
 
 class MySQLDeployment(Deployment):
@@ -30,21 +27,17 @@ class MySQLDeployment(Deployment):
         self.add_services([MySQL(), ])
 
 
-
 class NxProfile(Profile):
 
     def __init__(self):
-        super().__init__()
-        self.add_deployment(MySQLDeployment())
-
+        self.add_deployments([MySQLDeployment(), ])
 
 
 class MyBlueprint(Blueprint):
     """sample bp description"""
 
     def __init__(self):
-        super().__init__()
-        self.add_profile(NxProfile())
+        self.add_profiles([NxProfile(), ])
 
 
 

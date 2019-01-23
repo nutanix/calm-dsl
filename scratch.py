@@ -52,11 +52,8 @@ class Deployment:
 
 class Profile:
 
-    def __init__(self):
-        self.deployments = []
-
-    def add_deployment(self, deployment):
-        self.deployments.append(deployment)
+    def add_deployments(self, deployments):
+        self.deployments = deployments
 
 
     def dump(self, dct):
@@ -72,11 +69,8 @@ class Profile:
 
 class Blueprint:
 
-    def __init__(self):
-        self.profiles = []
-
-    def add_profile(self, profile):
-        self.profiles.append(profile)
+    def add_profiles(self, profiles):
+        self.profiles = profiles
 
     def get_default_profile(self):
         return self.profiles[0]
