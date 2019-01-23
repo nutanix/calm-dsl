@@ -32,12 +32,11 @@ class SubstrateType:
 class Deployment:
     substrate = SubstrateType()
 
-    def __init__(self, substrate, services):
+    def add_substrate(self, substrate):
         self.substrate = substrate
-        self.services = services
 
-    def add_service(self, service):
-        self.services.append(service)
+    def add_services(self, services):
+        self.services = services
 
     def dump(self, dct):
 

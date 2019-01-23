@@ -26,7 +26,9 @@ class AHVMedVM(Substrate):
 class MySQLDeployment(Deployment):
 
     def __init__(self):
-        super().__init__(AHVMedVM(), [MySQL(), ])
+        self.add_substrate(AHVMedVM())
+        self.add_services([MySQL(), ])
+
 
 
 class NxProfile(Profile):
