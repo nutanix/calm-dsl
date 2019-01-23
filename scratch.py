@@ -1,6 +1,5 @@
 import ast
 import inspect
-import json
 
 
 class Service(object):
