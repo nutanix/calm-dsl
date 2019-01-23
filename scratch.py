@@ -14,14 +14,27 @@ class Substrate:
         dump("substrate", self, dct)
 
 
+class SubstrateType:
+
+    def __get__(self, instance, owner):
+        return instance.__dict__[self.name]
+
+    def __set__(self, instance, value):
+        if not isinstance(value, Substrate):
+            raise TypeError('Got {} type. Looking for {}.'.format(
+                type(value), Substrate))
+        instance.__dict__[self.name] = value
+
+    def __set_name__(self, owner, name):
+        self.name = name
+
+
 class Deployment:
+    substrate = SubstrateType()
 
-    def __init__(self):
-        self.substrate = None
-        self.services = []
-
-    def add_substrate(self, substrate):
+    def __init__(self, substrate, services):
         self.substrate = substrate
+        self.services = services
 
     def add_service(self, service):
         self.services.append(service)

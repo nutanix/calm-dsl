@@ -20,16 +20,13 @@ class MySQL(Service):
 class AHVMedVM(Substrate):
 
     def __init__(self):
-        # TODO: load super automatically in metaclass
         super().__init__()
 
 
 class MySQLDeployment(Deployment):
 
     def __init__(self):
-        super().__init__()
-        self.add_substrate(AHVMedVM())
-        self.add_service(MySQL())
+        super().__init__(AHVMedVM(), [MySQL(), ])
 
 
 class NxProfile(Profile):
