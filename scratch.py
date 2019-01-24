@@ -6,6 +6,7 @@ import tokenize
 
 import asttokens
 
+
 class Service:
 
     def dump(self, dct):
