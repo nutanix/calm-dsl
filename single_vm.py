@@ -21,10 +21,11 @@ class AHVMedVM(Substrate):
 
 
 class MySQLDeployment(Deployment):
+    """Sample description for mysql db instance"""
 
     def __init__(self):
-        self.add_substrate(AHVMedVM())
-        self.add_services([MySQL(), ])
+        self.add_substrate(AHVMedVM()) # AHV VM
+        self.add_services([MySQL(), ]) # mysql service
 
 
 class NxProfile(Profile):
@@ -46,7 +47,7 @@ def main():
     bp = MyBlueprint()
     dct = dict()
     out = bp.dump(dct)
-    print(json.dumps(out))
+    # print(json.dumps(out))
 
 
 if __name__ == "__main__":
