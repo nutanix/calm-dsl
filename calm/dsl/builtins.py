@@ -43,7 +43,7 @@ class MetaDeployment(type):
         return x
 
 
-class Deployment(Descriptormetaclass=MetaDeployment):
+class Deployment(metaclass=MetaDeployment):
 
     substrate = Substrate()
 
