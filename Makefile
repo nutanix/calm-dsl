@@ -7,3 +7,9 @@ dist: test
 
 clean:
 	rm -r build/ dist/ calm.dsl.egg-info/
+
+_init:
+	rpm -q epel-release || sudo yum -y install epel-release
+	rpm -q python36 || sudo yum -y install python36 python-pip
+	[ -f venv/bin/python3 ] || virtualenv -p python36 venv
+	venv/bin/pip3 install -U pip setuptools
