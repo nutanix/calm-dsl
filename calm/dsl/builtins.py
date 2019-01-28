@@ -59,9 +59,29 @@ class Deployment(metaclass=MetaDeployment):
         self.name = name
 
 
+class Deployments:
+
+    def __get__(self, instance, owner):
+        return instance.__dict__[self.name]
+
+    def __set__(self, instance, values):
+
+        if not isinstance(values, list):
+            raise TypeError('{} is not of type {}.'.format(values, list))
+
+        for value in values:
+            if not isinstance(value, Deployment):
+                raise TypeError('{} is not of type {}.'.format(value, Deployment))
+
+        instance.__dict__[self.name] = values
+
+    def __set_name__(self, owner, name):
+        self.name = name
+
+
 class Profile:
 
-    deployment = Deployment()
+    deployments = Deployments()
 
     def __get__(self, instance, owner):
         return instance.__dict__[self.name]
@@ -75,9 +95,30 @@ class Profile:
         self.name = name
 
 
+class Profiles:
+    # TODO - refactor list and obj descriptors later
+
+    def __get__(self, instance, owner):
+        return instance.__dict__[self.name]
+
+    def __set__(self, instance, values):
+
+        if not isinstance(values, list):
+            raise TypeError('{} is not of type {}.'.format(values, list))
+
+        for value in values:
+            if not isinstance(value, Profile):
+                raise TypeError('{} is not of type {}.'.format(value, Profile))
+
+        instance.__dict__[self.name] = values
+
+    def __set_name__(self, owner, name):
+        self.name = name
+
+
 class Blueprint:
 
-    profile = Profile()
+    profiles = Profiles()
 
     def __get__(self, instance, owner):
         return instance.__dict__[self.name]
