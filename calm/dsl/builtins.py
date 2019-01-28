@@ -7,27 +7,14 @@ import tokenize
 import asttokens
 
 
-class Service:
-
-    def dump(self, dct):
-        dump("service", self, dct)
-
-
 class Substrate:
-
-    def dump(self, dct):
-        dump("substrate", self, dct)
-
-
-class SubstrateType:
 
     def __get__(self, instance, owner):
         return instance.__dict__[self.name]
 
     def __set__(self, instance, value):
-        if not isinstance(value, Substrate):
-            raise TypeError('Got {} type. Looking for {}.'.format(
-                type(value), Substrate))
+        if not isinstance(value, type(self)):
+            raise TypeError('{} is not of type {}.'.format(value, type(self)))
         instance.__dict__[self.name] = value
 
     def __set_name__(self, owner, name):
@@ -38,6 +25,8 @@ class MetaDeployment(type):
 
     def __new__(cls, name, bases, dct):
         x = super().__new__(cls, name, bases, dct)
+
+        print(vars(x))
 
         # TODO - Use inspect to allow only legal operations
         fns = inspect.getmembers(x, predicate=inspect.isfunction)
@@ -54,61 +43,54 @@ class MetaDeployment(type):
         return x
 
 
-class Deployment(metaclass=MetaDeployment):
+class Deployment(Descriptormetaclass=MetaDeployment):
 
-    substrate = SubstrateType()
+    substrate = Substrate()
 
-    def add_substrate(self, substrate):
-        self.substrate = substrate
+    def __get__(self, instance, owner):
+        return instance.__dict__[self.name]
 
-    def add_services(self, services):
-        self.services = services
+    def __set__(self, instance, value):
+        if not isinstance(value, type(self)):
+            raise TypeError('{} is not of type {}.'.format(value, type(self)))
+        instance.__dict__[self.name] = value
 
-    def dump(self, dct):
-
-        dump("deployment", self, dct)
-
-        self.substrate.dump(dct)
-
-        for service in self.services:
-            service.dump(dct)
-
-        return dct
+    def __set_name__(self, owner, name):
+        self.name = name
 
 
 class Profile:
 
-    def add_deployments(self, deployments):
-        self.deployments = deployments
+    deployment = Deployment()
 
+    def __get__(self, instance, owner):
+        return instance.__dict__[self.name]
 
-    def dump(self, dct):
+    def __set__(self, instance, value):
+        if not isinstance(value, type(self)):
+            raise TypeError('{} is not of type {}.'.format(value, type(self)))
+        instance.__dict__[self.name] = value
 
-        dump("profile", self, dct)
-
-        for deployment in self.deployments:
-            deployment.dump(dct)
-
-        return dct
-
+    def __set_name__(self, owner, name):
+        self.name = name
 
 
 class Blueprint:
 
-    def add_profiles(self, profiles):
-        self.profiles = profiles
+    profile = Profile()
 
-    def get_default_profile(self):
-        return self.profiles[0]
+    def __get__(self, instance, owner):
+        return instance.__dict__[self.name]
 
-    def dump(self, dct):
+    def __set__(self, instance, value):
+        if not isinstance(value, type(self)):
+            raise TypeError('{} is not of type {}.'.format(value, type(self)))
+        instance.__dict__[self.name] = value
 
-        dump("blueprint", self, dct)
+    def __set_name__(self, owner, name):
+        self.name = name
 
-        profile = self.get_default_profile()
-        profile.dump(dct)
 
-        return dct
 
 
 
