@@ -143,14 +143,21 @@ class Service(Base):
     pass
 
 
-class Deployment(Base):
+class DeploymentBase(Base):
 
-    _default_attrs = {
-        "substrate": None,
-        "services": [],
-        "min_replicas": 1,
-        "max_replicas": 1,
-    }
+    def __init_subclass__(cls, **kwargs):
+
+        cls._default_attrs = {
+            "substrate": None,
+            "services": [],
+            "min_replicas": 1,
+            "max_replicas": 1,
+        }
+
+        super().__init_subclass__(**kwargs)
+
+
+class Deployment(DeploymentBase):
 
     substrate = SubstrateDescriptor()
     services = ServiceListDescriptor()
