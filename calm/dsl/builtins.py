@@ -9,6 +9,10 @@ import asttokens
 
 class Entity:
 
+    _fields = []
+    _default_values = []
+    _attrs = {}
+
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
 
@@ -23,6 +27,15 @@ class Entity:
     def __set_name__(self, owner, name):
         self.name = name
 
+    def __init__(self, **kwargs):
+
+        _default_attrs = dict(zip(self.__class__._fields, self.__class__._default_values))
+        merged_dct = {**_default_attrs, **self.__class__._attrs, **kwargs}
+
+        for key, value in merged_dct.items():
+            if key not in self.__class__._fields:
+                raise KeyError("Unknown key {} given".format(key))
+            setattr(self, key, value)
 
 class List:
 
@@ -82,10 +95,6 @@ class Deployment(Entity):
         1.
     ]
 
-    _default_attrs = dict(zip(_fields, _default_values))
-
-    _attrs = dict()
-
     substrate = Substrate()
     services = List(Service)
     min_replicas = NonNegative()
@@ -94,14 +103,7 @@ class Deployment(Entity):
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
 
-    def __init__(self, **kwargs):
 
-        merged_dct = {**self.__class__._default_attrs, **self.__class__._attrs, **kwargs}
-
-        for key, value in merged_dct.items():
-            if key not in self.__class__._fields:
-                raise KeyError("Unknown key {} given".format(key))
-            setattr(self, key, value)
 
 
 class Profile(Entity):
