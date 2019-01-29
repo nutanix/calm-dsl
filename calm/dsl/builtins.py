@@ -68,14 +68,23 @@ class NonNegative:
 
 class Deployment(Entity):
 
-    _attrs = dict()
-
     _fields = [
         "substrate",
         "services",
         "min_replicas",
         "max_replicas",
     ]
+
+    _default_values = [
+        None,
+        [],
+        1,
+        1.
+    ]
+
+    _default_attrs = dict(zip(_fields, _default_values))
+
+    _attrs = dict()
 
     substrate = Substrate()
     services = List(Service)
@@ -91,13 +100,16 @@ class Deployment(Entity):
         for fn_name, fn_obj in fns:
             if fn_name == "__init__":
                 code = textwrap.dedent(inspect.getsource(fn_obj))
-                print(code)
+                #print(code)
                 tree = parse(code)
                 jsn = export_json(tree, pretty_print=True)
-                print(jsn)
+                #print(jsn)
 
-    def __init__(self):
-        for key, value in self.__class__._attrs.items():
+    def __init__(self, **kwargs):
+
+        merged_dct = {**self.__class__._default_attrs, **self.__class__._attrs, **kwargs}
+
+        for key, value in merged_dct.items():
             if key not in self.__class__._fields:
                 raise KeyError("Unknown key {} given".format(key))
             setattr(self, key, value)
