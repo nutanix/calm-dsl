@@ -51,9 +51,14 @@ class Substrate(Entity):
     pass
 
 
+class Service(Entity):
+    pass
+
+
 class Deployment(Entity):
 
     substrate = Substrate()
+    services = List(Service)
 
     def __init_subclass__(cls, **kwargs):
 
