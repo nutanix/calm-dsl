@@ -55,10 +55,32 @@ class Service(Entity):
     pass
 
 
+class NonNegative:
+    def __get__(self, instance, owner):
+        return instance.__dict__[self.name]
+    def __set__(self, instance, value):
+        if value < 0:
+            raise ValueError('Cannot be negative.')
+        instance.__dict__[self.name] = value
+    def __set_name__(self, owner, name):
+        self.name = name
+
+
 class Deployment(Entity):
+
+    _attrs = dict()
+
+    _fields = [
+        "substrate",
+        "services",
+        "min_replicas",
+        "max_replicas",
+    ]
 
     substrate = Substrate()
     services = List(Service)
+    min_replicas = NonNegative()
+    max_replicas = NonNegative()
 
     def __init_subclass__(cls, **kwargs):
 
@@ -73,6 +95,12 @@ class Deployment(Entity):
                 tree = parse(code)
                 jsn = export_json(tree, pretty_print=True)
                 print(jsn)
+
+    def __init__(self):
+        for key, value in self.__class__._attrs.items():
+            if key not in self.__class__._fields:
+                raise KeyError("Unknown key {} given".format(key))
+            setattr(self, key, value)
 
 
 class Profile(Entity):
