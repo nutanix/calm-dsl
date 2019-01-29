@@ -135,11 +135,29 @@ class Base:
             setattr(self, key, value)
 
 
-class Substrate(Base):
+class SubstrateBase(Base):
+
+    def __init_subclass__(cls, **kwargs):
+
+        cls._default_attrs = {}
+
+        super().__init_subclass__(**kwargs)
+
+
+class Substrate(SubstrateBase):
     pass
 
 
-class Service(Base):
+class ServiceBase(Base):
+
+    def __init_subclass__(cls, **kwargs):
+
+        cls._default_attrs = {}
+
+        super().__init_subclass__(**kwargs)
+
+
+class Service(ServiceBase):
     pass
 
 
@@ -165,24 +183,32 @@ class Deployment(DeploymentBase):
     max_replicas = NonNegative()
 
 
-class Profile(Base):
+class ProfileBase(Base):
 
-    _default_attrs = {
-        "deployments": [],
-    }
+    def __init_subclass__(cls, **kwargs):
+
+        cls._default_attrs = {
+            "deployments": [],
+        }
+
+
+class Profile(ProfileBase):
 
     deployments = DeploymentListDescriptor()
 
 
-class Blueprint(Base):
+class BlueprintBase(Base):
 
-    _default_attrs = {
-        "profiles": []
-    }
+    def __init_subclass__(cls, **kwargs):
+
+        cls._default_attrs = {
+            "profiles": [],
+        }
+
+
+class Blueprint(BlueprintBase):
 
     profiles = ProfileListDescriptor()
-
-
 
 
 ###
