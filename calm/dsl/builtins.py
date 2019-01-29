@@ -7,7 +7,59 @@ import tokenize
 import asttokens
 
 
+
 class Entity:
+
+    def __init__(self, entity_type):
+        self.entity_type = entity_type
+
+    def __get__(self, instance, owner):
+        return instance.__dict__[self.name]
+
+    def __set__(self, instance, value):
+        if not isinstance(value, self.entity_type):
+            raise TypeError('{} is not of type {}.'.format(type(value), self.entity_type))
+        instance.__dict__[self.name] = value
+
+    def __set_name__(self, owner, name):
+        self.name = name
+
+
+class EntityList:
+
+    def __init__(self, entity_type):
+        self.entity_type = entity_type
+
+    def __get__(self, instance, owner):
+        return instance.__dict__[self.name]
+
+    def __set__(self, instance, values):
+
+        if not isinstance(values, list):
+            raise TypeError('{} is not of type {}.'.format(type(values), list))
+
+        for value in values:
+            if not isinstance(value, self.entity_type):
+                raise TypeError('{} is not of type {}.'.format(type(value), self.entity_type))
+
+        instance.__dict__[self.name] = values
+
+    def __set_name__(self, owner, name):
+        self.name = name
+
+
+class NonNegative:
+    def __get__(self, instance, owner):
+        return instance.__dict__[self.name]
+    def __set__(self, instance, value):
+        if value < 0:
+            raise ValueError('Cannot be negative.')
+        instance.__dict__[self.name] = value
+    def __set_name__(self, owner, name):
+        self.name = name
+
+
+class Base:
 
     attributes = {}
     _default_attrs = {}
@@ -15,17 +67,6 @@ class Entity:
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-
-    def __get__(self, instance, owner):
-        return instance.__dict__[self.name]
-
-    def __set__(self, instance, value):
-        if not isinstance(value, type(self)):
-            raise TypeError('{} is not of type {}.'.format(value, type(self)))
-        instance.__dict__[self.name] = value
-
-    def __set_name__(self, owner, name):
-        self.name = name
 
     def __str__(cls):
         return str(cls._all_attrs)
@@ -43,49 +84,16 @@ class Entity:
                 raise KeyError("Unknown key {} given".format(key))
             setattr(self, key, value)
 
-class List:
 
-    def __init__(self, item_type):
-        self.item_type = item_type
-
-    def __get__(self, instance, owner):
-        return instance.__dict__[self.name]
-
-    def __set__(self, instance, values):
-
-        if not isinstance(values, list):
-            raise TypeError('{} is not of type {}.'.format(values, list))
-
-        for value in values:
-            if not isinstance(value, self.item_type):
-                raise TypeError('{} is not of type {}.'.format(value, self.item_type))
-
-        instance.__dict__[self.name] = values
-
-    def __set_name__(self, owner, name):
-        self.name = name
-
-
-class Substrate(Entity):
+class Substrate(Base):
     pass
 
 
-class Service(Entity):
+class Service(Base):
     pass
 
 
-class NonNegative:
-    def __get__(self, instance, owner):
-        return instance.__dict__[self.name]
-    def __set__(self, instance, value):
-        if value < 0:
-            raise ValueError('Cannot be negative.')
-        instance.__dict__[self.name] = value
-    def __set_name__(self, owner, name):
-        self.name = name
-
-
-class Deployment(Entity):
+class Deployment(Base):
 
     _default_attrs = {
         "substrate": None,
@@ -94,28 +102,28 @@ class Deployment(Entity):
         "max_replicas": 1,
     }
 
-    substrate = Substrate()
-    services = List(Service)
+    substrate = Entity(Substrate)
+    services = EntityList(Service)
     min_replicas = NonNegative()
     max_replicas = NonNegative()
 
 
-class Profile(Entity):
+class Profile(Base):
 
     _default_attrs = {
         "deployments": [],
     }
 
-    deployments = List(Deployment)
+    deployments = EntityList(Deployment)
 
 
-class Blueprint(Entity):
+class Blueprint(Base):
 
     _default_attrs = {
         "profiles": []
     }
 
-    profiles = List(Profile)
+    profiles = EntityList(Profile)
 
 
 
