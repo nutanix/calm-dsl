@@ -9,9 +9,8 @@ import asttokens
 
 class Entity:
 
-    _fields = []
-    _default_values = []
     _attrs = {}
+    _default_attrs = {}
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -29,11 +28,14 @@ class Entity:
 
     def __init__(self, **kwargs):
 
-        _default_attrs = dict(zip(self.__class__._fields, self.__class__._default_values))
-        merged_dct = {**_default_attrs, **self.__class__._attrs, **kwargs}
+        merged_dct = {
+            **self.__class__._default_attrs,
+            **self.__class__._attrs,
+            **kwargs,
+        }
 
         for key, value in merged_dct.items():
-            if key not in self.__class__._fields:
+            if key not in self.__class__._default_attrs.keys():
                 raise KeyError("Unknown key {} given".format(key))
             setattr(self, key, value)
 
@@ -81,19 +83,12 @@ class NonNegative:
 
 class Deployment(Entity):
 
-    _fields = [
-        "substrate",
-        "services",
-        "min_replicas",
-        "max_replicas",
-    ]
-
-    _default_values = [
-        None,
-        [],
-        1,
-        1.
-    ]
+    _default_attrs = {
+        "substrate": None,
+        "services": [],
+        "min_replicas": 1,
+        "max_replicas": 1,
+        }
 
     substrate = Substrate()
     services = List(Service)
