@@ -88,7 +88,7 @@ class Deployment(Entity):
         "services": [],
         "min_replicas": 1,
         "max_replicas": 1,
-        }
+    }
 
     substrate = Substrate()
     services = List(Service)
@@ -98,10 +98,18 @@ class Deployment(Entity):
 
 class Profile(Entity):
 
+    _default_attrs = {
+        "deployments": [],
+    }
+
     deployments = List(Deployment)
 
 
 class Blueprint(Entity):
+
+    _default_attrs = {
+        "profiles": []
+    }
 
     profiles = List(Profile)
 
