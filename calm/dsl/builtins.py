@@ -9,8 +9,9 @@ import asttokens
 
 class Entity:
 
-    _attrs = {}
+    attributes = {}
     _default_attrs = {}
+    _all_attrs = {}
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -26,15 +27,18 @@ class Entity:
     def __set_name__(self, owner, name):
         self.name = name
 
+    def __str__(cls):
+        return str(cls._all_attrs)
+
     def __init__(self, **kwargs):
 
-        merged_dct = {
+        self.__class__._all_attrs = {
             **self.__class__._default_attrs,
-            **self.__class__._attrs,
+            **self.__class__.attributes,
             **kwargs,
         }
 
-        for key, value in merged_dct.items():
+        for key, value in self.__class__._all_attrs.items():
             if key not in self.__class__._default_attrs.keys():
                 raise KeyError("Unknown key {} given".format(key))
             setattr(self, key, value)
