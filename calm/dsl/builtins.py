@@ -92,18 +92,7 @@ class Deployment(Entity):
     max_replicas = NonNegative()
 
     def __init_subclass__(cls, **kwargs):
-
         super().__init_subclass__(**kwargs)
-
-        print("Introspecting {} ...".format(cls))
-        fns = inspect.getmembers(cls, predicate=inspect.isfunction)
-        for fn_name, fn_obj in fns:
-            if fn_name == "__init__":
-                code = textwrap.dedent(inspect.getsource(fn_obj))
-                #print(code)
-                tree = parse(code)
-                jsn = export_json(tree, pretty_print=True)
-                #print(jsn)
 
     def __init__(self, **kwargs):
 
