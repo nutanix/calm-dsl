@@ -8,7 +8,7 @@ import asttokens
 
 
 
-class Entity:
+class BaseDescriptor:
 
     def __init__(self, entity_type):
         self.entity_type = entity_type
@@ -25,7 +25,31 @@ class Entity:
         self.name = name
 
 
-class EntityList:
+class ServiceDescriptor(BaseDescriptor):
+
+    def __init__(self):
+        super().__init__(Service)
+
+
+class SubstrateDescriptor(BaseDescriptor):
+
+    def __init__(self):
+        super().__init__(Substrate)
+
+
+class DeploymentDescriptor(BaseDescriptor):
+
+    def __init__(self):
+        super().__init__(Deployment)
+
+
+class ProfileDescriptor(BaseDescriptor):
+
+    def __init__(self):
+        super().__init__(Profile)
+
+
+class BaseListDescriptor:
 
     def __init__(self, entity_type):
         self.entity_type = entity_type
@@ -48,6 +72,30 @@ class EntityList:
         self.name = name
 
 
+class ServiceListDescriptor(BaseListDescriptor):
+
+    def __init__(self):
+        super().__init__(Service)
+
+
+class SubstrateListDescriptor(BaseListDescriptor):
+
+    def __init__(self):
+        super().__init__(Substrate)
+
+
+class DeploymentListDescriptor(BaseListDescriptor):
+
+    def __init__(self):
+        super().__init__(Deployment)
+
+
+class ProfileListDescriptor(BaseListDescriptor):
+
+    def __init__(self):
+        super().__init__(Profile)
+
+
 class NonNegative:
     def __get__(self, instance, owner):
         return instance.__dict__[self.name]
@@ -58,6 +106,8 @@ class NonNegative:
     def __set_name__(self, owner, name):
         self.name = name
 
+
+###
 
 class Base:
 
@@ -102,8 +152,8 @@ class Deployment(Base):
         "max_replicas": 1,
     }
 
-    substrate = Entity(Substrate)
-    services = EntityList(Service)
+    substrate = SubstrateDescriptor()
+    services = ServiceListDescriptor()
     min_replicas = NonNegative()
     max_replicas = NonNegative()
 
@@ -114,7 +164,7 @@ class Profile(Base):
         "deployments": [],
     }
 
-    deployments = EntityList(Deployment)
+    deployments = DeploymentListDescriptor()
 
 
 class Blueprint(Base):
@@ -123,7 +173,7 @@ class Blueprint(Base):
         "profiles": []
     }
 
-    profiles = EntityList(Profile)
+    profiles = ProfileListDescriptor()
 
 
 
