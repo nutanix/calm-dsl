@@ -7,7 +7,10 @@ import tokenize
 import asttokens
 
 
-class Substrate:
+class Entity:
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
 
     def __get__(self, instance, owner):
         return instance.__dict__[self.name]
@@ -21,114 +24,60 @@ class Substrate:
         self.name = name
 
 
-class DeploymentBase:
+class List:
 
-     def __init_subclass__(cls, **kwargs):
-         super().__init_subclass__(**kwargs)
+    def __init__(self, item_type):
+        self.item_type = item_type
 
-         print(vars(cls))
+    def __get__(self, instance, owner):
+        return instance.__dict__[self.name]
 
-         # TODO - Use inspect to allow only legal operations
-         fns = inspect.getmembers(cls, predicate=inspect.isfunction)
-         for fn_name, fn_obj in fns:
-             if fn_name == "__init__":
-                 code = textwrap.dedent(inspect.getsource(fn_obj))
-                 print(code)
-                 tree = parse(code)
-                 jsn = export_json(tree, pretty_print=True)
-                 print(jsn)
+    def __set__(self, instance, values):
 
-            # TODO - Add check for other supported methods
+        if not isinstance(values, list):
+            raise TypeError('{} is not of type {}.'.format(values, list))
+
+        for value in values:
+            if not isinstance(value, self.item_type):
+                raise TypeError('{} is not of type {}.'.format(value, self.item_type))
+
+        instance.__dict__[self.name] = values
+
+    def __set_name__(self, owner, name):
+        self.name = name
 
 
-class Deployment(DeploymentBase):
+class Substrate(Entity):
+    pass
+
+
+class Deployment(Entity):
 
     substrate = Substrate()
 
-    def __get__(self, instance, owner):
-        return instance.__dict__[self.name]
+    def __init_subclass__(cls, **kwargs):
 
-    def __set__(self, instance, value):
-        if not isinstance(value, type(self)):
-            raise TypeError('{} is not of type {}.'.format(value, type(self)))
-        instance.__dict__[self.name] = value
+        super().__init_subclass__(**kwargs)
 
-    def __set_name__(self, owner, name):
-        self.name = name
-
-
-class Deployments:
-
-    def __get__(self, instance, owner):
-        return instance.__dict__[self.name]
-
-    def __set__(self, instance, values):
-
-        if not isinstance(values, list):
-            raise TypeError('{} is not of type {}.'.format(values, list))
-
-        for value in values:
-            if not isinstance(value, Deployment):
-                raise TypeError('{} is not of type {}.'.format(value, Deployment))
-
-        instance.__dict__[self.name] = values
-
-    def __set_name__(self, owner, name):
-        self.name = name
+        print("Introspecting {} ...".format(cls))
+        fns = inspect.getmembers(cls, predicate=inspect.isfunction)
+        for fn_name, fn_obj in fns:
+            if fn_name == "__init__":
+                code = textwrap.dedent(inspect.getsource(fn_obj))
+                print(code)
+                tree = parse(code)
+                jsn = export_json(tree, pretty_print=True)
+                print(jsn)
 
 
-class Profile:
+class Profile(Entity):
 
-    deployments = Deployments()
-
-    def __get__(self, instance, owner):
-        return instance.__dict__[self.name]
-
-    def __set__(self, instance, value):
-        if not isinstance(value, type(self)):
-            raise TypeError('{} is not of type {}.'.format(value, type(self)))
-        instance.__dict__[self.name] = value
-
-    def __set_name__(self, owner, name):
-        self.name = name
+    deployments = List(Deployment)
 
 
-class Profiles:
-    # TODO - refactor list and obj descriptors later
+class Blueprint(Entity):
 
-    def __get__(self, instance, owner):
-        return instance.__dict__[self.name]
-
-    def __set__(self, instance, values):
-
-        if not isinstance(values, list):
-            raise TypeError('{} is not of type {}.'.format(values, list))
-
-        for value in values:
-            if not isinstance(value, Profile):
-                raise TypeError('{} is not of type {}.'.format(value, Profile))
-
-        instance.__dict__[self.name] = values
-
-    def __set_name__(self, owner, name):
-        self.name = name
-
-
-class Blueprint:
-
-    profiles = Profiles()
-
-    def __get__(self, instance, owner):
-        return instance.__dict__[self.name]
-
-    def __set__(self, instance, value):
-        if not isinstance(value, type(self)):
-            raise TypeError('{} is not of type {}.'.format(value, type(self)))
-        instance.__dict__[self.name] = value
-
-    def __set_name__(self, owner, name):
-        self.name = name
-
+    profiles = List(Profile)
 
 
 
