@@ -21,29 +21,27 @@ class Substrate:
         self.name = name
 
 
-class MetaDeployment(type):
+class DeploymentBase:
 
-    def __new__(cls, name, bases, dct):
-        x = super().__new__(cls, name, bases, dct)
+     def __init_subclass__(cls, **kwargs):
+         super().__init_subclass__(**kwargs)
 
-        print(vars(x))
+         print(vars(cls))
 
-        # TODO - Use inspect to allow only legal operations
-        fns = inspect.getmembers(x, predicate=inspect.isfunction)
-        for fn_name, fn_obj in fns:
-            if fn_name == "__init__":
-                code = textwrap.dedent(inspect.getsource(fn_obj))
-                print(code)
-                tree = parse(code)
-                jsn = export_json(tree, pretty_print=True)
-                print(jsn)
+         # TODO - Use inspect to allow only legal operations
+         fns = inspect.getmembers(cls, predicate=inspect.isfunction)
+         for fn_name, fn_obj in fns:
+             if fn_name == "__init__":
+                 code = textwrap.dedent(inspect.getsource(fn_obj))
+                 print(code)
+                 tree = parse(code)
+                 jsn = export_json(tree, pretty_print=True)
+                 print(jsn)
 
             # TODO - Add check for other supported methods
 
-        return x
 
-
-class Deployment(metaclass=MetaDeployment):
+class Deployment(DeploymentBase):
 
     substrate = Substrate()
 
