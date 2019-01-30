@@ -143,13 +143,20 @@ class EntityJSONEncoder(JSONEncoder):
             return super().default(obj)
 
 
-class Base:
+class EntityBase(type):
 
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
+    def __new__(cls, name, bases, ns):
+
+        self = super().__new__(cls, name, bases, ns)
+
+        for key in self.attributes:
+            if key not in self._default_attrs.keys():
+                raise KeyError("Unknown key {} given".format(key))
+
+        return self
 
 
-class EntityBase(Base):
+class Entity(metaclass=EntityBase):
 
     attributes = {}
     _default_attrs = {}
@@ -184,9 +191,11 @@ class EntityBase(Base):
 
 class PortBase(EntityBase):
 
-    def __init_subclass__(cls, **kwargs):
+    def __new__(cls, name, bases, ns):
 
-        cls._default_attrs = {
+        self = super().__new__(cls, name, bases, ns)
+
+        self._default_attrs = {
             "target_port": "",
             "protocol": "",
             "endpoint_name": "",
@@ -195,10 +204,10 @@ class PortBase(EntityBase):
             "container_spec": dict(),
         }
 
-        super().__init_subclass__(**kwargs)
+        return self
 
 
-class Port(PortBase):
+class Port(Entity, metaclass=PortBase):
 
     target_port = StringType()
     protocol = StringType()
@@ -210,9 +219,12 @@ class Port(PortBase):
 
 class ServiceBase(EntityBase):
 
-    def __init_subclass__(cls, **kwargs):
 
-        cls._default_attrs = {
+    def __new__(cls, name, bases, ns):
+
+        self = super().__new__(cls, name, bases, ns)
+
+        self._default_attrs = {
             "name": cls.__name__,
             "description": cls.__doc__,
             "port_list": [],
@@ -221,10 +233,10 @@ class ServiceBase(EntityBase):
 
         }
 
-        super().__init_subclass__(**kwargs)
+        return self
 
 
-class Service(ServiceBase):
+class Service(Entity, metaclass=ServiceBase):
 
     port_list = PortListType()
     singleton = BoolType()
@@ -233,32 +245,36 @@ class Service(ServiceBase):
 
 class SubstrateBase(EntityBase):
 
-    def __init_subclass__(cls, **kwargs):
+    def __new__(cls, name, bases, ns):
 
-        cls._default_attrs = {}
+        self = super().__new__(cls, name, bases, ns)
 
-        super().__init_subclass__(**kwargs)
+        self._default_attrs = {}
+
+        return self
 
 
-class Substrate(SubstrateBase):
+class Substrate(Entity, metaclass=SubstrateBase):
     pass
 
 
 class DeploymentBase(EntityBase):
 
-    def __init_subclass__(cls, **kwargs):
+    def __new__(cls, name, bases, ns):
 
-        cls._default_attrs = {
+        self = super().__new__(cls, name, bases, ns)
+
+        self._default_attrs = {
             "substrate": None,
             "services": [],
             "min_replicas": 1,
             "max_replicas": 1,
         }
 
-        super().__init_subclass__(**kwargs)
+        return self
 
 
-class Deployment(DeploymentBase):
+class Deployment(Entity, metaclass=DeploymentBase):
 
     substrate = SubstrateType()
     services = ServiceListType()
@@ -268,28 +284,36 @@ class Deployment(DeploymentBase):
 
 class ProfileBase(EntityBase):
 
-    def __init_subclass__(cls, **kwargs):
+    def __new__(cls, name, bases, ns):
 
-        cls._default_attrs = {
+        self = super().__new__(cls, name, bases, ns)
+
+        self._default_attrs = {
             "deployments": [],
         }
 
+        return self
 
-class Profile(ProfileBase):
+
+class Profile(Entity, metaclass=ProfileBase):
 
     deployments = DeploymentListType()
 
 
 class BlueprintBase(EntityBase):
 
-    def __init_subclass__(cls, **kwargs):
+    def __new__(cls, name, bases, ns):
 
-        cls._default_attrs = {
+        self = super().__new__(cls, name, bases, ns)
+
+        self._default_attrs = {
             "profiles": [],
         }
 
+        return self
 
-class Blueprint(BlueprintBase):
+
+class Blueprint(Entity, metaclass=BlueprintBase):
 
     profiles = ProfileListType()
 
