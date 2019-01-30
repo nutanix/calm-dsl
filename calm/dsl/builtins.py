@@ -153,32 +153,30 @@ class EntityBase(Base):
 
     attributes = {}
     _default_attrs = {}
-    _all_attrs = {}
 
-    def __str__(cls):
-        return str(cls._all_attrs)
+    def __str__(self):
+        return str(self._all_attrs)
 
-    def json_repr(cls):
-        return cls._all_attrs
+    def json_repr(self):
+        return self._all_attrs
 
-    def json_dumps(cls, pprint=False, sort_keys=False):
-        return json.dumps(
-            cls.json_repr(),
-            cls=EntityJSONEncoder,
-            sort_keys=sort_keys,
-            indent=4 if pprint else None,
-            separators=(",", ": ") if pprint else (",", ":")
+    def json_dumps(self, pprint=False, sort_keys=False):
+        return json.dumps(self.json_repr(),
+                          cls=EntityJSONEncoder,
+                          sort_keys=sort_keys,
+                          indent=4 if pprint else None,
+                          separators=(",", ": ") if pprint else (",", ":")
         )
 
     def __init__(self, **kwargs):
 
-        self.__class__._all_attrs = {
+        self._all_attrs = {
             **self.__class__._default_attrs,
             **self.__class__.attributes,
             **kwargs,
         }
 
-        for key, value in self.__class__._all_attrs.items():
+        for key, value in self._all_attrs.items():
             if key not in self.__class__._default_attrs.keys():
                 raise KeyError("Unknown key {} given".format(key))
             setattr(self, key, value)
