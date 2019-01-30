@@ -108,12 +108,15 @@ class NonNegativeType(BaseType):
 
 class Base:
 
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+
+
+class EntityBase(Base):
+
     attributes = {}
     _default_attrs = {}
     _all_attrs = {}
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
 
     def __str__(cls):
         return str(cls._all_attrs)
@@ -132,7 +135,7 @@ class Base:
             setattr(self, key, value)
 
 
-class SubstrateBase(Base):
+class SubstrateBase(EntityBase):
 
     def __init_subclass__(cls, **kwargs):
 
@@ -145,7 +148,7 @@ class Substrate(SubstrateBase):
     pass
 
 
-class ServiceBase(Base):
+class ServiceBase(EntityBase):
 
     def __init_subclass__(cls, **kwargs):
 
@@ -158,7 +161,7 @@ class Service(ServiceBase):
     pass
 
 
-class DeploymentBase(Base):
+class DeploymentBase(EntityBase):
 
     def __init_subclass__(cls, **kwargs):
 
@@ -180,7 +183,7 @@ class Deployment(DeploymentBase):
     max_replicas = NonNegativeType()
 
 
-class ProfileBase(Base):
+class ProfileBase(EntityBase):
 
     def __init_subclass__(cls, **kwargs):
 
@@ -194,7 +197,7 @@ class Profile(ProfileBase):
     deployments = DeploymentListType()
 
 
-class BlueprintBase(Base):
+class BlueprintBase(EntityBase):
 
     def __init_subclass__(cls, **kwargs):
 
