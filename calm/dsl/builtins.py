@@ -7,55 +7,58 @@ import tokenize
 import asttokens
 
 
-
-class BaseDescriptor:
-
-    def __init__(self, entity_type):
-        self.entity_type = entity_type
+class BaseType:
 
     def __get__(self, instance, owner):
         return instance.__dict__[self.name]
 
     def __set__(self, instance, value):
-        if not isinstance(value, self.entity_type):
-            raise TypeError('{} is not of type {}.'.format(type(value), self.entity_type))
         instance.__dict__[self.name] = value
 
     def __set_name__(self, owner, name):
         self.name = name
 
 
-class ServiceDescriptor(BaseDescriptor):
+
+class EntityType(BaseType):
+
+    def __init__(self, entity_type):
+        self.entity_type = entity_type
+
+    def __set__(self, instance, value):
+        if not isinstance(value, self.entity_type):
+            raise TypeError('{} is not of type {}.'.format(type(value), self.entity_type))
+        instance.__dict__[self.name] = value
+
+
+class ServiceType(EntityType):
 
     def __init__(self):
         super().__init__(Service)
 
 
-class SubstrateDescriptor(BaseDescriptor):
+class SubstrateType(EntityType):
 
     def __init__(self):
         super().__init__(Substrate)
 
 
-class DeploymentDescriptor(BaseDescriptor):
+class DeploymentType(EntityType):
 
     def __init__(self):
         super().__init__(Deployment)
 
 
-class ProfileDescriptor(BaseDescriptor):
+class ProfileType(EntityType):
 
     def __init__(self):
         super().__init__(Profile)
 
 
-class BaseListDescriptor:
+class EntityListType(BaseType):
 
     def __init__(self, entity_type):
         self.entity_type = entity_type
-
-    def __get__(self, instance, owner):
-        return instance.__dict__[self.name]
 
     def __set__(self, instance, values):
 
@@ -68,43 +71,37 @@ class BaseListDescriptor:
 
         instance.__dict__[self.name] = values
 
-    def __set_name__(self, owner, name):
-        self.name = name
 
-
-class ServiceListDescriptor(BaseListDescriptor):
+class ServiceListType(EntityListType):
 
     def __init__(self):
         super().__init__(Service)
 
 
-class SubstrateListDescriptor(BaseListDescriptor):
+class SubstrateListType(EntityListType):
 
     def __init__(self):
         super().__init__(Substrate)
 
 
-class DeploymentListDescriptor(BaseListDescriptor):
+class DeploymentListType(EntityListType):
 
     def __init__(self):
         super().__init__(Deployment)
 
 
-class ProfileListDescriptor(BaseListDescriptor):
+class ProfileListType(EntityListType):
 
     def __init__(self):
         super().__init__(Profile)
 
 
-class NonNegative:
-    def __get__(self, instance, owner):
-        return instance.__dict__[self.name]
+class NonNegative(BaseType):
+
     def __set__(self, instance, value):
         if value < 0:
             raise ValueError('Cannot be negative.')
         instance.__dict__[self.name] = value
-    def __set_name__(self, owner, name):
-        self.name = name
 
 
 ###
@@ -177,8 +174,8 @@ class DeploymentBase(Base):
 
 class Deployment(DeploymentBase):
 
-    substrate = SubstrateDescriptor()
-    services = ServiceListDescriptor()
+    substrate = SubstrateType()
+    services = ServiceListType()
     min_replicas = NonNegative()
     max_replicas = NonNegative()
 
@@ -194,7 +191,7 @@ class ProfileBase(Base):
 
 class Profile(ProfileBase):
 
-    deployments = DeploymentListDescriptor()
+    deployments = DeploymentListType()
 
 
 class BlueprintBase(Base):
@@ -208,7 +205,7 @@ class BlueprintBase(Base):
 
 class Blueprint(BlueprintBase):
 
-    profiles = ProfileListDescriptor()
+    profiles = ProfileListType()
 
 
 ###
