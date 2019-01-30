@@ -2,6 +2,7 @@ import ast
 import inspect
 import textwrap
 import json
+from json import JSONEncoder
 import tokenize
 
 import asttokens
@@ -133,6 +134,15 @@ class ProfileListType(EntityListType):
 
 ###
 
+
+class EntityJSONEncoder(JSONEncoder):
+    def default(self, obj):
+        if hasattr(obj,'json_repr'):
+            return obj.json_repr()
+        else:
+            return super().default(obj)
+
+
 class Base:
 
     def __init_subclass__(cls, **kwargs):
@@ -147,6 +157,18 @@ class EntityBase(Base):
 
     def __str__(cls):
         return str(cls._all_attrs)
+
+    def json_repr(cls):
+        return cls._all_attrs
+
+    def json_dumps(cls, pprint=False, sort_keys=False):
+        return json.dumps(
+            cls.json_repr(),
+            cls=EntityJSONEncoder,
+            sort_keys=sort_keys,
+            indent=4 if pprint else None,
+            separators=(",", ": ") if pprint else (",", ":")
+        )
 
     def __init__(self, **kwargs):
 
