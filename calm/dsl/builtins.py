@@ -19,6 +19,13 @@ class BaseType:
         self.name = name
 
 
+class NonNegativeType(BaseType):
+
+    def __set__(self, instance, value):
+        if value < 0:
+            raise ValueError('Cannot be negative.')
+        instance.__dict__[self.name] = value
+
 
 class EntityType(BaseType):
 
@@ -31,34 +38,7 @@ class EntityType(BaseType):
         instance.__dict__[self.name] = value
 
 
-class ServiceType(EntityType):
-
-    def __init__(self):
-        super().__init__(Service)
-
-
-class SubstrateType(EntityType):
-
-    def __init__(self):
-        super().__init__(Substrate)
-
-
-class DeploymentType(EntityType):
-
-    def __init__(self):
-        super().__init__(Deployment)
-
-
-class ProfileType(EntityType):
-
-    def __init__(self):
-        super().__init__(Profile)
-
-
-class EntityListType(BaseType):
-
-    def __init__(self, entity_type):
-        self.entity_type = entity_type
+class EntityListType(EntityType):
 
     def __set__(self, instance, values):
 
@@ -72,10 +52,22 @@ class EntityListType(BaseType):
         instance.__dict__[self.name] = values
 
 
+class ServiceType(EntityType):
+
+    def __init__(self):
+        super().__init__(Service)
+
+
 class ServiceListType(EntityListType):
 
     def __init__(self):
         super().__init__(Service)
+
+
+class SubstrateType(EntityType):
+
+    def __init__(self):
+        super().__init__(Substrate)
 
 
 class SubstrateListType(EntityListType):
@@ -84,10 +76,22 @@ class SubstrateListType(EntityListType):
         super().__init__(Substrate)
 
 
+class DeploymentType(EntityType):
+
+    def __init__(self):
+        super().__init__(Deployment)
+
+
 class DeploymentListType(EntityListType):
 
     def __init__(self):
         super().__init__(Deployment)
+
+
+class ProfileType(EntityType):
+
+    def __init__(self):
+        super().__init__(Profile)
 
 
 class ProfileListType(EntityListType):
@@ -95,13 +99,6 @@ class ProfileListType(EntityListType):
     def __init__(self):
         super().__init__(Profile)
 
-
-class NonNegativeType(BaseType):
-
-    def __set__(self, instance, value):
-        if value < 0:
-            raise ValueError('Cannot be negative.')
-        instance.__dict__[self.name] = value
 
 
 ###
