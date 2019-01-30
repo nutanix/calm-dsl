@@ -96,7 +96,7 @@ class ProfileListType(EntityListType):
         super().__init__(Profile)
 
 
-class NonNegative(BaseType):
+class NonNegativeType(BaseType):
 
     def __set__(self, instance, value):
         if value < 0:
@@ -176,8 +176,8 @@ class Deployment(DeploymentBase):
 
     substrate = SubstrateType()
     services = ServiceListType()
-    min_replicas = NonNegative()
-    max_replicas = NonNegative()
+    min_replicas = NonNegativeType()
+    max_replicas = NonNegativeType()
 
 
 class ProfileBase(Base):
