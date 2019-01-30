@@ -143,13 +143,13 @@ class EntityJSONEncoder(JSONEncoder):
             return super().default(obj)
 
 
-class EntityBase:
+class Base:
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
 
 
-class Entity(EntityBase):
+class EntityBase(Base):
 
     attributes = {}
     _default_attrs = {}
@@ -198,7 +198,7 @@ class PortBase(EntityBase):
         super().__init_subclass__(**kwargs)
 
 
-class Port(Entity, PortBase):
+class Port(PortBase):
 
     target_port = StringType()
     protocol = StringType()
@@ -224,7 +224,7 @@ class ServiceBase(EntityBase):
         super().__init_subclass__(**kwargs)
 
 
-class Service(Entity, ServiceBase):
+class Service(ServiceBase):
 
     port_list = PortListType()
     singleton = BoolType()
@@ -240,7 +240,7 @@ class SubstrateBase(EntityBase):
         super().__init_subclass__(**kwargs)
 
 
-class Substrate(Entity, SubstrateBase):
+class Substrate(SubstrateBase):
     pass
 
 
@@ -258,7 +258,7 @@ class DeploymentBase(EntityBase):
         super().__init_subclass__(**kwargs)
 
 
-class Deployment(Entity, DeploymentBase):
+class Deployment(DeploymentBase):
 
     substrate = SubstrateType()
     services = ServiceListType()
@@ -275,7 +275,7 @@ class ProfileBase(EntityBase):
         }
 
 
-class Profile(Entity, ProfileBase):
+class Profile(ProfileBase):
 
     deployments = DeploymentListType()
 
@@ -289,7 +289,7 @@ class BlueprintBase(EntityBase):
         }
 
 
-class Blueprint(Entity, BlueprintBase):
+class Blueprint(BlueprintBase):
 
     profiles = ProfileListType()
 
