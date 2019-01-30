@@ -52,6 +52,36 @@ class EntityListType(EntityType):
         instance.__dict__[self.name] = values
 
 
+class StringType(EntityType):
+
+    def __init__(self):
+        super().__init__(str)
+
+
+class BoolType(EntityType):
+
+    def __init__(self):
+        super().__init__(bool)
+
+
+class DictType(EntityType):
+
+    def __init__(self):
+        super().__init__(dict)
+
+
+class PortType(EntityType):
+
+    def __init__(self):
+        super().__init__(Port)
+
+
+class PortListType(EntityListType):
+
+    def __init__(self):
+        super().__init__(Port)
+
+
 class ServiceType(EntityType):
 
     def __init__(self):
@@ -132,6 +162,55 @@ class EntityBase(Base):
             setattr(self, key, value)
 
 
+class PortBase(EntityBase):
+
+    def __init_subclass__(cls, **kwargs):
+
+        cls._default_attrs = {
+            "target_port": "",
+            "protocol": "",
+            "endpoint_name": "",
+            "exposed_address": "",
+            "exposed_port": "",
+            "container_spec": dict(),
+        }
+
+        super().__init_subclass__(**kwargs)
+
+
+class Port(PortBase):
+
+    target_port = StringType()
+    protocol = StringType()
+    endpoint_name = StringType()
+    exposed_address = StringType()
+    exposed_port = StringType()
+    container_spec = DictType()
+
+
+class ServiceBase(EntityBase):
+
+    def __init_subclass__(cls, **kwargs):
+
+        cls._default_attrs = {
+            "name": cls.__name__,
+            "description": cls.__doc__,
+            "port_list": [],
+            "singleton": False,
+            "tier": "",
+
+        }
+
+        super().__init_subclass__(**kwargs)
+
+
+class Service(ServiceBase):
+
+    port_list = PortListType()
+    singleton = BoolType()
+    tier = StringType()
+
+
 class SubstrateBase(EntityBase):
 
     def __init_subclass__(cls, **kwargs):
@@ -142,19 +221,6 @@ class SubstrateBase(EntityBase):
 
 
 class Substrate(SubstrateBase):
-    pass
-
-
-class ServiceBase(EntityBase):
-
-    def __init_subclass__(cls, **kwargs):
-
-        cls._default_attrs = {}
-
-        super().__init_subclass__(**kwargs)
-
-
-class Service(ServiceBase):
     pass
 
 
