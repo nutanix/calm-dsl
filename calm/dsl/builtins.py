@@ -244,101 +244,132 @@ type_to_descriptor_cls = {
     "PortList": PortListType,
     "ServiceList": ServiceListType,
     "Substrate": SubstrateType,
+    "SubstrateList": SubstrateListType,
     "DeploymentList": DeploymentListType,
     "ProfileList": ProfileListType,
 }
 
 
-class Port(Entity, metaclass=EntityBase):
+class Port(Entity):
 
     __schema__ = {
+
         "target_port": {
             "type": "string",
             "default": "",
         },
+
         "protocol": {
             "type": "string",
             "default": "",
         },
+
         "endpoint_name": {
             "type": "string",
             "default": "",
         },
+
         "exposed_address": {
             "type": "string",
             "default": "",
         },
+
         "exposed_port": {
             "type": "string",
             "default": "",
         },
+
         "container_spec": {
             "type": "dict",
             "default": {},
         },
+
     }
 
 
-class Service(Entity, metaclass=EntityBase):
+class Service(Entity):
 
     __schema__ = {
+
         "port_list": {
             "type": "PortList",
             "default": "[]",
             },
+
         "singleton": {
             "type": "boolean",
             "default": False,
             },
+
         "tier": {
             "type": "string",
             "default": "",
         }
+
     }
 
 
-class Substrate(Entity, metaclass=EntityBase):
+class Substrate(Entity):
     pass
 
 
-class Deployment(Entity, metaclass=EntityBase):
+class Deployment(Entity):
 
     __schema__ = {
+
         "services": {
             "type": "ServiceList",
             "default": [],
         },
+
         "substrate": {
             "type": "Substrate",
         },
+
         "min_replicas": {
             "type": "integer",
             "default": 1,
         },
+
         "max_replicas": {
             "type": "integer",
             "default": 1,
         },
+
     }
 
 
-class Profile(Entity, metaclass=EntityBase):
+class Profile(Entity):
 
     __schema__ = {
+
         "deployments": {
             "type": "DeploymentList",
             "default": [],
         },
+
     }
 
 
-class Blueprint(Entity, metaclass=EntityBase):
+class Blueprint(Entity):
 
     __schema__ = {
+
+        "services": {
+            "type": "ServiceList",
+            "default": [],
+        },
+
+        "substrates": {
+            "type": "SubstrateList",
+            "default": [],
+        },
+
         "profiles": {
             "type": "ProfileList",
             "default": [],
         },
+
     }
 
 
