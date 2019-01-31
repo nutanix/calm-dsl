@@ -171,65 +171,15 @@ class EntityBase(type):
 
         cls = super().__new__(mcls, name, bases, ns)
 
-        for key in cls.attributes:
-            if key not in cls._default_attrs.keys():
-                raise KeyError("Unknown key {} given".format(key))
-
-        return cls
-
-
-class Entity(metaclass=EntityBase):
-
-    attributes = {}
-    _default_attrs = {}
-
-    def __str__(self):
-        return str(self._all_attrs)
-
-    def json_repr(self):
-        return self._all_attrs
-
-    def json_dumps(self, pprint=False, sort_keys=False):
-        return json.dumps(self.json_repr(),
-                          cls=EntityJSONEncoder,
-                          sort_keys=sort_keys,
-                          indent=4 if pprint else None,
-                          separators=(",", ": ") if pprint else (",", ":")
-        )
-
-    def __init__(self, **kwargs):
-
-        self._all_attrs = {
-            **self.__class__._default_attrs,
-            **self.__class__.attributes,
-            **kwargs,
-        }
-
-        for key, value in self._all_attrs.items():
-            if key not in self.__class__._default_attrs.keys():
-                raise KeyError("Unknown key {} given".format(key))
-            setattr(self, key, value)
-
-
-type_to_descriptor_cls = {
-    "string": StringType,
-    "dict": DictType,
-}
-
-
-class PortBase(EntityBase):
-
-    def __new__(mcls, name, bases, ns):
-
-        cls = super().__new__(mcls, name, bases, ns)
-
         cls._default_attrs = {
             "name": cls.__name__,
             "description": cls.__doc__,
         }
+
         for attr, attr_props in cls.__schema__.items():
 
             attr_type = attr_props.get("type", None)
+
             if attr_type is None:
                 raise Exception("Invalid schema {} given".format(attr_props))
 
@@ -246,10 +196,60 @@ class PortBase(EntityBase):
             if func is not None:
                 func(cls, k)
 
+        for key in cls.attributes:
+            if key not in cls._default_attrs.keys():
+                raise KeyError("Unknown key {} given".format(key))
+
         return cls
 
 
-class Port(Entity, metaclass=PortBase):
+class Entity(metaclass=EntityBase):
+
+    __schema__ = {}
+    attributes = {}
+
+    def __init__(self, **kwargs):
+
+        self._all_attrs = {
+            **self.__class__._default_attrs,
+            **self.__class__.attributes,
+            **kwargs,
+        }
+
+        for key, value in self._all_attrs.items():
+            if key not in self.__class__._default_attrs.keys():
+                raise KeyError("Unknown key {} given".format(key))
+            setattr(self, key, value)
+
+    def __str__(self):
+        return str(self._all_attrs)
+
+    def json_repr(self):
+        return self._all_attrs
+
+    def json_dumps(self, pprint=False, sort_keys=False):
+        return json.dumps(self.json_repr(),
+                          cls=EntityJSONEncoder,
+                          sort_keys=sort_keys,
+                          indent=4 if pprint else None,
+                          separators=(",", ": ") if pprint else (",", ":")
+        )
+
+
+type_to_descriptor_cls = {
+    "string": StringType,
+    "integer": IntType,
+    "dict": DictType,
+    "boolean": BoolType,
+    "PortList": PortListType,
+    "ServiceList": ServiceListType,
+    "Substrate": SubstrateType,
+    "DeploymentList": DeploymentListType,
+    "ProfileList": ProfileListType,
+}
+
+
+class Port(Entity, metaclass=EntityBase):
 
     __schema__ = {
         "target_port": {
@@ -279,105 +279,67 @@ class Port(Entity, metaclass=PortBase):
     }
 
 
-class ServiceBase(EntityBase):
+class Service(Entity, metaclass=EntityBase):
 
-
-    def __new__(mcls, name, bases, ns):
-
-        cls = super().__new__(mcls, name, bases, ns)
-
-        cls._default_attrs = {
-            "name": cls.__name__,
-            "description": cls.__doc__,
-            "port_list": [],
-            "singleton": False,
-            "tier": "",
-
+    __schema__ = {
+        "port_list": {
+            "type": "PortList",
+            "default": "[]",
+            },
+        "singleton": {
+            "type": "boolean",
+            "default": False,
+            },
+        "tier": {
+            "type": "string",
+            "default": "",
         }
-
-        return cls
-
-
-class Service(Entity, metaclass=ServiceBase):
-
-    port_list = PortListType()
-    singleton = BoolType()
-    tier = StringType()
+    }
 
 
-class SubstrateBase(EntityBase):
-
-    def __new__(mcls, name, bases, ns):
-
-        cls = super().__new__(mcls, name, bases, ns)
-
-        cls._default_attrs = {}
-
-        return cls
-
-
-class Substrate(Entity, metaclass=SubstrateBase):
+class Substrate(Entity, metaclass=EntityBase):
     pass
 
 
-class DeploymentBase(EntityBase):
+class Deployment(Entity, metaclass=EntityBase):
 
-    def __new__(mcls, name, bases, ns):
-
-        cls = super().__new__(mcls, name, bases, ns)
-
-        cls._default_attrs = {
-            "substrate": None,
-            "services": [],
-            "min_replicas": 1,
-            "max_replicas": 1,
-        }
-
-        return cls
-
-
-class Deployment(Entity, metaclass=DeploymentBase):
-
-    substrate = SubstrateType()
-    services = ServiceListType()
-    min_replicas = NonNegativeIntType()
-    max_replicas = NonNegativeIntType()
+    __schema__ = {
+        "services": {
+            "type": "ServiceList",
+            "default": [],
+        },
+        "substrate": {
+            "type": "Substrate",
+        },
+        "min_replicas": {
+            "type": "integer",
+            "default": 1,
+        },
+        "max_replicas": {
+            "type": "integer",
+            "default": 1,
+        },
+    }
 
 
-class ProfileBase(EntityBase):
+class Profile(Entity, metaclass=EntityBase):
 
-    def __new__(mcls, name, bases, ns):
-
-        cls = super().__new__(mcls, name, bases, ns)
-
-        cls._default_attrs = {
-            "deployments": [],
-        }
-
-        return cls
+    __schema__ = {
+        "deployments": {
+            "type": "DeploymentList",
+            "default": [],
+        },
+    }
 
 
-class Profile(Entity, metaclass=ProfileBase):
+class Blueprint(Entity, metaclass=EntityBase):
 
-    deployments = DeploymentListType()
-
-
-class BlueprintBase(EntityBase):
-
-    def __new__(mcls, name, bases, ns):
-
-        cls = super().__new__(mcls, name, bases, ns)
-
-        cls._default_attrs = {
-            "profiles": [],
-        }
-
-        return cls
-
-
-class Blueprint(Entity, metaclass=BlueprintBase):
-
-    profiles = ProfileListType()
+    __schema__ = {
+        "profiles": {
+            "type": "ProfileList",
+            "default": [],
+        },
+    }
 
 
 ###
