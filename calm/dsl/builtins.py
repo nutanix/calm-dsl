@@ -145,15 +145,15 @@ class EntityJSONEncoder(JSONEncoder):
 
 class EntityBase(type):
 
-    def __new__(cls, name, bases, ns):
+    def __new__(mcls, name, bases, ns):
 
-        self = super().__new__(cls, name, bases, ns)
+        cls = super().__new__(mcls, name, bases, ns)
 
-        for key in self.attributes:
-            if key not in self._default_attrs.keys():
+        for key in cls.attributes:
+            if key not in cls._default_attrs.keys():
                 raise KeyError("Unknown key {} given".format(key))
 
-        return self
+        return cls
 
 
 class Entity(metaclass=EntityBase):
@@ -191,11 +191,11 @@ class Entity(metaclass=EntityBase):
 
 class PortBase(EntityBase):
 
-    def __new__(cls, name, bases, ns):
+    def __new__(mcls, name, bases, ns):
 
-        self = super().__new__(cls, name, bases, ns)
+        cls = super().__new__(mcls, name, bases, ns)
 
-        self._default_attrs = {
+        cls._default_attrs = {
             "target_port": "",
             "protocol": "",
             "endpoint_name": "",
@@ -204,7 +204,7 @@ class PortBase(EntityBase):
             "container_spec": dict(),
         }
 
-        return self
+        return cls
 
 
 class Port(Entity, metaclass=PortBase):
@@ -220,11 +220,11 @@ class Port(Entity, metaclass=PortBase):
 class ServiceBase(EntityBase):
 
 
-    def __new__(cls, name, bases, ns):
+    def __new__(mcls, name, bases, ns):
 
-        self = super().__new__(cls, name, bases, ns)
+        cls = super().__new__(mcls, name, bases, ns)
 
-        self._default_attrs = {
+        cls._default_attrs = {
             "name": cls.__name__,
             "description": cls.__doc__,
             "port_list": [],
@@ -233,7 +233,7 @@ class ServiceBase(EntityBase):
 
         }
 
-        return self
+        return cls
 
 
 class Service(Entity, metaclass=ServiceBase):
@@ -245,13 +245,13 @@ class Service(Entity, metaclass=ServiceBase):
 
 class SubstrateBase(EntityBase):
 
-    def __new__(cls, name, bases, ns):
+    def __new__(mcls, name, bases, ns):
 
-        self = super().__new__(cls, name, bases, ns)
+        cls = super().__new__(mcls, name, bases, ns)
 
-        self._default_attrs = {}
+        cls._default_attrs = {}
 
-        return self
+        return cls
 
 
 class Substrate(Entity, metaclass=SubstrateBase):
@@ -260,18 +260,18 @@ class Substrate(Entity, metaclass=SubstrateBase):
 
 class DeploymentBase(EntityBase):
 
-    def __new__(cls, name, bases, ns):
+    def __new__(mcls, name, bases, ns):
 
-        self = super().__new__(cls, name, bases, ns)
+        cls = super().__new__(mcls, name, bases, ns)
 
-        self._default_attrs = {
+        cls._default_attrs = {
             "substrate": None,
             "services": [],
             "min_replicas": 1,
             "max_replicas": 1,
         }
 
-        return self
+        return cls
 
 
 class Deployment(Entity, metaclass=DeploymentBase):
@@ -284,15 +284,15 @@ class Deployment(Entity, metaclass=DeploymentBase):
 
 class ProfileBase(EntityBase):
 
-    def __new__(cls, name, bases, ns):
+    def __new__(mcls, name, bases, ns):
 
-        self = super().__new__(cls, name, bases, ns)
+        cls = super().__new__(mcls, name, bases, ns)
 
-        self._default_attrs = {
+        cls._default_attrs = {
             "deployments": [],
         }
 
-        return self
+        return cls
 
 
 class Profile(Entity, metaclass=ProfileBase):
@@ -302,15 +302,15 @@ class Profile(Entity, metaclass=ProfileBase):
 
 class BlueprintBase(EntityBase):
 
-    def __new__(cls, name, bases, ns):
+    def __new__(mcls, name, bases, ns):
 
-        self = super().__new__(cls, name, bases, ns)
+        cls = super().__new__(mcls, name, bases, ns)
 
-        self._default_attrs = {
+        cls._default_attrs = {
             "profiles": [],
         }
 
-        return self
+        return cls
 
 
 class Blueprint(Entity, metaclass=BlueprintBase):
