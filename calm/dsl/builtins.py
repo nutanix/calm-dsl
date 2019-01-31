@@ -37,9 +37,10 @@ class BaseListType(BaseType):
 
 class EntityType(BaseType):
 
-    def __init__(self, entity_type):
+    def __init__(self, entity_type, default=None):
         super().__init__()
         self.entity_type = entity_type
+        self.default = default
 
     def __validate__(self, value):
         super().__validate__(value)
@@ -210,33 +211,81 @@ class Entity(metaclass=EntityBase):
             setattr(self, key, value)
 
 
+type_to_descriptor_cls = {
+    "string": StringType,
+    "dict": DictType,
+}
+
+
 class PortBase(EntityBase):
+
+    schema = {
+        "target_port": {
+            "type": "string",
+            "default": "",
+        },
+        "protocol": {
+            "type": "string",
+            "default": "",
+        },
+        "endpoint_name": {
+            "type": "string",
+            "default": "",
+        },
+        "exposed_address": {
+            "type": "string",
+            "default": "",
+        },
+        "exposed_port": {
+            "type": "string",
+            "default": "",
+        },
+        "container_spec": {
+            "type": "dict",
+            "default": {},
+        },
+    }
 
     def __new__(mcls, name, bases, ns):
 
         cls = super().__new__(mcls, name, bases, ns)
 
         cls._default_attrs = {
-            "target_port": "",
-            "protocol": "",
-            "endpoint_name": "",
-            "exposed_address": "",
-            "exposed_port": "",
-            "container_spec": dict(),
+            "name": cls.__name__,
+            "description": cls.__doc__,
         }
+        for attr, attr_props in mcls.schema.items():
+
+            attr_type = attr_props.get("type", None)
+            if attr_type is None:
+                raise Exception("Invalid schema {} given".format(attr_props))
+
+            descriptor_cls = type_to_descriptor_cls.get(attr_type, None)
+            if descriptor_cls is None:
+                raise TypeError("Unknown type {} given".format(attr_type))
+
+            setattr(cls, attr, descriptor_cls())
+
+            cls._default_attrs[attr] = attr_props.get("default", None)
+
+        for k, v in cls.__dict__.items():
+            func = getattr(v, '__set_name__', None)
+            if func is not None:
+                func(cls, k)
 
         return cls
 
 
 class Port(Entity, metaclass=PortBase):
+    pass
 
-    target_port = StringType()
+"""
     protocol = StringType()
     endpoint_name = StringType()
     exposed_address = StringType()
     exposed_port = StringType()
     container_spec = DictType()
-
+"""
 
 class ServiceBase(EntityBase):
 
