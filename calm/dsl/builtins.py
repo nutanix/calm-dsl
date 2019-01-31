@@ -10,53 +10,74 @@ import asttokens
 
 class BaseType:
 
+    def __init__(self):
+        pass
+
     def __get__(self, instance, owner):
         return instance.__dict__[self.name]
 
+    def __validate__(self, value):
+        pass
+
     def __set__(self, instance, value):
+        self.__validate__(value)
         instance.__dict__[self.name] = value
 
     def __set_name__(self, owner, name):
         self.name = name
 
 
-class NonNegativeType(BaseType):
+class BaseListType(BaseType):
 
-    def __set__(self, instance, value):
-        if value < 0:
-            raise ValueError('Cannot be negative.')
-        instance.__dict__[self.name] = value
+    def __validate__(self, value):
+        super().__validate__(value)
+        if not isinstance(value, list):
+            raise TypeError('{} is not of type {}.'.format(type(value), list))
 
 
 class EntityType(BaseType):
 
     def __init__(self, entity_type):
+        super().__init__()
         self.entity_type = entity_type
 
-    def __set__(self, instance, value):
+    def __validate__(self, value):
+        super().__validate__(value)
         if not isinstance(value, self.entity_type):
             raise TypeError('{} is not of type {}.'.format(type(value), self.entity_type))
-        instance.__dict__[self.name] = value
 
 
-class EntityListType(EntityType):
+class EntityListType(BaseListType):
 
-    def __set__(self, instance, values):
+    def __init__(self, entity_type):
+        super().__init__()
+        self.entity_type = entity_type
 
-        if not isinstance(values, list):
-            raise TypeError('{} is not of type {}.'.format(type(values), list))
-
-        for value in values:
-            if not isinstance(value, self.entity_type):
-                raise TypeError('{} is not of type {}.'.format(type(value), self.entity_type))
-
-        instance.__dict__[self.name] = values
+    def __validate__(self, value):
+        super().__validate__(value)
+        for v in value:
+            if not isinstance(v, self.entity_type):
+                raise TypeError('{} is not of type {}.'.format(type(v), self.entity_type))
 
 
 class StringType(EntityType):
 
     def __init__(self):
         super().__init__(str)
+
+
+class IntType(EntityType):
+
+    def __init__(self):
+        super().__init__(int)
+
+
+class NonNegativeIntType(IntType):
+
+    def __validate__(self, value):
+        super().__validate__(value)
+        if value < 0:
+            raise ValueError('Cannot be negative.')
 
 
 class BoolType(EntityType):
@@ -278,8 +299,8 @@ class Deployment(Entity, metaclass=DeploymentBase):
 
     substrate = SubstrateType()
     services = ServiceListType()
-    min_replicas = NonNegativeType()
-    max_replicas = NonNegativeType()
+    min_replicas = NonNegativeIntType()
+    max_replicas = NonNegativeIntType()
 
 
 class ProfileBase(EntityBase):
