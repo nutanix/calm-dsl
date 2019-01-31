@@ -32,7 +32,7 @@ class BaseListType(BaseType):
     def __validate__(self, value):
         super().__validate__(value)
         if not isinstance(value, list):
-            raise TypeError('{} is not of type {}.'.format(type(value), list))
+            raise TypeError('{} is not of type {}.'.format(value, list))
 
 
 class EntityType(BaseType):
@@ -45,7 +45,7 @@ class EntityType(BaseType):
     def __validate__(self, value):
         super().__validate__(value)
         if not isinstance(value, self.entity_type):
-            raise TypeError('{} is not of type {}.'.format(type(value), self.entity_type))
+            raise TypeError('{} is not of type {}.'.format(value, self.entity_type))
 
 
 class EntityListType(BaseListType):
@@ -58,10 +58,16 @@ class EntityListType(BaseListType):
         super().__validate__(value)
         for v in value:
             if not isinstance(v, self.entity_type):
-                raise TypeError('{} is not of type {}.'.format(type(v), self.entity_type))
+                raise TypeError('{} is not of type {}.'.format(v, self.entity_type))
 
 
 class StringType(EntityType):
+
+    def __init__(self):
+        super().__init__(str)
+
+
+class StringListType(EntityListType):
 
     def __init__(self):
         super().__init__(str)
@@ -202,6 +208,9 @@ class EntityBase(type):
 
         return cls
 
+    def __str__(cls):
+        return cls.__name__
+
 
 class Entity(metaclass=EntityBase):
 
@@ -222,7 +231,7 @@ class Entity(metaclass=EntityBase):
             setattr(self, key, value)
 
     def __str__(self):
-        return str(self._all_attrs)
+        return str(self.__class__.__name__)
 
     def json_repr(self):
         return self._all_attrs
@@ -247,6 +256,7 @@ type_to_descriptor_cls = {
     "SubstrateList": SubstrateListType,
     "DeploymentList": DeploymentListType,
     "ProfileList": ProfileListType,
+    "StringList": StringListType,
 }
 
 
@@ -318,12 +328,12 @@ class Deployment(Entity):
     __schema__ = {
 
         "services": {
-            "type": "ServiceList",
+            "type": "StringList",
             "default": [],
         },
 
         "substrate": {
-            "type": "Substrate",
+            "type": "string",
         },
 
         "min_replicas": {
