@@ -293,7 +293,7 @@ class Service(Entity):
 
         "port_list": {
             "type": "PortList",
-            "default": "[]",
+            "default": [],
             },
 
         "singleton": {
