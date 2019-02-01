@@ -18,6 +18,7 @@ setuptools.setup(
     packages=setuptools.find_namespace_packages(include=['calm.*']),
     namespace_packages=['calm'],
     install_requires=read_file('requirements.txt'),
+    tests_require=read_file('dev-requirements.txt'),
     zip_safe=False,
     include_package_data=True,
     classifiers=[
