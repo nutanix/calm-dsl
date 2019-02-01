@@ -1,0 +1,28 @@
+{% macro Port() -%}
+
+title: Port
+type: object
+properties:
+  target_port:
+    type: string
+  protocol:
+    type: string
+  endpoint_name:
+    type: string
+  exposed_address:
+    type: string
+  exposed_port:
+    type: string
+  container_spec:
+    type: object
+    additionalProperties: true
+
+{%- endmacro %}
+
+
+{% macro PortSchema() -%}
+
+Port:
+  {{ Port()|indent(2) }}
+
+{%- endmacro %}

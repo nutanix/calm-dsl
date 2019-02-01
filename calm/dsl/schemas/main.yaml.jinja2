@@ -1,0 +1,17 @@
+{% import "service.yaml.jinja2" as service %}
+{% import "port.yaml.jinja2" as port %}
+
+{% macro Schemas() -%}
+
+{{ port.PortSchema() }}
+{{ service.ServiceSchema() }}
+
+{%- endmacro %}
+
+
+info:
+  title: Calm DSL models
+
+components:
+  schemas:
+    {{ Schemas()|indent(4) }}

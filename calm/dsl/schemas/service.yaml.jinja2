@@ -1,0 +1,30 @@
+{% macro Service() -%}
+
+title: Service
+type: object
+properties:
+  name:
+    type: string
+    maxLength: 64
+  description:
+    type: string
+    maxLength: 1000
+  port_list:
+    type: array
+    items:
+      $ref: '#/components/schemas/Port'
+  singleton:
+    type: boolean
+    default: False
+  tier:
+    type: string
+
+{%- endmacro %}
+
+
+{% macro ServiceSchema() -%}
+
+Service:
+  {{ Service()|indent(2) }}
+
+{%- endmacro %}
