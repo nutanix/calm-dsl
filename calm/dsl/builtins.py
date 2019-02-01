@@ -4,9 +4,19 @@ import textwrap
 import json
 from json import JSONEncoder
 import tokenize
+from io import StringIO
+from pprint import pprint
 
+import yaml
+from jinja2 import Environment, PackageLoader
 import asttokens
+import jsonref
 
+
+template = Environment(loader=PackageLoader(__name__, 'schemas')).get_template('main.yaml.jinja2')
+tdict = jsonref.loads(json.dumps(yaml.safe_load(StringIO(template.render()))))
+schemas = tdict["components"]["schemas"]
+pprint(schemas)
 
 class BaseType:
 
