@@ -272,7 +272,7 @@ type_to_descriptor_cls = {
     "SubstrateList": SubstrateListType,
     "DeploymentList": DeploymentListType,
     "ProfileList": ProfileListType,
-    "StringList": StringListType,
+    "strings": StringListType,
 }
 
 
@@ -292,28 +292,7 @@ class Substrate(Entity):
 
 class Deployment(Entity):
 
-    __schema__ = {
-
-        "services": {
-            "type": "StringList",
-            "default": [],
-        },
-
-        "substrate": {
-            "type": "string",
-        },
-
-        "min_replicas": {
-            "type": "integer",
-            "default": 1,
-        },
-
-        "max_replicas": {
-            "type": "integer",
-            "default": 1,
-        },
-
-    }
+    __schema__ = schemas["Deployment"]["properties"]
 
 
 class Profile(Entity):

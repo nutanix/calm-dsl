@@ -1,10 +1,12 @@
 {% import "service.yaml.jinja2" as service %}
 {% import "port.yaml.jinja2" as port %}
+{% import "deployment.yaml.jinja2" as deployment %}
 
 {% macro Schemas() -%}
 
 {{ port.PortSchema() }}
 {{ service.ServiceSchema() }}
+{{ deployment.DeploymentSchema() }}
 
 {%- endmacro %}
 
