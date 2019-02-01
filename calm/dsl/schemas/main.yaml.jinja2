@@ -1,5 +1,6 @@
 {% import "port.yaml.jinja2" as port %}
 {% import "service.yaml.jinja2" as service %}
+{% import "substrate.yaml.jinja2" as substrate %}
 {% import "deployment.yaml.jinja2" as deployment %}
 {% import "profile.yaml.jinja2" as profile %}
 {% import "blueprint.yaml.jinja2" as blueprint %}
@@ -8,6 +9,7 @@
 
 {{ port.PortSchema() }}
 {{ service.ServiceSchema() }}
+{{ substrate.SubstrateSchema() }}
 {{ deployment.DeploymentSchema() }}
 {{ profile.ProfileSchema() }}
 {{ blueprint.BlueprintSchema() }}

@@ -1,0 +1,37 @@
+{% macro Substrate() -%}
+
+title: Substrate
+type: object
+x-calm-dsl-type: substrate
+properties:
+  name:
+    type: string
+    maxLength: 64
+    default: ''
+  description:
+    type: string
+    maxLength: 1000
+    default: ''
+  type:
+    type: string
+    default: 'AHV_VM'
+  os_type:
+    type: string
+    default: 'LINUX'
+  create_spec:
+    type: object
+    x-calm-dsl-type: dict
+    default: {}
+  platform_data:
+    type: string
+    default: ''
+
+{%- endmacro %}
+
+
+{% macro SubstrateSchema() -%}
+
+Substrate:
+  {{ Substrate()|indent(2) }}
+
+{%- endmacro %}

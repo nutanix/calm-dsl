@@ -1,0 +1,39 @@
+{% macro Deployment() -%}
+
+title: Deployment
+type: object
+properties:
+  service_refs:
+    type: array
+    x-calm-dsl-type: strings
+    items:
+      type: string
+      default: ''
+
+  substrate_ref:
+    type: string
+    default: ''
+
+  min_replicas:
+    description: Minimum replicas for the deployment.
+    type: string
+    default: "1"
+
+  max_replicas:
+    description: Maximum replicas for the deployment.
+    type: string
+    default: "1"
+
+  type:
+    type: string
+    default: 'GREENFIELD'
+
+{%- endmacro %}
+
+
+{% macro DeploymentSchema() -%}
+
+Deployment:
+  {{ Deployment()|indent(2) }}
+
+{%- endmacro %}

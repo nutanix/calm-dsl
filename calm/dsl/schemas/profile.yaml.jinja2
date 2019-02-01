@@ -1,0 +1,20 @@
+{% macro Profile() -%}
+
+title: Profile
+type: object
+properties:
+  deployments:
+    type: array
+    x-calm-dsl-type: deployments
+    items:
+      $ref: '#/components/schemas/Deployment'
+
+{%- endmacro %}
+
+
+{% macro ProfileSchema() -%}
+
+Profile:
+  {{ Profile()|indent(2) }}
+
+{%- endmacro %}

@@ -12,8 +12,24 @@ import asttokens
 import jsonref
 
 
+
+class EntityJSONEncoder(JSONEncoder):
+    def default(self, obj):
+        if hasattr(obj,'json_repr'):
+            return obj.json_repr()
+        else:
+            return super().default(obj)
+
+
 template = Environment(loader=PackageLoader(__name__, 'schemas')).get_template('main.yaml.jinja2')
-tdict = jsonref.loads(json.dumps(yaml.safe_load(StringIO(template.render()))))
+
+tdict = yaml.safe_load(StringIO(template.render()))
+
+# Check if all references are resolved
+tdict = jsonref.loads(json.dumps(tdict))
+
+print(json.dumps(tdict, cls=EntityJSONEncoder, indent=4, separators=(",", ": ")))
+
 schemas = tdict["components"]["schemas"]
 
 
@@ -172,14 +188,6 @@ class ProfileListType(EntityListType):
 ###
 
 
-class EntityJSONEncoder(JSONEncoder):
-    def default(self, obj):
-        if hasattr(obj,'json_repr'):
-            return obj.json_repr()
-        else:
-            return super().default(obj)
-
-
 class EntityBase(type):
 
     def __new__(mcls, name, bases, ns):
@@ -301,7 +309,7 @@ class Service(Entity):
 
 
 class Substrate(Entity):
-    pass
+    __schema__ = schemas["Substrate"]["properties"]
 
 
 class Deployment(Entity):
