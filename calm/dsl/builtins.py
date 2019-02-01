@@ -202,7 +202,8 @@ class EntityBase(type):
                 attr_type = attr_props.get("x-calm-dsl-type", None)
 
                 if attr_type is None:
-                    raise Exception("Invalid schema {} given".format(attr_props))
+                    raise Exception("calm dsl extension not found. Invalid schema {}"
+                                    .format(attr_props))
 
             descriptor_cls = type_to_descriptor_cls.get(attr_type, None)
             if descriptor_cls is None:
@@ -262,17 +263,30 @@ class Entity(metaclass=EntityBase):
 
 
 type_to_descriptor_cls = {
+
     "string": StringType,
-    "integer": IntType,
-    "dict": DictType,
-    "boolean": BoolType,
-    "Ports": PortListType,
-    "ServiceList": ServiceListType,
-    "Substrate": SubstrateType,
-    "SubstrateList": SubstrateListType,
-    "DeploymentList": DeploymentListType,
-    "ProfileList": ProfileListType,
     "strings": StringListType,
+
+    "integer": IntType,
+
+    "dict": DictType,
+
+    "boolean": BoolType,
+
+    "port": PortType,
+    "ports": PortListType,
+
+    "service": ServiceType,
+    "services": ServiceListType,
+
+    "substrate": SubstrateType,
+    "substrates": SubstrateListType,
+
+    "deployment": DeploymentType,
+    "deployments": DeploymentListType,
+
+    "profile": ProfileType,
+    "profiles": ProfileListType,
 }
 
 
@@ -297,36 +311,12 @@ class Deployment(Entity):
 
 class Profile(Entity):
 
-    __schema__ = {
-
-        "deployments": {
-            "type": "DeploymentList",
-            "default": [],
-        },
-
-    }
+    __schema__ = schemas["Profile"]["properties"]
 
 
 class Blueprint(Entity):
 
-    __schema__ = {
-
-        "services": {
-            "type": "ServiceList",
-            "default": [],
-        },
-
-        "substrates": {
-            "type": "SubstrateList",
-            "default": [],
-        },
-
-        "profiles": {
-            "type": "ProfileList",
-            "default": [],
-        },
-
-    }
+    __schema__ = schemas["Blueprint"]["properties"]
 
 
 ###
