@@ -5,7 +5,6 @@ import json
 from json import JSONEncoder
 import tokenize
 from io import StringIO
-from pprint import pprint
 
 import yaml
 from jinja2 import Environment, PackageLoader
@@ -16,7 +15,7 @@ import jsonref
 template = Environment(loader=PackageLoader(__name__, 'schemas')).get_template('main.yaml.jinja2')
 tdict = jsonref.loads(json.dumps(yaml.safe_load(StringIO(template.render()))))
 schemas = tdict["components"]["schemas"]
-pprint(schemas)
+
 
 class BaseType:
 
@@ -199,12 +198,19 @@ class EntityBase(type):
             if attr_type is None:
                 raise Exception("Invalid schema {} given".format(attr_props))
 
+            if attr_type == "object" or attr_type == "array":
+                attr_type = attr_props.get("x-calm-dsl-type", None)
+
+                if attr_type is None:
+                    raise Exception("Invalid schema {} given".format(attr_props))
+
             descriptor_cls = type_to_descriptor_cls.get(attr_type, None)
             if descriptor_cls is None:
                 raise TypeError("Unknown type {} given".format(attr_type))
 
             setattr(cls, attr, descriptor_cls())
 
+            # TODO - add right default based on attr_type/descriptor_cls
             cls._default_attrs[attr] = attr_props.get("default", None)
 
         for k, v in cls.__dict__.items():
@@ -272,39 +278,7 @@ type_to_descriptor_cls = {
 
 class Port(Entity):
 
-    __schema__ = {
-
-        "target_port": {
-            "type": "string",
-            "default": "",
-        },
-
-        "protocol": {
-            "type": "string",
-            "default": "",
-        },
-
-        "endpoint_name": {
-            "type": "string",
-            "default": "",
-        },
-
-        "exposed_address": {
-            "type": "string",
-            "default": "",
-        },
-
-        "exposed_port": {
-            "type": "string",
-            "default": "",
-        },
-
-        "container_spec": {
-            "type": "dict",
-            "default": {},
-        },
-
-    }
+    __schema__ = schemas["Port"]["properties"]
 
 
 class Service(Entity):

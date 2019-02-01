@@ -2,19 +2,27 @@
 
 title: Port
 type: object
+x-calm-dsl-type: Port
 properties:
   target_port:
     type: string
+    default: ''
   protocol:
     type: string
+    default: 'SSH'
   endpoint_name:
     type: string
+    default: ''
   exposed_address:
     type: string
+    default: ''
   exposed_port:
     type: string
+    default: ''
   container_spec:
     type: object
+    x-calm-dsl-type: dict
+    default: {}
     additionalProperties: true
 
 {%- endmacro %}
