@@ -2,15 +2,19 @@
 
 title: Service
 type: object
+x-calm-dsl-type: Service
 properties:
   name:
     type: string
     maxLength: 64
+    default: ''
   description:
     type: string
     maxLength: 1000
+    default: ''
   port_list:
     type: array
+    x-calm-dsl-type: Ports
     items:
       $ref: '#/components/schemas/Port'
   singleton:
@@ -18,6 +22,7 @@ properties:
     default: False
   tier:
     type: string
+    default: ''
 
 {%- endmacro %}
 

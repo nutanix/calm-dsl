@@ -266,7 +266,7 @@ type_to_descriptor_cls = {
     "integer": IntType,
     "dict": DictType,
     "boolean": BoolType,
-    "PortList": PortListType,
+    "Ports": PortListType,
     "ServiceList": ServiceListType,
     "Substrate": SubstrateType,
     "SubstrateList": SubstrateListType,
@@ -283,24 +283,7 @@ class Port(Entity):
 
 class Service(Entity):
 
-    __schema__ = {
-
-        "port_list": {
-            "type": "PortList",
-            "default": [],
-            },
-
-        "singleton": {
-            "type": "boolean",
-            "default": False,
-            },
-
-        "tier": {
-            "type": "string",
-            "default": "",
-        }
-
-    }
+    __schema__ = schemas["Service"]["properties"]
 
 
 class Substrate(Entity):
