@@ -30,7 +30,7 @@ tdict = yaml.safe_load(StringIO(template.render()))
 
 print(json.dumps(tdict, cls=EntityJSONEncoder, indent=4, separators=(",", ": ")))
 
-schemas = tdict["components"]["schemas"]
+SCHEMAS = tdict["components"]["schemas"]
 
 
 class BaseType:
@@ -199,7 +199,9 @@ class EntityBase(type):
             "description": cls.__doc__,
         }
 
-        for attr, attr_props in cls.__schema__.items():
+        schema_props = cls.__schema__.get("properties", {})
+
+        for attr, attr_props in schema_props.items():
 
             attr_type = attr_props.get("type", None)
 
@@ -240,6 +242,7 @@ class EntityBase(type):
 class Entity(metaclass=EntityBase):
 
     __schema__ = {}
+
     attributes = {}
 
     def __init__(self, **kwargs):
@@ -300,31 +303,33 @@ type_to_descriptor_cls = {
 
 class Port(Entity):
 
-    __schema__ = schemas["Port"]["properties"]
+    __schema__ = SCHEMAS["Port"]
 
 
 class Service(Entity):
 
-    __schema__ = schemas["Service"]["properties"]
+    __schema__ = SCHEMAS["Service"]
 
 
 class Substrate(Entity):
-    __schema__ = schemas["Substrate"]["properties"]
+
+    __schema__ = SCHEMAS["Substrate"]
 
 
 class Deployment(Entity):
 
-    __schema__ = schemas["Deployment"]["properties"]
+    __schema__ = SCHEMAS["Deployment"]
 
 
 class Profile(Entity):
 
-    __schema__ = schemas["Profile"]["properties"]
+    __schema__ = SCHEMAS["Profile"]
 
 
 class Blueprint(Entity):
 
-    __schema__ = schemas["Blueprint"]["properties"]
+    __schema__ = SCHEMAS["Blueprint"]
+
 
 
 ###
