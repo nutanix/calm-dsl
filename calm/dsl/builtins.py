@@ -26,9 +26,8 @@ template = Environment(loader=PackageLoader(__name__, 'schemas')).get_template('
 tdict = yaml.safe_load(StringIO(template.render()))
 
 # Check if all references are resolved
-# tdict = jsonref.loads(json.dumps(tdict))
-
-print(json.dumps(tdict, cls=EntityJSONEncoder, indent=4, separators=(",", ": ")))
+tdict = jsonref.loads(json.dumps(tdict))
+# print(json.dumps(tdict, cls=EntityJSONEncoder, indent=4, separators=(",", ": ")))
 
 SCHEMAS = tdict["components"]["schemas"]
 
