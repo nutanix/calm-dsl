@@ -195,10 +195,7 @@ class EntityBase(type):
 
         cls = super().__new__(mcls, name, bases, ns)
 
-        cls._default_attrs = {
-            "name": cls.__name__,
-            "description": cls.__doc__,
-        }
+        cls._default_attrs = {}
 
         schema_props = cls.__schema__.get("properties", {})
 
@@ -224,6 +221,9 @@ class EntityBase(type):
 
             # TODO - add right default based on attr_type/descriptor_cls
             cls._default_attrs[attr] = attr_props.get("default", None)
+
+        cls._default_attrs["name"] = cls.__name__
+        cls._default_attrs["description"] = cls.__doc__
 
         for k, v in cls.__dict__.items():
             func = getattr(v, '__set_name__', None)
