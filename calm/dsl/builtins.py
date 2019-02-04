@@ -63,6 +63,9 @@ class BaseType:
     def __set_name__(self, owner, name):
         self.name = name
 
+    def __default__(self):
+        return self._default
+
 
 class BaseListType(BaseType):
 
@@ -223,23 +226,27 @@ class EntityBase(type):
                     raise Exception("calm dsl extension not found. Invalid schema {}"
                                     .format(attr_props))
 
-            descriptor_cls = type_to_descriptor_cls.get(attr_type, None)
-            if descriptor_cls is None:
+            DescriptorType = type_to_descriptor_cls.get(attr_type, None)
+            if DescriptorType is None:
                 raise TypeError("Unknown type {} given".format(attr_type))
 
-            setattr(cls, attr, descriptor_cls())
+            desc = DescriptorType()
+            setattr(cls, attr, desc)
 
-            # TODO - add right default based on attr_type/descriptor_cls
-            cls._default_attrs[attr] = attr_props.get("default", None)
+            cls._default_attrs[attr] = attr_props.get("default", desc.__default__())
 
         cls._default_attrs["name"] = cls.__name__
         cls._default_attrs["description"] = cls.__doc__ if cls.__doc__ is not None else ''
 
+        # __set_name__() is called right after class creation which in this case happens
+        # in the super() call above. [PEP 487]
+        # Call __set_name__() again to set the right attribute names
         for k, v in cls.__dict__.items():
             func = getattr(v, '__set_name__', None)
             if func is not None:
                 func(cls, k)
 
+        # Check if any spurious class attibutes are given before class creation
         for key in cls.attributes:
             if key not in cls._default_attrs.keys():
                 raise KeyError("Unknown key {} given".format(key))
