@@ -201,8 +201,15 @@ class ProfileListType(EntityListType):
 
 ###
 
+class CustomDict(dict):
+    pass
+
 
 class EntityBase(type):
+
+    @classmethod
+    def __prepare__(mcls, name, bases, **kwargs):
+        return CustomDict()
 
     def __new__(mcls, name, bases, ns):
 
