@@ -47,11 +47,11 @@ V3SCHEMAS = v3tdict["components"]["schemas"]
 
 class BaseType:
 
-    def __init__(self):
-        pass
+    def __init__(self, default=None):
+        self._default = default
 
     def __get__(self, instance, owner):
-        return instance.__dict__[self.name]
+        return instance.__dict__[self.name] if instance else self._default
 
     def __validate__(self, value):
         pass
@@ -75,9 +75,8 @@ class BaseListType(BaseType):
 class EntityType(BaseType):
 
     def __init__(self, entity_type, default=None):
-        super().__init__()
+        super().__init__(default=default)
         self.entity_type = entity_type
-        self.default = default
 
     def __validate__(self, value):
         super().__validate__(value)
@@ -87,8 +86,8 @@ class EntityType(BaseType):
 
 class EntityListType(BaseListType):
 
-    def __init__(self, entity_type):
-        super().__init__()
+    def __init__(self, entity_type, default=[]):
+        super().__init__(default=default)
         self.entity_type = entity_type
 
     def __validate__(self, value):
@@ -100,8 +99,8 @@ class EntityListType(BaseListType):
 
 class StringType(EntityType):
 
-    def __init__(self):
-        super().__init__(str)
+    def __init__(self, default=''):
+        super().__init__(str, default=default)
 
 
 class StringListType(EntityListType):
@@ -112,8 +111,8 @@ class StringListType(EntityListType):
 
 class IntType(EntityType):
 
-    def __init__(self):
-        super().__init__(int)
+    def __init__(self, default=0):
+        super().__init__(int, default=default)
 
 
 class NonNegativeIntType(IntType):
@@ -126,14 +125,14 @@ class NonNegativeIntType(IntType):
 
 class BoolType(EntityType):
 
-    def __init__(self):
-        super().__init__(bool)
+    def __init__(self, default=False):
+        super().__init__(bool, default=default)
 
 
 class DictType(EntityType):
 
-    def __init__(self):
-        super().__init__(dict)
+    def __init__(self, default={}):
+        super().__init__(dict, default=default)
 
 
 class PortType(EntityType):
@@ -234,7 +233,7 @@ class EntityBase(type):
             cls._default_attrs[attr] = attr_props.get("default", None)
 
         cls._default_attrs["name"] = cls.__name__
-        cls._default_attrs["description"] = cls.__doc__
+        cls._default_attrs["description"] = cls.__doc__ if cls.__doc__ is not None else ''
 
         for k, v in cls.__dict__.items():
             func = getattr(v, '__set_name__', None)
