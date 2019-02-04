@@ -1,0 +1,100 @@
+{% import "common.yaml.jinja2" as common %}
+
+{% macro blueprint_metadata() -%}
+
+title: Blueprint Metadata
+type: object
+properties:
+  {{ common.metadata_properties("app_blueprint")|indent(2) }}
+
+  categories:
+    type: object
+    additionalProperties:
+      type: string
+
+  project_reference:
+    {{ common.kind_reference("project")|indent(4) }}
+
+  owner_reference:
+    {{ common.kind_reference("owner")|indent(4) }}
+
+{%- endmacro %}
+
+
+{% macro blueprint_resources() -%}
+
+title: Blueprint Resources
+type: object
+properties:
+  service_defintion_list:
+    description: Service definitions for blueprint.
+    type: array
+    items:
+      $ref: '#/components/schemas/Service'
+
+  package_definition_list:
+    description: Package definitions for blueprint.
+    type: array
+    items:
+      $ref: '#/components/schemas/Package'
+
+  substrate_defintion_list:
+    description: Substrate definitions for blueprint.
+    type: array
+    items:
+      $ref: '#/components/schemas/Substrate'
+
+  credential_definition_list:
+    description: Credential definitions for blueprint.
+    type: array
+    items:
+      $ref: '#/components/schemas/Credential'
+
+  app_profile_list:
+    description: App profile definitions for blueprint.
+    type: array
+    items:
+      $ref: '#/components/schemas/Profile'
+
+  client_attrs: #TODO - add max length/size
+    additionalProperties: true
+    description: Data needed for clients.
+    type: object
+
+  defaults: #TODO - add schema for cred and profile
+    additionalProperties: true
+    type: object
+
+  flags:
+    type: object
+    properties:
+      is_cloned:
+        type: boolean
+        readOnly: true
+
+      is_brownfield:
+        type: boolean
+        default: false
+
+{%- endmacro %}
+
+
+{% macro Blueprint() -%}
+
+type: object
+title: Blueprint
+properties:
+  metadata:
+    {{ blueprint_metadata()|indent(4) }}
+  resources:
+    {{ blueprint_resources()|indent(4) }}
+
+{%- endmacro %}
+
+
+{% macro BlueprintSchema() -%}
+
+Blueprint:
+  {{ Blueprint()|indent(2) }}
+
+{%- endmacro %}

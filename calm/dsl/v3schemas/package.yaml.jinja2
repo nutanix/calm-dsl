@@ -1,0 +1,77 @@
+{% import "common.yaml.jinja2" as common %}
+
+
+{% macro package_editables() -%}
+
+title: PackageEditables
+type: object
+properties:
+  description:
+    type: boolean
+    description: Flag to indicate if description is editable at runtime
+    default: false
+
+{%- endmacro %}
+
+
+{% macro package_resources() -%}
+
+title: PackageResources
+type: object
+properties:
+  type:
+    description: |
+    type: string
+    x-ntnx-enum:
+      - DOCKER_IMAGE
+      - CUSTOM
+      - SUBSTRATE_IMAGE
+
+  options:
+    additionalProperties: true
+    type: object
+    description: Details based on type of the package.
+
+  editables:
+    {{ package_editables()|indent(4) }}
+
+  service_local_reference_list:
+    type: array
+    items:
+      {{ common.kind_reference("app_service")|indent(6) }}
+
+  variable_list:
+     description: |
+     type: array
+     items:
+       $ref: '#/components/schemas/Variable'
+
+  action_list:
+    description: |
+       List of references to action
+    type: array
+    items:
+      $ref: "#/components/schemas/Action"
+
+{%- endmacro %}
+
+
+{% macro Package() -%}
+
+title: Package
+type: object
+properties:
+  metadata:
+    {{ common.metadata("app_package")|indent(4) }}
+  resources:
+    {{ package_resources()|indent(4) }}
+
+{%- endmacro %}
+
+
+{% macro PackageSchema() -%}
+
+Package:
+  {{ Package()|indent(2) }}
+
+{%- endmacro %}

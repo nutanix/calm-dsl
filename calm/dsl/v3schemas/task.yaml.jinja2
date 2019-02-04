@@ -1,0 +1,47 @@
+{% import "common.yaml.jinja2" as common %}
+
+{% macro task_resources() -%}
+
+title: TaskResources
+type: object
+properties:
+  type:
+    type: string
+
+  target_reference:
+    {{ common.any_reference()|indent(4) }}
+    readOnly: true
+
+  attrs:
+    type: object
+    description: Task attrs for application of type object
+    additionalProperties: true
+
+  child_tasks_local_reference_list:
+    description: |
+    type: array
+    items:
+      {{ common.kind_reference("app_task")|indent(6) }}
+
+{%- endmacro %}
+
+
+{% macro Task() -%}
+
+title: Task
+type: object
+properties:
+  metadata:
+    {{ common.metadata("app_task")|indent(4) }}
+  resources:
+    {{ task_resources()|indent(4) }}
+
+{%- endmacro %}
+
+
+{% macro TaskSchema() -%}
+
+Task:
+  {{ Task()|indent(2) }}
+
+{%- endmacro %}

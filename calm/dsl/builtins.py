@@ -34,6 +34,17 @@ tdict = jsonref.loads(json.dumps(tdict))
 SCHEMAS = tdict["components"]["schemas"]
 
 
+
+# Load v3 schema objects
+# TODO - refactor
+
+v3template = Environment(loader=PackageLoader(__name__, 'v3schemas')).get_template('main.yaml.jinja2')
+
+v3tdict = yaml.safe_load(StringIO(v3template.render()))
+v3tdict = jsonref.loads(json.dumps(v3tdict))
+V3SCHEMAS = v3tdict["components"]["schemas"]
+
+
 class BaseType:
 
     def __init__(self):
@@ -307,29 +318,35 @@ class Port(Entity):
     __schema__ = SCHEMAS["Port"]
 
 
+
 class Service(Entity):
 
     __schema__ = SCHEMAS["Service"]
+    __v3_schema__ = V3SCHEMAS["Service"]
 
 
 class Substrate(Entity):
 
     __schema__ = SCHEMAS["Substrate"]
+    __v3_schema__ = V3SCHEMAS["Substrate"]
 
 
 class Deployment(Entity):
 
     __schema__ = SCHEMAS["Deployment"]
+    __v3_schema__ = V3SCHEMAS["DeploymentCreate"]
 
 
 class Profile(Entity):
 
     __schema__ = SCHEMAS["Profile"]
+    __v3_schema__ = V3SCHEMAS["Profile"]
 
 
 class Blueprint(Entity):
 
     __schema__ = SCHEMAS["Blueprint"]
+    __v3_schema__ = V3SCHEMAS["Blueprint"]
 
 
 

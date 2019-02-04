@@ -1,0 +1,54 @@
+{% import "common.yaml.jinja2" as common %}
+
+
+{% macro profile_resources() -%}
+
+title: ProfileResources
+type: object
+properties:
+  deployment_create_list:
+    description: |
+    type: array
+    items:
+      $ref: '#/components/schemas/DeploymentCreate'
+
+  variable_list:
+    description: |
+    type: array
+    items:
+      $ref: '#/components/schemas/Variable'
+
+  action_list:
+    description: |
+      List of references to action
+    type: array
+    items:
+      $ref: "#/components/schemas/Action"
+
+  editables:
+    type: object
+    additionalProperties: true
+
+{%- endmacro %}
+
+
+{% macro Profile() -%}
+
+title: Profile
+type: object
+properties:
+  metadata:
+    {{ common.metadata("app_profile")|indent(4) }}
+
+  resources:
+    {{ profile_resources()|indent(4) }}
+
+{%- endmacro %}
+
+
+{% macro ProfileSchema() -%}
+
+Profile:
+  {{ Profile()|indent(2) }}
+
+{%- endmacro %}

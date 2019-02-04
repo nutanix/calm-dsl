@@ -1,0 +1,128 @@
+{% import "common.yaml.jinja2" as common %}
+
+
+# TODO - move to separate file
+{% macro existing_machine() -%}
+
+title: Existing machine substrate spec
+ type: object
+ description: Existing machine substrate spec
+ properties:
+   type:
+     description: |
+     type: string
+   address:
+     description: IP address of the existing machine
+     type: string
+
+{%- endmacro %}
+
+
+{% macro readiness_probe() -%}
+
+title: ReadinessProbe
+type: object
+properties:
+  connection_type:
+    description: |
+    type: string
+    default: SSH
+    x-ntnx-enum:
+      - SSH
+      - POWERSHELL
+
+  connection_port:
+    type: integer
+    default: 22
+
+  login_credential_local_reference:
+    {{ common.kind_reference("app_credential")|indent(4) }}
+
+  timeout_secs:
+    type: string
+
+  delay:
+    description: Delay between substrate provision and check-login
+    type: string
+    default: "60"
+
+  address:
+    type: string
+
+  disable_readiness_probe:
+    description: |
+    type: boolean
+
+{%- endmacro %}
+
+
+{% macro substrate_resources() -%}
+
+title: SubstrateResources
+type: object
+properties:
+  type:
+    description: |
+    type: string
+    x-ntnx-enum:
+      - VM
+      - AHV_VM
+      - AWS_VM
+      - GCP_VM
+      - EXISTING_VM
+      - BARE_METAL
+      - GENERIC
+      - VMWARE_VM
+
+  create_spec:
+    description: Spec of the substrate
+    type: object
+    additionalProperties: true
+
+  os_type:
+    description: |
+    type: string
+
+  editables:
+    additionalProperties: true
+    type: object
+
+  platform_data:
+    description: |
+    type: string
+
+  readiness_probe:
+    {{ readiness_probe()|indent(4) }}
+
+  variable_list:
+    type: array
+    items:
+      $ref: '#/components/schemas/Variable'
+
+  action_list:
+    type: array
+    items:
+      $ref: "#/components/schemas/Action"
+
+{%- endmacro %}
+
+
+{% macro Substrate() -%}
+
+title: Substrate
+type: object
+properties:
+  metadata:
+    {{ common.metadata("app_substrate")|indent(4) }}
+  resources:
+    {{ substrate_resources()|indent(4) }}
+
+{%- endmacro %}
+
+
+{% macro SubstrateSchema() -%}
+
+Substrate:
+  {{ Substrate()|indent(2) }}
+
+{%- endmacro %}

@@ -1,0 +1,60 @@
+{% import "common.yaml.jinja2" as common %}
+
+{% macro variable_resources() -%}
+
+title: VariableResources
+type: object
+properties:
+  type:
+    type: string
+    x-ntnx-enum:
+      - LOCAL
+      - SECRET
+
+  label:
+    type: string
+
+  attrs:
+    additionalProperties: true
+    description: |
+    type: object
+
+  val_type:
+    description: |
+    type: string
+    x-ntnx-enum:
+      - STRING
+      - INT
+      - LIST
+      - DICT
+
+  value:
+    description: |
+    type: string
+
+  editables:
+    type: object
+    additionalProperties: true
+
+{%- endmacro %}
+
+
+{% macro Variable() -%}
+
+title: Variable
+type: object
+properties:
+  metadata:
+    {{ common.metadata("app_variable")|indent(4) }}
+  resources:
+    {{ variable_resources()|indent(4) }}
+
+{%- endmacro %}
+
+
+{% macro VariableSchema() -%}
+
+Variable:
+  {{ Variable()|indent(2) }}
+
+{%- endmacro %}
