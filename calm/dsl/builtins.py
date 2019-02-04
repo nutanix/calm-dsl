@@ -5,6 +5,8 @@ import json
 from json import JSONEncoder
 import tokenize
 from io import StringIO
+import os
+import sys
 
 import yaml
 from jinja2 import Environment, PackageLoader
@@ -328,6 +330,18 @@ class Profile(Entity):
 class Blueprint(Entity):
 
     __schema__ = SCHEMAS["Blueprint"]
+
+
+
+###
+
+
+def read_vm_spec(filename):
+
+    file_path = os.path.join(os.path.dirname(inspect.getfile(sys._getframe(1))), filename)
+
+    with open(file_path, "r") as f:
+        return yaml.safe_load(f.read())
 
 
 
