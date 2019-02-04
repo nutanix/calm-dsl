@@ -10,21 +10,18 @@ properties:
     x-calm-dsl-type: services
     items:
       $ref: '#/components/schemas/Service'
-    default: []
   substrates:
     description: Substrate definitions for blueprint.
     type: array
     x-calm-dsl-type: substrates
     items:
       $ref: '#/components/schemas/Substrate'
-    default: []
   profiles:
     description: App profile definitions for blueprint.
     type: array
     x-calm-dsl-type: profiles
     items:
       $ref: '#/components/schemas/Profile'
-    default: []
 
 {%- endmacro %}
 
