@@ -14,10 +14,9 @@ import asttokens
 import jsonref
 
 
-
 class EntityJSONEncoder(JSONEncoder):
     def default(self, obj):
-        if hasattr(obj,'json_repr'):
+        if hasattr(obj, 'json_repr'):
             return obj.json_repr()
         else:
             return super().default(obj)
@@ -32,8 +31,6 @@ tdict = jsonref.loads(json.dumps(tdict))
 # print(json.dumps(tdict, cls=EntityJSONEncoder, indent=4, separators=(",", ": ")))
 
 SCHEMAS = tdict["components"]["schemas"]
-
-
 
 # Load v3 schema objects
 # TODO - refactor
@@ -198,9 +195,6 @@ class ProfileListType(EntityListType):
         super().__init__(Profile)
 
 
-
-###
-
 class CustomDict(dict):
     pass
 
@@ -294,8 +288,7 @@ class Entity(metaclass=EntityBase):
                           cls=EntityJSONEncoder,
                           sort_keys=sort_keys,
                           indent=4 if pprint else None,
-                          separators=(",", ": ") if pprint else (",", ":")
-        )
+                          separators=(",", ": ") if pprint else (",", ":"))
 
 
 type_to_descriptor_cls = {
@@ -329,7 +322,6 @@ type_to_descriptor_cls = {
 class Port(Entity):
 
     __schema__ = SCHEMAS["Port"]
-
 
 
 class Service(Entity):
