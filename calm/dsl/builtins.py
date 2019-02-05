@@ -42,6 +42,7 @@ v3tdict = jsonref.loads(json.dumps(v3tdict))
 V3SCHEMAS = v3tdict["components"]["schemas"]
 
 
+# TODO - separate validators into separate classes.
 class BaseType:
 
     def __init__(self, default=None):
@@ -53,9 +54,12 @@ class BaseType:
     def __validate__(self, value):
         pass
 
-    def __set__(self, instance, value):
+    def __setval__(self, instance, value):
+
         self.__validate__(value)
-        instance.__dict__[self.name] = value
+
+        if not isinstance(instance, type):
+            instance.__dict__[self.name] = value
 
     def __set_name__(self, owner, name):
         self.name = name
@@ -368,6 +372,75 @@ def read_vm_spec(filename):
 
 
 ###
+
+
+"""
+Note:
+Descriptors do not work on metaclass as class attributes are stored
+as `mappingproxy` objects. This makes `class.__dict__` read-only, so only
+`class.__setattr__` remains as an avenue for setting class attributes.
+But, `setattr` works by looking for a data descriptor in
+`type(obj).__mro__`. If a data descriptor is found, it calls
+`__set__`. This causes infinite recursion!
+"""
+
+class FooDict(dict):
+
+    def __init__(self):
+        super().__init__()
+
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
+
+
+class FooBase(type):
+
+    @classmethod
+    def __prepare__(mcls, name, bases, **kwargs):
+        return FooDict()
+
+    def __new__(mcls, name, bases, classdict):
+
+        cls = type.__new__(mcls, name, bases, dict(classdict))
+
+        setattr(type(cls), "singleton", BoolType())
+
+        print(mcls.__dict__)
+
+        for k, v in mcls.__dict__.items():
+            func = getattr(v, '__set_name__', None)
+            if func is not None:
+                func(mcls, k)
+
+        return cls
+
+    def __setattr__(cls, name, value):
+        print("{}->{}".format(name, value))
+
+        if not name.startswith('__'):
+
+            if not name in cls.__class__.__dict__:
+                raise TypeError("Unknown attribute {} given".format(name))
+
+            descr_obj = cls.__class__.__dict__.get(name, None)
+
+            func = getattr(descr_obj, '__validate__', None)
+            if func is not None:
+                func(value)
+
+        super().__setattr__(name, value)
+
+    def __getattr__(cls, name):
+        return super().__getattr__(name)
+
+
+class Foo(metaclass=FooBase):
+    pass
+
+
+
+###
+
 
 
 def dump(name, obj, dct):
