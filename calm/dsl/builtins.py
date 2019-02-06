@@ -76,7 +76,7 @@ class EntityType:
 
     def __set__(self, instance, value):
         self.__validate__(value)
-        instance.__dict__[self.name] = value
+        instance.__dict__[self.name] = value # This will not work for class objects
 
     def __set_name__(self, owner, name):
         self.name = name
@@ -363,7 +363,11 @@ as `mappingproxy` objects. This makes `class.__dict__` read-only, so only
 `class.__setattr__` remains as an avenue for setting class attributes.
 But, `setattr` works by looking for a data descriptor in
 `type(obj).__mro__`. If a data descriptor is found, it calls
-`__set__`. This causes infinite recursion!
+`__set__` and exits.
+As `class.__dict__` cannot used to set attribute. `setattr` is the only way.
+This causes infinite recursion!
+
+
 """
 
 class FooDict(OrderedDict):
