@@ -47,7 +47,7 @@ V3SCHEMAS = v3tdict["components"]["schemas"]
 
 class EntityType:
 
-    def __init__(self, entity_type, default=None, is_array=False):
+    def __init__(self, entity_type, default=None, is_array=False, **kwargs):
         self.entity_type = entity_type
         self._default = default
         self.is_array = is_array
@@ -84,20 +84,20 @@ class EntityType:
 
 class StringType(EntityType):
 
-    def __init__(self):
-        super().__init__(str, default='')
+    def __init__(self, **kwargs):
+        super().__init__(str, default='', **kwargs)
 
 
-class StringListType(EntityType):
+class StringListType(StringType):
 
-    def __init__(self):
-        super().__init__(str, default='', is_array=True)
+    def __init__(self, **kwargs):
+        super().__init__(is_array=True, **kwargs)
 
 
 class IntType(EntityType):
 
-    def __init__(self):
-        super().__init__(int, default=0)
+    def __init__(self, **kwargs):
+        super().__init__(int, default=0, **kwargs)
 
 
 class NonNegativeIntType(IntType):
@@ -110,75 +110,74 @@ class NonNegativeIntType(IntType):
 
 class BoolType(EntityType):
 
-    def __init__(self):
-        super().__init__(bool, default=False)
+    def __init__(self, **kwargs):
+        super().__init__(bool, default=False, **kwargs)
 
 
 class DictType(EntityType):
 
-    def __init__(self):
-        super().__init__(dict, default={})
+    def __init__(self, **kwargs):
+        super().__init__(dict, default={}, **kwargs)
 
 
 class PortType(EntityType):
 
-    def __init__(self):
-        super().__init__(Port)
+    def __init__(self, **kwargs):
+        super().__init__(Port, **kwargs)
 
 
-class PortListType(EntityType):
+class PortListType(PortType):
 
-    def __init__(self):
-        super().__init__(Port, is_array=True)
+    def __init__(self, **kwargs):
+        super().__init__(is_array=True, **kwargs)
 
 
 class ServiceType(EntityType):
 
-    def __init__(self):
-        super().__init__(Service)
+    def __init__(self, **kwargs):
+        super().__init__(Service, **kwargs)
 
 
-class ServiceListType(EntityType):
+class ServiceListType(ServiceType):
 
-    def __init__(self):
-        super().__init__(Service, is_array=True)
+    def __init__(self, **kwargs):
+        super().__init__(is_array=True, **kwargs)
 
 
 class SubstrateType(EntityType):
 
-    def __init__(self):
-        super().__init__(Substrate)
+    def __init__(self, **kwargs):
+        super().__init__(Substrate, **kwargs)
 
 
-class SubstrateListType(EntityType):
+class SubstrateListType(SubstrateType):
 
-    def __init__(self):
-        super().__init__(Substrate, is_array=True)
+    def __init__(self, **kwargs):
+        super().__init__(is_array=True, **kwargs)
 
 
 class DeploymentType(EntityType):
 
-    def __init__(self):
-        super().__init__(Deployment)
+    def __init__(self, **kwargs):
+        super().__init__(Deployment, **kwargs)
 
 
-class DeploymentListType(EntityType):
+class DeploymentListType(DeploymentType):
 
-    def __init__(self):
-        super().__init__(Deployment, is_array=True)
+    def __init__(self, **kwargs):
+        super().__init__(is_array=True, **kwargs)
 
 
 class ProfileType(EntityType):
 
-    def __init__(self):
-        super().__init__(Profile)
+    def __init__(self, **kwargs):
+        super().__init__(Profile, **kwargs)
 
 
-class ProfileListType(EntityType):
+class ProfileListType(ProfileType):
 
-    def __init__(self):
-        super().__init__(Profile, is_array=True)
-
+    def __init__(self, **kwargs):
+        super().__init__(is_array=True, **kwargs)
 
 ###
 
