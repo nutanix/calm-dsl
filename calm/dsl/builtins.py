@@ -251,7 +251,7 @@ class EntityBase(type):
 
         cls = super().__new__(mcls, name, bases, ns)
 
-        cls._default_attrs = {}
+        cls.__default_attrs__ = {}
 
         schema_props = cls.__schema__.get("properties", {})
 
@@ -276,10 +276,10 @@ class EntityBase(type):
             desc = DescriptorType()
             setattr(cls, attr, desc)
 
-            cls._default_attrs[attr] = attr_props.get("default", desc.__default__())
+            cls.__default_attrs__[attr] = attr_props.get("default", desc.__default__())
 
-        cls._default_attrs["name"] = cls.__name__
-        cls._default_attrs["description"] = cls.__doc__ if cls.__doc__ is not None else ''
+        cls.__default_attrs__["name"] = cls.__name__
+        cls.__default_attrs__["description"] = cls.__doc__ if cls.__doc__ is not None else ''
 
         # __set_name__() is called right after class creation which in this case happens
         # in the super() call above. [PEP 487]
@@ -291,7 +291,7 @@ class EntityBase(type):
 
         # Check if any spurious class attibutes are given before class creation
         for key in cls.attributes:
-            if key not in cls._default_attrs.keys():
+            if key not in cls.__default_attrs__.keys():
                 raise KeyError("Unknown key {} given".format(key))
 
         return cls
@@ -309,13 +309,13 @@ class Entity(metaclass=EntityBase):
     def __init__(self, **kwargs):
 
         self.__all_attrs__ = {
-            **self.__class__._default_attrs,
+            **self.__class__.__default_attrs__,
             **self.__class__.attributes,
             **kwargs,
         }
 
         for key, value in self.__all_attrs__.items():
-            if key not in self.__class__._default_attrs.keys():
+            if key not in self.__class__.__default_attrs__.keys():
                 raise KeyError("Unknown key {} given".format(key))
             setattr(self, key, value)
 
@@ -328,7 +328,7 @@ class Entity(metaclass=EntityBase):
 
         if not (name.startswith('__') and name.endswith('__')):
 
-            if name not in self.__class__._default_attrs:
+            if name not in self.__class__.__default_attrs__:
                 raise TypeError("Unknown attribute {} given".format(name))
 
             # Call validate if there is a descriptor object
