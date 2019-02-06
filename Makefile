@@ -1,6 +1,6 @@
 test:
 	python3 setup.py develop
-	py.test -s
+	py.test -s -vv
 
 dist: test
 	python3 setup.py sdist bdist_wheel
