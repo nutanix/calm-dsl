@@ -56,11 +56,8 @@ class BaseType:
         pass
 
     def __setval__(self, instance, value):
-
         self.__validate__(value)
-
-        if not isinstance(instance, type):
-            instance.__dict__[self.name] = value
+        instance.__dict__[self.name] = value
 
     def __set_name__(self, owner, name):
         self.name = name
@@ -437,10 +434,12 @@ class FooBase(type):
             if func is not None:
                 func(value)
 
+        # Only way to set class attributes
         super().__setattr__(name, value)
 
     def __getattr__(cls, name):
-        pass
+        # TODO - Do some work. This would be called if __getattribute__ fails.
+        raise TypeError("Unknown attribute {} given".format(name))
 
 
 class Foo(metaclass=FooBase):
