@@ -6,3 +6,11 @@ Use:
  - `make _init` to setup your CentOS 7 VM for development
  - `make dist` to generate a `calm.dsl` python distribution
  - `make test` to run the test cases
+
+
+##ToDo
+
+ - Add Port type - tcp/udp
+ - List of supported protocols - ssh
+ - EnumType support
+ - Make License as GPL
