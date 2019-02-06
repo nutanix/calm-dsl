@@ -74,7 +74,7 @@ class EntityType:
             for v in value:
                 self.__validate_item__(v)
 
-    def __setval__(self, instance, value):
+    def __set__(self, instance, value):
         self.__validate__(value)
         instance.__dict__[self.name] = value
 
@@ -82,28 +82,22 @@ class EntityType:
         self.name = name
 
 
-class EntityListType(EntityType):
-
-    def __init__(self, entity_type, is_array=True):
-        super().__init__(entity_type, is_array=is_array)
-
-
 class StringType(EntityType):
 
-    def __init__(self, default=''):
-        super().__init__(str, default=default)
+    def __init__(self):
+        super().__init__(str, default='')
 
 
-class StringListType(EntityListType):
+class StringListType(EntityType):
 
     def __init__(self):
-        super().__init__(str)
+        super().__init__(str, default='', is_array=True)
 
 
 class IntType(EntityType):
 
-    def __init__(self, default=0):
-        super().__init__(int, default=default)
+    def __init__(self):
+        super().__init__(int, default=0)
 
 
 class NonNegativeIntType(IntType):
@@ -116,14 +110,14 @@ class NonNegativeIntType(IntType):
 
 class BoolType(EntityType):
 
-    def __init__(self, default=False):
-        super().__init__(bool, default=default)
+    def __init__(self):
+        super().__init__(bool, default=False)
 
 
 class DictType(EntityType):
 
-    def __init__(self, default={}):
-        super().__init__(dict, default=default)
+    def __init__(self):
+        super().__init__(dict, default={})
 
 
 class PortType(EntityType):
@@ -132,10 +126,10 @@ class PortType(EntityType):
         super().__init__(Port)
 
 
-class PortListType(EntityListType):
+class PortListType(EntityType):
 
     def __init__(self):
-        super().__init__(Port)
+        super().__init__(Port, is_array=True)
 
 
 class ServiceType(EntityType):
@@ -144,10 +138,10 @@ class ServiceType(EntityType):
         super().__init__(Service)
 
 
-class ServiceListType(EntityListType):
+class ServiceListType(EntityType):
 
     def __init__(self):
-        super().__init__(Service)
+        super().__init__(Service, is_array=True)
 
 
 class SubstrateType(EntityType):
@@ -156,10 +150,10 @@ class SubstrateType(EntityType):
         super().__init__(Substrate)
 
 
-class SubstrateListType(EntityListType):
+class SubstrateListType(EntityType):
 
     def __init__(self):
-        super().__init__(Substrate)
+        super().__init__(Substrate, is_array=True)
 
 
 class DeploymentType(EntityType):
@@ -168,10 +162,10 @@ class DeploymentType(EntityType):
         super().__init__(Deployment)
 
 
-class DeploymentListType(EntityListType):
+class DeploymentListType(EntityType):
 
     def __init__(self):
-        super().__init__(Deployment)
+        super().__init__(Deployment, is_array=True)
 
 
 class ProfileType(EntityType):
@@ -180,11 +174,13 @@ class ProfileType(EntityType):
         super().__init__(Profile)
 
 
-class ProfileListType(EntityListType):
+class ProfileListType(EntityType):
 
     def __init__(self):
-        super().__init__(Profile)
+        super().__init__(Profile, is_array=True)
 
+
+###
 
 class CustomDict(dict):
     pass
