@@ -44,16 +44,35 @@ V3SCHEMAS = v3tdict["components"]["schemas"]
 
 
 # TODO - separate validators into separate classes.
-class BaseType:
 
-    def __init__(self, default=None):
+class EntityType:
+
+    def __init__(self, entity_type, default=None, is_array=False):
+        self.entity_type = entity_type
         self._default = default
+        self.is_array = is_array
+
+    def __default__(self):
+        return self._default
 
     def __get__(self, instance, owner):
         return instance.__dict__[self.name] if instance else self._default
 
-    def __validate__(self, value):
-        pass
+    def __validate_item__(self, value):
+        if not isinstance(value, self.entity_type):
+            raise TypeError('{} is not of type {}.'.format(value, self.entity_type))
+
+    def __validate_list__(self, values):
+        if not isinstance(values, list):
+            raise TypeError('{} is not of type {}.'.format(values, list))
+
+    def __validate__(self, value, is_array=False):
+        if not self.is_array:
+            self.__validate_item__(value)
+        else:
+            self.__validate_list__(value)
+            for v in value:
+                self.__validate_item__(v)
 
     def __setval__(self, instance, value):
         self.__validate__(value)
@@ -62,41 +81,11 @@ class BaseType:
     def __set_name__(self, owner, name):
         self.name = name
 
-    def __default__(self):
-        return self._default
 
+class EntityListType(EntityType):
 
-class BaseListType(BaseType):
-
-    def __validate__(self, value):
-        super().__validate__(value)
-        if not isinstance(value, list):
-            raise TypeError('{} is not of type {}.'.format(value, list))
-
-
-class EntityType(BaseType):
-
-    def __init__(self, entity_type, default=None):
-        super().__init__(default=default)
-        self.entity_type = entity_type
-
-    def __validate__(self, value):
-        super().__validate__(value)
-        if not isinstance(value, self.entity_type):
-            raise TypeError('{} is not of type {}.'.format(value, self.entity_type))
-
-
-class EntityListType(BaseListType):
-
-    def __init__(self, entity_type, default=[]):
-        super().__init__(default=default)
-        self.entity_type = entity_type
-
-    def __validate__(self, value):
-        super().__validate__(value)
-        for v in value:
-            if not isinstance(v, self.entity_type):
-                raise TypeError('{} is not of type {}.'.format(v, self.entity_type))
+    def __init__(self, entity_type, is_array=True):
+        super().__init__(entity_type, is_array=is_array)
 
 
 class StringType(EntityType):
