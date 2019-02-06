@@ -440,7 +440,7 @@ class FooBase(type):
         super().__setattr__(name, value)
 
     def __getattr__(cls, name):
-        return super().__getattr__(name)
+        pass
 
 
 class Foo(metaclass=FooBase):
