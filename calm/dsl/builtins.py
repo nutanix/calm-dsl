@@ -387,10 +387,15 @@ But, `setattr` works by looking for a data descriptor in
 class FooDict(dict):
 
     def __init__(self):
-        super().__init__()
+        self.valid_attrs = ["singleton"]
 
-    def __setitem__(self, key, value):
-        super().__setitem__(key, value)
+    def __setitem__(self, name, value):
+
+        if not (name.startswith('__') and name.endswith('__')):
+            if name not in self.valid_attrs:
+                raise TypeError("Unknown attribute {} given".format(name))
+
+        super().__setitem__(name, value)
 
 
 class FooBase(type):
@@ -399,9 +404,12 @@ class FooBase(type):
     def __prepare__(mcls, name, bases, **kwargs):
         return FooDict()
 
-    def __new__(mcls, name, bases, classdict):
+    def __new__(mcls, name, bases, foodict):
 
-        cls = type.__new__(mcls, name, bases, dict(classdict))
+        # Replace foodict to dict() before passing to super()
+        cls = type.__new__(mcls, name, bases, dict(foodict))
+
+        cls.__valid_attrs__ = foodict.valid_attrs
 
         setattr(type(cls), "singleton", BoolType())
 
@@ -417,9 +425,9 @@ class FooBase(type):
     def __setattr__(cls, name, value):
         print("{}->{}".format(name, value))
 
-        if not name.startswith('__'):
+        if not (name.startswith('__') and name.endswith('__')):
 
-            if not name in cls.__class__.__dict__:
+            if not name in cls.__valid_attrs__:
                 raise TypeError("Unknown attribute {} given".format(name))
 
             descr_obj = cls.__class__.__dict__.get(name, None)
