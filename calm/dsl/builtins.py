@@ -23,7 +23,10 @@ class EntityJSONEncoder(JSONEncoder):
             return super().default(obj)
 
 
-template = Environment(loader=PackageLoader(__name__, 'schemas')).get_template('main.yaml.jinja2')
+template = Environment(
+    loader=PackageLoader(
+        __name__,
+        'schemas')).get_template('main.yaml.jinja2')
 
 tdict = yaml.safe_load(StringIO(template.render()))
 
@@ -36,7 +39,10 @@ SCHEMAS = tdict["components"]["schemas"]
 # Load v3 schema objects
 # TODO - refactor
 
-v3template = Environment(loader=PackageLoader(__name__, 'v3schemas')).get_template('main.yaml.jinja2')
+v3template = Environment(
+    loader=PackageLoader(
+        __name__,
+        'v3schemas')).get_template('main.yaml.jinja2')
 
 v3tdict = yaml.safe_load(StringIO(v3template.render()))
 v3tdict = jsonref.loads(json.dumps(v3tdict))
@@ -60,7 +66,9 @@ class EntityType:
 
     def __validate_item__(self, value):
         if not isinstance(value, self.entity_type):
-            raise TypeError('{} is not of type {}.'.format(value, self.entity_type))
+            raise TypeError(
+                '{} is not of type {}.'.format(
+                    value, self.entity_type))
 
     def __validate_list__(self, values):
         if not isinstance(values, list):
@@ -74,11 +82,10 @@ class EntityType:
             for v in value:
                 self.__validate_item__(v)
 
-
-    ## Too much magic going on with `__set__()` as described below!
-    ## Owner classes should call `__validate__()` explicitly through descriptors in
-    ## `type(instance).__setattr()`and use `super().__settar__()` in owner class
-    ## to set attributes. More details below.
+    # Too much magic going on with `__set__()` as described below!
+    # Owner classes should call `__validate__()` explicitly through descriptors in
+    # `type(instance).__setattr()`and use `super().__settar__()` in owner class
+    # to set attributes. More details below.
 
     # def __set__(self, instance, value):
     #     """ The below dict assignmet does not work for type objects like classes as
@@ -130,9 +137,6 @@ class EntityType:
     #         # Sorry, can't do anything!
 
     #         pass
-
-
-
 
     def __set_name__(self, owner, name):
         self.name = name
@@ -237,6 +241,7 @@ class ProfileListType(ProfileType):
 
 ###
 
+
 class CustomDict(dict):
     pass
 
@@ -266,8 +271,8 @@ class EntityBase(type):
                 attr_type = attr_props.get("x-calm-dsl-type", None)
 
                 if attr_type is None:
-                    raise Exception("calm dsl extension not found. Invalid schema {}"
-                                    .format(attr_props))
+                    raise Exception(
+                        "calm dsl extension not found. Invalid schema {}" .format(attr_props))
 
             DescriptorType = type_to_descriptor_cls.get(attr_type, None)
             if DescriptorType is None:
@@ -276,10 +281,12 @@ class EntityBase(type):
             desc = DescriptorType()
             setattr(cls, attr, desc)
 
-            cls.__default_attrs__[attr] = attr_props.get("default", desc.__default__())
+            cls.__default_attrs__[attr] = attr_props.get(
+                "default", desc.__default__())
 
         cls.__default_attrs__["name"] = cls.__name__
-        cls.__default_attrs__["description"] = cls.__doc__ if cls.__doc__ is not None else ''
+        cls.__default_attrs__[
+            "description"] = cls.__doc__ if cls.__doc__ is not None else ''
 
         # __set_name__() is called right after class creation which in this case happens
         # in the super() call above. [PEP 487]
@@ -415,17 +422,19 @@ class Blueprint(Entity):
     __v3_schema__ = V3SCHEMAS["Blueprint"]
 
 
-
 ###
 
 
 def read_vm_spec(filename):
 
-    file_path = os.path.join(os.path.dirname(inspect.getfile(sys._getframe(1))), filename)
+    file_path = os.path.join(
+        os.path.dirname(
+            inspect.getfile(
+                sys._getframe(1))),
+        filename)
 
     with open(file_path, "r") as f:
         return yaml.safe_load(f.read())
-
 
 
 ###
@@ -474,7 +483,7 @@ class FooBase(type):
 
         if not (name.startswith('__') and name.endswith('__')):
 
-            if not name in cls.__valid_attrs__:
+            if name not in cls.__valid_attrs__:
                 raise TypeError("Unknown attribute {} given".format(name))
 
             descr_obj = cls.__class__.__dict__.get(name, None)
@@ -495,9 +504,7 @@ class Foo(metaclass=FooBase):
     pass
 
 
-
 ###
-
 
 
 def dump(name, obj, dct):
