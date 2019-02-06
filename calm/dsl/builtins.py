@@ -315,7 +315,7 @@ class Entity(metaclass=EntityBase):
         }
 
         for key, value in self.__all_attrs__.items():
-            if key not in self.__class__.__default_attrs__.keys():
+            if key not in self.__class__.__default_attrs__:
                 raise KeyError("Unknown key {} given".format(key))
             setattr(self, key, value)
 
