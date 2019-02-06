@@ -7,6 +7,7 @@ import tokenize
 from io import StringIO
 import os
 import sys
+from collections import OrderedDict
 
 import yaml
 from jinja2 import Environment, PackageLoader
@@ -384,7 +385,7 @@ But, `setattr` works by looking for a data descriptor in
 `__set__`. This causes infinite recursion!
 """
 
-class FooDict(dict):
+class FooDict(OrderedDict):
 
     def __init__(self):
         self.valid_attrs = ["singleton"]
