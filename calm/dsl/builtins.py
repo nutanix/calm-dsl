@@ -183,7 +183,7 @@ class DictType(EntityType):
 class PortType(EntityType):
 
     def __init__(self, **kwargs):
-        super().__init__(Port, **kwargs)
+        super().__init__(PortBase, **kwargs)
 
 
 class PortListType(PortType):
@@ -195,7 +195,7 @@ class PortListType(PortType):
 class ServiceType(EntityType):
 
     def __init__(self, **kwargs):
-        super().__init__(Service, **kwargs)
+        super().__init__(ServiceBase, **kwargs)
 
 
 class ServiceListType(ServiceType):
@@ -207,7 +207,7 @@ class ServiceListType(ServiceType):
 class SubstrateType(EntityType):
 
     def __init__(self, **kwargs):
-        super().__init__(Substrate, **kwargs)
+        super().__init__(SubstrateBase, **kwargs)
 
 
 class SubstrateListType(SubstrateType):
@@ -219,7 +219,7 @@ class SubstrateListType(SubstrateType):
 class DeploymentType(EntityType):
 
     def __init__(self, **kwargs):
-        super().__init__(Deployment, **kwargs)
+        super().__init__(DeploymentBase, **kwargs)
 
 
 class DeploymentListType(DeploymentType):
@@ -231,7 +231,7 @@ class DeploymentListType(DeploymentType):
 class ProfileType(EntityType):
 
     def __init__(self, **kwargs):
-        super().__init__(Profile, **kwargs)
+        super().__init__(ProfileBase, **kwargs)
 
 
 class ProfileListType(ProfileType):
@@ -248,6 +248,8 @@ class CustomDict(dict):
 
 class EntityBase(type):
 
+    __schema__ = {}
+
     @classmethod
     def __prepare__(mcls, name, bases, **kwargs):
         return CustomDict()
@@ -258,7 +260,7 @@ class EntityBase(type):
 
         cls.__default_attrs__ = {}
 
-        schema_props = cls.__schema__.get("properties", {})
+        schema_props = mcls.__schema__.get("properties", {})
 
         for attr, attr_props in schema_props.items():
 
@@ -278,11 +280,11 @@ class EntityBase(type):
             if DescriptorType is None:
                 raise TypeError("Unknown type {} given".format(attr_type))
 
-            desc = DescriptorType()
-            setattr(cls, attr, desc)
+            descr_obj = DescriptorType()
+            setattr(mcls, attr, descr_obj)
 
             cls.__default_attrs__[attr] = attr_props.get(
-                "default", desc.__default__())
+                "default", descr_obj.__default__())
 
         cls.__default_attrs__["name"] = cls.__name__
         cls.__default_attrs__[
@@ -291,72 +293,81 @@ class EntityBase(type):
         # __set_name__() is called right after class creation which in this case happens
         # in the super() call above. [PEP 487]
         # Call __set_name__() again to set the right attribute names
-        for k, v in cls.__dict__.items():
+        for k, v in mcls.__dict__.items():
             func = getattr(v, '__set_name__', None)
             if func is not None:
                 func(cls, k)
 
+        """
         # Check if any spurious class attibutes are given before class creation
         for key in cls.attributes:
             if key not in cls.__default_attrs__.keys():
                 raise KeyError("Unknown key {} given".format(key))
+        """
+
+        """
+        print("Attrs = {}".format(cls.__default_attrs__))
+        print("----------")
+        print("Init Class dict = {}".format(cls.__dict__))
+        print("----------")
+        """
+
+        for k, v in cls.__dict__.items():
+            cls.__validate__(k, v)
 
         return cls
 
-    def __str__(cls):
-        return cls.__name__
+    def __validate__(cls, name, value):
 
-
-class Entity(metaclass=EntityBase):
-
-    __schema__ = {}
-
-    attributes = {}
-
-    def __init__(self, **kwargs):
-
-        self.__all_attrs__ = {
-            **self.__class__.__default_attrs__,
-            **self.__class__.attributes,
-            **kwargs,
-        }
-
-        for key, value in self.__all_attrs__.items():
-            if key not in self.__class__.__default_attrs__:
-                raise KeyError("Unknown key {} given".format(key))
-            setattr(self, key, value)
-
-    def __str__(self):
-        return str(self.__class__.__name__)
-
-    def __setattr__(self, name, value):
-
-        print("{}->{}".format(name, value))
+        # print("{}->{}".format(name, value))
 
         if not (name.startswith('__') and name.endswith('__')):
 
-            if name not in self.__class__.__default_attrs__:
+            if name not in cls.__default_attrs__:
                 raise TypeError("Unknown attribute {} given".format(name))
 
             # Call validate if there is a descriptor object
-            descr_obj = self.__class__.__dict__.get(name, None)
+            descr_obj = cls.__class__.__dict__.get(name, None)
             if descr_obj is not None:
                 func = getattr(descr_obj, '__validate__', None)
                 if func is not None:
                     func(value)
 
+    def __setattr__(cls, name, value):
+
+        # validate attribute
+        cls.__validate__(name, value)
+
         # Set attribute
         super().__setattr__(name, value)
 
-    def json_repr(self):
-        return self.__all_attrs__
+    def __str__(cls):
+        return cls.__name__
 
-    def json_dumps(self, pprint=False, sort_keys=False):
-        return json.dumps(self.json_repr(),
+    def json_repr(cls):
+        user_attrs = {}
+        for name, value in cls.__dict__.items():
+            if not (name.startswith('__') and name.endswith('__')):
+                user_attrs[name] = value
+
+        all_attrs = {
+            **cls.__default_attrs__,
+            **user_attrs,
+        }
+
+        return all_attrs
+
+    def json_dumps(cls, pprint=False, sort_keys=False):
+        return json.dumps(cls.json_repr(),
                           cls=EntityJSONEncoder,
                           sort_keys=sort_keys,
                           indent=4 if pprint else None,
                           separators=(",", ": ") if pprint else (",", ":"))
+
+
+class Entity(metaclass=EntityBase):
+
+    __schema__ = {}
 
 
 type_to_descriptor_cls = {
@@ -387,39 +398,52 @@ type_to_descriptor_cls = {
 }
 
 
-class Port(Entity):
-
+class PortBase(EntityBase):
     __schema__ = SCHEMAS["Port"]
 
 
-class Service(Entity):
+class Port(Entity, metaclass=PortBase):
+    pass
 
+
+class ServiceBase(EntityBase):
     __schema__ = SCHEMAS["Service"]
-    __v3_schema__ = V3SCHEMAS["Service"]
 
 
-class Substrate(Entity):
+class Service(Entity, metaclass=ServiceBase):
+    pass
 
+
+class SubstrateBase(EntityBase):
     __schema__ = SCHEMAS["Substrate"]
-    __v3_schema__ = V3SCHEMAS["Substrate"]
 
 
-class Deployment(Entity):
+class Substrate(Entity, metaclass=SubstrateBase):
+    pass
 
+
+class DeploymentBase(EntityBase):
     __schema__ = SCHEMAS["Deployment"]
-    __v3_schema__ = V3SCHEMAS["DeploymentCreate"]
 
 
-class Profile(Entity):
+class Deployment(Entity, metaclass=DeploymentBase):
+    pass
 
+
+class ProfileBase(EntityBase):
     __schema__ = SCHEMAS["Profile"]
-    __v3_schema__ = V3SCHEMAS["Profile"]
 
 
-class Blueprint(Entity):
+class Profile(Entity, metaclass=ProfileBase):
+    pass
 
+
+class BlueprintBase(EntityBase):
     __schema__ = SCHEMAS["Blueprint"]
-    __v3_schema__ = V3SCHEMAS["Blueprint"]
+
+
+class Blueprint(Entity, metaclass=BlueprintBase):
+    pass
 
 
 ###
@@ -469,7 +493,7 @@ class FooBase(type):
 
         setattr(type(cls), "singleton", BoolType())
 
-        print(mcls.__dict__)
+        # print(mcls.__dict__)
 
         for k, v in mcls.__dict__.items():
             func = getattr(v, '__set_name__', None)
@@ -479,7 +503,7 @@ class FooBase(type):
         return cls
 
     def __setattr__(cls, name, value):
-        print("{}->{}".format(name, value))
+        # print("{}->{}".format(name, value))
 
         if not (name.startswith('__') and name.endswith('__')):
 
