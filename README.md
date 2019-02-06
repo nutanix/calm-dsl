@@ -14,3 +14,4 @@ Use:
  - List of supported protocols - ssh
  - EnumType support
  - Make License as GPL
+ - Get rid of attributes field
