@@ -13,5 +13,5 @@ Use:
  - Add Port type - tcp/udp
  - List of supported protocols - ssh
  - EnumType support
- - Make License as GPL
- - Get rid of attributes field
+ - ~Make License as GPL~
+ - ~Get rid of attributes field~
