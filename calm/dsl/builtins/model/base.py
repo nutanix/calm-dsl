@@ -25,7 +25,7 @@ class EntityJSONEncoder(JSONEncoder):
 
 template = Environment(
     loader=PackageLoader(
-        __name__,
+        'calm.dsl',
         'schemas')).get_template('main.yaml.jinja2')
 
 tdict = yaml.safe_load(StringIO(template.render()))
@@ -41,13 +41,12 @@ SCHEMAS = tdict["components"]["schemas"]
 
 v3template = Environment(
     loader=PackageLoader(
-        __name__,
+        'calm.dsl',
         'v3schemas')).get_template('main.yaml.jinja2')
 
 v3tdict = yaml.safe_load(StringIO(v3template.render()))
 v3tdict = jsonref.loads(json.dumps(v3tdict))
 V3SCHEMAS = v3tdict["components"]["schemas"]
-
 
 
 class PropertyValidatorBase:
@@ -97,62 +96,6 @@ class PropertyValidator(PropertyValidatorBase, openapi_type=None):
             cls._validate_list(value)
             for v in value:
                 cls._validate_item(v)
-
-    # Too much magic going on with `__set__()` as described below!
-    # Owner classes should call `__validate__()` explicitly through descriptors in
-    # `type(instance).__setattr()`and use `super().__settar__()` in owner class
-    # to set attributes. More details below.
-
-    # def __set__(self, instance, value):
-    #     """ The below dict assignmet does not work for type objects like classes as
-    #     `cls.__dict__` is immutable and exposed through a `mappingproxy` which
-    #     is read-only.
-
-    #     `object.__setattr__(instance, name, value)` will also not work as this specifically
-    #     checks if the first argument is a subclass of `object`. `instance` here would
-    #     be a `type` object for class and hence this will fail.
-    #     The check is there to prevent this method being used to modify built-in
-    #     types (Carlo Verre hack).
-
-    #     So, descriptors cannot work in current form on type classes (eg. metaclass) as class
-    #     attributes are stored as `mappingproxy` objects. So only
-    #     `class.__setattr__` remains as an avenue for setting class attributes.
-
-    #     Now, `setattr` works by looking for a data descriptor in
-    #     `type(obj).__mro__`. If a data descriptor is found (i.e. if __set__ is defined),
-    #     it calls `__set__` and exits.
-    #     There is no way to avoid this, and uderstandably so, as this is the purpose
-    #     of the magical `__set__` interface.
-
-    #     But, as `class.__dict__` cannot be used to set attribute,
-    #     `setattr(cls, self.name, value)` is the only way.
-    #     Calling setattr inside this block will cause infinite recursion!
-    #     Else block below has more details.
-
-    #     """
-
-    #     self.validate(value)
-
-    #     # Does not work if instance is a type object.
-    #     if not isinstance(instance, type):
-    #         instance.__dict__[self.name] = value
-    #         # This works fine.
-    #     else:
-    #         # setattr(instance, self.name, value)
-    #         # This would call __set__ again and hence cause infinite recusion.
-
-    #         # type.__setattr__(instance, self.name, value)
-    #         # This would call __set__ again and hence cause infinite recusion.
-
-    #         # instance.__dict__[self.name] = value
-    #         # Item assignment for mappingproxy object is not allowed.
-
-    #         # object.__setattr__(instance, self.name, value)
-    #         # This does not work as `instance` is a type object.
-
-    #         # Sorry, can't do anything!
-
-    #         pass
 
 
 class StringValidator(PropertyValidator, openapi_type="string"):
@@ -316,124 +259,6 @@ class EntityType(type):
 
 
 class Entity(metaclass=EntityType):
-    pass
-
-
-## Port
-
-class PortType(EntityType):
-    __schema__ = SCHEMAS["Port"]
-
-
-class Port(Entity, metaclass=PortType):
-    pass
-
-
-class PortValidator(PropertyValidator, openapi_type="port"):
-
-    __default__ = None
-    __kind__ = PortType
-
-
-class PortListValidator(PortValidator, openapi_type="ports"):
-
-    __default__ = []
-
-
-## Service
-
-class ServiceType(EntityType):
-    __schema__ = SCHEMAS["Service"]
-
-
-class Service(Entity, metaclass=ServiceType):
-    pass
-
-
-class ServiceValidator(PropertyValidator, openapi_type="service"):
-
-    __default__ = None
-    __kind__ = ServiceType
-
-
-class ServiceListValidator(ServiceValidator, openapi_type="services"):
-
-    __default__ = []
-
-
-## Substrate
-
-class SubstrateType(EntityType):
-    __schema__ = SCHEMAS["Substrate"]
-
-
-class Substrate(Entity, metaclass=SubstrateType):
-    pass
-
-
-class SubstrateValidator(PropertyValidator, openapi_type="substrate"):
-
-    __default__ = None
-    __kind__ = SubstrateType
-
-
-class SubstrateListValidator(SubstrateValidator, openapi_type="substrates"):
-
-    __default__ = []
-
-
-## Deployment
-
-
-class DeploymentType(EntityType):
-    __schema__ = SCHEMAS["Deployment"]
-
-
-class Deployment(Entity, metaclass=DeploymentType):
-    pass
-
-
-class DeploymentValidator(PropertyValidator, openapi_type="deployment"):
-
-    __default__ = None
-    __kind__ = DeploymentType
-
-
-class DeploymentListValidator(DeploymentValidator, openapi_type="deployments"):
-
-    __default__ = []
-
-
-## Profile
-
-class ProfileType(EntityType):
-    __schema__ = SCHEMAS["Profile"]
-
-
-class Profile(Entity, metaclass=ProfileType):
-    pass
-
-
-class ProfileValidator(PropertyValidator, openapi_type="profile"):
-
-    __default__ = None
-    __kind__ = ProfileType
-
-
-class ProfileListValidator(ProfileValidator, openapi_type="profiles"):
-
-    __default__ = []
-
-
-
-
-## Blueprint
-
-class BlueprintType(EntityType):
-    __schema__ = SCHEMAS["Blueprint"]
-
-
-class Blueprint(Entity, metaclass=BlueprintType):
     pass
 
 
