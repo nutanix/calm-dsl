@@ -49,8 +49,6 @@ v3tdict = jsonref.loads(json.dumps(v3tdict))
 V3SCHEMAS = v3tdict["components"]["schemas"]
 
 
-# TODO - separate validators into separate classes.
-
 class EntityType:
 
     def __init__(self, entity_type, default=None, is_array=False, **kwargs):
