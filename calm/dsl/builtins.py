@@ -60,7 +60,7 @@ class EntityType:
         return self._default
 
     def get(self, instance, owner):
-        return instance.__dict__[self.name] if instance else self._default
+        return instance.__dict__[self.name]
 
     def _validate_item(self, value):
         if not isinstance(value, self.entity_type):
@@ -313,30 +313,34 @@ class EntityBase(type):
         """
 
         for k, v in cls.__dict__.items():
-            cls._validate(k, v)
+            cls._validate_attr(k, v)
 
         return cls
 
-    def _validate(cls, name, value):
+    def _get_descr_obj(cls, name):
 
-        # print("{}->{}".format(name, value))
+        return cls.__class__.__dict__.get(name, None)
+
+    def _call_descr_validate(cls, name, value):
+
+        descr_obj = cls._get_descr_obj(name)
+        if descr_obj is not None:
+            func = getattr(descr_obj, 'validate', None)
+            if func is not None:
+                func(value)
+
+    def _validate_attr(cls, name, value):
 
         if not (name.startswith('__') and name.endswith('__')):
-
             if name not in cls.__default_attrs__:
                 raise TypeError("Unknown attribute {} given".format(name))
 
-            # Call validate if there is a descriptor object
-            descr_obj = cls.__class__.__dict__.get(name, None)
-            if descr_obj is not None:
-                func = getattr(descr_obj, 'validate', None)
-                if func is not None:
-                    func(value)
+            cls._call_descr_validate(name, value)
 
     def __setattr__(cls, name, value):
 
         # validate attribute
-        cls._validate(name, value)
+        cls._validate_attr(name, value)
 
         # Set attribute
         super().__setattr__(name, value)
