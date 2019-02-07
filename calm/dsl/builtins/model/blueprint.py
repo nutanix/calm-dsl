@@ -1,5 +1,4 @@
 from .base import EntityType, Entity
-from .base import PropertyValidator
 from .base import SCHEMAS
 
 
