@@ -241,32 +241,7 @@ class ProfileListType(ProfileType):
 
 ###
 
-type_to_descriptor_cls = {
 
-    "string": StringType,
-    "strings": StringListType,
-
-    "integer": IntType,
-
-    "dict": DictType,
-
-    "boolean": BoolType,
-
-    "port": PortType,
-    "ports": PortListType,
-
-    "service": ServiceType,
-    "services": ServiceListType,
-
-    "substrate": SubstrateType,
-    "substrates": SubstrateListType,
-
-    "deployment": DeploymentType,
-    "deployments": DeploymentListType,
-
-    "profile": ProfileType,
-    "profiles": ProfileListType,
-}
 
 ###
 
@@ -274,6 +249,32 @@ class EntityDict(dict):
 
     def __init__(self, schema):
         self.schema = schema.get("properties", {})
+        self.schema_type_to_descriptor_cls = {
+
+            "string": StringType,
+            "strings": StringListType,
+
+            "integer": IntType,
+
+            "dict": DictType,
+
+            "boolean": BoolType,
+
+            "port": PortType,
+            "ports": PortListType,
+
+            "service": ServiceType,
+            "services": ServiceListType,
+
+            "substrate": SubstrateType,
+            "substrates": SubstrateListType,
+
+            "deployment": DeploymentType,
+            "deployments": DeploymentListType,
+
+            "profile": ProfileType,
+            "profiles": ProfileListType,
+        }
 
 
 class EntityBase(type):
@@ -306,7 +307,7 @@ class EntityBase(type):
                     raise Exception(
                         "calm dsl extension not found. Invalid schema {}" .format(attr_props))
 
-            DescriptorType = type_to_descriptor_cls.get(attr_type, None)
+            DescriptorType = entitydict.schema_type_to_descriptor_cls.get(attr_type, None)
             if DescriptorType is None:
                 raise TypeError("Unknown type {} given".format(attr_type))
 
