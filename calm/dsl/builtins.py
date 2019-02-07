@@ -163,7 +163,7 @@ class IntType(EntityType):
 class NonNegativeIntType(IntType):
 
     def validate(self, value):
-        super().__validate__(value)
+        super().validate(Value)
         if value < 0:
             raise ValueError('Cannot be negative.')
 
