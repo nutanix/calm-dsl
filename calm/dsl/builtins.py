@@ -58,29 +58,32 @@ class EntityType:
         self._default = default
         self.is_array = is_array
 
-    def __default__(self):
+    def get_default(self):
         return self._default
 
-    def __get__(self, instance, owner):
+    def get(self, instance, owner):
         return instance.__dict__[self.name] if instance else self._default
 
-    def __validate_item__(self, value):
+    def _validate_item(self, value):
         if not isinstance(value, self.entity_type):
             raise TypeError(
                 '{} is not of type {}.'.format(
                     value, self.entity_type))
 
-    def __validate_list__(self, values):
+    def _validate_list(self, values):
         if not isinstance(values, list):
             raise TypeError('{} is not of type {}.'.format(values, list))
 
-    def __validate__(self, value, is_array=False):
+    def validate(self, value, is_array=False):
         if not self.is_array:
-            self.__validate_item__(value)
+            self._validate_item(value)
         else:
-            self.__validate_list__(value)
+            self._validate_list(value)
             for v in value:
-                self.__validate_item__(v)
+                self._validate_item(v)
+
+    def set_name(self, owner, name):
+        self.name = name
 
     # Too much magic going on with `__set__()` as described below!
     # Owner classes should call `__validate__()` explicitly through descriptors in
@@ -115,7 +118,7 @@ class EntityType:
 
     #     """
 
-    #     self.__validate__(value)
+    #     self.validate(value)
 
     #     # Does not work if instance is a type object.
     #     if not isinstance(instance, type):
@@ -138,8 +141,7 @@ class EntityType:
 
     #         pass
 
-    def __set_name__(self, owner, name):
-        self.name = name
+
 
 
 class StringType(EntityType):
@@ -162,7 +164,7 @@ class IntType(EntityType):
 
 class NonNegativeIntType(IntType):
 
-    def __validate__(self, value):
+    def validate(self, value):
         super().__validate__(value)
         if value < 0:
             raise ValueError('Cannot be negative.')
@@ -284,7 +286,7 @@ class EntityBase(type):
             setattr(mcls, attr, descr_obj)
 
             cls.__default_attrs__[attr] = attr_props.get(
-                "default", descr_obj.__default__())
+                "default", descr_obj.get_default())
 
         cls.__default_attrs__["name"] = cls.__name__
         cls.__default_attrs__[
@@ -294,7 +296,7 @@ class EntityBase(type):
         # in the super() call above. [PEP 487]
         # Call __set_name__() again to set the right attribute names
         for k, v in mcls.__dict__.items():
-            func = getattr(v, '__set_name__', None)
+            func = getattr(v, 'set_name', None)
             if func is not None:
                 func(cls, k)
 
@@ -313,11 +315,11 @@ class EntityBase(type):
         """
 
         for k, v in cls.__dict__.items():
-            cls.__validate__(k, v)
+            cls._validate(k, v)
 
         return cls
 
-    def __validate__(cls, name, value):
+    def _validate(cls, name, value):
 
         # print("{}->{}".format(name, value))
 
@@ -329,14 +331,14 @@ class EntityBase(type):
             # Call validate if there is a descriptor object
             descr_obj = cls.__class__.__dict__.get(name, None)
             if descr_obj is not None:
-                func = getattr(descr_obj, '__validate__', None)
+                func = getattr(descr_obj, 'validate', None)
                 if func is not None:
                     func(value)
 
     def __setattr__(cls, name, value):
 
         # validate attribute
-        cls.__validate__(name, value)
+        cls._validate(name, value)
 
         # Set attribute
         super().__setattr__(name, value)
