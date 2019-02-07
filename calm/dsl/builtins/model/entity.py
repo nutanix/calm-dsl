@@ -83,7 +83,8 @@ class EntityType(type):
         for name, props in cls.__schema__.items():
 
             # Set validator type on metaclass for each property name
-            # It will be used during __setattr__ to validate props.
+            # To be used explicitly during __setattr__() to validate props.
+            # Look at cls._validate() for details.
             ValidatorType = entitydict.get_validator_type(name)
             setattr(mcls, name, ValidatorType)
 
@@ -94,28 +95,30 @@ class EntityType(type):
 
     def __init__(cls, name, bases, classdict):
 
+        # Update default attrs with name and description
         cls.__default_attrs__["name"] = cls.__name__
         cls.__default_attrs__[
             "description"] = '' if cls.__doc__ is None else cls.__doc__
 
-    def get_validator_type(cls, name):
+    def lookup_validator_type(cls, name):
+        # Use metaclass dictionary to get the right validator type
         return type(cls).__dict__.get(name, None)
 
     def check_name(cls, name):
         if name not in cls.__schema__:
             raise TypeError("Unknown attribute {} given".format(name))
 
-    def _validate(cls, name, value):
+    def validate(cls, name, value):
 
         if not (name.startswith('__') and name.endswith('__')):
             cls.check_name(name)
-            ValidatorType = cls.get_validator_type(name)
+            ValidatorType = cls.lookup_validator_type(name)
             ValidatorType.validate(value)
 
     def __setattr__(cls, name, value):
 
         # Validate attribute
-        cls._validate(name, value)
+        cls.validate(name, value)
 
         # Set attribute
         super().__setattr__(name, value)
@@ -123,18 +126,23 @@ class EntityType(type):
     def __str__(cls):
         return cls.__name__
 
-    def json_repr(cls):
+    def get_user_attrs(cls):
         user_attrs = {}
         for name, value in cls.__dict__.items():
             if not (name.startswith('__') and name.endswith('__')):
                 user_attrs[name] = value
+        return user_attrs
 
-        all_attrs = {
-            **cls.__default_attrs__,
-            **user_attrs,
-        }
+    def get_default_attrs(cls):
+        return cls.__default_attrs__
 
-        return all_attrs
+    def json_repr(cls):
+
+        default_attrs = cls.get_default_attrs()
+        user_attrs = cls.get_user_attrs()
+
+        # Merge both attrs. Overwrite user attrs on default attrs
+        return {**default_attrs, **user_attrs}
 
     def json_dumps(cls, pprint=False, sort_keys=False):
         return json.dumps(cls.json_repr(),
