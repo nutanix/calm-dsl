@@ -64,13 +64,18 @@ class PropertyValidatorBase:
 class PropertyValidator(PropertyValidatorBase, openapi_type=None):
 
     __default__ = None
+    __kind__ = None
 
     @classmethod
     def get_default(cls):
         return cls.__default__
 
-    def __init__(self, entity_type, **kwargs):
-        self.entity_type = entity_type
+    @classmethod
+    def get_kind(cls):
+        return cls.__kind__
+
+    def __init__(self):
+        self.entity_type = self.get_kind()
         self.is_array = True if isinstance(self.get_default(), list) else False
 
     def _validate_item(self, value):
@@ -154,9 +159,7 @@ class PropertyValidator(PropertyValidatorBase, openapi_type=None):
 class StringValidator(PropertyValidator, openapi_type="string"):
 
     __default__ = ''
-
-    def __init__(self, **kwargs):
-        super().__init__(str, **kwargs)
+    __kind__ = str
 
 
 class StringListValidator(StringValidator, openapi_type="strings"):
@@ -167,25 +170,19 @@ class StringListValidator(StringValidator, openapi_type="strings"):
 class IntValidator(PropertyValidator, openapi_type="integer"):
 
     __default__ = 0
-
-    def __init__(self, **kwargs):
-        super().__init__(int, **kwargs)
+    __kind__ = int
 
 
 class BoolValidator(PropertyValidator, openapi_type="boolean"):
 
     __default__ = False
-
-    def __init__(self, **kwargs):
-        super().__init__(bool, **kwargs)
+    __kind__ = bool
 
 
 class DictValidator(PropertyValidator, openapi_type="dict"):
 
     __default__ = {}
-
-    def __init__(self, **kwargs):
-        super().__init__(dict, **kwargs)
+    __kind__ = dict
 
 ###
 
@@ -340,9 +337,7 @@ class Port(Entity, metaclass=PortType):
 class PortValidator(PropertyValidator, openapi_type="port"):
 
     __default__ = None
-
-    def __init__(self, **kwargs):
-        super().__init__(PortType, **kwargs)
+    __kind__ = PortType
 
 
 class PortListValidator(PortValidator, openapi_type="ports"):
@@ -363,9 +358,7 @@ class Service(Entity, metaclass=ServiceType):
 class ServiceValidator(PropertyValidator, openapi_type="service"):
 
     __default__ = None
-
-    def __init__(self, **kwargs):
-        super().__init__(ServiceType, **kwargs)
+    __kind__ = ServiceType
 
 
 class ServiceListValidator(ServiceValidator, openapi_type="services"):
@@ -386,9 +379,7 @@ class Substrate(Entity, metaclass=SubstrateType):
 class SubstrateValidator(PropertyValidator, openapi_type="substrate"):
 
     __default__ = None
-
-    def __init__(self, **kwargs):
-        super().__init__(SubstrateType, **kwargs)
+    __kind__ = SubstrateType
 
 
 class SubstrateListValidator(SubstrateValidator, openapi_type="substrates"):
@@ -410,9 +401,7 @@ class Deployment(Entity, metaclass=DeploymentType):
 class DeploymentValidator(PropertyValidator, openapi_type="deployment"):
 
     __default__ = None
-
-    def __init__(self, **kwargs):
-        super().__init__(DeploymentType, **kwargs)
+    __kind__ = DeploymentType
 
 
 class DeploymentListValidator(DeploymentValidator, openapi_type="deployments"):
@@ -433,9 +422,7 @@ class Profile(Entity, metaclass=ProfileType):
 class ProfileValidator(PropertyValidator, openapi_type="profile"):
 
     __default__ = None
-
-    def __init__(self, **kwargs):
-        super().__init__(ProfileType, **kwargs)
+    __kind__ = ProfileType
 
 
 class ProfileListValidator(ProfileValidator, openapi_type="profiles"):
