@@ -57,6 +57,7 @@ class PropertyValidatorBase:
         super().__init_subclass__(**kwargs)
 
         if openapi_type is not None:
+            # register validator plugins
             cls.subclasses[openapi_type] = cls
 
 
@@ -185,72 +186,6 @@ class DictValidator(PropertyValidator, openapi_type="dict"):
 
     def __init__(self, **kwargs):
         super().__init__(dict, **kwargs)
-
-
-class PortValidator(PropertyValidator, openapi_type="port"):
-
-    __default__ = None
-
-    def __init__(self, **kwargs):
-        super().__init__(PortType, **kwargs)
-
-
-class PortListValidator(PortValidator, openapi_type="ports"):
-
-    __default__ = []
-
-
-class ServiceValidator(PropertyValidator, openapi_type="service"):
-
-    __default__ = None
-
-    def __init__(self, **kwargs):
-        super().__init__(ServiceType, **kwargs)
-
-
-class ServiceListValidator(ServiceValidator, openapi_type="services"):
-
-    __default__ = []
-
-
-class SubstrateValidator(PropertyValidator, openapi_type="substrate"):
-
-    __default__ = None
-
-    def __init__(self, **kwargs):
-        super().__init__(SubstrateType, **kwargs)
-
-
-class SubstrateListValidator(SubstrateValidator, openapi_type="substrates"):
-
-    __default__ = []
-
-
-class DeploymentValidator(PropertyValidator, openapi_type="deployment"):
-
-    __default__ = None
-
-    def __init__(self, **kwargs):
-        super().__init__(DeploymentType, **kwargs)
-
-
-class DeploymentListValidator(DeploymentValidator, openapi_type="deployments"):
-
-    __default__ = []
-
-
-class ProfileValidator(PropertyValidator, openapi_type="profile"):
-
-    __default__ = None
-
-    def __init__(self, **kwargs):
-        super().__init__(ProfileType, **kwargs)
-
-
-class ProfileListValidator(ProfileValidator, openapi_type="profiles"):
-
-    __default__ = []
-
 
 ###
 
@@ -392,49 +327,128 @@ class Entity(metaclass=EntityType):
     pass
 
 
+## Port
+
 class PortType(EntityType):
     __schema__ = SCHEMAS["Port"]
+
+
+class PortValidator(PropertyValidator, openapi_type="port"):
+
+    __default__ = None
+
+    def __init__(self, **kwargs):
+        super().__init__(PortType, **kwargs)
+
+
+class PortListValidator(PortValidator, openapi_type="ports"):
+
+    __default__ = []
 
 
 class Port(Entity, metaclass=PortType):
     pass
 
 
+## Service
+
 class ServiceType(EntityType):
     __schema__ = SCHEMAS["Service"]
+
+
+class ServiceValidator(PropertyValidator, openapi_type="service"):
+
+    __default__ = None
+
+    def __init__(self, **kwargs):
+        super().__init__(ServiceType, **kwargs)
+
+
+class ServiceListValidator(ServiceValidator, openapi_type="services"):
+
+    __default__ = []
 
 
 class Service(Entity, metaclass=ServiceType):
     pass
 
 
+## Substrate
+
 class SubstrateType(EntityType):
     __schema__ = SCHEMAS["Substrate"]
+
+
+class SubstrateValidator(PropertyValidator, openapi_type="substrate"):
+
+    __default__ = None
+
+    def __init__(self, **kwargs):
+        super().__init__(SubstrateType, **kwargs)
+
+
+class SubstrateListValidator(SubstrateValidator, openapi_type="substrates"):
+
+    __default__ = []
 
 
 class Substrate(Entity, metaclass=SubstrateType):
     pass
 
 
+## Deployment
+
+
 class DeploymentType(EntityType):
     __schema__ = SCHEMAS["Deployment"]
+
+
+class DeploymentValidator(PropertyValidator, openapi_type="deployment"):
+
+    __default__ = None
+
+    def __init__(self, **kwargs):
+        super().__init__(DeploymentType, **kwargs)
+
+
+class DeploymentListValidator(DeploymentValidator, openapi_type="deployments"):
+
+    __default__ = []
 
 
 class Deployment(Entity, metaclass=DeploymentType):
     pass
 
 
+## Profile
+
 class ProfileType(EntityType):
     __schema__ = SCHEMAS["Profile"]
+
+
+class ProfileValidator(PropertyValidator, openapi_type="profile"):
+
+    __default__ = None
+
+    def __init__(self, **kwargs):
+        super().__init__(ProfileType, **kwargs)
+
+
+class ProfileListValidator(ProfileValidator, openapi_type="profiles"):
+
+    __default__ = []
 
 
 class Profile(Entity, metaclass=ProfileType):
     pass
 
 
+## Blueprint
+
 class BlueprintType(EntityType):
     __schema__ = SCHEMAS["Blueprint"]
 
+## TODO - Add bp validators
 
 class Blueprint(Entity, metaclass=BlueprintType):
     pass
