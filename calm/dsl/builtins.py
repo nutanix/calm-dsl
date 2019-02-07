@@ -253,18 +253,21 @@ class EntityType(type):
         # Attach schema to class
         cls.__schema__ = entitydict.schema
 
-        # Set default attributes
-        cls.__default_attrs__ = entitydict.get_default_attrs()
-        cls.__default_attrs__["name"] = cls.__name__
-        cls.__default_attrs__["description"] = '' if cls.__doc__ is None else cls.__doc__
-
         # Set validator type on metaclass for each property name
         # It will be used during __setattr__ to validate props.
         for name in cls.__schema__:
             ValidatorType = entitydict.get_validator_type(name)
             setattr(mcls, name, ValidatorType)
 
+        # Set default attributes
+        cls.__default_attrs__ = entitydict.get_default_attrs()
+
         return cls
+
+    def __init__(cls, name, bases, classdict):
+
+        cls.__default_attrs__["name"] = cls.__name__
+        cls.__default_attrs__["description"] = '' if cls.__doc__ is None else cls.__doc__
 
     def get_validator_type(cls, name):
         return type(cls).__dict__.get(name, None)
