@@ -49,7 +49,7 @@ v3tdict = jsonref.loads(json.dumps(v3tdict))
 V3SCHEMAS = v3tdict["components"]["schemas"]
 
 
-class EntityType:
+class EntityValidator:
 
     __default__ = None
 
@@ -60,9 +60,6 @@ class EntityType:
     def __init__(self, entity_type, **kwargs):
         self.entity_type = entity_type
         self.is_array = True if isinstance(self.get_default(), list) else False
-
-    def get(self, instance, owner):
-        return instance.__dict__[self.name]
 
     def _validate_item(self, value):
         if not isinstance(value, self.entity_type):
@@ -142,9 +139,7 @@ class EntityType:
     #         pass
 
 
-
-
-class StringType(EntityType):
+class StringValidator(EntityValidator):
 
     __default__ = ''
 
@@ -152,12 +147,12 @@ class StringType(EntityType):
         super().__init__(str, **kwargs)
 
 
-class StringListType(StringType):
+class StringListValidator(StringValidator):
 
     __default__ = []
 
 
-class IntType(EntityType):
+class IntValidator(EntityValidator):
 
     __default__ = 0
 
@@ -165,7 +160,7 @@ class IntType(EntityType):
         super().__init__(int, **kwargs)
 
 
-class NonNegativeIntType(IntType):
+class NonNegativeIntValidator(IntValidator):
 
     def validate(self, value):
         super().validate(Value)
@@ -173,7 +168,7 @@ class NonNegativeIntType(IntType):
             raise ValueError('Cannot be negative.')
 
 
-class BoolType(EntityType):
+class BoolValidator(EntityValidator):
 
     __default__ = False
 
@@ -181,7 +176,7 @@ class BoolType(EntityType):
         super().__init__(bool, **kwargs)
 
 
-class DictType(EntityType):
+class DictValidator(EntityValidator):
 
     __default__ = {}
 
@@ -189,67 +184,67 @@ class DictType(EntityType):
         super().__init__(dict, **kwargs)
 
 
-class PortType(EntityType):
+class PortValidator(EntityValidator):
 
     __default__ = None
 
     def __init__(self, **kwargs):
-        super().__init__(PortBase, **kwargs)
+        super().__init__(PortType, **kwargs)
 
 
-class PortListType(PortType):
+class PortListValidator(PortValidator):
 
     __default__ = []
 
 
-class ServiceType(EntityType):
+class ServiceValidator(EntityValidator):
 
     __default__ = None
 
     def __init__(self, **kwargs):
-        super().__init__(ServiceBase, **kwargs)
+        super().__init__(ServiceType, **kwargs)
 
 
-class ServiceListType(ServiceType):
+class ServiceListValidator(ServiceValidator):
 
     __default__ = []
 
 
-class SubstrateType(EntityType):
+class SubstrateValidator(EntityValidator):
 
     __default__ = None
 
     def __init__(self, **kwargs):
-        super().__init__(SubstrateBase, **kwargs)
+        super().__init__(SubstrateType, **kwargs)
 
 
-class SubstrateListType(SubstrateType):
+class SubstrateListValidator(SubstrateValidator):
 
     __default__ = []
 
 
-class DeploymentType(EntityType):
+class DeploymentValidator(EntityValidator):
 
     __default__ = None
 
     def __init__(self, **kwargs):
-        super().__init__(DeploymentBase, **kwargs)
+        super().__init__(DeploymentType, **kwargs)
 
 
-class DeploymentListType(DeploymentType):
+class DeploymentListValidator(DeploymentValidator):
 
     __default__ = []
 
 
-class ProfileType(EntityType):
+class ProfileValidator(EntityValidator):
 
     __default__ = None
 
     def __init__(self, **kwargs):
-        super().__init__(ProfileBase, **kwargs)
+        super().__init__(ProfileType, **kwargs)
 
 
-class ProfileListType(ProfileType):
+class ProfileListValidator(ProfileValidator):
 
     __default__ = []
 
@@ -266,33 +261,33 @@ class EntityDict(dict):
         self.schema = schema.get("properties", {})
         self.schema_type_to_descriptor_cls = {
 
-            "string": StringType,
-            "strings": StringListType,
+            "string": StringValidator,
+            "strings": StringListValidator,
 
-            "integer": IntType,
+            "integer": IntValidator,
 
-            "dict": DictType,
+            "dict": DictValidator,
 
-            "boolean": BoolType,
+            "boolean": BoolValidator,
 
-            "port": PortType,
-            "ports": PortListType,
+            "port": PortValidator,
+            "ports": PortListValidator,
 
-            "service": ServiceType,
-            "services": ServiceListType,
+            "service": ServiceValidator,
+            "services": ServiceListValidator,
 
-            "substrate": SubstrateType,
-            "substrates": SubstrateListType,
+            "substrate": SubstrateValidator,
+            "substrates": SubstrateListValidator,
 
-            "deployment": DeploymentType,
-            "deployments": DeploymentListType,
+            "deployment": DeploymentValidator,
+            "deployments": DeploymentListValidator,
 
-            "profile": ProfileType,
-            "profiles": ProfileListType,
+            "profile": ProfileValidator,
+            "profiles": ProfileListValidator,
         }
 
 
-class EntityBase(type):
+class EntityType(type):
 
     __schema__ = {}
 
@@ -415,55 +410,55 @@ class EntityBase(type):
                           separators=(",", ": ") if pprint else (",", ":"))
 
 
-class Entity(metaclass=EntityBase):
+class Entity(metaclass=EntityType):
     pass
 
 
-class PortBase(EntityBase):
+class PortType(EntityType):
     __schema__ = SCHEMAS["Port"]
 
 
-class Port(Entity, metaclass=PortBase):
+class Port(Entity, metaclass=PortType):
     pass
 
 
-class ServiceBase(EntityBase):
+class ServiceType(EntityType):
     __schema__ = SCHEMAS["Service"]
 
 
-class Service(Entity, metaclass=ServiceBase):
+class Service(Entity, metaclass=ServiceType):
     pass
 
 
-class SubstrateBase(EntityBase):
+class SubstrateType(EntityType):
     __schema__ = SCHEMAS["Substrate"]
 
 
-class Substrate(Entity, metaclass=SubstrateBase):
+class Substrate(Entity, metaclass=SubstrateType):
     pass
 
 
-class DeploymentBase(EntityBase):
+class DeploymentType(EntityType):
     __schema__ = SCHEMAS["Deployment"]
 
 
-class Deployment(Entity, metaclass=DeploymentBase):
+class Deployment(Entity, metaclass=DeploymentType):
     pass
 
 
-class ProfileBase(EntityBase):
+class ProfileType(EntityType):
     __schema__ = SCHEMAS["Profile"]
 
 
-class Profile(Entity, metaclass=ProfileBase):
+class Profile(Entity, metaclass=ProfileType):
     pass
 
 
-class BlueprintBase(EntityBase):
+class BlueprintType(EntityType):
     __schema__ = SCHEMAS["Blueprint"]
 
 
-class Blueprint(Entity, metaclass=BlueprintBase):
+class Blueprint(Entity, metaclass=BlueprintType):
     pass
 
 
@@ -512,7 +507,7 @@ class FooBase(type):
 
         cls.__valid_attrs__ = foodict.valid_attrs
 
-        setattr(type(cls), "singleton", BoolType())
+        setattr(type(cls), "singleton", BoolValidator())
 
         # print(mcls.__dict__)
 
