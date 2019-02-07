@@ -247,15 +247,19 @@ class EntityType(type):
 
     def __new__(mcls, name, bases, entitydict):
 
+        # Create class
         cls = super().__new__(mcls, name, bases, dict(entitydict))
 
-        # ToDo - add comments for each step
+        # Attach schema to class
         cls.__schema__ = entitydict.schema
 
+        # Set default attributes
         cls.__default_attrs__ = entitydict.get_default_attrs()
         cls.__default_attrs__["name"] = cls.__name__
         cls.__default_attrs__["description"] = '' if cls.__doc__ is None else cls.__doc__
 
+        # Set validator type on metaclass for each property name
+        # It will be used during __setattr__ to validate props.
         for name in cls.__schema__:
             ValidatorType = entitydict.get_validator_type(name)
             setattr(mcls, name, ValidatorType)
