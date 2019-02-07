@@ -189,33 +189,46 @@ class DictValidator(PropertyValidator, openapi_type="dict"):
 
 ###
 
-class EntityDict(dict):
+class EntityDict(OrderedDict):
 
     def __init__(self, schema):
         self.schema = schema.get("properties", {})
         self.property_validators = PropertyValidatorBase.subclasses
 
+    def _get_default_attrs(self):
+        defaults = {}
+        for name, props in self.schema.items():
+            ValidatorType = self._get_validator_type(name)
+            defaults[name] = props.get("default", ValidatorType.get_default())
+
+        return defaults
+
+    def _get_validator_type(self, name):
+        props = self.schema.get(name)
+        type_ = props.get("type", None)
+        if type_ is None:
+            raise Exception("Invalid schema {} given".format(props))
+
+        if type_ == "object" or type_ == "array":
+            type_ = props.get("x-calm-dsl-type", None)
+            if type_ is None:
+                raise Exception("x-calm-dsl-type extension for {} not found".format(name))
+
+        ValidatorType = self.property_validators.get(type_, None)
+        if ValidatorType is None:
+            raise TypeError("Type {} not supported".format(type_))
+
+        return ValidatorType
+
+    def _check_name(self, name):
+        if name not in self.schema:
+            raise TypeError("Unknown attribute {} given".format(name))
+
     def _validate(self, name, value):
 
         if not (name.startswith('__') and name.endswith('__')):
-            if name not in self.schema:
-                raise TypeError("Unknown attribute {} given".format(name))
-
-            props = self.schema.get(name)
-            type_ = props.get("type", None)
-            if type_ is None:
-                raise Exception("Invalid schema {} given".format(props))
-
-            if type_ == "object" or type_ == "array":
-                type_ = props.get("x-calm-dsl-type", None)
-                if type_ is None:
-                    raise Exception("x-calm-dsl-type extension for {} not found".format(name))
-
-
-            ValidatorType = self.property_validators.get(type_, None)
-            if ValidatorType is None:
-                raise TypeError("Type {} not supported".format(type_))
-
+            self._check_name(name)
+            ValidatorType = self._get_validator_type(name)
             ValidatorType.validate(value)
 
     def __setitem__(self, name, value):
