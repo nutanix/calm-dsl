@@ -49,7 +49,18 @@ v3tdict = jsonref.loads(json.dumps(v3tdict))
 V3SCHEMAS = v3tdict["components"]["schemas"]
 
 
-class EntityValidator:
+
+class PropertyValidatorBase:
+    subclasses = {}
+
+    def __init_subclass__(cls, openapi_type, **kwargs):
+        super().__init_subclass__(**kwargs)
+
+        if openapi_type is not None:
+            cls.subclasses[openapi_type] = cls
+
+
+class PropertyValidator(PropertyValidatorBase, openapi_type=None):
 
     __default__ = None
 
@@ -139,7 +150,7 @@ class EntityValidator:
     #         pass
 
 
-class StringValidator(EntityValidator):
+class StringValidator(PropertyValidator, openapi_type="string"):
 
     __default__ = ''
 
@@ -147,12 +158,12 @@ class StringValidator(EntityValidator):
         super().__init__(str, **kwargs)
 
 
-class StringListValidator(StringValidator):
+class StringListValidator(StringValidator, openapi_type="strings"):
 
     __default__ = []
 
 
-class IntValidator(EntityValidator):
+class IntValidator(PropertyValidator, openapi_type="integer"):
 
     __default__ = 0
 
@@ -160,15 +171,7 @@ class IntValidator(EntityValidator):
         super().__init__(int, **kwargs)
 
 
-class NonNegativeIntValidator(IntValidator):
-
-    def validate(self, value):
-        super().validate(Value)
-        if value < 0:
-            raise ValueError('Cannot be negative.')
-
-
-class BoolValidator(EntityValidator):
+class BoolValidator(PropertyValidator, openapi_type="boolean"):
 
     __default__ = False
 
@@ -176,7 +179,7 @@ class BoolValidator(EntityValidator):
         super().__init__(bool, **kwargs)
 
 
-class DictValidator(EntityValidator):
+class DictValidator(PropertyValidator, openapi_type="dict"):
 
     __default__ = {}
 
@@ -184,7 +187,7 @@ class DictValidator(EntityValidator):
         super().__init__(dict, **kwargs)
 
 
-class PortValidator(EntityValidator):
+class PortValidator(PropertyValidator, openapi_type="port"):
 
     __default__ = None
 
@@ -192,12 +195,12 @@ class PortValidator(EntityValidator):
         super().__init__(PortType, **kwargs)
 
 
-class PortListValidator(PortValidator):
+class PortListValidator(PortValidator, openapi_type="ports"):
 
     __default__ = []
 
 
-class ServiceValidator(EntityValidator):
+class ServiceValidator(PropertyValidator, openapi_type="service"):
 
     __default__ = None
 
@@ -205,12 +208,12 @@ class ServiceValidator(EntityValidator):
         super().__init__(ServiceType, **kwargs)
 
 
-class ServiceListValidator(ServiceValidator):
+class ServiceListValidator(ServiceValidator, openapi_type="services"):
 
     __default__ = []
 
 
-class SubstrateValidator(EntityValidator):
+class SubstrateValidator(PropertyValidator, openapi_type="substrate"):
 
     __default__ = None
 
@@ -218,12 +221,12 @@ class SubstrateValidator(EntityValidator):
         super().__init__(SubstrateType, **kwargs)
 
 
-class SubstrateListValidator(SubstrateValidator):
+class SubstrateListValidator(SubstrateValidator, openapi_type="substrates"):
 
     __default__ = []
 
 
-class DeploymentValidator(EntityValidator):
+class DeploymentValidator(PropertyValidator, openapi_type="deployment"):
 
     __default__ = None
 
@@ -231,12 +234,12 @@ class DeploymentValidator(EntityValidator):
         super().__init__(DeploymentType, **kwargs)
 
 
-class DeploymentListValidator(DeploymentValidator):
+class DeploymentListValidator(DeploymentValidator, openapi_type="deployments"):
 
     __default__ = []
 
 
-class ProfileValidator(EntityValidator):
+class ProfileValidator(PropertyValidator, openapi_type="profile"):
 
     __default__ = None
 
@@ -244,7 +247,7 @@ class ProfileValidator(EntityValidator):
         super().__init__(ProfileType, **kwargs)
 
 
-class ProfileListValidator(ProfileValidator):
+class ProfileListValidator(ProfileValidator, openapi_type="profiles"):
 
     __default__ = []
 
@@ -259,32 +262,7 @@ class EntityDict(dict):
 
     def __init__(self, schema):
         self.schema = schema.get("properties", {})
-        self.schema_type_to_descriptor_cls = {
-
-            "string": StringValidator,
-            "strings": StringListValidator,
-
-            "integer": IntValidator,
-
-            "dict": DictValidator,
-
-            "boolean": BoolValidator,
-
-            "port": PortValidator,
-            "ports": PortListValidator,
-
-            "service": ServiceValidator,
-            "services": ServiceListValidator,
-
-            "substrate": SubstrateValidator,
-            "substrates": SubstrateListValidator,
-
-            "deployment": DeploymentValidator,
-            "deployments": DeploymentListValidator,
-
-            "profile": ProfileValidator,
-            "profiles": ProfileListValidator,
-        }
+        self.property_validators = PropertyValidatorBase.subclasses
 
 
 class EntityType(type):
@@ -317,7 +295,7 @@ class EntityType(type):
                     raise Exception(
                         "calm dsl extension not found. Invalid schema {}" .format(attr_props))
 
-            DescriptorType = entitydict.schema_type_to_descriptor_cls.get(attr_type, None)
+            DescriptorType = entitydict.property_validators.get(attr_type, None)
             if DescriptorType is None:
                 raise TypeError("Unknown type {} given".format(attr_type))
 
