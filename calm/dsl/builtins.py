@@ -74,30 +74,29 @@ class PropertyValidator(PropertyValidatorBase, openapi_type=None):
     def get_kind(cls):
         return cls.__kind__
 
-    def __init__(self):
-        self.entity_type = self.get_kind()
-        self.is_array = True if isinstance(self.get_default(), list) else False
+    @classmethod
+    def _validate_item(cls, value):
+        kind = cls.get_kind()
+        if not isinstance(value, kind):
+            raise TypeError('{} is not of type {}'.format(value, kind))
 
-    def _validate_item(self, value):
-        if not isinstance(value, self.entity_type):
-            raise TypeError(
-                '{} is not of type {}.'.format(
-                    value, self.entity_type))
-
-    def _validate_list(self, values):
+    @staticmethod
+    def _validate_list(values):
         if not isinstance(values, list):
-            raise TypeError('{} is not of type {}.'.format(values, list))
+            raise TypeError('{} is not of type {}'.format(values, list))
 
-    def validate(self, value):
-        if not self.is_array:
-            self._validate_item(value)
+    @classmethod
+    def validate(cls, value):
+
+        default = cls.get_default()
+        is_array = True if isinstance(default, list) else False
+
+        if not is_array:
+            cls._validate_item(value)
         else:
-            self._validate_list(value)
+            cls._validate_list(value)
             for v in value:
-                self._validate_item(v)
-
-    def set_name(self, owner, name):
-        self.name = name
+                cls._validate_item(v)
 
     # Too much magic going on with `__set__()` as described below!
     # Owner classes should call `__validate__()` explicitly through descriptors in
@@ -196,12 +195,32 @@ class EntityDict(dict):
         self.schema = schema.get("properties", {})
         self.property_validators = PropertyValidatorBase.subclasses
 
-    def __setitem__(self, name, value):
+    def _validate(self, name, value):
 
         if not (name.startswith('__') and name.endswith('__')):
             if name not in self.schema:
                 raise TypeError("Unknown attribute {} given".format(name))
 
+            props = self.schema.get(name)
+            type_ = props.get("type", None)
+            if type_ is None:
+                raise Exception("Invalid schema {} given".format(props))
+
+            if type_ == "object" or type_ == "array":
+                type_ = props.get("x-calm-dsl-type", None)
+                if type_ is None:
+                    raise Exception("x-calm-dsl-type extension for {} not found".format(name))
+
+
+            ValidatorType = self.property_validators.get(type_, None)
+            if ValidatorType is None:
+                raise TypeError("Type {} not supported".format(type_))
+
+            ValidatorType.validate(value)
+
+    def __setitem__(self, name, value):
+
+        self._validate(name, value)
         super().__setitem__(name, value)
 
 
