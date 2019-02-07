@@ -25,11 +25,25 @@ class EntityDict(OrderedDict):
         if type_ is None:
             raise Exception("Invalid schema {} given".format(props))
 
-        if type_ == "object" or type_ == "array":
+        if type_ == "object":
             type_ = props.get("x-calm-dsl-type", None)
             if type_ is None:
                 raise Exception(
                     "x-calm-dsl-type extension for {} not found".format(name))
+
+        if type_ == "array":
+            item_props = props.get("items", None)
+            item_type = item_props.get("type", None)
+            if item_type is None:
+                raise Exception("Invalid schema {} given".format(item_type))
+
+            if item_type == "object":
+                item_type = item_props.get("x-calm-dsl-type", None)
+                if item_type is None:
+                    raise Exception(
+                        "x-calm-dsl-type extension for {} not found".format(name))
+
+            type_ = item_type + "s"
 
         ValidatorType = self.property_validators.get(type_, None)
         if ValidatorType is None:
