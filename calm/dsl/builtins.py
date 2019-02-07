@@ -53,13 +53,13 @@ class EntityType:
 
     __default__ = None
 
-    def __init__(self, entity_type, is_array=False, **kwargs):
-        self.entity_type = entity_type
-        self.is_array = is_array
-
     @classmethod
     def get_default(cls):
         return cls.__default__
+
+    def __init__(self, entity_type, **kwargs):
+        self.entity_type = entity_type
+        self.is_array = True if isinstance(self.get_default(), list) else False
 
     def get(self, instance, owner):
         return instance.__dict__[self.name]
@@ -74,7 +74,7 @@ class EntityType:
         if not isinstance(values, list):
             raise TypeError('{} is not of type {}.'.format(values, list))
 
-    def validate(self, value, is_array=False):
+    def validate(self, value):
         if not self.is_array:
             self._validate_item(value)
         else:
@@ -156,9 +156,6 @@ class StringListType(StringType):
 
     __default__ = []
 
-    def __init__(self, **kwargs):
-        super().__init__(is_array=True, **kwargs)
-
 
 class IntType(EntityType):
 
@@ -204,9 +201,6 @@ class PortListType(PortType):
 
     __default__ = []
 
-    def __init__(self, **kwargs):
-        super().__init__(is_array=True, **kwargs)
-
 
 class ServiceType(EntityType):
 
@@ -219,9 +213,6 @@ class ServiceType(EntityType):
 class ServiceListType(ServiceType):
 
     __default__ = []
-
-    def __init__(self, **kwargs):
-        super().__init__(is_array=True, **kwargs)
 
 
 class SubstrateType(EntityType):
@@ -236,9 +227,6 @@ class SubstrateListType(SubstrateType):
 
     __default__ = []
 
-    def __init__(self, **kwargs):
-        super().__init__(is_array=True, **kwargs)
-
 
 class DeploymentType(EntityType):
 
@@ -251,9 +239,6 @@ class DeploymentType(EntityType):
 class DeploymentListType(DeploymentType):
 
     __default__ = []
-
-    def __init__(self, **kwargs):
-        super().__init__(is_array=True, **kwargs)
 
 
 class ProfileType(EntityType):
@@ -268,8 +253,6 @@ class ProfileListType(ProfileType):
 
     __default__ = []
 
-    def __init__(self, **kwargs):
-        super().__init__(is_array=True, **kwargs)
 
 ###
 
