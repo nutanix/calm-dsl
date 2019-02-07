@@ -11,14 +11,6 @@ class EntityDict(OrderedDict):
         self.schema = schema.get("properties", {})
         self.property_validators = get_property_validators()
 
-    def get_default_attrs(self):
-        defaults = {}
-        for name, props in self.schema.items():
-            ValidatorType = self.get_validator_type(name)
-            defaults[name] = props.get("default", ValidatorType.get_default())
-
-        return defaults
-
     def get_validator_type(self, name):
         props = self.schema.get(name)
         type_ = props.get("type", None)
@@ -37,6 +29,7 @@ class EntityDict(OrderedDict):
             if item_type is None:
                 raise Exception("Invalid schema {} given".format(item_type))
 
+            # TODO - refactor
             if item_type == "object":
                 item_type = item_props.get("x-calm-dsl-type", None)
                 if item_type is None:
@@ -84,14 +77,18 @@ class EntityType(type):
         # Attach schema to class
         cls.__schema__ = entitydict.schema
 
-        # Set validator type on metaclass for each property name
-        # It will be used during __setattr__ to validate props.
-        for name in cls.__schema__:
+        # Init default attrs dict
+        cls.__default_attrs__ = {}
+
+        for name, props in cls.__schema__.items():
+
+            # Set validator type on metaclass for each property name
+            # It will be used during __setattr__ to validate props.
             ValidatorType = entitydict.get_validator_type(name)
             setattr(mcls, name, ValidatorType)
 
-        # Set default attributes
-        cls.__default_attrs__ = entitydict.get_default_attrs()
+            # Set default attribute
+            cls.__default_attrs__[name] = props.get("default", ValidatorType.get_default())
 
         return cls
 
