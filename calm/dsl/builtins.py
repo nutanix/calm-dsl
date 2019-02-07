@@ -196,6 +196,14 @@ class EntityDict(dict):
         self.schema = schema.get("properties", {})
         self.property_validators = PropertyValidatorBase.subclasses
 
+    def __setitem__(self, name, value):
+
+        if not (name.startswith('__') and name.endswith('__')):
+            if name not in self.schema:
+                raise TypeError("Unknown attribute {} given".format(name))
+
+        super().__setitem__(name, value)
+
 
 class EntityType(type):
 
