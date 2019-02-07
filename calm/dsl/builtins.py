@@ -333,6 +333,10 @@ class PortType(EntityType):
     __schema__ = SCHEMAS["Port"]
 
 
+class Port(Entity, metaclass=PortType):
+    pass
+
+
 class PortValidator(PropertyValidator, openapi_type="port"):
 
     __default__ = None
@@ -346,14 +350,14 @@ class PortListValidator(PortValidator, openapi_type="ports"):
     __default__ = []
 
 
-class Port(Entity, metaclass=PortType):
-    pass
-
-
 ## Service
 
 class ServiceType(EntityType):
     __schema__ = SCHEMAS["Service"]
+
+
+class Service(Entity, metaclass=ServiceType):
+    pass
 
 
 class ServiceValidator(PropertyValidator, openapi_type="service"):
@@ -369,14 +373,14 @@ class ServiceListValidator(ServiceValidator, openapi_type="services"):
     __default__ = []
 
 
-class Service(Entity, metaclass=ServiceType):
-    pass
-
-
 ## Substrate
 
 class SubstrateType(EntityType):
     __schema__ = SCHEMAS["Substrate"]
+
+
+class Substrate(Entity, metaclass=SubstrateType):
+    pass
 
 
 class SubstrateValidator(PropertyValidator, openapi_type="substrate"):
@@ -392,15 +396,15 @@ class SubstrateListValidator(SubstrateValidator, openapi_type="substrates"):
     __default__ = []
 
 
-class Substrate(Entity, metaclass=SubstrateType):
-    pass
-
-
 ## Deployment
 
 
 class DeploymentType(EntityType):
     __schema__ = SCHEMAS["Deployment"]
+
+
+class Deployment(Entity, metaclass=DeploymentType):
+    pass
 
 
 class DeploymentValidator(PropertyValidator, openapi_type="deployment"):
@@ -416,14 +420,14 @@ class DeploymentListValidator(DeploymentValidator, openapi_type="deployments"):
     __default__ = []
 
 
-class Deployment(Entity, metaclass=DeploymentType):
-    pass
-
-
 ## Profile
 
 class ProfileType(EntityType):
     __schema__ = SCHEMAS["Profile"]
+
+
+class Profile(Entity, metaclass=ProfileType):
+    pass
 
 
 class ProfileValidator(PropertyValidator, openapi_type="profile"):
@@ -439,8 +443,6 @@ class ProfileListValidator(ProfileValidator, openapi_type="profiles"):
     __default__ = []
 
 
-class Profile(Entity, metaclass=ProfileType):
-    pass
 
 
 ## Blueprint
@@ -448,7 +450,6 @@ class Profile(Entity, metaclass=ProfileType):
 class BlueprintType(EntityType):
     __schema__ = SCHEMAS["Blueprint"]
 
-## TODO - Add bp validators
 
 class Blueprint(Entity, metaclass=BlueprintType):
     pass
