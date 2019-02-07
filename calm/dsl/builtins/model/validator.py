@@ -51,7 +51,7 @@ class PropertyValidator(_PropertyValidatorBase, openapi_type=None):
                 cls._validate_item(v)
 
 
-## built-in validators
+# built-in validators
 
 class StringValidator(PropertyValidator, openapi_type="string"):
 

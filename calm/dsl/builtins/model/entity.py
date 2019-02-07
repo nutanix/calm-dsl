@@ -28,7 +28,8 @@ class EntityDict(OrderedDict):
         if type_ == "object" or type_ == "array":
             type_ = props.get("x-calm-dsl-type", None)
             if type_ is None:
-                raise Exception("x-calm-dsl-type extension for {} not found".format(name))
+                raise Exception(
+                    "x-calm-dsl-type extension for {} not found".format(name))
 
         ValidatorType = self.property_validators.get(type_, None)
         if ValidatorType is None:
@@ -83,7 +84,8 @@ class EntityType(type):
     def __init__(cls, name, bases, classdict):
 
         cls.__default_attrs__["name"] = cls.__name__
-        cls.__default_attrs__["description"] = '' if cls.__doc__ is None else cls.__doc__
+        cls.__default_attrs__[
+            "description"] = '' if cls.__doc__ is None else cls.__doc__
 
     def get_validator_type(cls, name):
         return type(cls).__dict__.get(name, None)

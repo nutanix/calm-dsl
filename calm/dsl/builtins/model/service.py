@@ -3,7 +3,7 @@ from .validator import PropertyValidator
 from .base import SCHEMAS
 
 
-## Service
+# Service
 
 class ServiceType(EntityType):
     __schema__ = SCHEMAS["Service"]

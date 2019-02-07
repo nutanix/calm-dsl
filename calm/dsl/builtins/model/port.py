@@ -3,7 +3,7 @@ from .validator import PropertyValidator
 from .base import SCHEMAS
 
 
-## Port
+# Port
 
 class PortType(EntityType):
     __schema__ = SCHEMAS["Port"]

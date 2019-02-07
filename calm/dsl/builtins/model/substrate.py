@@ -3,7 +3,7 @@ from .validator import PropertyValidator
 from .base import SCHEMAS
 
 
-## Substrate
+# Substrate
 
 class SubstrateType(EntityType):
     __schema__ = SCHEMAS["Substrate"]

@@ -40,7 +40,6 @@ v3tdict = jsonref.loads(json.dumps(v3tdict))
 V3SCHEMAS = v3tdict["components"]["schemas"]
 
 
-
 def read_vm_spec(filename):
 
     file_path = os.path.join(
@@ -54,9 +53,6 @@ def read_vm_spec(filename):
 
 
 ###
-
-
-
 
 
 ###

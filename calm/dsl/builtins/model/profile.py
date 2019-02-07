@@ -3,7 +3,7 @@ from .validator import PropertyValidator
 from .base import SCHEMAS
 
 
-## Profile
+# Profile
 
 class ProfileType(EntityType):
     __schema__ = SCHEMAS["Profile"]

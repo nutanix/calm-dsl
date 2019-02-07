@@ -2,7 +2,7 @@ from .entity import EntityType, Entity
 from .base import SCHEMAS
 
 
-## Blueprint
+# Blueprint
 
 class BlueprintType(EntityType):
     __schema__ = SCHEMAS["Blueprint"]
