@@ -241,9 +241,39 @@ class ProfileListType(ProfileType):
 
 ###
 
+type_to_descriptor_cls = {
 
-class CustomDict(dict):
-    pass
+    "string": StringType,
+    "strings": StringListType,
+
+    "integer": IntType,
+
+    "dict": DictType,
+
+    "boolean": BoolType,
+
+    "port": PortType,
+    "ports": PortListType,
+
+    "service": ServiceType,
+    "services": ServiceListType,
+
+    "substrate": SubstrateType,
+    "substrates": SubstrateListType,
+
+    "deployment": DeploymentType,
+    "deployments": DeploymentListType,
+
+    "profile": ProfileType,
+    "profiles": ProfileListType,
+}
+
+###
+
+class EntityDict(dict):
+
+    def __init__(self, schema):
+        self.schema = schema.get("properties", {})
 
 
 class EntityBase(type):
@@ -252,17 +282,17 @@ class EntityBase(type):
 
     @classmethod
     def __prepare__(mcls, name, bases, **kwargs):
-        return CustomDict()
+        return EntityDict(schema=mcls.__schema__)
 
-    def __new__(mcls, name, bases, ns):
+    def __new__(mcls, name, bases, entitydict):
 
-        cls = super().__new__(mcls, name, bases, ns)
+        cls = super().__new__(mcls, name, bases, dict(entitydict))
+
+        cls.__schema__ = entitydict.schema
 
         cls.__default_attrs__ = {}
 
-        schema_props = mcls.__schema__.get("properties", {})
-
-        for attr, attr_props in schema_props.items():
+        for attr, attr_props in cls.__schema__.items():
 
             attr_type = attr_props.get("type", None)
 
@@ -370,36 +400,7 @@ class EntityBase(type):
 
 
 class Entity(metaclass=EntityBase):
-
-    __schema__ = {}
-
-
-type_to_descriptor_cls = {
-
-    "string": StringType,
-    "strings": StringListType,
-
-    "integer": IntType,
-
-    "dict": DictType,
-
-    "boolean": BoolType,
-
-    "port": PortType,
-    "ports": PortListType,
-
-    "service": ServiceType,
-    "services": ServiceListType,
-
-    "substrate": SubstrateType,
-    "substrates": SubstrateListType,
-
-    "deployment": DeploymentType,
-    "deployments": DeploymentListType,
-
-    "profile": ProfileType,
-    "profiles": ProfileListType,
-}
+    pass
 
 
 class PortBase(EntityBase):
