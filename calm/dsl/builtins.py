@@ -51,13 +51,15 @@ V3SCHEMAS = v3tdict["components"]["schemas"]
 
 class EntityType:
 
-    def __init__(self, entity_type, default=None, is_array=False, **kwargs):
+    __default__ = None
+
+    def __init__(self, entity_type, is_array=False, **kwargs):
         self.entity_type = entity_type
-        self._default = default
         self.is_array = is_array
 
-    def get_default(self):
-        return self._default
+    @classmethod
+    def get_default(cls):
+        return cls.__default__
 
     def get(self, instance, owner):
         return instance.__dict__[self.name]
@@ -144,11 +146,15 @@ class EntityType:
 
 class StringType(EntityType):
 
+    __default__ = ''
+
     def __init__(self, **kwargs):
-        super().__init__(str, default='', **kwargs)
+        super().__init__(str, **kwargs)
 
 
 class StringListType(StringType):
+
+    __default__ = []
 
     def __init__(self, **kwargs):
         super().__init__(is_array=True, **kwargs)
@@ -156,8 +162,10 @@ class StringListType(StringType):
 
 class IntType(EntityType):
 
+    __default__ = 0
+
     def __init__(self, **kwargs):
-        super().__init__(int, default=0, **kwargs)
+        super().__init__(int, **kwargs)
 
 
 class NonNegativeIntType(IntType):
@@ -170,17 +178,23 @@ class NonNegativeIntType(IntType):
 
 class BoolType(EntityType):
 
+    __default__ = False
+
     def __init__(self, **kwargs):
-        super().__init__(bool, default=False, **kwargs)
+        super().__init__(bool, **kwargs)
 
 
 class DictType(EntityType):
 
+    __default__ = {}
+
     def __init__(self, **kwargs):
-        super().__init__(dict, default={}, **kwargs)
+        super().__init__(dict, **kwargs)
 
 
 class PortType(EntityType):
+
+    __default__ = None
 
     def __init__(self, **kwargs):
         super().__init__(PortBase, **kwargs)
@@ -188,11 +202,15 @@ class PortType(EntityType):
 
 class PortListType(PortType):
 
+    __default__ = []
+
     def __init__(self, **kwargs):
         super().__init__(is_array=True, **kwargs)
 
 
 class ServiceType(EntityType):
+
+    __default__ = None
 
     def __init__(self, **kwargs):
         super().__init__(ServiceBase, **kwargs)
@@ -200,11 +218,15 @@ class ServiceType(EntityType):
 
 class ServiceListType(ServiceType):
 
+    __default__ = []
+
     def __init__(self, **kwargs):
         super().__init__(is_array=True, **kwargs)
 
 
 class SubstrateType(EntityType):
+
+    __default__ = None
 
     def __init__(self, **kwargs):
         super().__init__(SubstrateBase, **kwargs)
@@ -212,11 +234,15 @@ class SubstrateType(EntityType):
 
 class SubstrateListType(SubstrateType):
 
+    __default__ = []
+
     def __init__(self, **kwargs):
         super().__init__(is_array=True, **kwargs)
 
 
 class DeploymentType(EntityType):
+
+    __default__ = None
 
     def __init__(self, **kwargs):
         super().__init__(DeploymentBase, **kwargs)
@@ -224,17 +250,23 @@ class DeploymentType(EntityType):
 
 class DeploymentListType(DeploymentType):
 
+    __default__ = []
+
     def __init__(self, **kwargs):
         super().__init__(is_array=True, **kwargs)
 
 
 class ProfileType(EntityType):
 
+    __default__ = None
+
     def __init__(self, **kwargs):
         super().__init__(ProfileBase, **kwargs)
 
 
 class ProfileListType(ProfileType):
+
+    __default__ = []
 
     def __init__(self, **kwargs):
         super().__init__(is_array=True, **kwargs)
