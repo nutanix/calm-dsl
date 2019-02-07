@@ -319,7 +319,7 @@ class EntityBase(type):
 
     def _get_descr_obj(cls, name):
 
-        return cls.__class__.__dict__.get(name, None)
+        return type(cls).__dict__.get(name, None)
 
     def _call_descr_validate(cls, name, value):
 
