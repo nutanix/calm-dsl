@@ -195,15 +195,15 @@ class EntityDict(OrderedDict):
         self.schema = schema.get("properties", {})
         self.property_validators = PropertyValidatorBase.subclasses
 
-    def _get_default_attrs(self):
+    def get_default_attrs(self):
         defaults = {}
         for name, props in self.schema.items():
-            ValidatorType = self._get_validator_type(name)
+            ValidatorType = self.get_validator_type(name)
             defaults[name] = props.get("default", ValidatorType.get_default())
 
         return defaults
 
-    def _get_validator_type(self, name):
+    def get_validator_type(self, name):
         props = self.schema.get(name)
         type_ = props.get("type", None)
         if type_ is None:
@@ -228,7 +228,7 @@ class EntityDict(OrderedDict):
 
         if not (name.startswith('__') and name.endswith('__')):
             self._check_name(name)
-            ValidatorType = self._get_validator_type(name)
+            ValidatorType = self.get_validator_type(name)
             ValidatorType.validate(value)
 
     def __setitem__(self, name, value):
@@ -249,62 +249,16 @@ class EntityType(type):
 
         cls = super().__new__(mcls, name, bases, dict(entitydict))
 
+        # ToDo - add comments for each step
         cls.__schema__ = entitydict.schema
 
-        cls.__default_attrs__ = {}
-
-        for attr, attr_props in cls.__schema__.items():
-
-            attr_type = attr_props.get("type", None)
-
-            if attr_type is None:
-                raise Exception("Invalid schema {} given".format(attr_props))
-
-            if attr_type == "object" or attr_type == "array":
-                attr_type = attr_props.get("x-calm-dsl-type", None)
-
-                if attr_type is None:
-                    raise Exception(
-                        "calm dsl extension not found. Invalid schema {}" .format(attr_props))
-
-            DescriptorType = entitydict.property_validators.get(attr_type, None)
-            if DescriptorType is None:
-                raise TypeError("Unknown type {} given".format(attr_type))
-
-            descr_obj = DescriptorType()
-            setattr(mcls, attr, descr_obj)
-
-            cls.__default_attrs__[attr] = attr_props.get(
-                "default", descr_obj.get_default())
-
+        cls.__default_attrs__ = entitydict.get_default_attrs()
         cls.__default_attrs__["name"] = cls.__name__
-        cls.__default_attrs__[
-            "description"] = cls.__doc__ if cls.__doc__ is not None else ''
+        cls.__default_attrs__["description"] = '' if cls.__doc__ is None else cls.__doc__
 
-        # __set_name__() is called right after class creation which in this case happens
-        # in the super() call above. [PEP 487]
-        # Call __set_name__() again to set the right attribute names
-        for k, v in mcls.__dict__.items():
-            func = getattr(v, 'set_name', None)
-            if func is not None:
-                func(cls, k)
-
-        """
-        # Check if any spurious class attibutes are given before class creation
-        for key in cls.attributes:
-            if key not in cls.__default_attrs__.keys():
-                raise KeyError("Unknown key {} given".format(key))
-        """
-
-        """
-        print("Attrs = {}".format(cls.__default_attrs__))
-        print("----------")
-        print("Init Class dict = {}".format(cls.__dict__))
-        print("----------")
-        """
-
-        for k, v in cls.__dict__.items():
-            cls._validate_attr(k, v)
+        for name in cls.__schema__:
+            ValidatorType = entitydict.get_validator_type(name)
+            setattr(mcls, name, ValidatorType)
 
         return cls
 
