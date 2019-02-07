@@ -1,4 +1,4 @@
-from .base import EntityType, Entity
+from .entity import EntityType, Entity
 from .base import SCHEMAS
 
 

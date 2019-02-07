@@ -1,4 +1,4 @@
-from .base import EntityType, Entity
+from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .base import SCHEMAS
 
