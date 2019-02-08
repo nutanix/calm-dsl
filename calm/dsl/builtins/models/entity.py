@@ -72,7 +72,7 @@ class EntityType(type):
         return type(cls).__dict__.get(name, None)
 
     def check_name(cls, name):
-        if name not in cls.__schema__:
+        if name not in cls.__schema_props__:
             raise TypeError("Unknown attribute {} given".format(name))
 
     def validate(cls, name, value):
