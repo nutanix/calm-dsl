@@ -1,12 +1,11 @@
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
-from .base import SCHEMAS
 
 
 # Port
 
 class PortType(EntityType):
-    __schema__ = SCHEMAS["Port"]
+    __schema_name__ = "Port"
 
 
 class Port(Entity, metaclass=PortType):

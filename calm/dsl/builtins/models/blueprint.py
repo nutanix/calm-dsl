@@ -1,11 +1,10 @@
 from .entity import EntityType, Entity
-from .base import SCHEMAS
 
 
 # Blueprint
 
 class BlueprintType(EntityType):
-    __schema__ = SCHEMAS["Blueprint"]
+    __schema_name__ = "Blueprint"
 
 
 class Blueprint(Entity, metaclass=BlueprintType):

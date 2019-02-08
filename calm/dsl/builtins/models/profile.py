@@ -1,12 +1,11 @@
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
-from .base import SCHEMAS
 
 
 # Profile
 
 class ProfileType(EntityType):
-    __schema__ = SCHEMAS["Profile"]
+    __schema_name__ = "Profile"
 
 
 class Profile(Entity, metaclass=ProfileType):

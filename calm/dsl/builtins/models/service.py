@@ -1,12 +1,11 @@
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
-from .base import SCHEMAS
 
 
 # Service
 
 class ServiceType(EntityType):
-    __schema__ = SCHEMAS["Service"]
+    __schema_name__ = "Service"
 
 
 class Service(Entity, metaclass=ServiceType):

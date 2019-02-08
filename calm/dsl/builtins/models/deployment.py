@@ -1,13 +1,12 @@
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
-from .base import SCHEMAS
 
 
 # Deployment
 
 
 class DeploymentType(EntityType):
-    __schema__ = SCHEMAS["Deployment"]
+    __schema_name__ = "Deployment"
 
 
 class Deployment(Entity, metaclass=DeploymentType):
