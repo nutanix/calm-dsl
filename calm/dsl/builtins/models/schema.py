@@ -13,7 +13,7 @@ from .validator import get_property_validators
 _SCHEMAS = None
 
 
-def get_all_schemas():
+def _get_all_schemas():
     global _SCHEMAS
     if not _SCHEMAS:
         _SCHEMAS = _load_all_schemas()
@@ -32,24 +32,31 @@ def _load_all_schemas(schema_file='main.yaml.jinja2'):
     tdict = jsonref.loads(json.dumps(tdict))
     # print(json.dumps(tdict, cls=EntityJSONEncoder, indent=4, separators=(",", ": ")))
 
-    schema = tdict["components"]["schemas"]
+    schemas = tdict["components"]["schemas"]
+    return schemas
+
+
+def _get_schema(name):
+
+    schemas = _get_all_schemas()
+    schema = schemas.get(name, None)
+    if not schema:
+        raise TypeError("Invalid schema name {} given".format(name))
+
     return schema
 
 
-def get_schema(name):
-    schemas = get_all_schemas()
-    return schemas.get(name, {})
-
-
 def get_schema_props(name):
-    schema = get_schema(name)
-    return schema.get("properties", {})
-
-
-def get_validator_type(schema_props, name):
-
+    schema = _get_schema(name)
+    schema_props = schema.get("properties", None)
     if not schema_props:
-        return None
+        raise TypeError("Invalid schema name {} given".format(name))
+
+    return schema_props
+
+def get_validator_details(schema_props, name):
+
+    is_array = False
 
     props = schema_props.get(name, None)
     if props is None:
@@ -78,11 +85,35 @@ def get_validator_type(schema_props, name):
                 raise Exception(
                     "x-calm-dsl-type extension for {} not found".format(name))
 
-        type_ = item_type + "s"
+        type_ = item_type
+        is_array = True
 
     property_validators = get_property_validators()
     ValidatorType = property_validators.get(type_, None)
     if ValidatorType is None:
         raise TypeError("Type {} not supported".format(type_))
 
-    return ValidatorType
+    # Get default from schema if given, else set default from validator type
+    default = props.get("default", ValidatorType.get_default())
+
+    return ValidatorType, is_array, default
+
+
+def get_validators_with_defaults(schema_props):
+
+    validators = {}
+    defaults ={}
+    for name, props in schema_props.items():
+        ValidatorType, is_array, default = get_validator_details(schema_props, name)
+        validators[name] = (ValidatorType, is_array)
+        defaults[name] = default
+
+    return validators, defaults
+
+
+def get_schema_details(schema_name):
+
+    schema_props = get_schema_props(schema_name)
+    validators, defaults = get_validators_with_defaults(schema_props)
+
+    return schema_props, validators, defaults

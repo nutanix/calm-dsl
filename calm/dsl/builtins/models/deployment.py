@@ -17,8 +17,3 @@ class DeploymentValidator(PropertyValidator, openapi_type="deployment"):
 
     __default__ = None
     __kind__ = DeploymentType
-
-
-class DeploymentListValidator(DeploymentValidator, openapi_type="deployments"):
-
-    __default__ = []

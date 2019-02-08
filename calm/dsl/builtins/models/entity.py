@@ -2,24 +2,25 @@ from collections import OrderedDict
 import json
 from json import JSONEncoder
 
-from .schema import get_schema_props, get_validator_type
+from .schema import get_schema_details
 
 
 class EntityDict(OrderedDict):
 
-    def __init__(self, name):
-        self.schema_props = get_schema_props(name)
+    def __init__(self, validators):
+        self.validators = validators
 
     def _check_name(self, name):
-        if name not in self.schema_props:
+        if name not in self.validators:
             raise TypeError("Unknown attribute {} given".format(name))
 
     def _validate(self, name, value):
 
         if not (name.startswith('__') and name.endswith('__')):
             self._check_name(name)
-            ValidatorType = get_validator_type(self.schema_props, name)
-            ValidatorType.validate(value)
+            ValidatorType, is_array = self.validators[name]
+            if ValidatorType is not None:
+                ValidatorType.validate(value, is_array)
 
     def __setitem__(self, name, value):
 
@@ -33,54 +34,56 @@ class EntityType(type):
 
     @classmethod
     def __prepare__(mcls, name, bases, **kwargs):
-        return EntityDict(name=mcls.__schema_name__)
 
-    def __new__(mcls, name, bases, entitydict):
+        schema_name = mcls.__schema_name__
 
-        # Create class
-        cls = super().__new__(mcls, name, bases, dict(entitydict))
+        # Handle base case (Entity)
+        if not schema_name:
+            return dict()
 
-        # Attach schema properties to class
-        cls.__schema_props__ = entitydict.schema_props
+        # Check if validators were already set during previous class creation.
+        # If yes, then do not set validators again; just return entity dict.
 
-        # Init default attrs dict
-        cls.__default_attrs__ = {}
+        if not hasattr(mcls, '__validator_dict__'):
 
-        for name, props in cls.__schema_props__.items():
+            schema_props, validators, defaults = get_schema_details(schema_name)
 
-            # Set validator type on metaclass for each property name
-            # To be used explicitly during __setattr__() to validate props.
-            # Look at cls._validate() for details.
-            ValidatorType = get_validator_type(cls.__schema_props__, name)
-            if ValidatorType is not None:
-                setattr(mcls, name, ValidatorType)
+            # Set validator dict on metaclass for each prop.
+            # To be used during __setattr__() to validate props.
+            # Look at validate() for details.
+            setattr(mcls, "__validator_dict__", validators)
 
-            # Set default attribute
-            cls.__default_attrs__[name] = props.get("default", ValidatorType.get_default())
+            # Set defaults which will be used during serialization.
+            # Look at json_dumps() for details
+            setattr(mcls, "__default_attrs__", defaults)
 
-        return cls
+            # Attach schema properties to metaclass
+            # SSOT!
+            setattr(mcls, "__schema_props__", schema_props)
 
-    def __init__(cls, name, bases, classdict):
 
-        # Update default attrs with name and description
-        cls.__default_attrs__["name"] = cls.__name__
-        cls.__default_attrs__[
-            "description"] = '' if cls.__doc__ is None else cls.__doc__
+        else:
+            validators = getattr(mcls, '__validator_dict__')
+
+        # Class creation would happen using EntityDict() instead of dict().
+        # This is done to add validations to class attrs during class creation.
+        # Look at __setitem__ in EntityDict
+        return EntityDict(validators)
 
     def lookup_validator_type(cls, name):
         # Use metaclass dictionary to get the right validator type
-        return type(cls).__dict__.get(name, None)
+        return type(cls).__validator_dict__.get(name, None)
 
     def check_name(cls, name):
-        if name not in cls.__schema_props__:
+        if name not in type(cls).__schema_props__:
             raise TypeError("Unknown attribute {} given".format(name))
 
     def validate(cls, name, value):
 
         if not (name.startswith('__') and name.endswith('__')):
             cls.check_name(name)
-            ValidatorType = cls.lookup_validator_type(name)
-            ValidatorType.validate(value)
+            ValidatorType, is_array = cls.lookup_validator_type(name)
+            ValidatorType.validate(value, is_array)
 
     def __setattr__(cls, name, value):
 
@@ -95,13 +98,16 @@ class EntityType(type):
 
     def get_user_attrs(cls):
         user_attrs = {}
+        user_attrs["name"] = cls.__name__
+        user_attrs["description"] = cls.__doc__ if cls.__doc__ else ''
         for name, value in cls.__dict__.items():
             if not (name.startswith('__') and name.endswith('__')):
                 user_attrs[name] = value
+
         return user_attrs
 
     def get_default_attrs(cls):
-        return cls.__default_attrs__
+        return type(cls).__default_attrs__
 
     def json_repr(cls):
 

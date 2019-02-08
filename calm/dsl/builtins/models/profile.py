@@ -16,8 +16,3 @@ class ProfileValidator(PropertyValidator, openapi_type="profile"):
 
     __default__ = None
     __kind__ = ProfileType
-
-
-class ProfileListValidator(ProfileValidator, openapi_type="profiles"):
-
-    __default__ = []
