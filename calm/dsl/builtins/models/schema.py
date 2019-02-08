@@ -22,7 +22,7 @@ def get_all_schemas():
 
 def _load_all_schemas(schema_file='main.yaml.jinja2'):
 
-    loader = PackageLoader('calm.dsl.builtins.model', 'schemas')
+    loader = PackageLoader(__name__, 'schemas')
     env = Environment(loader=loader)
     template = env.get_template(schema_file)
 
