@@ -2,57 +2,23 @@ from collections import OrderedDict
 import json
 from json import JSONEncoder
 
-from .validator import get_property_validators
+from .schema import get_schema_props, get_validator_type
 
 
 class EntityDict(OrderedDict):
 
-    def __init__(self, schema):
-        self.schema = schema.get("properties", {})
-        self.property_validators = get_property_validators()
-
-    def get_validator_type(self, name):
-        props = self.schema.get(name)
-        type_ = props.get("type", None)
-        if type_ is None:
-            raise Exception("Invalid schema {} given".format(props))
-
-        if type_ == "object":
-            type_ = props.get("x-calm-dsl-type", None)
-            if type_ is None:
-                raise Exception(
-                    "x-calm-dsl-type extension for {} not found".format(name))
-
-        if type_ == "array":
-            item_props = props.get("items", None)
-            item_type = item_props.get("type", None)
-            if item_type is None:
-                raise Exception("Invalid schema {} given".format(item_type))
-
-            # TODO - refactor
-            if item_type == "object":
-                item_type = item_props.get("x-calm-dsl-type", None)
-                if item_type is None:
-                    raise Exception(
-                        "x-calm-dsl-type extension for {} not found".format(name))
-
-            type_ = item_type + "s"
-
-        ValidatorType = self.property_validators.get(type_, None)
-        if ValidatorType is None:
-            raise TypeError("Type {} not supported".format(type_))
-
-        return ValidatorType
+    def __init__(self, name):
+        self.schema_props = get_schema_props(name)
 
     def _check_name(self, name):
-        if name not in self.schema:
+        if name not in self.schema_props:
             raise TypeError("Unknown attribute {} given".format(name))
 
     def _validate(self, name, value):
 
         if not (name.startswith('__') and name.endswith('__')):
             self._check_name(name)
-            ValidatorType = self.get_validator_type(name)
+            ValidatorType = get_validator_type(self.schema_props, name)
             ValidatorType.validate(value)
 
     def __setitem__(self, name, value):
@@ -63,30 +29,31 @@ class EntityDict(OrderedDict):
 
 class EntityType(type):
 
-    __schema__ = {}
+    __schema_name__ = None
 
     @classmethod
     def __prepare__(mcls, name, bases, **kwargs):
-        return EntityDict(schema=mcls.__schema__)
+        return EntityDict(name=mcls.__schema_name__)
 
     def __new__(mcls, name, bases, entitydict):
 
         # Create class
         cls = super().__new__(mcls, name, bases, dict(entitydict))
 
-        # Attach schema to class
-        cls.__schema__ = entitydict.schema
+        # Attach schema properties to class
+        cls.__schema_props__ = entitydict.schema_props
 
         # Init default attrs dict
         cls.__default_attrs__ = {}
 
-        for name, props in cls.__schema__.items():
+        for name, props in cls.__schema_props__.items():
 
             # Set validator type on metaclass for each property name
             # To be used explicitly during __setattr__() to validate props.
             # Look at cls._validate() for details.
-            ValidatorType = entitydict.get_validator_type(name)
-            setattr(mcls, name, ValidatorType)
+            ValidatorType = get_validator_type(cls.__schema_props__, name)
+            if ValidatorType is not None:
+                setattr(mcls, name, ValidatorType)
 
             # Set default attribute
             cls.__default_attrs__[name] = props.get("default", ValidatorType.get_default())

@@ -1,12 +1,11 @@
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
-from .base import SCHEMAS
 
 
 # Substrate
 
 class SubstrateType(EntityType):
-    __schema__ = SCHEMAS["Substrate"]
+    __schema_name__ = "Substrate"
 
 
 class Substrate(Entity, metaclass=SubstrateType):

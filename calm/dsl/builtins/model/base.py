@@ -14,32 +14,6 @@ import asttokens
 import jsonref
 
 
-template = Environment(
-    loader=PackageLoader(
-        'calm.dsl',
-        'schemas')).get_template('main.yaml.jinja2')
-
-tdict = yaml.safe_load(StringIO(template.render()))
-
-# Check if all references are resolved
-tdict = jsonref.loads(json.dumps(tdict))
-# print(json.dumps(tdict, cls=EntityJSONEncoder, indent=4, separators=(",", ": ")))
-
-SCHEMAS = tdict["components"]["schemas"]
-
-# Load v3 schema objects
-# TODO - refactor
-
-v3template = Environment(
-    loader=PackageLoader(
-        'calm.dsl',
-        'v3schemas')).get_template('main.yaml.jinja2')
-
-v3tdict = yaml.safe_load(StringIO(v3template.render()))
-v3tdict = jsonref.loads(json.dumps(v3tdict))
-V3SCHEMAS = v3tdict["components"]["schemas"]
-
-
 def read_vm_spec(filename):
 
     file_path = os.path.join(
