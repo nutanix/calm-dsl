@@ -1,6 +1,6 @@
 test:
 	python3 setup.py develop
-	py.test -s -vv
+	py.test -s --cov -vv
 
 dist: test
 	python3 setup.py sdist bdist_wheel
@@ -22,3 +22,7 @@ _init:
 	# Setup our python3 based virtualenv
 	[ -f venv/bin/python3 ] || virtualenv -p python36 venv
 	venv/bin/pip3 install -U pip setuptools
+
+	venv/bin/pip3 install -r requirements.txt -r dev-requirements.txt
+	jupyter contrib nbextension install --user
+	jupyter nbextensions_configurator enable --user

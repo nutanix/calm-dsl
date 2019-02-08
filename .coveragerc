@@ -1,0 +1,6 @@
+[run]
+branch = True
+source = calm/
+[report]
+show_missing = True
+ignore_errors = True
