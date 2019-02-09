@@ -2,7 +2,7 @@ from collections import OrderedDict
 import json
 from json import JSONEncoder
 
-from .schema import get_schema_props, get_validator_type
+from .schema import get_schema_props, get_validator_details
 
 
 class EntityDict(OrderedDict):
@@ -18,7 +18,7 @@ class EntityDict(OrderedDict):
 
         if not (name.startswith('__') and name.endswith('__')):
             self._check_name(name)
-            ValidatorType, is_array = get_validator_type(self.schema_props, name)
+            ValidatorType, is_array, _ = get_validator_details(self.schema_props, name)
             ValidatorType.validate(value, is_array)
 
     def __setitem__(self, name, value):
@@ -51,12 +51,13 @@ class EntityType(type):
             # Set validator type on metaclass for each property name
             # To be used explicitly during __setattr__() to validate props.
             # Look at cls._validate() for details.
-            ValidatorType, is_array = get_validator_type(cls.__schema_props__, name)
+            ValidatorType, is_array, default = get_validator_details(cls.__schema_props__,
+                                                                     name)
             if ValidatorType is not None:
                 setattr(mcls, name, (ValidatorType, is_array))
 
             # Set default attribute
-            cls.__default_attrs__[name] = props.get("default", ValidatorType.get_default())
+            cls.__default_attrs__[name] = default
 
         return cls
 
@@ -79,7 +80,7 @@ class EntityType(type):
 
         if not (name.startswith('__') and name.endswith('__')):
             cls.check_name(name)
-            ValidatorType, is_array = cls.lookup_validator_type(name)
+            ValidatorType, is_array, _ = cls.lookup_validator_type(name)
             ValidatorType.validate(value, is_array)
 
     def __setattr__(cls, name, value):
@@ -98,6 +99,7 @@ class EntityType(type):
         for name, value in cls.__dict__.items():
             if not (name.startswith('__') and name.endswith('__')):
                 user_attrs[name] = value
+
         return user_attrs
 
     def get_default_attrs(cls):

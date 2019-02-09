@@ -46,7 +46,7 @@ def get_schema_props(name):
     return schema.get("properties", {})
 
 
-def get_validator_type(schema_props, name):
+def get_validator_details(schema_props, name):
 
     is_array = False
 
@@ -88,4 +88,7 @@ def get_validator_type(schema_props, name):
     if ValidatorType is None:
         raise TypeError("Type {} not supported".format(type_))
 
-    return ValidatorType, is_array
+    # Get default from schema if given, else set default from validator type
+    default = props.get("default", ValidatorType.get_default())
+
+    return ValidatorType, is_array, default
