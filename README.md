@@ -10,17 +10,20 @@ Use:
 
 ## ToDo
 
- - Add Port type - tcp/udp
- - List of supported protocols - ssh
- - EnumType support
- - Add YAML dumper
- - Allow inline definition of stateless classes like `Port`
- - DSL for runbooks
- - DSL for policies (quotas and notification)
- - DSL for apps (for app lcm)
+ - Language Enhancements:
+   - Add Port type - tcp/udp
+   - List of supported protocols - ssh
+   - EnumType support
+ - Elegance wishlist
+   - Allow inline definition of stateless classes like `Port`
+   - Show required vs optional attributes
+   - Add YAML dumper
+   - Make all attrs available on the class for ease of discovery aand use
+ - DSLs
+   - DSL for runbooks
+   - DSL for policies (quotas and notification)
+   - DSL for apps (for app LCM)
  - Build CLI tooling to interact with calm-server
- - Make all attrs available on the class for ease of discovery aand use
  - Build docker container for jupyter + DSL
- - Show required vs optional attributes
  - ~Make License as GPL~
  - ~Get rid of attributes field~
