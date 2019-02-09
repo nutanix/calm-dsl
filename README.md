@@ -23,6 +23,8 @@ Use:
    - DSL for runbooks
    - DSL for policies (quotas and notification)
    - DSL for apps (for app LCM)
+ - Mega ToDo:
+   - Generate idiomatic python code from blueprint JSON (decompile)
  - Build CLI tooling to interact with calm-server
  - Build docker container for jupyter + DSL
  - ~Make License as GPL~
