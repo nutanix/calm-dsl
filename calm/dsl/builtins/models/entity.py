@@ -44,7 +44,7 @@ class EntityType(type):
         mcls.__schema_props__ = entitydict.schema_props
 
         # Init default attrs dict
-        cls.__default_attrs__ = {}
+        mcls.__default_attrs__ = {}
 
         for name, props in mcls.__schema_props__.items():
 
@@ -57,16 +57,9 @@ class EntityType(type):
                 setattr(mcls, name, (ValidatorType, is_array))
 
             # Set default attribute
-            cls.__default_attrs__[name] = default
+            mcls.__default_attrs__[name] = default
 
         return cls
-
-    def __init__(cls, name, bases, classdict):
-
-        # Update default attrs with name and description
-        cls.__default_attrs__["name"] = cls.__name__
-        cls.__default_attrs__[
-            "description"] = '' if cls.__doc__ is None else cls.__doc__
 
     def lookup_validator_type(cls, name):
         # Use metaclass dictionary to get the right validator type
@@ -96,6 +89,8 @@ class EntityType(type):
 
     def get_user_attrs(cls):
         user_attrs = {}
+        user_attrs["name"] = cls.__name__
+        user_attrs["description"] = cls.__doc__ if cls.__doc__ else ''
         for name, value in cls.__dict__.items():
             if not (name.startswith('__') and name.endswith('__')):
                 user_attrs[name] = value
@@ -103,7 +98,7 @@ class EntityType(type):
         return user_attrs
 
     def get_default_attrs(cls):
-        return cls.__default_attrs__
+        return type(cls).__default_attrs__
 
     def json_repr(cls):
 
