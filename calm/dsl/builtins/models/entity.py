@@ -80,7 +80,7 @@ class EntityType(type):
 
         if not (name.startswith('__') and name.endswith('__')):
             cls.check_name(name)
-            ValidatorType, is_array, _ = cls.lookup_validator_type(name)
+            ValidatorType, is_array = cls.lookup_validator_type(name)
             ValidatorType.validate(value, is_array)
 
     def __setattr__(cls, name, value):
