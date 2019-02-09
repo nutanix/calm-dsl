@@ -40,18 +40,18 @@ class EntityType(type):
         # Create class
         cls = super().__new__(mcls, name, bases, dict(entitydict))
 
-        # Attach schema properties to class
-        cls.__schema_props__ = entitydict.schema_props
+        # Attach schema properties to metaclass
+        mcls.__schema_props__ = entitydict.schema_props
 
         # Init default attrs dict
         cls.__default_attrs__ = {}
 
-        for name, props in cls.__schema_props__.items():
+        for name, props in mcls.__schema_props__.items():
 
             # Set validator type on metaclass for each property name
             # To be used explicitly during __setattr__() to validate props.
             # Look at cls._validate() for details.
-            ValidatorType, is_array, default = get_validator_details(cls.__schema_props__,
+            ValidatorType, is_array, default = get_validator_details(mcls.__schema_props__,
                                                                      name)
             if ValidatorType is not None:
                 setattr(mcls, name, (ValidatorType, is_array))
@@ -73,7 +73,7 @@ class EntityType(type):
         return type(cls).__dict__.get(name, None)
 
     def check_name(cls, name):
-        if name not in cls.__schema_props__:
+        if name not in type(cls).__schema_props__:
             raise TypeError("Unknown attribute {} given".format(name))
 
     def validate(cls, name, value):
