@@ -109,3 +109,11 @@ def get_validators_with_defaults(schema_props):
         defaults[name] = default
 
     return validators, defaults
+
+
+def get_schema_details(schema_name):
+
+    schema_props = get_schema_props(schema_name)
+    validators, defaults = get_validators_with_defaults(schema_props)
+
+    return schema_props, validators, defaults

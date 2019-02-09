@@ -2,7 +2,7 @@ from collections import OrderedDict
 import json
 from json import JSONEncoder
 
-from .schema import get_schema_props, get_validators_with_defaults
+from .schema import get_schema_details
 
 
 class EntityDict(OrderedDict):
@@ -46,17 +46,21 @@ class EntityType(type):
 
         if not hasattr(mcls, '__validator_dict__'):
 
-            # Set validator type on metaclass for each prop.
+            schema_props, validators, defaults = get_schema_details(schema_name)
+
+            # Set validator dict on metaclass for each prop.
             # To be used during __setattr__() to validate props.
             # Look at validate() for details.
-
-            schema_props = get_schema_props(schema_name)
-            validators, defaults = get_validators_with_defaults(schema_props)
-
-            # Attach schema properties, validators and defaults to metaclass
-            setattr(mcls, "__schema_props__", schema_props)
             setattr(mcls, "__validator_dict__", validators)
+
+            # Set defaults which will be used during serialization.
+            # Look at json_dumps() for details
             setattr(mcls, "__default_attrs__", defaults)
+
+            # Attach schema properties to metaclass
+            # SSOT!
+            setattr(mcls, "__schema_props__", schema_props)
+
 
         else:
             validators = getattr(mcls, '__validator_dict__')
