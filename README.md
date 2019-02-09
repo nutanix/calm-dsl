@@ -20,6 +20,7 @@ Use:
  - DSL for apps (for app lcm)
  - Build CLI tooling to interact with calm-server
  - Make all attrs available on the class for ease of discovery aand use
+ - Build docker container for jupyter + DSL
  - Show required vs optional attributes
  - ~Make License as GPL~
  - ~Get rid of attributes field~
