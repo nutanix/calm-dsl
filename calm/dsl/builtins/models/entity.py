@@ -42,23 +42,28 @@ class EntityType(type):
 
         schema_props = get_schema_props(schema_name)
 
-        default_attrs = {}
-        for name, props in schema_props.items():
-            # Set validator type on metaclass for each property name
-            # To be used explicitly during __setattr__() to validate props.
-            # Look at validate() for details.
-            ValidatorType, is_array, default = get_validator_details(schema_props, name)
-            if ValidatorType is not None:
-                setattr(mcls, name, (ValidatorType, is_array))
-                # Set default attribute
-                default_attrs[name] = default
+        # Check if schema props were already set during previous class creation.
+        # If yes, then do not set validators again; just return entity dict.
+        if not hasattr(mcls, '__schema_props__'):
 
-        # Attach schema properties and defaults to metaclass
-        setattr(mcls, "__schema_props__", schema_props)
-        setattr(mcls, "__default_attrs__", default_attrs)
+            default_attrs = {}
+            for name, props in schema_props.items():
+                # Set validator type on metaclass for each property name.
+                # It will be used during __setattr__() to validate props.
+                # Look at validate() for details.
+                ValidatorType, is_array, default = get_validator_details(schema_props, name)
+                if ValidatorType is not None:
+                    setattr(mcls, name, (ValidatorType, is_array))
+                    # Set default attribute
+                    default_attrs[name] = default
+
+            # Attach schema properties and defaults to metaclass
+            setattr(mcls, "__schema_props__", schema_props)
+            setattr(mcls, "__default_attrs__", default_attrs)
 
         # Class creation would happen using EntityDict() instead of dict().
         # This is done to add validations to class attrs during class creation.
+        # Look at __setitem__ in EntityDict
         return EntityDict(schema_props)
 
     def lookup_validator_type(cls, name):
