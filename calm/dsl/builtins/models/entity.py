@@ -57,6 +57,8 @@ class EntityType(type):
         setattr(mcls, "__schema_props__", schema_props)
         setattr(mcls, "__default_attrs__", default_attrs)
 
+        # Class creation would happen using EntityDict() instead of dict().
+        # This is done to add validations to class attrs during class creation.
         return EntityDict(schema_props)
 
     def lookup_validator_type(cls, name):
