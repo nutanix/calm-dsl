@@ -50,9 +50,6 @@ def get_validator_details(schema_props, name):
 
     is_array = False
 
-    if not schema_props:
-        return None
-
     props = schema_props.get(name, None)
     if props is None:
         raise Exception("Invalid schema {} given".format(props))
