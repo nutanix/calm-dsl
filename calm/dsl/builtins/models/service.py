@@ -16,8 +16,3 @@ class ServiceValidator(PropertyValidator, openapi_type="service"):
 
     __default__ = None
     __kind__ = ServiceType
-
-
-class ServiceListValidator(ServiceValidator, openapi_type="services"):
-
-    __default__ = []

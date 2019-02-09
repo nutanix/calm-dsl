@@ -38,10 +38,7 @@ class PropertyValidator(_PropertyValidatorBase, openapi_type=None):
             raise TypeError('{} is not of type {}'.format(values, list))
 
     @classmethod
-    def validate(cls, value):
-
-        default = cls.get_default()
-        is_array = True if isinstance(default, list) else False
+    def validate(cls, value, is_array):
 
         if not is_array:
             cls._validate_item(value)
@@ -57,11 +54,6 @@ class StringValidator(PropertyValidator, openapi_type="string"):
 
     __default__ = ''
     __kind__ = str
-
-
-class StringListValidator(StringValidator, openapi_type="strings"):
-
-    __default__ = []
 
 
 class IntValidator(PropertyValidator, openapi_type="integer"):

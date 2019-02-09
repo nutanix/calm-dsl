@@ -16,8 +16,3 @@ class SubstrateValidator(PropertyValidator, openapi_type="substrate"):
 
     __default__ = None
     __kind__ = SubstrateType
-
-
-class SubstrateListValidator(SubstrateValidator, openapi_type="substrates"):
-
-    __default__ = []

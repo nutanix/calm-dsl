@@ -48,6 +48,8 @@ def get_schema_props(name):
 
 def get_validator_type(schema_props, name):
 
+    is_array = False
+
     if not schema_props:
         return None
 
@@ -78,11 +80,12 @@ def get_validator_type(schema_props, name):
                 raise Exception(
                     "x-calm-dsl-type extension for {} not found".format(name))
 
-        type_ = item_type + "s"
+        type_ = item_type
+        is_array = True
 
     property_validators = get_property_validators()
     ValidatorType = property_validators.get(type_, None)
     if ValidatorType is None:
         raise TypeError("Type {} not supported".format(type_))
 
-    return ValidatorType
+    return ValidatorType, is_array
