@@ -13,5 +13,7 @@ Use:
  - Add Port type - tcp/udp
  - List of supported protocols - ssh
  - EnumType support
+ - Add YAML dumper
+ - Allow inline definition of stateless classes like `Port`
  - ~Make License as GPL~
  - ~Get rid of attributes field~
