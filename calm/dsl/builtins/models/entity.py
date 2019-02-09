@@ -7,8 +7,8 @@ from .schema import get_schema_props, get_validator_details
 
 class EntityDict(OrderedDict):
 
-    def __init__(self, name):
-        self.schema_props = get_schema_props(name)
+    def __init__(self, schema_props):
+        self.schema_props = schema_props
 
     def _check_name(self, name):
         if name not in self.schema_props:
@@ -33,33 +33,31 @@ class EntityType(type):
 
     @classmethod
     def __prepare__(mcls, name, bases, **kwargs):
-        return EntityDict(name=mcls.__schema_name__)
 
-    def __new__(mcls, name, bases, entitydict):
+        schema_name = mcls.__schema_name__
 
-        # Create class
-        cls = super().__new__(mcls, name, bases, dict(entitydict))
+        # Handle base case (Entity)
+        if not schema_name:
+            return dict()
 
-        # Attach schema properties to metaclass
-        mcls.__schema_props__ = entitydict.schema_props
+        schema_props = get_schema_props(schema_name)
 
-        # Init default attrs dict
-        mcls.__default_attrs__ = {}
-
-        for name, props in mcls.__schema_props__.items():
-
+        default_attrs = {}
+        for name, props in schema_props.items():
             # Set validator type on metaclass for each property name
             # To be used explicitly during __setattr__() to validate props.
-            # Look at cls._validate() for details.
-            ValidatorType, is_array, default = get_validator_details(mcls.__schema_props__,
-                                                                     name)
+            # Look at validate() for details.
+            ValidatorType, is_array, default = get_validator_details(schema_props, name)
             if ValidatorType is not None:
                 setattr(mcls, name, (ValidatorType, is_array))
+                # Set default attribute
+                default_attrs[name] = default
 
-            # Set default attribute
-            mcls.__default_attrs__[name] = default
+        # Attach schema properties and defaults to metaclass
+        setattr(mcls, "__schema_props__", schema_props)
+        setattr(mcls, "__default_attrs__", default_attrs)
 
-        return cls
+        return EntityDict(schema_props)
 
     def lookup_validator_type(cls, name):
         # Use metaclass dictionary to get the right validator type
