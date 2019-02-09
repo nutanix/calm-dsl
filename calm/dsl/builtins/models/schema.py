@@ -97,3 +97,15 @@ def get_validator_details(schema_props, name):
     default = props.get("default", ValidatorType.get_default())
 
     return ValidatorType, is_array, default
+
+
+def get_validators_with_defaults(schema_props):
+
+    validators = {}
+    defaults ={}
+    for name, props in schema_props.items():
+        ValidatorType, is_array, default = get_validator_details(schema_props, name)
+        validators[name] = (ValidatorType, is_array)
+        defaults[name] = default
+
+    return validators, defaults
