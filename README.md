@@ -17,3 +17,9 @@ Use:
  - Allow inline definition of stateless classes like `Port`
  - ~Make License as GPL~
  - ~Get rid of attributes field~
+ - DSL for runbooks
+ - DSl for policies (quotas and notification)
+ - DSL for apps (for app lcm)
+ - Build CLI tooling to interact with calm-server
+ - Make all attrs available on the class for ease of discovery aand use
+ - Show required vs optional attributes
