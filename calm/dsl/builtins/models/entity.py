@@ -1,6 +1,9 @@
 from collections import OrderedDict
 import json
 from json import JSONEncoder
+import sys
+
+from ruamel.yaml import YAML
 
 from .schema import get_schema_details
 
@@ -28,9 +31,27 @@ class EntityDict(OrderedDict):
         super().__setitem__(name, value)
 
 
-class EntityType(type):
+class EntityTypeBase(type):
+
+    subclasses = []
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls.subclasses.append(cls)
+
+
+def get_entity_types():
+    return EntityTypeBase.subclasses
+
+
+class EntityType(EntityTypeBase):
 
     __schema_name__ = None
+
+    @classmethod
+    def to_yaml(mcls, representer, node):
+        yaml_tag = '!' + mcls.__schema_name__ if mcls.__schema_name__ else "!Entity"
+        return representer.represent_mapping(yaml_tag, node.json_repr())
 
     @classmethod
     def __prepare__(mcls, name, bases, **kwargs):
@@ -123,6 +144,14 @@ class EntityType(type):
                           sort_keys=sort_keys,
                           indent=4 if pprint else None,
                           separators=(",", ": ") if pprint else (",", ":"))
+
+    def yaml_dump(cls, stream=sys.stdout):
+
+        yaml = YAML()
+        for t in get_entity_types():
+            yaml.register_class(t)
+
+        yaml.dump(cls, stream=stream)
 
 
 class Entity(metaclass=EntityType):

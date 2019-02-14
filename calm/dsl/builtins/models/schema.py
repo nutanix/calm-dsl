@@ -3,7 +3,7 @@
 import json
 from io import StringIO
 
-import yaml
+from ruamel import yaml
 from jinja2 import Environment, PackageLoader
 import jsonref
 

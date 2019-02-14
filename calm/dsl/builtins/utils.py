@@ -1,7 +1,7 @@
 import os
 import sys
 import inspect
-import yaml
+from ruamel import yaml
 
 
 def read_vm_spec(filename):
