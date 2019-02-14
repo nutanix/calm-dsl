@@ -35,13 +35,13 @@ class EntityTypeBase(type):
 
     subclasses = []
 
+    @classmethod
+    def get_entity_types(cls):
+        return cls.subclasses
+
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         cls.subclasses.append(cls)
-
-
-def get_entity_types():
-    return EntityTypeBase.subclasses
 
 
 class EntityType(EntityTypeBase):
@@ -148,7 +148,7 @@ class EntityType(EntityTypeBase):
     def yaml_dump(cls, stream=sys.stdout):
 
         yaml = YAML()
-        for t in get_entity_types():
+        for t in cls.get_entity_types():
             yaml.register_class(t)
 
         yaml.dump(cls, stream=stream)
