@@ -14,6 +14,7 @@ Use:
    - Add Port type - tcp/udp
    - List of supported protocols - ssh
    - EnumType support
+   - SecretType for credentials (file/vault)
  - Elegance wishlist
    - Allow inline definition of stateless classes like `Port`
    - Show required vs optional attributes
