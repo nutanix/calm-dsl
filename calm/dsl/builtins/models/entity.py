@@ -91,6 +91,14 @@ class EntityType(EntityTypeBase):
         # Look at __setitem__ in EntityDict
         return EntityDict(validators)
 
+    def __new__(mcls, name, bases, entitydict):
+
+        cls = super().__new__(mcls, name, bases, entitydict)
+        for k, v in cls.get_all_attrs().items():
+            setattr(cls, k, v)
+
+        return cls
+
     def lookup_validator_type(cls, name):
         # Use metaclass dictionary to get the right validator type
         return type(cls).__validator_dict__.get(name, None)
@@ -119,8 +127,6 @@ class EntityType(EntityTypeBase):
 
     def get_user_attrs(cls):
         user_attrs = {}
-        user_attrs["name"] = cls.__name__
-        user_attrs["description"] = cls.__doc__ if cls.__doc__ else ''
         for name, value in cls.__dict__.items():
             if not (name.startswith('__') and name.endswith('__')):
                 user_attrs[name] = value
@@ -128,15 +134,27 @@ class EntityType(EntityTypeBase):
         return user_attrs
 
     def get_default_attrs(cls):
-        return type(cls).__default_attrs__
+        default_attrs = {}
+        if hasattr(type(cls), '__default_attrs__'):
+            default_attrs = getattr(type(cls), '__default_attrs__')
 
-    def json_repr(cls):
+        return default_attrs
 
+    def get_all_attrs(cls):
         default_attrs = cls.get_default_attrs()
         user_attrs = cls.get_user_attrs()
 
         # Merge both attrs. Overwrite user attrs on default attrs
         return {**default_attrs, **user_attrs}
+
+    def compile(cls):
+        attrs = cls.get_all_attrs()
+        attrs["name"] = cls.__name__
+        attrs["description"] = cls.__doc__ if cls.__doc__ else ''
+        return attrs
+
+    def json_repr(cls):
+        return cls.compile()
 
     def json_dumps(cls, pprint=False, sort_keys=False):
         return json.dumps(cls.json_repr(),
