@@ -19,8 +19,8 @@ class PropertyValidator(_PropertyValidatorBase, openapi_type=None):
     __kind__ = None
 
     @classmethod
-    def get_default(cls):
-        return cls.__default__
+    def get_default(cls, is_array):
+        return cls.__default__ if not is_array else []
 
     @classmethod
     def get_kind(cls):
