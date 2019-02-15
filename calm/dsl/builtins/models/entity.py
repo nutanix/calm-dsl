@@ -169,6 +169,7 @@ class EntityType(EntityTypeBase):
         for t in cls.get_entity_types():
             yaml.register_class(t)
 
+        yaml.indent(mapping=2, sequence=4, offset=2)
         yaml.dump(cls, stream=stream)
 
 
