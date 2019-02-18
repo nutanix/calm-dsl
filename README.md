@@ -18,8 +18,8 @@ Use:
  - Elegance wishlist
    - Allow inline definition of stateless classes like `Port`
    - Show required vs optional attributes
-   - Add YAML dumper
-   - Make all attrs available on the class for ease of discovery aand use
+   - ~Add YAML dumper~
+   - ~Make all attrs available on the class for ease of discovery aand use~
  - DSLs
    - DSL for runbooks
    - DSL for policies (quotas and notification)
