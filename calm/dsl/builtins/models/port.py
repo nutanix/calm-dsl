@@ -12,6 +12,10 @@ class Port(Entity, metaclass=PortType):
     pass
 
 
+def port(**kwargs):
+    return PortType("", (Entity, ), kwargs)
+
+
 class PortValidator(PropertyValidator, openapi_type="port"):
 
     __default__ = None

@@ -1,4 +1,4 @@
-from .port import Port
+from .port import Port, port
 from .service import Service
 from .substrate import Substrate
 from .deployment import Deployment
