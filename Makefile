@@ -9,7 +9,7 @@ docker: test
 	docker build --force-rm --no-cache --pull=true -t ideadevice/calm-dsl-engine .
 
 clean:
-	rm -r build/ dist/ calm.dsl.egg-info/
+	rm -r build/ dist/ calm.dsl.egg-info/ || echo "No directory found"
 	docker image prune -f
 
 
@@ -29,5 +29,8 @@ _init:
 	venv/bin/pip3 install -U pip setuptools
 
 	venv/bin/pip3 install -r requirements.txt -r dev-requirements.txt
+
+gui: _init
+        venv/bin/pip3 install -r gui-requirements.txt
 	jupyter contrib nbextension install --user
 	jupyter nbextensions_configurator enable --user
