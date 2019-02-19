@@ -16,7 +16,7 @@ Use:
    - EnumType support
    - SecretType for credentials (file/vault)
  - Elegance wishlist
-   - Allow inline definition of stateless classes like `Port`
+   - ~Allow inline definition of stateless classes like `Port`~
    - Show required vs optional attributes
    - ~Add YAML dumper~
    - ~Make all attrs available on the class for ease of discovery aand use~
