@@ -4,6 +4,3 @@ pytest>=4.2.0
 pytest-sugar>=0.9.2
 pytest-cov>=2.6.1
 autopep8>=1.4.3
-jupyter>=1.0
-jupyter_nbextensions_configurator>=0.4.1
-jupyter_contrib_nbextensions>=0.5.1

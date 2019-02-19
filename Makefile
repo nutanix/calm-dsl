@@ -5,8 +5,13 @@ test:
 dist: test
 	python3 setup.py sdist bdist_wheel
 
+docker: test
+	docker build --force-rm --no-cache --pull=true -t ideadevice/calm-dsl-engine .
+
 clean:
 	rm -r build/ dist/ calm.dsl.egg-info/
+	docker image prune -f
+
 
 _init:
 	# Lets get python3 in
