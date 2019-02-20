@@ -34,6 +34,12 @@ RUN apk add --no-cache $BUILD_PACKAGES
 COPY gui-requirements.txt /gui-requirements.txt
 RUN pip3 install --no-cache-dir -r /gui-requirements.txt
 
+# Configure jupyter extensions
+RUN jupyter contrib nbextension install --user
+RUN jupyter nbextensions_configurator enable --user
+RUN jupyter nbextension install --py jupyter_dashboards --sys-prefix
+RUN jupyter nbextension enable --py jupyter_dashboards --sys-prefix
+
 # Use root env instead of virtualenv for installing requirements [PEP 370]
 WORKDIR /root
 RUN mkdir -p `python3 -m site --user-site`
