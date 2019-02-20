@@ -54,4 +54,5 @@ RUN rm /gui-requirements.txt
 RUN rm /requirements.txt
 
 EXPOSE 8888
-CMD ["jupyter", "notebook", "--ip=0.0.0.0", "--port=8888", "--allow-root"]
+CMD ["jupyter", "notebook", "--ip=0.0.0.0", "--port=8888", "--allow-root", \
+	"--no-browser", "--NotebookApp.custom_display_url=http://localhost:8888"]
