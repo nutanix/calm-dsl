@@ -33,6 +33,8 @@ RUN apk add --no-cache $BUILD_PACKAGES
 # Install Jupyter requirements for GUI
 COPY gui-requirements.txt /gui-requirements.txt
 RUN pip3 install --no-cache-dir -r /gui-requirements.txt
+RUN rm /gui-requirements.txt
+
 
 # Configure jupyter extensions
 RUN jupyter contrib nbextension install --user
@@ -45,15 +47,14 @@ WORKDIR /root
 RUN mkdir -p `python3 -m site --user-site`
 COPY requirements.txt /requirements.txt
 RUN pip3 install --no-cache-dir -r /requirements.txt --user
+RUN rm /requirements.txt
+
+# Cleanup all build packages
+RUN apk del $BUILD_PACKAGES
 
 # Install calm.dsl package
 COPY dist/calm.dsl*.whl .
 RUN pip3 install --no-cache-dir calm.dsl*.whl --user
-
-# Cleanup
-RUN apk del $BUILD_PACKAGES
-RUN rm /gui-requirements.txt
-RUN rm /requirements.txt
 RUN rm calm.dsl*.whl
 
 EXPOSE 8888
