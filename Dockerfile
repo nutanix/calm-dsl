@@ -46,12 +46,15 @@ RUN mkdir -p `python3 -m site --user-site`
 COPY requirements.txt /requirements.txt
 RUN pip3 install --no-cache-dir -r /requirements.txt --user
 
-# TODO - Install calm.dsl package to root user-site
+# Install calm.dsl package
+COPY dist/calm.dsl*.whl .
+RUN pip3 install --no-cache-dir calm.dsl*.whl --user
 
 # Cleanup
 RUN apk del $BUILD_PACKAGES
 RUN rm /gui-requirements.txt
 RUN rm /requirements.txt
+RUN rm calm.dsl*.whl
 
 EXPOSE 8888
 CMD ["jupyter", "notebook", "--ip=0.0.0.0", "--port=8888", "--allow-root", \

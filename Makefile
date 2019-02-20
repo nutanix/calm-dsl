@@ -3,7 +3,7 @@ test:
 	py.test -s --cov -vv
 
 dist: test
-	python3 setup.py sdist bdist_wheel
+	python3 setup.py bdist_wheel
 
 docker: dist
 	docker build -t ideadevice/calm-dsl-engine .
