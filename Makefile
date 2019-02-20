@@ -1,19 +1,37 @@
-test:
-	python3 setup.py develop
-	py.test -s --cov -vv
+clean:
+	[ ! -d build/ ] || rm -r build/
+	[ ! -d dist/ ] || rm -r dist/
+	[ ! -d *.egg-info/ ] || rm -r *.egg-info/
+	docker image prune -f || echo "docker not present"
+	rm -r venv/ && mkdir venv/ && touch venv/.empty
+
+dev:
+	# Setup our python3 based virtualenv
+	# This step assumes python3 is installed on your dev machine
+	[ -f venv/bin/python3 ] || virtualenv -p python3 venv
+	venv/bin/pip3 install --upgrade pip setuptools
+	venv/bin/pip3 install -r requirements.txt -r dev-requirements.txt
+	venv/bin/python3 setup.py develop
+
+gui: dev
+	# Setup Jupyter
+	venv/bin/pip3 install -r gui-requirements.txt
+	venv/bin/jupyter contrib nbextension install --user
+	venv/bin/jupyter nbextensions_configurator enable --user
+	venv/bin/jupyter nbextension install --py jupyter_dashboards --sys-prefix
+	venv/bin/jupyter nbextension enable --py jupyter_dashboards --sys-prefix
+
+
+test: dev
+	venv/bin/py.test -s --cov -vv
 
 dist: test
-	python3 setup.py bdist_wheel
+	venv/bin/python3 setup.py bdist_wheel
 
-docker: dist
+docker: dist gui
 	docker build -t ideadevice/calm-dsl-engine .
 
-clean:
-	rm -r build/ dist/ calm.dsl.egg-info/ || echo "No directory found"
-	docker image prune -f
-
-
-_init:
+_init_py3_centos:
 	# Lets get python3 in
 	rpm -q epel-release || sudo yum -y install epel-release
 	# This has a modern git
@@ -23,14 +41,3 @@ _init:
 
 	rpm -q python36 || sudo yum -y install python36 python-pip
 	sudo yum update -y git
-
-	# Setup our python3 based virtualenv
-	[ -f venv/bin/python3 ] || virtualenv -p python36 venv
-	venv/bin/pip3 install -U pip setuptools
-
-	venv/bin/pip3 install -r requirements.txt -r dev-requirements.txt
-
-gui: _init
-	venv/bin/pip3 install -r gui-requirements.txt
-	jupyter contrib nbextension install --user
-	jupyter nbextensions_configurator enable --user
