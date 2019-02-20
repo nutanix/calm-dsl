@@ -27,6 +27,6 @@ Use:
  - Mega ToDo:
    - Generate idiomatic python code from blueprint JSON (decompile)
  - Build CLI tooling to interact with calm-server
- - Build docker container for jupyter + DSL
+ - ~Build docker container for jupyter + DSL~
  - ~Make License as GPL~
  - ~Get rid of attributes field~
