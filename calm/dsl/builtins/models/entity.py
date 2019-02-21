@@ -133,6 +133,9 @@ class EntityType(EntityTypeBase):
     def __str__(cls):
         return cls.__name__
 
+    def __repr__(cls):
+        return cls.__name__
+
     def get_user_attrs(cls):
         user_attrs = {}
         for name, value in cls.__dict__.items():
