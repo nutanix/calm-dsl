@@ -56,7 +56,7 @@ class EntityType(EntityTypeBase):
     @classmethod
     def to_yaml(mcls, representer, node):
         yaml_tag = '!' + mcls.__schema_name__ if mcls.__schema_name__ else "!Entity"
-        return representer.represent_mapping(yaml_tag, node.yaml_repr())
+        return representer.represent_mapping(yaml_tag, node.compile())
 
     @classmethod
     def __prepare__(mcls, name, bases, **kwargs):
@@ -166,32 +166,26 @@ class EntityType(EntityTypeBase):
         return attrs
 
     @classmethod
-    def decompile(mcls, obj):
+    def decompile(mcls, attrs):
 
-        name = obj["name"] if "name" in obj else ""
-        description = obj["description"] if obj["description"] else None
+        name = attrs["name"] if "name" in attrs else ""
+        description = attrs["description"] if attrs["description"] else None
 
         # Remove extra info
-        del obj["name"]
-        del obj["description"]
-        del obj['__kind__']
+        del attrs["name"]
+        del attrs["description"]
+        del attrs['__kind__']
 
         # Create new class based on type
-        entitydict = obj
+        entitydict = attrs
         cls = mcls(name, (Entity, ), entitydict)
         cls.__doc__ = description
 
         return cls
 
-    def yaml_repr(cls):
-        return cls.compile()
-
-    def json_repr(cls):
-        return cls.compile()
-
     def json_dumps(cls, pprint=False, sort_keys=False):
 
-        dump = json.dumps(cls.json_repr(),
+        dump = json.dumps(cls,
                           cls=EntityJSONEncoder,
                           sort_keys=sort_keys,
                           indent=4 if pprint else None,
@@ -199,7 +193,6 @@ class EntityType(EntityTypeBase):
 
         # Add newline for pretty print
         return dump + "\n" if pprint else dump
-
 
     def json_loads(cls, data):
         return json.loads(data, cls=EntityJSONDecoder)
@@ -221,27 +214,27 @@ class Entity(metaclass=EntityType):
 
 
 class EntityJSONEncoder(JSONEncoder):
-    def default(self, obj):
-        if hasattr(obj, 'json_repr'):
-            return obj.json_repr()
+    def default(self, cls):
+        if hasattr(cls, '__kind__'):
+            return cls.compile()
         else:
-            return super().default(obj)
+            return super().default(cls)
 
 
 class EntityJSONDecoder(JSONDecoder):
     def __init__(self, *args, **kwargs):
         super().__init__(object_hook=self.object_hook, *args, **kwargs)
 
-    def object_hook(self, obj):
+    def object_hook(self, attrs):
 
-        if "__kind__" not in obj:
-            return obj
+        if "__kind__" not in attrs:
+            return attrs
 
-        kind = obj["__kind__"]
+        kind = attrs["__kind__"]
         types = EntityTypeBase.get_entity_types()
 
         Type = types.get(kind, None)
         if not Type:
             raise TypeError("Unknown entity type {} given".format(kind))
 
-        return Type.decompile(obj)
+        return Type.decompile(attrs)
