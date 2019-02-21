@@ -31,7 +31,7 @@ Look at the example code in `tests/single_vm_example/test_single_vm_bp.py` for s
    - ~Allow inline definition of stateless classes like `Port`~
    - Show required vs optional attributes
    - ~Add YAML dumper~
-   - ~Make all attrs available on the class for ease of discovery aand use~
+   - ~Make all attrs available on the class for ease of discovery and use~
  - DSLs
    - DSL for runbooks
    - DSL for policies (quotas and notification)
