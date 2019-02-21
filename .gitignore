@@ -105,3 +105,6 @@ venv.bak/
 
 # emacs stuff
 *~
+
+# jupyter notebook stuff
+*.ipynb
