@@ -18,6 +18,7 @@ Use:
  - `make run` to run container.
  - `make clean` to reset.
 
+Look at the example code in `tests/single_vm_example/test_single_vm_bp.py` for see an blueprint in action
 
 ## ToDo
 
