@@ -49,9 +49,9 @@ class EntityType(EntityTypeBase):
     __schema_name__ = None
 
     @classmethod
-    def to_yaml(mcls, representer, node):
+    def to_yaml(mcls, representer, node):x
         yaml_tag = '!' + mcls.__schema_name__ if mcls.__schema_name__ else "!Entity"
-        return representer.represent_mapping(yaml_tag, node.json_repr())
+        return representer.represent_mapping(yaml_tag, node.yaml_repr())
 
     @classmethod
     def __prepare__(mcls, name, bases, **kwargs):
@@ -152,6 +152,9 @@ class EntityType(EntityTypeBase):
         attrs["name"] = cls.__name__
         attrs["description"] = cls.__doc__ if cls.__doc__ else ''
         return attrs
+
+    def yaml_repr(cls):
+        return cls.compile()
 
     def json_repr(cls):
         return cls.compile()
