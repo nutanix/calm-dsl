@@ -215,10 +215,11 @@ class Entity(metaclass=EntityType):
 
 class EntityJSONEncoder(JSONEncoder):
     def default(self, cls):
-        if hasattr(cls, '__kind__'):
-            return cls.compile()
-        else:
+
+        if not hasattr(cls, '__kind__'):
             return super().default(cls)
+
+        return cls.compile()
 
 
 class EntityJSONDecoder(JSONDecoder):
@@ -228,7 +229,7 @@ class EntityJSONDecoder(JSONDecoder):
     def object_hook(self, attrs):
 
         if "__kind__" not in attrs:
-            return attrs
+            return super().object_hook(attrs)
 
         kind = attrs["__kind__"]
         types = EntityTypeBase.get_entity_types()
