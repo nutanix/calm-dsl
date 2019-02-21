@@ -4,10 +4,10 @@ Calm DSL Engine describes a simpler Python 3 based DSL for writing Calm blueprin
 
 Use:
  - `make _init_py3_centos` to setup your CentOS 7 VM for development.
- - `make dev` to create a python 3 virtualenv in `$TOPDIR/venv`. Activate it by sourcing `$TOPDIR/venv/bin/activate`.
+ - `make dev` to create/use python3 virtualenv in `$TOPDIR/venv` and setup dev environment. Activate it by calling `source venv/bin/activate`. Use `deactivate` to deactivate virtualenv.
  - `make test` to run the test cases.
  - `make dist` to generate a `calm.dsl` python distribution.
- - `make gui` to install jupyter notebook and extensions.
+ - `make gui` to install jupyter notebook and extensions in your virtualenv.
  - `make docker` to build docker container. (Assumes docker client is setup on your machine)
  - `make clean` to reset.
 
