@@ -34,6 +34,9 @@ docker: dist gui
 	[ -S /var/run/docker.sock ] && \
 		docker build --rm -t ideadevice/calm-dsl-engine .
 
+run:
+	docker run -it -p 8888:8888 ideadevice/calm-dsl-engine
+
 _init_py3_centos:
 	# Lets get python3 in
 	rpm -q epel-release || sudo yum -y install epel-release
