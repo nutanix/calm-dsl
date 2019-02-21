@@ -2,7 +2,9 @@ clean:
 	[ ! -d build/ ] || rm -r build/
 	[ ! -d dist/ ] || rm -r dist/
 	[ ! -d *.egg-info/ ] || rm -r *.egg-info/
-	docker image prune -f || echo "docker not present"
+	[ -S /var/run/docker.sock ] && \
+		docker ps -aq --no-trunc --filter "status=exited" | xargs docker rm && \
+		docker image prune -f
 	rm -r venv/ && mkdir venv/ && touch venv/.empty
 
 dev:
