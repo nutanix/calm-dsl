@@ -49,7 +49,7 @@ class EntityType(EntityTypeBase):
     __schema_name__ = None
 
     @classmethod
-    def to_yaml(mcls, representer, node):x
+    def to_yaml(mcls, representer, node):
         yaml_tag = '!' + mcls.__schema_name__ if mcls.__schema_name__ else "!Entity"
         return representer.represent_mapping(yaml_tag, node.yaml_repr())
 
