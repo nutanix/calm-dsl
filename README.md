@@ -15,6 +15,7 @@ Use:
  - `make dist` to generate a `calm.dsl` python distribution.
  - `make gui` to install jupyter notebook and extensions in your virtualenv.
  - `make docker` to build docker container. (Assumes docker client is setup on your machine)
+ - `make run` to run container.
  - `make clean` to reset.
 
 
