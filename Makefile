@@ -31,7 +31,8 @@ dist: test
 	venv/bin/python3 setup.py bdist_wheel
 
 docker: dist gui
-	docker build -t ideadevice/calm-dsl-engine .
+	[ -S /var/run/docker.sock ] && \
+		docker build --rm -t ideadevice/calm-dsl-engine .
 
 _init_py3_centos:
 	# Lets get python3 in
