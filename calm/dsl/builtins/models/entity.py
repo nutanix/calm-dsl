@@ -41,7 +41,12 @@ class EntityTypeBase(type):
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        cls.subclasses[cls.__schema_name__] = cls
+
+        if not hasattr(cls, "__schema_name__"):
+            raise TypeError("Entity type does not have a schema name")
+
+        schema_name = getattr(cls, "__schema_name__")
+        cls.subclasses[schema_name] = cls
 
 
 class EntityType(EntityTypeBase):
