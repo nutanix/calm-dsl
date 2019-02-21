@@ -44,3 +44,5 @@ _init_py3_centos:
 
 	rpm -q python36 || sudo yum -y install python36 python-pip
 	sudo yum update -y git
+
+	# TODO - add steps to install docker

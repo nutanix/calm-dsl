@@ -6,8 +6,10 @@ Pre-Reqs for Mac:
  - Get python3 using brew - `brew install python3`
  - Install [Docker for Mac](https://hub.docker.com/editions/community/docker-ce-desktop-mac)
 
-Use:
+Pre-Reqs for Centos:
  - `make _init_py3_centos` to setup your CentOS 7 VM for development.
+
+Use:
  - `make dev` to create/use python3 virtualenv in `$TOPDIR/venv` and setup dev environment. Activate it by calling `source venv/bin/activate`. Use `deactivate` to deactivate virtualenv.
  - `make test` to run the test cases.
  - `make dist` to generate a `calm.dsl` python distribution.
