@@ -1,6 +1,6 @@
 from collections import OrderedDict
 import json
-from json import JSONEncoder
+from json import JSONEncoder, JSONDecoder
 import sys
 
 from ruamel.yaml import YAML
@@ -33,7 +33,7 @@ class EntityDict(OrderedDict):
 
 class EntityTypeBase(type):
 
-    subclasses = []
+    subclasses = {}
 
     @classmethod
     def get_entity_types(cls):
@@ -41,7 +41,7 @@ class EntityTypeBase(type):
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        cls.subclasses.append(cls)
+        cls.subclasses[cls.__schema_name__] = cls
 
 
 class EntityType(EntityTypeBase):
@@ -94,6 +94,9 @@ class EntityType(EntityTypeBase):
     def __new__(mcls, name, bases, entitydict):
 
         cls = super().__new__(mcls, name, bases, entitydict)
+
+        setattr(cls, "__kind__", mcls.__schema_name__)
+
         for k, v in cls.get_all_attrs().items():
             setattr(cls, k, v)
 
@@ -149,9 +152,31 @@ class EntityType(EntityTypeBase):
 
     def compile(cls):
         attrs = cls.get_all_attrs()
+
+        # Add extra info
         attrs["name"] = cls.__name__
         attrs["description"] = cls.__doc__ if cls.__doc__ else ''
+        attrs['__kind__'] = cls.__kind__
+
         return attrs
+
+    @classmethod
+    def decompile(mcls, obj):
+
+        name = obj["name"] if "name" in obj else ""
+        description = obj["description"] if obj["description"] else None
+
+        # Remove extra info
+        del obj["name"]
+        del obj["description"]
+        del obj['__kind__']
+
+        # Create new class based on type
+        entitydict = obj
+        cls = mcls(name, (Entity, ), entitydict)
+        cls.__doc__ = description
+
+        return cls
 
     def yaml_repr(cls):
         return cls.compile()
@@ -160,16 +185,26 @@ class EntityType(EntityTypeBase):
         return cls.compile()
 
     def json_dumps(cls, pprint=False, sort_keys=False):
-        return json.dumps(cls.json_repr(),
+
+        dump = json.dumps(cls.json_repr(),
                           cls=EntityJSONEncoder,
                           sort_keys=sort_keys,
                           indent=4 if pprint else None,
                           separators=(",", ": ") if pprint else (",", ":"))
 
+        # Add newline for pretty print
+        return dump + "\n" if pprint else dump
+
+
+    def json_loads(cls, data):
+        return json.loads(data, cls=EntityJSONDecoder)
+
     def yaml_dump(cls, stream=sys.stdout):
 
         yaml = YAML()
-        for t in cls.get_entity_types():
+        types = EntityTypeBase.get_entity_types()
+
+        for _, t in types.items():
             yaml.register_class(t)
 
         yaml.indent(mapping=2, sequence=4, offset=2)
@@ -186,3 +221,22 @@ class EntityJSONEncoder(JSONEncoder):
             return obj.json_repr()
         else:
             return super().default(obj)
+
+
+class EntityJSONDecoder(JSONDecoder):
+    def __init__(self, *args, **kwargs):
+        super().__init__(object_hook=self.object_hook, *args, **kwargs)
+
+    def object_hook(self, obj):
+
+        if "__kind__" not in obj:
+            return obj
+
+        kind = obj["__kind__"]
+        types = EntityTypeBase.get_entity_types()
+
+        Type = types.get(kind, None)
+        if not Type:
+            raise TypeError("Unknown entity type {} given".format(kind))
+
+        return Type.decompile(obj)
