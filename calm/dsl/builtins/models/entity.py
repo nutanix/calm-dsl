@@ -229,7 +229,7 @@ class EntityJSONDecoder(JSONDecoder):
     def object_hook(self, attrs):
 
         if "__kind__" not in attrs:
-            return super().object_hook(attrs)
+            return attrs
 
         kind = attrs["__kind__"]
         types = EntityTypeBase.get_entity_types()
