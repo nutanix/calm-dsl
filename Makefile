@@ -40,12 +40,13 @@ run:
 _init_py3_centos:
 	# Lets get python3 in
 	rpm -q epel-release || sudo yum -y install epel-release
-	# This has a modern git
-	rpm -q wandisco-git-release || sudo yum install -y http://opensource.wandisco.com/centos/7/git/x86_64/wandisco-git-release-7-2.noarch.rpm || :
+	# Not needed: This has a modern git
+	# rpm -q wandisco-git-release || sudo yum install -y http://opensource.wandisco.com/centos/7/git/x86_64/wandisco-git-release-7-2.noarch.rpm || :
+	#sudo yum update -y git || :
 
 	sudo yum makecache
 
-	rpm -q python36 || sudo yum -y install python36 python-pip
-	sudo yum update -y git
+	# Install docker
+	which docker || { curl -fsSL https://get.docker.com/ | sh; sudo systemctl start docker; sudo systemctl enable docker; sudo usermod -aG docker $(whoami); }
 
-	# TODO - add steps to install docker
+	rpm -q python36 || sudo yum -y install python36 python-pip
