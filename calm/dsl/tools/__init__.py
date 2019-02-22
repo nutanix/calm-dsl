@@ -1,1 +1,1 @@
-from .render_json import RenderJSON  # pragma: nocover
+from .render_json import RenderJSON  # noqa F401

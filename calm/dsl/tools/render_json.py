@@ -1,8 +1,8 @@
 import uuid
 
 try:
-    from IPython.display import display_javascript, display_html, display
-except ImportError as e:
+    from IPython.display import display_javascript, display_html
+except ImportError:
     print("Could not import Ipython based classes")
 
 import json

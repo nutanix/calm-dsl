@@ -18,10 +18,9 @@ class PackageType(EntityType):
         if not cdict["type"] == "CUSTOM":
             return cdict
 
-
         def make_empty_dag_runbook(packge_name, rb_name, dag_task_name):
 
-            rb_dict =  {
+            rb_dict = {
                 "task_definition_list": [{
                     "target_any_local_reference": {
                         "kind": "app_package",

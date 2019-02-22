@@ -3,7 +3,7 @@ import json
 from json import JSONEncoder, JSONDecoder
 import sys
 
-from ruamel.yaml import YAML, SafeDumper, resolver
+from ruamel.yaml import YAML, resolver
 
 from .schema import get_schema_details
 
@@ -28,7 +28,7 @@ def _validate(vdict, name, value):
             if not isinstance(value, VariableType):
                 raise
 
-            ## Validate and set variable
+            # Validate and set variable
 
             # get validator for variables
             ValidatorType, _ = vdict["variables"]
@@ -40,7 +40,7 @@ def _validate(vdict, name, value):
             setattr(value, "name", name)
 
         if ValidatorType is not None:
-                ValidatorType.validate(value, is_array)
+            ValidatorType.validate(value, is_array)
 
 
 class EntityDict(OrderedDict):

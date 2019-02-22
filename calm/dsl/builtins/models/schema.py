@@ -55,6 +55,7 @@ def get_schema_props(name):
 
     return schema_props
 
+
 def get_validator_details(schema_props, name):
 
     is_array = False

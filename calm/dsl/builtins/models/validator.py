@@ -52,7 +52,6 @@ class PropertyValidator(_PropertyValidatorBase, openapi_type=None):
             for v in value:
                 cls._validate_item(v)
 
-
     # Note on __set__() interface:
     # Initial plan was to use PropertyValidator as descriptors and make use of the magical
     # __set__() interface to validate values.
