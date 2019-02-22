@@ -237,7 +237,7 @@ class EntityType(EntityTypeBase):
         # Remove extra info
         name = cdict.pop("name", mcls.__schema_name__)
         description = cdict.pop("description", None)
-        kind = cdict.pop('__kind__')
+        kind = cdict.pop('__kind__')  # noqa: F841
 
         # Convert attribute names to x-calm-dsl-display-name, if given
         attrs = {}
