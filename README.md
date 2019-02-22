@@ -22,6 +22,9 @@ Look at the example code in `tests/single_vm_example/test_single_vm_bp.py` for s
 
 ## ToDo
 
+ - Prototype
+   - Upload bp json for single VM to calm server
+   - Validate & launch bp
  - Language Enhancements:
    - Add Port type - tcp/udp
    - List of supported protocols - ssh
