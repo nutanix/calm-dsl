@@ -7,7 +7,7 @@ Pre-Reqs for Mac:
  - Install [Docker for Mac](https://hub.docker.com/editions/community/docker-ce-desktop-mac)
 
 Pre-Reqs for Centos:
- - `make _init_py3_centos` to setup your CentOS 7 VM for development.
+ - `make _init_centos` to setup your CentOS 7 VM for development. This will install python3 and docker.
 
 Use:
  - `make dev` to create/use python3 virtualenv in `$TOPDIR/venv` and setup dev environment. Activate it by calling `source venv/bin/activate`. Use `deactivate` to deactivate virtualenv.
