@@ -4,3 +4,4 @@ source = calm/
 [report]
 show_missing = True
 ignore_errors = True
+omit = calm/dsl/tools/render_json.py
