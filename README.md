@@ -24,6 +24,9 @@ Look at the example code in `tests/single_vm_example/test_single_vm_bp.py` for s
 
  - Prototype
    - Upload bp json for single VM to calm server
+     - Add bp metadata (projects, etc)
+     - Use same key names as v3 apis (use `x-calm-dsl-key` to map in schema)
+     - Add `RefType`
    - Validate & launch bp
  - Language Enhancements:
    - Add Port type - tcp/udp
