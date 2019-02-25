@@ -162,8 +162,8 @@ class EntityType(EntityTypeBase):
         attrs = cls.get_all_attrs()
 
         # Add extra info
-        attrs["name"] = cls.__name__
-        attrs["description"] = cls.__doc__ if cls.__doc__ else ''
+        attrs["__name__"] = cls.__name__
+        attrs["__doc__"] = cls.__doc__ if cls.__doc__ else ''
         attrs['__kind__'] = cls.__kind__
 
         return attrs
@@ -171,12 +171,12 @@ class EntityType(EntityTypeBase):
     @classmethod
     def decompile(mcls, attrs):
 
-        name = attrs["name"] if "name" in attrs else ""
-        description = attrs["description"] if attrs["description"] else None
+        name = attrs.get("__name__", "")
+        description = attrs.get("__doc__", None)
 
         # Remove extra info
-        del attrs["name"]
-        del attrs["description"]
+        del attrs["__name__"]
+        del attrs["__doc__"]
         del attrs['__kind__']
 
         # Create new class based on type

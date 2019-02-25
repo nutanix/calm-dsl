@@ -1,0 +1,24 @@
+{% macro Ref() -%}
+
+title: Reference
+type: object
+x-calm-dsl-type: ref
+required:
+  - kind
+properties:
+  kind:
+    type: string
+  name:
+    type: string
+  uuid:
+    type: string
+
+{%- endmacro -%}
+
+
+{% macro RefSchema() -%}
+
+Ref:
+  {{ Ref()|indent(2) }}
+
+{%- endmacro %}

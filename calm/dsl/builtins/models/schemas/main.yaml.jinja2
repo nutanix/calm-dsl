@@ -4,6 +4,7 @@
 {% import "deployment.yaml.jinja2" as deployment %}
 {% import "profile.yaml.jinja2" as profile %}
 {% import "blueprint.yaml.jinja2" as blueprint %}
+{% import "ref.yaml.jinja2" as ref %}
 
 {% macro Schemas() -%}
 
@@ -13,6 +14,7 @@
 {{ deployment.DeploymentSchema() }}
 {{ profile.ProfileSchema() }}
 {{ blueprint.BlueprintSchema() }}
+{{ ref.RefSchema() }}
 
 {%- endmacro %}
 

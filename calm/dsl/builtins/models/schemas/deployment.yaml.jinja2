@@ -7,12 +7,9 @@ properties:
   service_refs:
     type: array
     items:
-      type: string
-      default: ''
-    default: []
+      $ref: '#/components/schemas/Ref'
   substrate_ref:
-    type: string
-    default: ''
+    $ref: '#/components/schemas/Ref'
   min_replicas:
     description: Minimum replicas for the deployment.
     type: string
