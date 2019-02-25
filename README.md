@@ -18,15 +18,17 @@ Use:
  - `make run` to run container.
  - `make clean` to reset.
 
-Look at the example code in `tests/single_vm_example/test_single_vm_bp.py` for see an blueprint in action
+Look at this [example](https://github.com/ideadevice/calm-dsl-engine/blob/master/tests/single_vm_example/test_single_vm_bp.py) to see a blueprint in action
 
 ## ToDo
 
  - Prototype
    - Upload bp json for single VM to calm server
      - Add bp metadata (projects, etc)
-     - Use same key names as v3 apis (use `x-calm-dsl-key` to map in schema)
-     - Add `RefType`
+     - ~Use same key names as v3 apis (use `x-calm-dsl-key` later to map to v3 schema)~
+     - ~Add `RefType`~
+     - Add connection handle to talk to server [Kiran]
+     - Add VariableType to entities
    - Validate & launch bp
  - Language Enhancements:
    - Add Port type - tcp/udp
