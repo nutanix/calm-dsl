@@ -4,11 +4,11 @@ title: Deployment
 type: object
 x-calm-dsl-type: deployment
 properties:
-  service_refs:
+  service_reference_list:
     type: array
     items:
       $ref: '#/components/schemas/Ref'
-  substrate_ref:
+  substrate_reference:
     $ref: '#/components/schemas/Ref'
   min_replicas:
     description: Minimum replicas for the deployment.

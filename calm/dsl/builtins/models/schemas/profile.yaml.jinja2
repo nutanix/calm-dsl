@@ -4,11 +4,10 @@ title: Profile
 type: object
 x-calm-dsl-type: profile
 properties:
-  deployments:
+  deployment_create_list:
     type: array
     items:
       $ref: '#/components/schemas/Deployment'
-    default: []
 
 {%- endmacro %}
 

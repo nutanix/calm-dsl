@@ -4,17 +4,17 @@ title: Blueprint
 type: object
 x-calm-dsl-type: blueprint
 properties:
-  services:
+  service_definition_list:
     description: Service definitions for blueprint.
     type: array
     items:
       $ref: '#/components/schemas/Service'
-  substrates:
+  substrate_definition_list:
     description: Substrate definitions for blueprint.
     type: array
     items:
       $ref: '#/components/schemas/Substrate'
-  profiles:
+  app_profile_list:
     description: App profile definitions for blueprint.
     type: array
     items:
