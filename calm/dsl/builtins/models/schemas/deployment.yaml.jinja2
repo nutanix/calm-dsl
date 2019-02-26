@@ -1,3 +1,5 @@
+{% import "ref.yaml.jinja2" as ref %}
+
 {% macro Deployment() -%}
 
 title: Deployment
@@ -5,11 +7,13 @@ type: object
 x-calm-dsl-type: deployment
 properties:
   service_reference_list:
+    x-calm-dsl-display-name: service_refs
     type: array
     items:
       $ref: '#/components/schemas/Ref'
   substrate_reference:
-    $ref: '#/components/schemas/Ref'
+    x-calm-dsl-display-name: substrate_ref
+    {{ ref.Ref() | indent(4) }}
   min_replicas:
     description: Minimum replicas for the deployment.
     type: string
