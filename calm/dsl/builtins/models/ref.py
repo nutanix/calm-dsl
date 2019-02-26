@@ -12,7 +12,11 @@ class Ref(Entity, metaclass=RefType):
     pass
 
 
-def ref(**kwargs):
+def ref(cls):
+
+    kwargs = {}
+    kwargs["name"] = str(cls)
+    kwargs["kind"] = getattr(cls, "__schema_name__", None)
     return RefType("", (Entity, ), kwargs)
 
 
