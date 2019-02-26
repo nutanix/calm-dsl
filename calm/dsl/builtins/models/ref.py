@@ -16,7 +16,7 @@ def ref(cls):
 
     kwargs = {}
     kwargs["name"] = str(cls)
-    kwargs["kind"] = getattr(cls, "__schema_name__", None)
+    kwargs["kind"] = getattr(cls, "__kind__", None)
     return RefType("", (Entity, ), kwargs)
 
 
