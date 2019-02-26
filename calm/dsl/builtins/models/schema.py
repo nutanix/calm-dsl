@@ -6,6 +6,7 @@ from io import StringIO
 from ruamel import yaml
 from jinja2 import Environment, PackageLoader
 import jsonref
+from bidict import bidict
 
 from .validator import get_property_validators
 
@@ -102,18 +103,21 @@ def get_validator_details(schema_props, name):
 def get_validators_with_defaults(schema_props):
 
     validators = {}
-    defaults ={}
+    defaults = {}
+    display_map = bidict()
     for name, props in schema_props.items():
         ValidatorType, is_array, default = get_validator_details(schema_props, name)
-        validators[name] = (ValidatorType, is_array)
-        defaults[name] = default
+        attr_name = props.get('x-calm-dsl-display-name', name)
+        validators[attr_name] = (ValidatorType, is_array)
+        defaults[attr_name] = default
+        display_map[attr_name] = name
 
-    return validators, defaults
+    return validators, defaults, display_map
 
 
 def get_schema_details(schema_name):
 
     schema_props = get_schema_props(schema_name)
-    validators, defaults = get_validators_with_defaults(schema_props)
+    validators, defaults, display_map = get_validators_with_defaults(schema_props)
 
-    return schema_props, validators, defaults
+    return schema_props, validators, defaults, display_map

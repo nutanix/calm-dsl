@@ -72,7 +72,7 @@ class EntityType(EntityTypeBase):
 
         if not hasattr(mcls, '__validator_dict__'):
 
-            schema_props, validators, defaults = get_schema_details(schema_name)
+            schema_props, validators, defaults, display_map = get_schema_details(schema_name)
 
             # Set validator dict on metaclass for each prop.
             # To be used during __setattr__() to validate props.
@@ -84,8 +84,10 @@ class EntityType(EntityTypeBase):
             setattr(mcls, "__default_attrs__", defaults)
 
             # Attach schema properties to metaclass
-            # SSOT!
             setattr(mcls, "__schema_props__", schema_props)
+
+            # Attach display map for compile/decompile
+            setattr(mcls, "__display_map__", display_map)
 
 
         else:
@@ -112,7 +114,7 @@ class EntityType(EntityTypeBase):
         return type(cls).__validator_dict__.get(name, None)
 
     def check_name(cls, name):
-        if name not in type(cls).__schema_props__:
+        if name not in type(cls).__validator_dict__:
             raise TypeError("Unknown attribute {} given".format(name))
 
     def validate(cls, name, value):
@@ -159,29 +161,38 @@ class EntityType(EntityTypeBase):
         return {**default_attrs, **user_attrs}
 
     def compile(cls):
+
         attrs = cls.get_all_attrs()
 
-        # Add extra info
-        attrs["__name__"] = cls.__name__
-        attrs["__doc__"] = cls.__doc__ if cls.__doc__ else ''
-        attrs['__kind__'] = cls.__kind__
+        # convert keys to api schema
+        cdict = {}
+        display_map = getattr(type(cls), "__display_map__")
+        for k, v in attrs.items():
+            cdict.setdefault(display_map[k], v)
 
-        return attrs
+        # Add extra info
+        cdict["__name__"] = cls.__name__
+        cdict["__doc__"] = cls.__doc__ if cls.__doc__ else ''
+        cdict['__kind__'] = cls.__kind__
+
+        return cdict
 
     @classmethod
-    def decompile(mcls, attrs):
-
-        name = attrs.get("__name__", "")
-        description = attrs.get("__doc__", None)
+    def decompile(mcls, cdict):
 
         # Remove extra info
-        del attrs["__name__"]
-        del attrs["__doc__"]
-        del attrs['__kind__']
+        name = cdict.pop("__name__")
+        description = cdict.pop("__doc__", None)
+        kind = cdict.pop('__kind__')
+
+        # Convert attribute names to x-calm-dsl-display-name, if given
+        attrs = {}
+        display_map = getattr(mcls, "__display_map__")
+        for k, v in cdict.items():
+            attrs.setdefault(display_map.inverse[k], v)
 
         # Create new class based on type
-        entitydict = attrs
-        cls = mcls(name, (Entity, ), entitydict)
+        cls = mcls(name, (Entity, ), attrs)
         cls.__doc__ = description
 
         return cls
