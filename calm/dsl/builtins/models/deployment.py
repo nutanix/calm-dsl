@@ -13,6 +13,10 @@ class Deployment(Entity, metaclass=DeploymentType):
     pass
 
 
+def deployment(**kwargs):
+    return DeploymentType("", (Entity, ), kwargs)
+
+
 class DeploymentValidator(PropertyValidator, openapi_type="deployment"):
 
     __default__ = None

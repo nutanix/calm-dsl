@@ -12,6 +12,10 @@ class Service(Entity, metaclass=ServiceType):
     pass
 
 
+def service(**kwargs):
+    return ServiceType("", (Entity, ), kwargs)
+
+
 class ServiceValidator(PropertyValidator, openapi_type="service"):
 
     __default__ = None

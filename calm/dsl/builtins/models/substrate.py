@@ -12,6 +12,10 @@ class Substrate(Entity, metaclass=SubstrateType):
     pass
 
 
+def substrate(**kwargs):
+    return SubstrateType("", (Entity, ), kwargs)
+
+
 class SubstrateValidator(PropertyValidator, openapi_type="substrate"):
 
     __default__ = None

@@ -12,6 +12,10 @@ class Profile(Entity, metaclass=ProfileType):
     pass
 
 
+def profile(**kwargs):
+    return ProfileType("", (Entity, ), kwargs)
+
+
 class ProfileValidator(PropertyValidator, openapi_type="profile"):
 
     __default__ = None

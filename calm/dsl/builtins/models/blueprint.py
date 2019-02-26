@@ -9,3 +9,7 @@ class BlueprintType(EntityType):
 
 class Blueprint(Entity, metaclass=BlueprintType):
     pass
+
+
+def blueprint(**kwargs):
+    return BlueprintType("", (Entity, ), kwargs)
