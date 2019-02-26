@@ -65,7 +65,7 @@ def get_validator_details(schema_props, name):
 
     type_ = props.get("type", None)
     if type_ is None:
-        raise Exception("Invalid schema {} given".format(schem_props))
+        raise Exception("Invalid schema {} given".format(schema_props))
 
     if type_ == "object":
         type_ = props.get("x-calm-dsl-type", None)
