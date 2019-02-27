@@ -22,7 +22,7 @@ Look at this [example](https://github.com/ideadevice/calm-dsl-engine/blob/master
 
 ## ToDo
 
- - Prototype
+ - Prototype ([Demoscript](https://docs.google.com/document/d/1Psr8wPD73xCV6r3ILMEIx4Zf-nlN8H2kzMfGWO2A8_Q/edit))
    - Upload bp json for single VM to calm server
      - Add bp metadata (projects, etc)
      - ~Use same key names as v3 apis (use `x-calm-dsl-key` later to map to v3 schema)~
