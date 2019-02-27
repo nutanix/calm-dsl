@@ -12,16 +12,15 @@ class Variable(Entity, metaclass=VariableType):
     pass
 
 
-def var(name, value, type="LOCAL", val_type="STRING", label=""):
+def var(value, type="LOCAL", val_type="STRING", label=""):
 
     kwargs = {}
-    kwargs["name"] = name
     kwargs["value"] = value
     kwargs["type"] = type
     kwargs["val_type"] = val_type
     kwargs["label"] = label
 
-    return VariableType(name, (Entity, ), kwargs)
+    return VariableType("Variable", (Entity, ), kwargs)
 
 
 class VariableValidator(PropertyValidator, openapi_type="variable"):

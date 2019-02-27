@@ -26,6 +26,11 @@ def _validate(vdict, name, value):
             ValidatorType, _ = vdict["variables"]
             is_array = False
 
+            # Set name attribute in variable
+            # TODO - use interfaces similar __set__, __get__ interfaces for descriptors
+            # TODO - Avoid recursion. caller class should not be a VariableType
+            setattr(value, "name", name)
+
         if ValidatorType is not None:
                 ValidatorType.validate(value, is_array)
 
