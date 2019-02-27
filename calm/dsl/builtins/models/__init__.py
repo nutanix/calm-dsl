@@ -1,4 +1,5 @@
 from .ref import Ref, ref
+from .variable import Variable, setvar
 from .port import Port, port
 from .service import Service, service
 from .substrate import Substrate, substrate

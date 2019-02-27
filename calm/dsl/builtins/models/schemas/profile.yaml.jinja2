@@ -10,6 +10,12 @@ properties:
     items:
       $ref: '#/components/schemas/Deployment'
 
+  variable_list:
+    x-calm-dsl-display-name: variables
+    type: array
+    items:
+      $ref: '#/components/schemas/Variable'
+
 {%- endmacro %}
 
 

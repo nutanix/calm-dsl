@@ -5,6 +5,7 @@
 {% import "profile.yaml.jinja2" as profile %}
 {% import "blueprint.yaml.jinja2" as blueprint %}
 {% import "ref.yaml.jinja2" as ref %}
+{% import "variable.yaml.jinja2" as variable %}
 
 {% macro Schemas() -%}
 
@@ -15,12 +16,15 @@
 {{ profile.ProfileSchema() }}
 {{ blueprint.BlueprintSchema() }}
 {{ ref.RefSchema() }}
+{{ variable.VariableSchema() }}
 
 {%- endmacro %}
 
 
 info:
-  title: Calm DSL models
+  title: Calm v3 API schema with calm.dsl extenstions.
+  description: Latest stable calm schemas. Later to be obtained from the openapi spec.
+  version: 2.6.0
 
 components:
   schemas:

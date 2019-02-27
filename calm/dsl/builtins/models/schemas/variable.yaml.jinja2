@@ -1,0 +1,37 @@
+{% macro Variable() -%}
+
+title: Variable
+type: object
+x-calm-dsl-type: variable
+properties:
+  name:
+    description: name
+    type: string
+    maxLength: 64
+  description:
+    type: string
+    maxLength: 1000
+  type:
+    type: string
+    default: 'LOCAL'
+  label:
+    type: string
+  attrs:
+    additionalProperties: true
+    type: object
+    x-calm-dsl-type: dict
+  val_type:
+    type: string
+    default: 'STRING'
+  value:
+    type: string
+
+{%- endmacro %}
+
+
+{% macro VariableSchema() -%}
+
+Variable:
+  {{ Variable()|indent(2) }}
+
+{%- endmacro %}
