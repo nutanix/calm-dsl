@@ -212,8 +212,8 @@ class EntityType(EntityTypeBase):
             cdict.setdefault(display_map[k], v)
 
         # Add extra info
-        cdict["__name__"] = cls.__name__
-        cdict["__doc__"] = cls.__doc__ if cls.__doc__ else ''
+        cdict["__name__"] = cdict.get("name", cls.__name__)
+        cdict["__doc__"] = cdict.get("description", cls.__doc__ if cls.__doc__ else '')
         cdict['__kind__'] = cls.__kind__
 
         return cdict
