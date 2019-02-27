@@ -7,12 +7,12 @@ type: object
 x-calm-dsl-type: deployment
 properties:
   service_reference_list:
-    x-calm-dsl-display-name: service_refs
+    x-calm-dsl-display-name: services
     type: array
     items:
       $ref: '#/components/schemas/Ref'
   substrate_reference:
-    x-calm-dsl-display-name: substrate_ref
+    x-calm-dsl-display-name: substrate
     {{ ref.Ref() | indent(4) }}
   min_replicas:
     description: Minimum replicas for the deployment.
