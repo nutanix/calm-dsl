@@ -8,7 +8,6 @@ from ruamel.yaml import YAML
 from .schema import get_schema_details
 
 
-
 def _validate(vdict, name, value):
 
     if not (name.startswith('__') and name.endswith('__')):
@@ -17,10 +16,11 @@ def _validate(vdict, name, value):
             if name not in vdict:
                 raise TypeError("Unknown attribute {} given".format(name))
             ValidatorType, is_array = vdict[name]
-        except TypeError:
+        except TypeError as te:
             # entity should have the capability to define variables
+            # TODO - use a capability config set per entity
             if "variables" not in vdict:
-                raise TypeError("Entity does not support VariableType")
+                raise te
 
             # get validator for variables
             ValidatorType, _ = vdict["variables"]
