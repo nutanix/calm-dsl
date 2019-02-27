@@ -202,9 +202,14 @@ class EntityType(EntityTypeBase):
         for k, v in attrs.items():
             cdict.setdefault(display_map[k], v)
 
-        # Add extra info
-        cdict["__name__"] = cdict.get("name", cls.__name__)
-        cdict["__doc__"] = cdict.get("description", cls.__doc__ if cls.__doc__ else '')
+        # Add name & description if present
+        if "name" in cdict and cdict["name"] == "":
+            cdict["name"] = cls.__name__
+
+        if "description" in cdict and cdict["description"] == "":
+            cdict["description"] = cls.__doc__ if cls.__doc__ else ""
+
+        # Add extra info for roundtrip
         cdict['__kind__'] = cls.__kind__
 
         return cdict
@@ -213,8 +218,8 @@ class EntityType(EntityTypeBase):
     def decompile(mcls, cdict):
 
         # Remove extra info
-        name = cdict.pop("__name__")
-        description = cdict.pop("__doc__", None)
+        name = cdict.pop("name", mcls.__schema_name__)
+        description = cdict.pop("description", None)
         kind = cdict.pop('__kind__')
 
         # Convert attribute names to x-calm-dsl-display-name, if given
