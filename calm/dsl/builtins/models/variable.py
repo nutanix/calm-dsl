@@ -12,13 +12,14 @@ class Variable(Entity, metaclass=VariableType):
     pass
 
 
-def setvar(name, value, type="LOCAL", val_type="STRING"):
+def setvar(name, value, type="LOCAL", val_type="STRING", label=""):
 
     kwargs = {}
     kwargs["name"] = name
     kwargs["value"] = value
     kwargs["type"] = type
     kwargs["val_type"] = val_type
+    kwargs["label"] = label
 
     return VariableType("", (Entity, ), kwargs)
 
