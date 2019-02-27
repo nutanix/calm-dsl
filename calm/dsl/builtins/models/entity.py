@@ -8,32 +8,36 @@ from ruamel.yaml import YAML
 from .schema import get_schema_details
 
 
+
+def _validate(vdict, name, value):
+
+    if not (name.startswith('__') and name.endswith('__')):
+
+        try:
+            if name not in vdict:
+                raise TypeError("Unknown attribute {} given".format(name))
+            ValidatorType, is_array = vdict[name]
+        except TypeError:
+            # entity should have the capability to define variables
+            if "variables" not in vdict:
+                raise TypeError("Entity does not support VariableType")
+
+            # get validator for variables
+            ValidatorType, _ = vdict["variables"]
+            is_array = False
+
+        if ValidatorType is not None:
+                ValidatorType.validate(value, is_array)
+
+
 class EntityDict(OrderedDict):
 
     def __init__(self, validators):
         self.validators = validators
 
-    def _check_name(self, name):
-        if name not in self.validators:
-            raise TypeError("Unknown attribute {} given".format(name))
-
     def _validate(self, name, value):
-
-        if not (name.startswith('__') and name.endswith('__')):
-            try:
-                self._check_name(name)
-                ValidatorType, is_array = self.validators[name]
-            except:
-                # entity should have the capability to define variables
-                name = "variables"
-                self._check_name(name)
-                # get validator for variables
-                ValidatorType, _ = self.validators[name]
-                print(ValidatorType)
-                is_array = False
-
-            if ValidatorType is not None:
-                ValidatorType.validate(value, is_array)
+        vdict = self.validators
+        _validate(vdict, name, value)
 
     def __setitem__(self, name, value):
 
@@ -119,29 +123,11 @@ class EntityType(EntityTypeBase):
 
         return cls
 
-    def lookup_validator_type(cls, name):
-        # Use metaclass dictionary to get the right validator type
-        return type(cls).__validator_dict__.get(name, None)
-
-    def check_name(cls, name):
-        if name not in type(cls).__validator_dict__:
-            raise TypeError("Unknown attribute {} given".format(name))
-
-    def validate(cls, name, value):
-
-        if not (name.startswith('__') and name.endswith('__')):
-            # TODO - refactor with dict validate
-            try:
-                cls.check_name(name)
-                ValidatorType, is_array = cls.lookup_validator_type(name)
-            except:
-                # entity should have the capability to define variables
-                name = "variables"
-                cls.check_name(name)
-                ValidatorType, _ = cls.lookup_validator_type(name)
-                is_array = False
-
-            ValidatorType.validate(value, is_array)
+    @classmethod
+    def validate(mcls, name, value):
+        if hasattr(mcls, "__validator_dict__"):
+            vdict = mcls.__validator_dict__
+            _validate(vdict, name, value)
 
     def __setattr__(cls, name, value):
 
