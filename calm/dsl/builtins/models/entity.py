@@ -20,8 +20,18 @@ class EntityDict(OrderedDict):
     def _validate(self, name, value):
 
         if not (name.startswith('__') and name.endswith('__')):
-            self._check_name(name)
-            ValidatorType, is_array = self.validators[name]
+            try:
+                self._check_name(name)
+                ValidatorType, is_array = self.validators[name]
+            except:
+                # entity should have the capability to define variables
+                name = "variables"
+                self._check_name(name)
+                # get validator for variables
+                ValidatorType, _ = self.validators[name]
+                print(ValidatorType)
+                is_array = False
+
             if ValidatorType is not None:
                 ValidatorType.validate(value, is_array)
 
@@ -120,8 +130,17 @@ class EntityType(EntityTypeBase):
     def validate(cls, name, value):
 
         if not (name.startswith('__') and name.endswith('__')):
-            cls.check_name(name)
-            ValidatorType, is_array = cls.lookup_validator_type(name)
+            # TODO - refactor with dict validate
+            try:
+                cls.check_name(name)
+                ValidatorType, is_array = cls.lookup_validator_type(name)
+            except:
+                # entity should have the capability to define variables
+                name = "variables"
+                cls.check_name(name)
+                ValidatorType, _ = cls.lookup_validator_type(name)
+                is_array = False
+
             ValidatorType.validate(value, is_array)
 
     def __setattr__(cls, name, value):
@@ -153,12 +172,34 @@ class EntityType(EntityTypeBase):
 
         return default_attrs
 
+    @classmethod
+    def check_variables(mcls, user_attrs):
+
+        if not hasattr(mcls, "__validator_dict__"):
+            return user_attrs
+
+        if "variables" not in getattr(mcls, "__validator_dict__"):
+            return user_attrs
+
+        mod_attrs = {}
+        mod_attrs["variables"] = []
+        for k, v in user_attrs.items():
+            if k not in mcls.__validator_dict__:
+                # TODO - make use of k
+                mod_attrs["variables"].append(v)
+            else:
+                mod_attrs[k] = v
+
+        return mod_attrs
+
     def get_all_attrs(cls):
         default_attrs = cls.get_default_attrs()
         user_attrs = cls.get_user_attrs()
 
+        mod_attrs = cls.check_variables(user_attrs)
+
         # Merge both attrs. Overwrite user attrs on default attrs
-        return {**default_attrs, **user_attrs}
+        return {**default_attrs, **mod_attrs}
 
     def compile(cls):
 
