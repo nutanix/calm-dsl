@@ -67,6 +67,28 @@ class EntityTypeBase(type):
         schema_name = getattr(cls, "__schema_name__")
         cls.subclasses[schema_name] = cls
 
+        # Handle base case (Entity)
+        if not schema_name:
+            return
+
+        # Set properties on metaclass by fetching from schema
+        schema_props, validators, defaults, display_map = get_schema_details(schema_name)
+
+        # Set validator dict on metaclass for each prop.
+        # To be used during __setattr__() to validate props.
+        # Look at validate() for details.
+        setattr(cls, "__validator_dict__", validators)
+
+        # Set defaults which will be used during serialization.
+        # Look at json_dumps() for details
+        setattr(cls, "__default_attrs__", defaults)
+
+        # Attach schema properties to metaclass
+        setattr(cls, "__schema_props__", schema_props)
+
+        # Attach display map for compile/decompile
+        setattr(cls, "__display_map__", display_map)
+
 
 class EntityType(EntityTypeBase):
 
@@ -86,31 +108,7 @@ class EntityType(EntityTypeBase):
         if not schema_name:
             return dict()
 
-        # Check if validators were already set during previous class creation.
-        # If yes, then do not set validators again; just return entity dict.
-
-        if not hasattr(mcls, '__validator_dict__'):
-
-            schema_props, validators, defaults, display_map = get_schema_details(schema_name)
-
-            # Set validator dict on metaclass for each prop.
-            # To be used during __setattr__() to validate props.
-            # Look at validate() for details.
-            setattr(mcls, "__validator_dict__", validators)
-
-            # Set defaults which will be used during serialization.
-            # Look at json_dumps() for details
-            setattr(mcls, "__default_attrs__", defaults)
-
-            # Attach schema properties to metaclass
-            setattr(mcls, "__schema_props__", schema_props)
-
-            # Attach display map for compile/decompile
-            setattr(mcls, "__display_map__", display_map)
-
-
-        else:
-            validators = getattr(mcls, '__validator_dict__')
+        validators = getattr(mcls, '__validator_dict__')
 
         # Class creation would happen using EntityDict() instead of dict().
         # This is done to add validations to class attrs during class creation.
