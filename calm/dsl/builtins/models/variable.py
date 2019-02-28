@@ -8,22 +8,24 @@ class VariableType(EntityType):
     __schema_name__ = "Variable"
 
 
+class VariableValidator(PropertyValidator, openapi_type="variable"):
+    __default__ = None
+    __kind__ = VariableType
+
+
 class Variable(Entity, metaclass=VariableType):
     pass
 
 
-def var(value, type="LOCAL", val_type="STRING", label=""):
+def setvar(name, value, **kwargs):
 
-    kwargs = {}
+    kwargs["name"] = name
     kwargs["value"] = value
-    kwargs["type"] = type
-    kwargs["val_type"] = val_type
-    kwargs["label"] = label
 
-    return VariableType("Variable", (Entity, ), kwargs)
+    # name = name.title() + getattr(VariableType, "__schema_name__")
+    return VariableType(name, (Entity, ), kwargs)
 
 
-class VariableValidator(PropertyValidator, openapi_type="variable"):
-
-    __default__ = None
-    __kind__ = VariableType
+def var(value, **kwargs):
+    name = "Variable"
+    return setvar(name, value, **kwargs)

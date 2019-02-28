@@ -164,37 +164,41 @@ class EntityType(EntityTypeBase):
         return default_attrs
 
     @classmethod
-    def check_variables(mcls, user_attrs):
+    def update_attrs(mcls, attrs):
 
         if not hasattr(mcls, "__validator_dict__"):
-            return user_attrs
+            return
 
-        if "variables" not in getattr(mcls, "__validator_dict__"):
-            return user_attrs
+        vdict = getattr(mcls, "__validator_dict__")
+        if "variables" not in vdict:
+            return
 
-        mod_attrs = {}
-        mod_attrs["variables"] = []
-        for k, v in user_attrs.items():
-            if k not in mcls.__validator_dict__:
-                # TODO - make use of k
-                mod_attrs["variables"].append(v)
-            else:
-                mod_attrs[k] = v
+        # Get a copy of given variables
+        attrs["variables"] = list(attrs.get("variables", []))
 
-        return mod_attrs
+        # Update list of variables with given class-level variables
+        del_keys = []
+        for k, v in attrs.items():
+            if k not in vdict:
+                # ToDo - Check again if it is a variable
+                attrs["variables"].append(v)
+                del_keys.append(k)
+
+        # Delete attrs
+        for k in del_keys:
+            attrs.pop(k)
 
     def get_all_attrs(cls):
         default_attrs = cls.get_default_attrs()
         user_attrs = cls.get_user_attrs()
 
-        mod_attrs = cls.check_variables(user_attrs)
-
         # Merge both attrs. Overwrite user attrs on default attrs
-        return {**default_attrs, **mod_attrs}
+        return {**default_attrs, **user_attrs}
 
     def compile(cls):
 
         attrs = cls.get_all_attrs()
+        cls.update_attrs(attrs)
 
         # convert keys to api schema
         cdict = {}
