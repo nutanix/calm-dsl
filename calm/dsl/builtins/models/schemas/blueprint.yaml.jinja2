@@ -10,6 +10,12 @@ properties:
     type: array
     items:
       $ref: '#/components/schemas/Service'
+  package_definition_list:
+    x-calm-dsl-display-name: packages
+    description: Package definitions for blueprint.
+    type: array
+    items:
+      $ref: '#/components/schemas/Package'
   substrate_definition_list:
     x-calm-dsl-display-name: substrates
     description: Substrate definitions for blueprint.
