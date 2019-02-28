@@ -6,6 +6,7 @@
 {% import "blueprint.yaml.jinja2" as blueprint %}
 {% import "ref.yaml.jinja2" as ref %}
 {% import "variable.yaml.jinja2" as variable %}
+{% import "package.yaml.jinja2" as package %}
 
 {% macro Schemas() -%}
 
@@ -17,6 +18,7 @@
 {{ blueprint.BlueprintSchema() }}
 {{ ref.RefSchema() }}
 {{ variable.VariableSchema() }}
+{{ package.PackageSchema() }}
 
 {%- endmacro %}
 

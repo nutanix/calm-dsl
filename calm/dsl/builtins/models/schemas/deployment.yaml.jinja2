@@ -6,12 +6,12 @@ title: Deployment
 type: object
 x-calm-dsl-type: deployment
 properties:
-  service_reference_list:
-    x-calm-dsl-display-name: services
+  package_reference_list:
+    x-calm-dsl-display-name: packages
     type: array
     items:
       $ref: '#/components/schemas/Ref'
-  substrate_reference:
+  substrate_local_reference:
     x-calm-dsl-display-name: substrate
     {{ ref.Ref() | indent(4) }}
   min_replicas:
