@@ -19,11 +19,4 @@ def substrate(**kwargs):
     return SubstrateType(name, bases, kwargs)
 
 
-def substrate_type(cls):
-    name = cls.__name__
-    bases = (Entity, )
-    kwargs = dict(cls.__dict__) # class dict is mappingproxy
-    return SubstrateType(name, bases, kwargs)
-
-
 Substrate = substrate()

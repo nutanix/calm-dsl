@@ -19,13 +19,6 @@ def _ref(**kwargs):
     return RefType(name, bases, kwargs)
 
 
-def ref_type(cls):
-    name = cls.__name__
-    bases = (Entity, )
-    kwargs = dict(cls.__dict__) # class dict is mappingproxy
-    return RefType(name, bases, kwargs)
-
-
 Ref = _ref()
 
 

@@ -19,11 +19,4 @@ def port(**kwargs):
     return PortType(name, bases, kwargs)
 
 
-def port_type(cls):
-    name = cls.__name__
-    bases = (Entity, )
-    kwargs = dict(cls.__dict__) # class dict is mappingproxy
-    return PortType(name, bases, kwargs)
-
-
 Port = port()

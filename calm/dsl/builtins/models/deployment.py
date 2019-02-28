@@ -19,11 +19,4 @@ def deployment(**kwargs):
     return DeploymentType(name, bases, kwargs)
 
 
-def deployment_type(cls):
-    name = cls.__name__
-    bases = (Entity, )
-    kwargs = dict(cls.__dict__) # class dict is mappingproxy
-    return DeploymentType(name, bases, kwargs)
-
-
 Deployment = deployment()

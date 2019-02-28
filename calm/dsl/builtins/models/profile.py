@@ -19,11 +19,4 @@ def profile(**kwargs):
     return ProfileType(name, bases, kwargs)
 
 
-def profile_type(cls):
-    name = cls.__name__
-    bases = (Entity, )
-    kwargs = dict(cls.__dict__) # class dict is mappingproxy
-    return ProfileType(name, bases, kwargs)
-
-
 Profile = profile()

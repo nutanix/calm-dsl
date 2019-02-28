@@ -19,11 +19,4 @@ def service(**kwargs):
     return ServiceType(name, bases, kwargs)
 
 
-def service_type(cls):
-    name = cls.__name__
-    bases = (Entity, )
-    kwargs = dict(cls.__dict__) # class dict is mappingproxy
-    return ServiceType(name, bases, kwargs)
-
-
 Service = service()

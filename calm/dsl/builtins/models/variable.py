@@ -19,13 +19,6 @@ def _var(**kwargs):
     return VariableType(name, bases, kwargs)
 
 
-def var_type(cls):
-    name = cls.__name__
-    bases = (Entity, )
-    kwargs = dict(cls.__dict__) # class dict is mappingproxy
-    return VariableType(name, bases, kwargs)
-
-
 Variable = _var()
 
 
