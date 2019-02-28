@@ -121,8 +121,11 @@ class EntityType(EntityTypeBase):
 
         setattr(cls, "__kind__", mcls.__schema_name__)
 
-        for k, v in cls.get_all_attrs().items():
-            setattr(cls, k, v)
+        for k, v in cls.get_default_attrs().items():
+            # Check if attr was set during class creation
+            # else - set default value
+            if not hasattr(cls, k):
+                setattr(cls, k, v)
 
         return cls
 
@@ -154,10 +157,11 @@ class EntityType(EntityTypeBase):
 
         return user_attrs
 
-    def get_default_attrs(cls):
+    @classmethod
+    def get_default_attrs(mcls):
         default_attrs = {}
-        if hasattr(type(cls), '__default_attrs__'):
-            default_attrs = getattr(type(cls), '__default_attrs__')
+        if hasattr(mcls, '__default_attrs__'):
+            default_attrs = getattr(mcls, '__default_attrs__')
 
         return default_attrs
 
