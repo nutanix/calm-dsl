@@ -34,7 +34,7 @@ def setvar(name, value, **kwargs):
     kwargs["name"] = name
     kwargs["value"] = value
 
-    name = name.title() + getattr(VariableType, "__schema_name__")
+    # name = name.title() + getattr(VariableType, "__schema_name__")
     return VariableType(name, (Entity, ), kwargs)
 
 
