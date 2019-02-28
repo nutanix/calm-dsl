@@ -13,10 +13,6 @@ class PortValidator(PropertyValidator, openapi_type="port"):
     __kind__ = PortType
 
 
-class Port(Entity, metaclass=PortType):
-    pass
-
-
 def port(**kwargs):
     name = getattr(PortType, "__schema_name__")
     bases = (Entity, )
@@ -28,3 +24,6 @@ def port_type(cls):
     bases = (Entity, )
     kwargs = dict(cls.__dict__) # class dict is mappingproxy
     return PortType(name, bases, kwargs)
+
+
+Port = port()

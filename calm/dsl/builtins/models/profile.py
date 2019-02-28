@@ -8,15 +8,22 @@ class ProfileType(EntityType):
     __schema_name__ = "Profile"
 
 
-class Profile(Entity, metaclass=ProfileType):
-    pass
+class ProfileValidator(PropertyValidator, openapi_type="profile"):
+    __default__ = None
+    __kind__ = ProfileType
 
 
 def profile(**kwargs):
-    return ProfileType("", (Entity, ), kwargs)
+    name = getattr(ProfileType, "__schema_name__")
+    bases = (Entity, )
+    return ProfileType(name, bases, kwargs)
 
 
-class ProfileValidator(PropertyValidator, openapi_type="profile"):
+def profile_type(cls):
+    name = cls.__name__
+    bases = (Entity, )
+    kwargs = dict(cls.__dict__) # class dict is mappingproxy
+    return ProfileType(name, bases, kwargs)
 
-    __default__ = None
-    __kind__ = ProfileType
+
+Profile = profile()

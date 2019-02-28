@@ -13,10 +13,6 @@ class ServiceValidator(PropertyValidator, openapi_type="service"):
     __kind__ = ServiceType
 
 
-class Service(Entity, metaclass=ServiceType):
-    pass
-
-
 def service(**kwargs):
     name = getattr(ServiceType, "__schema_name__")
     bases = (Entity, )
@@ -28,3 +24,6 @@ def service_type(cls):
     bases = (Entity, )
     kwargs = dict(cls.__dict__) # class dict is mappingproxy
     return ServiceType(name, bases, kwargs)
+
+
+Service = service()

@@ -4,20 +4,26 @@ from .validator import PropertyValidator
 
 # Deployment
 
-
 class DeploymentType(EntityType):
     __schema_name__ = "Deployment"
 
 
-class Deployment(Entity, metaclass=DeploymentType):
-    pass
+class DeploymentValidator(PropertyValidator, openapi_type="deployment"):
+    __default__ = None
+    __kind__ = DeploymentType
 
 
 def deployment(**kwargs):
-    return DeploymentType("", (Entity, ), kwargs)
+    name = getattr(DeploymentType, "__schema_name__")
+    bases = (Entity, )
+    return DeploymentType(name, bases, kwargs)
 
 
-class DeploymentValidator(PropertyValidator, openapi_type="deployment"):
+def deployment_type(cls):
+    name = cls.__name__
+    bases = (Entity, )
+    kwargs = dict(cls.__dict__) # class dict is mappingproxy
+    return DeploymentType(name, bases, kwargs)
 
-    __default__ = None
-    __kind__ = DeploymentType
+
+Deployment = deployment()
