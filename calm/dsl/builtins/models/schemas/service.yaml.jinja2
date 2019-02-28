@@ -24,6 +24,11 @@ properties:
   tier:
     type: string
     default: ''
+  depends_on_list:
+    x-calm-dsl-display-name: dependencies
+    type: array
+    items:
+      $ref: '#/components/schemas/Ref'
 
 {%- endmacro %}
 
