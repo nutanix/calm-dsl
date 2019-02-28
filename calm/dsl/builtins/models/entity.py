@@ -13,14 +13,22 @@ def _validate(vdict, name, value):
     if not (name.startswith('__') and name.endswith('__')):
 
         try:
+
             if name not in vdict:
                 raise TypeError("Unknown attribute {} given".format(name))
             ValidatorType, is_array = vdict[name]
+
         except TypeError as te:
-            # entity should have the capability to define variables
-            # TODO - use a capability config set per entity
-            if "variables" not in vdict:
+
+            # Check if value is a variable
+            types = EntityTypeBase.get_entity_types()
+            VariableType = types.get("Variable", None)
+            if not VariableType:
+                raise TypeError("Variable type not defined")
+            if not isinstance(value, VariableType):
                 raise te
+
+            ## Validate and set variable
 
             # get validator for variables
             ValidatorType, _ = vdict["variables"]
