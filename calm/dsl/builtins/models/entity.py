@@ -18,7 +18,7 @@ def _validate(vdict, name, value):
                 raise TypeError("Unknown attribute {} given".format(name))
             ValidatorType, is_array = vdict[name]
 
-        except TypeError as te:
+        except TypeError:
 
             # Check if value is a variable
             types = EntityTypeBase.get_entity_types()
@@ -26,7 +26,7 @@ def _validate(vdict, name, value):
             if not VariableType:
                 raise TypeError("Variable type not defined")
             if not isinstance(value, VariableType):
-                raise te
+                raise
 
             ## Validate and set variable
 
