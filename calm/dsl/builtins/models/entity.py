@@ -3,8 +3,7 @@ import json
 from json import JSONEncoder, JSONDecoder
 import sys
 
-from ruamel.yaml import YAML
-from ruamel import yaml
+from ruamel.yaml import YAML, SafeDumper, resolver
 
 from .schema import get_schema_details
 
@@ -105,7 +104,7 @@ class EntityType(EntityTypeBase):
 
     @classmethod
     def to_yaml(mcls, representer, node):
-        yaml_tag = yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG
+        yaml_tag = resolver.BaseResolver.DEFAULT_MAPPING_TAG
         return representer.represent_mapping(yaml_tag, node.compile())
 
     @classmethod
