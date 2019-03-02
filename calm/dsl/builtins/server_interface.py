@@ -237,24 +237,3 @@ class ServerInterface(object):
             err = {"error": err_msg, "code": status_code}
             log.error("Error Response: {}".format(err))
         return res, err
-
-
-def example_handle():
-
-    pc_ip = "10.46.34.130" # kiran_pc
-    pc_port = 9440
-    client = get_server_handle(pc_ip, pc_port,
-                               auth=("admin", "***REMOVED***"))
-
-    test_url = "api/nutanix/v3/clusters/list"
-    # test_url = "api/nutanix/v3/blueprints/list"
-    # TODO - Enable and setup Calm on this PC. (No host cluster is registered with PC)
-    res, err = client._call(test_url, verify=False)
-
-    if not err:
-        print(json.dumps(res.json(), indent=4, separators=(",", ": ")))
-        assert res.ok == True
-
-
-if __name__ == "__main__":
-    example_handle()
