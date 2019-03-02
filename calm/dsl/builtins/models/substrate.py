@@ -8,6 +8,24 @@ class SubstrateType(EntityType):
     __schema_name__ = "Substrate"
     __openapi_type__ = "app_substrate"
 
+    def compile(cls):
+
+        cdict = super().compile()
+
+        # TODO - fix this mess!
+        # readiness probe requires address to be set even if there is one nic
+
+        if not cdict["type"] == "AHV_VM":
+            return cdict
+
+        readiness_probe = {
+            "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
+        }
+
+        cdict["readiness_probe"] = readiness_probe
+
+        return cdict
+
 
 class SubstrateValidator(PropertyValidator, openapi_type="app_substrate"):
     __default__ = None
