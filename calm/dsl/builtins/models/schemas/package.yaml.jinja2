@@ -4,6 +4,14 @@ title: Package
 type: object
 x-calm-dsl-type: app_package
 properties:
+  name:
+    type: string
+    maxLength: 64
+    default: ''
+  description:
+    type: string
+    maxLength: 1000
+    default: ''
   type:
     type: string
     default: CUSTOM

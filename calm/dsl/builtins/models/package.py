@@ -6,6 +6,7 @@ from .validator import PropertyValidator
 
 class PackageType(EntityType):
     __schema_name__ = "Package"
+    __openapi_type__ = "app_package"
 
 
 class PackageValidator(PropertyValidator, openapi_type="app_package"):

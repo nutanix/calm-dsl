@@ -27,6 +27,6 @@ def ref(cls):
 
     kwargs = {}
     kwargs["name"] = str(cls)
-    kwargs["kind"] = getattr(cls, "__kind__", None)
+    kwargs["kind"] = getattr(cls, "__kind__")
 
     return _ref(**kwargs)
