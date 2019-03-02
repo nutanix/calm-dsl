@@ -19,6 +19,8 @@ properties:
     additionalProperties: true
     type: object
     x-calm-dsl-type: dict
+    # TODO - fix this mess!
+    default: {"install_runbook": {}, "uninstall_runbook": {}}
   service_local_reference_list:
     type: array
     x-calm-dsl-display-name: services
