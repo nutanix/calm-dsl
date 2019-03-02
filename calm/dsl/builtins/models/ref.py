@@ -6,9 +6,10 @@ from .validator import PropertyValidator
 
 class RefType(EntityType):
     __schema_name__ = "Ref"
+    __openapi_type__ = "app_ref"
 
 
-class RefValidator(PropertyValidator, openapi_type="ref"):
+class RefValidator(PropertyValidator, openapi_type="app_ref"):
     __default__ = None
     __kind__ = RefType
 

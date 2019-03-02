@@ -6,9 +6,10 @@ from .validator import PropertyValidator
 
 class ServiceType(EntityType):
     __schema_name__ = "Service"
+    __openapi_type__ = "app_service"
 
 
-class ServiceValidator(PropertyValidator, openapi_type="service"):
+class ServiceValidator(PropertyValidator, openapi_type="app_service"):
     __default__ = None
     __kind__ = ServiceType
 

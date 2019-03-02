@@ -101,6 +101,7 @@ class EntityTypeBase(type):
 class EntityType(EntityTypeBase):
 
     __schema_name__ = None
+    __openapi_type__ = None
 
     @classmethod
     def to_yaml(mcls, representer, node):
@@ -127,7 +128,8 @@ class EntityType(EntityTypeBase):
 
         cls = super().__new__(mcls, name, bases, entitydict)
 
-        setattr(cls, "__kind__", mcls.__schema_name__)
+        openapi_type = getattr(mcls, "__openapi_type__")
+        setattr(cls, "__kind__", openapi_type)
 
         for k, v in cls.get_default_attrs().items():
             # Check if attr was set during class creation

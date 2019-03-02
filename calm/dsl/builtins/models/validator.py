@@ -5,6 +5,7 @@ class _PropertyValidatorBase:
         super().__init_subclass__(**kwargs)
 
         if openapi_type is not None:
+
             # register validator plugins
             cls.subclasses[openapi_type] = cls
 

@@ -6,9 +6,10 @@ from .validator import PropertyValidator
 
 class BlueprintType(EntityType):
     __schema_name__ = "Blueprint"
+    __openapi_type__ = "app_blueprint"
 
 
-class BlueprintValidator(PropertyValidator, openapi_type="blueprint"):
+class BlueprintValidator(PropertyValidator, openapi_type="app_blueprint"):
     __default__ = None
     __kind__ = BlueprintType
 

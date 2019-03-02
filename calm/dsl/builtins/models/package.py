@@ -8,7 +8,7 @@ class PackageType(EntityType):
     __schema_name__ = "Package"
 
 
-class PackageValidator(PropertyValidator, openapi_type="package"):
+class PackageValidator(PropertyValidator, openapi_type="app_package"):
     __default__ = None
     __kind__ = PackageType
 

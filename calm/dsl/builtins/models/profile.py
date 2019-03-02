@@ -6,9 +6,10 @@ from .validator import PropertyValidator
 
 class ProfileType(EntityType):
     __schema_name__ = "Profile"
+    __openapi_type__ = "app_profile"
 
 
-class ProfileValidator(PropertyValidator, openapi_type="profile"):
+class ProfileValidator(PropertyValidator, openapi_type="app_profile"):
     __default__ = None
     __kind__ = ProfileType
 

@@ -6,9 +6,10 @@ from .validator import PropertyValidator
 
 class VariableType(EntityType):
     __schema_name__ = "Variable"
+    __openapi_type__ = "app_variable"
 
 
-class VariableValidator(PropertyValidator, openapi_type="variable"):
+class VariableValidator(PropertyValidator, openapi_type="app_variable"):
     __default__ = None
     __kind__ = VariableType
 

@@ -6,9 +6,10 @@ from .validator import PropertyValidator
 
 class DeploymentType(EntityType):
     __schema_name__ = "Deployment"
+    __openapi_type__ = "app_deployment"
 
 
-class DeploymentValidator(PropertyValidator, openapi_type="deployment"):
+class DeploymentValidator(PropertyValidator, openapi_type="app_deployment"):
     __default__ = None
     __kind__ = DeploymentType
 
