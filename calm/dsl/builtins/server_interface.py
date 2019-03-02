@@ -215,7 +215,7 @@ class ServerInterface(object):
                 res = self.session.put(
                     url,
                     params=request_params,
-                    data=json.dumps(),
+                    data=json.dumps(request_json),
                     verify=verify,
                     headers=base_headers,
                     cookies=cookies,
