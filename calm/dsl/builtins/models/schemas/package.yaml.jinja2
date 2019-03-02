@@ -1,0 +1,33 @@
+{% macro Package() -%}
+
+title: Package
+type: object
+x-calm-dsl-type: package
+properties:
+  type:
+    type: string
+    default: CUSTOM
+  options:
+    additionalProperties: true
+    type: object
+    x-calm-dsl-type: dict
+  service_local_reference_list:
+    type: array
+    x-calm-dsl-display-name: services
+    items:
+       $ref: '#/components/schemas/Ref'
+  variable_list:
+     type: array
+     x-calm-dsl-display-name: variables
+     items:
+       $ref: '#/components/schemas/Variable'
+
+{%- endmacro %}
+
+
+{% macro PackageSchema() -%}
+
+Package:
+  {{ Package()|indent(2) }}
+
+{%- endmacro %}
