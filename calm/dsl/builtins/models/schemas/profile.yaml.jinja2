@@ -4,12 +4,14 @@ title: Profile
 type: object
 x-calm-dsl-type: app_profile
 properties:
+  name:
+    type: string
+    default: 'Default'
   deployment_create_list:
     x-calm-dsl-display-name: deployments
     type: array
     items:
       $ref: '#/components/schemas/Deployment'
-
   variable_list:
     x-calm-dsl-display-name: variables
     type: array

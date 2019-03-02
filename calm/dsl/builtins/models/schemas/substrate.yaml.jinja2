@@ -25,6 +25,19 @@ properties:
   platform_data:
     type: string
     default: ''
+  variable_list:
+    x-calm-dsl-display-name: variables
+    type: array
+    items:
+      $ref: '#/components/schemas/Variable'
+  action_list:
+    # TODO - add action schema
+    x-calm-dsl-display-name: actions
+    type: array
+    items:
+      additionalProperties: true
+      type: object
+      x-calm-dsl-type: dict
 
 {%- endmacro %}
 
