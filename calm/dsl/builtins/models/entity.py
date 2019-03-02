@@ -224,7 +224,8 @@ class EntityType(EntityTypeBase):
             cdict["description"] = cls.__doc__ if cls.__doc__ else ""
 
         # Add extra info for roundtrip
-        cdict['__kind__'] = cls.__kind__
+        # TODO - remove during serialization before sending to server
+        # cdict['__kind__'] = cls.__kind__
 
         return cdict
 
