@@ -4,25 +4,28 @@ server_interface: Provides a HTTP client to make requests to calm
 
 Example:
 
-client = get_server_handle(
-    "pcip", 9440, None, scheme="https", auth=("admin", "password"))
-response, response dict = client._call(
-    "api/nutanix/v3/blueprints/list", method="post", request_json={})
+pc_ip = "<pc_ip>"
+pc_port = 9440
+client = get_server_handle(pc_ip, pc_port,
+                           auth=("admin", "***REMOVED***"))
+
+url = "api/nutanix/v3/blueprints/list"
+res, err = client._call(url, verify=False)
 
 """
 
 import copy
 import traceback
 import logging
+import json
 
-import ujson
 from requests import Session as NonRetrySession
 from requests.adapters import HTTPAdapter
+
 from calm.dsl.builtins.constants import REQUEST
 
-log = logging.getLogger(__name__)
 
-api_client = None
+log = logging.getLogger(__name__)
 
 
 def build_url(host, port, endpoint="", scheme=REQUEST.SCHEME.HTTPS):
@@ -43,9 +46,12 @@ def build_url(host, port, endpoint="", scheme=REQUEST.SCHEME.HTTPS):
     return url
 
 
+_API_CLIENT = None
+
+
 def get_server_handle(host,
                       port,
-                      auth_type,
+                      auth_type=REQUEST.AUTH_TYPE.BASIC,
                       scheme=REQUEST.SCHEME.HTTPS,
                       auth=None):
     """Get api server (aplos/styx) handle.
@@ -62,15 +68,11 @@ def get_server_handle(host,
     Raises:
         Exception: If cannot connect
     """
-    global api_client
-    if api_client:
-        return api_client
-    else:
-
-        api_client = ServerInterface(
-            host, port, auth_type, scheme=scheme, auth=auth)
-        api_client.connect()
-        return api_client
+    global _API_CLIENT
+    if not _API_CLIENT:
+        _API_CLIENT = ServerInterface(host, port, auth_type, scheme=scheme, auth=auth)
+        _API_CLIENT.connect()
+    return _API_CLIENT
 
 
 class ServerInterface(object):
@@ -138,7 +140,7 @@ class ServerInterface(object):
         #     self.session = RetrySession()
         # else:
         self.session = NonRetrySession()
-        if self.auth and self.auth_type == REQUEST.AUTH.TYPE.BASIC:
+        if self.auth and self.auth_type == REQUEST.AUTH_TYPE.BASIC:
             self.session.auth = self.auth
         self.session.headers.update({"Content-Type": "application/json"})
         self.session.headers.update(self.session_headers)
@@ -171,6 +173,7 @@ class ServerInterface(object):
             cookies=None,
             request_json=None,
             request_params=None,
+            verify=True,
     ):
         """Private method for making http request to Beam.
 
@@ -191,7 +194,7 @@ class ServerInterface(object):
             '{body}'""".format(
             method=method, endpoint=endpoint, body=request_json))
         res = None
-        response_json = {}
+        err = None
         try:
             res = None
             url = build_url(
@@ -203,8 +206,8 @@ class ServerInterface(object):
                 res = self.session.post(
                     url,
                     params=request_params,
-                    data=ujson.dumps(request_json),
-                    verify=True,
+                    data=json.dumps(request_json),
+                    verify=verify,
                     headers=base_headers,
                     cookies=cookies,
                 )
@@ -212,8 +215,8 @@ class ServerInterface(object):
                 res = self.session.put(
                     url,
                     params=request_params,
-                    data=ujson.dumps(),
-                    verify=True,
+                    data=json.dumps(),
+                    verify=verify,
                     headers=base_headers,
                     cookies=cookies,
                 )
@@ -221,21 +224,37 @@ class ServerInterface(object):
                 res = self.session.get(
                     url,
                     params=request_params or request_json,
-                    verify=True,
+                    verify=verify,
                     headers=base_headers,
                     cookies=cookies,
                 )
             res.raise_for_status()
-            response_json = ujson.loads(res.text or "{}")
+            log.info("Server Response: {}".format(res.json()))
         except Exception as ex:
             log.error("Got the traceback\n{}".format(traceback.format_exc()))
-            log.error("Exception in server response: %s" % (ex))
-            try:
-                err_msg = res.text
-                status_code = res.status_code
-            except Exception:
-                err_msg = ex.message
-                status_code = 500
-            response_json = {"error": err_msg, "code": status_code}
-        log.info("Server Response- '{}'".format(response_json))
-        return res, response_json
+            err_msg = res.text if hasattr(res, "text") else "{}".format(ex)
+            status_code = res.status_code if hasattr(res, "status_code") else 500
+            err = {"error": err_msg, "code": status_code}
+            log.error("Error Response: {}".format(err))
+        return res, err
+
+
+def example_handle():
+
+    pc_ip = "10.46.34.130" # kiran_pc
+    pc_port = 9440
+    client = get_server_handle(pc_ip, pc_port,
+                               auth=("admin", "***REMOVED***"))
+
+    test_url = "api/nutanix/v3/clusters/list"
+    # test_url = "api/nutanix/v3/blueprints/list"
+    # TODO - Enable and setup Calm on this PC. (No host cluster is registered with PC)
+    res, err = client._call(test_url, verify=False)
+
+    if not err:
+        print(json.dumps(res.json(), indent=4, separators=(",", ": ")))
+        assert res.ok == True
+
+
+if __name__ == "__main__":
+    example_handle()

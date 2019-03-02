@@ -2,3 +2,4 @@ ruamel.yaml==0.15.88
 jinja2==2.10
 jsonref==0.2
 bidict==0.18.0
+requests==2.21.0

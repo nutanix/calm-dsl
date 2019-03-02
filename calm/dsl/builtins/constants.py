@@ -18,8 +18,7 @@ class __IterableConstantsMeta__(type):
                 yield getattr(self, attr)
 
 
-class IterableConstants(object):
-    __metaclass__ = __IterableConstantsMeta__
+class IterableConstants(metaclass=__IterableConstantsMeta__):
 
     @ClassProperty
     @classmethod
