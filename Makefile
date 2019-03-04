@@ -25,6 +25,9 @@ gui: dev
 
 
 test: dev
+	venv/bin/py.test --cov --flake8
+
+test-verbose: dev
 	venv/bin/py.test -s --cov --flake8
 
 dist: test
