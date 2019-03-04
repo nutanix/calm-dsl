@@ -7,6 +7,7 @@
 {% import "ref.yaml.jinja2" as ref %}
 {% import "variable.yaml.jinja2" as variable %}
 {% import "package.yaml.jinja2" as package %}
+{% import "credential.yaml.jinja2" as credential %}
 
 {% macro Schemas() -%}
 
@@ -19,6 +20,7 @@
 {{ ref.RefSchema() }}
 {{ variable.VariableSchema() }}
 {{ package.PackageSchema() }}
+{{ credential.CredentialSchema() }}
 
 {%- endmacro %}
 

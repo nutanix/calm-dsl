@@ -4,6 +4,9 @@ title: Blueprint
 type: object
 x-calm-dsl-type: app_blueprint
 properties:
+  type:
+    type: string
+    default: 'USER'
   service_definition_list:
     x-calm-dsl-display-name: services
     description: Service definitions for blueprint.
@@ -22,6 +25,12 @@ properties:
     type: array
     items:
       $ref: '#/components/schemas/Substrate'
+  credential_definition_list:
+    x-calm-dsl-display-name: credentials
+    description: Credential definitions for blueprint.
+    type: array
+    items:
+      $ref: '#/components/schemas/Credential'
   app_profile_list:
     x-calm-dsl-display-name: profiles
     description: App profile definitions for blueprint.

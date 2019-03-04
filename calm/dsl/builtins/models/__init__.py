@@ -1,4 +1,5 @@
 from .ref import Ref, ref  # noqa: F401
+from .credential import basic_cred  # noqa: F401
 from .variable import Variable, var, setvar  # noqa: F401
 from .port import Port, port  # noqa: F401
 from .service import Service, service  # noqa: F401
