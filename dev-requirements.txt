@@ -10,3 +10,4 @@ pytest-flake8>=1.0.4
 pytest-randomly>=2.1.0
 pytest-icdiff>=0.0.4
 pytest-xdist>=1.26.1
+pytest-gitignore>=1.3
