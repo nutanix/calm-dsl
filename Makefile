@@ -25,10 +25,10 @@ gui: dev
 
 
 test: dev
-	venv/bin/py.test --cov --flake8
+	venv/bin/py.test
 
 test-verbose: dev
-	venv/bin/py.test -s --cov --flake8
+	venv/bin/py.test -s
 
 dist: test
 	venv/bin/python3 setup.py bdist_wheel
