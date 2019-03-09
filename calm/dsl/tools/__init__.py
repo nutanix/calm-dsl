@@ -1,1 +1,6 @@
-from .render_json import RenderJSON  # noqa F401
+from .render_json import RenderJSON
+
+
+__all__ = [
+    'RenderJSON',
+]
