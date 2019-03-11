@@ -1,0 +1,32 @@
+{% macro Task() -%}
+
+title: Task
+type: object
+x-calm-dsl-type: app_task
+properties:
+  name:
+    type: string
+  description:
+    type: string
+  type:
+    type: string
+  target_any_local_reference:
+    $ref: '#/components/schemas/Ref'
+  attrs:
+    type: object
+    additionalProperties: true
+    x-calm-dsl-type: dict
+  child_tasks_local_reference_list:
+    type: array
+    items:
+      $ref: '#/components/schemas/Ref'
+
+{%- endmacro %}
+
+
+{% macro TaskSchema() -%}
+
+Task:
+  {{ Task()|indent(2) }}
+
+{%- endmacro %}

@@ -1,6 +1,7 @@
 from .models.ref import Ref, ref
 from .models.credential import basic_cred
 from .models.variable import Variable, var, setvar
+from .models.task import Task, exec_ssh
 from .models.port import Port, port
 from .models.service import Service, service
 from .models.package import Package, package
@@ -14,6 +15,7 @@ __all__ = [
     'Ref', 'ref',
     'basic_cred',
     'Variable', 'var', 'setvar',
+    'Task', 'exec_ssh',
     'Port', 'port',
     'Service', 'service',
     'Package', 'package',
