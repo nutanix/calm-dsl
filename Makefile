@@ -1,3 +1,6 @@
+test: dev
+	venv/bin/py.test
+
 dev:
 	# Setup our python3 based virtualenv
 	# This step assumes python3 is installed on your dev machine
@@ -23,13 +26,10 @@ clean:
 		docker image prune -f
 	rm -r venv/ && mkdir venv/ && touch venv/.empty
 
-test: dev
-	venv/bin/py.test
-
 test-verbose: dev
 	venv/bin/py.test -s
 
-dist: test
+dist:
 	venv/bin/python3 setup.py bdist_wheel
 
 docker: dist gui

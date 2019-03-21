@@ -5,21 +5,21 @@ FROM alpine:edge
 
 # Add required C extensions to packages.
 ENV PACKAGES="\
-	libxml2 \
-	libxslt \
-	libzmq \
-	python3 \
-	"
+        libxml2 \
+        libxslt \
+        libzmq \
+        python3 \
+        "
 
 # Add build packages needed to compile from source
 ENV BUILD_PACKAGES="\
-	python3-dev \
-	build-base \
-	musl-dev \
-	zeromq-dev \
-	libxml2-dev \
-	libxslt-dev \
-	"
+        python3-dev \
+        build-base \
+        musl-dev \
+        zeromq-dev \
+        libxml2-dev \
+        libxslt-dev \
+        "
 
 # Install base packages
 RUN apk update && apk add --no-cache $PACKAGES
@@ -37,10 +37,10 @@ RUN rm /gui-requirements.txt
 
 
 # Configure jupyter extensions
-RUN jupyter contrib nbextension install --user
-RUN jupyter nbextensions_configurator enable --user
-RUN jupyter nbextension install --py jupyter_dashboards --sys-prefix
-RUN jupyter nbextension enable --py jupyter_dashboards --sys-prefix
+## RUN jupyter contrib nbextension install --user
+## RUN jupyter nbextensions_configurator enable --user
+## RUN jupyter nbextension install --py jupyter_dashboards --sys-prefix
+## RUN jupyter nbextension enable --py jupyter_dashboards --sys-prefix
 
 # Use root env instead of virtualenv for installing requirements [PEP 370]
 WORKDIR /root
@@ -59,4 +59,4 @@ RUN rm calm.dsl*.whl
 
 EXPOSE 8888
 CMD ["jupyter", "notebook", "--ip=0.0.0.0", "--port=8888", "--allow-root", \
-	"--no-browser", "--NotebookApp.custom_display_url=http://localhost:8888"]
+        "--no-browser", "--NotebookApp.custom_display_url=http://localhost:8888"]
