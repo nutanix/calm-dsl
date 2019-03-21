@@ -1,16 +1,7 @@
-clean:
-	[ ! -d build/ ] || rm -r build/
-	[ ! -d dist/ ] || rm -r dist/
-	[ ! -d *.egg-info/ ] || rm -r *.egg-info/
-	[ -S /var/run/docker.sock ] && \
-		docker ps -aq --no-trunc --filter "status=exited" | xargs docker rm && \
-		docker image prune -f
-	rm -r venv/ && mkdir venv/ && touch venv/.empty
-
 dev:
 	# Setup our python3 based virtualenv
 	# This step assumes python3 is installed on your dev machine
-	[ -f venv/bin/python3 ] || (virtualenv -p python3 venv && \
+	[ -f venv/bin/python3 ] || (virtualenv -p python36 venv && \
 		venv/bin/pip3 install --upgrade pip setuptools)
 	venv/bin/pip3 install -r requirements.txt -r dev-requirements.txt
 	venv/bin/python3 setup.py develop
@@ -23,6 +14,14 @@ gui: dev
 	venv/bin/jupyter nbextension install --py jupyter_dashboards --sys-prefix
 	venv/bin/jupyter nbextension enable --py jupyter_dashboards --sys-prefix
 
+clean:
+	[ ! -d build/ ] || rm -r build/
+	[ ! -d dist/ ] || rm -r dist/
+	[ ! -d *.egg-info/ ] || rm -r *.egg-info/
+	[ -S /var/run/docker.sock ] && \
+		docker ps -aq --no-trunc --filter "status=exited" | xargs -r docker rm && \
+		docker image prune -f
+	rm -r venv/ && mkdir venv/ && touch venv/.empty
 
 test: dev
 	venv/bin/py.test
