@@ -22,10 +22,39 @@ import json
 from requests import Session as NonRetrySession
 from requests.adapters import HTTPAdapter
 
-from calm.dsl.builtins.constants import REQUEST
-
 
 log = logging.getLogger(__name__)
+
+
+class REQUEST:
+    """Request related constants"""
+
+    class SCHEME:
+        """
+        Connection schemes
+        """
+
+        HTTP = "http"
+        HTTPS = "https"
+
+    class AUTH_TYPE:
+        """
+        Types of auth
+        """
+
+        NONE = "none"
+        BASIC = "basic"
+        JWT = "jwt"
+
+    class METHOD:
+        """
+        Request methods
+        """
+
+        DELETE = "delete"
+        GET = "get"
+        POST = "post"
+        PUT = "put"
 
 
 def build_url(host, port, endpoint="", scheme=REQUEST.SCHEME.HTTPS):

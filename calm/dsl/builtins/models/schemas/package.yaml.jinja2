@@ -27,10 +27,14 @@ properties:
     items:
        $ref: '#/components/schemas/Ref'
   variable_list:
-     type: array
-     x-calm-dsl-display-name: variables
-     items:
-       $ref: '#/components/schemas/Variable'
+    type: array
+    x-calm-dsl-display-name: variables
+    items:
+      $ref: '#/components/schemas/Variable'
+  install_tasks:
+    type: array
+    items:
+      $ref: '#/components/schemas/Task'
 
 {%- endmacro %}
 

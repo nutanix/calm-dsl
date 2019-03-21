@@ -35,7 +35,7 @@ def _validate(vdict, name, value):
             is_array = False
 
             # Set name attribute in variable
-            # TODO - use interfaces similar __set__, __get__ interfaces for descriptors
+            # TODO - use __set__, __get__ interfaces for descriptors
             # TODO - Avoid recursion. caller class should not be a VariableType
             setattr(value, "name", name)
 
@@ -80,7 +80,10 @@ class EntityTypeBase(type):
             return
 
         # Set properties on metaclass by fetching from schema
-        schema_props, validators, defaults, display_map = get_schema_details(schema_name)
+        (schema_props,
+         validators,
+         defaults,
+         display_map) = get_schema_details(schema_name)
 
         # Set validator dict on metaclass for each prop.
         # To be used during __setattr__() to validate props.
@@ -237,7 +240,7 @@ class EntityType(EntityTypeBase):
         # Remove extra info
         name = cdict.pop("name", mcls.__schema_name__)
         description = cdict.pop("description", None)
-        kind = cdict.pop('__kind__')
+        # kind = cdict.pop('__kind__')
 
         # Convert attribute names to x-calm-dsl-display-name, if given
         attrs = {}

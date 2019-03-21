@@ -27,9 +27,10 @@ Look at this [example](https://github.com/ideadevice/calm-dsl-engine/blob/master
      - Add bp metadata (projects, etc)
      - ~Use same key names as v3 apis (use `x-calm-dsl-key` later to map to v3 schema)~
      - ~Add `RefType`~
-     - Add connection handle to talk to server [Kiran]
-     - Add VariableType to entities
-   - Validate & launch bp
+     - ~Add connection handle to talk to server [Kiran]~
+     - ~Add VariableType to entities~
+   - ~Validate bp~
+   - Launch bp
  - Language Enhancements:
    - Add Port type - tcp/udp
    - List of supported protocols - ssh

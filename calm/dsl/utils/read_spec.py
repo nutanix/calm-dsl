@@ -4,7 +4,7 @@ import inspect
 from ruamel import yaml
 
 
-def read_vm_spec(filename):
+def read_ahv_vm_spec(filename):
 
     file_path = os.path.join(
         os.path.dirname(
