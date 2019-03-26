@@ -6,11 +6,10 @@ Example:
 
 pc_ip = "<pc_ip>"
 pc_port = 9440
-client = get_server_handle(pc_ip, pc_port,
+client = get_bp_api_handle(pc_ip, pc_port,
                            auth=("admin", "***REMOVED***"))
 
-url = "api/nutanix/v3/blueprints/list"
-res, err = client._call(url, verify=False)
+res, err = client.list()
 
 """
 
@@ -75,37 +74,7 @@ def build_url(host, port, endpoint="", scheme=REQUEST.SCHEME.HTTPS):
     return url
 
 
-_API_CLIENT = None
-
-
-def get_server_handle(host,
-                      port,
-                      auth_type=REQUEST.AUTH_TYPE.BASIC,
-                      scheme=REQUEST.SCHEME.HTTPS,
-                      auth=None):
-    """Get api server (aplos/styx) handle.
-
-    Args:
-        host (str): Hostname/IP address
-        port (int): Port to connect to
-        auth_type (str): auth type that needs to be used by the client
-        scheme (str): http scheme (http or https)
-        session_headers (dict): session headers dict
-        auth (tuple): authentication
-    Returns:
-        Client handle
-    Raises:
-        Exception: If cannot connect
-    """
-    global _API_CLIENT
-    if not _API_CLIENT:
-        _API_CLIENT = ServerInterface(host, port, auth_type, scheme=scheme, auth=auth)
-        _API_CLIENT.connect()
-    return _API_CLIENT
-
-
-class ServerInterface(object):
-    """ServerInterface."""
+class Connection(object):
 
     def __init__(self,
                  host,
@@ -204,11 +173,11 @@ class ServerInterface(object):
             request_params=None,
             verify=True,
     ):
-        """Private method for making http request to Beam.
+        """Private method for making http request to calm
 
         Args:
-            endpoint (str): beam server endpoint
-            method (str): beam server http method
+            endpoint (str): calm server endpoint
+            method (str): calm server http method
             cookies (dict): cookies that need to be forwarded.
             request_json (dict): request data
             request_params (dict): request params
@@ -266,3 +235,139 @@ class ServerInterface(object):
             err = {"error": err_msg, "code": status_code}
             log.error("Error Response: {}".format(err))
         return res, err
+
+
+_CONNECTION = None
+
+
+def get_connection(host,
+                   port,
+                   auth_type=REQUEST.AUTH_TYPE.BASIC,
+                   scheme=REQUEST.SCHEME.HTTPS,
+                   auth=None):
+    """Get api server (aplos/styx) handle.
+
+    Args:
+        host (str): Hostname/IP address
+        port (int): Port to connect to
+        auth_type (str): auth type that needs to be used by the client
+        scheme (str): http scheme (http or https)
+        session_headers (dict): session headers dict
+        auth (tuple): authentication
+    Returns:
+        Client handle
+    Raises:
+        Exception: If cannot connect
+    """
+    global _CONNECTION
+    if not _CONNECTION:
+        _CONNECTION = Connection(host, port, auth_type, scheme=scheme, auth=auth)
+    return _CONNECTION
+
+
+class BlueprintAPI:
+
+    _PREFIX = "api/nutanix/v3/blueprints"
+    LIST = _PREFIX + "/list"
+    UPLOAD = _PREFIX + "/import_json"
+    ITEM = _PREFIX + "/{uuid}"
+
+    def __init__(self, connection):
+        self.connection = connection
+
+    def list(self):
+        return self.connection._call(BlueprintAPI.LIST,
+                                     verify=False,
+                                     method=REQUEST.METHOD.POST)
+
+    def update(self, uuid, payload):
+        return self.connection._call(BlueprintAPI.ITEM.format(uuid),
+                                     verify=False,
+                                     request_json=payload,
+                                     method=REQUEST.METHOD.PUT)
+
+    def upload(self, payload):
+        return self.connection._call(BlueprintAPI.UPLOAD,
+                                     verify=False,
+                                     request_json=payload,
+                                     method=REQUEST.METHOD.POST)
+
+    @staticmethod
+    def _make_blueprint_payload(bp_name, bp_desc, bp_resources):
+
+        bp_payload = {
+            "spec": {
+                "name": bp_name,
+                "description": bp_desc or "",
+                "resources": bp_resources,
+            },
+            "metadata": {
+                "spec_version": 1,
+                "name": bp_name,
+                "kind": "blueprint",
+            },
+            "api_version": "3.0",
+        }
+
+        return bp_payload
+
+    def upload_with_secrets(self, bp):
+
+        bp_resources = json.loads(bp.json_dumps())
+
+        # Firt remove secrets before upload
+        creds = bp_resources["credential_definition_list"]
+        secret_map = {}
+        for cred in creds:
+            name = cred["name"]
+            secret_map[name] = cred.pop("secret", {})
+            cred["secret"] = {}
+
+        # Make first cred as default for now
+        # TODO - get the right cred default
+        # TODO - check if no creds
+        bp_resources["default_credential_local_reference"] = {
+            "kind": "app_credential",
+            "name": creds[0]["name"],
+        }
+
+        upload_payload = self._make_blueprint_payload(bp.__name__,
+                                                      bp.__doc__,
+                                                      bp_resources)
+
+        res, err = self.upload(upload_payload)
+        if err:
+            return res, err
+
+        # Add secrets and update bp
+        bp = res.json()
+        del bp["status"]
+
+        # Add secrets back
+        creds = bp["spec"]["resources"]["credential_definition_list"]
+        for cred in creds:
+            name = cred["name"]
+            cred["secret"] = secret_map[name]
+
+        # Update blueprint
+        update_payload = bp
+        uuid = bp["metadata"]["uuid"]
+
+        return self.update(uuid, update_payload)
+
+
+_BP_API_HANDLE = None
+
+
+def get_blueprint_api_handle(host,
+                             port,
+                             auth_type=REQUEST.AUTH_TYPE.BASIC,
+                             scheme=REQUEST.SCHEME.HTTPS,
+                             auth=None):
+
+    global _BP_API_HANDLE
+    if not _BP_API_HANDLE:
+        connection = get_connection(host, port, auth_type, scheme=scheme, auth=auth)
+        connection.connect()
+        _BP_API_HANDLE = BlueprintAPI(connection)
+    return _BP_API_HANDLE
