@@ -13,7 +13,6 @@ res, err = client.list()
 
 """
 
-import copy
 import traceback
 import logging
 import json
@@ -141,7 +140,7 @@ class Connection(object):
         if self.auth and self.auth_type == REQUEST.AUTH_TYPE.BASIC:
             self.session.auth = self.auth
         self.session.headers.update({"Content-Type": "application/json"})
-        self.session.headers.update(self.session_headers)
+
         http_adapter = HTTPAdapter(
             pool_block=bool(self._pool_block),
             pool_connections=int(self._pool_connections),
@@ -198,7 +197,7 @@ class Connection(object):
             url = build_url(
                 self.host, self.port, endpoint=endpoint, scheme=self.scheme)
             log.info("URL is: {}".format(url))
-            base_headers = copy.deepcopy(self.session.headers)
+            base_headers = self.session.headers
 
             if method == REQUEST.METHOD.POST:
                 res = self.session.post(
@@ -270,7 +269,7 @@ class BlueprintAPI:
     _PREFIX = "api/nutanix/v3/blueprints"
     LIST = _PREFIX + "/list"
     UPLOAD = _PREFIX + "/import_json"
-    ITEM = _PREFIX + "/{uuid}"
+    ITEM = _PREFIX + "/{}"
 
     def __init__(self, connection):
         self.connection = connection
@@ -315,7 +314,7 @@ class BlueprintAPI:
 
         bp_resources = json.loads(bp.json_dumps())
 
-        # Firt remove secrets before upload
+        # Remove creds before upload
         creds = bp_resources["credential_definition_list"]
         secret_map = {}
         for cred in creds:
@@ -336,8 +335,12 @@ class BlueprintAPI:
                                                       bp_resources)
 
         res, err = self.upload(upload_payload)
+
         if err:
             return res, err
+
+        # TODO - update bp fails on latest master after import_json
+        # Error - Secret entity object with uuid None not present in db
 
         # Add secrets and update bp
         bp = res.json()
