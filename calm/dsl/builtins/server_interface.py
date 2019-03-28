@@ -320,7 +320,14 @@ class BlueprintAPI:
         for cred in creds:
             name = cred["name"]
             secret_map[name] = cred.pop("secret", {})
-            cred["secret"] = {}
+            # Explicitly set defaults so that secret is not created at server
+            # TODO - Fix bug in server: {} != None
+            cred["secret"] = {
+                "attrs": {
+                    "is_secret_modified": False,
+                    "secret_reference": None,
+                },
+            }
 
         # Make first cred as default for now
         # TODO - get the right cred default
@@ -338,9 +345,6 @@ class BlueprintAPI:
 
         if err:
             return res, err
-
-        # TODO - update bp fails on latest master after import_json
-        # Error - Secret entity object with uuid None not present in db
 
         # Add secrets and update bp
         bp = res.json()
