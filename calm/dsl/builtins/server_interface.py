@@ -274,9 +274,10 @@ class BlueprintAPI:
     def __init__(self, connection):
         self.connection = connection
 
-    def list(self):
+    def list(self, params=None):
         return self.connection._call(BlueprintAPI.LIST,
                                      verify=False,
+                                     request_json=params,
                                      method=REQUEST.METHOD.POST)
 
     def update(self, uuid, payload):
