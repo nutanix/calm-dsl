@@ -225,6 +225,15 @@ class Connection(object):
                     headers=base_headers,
                     cookies=cookies,
                 )
+            elif method == REQUEST.METHOD.DELETE:
+                res = self.session.delete(
+                    url,
+                    params=request_params,
+                    data=json.dumps(request_json),
+                    verify=verify,
+                    headers=base_headers,
+                    cookies=cookies,
+                )
             res.raise_for_status()
             log.info("Server Response: {}".format(res.json()))
         except Exception as ex:
@@ -291,6 +300,11 @@ class BlueprintAPI:
                                      verify=False,
                                      request_json=payload,
                                      method=REQUEST.METHOD.POST)
+
+    def delete(self, uuid):
+        return self.connection._call(BlueprintAPI.ITEM.format(uuid),
+                                     verify=False,
+                                     method=REQUEST.METHOD.DELETE)
 
     @staticmethod
     def _make_blueprint_payload(bp_name, bp_desc, bp_resources):
