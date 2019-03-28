@@ -15,12 +15,18 @@ class SubstrateType(EntityType):
         # TODO - fix this mess!
         # readiness probe requires address to be set even if there is one nic
 
-        if not cdict["type"] == "AHV_VM":
-            return cdict
+        if cdict["type"] == "AHV_VM":
+            readiness_probe = {
+                "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
+            }
 
-        readiness_probe = {
-            "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
-        }
+        elif cdict["type"] == "EXISTING_VM":
+            readiness_probe = {
+                "address": "@@{ip_address}@@",
+            }
+
+        else:
+            readiness_probe = {}
 
         cdict["readiness_probe"] = readiness_probe
 
