@@ -37,6 +37,10 @@ properties:
     type: array
     items:
       $ref: '#/components/schemas/Profile'
+  client_attrs:
+    type: object
+    additionalProperties: true
+    x-calm-dsl-type: dict
 
 {%- endmacro %}
 

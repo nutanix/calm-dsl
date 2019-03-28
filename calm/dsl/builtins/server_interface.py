@@ -279,6 +279,7 @@ class BlueprintAPI:
     LIST = _PREFIX + "/list"
     UPLOAD = _PREFIX + "/import_json"
     ITEM = _PREFIX + "/{}"
+    LAUNCH = ITEM + "/simple_launch"
 
     def __init__(self, connection):
         self.connection = connection
@@ -305,6 +306,12 @@ class BlueprintAPI:
         return self.connection._call(BlueprintAPI.ITEM.format(uuid),
                                      verify=False,
                                      method=REQUEST.METHOD.DELETE)
+
+    def launch(self, uuid, payload):
+        return self.connection._call(BlueprintAPI.LAUNCH.format(uuid),
+                                     verify=False,
+                                     request_json=payload,
+                                     method=REQUEST.METHOD.POST)
 
     @staticmethod
     def _make_blueprint_payload(bp_name, bp_desc, bp_resources):
