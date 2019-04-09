@@ -47,7 +47,7 @@ Look at this [example](https://github.com/ideadevice/calm-dsl-engine/blob/master
    - DSL for apps (for app LCM)
  - Mega ToDo:
    - Generate idiomatic python code from blueprint JSON (decompile)
- - Build CLI tooling to interact with calm-server
+ - Build CLI tooling to interact with calm-server [Sen]
  - ~Build docker container for jupyter + DSL~
  - ~Make License as GPL~
  - ~Get rid of attributes field~
