@@ -16,41 +16,73 @@ Options:
   -u --username username     Prism Central username
   -p --password password     Prism Central password
 """
+import os
 import json
 import warnings
+import configparser
 from functools import reduce
 from docopt import docopt
-from utils import get_api_client, ping
 
-# These will be read from a config file, in the coming days
+from calm.dsl.utils.server_utils import get_api_client as _get_api_client, ping
+
+# Defaults to be used if no config file exists.
 PC_IP = "10.51.152.102"
 PC_PORT = 9440
 PC_USERNAME = "admin"
 PC_PASSWORD = "***REMOVED***"
 
+LOCAL_CONFIG_PATH = "config.ini"
+GLOBAL_CONFIG_PATH = "~/.calm/config"
+
+
+def get_api_client(username="admin", password="***REMOVED***"):
+    return _get_api_client(auth=(username, password))
+
 
 def main():
     global PC_IP, PC_PORT, PC_USERNAME, PC_PASSWORD
-    names = []
+    local_config_exists = os.path.isfile(LOCAL_CONFIG_PATH)
+    global_config_exists = os.path.isfile(GLOBAL_CONFIG_PATH)
 
-    arguments = docopt(__doc__, version='Calm CLI v0.1.0')
+    if global_config_exists and not local_config_exists:
+        file_path = GLOBAL_CONFIG_PATH
+    else:
+        file_path = LOCAL_CONFIG_PATH
+
+    config = configparser.ConfigParser()
+    config.read(file_path)
+    if "SERVER" in config:
+        PC_IP = config["SERVER"]["pc_ip"]
+        PC_PORT = config["SERVER"]["pc_port"]
+        PC_USERNAME = config["SERVER"]["pc_username"]
+        PC_PASSWORD = config["SERVER"]["pc_password"]
+
+    arguments = docopt(__doc__, version="Calm CLI v0.1.0")
     print(arguments)
 
-    if arguments['config']:
-        if arguments['--server']:
-            [PC_IP, PC_PORT] = arguments['--server'].split(':')
-        if arguments['--username']:
-            PC_USERNAME = arguments['--username']
-        if arguments['--password']:
-            PC_PASSWORD = arguments['--password']
+    if arguments["config"]:
+        if arguments["--server"]:
+            [PC_IP, PC_PORT] = arguments["--server"].split(":")
+        if arguments["--username"]:
+            PC_USERNAME = arguments["--username"]
+        if arguments["--password"]:
+            PC_PASSWORD = arguments["--password"]
+        config["SERVER"] = {
+            "pc_ip": PC_IP,
+            "pc_port": PC_PORT,
+            "pc_username": PC_USERNAME,
+            "pc_password": PC_PASSWORD
+        }
+        with open(file_path, "w") as configfile:
+            config.write(configfile)
 
-    if arguments['get']:
-        names = arguments['<name>']
-        get_blueprint_list(names)
+    if arguments["get"]:
+        get_blueprint_list(arguments["<name>"])
 
 
 def get_blueprint_list(names):
-    assert ping() is True
+    global PC_IP
+    assert ping(PC_IP) is True
     client = get_api_client()
 
     params = {
@@ -58,11 +90,11 @@ def get_blueprint_list(names):
         "offset": 0,
     }
     if names:
-        search_strings = ['name==.*' + reduce(lambda acc, c: "{}[{}|{}]".
-                          format(acc, c.lower(), c.upper()), name, '') + '.*' for name in names
+        search_strings = ["name==.*" + reduce(lambda acc, c: "{}[{}|{}]".
+                          format(acc, c.lower(), c.upper()), name, "") + ".*" for name in names
                           ]
-        params['filter'] = ''.join(search_strings)
-
+        params["filter"] = ",".join(search_strings)
+    print(params)
     res, err = client.list(params=params)
 
     if not err:
