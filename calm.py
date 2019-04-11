@@ -18,6 +18,7 @@ Options:
 """
 import os
 import json
+import time
 import warnings
 import configparser
 from functools import reduce
@@ -35,8 +36,8 @@ LOCAL_CONFIG_PATH = "config.ini"
 GLOBAL_CONFIG_PATH = "~/.calm/config"
 
 
-def get_api_client(username="admin", password="***REMOVED***"):
-    return _get_api_client(auth=(username, password))
+def get_api_client(pc_ip=PC_IP, pc_port=PC_PORT, username=PC_USERNAME, password=PC_PASSWORD):
+    return _get_api_client(pc_ip=pc_ip, pc_port=pc_port, auth=(username, password))
 
 
 def main():
@@ -58,7 +59,6 @@ def main():
         PC_PASSWORD = config["SERVER"]["pc_password"]
 
     arguments = docopt(__doc__, version="Calm CLI v0.1.0")
-    print(arguments)
 
     if arguments["config"]:
         if arguments["--server"]:
@@ -67,6 +67,7 @@ def main():
             PC_USERNAME = arguments["--username"]
         if arguments["--password"]:
             PC_PASSWORD = arguments["--password"]
+
         config["SERVER"] = {
             "pc_ip": PC_IP,
             "pc_port": PC_PORT,
@@ -78,6 +79,8 @@ def main():
 
     if arguments["get"]:
         get_blueprint_list(arguments["<name>"])
+    if arguments["launch"]:
+        launch_blueprint(arguments["<name>"][0])
 
 
 def get_blueprint_list(names):
@@ -94,7 +97,6 @@ def get_blueprint_list(names):
                           format(acc, c.lower(), c.upper()), name, "") + ".*" for name in names
                           ]
         params["filter"] = ",".join(search_strings)
-    print(params)
     res, err = client.list(params=params)
 
     if not err:
@@ -103,6 +105,63 @@ def get_blueprint_list(names):
         assert res.ok is True
     else:
         warnings.warn(UserWarning("Cannot fetch blueprints from {}".format(PC_IP)))
+
+
+def launch_blueprint(blueprint_name):
+    client = get_api_client()
+    # find bp
+    params = {
+        "filter": "name=={};state!=DELETED".format(blueprint_name)
+    }
+
+    res, err = client.list(params=params)
+    if err:
+        print("[{}] - {}".format(err["code"], err["error"]))
+        return
+
+    response = res.json()
+    entities = response.get("entities", None)
+    blueprint = None
+    if entities:
+        if len(entities) != 1:
+            print("More than one blueprint found - {}".format(entities))
+            return
+
+        print(">> {} found >>".format(blueprint_name))
+        blueprint = entities[0]
+        uuid = blueprint["metadata"]["uuid"]
+    else:
+        print(">>No blueprint found with name {} found >>".format(blueprint_name))
+        return
+
+    blueprint_spec = blueprint['spec']
+
+    launch_payload = {
+        "spec": {
+            "application_name": "ExistingVMApp-{}".format(int(time.time())),
+            "app_profile_reference": {
+                "kind": "app_profile",
+                "name": "{}".format(blueprint_spec['app_profile_list'][0]),
+            },
+            "resources": blueprint_spec['resources']
+        },
+    }
+
+    res, err = client.launch(uuid, launch_payload)
+    if not err:
+        print(">> {} launched >>".format(blueprint_name))
+        print(json.dumps(res.json(), indent=4, separators=(",", ": ")))
+    else:
+        print("[{}] - {}".format(err["code"], err["error"]))
+        return
+
+    # Poll every 10 seconds on the app status, for 5 mins
+    maxWait = 5 * 60
+    count = 0
+    while count < maxWait:
+        # call status api
+        count += 10
+        time.sleep(10)
 
 
 if __name__ == "__main__":
