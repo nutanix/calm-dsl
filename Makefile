@@ -9,6 +9,14 @@ dev:
 	venv/bin/pip3 install -r requirements.txt -r dev-requirements.txt
 	venv/bin/python3 setup.py develop
 
+cli:
+	# Setup our python3 based virtualenv
+	# This step assumes python3 is installed on your dev machine
+	[ -f venv/bin/python3 ] || (virtualenv -p python36 venv && \
+		venv/bin/pip3 install --upgrade pip setuptools)
+	venv/bin/pip3 install -r requirements.txt -r dev-requirements.txt -r cli-requirements.txt
+	venv/bin/python3 setup.py develop
+
 gui: dev
 	# Setup Jupyter
 	venv/bin/pip3 install -r gui-requirements.txt
