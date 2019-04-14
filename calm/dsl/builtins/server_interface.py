@@ -280,6 +280,8 @@ class BlueprintAPI:
     UPLOAD = _PREFIX + "/import_json"
     ITEM = _PREFIX + "/{}"
     LAUNCH = ITEM + "/simple_launch"
+    FULL_LAUNCH = ITEM + "/launch"
+    LAUNCH_POLL = ITEM + "/pending_launches/{}"
 
     def __init__(self, connection):
         self.connection = connection
@@ -289,6 +291,11 @@ class BlueprintAPI:
                                      verify=False,
                                      request_json=params,
                                      method=REQUEST.METHOD.POST)
+
+    def get(self, blueprint_id):
+        return self.connection._call(BlueprintAPI.ITEM.format(blueprint_id),
+                                     verify=False,
+                                     method=REQUEST.METHOD.GET)
 
     def update(self, uuid, payload):
         return self.connection._call(BlueprintAPI.ITEM.format(uuid),
@@ -312,6 +319,17 @@ class BlueprintAPI:
                                      verify=False,
                                      request_json=payload,
                                      method=REQUEST.METHOD.POST)
+
+    def full_launch(self, uuid, payload):
+        return self.connection._call(BlueprintAPI.FULL_LAUNCH.format(uuid),
+                                     verify=False,
+                                     request_json=payload,
+                                     method=REQUEST.METHOD.POST)
+
+    def launch_poll(self, blueprint_id, request_id):
+        return self.connection._call(BlueprintAPI.LAUNCH_POLL.format(blueprint_id, request_id),
+                                     verify=False,
+                                     method=REQUEST.METHOD.GET)
 
     @staticmethod
     def _make_blueprint_payload(bp_name, bp_desc, bp_resources):

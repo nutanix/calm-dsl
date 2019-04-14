@@ -23,7 +23,7 @@ import warnings
 import configparser
 from functools import reduce
 from docopt import docopt
-
+from pprint import pprint
 from calm.dsl.utils.server_utils import get_api_client as _get_api_client, ping
 
 # Defaults to be used if no config file exists.
@@ -76,17 +76,16 @@ def main():
         }
         with open(file_path, "w") as configfile:
             config.write(configfile)
-
+    client = get_api_client(PC_IP, PC_PORT, PC_USERNAME, PC_PASSWORD)
     if arguments["get"]:
-        get_blueprint_list(arguments["<name>"])
+        get_blueprint_list(arguments["<name>"], client)
     if arguments["launch"]:
-        launch_blueprint(arguments["<name>"][0])
+        launch_blueprint(arguments["<name>"][0], client)
 
 
-def get_blueprint_list(names):
+def get_blueprint_list(names, client):
     global PC_IP
     assert ping(PC_IP) is True
-    client = get_api_client()
 
     params = {
         "length": 20,
@@ -107,7 +106,8 @@ def get_blueprint_list(names):
         warnings.warn(UserWarning("Cannot fetch blueprints from {}".format(PC_IP)))
 
 
-def launch_blueprint(blueprint_name):
+def launch_blueprint(blueprint_name, client):
+    global PC_IP, PC_PORT
     client = get_api_client()
     # find bp
     params = {
@@ -129,37 +129,61 @@ def launch_blueprint(blueprint_name):
 
         print(">> {} found >>".format(blueprint_name))
         blueprint = entities[0]
-        uuid = blueprint["metadata"]["uuid"]
     else:
         print(">>No blueprint found with name {} found >>".format(blueprint_name))
         return
 
-    blueprint_spec = blueprint['spec']
+    blueprint_id = blueprint["metadata"]["uuid"]
+    print(">>Fetching blueprint details")
+    res, err = client.get(blueprint_id)
+    if err:
+        print("[{}] - {}".format(err["code"], err["error"]))
+        return
+    blueprint = res.json()
+    blueprint_spec = blueprint["spec"]
 
     launch_payload = {
+        "api_version": "3.0",
+        "metadata": blueprint["metadata"],
         "spec": {
             "application_name": "ExistingVMApp-{}".format(int(time.time())),
             "app_profile_reference": {
                 "kind": "app_profile",
-                "name": "{}".format(blueprint_spec['app_profile_list'][0]),
+                "name": "{}".format(blueprint_spec["resources"]["app_profile_list"][0]["name"]),
+                "uuid": "{}".format(blueprint_spec["resources"]["app_profile_list"][0]["uuid"]),
             },
-            "resources": blueprint_spec['resources']
+            "resources": blueprint_spec["resources"]
         },
     }
 
-    res, err = client.launch(uuid, launch_payload)
+    res, err = client.full_launch(blueprint_id, launch_payload)
     if not err:
-        print(">> {} launched >>".format(blueprint_name))
+        print(">> {} queued for launch >>".format(blueprint_name))
         print(json.dumps(res.json(), indent=4, separators=(",", ": ")))
     else:
         print("[{}] - {}".format(err["code"], err["error"]))
         return
+    response = res.json()
+    launch_req_id = response["status"]["request_id"]
 
     # Poll every 10 seconds on the app status, for 5 mins
     maxWait = 5 * 60
     count = 0
     while count < maxWait:
         # call status api
+        print("Polling status of Launch")
+        res, err = client.launch_poll(blueprint_id, launch_req_id)
+        response = res.json()
+        pprint(response)
+        if response["status"]["state"] == "success":
+            app_uuid = response["status"]["application_uuid"]
+            # Can't give app url, as deep routing within PC doesn't work.
+            # Hence just giving the app id.
+            print("Successfully launched. App uuid is: {}".format(app_uuid))
+            break
+        elif err:
+            print("[{}] - {}".format(err["code"], err["error"]))
+            break
         count += 10
         time.sleep(10)
 
