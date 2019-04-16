@@ -42,3 +42,6 @@ def exec_ssh(script):
     }
 
     return _task(**kwargs)
+
+def dag(**kwargs):
+    return _task(**kwargs)

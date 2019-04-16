@@ -35,13 +35,10 @@ properties:
     items:
       $ref: '#/components/schemas/Variable'
   action_list:
-    # TODO - add action schema
     x-calm-dsl-display-name: actions
     type: array
     items:
-      additionalProperties: true
-      type: object
-      x-calm-dsl-type: dict
+      $ref: '#/components/schemas/Action'
 
 {%- endmacro %}
 
