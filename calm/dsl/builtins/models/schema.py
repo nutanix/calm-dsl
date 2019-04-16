@@ -21,9 +21,9 @@ def _get_all_schemas():
     return _SCHEMAS
 
 
-def _load_all_schemas(schema_file='main.yaml.jinja2'):
+def _load_all_schemas(schema_file="main.yaml.jinja2"):
 
-    loader = PackageLoader(__name__, 'schemas')
+    loader = PackageLoader(__name__, "schemas")
     env = Environment(loader=loader)
     template = env.get_template(schema_file)
 
@@ -71,8 +71,7 @@ def get_validator_details(schema_props, name):
     if type_ == "object":
         type_ = props.get("x-calm-dsl-type", None)
         if type_ is None:
-            raise Exception(
-                "x-calm-dsl-type extension for {} not found".format(name))
+            raise Exception("x-calm-dsl-type extension for {} not found".format(name))
 
     if type_ == "array":
         item_props = props.get("items", None)
@@ -85,7 +84,8 @@ def get_validator_details(schema_props, name):
             item_type = item_props.get("x-calm-dsl-type", None)
             if item_type is None:
                 raise Exception(
-                    "x-calm-dsl-type extension for {} not found".format(name))
+                    "x-calm-dsl-type extension for {} not found".format(name)
+                )
 
         type_ = item_type
         is_array = True
@@ -108,7 +108,7 @@ def get_validators_with_defaults(schema_props):
     display_map = bidict()
     for name, props in schema_props.items():
         ValidatorType, is_array, default = get_validator_details(schema_props, name)
-        attr_name = props.get('x-calm-dsl-display-name', name)
+        attr_name = props.get("x-calm-dsl-display-name", name)
         validators[attr_name] = (ValidatorType, is_array)
         defaults[attr_name] = default
         display_map[attr_name] = name

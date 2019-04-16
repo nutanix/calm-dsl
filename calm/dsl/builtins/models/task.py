@@ -4,6 +4,7 @@ from .validator import PropertyValidator
 
 # Task
 
+
 class TaskType(EntityType):
     __schema_name__ = "Task"
     __openapi_type__ = "app_task"
@@ -16,7 +17,7 @@ class TaskValidator(PropertyValidator, openapi_type="app_task"):
 
 def _task(**kwargs):
     name = getattr(TaskType, "__schema_name__")
-    bases = (Entity, )
+    bases = (Entity,)
     return TaskType(name, bases, kwargs)
 
 

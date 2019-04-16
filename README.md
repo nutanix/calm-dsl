@@ -20,6 +20,7 @@ Use:
 
 Look at this [example](https://github.com/ideadevice/calm-dsl-engine/blob/master/tests/single_vm_example/test_single_vm_bp.py) to see a blueprint in action
 
+Code formatted by [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
 ## ToDo
 

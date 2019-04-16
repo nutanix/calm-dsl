@@ -4,6 +4,7 @@ from .validator import PropertyValidator
 
 # Substrate
 
+
 class SubstrateType(EntityType):
     __schema_name__ = "Substrate"
     __openapi_type__ = "app_substrate"
@@ -17,13 +18,11 @@ class SubstrateType(EntityType):
 
         if cdict["type"] == "AHV_VM":
             readiness_probe = {
-                "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
+                "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@"
             }
 
         elif cdict["type"] == "EXISTING_VM":
-            readiness_probe = {
-                "address": "@@{ip_address}@@",
-            }
+            readiness_probe = {"address": "@@{ip_address}@@"}
 
         else:
             readiness_probe = {}
@@ -40,7 +39,7 @@ class SubstrateValidator(PropertyValidator, openapi_type="app_substrate"):
 
 def substrate(**kwargs):
     name = getattr(SubstrateType, "__schema_name__")
-    bases = (Entity, )
+    bases = (Entity,)
     return SubstrateType(name, bases, kwargs)
 
 

@@ -4,6 +4,7 @@ from .validator import PropertyValidator
 
 # Credential
 
+
 class CredentialType(EntityType):
     __schema_name__ = "Credential"
     __openapi_type__ = "app_credential"
@@ -16,7 +17,7 @@ class CredentialValidator(PropertyValidator, openapi_type="app_credential"):
 
 def _credential(**kwargs):
     name = getattr(CredentialType, "__schema_name__")
-    bases = (Entity, )
+    bases = (Entity,)
     return CredentialType(name, bases, kwargs)
 
 
@@ -25,12 +26,7 @@ Credential = _credential()
 
 def basic_cred(username, password):
 
-    secret = {
-        "attrs": {
-            "is_secret_modified": True,
-        },
-        "value": password,
-    }
+    secret = {"attrs": {"is_secret_modified": True}, "value": password}
 
     kwargs = {}
     kwargs["type"] = "PASSWORD"

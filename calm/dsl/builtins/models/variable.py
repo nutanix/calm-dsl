@@ -4,6 +4,7 @@ from .validator import PropertyValidator
 
 # Variable
 
+
 class VariableType(EntityType):
     __schema_name__ = "Variable"
     __openapi_type__ = "app_variable"
@@ -16,7 +17,7 @@ class VariableValidator(PropertyValidator, openapi_type="app_variable"):
 
 def _var(**kwargs):
     name = getattr(VariableType, "__schema_name__")
-    bases = (Entity, )
+    bases = (Entity,)
     return VariableType(name, bases, kwargs)
 
 
@@ -29,7 +30,7 @@ def setvar(name, value, **kwargs):
     kwargs["value"] = value
 
     # name = name.title() + getattr(VariableType, "__schema_name__")
-    return VariableType(name, (Entity, ), kwargs)
+    return VariableType(name, (Entity,), kwargs)
 
 
 def var(value, **kwargs):

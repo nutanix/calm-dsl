@@ -4,6 +4,7 @@ from .validator import PropertyValidator
 
 # Ref
 
+
 class RefType(EntityType):
     __schema_name__ = "Ref"
     __openapi_type__ = "app_ref"
@@ -16,7 +17,7 @@ class RefValidator(PropertyValidator, openapi_type="app_ref"):
 
 def _ref(**kwargs):
     name = getattr(RefType, "__schema_name__")
-    bases = (Entity, )
+    bases = (Entity,)
     return RefType(name, bases, kwargs)
 
 

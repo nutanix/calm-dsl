@@ -35,12 +35,12 @@ class PropertyValidator(_PropertyValidatorBase, openapi_type=None):
 
         kind = cls.get_kind()
         if not isinstance(value, kind):
-            raise TypeError('{} is not of type {}'.format(value, kind))
+            raise TypeError("{} is not of type {}".format(value, kind))
 
     @staticmethod
     def _validate_list(values):
         if not isinstance(values, list):
-            raise TypeError('{} is not of type {}'.format(values, list))
+            raise TypeError("{} is not of type {}".format(values, list))
 
     @classmethod
     def validate(cls, value, is_array):
@@ -122,9 +122,10 @@ class PropertyValidator(_PropertyValidatorBase, openapi_type=None):
 
 # built-in validators
 
+
 class StringValidator(PropertyValidator, openapi_type="string"):
 
-    __default__ = ''
+    __default__ = ""
     __kind__ = str
 
 
