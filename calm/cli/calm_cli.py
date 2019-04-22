@@ -1,13 +1,13 @@
 """Calm CLI
 
 Usage:
-  calm_cli.py get blueprints [<name> ...]
-  calm_cli.py describe blueprint <name> [--json|--yaml]
-  calm_cli.py upload blueprint <name>
-  calm_cli.py launch blueprint <name>
-  calm_cli.py config [--server <ip:port>] [--username <username>] [--password <password>]
-  calm_cli.py (-h | --help)
-  calm_cli.py (-v | --version)
+  calm get blueprints [<name> ...]
+  calm describe blueprint <name> [--json|--yaml]
+  calm upload blueprint <name>
+  calm launch blueprint <name>
+  calm config [--server <ip:port>] [--username <username>] [--password <password>]
+  calm (-h | --help)
+  calm (-v | --version)
 
 Options:
   -h --help                  Show this screen.
