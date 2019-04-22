@@ -77,9 +77,9 @@ def main():
         with open(file_path, "w") as configfile:
             config.write(configfile)
     client = get_api_client(PC_IP, PC_PORT, PC_USERNAME, PC_PASSWORD)
-    if arguments["get"]:
+    if arguments["get"] and arguments["bps"]:
         get_blueprint_list(arguments["<name>"], client)
-    if arguments["launch"]:
+    if arguments["launch"] and arguments["bp"]:
         launch_blueprint(arguments["<name>"][0], client)
 
 
