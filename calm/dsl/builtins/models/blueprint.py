@@ -4,6 +4,7 @@ from .validator import PropertyValidator
 
 # Blueprint
 
+
 class BlueprintType(EntityType):
     __schema_name__ = "Blueprint"
     __openapi_type__ = "app_blueprint"
@@ -16,7 +17,7 @@ class BlueprintValidator(PropertyValidator, openapi_type="app_blueprint"):
 
 def blueprint(**kwargs):
     name = getattr(BlueprintType, "__schema_name__")
-    bases = (Entity, )
+    bases = (Entity,)
     return BlueprintType(name, bases, kwargs)
 
 

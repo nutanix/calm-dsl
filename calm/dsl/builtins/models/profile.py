@@ -4,6 +4,7 @@ from .validator import PropertyValidator
 
 # Profile
 
+
 class ProfileType(EntityType):
     __schema_name__ = "Profile"
     __openapi_type__ = "app_profile"
@@ -16,7 +17,7 @@ class ProfileValidator(PropertyValidator, openapi_type="app_profile"):
 
 def profile(**kwargs):
     name = getattr(ProfileType, "__schema_name__")
-    bases = (Entity, )
+    bases = (Entity,)
     return ProfileType(name, bases, kwargs)
 
 

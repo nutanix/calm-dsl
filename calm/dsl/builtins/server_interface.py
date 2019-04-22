@@ -74,21 +74,22 @@ def build_url(host, port, endpoint="", scheme=REQUEST.SCHEME.HTTPS):
 
 
 class Connection(object):
-
-    def __init__(self,
-                 host,
-                 port,
-                 auth_type,
-                 scheme=REQUEST.SCHEME.HTTPS,
-                 auth=None,
-                 pool_maxsize=20,
-                 pool_connections=20,
-                 pool_block=True,
-                 base_url="",
-                 response_processor=None,
-                 session_headers=None,
-                 retries_enabled=False,
-                 **kwargs):
+    def __init__(
+        self,
+        host,
+        port,
+        auth_type,
+        scheme=REQUEST.SCHEME.HTTPS,
+        auth=None,
+        pool_maxsize=20,
+        pool_connections=20,
+        pool_block=True,
+        base_url="",
+        response_processor=None,
+        session_headers=None,
+        retries_enabled=False,
+        **kwargs
+    ):
         """Generic client to connect to server.
 
         Args:
@@ -164,13 +165,13 @@ class Connection(object):
         self.session.close()
 
     def _call(
-            self,
-            endpoint,
-            method=REQUEST.METHOD.POST,
-            cookies=None,
-            request_json=None,
-            request_params=None,
-            verify=True,
+        self,
+        endpoint,
+        method=REQUEST.METHOD.POST,
+        cookies=None,
+        request_json=None,
+        request_params=None,
+        verify=True,
     ):
         """Private method for making http request to calm
 
@@ -187,15 +188,17 @@ class Connection(object):
             request_params = {}
 
         request_json = request_json or {}
-        log.info("""Server Request- '{method}' at '{endpoint}' with body:
+        log.info(
+            """Server Request- '{method}' at '{endpoint}' with body:
             '{body}'""".format(
-            method=method, endpoint=endpoint, body=request_json))
+                method=method, endpoint=endpoint, body=request_json
+            )
+        )
         res = None
         err = None
         try:
             res = None
-            url = build_url(
-                self.host, self.port, endpoint=endpoint, scheme=self.scheme)
+            url = build_url(self.host, self.port, endpoint=endpoint, scheme=self.scheme)
             log.info("URL is: {}".format(url))
             base_headers = self.session.headers
 
@@ -248,11 +251,13 @@ class Connection(object):
 _CONNECTION = None
 
 
-def get_connection(host,
-                   port,
-                   auth_type=REQUEST.AUTH_TYPE.BASIC,
-                   scheme=REQUEST.SCHEME.HTTPS,
-                   auth=None):
+def get_connection(
+    host,
+    port,
+    auth_type=REQUEST.AUTH_TYPE.BASIC,
+    scheme=REQUEST.SCHEME.HTTPS,
+    auth=None,
+):
     """Get api server (aplos/styx) handle.
 
     Args:
@@ -287,10 +292,12 @@ class BlueprintAPI:
         self.connection = connection
 
     def list(self, params=None):
-        return self.connection._call(BlueprintAPI.LIST,
-                                     verify=False,
-                                     request_json=params,
-                                     method=REQUEST.METHOD.POST)
+        return self.connection._call(
+            BlueprintAPI.LIST,
+            verify=False,
+            request_json=params,
+            method=REQUEST.METHOD.POST,
+        )
 
     def get(self, blueprint_id):
         return self.connection._call(BlueprintAPI.ITEM.format(blueprint_id),
@@ -298,27 +305,33 @@ class BlueprintAPI:
                                      method=REQUEST.METHOD.GET)
 
     def update(self, uuid, payload):
-        return self.connection._call(BlueprintAPI.ITEM.format(uuid),
-                                     verify=False,
-                                     request_json=payload,
-                                     method=REQUEST.METHOD.PUT)
+        return self.connection._call(
+            BlueprintAPI.ITEM.format(uuid),
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.PUT,
+        )
 
     def upload(self, payload):
-        return self.connection._call(BlueprintAPI.UPLOAD,
-                                     verify=False,
-                                     request_json=payload,
-                                     method=REQUEST.METHOD.POST)
+        return self.connection._call(
+            BlueprintAPI.UPLOAD,
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
+        )
 
     def delete(self, uuid):
-        return self.connection._call(BlueprintAPI.ITEM.format(uuid),
-                                     verify=False,
-                                     method=REQUEST.METHOD.DELETE)
+        return self.connection._call(
+            BlueprintAPI.ITEM.format(uuid), verify=False, method=REQUEST.METHOD.DELETE
+        )
 
     def launch(self, uuid, payload):
-        return self.connection._call(BlueprintAPI.LAUNCH.format(uuid),
-                                     verify=False,
-                                     request_json=payload,
-                                     method=REQUEST.METHOD.POST)
+        return self.connection._call(
+            BlueprintAPI.LAUNCH.format(uuid),
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
+        )
 
     def full_launch(self, uuid, payload):
         return self.connection._call(BlueprintAPI.FULL_LAUNCH.format(uuid),
@@ -340,11 +353,7 @@ class BlueprintAPI:
                 "description": bp_desc or "",
                 "resources": bp_resources,
             },
-            "metadata": {
-                "spec_version": 1,
-                "name": bp_name,
-                "kind": "blueprint",
-            },
+            "metadata": {"spec_version": 1, "name": bp_name, "kind": "blueprint"},
             "api_version": "3.0",
         }
 
@@ -363,10 +372,7 @@ class BlueprintAPI:
             # Explicitly set defaults so that secret is not created at server
             # TODO - Fix bug in server: {} != None
             cred["secret"] = {
-                "attrs": {
-                    "is_secret_modified": False,
-                    "secret_reference": None,
-                },
+                "attrs": {"is_secret_modified": False, "secret_reference": None}
             }
 
         # Make first cred as default for now
@@ -377,9 +383,9 @@ class BlueprintAPI:
             "name": creds[0]["name"],
         }
 
-        upload_payload = self._make_blueprint_payload(bp.__name__,
-                                                      bp.__doc__,
-                                                      bp_resources)
+        upload_payload = self._make_blueprint_payload(
+            bp.__name__, bp.__doc__, bp_resources
+        )
 
         res, err = self.upload(upload_payload)
 
@@ -406,11 +412,13 @@ class BlueprintAPI:
 _BP_API_HANDLE = None
 
 
-def get_blueprint_api_handle(host,
-                             port,
-                             auth_type=REQUEST.AUTH_TYPE.BASIC,
-                             scheme=REQUEST.SCHEME.HTTPS,
-                             auth=None):
+def get_blueprint_api_handle(
+    host,
+    port,
+    auth_type=REQUEST.AUTH_TYPE.BASIC,
+    scheme=REQUEST.SCHEME.HTTPS,
+    auth=None,
+):
 
     global _BP_API_HANDLE
     if not _BP_API_HANDLE:

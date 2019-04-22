@@ -4,6 +4,7 @@ from .validator import PropertyValidator
 
 # Service
 
+
 class ServiceType(EntityType):
     __schema_name__ = "Service"
     __openapi_type__ = "app_service"
@@ -16,7 +17,7 @@ class ServiceValidator(PropertyValidator, openapi_type="app_service"):
 
 def service(**kwargs):
     name = getattr(ServiceType, "__schema_name__")
-    bases = (Entity, )
+    bases = (Entity,)
     return ServiceType(name, bases, kwargs)
 
 

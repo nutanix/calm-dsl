@@ -10,7 +10,7 @@ from .schema import get_schema_details
 
 def _validate(vdict, name, value):
 
-    if not (name.startswith('__') and name.endswith('__')):
+    if not (name.startswith("__") and name.endswith("__")):
 
         try:
 
@@ -44,7 +44,6 @@ def _validate(vdict, name, value):
 
 
 class EntityDict(OrderedDict):
-
     def __init__(self, validators):
         self.validators = validators
 
@@ -80,10 +79,9 @@ class EntityTypeBase(type):
             return
 
         # Set properties on metaclass by fetching from schema
-        (schema_props,
-         validators,
-         defaults,
-         display_map) = get_schema_details(schema_name)
+        (schema_props, validators, defaults, display_map) = get_schema_details(
+            schema_name
+        )
 
         # Set validator dict on metaclass for each prop.
         # To be used during __setattr__() to validate props.
@@ -120,7 +118,7 @@ class EntityType(EntityTypeBase):
         if not schema_name:
             return dict()
 
-        validators = getattr(mcls, '__validator_dict__')
+        validators = getattr(mcls, "__validator_dict__")
 
         # Class creation would happen using EntityDict() instead of dict().
         # This is done to add validations to class attrs during class creation.
@@ -165,7 +163,7 @@ class EntityType(EntityTypeBase):
     def get_user_attrs(cls):
         user_attrs = {}
         for name, value in cls.__dict__.items():
-            if not (name.startswith('__') and name.endswith('__')):
+            if not (name.startswith("__") and name.endswith("__")):
                 user_attrs[name] = value
 
         return user_attrs
@@ -173,8 +171,8 @@ class EntityType(EntityTypeBase):
     @classmethod
     def get_default_attrs(mcls):
         default_attrs = {}
-        if hasattr(mcls, '__default_attrs__'):
-            default_attrs = getattr(mcls, '__default_attrs__')
+        if hasattr(mcls, "__default_attrs__"):
+            default_attrs = getattr(mcls, "__default_attrs__")
 
         return default_attrs
 
@@ -249,18 +247,20 @@ class EntityType(EntityTypeBase):
             attrs.setdefault(display_map.inverse[k], v)
 
         # Create new class based on type
-        cls = mcls(name, (Entity, ), attrs)
+        cls = mcls(name, (Entity,), attrs)
         cls.__doc__ = description
 
         return cls
 
     def json_dumps(cls, pprint=False, sort_keys=False):
 
-        dump = json.dumps(cls,
-                          cls=EntityJSONEncoder,
-                          sort_keys=sort_keys,
-                          indent=4 if pprint else None,
-                          separators=(",", ": ") if pprint else (",", ":"))
+        dump = json.dumps(
+            cls,
+            cls=EntityJSONEncoder,
+            sort_keys=sort_keys,
+            indent=4 if pprint else None,
+            separators=(",", ": ") if pprint else (",", ":"),
+        )
 
         # Add newline for pretty print
         return dump + "\n" if pprint else dump
@@ -287,7 +287,7 @@ class Entity(metaclass=EntityType):
 class EntityJSONEncoder(JSONEncoder):
     def default(self, cls):
 
-        if not hasattr(cls, '__kind__'):
+        if not hasattr(cls, "__kind__"):
             return super().default(cls)
 
         return cls.compile()
