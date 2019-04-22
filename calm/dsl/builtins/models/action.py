@@ -7,11 +7,9 @@ from .validator import PropertyValidator
 from .task import dag
 from .ref import ref
 
-# TODO: ref() for tasks doesn't work as expected due to class name
-# being picked up as __schema_name__ . Need to fix this.
-
 # Action - Since action, runbook and DAG task are heavily coupled together,
 # the action type behaves as all three.
+
 
 class RunbookType(EntityType):
     __schema_name__ = "Runbook"
@@ -35,6 +33,15 @@ def _runbook(**kwargs):
 Runbook = _runbook()
 
 
+def _runbook_create(**kwargs):
+
+    # This follows UI naming convention for runbooks
+    name = str(uuid.uuid4())[:8] + '_' + getattr(RunbookType, "__schema_name__")
+    name = kwargs.get('name', kwargs.get('__name__', name))
+    bases = (Runbook,)
+    return RunbookType(name, bases, kwargs)
+
+
 class ActionType(EntityType):
     __schema_name__ = "Action"
     __openapi_type__ = "app_action"
@@ -55,6 +62,13 @@ def _action(**kwargs):
 
 
 Action = _action()
+
+
+def _action_create(**kwargs):
+    name = str(uuid.uuid4())[:8] + '_' + getattr(ActionType, "__schema_name__")
+    name = kwargs.get('name', kwargs.get('__name__', name))
+    bases = (Action,)
+    return ActionType(name, bases, kwargs)
 
 
 class GetCallNodes(ast.NodeVisitor):
@@ -136,7 +150,7 @@ def action(user_func):
     })
 
     # Next, create the RB
-    user_runbook = _runbook(**{
+    user_runbook = _runbook_create(**{
         "main_task_local_reference": ref(user_dag),
         "tasks": [user_dag],
         "name": runbook_name,
@@ -144,7 +158,7 @@ def action(user_func):
     })
 
     # Finally the action
-    user_action = _action(**{
+    user_action = _action_create(**{
         "name": action_name,
         "critical": False,
         "type": "user",
