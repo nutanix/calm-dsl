@@ -300,9 +300,11 @@ class BlueprintAPI:
         )
 
     def get(self, blueprint_id):
-        return self.connection._call(BlueprintAPI.ITEM.format(blueprint_id),
-                                     verify=False,
-                                     method=REQUEST.METHOD.GET)
+        return self.connection._call(
+            BlueprintAPI.ITEM.format(blueprint_id),
+            verify=False,
+            method=REQUEST.METHOD.GET,
+        )
 
     def update(self, uuid, payload):
         return self.connection._call(
@@ -334,15 +336,19 @@ class BlueprintAPI:
         )
 
     def full_launch(self, uuid, payload):
-        return self.connection._call(BlueprintAPI.FULL_LAUNCH.format(uuid),
-                                     verify=False,
-                                     request_json=payload,
-                                     method=REQUEST.METHOD.POST)
+        return self.connection._call(
+            BlueprintAPI.FULL_LAUNCH.format(uuid),
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
+        )
 
     def launch_poll(self, blueprint_id, request_id):
-        return self.connection._call(BlueprintAPI.LAUNCH_POLL.format(blueprint_id, request_id),
-                                     verify=False,
-                                     method=REQUEST.METHOD.GET)
+        return self.connection._call(
+            BlueprintAPI.LAUNCH_POLL.format(blueprint_id, request_id),
+            verify=False,
+            method=REQUEST.METHOD.GET,
+        )
 
     @staticmethod
     def _make_blueprint_payload(bp_name, bp_desc, bp_resources):

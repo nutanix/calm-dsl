@@ -36,6 +36,9 @@ docker: dist gui
 	[ -S /var/run/docker.sock ] && \
 		docker build --rm -t ideadevice/calm-dsl-engine .
 
+black:
+	black --exclude 'venv' .
+
 run:
 	docker run -it -p 8888:8888 ideadevice/calm-dsl-engine
 

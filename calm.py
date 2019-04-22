@@ -36,7 +36,9 @@ LOCAL_CONFIG_PATH = "config.ini"
 GLOBAL_CONFIG_PATH = "~/.calm/config"
 
 
-def get_api_client(pc_ip=PC_IP, pc_port=PC_PORT, username=PC_USERNAME, password=PC_PASSWORD):
+def get_api_client(
+    pc_ip=PC_IP, pc_port=PC_PORT, username=PC_USERNAME, password=PC_PASSWORD
+):
     return _get_api_client(pc_ip=pc_ip, pc_port=pc_port, auth=(username, password))
 
 
@@ -72,7 +74,7 @@ def main():
             "pc_ip": PC_IP,
             "pc_port": PC_PORT,
             "pc_username": PC_USERNAME,
-            "pc_password": PC_PASSWORD
+            "pc_password": PC_PASSWORD,
         }
         with open(file_path, "w") as configfile:
             config.write(configfile)
@@ -87,14 +89,16 @@ def get_blueprint_list(names, client):
     global PC_IP
     assert ping(PC_IP) is True
 
-    params = {
-        "length": 20,
-        "offset": 0,
-    }
+    params = {"length": 20, "offset": 0}
     if names:
-        search_strings = ["name==.*" + reduce(lambda acc, c: "{}[{}|{}]".
-                          format(acc, c.lower(), c.upper()), name, "") + ".*" for name in names
-                          ]
+        search_strings = [
+            "name==.*"
+            + reduce(
+                lambda acc, c: "{}[{}|{}]".format(acc, c.lower(), c.upper()), name, ""
+            )
+            + ".*"
+            for name in names
+        ]
         params["filter"] = ",".join(search_strings)
     res, err = client.list(params=params)
 
@@ -110,9 +114,7 @@ def launch_blueprint(blueprint_name, client):
     global PC_IP, PC_PORT
     client = get_api_client()
     # find bp
-    params = {
-        "filter": "name=={};state!=DELETED".format(blueprint_name)
-    }
+    params = {"filter": "name=={};state!=DELETED".format(blueprint_name)}
 
     res, err = client.list(params=params)
     if err:
@@ -149,10 +151,14 @@ def launch_blueprint(blueprint_name, client):
             "application_name": "ExistingVMApp-{}".format(int(time.time())),
             "app_profile_reference": {
                 "kind": "app_profile",
-                "name": "{}".format(blueprint_spec["resources"]["app_profile_list"][0]["name"]),
-                "uuid": "{}".format(blueprint_spec["resources"]["app_profile_list"][0]["uuid"]),
+                "name": "{}".format(
+                    blueprint_spec["resources"]["app_profile_list"][0]["name"]
+                ),
+                "uuid": "{}".format(
+                    blueprint_spec["resources"]["app_profile_list"][0]["uuid"]
+                ),
             },
-            "resources": blueprint_spec["resources"]
+            "resources": blueprint_spec["resources"],
         },
     }
 
