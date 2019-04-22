@@ -40,7 +40,7 @@ setuptools.setup(
     zip_safe=False,
     include_package_data=True,
     entry_points={
-        'console_scripts': ['calm=calm.cli.calm_cli:main'],
+        'console_scripts': ['calm=calm.dsl.cli.__init__:main'],
     },
     classifiers=[
         "Programming Language :: Python :: 3",
