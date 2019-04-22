@@ -9,9 +9,6 @@ dev:
 test: dev
 	venv/bin/py.test
 
-cli: dev
-	venv/bin/pip3 install -r cli-requirements.txt
-
 gui: dev
 	# Setup Jupyter
 	venv/bin/pip3 install -r gui-requirements.txt
