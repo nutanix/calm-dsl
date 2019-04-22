@@ -1,10 +1,10 @@
 """Calm CLI
 
 Usage:
-  calm get blueprints [<name> ...]
-  calm describe blueprint <name> [--json|--yaml]
-  calm upload blueprint <name>
-  calm launch blueprint <name>
+  calm get bps [<name> ...]
+  calm describe bp <name> [--json|--yaml]
+  calm upload bp <name>
+  calm launch bp <name>
   calm config [--server <ip:port>] [--username <username>] [--password <password>]
   calm (-h | --help)
   calm (-v | --version)
