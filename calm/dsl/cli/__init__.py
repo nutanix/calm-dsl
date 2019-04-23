@@ -168,29 +168,25 @@ def launch_blueprint(blueprint_name, client):
 
     res, err = client.list(params=params)
     if err:
-        print("[{}] - {}".format(err["code"], err["error"]))
-        return
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     response = res.json()
     entities = response.get("entities", None)
     blueprint = None
     if entities:
         if len(entities) != 1:
-            print("More than one blueprint found - {}".format(entities))
-            return
+            raise Exception("More than one blueprint found - {}".format(entities))
 
         print(">> {} found >>".format(blueprint_name))
         blueprint = entities[0]
     else:
-        print(">>No blueprint found with name {} found >>".format(blueprint_name))
-        return
+        raise Exception(">>No blueprint found with name {} found >>".format(blueprint_name))
 
     blueprint_id = blueprint["metadata"]["uuid"]
     print(">>Fetching blueprint details")
     res, err = client.get(blueprint_id)
     if err:
-        print("[{}] - {}".format(err["code"], err["error"]))
-        return
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
     blueprint = res.json()
     blueprint_spec = blueprint["spec"]
 
@@ -217,8 +213,7 @@ def launch_blueprint(blueprint_name, client):
         print(">> {} queued for launch >>".format(blueprint_name))
         print(json.dumps(res.json(), indent=4, separators=(",", ": ")))
     else:
-        print("[{}] - {}".format(err["code"], err["error"]))
-        return
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
     response = res.json()
     launch_req_id = response["status"]["request_id"]
 
@@ -238,8 +233,7 @@ def launch_blueprint(blueprint_name, client):
             print("Successfully launched. App uuid is: {}".format(app_uuid))
             break
         elif err:
-            print("[{}] - {}".format(err["code"], err["error"]))
-            break
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
         count += 10
         time.sleep(10)
 
