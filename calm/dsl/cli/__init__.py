@@ -3,9 +3,11 @@
 Usage:
   calm get bps [--filter=<name>...]
   calm describe bp <name> [--json | --yaml]
-  calm create bp --file=<bp_file> [--launch]
-  calm launch bp <name>
+  calm create bp --file=<bp_file>
+  calm delete bp <bp_name>
+  calm launch bp (--name <bp_name> | --file <bp_file>)
   calm get apps [--filter=<name>...]
+  calm describe app <app_name>
   calm <action> app <app_name> [--watch]
   calm watch --action <action_runlog_uuid> --app <app_name>
   calm watch --app <app_name>
@@ -31,7 +33,7 @@ from functools import reduce
 from importlib import import_module
 #from docopt import docopt
 from pprint import pprint
-from calm.dsl.utils.server_utils import get_api_client as _get_api_client, ping
+from calm.dsl.utils.server_utils import get_api_client as _get_api_client
 from prettytable import PrettyTable
 from .constants import RUNLOG
 
@@ -39,7 +41,7 @@ from .constants import RUNLOG
 urllib3.disable_warnings()
 
 # Defaults to be used if no config file exists.
-PC_IP = "10.51.152.102"
+PC_IP = "10.46.34.230"
 PC_PORT = 9440
 PC_USERNAME = "admin"
 PC_PASSWORD = "***REMOVED***"
@@ -131,19 +133,28 @@ Usage:
 
     # if arguments["get"] and arguments["bps"]:
     #     get_blueprint_list(arguments["--filter"], client)
+    # elif arguments["delete"] and arguments["<bp_name>"]:
+    #     delete_blueprint(arguments["<bp_name>"], client)
     # elif arguments["launch"] and arguments["bp"]:
-    #     launch_blueprint(arguments["<name>"], client)
+    #     if arguments["--name"]:
+    #         launch_blueprint(arguments["<bp_name>"], client)
+    #     elif arguments["--file"]:
+    #         upload_blueprint(arguments["--file"], client, True)
     # elif arguments["create"] and arguments["bp"]:
-    #     upload_blueprint(arguments["--file"], client, arguments["--launch"])
+    #     upload_blueprint(arguments["--file"], client)
     # elif arguments["get"] and arguments["apps"]:
     #     get_apps(arguments["--filter"], client)
+    # elif arguments["describe"] and arguments["app"]:
+    #     describe_app(arguments["<app_name>"], client)
     # elif arguments["<action>"] and arguments["<app_name>"]:
     #     run_actions(
     #         arguments["<action>"], arguments["<app_name>"], client, arguments["--watch"]
     #     )
     # elif arguments["watch"]:
     #     if arguments["--action"]:
-    #         watch_action(arguments["<runlog_uuid>"], arguments["<app_name>"], client)
+    #         watch_action(
+    #             arguments["<action_runlog_uuid>"], arguments["<app_name>"], client
+    #         )
     #     else:
     #         watch_app(arguments["<app_name>"], client)
 
@@ -152,52 +163,6 @@ Usage:
 def get():
     """Get various things like blueprints, apps and so on"""
 
-
-@get.command('apps')
-@click.option('--names', default=None, help='The name of apps to filter by')
-@click.option('--limit', default=20, help='Number of results to return')
-@click.pass_context
-def get_apps(ctx, names, limit):
-    """Get Apps, optionally filtered by a string"""
-    global PC_IP
-    assert ping(PC_IP) is True
-
-    client = ctx.client
-
-    params = {"length": limit, "offset": 0}
-    if names:
-        params["filter"] = _get_name_query(names)
-    res, err = client.list_apps(params=params)
-
-    if not err:
-        table = PrettyTable()
-        table.field_names = [
-            "Application Name",
-            "Source Blueprint",
-            "State",
-            "Owner",
-            "Created On",
-        ]
-        json_rows = res.json()["entities"]
-        for _row in json_rows:
-            row = _row["status"]
-            metadata = _row["metadata"]
-
-            created_on = time.ctime(int(metadata["creation_time"]) // 1000000)
-            table.add_row(
-                [
-                    row["name"],
-                    row["resources"]["app_blueprint_reference"]["name"],
-                    row["state"],
-                    metadata["owner_reference"]["name"],
-                    created_on,
-                ]
-            )
-        print("\n----Application List----")
-        print(table)
-        assert res.ok is True
-    else:
-        warnings.warn(UserWarning("Cannot fetch applications from {}".format(PC_IP)))
 
 @get.command('bps')
 @click.option('--names', default=None, help='The name of blueprints to filter by')
@@ -258,12 +223,55 @@ def get_blueprint_list(ctx, names, limit):
         warnings.warn(UserWarning("Cannot fetch blueprints from {}".format(PC_IP)))
 
 
+@get.command('apps')
+@click.option('--names', default=None, help='The name of apps to filter by')
+@click.option('--limit', default=20, help='Number of results to return')
+@click.pass_context
+def get_apps(ctx, names, limit):
+    """Get Apps, optionally filtered by a string"""
+
+    client = ctx.client
+
+    params = {"length": limit, "offset": 0}
+    if names:
+        params["filter"] = get_name_query(names)
+    res, err = client.list_apps(params=params)
+
+    if not err:
+        table = PrettyTable()
+        table.field_names = [
+            "Application Name",
+            "Source Blueprint",
+            "State",
+            "Owner",
+            "Created On",
+        ]
+        json_rows = res.json()["entities"]
+        for _row in json_rows:
+            row = _row["status"]
+            metadata = _row["metadata"]
+
+            created_on = time.ctime(int(metadata["creation_time"]) // 1000000)
+            table.add_row(
+                [
+                    row["name"],
+                    row["resources"]["app_blueprint_reference"]["name"],
+                    row["state"],
+                    metadata["owner_reference"]["name"],
+                    created_on,
+                ]
+            )
+        print("\n----Application List----")
+        print(table)
+        assert res.ok is True
+    else:
+        warnings.warn(UserWarning("Cannot fetch applications from {}".format(PC_IP)))
+
+
 def upload_blueprint(name_with_class, client, launch=False):
-    global PC_IP
-    assert ping(PC_IP) is True
 
     name_with_class = name_with_class.replace("/", ".")
-    (file_name, class_name) = name_with_class.rsplit(".", 1)
+    (file_name, class_name) = name_with_class.rsplit(":", 1)
     mod = import_module(file_name)
     Blueprint = getattr(mod, class_name)
 
@@ -316,7 +324,6 @@ def get_blueprint(ctx, name):
     """Get a specific blueprint"""
     global PC_IP
     assert ping(PC_IP) is True
-
     client = ctx.client
 
     # find bp
@@ -342,6 +349,16 @@ def get_blueprint(ctx, name):
     return blueprint
 
 
+def delete_blueprint(blueprint_name, client):
+
+    blueprint = get_blueprint(blueprint_name, client)
+    blueprint_id = blueprint["metadata"]["uuid"]
+    res, err = client.delete(blueprint_id)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    print(">> Blueprint {} deleted >>".format(blueprint_name))
+
+
 def launch_blueprint(blueprint_name, client, blueprint=None):
     if not blueprint:
         blueprint = get_blueprint(blueprint_name, client)
@@ -358,7 +375,7 @@ def launch_blueprint(blueprint_name, client, blueprint=None):
         "api_version": "3.0",
         "metadata": blueprint["metadata"],
         "spec": {
-            "application_name": "ExistingVMApp-{}".format(int(time.time())),
+            "application_name": "NextDemoApp-{}".format(int(time.time())),
             "app_profile_reference": {
                 "kind": "app_profile",
                 "name": "{}".format(
@@ -411,8 +428,6 @@ def launch_blueprint(blueprint_name, client, blueprint=None):
 
 
 def _get_app(app_name, client):
-    global PC_IP
-    assert ping(PC_IP) is True
 
     # 1. Get app_uuid from list api
     params = {"filter": "name=={}".format(app_name)}
@@ -443,6 +458,61 @@ def _get_app(app_name, client):
     return app
 
 
+def describe_app(app_name, client):
+    app = _get_app(app_name, client)
+
+    print("\n----Application Summary----\n")
+    app_name = app["metadata"]["name"]
+    print("Name: {}".format(app_name))
+    print("UUID: {}".format(app["metadata"]["uuid"]))
+    print("Status: {}".format(app["status"]["state"]))
+    print("Owner: {}".format(app["metadata"]["owner_reference"]["name"]))
+    print("Project: {}".format(app["metadata"]["project_reference"]["name"]))
+
+    created_on = time.ctime(int(app["metadata"]["creation_time"]) // 1000000)
+    print("Created On: {}".format(created_on))
+
+    print(
+        "Source Blueprint: {}".format(
+            app["status"]["resources"]["app_blueprint_reference"]["name"]
+        )
+    )
+
+    print(
+        "Application Profile: {}".format(
+            app["status"]["resources"]["app_profile_config_reference"]["name"]
+        )
+    )
+
+    deployment_list = app["status"]["resources"]["deployment_list"]
+    print("Deployments ({}):".format(len(deployment_list)))
+    for deployment in deployment_list:
+        print("\t{} {}".format(deployment["name"], deployment["state"]))
+
+    action_list = app["status"]["resources"]["action_list"]
+    print("App Actions ({}):".format(len(action_list)))
+    for action in action_list:
+        action_name = action["name"]
+        if action_name.startswith("action_"):
+            action_name = action_name.lstrip("action_")
+        print("\t{}".format(action_name))
+
+    variable_list = app["status"]["resources"]["variable_list"]
+    print("App Variables ({}):".format(len(variable_list)))
+    for variable in variable_list:
+        print(
+            "\t{}: {}  # {}".format(
+                variable["name"], variable["value"], variable["label"]
+            )
+        )
+
+    print(
+        "# You can run actions on the app using: calm <action_name> app {}".format(
+            app_name
+        )
+    )
+
+
 def run_actions(action_name, app_name, client, watch=False):
     app = _get_app(app_name, client)
     app_spec = app["spec"]
@@ -458,16 +528,20 @@ def run_actions(action_name, app_name, client, watch=False):
             print("Delete action triggered")
             response = res.json()
             runlog_id = response["status"]["runlog_uuid"]
+            print("Action runlog uuid: {}".format(runlog_id))
 
             def poll_func():
                 print("Polling Delete action...")
                 return client.get_app(app_id)
 
             def is_deletion_complete(response):
-                is_deleted = response["status"]["state"] == "deleted"
+                status = response["status"]["state"]
+                print("Current app status: {}".format(status))
+                is_deleted = status == "deleted"
                 return (is_deleted, "Successfully deleted app {}".format(app_name))
 
-            poll_action(poll_func, is_deletion_complete)
+            if watch:
+                poll_action(poll_func, is_deletion_complete)
             return
 
     calm_action_name = "action_" + action_name.lower()

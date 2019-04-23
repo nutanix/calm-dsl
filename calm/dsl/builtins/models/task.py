@@ -74,7 +74,7 @@ def exec_ssh(script, name=None, target=None):
             "script": script,
             "login_credential_local_reference": {
                 "kind": "app_credential",
-                "name": "Credential",  # TODO
+                "name": "default",  # TODO
             },
         },
     }
