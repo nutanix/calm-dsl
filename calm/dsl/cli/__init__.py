@@ -23,6 +23,7 @@ import json
 import time
 import warnings
 import configparser
+import urllib3
 from functools import reduce
 from importlib import import_module
 from docopt import docopt
@@ -30,6 +31,8 @@ from pprint import pprint
 from calm.dsl.utils.server_utils import get_api_client as _get_api_client, ping
 from prettytable import PrettyTable
 
+
+urllib3.disable_warnings()
 
 # Defaults to be used if no config file exists.
 PC_IP = "10.51.152.102"
