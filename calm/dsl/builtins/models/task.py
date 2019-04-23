@@ -55,12 +55,37 @@ def exec_ssh(script, name=None):
     return _task_create(**kwargs)
 
 
-def dag(**kwargs):
+def dag(name=None, child_tasks=None, edges=None):
+    """
+    Create a DAG task
+    Args:
+        name (str): Name for the task
+        child_tasks (list [Task]): Child tasks within this dag
+        edges (list [tuple (ref, ref)]): List of tuples of ref(Task).
+                                         Each element denotes an edge from
+                                         first task to the second.
+    Returns:
+        (Task): DAG task
+    """
+    dag_edges = []
+    for edge in edges or []:
+        if len(edge) != 2:
+            raise ValueError("DAG edges require a tuple of two task references")
+        for task_ref in edge:
+            if not getattr(task_ref, "__kind__") == "app_ref":
+                raise ValueError("{} is not a valid task reference".format(task_ref))
+        from_ref = edge[0]
+        to_ref = edge[1]
+        dag_edges.append({"from_task_reference": from_ref, "to_task_reference": to_ref})
+
+    kwargs = {
+        "name": name,
+        "child_tasks_local_reference_list": child_tasks or [],
+        "attrs": {"edges": dag_edges},
+        "type": "DAG",
+    }
 
     # This follows UI naming convention for runbooks
-    name = str(uuid.uuid4())[:8] + "_dag"
-    name = kwargs.get("name", kwargs.get("__name__", name))
-    new_kwargs = kwargs.copy()
-    new_kwargs["name"] = name
+    name = name or str(uuid.uuid4())[:8] + "_dag"
 
-    return _task_create(**new_kwargs)
+    return _task_create(**kwargs)

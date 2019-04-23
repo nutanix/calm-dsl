@@ -136,14 +136,8 @@ def action(user_func):
     tasks, variables = node_visitor.get_objects()
 
     # First create the dag
-    user_dag = dag(
-        **{
-            "name": dag_name,
-            "child_tasks_local_reference_list": tasks,
-            "attrs": {"edges": []},
-            "type": "DAG",
-        }
-    )
+    edges = [(ref(frm), ref(to)) for frm, to in zip(tasks, tasks[1:])]
+    user_dag = dag(name=dag_name, child_tasks=tasks, edges=edges)
 
     # Next, create the RB
     user_runbook = _runbook_create(
