@@ -1,6 +1,3 @@
-test: dev
-	venv/bin/py.test
-
 dev:
 	# Setup our python3 based virtualenv
 	# This step assumes python3 is installed on your dev machine
@@ -8,6 +5,9 @@ dev:
 		venv/bin/pip3 install --upgrade pip setuptools)
 	venv/bin/pip3 install -r requirements.txt -r dev-requirements.txt
 	venv/bin/python3 setup.py develop
+
+test: dev
+	venv/bin/py.test
 
 gui: dev
 	# Setup Jupyter
@@ -35,6 +35,9 @@ dist:
 docker: dist gui
 	[ -S /var/run/docker.sock ] && \
 		docker build --rm -t ideadevice/calm-dsl-engine .
+
+black:
+	black --exclude 'venv' .
 
 run:
 	docker run -it -p 8888:8888 ideadevice/calm-dsl-engine
