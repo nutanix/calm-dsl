@@ -2,6 +2,7 @@ import uuid
 
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
+from .ref import ref
 
 
 # Task
@@ -78,14 +79,13 @@ def dag(name=None, child_tasks=None, edges=None):
         to_ref = edge[1]
         dag_edges.append({"from_task_reference": from_ref, "to_task_reference": to_ref})
 
+    # This follows UI naming convention for runbooks
+    name = name or str(uuid.uuid4())[:8] + "_dag"
     kwargs = {
         "name": name,
-        "child_tasks_local_reference_list": child_tasks or [],
+        "child_tasks_local_reference_list": [ref(task) for task in child_tasks or []],
         "attrs": {"edges": dag_edges},
         "type": "DAG",
     }
-
-    # This follows UI naming convention for runbooks
-    name = name or str(uuid.uuid4())[:8] + "_dag"
 
     return _task_create(**kwargs)

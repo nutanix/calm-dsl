@@ -72,11 +72,9 @@ def _action_create(**kwargs):
 
 
 class GetCallNodes(ast.NodeVisitor):
-    tasks = []
-    variables = {}
-    _globals = {}
-
     def __init__(self, func_globals):
+        self.tasks = []
+        self.variables = {}
         self._globals = func_globals or {}.copy()
 
     def get_objects(self):
@@ -143,7 +141,7 @@ def action(user_func):
     user_runbook = _runbook_create(
         **{
             "main_task_local_reference": ref(user_dag),
-            "tasks": [user_dag],
+            "tasks": [user_dag] + tasks,
             "name": runbook_name,
             "variables": variables.values(),
         }
