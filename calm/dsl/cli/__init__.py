@@ -116,8 +116,8 @@ def get_blueprint_list(names, client):
 
 
 def upload_blueprint(name_with_class, client):
-    name_with_class = name_with_class.replace('/', '.')
-    (file_name, class_name) = name_with_class.rsplit('.', 1)
+    name_with_class = name_with_class.replace("/", ".")
+    (file_name, class_name) = name_with_class.rsplit(".", 1)
     mod = import_module(file_name)
     Blueprint = getattr(mod, class_name)
 
@@ -180,7 +180,9 @@ def launch_blueprint(blueprint_name, client):
         print(">> {} found >>".format(blueprint_name))
         blueprint = entities[0]
     else:
-        raise Exception(">>No blueprint found with name {} found >>".format(blueprint_name))
+        raise Exception(
+            ">>No blueprint found with name {} found >>".format(blueprint_name)
+        )
 
     blueprint_id = blueprint["metadata"]["uuid"]
     print(">>Fetching blueprint details")
