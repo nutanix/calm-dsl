@@ -26,9 +26,10 @@ import time
 import warnings
 import configparser
 import urllib3
+import click
 from functools import reduce
 from importlib import import_module
-from docopt import docopt
+#from docopt import docopt
 from pprint import pprint
 from calm.dsl.utils.server_utils import get_api_client as _get_api_client, ping
 from prettytable import PrettyTable
@@ -53,15 +54,51 @@ def get_api_client(
     return _get_api_client(pc_ip=pc_ip, pc_port=pc_port, auth=(username, password))
 
 
-def main():
+@click.group()
+@click.option('--username', envvar='PRISM_USERNAME', default=None,
+              help='Prism Central username')
+@click.option('--password', envvar='PRISM_PASSWORD', default=None,
+              help='Prism Central password')
+@click.option('--server', '-s', envvar='PRISM_SERVER', default=None,
+              help='Prism Central server URL in <ip>:<port> format')
+@click.option('--config', '-c', 'config_file', envvar='CALM_CONFIG',
+              type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+              help='Path of config file, default is %s in current directory, %s otherwise' % (LOCAL_CONFIG_PATH, GLOBAL_CONFIG_PATH))
+@click.option('--verbose', '-v', is_flag=True,
+              help='Enables verbose mode.')
+@click.version_option('0.1')
+@click.pass_context
+def main(ctx, username, password, server, config_file, verbose):
+    """Calm CLI
+
+\b
+Usage:
+  calm get bps [--filter=<name>...]
+  calm describe bp <name> [--json | --yaml]
+  calm create bp --file=<bp_file> [--launch]
+  calm launch bp <name>
+  calm get apps [--filter=<name>...]
+  calm <action> app <app_name> [--watch]
+  calm watch --action <action_runlog_uuid> --app <app_name>
+  calm watch --app <app_name>
+  calm set config [--server <ip:port>] [--username <username>] [--password <password>]
+  calm get config
+  calm (-h | --help)
+  calm (-v | --version)
+    """
+
     global PC_IP, PC_PORT, PC_USERNAME, PC_PASSWORD
+
     local_config_exists = os.path.isfile(LOCAL_CONFIG_PATH)
     global_config_exists = os.path.isfile(GLOBAL_CONFIG_PATH)
 
-    if global_config_exists and not local_config_exists:
-        file_path = GLOBAL_CONFIG_PATH
-    else:
-        file_path = LOCAL_CONFIG_PATH
+    file_path = config_file
+
+    if not file_path:
+        if global_config_exists and not local_config_exists:
+            file_path = GLOBAL_CONFIG_PATH
+        else:
+            file_path = LOCAL_CONFIG_PATH
 
     config = configparser.ConfigParser()
     config.read(file_path)
@@ -72,17 +109,14 @@ def main():
         PC_USERNAME = config["SERVER"]["pc_username"]
         PC_PASSWORD = config["SERVER"]["pc_password"]
 
-    arguments = docopt(__doc__, version="Calm CLI v0.1.0")
+    if server:
+        [PC_IP, PC_PORT] = server.split(":")
+    if username:
+        PC_USERNAME = username
+    if password:
+        PC_PASSWORD = password
 
-    if arguments["config"]:
-        if arguments["--server"]:
-            [PC_IP, PC_PORT] = arguments["--server"].split(":")
-        if arguments["--username"]:
-            PC_USERNAME = arguments["--username"]
-        if arguments["--password"]:
-            PC_PASSWORD = arguments["--password"]
-
-    if arguments["config"] or "SERVER" not in config:
+    if file_path or "SERVER" not in config:
         # Save to config file if explicitly set, or no config file found
         config["SERVER"] = {
             "pc_ip": PC_IP,
@@ -93,47 +127,92 @@ def main():
         with open(file_path, "w") as configfile:
             config.write(configfile)
 
-    client = get_api_client(PC_IP, PC_PORT, PC_USERNAME, PC_PASSWORD)
+    ctx.client = get_api_client(PC_IP, PC_PORT, PC_USERNAME, PC_PASSWORD)
 
-    if arguments["get"] and arguments["bps"]:
-        get_blueprint_list(arguments["--filter"], client)
-    elif arguments["launch"] and arguments["bp"]:
-        launch_blueprint(arguments["<name>"], client)
-    elif arguments["create"] and arguments["bp"]:
-        upload_blueprint(arguments["--file"], client, arguments["--launch"])
-    elif arguments["get"] and arguments["apps"]:
-        get_apps(arguments["--filter"], client)
-    elif arguments["<action>"] and arguments["<app_name>"]:
-        run_actions(
-            arguments["<action>"], arguments["<app_name>"], client, arguments["--watch"]
-        )
-    elif arguments["watch"]:
-        if arguments["--action"]:
-            watch_action(arguments["<runlog_uuid>"], arguments["<app_name>"], client)
-        else:
-            watch_app(arguments["<app_name>"], client)
-
-
-def get_name_query(names):
-    if names:
-        search_strings = [
-            "name==.*"
-            + reduce(
-                lambda acc, c: "{}[{}|{}]".format(acc, c.lower(), c.upper()), name, ""
-            )
-            + ".*"
-            for name in names
-        ]
-        return ",".join(search_strings)
+    # if arguments["get"] and arguments["bps"]:
+    #     get_blueprint_list(arguments["--filter"], client)
+    # elif arguments["launch"] and arguments["bp"]:
+    #     launch_blueprint(arguments["<name>"], client)
+    # elif arguments["create"] and arguments["bp"]:
+    #     upload_blueprint(arguments["--file"], client, arguments["--launch"])
+    # elif arguments["get"] and arguments["apps"]:
+    #     get_apps(arguments["--filter"], client)
+    # elif arguments["<action>"] and arguments["<app_name>"]:
+    #     run_actions(
+    #         arguments["<action>"], arguments["<app_name>"], client, arguments["--watch"]
+    #     )
+    # elif arguments["watch"]:
+    #     if arguments["--action"]:
+    #         watch_action(arguments["<runlog_uuid>"], arguments["<app_name>"], client)
+    #     else:
+    #         watch_app(arguments["<app_name>"], client)
 
 
-def get_blueprint_list(names, client):
+@main.group()
+def get():
+    """Get various things like blueprints, apps and so on"""
+
+
+@get.command('apps')
+@click.option('--names', default=None, help='The name of apps to filter by')
+@click.option('--limit', default=20, help='Number of results to return')
+@click.pass_context
+def get_apps(ctx, names, limit):
+    """Get Apps, optionally filtered by a string"""
     global PC_IP
     assert ping(PC_IP) is True
 
-    params = {"length": 20, "offset": 0}
+    client = ctx.client
+
+    params = {"length": limit, "offset": 0}
     if names:
-        params["filter"] = get_name_query(names)
+        params["filter"] = _get_name_query(names)
+    res, err = client.list_apps(params=params)
+
+    if not err:
+        table = PrettyTable()
+        table.field_names = [
+            "Application Name",
+            "Source Blueprint",
+            "State",
+            "Owner",
+            "Created On",
+        ]
+        json_rows = res.json()["entities"]
+        for _row in json_rows:
+            row = _row["status"]
+            metadata = _row["metadata"]
+
+            created_on = time.ctime(int(metadata["creation_time"]) // 1000000)
+            table.add_row(
+                [
+                    row["name"],
+                    row["resources"]["app_blueprint_reference"]["name"],
+                    row["state"],
+                    metadata["owner_reference"]["name"],
+                    created_on,
+                ]
+            )
+        print("\n----Application List----")
+        print(table)
+        assert res.ok is True
+    else:
+        warnings.warn(UserWarning("Cannot fetch applications from {}".format(PC_IP)))
+
+@get.command('bps')
+@click.option('--names', default=None, help='The name of blueprints to filter by')
+@click.option('--limit', default=20, help='Number of results to return')
+@click.pass_context
+def get_blueprint_list(ctx, names, limit):
+    """Get the blueprints, optionally filtered by a string"""
+    global PC_IP
+    assert ping(PC_IP) is True
+
+    client = ctx.client
+
+    params = {"length": limit, "offset": 0}
+    if names:
+        params["filter"] = _get_name_query(names)
     res, err = client.list(params=params)
 
     if not err:
@@ -177,46 +256,6 @@ def get_blueprint_list(names, client):
         assert res.ok is True
     else:
         warnings.warn(UserWarning("Cannot fetch blueprints from {}".format(PC_IP)))
-
-
-def get_apps(names, client):
-    global PC_IP
-    assert ping(PC_IP) is True
-
-    params = {"length": 20, "offset": 0}
-    if names:
-        params["filter"] = get_name_query(names)
-    res, err = client.list_apps(params=params)
-
-    if not err:
-        table = PrettyTable()
-        table.field_names = [
-            "Application Name",
-            "Source Blueprint",
-            "State",
-            "Owner",
-            "Created On",
-        ]
-        json_rows = res.json()["entities"]
-        for _row in json_rows:
-            row = _row["status"]
-            metadata = _row["metadata"]
-
-            created_on = time.ctime(int(metadata["creation_time"]) // 1000000)
-            table.add_row(
-                [
-                    row["name"],
-                    row["resources"]["app_blueprint_reference"]["name"],
-                    row["state"],
-                    metadata["owner_reference"]["name"],
-                    created_on,
-                ]
-            )
-        print("\n----Application List----")
-        print(table)
-        assert res.ok is True
-    else:
-        warnings.warn(UserWarning("Cannot fetch applications from {}".format(PC_IP)))
 
 
 def upload_blueprint(name_with_class, client, launch=False):
@@ -270,12 +309,18 @@ def upload_blueprint(name_with_class, client, launch=False):
         launch_blueprint(Blueprint, client, bp)
 
 
-def get_blueprint(blueprint_name, client):
+@get.command('bp')
+@click.argument('name')
+@click.pass_context
+def get_blueprint(ctx, name):
+    """Get a specific blueprint"""
     global PC_IP
     assert ping(PC_IP) is True
 
+    client = ctx.client
+
     # find bp
-    params = {"filter": "name=={};state!=DELETED".format(blueprint_name)}
+    params = {"filter": "name=={};state!=DELETED".format(name)}
 
     res, err = client.list(params=params)
     if err:
@@ -288,11 +333,11 @@ def get_blueprint(blueprint_name, client):
         if len(entities) != 1:
             raise Exception("More than one blueprint found - {}".format(entities))
 
-        print(">> {} found >>".format(blueprint_name))
+        print(">> {} found >>".format(name))
         blueprint = entities[0]
     else:
         raise Exception(
-            ">> No blueprint found with name {} found >>".format(blueprint_name)
+            ">> No blueprint found with name {} found >>".format(name)
         )
     return blueprint
 
@@ -538,6 +583,20 @@ def watch_app(app_name, client):
         return (False, "")
 
     poll_action(poll_func, is_complete)
+
+def _get_name_query(names):
+    if names:
+        search_strings = [
+            "name==.*"
+            + reduce(
+                lambda acc, c: "{}[{}|{}]".format(acc, c.lower(), c.upper()), name, ""
+            )
+            + ".*"
+            for name in names
+        ]
+        return ",".join(search_strings)
+
+
 
 
 if __name__ == "__main__":
