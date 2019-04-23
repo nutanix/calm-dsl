@@ -5,7 +5,7 @@ import sys
 
 from ruamel.yaml import YAML, resolver
 
-from .schema import get_schema_details, _get_schema
+from .schema import get_schema_details, _get_schema  # noqa: F401
 
 
 def _validate(vdict, name, value):
