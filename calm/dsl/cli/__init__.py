@@ -26,6 +26,8 @@ from importlib import import_module
 from docopt import docopt
 from pprint import pprint
 from calm.dsl.utils.server_utils import get_api_client as _get_api_client, ping
+from prettytable import PrettyTable
+
 
 # Defaults to be used if no config file exists.
 PC_IP = "10.51.152.102"
@@ -108,8 +110,17 @@ def get_blueprint_list(names, client):
     res, err = client.list(params=params)
 
     if not err:
-        print(">> Blueprint List >>")
-        print(json.dumps(res.json(), indent=4, separators=(",", ": ")))
+        table = PrettyTable()
+        table.field_names = ["Blueprint Name", "Type", "Description", "State", "Project", "Application Count", ]
+        json_rows = res.json()["entities"]
+        for _row in json_rows:
+            row = _row["status"]
+            metadata = _row["metadata"]
+            bp_type = "Single VM" if "categories" in metadata and metadata["categories"]["TemplateType"] == "Vm" else "Multi VM/Pod"
+            project = metadata["project_reference"]["name"]
+            table.add_row([row["name"], bp_type, row["description"], row["state"], project, row["application_count"]])
+        print("\n----Blueprint List----")
+        print(table)
         assert res.ok is True
     else:
         warnings.warn(UserWarning("Cannot fetch blueprints from {}".format(PC_IP)))
