@@ -1,7 +1,7 @@
 """Calm CLI
 
 Usage:
-  calm get bps [<name> ...]
+  calm get bps [<names> ...]
   calm describe bp <name> [--json|--yaml]
   calm upload bp <name>
   calm launch bp <name>
@@ -22,6 +22,7 @@ import time
 import warnings
 import configparser
 from functools import reduce
+from importlib import import_module
 from docopt import docopt
 from pprint import pprint
 from calm.dsl.utils.server_utils import get_api_client as _get_api_client, ping
@@ -78,11 +79,15 @@ def main():
         }
         with open(file_path, "w") as configfile:
             config.write(configfile)
+
     client = get_api_client(PC_IP, PC_PORT, PC_USERNAME, PC_PASSWORD)
+
     if arguments["get"] and arguments["bps"]:
-        get_blueprint_list(arguments["<name>"], client)
+        get_blueprint_list(arguments["<names>"], client)
     if arguments["launch"] and arguments["bp"]:
-        launch_blueprint(arguments["<name>"][0], client)
+        launch_blueprint(arguments["<name>"], client)
+    if arguments["upload"] and arguments["bp"]:
+        upload_blueprint(arguments["<name>"], client)
 
 
 def get_blueprint_list(names, client):
@@ -108,6 +113,51 @@ def get_blueprint_list(names, client):
         assert res.ok is True
     else:
         warnings.warn(UserWarning("Cannot fetch blueprints from {}".format(PC_IP)))
+
+
+def upload_blueprint(name_with_class, client):
+    name_with_class = name_with_class.replace('/', '.')
+    (file_name, class_name) = name_with_class.rsplit('.', 1)
+    mod = import_module(file_name)
+    Blueprint = getattr(mod, class_name)
+
+    # seek and destroy
+    params = {"filter": "name=={};state!=DELETED".format(Blueprint)}
+    res, err = client.list(params=params)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    response = res.json()
+    entities = response.get("entities", None)
+    if entities:
+        if len(entities) != 1:
+            raise Exception("More than one blueprint found - {}".format(entities))
+
+        print(">> {} found >>".format(Blueprint))
+        uuid = entities[0]["metadata"]["uuid"]
+
+        res, err = client.delete(uuid)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        print(">> {} deleted >>".format(Blueprint))
+
+    else:
+        print(">> {} not found >>".format(Blueprint))
+
+    # upload
+    res, err = client.upload_with_secrets(Blueprint)
+    if not err:
+        print(">> {} uploaded with creds >>".format(Blueprint))
+        print(json.dumps(res.json(), indent=4, separators=(",", ": ")))
+        assert res.ok is True
+    else:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    bp = res.json()
+    bp_state = bp["status"]["state"]
+    print(">> Blueprint state: {}".format(bp_state))
+    assert bp_state == "ACTIVE"
 
 
 def launch_blueprint(blueprint_name, client):
