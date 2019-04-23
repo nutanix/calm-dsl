@@ -26,7 +26,7 @@ class RunbookValidator(PropertyValidator, openapi_type="app_runbook"):
 
 def _runbook(**kwargs):
     name = getattr(RunbookType, "__schema_name__")
-    bases = (Entity, )
+    bases = (Entity,)
     return RunbookType(name, bases, kwargs)
 
 
@@ -36,8 +36,8 @@ Runbook = _runbook()
 def _runbook_create(**kwargs):
 
     # This follows UI naming convention for runbooks
-    name = str(uuid.uuid4())[:8] + '_' + getattr(RunbookType, "__schema_name__")
-    name = kwargs.get('name', kwargs.get('__name__', name))
+    name = str(uuid.uuid4())[:8] + "_" + getattr(RunbookType, "__schema_name__")
+    name = kwargs.get("name", kwargs.get("__name__", name))
     bases = (Runbook,)
     return RunbookType(name, bases, kwargs)
 
@@ -57,7 +57,7 @@ class ActionValidator(PropertyValidator, openapi_type="app_action"):
 
 def _action(**kwargs):
     name = getattr(ActionType, "__schema_name__")
-    bases = (Entity, )
+    bases = (Entity,)
     return ActionType(name, bases, kwargs)
 
 
@@ -65,8 +65,8 @@ Action = _action()
 
 
 def _action_create(**kwargs):
-    name = str(uuid.uuid4())[:8] + '_' + getattr(ActionType, "__schema_name__")
-    name = kwargs.get('name', kwargs.get('__name__', name))
+    name = str(uuid.uuid4())[:8] + "_" + getattr(ActionType, "__schema_name__")
+    name = kwargs.get("name", kwargs.get("__name__", name))
     bases = (Action,)
     return ActionType(name, bases, kwargs)
 
@@ -83,10 +83,9 @@ class GetCallNodes(ast.NodeVisitor):
         return self.tasks, self.variables
 
     def visit_Call(self, node):
-        if node.func.id in ['exec_ssh']:
+        if node.func.id in ["exec_ssh"]:
             self.tasks.append(
-                eval(compile(ast.Expression(node), '', 'eval'),
-                     self._globals)
+                eval(compile(ast.Expression(node), "", "eval"), self._globals)
             )
 
     def visit_Assign(self, node):
@@ -94,17 +93,14 @@ class GetCallNodes(ast.NodeVisitor):
             raise ValueError(
                 "not enough values to unpack (expected {}, got 1)".format(
                     len(node.targets)
-                ))
+                )
+            )
         variable_name = node.targets[0].id
         if variable_name in self.variables.keys():
-            raise NameError(
-                "duplicate variable name {}".format(variable_name)
-            )
-        if (isinstance(node.value, ast.Call) and
-                node.value.func.id in ['var']):
+            raise NameError("duplicate variable name {}".format(variable_name))
+        if isinstance(node.value, ast.Call) and node.value.func.id in ["var"]:
             variable = eval(
-                compile(ast.Expression(node.value), '', 'eval'),
-                self._globals
+                compile(ast.Expression(node.value), "", "eval"), self._globals
             )
             variable.name = variable_name
             self.variables[variable_name] = variable
@@ -120,18 +116,18 @@ def action(user_func):
     """
 
     # Get the entity names
-    action_name = " ".join(user_func.__name__.lower().split('_')).title()
+    action_name = " ".join(user_func.__name__.lower().split("_")).title()
     runbook_name = str(uuid.uuid4())[:8] + "_runbook"
     dag_name = str(uuid.uuid4())[:8] + "_dag"
 
     # Get the source code for the user function
-    src = inspect.getsource(user_func).replace('\t', '    ')
+    src = inspect.getsource(user_func).replace("\t", "    ")
 
     # Get the padding since this decorator is used within class definition
-    padding = src.split('\n')[0].rstrip(' ').split(' ').count('')
+    padding = src.split("\n")[0].rstrip(" ").split(" ").count("")
 
     # Get the function source without the decorator
-    new_src = "\n".join(line[padding:] for line in src.split('\n')[1:])
+    new_src = "\n".join(line[padding:] for line in src.split("\n")[1:])
 
     # Get all the child tasks
     node = ast.parse(new_src)
@@ -140,29 +136,33 @@ def action(user_func):
     tasks, variables = node_visitor.get_objects()
 
     # First create the dag
-    user_dag = dag(**{
-        "name": dag_name,
-        "child_tasks_local_reference_list": tasks,
-        "attrs": {
-            "edges": []
-        },
-        "type": "DAG",
-    })
+    user_dag = dag(
+        **{
+            "name": dag_name,
+            "child_tasks_local_reference_list": tasks,
+            "attrs": {"edges": []},
+            "type": "DAG",
+        }
+    )
 
     # Next, create the RB
-    user_runbook = _runbook_create(**{
-        "main_task_local_reference": ref(user_dag),
-        "tasks": [user_dag],
-        "name": runbook_name,
-        "variables": variables.values(),
-    })
+    user_runbook = _runbook_create(
+        **{
+            "main_task_local_reference": ref(user_dag),
+            "tasks": [user_dag],
+            "name": runbook_name,
+            "variables": variables.values(),
+        }
+    )
 
     # Finally the action
-    user_action = _action_create(**{
-        "name": action_name,
-        "critical": False,
-        "type": "user",
-        "runbook": user_runbook
-    })
+    user_action = _action_create(
+        **{
+            "name": action_name,
+            "critical": False,
+            "type": "user",
+            "runbook": user_runbook,
+        }
+    )
 
     return user_action

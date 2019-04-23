@@ -42,7 +42,7 @@ def _validate(vdict, name, value):
                 setattr(value, "name", name)
 
             elif isinstance(value, ActionType):
-                ValidatorType, _ = vdict["actions"] 
+                ValidatorType, _ = vdict["actions"]
             is_array = False
 
         if ValidatorType is not None:
@@ -196,8 +196,8 @@ class EntityType(EntityTypeBase):
         attrs["variables"] = list(attrs.get("variables", []))
 
         types = EntityTypeBase.get_entity_types()
-        ActionType = types.get('Action', None)
-        VariableType = types.get('Variable', None)
+        ActionType = types.get("Action", None)
+        VariableType = types.get("Variable", None)
         if not (ActionType and VariableType):
             raise TypeError("ActionType or VariableType not found in subclasses.")
 
@@ -211,9 +211,8 @@ class EntityType(EntityTypeBase):
                     attr_name = "variables"
                 else:
                     raise TypeError(
-                        "Field {} has value of type {} ".format(
-                            key, type(value)) +
-                        "but it is not handled for this entity"
+                        "Field {} has value of type {} ".format(key, type(value))
+                        + "but it is not handled for this entity"
                     )
                 attrs[attr_name].append(value)
                 del_keys.append(key)
