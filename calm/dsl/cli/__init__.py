@@ -5,6 +5,8 @@ Usage:
   calm describe bp <name> [--json|--yaml]
   calm upload bp <name>
   calm launch bp <name>
+  calm get apps [<names> ...]
+  calm <action> <app_name>
   calm config [--server <ip:port>] [--username <username>] [--password <password>]
   calm (-h | --help)
   calm (-v | --version)
@@ -90,13 +92,11 @@ def main():
         launch_blueprint(arguments["<name>"], client)
     if arguments["upload"] and arguments["bp"]:
         upload_blueprint(arguments["<name>"], client)
+    if arguments["get"] and arguments["apps"]:
+        get_app_list(arguments["<names>"], client)
 
 
-def get_blueprint_list(names, client):
-    global PC_IP
-    assert ping(PC_IP) is True
-
-    params = {"length": 20, "offset": 0}
+def get_name_query(names):
     if names:
         search_strings = [
             "name==.*"
@@ -106,24 +106,97 @@ def get_blueprint_list(names, client):
             + ".*"
             for name in names
         ]
-        params["filter"] = ",".join(search_strings)
+        return ",".join(search_strings)
+
+
+def get_blueprint_list(names, client):
+    global PC_IP
+    assert ping(PC_IP) is True
+
+    params = {"length": 20, "offset": 0}
+    if names:
+        params["filter"] = get_name_query(names)
     res, err = client.list(params=params)
 
     if not err:
         table = PrettyTable()
-        table.field_names = ["Blueprint Name", "Type", "Description", "State", "Project", "Application Count", ]
+        table.field_names = [
+            "Blueprint Name",
+            "Type",
+            "Description",
+            "State",
+            "Project",
+            "Application Count",
+        ]
         json_rows = res.json()["entities"]
         for _row in json_rows:
             row = _row["status"]
             metadata = _row["metadata"]
-            bp_type = "Single VM" if "categories" in metadata and metadata["categories"]["TemplateType"] == "Vm" else "Multi VM/Pod"
+            bp_type = (
+                "Single VM"
+                if "categories" in metadata
+                and metadata["categories"]["TemplateType"] == "Vm"
+                else "Multi VM/Pod"
+            )
             project = metadata["project_reference"]["name"]
-            table.add_row([row["name"], bp_type, row["description"], row["state"], project, row["application_count"]])
+            table.add_row(
+                [
+                    row["name"],
+                    bp_type,
+                    row["description"],
+                    row["state"],
+                    project,
+                    row["application_count"],
+                ]
+            )
         print("\n----Blueprint List----")
         print(table)
         assert res.ok is True
     else:
         warnings.warn(UserWarning("Cannot fetch blueprints from {}".format(PC_IP)))
+
+
+def get_app_list(names, client):
+    global PC_IP
+    assert ping(PC_IP) is True
+
+    params = {"length": 20, "offset": 0}
+    if names:
+        params["filter"] = get_name_query(names)
+    res, err = client.list(params=params, endpoint=client.APP_LIST)
+
+    if not err:
+        table = PrettyTable()
+        table.field_names = [
+            "Application Name",
+            "Source Blueprint",
+            "State",
+            "Owner",
+            "Created On",
+            "Last Updated At",
+        ]
+        json_rows = res.json()["entities"]
+        for _row in json_rows:
+            row = _row["status"]
+            metadata = _row["metadata"]
+
+            created_on = time.ctime(int(metadata["creation_time"]) // 1000000)
+            last_modified = time.ctime(int(metadata["last_update_time"]) // 1000000)
+            table.add_row(
+                [
+                    row["name"],
+                    row["resources"]["app_blueprint_reference"]["name"],
+                    row["state"],
+                    metadata["owner_reference"]["name"],
+                    created_on,
+                    last_modified,
+                ]
+            )
+        print("\n----Application List----")
+        print(table)
+        assert res.ok is True
+    else:
+        warnings.warn(UserWarning("Cannot fetch applications from {}".format(PC_IP)))
 
 
 def upload_blueprint(name_with_class, client):

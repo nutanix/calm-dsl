@@ -280,23 +280,23 @@ def get_connection(
 
 class BlueprintAPI:
 
-    _PREFIX = "api/nutanix/v3/blueprints"
-    LIST = _PREFIX + "/list"
-    UPLOAD = _PREFIX + "/import_json"
-    ITEM = _PREFIX + "/{}"
+    _PREFIX = "api/nutanix/v3/"
+    BP_PREFIX = _PREFIX + "blueprints"
+    LIST = BP_PREFIX + "/list"
+    UPLOAD = BP_PREFIX + "/import_json"
+    ITEM = BP_PREFIX + "/{}"
     LAUNCH = ITEM + "/simple_launch"
     FULL_LAUNCH = ITEM + "/launch"
     LAUNCH_POLL = ITEM + "/pending_launches/{}"
+    APP_PREFIX = _PREFIX + "apps"
+    APP_LIST = APP_PREFIX + "/list"
 
     def __init__(self, connection):
         self.connection = connection
 
-    def list(self, params=None):
+    def list(self, params=None, endpoint=LIST):
         return self.connection._call(
-            BlueprintAPI.LIST,
-            verify=False,
-            request_json=params,
-            method=REQUEST.METHOD.POST,
+            endpoint, verify=False, request_json=params, method=REQUEST.METHOD.POST
         )
 
     def get(self, blueprint_id):
