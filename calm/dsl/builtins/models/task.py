@@ -55,15 +55,16 @@ def exec_ssh(script, name=None):
     return _task_create(**kwargs)
 
 
-def dag(name=None, child_tasks=None, edges=None):
+def dag(name=None, child_tasks=None, edges=None, target=None):
     """
     Create a DAG task
     Args:
         name (str): Name for the task
         child_tasks (list [Task]): Child tasks within this dag
-        edges (list [tuple (ref, ref)]): List of tuples of ref(Task).
+        edges (list [tuple (Ref, Ref)]): List of tuples of ref(Task).
                                          Each element denotes an edge from
                                          first task to the second.
+        target (Ref): Target entity reference
     Returns:
         (Task): DAG task
     """
@@ -88,5 +89,7 @@ def dag(name=None, child_tasks=None, edges=None):
         "attrs": {"edges": dag_edges},
         "type": "DAG",
     }
+    if target:
+        kwargs["target_any_local_reference"] = target
 
     return _task_create(**kwargs)

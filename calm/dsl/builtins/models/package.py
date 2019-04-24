@@ -18,7 +18,7 @@ class PackageType(EntityType):
             return cdict
 
         def make_empty_runbook():
-            user_dag = dag()
+            user_dag = dag(target=cls.get_task_target())
             return _runbook_create(
                 main_task_local_reference=user_dag.get_ref(), tasks=[user_dag]
             )
@@ -48,6 +48,14 @@ class PackageType(EntityType):
         del cdict["install_tasks"]
 
         return cdict
+
+    def get_task_target(cls):
+
+        # Target for package actions is the service, keeping this consistent between UI and DSL.
+        # Refer: https://jira.nutanix.com/browse/CALM-9182
+        services = getattr(cls, "services", [])
+        if services:
+            return services[0]
 
 
 class PackageValidator(PropertyValidator, openapi_type="app_package"):

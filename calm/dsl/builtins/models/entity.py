@@ -138,6 +138,13 @@ class EntityType(EntityTypeBase):
         openapi_type = getattr(mcls, "__openapi_type__")
         setattr(cls, "__kind__", openapi_type)
 
+        ActionType = EntityTypeBase.get_entity_types().get("Action", None)
+        if ActionType is not None:
+            for action in filter(
+                lambda value: isinstance(value, ActionType), entitydict.values()
+            ):
+                action.assign_targets(cls)
+
         for k, v in cls.get_default_attrs().items():
             # Check if attr was set during class creation
             # else - set default value
@@ -311,6 +318,9 @@ class EntityType(EntityTypeBase):
             attrs["name"] = str(cls)
             attrs["kind"] = getattr(cls, "__kind__")
         return ref(name, bases, attrs)
+
+    def get_task_target(cls):
+        return cls.get_ref()
 
 
 class Entity(metaclass=EntityType):

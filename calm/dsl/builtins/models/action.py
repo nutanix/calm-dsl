@@ -48,6 +48,10 @@ class ActionType(EntityType):
     def __call__(*args, **kwargs):
         pass
 
+    def assign_targets(cls, parent_entity):
+        for task in cls.runbook.tasks:
+            task.target_any_local_reference = parent_entity.get_task_target()
+
 
 class ActionValidator(PropertyValidator, openapi_type="app_action"):
     __default__ = None
