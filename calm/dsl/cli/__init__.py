@@ -94,6 +94,8 @@ def main():
         upload_blueprint(arguments["<name>"], client)
     if arguments["get"] and arguments["apps"]:
         get_app_list(arguments["<names>"], client)
+    if arguments["<action>"] and arguments["<app_name>"]:
+        run_actions(arguments["<action>"], arguments["<app_name>"], client)
 
 
 def get_name_query(names):
@@ -163,7 +165,7 @@ def get_app_list(names, client):
     params = {"length": 20, "offset": 0}
     if names:
         params["filter"] = get_name_query(names)
-    res, err = client.list(params=params, endpoint=client.APP_LIST)
+    res, err = client.list_apps(params=params)
 
     if not err:
         table = PrettyTable()
@@ -200,6 +202,9 @@ def get_app_list(names, client):
 
 
 def upload_blueprint(name_with_class, client):
+    global PC_IP
+    assert ping(PC_IP) is True
+
     name_with_class = name_with_class.replace("/", ".")
     (file_name, class_name) = name_with_class.rsplit(".", 1)
     mod = import_module(file_name)
@@ -245,8 +250,9 @@ def upload_blueprint(name_with_class, client):
 
 
 def launch_blueprint(blueprint_name, client):
-    global PC_IP, PC_PORT
-    client = get_api_client()
+    global PC_IP
+    assert ping(PC_IP) is True
+
     # find bp
     params = {"filter": "name=={};state!=DELETED".format(blueprint_name)}
 
@@ -322,6 +328,63 @@ def launch_blueprint(blueprint_name, client):
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
         count += 10
         time.sleep(10)
+
+
+def run_actions(action_name, app_name, client):
+    global PC_IP
+    assert ping(PC_IP) is True
+
+    # 1. Get app_uuid from list api
+    params = {"filter": "name=={}".format(app_name)}
+
+    res, err = client.list_apps(params=params)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    response = res.json()
+    entities = response.get("entities", None)
+    app = None
+    if entities:
+        if len(entities) != 1:
+            raise Exception("More than one app found - {}".format(entities))
+
+        print(">> {} found >>".format(app_name))
+        app = entities[0]
+    else:
+        raise Exception(">>No app found with name {} found >>".format(app_name))
+    app_id = app["metadata"]["uuid"]
+
+    # 2. Get app details
+    print(">>Fetching app details")
+    res, err = client.get_app(app_id)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    app = res.json()
+    app_spec = app["spec"]
+
+    # 3. Get action uuid from action name
+    calm_action_name = "action_" + action_name.lower()
+
+    action = next(
+        action
+        for action in app_spec["resources"]["action_list"]
+        if action["name"] == calm_action_name
+    )
+    if not action:
+        raise Exception("No action found matching name {}".format(action_name))
+    action_id = action["uuid"]
+
+    # 4. Hit action run api (with metadata and minimal spec: [args, target_kind, target_uuid])
+    app.pop("status")
+    app["spec"] = {"args": [], "target_kind": "Application", "target_uuid": app_id}
+    res, err = client.run_action(app_id, action_id, app)
+    print(">>Triggering action run")
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    response = res.json()
+    runlog_id = response["status"]["runlog_uuid"]
+    print("Runlog uuid: ", runlog_id)
 
 
 if __name__ == "__main__":

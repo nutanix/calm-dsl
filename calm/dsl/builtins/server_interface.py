@@ -290,13 +290,18 @@ class BlueprintAPI:
     LAUNCH_POLL = ITEM + "/pending_launches/{}"
     APP_PREFIX = _PREFIX + "apps"
     APP_LIST = APP_PREFIX + "/list"
+    APP_ITEM = APP_PREFIX + "/{}"
+    ACTION_RUN = APP_PREFIX + "/{}/actions/{}/run"
 
     def __init__(self, connection):
         self.connection = connection
 
-    def list(self, params=None, endpoint=LIST):
+    def list(self, params=None):
         return self.connection._call(
-            endpoint, verify=False, request_json=params, method=REQUEST.METHOD.POST
+            BlueprintAPI.LIST,
+            verify=False,
+            request_json=params,
+            method=REQUEST.METHOD.POST,
         )
 
     def get(self, blueprint_id):
@@ -348,6 +353,29 @@ class BlueprintAPI:
             BlueprintAPI.LAUNCH_POLL.format(blueprint_id, request_id),
             verify=False,
             method=REQUEST.METHOD.GET,
+        )
+
+    def list_apps(self, params=None):
+        return self.connection._call(
+            BlueprintAPI.APP_LIST,
+            verify=False,
+            request_json=params,
+            method=REQUEST.METHOD.POST,
+        )
+
+    def get_app(self, app_id):
+        return self.connection._call(
+            BlueprintAPI.APP_ITEM.format(app_id),
+            verify=False,
+            method=REQUEST.METHOD.GET,
+        )
+
+    def run_action(self, app_id, action_id, payload):
+        return self.connection._call(
+            BlueprintAPI.ACTION_RUN.format(app_id, action_id),
+            request_json=payload,
+            verify=False,
+            method=REQUEST.METHOD.POST,
         )
 
     @staticmethod
