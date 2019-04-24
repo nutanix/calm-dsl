@@ -299,6 +299,19 @@ class EntityType(EntityTypeBase):
         yaml.indent(mapping=2, sequence=4, offset=2)
         yaml.dump(cls, stream=stream)
 
+    def get_ref(cls):
+        types = EntityTypeBase.get_entity_types()
+        ref = types.get("Ref")
+        if not ref:
+            return
+        name = getattr(ref, "__schema_name__")
+        bases = (Entity,)
+        if ref:
+            attrs = {}
+            attrs["name"] = str(cls)
+            attrs["kind"] = getattr(cls, "__kind__")
+        return ref(name, bases, attrs)
+
 
 class Entity(metaclass=EntityType):
     pass

@@ -3,7 +3,6 @@ from .validator import PropertyValidator
 
 from .task import dag
 from .action import _runbook_create
-from .ref import ref
 
 # Package
 
@@ -21,7 +20,7 @@ class PackageType(EntityType):
         def make_empty_runbook():
             user_dag = dag()
             return _runbook_create(
-                main_task_local_reference=ref(user_dag), tasks=[user_dag]
+                main_task_local_reference=user_dag.get_ref(), tasks=[user_dag]
             )
 
         install_runbook = (

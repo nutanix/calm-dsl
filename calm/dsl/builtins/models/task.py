@@ -2,7 +2,6 @@ import uuid
 
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
-from .ref import ref
 
 
 # Task
@@ -83,7 +82,9 @@ def dag(name=None, child_tasks=None, edges=None):
     name = name or str(uuid.uuid4())[:8] + "_dag"
     kwargs = {
         "name": name,
-        "child_tasks_local_reference_list": [ref(task) for task in child_tasks or []],
+        "child_tasks_local_reference_list": [
+            task.get_ref() for task in child_tasks or []
+        ],
         "attrs": {"edges": dag_edges},
         "type": "DAG",
     }

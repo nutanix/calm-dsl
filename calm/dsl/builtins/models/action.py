@@ -5,7 +5,6 @@ import uuid
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .task import dag
-from .ref import ref
 
 # Action - Since action, runbook and DAG task are heavily coupled together,
 # the action type behaves as all three.
@@ -134,13 +133,13 @@ def action(user_func):
     tasks, variables = node_visitor.get_objects()
 
     # First create the dag
-    edges = [(ref(frm), ref(to)) for frm, to in zip(tasks, tasks[1:])]
+    edges = [(frm.get_ref(), to.get_ref()) for frm, to in zip(tasks, tasks[1:])]
     user_dag = dag(name=dag_name, child_tasks=tasks, edges=edges)
 
     # Next, create the RB
     user_runbook = _runbook_create(
         **{
-            "main_task_local_reference": ref(user_dag),
+            "main_task_local_reference": user_dag.get_ref(),
             "tasks": [user_dag] + tasks,
             "name": runbook_name,
             "variables": variables.values(),
