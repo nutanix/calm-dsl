@@ -35,7 +35,9 @@ def _task_create(**kwargs):
 
 def _create_call_rb(runbook, target=None):
     kwargs = {
-        "name": "Call Runbook {} - {}".format(runbook.name, str(uuid.uuid4())[:8]),
+        "name": "Call_Runbook_task_for_{}__{}".format(
+            runbook.name, str(uuid.uuid4())[:8]
+        ),
         "type": "CALL_RUNBOOK",
         "attrs": {"runbook_reference": runbook.get_ref()},
     }
