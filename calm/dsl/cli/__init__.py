@@ -6,7 +6,7 @@ Usage:
   calm upload bp <name>
   calm launch bp <name>
   calm get apps [<names> ...]
-  calm <action> <app_name>
+  calm <action> app <app_name>
   calm config [--server <ip:port>] [--username <username>] [--password <password>]
   calm (-h | --help)
   calm (-v | --version)
@@ -175,7 +175,6 @@ def get_app_list(names, client):
             "State",
             "Owner",
             "Created On",
-            "Last Updated At",
         ]
         json_rows = res.json()["entities"]
         for _row in json_rows:
@@ -183,7 +182,6 @@ def get_app_list(names, client):
             metadata = _row["metadata"]
 
             created_on = time.ctime(int(metadata["creation_time"]) // 1000000)
-            last_modified = time.ctime(int(metadata["last_update_time"]) // 1000000)
             table.add_row(
                 [
                     row["name"],
@@ -191,7 +189,6 @@ def get_app_list(names, client):
                     row["state"],
                     metadata["owner_reference"]["name"],
                     created_on,
-                    last_modified,
                 ]
             )
         print("\n----Application List----")
@@ -315,7 +312,7 @@ def launch_blueprint(blueprint_name, client):
     while count < maxWait:
         # call status api
         print("Polling status of Launch")
-        res, err = client.launch_poll(blueprint_id, launch_req_id)
+        res, err = client.poll_launch(blueprint_id, launch_req_id)
         response = res.json()
         pprint(response)
         if response["status"]["state"] == "success":
@@ -363,8 +360,28 @@ def run_actions(action_name, app_name, client):
     app_spec = app["spec"]
 
     # 3. Get action uuid from action name
-    calm_action_name = "action_" + action_name.lower()
+    if action_name.lower() == "delete":
+        res, err = client.delete_app(app_id)
+        print(">>Triggering Delete")
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        else:
+            print("Delete action triggered")
+            response = res.json()
+            runlog_id = response["status"]["runlog_uuid"]
 
+            def poll_func():
+                print("Polling Delete action...")
+                return client.get_app(app_id)
+
+            def is_deletion_complete(response):
+                is_deleted = response["status"]["state"] == "deleted"
+                return (is_deleted, "Successfully deleted app {}".format(app_name))
+
+            poll_action(poll_func, is_deletion_complete)
+            return
+
+    calm_action_name = "action_" + action_name.lower()
     action = next(
         action
         for action in app_spec["resources"]["action_list"]
@@ -385,6 +402,41 @@ def run_actions(action_name, app_name, client):
     response = res.json()
     runlog_id = response["status"]["runlog_uuid"]
     print("Runlog uuid: ", runlog_id)
+    url = client.APP_ITEM.format(app_id) + "/app_runlogs/list"
+    payload = {"filter": "root_reference=={}".format(runlog_id)}
+
+    def poll_func():
+        print("Polling action run ...")
+        return client.poll_action_run(url, payload)
+
+    def is_action_complete(response):
+        pprint(response)
+        if len(response["entities"]):
+            for action in response["entities"]:
+                if action["status"]["state"] != "SUCCESS":
+                    return (False, "")
+            return (True, "{} action complete".format(action_name.upper()))
+
+    poll_action(poll_func, is_action_complete)
+
+
+def poll_action(poll_func, completion_func):
+    # Poll every 10 seconds on the app status, for 5 mins
+    maxWait = 5 * 60
+    count = 0
+    while count < maxWait:
+        # call status api
+        print("Polling status of action")
+        res, err = poll_func()
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        response = res.json()
+        (completed, msg) = completion_func(response)
+        if completed:
+            print(msg)
+            break
+        count += 10
+        time.sleep(10)
 
 
 if __name__ == "__main__":

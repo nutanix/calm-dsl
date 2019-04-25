@@ -348,7 +348,7 @@ class BlueprintAPI:
             method=REQUEST.METHOD.POST,
         )
 
-    def launch_poll(self, blueprint_id, request_id):
+    def poll_launch(self, blueprint_id, request_id):
         return self.connection._call(
             BlueprintAPI.LAUNCH_POLL.format(blueprint_id, request_id),
             verify=False,
@@ -376,6 +376,18 @@ class BlueprintAPI:
             request_json=payload,
             verify=False,
             method=REQUEST.METHOD.POST,
+        )
+
+    def poll_action_run(self, poll_url, payload):
+        return self.connection._call(
+            poll_url, request_json=payload, verify=False, method=REQUEST.METHOD.POST
+        )
+
+    def delete_app(self, app_id):
+        return self.connection._call(
+            BlueprintAPI.APP_ITEM.format(app_id),
+            verify=False,
+            method=REQUEST.METHOD.DELETE,
         )
 
     @staticmethod
