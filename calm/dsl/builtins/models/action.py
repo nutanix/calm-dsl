@@ -45,8 +45,8 @@ class ActionType(EntityType):
     __schema_name__ = "Action"
     __openapi_type__ = "app_action"
 
-    def __call__(cls):
-        return _create_call_rb(cls.runbook) if cls.runbook else None
+    def __call__(cls, name=None):
+        return _create_call_rb(cls.runbook, name=name) if cls.runbook else None
 
     def assign_targets(cls, parent_entity):
         for task in cls.runbook.tasks:
