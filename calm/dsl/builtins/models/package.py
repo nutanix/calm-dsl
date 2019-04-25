@@ -17,10 +17,15 @@ class PackageType(EntityType):
             cdict = super().compile()
             return cdict
 
-        def make_empty_runbook():
-            user_dag = dag(target=cls.get_task_target())
+        def make_empty_runbook(action_name):
+            user_dag = dag(
+                name="DAG_Task_for_Package_{}_{}".format(str(cls), action_name),
+                target=cls.get_task_target(),
+            )
             return _runbook_create(
-                main_task_local_reference=user_dag.get_ref(), tasks=[user_dag]
+                name="Runbook_for_Package_{}_{}".format(str(cls), action_name),
+                main_task_local_reference=user_dag.get_ref(),
+                tasks=[user_dag],
             )
 
         install_runbook = (
@@ -29,14 +34,14 @@ class PackageType(EntityType):
         if install_runbook:
             delattr(cls, "__install__")
         else:
-            install_runbook = make_empty_runbook()
+            install_runbook = make_empty_runbook("action_install")
         uninstall_runbook = (
             getattr(getattr(cls, "__uninstall__", None), "runbook", None) or None
         )
         if uninstall_runbook:
             delattr(cls, "__uninstall__")
         else:
-            uninstall_runbook = make_empty_runbook()
+            uninstall_runbook = make_empty_runbook("action_uninstall")
 
         cdict = super().compile()
 
