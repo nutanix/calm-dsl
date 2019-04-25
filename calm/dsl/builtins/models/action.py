@@ -4,7 +4,7 @@ import uuid
 
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
-from .task import dag
+from .task import dag, _create_call_rb
 
 # Action - Since action, runbook and DAG task are heavily coupled together,
 # the action type behaves as all three.
@@ -45,12 +45,13 @@ class ActionType(EntityType):
     __schema_name__ = "Action"
     __openapi_type__ = "app_action"
 
-    def __call__(*args, **kwargs):
-        pass
+    def __call__(cls):
+        return _create_call_rb(cls.runbook) if cls.runbook else None
 
     def assign_targets(cls, parent_entity):
         for task in cls.runbook.tasks:
-            task.target_any_local_reference = parent_entity.get_task_target()
+            if not task.target_any_local_reference:
+                task.target_any_local_reference = parent_entity.get_task_target()
 
 
 class ActionValidator(PropertyValidator, openapi_type="app_action"):
@@ -84,10 +85,13 @@ class GetCallNodes(ast.NodeVisitor):
         return self.tasks, self.variables
 
     def visit_Call(self, node):
-        if node.func.id in ["exec_ssh"]:
-            self.tasks.append(
-                eval(compile(ast.Expression(node), "", "eval"), self._globals)
-            )
+        if isinstance(node.func, ast.Attribute) or (
+            isinstance(node.func, ast.Name) and node.func.id in ["exec_ssh"]
+        ):
+
+            task = eval(compile(ast.Expression(node), "", "eval"), self._globals)
+            if task is not None:
+                self.tasks.append(task)
 
     def visit_Assign(self, node):
         if len(node.targets) > 1:

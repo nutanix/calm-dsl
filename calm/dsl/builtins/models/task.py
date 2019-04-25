@@ -33,7 +33,19 @@ def _task_create(**kwargs):
     return TaskType(name, bases, kwargs)
 
 
-def exec_ssh(script, name=None):
+def _create_call_rb(runbook, target=None):
+    kwargs = {
+        "name": "Call Runbook {} - {}".format(runbook.name, str(uuid.uuid4())[:8]),
+        "type": "CALL_RUNBOOK",
+        "attrs": {"runbook_reference": runbook.get_ref()},
+    }
+    if target is not None:
+        kwargs["target_any_local_reference"] = target
+
+    return _task_create(**kwargs)
+
+
+def exec_ssh(script, name=None, target=None):
 
     kwargs = {
         "type": "EXEC",
