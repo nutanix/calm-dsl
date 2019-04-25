@@ -271,11 +271,11 @@ def launch_blueprint(blueprint_name, client):
         blueprint = entities[0]
     else:
         raise Exception(
-            ">>No blueprint found with name {} found >>".format(blueprint_name)
+            ">> No blueprint found with name {} found >>".format(blueprint_name)
         )
 
     blueprint_id = blueprint["metadata"]["uuid"]
-    print(">>Fetching blueprint details")
+    print(">> Fetching blueprint details")
     res, err = client.get(blueprint_id)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -351,11 +351,11 @@ def run_actions(action_name, app_name, client):
         print(">> {} found >>".format(app_name))
         app = entities[0]
     else:
-        raise Exception(">>No app found with name {} found >>".format(app_name))
+        raise Exception(">> No app found with name {} found >>".format(app_name))
     app_id = app["metadata"]["uuid"]
 
     # 2. Get app details
-    print(">>Fetching app details")
+    print(">> Fetching app details")
     res, err = client.get_app(app_id)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -365,7 +365,7 @@ def run_actions(action_name, app_name, client):
     # 3. Get action uuid from action name
     if action_name.lower() == "delete":
         res, err = client.delete_app(app_id)
-        print(">>Triggering Delete")
+        print(">> Triggering Delete")
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
         else:
@@ -398,7 +398,7 @@ def run_actions(action_name, app_name, client):
     app.pop("status")
     app["spec"] = {"args": [], "target_kind": "Application", "target_uuid": app_id}
     res, err = client.run_action(app_id, action_id, app)
-    print(">>Triggering action run")
+    print(">> Triggering action run")
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -419,6 +419,7 @@ def run_actions(action_name, app_name, client):
                 if action["status"]["state"] != "SUCCESS":
                     return (False, "")
             return (True, "{} action complete".format(action_name.upper()))
+        return (False, "")
 
     poll_action(poll_func, is_action_complete)
 
