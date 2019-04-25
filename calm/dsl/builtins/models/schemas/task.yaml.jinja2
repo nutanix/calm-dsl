@@ -20,6 +20,11 @@ properties:
     type: array
     items:
       $ref: '#/components/schemas/Ref'
+  variable_list:
+    x-calm-dsl-display-name: variables
+    type: array
+    items:
+      $ref: '#/components/schemas/Variable'
 
 {%- endmacro %}
 
