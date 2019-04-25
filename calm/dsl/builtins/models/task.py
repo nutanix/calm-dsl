@@ -65,6 +65,8 @@ def exec_ssh(script, name=None, target=None):
     }
     if name is not None:
         kwargs["name"] = name
+    if target is not None:
+        kwargs["target_any_local_reference"] = target
 
     return _task_create(**kwargs)
 
