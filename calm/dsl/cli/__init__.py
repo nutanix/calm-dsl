@@ -1,10 +1,12 @@
 """Calm CLI
 
 Usage:
-  calm get bps [<name> ...]
+  calm get bps [<names> ...]
   calm describe bp <name> [--json|--yaml]
   calm upload bp <name>
   calm launch bp <name>
+  calm get apps [<names> ...]
+  calm <action> app <app_name>
   calm config [--server <ip:port>] [--username <username>] [--password <password>]
   calm (-h | --help)
   calm (-v | --version)
@@ -21,10 +23,16 @@ import json
 import time
 import warnings
 import configparser
+import urllib3
 from functools import reduce
+from importlib import import_module
 from docopt import docopt
 from pprint import pprint
 from calm.dsl.utils.server_utils import get_api_client as _get_api_client, ping
+from prettytable import PrettyTable
+
+
+urllib3.disable_warnings()
 
 # Defaults to be used if no config file exists.
 PC_IP = "10.51.152.102"
@@ -78,18 +86,22 @@ def main():
         }
         with open(file_path, "w") as configfile:
             config.write(configfile)
+
     client = get_api_client(PC_IP, PC_PORT, PC_USERNAME, PC_PASSWORD)
+
     if arguments["get"] and arguments["bps"]:
-        get_blueprint_list(arguments["<name>"], client)
+        get_blueprint_list(arguments["<names>"], client)
     if arguments["launch"] and arguments["bp"]:
-        launch_blueprint(arguments["<name>"][0], client)
+        launch_blueprint(arguments["<name>"], client)
+    if arguments["upload"] and arguments["bp"]:
+        upload_blueprint(arguments["<name>"], client)
+    if arguments["get"] and arguments["apps"]:
+        get_app_list(arguments["<names>"], client)
+    if arguments["<action>"] and arguments["<app_name>"]:
+        run_actions(arguments["<action>"], arguments["<app_name>"], client)
 
 
-def get_blueprint_list(names, client):
-    global PC_IP
-    assert ping(PC_IP) is True
-
-    params = {"length": 20, "offset": 0}
+def get_name_query(names):
     if names:
         search_strings = [
             "name==.*"
@@ -99,48 +111,174 @@ def get_blueprint_list(names, client):
             + ".*"
             for name in names
         ]
-        params["filter"] = ",".join(search_strings)
+        return ",".join(search_strings)
+
+
+def get_blueprint_list(names, client):
+    global PC_IP
+    assert ping(PC_IP) is True
+
+    params = {"length": 20, "offset": 0}
+    if names:
+        params["filter"] = get_name_query(names)
     res, err = client.list(params=params)
 
     if not err:
-        print(">> Blueprint List >>")
-        print(json.dumps(res.json(), indent=4, separators=(",", ": ")))
+        table = PrettyTable()
+        table.field_names = [
+            "Blueprint Name",
+            "Type",
+            "Description",
+            "State",
+            "Project",
+            "Application Count",
+        ]
+        json_rows = res.json()["entities"]
+        for _row in json_rows:
+            row = _row["status"]
+            metadata = _row["metadata"]
+            bp_type = (
+                "Single VM"
+                if "categories" in metadata
+                and metadata["categories"]["TemplateType"] == "Vm"
+                else "Multi VM/Pod"
+            )
+            project = metadata["project_reference"]["name"]
+            table.add_row(
+                [
+                    row["name"],
+                    bp_type,
+                    row["description"],
+                    row["state"],
+                    project,
+                    row["application_count"],
+                ]
+            )
+        print("\n----Blueprint List----")
+        print(table)
         assert res.ok is True
     else:
         warnings.warn(UserWarning("Cannot fetch blueprints from {}".format(PC_IP)))
 
 
+def get_app_list(names, client):
+    global PC_IP
+    assert ping(PC_IP) is True
+
+    params = {"length": 20, "offset": 0}
+    if names:
+        params["filter"] = get_name_query(names)
+    res, err = client.list_apps(params=params)
+
+    if not err:
+        table = PrettyTable()
+        table.field_names = [
+            "Application Name",
+            "Source Blueprint",
+            "State",
+            "Owner",
+            "Created On",
+        ]
+        json_rows = res.json()["entities"]
+        for _row in json_rows:
+            row = _row["status"]
+            metadata = _row["metadata"]
+
+            created_on = time.ctime(int(metadata["creation_time"]) // 1000000)
+            table.add_row(
+                [
+                    row["name"],
+                    row["resources"]["app_blueprint_reference"]["name"],
+                    row["state"],
+                    metadata["owner_reference"]["name"],
+                    created_on,
+                ]
+            )
+        print("\n----Application List----")
+        print(table)
+        assert res.ok is True
+    else:
+        warnings.warn(UserWarning("Cannot fetch applications from {}".format(PC_IP)))
+
+
+def upload_blueprint(name_with_class, client):
+    global PC_IP
+    assert ping(PC_IP) is True
+
+    name_with_class = name_with_class.replace("/", ".")
+    (file_name, class_name) = name_with_class.rsplit(".", 1)
+    mod = import_module(file_name)
+    Blueprint = getattr(mod, class_name)
+
+    # seek and destroy
+    params = {"filter": "name=={};state!=DELETED".format(Blueprint)}
+    res, err = client.list(params=params)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    response = res.json()
+    entities = response.get("entities", None)
+    if entities:
+        if len(entities) != 1:
+            raise Exception("More than one blueprint found - {}".format(entities))
+
+        print(">> {} found >>".format(Blueprint))
+        uuid = entities[0]["metadata"]["uuid"]
+
+        res, err = client.delete(uuid)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        print(">> {} deleted >>".format(Blueprint))
+
+    else:
+        print(">> {} not found >>".format(Blueprint))
+
+    # upload
+    res, err = client.upload_with_secrets(Blueprint)
+    if not err:
+        print(">> {} uploaded with creds >>".format(Blueprint))
+        print(json.dumps(res.json(), indent=4, separators=(",", ": ")))
+        assert res.ok is True
+    else:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    bp = res.json()
+    bp_state = bp["status"]["state"]
+    print(">> Blueprint state: {}".format(bp_state))
+    assert bp_state == "ACTIVE"
+
+
 def launch_blueprint(blueprint_name, client):
-    global PC_IP, PC_PORT
-    client = get_api_client()
+    global PC_IP
+    assert ping(PC_IP) is True
+
     # find bp
     params = {"filter": "name=={};state!=DELETED".format(blueprint_name)}
 
     res, err = client.list(params=params)
     if err:
-        print("[{}] - {}".format(err["code"], err["error"]))
-        return
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     response = res.json()
     entities = response.get("entities", None)
     blueprint = None
     if entities:
         if len(entities) != 1:
-            print("More than one blueprint found - {}".format(entities))
-            return
+            raise Exception("More than one blueprint found - {}".format(entities))
 
         print(">> {} found >>".format(blueprint_name))
         blueprint = entities[0]
     else:
-        print(">>No blueprint found with name {} found >>".format(blueprint_name))
-        return
+        raise Exception(
+            ">> No blueprint found with name {} found >>".format(blueprint_name)
+        )
 
     blueprint_id = blueprint["metadata"]["uuid"]
-    print(">>Fetching blueprint details")
+    print(">> Fetching blueprint details")
     res, err = client.get(blueprint_id)
     if err:
-        print("[{}] - {}".format(err["code"], err["error"]))
-        return
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
     blueprint = res.json()
     blueprint_spec = blueprint["spec"]
 
@@ -167,8 +305,7 @@ def launch_blueprint(blueprint_name, client):
         print(">> {} queued for launch >>".format(blueprint_name))
         print(json.dumps(res.json(), indent=4, separators=(",", ": ")))
     else:
-        print("[{}] - {}".format(err["code"], err["error"]))
-        return
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
     response = res.json()
     launch_req_id = response["status"]["request_id"]
 
@@ -178,7 +315,7 @@ def launch_blueprint(blueprint_name, client):
     while count < maxWait:
         # call status api
         print("Polling status of Launch")
-        res, err = client.launch_poll(blueprint_id, launch_req_id)
+        res, err = client.poll_launch(blueprint_id, launch_req_id)
         response = res.json()
         pprint(response)
         if response["status"]["state"] == "success":
@@ -188,7 +325,119 @@ def launch_blueprint(blueprint_name, client):
             print("Successfully launched. App uuid is: {}".format(app_uuid))
             break
         elif err:
-            print("[{}] - {}".format(err["code"], err["error"]))
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        count += 10
+        time.sleep(10)
+
+
+def run_actions(action_name, app_name, client):
+    global PC_IP
+    assert ping(PC_IP) is True
+
+    # 1. Get app_uuid from list api
+    params = {"filter": "name=={}".format(app_name)}
+
+    res, err = client.list_apps(params=params)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    response = res.json()
+    entities = response.get("entities", None)
+    app = None
+    if entities:
+        if len(entities) != 1:
+            raise Exception("More than one app found - {}".format(entities))
+
+        print(">> {} found >>".format(app_name))
+        app = entities[0]
+    else:
+        raise Exception(">> No app found with name {} found >>".format(app_name))
+    app_id = app["metadata"]["uuid"]
+
+    # 2. Get app details
+    print(">> Fetching app details")
+    res, err = client.get_app(app_id)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    app = res.json()
+    app_spec = app["spec"]
+
+    # 3. Get action uuid from action name
+    if action_name.lower() == "delete":
+        res, err = client.delete_app(app_id)
+        print(">> Triggering Delete")
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        else:
+            print("Delete action triggered")
+            response = res.json()
+            runlog_id = response["status"]["runlog_uuid"]
+
+            def poll_func():
+                print("Polling Delete action...")
+                return client.get_app(app_id)
+
+            def is_deletion_complete(response):
+                is_deleted = response["status"]["state"] == "deleted"
+                return (is_deleted, "Successfully deleted app {}".format(app_name))
+
+            poll_action(poll_func, is_deletion_complete)
+            return
+
+    calm_action_name = "action_" + action_name.lower()
+    action = next(
+        action
+        for action in app_spec["resources"]["action_list"]
+        if action["name"] == calm_action_name
+    )
+    if not action:
+        raise Exception("No action found matching name {}".format(action_name))
+    action_id = action["uuid"]
+
+    # 4. Hit action run api (with metadata and minimal spec: [args, target_kind, target_uuid])
+    app.pop("status")
+    app["spec"] = {"args": [], "target_kind": "Application", "target_uuid": app_id}
+    res, err = client.run_action(app_id, action_id, app)
+    print(">> Triggering action run")
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    response = res.json()
+    runlog_id = response["status"]["runlog_uuid"]
+    print("Runlog uuid: ", runlog_id)
+    url = client.APP_ITEM.format(app_id) + "/app_runlogs/list"
+    payload = {"filter": "root_reference=={}".format(runlog_id)}
+
+    def poll_func():
+        print("Polling action run ...")
+        return client.poll_action_run(url, payload)
+
+    def is_action_complete(response):
+        pprint(response)
+        if len(response["entities"]):
+            for action in response["entities"]:
+                if action["status"]["state"] != "SUCCESS":
+                    return (False, "")
+            return (True, "{} action complete".format(action_name.upper()))
+        return (False, "")
+
+    poll_action(poll_func, is_action_complete)
+
+
+def poll_action(poll_func, completion_func):
+    # Poll every 10 seconds on the app status, for 5 mins
+    maxWait = 5 * 60
+    count = 0
+    while count < maxWait:
+        # call status api
+        print("Polling status of action")
+        res, err = poll_func()
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        response = res.json()
+        (completed, msg) = completion_func(response)
+        if completed:
+            print(msg)
             break
         count += 10
         time.sleep(10)
