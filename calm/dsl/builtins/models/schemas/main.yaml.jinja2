@@ -9,6 +9,7 @@
 {% import "package.yaml.jinja2" as package %}
 {% import "credential.yaml.jinja2" as credential %}
 {% import "task.yaml.jinja2" as task %}
+{% import "runbook.yaml.jinja2" as runbook %}
 {% import "action.yaml.jinja2" as action %}
 
 {% macro Schemas() -%}
@@ -24,6 +25,7 @@
 {{ package.PackageSchema() }}
 {{ credential.CredentialSchema() }}
 {{ task.TaskSchema() }}
+{{ runbook.RunbookSchema() }}
 {{ action.ActionSchema() }}
 
 {%- endmacro %}

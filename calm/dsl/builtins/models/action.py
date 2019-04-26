@@ -4,41 +4,11 @@ import uuid
 
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
-from .task import dag, _create_call_rb
+from .task import dag, create_call_rb
+from .runbook import runbook_create
 
 # Action - Since action, runbook and DAG task are heavily coupled together,
 # the action type behaves as all three.
-
-
-class RunbookType(EntityType):
-    __schema_name__ = "Runbook"
-    __openapi_type__ = "app_runbook"
-
-    def __call__(*args, **kwargs):
-        pass
-
-
-class RunbookValidator(PropertyValidator, openapi_type="app_runbook"):
-    __default__ = None
-    __kind__ = RunbookType
-
-
-def _runbook(**kwargs):
-    name = getattr(RunbookType, "__schema_name__")
-    bases = (Entity,)
-    return RunbookType(name, bases, kwargs)
-
-
-Runbook = _runbook()
-
-
-def _runbook_create(**kwargs):
-
-    # This follows UI naming convention for runbooks
-    name = str(uuid.uuid4())[:8] + "_" + getattr(RunbookType, "__schema_name__")
-    name = kwargs.get("name", kwargs.get("__name__", name))
-    bases = (Runbook,)
-    return RunbookType(name, bases, kwargs)
 
 
 class ActionType(EntityType):
@@ -46,7 +16,7 @@ class ActionType(EntityType):
     __openapi_type__ = "app_action"
 
     def __call__(cls, name=None):
-        return _create_call_rb(cls.runbook, name=name) if cls.runbook else None
+        return create_call_rb(cls.runbook, name=name) if cls.runbook else None
 
     def assign_targets(cls, parent_entity):
         for task in cls.runbook.tasks:
@@ -76,6 +46,8 @@ def _action_create(**kwargs):
 
 
 class GetCallNodes(ast.NodeVisitor):
+
+    # TODO: Need to add validations for unsupported nodes.
     def __init__(self, func_globals):
         self.tasks = []
         self.variables = {}
@@ -115,9 +87,9 @@ def action(user_func):
     """
     A decorator for generating actions from a function definition.
     Args:
-        entity (Entity): Entity for which this action is defined
+        user_func (function): User defined function
     Returns:
-
+        (Action): Action class
     """
 
     # Get the entity names
@@ -125,16 +97,23 @@ def action(user_func):
     runbook_name = str(uuid.uuid4())[:8] + "_runbook"
     dag_name = str(uuid.uuid4())[:8] + "_dag"
 
-    # Get the source code for the user function
+    # Get the source code for the user function.
+    # Also replace tabs with 4 spaces.
     src = inspect.getsource(user_func).replace("\t", "    ")
 
-    # Get the padding since this decorator is used within class definition
+    # Get the indent since this decorator is used within class definition
+    # For this we split the code on newline and count the number of spaces
+    # before the @action decorator.
+    # src = "    @action\n    def action1():\n    exec_ssh("Hello World")"
+    # The indentation here would be 4.
     padding = src.split("\n")[0].rstrip(" ").split(" ").count("")
 
-    # Get the function source without the decorator
+    # This recreates the source code without the indentation and the
+    # decorator.
     new_src = "\n".join(line[padding:] for line in src.split("\n")[1:])
 
-    # Get all the child tasks
+    # Get all the child tasks by parsing the source code and visiting the
+    # ast.Call nodes. ast.Assign nodes become variables.
     node = ast.parse(new_src)
     node_visitor = GetCallNodes(user_func.__globals__)
     node_visitor.visit(node)
@@ -145,7 +124,7 @@ def action(user_func):
     user_dag = dag(name=dag_name, child_tasks=tasks, edges=edges)
 
     # Next, create the RB
-    user_runbook = _runbook_create(
+    user_runbook = runbook_create(
         **{
             "main_task_local_reference": user_dag.get_ref(),
             "tasks": [user_dag] + tasks,

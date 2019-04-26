@@ -2,7 +2,7 @@ from .entity import EntityType, Entity
 from .validator import PropertyValidator
 
 from .task import dag
-from .action import _runbook_create
+from .action import runbook_create
 
 # Package
 
@@ -22,7 +22,7 @@ class PackageType(EntityType):
                 name="DAG_Task_for_Package_{}_{}".format(str(cls), action_name),
                 target=cls.get_task_target(),
             )
-            return _runbook_create(
+            return runbook_create(
                 name="Runbook_for_Package_{}_{}".format(str(cls), action_name),
                 main_task_local_reference=user_dag.get_ref(),
                 tasks=[user_dag],
@@ -47,10 +47,6 @@ class PackageType(EntityType):
 
         cdict["options"]["install_runbook"] = install_runbook
         cdict["options"]["uninstall_runbook"] = uninstall_runbook
-
-        # Delete additional dsl keys
-        # TODO - pop items based on schema flag
-        del cdict["install_tasks"]
 
         return cdict
 

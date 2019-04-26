@@ -37,7 +37,7 @@ def _load_all_schemas(schema_file="main.yaml.jinja2"):
     return schemas
 
 
-def _get_schema(name):
+def get_schema(name):
 
     schemas = _get_all_schemas()
     schema = schemas.get(name, None)
@@ -48,7 +48,7 @@ def _get_schema(name):
 
 
 def get_schema_props(name):
-    schema = _get_schema(name)
+    schema = get_schema(name)
     schema_props = schema.get("properties", None)
     if not schema_props:
         raise TypeError("Invalid schema name {} given".format(name))

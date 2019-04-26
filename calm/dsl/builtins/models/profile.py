@@ -9,6 +9,9 @@ class ProfileType(EntityType):
     __schema_name__ = "Profile"
     __openapi_type__ = "app_profile"
 
+    def get_task_target(cls):
+        return cls.get_ref()
+
 
 class ProfileValidator(PropertyValidator, openapi_type="app_profile"):
     __default__ = None

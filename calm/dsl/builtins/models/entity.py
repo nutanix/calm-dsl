@@ -5,7 +5,7 @@ import sys
 
 from ruamel.yaml import YAML, resolver
 
-from .schema import get_schema_details, _get_schema  # noqa: F401
+from .schema import get_schema_details
 
 
 def _validate(vdict, name, value):
@@ -32,7 +32,6 @@ def _validate(vdict, name, value):
                 raise
 
             # Validate and set variable/action
-
             # get validator for variables/action
             if isinstance(value, VariableType):
                 ValidatorType, _ = vdict["variables"]
@@ -205,8 +204,6 @@ class EntityType(EntityTypeBase):
         types = EntityTypeBase.get_entity_types()
         ActionType = types.get("Action", None)
         VariableType = types.get("Variable", None)
-        if not (ActionType and VariableType):
-            raise TypeError("ActionType or VariableType not found in subclasses.")
 
         # Update list of variables with given class-level variables
         del_keys = []
@@ -318,9 +315,6 @@ class EntityType(EntityTypeBase):
             attrs["name"] = str(cls)
             attrs["kind"] = getattr(cls, "__kind__")
         return ref(name, bases, attrs)
-
-    def get_task_target(cls):
-        return cls.get_ref()
 
 
 class Entity(metaclass=EntityType):

@@ -7,7 +7,7 @@
 from .models.ref import Ref, ref
 from .models.credential import basic_cred
 from .models.variable import Variable, var, setvar
-from .models.action import Runbook, Action, action
+from .models.action import action
 
 from .models.task import Task, exec_ssh
 from .models.port import Port, port
@@ -42,7 +42,5 @@ __all__ = [
     "profile",
     "Blueprint",
     "blueprint",
-    "Runbook",
-    "Action",
     "action",
 ]
