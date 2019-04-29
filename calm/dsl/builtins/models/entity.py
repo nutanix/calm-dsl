@@ -25,14 +25,11 @@ def _validate(vdict, name, value):
             VariableType = types.get("Variable", None)
             if not VariableType:
                 raise TypeError("Variable type not defined")
-            ActionType = types.get("Action", None)
-            if not ActionType:
-                raise TypeError("Action type not defined")
             DescriptorType = types.get("Descriptor", None)
             if not DescriptorType:
                 raise TypeError("Descriptor type not defined")
             if not (
-                isinstance(value, (VariableType, ActionType))
+                isinstance(value, (VariableType,))
                 or isinstance(type(value), DescriptorType)
             ):
                 raise
@@ -46,8 +43,6 @@ def _validate(vdict, name, value):
                 # TODO - Avoid recursion. caller class should not be a VariableType
                 setattr(value, "name", name)
 
-            elif isinstance(value, ActionType):
-                ValidatorType, _ = vdict["actions"]
             elif isinstance(type(value), DescriptorType):
                 ValidatorType = None
             is_array = False
@@ -210,10 +205,6 @@ class EntityType(EntityTypeBase):
         del_keys = []
         for key, value in attrs.items():
             if key not in vdict:
-                from .action import action
-
-                if isinstance(value, action):
-                    continue
                 if isinstance(value, ActionType):
                     attr_name = "actions"
                 elif isinstance(value, VariableType):
