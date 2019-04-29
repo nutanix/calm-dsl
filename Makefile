@@ -27,7 +27,7 @@ clean:
 	rm -r venv/ && mkdir venv/ && touch venv/.empty
 
 test-verbose: dev
-	venv/bin/py.test -s
+	venv/bin/py.test -s -vv
 
 dist:
 	venv/bin/python3 setup.py bdist_wheel

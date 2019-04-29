@@ -1,0 +1,26 @@
+{% macro Action() -%}
+
+title: Action
+type: object
+x-calm-dsl-type: app_action
+properties:
+  name:
+    type: string
+  description:
+    type: string
+  type:
+    type: string
+  critical:
+    type: boolean
+  runbook:
+    $ref: '#/components/schemas/Runbook'
+
+{%- endmacro %}
+
+
+{% macro ActionSchema() -%}
+
+Action:
+  {{ Action()|indent(2) }}
+
+{%- endmacro %}
