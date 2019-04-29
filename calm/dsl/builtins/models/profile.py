@@ -8,9 +8,10 @@ from .validator import PropertyValidator
 class ProfileType(EntityType):
     __schema_name__ = "Profile"
     __openapi_type__ = "app_profile"
+    __has_dag_target__ = False
 
     def get_task_target(cls):
-        return cls.get_ref()
+        return
 
 
 class ProfileValidator(PropertyValidator, openapi_type="app_profile"):

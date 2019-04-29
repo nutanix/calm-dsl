@@ -153,7 +153,10 @@ class action:
 
         # First create the dag
         self.user_dag = dag(
-            name=self.dag_name, child_tasks=tasks, edges=edges, target=cls.get_ref()
+            name=self.dag_name,
+            child_tasks=tasks,
+            edges=edges,
+            target=cls.get_ref() if getattr(cls, "__has_dag_target__", True) else None,
         )
 
         # Modify the user runbook

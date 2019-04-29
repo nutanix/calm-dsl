@@ -12,6 +12,12 @@ class TaskType(EntityType):
     __schema_name__ = "Task"
     __openapi_type__ = "app_task"
 
+    def compile(cls):
+        cdict = super().compile()
+        if cdict.get("target_any_local_reference", None) or None is None:
+            cdict.pop("target_any_local_reference", None)
+        return cdict
+
 
 class TaskValidator(PropertyValidator, openapi_type="app_task"):
     __default__ = None
@@ -45,6 +51,13 @@ def create_call_rb(runbook, target=None, name=None):
         if not isinstance(target, RefType) and isinstance(target, EntityType):
             target = target.get_ref()
         kwargs["target_any_local_reference"] = target
+    else:
+        main_dag = [
+            task
+            for task in runbook.tasks
+            if task.name == runbook.main_task_local_reference.name
+        ][0]
+        kwargs["target_any_local_reference"] = main_dag.target_any_local_reference
 
     return _task_create(**kwargs)
 
