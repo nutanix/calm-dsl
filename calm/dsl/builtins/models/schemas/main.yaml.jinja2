@@ -5,10 +5,13 @@
 {% import "profile.yaml.jinja2" as profile %}
 {% import "blueprint.yaml.jinja2" as blueprint %}
 {% import "ref.yaml.jinja2" as ref %}
+{% import "descriptor.yaml.jinja2" as descriptor %}
 {% import "variable.yaml.jinja2" as variable %}
 {% import "package.yaml.jinja2" as package %}
 {% import "credential.yaml.jinja2" as credential %}
 {% import "task.yaml.jinja2" as task %}
+{% import "runbook.yaml.jinja2" as runbook %}
+{% import "action.yaml.jinja2" as action %}
 
 {% macro Schemas() -%}
 
@@ -19,10 +22,13 @@
 {{ profile.ProfileSchema() }}
 {{ blueprint.BlueprintSchema() }}
 {{ ref.RefSchema() }}
+{{ descriptor.DescriptorSchema() }}
 {{ variable.VariableSchema() }}
 {{ package.PackageSchema() }}
 {{ credential.CredentialSchema() }}
 {{ task.TaskSchema() }}
+{{ runbook.RunbookSchema() }}
+{{ action.ActionSchema() }}
 
 {%- endmacro %}
 

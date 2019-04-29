@@ -1,0 +1,15 @@
+{% macro Descriptor() -%}
+
+title: Descriptor
+type: object
+x-calm-dsl-type: app_descriptor
+
+{%- endmacro -%}
+
+
+{% macro DescriptorSchema() -%}
+
+Descriptor:
+  {{ Descriptor()|indent(2) }}
+
+{%- endmacro %}

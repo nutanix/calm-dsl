@@ -20,24 +20,32 @@ def _validate(vdict, name, value):
 
         except TypeError:
 
-            # Check if value is a variable
+            # Check if value is a variable/action
             types = EntityTypeBase.get_entity_types()
             VariableType = types.get("Variable", None)
             if not VariableType:
                 raise TypeError("Variable type not defined")
-            if not isinstance(value, VariableType):
+            DescriptorType = types.get("Descriptor", None)
+            if not DescriptorType:
+                raise TypeError("Descriptor type not defined")
+            if not (
+                isinstance(value, (VariableType,))
+                or isinstance(type(value), DescriptorType)
+            ):
                 raise
 
-            # Validate and set variable
+            # Validate and set variable/action
+            # get validator for variables/action
+            if isinstance(value, VariableType):
+                ValidatorType, _ = vdict["variables"]
+                # Set name attribute in variable
+                # TODO - use __set__, __get__ interfaces for descriptors
+                # TODO - Avoid recursion. caller class should not be a VariableType
+                setattr(value, "name", name)
 
-            # get validator for variables
-            ValidatorType, _ = vdict["variables"]
+            elif isinstance(type(value), DescriptorType):
+                ValidatorType = None
             is_array = False
-
-            # Set name attribute in variable
-            # TODO - use __set__, __get__ interfaces for descriptors
-            # TODO - Avoid recursion. caller class should not be a VariableType
-            setattr(value, "name", name)
 
         if ValidatorType is not None:
             ValidatorType.validate(value, is_array)
@@ -164,7 +172,7 @@ class EntityType(EntityTypeBase):
         user_attrs = {}
         for name, value in cls.__dict__.items():
             if not (name.startswith("__") and name.endswith("__")):
-                user_attrs[name] = value
+                user_attrs[name] = getattr(cls, name, value)
 
         return user_attrs
 
@@ -183,19 +191,31 @@ class EntityType(EntityTypeBase):
             return
 
         vdict = getattr(mcls, "__validator_dict__")
-        if "variables" not in vdict:
+        if "variables" not in vdict and "actions" not in vdict:
             return
 
         # Get a copy of given variables
         attrs["variables"] = list(attrs.get("variables", []))
 
+        types = EntityTypeBase.get_entity_types()
+        ActionType = types.get("Action", None)
+        VariableType = types.get("Variable", None)
+
         # Update list of variables with given class-level variables
         del_keys = []
-        for k, v in attrs.items():
-            if k not in vdict:
-                # ToDo - Check again if it is a variable
-                attrs["variables"].append(v)
-                del_keys.append(k)
+        for key, value in attrs.items():
+            if key not in vdict:
+                if isinstance(value, ActionType):
+                    attr_name = "actions"
+                elif isinstance(value, VariableType):
+                    attr_name = "variables"
+                else:
+                    raise TypeError(
+                        "Field {} has value of type {} ".format(key, type(value))
+                        + "but it is not handled for this entity"
+                    )
+                attrs[attr_name].append(value)
+                del_keys.append(key)
 
         # Delete attrs
         for k in del_keys:
@@ -278,6 +298,19 @@ class EntityType(EntityTypeBase):
 
         yaml.indent(mapping=2, sequence=4, offset=2)
         yaml.dump(cls, stream=stream)
+
+    def get_ref(cls):
+        types = EntityTypeBase.get_entity_types()
+        ref = types.get("Ref")
+        if not ref:
+            return
+        name = getattr(ref, "__schema_name__")
+        bases = (Entity,)
+        if ref:
+            attrs = {}
+            attrs["name"] = str(cls)
+            attrs["kind"] = getattr(cls, "__kind__")
+        return ref(name, bases, attrs)
 
 
 class Entity(metaclass=EntityType):

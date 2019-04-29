@@ -31,6 +31,9 @@ class SubstrateType(EntityType):
 
         return cdict
 
+    def get_task_target(cls):
+        return cls.get_ref()
+
 
 class SubstrateValidator(PropertyValidator, openapi_type="app_substrate"):
     __default__ = None

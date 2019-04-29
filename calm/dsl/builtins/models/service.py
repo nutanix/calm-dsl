@@ -9,6 +9,9 @@ class ServiceType(EntityType):
     __schema_name__ = "Service"
     __openapi_type__ = "app_service"
 
+    def get_task_target(cls):
+        return cls.get_ref()
+
 
 class ServiceValidator(PropertyValidator, openapi_type="app_service"):
     __default__ = None

@@ -16,7 +16,11 @@ properties:
     type: array
     items:
       $ref: '#/components/schemas/Variable'
-
+  action_list:
+    x-calm-dsl-display-name: actions
+    type: array
+    items:
+      $ref: '#/components/schemas/Action'
 {%- endmacro %}
 
 
