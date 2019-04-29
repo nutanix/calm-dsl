@@ -29,7 +29,15 @@ def _validate(vdict, name, value):
             if not ActionType:
                 raise TypeError("Action type not defined")
             if not isinstance(value, (VariableType, ActionType)):
-                raise
+
+                # TODO: Make this cleaner.
+                # We can't validate this until the class has been generated.
+                from .action import action
+
+                if isinstance(value, action):
+                    ValidatorType = None
+                else:
+                    raise
 
             # Validate and set variable/action
             # get validator for variables/action
@@ -176,7 +184,7 @@ class EntityType(EntityTypeBase):
         user_attrs = {}
         for name, value in cls.__dict__.items():
             if not (name.startswith("__") and name.endswith("__")):
-                user_attrs[name] = value
+                user_attrs[name] = getattr(cls, name, value)
 
         return user_attrs
 
@@ -195,7 +203,7 @@ class EntityType(EntityTypeBase):
             return
 
         vdict = getattr(mcls, "__validator_dict__")
-        if "variables" not in vdict:
+        if "variables" not in vdict and "actions" not in vdict:
             return
 
         # Get a copy of given variables
@@ -209,6 +217,10 @@ class EntityType(EntityTypeBase):
         del_keys = []
         for key, value in attrs.items():
             if key not in vdict:
+                from .action import action
+
+                if isinstance(value, action):
+                    continue
                 if isinstance(value, ActionType):
                     attr_name = "actions"
                 elif isinstance(value, VariableType):

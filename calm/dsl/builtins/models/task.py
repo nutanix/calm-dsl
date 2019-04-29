@@ -41,6 +41,8 @@ def create_call_rb(runbook, target=None, name=None):
         "attrs": {"runbook_reference": runbook.get_ref()},
     }
     if target is not None:
+        if isinstance(target, EntityType):
+            target = target.get_ref()
         kwargs["target_any_local_reference"] = target
 
     return _task_create(**kwargs)
@@ -65,6 +67,8 @@ def exec_ssh(script, name=None, target=None):
     if name is not None:
         kwargs["name"] = name
     if target is not None:
+        if isinstance(target, EntityType):
+            target = target.get_ref()
         kwargs["target_any_local_reference"] = target
 
     return _task_create(**kwargs)

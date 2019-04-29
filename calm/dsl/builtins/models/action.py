@@ -48,9 +48,10 @@ def _action_create(**kwargs):
 class GetCallNodes(ast.NodeVisitor):
 
     # TODO: Need to add validations for unsupported nodes.
-    def __init__(self, func_globals):
+    def __init__(self, func_globals, target=None):
         self.tasks = []
         self.variables = {}
+        self.target = target or None
         self._globals = func_globals or {}.copy()
 
     def get_objects(self):
@@ -63,6 +64,8 @@ class GetCallNodes(ast.NodeVisitor):
 
             task = eval(compile(ast.Expression(node), "", "eval"), self._globals)
             if task is not None:
+                if self.target is not None and not task.target_any_local_reference:
+                    task.target_any_local_reference = self.target
                 self.tasks.append(task)
 
     def visit_Assign(self, node):
@@ -83,64 +86,91 @@ class GetCallNodes(ast.NodeVisitor):
             self.variables[variable_name] = variable
 
 
-def action(user_func):
+class action:
     """
-    A decorator for generating actions from a function definition.
-    Args:
-        user_func (function): User defined function
-    Returns:
-        (Action): Action class
+    action descriptor
     """
 
-    # Get the entity names
-    action_name = " ".join(user_func.__name__.lower().split("_")).title()
-    runbook_name = str(uuid.uuid4())[:8] + "_runbook"
-    dag_name = str(uuid.uuid4())[:8] + "_dag"
+    def __init__(self, user_func):
+        """
+        A decorator for generating actions from a function definition.
+        Args:
+            user_func (function): User defined function
+        Returns:
+            (Action): Action class
+        """
 
-    # Get the source code for the user function.
-    # Also replace tabs with 4 spaces.
-    src = inspect.getsource(user_func).replace("\t", "    ")
+        # Generate the entity names
+        self.action_name = " ".join(user_func.__name__.lower().split("_")).title()
+        self.runbook_name = str(uuid.uuid4())[:8] + "_runbook"
+        self.dag_name = str(uuid.uuid4())[:8] + "_dag"
+        self.user_func = user_func
+        self.user_runbook = runbook_create(**{"name": self.runbook_name})
+        self.__parsed__ = False
 
-    # Get the indent since this decorator is used within class definition
-    # For this we split the code on newline and count the number of spaces
-    # before the @action decorator.
-    # src = "    @action\n    def action1():\n    exec_ssh("Hello World")"
-    # The indentation here would be 4.
-    padding = src.split("\n")[0].rstrip(" ").split(" ").count("")
+    def __call__(self, name=None):
+        return create_call_rb(self.user_runbook, name=name)
 
-    # This recreates the source code without the indentation and the
-    # decorator.
-    new_src = "\n".join(line[padding:] for line in src.split("\n")[1:])
+    def __get__(self, instance, cls):
+        """
+        Translate the user defined function to an action.
+        Args:
+            instance (object): Instance of cls
+            cls (Entity): Entity that this action is defined on
+        Returns:
+            (ActionType): Generated Action class
+        """
+        if cls is None:
+            return self
 
-    # Get all the child tasks by parsing the source code and visiting the
-    # ast.Call nodes. ast.Assign nodes become variables.
-    node = ast.parse(new_src)
-    node_visitor = GetCallNodes(user_func.__globals__)
-    node_visitor.visit(node)
-    tasks, variables = node_visitor.get_objects()
+        if self.__parsed__:
+            return self.user_action
 
-    # First create the dag
-    edges = [(frm.get_ref(), to.get_ref()) for frm, to in zip(tasks, tasks[1:])]
-    user_dag = dag(name=dag_name, child_tasks=tasks, edges=edges)
+        # Get the source code for the user function.
+        # Also replace tabs with 4 spaces.
+        src = inspect.getsource(self.user_func).replace("\t", "    ")
 
-    # Next, create the RB
-    user_runbook = runbook_create(
-        **{
-            "main_task_local_reference": user_dag.get_ref(),
-            "tasks": [user_dag] + tasks,
-            "name": runbook_name,
-            "variables": variables.values(),
-        }
-    )
+        # Get the indent since this decorator is used within class definition
+        # For this we split the code on newline and count the number of spaces
+        # before the @action decorator.
+        # src = "    @action\n    def action1():\n    exec_ssh("Hello World")"
+        # The indentation here would be 4.
+        padding = src.split("\n")[0].rstrip(" ").split(" ").count("")
 
-    # Finally the action
-    user_action = _action_create(
-        **{
-            "name": action_name,
-            "critical": False,
-            "type": "user",
-            "runbook": user_runbook,
-        }
-    )
+        # This recreates the source code without the indentation and the
+        # decorator.
+        new_src = "\n".join(line[padding:] for line in src.split("\n")[1:])
 
-    return user_action
+        # Get all the child tasks by parsing the source code and visiting the
+        # ast.Call nodes. ast.Assign nodes become variables.
+        node = ast.parse(new_src)
+        func_globals = self.user_func.__globals__.copy()
+        func_globals["cls"] = cls
+        node_visitor = GetCallNodes(func_globals, target=cls.get_task_target())
+        node_visitor.visit(node)
+        tasks, variables = node_visitor.get_objects()
+        edges = [(frm.get_ref(), to.get_ref()) for frm, to in zip(tasks, tasks[1:])]
+
+        # First create the dag
+        self.user_dag = dag(
+            name=self.dag_name, child_tasks=tasks, edges=edges, target=cls.get_ref()
+        )
+
+        # Modify the user runbook
+        self.user_runbook.main_task_local_reference = self.user_dag.get_ref()
+        self.user_runbook.tasks = [self.user_dag] + tasks
+        self.user_runbook.variables = [variable for variable in variables.values()]
+
+        # Finally create the action
+        self.user_action = _action_create(
+            **{
+                "name": self.action_name,
+                "critical": False,
+                "type": "user",
+                "runbook": self.user_runbook,
+            }
+        )
+
+        self.__parsed__ = True
+
+        return self.user_action
