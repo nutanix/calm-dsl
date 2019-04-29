@@ -3,6 +3,7 @@ import inspect
 import uuid
 
 from .entity import EntityType, Entity
+from .descriptor import DescriptorType
 from .validator import PropertyValidator
 from .task import dag, create_call_rb
 from .runbook import runbook_create
@@ -86,7 +87,7 @@ class GetCallNodes(ast.NodeVisitor):
             self.variables[variable_name] = variable
 
 
-class action:
+class action(metaclass=DescriptorType):
     """
     action descriptor
     """

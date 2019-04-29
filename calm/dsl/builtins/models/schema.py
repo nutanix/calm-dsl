@@ -50,7 +50,10 @@ def get_schema(name):
 def get_schema_props(name):
     schema = get_schema(name)
     schema_props = schema.get("properties", None)
-    if not schema_props:
+    schema_type = schema.get("x-calm-dsl-type", None)
+    if schema_type == "app_descriptor":
+        schema_props = {}
+    elif not schema_props:
         raise TypeError("Invalid schema name {} given".format(name))
 
     return schema_props

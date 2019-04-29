@@ -28,16 +28,20 @@ def _validate(vdict, name, value):
             ActionType = types.get("Action", None)
             if not ActionType:
                 raise TypeError("Action type not defined")
-            if not isinstance(value, (VariableType, ActionType)):
+            DescriptorType = types.get("Descriptor", None)
+            if not DescriptorType:
+                import ipdb
 
-                # TODO: Make this cleaner.
-                # We can't validate this until the class has been generated.
-                from .action import action
+                ipdb.set_trace()
+                raise TypeError("Descriptor type not defined")
+            if not (
+                isinstance(value, (VariableType, ActionType))
+                or isinstance(type(value), DescriptorType)
+            ):
+                import ipdb
 
-                if isinstance(value, action):
-                    ValidatorType = None
-                else:
-                    raise
+                ipdb.set_trace()
+                raise
 
             # Validate and set variable/action
             # get validator for variables/action
@@ -50,6 +54,8 @@ def _validate(vdict, name, value):
 
             elif isinstance(value, ActionType):
                 ValidatorType, _ = vdict["actions"]
+            elif isinstance(type(value), DescriptorType):
+                ValidatorType = None
             is_array = False
 
         if ValidatorType is not None:

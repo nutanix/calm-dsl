@@ -5,6 +5,7 @@
 {% import "profile.yaml.jinja2" as profile %}
 {% import "blueprint.yaml.jinja2" as blueprint %}
 {% import "ref.yaml.jinja2" as ref %}
+{% import "descriptor.yaml.jinja2" as descriptor %}
 {% import "variable.yaml.jinja2" as variable %}
 {% import "package.yaml.jinja2" as package %}
 {% import "credential.yaml.jinja2" as credential %}
@@ -21,6 +22,7 @@
 {{ profile.ProfileSchema() }}
 {{ blueprint.BlueprintSchema() }}
 {{ ref.RefSchema() }}
+{{ descriptor.DescriptorSchema() }}
 {{ variable.VariableSchema() }}
 {{ package.PackageSchema() }}
 {{ credential.CredentialSchema() }}
