@@ -97,6 +97,9 @@ venv.bak/
 # Rope project settings
 .ropeproject
 
+# VS Code settings
+.vscode
+
 # mkdocs documentation
 /site
 
@@ -114,3 +117,6 @@ venv.bak/
 
 # CLI config file
 config.ini
+
+# jupyter extension, until we need it
+calm_nb_ext/
