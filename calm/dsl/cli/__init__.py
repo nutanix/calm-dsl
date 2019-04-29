@@ -388,7 +388,7 @@ def run_actions(action_name, app_name, client):
     action = next(
         action
         for action in app_spec["resources"]["action_list"]
-        if action["name"] == calm_action_name
+        if action["name"] == calm_action_name or action["name"] == action_name
     )
     if not action:
         raise Exception("No action found matching name {}".format(action_name))
