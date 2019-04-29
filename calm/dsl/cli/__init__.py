@@ -2,11 +2,13 @@
 
 Usage:
   calm get bps [<names> ...]
-  calm describe bp <name> [--json|--yaml]
+  calm describe bp <name> [--json | --yaml]
   calm upload bp <name>
   calm launch bp <name>
   calm get apps [<names> ...]
-  calm <action> app <app_name>
+  calm <action> app <app_name> [--track]
+  calm track --action <runlog_uuid> --app <app_name>
+  calm track --app <app_name>
   calm config [--server <ip:port>] [--username <username>] [--password <password>]
   calm (-h | --help)
   calm (-v | --version)
@@ -30,6 +32,7 @@ from docopt import docopt
 from pprint import pprint
 from calm.dsl.utils.server_utils import get_api_client as _get_api_client, ping
 from prettytable import PrettyTable
+from .constants import RUNLOG
 
 
 urllib3.disable_warnings()
@@ -98,7 +101,14 @@ def main():
     if arguments["get"] and arguments["apps"]:
         get_app_list(arguments["<names>"], client)
     if arguments["<action>"] and arguments["<app_name>"]:
-        run_actions(arguments["<action>"], arguments["<app_name>"], client)
+        run_actions(
+            arguments["<action>"], arguments["<app_name>"], client, arguments["--track"]
+        )
+    if arguments["track"]:
+        if arguments["--action"]:
+            track_action(arguments["<runlog_uuid>"], arguments["<app_name>"], client)
+        else:
+            track_app(arguments["<app_name>"], client)
 
 
 def get_name_query(names):
@@ -303,7 +313,6 @@ def launch_blueprint(blueprint_name, client):
     res, err = client.full_launch(blueprint_id, launch_payload)
     if not err:
         print(">> {} queued for launch >>".format(blueprint_name))
-        print(json.dumps(res.json(), indent=4, separators=(",", ": ")))
     else:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
     response = res.json()
@@ -330,7 +339,7 @@ def launch_blueprint(blueprint_name, client):
         time.sleep(10)
 
 
-def run_actions(action_name, app_name, client):
+def _get_app(app_name, client):
     global PC_IP
     assert ping(PC_IP) is True
 
@@ -360,7 +369,13 @@ def run_actions(action_name, app_name, client):
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
     app = res.json()
+    return app
+
+
+def run_actions(action_name, app_name, client, track=False):
+    app = _get_app(app_name, client)
     app_spec = app["spec"]
+    app_id = app["metadata"]["uuid"]
 
     # 3. Get action uuid from action name
     if action_name.lower() == "delete":
@@ -421,7 +436,8 @@ def run_actions(action_name, app_name, client):
             return (True, "{} action complete".format(action_name.upper()))
         return (False, "")
 
-    poll_action(poll_func, is_action_complete)
+    if track:
+        poll_action(poll_func, is_action_complete)
 
 
 def poll_action(poll_func, completion_func):
@@ -430,7 +446,6 @@ def poll_action(poll_func, completion_func):
     count = 0
     while count < maxWait:
         # call status api
-        print("Polling status of action")
         res, err = poll_func()
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -441,6 +456,54 @@ def poll_action(poll_func, completion_func):
             break
         count += 10
         time.sleep(10)
+
+
+def track_action(runlog_id, app_name, client):
+    app = _get_app(app_name, client)
+    app_id = app["metadata"]["uuid"]
+
+    url = client.APP_ITEM.format(app_id) + "/app_runlogs/list"
+    payload = {"filter": "root_reference=={}".format(runlog_id)}
+
+    def poll_func():
+        print("Polling action status...")
+        return client.poll_action_run(url, payload)
+
+    def is_action_complete(response):
+        if len(response["entities"]):
+            for action in response["entities"]:
+                state = action["status"]["state"]
+                if state in RUNLOG.FAILURE_STATES:
+                    return (True, "Action failed")
+                if state not in RUNLOG.TERMINAL_STATES:
+                    return (False, "")
+            return (True, "Action ran successfully")
+        return (False, "")
+
+    poll_action(poll_func, is_action_complete)
+
+
+def track_app(app_name, client):
+    app = _get_app(app_name, client)
+    app_id = app["metadata"]["uuid"]
+
+    def poll_func():
+        print("Polling app status...")
+        return client.get_app(app_id)
+
+    def is_complete(response):
+        state = response["status"]["state"]
+        print("App state:", state)
+        is_terminal = state in ["running", "deleted"]
+        deleted = state == "deleted"
+        msg = (
+            "Successfully deleted app {}".format(app_name)
+            if deleted
+            else "App {} is now provisioned".format(app_name)
+        )
+        return (is_terminal, msg)
+
+    poll_action(poll_func, is_complete)
 
 
 if __name__ == "__main__":

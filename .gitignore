@@ -106,5 +106,11 @@ venv.bak/
 # emacs stuff
 *~
 
+# vs code configs
+.vscode
+
 # jupyter notebook stuff
 *.ipynb
+
+# CLI config file
+config.ini
