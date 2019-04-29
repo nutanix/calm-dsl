@@ -14,7 +14,7 @@ class TaskType(EntityType):
 
     def compile(cls):
         cdict = super().compile()
-        if cdict.get("target_any_local_reference", None) or None is None:
+        if (cdict.get("target_any_local_reference", None) or None) is None:
             cdict.pop("target_any_local_reference", None)
         return cdict
 
