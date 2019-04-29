@@ -30,17 +30,11 @@ def _validate(vdict, name, value):
                 raise TypeError("Action type not defined")
             DescriptorType = types.get("Descriptor", None)
             if not DescriptorType:
-                import ipdb
-
-                ipdb.set_trace()
                 raise TypeError("Descriptor type not defined")
             if not (
                 isinstance(value, (VariableType, ActionType))
                 or isinstance(type(value), DescriptorType)
             ):
-                import ipdb
-
-                ipdb.set_trace()
                 raise
 
             # Validate and set variable/action
