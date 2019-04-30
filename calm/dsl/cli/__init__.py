@@ -3,13 +3,14 @@
 Usage:
   calm get bps [<names> ...]
   calm describe bp <name> [--json | --yaml]
-  calm upload bp <name>
+  calm create bp --file=<bp_file> [--launch]
   calm launch bp <name>
   calm get apps [<names> ...]
-  calm <action> app <app_name> [--track]
-  calm track --action <runlog_uuid> --app <app_name>
-  calm track --app <app_name>
-  calm config [--server <ip:port>] [--username <username>] [--password <password>]
+  calm <action> app <app_name> [--watch]
+  calm watch --action <runlog_uuid> --app <app_name>
+  calm watch --app <app_name>
+  calm set config [--server <ip:port>] [--username <username>] [--password <password>]
+  calm get config
   calm (-h | --help)
   calm (-v | --version)
 
@@ -21,7 +22,6 @@ Options:
   -p --password password     Prism Central password
 """
 import os
-import json
 import time
 import warnings
 import configparser
@@ -65,6 +65,7 @@ def main():
 
     config = configparser.ConfigParser()
     config.read(file_path)
+
     if "SERVER" in config:
         PC_IP = config["SERVER"]["pc_ip"]
         PC_PORT = config["SERVER"]["pc_port"]
@@ -81,6 +82,8 @@ def main():
         if arguments["--password"]:
             PC_PASSWORD = arguments["--password"]
 
+    if arguments["config"] or "SERVER" not in config:
+        # Save to config file if explicitly set, or no config file found
         config["SERVER"] = {
             "pc_ip": PC_IP,
             "pc_port": PC_PORT,
@@ -94,21 +97,21 @@ def main():
 
     if arguments["get"] and arguments["bps"]:
         get_blueprint_list(arguments["<names>"], client)
-    if arguments["launch"] and arguments["bp"]:
+    elif arguments["launch"] and arguments["bp"]:
         launch_blueprint(arguments["<name>"], client)
-    if arguments["upload"] and arguments["bp"]:
-        upload_blueprint(arguments["<name>"], client)
-    if arguments["get"] and arguments["apps"]:
-        get_app_list(arguments["<names>"], client)
-    if arguments["<action>"] and arguments["<app_name>"]:
+    elif arguments["create"] and arguments["bp"]:
+        upload_blueprint(arguments["--file"], client, arguments["--launch"])
+    elif arguments["get"] and arguments["apps"]:
+        get_apps(arguments["<names>"], client)
+    elif arguments["<action>"] and arguments["<app_name>"]:
         run_actions(
-            arguments["<action>"], arguments["<app_name>"], client, arguments["--track"]
+            arguments["<action>"], arguments["<app_name>"], client, arguments["--watch"]
         )
-    if arguments["track"]:
+    elif arguments["watch"]:
         if arguments["--action"]:
-            track_action(arguments["<runlog_uuid>"], arguments["<app_name>"], client)
+            watch_action(arguments["<runlog_uuid>"], arguments["<app_name>"], client)
         else:
-            track_app(arguments["<app_name>"], client)
+            watch_app(arguments["<app_name>"], client)
 
 
 def get_name_query(names):
@@ -171,7 +174,7 @@ def get_blueprint_list(names, client):
         warnings.warn(UserWarning("Cannot fetch blueprints from {}".format(PC_IP)))
 
 
-def get_app_list(names, client):
+def get_apps(names, client):
     global PC_IP
     assert ping(PC_IP) is True
 
@@ -211,7 +214,7 @@ def get_app_list(names, client):
         warnings.warn(UserWarning("Cannot fetch applications from {}".format(PC_IP)))
 
 
-def upload_blueprint(name_with_class, client):
+def upload_blueprint(name_with_class, client, launch=False):
     global PC_IP
     assert ping(PC_IP) is True
 
@@ -247,8 +250,8 @@ def upload_blueprint(name_with_class, client):
     # upload
     res, err = client.upload_with_secrets(Blueprint)
     if not err:
-        print(">> {} uploaded with creds >>".format(Blueprint))
-        print(json.dumps(res.json(), indent=4, separators=(",", ": ")))
+        print(">> {} uploaded with credentials >>".format(Blueprint))
+        # print(json.dumps(res.json(), indent=4, separators=(",", ": ")))
         assert res.ok is True
     else:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -258,8 +261,11 @@ def upload_blueprint(name_with_class, client):
     print(">> Blueprint state: {}".format(bp_state))
     assert bp_state == "ACTIVE"
 
+    if launch:
+        launch_blueprint(Blueprint, client, bp)
 
-def launch_blueprint(blueprint_name, client):
+
+def get_blueprint(blueprint_name, client):
     global PC_IP
     assert ping(PC_IP) is True
 
@@ -283,6 +289,12 @@ def launch_blueprint(blueprint_name, client):
         raise Exception(
             ">> No blueprint found with name {} found >>".format(blueprint_name)
         )
+    return blueprint
+
+
+def launch_blueprint(blueprint_name, client, blueprint=None):
+    if not blueprint:
+        blueprint = get_blueprint(blueprint_name, client)
 
     blueprint_id = blueprint["metadata"]["uuid"]
     print(">> Fetching blueprint details")
@@ -332,6 +344,14 @@ def launch_blueprint(blueprint_name, client):
             # Can't give app url, as deep routing within PC doesn't work.
             # Hence just giving the app id.
             print("Successfully launched. App uuid is: {}".format(app_uuid))
+            print(
+                "App url: https://{}:{}/console/#page/explore/calm/applications/{}".format(
+                    PC_IP, PC_PORT, app_uuid
+                )
+            )
+            break
+        elif response["status"]["state"] == "failure":
+            print("Failed to launch blueprint. Check API response above.")
             break
         elif err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -372,7 +392,7 @@ def _get_app(app_name, client):
     return app
 
 
-def run_actions(action_name, app_name, client, track=False):
+def run_actions(action_name, app_name, client, watch=False):
     app = _get_app(app_name, client)
     app_spec = app["spec"]
     app_id = app["metadata"]["uuid"]
@@ -436,7 +456,7 @@ def run_actions(action_name, app_name, client, track=False):
             return (True, "{} action complete".format(action_name.upper()))
         return (False, "")
 
-    if track:
+    if watch:
         poll_action(poll_func, is_action_complete)
 
 
@@ -458,7 +478,7 @@ def poll_action(poll_func, completion_func):
         time.sleep(10)
 
 
-def track_action(runlog_id, app_name, client):
+def watch_action(runlog_id, app_name, client):
     app = _get_app(app_name, client)
     app_id = app["metadata"]["uuid"]
 
@@ -483,7 +503,7 @@ def track_action(runlog_id, app_name, client):
     poll_action(poll_func, is_action_complete)
 
 
-def track_app(app_name, client):
+def watch_app(app_name, client):
     app = _get_app(app_name, client)
     app_id = app["metadata"]["uuid"]
 
