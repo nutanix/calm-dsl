@@ -4,7 +4,7 @@ import json
 from json import JSONEncoder, JSONDecoder
 import sys
 
-from ruamel.yaml import YAML, resolver
+from ruamel.yaml import YAML, resolver, SafeRepresenter
 
 from .schema import get_schema_details
 
@@ -294,7 +294,14 @@ class EntityType(EntityTypeBase):
 
     def yaml_dump(cls, stream=sys.stdout):
 
-        yaml = YAML()
+        class MyRepresenter(SafeRepresenter):
+            def ignore_aliases(self, data):
+                return True
+
+        yaml = YAML(typ='safe')
+        yaml.default_flow_style = False
+        yaml.Representer = MyRepresenter
+
         types = EntityTypeBase.get_entity_types()
 
         for _, t in types.items():
