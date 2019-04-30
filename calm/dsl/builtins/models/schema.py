@@ -1,6 +1,7 @@
 """ Schema should be according to OpenAPI 3 format with x-calm-dsl-type extension"""
 
 import json
+from copy import deepcopy
 from io import StringIO
 
 from ruamel import yaml
@@ -99,7 +100,16 @@ def get_validator_details(schema_props, name):
         raise TypeError("Type {} not supported".format(type_))
 
     # Get default from schema if given, else set default from validator type
-    default = props.get("default", ValidatorType.get_default(is_array))
+    class NotDefined:
+        pass
+
+    default = None
+    schema_default = props.get("default", NotDefined)
+    if schema_default is NotDefined:
+        class_default = ValidatorType.get_default(is_array)
+        default = class_default
+    else:
+        default = lambda: deepcopy(schema_default)  # noqa: E731
 
     return ValidatorType, is_array, default
 

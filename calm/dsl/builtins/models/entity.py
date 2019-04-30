@@ -179,12 +179,14 @@ class EntityType(EntityTypeBase):
 
     @classmethod
     def get_default_attrs(mcls):
-        default_attrs = {}
-        if hasattr(mcls, "__default_attrs__"):
-            default_attrs = getattr(mcls, "__default_attrs__")
+        ret = {}
+        default_attrs = getattr(mcls, "__default_attrs__", {}) or {}
+
+        for key, value in default_attrs.items():
+            ret[key] = value()
 
         # return a deepcopy, this dict or it's contents should NEVER be modified
-        return default_attrs.copy()
+        return ret
 
     @classmethod
     def update_attrs(mcls, attrs):

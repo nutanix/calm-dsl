@@ -1,3 +1,6 @@
+from copy import deepcopy
+
+
 class _PropertyValidatorBase:
     subclasses = {}
 
@@ -19,9 +22,19 @@ class PropertyValidator(_PropertyValidatorBase, openapi_type=None):
     __default__ = None
     __kind__ = None
 
+    # @classmethod
+    # def get_default(cls, is_array):
+    #     return cls.__default__ if not is_array else []
+
     @classmethod
     def get_default(cls, is_array):
-        return cls.__default__ if not is_array else []
+        default = None
+        class_default = cls.__default__
+        if not callable(class_default):
+            default = lambda: deepcopy(class_default)  # noqa: E731
+        else:
+            default = class_default
+        return default if not is_array else list
 
     @classmethod
     def get_kind(cls):
@@ -125,23 +138,23 @@ class PropertyValidator(_PropertyValidatorBase, openapi_type=None):
 
 class StringValidator(PropertyValidator, openapi_type="string"):
 
-    __default__ = ""
+    __default__ = str
     __kind__ = str
 
 
 class IntValidator(PropertyValidator, openapi_type="integer"):
 
-    __default__ = 0
+    __default__ = int
     __kind__ = int
 
 
 class BoolValidator(PropertyValidator, openapi_type="boolean"):
 
-    __default__ = False
+    __default__ = bool
     __kind__ = bool
 
 
 class DictValidator(PropertyValidator, openapi_type="dict"):
 
-    __default__ = {}
+    __default__ = dict
     __kind__ = dict
