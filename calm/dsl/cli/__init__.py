@@ -1,11 +1,11 @@
 """Calm CLI
 
 Usage:
-  calm get bps [<names> ...]
+  calm get bps [--filter=<name>...]
   calm describe bp <name> [--json | --yaml]
   calm create bp --file=<bp_file> [--launch]
   calm launch bp <name>
-  calm get apps [<names> ...]
+  calm get apps [--filter=<name>...]
   calm <action> app <app_name> [--watch]
   calm watch --action <runlog_uuid> --app <app_name>
   calm watch --app <app_name>
@@ -96,13 +96,13 @@ def main():
     client = get_api_client(PC_IP, PC_PORT, PC_USERNAME, PC_PASSWORD)
 
     if arguments["get"] and arguments["bps"]:
-        get_blueprint_list(arguments["<names>"], client)
+        get_blueprint_list(arguments["--filter"], client)
     elif arguments["launch"] and arguments["bp"]:
         launch_blueprint(arguments["<name>"], client)
     elif arguments["create"] and arguments["bp"]:
         upload_blueprint(arguments["--file"], client, arguments["--launch"])
     elif arguments["get"] and arguments["apps"]:
-        get_apps(arguments["<names>"], client)
+        get_apps(arguments["--filter"], client)
     elif arguments["<action>"] and arguments["<app_name>"]:
         run_actions(
             arguments["<action>"], arguments["<app_name>"], client, arguments["--watch"]
@@ -156,7 +156,8 @@ def get_blueprint_list(names, client):
                 and metadata["categories"]["TemplateType"] == "Vm"
                 else "Multi VM/Pod"
             )
-            project = metadata["project_reference"]["name"]
+
+            project = metadata["project_reference"]["name"] if "project_reference" in metadata else None
             table.add_row(
                 [
                     row["name"],
