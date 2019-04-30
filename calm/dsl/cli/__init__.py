@@ -38,10 +38,10 @@ from .constants import RUNLOG
 urllib3.disable_warnings()
 
 # Defaults to be used if no config file exists.
-PC_IP = "10.51.152.102"
+PC_IP = "35.198.250.100"
 PC_PORT = 9440
 PC_USERNAME = "admin"
-PC_PASSWORD = "***REMOVED***"
+PC_PASSWORD = "RO*WQrGLI17LK"
 
 LOCAL_CONFIG_PATH = "config.ini"
 GLOBAL_CONFIG_PATH = "~/.calm/config"
@@ -313,7 +313,7 @@ def launch_blueprint(blueprint_name, client, blueprint=None):
         "api_version": "3.0",
         "metadata": blueprint["metadata"],
         "spec": {
-            "application_name": "ExistingVMApp-{}".format(int(time.time())),
+            "application_name": "NextDemoApp-{}".format(int(time.time())),
             "app_profile_reference": {
                 "kind": "app_profile",
                 "name": "{}".format(
