@@ -296,12 +296,11 @@ class EntityType(EntityTypeBase):
         return json.loads(data, cls=EntityJSONDecoder)
 
     def yaml_dump(cls, stream=sys.stdout):
-
         class MyRepresenter(SafeRepresenter):
             def ignore_aliases(self, data):
                 return True
 
-        yaml = YAML(typ='safe')
+        yaml = YAML(typ="safe")
         yaml.default_flow_style = False
         yaml.Representer = MyRepresenter
 
