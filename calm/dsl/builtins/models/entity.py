@@ -1,8 +1,8 @@
 from collections import OrderedDict
-from copy import deepcopy
 import json
 from json import JSONEncoder, JSONDecoder
 import sys
+from types import MappingProxyType
 
 from ruamel.yaml import YAML, resolver, SafeRepresenter
 
@@ -95,17 +95,17 @@ class EntityTypeBase(type):
         # Set validator dict on metaclass for each prop.
         # To be used during __setattr__() to validate props.
         # Look at validate() for details.
-        setattr(cls, "__validator_dict__", validators)
+        setattr(cls, "__validator_dict__", MappingProxyType(validators))
 
         # Set defaults which will be used during serialization.
         # Look at json_dumps() for details
-        setattr(cls, "__default_attrs__", defaults)
+        setattr(cls, "__default_attrs__", MappingProxyType(defaults))
 
         # Attach schema properties to metaclass
-        setattr(cls, "__schema_props__", schema_props)
+        setattr(cls, "__schema_props__", MappingProxyType(schema_props))
 
         # Attach display map for compile/decompile
-        setattr(cls, "__display_map__", display_map)
+        setattr(cls, "__display_map__", MappingProxyType(display_map))
 
 
 class EntityType(EntityTypeBase):
@@ -184,7 +184,7 @@ class EntityType(EntityTypeBase):
             default_attrs = getattr(mcls, "__default_attrs__")
 
         # return a deepcopy, this dict or it's contents should NEVER be modified
-        return deepcopy(default_attrs)
+        return default_attrs.copy()
 
     @classmethod
     def update_attrs(mcls, attrs):
