@@ -196,6 +196,8 @@ class EntityType(EntityTypeBase):
 
         # Get a copy of given variables
         attrs["variables"] = list(attrs.get("variables", []))
+        if "actions" in vdict:
+            attrs["actions"] = list(attrs.get("actions", []))
 
         types = EntityTypeBase.get_entity_types()
         ActionType = types.get("Action", None)
