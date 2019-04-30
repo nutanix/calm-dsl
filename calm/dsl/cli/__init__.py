@@ -157,7 +157,11 @@ def get_blueprint_list(names, client):
                 else "Multi VM/Pod"
             )
 
-            project = metadata["project_reference"]["name"] if "project_reference" in metadata else None
+            project = (
+                metadata["project_reference"]["name"]
+                if "project_reference" in metadata
+                else None
+            )
             table.add_row(
                 [
                     row["name"],
