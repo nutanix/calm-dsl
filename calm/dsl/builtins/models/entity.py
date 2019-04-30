@@ -196,7 +196,10 @@ class EntityType(EntityTypeBase):
         if "variables" not in vdict and "actions" not in vdict:
             return
 
-        # Get a copy of given variables
+        # Variables and actions have [] as defaults.
+        # As this list can be modified/extended here,
+        # make a copy of variables and actions
+        # TODO - Use lambdas for values in default attrs
         attrs["variables"] = list(attrs.get("variables", []))
         if "actions" in vdict:
             attrs["actions"] = list(attrs.get("actions", []))
