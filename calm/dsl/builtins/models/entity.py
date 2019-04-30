@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from copy import deepcopy
 import json
 from json import JSONEncoder, JSONDecoder
 import sys
@@ -182,7 +183,8 @@ class EntityType(EntityTypeBase):
         if hasattr(mcls, "__default_attrs__"):
             default_attrs = getattr(mcls, "__default_attrs__")
 
-        return default_attrs
+        # return a deepcopy, this dict or it's contents should NEVER be modified
+        return deepcopy(default_attrs)
 
     @classmethod
     def update_attrs(mcls, attrs):
