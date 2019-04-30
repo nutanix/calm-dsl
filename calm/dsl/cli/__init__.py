@@ -1,13 +1,16 @@
 """Calm CLI
 
 Usage:
-  calm get bps [<names> ...]
-  calm describe bp <name> [--json|--yaml]
-  calm upload bp <name>
+  calm get bps [--filter=<name>...]
+  calm describe bp <name> [--json | --yaml]
+  calm create bp --file=<bp_file> [--launch]
   calm launch bp <name>
-  calm get apps [<names> ...]
-  calm <action> app <app_name>
-  calm config [--server <ip:port>] [--username <username>] [--password <password>]
+  calm get apps [--filter=<name>...]
+  calm <action> app <app_name> [--watch]
+  calm watch --action <runlog_uuid> --app <app_name>
+  calm watch --app <app_name>
+  calm set config [--server <ip:port>] [--username <username>] [--password <password>]
+  calm get config
   calm (-h | --help)
   calm (-v | --version)
 
@@ -19,7 +22,6 @@ Options:
   -p --password password     Prism Central password
 """
 import os
-import json
 import time
 import warnings
 import configparser
@@ -30,6 +32,7 @@ from docopt import docopt
 from pprint import pprint
 from calm.dsl.utils.server_utils import get_api_client as _get_api_client, ping
 from prettytable import PrettyTable
+from .constants import RUNLOG
 
 
 urllib3.disable_warnings()
@@ -62,6 +65,7 @@ def main():
 
     config = configparser.ConfigParser()
     config.read(file_path)
+
     if "SERVER" in config:
         PC_IP = config["SERVER"]["pc_ip"]
         PC_PORT = config["SERVER"]["pc_port"]
@@ -78,6 +82,8 @@ def main():
         if arguments["--password"]:
             PC_PASSWORD = arguments["--password"]
 
+    if arguments["config"] or "SERVER" not in config:
+        # Save to config file if explicitly set, or no config file found
         config["SERVER"] = {
             "pc_ip": PC_IP,
             "pc_port": PC_PORT,
@@ -90,15 +96,22 @@ def main():
     client = get_api_client(PC_IP, PC_PORT, PC_USERNAME, PC_PASSWORD)
 
     if arguments["get"] and arguments["bps"]:
-        get_blueprint_list(arguments["<names>"], client)
-    if arguments["launch"] and arguments["bp"]:
+        get_blueprint_list(arguments["--filter"], client)
+    elif arguments["launch"] and arguments["bp"]:
         launch_blueprint(arguments["<name>"], client)
-    if arguments["upload"] and arguments["bp"]:
-        upload_blueprint(arguments["<name>"], client)
-    if arguments["get"] and arguments["apps"]:
-        get_app_list(arguments["<names>"], client)
-    if arguments["<action>"] and arguments["<app_name>"]:
-        run_actions(arguments["<action>"], arguments["<app_name>"], client)
+    elif arguments["create"] and arguments["bp"]:
+        upload_blueprint(arguments["--file"], client, arguments["--launch"])
+    elif arguments["get"] and arguments["apps"]:
+        get_apps(arguments["--filter"], client)
+    elif arguments["<action>"] and arguments["<app_name>"]:
+        run_actions(
+            arguments["<action>"], arguments["<app_name>"], client, arguments["--watch"]
+        )
+    elif arguments["watch"]:
+        if arguments["--action"]:
+            watch_action(arguments["<runlog_uuid>"], arguments["<app_name>"], client)
+        else:
+            watch_app(arguments["<app_name>"], client)
 
 
 def get_name_query(names):
@@ -143,7 +156,12 @@ def get_blueprint_list(names, client):
                 and metadata["categories"]["TemplateType"] == "Vm"
                 else "Multi VM/Pod"
             )
-            project = metadata["project_reference"]["name"]
+
+            project = (
+                metadata["project_reference"]["name"]
+                if "project_reference" in metadata
+                else None
+            )
             table.add_row(
                 [
                     row["name"],
@@ -161,7 +179,7 @@ def get_blueprint_list(names, client):
         warnings.warn(UserWarning("Cannot fetch blueprints from {}".format(PC_IP)))
 
 
-def get_app_list(names, client):
+def get_apps(names, client):
     global PC_IP
     assert ping(PC_IP) is True
 
@@ -201,7 +219,7 @@ def get_app_list(names, client):
         warnings.warn(UserWarning("Cannot fetch applications from {}".format(PC_IP)))
 
 
-def upload_blueprint(name_with_class, client):
+def upload_blueprint(name_with_class, client, launch=False):
     global PC_IP
     assert ping(PC_IP) is True
 
@@ -237,8 +255,8 @@ def upload_blueprint(name_with_class, client):
     # upload
     res, err = client.upload_with_secrets(Blueprint)
     if not err:
-        print(">> {} uploaded with creds >>".format(Blueprint))
-        print(json.dumps(res.json(), indent=4, separators=(",", ": ")))
+        print(">> {} uploaded with credentials >>".format(Blueprint))
+        # print(json.dumps(res.json(), indent=4, separators=(",", ": ")))
         assert res.ok is True
     else:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -248,8 +266,11 @@ def upload_blueprint(name_with_class, client):
     print(">> Blueprint state: {}".format(bp_state))
     assert bp_state == "ACTIVE"
 
+    if launch:
+        launch_blueprint(Blueprint, client, bp)
 
-def launch_blueprint(blueprint_name, client):
+
+def get_blueprint(blueprint_name, client):
     global PC_IP
     assert ping(PC_IP) is True
 
@@ -273,6 +294,12 @@ def launch_blueprint(blueprint_name, client):
         raise Exception(
             ">> No blueprint found with name {} found >>".format(blueprint_name)
         )
+    return blueprint
+
+
+def launch_blueprint(blueprint_name, client, blueprint=None):
+    if not blueprint:
+        blueprint = get_blueprint(blueprint_name, client)
 
     blueprint_id = blueprint["metadata"]["uuid"]
     print(">> Fetching blueprint details")
@@ -303,7 +330,6 @@ def launch_blueprint(blueprint_name, client):
     res, err = client.full_launch(blueprint_id, launch_payload)
     if not err:
         print(">> {} queued for launch >>".format(blueprint_name))
-        print(json.dumps(res.json(), indent=4, separators=(",", ": ")))
     else:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
     response = res.json()
@@ -323,6 +349,14 @@ def launch_blueprint(blueprint_name, client):
             # Can't give app url, as deep routing within PC doesn't work.
             # Hence just giving the app id.
             print("Successfully launched. App uuid is: {}".format(app_uuid))
+            print(
+                "App url: https://{}:{}/console/#page/explore/calm/applications/{}".format(
+                    PC_IP, PC_PORT, app_uuid
+                )
+            )
+            break
+        elif response["status"]["state"] == "failure":
+            print("Failed to launch blueprint. Check API response above.")
             break
         elif err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -330,7 +364,7 @@ def launch_blueprint(blueprint_name, client):
         time.sleep(10)
 
 
-def run_actions(action_name, app_name, client):
+def _get_app(app_name, client):
     global PC_IP
     assert ping(PC_IP) is True
 
@@ -360,7 +394,13 @@ def run_actions(action_name, app_name, client):
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
     app = res.json()
+    return app
+
+
+def run_actions(action_name, app_name, client, watch=False):
+    app = _get_app(app_name, client)
     app_spec = app["spec"]
+    app_id = app["metadata"]["uuid"]
 
     # 3. Get action uuid from action name
     if action_name.lower() == "delete":
@@ -421,7 +461,8 @@ def run_actions(action_name, app_name, client):
             return (True, "{} action complete".format(action_name.upper()))
         return (False, "")
 
-    poll_action(poll_func, is_action_complete)
+    if watch:
+        poll_action(poll_func, is_action_complete)
 
 
 def poll_action(poll_func, completion_func):
@@ -430,7 +471,6 @@ def poll_action(poll_func, completion_func):
     count = 0
     while count < maxWait:
         # call status api
-        print("Polling status of action")
         res, err = poll_func()
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -441,6 +481,54 @@ def poll_action(poll_func, completion_func):
             break
         count += 10
         time.sleep(10)
+
+
+def watch_action(runlog_id, app_name, client):
+    app = _get_app(app_name, client)
+    app_id = app["metadata"]["uuid"]
+
+    url = client.APP_ITEM.format(app_id) + "/app_runlogs/list"
+    payload = {"filter": "root_reference=={}".format(runlog_id)}
+
+    def poll_func():
+        print("Polling action status...")
+        return client.poll_action_run(url, payload)
+
+    def is_action_complete(response):
+        if len(response["entities"]):
+            for action in response["entities"]:
+                state = action["status"]["state"]
+                if state in RUNLOG.FAILURE_STATES:
+                    return (True, "Action failed")
+                if state not in RUNLOG.TERMINAL_STATES:
+                    return (False, "")
+            return (True, "Action ran successfully")
+        return (False, "")
+
+    poll_action(poll_func, is_action_complete)
+
+
+def watch_app(app_name, client):
+    app = _get_app(app_name, client)
+    app_id = app["metadata"]["uuid"]
+
+    def poll_func():
+        print("Polling app status...")
+        return client.get_app(app_id)
+
+    def is_complete(response):
+        state = response["status"]["state"]
+        print("App state:", state)
+        is_terminal = state in ["running", "deleted"]
+        deleted = state == "deleted"
+        msg = (
+            "Successfully deleted app {}".format(app_name)
+            if deleted
+            else "App {} is now provisioned".format(app_name)
+        )
+        return (is_terminal, msg)
+
+    poll_action(poll_func, is_complete)
 
 
 if __name__ == "__main__":
