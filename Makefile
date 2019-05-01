@@ -37,7 +37,7 @@ docker: dist gui
 		docker build --rm -t ideadevice/calm-dsl-engine .
 
 black:
-	black --exclude 'venv' .
+	black --exclude '/(\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|venv|_build|buck-out|build|dist)/' .
 
 run:
 	docker run -it -p 8888:8888 ideadevice/calm-dsl-engine

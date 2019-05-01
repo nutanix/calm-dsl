@@ -146,7 +146,6 @@ class action(metaclass=DescriptorType):
         # ast.Call nodes. ast.Assign nodes become variables.
         node = ast.parse(new_src)
         func_globals = self.user_func.__globals__.copy()
-        func_globals["cls"] = cls
         node_visitor = GetCallNodes(func_globals, target=cls.get_task_target())
         node_visitor.visit(node)
         tasks, variables = node_visitor.get_objects()

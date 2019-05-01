@@ -2,8 +2,9 @@ from collections import OrderedDict
 import json
 from json import JSONEncoder, JSONDecoder
 import sys
+from types import MappingProxyType
 
-from ruamel.yaml import YAML, resolver
+from ruamel.yaml import YAML, resolver, SafeRepresenter
 
 from .schema import get_schema_details
 
@@ -94,17 +95,17 @@ class EntityTypeBase(type):
         # Set validator dict on metaclass for each prop.
         # To be used during __setattr__() to validate props.
         # Look at validate() for details.
-        setattr(cls, "__validator_dict__", validators)
+        setattr(cls, "__validator_dict__", MappingProxyType(validators))
 
         # Set defaults which will be used during serialization.
         # Look at json_dumps() for details
-        setattr(cls, "__default_attrs__", defaults)
+        setattr(cls, "__default_attrs__", MappingProxyType(defaults))
 
         # Attach schema properties to metaclass
-        setattr(cls, "__schema_props__", schema_props)
+        setattr(cls, "__schema_props__", MappingProxyType(schema_props))
 
         # Attach display map for compile/decompile
-        setattr(cls, "__display_map__", display_map)
+        setattr(cls, "__display_map__", MappingProxyType(display_map))
 
 
 class EntityType(EntityTypeBase):
@@ -178,11 +179,14 @@ class EntityType(EntityTypeBase):
 
     @classmethod
     def get_default_attrs(mcls):
-        default_attrs = {}
-        if hasattr(mcls, "__default_attrs__"):
-            default_attrs = getattr(mcls, "__default_attrs__")
+        ret = {}
+        default_attrs = getattr(mcls, "__default_attrs__", {}) or {}
 
-        return default_attrs
+        for key, value in default_attrs.items():
+            ret[key] = value()
+
+        # return a deepcopy, this dict or it's contents should NEVER be modified
+        return ret
 
     @classmethod
     def update_attrs(mcls, attrs):
@@ -194,8 +198,13 @@ class EntityType(EntityTypeBase):
         if "variables" not in vdict and "actions" not in vdict:
             return
 
-        # Get a copy of given variables
+        # Variables and actions have [] as defaults.
+        # As this list can be modified/extended here,
+        # make a copy of variables and actions
+        # TODO - Use lambdas for values in default attrs
         attrs["variables"] = list(attrs.get("variables", []))
+        if "actions" in vdict:
+            attrs["actions"] = list(attrs.get("actions", []))
 
         types = EntityTypeBase.get_entity_types()
         ActionType = types.get("Action", None)
@@ -289,8 +298,14 @@ class EntityType(EntityTypeBase):
         return json.loads(data, cls=EntityJSONDecoder)
 
     def yaml_dump(cls, stream=sys.stdout):
+        class MyRepresenter(SafeRepresenter):
+            def ignore_aliases(self, data):
+                return True
 
-        yaml = YAML()
+        yaml = YAML(typ="safe")
+        yaml.default_flow_style = False
+        yaml.Representer = MyRepresenter
+
         types = EntityTypeBase.get_entity_types()
 
         for _, t in types.items():
