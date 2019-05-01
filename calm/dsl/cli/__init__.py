@@ -7,7 +7,7 @@ Usage:
   calm launch bp <name>
   calm get apps [--filter=<name>...]
   calm <action> app <app_name> [--watch]
-  calm watch --action <runlog_uuid> --app <app_name>
+  calm watch --action <action_runlog_uuid> --app <app_name>
   calm watch --app <app_name>
   calm set config [--server <ip:port>] [--username <username>] [--password <password>]
   calm get config
@@ -346,6 +346,7 @@ def launch_blueprint(blueprint_name, client, blueprint=None):
         pprint(response)
         if response["status"]["state"] == "success":
             app_uuid = response["status"]["application_uuid"]
+
             # Can't give app url, as deep routing within PC doesn't work.
             # Hence just giving the app id.
             print("Successfully launched. App uuid is: {}".format(app_uuid))
@@ -495,6 +496,7 @@ def watch_action(runlog_id, app_name, client):
         return client.poll_action_run(url, payload)
 
     def is_action_complete(response):
+        pprint(response)
         if len(response["entities"]):
             for action in response["entities"]:
                 state = action["status"]["state"]
@@ -511,22 +513,29 @@ def watch_action(runlog_id, app_name, client):
 def watch_app(app_name, client):
     app = _get_app(app_name, client)
     app_id = app["metadata"]["uuid"]
+    url = client.APP_ITEM.format(app_id) + "/app_runlogs/list"
+
+    payload = {
+        "filter": "application_reference=={};(type==action_runlog,type==audit_runlog,type==ngt_runlog,type==clone_action_runlog)".format(
+            app_id
+        )
+    }
 
     def poll_func():
         print("Polling app status...")
-        return client.get_app(app_id)
+        return client.poll_action_run(url, payload)
 
     def is_complete(response):
-        state = response["status"]["state"]
-        print("App state:", state)
-        is_terminal = state in ["running", "deleted"]
-        deleted = state == "deleted"
-        msg = (
-            "Successfully deleted app {}".format(app_name)
-            if deleted
-            else "App {} is now provisioned".format(app_name)
-        )
-        return (is_terminal, msg)
+        pprint(response)
+        if len(response["entities"]):
+            for action in response["entities"]:
+                state = action["status"]["state"]
+                if state in RUNLOG.FAILURE_STATES:
+                    return (True, "Action failed")
+                if state not in RUNLOG.TERMINAL_STATES:
+                    return (False, "")
+            return (True, "Action ran successfully")
+        return (False, "")
 
     poll_action(poll_func, is_complete)
 
