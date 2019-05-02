@@ -30,7 +30,7 @@ from functools import reduce
 from importlib import import_module
 from docopt import docopt
 from pprint import pprint
-from calm.dsl.utils.server_utils import get_api_client as _get_api_client, ping
+from calm.dsl.utils.server_utils import get_api_client as _get_api_client
 from prettytable import PrettyTable
 from .constants import RUNLOG
 
@@ -133,8 +133,6 @@ def get_name_query(names):
 
 
 def get_blueprint_list(names, client):
-    global PC_IP
-    assert ping(PC_IP) is True
 
     params = {"length": 20, "offset": 0}
     if names:
@@ -185,8 +183,6 @@ def get_blueprint_list(names, client):
 
 
 def get_apps(names, client):
-    global PC_IP
-    assert ping(PC_IP) is True
 
     params = {"length": 20, "offset": 0}
     if names:
@@ -225,8 +221,6 @@ def get_apps(names, client):
 
 
 def upload_blueprint(name_with_class, client, launch=False):
-    global PC_IP
-    assert ping(PC_IP) is True
 
     name_with_class = name_with_class.replace("/", ".")
     (file_name, class_name) = name_with_class.rsplit(":", 1)
@@ -276,8 +270,6 @@ def upload_blueprint(name_with_class, client, launch=False):
 
 
 def get_blueprint(blueprint_name, client):
-    global PC_IP
-    assert ping(PC_IP) is True
 
     # find bp
     params = {"filter": "name=={};state!=DELETED".format(blueprint_name)}
@@ -371,8 +363,6 @@ def launch_blueprint(blueprint_name, client, blueprint=None):
 
 
 def _get_app(app_name, client):
-    global PC_IP
-    assert ping(PC_IP) is True
 
     # 1. Get app_uuid from list api
     params = {"filter": "name=={}".format(app_name)}
