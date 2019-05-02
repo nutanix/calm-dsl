@@ -413,6 +413,7 @@ def run_actions(action_name, app_name, client, watch=False):
             print("Delete action triggered")
             response = res.json()
             runlog_id = response["status"]["runlog_uuid"]
+            print("Action runlog uuid: {}".format(runlog_id))
 
             def poll_func():
                 print("Polling Delete action...")
