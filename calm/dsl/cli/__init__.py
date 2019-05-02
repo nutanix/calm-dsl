@@ -4,6 +4,7 @@ Usage:
   calm get bps [--filter=<name>...]
   calm describe bp <name> [--json | --yaml]
   calm create bp --file=<bp_file>
+  calm delete bp <bp_name>
   calm launch bp (--name <bp_name> | --file <bp_file>)
   calm get apps [--filter=<name>...]
   calm <action> app <app_name> [--watch]
@@ -97,6 +98,8 @@ def main():
 
     if arguments["get"] and arguments["bps"]:
         get_blueprint_list(arguments["--filter"], client)
+    elif arguments["delete"] and arguments["<bp_name>"]:
+        delete_blueprint(arguments["<bp_name>"], client)
     elif arguments["launch"] and arguments["bp"]:
         if arguments["--name"]:
             launch_blueprint(arguments["<bp_name>"], client)
@@ -292,6 +295,17 @@ def get_blueprint(blueprint_name, client):
             ">> No blueprint found with name {} found >>".format(blueprint_name)
         )
     return blueprint
+
+
+def delete_blueprint(blueprint_name, client):
+
+    blueprint = get_blueprint(blueprint_name, client)
+    blueprint_id = blueprint["metadata"]["uuid"]
+    res, err = client.delete(blueprint_id)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    print(">> Blueprint {} deleted >>".format(blueprint_name))
+
 
 
 def launch_blueprint(blueprint_name, client, blueprint=None):
