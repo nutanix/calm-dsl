@@ -22,9 +22,9 @@ class SubstrateType(EntityType):
                 readiness_probe = {
                     "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
                     "login_credential_local_reference": {
-                            "name": "default",
-                            "kind": "app_credential"
-                        },
+                        "name": "default",
+                        "kind": "app_credential",
+                    },
                     "disable_readiness_probe": False,
                     "delay_secs": "0",
                     "connection_type": "SSH",
@@ -36,9 +36,9 @@ class SubstrateType(EntityType):
                 readiness_probe = {
                     "address": "@@{ip_address}@@",
                     "login_credential_local_reference": {
-                            "name": "default",
-                            "kind": "app_credential"
-                        },
+                        "name": "default",
+                        "kind": "app_credential",
+                    },
                     "disable_readiness_probe": False,
                     "delay_secs": "0",
                     "connection_type": "SSH",

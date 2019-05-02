@@ -307,7 +307,6 @@ def delete_blueprint(blueprint_name, client):
     print(">> Blueprint {} deleted >>".format(blueprint_name))
 
 
-
 def launch_blueprint(blueprint_name, client, blueprint=None):
     if not blueprint:
         blueprint = get_blueprint(blueprint_name, client)
