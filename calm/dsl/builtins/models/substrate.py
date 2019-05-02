@@ -17,12 +17,33 @@ class SubstrateType(EntityType):
         # readiness probe requires address to be set even if there is one nic
 
         if cdict["type"] == "AHV_VM":
-            readiness_probe = {
-                "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@"
-            }
+            # If readiness probe is not given by user, set defaults
+            if "readiness_probe" not in cdict:
+                readiness_probe = {
+                    "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
+                    "login_credential_local_reference": {
+                            "name": "default",
+                            "kind": "app_credential"
+                        },
+                    "disable_readiness_probe": False,
+                    "delay_secs": "0",
+                    "connection_type": "SSH",
+                    "connection_port": 22,
+                }
 
         elif cdict["type"] == "EXISTING_VM":
-            readiness_probe = {"address": "@@{ip_address}@@"}
+            if "readiness_probe" not in cdict:
+                readiness_probe = {
+                    "address": "@@{ip_address}@@",
+                    "login_credential_local_reference": {
+                            "name": "default",
+                            "kind": "app_credential"
+                        },
+                    "disable_readiness_probe": False,
+                    "delay_secs": "0",
+                    "connection_type": "SSH",
+                    "connection_port": 22,
+                }
 
         else:
             readiness_probe = {}

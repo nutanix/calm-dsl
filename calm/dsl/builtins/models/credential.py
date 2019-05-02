@@ -17,6 +17,7 @@ class CredentialValidator(PropertyValidator, openapi_type="app_credential"):
 
 def _credential(**kwargs):
     name = getattr(CredentialType, "__schema_name__")
+    name = kwargs.get("name", name)
     bases = (Entity,)
     return CredentialType(name, bases, kwargs)
 
@@ -24,7 +25,7 @@ def _credential(**kwargs):
 Credential = _credential()
 
 
-def basic_cred(username, password):
+def basic_cred(username, password, name="default"):
 
     secret = {"attrs": {"is_secret_modified": True}, "value": password}
 
@@ -32,5 +33,6 @@ def basic_cred(username, password):
     kwargs["type"] = "PASSWORD"
     kwargs["username"] = username
     kwargs["secret"] = secret
+    kwargs["name"] = name
 
     return _credential(**kwargs)
