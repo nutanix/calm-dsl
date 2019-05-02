@@ -82,8 +82,8 @@ def main():
         if arguments["--password"]:
             PC_PASSWORD = arguments["--password"]
 
-    if arguments["config"] or "SERVER" not in config:
-        # Save to config file if explicitly set, or no config file found
+    if arguments["set"] and arguments["config"]:
+        # Save to config file if setting values
         config["SERVER"] = {
             "pc_ip": PC_IP,
             "pc_port": PC_PORT,
@@ -419,10 +419,12 @@ def run_actions(action_name, app_name, client, watch=False):
                 return client.get_app(app_id)
 
             def is_deletion_complete(response):
+                pprint(response)
                 is_deleted = response["status"]["state"] == "deleted"
                 return (is_deleted, "Successfully deleted app {}".format(app_name))
 
-            poll_action(poll_func, is_deletion_complete)
+            if watch:
+                poll_action(poll_func, is_deletion_complete)
             return
 
     calm_action_name = "action_" + action_name.lower()
