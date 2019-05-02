@@ -413,7 +413,8 @@ def describe_app(app_name, client):
     app = _get_app(app_name, client)
 
     print("\n----Application Summary----\n")
-    print("Name: {}".format(app["metadata"]["name"]))
+    app_name = app["metadata"]["name"]
+    print("Name: {}".format(app_name))
     print("UUID: {}".format(app["metadata"]["uuid"]))
     print("Status: {}".format(app["status"]["state"]))
     print("Owner: {}".format(app["metadata"]["owner_reference"]["name"]))
@@ -442,7 +443,10 @@ def describe_app(app_name, client):
     action_list = app["status"]["resources"]["action_list"]
     print("App Actions ({}):".format(len(action_list)))
     for action in action_list:
-        print("\t{}".format(action["name"]))
+        action_name = action["name"]
+        if action_name.startswith("action_"):
+            action_name = action_name.lstrip("action_")
+        print("\t{}".format(action_name))
 
     variable_list = app["status"]["resources"]["variable_list"]
     print("App Variables ({}):".format(len(variable_list)))
@@ -452,6 +456,12 @@ def describe_app(app_name, client):
                 variable["name"], variable["value"], variable["label"]
             )
         )
+
+    print(
+        "# You can run actions on the app using: calm <action_name> app {}".format(
+            app_name
+        )
+    )
 
 
 def run_actions(action_name, app_name, client, watch=False):
