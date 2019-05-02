@@ -378,10 +378,15 @@ class BlueprintAPI:
             method=REQUEST.METHOD.POST,
         )
 
-    def poll_action_run(self, poll_url, payload):
-        return self.connection._call(
-            poll_url, request_json=payload, verify=False, method=REQUEST.METHOD.POST
-        )
+    def poll_action_run(self, poll_url, payload=None):
+        if payload:
+            return self.connection._call(
+                poll_url, request_json=payload, verify=False, method=REQUEST.METHOD.POST
+            )
+        else:
+            return self.connection._call(
+                poll_url, verify=False, method=REQUEST.METHOD.GET
+            )
 
     def delete_app(self, app_id):
         return self.connection._call(
