@@ -3,8 +3,8 @@
 Usage:
   calm get bps [--filter=<name>...]
   calm describe bp <name> [--json | --yaml]
-  calm create bp --file=<bp_file> [--launch]
-  calm launch bp <name>
+  calm create bp --file=<bp_file>
+  calm launch bp (--name <bp_name> | --file <bp_file>)
   calm get apps [--filter=<name>...]
   calm <action> app <app_name> [--watch]
   calm watch --action <action_runlog_uuid> --app <app_name>
@@ -98,9 +98,12 @@ def main():
     if arguments["get"] and arguments["bps"]:
         get_blueprint_list(arguments["--filter"], client)
     elif arguments["launch"] and arguments["bp"]:
-        launch_blueprint(arguments["<name>"], client)
+        if arguments["--name"]:
+            launch_blueprint(arguments["<bp_name>"], client)
+        elif arguments["--file"]:
+            upload_blueprint(arguments["--file"], client, True)
     elif arguments["create"] and arguments["bp"]:
-        upload_blueprint(arguments["--file"], client, arguments["--launch"])
+        upload_blueprint(arguments["--file"], client)
     elif arguments["get"] and arguments["apps"]:
         get_apps(arguments["--filter"], client)
     elif arguments["<action>"] and arguments["<app_name>"]:
@@ -109,7 +112,7 @@ def main():
         )
     elif arguments["watch"]:
         if arguments["--action"]:
-            watch_action(arguments["<runlog_uuid>"], arguments["<app_name>"], client)
+            watch_action(arguments["<action_runlog_uuid>"], arguments["<app_name>"], client)
         else:
             watch_app(arguments["<app_name>"], client)
 
@@ -224,7 +227,7 @@ def upload_blueprint(name_with_class, client, launch=False):
     assert ping(PC_IP) is True
 
     name_with_class = name_with_class.replace("/", ".")
-    (file_name, class_name) = name_with_class.rsplit(".", 1)
+    (file_name, class_name) = name_with_class.rsplit(":", 1)
     mod = import_module(file_name)
     Blueprint = getattr(mod, class_name)
 
