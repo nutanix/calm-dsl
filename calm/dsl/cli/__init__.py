@@ -112,7 +112,9 @@ def main():
         )
     elif arguments["watch"]:
         if arguments["--action"]:
-            watch_action(arguments["<action_runlog_uuid>"], arguments["<app_name>"], client)
+            watch_action(
+                arguments["<action_runlog_uuid>"], arguments["<app_name>"], client
+            )
         else:
             watch_app(arguments["<app_name>"], client)
 
