@@ -38,10 +38,10 @@ from .constants import RUNLOG
 urllib3.disable_warnings()
 
 # Defaults to be used if no config file exists.
-PC_IP = "35.198.250.100"
+PC_IP = "10.46.34.230"
 PC_PORT = 9440
 PC_USERNAME = "admin"
-PC_PASSWORD = "RO*WQrGLI17LK"
+PC_PASSWORD = "***REMOVED***"
 
 LOCAL_CONFIG_PATH = "config.ini"
 GLOBAL_CONFIG_PATH = "~/.calm/config"
