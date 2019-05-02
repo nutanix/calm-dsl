@@ -82,8 +82,8 @@ def main():
         if arguments["--password"]:
             PC_PASSWORD = arguments["--password"]
 
-    if arguments["config"] or "SERVER" not in config:
-        # Save to config file if explicitly set, or no config file found
+    if arguments["set"] and arguments["config"]:
+        # Save to config file if setting values
         config["SERVER"] = {
             "pc_ip": PC_IP,
             "pc_port": PC_PORT,
