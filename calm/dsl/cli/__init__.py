@@ -425,8 +425,9 @@ def run_actions(action_name, app_name, client, watch=False):
                 return client.get_app(app_id)
 
             def is_deletion_complete(response):
-                pprint(response)
-                is_deleted = response["status"]["state"] == "deleted"
+                status = response["status"]["state"]
+                print("Current app status: {}".format(status))
+                is_deleted = status == "deleted"
                 return (is_deleted, "Successfully deleted app {}".format(app_name))
 
             if watch:
