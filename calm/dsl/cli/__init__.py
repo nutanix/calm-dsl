@@ -7,6 +7,7 @@ Usage:
   calm delete bp <bp_name>
   calm launch bp (--name <bp_name> | --file <bp_file>)
   calm get apps [--filter=<name>...]
+  calm describe app <app_name>
   calm <action> app <app_name> [--watch]
   calm watch --action <action_runlog_uuid> --app <app_name>
   calm watch --app <app_name>
@@ -109,6 +110,8 @@ def main():
         upload_blueprint(arguments["--file"], client)
     elif arguments["get"] and arguments["apps"]:
         get_apps(arguments["--filter"], client)
+    elif arguments["describe"] and arguments["app"]:
+        describe_app(arguments["<app_name>"], client)
     elif arguments["<action>"] and arguments["<app_name>"]:
         run_actions(
             arguments["<action>"], arguments["<app_name>"], client, arguments["--watch"]
@@ -404,6 +407,51 @@ def _get_app(app_name, client):
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
     app = res.json()
     return app
+
+
+def describe_app(app_name, client):
+    app = _get_app(app_name, client)
+
+    print("\n----Application Summary----\n")
+    print("Name: {}".format(app["metadata"]["name"]))
+    print("UUID: {}".format(app["metadata"]["uuid"]))
+    print("Status: {}".format(app["status"]["state"]))
+    print("Owner: {}".format(app["metadata"]["owner_reference"]["name"]))
+    print("Project: {}".format(app["metadata"]["project_reference"]["name"]))
+
+    created_on = time.ctime(int(app["metadata"]["creation_time"]) // 1000000)
+    print("Created On: {}".format(created_on))
+
+    print(
+        "Source Blueprint: {}".format(
+            app["status"]["resources"]["app_blueprint_reference"]["name"]
+        )
+    )
+
+    print(
+        "Application Profile: {}".format(
+            app["status"]["resources"]["app_profile_config_reference"]["name"]
+        )
+    )
+
+    deployment_list = app["status"]["resources"]["deployment_list"]
+    print("Deployments ({}):".format(len(deployment_list)))
+    for deployment in deployment_list:
+        print("\t{} {}".format(deployment["name"], deployment["state"]))
+
+    action_list = app["status"]["resources"]["action_list"]
+    print("App Actions ({}):".format(len(action_list)))
+    for action in action_list:
+        print("\t{}".format(action["name"]))
+
+    variable_list = app["status"]["resources"]["variable_list"]
+    print("App Variables ({}):".format(len(variable_list)))
+    for variable in variable_list:
+        print(
+            "\t{}: {}  # {}".format(
+                variable["name"], variable["value"], variable["label"]
+            )
+        )
 
 
 def run_actions(action_name, app_name, client, watch=False):
