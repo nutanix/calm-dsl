@@ -550,7 +550,7 @@ def describe_app(app_name, client):
     for action in action_list:
         action_name = action["name"]
         if action_name.startswith("action_"):
-            action_name = action_name.lstrip("action_")
+            action_name = action_name[len("action_"):]
         print("\t{}".format(action_name))
 
     variable_list = app["status"]["resources"]["variable_list"]
