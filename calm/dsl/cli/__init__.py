@@ -142,7 +142,7 @@ Usage:
             config.write(configfile)
 
     ctx.ensure_object(dict)
-    ctx.obj['client'] = get_api_client(PC_IP, PC_PORT, PC_USERNAME, PC_PASSWORD)
+    ctx.obj["client"] = get_api_client(PC_IP, PC_PORT, PC_USERNAME, PC_PASSWORD)
 
     if verbose:
         click.echo("Using user %s @ https://%s:%s" % (PC_USERNAME, PC_IP, PC_PORT))
@@ -181,14 +181,16 @@ def get():
 
 
 @get.command("bps")
-@click.option("--filter", "filter_by", default=None, help="Filter blueprints with this string")
+@click.option(
+    "--filter", "filter_by", default=None, help="Filter blueprints with this string"
+)
 @click.option("--limit", default=20, help="Number of results to return")
 @click.pass_context
 def get_blueprint_list(ctx, filter_by, limit):
     """Get the blueprints, optionally filtered by a string"""
     global PC_IP
 
-    client = ctx.obj['client']
+    client = ctx.obj["client"]
 
     params = {"length": limit, "offset": 0}
     if filter_by:
@@ -245,7 +247,7 @@ def get_blueprint_list(ctx, filter_by, limit):
 def get_apps(ctx, names, limit):
     """Get Apps, optionally filtered by a string"""
 
-    client = ctx.obj['client']
+    client = ctx.obj["client"]
 
     params = {"length": limit, "offset": 0}
     if names:
@@ -282,9 +284,11 @@ def get_apps(ctx, names, limit):
     else:
         warnings.warn(UserWarning("Cannot fetch applications from {}".format(PC_IP)))
 
+
 @main.group()
 def create():
     """Create blueprint, optionally launch too"""
+
 
 @create.command("bp")
 @click.argument("name")
@@ -299,7 +303,7 @@ def create():
 def upload_blueprint(ctx, name):
     """Upload a blueprint"""
 
-    client = ctx.obj['client']
+    client = ctx.obj["client"]
 
     name_with_class = name.replace("/", ".")
     (file_name, class_name) = name_with_class.rsplit(":", 1)
@@ -354,7 +358,7 @@ def upload_blueprint(ctx, name):
 def get_blueprint(ctx, name):
     """Get a specific blueprint"""
     global PC_IP
-    client = ctx.obj['client']
+    client = ctx.obj["client"]
 
     # find bp
     params = {"filter": "name=={};state!=DELETED".format(name)}
@@ -381,12 +385,13 @@ def get_blueprint(ctx, name):
 def delete():
     """Delete blueprints"""
 
+
 @delete.command("bp")
 @click.argument("name")
 @click.pass_context
 def delete_blueprint(ctx, name):
 
-    client = ctx.obj['client']
+    client = ctx.obj["client"]
     blueprint = get_blueprint(name, client)
     blueprint_id = blueprint["metadata"]["uuid"]
     res, err = client.delete(blueprint_id)
@@ -398,6 +403,7 @@ def delete_blueprint(ctx, name):
 @main.group()
 def launch():
     """Launch blueprints to create Apps"""
+
 
 @launch.command("bp")
 @click.argument("name")
@@ -566,7 +572,7 @@ def describe_app(app_name, client):
 @main.command("app")
 @click.argument("app_name")
 @click.argument("action_name")
-@click.option('--watch/--no-watch', '-w', default=False, help="Watch scrolling output")
+@click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
 @click.pass_context
 def run_actions(ctx, app_name, action_name, watch):
     """App related functionality: launch, lcm actions, monitor, delete"""
