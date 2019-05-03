@@ -292,6 +292,7 @@ class BlueprintAPI:
     APP_LIST = APP_PREFIX + "/list"
     APP_ITEM = APP_PREFIX + "/{}"
     ACTION_RUN = APP_PREFIX + "/{}/actions/{}/run"
+    BP_EDITABLES = BP_PREFIX + "/{}/runtime_editables"
 
     def __init__(self, connection):
         self.connection = connection
@@ -458,6 +459,13 @@ class BlueprintAPI:
         uuid = bp["metadata"]["uuid"]
 
         return self.update(uuid, update_payload)
+
+    def _get_editables(self, bp_uuid):
+        return self.connection._call(
+            BlueprintAPI.BP_EDITABLES.format(bp_uuid),
+            verify=False,
+            method=REQUEST.METHOD.GET,
+        )
 
 
 _BP_API_HANDLE = None
