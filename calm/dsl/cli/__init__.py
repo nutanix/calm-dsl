@@ -514,7 +514,18 @@ def _get_app(app_name, client):
     return app
 
 
-def describe_app(app_name, client):
+@main.group()
+def describe():
+    """Describe apps and blueprints"""
+
+
+@describe.command("app")
+@click.argument("app_name")
+@click.pass_context
+def describe_app(ctx, app_name):
+    """Describe an app"""
+
+    client = ctx.obj["client"]
     app = _get_app(app_name, client)
 
     print("\n----Application Summary----\n")
@@ -550,7 +561,7 @@ def describe_app(app_name, client):
     for action in action_list:
         action_name = action["name"]
         if action_name.startswith("action_"):
-            action_name = action_name[len("action_"):]
+            action_name = action_name[len("action_") :]
         print("\t{}".format(action_name))
 
     variable_list = app["status"]["resources"]["variable_list"]
@@ -576,6 +587,8 @@ def describe_app(app_name, client):
 @click.pass_context
 def run_actions(ctx, app_name, action_name, watch):
     """App related functionality: launch, lcm actions, monitor, delete"""
+
+    client = ctx.obj["client"]
 
     app = _get_app(app_name, client)
     app_spec = app["spec"]
@@ -692,7 +705,18 @@ def watch_action(runlog_id, app_name, client):
     poll_action(poll_func, is_action_complete)
 
 
-def watch_app(app_name, client):
+@main.group()
+def watch():
+    """Get various things like blueprints, apps and so on"""
+
+
+@watch.command("app")
+@click.argument("app_name")
+@click.pass_context
+def watch_app(ctx, app_name):
+    """Watch an app"""
+
+    client = ctx.obj["client"]
     app = _get_app(app_name, client)
     app_id = app["metadata"]["uuid"]
     url = client.APP_ITEM.format(app_id) + "/app_runlogs/list"
