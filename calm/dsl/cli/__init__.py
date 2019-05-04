@@ -4,7 +4,7 @@ Usage:
   calm get bps [--filter=<name>...]
   calm describe bp <name> [--json | --yaml]
   calm create bp --file=<bp_file>
-  calm launch bp (--name <bp_name> | --file <bp_file>) [--profile <profile_name>]
+  calm launch bp (--name <bp_name> | --file <bp_file>) [--profile <profile_name>] [--app <app_name>]
   calm get apps [--filter=<name>...]
   calm <action> app <app_name> [--watch]
   calm watch --action <action_runlog_uuid> --app <app_name>
@@ -99,13 +99,19 @@ def main():
         get_blueprint_list(arguments["--filter"], client)
     elif arguments["launch"] and arguments["bp"]:
         if arguments["--name"]:
-            launch_blueprint_simple(
-                arguments["<bp_name>"],
-                client,
-                profile_name=arguments.get("<profile_name>", None),
-            )
+            kwargs = {}
+            if arguments["--profile"]:
+                kwargs["profile_name"] = arguments.get("<profile_name>", None)
+            if arguments["--app"]:
+                kwargs["app_name"] = arguments.get("<app_name>", None)
+            launch_blueprint(arguments["<bp_name>"], client, **kwargs)
         elif arguments["--file"]:
-            upload_blueprint(arguments["--file"], client, True)
+            kwargs = {"launch": True}
+            if arguments["--profile"]:
+                kwargs["profile_name"] = arguments.get("<profile_name>", None)
+            if arguments["--app"]:
+                kwargs["app_name"] = arguments.get("<app_name>", None)
+            upload_blueprint(arguments["--file"], client, **kwargs)
     elif arguments["create"] and arguments["bp"]:
         upload_blueprint(arguments["--file"], client)
     elif arguments["get"] and arguments["apps"]:
@@ -228,7 +234,9 @@ def get_apps(names, client):
         warnings.warn(UserWarning("Cannot fetch applications from {}".format(PC_IP)))
 
 
-def upload_blueprint(name_with_class, client, launch=False):
+def upload_blueprint(
+    name_with_class, client, launch=False, profile_name=None, app_name=None
+):
     global PC_IP
     assert ping(PC_IP) is True
 
@@ -276,7 +284,9 @@ def upload_blueprint(name_with_class, client, launch=False):
     assert bp_state == "ACTIVE"
 
     if launch:
-        launch_blueprint(Blueprint, client, bp)
+        launch_blueprint(
+            None, client, blueprint=bp, profile_name=profile_name, app_name=app_name
+        )
 
 
 def get_blueprint(blueprint_name, client):
@@ -333,10 +343,13 @@ def get_field_values(entity_dict, context, path=None):
                 entity_dict[field] = type(value)(new_val)
 
 
-def launch_blueprint_simple(blueprint_name, client, blueprint=None, profile_name=None):
+def launch_blueprint(
+    blueprint_name, client, blueprint=None, profile_name=None, app_name=None
+):
     if not blueprint:
         blueprint = get_blueprint(blueprint_name, client)
 
+    blueprint_name = blueprint_name or blueprint.get("spec", {}).get("name")
     blueprint_uuid = blueprint.get("metadata", {}).get("uuid", "")
     profiles = get_blueprint_runtime_editables(blueprint, client)
     profile = None
@@ -355,7 +368,7 @@ def launch_blueprint_simple(blueprint_name, client, blueprint=None, profile_name
     runtime_editables = profile.pop("runtime_editables", [])
     launch_payload = {
         "spec": {
-            "app_name": "TestSimpleLaunch-{}".format(int(time.time())),
+            "app_name": app_name or blueprint_name + "_" + str(int(time.time())),
             "app_description": "",
             "app_profile_reference": profile.get("app_profile_reference", {}),
             "runtime_editables": runtime_editables,
@@ -384,74 +397,6 @@ def launch_blueprint_simple(blueprint_name, client, blueprint=None, profile_name
         # call status api
         print("Polling status of Launch")
         res, err = client.poll_launch(blueprint_uuid, launch_req_id)
-        response = res.json()
-        pprint(response)
-        if response["status"]["state"] == "success":
-            app_uuid = response["status"]["application_uuid"]
-
-            # Can't give app url, as deep routing within PC doesn't work.
-            # Hence just giving the app id.
-            print("Successfully launched. App uuid is: {}".format(app_uuid))
-            print(
-                "App url: https://{}:{}/console/#page/explore/calm/applications/{}".format(
-                    PC_IP, PC_PORT, app_uuid
-                )
-            )
-            break
-        elif response["status"]["state"] == "failure":
-            print("Failed to launch blueprint. Check API response above.")
-            break
-        elif err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        count += 10
-        time.sleep(10)
-
-
-def launch_blueprint(blueprint_name, client, blueprint=None, profile_name=None):
-    if not blueprint:
-        blueprint = get_blueprint(blueprint_name, client)
-
-    blueprint_id = blueprint["metadata"]["uuid"]
-    print(">> Fetching blueprint details")
-    res, err = client.get(blueprint_id)
-    if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-    blueprint = res.json()
-    blueprint_spec = blueprint["spec"]
-
-    launch_payload = {
-        "api_version": "3.0",
-        "metadata": blueprint["metadata"],
-        "spec": {
-            "application_name": "ExistingVMApp-{}".format(int(time.time())),
-            "app_profile_reference": {
-                "kind": "app_profile",
-                "name": "{}".format(
-                    blueprint_spec["resources"]["app_profile_list"][0]["name"]
-                ),
-                "uuid": "{}".format(
-                    blueprint_spec["resources"]["app_profile_list"][0]["uuid"]
-                ),
-            },
-            "resources": blueprint_spec["resources"],
-        },
-    }
-
-    res, err = client.full_launch(blueprint_id, launch_payload)
-    if not err:
-        print(">> {} queued for launch >>".format(blueprint_name))
-    else:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-    response = res.json()
-    launch_req_id = response["status"]["request_id"]
-
-    # Poll every 10 seconds on the app status, for 5 mins
-    maxWait = 5 * 60
-    count = 0
-    while count < maxWait:
-        # call status api
-        print("Polling status of Launch")
-        res, err = client.poll_launch(blueprint_id, launch_req_id)
         response = res.json()
         pprint(response)
         if response["status"]["state"] == "success":
