@@ -25,10 +25,12 @@ Options:
 """
 import os
 import time
+import datetime
 import warnings
 import configparser
 import urllib3
 import click
+import arrow
 from functools import reduce
 from importlib import import_module
 
@@ -535,53 +537,75 @@ def describe_app(ctx, app_name):
     client = ctx.obj.get("client")
     app = _get_app(app_name, client)
 
-    print("\n----Application Summary----\n")
+    click.echo("\n----Application Summary----\n")
     app_name = app["metadata"]["name"]
-    print("Name: {}".format(app_name))
-    print("UUID: {}".format(app["metadata"]["uuid"]))
-    print("Status: {}".format(app["status"]["state"]))
-    print("Owner: {}".format(app["metadata"]["owner_reference"]["name"]))
-    print("Project: {}".format(app["metadata"]["project_reference"]["name"]))
+    click.echo(
+        "Name: "
+        + _highlight_text(app_name)
+        + " (uuid: "
+        + _highlight_text(app["metadata"]["uuid"])
+        + ")"
+    )
+    click.echo("Status: " + _highlight_text(app["status"]["state"]))
+    click.echo(
+        "Owner: " + _highlight_text(app["metadata"]["owner_reference"]["name"]),
+        nl=False,
+    )
+    click.echo(
+        " Project: " + _highlight_text(app["metadata"]["project_reference"]["name"])
+    )
 
-    created_on = time.ctime(int(app["metadata"]["creation_time"]) // 1000000)
-    print("Created On: {}".format(created_on))
+    click.echo(
+        "Blueprint: "
+        + _highlight_text(app["status"]["resources"]["app_blueprint_reference"]["name"])
+    )
 
-    print(
-        "Source Blueprint: {}".format(
-            app["status"]["resources"]["app_blueprint_reference"]["name"]
+    created_on = int(app["metadata"]["creation_time"]) // 1000000
+    past = arrow.get(created_on).humanize()
+    click.echo(
+        "Created: {} ({})".format(
+            _highlight_text(time.ctime(created_on)), _highlight_text(past)
         )
     )
 
-    print(
-        "Application Profile: {}".format(
+    click.echo(
+        "Application Profile: "
+        + _highlight_text(
             app["status"]["resources"]["app_profile_config_reference"]["name"]
         )
     )
 
     deployment_list = app["status"]["resources"]["deployment_list"]
-    print("Deployments ({}):".format(len(deployment_list)))
+    click.echo("Deployments [{}]:".format(_highlight_text((len(deployment_list)))))
     for deployment in deployment_list:
-        print("\t{} {}".format(deployment["name"], deployment["state"]))
+        click.echo(
+            "\t {} {}".format(
+                _highlight_text(deployment["name"]),
+                _highlight_text(deployment["state"]),
+            )
+        )
 
     action_list = app["status"]["resources"]["action_list"]
-    print("App Actions ({}):".format(len(action_list)))
+    click.echo("App Actions [{}]:".format(_highlight_text(len(action_list))))
     for action in action_list:
         action_name = action["name"]
         if action_name.startswith("action_"):
             action_name = action_name[len("action_") :]
-        print("\t{}".format(action_name))
+        click.echo("\t" + _highlight_text(action_name))
 
     variable_list = app["status"]["resources"]["variable_list"]
-    print("App Variables ({}):".format(len(variable_list)))
+    click.echo("App Variables [{}]".format(_highlight_text(len(variable_list))))
     for variable in variable_list:
-        print(
+        click.echo(
             "\t{}: {}  # {}".format(
-                variable["name"], variable["value"], variable["label"]
+                _highlight_text(variable["name"]),
+                _highlight_text(variable["value"]),
+                _highlight_text(variable["label"]),
             )
         )
 
-    print(
-        "# You can run actions on the app using: calm <action_name> app {}".format(
+    click.echo(
+        "# Hint: You can run actions on the app using: calm <action_name> app {}".format(
             app_name
         )
     )
@@ -769,6 +793,11 @@ def _get_name_query(names):
             for name in names
         ]
         return ",".join(search_strings)
+
+
+def _highlight_text(text, **kwargs):
+    """Highlight text in our standard format"""
+    return click.style("{}".format(text), fg="blue", bold=False, **kwargs)
 
 
 if __name__ == "__main__":

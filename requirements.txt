@@ -6,3 +6,5 @@ requests==2.21.0
 docopt==0.6.2
 PTable==0.9.2
 Click==7.0
+colorama==0.4.1
+arrow==0.13.1
