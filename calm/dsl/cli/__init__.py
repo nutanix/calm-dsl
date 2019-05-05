@@ -712,11 +712,18 @@ def watch():
 
 @watch.command("app")
 @click.argument("app_name")
+@click.option(
+    "--action", default=None, help="Watch specific action"
+)
 @click.pass_context
-def watch_app(ctx, app_name):
+def watch_app(ctx, app_name, action):
     """Watch an app"""
 
     client = ctx.obj["client"]
+
+    if action:
+        return watch_action(action, app_name, client)
+
     app = _get_app(app_name, client)
     app_id = app["metadata"]["uuid"]
     url = client.APP_ITEM.format(app_id) + "/app_runlogs/list"
