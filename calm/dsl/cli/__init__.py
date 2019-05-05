@@ -247,6 +247,8 @@ def get_blueprint_list(ctx, filter_by, limit):
 def get_apps(ctx, names, limit):
     """Get Apps, optionally filtered by a string"""
 
+    global PC_IP
+
     client = ctx.obj["client"]
 
     params = {"length": limit, "offset": 0}
@@ -299,17 +301,25 @@ def create():
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path of Blueprint file to upload",
 )
+@click.option("--class", "bp_class", help="The name of the blueprint class in the file")
 @click.pass_context
-def upload_blueprint(ctx, name):
+def upload_blueprint(ctx, name, bp_file, bp_class, launch_):
     """Upload a blueprint"""
 
-    client = ctx.obj["client"]
+    global PC_IP
 
-    name_with_class = name.replace("/", ".")
-    (file_name, class_name) = name_with_class.rsplit(":", 1)
+    click.echo("Upload called. Path + name:", bp_file)
+
+    if bp_file.startswith("."):
+        bp_file = bp_file[2:]
+
+    file_name = bp_file.replace("/", ".")[:-3]
+    file_name_with_class = name.replace("/", ".")
     mod = import_module(file_name)
-    Blueprint = getattr(mod, class_name)
 
+    Blueprint = getattr(mod, bp_class)
+
+    client = ctx.obj.get("client")
     # seek and destroy
     params = {"filter": "name=={};state!=DELETED".format(Blueprint)}
     res, err = client.list(params=params)
@@ -387,17 +397,17 @@ def delete():
 
 
 @delete.command("bp")
-@click.argument("name")
+@click.argument("blueprint_name")
 @click.pass_context
-def delete_blueprint(ctx, name):
+def delete_blueprint(ctx, blueprint_name, blueprint=None):
 
     client = ctx.obj["client"]
-    blueprint = get_blueprint(name, client)
+    blueprint = get_blueprint(blueprint_name, client)
     blueprint_id = blueprint["metadata"]["uuid"]
     res, err = client.delete(blueprint_id)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
-    print(">> Blueprint {} deleted >>".format(name))
+    click.echo("Blueprint {} deleted".format(blueprint_name))
 
 
 @main.group()
@@ -406,18 +416,15 @@ def launch():
 
 
 @launch.command("bp")
-@click.argument("name")
-@click.option(
-    "--file",
-    "-f",
-    "bp_file",
-    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
-    help="Path of Blueprint file to upload",
-)
+@click.argument("blueprint_name")
 @click.pass_context
 def launch_blueprint(blueprint_name, client, blueprint=None):
+    client = ctx.obj.get("client")
+    import ipdb
+
+    ipdb.set_trace()
     if not blueprint:
-        blueprint = get_blueprint(blueprint_name, client)
+        blueprint = get_blueprint(client, blueprint_name)
 
     blueprint_id = blueprint["metadata"]["uuid"]
     print(">> Fetching blueprint details")
