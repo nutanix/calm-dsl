@@ -190,7 +190,7 @@ def get_blueprint_list(ctx, filter_by, limit):
     """Get the blueprints, optionally filtered by a string"""
     global PC_IP
 
-    client = ctx.obj["client"]
+    client = ctx.obj.get("client")
 
     params = {"length": limit, "offset": 0}
     if filter_by:
@@ -249,7 +249,7 @@ def get_apps(ctx, names, limit):
 
     global PC_IP
 
-    client = ctx.obj["client"]
+    client = ctx.obj.get("client")
 
     params = {"length": limit, "offset": 0}
     if names:
@@ -368,7 +368,7 @@ def upload_blueprint(ctx, name, bp_file, bp_class, launch_):
 def get_blueprint(ctx, name):
     """Get a specific blueprint"""
     global PC_IP
-    client = ctx.obj["client"]
+    client = ctx.obj.get("client")
 
     # find bp
     params = {"filter": "name=={};state!=DELETED".format(name)}
@@ -401,7 +401,7 @@ def delete():
 @click.pass_context
 def delete_blueprint(ctx, blueprint_name, blueprint=None):
 
-    client = ctx.obj["client"]
+    client = ctx.obj.get("client")
     blueprint = get_blueprint(blueprint_name, client)
     blueprint_id = blueprint["metadata"]["uuid"]
     res, err = client.delete(blueprint_id)
@@ -532,7 +532,7 @@ def describe():
 def describe_app(ctx, app_name):
     """Describe an app"""
 
-    client = ctx.obj["client"]
+    client = ctx.obj.get("client")
     app = _get_app(app_name, client)
 
     print("\n----Application Summary----\n")
@@ -595,7 +595,7 @@ def describe_app(ctx, app_name):
 def run_actions(ctx, app_name, action_name, watch):
     """App related functionality: launch, lcm actions, monitor, delete"""
 
-    client = ctx.obj["client"]
+    client = ctx.obj.get("client")
 
     app = _get_app(app_name, client)
     app_spec = app["spec"]
@@ -719,14 +719,12 @@ def watch():
 
 @watch.command("app")
 @click.argument("app_name")
-@click.option(
-    "--action", default=None, help="Watch specific action"
-)
+@click.option("--action", default=None, help="Watch specific action")
 @click.pass_context
 def watch_app(ctx, app_name, action):
     """Watch an app"""
 
-    client = ctx.obj["client"]
+    client = ctx.obj.get("client")
 
     if action:
         return watch_action(action, app_name, client)
