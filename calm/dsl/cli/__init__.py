@@ -227,16 +227,16 @@ def get_blueprint_list(ctx, filter_by, limit):
             )
             table.add_row(
                 [
-                    row["name"],
-                    bp_type,
-                    row["description"],
-                    row["state"],
-                    project,
-                    row["application_count"],
+                    _highlight_text(row["name"]),
+                    _highlight_text(bp_type),
+                    _highlight_text(row["description"]),
+                    _highlight_text(row["state"]),
+                    _highlight_text(project),
+                    _highlight_text(row["application_count"]),
                 ]
             )
-        print("\n----Blueprint List----")
-        print(table)
+        click.echo("\n----Blueprint List----")
+        click.echo(table)
         assert res.ok is True
     else:
         warnings.warn(UserWarning("Cannot fetch blueprints from {}".format(PC_IP)))
@@ -272,18 +272,23 @@ def get_apps(ctx, names, limit):
             row = _row["status"]
             metadata = _row["metadata"]
 
-            created_on = time.ctime(int(metadata["creation_time"]) // 1000000)
+            created_on = int(metadata["creation_time"]) // 1000000
             table.add_row(
                 [
-                    row["name"],
-                    row["resources"]["app_blueprint_reference"]["name"],
-                    row["state"],
-                    metadata["owner_reference"]["name"],
-                    created_on,
+                    _highlight_text(row["name"]),
+                    _highlight_text(
+                        row["resources"]["app_blueprint_reference"]["name"]
+                    ),
+                    _highlight_text(row["state"]),
+                    _highlight_text(metadata["owner_reference"]["name"]),
+                    "{} ({}) ".format(
+                        _highlight_text(time.ctime(created_on)),
+                        arrow.get(created_on).humanize(),
+                    ),
                 ]
             )
-        print("\n----Application List----")
-        print(table)
+        click.echo("\n----Application List----")
+        click.echo(table)
         assert res.ok is True
     else:
         warnings.warn(UserWarning("Cannot fetch applications from {}".format(PC_IP)))
