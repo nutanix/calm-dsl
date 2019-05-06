@@ -29,7 +29,8 @@ import urllib3
 import click
 from functools import reduce
 from importlib import import_module
-#from docopt import docopt
+
+# from docopt import docopt
 from pprint import pprint
 from calm.dsl.utils.server_utils import get_api_client as _get_api_client, ping
 from prettytable import PrettyTable
@@ -55,18 +56,30 @@ def get_api_client(
 
 
 @click.group()
-@click.option('--username', envvar='PRISM_USERNAME', default=None,
-              help='Prism Central username')
-@click.option('--password', envvar='PRISM_PASSWORD', default=None,
-              help='Prism Central password')
-@click.option('--server', '-s', envvar='PRISM_SERVER', default=None,
-              help='Prism Central server URL in <ip>:<port> format')
-@click.option('--config', '-c', 'config_file', envvar='CALM_CONFIG',
-              type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
-              help='Path of config file, default is %s in current directory, %s otherwise' % (LOCAL_CONFIG_PATH, GLOBAL_CONFIG_PATH))
-@click.option('--verbose', '-v', is_flag=True,
-              help='Enables verbose mode.')
-@click.version_option('0.1')
+@click.option(
+    "--username", envvar="PRISM_USERNAME", default=None, help="Prism Central username"
+)
+@click.option(
+    "--password", envvar="PRISM_PASSWORD", default=None, help="Prism Central password"
+)
+@click.option(
+    "--server",
+    "-s",
+    envvar="PRISM_SERVER",
+    default=None,
+    help="Prism Central server URL in <ip>:<port> format",
+)
+@click.option(
+    "--config",
+    "-c",
+    "config_file",
+    envvar="CALM_CONFIG",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path of config file, default is %s in current directory, %s otherwise"
+    % (LOCAL_CONFIG_PATH, GLOBAL_CONFIG_PATH),
+)
+@click.option("--verbose", "-v", is_flag=True, help="Enables verbose mode.")
+@click.version_option("0.1")
 @click.pass_context
 def main(ctx, username, password, server, config_file, verbose):
     """Calm CLI
@@ -127,7 +140,10 @@ Usage:
         with open(file_path, "w") as configfile:
             config.write(configfile)
 
-    ctx.client = get_api_client(PC_IP, PC_PORT, PC_USERNAME, PC_PASSWORD)
+    if not ctx.obj:
+        ctx.obj = {}
+
+    ctx.obj["client"] = get_api_client(PC_IP, PC_PORT, PC_USERNAME, PC_PASSWORD)
 
     # if arguments["get"] and arguments["bps"]:
     #     get_blueprint_list(arguments["--filter"], client)
@@ -153,16 +169,16 @@ def get():
     """Get various things like blueprints, apps and so on"""
 
 
-@get.command('apps')
-@click.option('--names', default=None, help='The name of apps to filter by')
-@click.option('--limit', default=20, help='Number of results to return')
+@get.command("apps")
+@click.option("--names", default=None, help="The name of apps to filter by")
+@click.option("--limit", default=20, help="Number of results to return")
 @click.pass_context
 def get_apps(ctx, names, limit):
     """Get Apps, optionally filtered by a string"""
     global PC_IP
     assert ping(PC_IP) is True
 
-    client = ctx.client
+    client = ctx.obj.get("client")
 
     params = {"length": limit, "offset": 0}
     if names:
@@ -199,16 +215,18 @@ def get_apps(ctx, names, limit):
     else:
         warnings.warn(UserWarning("Cannot fetch applications from {}".format(PC_IP)))
 
-@get.command('bps')
-@click.option('--names', default=None, help='The name of blueprints to filter by')
-@click.option('--limit', default=20, help='Number of results to return')
+
+@get.command("bps")
+@click.option("--names", default=None, help="The name of blueprints to filter by")
+@click.option("--limit", default=20, help="Number of results to return")
 @click.pass_context
 def get_blueprint_list(ctx, names, limit):
     """Get the blueprints, optionally filtered by a string"""
+
     global PC_IP
     assert ping(PC_IP) is True
 
-    client = ctx.client
+    client = ctx.obj.get("client")
 
     params = {"length": limit, "offset": 0}
     if names:
@@ -258,15 +276,39 @@ def get_blueprint_list(ctx, names, limit):
         warnings.warn(UserWarning("Cannot fetch blueprints from {}".format(PC_IP)))
 
 
-def upload_blueprint(name_with_class, client, launch=False):
+@main.group("create")
+def create():
+    pass
+
+
+@create.command("bp")
+@click.option(
+    "--bp_file",
+    "--file_name",
+    envvar="CALM_CONFIG",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path of Blueprint file, default is %s in current directory, %s otherwise"
+    % (LOCAL_CONFIG_PATH, GLOBAL_CONFIG_PATH),
+)
+@click.option("--bp_class", help="The name of the blueprint class in the file")
+@click.pass_context
+def upload_blueprint(ctx, bp_file, bp_class, launch=False):
+    """Given a DSL blueprint file, upload it to the Calm server."""
+
+    print("Upload called. Path + name:", bp_file)
+
     global PC_IP
     assert ping(PC_IP) is True
+    if bp_file.startswith("."):
+        bp_file = bp_file[2:]
 
-    name_with_class = name_with_class.replace("/", ".")
-    (file_name, class_name) = name_with_class.rsplit(".", 1)
+    file_name = bp_file.replace("/", ".")[:-3]
+    # (file_name, class_name) = file_name.rsplit(":", 1)
     mod = import_module(file_name)
-    Blueprint = getattr(mod, class_name)
 
+    Blueprint = getattr(mod, bp_class)
+
+    client = ctx.obj.get("client")
     # seek and destroy
     params = {"filter": "name=={};state!=DELETED".format(Blueprint)}
     res, err = client.list(params=params)
@@ -309,15 +351,10 @@ def upload_blueprint(name_with_class, client, launch=False):
         launch_blueprint(Blueprint, client, bp)
 
 
-@get.command('bp')
-@click.argument('name')
-@click.pass_context
-def get_blueprint(ctx, name):
+def get_blueprint(client, name):
     """Get a specific blueprint"""
     global PC_IP
     assert ping(PC_IP) is True
-
-    client = ctx.client
 
     # find bp
     params = {"filter": "name=={};state!=DELETED".format(name)}
@@ -336,15 +373,25 @@ def get_blueprint(ctx, name):
         print(">> {} found >>".format(name))
         blueprint = entities[0]
     else:
-        raise Exception(
-            ">> No blueprint found with name {} found >>".format(name)
-        )
+        raise Exception(">> No blueprint found with name {} found >>".format(name))
     return blueprint
 
 
-def launch_blueprint(blueprint_name, client, blueprint=None):
+@main.group("launch")
+def launch():
+    pass
+
+
+@launch.command("bp")
+@click.argument("blueprint_name")
+@click.pass_context
+def launch_blueprint(ctx, blueprint_name, blueprint=None):
+    client = ctx.obj.get("client")
+    import ipdb
+
+    ipdb.set_trace()
     if not blueprint:
-        blueprint = get_blueprint(blueprint_name, client)
+        blueprint = get_blueprint(client, blueprint_name)
 
     blueprint_id = blueprint["metadata"]["uuid"]
     print(">> Fetching blueprint details")
@@ -584,6 +631,7 @@ def watch_app(app_name, client):
 
     poll_action(poll_func, is_complete)
 
+
 def _get_name_query(names):
     if names:
         search_strings = [
@@ -595,9 +643,3 @@ def _get_name_query(names):
             for name in names
         ]
         return ",".join(search_strings)
-
-
-
-
-if __name__ == "__main__":
-    main()
