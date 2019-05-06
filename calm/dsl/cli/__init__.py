@@ -11,6 +11,7 @@ Usage:
   calm watch --app <app_name>
   calm set config [--server <ip:port>] [--username <username>] [--password <password>]
   calm get config
+  calm get server status
   calm (-h | --help)
   calm (-v | --version)
 
@@ -95,7 +96,9 @@ def main():
 
     client = get_api_client(PC_IP, PC_PORT, PC_USERNAME, PC_PASSWORD)
 
-    if arguments["get"] and arguments["bps"]:
+    if arguments["get"] and arguments["server"] and arguments["status"]:
+        get_server_status(client)
+    elif arguments["get"] and arguments["bps"]:
         get_blueprint_list(arguments["--filter"], client)
     elif arguments["launch"] and arguments["bp"]:
         if arguments["--name"]:
@@ -129,6 +132,16 @@ def main():
             watch_app(arguments["<app_name>"], client)
 
 
+def get_server_status(client):
+
+    host = client.connection.host
+    ping_status = "Success" if ping(ip=host) is True else "Fail"
+
+    print("Server Ping Status: {}".format(ping_status))
+    print("Server URL: {}".format(client.connection.base_url))
+    # TODO - Add info about PC and Calm server version
+
+
 def get_name_query(names):
     if names:
         search_strings = [
@@ -143,8 +156,6 @@ def get_name_query(names):
 
 
 def get_blueprint_list(names, client):
-    global PC_IP
-    assert ping(PC_IP) is True
 
     params = {"length": 20, "offset": 0}
     if names:
@@ -195,8 +206,6 @@ def get_blueprint_list(names, client):
 
 
 def get_apps(names, client):
-    global PC_IP
-    assert ping(PC_IP) is True
 
     params = {"length": 20, "offset": 0}
     if names:
@@ -237,8 +246,6 @@ def get_apps(names, client):
 def upload_blueprint(
     name_with_class, client, launch=False, profile_name=None, app_name=None
 ):
-    global PC_IP
-    assert ping(PC_IP) is True
 
     name_with_class = name_with_class.replace("/", ".")
     (file_name, class_name) = name_with_class.rsplit(":", 1)
@@ -290,8 +297,6 @@ def upload_blueprint(
 
 
 def get_blueprint(blueprint_name, client):
-    global PC_IP
-    assert ping(PC_IP) is True
 
     # find bp
     params = {"filter": "name=={};state!=DELETED".format(blueprint_name)}
@@ -317,8 +322,6 @@ def get_blueprint(blueprint_name, client):
 
 
 def get_blueprint_runtime_editables(blueprint, client):
-    global PC_IP
-    assert ping(PC_IP) is True
 
     bp_uuid = blueprint.get("metadata", {}).get("uuid", None)
     if not bp_uuid:
@@ -421,8 +424,6 @@ def launch_blueprint(
 
 
 def _get_app(app_name, client):
-    global PC_IP
-    assert ping(PC_IP) is True
 
     # 1. Get app_uuid from list api
     params = {"filter": "name=={}".format(app_name)}
