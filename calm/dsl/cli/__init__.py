@@ -622,7 +622,8 @@ def describe_app(ctx, app_name):
     for action in action_list:
         action_name = action["name"]
         if action_name.startswith("action_"):
-            action_name = action_name[len("action_") :]
+            prefix_len = len("action_")
+            action_name = action_name[prefix_len:]
         click.echo("\t" + _highlight_text(action_name))
 
     variable_list = app["status"]["resources"]["variable_list"]
