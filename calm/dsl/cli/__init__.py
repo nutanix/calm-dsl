@@ -25,7 +25,6 @@ Options:
 """
 import os
 import time
-import datetime
 import warnings
 import configparser
 import urllib3
@@ -341,7 +340,7 @@ def upload_blueprint(ctx, name, bp_file, bp_class, launch_):
         bp_file = bp_file[2:]
 
     file_name = bp_file.replace("/", ".")[:-3]
-    file_name_with_class = name.replace("/", ".")
+    # file_name_with_class = name.replace("/", ".")
     mod = import_module(file_name)
 
     Blueprint = getattr(mod, bp_class)
@@ -386,16 +385,10 @@ def upload_blueprint(ctx, name, bp_file, bp_class, launch_):
     assert bp_state == "ACTIVE"
 
     if launch:
-        launch_blueprint(ctx, Blueprint, bp)
+        launch_blueprint(client, str(Blueprint), blueprint=bp)
 
 
-@get.command("bp")
-@click.argument("name")
-@click.pass_context
-def get_blueprint(ctx, name):
-    """Get a specific blueprint"""
-    global PC_IP
-    client = ctx.obj.get("client")
+def get_blueprint(client, name):
 
     # find bp
     params = {"filter": "name=={};state!=DELETED".format(name)}
@@ -418,6 +411,16 @@ def get_blueprint(ctx, name):
     return blueprint
 
 
+@get.command("bp")
+@click.argument("name")
+@click.pass_context
+def get_blueprint_command(ctx, name):
+    """Get a specific blueprint"""
+
+    client = ctx.obj.get("client")
+    get_blueprint(client, name)
+
+
 @main.group()
 def delete():
     """Delete blueprints"""
@@ -429,7 +432,7 @@ def delete():
 def delete_blueprint(ctx, blueprint_name, blueprint=None):
 
     client = ctx.obj.get("client")
-    blueprint = get_blueprint(blueprint_name, client)
+    blueprint = get_blueprint(client, blueprint_name)
     blueprint_id = blueprint["metadata"]["uuid"]
     res, err = client.delete(blueprint_id)
     if err:
@@ -440,16 +443,11 @@ def delete_blueprint(ctx, blueprint_name, blueprint=None):
 @main.group()
 def launch():
     """Launch blueprints to create Apps"""
+    pass
 
 
-@launch.command("bp")
-@click.argument("blueprint_name")
-@click.pass_context
-def launch_blueprint(blueprint_name, client, blueprint=None):
-    client = ctx.obj.get("client")
-    import ipdb
+def launch_blueprint(client, blueprint_name, blueprint=None):
 
-    ipdb.set_trace()
     if not blueprint:
         blueprint = get_blueprint(client, blueprint_name)
 
@@ -515,6 +513,15 @@ def launch_blueprint(blueprint_name, client, blueprint=None):
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
         count += 10
         time.sleep(10)
+
+
+@launch.command("bp")
+@click.argument("blueprint_name")
+@click.pass_obj
+def launch_blueprint_command(obj, blueprint_name, blueprint=None):
+
+    client = obj.get("client")
+    launch_blueprint(client, blueprint_name, blueprint=blueprint)
 
 
 def _get_app(app_name, client):
@@ -615,7 +622,7 @@ def describe_app(ctx, app_name):
     for action in action_list:
         action_name = action["name"]
         if action_name.startswith("action_"):
-            action_name = action_name[len("action_") :]
+            action_name = action_name[len("action_"):]
         click.echo("\t" + _highlight_text(action_name))
 
     variable_list = app["status"]["resources"]["variable_list"]
