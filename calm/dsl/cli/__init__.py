@@ -35,7 +35,7 @@ from functools import reduce
 from importlib import import_module
 
 from pprint import pprint
-from calm.dsl.utils.server_utils import get_api_client as _get_api_client
+from calm.dsl.utils.server_utils import get_api_client as _get_api_client, ping
 from prettytable import PrettyTable
 from .constants import RUNLOG
 
@@ -180,6 +180,26 @@ Usage:
 @main.group()
 def get():
     """Get various things like blueprints, apps and so on"""
+
+
+@get.group()
+def server():
+    """Get calm server details"""
+    pass
+
+
+@server.command("status")
+@click.pass_obj
+def get_server_status(obj):
+    """Get calm server connection status"""
+
+    client = obj.get("client")
+    host = client.connection.host
+    ping_status = "Success" if ping(ip=host) is True else "Fail"
+
+    click.echo("Server Ping Status: {}".format(ping_status))
+    click.echo("Server URL: {}".format(client.connection.base_url))
+    # TODO - Add info about PC and Calm server version
 
 
 @get.command("bps")
