@@ -31,13 +31,10 @@ from .config import get_config, get_api_client
     "--username",
     envvar="PRISM_USERNAME",
     default="admin",
-    help="Prism Central username"
+    help="Prism Central username",
 )
 @click.option(
-    "--password",
-    envvar="PRISM_PASSWORD",
-    default=None,
-    help="Prism Central password"
+    "--password", envvar="PRISM_PASSWORD", default=None, help="Prism Central password"
 )
 @click.option(
     "--config",
@@ -48,12 +45,7 @@ from .config import get_config, get_api_client
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path to config file, defaults to ~/.calm/config",
 )
-@click.option(
-    "--verbose",
-    "-v",
-    is_flag=True,
-    help="Enables verbose mode.",
-)
+@click.option("--verbose", "-v", is_flag=True, help="Enables verbose mode.")
 @click.version_option("0.1")
 @click.pass_context
 def main(ctx, ip, port, username, password, config_file, verbose):
@@ -61,11 +53,7 @@ def main(ctx, ip, port, username, password, config_file, verbose):
 
     ctx.ensure_object(dict)
     ctx.obj["config"] = get_config(
-        ip=ip,
-        port=port,
-        username=username,
-        password=password,
-        config_file=config_file,
+        ip=ip, port=port, username=username, password=password, config_file=config_file
     )
     ctx.obj["client"] = get_api_client()
     ctx.obj["verbose"] = verbose
