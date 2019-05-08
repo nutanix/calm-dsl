@@ -214,10 +214,8 @@ def create():
 )
 @click.option("--class", "bp_class", help="The name of the blueprint class in the file")
 @click.pass_obj
-def upload_blueprint(obj, name, bp_file, bp_class):
-    """Upload a blueprint"""
-
-    global PC_IP
+def create_blueprint(obj, name, bp_file, bp_class):
+    """Create a blueprint"""
 
     if bp_file.startswith("."):
         bp_file = bp_file[2:]
@@ -642,29 +640,38 @@ def run_actions(obj, app_name, action_name, watch):
     app_id = app["metadata"]["uuid"]
 
     # 3. Get action uuid from action name
-    if action_name.lower() == "delete":
-        res, err = client.delete_app(app_id)
-        print(">> Triggering Delete")
+    if action_name.lower() in ["delete", "soft_delete"]:
+        action_name = action_name.lower()
+        is_soft_delete = action_name == "soft_delete"
+        action_label = "Soft Delete" if is_soft_delete else "Delete"
+        res, err = client.delete_app(app_id, is_soft_delete)
+        print(">> Triggering {}".format(action_label))
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
         else:
-            print("Delete action triggered")
+            print("{} action triggered".format(action_label))
             response = res.json()
             runlog_id = response["status"]["runlog_uuid"]
             print("Action runlog uuid: {}".format(runlog_id))
 
-            def poll_func():
-                print("Polling Delete action...")
-                return client.get_app(app_id)
-
-            def is_deletion_complete(response):
-                status = response["status"]["state"]
-                print("Current app status: {}".format(status))
-                is_deleted = status == "deleted"
-                return (is_deleted, "Successfully deleted app {}".format(app_name))
-
             if watch:
-                poll_action(poll_func, is_deletion_complete)
+                url = client.APP_ITEM.format(app_id) + "/app_runlogs/list"
+                payload = {"filter": "root_reference=={}".format(runlog_id)}
+
+                def poll_func():
+                    print("Polling action run ...")
+                    return client.poll_action_run(url, payload)
+
+                def is_action_complete(response):
+                    pprint(response)
+                    if len(response["entities"]):
+                        for action in response["entities"]:
+                            if action["status"]["state"] != "SUCCESS":
+                                return (False, "")
+                        return (True, "{} action complete".format(action_label))
+                    else:
+                        return (False, "")
+                poll_action(poll_func, is_action_complete)
             return
 
     calm_action_name = "action_" + action_name.lower()
@@ -691,20 +698,20 @@ def run_actions(obj, app_name, action_name, watch):
     url = client.APP_ITEM.format(app_id) + "/app_runlogs/list"
     payload = {"filter": "root_reference=={}".format(runlog_id)}
 
-    def poll_func():
-        print("Polling action run ...")
-        return client.poll_action_run(url, payload)
-
-    def is_action_complete(response):
-        pprint(response)
-        if len(response["entities"]):
-            for action in response["entities"]:
-                if action["status"]["state"] != "SUCCESS":
-                    return (False, "")
-            return (True, "{} action complete".format(action_name.upper()))
-        return (False, "")
-
     if watch:
+        def poll_func():
+            print("Polling action run ...")
+            return client.poll_action_run(url, payload)
+
+        def is_action_complete(response):
+            pprint(response)
+            if len(response["entities"]):
+                for action in response["entities"]:
+                    if action["status"]["state"] != "SUCCESS":
+                        return (False, "")
+                return (True, "{} action complete".format(action_name))
+            else:
+                return (False, "")
         poll_action(poll_func, is_action_complete)
 
 

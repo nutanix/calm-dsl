@@ -391,9 +391,12 @@ class BlueprintAPI:
                 poll_url, verify=False, method=REQUEST.METHOD.GET
             )
 
-    def delete_app(self, app_id):
+    def delete_app(self, app_id, soft_delete=False):
+        delete_url = BlueprintAPI.APP_ITEM.format(app_id)
+        if soft_delete:
+            delete_url += "?type=soft"
         return self.connection._call(
-            BlueprintAPI.APP_ITEM.format(app_id),
+            delete_url,
             verify=False,
             method=REQUEST.METHOD.DELETE,
         )
