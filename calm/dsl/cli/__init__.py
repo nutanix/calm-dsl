@@ -105,12 +105,12 @@ def get_server_status(obj):
     "--filter", "filter_by", default=None, help="Filter blueprints with this string"
 )
 @click.option("--limit", default=20, help="Number of results to return")
-@click.pass_context
-def get_blueprint_list(ctx, filter_by, limit):
+@click.pass_obj
+def get_blueprint_list(obj, filter_by, limit):
     """Get the blueprints, optionally filtered by a string"""
 
-    client = ctx.obj.get("client")
-    config = ctx.obj.get("config")
+    client = obj.get("client")
+    config = obj.get("config")
 
     params = {"length": limit, "offset": 0}
     if filter_by:
@@ -164,12 +164,12 @@ def get_blueprint_list(ctx, filter_by, limit):
 @get.command("apps")
 @click.option("--names", default=None, help="The name of apps to filter by")
 @click.option("--limit", default=20, help="Number of results to return")
-@click.pass_context
-def get_apps(ctx, names, limit):
+@click.pass_obj
+def get_apps(obj, names, limit):
     """Get Apps, optionally filtered by a string"""
 
-    client = ctx.obj.get("client")
-    config = ctx.obj.get("config")
+    client = obj.get("client")
+    config = obj.get("config")
 
     params = {"length": limit, "offset": 0}
     if names:
@@ -228,8 +228,8 @@ def create():
     help="Path of Blueprint file to upload",
 )
 @click.option("--class", "bp_class", help="The name of the blueprint class in the file")
-@click.pass_context
-def upload_blueprint(ctx, name, bp_file, bp_class, launch_):
+@click.pass_obj
+def upload_blueprint(obj, name, bp_file, bp_class, launch_):
     """Upload a blueprint"""
 
     click.echo("Upload called. Path + name:", bp_file)
@@ -243,7 +243,7 @@ def upload_blueprint(ctx, name, bp_file, bp_class, launch_):
 
     Blueprint = getattr(mod, bp_class)
 
-    client = ctx.obj.get("client")
+    client = obj.get("client")
     # seek and destroy
     params = {"filter": "name=={};state!=DELETED".format(Blueprint)}
     res, err = client.list(params=params)
@@ -311,11 +311,11 @@ def get_blueprint(client, name):
 
 @get.command("bp")
 @click.argument("name")
-@click.pass_context
-def get_blueprint_command(ctx, name):
+@click.pass_obj
+def get_blueprint_command(obj, name):
     """Get a specific blueprint"""
 
-    client = ctx.obj.get("client")
+    client = obj.get("client")
     get_blueprint(client, name)
 
 
@@ -326,10 +326,10 @@ def delete():
 
 @delete.command("bp")
 @click.argument("blueprint_name")
-@click.pass_context
-def delete_blueprint(ctx, blueprint_name, blueprint=None):
+@click.pass_obj
+def delete_blueprint(obj, blueprint_name, blueprint=None):
 
-    client = ctx.obj.get("client")
+    client = obj.get("client")
     blueprint = get_blueprint(client, blueprint_name)
     blueprint_id = blueprint["metadata"]["uuid"]
     res, err = client.delete(blueprint_id)
@@ -465,11 +465,11 @@ def describe():
 
 @describe.command("app")
 @click.argument("app_name")
-@click.pass_context
-def describe_app(ctx, app_name):
+@click.pass_obj
+def describe_app(obj, app_name):
     """Describe an app"""
 
-    client = ctx.obj.get("client")
+    client = obj.get("client")
     app = _get_app(app_name, client)
 
     click.echo("\n----Application Summary----\n")
@@ -551,11 +551,11 @@ def describe_app(ctx, app_name):
 @click.argument("app_name")
 @click.argument("action_name")
 @click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
-@click.pass_context
-def run_actions(ctx, app_name, action_name, watch):
+@click.pass_obj
+def run_actions(obj, app_name, action_name, watch):
     """App related functionality: launch, lcm actions, monitor, delete"""
 
-    client = ctx.obj.get("client")
+    client = obj.get("client")
 
     app = _get_app(app_name, client)
     app_spec = app["spec"]
@@ -680,11 +680,11 @@ def watch():
 @watch.command("app")
 @click.argument("app_name")
 @click.option("--action", default=None, help="Watch specific action")
-@click.pass_context
-def watch_app(ctx, app_name, action):
+@click.pass_obj
+def watch_app(obj, app_name, action):
     """Watch an app"""
 
-    client = ctx.obj.get("client")
+    client = obj.get("client")
 
     if action:
         return watch_action(action, app_name, client)
