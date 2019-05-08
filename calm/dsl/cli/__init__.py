@@ -148,33 +148,6 @@ Usage:
     if verbose:
         click.echo("Using user %s @ https://%s:%s" % (PC_USERNAME, PC_IP, PC_PORT))
 
-    # if arguments["get"] and arguments["bps"]:
-    #     get_blueprint_list(arguments["--filter"], client)
-    # elif arguments["delete"] and arguments["<bp_name>"]:
-    #     delete_blueprint(arguments["<bp_name>"], client)
-    # elif arguments["launch"] and arguments["bp"]:
-    #     if arguments["--name"]:
-    #         launch_blueprint(arguments["<bp_name>"], client)
-    #     elif arguments["--file"]:
-    #         upload_blueprint(arguments["--file"], client, True)
-    # elif arguments["create"] and arguments["bp"]:
-    #     upload_blueprint(arguments["--file"], client)
-    # elif arguments["get"] and arguments["apps"]:
-    #     get_apps(arguments["--filter"], client)
-    # elif arguments["describe"] and arguments["app"]:
-    #     describe_app(arguments["<app_name>"], client)
-    # elif arguments["<action>"] and arguments["<app_name>"]:
-    #     run_actions(
-    #         arguments["<action>"], arguments["<app_name>"], client, arguments["--watch"]
-    #     )
-    # elif arguments["watch"]:
-    #     if arguments["--action"]:
-    #         watch_action(
-    #             arguments["<action_runlog_uuid>"], arguments["<app_name>"], client
-    #         )
-    #     else:
-    #         watch_app(arguments["<app_name>"], client)
-
 
 @main.group()
 def get():
