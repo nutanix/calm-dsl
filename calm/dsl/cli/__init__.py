@@ -1,7 +1,5 @@
-import os
 import time
 import warnings
-import configparser
 import urllib3
 from functools import reduce
 from importlib import import_module
@@ -11,104 +9,70 @@ import click
 import arrow
 from prettytable import PrettyTable
 
-from calm.dsl.utils.server_utils import get_api_client as _get_api_client, ping
+from calm.dsl.utils.server_utils import ping
 
 from .constants import RUNLOG
+from .config import get_config, get_api_client
 
 
 urllib3.disable_warnings()
 
 
-# Defaults to be used if no config file exists.
-PC_IP = "10.46.34.230"
-PC_PORT = 9440
-PC_USERNAME = "admin"
-PC_PASSWORD = "***REMOVED***"
-
-LOCAL_CONFIG_PATH = "config.ini"
-GLOBAL_CONFIG_PATH = "~/.calm/config"
-
-
-def get_api_client(
-    pc_ip=PC_IP, pc_port=PC_PORT, username=PC_USERNAME, password=PC_PASSWORD
-):
-    return _get_api_client(pc_ip=pc_ip, pc_port=pc_port, auth=(username, password))
-
-
 @click.group()
 @click.option(
-    "--username", envvar="PRISM_USERNAME", default=None, help="Prism Central username"
-)
-@click.option(
-    "--password", envvar="PRISM_PASSWORD", default=None, help="Prism Central password"
-)
-@click.option(
-    "--server",
-    "-s",
-    envvar="PRISM_SERVER",
+    "--ip",
+    envvar="PRISM_SERVER_IP",
     default=None,
-    help="Prism Central server URL in <ip>:<port> format",
+    help="Prism Central server IP or hostname",
+)
+@click.option(
+    "--port",
+    envvar="PRISM_SERVER_PORT",
+    default=9440,
+    help="Prism Central server port number. Defaults to 9440.",
+)
+@click.option(
+    "--username",
+    envvar="PRISM_USERNAME",
+    default="admin",
+    help="Prism Central username"
+)
+@click.option(
+    "--password",
+    envvar="PRISM_PASSWORD",
+    default=None,
+    help="Prism Central password"
 )
 @click.option(
     "--config",
     "-c",
     "config_file",
     envvar="CALM_CONFIG",
+    default=None,
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
-    help="Path of config file, default is %s in current directory, %s otherwise"
-    % (LOCAL_CONFIG_PATH, GLOBAL_CONFIG_PATH),
+    help="Path to config file, defaults to ~/.calm/config",
 )
-@click.option("--verbose", "-v", is_flag=True, help="Enables verbose mode.")
+@click.option(
+    "--verbose",
+    "-v",
+    is_flag=True,
+    help="Enables verbose mode.",
+)
 @click.version_option("0.1")
 @click.pass_context
-def main(ctx, username, password, server, config_file, verbose):
+def main(ctx, ip, port, username, password, config_file, verbose):
     """Calm CLI"""
 
-    global PC_IP, PC_PORT, PC_USERNAME, PC_PASSWORD
-
-    local_config_exists = os.path.isfile(LOCAL_CONFIG_PATH)
-    global_config_exists = os.path.isfile(GLOBAL_CONFIG_PATH)
-
-    file_path = config_file
-
-    if not file_path:
-        if global_config_exists and not local_config_exists:
-            file_path = GLOBAL_CONFIG_PATH
-        else:
-            file_path = LOCAL_CONFIG_PATH
-
-    config = configparser.ConfigParser()
-    config.read(file_path)
-
-    if "SERVER" in config:
-        PC_IP = config["SERVER"]["pc_ip"]
-        PC_PORT = config["SERVER"]["pc_port"]
-        PC_USERNAME = config["SERVER"]["pc_username"]
-        PC_PASSWORD = config["SERVER"]["pc_password"]
-
-    if server:
-        [PC_IP, PC_PORT] = server.split(":")
-    if username:
-        PC_USERNAME = username
-    if password:
-        PC_PASSWORD = password
-
-    if file_path or "SERVER" not in config:
-        # Save to config file if explicitly set, or no config file found
-        config["SERVER"] = {
-            "pc_ip": PC_IP,
-            "pc_port": PC_PORT,
-            "pc_username": PC_USERNAME,
-            "pc_password": PC_PASSWORD,
-        }
-        with open(file_path, "w") as configfile:
-            config.write(configfile)
-
     ctx.ensure_object(dict)
-    ctx.obj["client"] = get_api_client(PC_IP, PC_PORT, PC_USERNAME, PC_PASSWORD)
-
-    if verbose:
-        click.echo("Using user %s @ https://%s:%s" % (PC_USERNAME, PC_IP, PC_PORT))
+    ctx.obj["config"] = get_config(
+        ip=ip,
+        port=port,
+        username=username,
+        password=password,
+        config_file=config_file,
+    )
+    ctx.obj["client"] = get_api_client()
+    ctx.obj["verbose"] = verbose
 
 
 @main.group()
@@ -144,9 +108,9 @@ def get_server_status(obj):
 @click.pass_context
 def get_blueprint_list(ctx, filter_by, limit):
     """Get the blueprints, optionally filtered by a string"""
-    global PC_IP
 
     client = ctx.obj.get("client")
+    config = ctx.obj.get("config")
 
     params = {"length": limit, "offset": 0}
     if filter_by:
@@ -193,7 +157,8 @@ def get_blueprint_list(ctx, filter_by, limit):
         click.echo(table)
         assert res.ok is True
     else:
-        warnings.warn(UserWarning("Cannot fetch blueprints from {}".format(PC_IP)))
+        pc_ip = config["SERVER"]["pc_ip"]
+        warnings.warn(UserWarning("Cannot fetch blueprints from {}".format(pc_ip)))
 
 
 @get.command("apps")
@@ -203,9 +168,8 @@ def get_blueprint_list(ctx, filter_by, limit):
 def get_apps(ctx, names, limit):
     """Get Apps, optionally filtered by a string"""
 
-    global PC_IP
-
     client = ctx.obj.get("client")
+    config = ctx.obj.get("config")
 
     params = {"length": limit, "offset": 0}
     if names:
@@ -245,7 +209,8 @@ def get_apps(ctx, names, limit):
         click.echo(table)
         assert res.ok is True
     else:
-        warnings.warn(UserWarning("Cannot fetch applications from {}".format(PC_IP)))
+        pc_ip = config["SERVER"]["pc_ip"]
+        warnings.warn(UserWarning("Cannot fetch applications from {}".format(pc_ip)))
 
 
 @main.group()
@@ -266,8 +231,6 @@ def create():
 @click.pass_context
 def upload_blueprint(ctx, name, bp_file, bp_class, launch_):
     """Upload a blueprint"""
-
-    global PC_IP
 
     click.echo("Upload called. Path + name:", bp_file)
 
@@ -383,6 +346,10 @@ def launch():
 
 def launch_blueprint(client, blueprint_name, blueprint=None):
 
+    config = get_config()
+    pc_ip = config["SERVER"]["pc_ip"]
+    pc_port = config["SERVER"]["pc_port"]
+
     if not blueprint:
         blueprint = get_blueprint(client, blueprint_name)
 
@@ -437,7 +404,7 @@ def launch_blueprint(client, blueprint_name, blueprint=None):
             print("Successfully launched. App uuid is: {}".format(app_uuid))
             print(
                 "App url: https://{}:{}/console/#page/explore/calm/applications/{}".format(
-                    PC_IP, PC_PORT, app_uuid
+                    pc_ip, pc_port, app_uuid
                 )
             )
             break
@@ -456,6 +423,7 @@ def launch_blueprint(client, blueprint_name, blueprint=None):
 def launch_blueprint_command(obj, blueprint_name, blueprint=None):
 
     client = obj.get("client")
+
     launch_blueprint(client, blueprint_name, blueprint=blueprint)
 
 
