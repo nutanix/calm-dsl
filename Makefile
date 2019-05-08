@@ -1,7 +1,7 @@
 dev:
 	# Setup our python3 based virtualenv
 	# This step assumes python3 is installed on your dev machine
-	[ -f venv/bin/python3 ] || (virtualenv -p python36 venv && \
+	[ -f venv/bin/python3 ] || (virtualenv -p python3 venv && \
 		venv/bin/pip3 install --upgrade pip setuptools)
 	venv/bin/pip3 install -r requirements.txt -r dev-requirements.txt
 	venv/bin/python3 setup.py develop

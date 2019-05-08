@@ -16,11 +16,13 @@ res, err = client.list()
 import traceback
 import logging
 import json
+import urllib3
 
 from requests import Session as NonRetrySession
 from requests.adapters import HTTPAdapter
 
 
+urllib3.disable_warnings()
 log = logging.getLogger(__name__)
 
 
@@ -410,7 +412,7 @@ class BlueprintAPI:
 
         return bp_payload
 
-    def upload_with_secrets(self, bp):
+    def upload_with_secrets(self, bp, bp_name=None):
 
         bp_resources = json.loads(bp.json_dumps())
 
@@ -435,7 +437,7 @@ class BlueprintAPI:
         }
 
         upload_payload = self._make_blueprint_payload(
-            bp.__name__, bp.__doc__, bp_resources
+            bp_name or bp.__name__, bp.__doc__, bp_resources
         )
 
         res, err = self.upload(upload_payload)
