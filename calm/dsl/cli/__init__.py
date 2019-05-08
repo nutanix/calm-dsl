@@ -1,45 +1,23 @@
-"""Calm CLI
-
-Usage:
-  calm get bps [--filter=<name>...]
-  calm describe bp <name> [--json | --yaml]
-  calm create bp --file=<bp_file>
-  calm delete bp <bp_name>
-  calm launch bp (--name <bp_name> | --file <bp_file>)
-  calm get apps [--filter=<name>...]
-  calm describe app <app_name>
-  calm <action> app <app_name> [--watch]
-  calm watch --action <action_runlog_uuid> --app <app_name>
-  calm watch --app <app_name>
-  calm set config [--server <ip:port>] [--username <username>] [--password <password>]
-  calm get config
-  calm (-h | --help)
-  calm (-v | --version)
-
-Options:
-  -h --help                  Show this screen.
-  -v --version               Show version.
-  -s --server url            Prism Central URL in <ip:port> format
-  -u --username username     Prism Central username
-  -p --password password     Prism Central password
-"""
 import os
 import time
 import warnings
 import configparser
 import urllib3
-import click
-import arrow
 from functools import reduce
 from importlib import import_module
-
 from pprint import pprint
-from calm.dsl.utils.server_utils import get_api_client as _get_api_client, ping
+
+import click
+import arrow
 from prettytable import PrettyTable
+
+from calm.dsl.utils.server_utils import get_api_client as _get_api_client, ping
+
 from .constants import RUNLOG
 
 
 urllib3.disable_warnings()
+
 
 # Defaults to be used if no config file exists.
 PC_IP = "10.46.34.230"
