@@ -412,7 +412,7 @@ class BlueprintAPI:
 
         return bp_payload
 
-    def upload_with_secrets(self, bp):
+    def upload_with_secrets(self, bp, bp_name=None):
 
         bp_resources = json.loads(bp.json_dumps())
 
@@ -437,7 +437,7 @@ class BlueprintAPI:
         }
 
         upload_payload = self._make_blueprint_payload(
-            bp.__name__, bp.__doc__, bp_resources
+            bp_name or bp.__name__, bp.__doc__, bp_resources
         )
 
         res, err = self.upload(upload_payload)

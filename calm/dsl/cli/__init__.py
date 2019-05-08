@@ -50,7 +50,6 @@ from .config import get_config, get_api_client
 @click.pass_context
 def main(ctx, ip, port, username, password, config_file, verbose):
     """Calm CLI"""
-
     ctx.ensure_object(dict)
     ctx.obj["config"] = get_config(
         ip=ip, port=port, username=username, password=password, config_file=config_file
@@ -215,23 +214,27 @@ def create():
 )
 @click.option("--class", "bp_class", help="The name of the blueprint class in the file")
 @click.pass_obj
-def upload_blueprint(obj, name, bp_file, bp_class, launch_):
+@click.option(
+    "--launch",
+    flag_value="launch",
+    help="If you want to launch the blueprint upon uploading",
+)
+def upload_blueprint(obj, name, bp_file, bp_class, launch):
     """Upload a blueprint"""
 
-    click.echo("Upload called. Path + name:", bp_file)
+    global PC_IP
 
     if bp_file.startswith("."):
         bp_file = bp_file[2:]
 
     file_name = bp_file.replace("/", ".")[:-3]
-    # file_name_with_class = name.replace("/", ".")
     mod = import_module(file_name)
 
     Blueprint = getattr(mod, bp_class)
 
     client = obj.get("client")
-    # seek and destroy
-    params = {"filter": "name=={};state!=DELETED".format(Blueprint)}
+    # check if bp with the given name already exists
+    params = {"filter": "name=={};state!=DELETED".format(name)}
     res, err = client.list(params=params)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -239,25 +242,18 @@ def upload_blueprint(obj, name, bp_file, bp_class, launch_):
     response = res.json()
     entities = response.get("entities", None)
     if entities:
-        if len(entities) != 1:
-            raise Exception("More than one blueprint found - {}".format(entities))
-
-        print(">> {} found >>".format(Blueprint))
-        uuid = entities[0]["metadata"]["uuid"]
-
-        res, err = client.delete(uuid)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        print(">> {} deleted >>".format(Blueprint))
+        if len(entities) > 0:
+            click.echo("Blueprint with name {} already exists.".format(name))
+            # ToDo: Add command to edit Blueprints
+            return
 
     else:
-        print(">> {} not found >>".format(Blueprint))
+        print(">> {} not found >>".format(name))
 
     # upload
-    res, err = client.upload_with_secrets(Blueprint)
+    res, err = client.upload_with_secrets(Blueprint, name)
     if not err:
-        print(">> {} uploaded with credentials >>".format(Blueprint))
+        print(">> {} uploaded with credentials >>".format(name))
         # print(json.dumps(res.json(), indent=4, separators=(",", ": ")))
         assert res.ok is True
     else:
