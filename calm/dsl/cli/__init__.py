@@ -198,6 +198,48 @@ def get_apps(obj, names, limit):
 
 
 @main.group()
+def compile():
+    """Compile blueprint to json/yaml"""
+    pass
+
+
+@compile.command("bp")
+@click.option(
+    "--file",
+    "-f",
+    "bp_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path of Blueprint file to upload",
+)
+@click.option("--class", "bp_class", help="The name of the blueprint class in the file")
+@click.option(
+    "--out",
+    "out",
+    type=click.Choice(["json", "yaml"]),
+    default="json",
+    help="output format [json|yaml].",
+)
+def compile_blueprint(bp_file, bp_class, out):
+
+    if bp_file.startswith("."):
+        bp_file = bp_file[2:]
+
+    file_name = bp_file.replace("/", ".")[:-3]
+    mod = import_module(file_name)
+
+    Blueprint = getattr(mod, bp_class)
+
+    # TODO - Handle secrets
+
+    if out == "json":
+        click.echo(Blueprint.json_dumps(pprint=True))
+    elif out == "yaml":
+        click.echo(Blueprint.yaml_dump())
+    else:
+        click.echo("Unknown output format {} given".format(out))
+
+
+@main.group()
 def create():
     """Create blueprint, optionally launch too"""
     pass
