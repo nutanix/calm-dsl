@@ -214,12 +214,7 @@ def create():
 )
 @click.option("--class", "bp_class", help="The name of the blueprint class in the file")
 @click.pass_obj
-@click.option(
-    "--launch",
-    flag_value="launch",
-    help="If you want to launch the blueprint upon uploading",
-)
-def upload_blueprint(obj, name, bp_file, bp_class, launch):
+def upload_blueprint(obj, name, bp_file, bp_class):
     """Upload a blueprint"""
 
     global PC_IP
@@ -263,9 +258,6 @@ def upload_blueprint(obj, name, bp_file, bp_class, launch):
     bp_state = bp["status"]["state"]
     print(">> Blueprint state: {}".format(bp_state))
     assert bp_state == "ACTIVE"
-
-    if launch:
-        launch_blueprint(client, str(Blueprint), blueprint=bp)
 
 
 def get_blueprint(client, name):
