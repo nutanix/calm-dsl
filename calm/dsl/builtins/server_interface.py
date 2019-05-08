@@ -396,9 +396,7 @@ class BlueprintAPI:
         if soft_delete:
             delete_url += "?type=soft"
         return self.connection._call(
-            delete_url,
-            verify=False,
-            method=REQUEST.METHOD.DELETE,
+            delete_url, verify=False, method=REQUEST.METHOD.DELETE
         )
 
     @staticmethod

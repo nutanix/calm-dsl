@@ -3,6 +3,7 @@ import warnings
 from functools import reduce
 from importlib import import_module
 from pprint import pprint
+import json
 
 import click
 import arrow
@@ -203,20 +204,15 @@ def create():
     pass
 
 
-@create.command("bp")
-@click.argument("name")
-@click.option(
-    "--file",
-    "-f",
-    "bp_file",
-    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
-    help="Path of Blueprint file to upload",
-)
-@click.option("--class", "bp_class", help="The name of the blueprint class in the file")
-@click.pass_obj
-def create_blueprint(obj, name, bp_file, bp_class):
-    """Create a blueprint"""
+def create_blueprint_from_json(client, name, path_to_json):
+    blueprint_json = json.loads(open(path_to_json, "r").read())
+    blueprint_json.pop("status", None)
+    blueprint_json["spec"]["name"] = name
+    blueprint_json["metadata"]["name"] = name
+    return client.upload(blueprint_json)
 
+
+def create_blueprint_from_dsl(client, name, bp_file, bp_class):
     if bp_file.startswith("."):
         bp_file = bp_file[2:]
 
@@ -225,7 +221,6 @@ def create_blueprint(obj, name, bp_file, bp_class):
 
     Blueprint = getattr(mod, bp_class)
 
-    client = obj.get("client")
     # check if bp with the given name already exists
     params = {"filter": "name=={};state!=DELETED".format(name)}
     res, err = client.list(params=params)
@@ -251,6 +246,28 @@ def create_blueprint(obj, name, bp_file, bp_class):
         assert res.ok is True
     else:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    return res, err
+
+
+@create.command("bp")
+@click.argument("name")
+@click.option(
+    "--file",
+    "-f",
+    "bp_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path of Blueprint file to upload",
+)
+@click.option("--class", "bp_class", help="The name of the blueprint class in the file")
+@click.pass_obj
+def create_blueprint(obj, name, bp_file, bp_class):
+    """Create a blueprint"""
+    client = obj.get("client")
+
+    if bp_file.endswith(".json"):
+        res, err = create_blueprint_from_json(client, name, bp_file)
+    else:
+        res, err = create_blueprint_from_dsl(client, name, bp_file, bp_class)
 
     bp = res.json()
     bp_state = bp["status"]["state"]
@@ -671,6 +688,7 @@ def run_actions(obj, app_name, action_name, watch):
                         return (True, "{} action complete".format(action_label))
                     else:
                         return (False, "")
+
                 poll_action(poll_func, is_action_complete)
             return
 
@@ -699,6 +717,7 @@ def run_actions(obj, app_name, action_name, watch):
     payload = {"filter": "root_reference=={}".format(runlog_id)}
 
     if watch:
+
         def poll_func():
             print("Polling action run ...")
             return client.poll_action_run(url, payload)
@@ -712,6 +731,7 @@ def run_actions(obj, app_name, action_name, watch):
                 return (True, "{} action complete".format(action_name))
             else:
                 return (False, "")
+
         poll_action(poll_func, is_action_complete)
 
 
