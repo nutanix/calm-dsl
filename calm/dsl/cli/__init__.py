@@ -84,23 +84,7 @@ def get_api_client(
 @click.version_option("0.1")
 @click.pass_context
 def main(ctx, username, password, server, config_file, verbose):
-    """Calm CLI
-
-\b
-Usage:
-  calm get bps [--filter=<name>...]
-  calm describe bp <name> [--json | --yaml]
-  calm create bp --file=<bp_file>
-  calm delete bp <bp_name>
-  calm launch bp (--name <bp_name> | --file <bp_file>)
-  calm get apps [--filter=<name>...]
-  calm describe app <app_name>
-  calm <action> app <app_name> [--watch]
-  calm watch --action <action_runlog_uuid> --app <app_name>
-  calm watch --app <app_name>
-  calm set config [--server <ip:port>] [--username <username>] [--password <password>]
-  calm get config
-    """
+    """Calm CLI"""
 
     global PC_IP, PC_PORT, PC_USERNAME, PC_PASSWORD
 
