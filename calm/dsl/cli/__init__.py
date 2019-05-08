@@ -62,6 +62,7 @@ def main(ctx, ip, port, username, password, config_file, verbose):
 @main.group()
 def get():
     """Get various things like blueprints, apps and so on"""
+    pass
 
 
 @get.group()
@@ -200,6 +201,7 @@ def get_apps(obj, names, limit):
 @main.group()
 def create():
     """Create blueprint, optionally launch too"""
+    pass
 
 
 @create.command("bp")
@@ -306,6 +308,7 @@ def get_blueprint_command(obj, name):
 @main.group()
 def delete():
     """Delete blueprints"""
+    pass
 
 
 @delete.command("bp")
@@ -445,6 +448,7 @@ def _get_app(app_name, client):
 @main.group()
 def describe():
     """Describe apps and blueprints"""
+    pass
 
 
 @describe.command("app")
@@ -659,6 +663,7 @@ def watch_action(runlog_id, app_name, client):
 @main.group()
 def watch():
     """Get various things like blueprints, apps and so on"""
+    pass
 
 
 @watch.command("app")
@@ -718,7 +723,3 @@ def _get_name_query(names):
 def _highlight_text(text, **kwargs):
     """Highlight text in our standard format"""
     return click.style("{}".format(text), fg="blue", bold=False, **kwargs)
-
-
-if __name__ == "__main__":
-    main()
