@@ -1,6 +1,5 @@
 import time
 import warnings
-import urllib3
 from functools import reduce
 from importlib import import_module
 from pprint import pprint
@@ -13,9 +12,6 @@ from calm.dsl.utils.server_utils import ping
 
 from .constants import RUNLOG
 from .config import get_config, get_api_client
-
-
-urllib3.disable_warnings()
 
 
 @click.group()

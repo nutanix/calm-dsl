@@ -16,11 +16,13 @@ res, err = client.list()
 import traceback
 import logging
 import json
+import urllib3
 
 from requests import Session as NonRetrySession
 from requests.adapters import HTTPAdapter
 
 
+urllib3.disable_warnings()
 log = logging.getLogger(__name__)
 
 
