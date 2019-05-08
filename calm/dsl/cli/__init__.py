@@ -319,6 +319,110 @@ def launch():
     pass
 
 
+def get_blueprint_runtime_editables(blueprint, client):
+
+    bp_uuid = blueprint.get("metadata", {}).get("uuid", None)
+    if not bp_uuid:
+        raise Exception(">> Invalid blueprint provided {} >>".format(blueprint))
+    res, err = client._get_editables(bp_uuid)
+    response = res.json()
+    return response.get("resources", [])
+
+
+def get_field_values(entity_dict, context, path=None):
+    path = path or ""
+    for field, value in entity_dict.items():
+        if isinstance(value, dict):
+            get_field_values(entity_dict[field], context, path=path + "." + field)
+        else:
+            new_val = input(
+                "Value for {} in {} (default value={}): ".format(
+                    path + "." + field, context, value
+                )
+            )
+            if new_val:
+                entity_dict[field] = type(value)(new_val)
+
+
+def launch_blueprint_simple(client, blueprint_name, blueprint=None, profile_name=None):
+    if not blueprint:
+        blueprint = get_blueprint(blueprint_name, client)
+
+    blueprint_uuid = blueprint.get("metadata", {}).get("uuid", "")
+    profiles = get_blueprint_runtime_editables(blueprint, client)
+    profile = None
+    if profile_name is None:
+        profile = profiles[0]
+    else:
+        for app_profile in profiles:
+            app_prof_ref = app_profile.get("app_profile_reference", {})
+            if app_prof_ref.get("name") == profile_name:
+                profile = app_profile
+
+                break
+        if not profile:
+            raise Exception(">> No profile found with name {} >>".format(profile_name))
+
+    runtime_editables = profile.pop("runtime_editables", [])
+    launch_payload = {
+        "spec": {
+            "app_name": "TestSimpleLaunch-{}".format(int(time.time())),
+            "app_description": "",
+            "app_profile_reference": profile.get("app_profile_reference", {}),
+            "runtime_editables": runtime_editables,
+        }
+    }
+    if runtime_editables:
+        print("Blueprint editables are:\n{}".format(runtime_editables))
+        for entity_type, entity_list in runtime_editables.items():
+            for entity in entity_list:
+                context = entity["context"]
+                editables = entity["value"]
+                get_field_values(editables, context, path=entity.get("name", ""))
+        print("Updated blueprint editables are:\n{}".format(runtime_editables))
+    res, err = client.launch(blueprint_uuid, launch_payload)
+    if not err:
+        print(">> {} queued for launch >>".format(blueprint_name))
+    else:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    response = res.json()
+    launch_req_id = response["status"]["request_id"]
+
+    # Poll every 10 seconds on the app status, for 5 mins
+    maxWait = 5 * 60
+    count = 0
+    while count < maxWait:
+        # call status api
+        print("Polling status of Launch")
+        res, err = client.poll_launch(blueprint_uuid, launch_req_id)
+        response = res.json()
+        pprint(response)
+        if response["status"]["state"] == "success":
+            app_uuid = response["status"]["application_uuid"]
+
+            config = get_config()
+            pc_ip = config["SERVER"]["pc_ip"]
+            pc_port = config["SERVER"]["pc_port"]
+
+            # Can't give app url, as deep routing within PC doesn't work.
+            # Hence just giving the app id.
+            print("Successfully launched. App uuid is: {}".format(app_uuid))
+
+            print(
+                "App url: https://{}:{}/console/#page/explore/calm/applications/{}".format(
+                    pc_ip, pc_port, app_uuid
+                )
+            )
+            break
+        elif response["status"]["state"] == "failure":
+            print("Failed to launch blueprint. Check API response above.")
+            break
+        elif err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        count += 10
+        time.sleep(10)
+
+
 def launch_blueprint(client, blueprint_name, blueprint=None):
 
     config = get_config()
