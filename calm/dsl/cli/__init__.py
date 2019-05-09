@@ -3,6 +3,7 @@ import warnings
 from functools import reduce
 from importlib import import_module
 from pprint import pprint
+import json
 
 import click
 import arrow
@@ -245,22 +246,15 @@ def create():
     pass
 
 
-@create.command("bp")
-@click.argument("name")
-@click.option(
-    "--file",
-    "-f",
-    "bp_file",
-    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
-    help="Path of Blueprint file to upload",
-)
-@click.option("--class", "bp_class", help="The name of the blueprint class in the file")
-@click.pass_obj
-def upload_blueprint(obj, name, bp_file, bp_class):
-    """Upload a blueprint"""
+def create_blueprint_from_json(client, name, path_to_json):
+    blueprint_json = json.loads(open(path_to_json, "r").read())
+    blueprint_json.pop("status", None)
+    blueprint_json["spec"]["name"] = name
+    blueprint_json["metadata"]["name"] = name
+    return client.upload(blueprint_json)
 
-    global PC_IP
 
+def create_blueprint_from_dsl(client, name, bp_file, bp_class):
     if bp_file.startswith("."):
         bp_file = bp_file[2:]
 
@@ -269,7 +263,6 @@ def upload_blueprint(obj, name, bp_file, bp_class):
 
     Blueprint = getattr(mod, bp_class)
 
-    client = obj.get("client")
     # check if bp with the given name already exists
     params = {"filter": "name=={};state!=DELETED".format(name)}
     res, err = client.list(params=params)
@@ -285,20 +278,42 @@ def upload_blueprint(obj, name, bp_file, bp_class):
             return
 
     else:
-        print(">> {} not found >>".format(name))
+        click.echo(">> {} not found >>".format(name))
 
     # upload
     res, err = client.upload_with_secrets(Blueprint, name)
     if not err:
-        print(">> {} uploaded with credentials >>".format(name))
-        # print(json.dumps(res.json(), indent=4, separators=(",", ": ")))
+        click.echo(">> {} uploaded with credentials >>".format(name))
+        # click.echo(json.dumps(res.json(), indent=4, separators=(",", ": ")))
         assert res.ok is True
     else:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    return res, err
+
+
+@create.command("bp")
+@click.argument("name")
+@click.option(
+    "--file",
+    "-f",
+    "bp_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path of Blueprint file to upload",
+)
+@click.option("--class", "bp_class", help="The name of the blueprint class in the file")
+@click.pass_obj
+def create_blueprint(obj, name, bp_file, bp_class):
+    """Create a blueprint"""
+    client = obj.get("client")
+
+    if bp_file.endswith(".json"):
+        res, err = create_blueprint_from_json(client, name, bp_file)
+    else:
+        res, err = create_blueprint_from_dsl(client, name, bp_file, bp_class)
 
     bp = res.json()
     bp_state = bp["status"]["state"]
-    print(">> Blueprint state: {}".format(bp_state))
+    click.echo(">> Blueprint state: {}".format(bp_state))
     assert bp_state == "ACTIVE"
 
 
@@ -318,7 +333,7 @@ def get_blueprint(client, name):
         if len(entities) != 1:
             raise Exception("More than one blueprint found - {}".format(entities))
 
-        print(">> {} found >>".format(name))
+        click.echo(">> {} found >>".format(name))
         blueprint = entities[0]
     else:
         raise Exception(">> No blueprint found with name {} found >>".format(name))
@@ -415,16 +430,16 @@ def launch_blueprint_simple(client, blueprint_name, blueprint=None, profile_name
         }
     }
     if runtime_editables:
-        print("Blueprint editables are:\n{}".format(runtime_editables))
+        click.echo("Blueprint editables are:\n{}".format(runtime_editables))
         for entity_type, entity_list in runtime_editables.items():
             for entity in entity_list:
                 context = entity["context"]
                 editables = entity["value"]
                 get_field_values(editables, context, path=entity.get("name", ""))
-        print("Updated blueprint editables are:\n{}".format(runtime_editables))
+        click.echo("Updated blueprint editables are:\n{}".format(runtime_editables))
     res, err = client.launch(blueprint_uuid, launch_payload)
     if not err:
-        print(">> {} queued for launch >>".format(blueprint_name))
+        click.echo(">> {} queued for launch >>".format(blueprint_name))
     else:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
     response = res.json()
@@ -435,7 +450,7 @@ def launch_blueprint_simple(client, blueprint_name, blueprint=None, profile_name
     count = 0
     while count < maxWait:
         # call status api
-        print("Polling status of Launch")
+        click.echo("Polling status of Launch")
         res, err = client.poll_launch(blueprint_uuid, launch_req_id)
         response = res.json()
         pprint(response)
@@ -448,16 +463,16 @@ def launch_blueprint_simple(client, blueprint_name, blueprint=None, profile_name
 
             # Can't give app url, as deep routing within PC doesn't work.
             # Hence just giving the app id.
-            print("Successfully launched. App uuid is: {}".format(app_uuid))
+            click.echo("Successfully launched. App uuid is: {}".format(app_uuid))
 
-            print(
+            click.echo(
                 "App url: https://{}:{}/console/#page/explore/calm/applications/{}".format(
                     pc_ip, pc_port, app_uuid
                 )
             )
             break
         elif response["status"]["state"] == "failure":
-            print("Failed to launch blueprint. Check API response above.")
+            click.echo("Failed to launch blueprint. Check API response above.")
             break
         elif err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -475,7 +490,7 @@ def launch_blueprint(client, blueprint_name, blueprint=None):
         blueprint = get_blueprint(client, blueprint_name)
 
     blueprint_id = blueprint["metadata"]["uuid"]
-    print(">> Fetching blueprint details")
+    click.echo(">> Fetching blueprint details")
     res, err = client.get(blueprint_id)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -502,7 +517,7 @@ def launch_blueprint(client, blueprint_name, blueprint=None):
 
     res, err = client.full_launch(blueprint_id, launch_payload)
     if not err:
-        print(">> {} queued for launch >>".format(blueprint_name))
+        click.echo(">> {} queued for launch >>".format(blueprint_name))
     else:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
     response = res.json()
@@ -513,7 +528,7 @@ def launch_blueprint(client, blueprint_name, blueprint=None):
     count = 0
     while count < maxWait:
         # call status api
-        print("Polling status of Launch")
+        click.echo("Polling status of Launch")
         res, err = client.poll_launch(blueprint_id, launch_req_id)
         response = res.json()
         pprint(response)
@@ -522,15 +537,15 @@ def launch_blueprint(client, blueprint_name, blueprint=None):
 
             # Can't give app url, as deep routing within PC doesn't work.
             # Hence just giving the app id.
-            print("Successfully launched. App uuid is: {}".format(app_uuid))
-            print(
+            click.echo("Successfully launched. App uuid is: {}".format(app_uuid))
+            click.echo(
                 "App url: https://{}:{}/console/#page/explore/calm/applications/{}".format(
                     pc_ip, pc_port, app_uuid
                 )
             )
             break
         elif response["status"]["state"] == "failure":
-            print("Failed to launch blueprint. Check API response above.")
+            click.echo("Failed to launch blueprint. Check API response above.")
             break
         elif err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -564,14 +579,14 @@ def _get_app(app_name, client):
         if len(entities) != 1:
             raise Exception("More than one app found - {}".format(entities))
 
-        print(">> {} found >>".format(app_name))
+        click.echo(">> {} found >>".format(app_name))
         app = entities[0]
     else:
         raise Exception(">> No app found with name {} found >>".format(app_name))
     app_id = app["metadata"]["uuid"]
 
     # 2. Get app details
-    print(">> Fetching app details")
+    click.echo(">> Fetching app details")
     res, err = client.get_app(app_id)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -684,29 +699,39 @@ def run_actions(obj, app_name, action_name, watch):
     app_id = app["metadata"]["uuid"]
 
     # 3. Get action uuid from action name
-    if action_name.lower() == "delete":
-        res, err = client.delete_app(app_id)
-        print(">> Triggering Delete")
+    if action_name.lower() in ["delete", "soft_delete"]:
+        action_name = action_name.lower()
+        is_soft_delete = action_name == "soft_delete"
+        action_label = "Soft Delete" if is_soft_delete else "Delete"
+        res, err = client.delete_app(app_id, is_soft_delete)
+        click.echo(">> Triggering {}".format(action_label))
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
         else:
-            print("Delete action triggered")
+            click.echo("{} action triggered".format(action_label))
             response = res.json()
             runlog_id = response["status"]["runlog_uuid"]
-            print("Action runlog uuid: {}".format(runlog_id))
-
-            def poll_func():
-                print("Polling Delete action...")
-                return client.get_app(app_id)
-
-            def is_deletion_complete(response):
-                status = response["status"]["state"]
-                print("Current app status: {}".format(status))
-                is_deleted = status == "deleted"
-                return (is_deleted, "Successfully deleted app {}".format(app_name))
+            click.echo("Action runlog uuid: {}".format(runlog_id))
 
             if watch:
-                poll_action(poll_func, is_deletion_complete)
+                url = client.APP_ITEM.format(app_id) + "/app_runlogs/list"
+                payload = {"filter": "root_reference=={}".format(runlog_id)}
+
+                def poll_func():
+                    click.echo("Polling action run ...")
+                    return client.poll_action_run(url, payload)
+
+                def is_action_complete(response):
+                    pprint(response)
+                    if len(response["entities"]):
+                        for action in response["entities"]:
+                            if action["status"]["state"] != "SUCCESS":
+                                return (False, "")
+                        return (True, "{} action complete".format(action_label))
+                    else:
+                        return (False, "")
+
+                poll_action(poll_func, is_action_complete)
             return
 
     calm_action_name = "action_" + action_name.lower()
@@ -723,30 +748,32 @@ def run_actions(obj, app_name, action_name, watch):
     app.pop("status")
     app["spec"] = {"args": [], "target_kind": "Application", "target_uuid": app_id}
     res, err = client.run_action(app_id, action_id, app)
-    print(">> Triggering action run")
+    click.echo(">> Triggering action run")
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     response = res.json()
     runlog_id = response["status"]["runlog_uuid"]
-    print("Runlog uuid: ", runlog_id)
+    click.echo("Runlog uuid: ", runlog_id)
     url = client.APP_ITEM.format(app_id) + "/app_runlogs/list"
     payload = {"filter": "root_reference=={}".format(runlog_id)}
 
-    def poll_func():
-        print("Polling action run ...")
-        return client.poll_action_run(url, payload)
-
-    def is_action_complete(response):
-        pprint(response)
-        if len(response["entities"]):
-            for action in response["entities"]:
-                if action["status"]["state"] != "SUCCESS":
-                    return (False, "")
-            return (True, "{} action complete".format(action_name.upper()))
-        return (False, "")
-
     if watch:
+
+        def poll_func():
+            click.echo("Polling action run ...")
+            return client.poll_action_run(url, payload)
+
+        def is_action_complete(response):
+            pprint(response)
+            if len(response["entities"]):
+                for action in response["entities"]:
+                    if action["status"]["state"] != "SUCCESS":
+                        return (False, "")
+                return (True, "{} action complete".format(action_name))
+            else:
+                return (False, "")
+
         poll_action(poll_func, is_action_complete)
 
 
@@ -762,7 +789,7 @@ def poll_action(poll_func, completion_func):
         response = res.json()
         (completed, msg) = completion_func(response)
         if completed:
-            print(msg)
+            click.echo(msg)
             break
         count += 10
         time.sleep(10)
@@ -776,7 +803,7 @@ def watch_action(runlog_id, app_name, client):
     payload = {"filter": "root_reference=={}".format(runlog_id)}
 
     def poll_func():
-        print("Polling action status...")
+        click.echo("Polling action status...")
         return client.poll_action_run(url, payload)
 
     def is_action_complete(response):
@@ -823,7 +850,7 @@ def watch_app(obj, app_name, action):
     }
 
     def poll_func():
-        print("Polling app status...")
+        click.echo("Polling app status...")
         return client.poll_action_run(url, payload)
 
     def is_complete(response):
