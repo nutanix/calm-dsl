@@ -1,7 +1,7 @@
 import time
 import warnings
 from functools import reduce
-from importlib import import_module
+import importlib.util
 from pprint import pprint
 import json
 
@@ -222,13 +222,11 @@ def compile():
 )
 def compile_blueprint(bp_file, bp_class, out):
 
-    if bp_file.startswith("."):
-        bp_file = bp_file[2:]
+    spec = importlib.util.spec_from_file_location("calm.dsl.user_bp", bp_file)
+    user_bp_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(user_bp_module)
 
-    file_name = bp_file.replace("/", ".")[:-3]
-    mod = import_module(file_name)
-
-    Blueprint = getattr(mod, bp_class)
+    Blueprint = getattr(user_bp_module, bp_class)
 
     # TODO - Handle secrets
 
@@ -255,13 +253,12 @@ def create_blueprint_from_json(client, name, path_to_json):
 
 
 def create_blueprint_from_dsl(client, name, bp_file, bp_class):
-    if bp_file.startswith("."):
-        bp_file = bp_file[2:]
 
-    file_name = bp_file.replace("/", ".")[:-3]
-    mod = import_module(file_name)
+    spec = importlib.util.spec_from_file_location("calm.dsl.user_bp", bp_file)
+    user_bp_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(user_bp_module)
 
-    Blueprint = getattr(mod, bp_class)
+    Blueprint = getattr(user_bp_module, bp_class)
 
     # check if bp with the given name already exists
     params = {"filter": "name=={};state!=DELETED".format(name)}
