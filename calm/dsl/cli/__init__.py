@@ -10,6 +10,7 @@ import arrow
 from prettytable import PrettyTable
 
 from calm.dsl.utils.server_utils import ping
+from calm.dsl.builtins import Blueprint
 
 from .constants import RUNLOG
 from .config import get_config, get_api_client
@@ -212,7 +213,6 @@ def compile():
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path of Blueprint file to upload",
 )
-@click.option("--class", "bp_class", help="The name of the blueprint class in the file")
 @click.option(
     "--out",
     "out",
@@ -220,20 +220,29 @@ def compile():
     default="json",
     help="output format [json|yaml].",
 )
-def compile_blueprint(bp_file, bp_class, out):
+def compile_blueprint(bp_file, out):
 
     spec = importlib.util.spec_from_file_location("calm.dsl.user_bp", bp_file)
     user_bp_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(user_bp_module)
 
-    Blueprint = getattr(user_bp_module, bp_class)
+    UserBlueprint = None
+    for item in dir(user_bp_module):
+        obj = getattr(user_bp_module, item)
+        if isinstance(obj, type(Blueprint)):
+            if obj.__bases__[0] == Blueprint:
+                UserBlueprint = obj
+
+    if UserBlueprint is None:
+        click.echo("User blueprint not found in {}".format(bp_file))
+        return
 
     # TODO - Handle secrets
 
     if out == "json":
-        click.echo(Blueprint.json_dumps(pprint=True))
+        click.echo(UserBlueprint.json_dumps(pprint=True))
     elif out == "yaml":
-        click.echo(Blueprint.yaml_dump())
+        click.echo(UserBlueprint.yaml_dump())
     else:
         click.echo("Unknown output format {} given".format(out))
 
@@ -252,13 +261,22 @@ def create_blueprint_from_json(client, name, path_to_json):
     return client.upload(blueprint_json)
 
 
-def create_blueprint_from_dsl(client, name, bp_file, bp_class):
+def create_blueprint_from_dsl(client, name, bp_file):
 
     spec = importlib.util.spec_from_file_location("calm.dsl.user_bp", bp_file)
     user_bp_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(user_bp_module)
 
-    Blueprint = getattr(user_bp_module, bp_class)
+    UserBlueprint = None
+    for item in dir(user_bp_module):
+        obj = getattr(user_bp_module, item)
+        if isinstance(obj, type(Blueprint)):
+            if obj.__bases__[0] == Blueprint:
+                UserBlueprint = obj
+
+    if UserBlueprint is None:
+        click.echo("User blueprint not found in {}".format(bp_file))
+        return
 
     # check if bp with the given name already exists
     params = {"filter": "name=={};state!=DELETED".format(name)}
@@ -278,7 +296,7 @@ def create_blueprint_from_dsl(client, name, bp_file, bp_class):
         click.echo(">> {} not found >>".format(name))
 
     # upload
-    res, err = client.upload_with_secrets(Blueprint, name)
+    res, err = client.upload_with_secrets(UserBlueprint, name)
     if not err:
         click.echo(">> {} uploaded with credentials >>".format(name))
         # click.echo(json.dumps(res.json(), indent=4, separators=(",", ": ")))
@@ -297,16 +315,15 @@ def create_blueprint_from_dsl(client, name, bp_file, bp_class):
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path of Blueprint file to upload",
 )
-@click.option("--class", "bp_class", help="The name of the blueprint class in the file")
 @click.pass_obj
-def create_blueprint(obj, name, bp_file, bp_class):
+def create_blueprint(obj, name, bp_file):
     """Create a blueprint"""
     client = obj.get("client")
 
     if bp_file.endswith(".json"):
         res, err = create_blueprint_from_json(client, name, bp_file)
     else:
-        res, err = create_blueprint_from_dsl(client, name, bp_file, bp_class)
+        res, err = create_blueprint_from_dsl(client, name, bp_file)
 
     bp = res.json()
     bp_state = bp["status"]["state"]
