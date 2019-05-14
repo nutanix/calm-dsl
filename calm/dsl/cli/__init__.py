@@ -223,6 +223,34 @@ def get_blueprint_class_from_module(user_bp_module):
     return UserBlueprint
 
 
+def compile_blueprint(bp_file):
+
+    user_bp_module = get_blueprint_module_from_file(bp_file)
+    UserBlueprint = get_blueprint_class_from_module(user_bp_module)
+    if UserBlueprint is None:
+        return None
+
+    # TODO - use secret option in cli to handle secrets
+    bp_resources = json.loads(UserBlueprint.json_dumps())
+
+    # TODO - fill metadata section using module details (categories, project, etc)
+    bp_payload = {
+        "spec": {
+            "name": UserBlueprint.__name__,
+            "description": UserBlueprint.__doc__,
+            "resources": bp_resources,
+        },
+        "metadata": {
+            "spec_version": 1,
+            "name": UserBlueprint.__name__,
+            "kind": "blueprint",
+        },
+        "api_version": "3.0",
+    }
+
+    return bp_payload
+
+
 @main.group()
 def compile():
     """Compile blueprint to json/yaml"""
@@ -244,32 +272,12 @@ def compile():
     default="json",
     help="output format [json|yaml].",
 )
-def compile_blueprint(bp_file, out):
+def compile_blueprint_command(bp_file, out):
 
-    user_bp_module = get_blueprint_module_from_file(bp_file)
-
-    UserBlueprint = get_blueprint_class_from_module(user_bp_module)
-    if UserBlueprint is None:
+    bp_payload = compile_blueprint(bp_file)
+    if bp_payload is None:
         click.echo("User blueprint not found in {}".format(bp_file))
         return
-
-    # TODO - use secret option in cli to handle secrets
-    bp_resources = json.loads(UserBlueprint.json_dumps())
-
-    # TODO - fill metadata section using module details (categories, project, etc)
-    bp_payload = {
-        "spec": {
-            "name": UserBlueprint.__name__,
-            "description": UserBlueprint.__doc__,
-            "resources": bp_resources,
-        },
-        "metadata": {
-            "spec_version": 1,
-            "name": UserBlueprint.__name__,
-            "kind": "blueprint",
-        },
-        "api_version": "3.0",
-    }
 
     if out == "json":
         click.echo(json.dumps(bp_payload, indent=4, separators=(",", ": ")))
@@ -285,64 +293,39 @@ def create():
     pass
 
 
-def create_blueprint_from_json(client, path_to_json, name=None):
+def create_blueprint(client, bp_payload, name=None, description=None):
 
-    blueprint_json = json.loads(open(path_to_json, "r").read())
-    blueprint_json.pop("status", None)
+    bp_payload.pop("status", None)
 
     if name:
-        blueprint_json["spec"]["name"] = name
-        blueprint_json["metadata"]["name"] = name
+        bp_payload["spec"]["name"] = name
+        bp_payload["metadata"]["name"] = name
 
-    bp_resources = blueprint_json["spec"]["resources"]
-    bp_name = blueprint_json["spec"]["name"]
-    bp_desc = blueprint_json["spec"]["description"]
+    if description:
+        bp_payload["spec"]["description"] = description
 
-    # TODO - use secret option and upload accordingly
+    bp_resources = bp_payload["spec"]["resources"]
+    bp_name = bp_payload["spec"]["name"]
+    bp_desc = bp_payload["spec"]["description"]
+
     return client.upload_with_secrets(bp_name, bp_desc, bp_resources)
+
+
+def create_blueprint_from_json(client, path_to_json, name=None, description=None):
+
+    bp_payload = json.loads(open(path_to_json, "r").read())
+    return create_blueprint(client, bp_payload, name=name, description=description)
 
 
 def create_blueprint_from_dsl(client, bp_file, name=None, description=None):
 
-    user_bp_module = get_blueprint_module_from_file(bp_file)
-    click.echo("Using blueprint module: {}".format(user_bp_module))
-
-    UserBlueprint = get_blueprint_class_from_module(user_bp_module)
-    if UserBlueprint is None:
+    bp_payload = compile_blueprint(bp_file)
+    if bp_payload is None:
         err_msg = "User blueprint not found in {}".format(bp_file)
         err = {"error": err_msg, "code": -1}
         return None, err
-    click.echo("Found user blueprint: {}".format(UserBlueprint))
 
-    name = name or UserBlueprint.__name__
-    # check if bp with the given name already exists
-    params = {"filter": "name=={};state!=DELETED".format(name)}
-    res, err = client.list(params=params)
-    if err:
-        return None, err
-
-    response = res.json()
-    entities = response.get("entities", None)
-    if entities:
-        if len(entities) > 0:
-            err_msg = "Blueprint with name {} already exists.".format(name)
-            # ToDo: Add command to edit Blueprints
-            err = {"error": err_msg, "code": -1}
-            return None, err
-    else:
-        click.echo(">> {} not found >>".format(name))
-
-    # upload
-    bp_desc = description or UserBlueprint.__doc__
-    bp_resources = json.loads(UserBlueprint.json_dumps())
-    res, err = client.upload_with_secrets(name, bp_desc, bp_resources)
-    if not err:
-        click.echo(">> {} uploaded with credentials >>".format(name))
-        # click.echo(json.dumps(res.json(), indent=4, separators=(",", ": ")))
-        assert res.ok is True
-    else:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-    return res, err
+    return create_blueprint(client, bp_payload, name=name, description=description)
 
 
 @create.command("bp")
@@ -353,22 +336,25 @@ def create_blueprint_from_dsl(client, bp_file, name=None, description=None):
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path of Blueprint file to upload",
 )
-@click.option(
-    "--name",
-    envvar="CALM_BLUEPRINT_NAME",
-    default=None,
-    help="Blueprint name (Optional)",
-)
+@click.option("--name", default=None, help="Blueprint name (Optional)")
+@click.option("--description", default=None, help="Blueprint description (Optional)")
 @click.pass_obj
-def create_blueprint(obj, bp_file, name):
+def create_blueprint_command(obj, bp_file, name, description):
     """Create a blueprint"""
 
     client = obj.get("client")
 
     if bp_file.endswith(".json"):
-        res, err = create_blueprint_from_json(client, bp_file, name=name)
+        res, err = create_blueprint_from_json(
+            client, bp_file, name=name, description=description
+        )
+    elif bp_file.endswith(".py"):
+        res, err = create_blueprint_from_dsl(
+            client, bp_file, name=name, description=description
+        )
     else:
-        res, err = create_blueprint_from_dsl(client, bp_file, name=name)
+        click.echo("Unknown file format {}".format(bp_file))
+        return
 
     if err:
         click.echo(err["error"])
