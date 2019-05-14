@@ -8,6 +8,7 @@ import json
 import click
 import arrow
 from prettytable import PrettyTable
+from ruamel import yaml
 
 from calm.dsl.utils.server_utils import ping
 from calm.dsl.builtins import Blueprint
@@ -199,12 +200,18 @@ def get_apps(obj, names, limit):
         warnings.warn(UserWarning("Cannot fetch applications from {}".format(pc_ip)))
 
 
-def get_blueprint_class_from_file(bp_file):
-    """Return User Blueprint class given a user blueprint dsl file (.py)"""
+def get_blueprint_module_from_file(bp_file):
+    """Returns Blueprint module given a user blueprint dsl file (.py)"""
 
     spec = importlib.util.spec_from_file_location("calm.dsl.user_bp", bp_file)
     user_bp_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(user_bp_module)
+
+    return user_bp_module
+
+
+def get_blueprint_class_from_module(user_bp_module):
+    """Returns blueprint class given a module"""
 
     UserBlueprint = None
     for item in dir(user_bp_module):
@@ -239,18 +246,37 @@ def compile():
 )
 def compile_blueprint(bp_file, out):
 
-    UserBlueprint = get_blueprint_class_from_file(bp_file)
+    user_bp_module = get_blueprint_module_from_file(bp_file)
+    click.echo("Using blueprint module: {}".format(user_bp_module))
 
+    UserBlueprint = get_blueprint_class_from_module(user_bp_module)
     if UserBlueprint is None:
         click.echo("User blueprint not found in {}".format(bp_file))
         return
+    click.echo("Found user blueprint: {}".format(UserBlueprint))
 
     # TODO - Handle secrets
+    bp_resources = json.loads(UserBlueprint.json_dumps())
+
+    # TODO - fill metadata section using module details (categories, project, etc)
+    bp_payload = {
+        "spec": {
+            "name": UserBlueprint.__name__,
+            "description": UserBlueprint.__doc__,
+            "resources": bp_resources,
+        },
+        "metadata": {
+            "spec_version": 1,
+            "name": UserBlueprint.__name__,
+            "kind": "blueprint",
+        },
+        "api_version": "3.0",
+    }
 
     if out == "json":
-        click.echo(UserBlueprint.json_dumps(pprint=True))
+        click.echo(json.dumps(bp_payload, indent=4, separators=(",", ": ")))
     elif out == "yaml":
-        click.echo(UserBlueprint.yaml_dump())
+        click.echo(yaml.dump(bp_payload, default_flow_style=False))
     else:
         click.echo("Unknown output format {} given".format(out))
 
@@ -275,12 +301,15 @@ def create_blueprint_from_json(client, path_to_json, name=None):
 
 def create_blueprint_from_dsl(client, bp_file, name=None):
 
-    UserBlueprint = get_blueprint_class_from_file(bp_file)
+    user_bp_module = get_blueprint_module_from_file(bp_file)
+    click.echo("Using blueprint module: {}".format(user_bp_module))
 
+    UserBlueprint = get_blueprint_class_from_module(user_bp_module)
     if UserBlueprint is None:
         err_msg = "User blueprint not found in {}".format(bp_file)
         err = {"error": err_msg, "code": -1}
         return None, err
+    click.echo("Found user blueprint: {}".format(UserBlueprint))
 
     name = UserBlueprint.__name__ if not name else name
     # check if bp with the given name already exists
@@ -320,7 +349,10 @@ def create_blueprint_from_dsl(client, bp_file, name=None):
     help="Path of Blueprint file to upload",
 )
 @click.option(
-    "--name", envvar="CALM_BLUEPRINT_NAME", default=None, help="Blueprint name (Optional)"
+    "--name",
+    envvar="CALM_BLUEPRINT_NAME",
+    default=None,
+    help="Blueprint name (Optional)",
 )
 @click.pass_obj
 def create_blueprint(obj, bp_file, name):
