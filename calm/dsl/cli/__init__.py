@@ -199,6 +199,23 @@ def get_apps(obj, names, limit):
         warnings.warn(UserWarning("Cannot fetch applications from {}".format(pc_ip)))
 
 
+def get_blueprint_class_from_file(bp_file):
+    """Return User Blueprint class given a user blueprint dsl file (.py)"""
+
+    spec = importlib.util.spec_from_file_location("calm.dsl.user_bp", bp_file)
+    user_bp_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(user_bp_module)
+
+    UserBlueprint = None
+    for item in dir(user_bp_module):
+        obj = getattr(user_bp_module, item)
+        if isinstance(obj, type(Blueprint)):
+            if obj.__bases__[0] == Blueprint:
+                UserBlueprint = obj
+
+    return UserBlueprint
+
+
 @main.group()
 def compile():
     """Compile blueprint to json/yaml"""
@@ -222,16 +239,7 @@ def compile():
 )
 def compile_blueprint(bp_file, out):
 
-    spec = importlib.util.spec_from_file_location("calm.dsl.user_bp", bp_file)
-    user_bp_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(user_bp_module)
-
-    UserBlueprint = None
-    for item in dir(user_bp_module):
-        obj = getattr(user_bp_module, item)
-        if isinstance(obj, type(Blueprint)):
-            if obj.__bases__[0] == Blueprint:
-                UserBlueprint = obj
+    UserBlueprint = get_blueprint_class_from_file(bp_file)
 
     if UserBlueprint is None:
         click.echo("User blueprint not found in {}".format(bp_file))
@@ -263,35 +271,27 @@ def create_blueprint_from_json(client, name, path_to_json):
 
 def create_blueprint_from_dsl(client, name, bp_file):
 
-    spec = importlib.util.spec_from_file_location("calm.dsl.user_bp", bp_file)
-    user_bp_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(user_bp_module)
-
-    UserBlueprint = None
-    for item in dir(user_bp_module):
-        obj = getattr(user_bp_module, item)
-        if isinstance(obj, type(Blueprint)):
-            if obj.__bases__[0] == Blueprint:
-                UserBlueprint = obj
+    UserBlueprint = get_blueprint_class_from_file(bp_file)
 
     if UserBlueprint is None:
-        click.echo("User blueprint not found in {}".format(bp_file))
-        return
+        err_msg = "User blueprint not found in {}".format(bp_file)
+        err = {"error": err_msg, "code": -1}
+        return None, err
 
     # check if bp with the given name already exists
     params = {"filter": "name=={};state!=DELETED".format(name)}
     res, err = client.list(params=params)
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        return None, err
 
     response = res.json()
     entities = response.get("entities", None)
     if entities:
         if len(entities) > 0:
-            click.echo("Blueprint with name {} already exists.".format(name))
+            err_msg = "Blueprint with name {} already exists.".format(name)
             # ToDo: Add command to edit Blueprints
-            return
-
+            err = {"error": err_msg, "code": -1}
+            return None, err
     else:
         click.echo(">> {} not found >>".format(name))
 
@@ -318,12 +318,17 @@ def create_blueprint_from_dsl(client, name, bp_file):
 @click.pass_obj
 def create_blueprint(obj, name, bp_file):
     """Create a blueprint"""
+
     client = obj.get("client")
 
     if bp_file.endswith(".json"):
         res, err = create_blueprint_from_json(client, name, bp_file)
     else:
         res, err = create_blueprint_from_dsl(client, name, bp_file)
+
+    if err:
+        click.echo(err["error"])
+        return
 
     bp = res.json()
     bp_state = bp["status"]["state"]
