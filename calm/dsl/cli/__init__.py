@@ -247,13 +247,11 @@ def compile():
 def compile_blueprint(bp_file, out):
 
     user_bp_module = get_blueprint_module_from_file(bp_file)
-    click.echo("Using blueprint module: {}".format(user_bp_module))
 
     UserBlueprint = get_blueprint_class_from_module(user_bp_module)
     if UserBlueprint is None:
         click.echo("User blueprint not found in {}".format(bp_file))
         return
-    click.echo("Found user blueprint: {}".format(UserBlueprint))
 
     # TODO - Handle secrets
     bp_resources = json.loads(UserBlueprint.json_dumps())
@@ -296,10 +294,14 @@ def create_blueprint_from_json(client, path_to_json, name=None):
         blueprint_json["spec"]["name"] = name
         blueprint_json["metadata"]["name"] = name
 
-    return client.upload(blueprint_json)
+    bp_resources = blueprint_json["spec"]["resources"]
+    bp_name = blueprint_json["spec"]["name"]
+    bp_desc = blueprint_json["spec"]["description"]
+
+    return client.upload_with_secrets(bp_name, bp_desc, bp_resources)
 
 
-def create_blueprint_from_dsl(client, bp_file, name=None):
+def create_blueprint_from_dsl(client, bp_file, name=None, description=None):
 
     user_bp_module = get_blueprint_module_from_file(bp_file)
     click.echo("Using blueprint module: {}".format(user_bp_module))
@@ -311,7 +313,7 @@ def create_blueprint_from_dsl(client, bp_file, name=None):
         return None, err
     click.echo("Found user blueprint: {}".format(UserBlueprint))
 
-    name = UserBlueprint.__name__ if not name else name
+    name = name or UserBlueprint.__name__
     # check if bp with the given name already exists
     params = {"filter": "name=={};state!=DELETED".format(name)}
     res, err = client.list(params=params)
@@ -330,7 +332,9 @@ def create_blueprint_from_dsl(client, bp_file, name=None):
         click.echo(">> {} not found >>".format(name))
 
     # upload
-    res, err = client.upload_with_secrets(UserBlueprint, name)
+    bp_desc = description or UserBlueprint.__doc__
+    bp_resources = json.loads(UserBlueprint.json_dumps())
+    res, err = client.upload_with_secrets(name, bp_desc, bp_resources)
     if not err:
         click.echo(">> {} uploaded with credentials >>".format(name))
         # click.echo(json.dumps(res.json(), indent=4, separators=(",", ": ")))
