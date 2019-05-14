@@ -261,15 +261,19 @@ def create():
     pass
 
 
-def create_blueprint_from_json(client, name, path_to_json):
+def create_blueprint_from_json(client, path_to_json, name=None):
+
     blueprint_json = json.loads(open(path_to_json, "r").read())
     blueprint_json.pop("status", None)
-    blueprint_json["spec"]["name"] = name
-    blueprint_json["metadata"]["name"] = name
+
+    if name:
+        blueprint_json["spec"]["name"] = name
+        blueprint_json["metadata"]["name"] = name
+
     return client.upload(blueprint_json)
 
 
-def create_blueprint_from_dsl(client, name, bp_file):
+def create_blueprint_from_dsl(client, bp_file, name=None):
 
     UserBlueprint = get_blueprint_class_from_file(bp_file)
 
@@ -278,6 +282,7 @@ def create_blueprint_from_dsl(client, name, bp_file):
         err = {"error": err_msg, "code": -1}
         return None, err
 
+    name = UserBlueprint.__name__ if not name else name
     # check if bp with the given name already exists
     params = {"filter": "name=={};state!=DELETED".format(name)}
     res, err = client.list(params=params)
@@ -307,7 +312,6 @@ def create_blueprint_from_dsl(client, name, bp_file):
 
 
 @create.command("bp")
-@click.argument("name")
 @click.option(
     "--file",
     "-f",
@@ -315,16 +319,19 @@ def create_blueprint_from_dsl(client, name, bp_file):
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path of Blueprint file to upload",
 )
+@click.option(
+    "--name", envvar="CALM_BLUEPRINT_NAME", default=None, help="Blueprint name (Optional)"
+)
 @click.pass_obj
-def create_blueprint(obj, name, bp_file):
+def create_blueprint(obj, bp_file, name):
     """Create a blueprint"""
 
     client = obj.get("client")
 
     if bp_file.endswith(".json"):
-        res, err = create_blueprint_from_json(client, name, bp_file)
+        res, err = create_blueprint_from_json(client, bp_file, name=name)
     else:
-        res, err = create_blueprint_from_dsl(client, name, bp_file)
+        res, err = create_blueprint_from_dsl(client, bp_file, name=name)
 
     if err:
         click.echo(err["error"])
