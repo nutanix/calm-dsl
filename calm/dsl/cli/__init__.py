@@ -253,7 +253,7 @@ def compile_blueprint(bp_file, out):
         click.echo("User blueprint not found in {}".format(bp_file))
         return
 
-    # TODO - Handle secrets
+    # TODO - use secret option in cli to handle secrets
     bp_resources = json.loads(UserBlueprint.json_dumps())
 
     # TODO - fill metadata section using module details (categories, project, etc)
@@ -298,6 +298,7 @@ def create_blueprint_from_json(client, path_to_json, name=None):
     bp_name = blueprint_json["spec"]["name"]
     bp_desc = blueprint_json["spec"]["description"]
 
+    # TODO - use secret option and upload accordingly
     return client.upload_with_secrets(bp_name, bp_desc, bp_resources)
 
 
