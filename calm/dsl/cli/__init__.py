@@ -409,16 +409,6 @@ def get_blueprint(client, name):
     return blueprint
 
 
-@get.command("bp")
-@click.argument("name")
-@click.pass_obj
-def get_blueprint_command(obj, name):
-    """Get a specific blueprint"""
-
-    client = obj.get("client")
-    get_blueprint(client, name)
-
-
 @main.group()
 def delete():
     """Delete blueprints"""
