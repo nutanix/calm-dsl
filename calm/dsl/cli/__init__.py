@@ -425,7 +425,7 @@ def launch():
     pass
 
 
-def get_blueprint_runtime_editables(blueprint, client):
+def get_blueprint_runtime_editables(client, blueprint):
 
     bp_uuid = blueprint.get("metadata", {}).get("uuid", None)
     if not bp_uuid:
@@ -452,10 +452,10 @@ def get_field_values(entity_dict, context, path=None):
 
 def launch_blueprint_simple(client, blueprint_name, blueprint=None, profile_name=None):
     if not blueprint:
-        blueprint = get_blueprint(blueprint_name, client)
+        blueprint = get_blueprint(client, blueprint_name)
 
     blueprint_uuid = blueprint.get("metadata", {}).get("uuid", "")
-    profiles = get_blueprint_runtime_editables(blueprint, client)
+    profiles = get_blueprint_runtime_editables(client, blueprint)
     profile = None
     if profile_name is None:
         profile = profiles[0]
@@ -609,7 +609,7 @@ def launch_blueprint_command(obj, blueprint_name, blueprint=None):
 
     client = obj.get("client")
 
-    launch_blueprint(client, blueprint_name, blueprint=blueprint)
+    launch_blueprint_simple(client, blueprint_name, blueprint=blueprint)
 
 
 def _get_app(app_name, client):
