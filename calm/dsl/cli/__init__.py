@@ -92,15 +92,16 @@ def get_server_status(obj):
     "--filter", "filter_by", default=None, help="Filter blueprints with this string"
 )
 @click.option("--limit", default=20, help="Number of results to return")
+@click.option("--offset", default=0, help="Offset results by the specified amount")
 @click.option("--quiet/--no-quiet", "-q", default=False, help="Show only blueprint names.")
 @click.pass_obj
-def get_blueprint_list(obj, filter_by, limit, quiet):
+def get_blueprint_list(obj, filter_by, limit, offset, quiet):
     """Get the blueprints, optionally filtered by a string"""
 
     client = obj.get("client")
     config = obj.get("config")
 
-    params = {"length": limit, "offset": 0}
+    params = {"length": limit, "offset": offset}
     if filter_by:
         params["filter"] = _get_name_query(filter_by)
     res, err = client.list(params=params)
