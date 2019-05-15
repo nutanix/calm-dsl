@@ -110,13 +110,13 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all):
     if filter_by:
         filter = filter + ";" + filter_by if name else filter_by
     if all:
-        filter += ";state==" + ",state==".join(
+        filter += "(;state==" + ",state==".join(
             [field for field in vars(BLUEPRINT.STATES) if not field.startswith("__")]
-        )
+        ) + ")"
     if filter.startswith(";"):
         filter = filter[1:]
 
-    if not filter:
+    if filter:
         params["filter"] = filter
 
     res, err = client.list(params=params)
@@ -187,9 +187,10 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all):
 @click.option("--name", default=None, help="Search for apps by name")
 @click.option("--filter", "filter_by", default=None, help="Filter apps by this string")
 @click.option("--limit", default=20, help="Number of results to return")
+@click.option("--quiet/--no-quiet", "-q", default=False, help="Show only app names.")
 @click.option("--all", "-a", is_flag=True, help="Get all items, including deleted ones")
 @click.pass_obj
-def get_apps(obj, name, filter_by, limit, all):
+def get_apps(obj, name, filter_by, limit, quiet, all):
     """Get Apps, optionally filtered by a string"""
 
     client = obj.get("client")
@@ -202,13 +203,13 @@ def get_apps(obj, name, filter_by, limit, all):
     if filter_by:
         filter = filter + ";" + filter_by if name else filter_by
     if all:
-        filter += ";_state==" + ",_state==".join(
+        filter += "(;_state==" + ",_state==".join(
             [field for field in vars(APPLICATION.STATES) if not field.startswith("__")]
-        )
+        ) + ")"
     if filter.startswith(";"):
         filter = filter[1:]
 
-    if not filter:
+    if filter:
         params["filter"] = filter
 
     res, err = client.list_apps(params=params)
@@ -223,6 +224,13 @@ def get_apps(obj, name, filter_by, limit, all):
             "Created On",
         ]
         json_rows = res.json()["entities"]
+
+        if quiet:
+            for _row in json_rows:
+                row = _row["status"]
+                click.echo(_highlight_text(row["name"]))
+            return
+
         for _row in json_rows:
             row = _row["status"]
             metadata = _row["metadata"]
@@ -471,6 +479,22 @@ def delete_blueprint(obj, blueprint_names):
         click.echo("Blueprint {} deleted".format(blueprint_name))
 
 
+@delete.command("app")
+@click.argument("app_names", nargs=-1)
+@click.pass_obj
+def delete_app(obj, app_names):
+
+    client = obj.get("client")
+
+    for app_name in app_names:
+        app = _get_app(client, app_name)
+        app_id = app["metadata"]["uuid"]
+        res, err = client.delete_app(app_id)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        click.echo("App {} deleted".format(app_name))
+
+
 @main.group()
 def launch():
     """Launch blueprints to create Apps"""
@@ -591,10 +615,14 @@ def launch_blueprint_command(obj, blueprint_name, blueprint=None):
     launch_blueprint_simple(client, blueprint_name, blueprint=blueprint)
 
 
-def _get_app(app_name, client):
+def _get_app(client, app_name, all=False):
 
     # 1. Get app_uuid from list api
     params = {"filter": "name=={}".format(app_name)}
+    if all:
+        params["filter"] += "(;_state==" + ",_state==".join(
+            [field for field in vars(APPLICATION.STATES) if not field.startswith("__")]
+        ) + ")"
 
     res, err = client.list_apps(params=params)
     if err:
@@ -635,7 +663,7 @@ def describe_app(obj, app_name):
     """Describe an app"""
 
     client = obj.get("client")
-    app = _get_app(app_name, client)
+    app = _get_app(client, app_name, True)
 
     click.echo("\n----Application Summary----\n")
     app_name = app["metadata"]["name"]
@@ -722,7 +750,7 @@ def run_actions(obj, app_name, action_name, watch):
 
     client = obj.get("client")
 
-    app = _get_app(app_name, client)
+    app = _get_app(client, app_name)
     app_spec = app["spec"]
     app_id = app["metadata"]["uuid"]
 
@@ -824,7 +852,7 @@ def poll_action(poll_func, completion_func):
 
 
 def watch_action(runlog_id, app_name, client):
-    app = _get_app(app_name, client)
+    app = _get_app(client, app_name)
     app_id = app["metadata"]["uuid"]
 
     url = client.APP_ITEM.format(app_id) + "/app_runlogs/list"
@@ -867,7 +895,7 @@ def watch_app(obj, app_name, action):
     if action:
         return watch_action(action, app_name, client)
 
-    app = _get_app(app_name, client)
+    app = _get_app(client, app_name)
     app_id = app["metadata"]["uuid"]
     url = client.APP_ITEM.format(app_id) + "/app_runlogs/list"
 
