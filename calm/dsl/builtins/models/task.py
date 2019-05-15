@@ -62,7 +62,7 @@ def create_call_rb(runbook, target=None, name=None):
     return _task_create(**kwargs)
 
 
-def exec_ssh(script, name=None, target=None):
+def _exec_create(script, script_type, name=None, target=None):
 
     kwargs = {
         "type": "EXEC",
@@ -70,7 +70,7 @@ def exec_ssh(script, name=None, target=None):
         # "retries": "0",
         # "state": "ACTIVE",
         "attrs": {
-            "script_type": "sh",
+            "script_type": script_type,
             "script": script,
             "login_credential_local_reference": {
                 "kind": "app_credential",
@@ -126,3 +126,11 @@ def dag(name=None, child_tasks=None, edges=None, target=None):
         kwargs["target_any_local_reference"] = target
 
     return _task_create(**kwargs)
+
+
+def exec_ssh(script, name=None, target=None):
+    return _exec_create(script, "sh", name=name, target=target)
+
+
+def exec_escript(script, name=None, target=None):
+    return _exec_create(script, "static", name=name, target=target)
