@@ -425,17 +425,19 @@ def delete():
 
 
 @delete.command("bp")
-@click.argument("blueprint_name")
+@click.argument("blueprint_names", nargs=-1)
 @click.pass_obj
-def delete_blueprint(obj, blueprint_name, blueprint=None):
+def delete_blueprint(obj, blueprint_names):
 
     client = obj.get("client")
-    blueprint = get_blueprint(client, blueprint_name)
-    blueprint_id = blueprint["metadata"]["uuid"]
-    res, err = client.delete(blueprint_id)
-    if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-    click.echo("Blueprint {} deleted".format(blueprint_name))
+
+    for blueprint_name in blueprint_names:
+        blueprint = get_blueprint(client, blueprint_name)
+        blueprint_id = blueprint["metadata"]["uuid"]
+        res, err = client.delete(blueprint_id)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        click.echo("Blueprint {} deleted".format(blueprint_name))
 
 
 @main.group()
