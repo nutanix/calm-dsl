@@ -113,7 +113,7 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all):
         filter = filter + ";" + filter_by if name else filter_by
     if all:
         filter += (
-            "(;state=="
+            ";(state=="
             + ",state==".join(
                 [
                     field
