@@ -1,6 +1,23 @@
 # calm-dsl-engine
 
+## WHY
+
+The current Calm Blueprint JSON is not human readable (leave alone writable).
+To build a new (human friendly) Blueprint DSL, the conventional approach is to use YAML (or JSON). We disagree, and think using a nice programming language is a much more scalable design. We think it should be python.
+
+For three big reasons:
+ - Language design is black art, and building upon a well-established language is design-wise a big win. The language has also solved many issues like scoping, modules, if-else, inheritance, etc
+ - Well established languages have great tooling support: IDEs, syntax checkers, third-party modules, coding practices. They see much more community improvements as well (compare the performance of Python 3.0 vs 3.6 vs PyPy)
+ - REPL: Python specifically comes with a very good REPL (read–eval–print loop). Having an interactive prompt to play around and slowly build objects is an order-of-magnitude improvement in developer productivity. Python inbuilt REPL (and also Jupyter (https://jupyter.org) which we will package) is very nice.
+
+For more YAML bashing, see this https://twitter.com/laserllama/status/1063777131736571905 from the creator of Ansible.
+
+## WHAT
+
 Calm DSL Engine describes a simpler Python 3 based DSL for writing Calm blueprints.
+Look at this [example](https://github.com/ideadevice/calm-dsl-engine/blob/master/tests/single_vm_example/test_single_vm_bp.py) to see a blueprint in action.
+
+## Dev Setup
 
 Pre-Reqs for Mac:
  - Get python3 using brew - `brew install python3`
@@ -17,8 +34,6 @@ Use:
  - `make docker` to build docker container. (Assumes docker client is setup on your machine)
  - `make run` to run container.
  - `make clean` to reset.
-
-Look at this [example](https://github.com/ideadevice/calm-dsl-engine/blob/master/tests/single_vm_example/test_single_vm_bp.py) to see a blueprint in action
 
 Code formatted by [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
