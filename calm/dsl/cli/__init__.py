@@ -94,7 +94,9 @@ def get_server_status(obj):
 )
 @click.option("--limit", default=20, help="Number of results to return")
 @click.option("--offset", default=0, help="Offset results by the specified amount")
-@click.option("--quiet/--no-quiet", "-q", default=False, help="Show only blueprint names.")
+@click.option(
+    "--quiet/--no-quiet", "-q", default=False, help="Show only blueprint names."
+)
 @click.option("--all", "-a", is_flag=True, help="Get all items, including deleted ones")
 @click.pass_obj
 def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all):
@@ -110,9 +112,17 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all):
     if filter_by:
         filter = filter + ";" + filter_by if name else filter_by
     if all:
-        filter += "(;state==" + ",state==".join(
-            [field for field in vars(BLUEPRINT.STATES) if not field.startswith("__")]
-        ) + ")"
+        filter += (
+            "(;state=="
+            + ",state==".join(
+                [
+                    field
+                    for field in vars(BLUEPRINT.STATES)
+                    if not field.startswith("__")
+                ]
+            )
+            + ")"
+        )
     if filter.startswith(";"):
         filter = filter[1:]
 
@@ -145,7 +155,6 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all):
         "CREATED ON",
         "LAST UPDATED",
         "UUID",
-
     ]
     for _row in json_rows:
         row = _row["status"]
@@ -177,7 +186,6 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all):
                 _highlight_text(time.ctime(creation_time)),
                 "{}".format(arrow.get(last_update_time).humanize()),
                 _highlight_text(row["uuid"]),
-
             ]
         )
     click.echo(table)
@@ -187,25 +195,36 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all):
 @click.option("--name", default=None, help="Search for apps by name")
 @click.option("--filter", "filter_by", default=None, help="Filter apps by this string")
 @click.option("--limit", default=20, help="Number of results to return")
-@click.option("--quiet/--no-quiet", "-q", default=False, help="Show only app names.")
+@click.option("--offset", default=0, help="Offset results by the specified amount")
+@click.option(
+    "--quiet/--no-quiet", "-q", default=False, help="Show only application names"
+)
 @click.option("--all", "-a", is_flag=True, help="Get all items, including deleted ones")
 @click.pass_obj
-def get_apps(obj, name, filter_by, limit, quiet, all):
+def get_apps(obj, name, filter_by, limit, offset, quiet, all):
     """Get Apps, optionally filtered by a string"""
 
     client = obj.get("client")
     config = obj.get("config")
 
-    params = {"length": limit, "offset": 0}
+    params = {"length": limit, "offset": offset}
     filter = ""
     if name:
         filter = _get_name_query([name])
     if filter_by:
         filter = filter + ";" + filter_by if name else filter_by
     if all:
-        filter += "(;_state==" + ",_state==".join(
-            [field for field in vars(APPLICATION.STATES) if not field.startswith("__")]
-        ) + ")"
+        filter += (
+            ";(_state=="
+            + ",_state==".join(
+                [
+                    field
+                    for field in vars(APPLICATION.STATES)
+                    if not field.startswith("__")
+                ]
+            )
+            + ")"
+        )
     if filter.startswith(";"):
         filter = filter[1:]
 
@@ -214,48 +233,54 @@ def get_apps(obj, name, filter_by, limit, quiet, all):
 
     res, err = client.list_apps(params=params)
 
-    if not err:
-        table = PrettyTable()
-        table.field_names = [
-            "Application Name",
-            "Source Blueprint",
-            "State",
-            "Owner",
-            "Created On",
-        ]
-        json_rows = res.json()["entities"]
+    if err:
+        pc_ip = config["SERVER"]["pc_ip"]
+        warnings.warn(UserWarning("Cannot fetch blueprints from {}".format(pc_ip)))
+        return
 
-        if quiet:
-            for _row in json_rows:
-                row = _row["status"]
-                click.echo(_highlight_text(row["name"]))
-            return
+    table = PrettyTable()
+    table.field_names = [
+        "Application Name",
+        "Source Blueprint",
+        "State",
+        "Owner",
+        "Created On",
+    ]
+    json_rows = res.json()["entities"]
 
+    if quiet:
         for _row in json_rows:
             row = _row["status"]
-            metadata = _row["metadata"]
+            click.echo(_highlight_text(row["name"]))
+        return
 
-            created_on = int(metadata["creation_time"]) // 1000000
-            table.add_row(
-                [
-                    _highlight_text(row["name"]),
-                    _highlight_text(
-                        row["resources"]["app_blueprint_reference"]["name"]
-                    ),
-                    _highlight_text(row["state"]),
-                    _highlight_text(metadata["owner_reference"]["name"]),
-                    "{} ({}) ".format(
-                        _highlight_text(time.ctime(created_on)),
-                        arrow.get(created_on).humanize(),
-                    ),
-                ]
-            )
-        click.echo("\n----Application List----")
-        click.echo(table)
-        assert res.ok is True
-    else:
-        pc_ip = config["SERVER"]["pc_ip"]
-        warnings.warn(UserWarning("Cannot fetch applications from {}".format(pc_ip)))
+    table = PrettyTable()
+    table.field_names = [
+        "Application Name",
+        "Source Blueprint",
+        "State",
+        "Owner",
+        "Created On",
+    ]
+    for _row in json_rows:
+        row = _row["status"]
+        metadata = _row["metadata"]
+
+        created_on = int(metadata["creation_time"]) // 1000000
+        table.add_row(
+            [
+                _highlight_text(row["name"]),
+                _highlight_text(row["resources"]["app_blueprint_reference"]["name"]),
+                _highlight_text(row["state"]),
+                _highlight_text(metadata["owner_reference"]["name"]),
+                "{} ({}) ".format(
+                    _highlight_text(time.ctime(created_on)),
+                    arrow.get(created_on).humanize(),
+                ),
+            ]
+        )
+    click.echo("\n----Application List----")
+    click.echo(table)
 
 
 def get_blueprint_module_from_file(bp_file):
@@ -447,16 +472,6 @@ def get_blueprint(client, name):
     return blueprint
 
 
-@get.command("bp")
-@click.argument("name")
-@click.pass_obj
-def get_blueprint_command(obj, name):
-    """Get a specific blueprint"""
-
-    client = obj.get("client")
-    get_blueprint(client, name)
-
-
 @main.group()
 def delete():
     """Delete blueprints"""
@@ -620,9 +635,17 @@ def _get_app(client, app_name, all=False):
     # 1. Get app_uuid from list api
     params = {"filter": "name=={}".format(app_name)}
     if all:
-        params["filter"] += "(;_state==" + ",_state==".join(
-            [field for field in vars(APPLICATION.STATES) if not field.startswith("__")]
-        ) + ")"
+        params["filter"] += (
+            ";(_state=="
+            + ",_state==".join(
+                [
+                    field
+                    for field in vars(APPLICATION.STATES)
+                    if not field.startswith("__")
+                ]
+            )
+            + ")"
+        )
 
     res, err = client.list_apps(params=params)
     if err:
