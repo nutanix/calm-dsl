@@ -171,14 +171,15 @@ def get_blueprint_list(obj, filter_by, limit, offset, quiet):
 @get.command("apps")
 @click.option("--names", default=None, help="The name of apps to filter by")
 @click.option("--limit", default=20, help="Number of results to return")
+@click.option("--offset", default=0, help="Offset results by the specified amount")
 @click.pass_obj
-def get_apps(obj, names, limit):
+def get_apps(obj, names, limit, offset):
     """Get Apps, optionally filtered by a string"""
 
     client = obj.get("client")
     config = obj.get("config")
 
-    params = {"length": limit, "offset": 0}
+    params = {"length": limit, "offset": offset}
     if names:
         params["filter"] = _get_name_query(names)
     res, err = client.list_apps(params=params)
