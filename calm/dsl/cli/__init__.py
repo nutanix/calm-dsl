@@ -96,7 +96,7 @@ def get_server_status(obj):
 @click.option("--limit", default=20, help="Number of results to return")
 @click.option("--offset", default=0, help="Offset results by the specified amount")
 @click.option(
-    "--quiet/--no-quiet", "-q", default=False, help="Show only blueprint names."
+    "--quiet", "-q", is_flag=True, default=False, help="Show only blueprint names."
 )
 @click.option(
     "--all-items", "-a", is_flag=True, help="Get all items, including deleted ones"
@@ -190,7 +190,7 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
 @click.option("--limit", default=20, help="Number of results to return")
 @click.option("--offset", default=0, help="Offset results by the specified amount")
 @click.option(
-    "--quiet/--no-quiet", "-q", default=False, help="Show only application names"
+    "--quiet", "-q", is_flag=True, default=False, help="Show only application names"
 )
 @click.option(
     "--all-items", "-a", is_flag=True, help="Get all items, including deleted ones"
@@ -483,18 +483,25 @@ def delete_blueprint(obj, blueprint_names):
 
 @delete.command("app")
 @click.argument("app_names", nargs=-1)
+@click.option("--soft", "-s", is_flag=True, default=False, help="Soft delete app")
 @click.pass_obj
-def delete_app(obj, app_names):
+def delete_app(obj, app_names, soft):
 
     client = obj.get("client")
 
     for app_name in app_names:
         app = _get_app(client, app_name)
         app_id = app["metadata"]["uuid"]
-        res, err = client.delete_app(app_id)
+        action_label = "Soft Delete" if soft else "Delete"
+        click.echo(">> Triggering {}".format(action_label))
+        res, err = client.delete_app(app_id, soft_delete=soft)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        click.echo("App {} deleted".format(app_name))
+
+        click.echo("{} action triggered".format(action_label))
+        response = res.json()
+        runlog_id = response["status"]["runlog_uuid"]
+        click.echo("Action runlog uuid: {}".format(runlog_id))
 
 
 @main.group()
