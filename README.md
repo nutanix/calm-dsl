@@ -10,12 +10,12 @@ For three big reasons:
  - Well established languages have great tooling support: IDEs, syntax checkers, third-party modules, coding practices. They see much more community improvements as well (compare the performance of Python 3.0 vs 3.6 vs PyPy)
  - REPL: Python specifically comes with a very good REPL (read–eval–print loop). Having an interactive prompt to play around and slowly build objects is an order-of-magnitude improvement in developer productivity. Python inbuilt REPL (and also Jupyter (https://jupyter.org) which we will package) is very nice.
 
-For more YAML bashing, see this https://twitter.com/laserllama/status/1063777131736571905 from the creator of Ansible.
+For more YAML bashing, see this [tweet](https://twitter.com/laserllama/status/1063777131736571905) from the creator of Ansible. Also, look at the [#noyaml](https://twitter.com/hashtag/noyaml?src=hash) movement which is now evident due to adoption of Kubernetes.
 
 ## WHAT
 
 Calm DSL Engine describes a simpler Python 3 based DSL for writing Calm blueprints.
-Look at this [example](https://github.com/ideadevice/calm-dsl-engine/blob/master/tests/single_vm_example/test_single_vm_bp.py) to see a blueprint in action.
+Look at this [example](https://github.com/ideadevice/calm-dsl-engine/blob/master/tests/next_demo/test_next_demo.py) to see a blueprint in action.
 
 ## Dev Setup
 
