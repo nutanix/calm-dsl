@@ -15,6 +15,7 @@ from calm.dsl.builtins import Blueprint
 
 from .constants import RUNLOG, BLUEPRINT, APPLICATION
 from .config import get_config, get_api_client
+from .utils import get_states_filter
 
 
 @click.group()
@@ -97,9 +98,11 @@ def get_server_status(obj):
 @click.option(
     "--quiet/--no-quiet", "-q", default=False, help="Show only blueprint names."
 )
-@click.option("--all", "-a", is_flag=True, help="Get all items, including deleted ones")
+@click.option(
+    "--all-items", "-a", is_flag=True, help="Get all items, including deleted ones"
+)
 @click.pass_obj
-def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all):
+def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
     """Get the blueprints, optionally filtered by a string"""
 
     client = obj.get("client")
@@ -111,18 +114,8 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all):
         filter = _get_name_query([name])
     if filter_by:
         filter = filter + ";" + filter_by if name else filter_by
-    if all:
-        filter += (
-            ";(state=="
-            + ",state==".join(
-                [
-                    field
-                    for field in vars(BLUEPRINT.STATES)
-                    if not field.startswith("__")
-                ]
-            )
-            + ")"
-        )
+    if all_items:
+        filter += get_states_filter(BLUEPRINT.STATES)
     if filter.startswith(";"):
         filter = filter[1:]
 
@@ -199,9 +192,11 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all):
 @click.option(
     "--quiet/--no-quiet", "-q", default=False, help="Show only application names"
 )
-@click.option("--all", "-a", is_flag=True, help="Get all items, including deleted ones")
+@click.option(
+    "--all-items", "-a", is_flag=True, help="Get all items, including deleted ones"
+)
 @click.pass_obj
-def get_apps(obj, name, filter_by, limit, offset, quiet, all):
+def get_apps(obj, name, filter_by, limit, offset, quiet, all_items):
     """Get Apps, optionally filtered by a string"""
 
     client = obj.get("client")
@@ -213,18 +208,8 @@ def get_apps(obj, name, filter_by, limit, offset, quiet, all):
         filter = _get_name_query([name])
     if filter_by:
         filter = filter + ";" + filter_by if name else filter_by
-    if all:
-        filter += (
-            ";(_state=="
-            + ",_state==".join(
-                [
-                    field
-                    for field in vars(APPLICATION.STATES)
-                    if not field.startswith("__")
-                ]
-            )
-            + ")"
-        )
+    if all_items:
+        filter += get_states_filter(APPLICATION.STATES, state_key="_state")
     if filter.startswith(";"):
         filter = filter[1:]
 
@@ -637,17 +622,7 @@ def _get_app(client, app_name, all=False):
     # 1. Get app_uuid from list api
     params = {"filter": "name=={}".format(app_name)}
     if all:
-        params["filter"] += (
-            ";(_state=="
-            + ",_state==".join(
-                [
-                    field
-                    for field in vars(APPLICATION.STATES)
-                    if not field.startswith("__")
-                ]
-            )
-            + ")"
-        )
+        params["filter"] += get_states_filter(APPLICATION.STATES, state_key="_state")
 
     res, err = client.list_apps(params=params)
     if err:
@@ -688,7 +663,7 @@ def describe_app(obj, app_name):
     """Describe an app"""
 
     client = obj.get("client")
-    app = _get_app(client, app_name, True)
+    app = _get_app(client, app_name, all=True)
 
     click.echo("\n----Application Summary----\n")
     app_name = app["metadata"]["name"]
