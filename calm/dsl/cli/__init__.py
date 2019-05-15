@@ -107,15 +107,16 @@ def get_blueprint_list(obj, filter_by, limit):
     if not err:
         table = PrettyTable()
         table.field_names = [
-            "Name",
+            "NAME",
+            "BLUEPRINT TYPE",
+            "DESCRIPTION",
+            "APPLICATION COUNT",
+            "PROJECT",
+            "STATE",
+            "CREATED ON",
+            "LAST UPDATED",
             "UUID",
-            "Type",
-            "Description",
-            "State",
-            "Project",
-            "Application Count",
-            "Created On",
-            "Last Updated",
+
         ]
         json_rows = res.json()["entities"]
         for _row in json_rows:
@@ -140,14 +141,15 @@ def get_blueprint_list(obj, filter_by, limit):
             table.add_row(
                 [
                     _highlight_text(row["name"]),
-                    _highlight_text(row["uuid"]),
                     _highlight_text(bp_type),
                     _highlight_text(row["description"]),
-                    _highlight_text(row["state"]),
-                    _highlight_text(project),
                     _highlight_text(row["application_count"]),
+                    _highlight_text(project),
+                    _highlight_text(row["state"]),
                     _highlight_text(time.ctime(creation_time)),
                     "{}".format(arrow.get(last_update_time).humanize()),
+                    _highlight_text(row["uuid"]),
+
                 ]
             )
         click.echo(table)
