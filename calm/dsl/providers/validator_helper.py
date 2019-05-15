@@ -1,4 +1,3 @@
-import re
 
 
 def is_array(checker, spec_instance):
@@ -52,6 +51,8 @@ class TypeChecker(object):
 
         except:
             raise Exception('Undefined type: %r ' % (type))
+
+
 
 
 def items(validator, items, spec_instance):
@@ -145,23 +146,14 @@ def type(validator, types, spec_instance):
 
     if not any(validator.is_type(spec_instance, type) for type in types):
         raise Exception(
-            'instance : %r does n\'t match with any schema ' % (spec_instance)
-            )
+            'instance : %r doesn\'t match with any schema ' % (spec_instance)
+        )
 
 
 def title(validator, title, spec_instance):
 
     if not isinstance(title, str):
         raise Exception('title is not string')
-
-
-def pattern(validator, pattern, spec_instance):
-
-    if not validator.is_type(spec_instance, 'string'):
-        raise Exception('spec is not of %r type' % ('string'))
-
-    if not re.search(pattern, spec_instance):
-        raise Exception('spec invalid : {}' % (spec_instance))
 
 
 class ValidatorType(object):
@@ -176,6 +168,5 @@ class ValidatorType(object):
         u'allOf': allOf,
         u'anyOf': anyOf,
         u'type': type,
-        u'title': title,
-        u'pattern': pattern
+        u'title': title
     }
