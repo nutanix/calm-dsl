@@ -15,7 +15,7 @@ For more YAML bashing, see this https://twitter.com/laserllama/status/1063777131
 ## WHAT
 
 Calm DSL Engine describes a simpler Python 3 based DSL for writing Calm blueprints.
-Look at this [example](https://github.com/ideadevice/calm-dsl-engine/blob/master/tests/single_vm_example/test_single_vm_bp.py) to see a blueprint in action.
+Look at this [example](example](https://github.com/ideadevice/calm-dsl-engine/blob/master/tests/next_demo/test_next_demo.py) to see a blueprint in action.
 
 ## Dev Setup
 
