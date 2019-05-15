@@ -10,7 +10,7 @@ import arrow
 from prettytable import PrettyTable
 from ruamel import yaml
 
-from calm.dsl.utils.server_utils import ping
+from calm.dsl.tools import ping
 from calm.dsl.builtins import Blueprint
 
 from .constants import RUNLOG, BLUEPRINT, APPLICATION
