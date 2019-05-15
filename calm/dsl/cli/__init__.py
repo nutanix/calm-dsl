@@ -109,18 +109,18 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
     config = obj.get("config")
 
     params = {"length": limit, "offset": offset}
-    filter = ""
+    filter_query = ""
     if name:
-        filter = _get_name_query([name])
+        filter_query = _get_name_query([name])
     if filter_by:
-        filter = filter + ";" + filter_by if name else filter_by
+        filter_query = filter_query + ";" + filter_by if name else filter_by
     if all_items:
-        filter += get_states_filter(BLUEPRINT.STATES)
-    if filter.startswith(";"):
-        filter = filter[1:]
+        filter_query += get_states_filter(BLUEPRINT.STATES)
+    if filter_query.startswith(";"):
+        filter_query = filter_query[1:]
 
-    if filter:
-        params["filter"] = filter
+    if filter_query:
+        params["filter"] = filter_query
 
     res, err = client.list(params=params)
 
@@ -203,18 +203,18 @@ def get_apps(obj, name, filter_by, limit, offset, quiet, all_items):
     config = obj.get("config")
 
     params = {"length": limit, "offset": offset}
-    filter = ""
+    filter_query = ""
     if name:
-        filter = _get_name_query([name])
+        filter_query = _get_name_query([name])
     if filter_by:
-        filter = filter + ";" + filter_by if name else filter_by
+        filter_query = filter_query + ";" + filter_by if name else filter_by
     if all_items:
-        filter += get_states_filter(APPLICATION.STATES, state_key="_state")
-    if filter.startswith(";"):
-        filter = filter[1:]
+        filter_query += get_states_filter(APPLICATION.STATES, state_key="_state")
+    if filter_query.startswith(";"):
+        filter_query = filter_query[1:]
 
-    if filter:
-        params["filter"] = filter
+    if filter_query:
+        params["filter"] = filter_query
 
     res, err = client.list_apps(params=params)
 
