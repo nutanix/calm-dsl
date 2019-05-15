@@ -107,7 +107,8 @@ def get_blueprint_list(obj, filter_by, limit):
     if not err:
         table = PrettyTable()
         table.field_names = [
-            "Blueprint Name",
+            "Name",
+            "UUID",
             "Type",
             "Description",
             "State",
@@ -133,6 +134,7 @@ def get_blueprint_list(obj, filter_by, limit):
             table.add_row(
                 [
                     _highlight_text(row["name"]),
+                    _highlight_text(row["uuid"]),
                     _highlight_text(bp_type),
                     _highlight_text(row["description"]),
                     _highlight_text(row["state"]),
@@ -140,9 +142,7 @@ def get_blueprint_list(obj, filter_by, limit):
                     _highlight_text(row["application_count"]),
                 ]
             )
-        click.echo("\n----Blueprint List----")
         click.echo(table)
-        assert res.ok is True
     else:
         pc_ip = config["SERVER"]["pc_ip"]
         warnings.warn(UserWarning("Cannot fetch blueprints from {}".format(pc_ip)))
