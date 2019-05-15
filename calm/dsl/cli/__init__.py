@@ -92,8 +92,9 @@ def get_server_status(obj):
     "--filter", "filter_by", default=None, help="Filter blueprints with this string"
 )
 @click.option("--limit", default=20, help="Number of results to return")
+@click.option("--quiet/--no-quiet", "-q", default=False, help="Show only blueprint names.")
 @click.pass_obj
-def get_blueprint_list(obj, filter_by, limit):
+def get_blueprint_list(obj, filter_by, limit, quiet):
     """Get the blueprints, optionally filtered by a string"""
 
     client = obj.get("client")
@@ -104,58 +105,66 @@ def get_blueprint_list(obj, filter_by, limit):
         params["filter"] = _get_name_query(filter_by)
     res, err = client.list(params=params)
 
-    if not err:
-        table = PrettyTable()
-        table.field_names = [
-            "NAME",
-            "BLUEPRINT TYPE",
-            "DESCRIPTION",
-            "APPLICATION COUNT",
-            "PROJECT",
-            "STATE",
-            "CREATED ON",
-            "LAST UPDATED",
-            "UUID",
-
-        ]
-        json_rows = res.json()["entities"]
-        for _row in json_rows:
-            row = _row["status"]
-            metadata = _row["metadata"]
-            bp_type = (
-                "Single VM"
-                if "categories" in metadata
-                and metadata["categories"]["TemplateType"] == "Vm"
-                else "Multi VM/Pod"
-            )
-
-            project = (
-                metadata["project_reference"]["name"]
-                if "project_reference" in metadata
-                else None
-            )
-
-            creation_time = int(metadata["creation_time"]) // 1000000
-            last_update_time = int(metadata["last_update_time"]) // 1000000
-
-            table.add_row(
-                [
-                    _highlight_text(row["name"]),
-                    _highlight_text(bp_type),
-                    _highlight_text(row["description"]),
-                    _highlight_text(row["application_count"]),
-                    _highlight_text(project),
-                    _highlight_text(row["state"]),
-                    _highlight_text(time.ctime(creation_time)),
-                    "{}".format(arrow.get(last_update_time).humanize()),
-                    _highlight_text(row["uuid"]),
-
-                ]
-            )
-        click.echo(table)
-    else:
+    if err:
         pc_ip = config["SERVER"]["pc_ip"]
         warnings.warn(UserWarning("Cannot fetch blueprints from {}".format(pc_ip)))
+        return
+
+    json_rows = res.json()["entities"]
+
+    if quiet:
+        for _row in json_rows:
+            row = _row["status"]
+            click.echo(_highlight_text(row["name"]))
+        return
+
+    table = PrettyTable()
+    table.field_names = [
+        "NAME",
+        "BLUEPRINT TYPE",
+        "DESCRIPTION",
+        "APPLICATION COUNT",
+        "PROJECT",
+        "STATE",
+        "CREATED ON",
+        "LAST UPDATED",
+        "UUID",
+
+    ]
+    for _row in json_rows:
+        row = _row["status"]
+        metadata = _row["metadata"]
+        bp_type = (
+            "Single VM"
+            if "categories" in metadata
+            and metadata["categories"]["TemplateType"] == "Vm"
+            else "Multi VM/Pod"
+        )
+
+        project = (
+            metadata["project_reference"]["name"]
+            if "project_reference" in metadata
+            else None
+        )
+
+        creation_time = int(metadata["creation_time"]) // 1000000
+        last_update_time = int(metadata["last_update_time"]) // 1000000
+
+        table.add_row(
+            [
+                _highlight_text(row["name"]),
+                _highlight_text(bp_type),
+                _highlight_text(row["description"]),
+                _highlight_text(row["application_count"]),
+                _highlight_text(project),
+                _highlight_text(row["state"]),
+                _highlight_text(time.ctime(creation_time)),
+                "{}".format(arrow.get(last_update_time).humanize()),
+                _highlight_text(row["uuid"]),
+
+            ]
+        )
+    click.echo(table)
 
 
 @get.command("apps")
