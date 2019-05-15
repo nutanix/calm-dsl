@@ -262,7 +262,7 @@ def get_apps(obj, name, filter_by, limit, offset, quiet, all):
         "OWNER",
         "CREATED ON",
         "LAST UPDATED",
-        "UUID"
+        "UUID",
     ]
     for _row in json_rows:
         row = _row["status"]
@@ -835,7 +835,7 @@ def run_actions(obj, app_name, action_name, watch):
 
     response = res.json()
     runlog_id = response["status"]["runlog_uuid"]
-    click.echo("Runlog uuid: ", runlog_id)
+    click.echo("Runlog uuid: {}".format(runlog_id))
     url = client.APP_ITEM.format(app_id) + "/app_runlogs/list"
     payload = {"filter": "root_reference=={}".format(runlog_id)}
 
