@@ -1,7 +1,7 @@
 import os
 import configparser
 
-from calm.dsl.utils.server_utils import get_api_client as _get_api_client
+from calm.dsl.api import get_client_handle
 
 
 # Defaults to be used if no config file exists.
@@ -61,4 +61,4 @@ def get_api_client():
     username = config["SERVER"].get("pc_username")
     password = config["SERVER"].get("pc_password")
 
-    return _get_api_client(pc_ip=pc_ip, pc_port=pc_port, auth=(username, password))
+    return get_client_handle(pc_ip, pc_port, auth=(username, password))

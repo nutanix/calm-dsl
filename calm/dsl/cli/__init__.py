@@ -129,7 +129,7 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all):
     if filter:
         params["filter"] = filter
 
-    res, err = client.list(params=params)
+    res, err = client.blueprint.list(params=params)
 
     if err:
         pc_ip = config["SERVER"]["pc_ip"]
@@ -231,7 +231,7 @@ def get_apps(obj, name, filter_by, limit, offset, quiet, all):
     if filter:
         params["filter"] = filter
 
-    res, err = client.list_apps(params=params)
+    res, err = client.application.list(params=params)
 
     if err:
         pc_ip = config["SERVER"]["pc_ip"]
@@ -393,7 +393,7 @@ def create_blueprint(client, bp_payload, name=None, description=None):
     bp_name = bp_payload["spec"]["name"]
     bp_desc = bp_payload["spec"]["description"]
 
-    return client.upload_with_secrets(bp_name, bp_desc, bp_resources)
+    return client.blueprint.upload_with_secrets(bp_name, bp_desc, bp_resources)
 
 
 def create_blueprint_from_json(client, path_to_json, name=None, description=None):
@@ -456,7 +456,7 @@ def get_blueprint(client, name):
     # find bp
     params = {"filter": "name=={};state!=DELETED".format(name)}
 
-    res, err = client.list(params=params)
+    res, err = client.blueprint.list(params=params)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -490,7 +490,7 @@ def delete_blueprint(obj, blueprint_names):
     for blueprint_name in blueprint_names:
         blueprint = get_blueprint(client, blueprint_name)
         blueprint_id = blueprint["metadata"]["uuid"]
-        res, err = client.delete(blueprint_id)
+        res, err = client.blueprint.delete(blueprint_id)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
         click.echo("Blueprint {} deleted".format(blueprint_name))
@@ -509,7 +509,7 @@ def delete_app(obj, app_names, soft):
         app_id = app["metadata"]["uuid"]
         action_label = "Soft Delete" if soft else "Delete"
         click.echo(">> Triggering {}".format(action_label))
-        res, err = client.delete_app(app_id, soft_delete=soft)
+        res, err = client.application.delete(app_id, soft_delete=soft)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -530,7 +530,7 @@ def get_blueprint_runtime_editables(client, blueprint):
     bp_uuid = blueprint.get("metadata", {}).get("uuid", None)
     if not bp_uuid:
         raise Exception(">> Invalid blueprint provided {} >>".format(blueprint))
-    res, err = client._get_editables(bp_uuid)
+    res, err = client.blueprint._get_editables(bp_uuid)
     response = res.json()
     return response.get("resources", [])
 
@@ -586,7 +586,7 @@ def launch_blueprint_simple(client, blueprint_name, blueprint=None, profile_name
                 editables = entity["value"]
                 get_field_values(editables, context, path=entity.get("name", ""))
         click.echo("Updated blueprint editables are:\n{}".format(runtime_editables))
-    res, err = client.launch(blueprint_uuid, launch_payload)
+    res, err = client.blueprint.launch(blueprint_uuid, launch_payload)
     if not err:
         click.echo(">> {} queued for launch >>".format(blueprint_name))
     else:
@@ -600,7 +600,7 @@ def launch_blueprint_simple(client, blueprint_name, blueprint=None, profile_name
     while count < maxWait:
         # call status api
         click.echo("Polling status of Launch")
-        res, err = client.poll_launch(blueprint_uuid, launch_req_id)
+        res, err = client.blueprint.poll_launch(blueprint_uuid, launch_req_id)
         response = res.json()
         pprint(response)
         if response["status"]["state"] == "success":
@@ -656,7 +656,7 @@ def _get_app(client, app_name, all=False):
             + ")"
         )
 
-    res, err = client.list_apps(params=params)
+    res, err = client.application.list(params=params)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -675,7 +675,7 @@ def _get_app(client, app_name, all=False):
 
     # 2. Get app details
     click.echo(">> Fetching app details")
-    res, err = client.get_app(app_id)
+    res, err = client.application.get(app_id)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
     app = res.json()
@@ -791,7 +791,7 @@ def run_actions(obj, app_name, action_name, watch):
         action_name = action_name.lower()
         is_soft_delete = action_name == "soft_delete"
         action_label = "Soft Delete" if is_soft_delete else "Delete"
-        res, err = client.delete_app(app_id, is_soft_delete)
+        res, err = client.application.delete(app_id, is_soft_delete)
         click.echo(">> Triggering {}".format(action_label))
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -802,12 +802,12 @@ def run_actions(obj, app_name, action_name, watch):
             click.echo("Action runlog uuid: {}".format(runlog_id))
 
             if watch:
-                url = client.APP_ITEM.format(app_id) + "/app_runlogs/list"
+                url = client.application.APP_ITEM.format(app_id) + "/app_runlogs/list"
                 payload = {"filter": "root_reference=={}".format(runlog_id)}
 
                 def poll_func():
                     click.echo("Polling action run ...")
-                    return client.poll_action_run(url, payload)
+                    return client.application.poll_action_run(url, payload)
 
                 def is_action_complete(response):
                     pprint(response)
@@ -835,7 +835,7 @@ def run_actions(obj, app_name, action_name, watch):
     # 4. Hit action run api (with metadata and minimal spec: [args, target_kind, target_uuid])
     app.pop("status")
     app["spec"] = {"args": [], "target_kind": "Application", "target_uuid": app_id}
-    res, err = client.run_action(app_id, action_id, app)
+    res, err = client.application.run_action(app_id, action_id, app)
     click.echo(">> Triggering action run")
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -843,14 +843,14 @@ def run_actions(obj, app_name, action_name, watch):
     response = res.json()
     runlog_id = response["status"]["runlog_uuid"]
     click.echo("Runlog uuid: {}".format(runlog_id))
-    url = client.APP_ITEM.format(app_id) + "/app_runlogs/list"
+    url = client.application.APP_ITEM.format(app_id) + "/app_runlogs/list"
     payload = {"filter": "root_reference=={}".format(runlog_id)}
 
     if watch:
 
         def poll_func():
             click.echo("Polling action run ...")
-            return client.poll_action_run(url, payload)
+            return client.application.poll_action_run(url, payload)
 
         def is_action_complete(response):
             pprint(response)
@@ -887,12 +887,12 @@ def watch_action(runlog_id, app_name, client):
     app = _get_app(client, app_name)
     app_id = app["metadata"]["uuid"]
 
-    url = client.APP_ITEM.format(app_id) + "/app_runlogs/list"
+    url = client.application.APP_ITEM.format(app_id) + "/app_runlogs/list"
     payload = {"filter": "root_reference=={}".format(runlog_id)}
 
     def poll_func():
         click.echo("Polling action status...")
-        return client.poll_action_run(url, payload)
+        return client.application.poll_action_run(url, payload)
 
     def is_action_complete(response):
         pprint(response)
@@ -929,7 +929,7 @@ def watch_app(obj, app_name, action):
 
     app = _get_app(client, app_name)
     app_id = app["metadata"]["uuid"]
-    url = client.APP_ITEM.format(app_id) + "/app_runlogs/list"
+    url = client.application.APP_ITEM.format(app_id) + "/app_runlogs/list"
 
     payload = {
         "filter": "application_reference=={};(type==action_runlog,type==audit_runlog,type==ngt_runlog,type==clone_action_runlog)".format(
@@ -939,7 +939,7 @@ def watch_app(obj, app_name, action):
 
     def poll_func():
         click.echo("Polling app status...")
-        return client.poll_action_run(url, payload)
+        return client.application.poll_action_run(url, payload)
 
     def is_complete(response):
         pprint(response)
