@@ -498,15 +498,16 @@ def delete_blueprint(obj, blueprint_names):
 
 @delete.command("app")
 @click.argument("app_names", nargs=-1)
+@click.option("--soft", "-s", is_flag=True, default=False, help="Soft delete app")
 @click.pass_obj
-def delete_app(obj, app_names):
+def delete_app(obj, app_names, soft):
 
     client = obj.get("client")
 
     for app_name in app_names:
         app = _get_app(client, app_name)
         app_id = app["metadata"]["uuid"]
-        res, err = client.delete_app(app_id)
+        res, err = client.delete_app(app_id, soft_delete=soft)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
         click.echo("App {} deleted".format(app_name))
