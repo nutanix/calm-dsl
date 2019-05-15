@@ -2,6 +2,7 @@ import os
 import sys
 import inspect
 from ruamel import yaml
+from calm.dsl.providers import get_validator
 
 
 def read_ahv_vm_spec(filename):
@@ -22,20 +23,7 @@ class CreateSpecReader:
     
     def __validate__(self, vm_type):
 
-        Providers = {
-            'AHV_VM': 
-            ('calm.dsl.builtins.models.create_spec_validator', 'AHV_Validator')
-        }
-
-        if vm_type not in Providers:
-            raise Exception('given provider : %r is not supported' % (vm_type) )
-        
-        mod_name, validator_name = Providers[vm_type]  
-        validator_mod = __import__(
-            mod_name, globals(), locals(), validator_name
-        )
-        
-        validator_cls = getattr(validator_mod, validator_name)
+        validator_cls = get_validator(vm_type)
         validator = validator_cls()
         validator.validate(self.create_spec)
 
