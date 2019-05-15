@@ -95,7 +95,7 @@ def get_server_status(obj):
 @click.option("--limit", default=20, help="Number of results to return")
 @click.option("--offset", default=0, help="Offset results by the specified amount")
 @click.option(
-    "--quiet/--no-quiet", "-q", default=False, help="Show only blueprint names."
+    "--quiet", "-q", is_flag=True, default=False, help="Show only blueprint names."
 )
 @click.option("--all", "-a", is_flag=True, help="Get all items, including deleted ones")
 @click.pass_obj
@@ -197,7 +197,7 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all):
 @click.option("--limit", default=20, help="Number of results to return")
 @click.option("--offset", default=0, help="Offset results by the specified amount")
 @click.option(
-    "--quiet/--no-quiet", "-q", default=False, help="Show only application names"
+    "--quiet", "-q", is_flag=True, default=False, help="Show only application names"
 )
 @click.option("--all", "-a", is_flag=True, help="Get all items, including deleted ones")
 @click.pass_obj
