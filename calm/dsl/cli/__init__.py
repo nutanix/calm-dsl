@@ -13,7 +13,7 @@ from ruamel import yaml
 from calm.dsl.utils.server_utils import ping
 from calm.dsl.builtins import Blueprint
 
-from .constants import RUNLOG
+from .constants import RUNLOG, BLUEPRINT, APPLICATION
 from .config import get_config, get_api_client
 
 
@@ -88,20 +88,35 @@ def get_server_status(obj):
 
 
 @get.command("bps")
+@click.option("--name", default=None, help="Search for blueprints by name")
 @click.option(
-    "--filter", "filter_by", default=None, help="Filter blueprints with this string"
+    "--filter", "filter_by", default=None, help="Filter blueprints by this string"
 )
 @click.option("--limit", default=20, help="Number of results to return")
+@click.option("--all", "-a", is_flag=True, help="Get all items, including deleted ones")
 @click.pass_obj
-def get_blueprint_list(obj, filter_by, limit):
+def get_blueprint_list(obj, name, filter_by, limit, all):
     """Get the blueprints, optionally filtered by a string"""
 
     client = obj.get("client")
     config = obj.get("config")
 
     params = {"length": limit, "offset": 0}
+    filter = ""
+    if name:
+        filter = _get_name_query([name])
     if filter_by:
-        params["filter"] = _get_name_query(filter_by)
+        filter = filter + ";" + filter_by if name else filter_by
+    if all:
+        filter += ";state==" + ",state==".join(
+            [field for field in vars(BLUEPRINT.STATES) if not field.startswith("__")]
+        )
+    if filter.startswith(";"):
+        filter = filter[1:]
+
+    if not filter:
+        params["filter"] = filter
+
     res, err = client.list(params=params)
 
     if not err:
@@ -149,18 +164,33 @@ def get_blueprint_list(obj, filter_by, limit):
 
 
 @get.command("apps")
-@click.option("--names", default=None, help="The name of apps to filter by")
+@click.option("--name", default=None, help="Search for apps by name")
+@click.option("--filter", "filter_by", default=None, help="Filter apps by this string")
 @click.option("--limit", default=20, help="Number of results to return")
+@click.option("--all", "-a", is_flag=True, help="Get all items, including deleted ones")
 @click.pass_obj
-def get_apps(obj, names, limit):
+def get_apps(obj, name, filter_by, limit, all):
     """Get Apps, optionally filtered by a string"""
 
     client = obj.get("client")
     config = obj.get("config")
 
     params = {"length": limit, "offset": 0}
-    if names:
-        params["filter"] = _get_name_query(names)
+    filter = ""
+    if name:
+        filter = _get_name_query([name])
+    if filter_by:
+        filter = filter + ";" + filter_by if name else filter_by
+    if all:
+        filter += ";_state==" + ",_state==".join(
+            [field for field in vars(APPLICATION.STATES) if not field.startswith("__")]
+        )
+    if filter.startswith(";"):
+        filter = filter[1:]
+
+    if not filter:
+        params["filter"] = filter
+
     res, err = client.list_apps(params=params)
 
     if not err:
@@ -281,7 +311,7 @@ def compile_blueprint(bp_file, out):
 
 @main.group()
 def create():
-    """Create blueprint, optionally launch too"""
+    """Create blueprint in Calm, from DSL (Python) or JSON file """
     pass
 
 

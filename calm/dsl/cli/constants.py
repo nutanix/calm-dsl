@@ -1,5 +1,5 @@
-class RUNLOG(object):
-    class STATUS(object):
+class RUNLOG:
+    class STATUS:
         SUCCESS = "SUCCESS"
         PENDING = "PENDING"
         RUNNING = "RUNNING"
@@ -37,3 +37,27 @@ class RUNLOG(object):
         STATUS.SYS_ERROR,
         STATUS.SYS_ABORTED,
     ]
+
+
+class BLUEPRINT:
+    class STATES:
+        ACTIVE = "ACTIVE"
+        DELETED = "DELETED"
+        DRAFT = "DRAFT"
+        ERROR = "ERROR"
+
+
+class APPLICATION:
+    class STATES:
+        PROVISIONING = "provisioning"
+        DELETED = "stopped"
+        DRAFT = "running"
+        ERROR = "error"
+        ERROR = "deleted"
+        ERROR = "deleting"
+        ERROR = "starting"
+        ERROR = "stopping"
+        ERROR = "restarting"
+        ERROR = "busy"
+        ERROR = "timeout"
+        ERROR = "restarting"
