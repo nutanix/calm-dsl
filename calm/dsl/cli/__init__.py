@@ -172,8 +172,9 @@ def get_blueprint_list(obj, filter_by, limit, offset, quiet):
 @click.option("--names", default=None, help="The name of apps to filter by")
 @click.option("--limit", default=20, help="Number of results to return")
 @click.option("--offset", default=0, help="Offset results by the specified amount")
+@click.option("--quiet/--no-quiet", "-q", default=False, help="Show only application names")
 @click.pass_obj
-def get_apps(obj, names, limit, offset):
+def get_apps(obj, names, limit, offset, quiet):
     """Get Apps, optionally filtered by a string"""
 
     client = obj.get("client")
@@ -184,41 +185,48 @@ def get_apps(obj, names, limit, offset):
         params["filter"] = _get_name_query(names)
     res, err = client.list_apps(params=params)
 
-    if not err:
-        table = PrettyTable()
-        table.field_names = [
-            "Application Name",
-            "Source Blueprint",
-            "State",
-            "Owner",
-            "Created On",
-        ]
-        json_rows = res.json()["entities"]
+    if err:
+        pc_ip = config["SERVER"]["pc_ip"]
+        warnings.warn(UserWarning("Cannot fetch blueprints from {}".format(pc_ip)))
+        return
+
+    json_rows = res.json()["entities"]
+
+    if quiet:
         for _row in json_rows:
             row = _row["status"]
-            metadata = _row["metadata"]
+            click.echo(_highlight_text(row["name"]))
+        return
 
-            created_on = int(metadata["creation_time"]) // 1000000
-            table.add_row(
-                [
-                    _highlight_text(row["name"]),
-                    _highlight_text(
-                        row["resources"]["app_blueprint_reference"]["name"]
-                    ),
-                    _highlight_text(row["state"]),
-                    _highlight_text(metadata["owner_reference"]["name"]),
-                    "{} ({}) ".format(
-                        _highlight_text(time.ctime(created_on)),
-                        arrow.get(created_on).humanize(),
-                    ),
-                ]
-            )
-        click.echo("\n----Application List----")
-        click.echo(table)
-        assert res.ok is True
-    else:
-        pc_ip = config["SERVER"]["pc_ip"]
-        warnings.warn(UserWarning("Cannot fetch applications from {}".format(pc_ip)))
+    table = PrettyTable()
+    table.field_names = [
+        "Application Name",
+        "Source Blueprint",
+        "State",
+        "Owner",
+        "Created On",
+    ]
+    for _row in json_rows:
+        row = _row["status"]
+        metadata = _row["metadata"]
+
+        created_on = int(metadata["creation_time"]) // 1000000
+        table.add_row(
+            [
+                _highlight_text(row["name"]),
+                _highlight_text(
+                    row["resources"]["app_blueprint_reference"]["name"]
+                ),
+                _highlight_text(row["state"]),
+                _highlight_text(metadata["owner_reference"]["name"]),
+                "{} ({}) ".format(
+                    _highlight_text(time.ctime(created_on)),
+                    arrow.get(created_on).humanize(),
+                ),
+            ]
+        )
+    click.echo("\n----Application List----")
+    click.echo(table)
 
 
 def get_blueprint_module_from_file(bp_file):
