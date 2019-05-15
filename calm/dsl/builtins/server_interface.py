@@ -75,7 +75,7 @@ def build_url(host, port, endpoint="", scheme=REQUEST.SCHEME.HTTPS):
     return url
 
 
-class Connection(object):
+class Connection:
     def __init__(
         self,
         host,
