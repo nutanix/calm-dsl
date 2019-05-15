@@ -96,7 +96,7 @@ def get_validator_details(schema_props, name):
 
     property_validators = get_property_validators()
     ValidatorType = property_validators.get(type_, None)
-    if ValidatorType is None:
+    if (ValidatorType is None) and (name != 'create_spec'):
         raise TypeError("Type {} not supported".format(type_))
 
     # Get default from schema if given, else set default from validator type
