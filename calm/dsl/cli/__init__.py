@@ -114,6 +114,8 @@ def get_blueprint_list(obj, filter_by, limit):
             "State",
             "Project",
             "Application Count",
+            "Created On",
+            "Last Updated",
         ]
         json_rows = res.json()["entities"]
         for _row in json_rows:
@@ -131,6 +133,10 @@ def get_blueprint_list(obj, filter_by, limit):
                 if "project_reference" in metadata
                 else None
             )
+
+            creation_time = int(metadata["creation_time"]) // 1000000
+            last_update_time = int(metadata["last_update_time"]) // 1000000
+
             table.add_row(
                 [
                     _highlight_text(row["name"]),
@@ -140,6 +146,8 @@ def get_blueprint_list(obj, filter_by, limit):
                     _highlight_text(row["state"]),
                     _highlight_text(project),
                     _highlight_text(row["application_count"]),
+                    _highlight_text(time.ctime(creation_time)),
+                    "{}".format(arrow.get(last_update_time).humanize()),
                 ]
             )
         click.echo(table)
