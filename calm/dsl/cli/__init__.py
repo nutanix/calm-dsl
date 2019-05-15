@@ -507,10 +507,16 @@ def delete_app(obj, app_names, soft):
     for app_name in app_names:
         app = _get_app(client, app_name)
         app_id = app["metadata"]["uuid"]
+        action_label = "Soft Delete" if soft else "Delete"
+        click.echo(">> Triggering {}".format(action_label))
         res, err = client.delete_app(app_id, soft_delete=soft)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        click.echo("App {} deleted".format(app_name))
+
+        click.echo("{} action triggered".format(action_label))
+        response = res.json()
+        runlog_id = response["status"]["runlog_uuid"]
+        click.echo("Action runlog uuid: {}".format(runlog_id))
 
 
 @main.group()
