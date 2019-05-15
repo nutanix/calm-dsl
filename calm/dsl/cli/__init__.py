@@ -200,17 +200,21 @@ def get_apps(obj, names, limit, offset, quiet):
 
     table = PrettyTable()
     table.field_names = [
-        "Application Name",
-        "Source Blueprint",
-        "State",
-        "Owner",
-        "Created On",
+        "NAME",
+        "SOURCE BLUEPRINT",
+        "STATE",
+        "OWNER",
+        "CREATED ON",
+        "LAST UPDATED",
+        "UUID"
     ]
     for _row in json_rows:
         row = _row["status"]
         metadata = _row["metadata"]
 
-        created_on = int(metadata["creation_time"]) // 1000000
+        creation_time = int(metadata["creation_time"]) // 1000000
+        last_update_time = int(metadata["last_update_time"]) // 1000000
+
         table.add_row(
             [
                 _highlight_text(row["name"]),
@@ -219,13 +223,11 @@ def get_apps(obj, names, limit, offset, quiet):
                 ),
                 _highlight_text(row["state"]),
                 _highlight_text(metadata["owner_reference"]["name"]),
-                "{} ({}) ".format(
-                    _highlight_text(time.ctime(created_on)),
-                    arrow.get(created_on).humanize(),
-                ),
+                _highlight_text(time.ctime(creation_time)),
+                "{}".format(arrow.get(last_update_time).humanize()),
+                _highlight_text(row["uuid"]),
             ]
         )
-    click.echo("\n----Application List----")
     click.echo(table)
 
 
