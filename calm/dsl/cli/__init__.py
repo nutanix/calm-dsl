@@ -93,15 +93,17 @@ def get_server_status(obj):
     "--filter", "filter_by", default=None, help="Filter blueprints by this string"
 )
 @click.option("--limit", default=20, help="Number of results to return")
+@click.option("--offset", default=0, help="Offset results by the specified amount")
+@click.option("--quiet/--no-quiet", "-q", default=False, help="Show only blueprint names.")
 @click.option("--all", "-a", is_flag=True, help="Get all items, including deleted ones")
 @click.pass_obj
-def get_blueprint_list(obj, name, filter_by, limit, all):
+def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all):
     """Get the blueprints, optionally filtered by a string"""
 
     client = obj.get("client")
     config = obj.get("config")
 
-    params = {"length": limit, "offset": 0}
+    params = {"length": limit, "offset": offset}
     filter = ""
     if name:
         filter = _get_name_query([name])
@@ -119,48 +121,66 @@ def get_blueprint_list(obj, name, filter_by, limit, all):
 
     res, err = client.list(params=params)
 
-    if not err:
-        table = PrettyTable()
-        table.field_names = [
-            "Blueprint Name",
-            "Type",
-            "Description",
-            "State",
-            "Project",
-            "Application Count",
-        ]
-        json_rows = res.json()["entities"]
-        for _row in json_rows:
-            row = _row["status"]
-            metadata = _row["metadata"]
-            bp_type = (
-                "Single VM"
-                if "categories" in metadata
-                and metadata["categories"]["TemplateType"] == "Vm"
-                else "Multi VM/Pod"
-            )
-
-            project = (
-                metadata["project_reference"]["name"]
-                if "project_reference" in metadata
-                else None
-            )
-            table.add_row(
-                [
-                    _highlight_text(row["name"]),
-                    _highlight_text(bp_type),
-                    _highlight_text(row["description"]),
-                    _highlight_text(row["state"]),
-                    _highlight_text(project),
-                    _highlight_text(row["application_count"]),
-                ]
-            )
-        click.echo("\n----Blueprint List----")
-        click.echo(table)
-        assert res.ok is True
-    else:
+    if err:
         pc_ip = config["SERVER"]["pc_ip"]
         warnings.warn(UserWarning("Cannot fetch blueprints from {}".format(pc_ip)))
+        return
+
+    json_rows = res.json()["entities"]
+
+    if quiet:
+        for _row in json_rows:
+            row = _row["status"]
+            click.echo(_highlight_text(row["name"]))
+        return
+
+    table = PrettyTable()
+    table.field_names = [
+        "NAME",
+        "BLUEPRINT TYPE",
+        "DESCRIPTION",
+        "APPLICATION COUNT",
+        "PROJECT",
+        "STATE",
+        "CREATED ON",
+        "LAST UPDATED",
+        "UUID",
+
+    ]
+    for _row in json_rows:
+        row = _row["status"]
+        metadata = _row["metadata"]
+        bp_type = (
+            "Single VM"
+            if "categories" in metadata
+            and metadata["categories"]["TemplateType"] == "Vm"
+            else "Multi VM/Pod"
+        )
+
+        project = (
+            metadata["project_reference"]["name"]
+            if "project_reference" in metadata
+            else None
+        )
+
+        creation_time = int(metadata["creation_time"]) // 1000000
+        last_update_time = int(metadata["last_update_time"]) // 1000000
+
+        table.add_row(
+            [
+                _highlight_text(row["name"]),
+                _highlight_text(bp_type),
+                _highlight_text(row["description"]),
+                _highlight_text(row["application_count"]),
+                _highlight_text(project),
+                _highlight_text(row["state"]),
+                _highlight_text(time.ctime(creation_time)),
+                "{}".format(arrow.get(last_update_time).humanize()),
+                _highlight_text(row["uuid"]),
+
+            ]
+        )
+    click.echo(table)
 
 
 @get.command("apps")
@@ -253,6 +273,34 @@ def get_blueprint_class_from_module(user_bp_module):
     return UserBlueprint
 
 
+def compile_blueprint(bp_file):
+
+    user_bp_module = get_blueprint_module_from_file(bp_file)
+    UserBlueprint = get_blueprint_class_from_module(user_bp_module)
+    if UserBlueprint is None:
+        return None
+
+    # TODO - use secret option in cli to handle secrets
+    bp_resources = json.loads(UserBlueprint.json_dumps())
+
+    # TODO - fill metadata section using module details (categories, project, etc)
+    bp_payload = {
+        "spec": {
+            "name": UserBlueprint.__name__,
+            "description": UserBlueprint.__doc__,
+            "resources": bp_resources,
+        },
+        "metadata": {
+            "spec_version": 1,
+            "name": UserBlueprint.__name__,
+            "kind": "blueprint",
+        },
+        "api_version": "3.0",
+    }
+
+    return bp_payload
+
+
 @main.group()
 def compile():
     """Compile blueprint to json/yaml"""
@@ -274,32 +322,12 @@ def compile():
     default="json",
     help="output format [json|yaml].",
 )
-def compile_blueprint(bp_file, out):
+def compile_blueprint_command(bp_file, out):
 
-    user_bp_module = get_blueprint_module_from_file(bp_file)
-
-    UserBlueprint = get_blueprint_class_from_module(user_bp_module)
-    if UserBlueprint is None:
+    bp_payload = compile_blueprint(bp_file)
+    if bp_payload is None:
         click.echo("User blueprint not found in {}".format(bp_file))
         return
-
-    # TODO - use secret option in cli to handle secrets
-    bp_resources = json.loads(UserBlueprint.json_dumps())
-
-    # TODO - fill metadata section using module details (categories, project, etc)
-    bp_payload = {
-        "spec": {
-            "name": UserBlueprint.__name__,
-            "description": UserBlueprint.__doc__,
-            "resources": bp_resources,
-        },
-        "metadata": {
-            "spec_version": 1,
-            "name": UserBlueprint.__name__,
-            "kind": "blueprint",
-        },
-        "api_version": "3.0",
-    }
 
     if out == "json":
         click.echo(json.dumps(bp_payload, indent=4, separators=(",", ": ")))
@@ -315,64 +343,39 @@ def create():
     pass
 
 
-def create_blueprint_from_json(client, path_to_json, name=None):
+def create_blueprint(client, bp_payload, name=None, description=None):
 
-    blueprint_json = json.loads(open(path_to_json, "r").read())
-    blueprint_json.pop("status", None)
+    bp_payload.pop("status", None)
 
     if name:
-        blueprint_json["spec"]["name"] = name
-        blueprint_json["metadata"]["name"] = name
+        bp_payload["spec"]["name"] = name
+        bp_payload["metadata"]["name"] = name
 
-    bp_resources = blueprint_json["spec"]["resources"]
-    bp_name = blueprint_json["spec"]["name"]
-    bp_desc = blueprint_json["spec"]["description"]
+    if description:
+        bp_payload["spec"]["description"] = description
 
-    # TODO - use secret option and upload accordingly
+    bp_resources = bp_payload["spec"]["resources"]
+    bp_name = bp_payload["spec"]["name"]
+    bp_desc = bp_payload["spec"]["description"]
+
     return client.upload_with_secrets(bp_name, bp_desc, bp_resources)
+
+
+def create_blueprint_from_json(client, path_to_json, name=None, description=None):
+
+    bp_payload = json.loads(open(path_to_json, "r").read())
+    return create_blueprint(client, bp_payload, name=name, description=description)
 
 
 def create_blueprint_from_dsl(client, bp_file, name=None, description=None):
 
-    user_bp_module = get_blueprint_module_from_file(bp_file)
-    click.echo("Using blueprint module: {}".format(user_bp_module))
-
-    UserBlueprint = get_blueprint_class_from_module(user_bp_module)
-    if UserBlueprint is None:
+    bp_payload = compile_blueprint(bp_file)
+    if bp_payload is None:
         err_msg = "User blueprint not found in {}".format(bp_file)
         err = {"error": err_msg, "code": -1}
         return None, err
-    click.echo("Found user blueprint: {}".format(UserBlueprint))
 
-    name = name or UserBlueprint.__name__
-    # check if bp with the given name already exists
-    params = {"filter": "name=={};state!=DELETED".format(name)}
-    res, err = client.list(params=params)
-    if err:
-        return None, err
-
-    response = res.json()
-    entities = response.get("entities", None)
-    if entities:
-        if len(entities) > 0:
-            err_msg = "Blueprint with name {} already exists.".format(name)
-            # ToDo: Add command to edit Blueprints
-            err = {"error": err_msg, "code": -1}
-            return None, err
-    else:
-        click.echo(">> {} not found >>".format(name))
-
-    # upload
-    bp_desc = description or UserBlueprint.__doc__
-    bp_resources = json.loads(UserBlueprint.json_dumps())
-    res, err = client.upload_with_secrets(name, bp_desc, bp_resources)
-    if not err:
-        click.echo(">> {} uploaded with credentials >>".format(name))
-        # click.echo(json.dumps(res.json(), indent=4, separators=(",", ": ")))
-        assert res.ok is True
-    else:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-    return res, err
+    return create_blueprint(client, bp_payload, name=name, description=description)
 
 
 @create.command("bp")
@@ -383,22 +386,25 @@ def create_blueprint_from_dsl(client, bp_file, name=None, description=None):
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path of Blueprint file to upload",
 )
-@click.option(
-    "--name",
-    envvar="CALM_BLUEPRINT_NAME",
-    default=None,
-    help="Blueprint name (Optional)",
-)
+@click.option("--name", default=None, help="Blueprint name (Optional)")
+@click.option("--description", default=None, help="Blueprint description (Optional)")
 @click.pass_obj
-def create_blueprint(obj, bp_file, name):
+def create_blueprint_command(obj, bp_file, name, description):
     """Create a blueprint"""
 
     client = obj.get("client")
 
     if bp_file.endswith(".json"):
-        res, err = create_blueprint_from_json(client, bp_file, name=name)
+        res, err = create_blueprint_from_json(
+            client, bp_file, name=name, description=description
+        )
+    elif bp_file.endswith(".py"):
+        res, err = create_blueprint_from_dsl(
+            client, bp_file, name=name, description=description
+        )
     else:
-        res, err = create_blueprint_from_dsl(client, bp_file, name=name)
+        click.echo("Unknown file format {}".format(bp_file))
+        return
 
     if err:
         click.echo(err["error"])
@@ -450,17 +456,19 @@ def delete():
 
 
 @delete.command("bp")
-@click.argument("blueprint_name")
+@click.argument("blueprint_names", nargs=-1)
 @click.pass_obj
-def delete_blueprint(obj, blueprint_name, blueprint=None):
+def delete_blueprint(obj, blueprint_names):
 
     client = obj.get("client")
-    blueprint = get_blueprint(client, blueprint_name)
-    blueprint_id = blueprint["metadata"]["uuid"]
-    res, err = client.delete(blueprint_id)
-    if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-    click.echo("Blueprint {} deleted".format(blueprint_name))
+
+    for blueprint_name in blueprint_names:
+        blueprint = get_blueprint(client, blueprint_name)
+        blueprint_id = blueprint["metadata"]["uuid"]
+        res, err = client.delete(blueprint_id)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        click.echo("Blueprint {} deleted".format(blueprint_name))
 
 
 @main.group()
@@ -469,7 +477,7 @@ def launch():
     pass
 
 
-def get_blueprint_runtime_editables(blueprint, client):
+def get_blueprint_runtime_editables(client, blueprint):
 
     bp_uuid = blueprint.get("metadata", {}).get("uuid", None)
     if not bp_uuid:
@@ -496,10 +504,10 @@ def get_field_values(entity_dict, context, path=None):
 
 def launch_blueprint_simple(client, blueprint_name, blueprint=None, profile_name=None):
     if not blueprint:
-        blueprint = get_blueprint(blueprint_name, client)
+        blueprint = get_blueprint(client, blueprint_name)
 
     blueprint_uuid = blueprint.get("metadata", {}).get("uuid", "")
-    profiles = get_blueprint_runtime_editables(blueprint, client)
+    profiles = get_blueprint_runtime_editables(client, blueprint)
     profile = None
     if profile_name is None:
         profile = profiles[0]
@@ -573,79 +581,6 @@ def launch_blueprint_simple(client, blueprint_name, blueprint=None, profile_name
         time.sleep(10)
 
 
-def launch_blueprint(client, blueprint_name, blueprint=None):
-
-    config = get_config()
-    pc_ip = config["SERVER"]["pc_ip"]
-    pc_port = config["SERVER"]["pc_port"]
-
-    if not blueprint:
-        blueprint = get_blueprint(client, blueprint_name)
-
-    blueprint_id = blueprint["metadata"]["uuid"]
-    click.echo(">> Fetching blueprint details")
-    res, err = client.get(blueprint_id)
-    if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-    blueprint = res.json()
-    blueprint_spec = blueprint["spec"]
-
-    launch_payload = {
-        "api_version": "3.0",
-        "metadata": blueprint["metadata"],
-        "spec": {
-            "application_name": "NextDemoApp-{}".format(int(time.time())),
-            "app_profile_reference": {
-                "kind": "app_profile",
-                "name": "{}".format(
-                    blueprint_spec["resources"]["app_profile_list"][0]["name"]
-                ),
-                "uuid": "{}".format(
-                    blueprint_spec["resources"]["app_profile_list"][0]["uuid"]
-                ),
-            },
-            "resources": blueprint_spec["resources"],
-        },
-    }
-
-    res, err = client.full_launch(blueprint_id, launch_payload)
-    if not err:
-        click.echo(">> {} queued for launch >>".format(blueprint_name))
-    else:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-    response = res.json()
-    launch_req_id = response["status"]["request_id"]
-
-    # Poll every 10 seconds on the app status, for 5 mins
-    maxWait = 5 * 60
-    count = 0
-    while count < maxWait:
-        # call status api
-        click.echo("Polling status of Launch")
-        res, err = client.poll_launch(blueprint_id, launch_req_id)
-        response = res.json()
-        pprint(response)
-        if response["status"]["state"] == "success":
-            app_uuid = response["status"]["application_uuid"]
-
-            # Can't give app url, as deep routing within PC doesn't work.
-            # Hence just giving the app id.
-            click.echo("Successfully launched. App uuid is: {}".format(app_uuid))
-            click.echo(
-                "App url: https://{}:{}/console/#page/explore/calm/applications/{}".format(
-                    pc_ip, pc_port, app_uuid
-                )
-            )
-            break
-        elif response["status"]["state"] == "failure":
-            click.echo("Failed to launch blueprint. Check API response above.")
-            break
-        elif err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        count += 10
-        time.sleep(10)
-
-
 @launch.command("bp")
 @click.argument("blueprint_name")
 @click.pass_obj
@@ -653,7 +588,7 @@ def launch_blueprint_command(obj, blueprint_name, blueprint=None):
 
     client = obj.get("client")
 
-    launch_blueprint(client, blueprint_name, blueprint=blueprint)
+    launch_blueprint_simple(client, blueprint_name, blueprint=blueprint)
 
 
 def _get_app(app_name, client):

@@ -416,6 +416,21 @@ class BlueprintAPI:
 
     def upload_with_secrets(self, bp_name, bp_desc, bp_resources):
 
+        # check if bp with the given name already exists
+        params = {"filter": "name=={};state!=DELETED".format(bp_name)}
+        res, err = self.list(params=params)
+        if err:
+            return None, err
+
+        response = res.json()
+        entities = response.get("entities", None)
+        if entities:
+            if len(entities) > 0:
+                err_msg = "Blueprint with name {} already exists.".format(bp_name)
+                # ToDo: Add command to edit Blueprints
+                err = {"error": err_msg, "code": -1}
+                return None, err
+
         # Remove creds before upload
         creds = bp_resources["credential_definition_list"]
         secret_map = {}
