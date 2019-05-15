@@ -13,7 +13,7 @@ from ruamel import yaml
 from calm.dsl.utils.server_utils import ping
 from calm.dsl.builtins import Blueprint
 
-from .constants import RUNLOG
+from .constants import RUNLOG, BLUEPRINT, APPLICATION
 from .config import get_config, get_api_client
 
 
@@ -88,22 +88,47 @@ def get_server_status(obj):
 
 
 @get.command("bps")
+@click.option("--name", default=None, help="Search for blueprints by name")
 @click.option(
-    "--filter", "filter_by", default=None, help="Filter blueprints with this string"
+    "--filter", "filter_by", default=None, help="Filter blueprints by this string"
 )
 @click.option("--limit", default=20, help="Number of results to return")
 @click.option("--offset", default=0, help="Offset results by the specified amount")
-@click.option("--quiet/--no-quiet", "-q", default=False, help="Show only blueprint names.")
+@click.option(
+    "--quiet/--no-quiet", "-q", default=False, help="Show only blueprint names."
+)
+@click.option("--all", "-a", is_flag=True, help="Get all items, including deleted ones")
 @click.pass_obj
-def get_blueprint_list(obj, filter_by, limit, offset, quiet):
+def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all):
     """Get the blueprints, optionally filtered by a string"""
 
     client = obj.get("client")
     config = obj.get("config")
 
     params = {"length": limit, "offset": offset}
+    filter = ""
+    if name:
+        filter = _get_name_query([name])
     if filter_by:
-        params["filter"] = _get_name_query(filter_by)
+        filter = filter + ";" + filter_by if name else filter_by
+    if all:
+        filter += (
+            ";(state=="
+            + ",state==".join(
+                [
+                    field
+                    for field in vars(BLUEPRINT.STATES)
+                    if not field.startswith("__")
+                ]
+            )
+            + ")"
+        )
+    if filter.startswith(";"):
+        filter = filter[1:]
+
+    if filter:
+        params["filter"] = filter
+
     res, err = client.list(params=params)
 
     if err:
@@ -130,7 +155,6 @@ def get_blueprint_list(obj, filter_by, limit, offset, quiet):
         "CREATED ON",
         "LAST UPDATED",
         "UUID",
-
     ]
     for _row in json_rows:
         row = _row["status"]
@@ -162,27 +186,51 @@ def get_blueprint_list(obj, filter_by, limit, offset, quiet):
                 _highlight_text(time.ctime(creation_time)),
                 "{}".format(arrow.get(last_update_time).humanize()),
                 _highlight_text(row["uuid"]),
-
             ]
         )
     click.echo(table)
 
 
 @get.command("apps")
-@click.option("--names", default=None, help="The name of apps to filter by")
+@click.option("--name", default=None, help="Search for apps by name")
+@click.option("--filter", "filter_by", default=None, help="Filter apps by this string")
 @click.option("--limit", default=20, help="Number of results to return")
 @click.option("--offset", default=0, help="Offset results by the specified amount")
-@click.option("--quiet/--no-quiet", "-q", default=False, help="Show only application names")
+@click.option(
+    "--quiet/--no-quiet", "-q", default=False, help="Show only application names"
+)
+@click.option("--all", "-a", is_flag=True, help="Get all items, including deleted ones")
 @click.pass_obj
-def get_apps(obj, names, limit, offset, quiet):
+def get_apps(obj, name, filter_by, limit, offset, quiet, all):
     """Get Apps, optionally filtered by a string"""
 
     client = obj.get("client")
     config = obj.get("config")
 
     params = {"length": limit, "offset": offset}
-    if names:
-        params["filter"] = _get_name_query(names)
+    filter = ""
+    if name:
+        filter = _get_name_query([name])
+    if filter_by:
+        filter = filter + ";" + filter_by if name else filter_by
+    if all:
+        filter += (
+            ";(_state=="
+            + ",_state==".join(
+                [
+                    field
+                    for field in vars(APPLICATION.STATES)
+                    if not field.startswith("__")
+                ]
+            )
+            + ")"
+        )
+    if filter.startswith(";"):
+        filter = filter[1:]
+
+    if filter:
+        params["filter"] = filter
+
     res, err = client.list_apps(params=params)
 
     if err:
@@ -190,6 +238,14 @@ def get_apps(obj, names, limit, offset, quiet):
         warnings.warn(UserWarning("Cannot fetch blueprints from {}".format(pc_ip)))
         return
 
+    table = PrettyTable()
+    table.field_names = [
+        "Application Name",
+        "Source Blueprint",
+        "State",
+        "Owner",
+        "Created On",
+    ]
     json_rows = res.json()["entities"]
 
     if quiet:
@@ -206,7 +262,7 @@ def get_apps(obj, names, limit, offset, quiet):
         "OWNER",
         "CREATED ON",
         "LAST UPDATED",
-        "UUID"
+        "UUID",
     ]
     for _row in json_rows:
         row = _row["status"]
@@ -218,9 +274,7 @@ def get_apps(obj, names, limit, offset, quiet):
         table.add_row(
             [
                 _highlight_text(row["name"]),
-                _highlight_text(
-                    row["resources"]["app_blueprint_reference"]["name"]
-                ),
+                _highlight_text(row["resources"]["app_blueprint_reference"]["name"]),
                 _highlight_text(row["state"]),
                 _highlight_text(metadata["owner_reference"]["name"]),
                 _highlight_text(time.ctime(creation_time)),
@@ -320,7 +374,7 @@ def compile_blueprint_command(bp_file, out):
 
 @main.group()
 def create():
-    """Create blueprint, optionally launch too"""
+    """Create blueprint in Calm, from DSL (Python) or JSON file """
     pass
 
 
@@ -440,6 +494,22 @@ def delete_blueprint(obj, blueprint_names):
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
         click.echo("Blueprint {} deleted".format(blueprint_name))
+
+
+@delete.command("app")
+@click.argument("app_names", nargs=-1)
+@click.pass_obj
+def delete_app(obj, app_names):
+
+    client = obj.get("client")
+
+    for app_name in app_names:
+        app = _get_app(client, app_name)
+        app_id = app["metadata"]["uuid"]
+        res, err = client.delete_app(app_id)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        click.echo("App {} deleted".format(app_name))
 
 
 @main.group()
@@ -562,10 +632,22 @@ def launch_blueprint_command(obj, blueprint_name, blueprint=None):
     launch_blueprint_simple(client, blueprint_name, blueprint=blueprint)
 
 
-def _get_app(app_name, client):
+def _get_app(client, app_name, all=False):
 
     # 1. Get app_uuid from list api
     params = {"filter": "name=={}".format(app_name)}
+    if all:
+        params["filter"] += (
+            ";(_state=="
+            + ",_state==".join(
+                [
+                    field
+                    for field in vars(APPLICATION.STATES)
+                    if not field.startswith("__")
+                ]
+            )
+            + ")"
+        )
 
     res, err = client.list_apps(params=params)
     if err:
@@ -606,7 +688,7 @@ def describe_app(obj, app_name):
     """Describe an app"""
 
     client = obj.get("client")
-    app = _get_app(app_name, client)
+    app = _get_app(client, app_name, True)
 
     click.echo("\n----Application Summary----\n")
     app_name = app["metadata"]["name"]
@@ -693,7 +775,7 @@ def run_actions(obj, app_name, action_name, watch):
 
     client = obj.get("client")
 
-    app = _get_app(app_name, client)
+    app = _get_app(client, app_name)
     app_spec = app["spec"]
     app_id = app["metadata"]["uuid"]
 
@@ -753,7 +835,7 @@ def run_actions(obj, app_name, action_name, watch):
 
     response = res.json()
     runlog_id = response["status"]["runlog_uuid"]
-    click.echo("Runlog uuid: ", runlog_id)
+    click.echo("Runlog uuid: {}".format(runlog_id))
     url = client.APP_ITEM.format(app_id) + "/app_runlogs/list"
     payload = {"filter": "root_reference=={}".format(runlog_id)}
 
@@ -795,7 +877,7 @@ def poll_action(poll_func, completion_func):
 
 
 def watch_action(runlog_id, app_name, client):
-    app = _get_app(app_name, client)
+    app = _get_app(client, app_name)
     app_id = app["metadata"]["uuid"]
 
     url = client.APP_ITEM.format(app_id) + "/app_runlogs/list"
@@ -838,7 +920,7 @@ def watch_app(obj, app_name, action):
     if action:
         return watch_action(action, app_name, client)
 
-    app = _get_app(app_name, client)
+    app = _get_app(client, app_name)
     app_id = app["metadata"]["uuid"]
     url = client.APP_ITEM.format(app_id) + "/app_runlogs/list"
 
