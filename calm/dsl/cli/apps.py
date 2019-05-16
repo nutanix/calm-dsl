@@ -27,7 +27,7 @@ def get_apps(obj, name, filter_by, limit, offset, quiet, all_items):
     if filter_query:
         params["filter"] = filter_query
 
-    res, err = client.list_apps(params=params)
+    res, err = client.application.list(params=params)
 
     if err:
         pc_ip = config["SERVER"]["pc_ip"]
@@ -87,7 +87,7 @@ def _get_app(client, app_name, all=False):
     if all:
         params["filter"] += get_states_filter(APPLICATION.STATES, state_key="_state")
 
-    res, err = client.list_apps(params=params)
+    res, err = client.application.list(params=params)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -106,7 +106,7 @@ def _get_app(client, app_name, all=False):
 
     # 2. Get app details
     click.echo(">> Fetching app details")
-    res, err = client.get_app(app_id)
+    res, err = client.application.get(app_id)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
     app = res.json()
@@ -194,12 +194,12 @@ def watch_action(runlog_id, app_name, client):
     app = _get_app(client, app_name)
     app_id = app["metadata"]["uuid"]
 
-    url = client.APP_ITEM.format(app_id) + "/app_runlogs/list"
+    url = client.application.APP_ITEM.format(app_id) + "/app_runlogs/list"
     payload = {"filter": "root_reference=={}".format(runlog_id)}
 
     def poll_func():
         click.echo("Polling action status...")
-        return client.poll_action_run(url, payload)
+        return client.application.poll_action_run(url, payload)
 
     def is_action_complete(response):
         pprint(response)
@@ -226,7 +226,7 @@ def watch_app(obj, app_name, action):
 
     app = _get_app(client, app_name)
     app_id = app["metadata"]["uuid"]
-    url = client.APP_ITEM.format(app_id) + "/app_runlogs/list"
+    url = client.application.APP_ITEM.format(app_id) + "/app_runlogs/list"
 
     payload = {
         "filter": "application_reference=={};(type==action_runlog,type==audit_runlog,type==ngt_runlog,type==clone_action_runlog)".format(
@@ -236,7 +236,7 @@ def watch_app(obj, app_name, action):
 
     def poll_func():
         click.echo("Polling app status...")
-        return client.poll_action_run(url, payload)
+        return client.application.poll_action_run(url, payload)
 
     def is_complete(response):
         pprint(response)
@@ -261,7 +261,7 @@ def delete_app(obj, app_names, soft):
         app_id = app["metadata"]["uuid"]
         action_label = "Soft Delete" if soft else "Delete"
         click.echo(">> Triggering {}".format(action_label))
-        res, err = client.delete_app(app_id, soft_delete=soft)
+        res, err = client.application.delete(app_id, soft_delete=soft)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -283,7 +283,7 @@ def run_actions(obj, app_name, action_name, watch):
         action_name = action_name.lower()
         is_soft_delete = action_name == "soft_delete"
         action_label = "Soft Delete" if is_soft_delete else "Delete"
-        res, err = client.delete_app(app_id, is_soft_delete)
+        res, err = client.application.delete(app_id, is_soft_delete)
         click.echo(">> Triggering {}".format(action_label))
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -294,12 +294,12 @@ def run_actions(obj, app_name, action_name, watch):
             click.echo("Action runlog uuid: {}".format(runlog_id))
 
             if watch:
-                url = client.APP_ITEM.format(app_id) + "/app_runlogs/list"
+                url = client.application.APP_ITEM.format(app_id) + "/app_runlogs/list"
                 payload = {"filter": "root_reference=={}".format(runlog_id)}
 
                 def poll_func():
                     click.echo("Polling action run ...")
-                    return client.poll_action_run(url, payload)
+                    return client.application.poll_action_run(url, payload)
 
                 def is_action_complete(response):
                     pprint(response)
@@ -327,7 +327,7 @@ def run_actions(obj, app_name, action_name, watch):
     # Hit action run api (with metadata and minimal spec: [args, target_kind, target_uuid])
     app.pop("status")
     app["spec"] = {"args": [], "target_kind": "Application", "target_uuid": app_id}
-    res, err = client.run_action(app_id, action_id, app)
+    res, err = client.application.run_action(app_id, action_id, app)
     click.echo(">> Triggering action run")
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -335,14 +335,14 @@ def run_actions(obj, app_name, action_name, watch):
     response = res.json()
     runlog_id = response["status"]["runlog_uuid"]
     click.echo("Runlog uuid: {}".format(runlog_id))
-    url = client.APP_ITEM.format(app_id) + "/app_runlogs/list"
+    url = client.application.APP_ITEM.format(app_id) + "/app_runlogs/list"
     payload = {"filter": "root_reference=={}".format(runlog_id)}
 
     if watch:
 
         def poll_func():
             click.echo("Polling action run ...")
-            return client.poll_action_run(url, payload)
+            return client.application.poll_action_run(url, payload)
 
         def is_action_complete(response):
             pprint(response)

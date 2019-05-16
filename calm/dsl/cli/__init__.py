@@ -9,7 +9,7 @@ import arrow
 from prettytable import PrettyTable
 from ruamel import yaml
 
-from calm.dsl.utils.server_utils import ping
+from calm.dsl.tools import ping
 from calm.dsl.builtins import Blueprint
 
 from .constants import BLUEPRINT
@@ -122,7 +122,7 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
     if filter_query:
         params["filter"] = filter_query
 
-    res, err = client.list(params=params)
+    res, err = client.blueprint.list(params=params)
 
     if err:
         pc_ip = config["SERVER"]["pc_ip"]
@@ -309,7 +309,7 @@ def create_blueprint(client, bp_payload, name=None, description=None):
     bp_name = bp_payload["spec"]["name"]
     bp_desc = bp_payload["spec"]["description"]
 
-    return client.upload_with_secrets(bp_name, bp_desc, bp_resources)
+    return client.blueprint.upload_with_secrets(bp_name, bp_desc, bp_resources)
 
 
 def create_blueprint_from_json(client, path_to_json, name=None, description=None):
@@ -372,7 +372,7 @@ def get_blueprint(client, name):
     # find bp
     params = {"filter": "name=={};state!=DELETED".format(name)}
 
-    res, err = client.list(params=params)
+    res, err = client.blueprint.list(params=params)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -406,7 +406,7 @@ def delete_blueprint(obj, blueprint_names):
     for blueprint_name in blueprint_names:
         blueprint = get_blueprint(client, blueprint_name)
         blueprint_id = blueprint["metadata"]["uuid"]
-        res, err = client.delete(blueprint_id)
+        res, err = client.blueprint.delete(blueprint_id)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
         click.echo("Blueprint {} deleted".format(blueprint_name))
@@ -431,7 +431,7 @@ def get_blueprint_runtime_editables(client, blueprint):
     bp_uuid = blueprint.get("metadata", {}).get("uuid", None)
     if not bp_uuid:
         raise Exception(">> Invalid blueprint provided {} >>".format(blueprint))
-    res, err = client._get_editables(bp_uuid)
+    res, err = client.blueprint._get_editables(bp_uuid)
     response = res.json()
     return response.get("resources", [])
 
@@ -487,7 +487,7 @@ def launch_blueprint_simple(client, blueprint_name, blueprint=None, profile_name
                 editables = entity["value"]
                 get_field_values(editables, context, path=entity.get("name", ""))
         click.echo("Updated blueprint editables are:\n{}".format(runtime_editables))
-    res, err = client.launch(blueprint_uuid, launch_payload)
+    res, err = client.blueprint.launch(blueprint_uuid, launch_payload)
     if not err:
         click.echo(">> {} queued for launch >>".format(blueprint_name))
     else:
@@ -501,7 +501,7 @@ def launch_blueprint_simple(client, blueprint_name, blueprint=None, profile_name
     while count < maxWait:
         # call status api
         click.echo("Polling status of Launch")
-        res, err = client.poll_launch(blueprint_uuid, launch_req_id)
+        res, err = client.blueprint.poll_launch(blueprint_uuid, launch_req_id)
         response = res.json()
         pprint(response)
         if response["status"]["state"] == "success":
