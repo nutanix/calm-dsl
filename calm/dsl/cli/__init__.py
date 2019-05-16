@@ -1,6 +1,5 @@
 import time
 import warnings
-from functools import reduce
 import importlib.util
 from pprint import pprint
 import json
@@ -13,8 +12,10 @@ from ruamel import yaml
 from calm.dsl.tools import ping
 from calm.dsl.builtins import Blueprint
 
-from .constants import RUNLOG, BLUEPRINT, APPLICATION
+from .constants import BLUEPRINT
 from .config import get_config, get_api_client
+from .utils import get_states_filter, get_name_query, highlight_text
+from .apps import get_apps, describe_app, delete_app, run_actions, watch_app
 
 
 @click.group()
@@ -97,37 +98,29 @@ def get_server_status(obj):
 @click.option(
     "--quiet", "-q", is_flag=True, default=False, help="Show only blueprint names."
 )
-@click.option("--all", "-a", is_flag=True, help="Get all items, including deleted ones")
+@click.option(
+    "--all-items", "-a", is_flag=True, help="Get all items, including deleted ones"
+)
 @click.pass_obj
-def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all):
+def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
     """Get the blueprints, optionally filtered by a string"""
 
     client = obj.get("client")
     config = obj.get("config")
 
     params = {"length": limit, "offset": offset}
-    filter = ""
+    filter_query = ""
     if name:
-        filter = _get_name_query([name])
+        filter_query = get_name_query([name])
     if filter_by:
-        filter = filter + ";" + filter_by if name else filter_by
-    if all:
-        filter += (
-            ";(state=="
-            + ",state==".join(
-                [
-                    field
-                    for field in vars(BLUEPRINT.STATES)
-                    if not field.startswith("__")
-                ]
-            )
-            + ")"
-        )
-    if filter.startswith(";"):
-        filter = filter[1:]
+        filter_query = filter_query + ";" + filter_by if name else filter_by
+    if all_items:
+        filter_query += get_states_filter(BLUEPRINT.STATES)
+    if filter_query.startswith(";"):
+        filter_query = filter_query[1:]
 
-    if filter:
-        params["filter"] = filter
+    if filter_query:
+        params["filter"] = filter_query
 
     res, err = client.blueprint.list(params=params)
 
@@ -141,7 +134,7 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all):
     if quiet:
         for _row in json_rows:
             row = _row["status"]
-            click.echo(_highlight_text(row["name"]))
+            click.echo(highlight_text(row["name"]))
         return
 
     table = PrettyTable()
@@ -177,15 +170,15 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all):
 
         table.add_row(
             [
-                _highlight_text(row["name"]),
-                _highlight_text(bp_type),
-                _highlight_text(row["description"]),
-                _highlight_text(row["application_count"]),
-                _highlight_text(project),
-                _highlight_text(row["state"]),
-                _highlight_text(time.ctime(creation_time)),
+                highlight_text(row["name"]),
+                highlight_text(bp_type),
+                highlight_text(row["description"]),
+                highlight_text(row["application_count"]),
+                highlight_text(project),
+                highlight_text(row["state"]),
+                highlight_text(time.ctime(creation_time)),
                 "{}".format(arrow.get(last_update_time).humanize()),
-                _highlight_text(row["uuid"]),
+                highlight_text(row["uuid"]),
             ]
         )
     click.echo(table)
@@ -199,90 +192,13 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all):
 @click.option(
     "--quiet", "-q", is_flag=True, default=False, help="Show only application names"
 )
-@click.option("--all", "-a", is_flag=True, help="Get all items, including deleted ones")
+@click.option(
+    "--all-items", "-a", is_flag=True, help="Get all items, including deleted ones"
+)
 @click.pass_obj
-def get_apps(obj, name, filter_by, limit, offset, quiet, all):
+def _get_apps(obj, name, filter_by, limit, offset, quiet, all_items):
     """Get Apps, optionally filtered by a string"""
-
-    client = obj.get("client")
-    config = obj.get("config")
-
-    params = {"length": limit, "offset": offset}
-    filter = ""
-    if name:
-        filter = _get_name_query([name])
-    if filter_by:
-        filter = filter + ";" + filter_by if name else filter_by
-    if all:
-        filter += (
-            ";(_state=="
-            + ",_state==".join(
-                [
-                    field
-                    for field in vars(APPLICATION.STATES)
-                    if not field.startswith("__")
-                ]
-            )
-            + ")"
-        )
-    if filter.startswith(";"):
-        filter = filter[1:]
-
-    if filter:
-        params["filter"] = filter
-
-    res, err = client.application.list(params=params)
-
-    if err:
-        pc_ip = config["SERVER"]["pc_ip"]
-        warnings.warn(UserWarning("Cannot fetch blueprints from {}".format(pc_ip)))
-        return
-
-    table = PrettyTable()
-    table.field_names = [
-        "Application Name",
-        "Source Blueprint",
-        "State",
-        "Owner",
-        "Created On",
-    ]
-    json_rows = res.json()["entities"]
-
-    if quiet:
-        for _row in json_rows:
-            row = _row["status"]
-            click.echo(_highlight_text(row["name"]))
-        return
-
-    table = PrettyTable()
-    table.field_names = [
-        "NAME",
-        "SOURCE BLUEPRINT",
-        "STATE",
-        "OWNER",
-        "CREATED ON",
-        "LAST UPDATED",
-        "UUID",
-    ]
-    for _row in json_rows:
-        row = _row["status"]
-        metadata = _row["metadata"]
-
-        creation_time = int(metadata["creation_time"]) // 1000000
-        last_update_time = int(metadata["last_update_time"]) // 1000000
-
-        table.add_row(
-            [
-                _highlight_text(row["name"]),
-                _highlight_text(row["resources"]["app_blueprint_reference"]["name"]),
-                _highlight_text(row["state"]),
-                _highlight_text(metadata["owner_reference"]["name"]),
-                _highlight_text(time.ctime(creation_time)),
-                "{}".format(arrow.get(last_update_time).humanize()),
-                _highlight_text(row["uuid"]),
-            ]
-        )
-    click.echo(table)
+    get_apps(obj, name, filter_by, limit, offset, quiet, all_items)
 
 
 def get_blueprint_module_from_file(bp_file):
@@ -500,23 +416,8 @@ def delete_blueprint(obj, blueprint_names):
 @click.argument("app_names", nargs=-1)
 @click.option("--soft", "-s", is_flag=True, default=False, help="Soft delete app")
 @click.pass_obj
-def delete_app(obj, app_names, soft):
-
-    client = obj.get("client")
-
-    for app_name in app_names:
-        app = _get_app(client, app_name)
-        app_id = app["metadata"]["uuid"]
-        action_label = "Soft Delete" if soft else "Delete"
-        click.echo(">> Triggering {}".format(action_label))
-        res, err = client.application.delete(app_id, soft_delete=soft)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        click.echo("{} action triggered".format(action_label))
-        response = res.json()
-        runlog_id = response["status"]["runlog_uuid"]
-        click.echo("Action runlog uuid: {}".format(runlog_id))
+def _delete_app(obj, app_names, soft):
+    delete_app(obj, app_names, soft)
 
 
 @main.group()
@@ -639,49 +540,6 @@ def launch_blueprint_command(obj, blueprint_name, blueprint=None):
     launch_blueprint_simple(client, blueprint_name, blueprint=blueprint)
 
 
-def _get_app(client, app_name, all=False):
-
-    # 1. Get app_uuid from list api
-    params = {"filter": "name=={}".format(app_name)}
-    if all:
-        params["filter"] += (
-            ";(_state=="
-            + ",_state==".join(
-                [
-                    field
-                    for field in vars(APPLICATION.STATES)
-                    if not field.startswith("__")
-                ]
-            )
-            + ")"
-        )
-
-    res, err = client.application.list(params=params)
-    if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-    response = res.json()
-    entities = response.get("entities", None)
-    app = None
-    if entities:
-        if len(entities) != 1:
-            raise Exception("More than one app found - {}".format(entities))
-
-        click.echo(">> {} found >>".format(app_name))
-        app = entities[0]
-    else:
-        raise Exception(">> No app found with name {} found >>".format(app_name))
-    app_id = app["metadata"]["uuid"]
-
-    # 2. Get app details
-    click.echo(">> Fetching app details")
-    res, err = client.application.get(app_id)
-    if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-    app = res.json()
-    return app
-
-
 @main.group()
 def describe():
     """Describe apps and blueprints"""
@@ -691,85 +549,9 @@ def describe():
 @describe.command("app")
 @click.argument("app_name")
 @click.pass_obj
-def describe_app(obj, app_name):
+def _describe_app(obj, app_name):
     """Describe an app"""
-
-    client = obj.get("client")
-    app = _get_app(client, app_name, True)
-
-    click.echo("\n----Application Summary----\n")
-    app_name = app["metadata"]["name"]
-    click.echo(
-        "Name: "
-        + _highlight_text(app_name)
-        + " (uuid: "
-        + _highlight_text(app["metadata"]["uuid"])
-        + ")"
-    )
-    click.echo("Status: " + _highlight_text(app["status"]["state"]))
-    click.echo(
-        "Owner: " + _highlight_text(app["metadata"]["owner_reference"]["name"]),
-        nl=False,
-    )
-    click.echo(
-        " Project: " + _highlight_text(app["metadata"]["project_reference"]["name"])
-    )
-
-    click.echo(
-        "Blueprint: "
-        + _highlight_text(app["status"]["resources"]["app_blueprint_reference"]["name"])
-    )
-
-    created_on = int(app["metadata"]["creation_time"]) // 1000000
-    past = arrow.get(created_on).humanize()
-    click.echo(
-        "Created: {} ({})".format(
-            _highlight_text(time.ctime(created_on)), _highlight_text(past)
-        )
-    )
-
-    click.echo(
-        "Application Profile: "
-        + _highlight_text(
-            app["status"]["resources"]["app_profile_config_reference"]["name"]
-        )
-    )
-
-    deployment_list = app["status"]["resources"]["deployment_list"]
-    click.echo("Deployments [{}]:".format(_highlight_text((len(deployment_list)))))
-    for deployment in deployment_list:
-        click.echo(
-            "\t {} {}".format(
-                _highlight_text(deployment["name"]),
-                _highlight_text(deployment["state"]),
-            )
-        )
-
-    action_list = app["status"]["resources"]["action_list"]
-    click.echo("App Actions [{}]:".format(_highlight_text(len(action_list))))
-    for action in action_list:
-        action_name = action["name"]
-        if action_name.startswith("action_"):
-            prefix_len = len("action_")
-            action_name = action_name[prefix_len:]
-        click.echo("\t" + _highlight_text(action_name))
-
-    variable_list = app["status"]["resources"]["variable_list"]
-    click.echo("App Variables [{}]".format(_highlight_text(len(variable_list))))
-    for variable in variable_list:
-        click.echo(
-            "\t{}: {}  # {}".format(
-                _highlight_text(variable["name"]),
-                _highlight_text(variable["value"]),
-                _highlight_text(variable["label"]),
-            )
-        )
-
-    click.echo(
-        "# Hint: You can run actions on the app using: calm <action_name> app {}".format(
-            app_name
-        )
-    )
+    describe_app(obj, app_name)
 
 
 @main.command("app")
@@ -777,136 +559,10 @@ def describe_app(obj, app_name):
 @click.argument("action_name")
 @click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
 @click.pass_obj
-def run_actions(obj, app_name, action_name, watch):
+def _run_actions(obj, app_name, action_name, watch):
     """App related functionality: launch, lcm actions, monitor, delete"""
 
-    client = obj.get("client")
-
-    app = _get_app(client, app_name)
-    app_spec = app["spec"]
-    app_id = app["metadata"]["uuid"]
-
-    # 3. Get action uuid from action name
-    if action_name.lower() in ["delete", "soft_delete"]:
-        action_name = action_name.lower()
-        is_soft_delete = action_name == "soft_delete"
-        action_label = "Soft Delete" if is_soft_delete else "Delete"
-        res, err = client.application.delete(app_id, is_soft_delete)
-        click.echo(">> Triggering {}".format(action_label))
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        else:
-            click.echo("{} action triggered".format(action_label))
-            response = res.json()
-            runlog_id = response["status"]["runlog_uuid"]
-            click.echo("Action runlog uuid: {}".format(runlog_id))
-
-            if watch:
-                url = client.application.APP_ITEM.format(app_id) + "/app_runlogs/list"
-                payload = {"filter": "root_reference=={}".format(runlog_id)}
-
-                def poll_func():
-                    click.echo("Polling action run ...")
-                    return client.application.poll_action_run(url, payload)
-
-                def is_action_complete(response):
-                    pprint(response)
-                    if len(response["entities"]):
-                        for action in response["entities"]:
-                            if action["status"]["state"] != "SUCCESS":
-                                return (False, "")
-                        return (True, "{} action complete".format(action_label))
-                    else:
-                        return (False, "")
-
-                poll_action(poll_func, is_action_complete)
-            return
-
-    calm_action_name = "action_" + action_name.lower()
-    action = next(
-        action
-        for action in app_spec["resources"]["action_list"]
-        if action["name"] == calm_action_name or action["name"] == action_name
-    )
-    if not action:
-        raise Exception("No action found matching name {}".format(action_name))
-    action_id = action["uuid"]
-
-    # 4. Hit action run api (with metadata and minimal spec: [args, target_kind, target_uuid])
-    app.pop("status")
-    app["spec"] = {"args": [], "target_kind": "Application", "target_uuid": app_id}
-    res, err = client.application.run_action(app_id, action_id, app)
-    click.echo(">> Triggering action run")
-    if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-    response = res.json()
-    runlog_id = response["status"]["runlog_uuid"]
-    click.echo("Runlog uuid: {}".format(runlog_id))
-    url = client.application.APP_ITEM.format(app_id) + "/app_runlogs/list"
-    payload = {"filter": "root_reference=={}".format(runlog_id)}
-
-    if watch:
-
-        def poll_func():
-            click.echo("Polling action run ...")
-            return client.application.poll_action_run(url, payload)
-
-        def is_action_complete(response):
-            pprint(response)
-            if len(response["entities"]):
-                for action in response["entities"]:
-                    if action["status"]["state"] != "SUCCESS":
-                        return (False, "")
-                return (True, "{} action complete".format(action_name))
-            else:
-                return (False, "")
-
-        poll_action(poll_func, is_action_complete)
-
-
-def poll_action(poll_func, completion_func):
-    # Poll every 10 seconds on the app status, for 5 mins
-    maxWait = 5 * 60
-    count = 0
-    while count < maxWait:
-        # call status api
-        res, err = poll_func()
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        response = res.json()
-        (completed, msg) = completion_func(response)
-        if completed:
-            click.echo(msg)
-            break
-        count += 10
-        time.sleep(10)
-
-
-def watch_action(runlog_id, app_name, client):
-    app = _get_app(client, app_name)
-    app_id = app["metadata"]["uuid"]
-
-    url = client.application.APP_ITEM.format(app_id) + "/app_runlogs/list"
-    payload = {"filter": "root_reference=={}".format(runlog_id)}
-
-    def poll_func():
-        click.echo("Polling action status...")
-        return client.application.poll_action_run(url, payload)
-
-    def is_action_complete(response):
-        pprint(response)
-        if len(response["entities"]):
-            for action in response["entities"]:
-                state = action["status"]["state"]
-                if state in RUNLOG.FAILURE_STATES:
-                    return (True, "Action failed")
-                if state not in RUNLOG.TERMINAL_STATES:
-                    return (False, "")
-            return (True, "Action ran successfully")
-        return (False, "")
-
-    poll_action(poll_func, is_action_complete)
+    run_actions(obj, app_name, action_name, watch)
 
 
 @main.group()
@@ -919,56 +575,6 @@ def watch():
 @click.argument("app_name")
 @click.option("--action", default=None, help="Watch specific action")
 @click.pass_obj
-def watch_app(obj, app_name, action):
+def _watch_app(obj, app_name, action):
     """Watch an app"""
-
-    client = obj.get("client")
-
-    if action:
-        return watch_action(action, app_name, client)
-
-    app = _get_app(client, app_name)
-    app_id = app["metadata"]["uuid"]
-    url = client.application.APP_ITEM.format(app_id) + "/app_runlogs/list"
-
-    payload = {
-        "filter": "application_reference=={};(type==action_runlog,type==audit_runlog,type==ngt_runlog,type==clone_action_runlog)".format(
-            app_id
-        )
-    }
-
-    def poll_func():
-        click.echo("Polling app status...")
-        return client.application.poll_action_run(url, payload)
-
-    def is_complete(response):
-        pprint(response)
-        if len(response["entities"]):
-            for action in response["entities"]:
-                state = action["status"]["state"]
-                if state in RUNLOG.FAILURE_STATES:
-                    return (True, "Action failed")
-                if state not in RUNLOG.TERMINAL_STATES:
-                    return (False, "")
-            return (True, "Action ran successfully")
-        return (False, "")
-
-    poll_action(poll_func, is_complete)
-
-
-def _get_name_query(names):
-    if names:
-        search_strings = [
-            "name==.*"
-            + reduce(
-                lambda acc, c: "{}[{}|{}]".format(acc, c.lower(), c.upper()), name, ""
-            )
-            + ".*"
-            for name in names
-        ]
-        return ",".join(search_strings)
-
-
-def _highlight_text(text, **kwargs):
-    """Highlight text in our standard format"""
-    return click.style("{}".format(text), fg="blue", bold=False, **kwargs)
+    watch_app(obj, app_name, action)
