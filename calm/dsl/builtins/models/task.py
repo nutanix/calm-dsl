@@ -3,6 +3,7 @@ import uuid
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .ref import RefType
+from .variable import setvar
 
 
 # Task
@@ -134,3 +135,133 @@ def exec_ssh(script, name=None, target=None):
 
 def exec_escript(script, name=None, target=None):
     return _exec_create(script, "static", name=name, target=target)
+
+
+def exec_http(
+    method,
+    url,
+    body=None,
+    headers=None,
+    auth=None,
+    content_type=None,
+    timeout=120,
+    verify=False,
+    retries=0,
+    retry_interval=10,
+    status_mapping=None,
+    response_paths=None,
+    name=None,
+    target=None,
+):
+    """
+    Defines a HTTP Task.
+
+    Args:
+        method (str): Request method (GET, PUT, POST, DELETE, etc.)
+        url (str): Request URL (https://example.com/dummy_url)
+        body (str): Request body
+        headers (dict): Request headers
+        auth (Credential): Credential object
+        content_type (string): Request Content-Type (application/json, application/xml, etc.)
+        timeout (int): Request timeout in seconds (Default: 120)
+        verify (bool): TLS verify (Default: False)
+        retries (int): Number of times to retry this request if it fails. (Default: 0)
+        retry_interval (int): Time to wait in seconds between retries (Default: 10)
+        status_mapping (dict): Mapping of  Response status code (int) to
+                               task status (True: success, False: Failure)
+        response_paths (dict): Mapping of variable name (str) to path in response (str)
+        name (str): Task name
+        target (Ref): Target entity that this task runs under.
+    Returns:
+        (Task): HTTP Task
+    """
+    # TODO: Auth
+    kwargs = {
+        "type": "HTTP",
+        # "timeout_secs": "0", # TODO - fix class creation params
+        # "retries": "0",
+        # "state": "ACTIVE",
+        "attrs": {
+            "method": method,
+            "url": url,
+            "request_body": body,
+            "auth": auth,
+            "content_type": content_type,
+            "timeout": timeout,
+            "verify": verify,
+            "retry_count": retries + 1,
+            "retry_interval": retry_interval,
+            "login_credential_local_reference": {
+                "kind": "app_credential",
+                "name": "default",  # TODO
+            },
+        },
+    }
+
+    if headers is not None:
+        header_variables = []
+        if not isinstance(headers, dict):
+            raise TypeError(
+                "Headers for HTTP task " + name
+                or "" + " should be dictionary of strings"
+            )
+        for var_name, var_value in headers.items():
+            if not isinstance(var_name, str):
+                raise TypeError(
+                    "Headers for HTTP task " + name
+                    or "" + " should be dictionary of strings"
+                )
+            if not isinstance(var_value, str):
+                raise TypeError(
+                    "Headers for HTTP task " + name
+                    or "" + " should be dictionary of strings"
+                )
+            header_variables.append(setvar(var_name, var_value))
+        kwargs["header_variables"] = header_variables
+
+    if status_mapping is not None:
+        if not isinstance(status_mapping, dict):
+            raise TypeError(
+                "Status mapping for HTTP task " + name
+                or "" + " should be dictionary of int keys and boolean values"
+            )
+        expected_response = []
+        for code, state in status_mapping.items():
+            if not isinstance(code, int):
+                raise TypeError(
+                    "Status mapping for HTTP task " + name
+                    or "" + " should be dictionary of int keys and boolean values"
+                )
+            if not isinstance(state, bool):
+                raise TypeError(
+                    "Status mapping for HTTP task " + name
+                    or "" + " should be dictionary of int keys and boolean values"
+                )
+            expected_response.append(
+                {"status": "SUCCESS" if state else "FAILURE", "code": code}
+            )
+        kwargs["expected_response_params"] = expected_response
+
+    if response_paths is not None:
+        if not isinstance(response_paths, dict):
+            raise TypeError(
+                "Response paths for HTTP task " + name
+                or "" + " should be dictionary of strings"
+            )
+        for prop, path in response_paths.items():
+            if not isinstance(prop, int):
+                raise TypeError(
+                    "Response paths for HTTP task " + name
+                    or "" + " should be dictionary of strings"
+                )
+            if not isinstance(path, bool):
+                raise TypeError(
+                    "Response paths for HTTP task " + name
+                    or "" + " should be dictionary of strings"
+                )
+            expected_response.append(
+                {"status": "SUCCESS" if state else "FAILURE", "code": code}
+            )
+        kwargs["response_paths"] = response_paths
+
+    return _task_create(**kwargs)
