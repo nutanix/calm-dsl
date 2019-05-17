@@ -5,7 +5,13 @@ from calm.dsl.tools import ping
 
 from .config import get_config, get_api_client
 from .apps import get_apps, describe_app, delete_app, run_actions, watch_app
-from .bps import get_blueprint_list, compile_blueprint_command, compile_blueprint, launch_blueprint_simple, delete_blueprint
+from .bps import (
+    get_blueprint_list,
+    compile_blueprint_command,
+    compile_blueprint,
+    launch_blueprint_simple,
+    delete_blueprint,
+)
 
 
 @click.group()
@@ -116,7 +122,7 @@ def _get_apps(obj, name, filter_by, limit, offset, quiet, all_items):
 
 @main.group()
 def compile():
-    """Compile blueprint to json/yaml"""
+    """Compile blueprint to json / yaml"""
     pass
 
 
@@ -248,12 +254,13 @@ def launch():
 
 @launch.command("bp")
 @click.argument("blueprint_name")
+@click.option("--app_name", default=None, help="Name of your app")
 @click.pass_obj
-def launch_blueprint_command(obj, blueprint_name, blueprint=None):
+def launch_blueprint_command(obj, blueprint_name, app_name, blueprint=None):
 
     client = obj.get("client")
 
-    launch_blueprint_simple(client, blueprint_name, blueprint=blueprint)
+    launch_blueprint_simple(client, blueprint_name, app_name, blueprint=blueprint)
 
 
 @main.group()

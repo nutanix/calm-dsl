@@ -211,7 +211,9 @@ def get_field_values(entity_dict, context, path=None):
                 entity_dict[field] = type(value)(new_val)
 
 
-def launch_blueprint_simple(client, blueprint_name, blueprint=None, profile_name=None):
+def launch_blueprint_simple(
+    client, blueprint_name, app_name, blueprint=None, profile_name=None
+):
     if not blueprint:
         blueprint = get_blueprint(client, blueprint_name)
 
@@ -233,7 +235,9 @@ def launch_blueprint_simple(client, blueprint_name, blueprint=None, profile_name
     runtime_editables = profile.pop("runtime_editables", [])
     launch_payload = {
         "spec": {
-            "app_name": "TestSimpleLaunch-{}".format(int(time.time())),
+            "app_name": app_name
+            if app_name
+            else "TestSimpleLaunch-{}".format(int(time.time())),
             "app_description": "",
             "app_profile_reference": profile.get("app_profile_reference", {}),
             "runtime_editables": runtime_editables,
@@ -271,8 +275,6 @@ def launch_blueprint_simple(client, blueprint_name, blueprint=None, profile_name
             pc_ip = config["SERVER"]["pc_ip"]
             pc_port = config["SERVER"]["pc_port"]
 
-            # Can't give app url, as deep routing within PC doesn't work.
-            # Hence just giving the app id.
             click.echo("Successfully launched. App uuid is: {}".format(app_uuid))
 
             click.echo(
