@@ -1,7 +1,9 @@
 
 VM_PLUGINS = {
     'AHV_VM': 
-        ('calm.dsl.providers.ahv.validator', 'AHV_Validator')
+        ('calm.dsl.providers.ahv.validator', 'AHV_Validator'),
+    'EXISTING_VM':
+        ('calm.dsl.providers.existing_machine.validator', 'EM_Validator')
 }
 
 

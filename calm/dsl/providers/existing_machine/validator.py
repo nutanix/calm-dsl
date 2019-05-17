@@ -5,13 +5,13 @@ from io import StringIO
 import jsonref, json
 from ..schema_validator import validator
 
-class AHV_Validator(object):
+class EM_Validator(object):
 
     def __init__(self):
 
         loader = PackageLoader(__name__, ".")
         env = Environment(loader=loader)
-        template = env.get_template("ahv_create_spec.yaml.jinja2")
+        template = env.get_template("em_create_spec.yaml.jinja2")
         tdict = yaml.safe_load(StringIO(template.render()))
         tdict = jsonref.loads(json.dumps(tdict))
 
