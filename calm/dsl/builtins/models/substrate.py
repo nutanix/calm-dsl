@@ -1,5 +1,6 @@
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
+from calm.dsl.providers import get_validator
 
 
 # Substrate
@@ -52,6 +53,10 @@ class SubstrateType(EntityType):
 
         if not isinstance(cdict['create_spec'], dict):
             raise Exception('create_spec is invalid')
+
+        validator_cls = get_validator(cdict["type"])
+        validator = validator_cls()
+        validator.validate(cdict['create_spec'])
 
         return cdict
 
