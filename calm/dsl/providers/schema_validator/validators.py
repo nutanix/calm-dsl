@@ -1,4 +1,3 @@
-
 from jsonschema import Draft7Validator, validators, exceptions
 
 def set_additional_properties_false(validator_cls):
