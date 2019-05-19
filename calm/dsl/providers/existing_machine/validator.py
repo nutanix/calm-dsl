@@ -1,11 +1,12 @@
-
 from ruamel import yaml
 from jinja2 import Environment, PackageLoader
 from io import StringIO
 import jsonref, json
 from ..schema_validator import validator
+from ..providers import Validator_Base
 
-class EM_Validator(object):
+
+class EM_Validator(Validator_Base, vm_type='EXISTING_VM'):
 
     def __init__(self):
 
