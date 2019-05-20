@@ -265,3 +265,63 @@ def exec_http(
         kwargs["response_paths"] = response_paths
 
     return _task_create(**kwargs)
+
+
+def _deployment_scaling_create(target, scaling_type, scaling_count, name=None):
+    if not target:
+        raise ValueError("A target is required for deployment scaling task")
+    if not isinstance(target, RefType) and isinstance(target, EntityType):
+        target = target.get_ref()
+    if not target.kind == "app_deployment":
+        raise ValueError(
+            "Target for deployment scaling cannot be {}".format(target.kind)
+        )
+
+    kwargs = {
+        "name": name
+        if name is not None
+        else "{}_task_for_{}__{}".format(
+            scaling_type, target.name, str(uuid.uuid4())[:8]
+        ),
+        "type": "SCALING",
+        # "timeout_secs": "0", # TODO - fix class creation params
+        # "retries": "0",
+        # "state": "ACTIVE",
+        "attrs": {
+            "scaling_type": scaling_type,
+            "scaling_count": str(scaling_count),
+            "login_credential_local_reference": {
+                "kind": "app_credential",
+                "name": "default",  # TODO
+            },
+        },
+        "target_any_local_reference": target,
+    }
+
+    return _task_create(**kwargs)
+
+
+def deployment_scaleout(target, count, name=None):
+    """
+    Defines a deployment scale out task
+    Args:
+        target (Ref): Target entity for scale out
+        count (str): scaling_count
+        name (str): Name for this task
+    Returns:
+        (Task): Deployment scale out task
+    """
+    return _deployment_scaling_create(target, "SCALEOUT", count, name=name)
+
+
+def deployment_scalein(target, count, name=None):
+    """
+    Defines a deployment scale in task
+    Args:
+        target (Ref): Target entity for scale in
+        count (str): scaling_count
+        name (str): Name for this task
+    Returns:
+        (Task): Deployment scale in task
+    """
+    return _deployment_scaling_create(target, "SCALEIN", count, name=name)
