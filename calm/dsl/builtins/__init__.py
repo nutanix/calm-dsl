@@ -9,7 +9,14 @@ from .models.credential import basic_cred
 from .models.variable import Variable, var, setvar
 from .models.action import action
 
-from .models.task import Task, exec_ssh
+from .models.task import (
+    Task,
+    exec_ssh,
+    exec_escript,
+    exec_http,
+    deployment_scaleout,
+    deployment_scalein,
+)
 from .models.port import Port, port
 from .models.service import Service, service
 from .models.package import Package, package
@@ -28,6 +35,10 @@ __all__ = [
     "setvar",
     "Task",
     "exec_ssh",
+    "exec_escript",
+    "exec_http",
+    "deployment_scaleout",
+    "deployment_scalein",
     "Port",
     "port",
     "Service",
