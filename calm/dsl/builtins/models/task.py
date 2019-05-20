@@ -137,6 +137,31 @@ def exec_escript(script, name=None, target=None):
     return _exec_create(script, "static", name=name, target=target)
 
 
+def _set_variable_create(task, variables=None):
+    task.type = "SET_VARIABLE"
+    eval_variables = []
+    for var in variables or []:
+        if not isinstance(var, str):
+            raise TypeError(
+                "Expected string in set variable task variables list, got {}".format(
+                    type(var)
+                )
+            )
+        eval_variables.append(var)
+    task.attrs["eval_variables"] = eval_variables
+    return task
+
+
+def set_variable_ssh(script, name=None, target=None, variables=None):
+    task = exec_ssh(script, name=name, target=target)
+    return _set_variable_create(task, variables)
+
+
+def set_variable_escript(script, name=None, target=None, variables=None):
+    task = exec_escript(script, name=name, target=target)
+    return _set_variable_create(task, variables)
+
+
 def exec_http(
     method,
     url,
