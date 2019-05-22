@@ -10,7 +10,7 @@ PC_IP = "10.46.34.230"
 PC_PORT = 9440
 PC_USERNAME = "admin"
 PC_PASSWORD = "***REMOVED***"
-CONFIG_FILE = "~/.calm/config"
+CONFIG_FILE = os.path.expanduser("~/.calm/config")
 
 
 _CONFIG = None
@@ -50,6 +50,30 @@ def _init_config(ip, port, username, password, config_file):
         config["SERVER"].setdefault("pc_password", password)
 
     return config
+
+
+def set_config(**kwargs):
+    config = configparser.ConfigParser()
+
+    ip = kwargs.get("ip") or PC_IP
+    port = kwargs.get("port") or str(PC_PORT)
+    username = kwargs.get("username") or PC_USERNAME
+    password = kwargs.get("password") or PC_PASSWORD
+    config_path = kwargs.get("config_file") or CONFIG_FILE
+
+    if "SERVER" not in config:
+        config["SERVER"] = {}
+    if ip:
+        config["SERVER"]["pc_ip"] = ip
+    if port:
+        config["SERVER"]["pc_port"] = port
+    if username:
+        config["SERVER"]["pc_username"] = username
+    if password:
+        config["SERVER"]["pc_password"] = password
+
+    with open(os.path.expanduser(config_path), "w") as configfile:
+        config.write(configfile)
 
 
 def get_api_client():

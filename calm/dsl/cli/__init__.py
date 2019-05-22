@@ -3,7 +3,7 @@ import json
 import click
 from calm.dsl.tools import ping
 
-from .config import get_config, get_api_client
+from .config import get_api_client, set_config
 from .apps import get_apps, describe_app, delete_app, run_actions, watch_app
 from .bps import (
     get_blueprint_list,
@@ -15,6 +15,17 @@ from .bps import (
 
 
 @click.group()
+@click.pass_context
+@click.option("--verbose", "-v", is_flag=True, help="Enables verbose mode.")
+@click.version_option("0.1")
+def main(ctx, verbose):
+    """Calm CLI"""
+    ctx.ensure_object(dict)
+    ctx.obj["client"] = get_api_client()
+    ctx.obj["verbose"] = verbose
+
+
+@main.command("config")
 @click.option(
     "--ip",
     envvar="PRISM_SERVER_IP",
@@ -24,7 +35,7 @@ from .bps import (
 @click.option(
     "--port",
     envvar="PRISM_SERVER_PORT",
-    default=9440,
+    default="9440",
     help="Prism Central server port number. Defaults to 9440.",
 )
 @click.option(
@@ -45,17 +56,12 @@ from .bps import (
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path to config file, defaults to ~/.calm/config",
 )
-@click.option("--verbose", "-v", is_flag=True, help="Enables verbose mode.")
-@click.version_option("0.1")
-@click.pass_context
-def main(ctx, ip, port, username, password, config_file, verbose):
-    """Calm CLI"""
-    ctx.ensure_object(dict)
-    ctx.obj["config"] = get_config(
+@click.pass_obj
+def _set_config(obj, ip, port, username, password, config_file):
+    """Configure values for PC details (IP, Port, Credentials) and Projects"""
+    set_config(
         ip=ip, port=port, username=username, password=password, config_file=config_file
     )
-    ctx.obj["client"] = get_api_client()
-    ctx.obj["verbose"] = verbose
 
 
 @main.group()
@@ -290,7 +296,7 @@ def _run_actions(obj, app_name, action_name, watch):
 
 @main.group()
 def watch():
-    """Get various things like blueprints, apps and so on"""
+    """Track actions running on apps"""
     pass
 
 
