@@ -6,8 +6,7 @@ from ..schema_validator import validator
 from ..providers import Validator_Base
 
 
-class EM_Validator(Validator_Base, vm_type='EXISTING_VM'):
-
+class EM_Validator(Validator_Base, vm_type="EXISTING_VM"):
     def __init__(self):
 
         loader = PackageLoader(__name__, ".")
@@ -18,7 +17,7 @@ class EM_Validator(Validator_Base, vm_type='EXISTING_VM'):
 
         self.schema = tdict["components"]["schemas"]["create_spec"]
         self.validator = validator(self.schema)
-    
+
     def validate(self, spec):
 
         self.validator.validate(spec)
