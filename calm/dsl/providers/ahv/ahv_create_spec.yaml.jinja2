@@ -4,6 +4,12 @@
 title: AHV NIC
 type: object
 properties:
+  network_function_nic_type:
+    type: string
+    default: INGRESS
+  nic_type:
+    type: string
+    default: NORMAL_NIC
   subnet_reference:
     type: object
     properties:
@@ -23,10 +29,10 @@ properties:
 title: AHV Boot Configuration
 type: object
 properties:
-  boot_device: 
+  boot_device:
     type: object
     properties:
-      disk_address: 
+      disk_address:
         type: object
         properties:
           device_index:
@@ -45,7 +51,7 @@ properties:
   data_source_reference:
     type: object
     properties:
-      name: 
+      name:
         type: string
       kind:
         type: string
@@ -62,7 +68,7 @@ properties:
       disk_address:
         type: object
         properties:
-          device_index: 
+          device_index:
             type: integer
           adapter_type:
             type: string
@@ -85,7 +91,7 @@ properties:
       disk_address:
         type: object
         properties:
-          device_index: 
+          device_index:
             type: integer
           adapter_type:
             type: string
@@ -135,7 +141,7 @@ properties:
     items:
       {{ ahvNICs() | indent(6) }}
   num_vcpus_per_socket:
-    type: integer 
+    type: integer
   num_sockets:
     type: integer
   memory_size_mib:
@@ -149,16 +155,16 @@ properties:
       type: object
   disk_list:
     type: array
-    items: 
+    items:
       anyOf:
         - $ref: '#/components/schemas/disk_list'
         - $ref: '#/components/schemas/vdisk_list'
-  boot_config: 
+  boot_config:
     {{ ahv_BootConfig() | indent(4) }}
   guest_customization:
     anyOf:
       - $ref: '#/components/schemas/cloud_init_script'
-      - $ref: '#/components/schemas/sys_prep_script' 
+      - $ref: '#/components/schemas/sys_prep_script'
 
 {%- endmacro %}
 
@@ -168,10 +174,10 @@ properties:
 title: AHV CreateSpec
 type: object
 properties:
-  name: 
+  name:
     type: string
   categories:
-    type: object     # TODO get the respective(fix no. of categories) 
+    type: object     # TODO get the respective(fix no. of categories)
   resources:
     {{ ahvResources() | indent(4) }}
 

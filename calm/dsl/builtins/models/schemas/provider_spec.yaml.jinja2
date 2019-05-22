@@ -1,0 +1,15 @@
+{% macro ProviderSpec() -%}
+
+title: ProviderSpec
+type: object
+x-calm-dsl-type: app_provider_spec
+
+{%- endmacro -%}
+
+
+{% macro ProviderSpecSchema() -%}
+
+ProviderSpec:
+  {{ ProviderSpec()|indent(2) }}
+
+{%- endmacro %}

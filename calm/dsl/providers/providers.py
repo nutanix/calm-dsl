@@ -1,4 +1,3 @@
-
 class Validator_Base(object):
 
     validators = {}
@@ -14,6 +13,6 @@ class Validator_Base(object):
 def get_validator(vm_type):
 
     if vm_type not in Validator_Base.validators:
-        raise Exception('provider not registered')
-    
+        raise Exception("provider not registered")
+
     return Validator_Base.validators[vm_type]

@@ -1,5 +1,6 @@
 {% import "port.yaml.jinja2" as port %}
 {% import "service.yaml.jinja2" as service %}
+{% import "provider_spec.yaml.jinja2" as provider_spec %}
 {% import "substrate.yaml.jinja2" as substrate %}
 {% import "deployment.yaml.jinja2" as deployment %}
 {% import "profile.yaml.jinja2" as profile %}
@@ -17,6 +18,7 @@
 
 {{ port.PortSchema() }}
 {{ service.ServiceSchema() }}
+{{ provider_spec.ProviderSpecSchema() }}
 {{ substrate.SubstrateSchema() }}
 {{ deployment.DeploymentSchema() }}
 {{ profile.ProfileSchema() }}

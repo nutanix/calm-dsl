@@ -54,6 +54,8 @@ def get_schema_props(name):
     schema_type = schema.get("x-calm-dsl-type", None)
     if schema_type == "app_descriptor":
         schema_props = {}
+    elif schema_type == "app_provider_spec":
+        schema_props = {}
     elif not schema_props:
         raise TypeError("Invalid schema name {} given".format(name))
 
@@ -96,7 +98,7 @@ def get_validator_details(schema_props, name):
 
     property_validators = get_property_validators()
     ValidatorType = property_validators.get(type_, None)
-    if (ValidatorType is None) and (name != 'create_spec'):
+    if ValidatorType is None:
         raise TypeError("Type {} not supported".format(type_))
 
     # Get default from schema if given, else set default from validator type
