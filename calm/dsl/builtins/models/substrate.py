@@ -51,13 +51,6 @@ class SubstrateType(EntityType):
 
         cdict["readiness_probe"] = readiness_probe
 
-        if not isinstance(cdict["create_spec"], dict):
-            raise Exception("create_spec is invalid")
-
-        validator_cls = get_provider(cdict["type"])
-        validator = validator_cls()
-        validator.validate(cdict["create_spec"])
-
         return cdict
 
     def get_task_target(cls):
