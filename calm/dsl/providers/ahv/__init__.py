@@ -1,4 +1,4 @@
-from .validator import AhvVmValidator
+from .provider import AhvVmProvider
 
 
-__all__ = ["AhvVmValidator"]
+__all__ = ["AhvVmProvider"]
