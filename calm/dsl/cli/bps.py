@@ -212,7 +212,7 @@ def get_field_values(entity_dict, context, path=None):
 
 
 def launch_blueprint_simple(
-    client, blueprint_name, app_name, blueprint=None, profile_name=None
+    client, blueprint_name, app_name=None, blueprint=None, profile_name=None
 ):
     if not blueprint:
         blueprint = get_blueprint(client, blueprint_name)
