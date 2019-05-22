@@ -1,7 +1,8 @@
 from ruamel import yaml
 from jinja2 import Environment, PackageLoader
 from io import StringIO
-import jsonref, json
+import json
+import jsonref
 from ..schema_validator import validator
 from ..providers import Validator_Base
 
