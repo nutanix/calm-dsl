@@ -65,9 +65,9 @@ def get_validator_interface():
     return ValidatorBase
 
 
-def get_validator(vm_type):
+def get_validator(provider_type):
 
-    if vm_type not in ValidatorBase.validators:
+    if provider_type not in ValidatorBase.validators:
         raise Exception("provider not registered")
 
-    return ValidatorBase.validators[vm_type]
+    return ValidatorBase.validators[provider_type]
