@@ -1,6 +1,5 @@
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
-from calm.dsl.providers import get_provider
 
 
 # Substrate
