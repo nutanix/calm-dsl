@@ -11,6 +11,12 @@ def set_additional_properties_false(ValidatorClass):
         if not validator.is_type(instance, "object"):
             return
 
+        # for managing defaults in the schema
+        for property, subschema in properties.items():
+            if "default" in subschema:
+                instance.setdefault(property, subschema["default"])
+
+        # for handling additional properties found in user spec
         for property, value in instance.items():
 
             if property in properties:
