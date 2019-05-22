@@ -3,8 +3,4 @@ from .existing_machine import ExistingMachineValidator
 from .providers import get_validator
 
 
-__all__ = [
-    'get_validator',
-    'AhvVmValidator',
-    'ExistingMachineValidator',
-]
+__all__ = ["get_validator", "AhvVmValidator", "ExistingMachineValidator"]
