@@ -1,6 +1,6 @@
-from .ahv import AhvVmValidator
-from .existing_machine import ExistingMachineValidator
-from .providers import get_validator
+from .ahv import AhvVmProvider
+from .existing_machine import ExistingMachineProvider
+from .providers import get_provider
 
 
-__all__ = ["get_validator", "AhvVmValidator", "ExistingMachineValidator"]
+__all__ = ["get_provider", "AhvVmProvider", "ExistingMachineProvider"]

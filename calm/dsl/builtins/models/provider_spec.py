@@ -2,7 +2,7 @@ import os
 import sys
 import inspect
 from ruamel import yaml
-from calm.dsl.providers import get_validator
+from calm.dsl.providers import get_provider
 
 from .entity import EntityType
 from .validator import PropertyValidator
@@ -20,8 +20,8 @@ class ProviderSpec(metaclass=ProviderSpecType):
 
     def __validate__(self, provider_type):
 
-        ValidatorClass = get_validator(provider_type)
-        ValidatorClass.validate(self.create_spec)
+        Provider = get_provider(provider_type)
+        Provider.validate(self.create_spec)
 
         return self.create_spec
 

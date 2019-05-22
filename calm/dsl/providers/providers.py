@@ -38,9 +38,9 @@ def set_additional_properties_false(ValidatorClass):
 StrictDraft7Validator = set_additional_properties_false(Draft7Validator)
 
 
-class ValidatorBase:
+class ProviderInterface:
 
-    validators = {}
+    providers = {}
 
     @staticmethod
     def _get_schema(package_name, spec_template):
@@ -73,20 +73,20 @@ class ValidatorBase:
         schema = cls._get_schema(package_name, spec_template)
         cls.validator = StrictDraft7Validator(schema)
 
-        cls.validators[provider_type] = cls
+        cls.providers[provider_type] = cls
 
     @classmethod
     def validate(cls, spec):
         cls.validator.validate(spec)
 
 
-def get_validator_interface():
-    return ValidatorBase
+def get_provider_interface():
+    return ProviderInterface
 
 
-def get_validator(provider_type):
+def get_provider(provider_type):
 
-    if provider_type not in ValidatorBase.validators:
+    if provider_type not in ProviderInterface.providers:
         raise Exception("provider not registered")
 
-    return ValidatorBase.validators[provider_type]
+    return ProviderInterface.providers[provider_type]

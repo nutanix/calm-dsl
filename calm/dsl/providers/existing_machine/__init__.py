@@ -1,4 +1,4 @@
-from .validator import ExistingMachineValidator
+from .provider import ExistingMachineProvider
 
 
-__all__ = ["ExistingMachineValidator"]
+__all__ = ["ExistingMachineProvider"]
