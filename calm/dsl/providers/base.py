@@ -96,32 +96,33 @@ def read_schema(spec_template_file):
     return provider_type, provider_spec
 
 
+def register_provider(filename):
+
+    # Get spec template
+    spec_template_file = PurePath(filename).name
+
+    # Read spec schema
+    provider_type, provider_spec = read_schema(spec_template_file)
+
+    # Create namespace dict for class
+    ns = {"provider_type": provider_type, "provider_spec": provider_spec}
+
+    # Create provider class
+
+    # removes .yaml and .jinja2 suffix
+    file_stem = PurePath(PurePath(filename).stem).stem
+    name = file_stem.title().replace("_", "")
+
+    bases = (object,)
+    ProviderType(name, bases, ns)
+
+
 def register_providers():
 
     path = Path(__file__)
 
     for filename in list(path.parent.glob("schemas/*.yaml.jinja2")):
-
-        # Get spec template
-        spec_template_file = PurePath(filename).name
-
-        # Read spec schema
-        provider_type, provider_spec = read_schema(spec_template_file)
-
-        # Create namespace dict for class
-        ns = {
-            "provider_type": provider_type,
-            "provider_spec": provider_spec,
-        }
-
-        # Create provider class
-
-        # removes .yaml and .jinja2 suffix
-        file_stem = PurePath(PurePath(filename).stem).stem
-        name = file_stem.title().replace("_", "")
-
-        bases = (object, )
-        ProviderType(name, bases, ns)
+        register_provider(filename)
 
 
 def main():
