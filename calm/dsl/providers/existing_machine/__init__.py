@@ -1,4 +1,4 @@
-from .validator import EM_Validator
+from .validator import ExistingMachineValidator
 
 
-__all__ = ["EM_Validator"]
+__all__ = ["ExistingMachineValidator"]
