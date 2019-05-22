@@ -58,7 +58,13 @@ class ValidatorBase:
         schema = tdict["components"]["schemas"]["provider_spec"]
         return schema
 
-    def __init_subclass__(cls, provider_type, package_name, spec_template="provider_spec.yaml.jinja2", **kwargs):
+    def __init_subclass__(
+        cls,
+        provider_type,
+        package_name,
+        spec_template="provider_spec.yaml.jinja2",
+        **kwargs
+    ):
         super().__init_subclass__(**kwargs)
 
         if provider_type is None:
