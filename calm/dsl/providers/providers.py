@@ -42,29 +42,36 @@ class ValidatorBase:
 
     validators = {}
 
-    def __init_subclass__(cls, provider_type, **kwargs):
-        super().__init_subclass__(**kwargs)
+    @staticmethod
+    def _get_schema(package_name, spec_template):
 
-        if provider_type is not None:
-            cls.validators[provider_type] = cls
+        if package_name is None:
+            raise Exception("Package name not given.")
 
-    def __init__(self, package, spec_template="provider_spec.yaml.jinja2"):
-
-        if package is None:
-            raise NotImplementedError("No package specified.")
-
-        loader = PackageLoader(package, ".")
+        loader = PackageLoader(package_name, ".")
         env = Environment(loader=loader)
         template = env.get_template(spec_template)
         tdict = yaml.safe_load(StringIO(template.render()))
         tdict = jsonref.loads(json.dumps(tdict))
 
         # TODO - Check if keys are present
-        self.schema = tdict["components"]["schemas"]["provider_spec"]
-        self.validator = StrictDraft7Validator(self.schema)
+        schema = tdict["components"]["schemas"]["provider_spec"]
+        return schema
 
-    def validate(self, spec):
-        self.validator.validate(spec)
+    def __init_subclass__(cls, provider_type, package_name, spec_template="provider_spec.yaml.jinja2", **kwargs):
+        super().__init_subclass__(**kwargs)
+
+        if provider_type is None:
+            raise Exception("Provider Type not given.")
+
+        schema = cls._get_schema(package_name, spec_template)
+        cls.validator = StrictDraft7Validator(schema)
+
+        cls.validators[provider_type] = cls
+
+    @classmethod
+    def validate(cls, spec):
+        cls.validator.validate(spec)
 
 
 def get_validator_interface():
