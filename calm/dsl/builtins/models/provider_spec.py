@@ -18,18 +18,17 @@ class ProviderSpec(metaclass=ProviderSpecType):
 
         self.create_spec = create_spec
 
-    def __validate__(self, vm_type):
+    def __validate__(self, provider_type):
 
-        validator_cls = get_validator(vm_type)
-        validator = validator_cls()
+        ValidatorClass = get_validator(provider_type)
+        validator = ValidatorClass()
         validator.validate(self.create_spec)
 
         return self.create_spec
 
     def __get__(self, instance, cls):
 
-        vm_type = cls.type
-        return self.__validate__(vm_type)
+        return self.__validate__(cls.type)
 
 
 class ProviderSpecValidator(PropertyValidator, openapi_type="app_provider_spec"):
