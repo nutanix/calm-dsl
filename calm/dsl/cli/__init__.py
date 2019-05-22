@@ -59,6 +59,45 @@ def main(ctx, ip, port, username, password, config_file, verbose):
 
 
 @main.group()
+def validate():
+    """Validate provider specs"""
+    pass
+
+
+@validate.command("provider_spec")
+@click.option(
+    "--file",
+    "-f",
+    "spec_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path of provider spec file",
+)
+@click.option(
+    "--type",
+    "provider_type",
+    type=click.Choice(["AHV_VM", "EXISTING_VM"]),
+    default="AHV_VM",
+    help="Provider type",
+)
+def validate_provider_spec(spec_file, provider_type):
+
+    # TODO - move to separate file
+    from ruamel import yaml
+    from calm.dsl.providers import get_provider
+
+    with open(spec_file) as f:
+        spec = yaml.safe_load(f.read())
+
+    try:
+        Provider = get_provider(provider_type)
+        Provider.validate(spec)
+        click.echo("File {} is a valid {} spec.".format(spec_file, provider_type))
+    except Exception as ee:
+        click.echo("File {} is invalid {} spec".format(spec_file, provider_type))
+        raise ee
+
+
+@main.group()
 def get():
     """Get various things like blueprints, apps and so on"""
     pass
