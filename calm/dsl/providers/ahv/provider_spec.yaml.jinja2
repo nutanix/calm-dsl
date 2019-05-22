@@ -1,0 +1,198 @@
+
+{% macro ahvNICs() -%}
+
+title: AHV NIC
+type: object
+properties:
+  network_function_nic_type:
+    type: string
+    default: INGRESS
+  nic_type:
+    type: string
+    default: NORMAL_NIC
+  subnet_reference:
+    type: object
+    properties:
+      uuid:
+        type: string
+        minLength: 36
+        maxLength: 36
+      kind:
+        type: string
+      name:
+        type: string
+{%- endmacro %}
+
+
+{% macro ahv_BootConfig() -%}
+
+title: AHV Boot Configuration
+type: object
+properties:
+  boot_device:
+    type: object
+    properties:
+      disk_address:
+        type: object
+        properties:
+          device_index:
+            type: integer
+          adapter_type:
+            type: string
+
+{%- endmacro %}
+
+
+{% macro ahv_DiskList() -%}
+
+title: AHV Disk List
+type: object
+properties:
+  data_source_reference:
+    type: object
+    properties:
+      name:
+        type: string
+      kind:
+        type: string
+        enum: [image]
+      uuid:
+        type: string
+        minLength: 36
+        maxLength: 36
+  device_properties:
+    type: object
+    properties:
+      device_type:
+        type: string
+      disk_address:
+        type: object
+        properties:
+          device_index:
+            type: integer
+          adapter_type:
+            type: string
+  disk_size_mib:
+    type: integer
+
+{%- endmacro %}
+
+
+{% macro ahv_VDiskList() -%}
+
+title: AHV VDisk List
+type: object
+properties:
+  device_properties:
+    type: object
+    properties:
+      device_type:
+        type: string
+      disk_address:
+        type: object
+        properties:
+          device_index:
+            type: integer
+          adapter_type:
+            type: string
+  disk_size_mib:
+    type: integer
+
+{%- endmacro %}
+
+
+{% macro ahvCloudInitScript() -%}
+
+title: AHV CLOUD INIT Script
+type: object
+properties:
+  cloud_init:
+    type: object
+    properties:
+      user_data:
+        type: string
+
+{%- endmacro %}
+
+
+{% macro ahvSysPrepScript() -%}
+
+title: AHV Sys Prep Script
+type: object
+properties:
+  sysprep:
+    type: object
+    properties:
+      unattend_xml:
+        type: string
+      install_type:
+        type: string
+
+{%- endmacro %}
+
+
+{% macro ahvResources() -%}
+
+title: AHV Resources
+type: object
+properties:
+  nic_list:
+    type: array
+    items:
+      {{ ahvNICs() | indent(6) }}
+  num_vcpus_per_socket:
+    type: integer
+  num_sockets:
+    type: integer
+  memory_size_mib:
+    type: integer
+  power_state:
+    type: string
+    enum: [ON, OFF]
+  gpu_list:
+    type: array
+    items:
+      type: object
+  disk_list:
+    type: array
+    items:
+      anyOf:
+        - $ref: '#/components/schemas/disk_list'
+        - $ref: '#/components/schemas/vdisk_list'
+  boot_config:
+    {{ ahv_BootConfig() | indent(4) }}
+  guest_customization:
+    anyOf:
+      - $ref: '#/components/schemas/cloud_init_script'
+      - $ref: '#/components/schemas/sys_prep_script'
+
+{%- endmacro %}
+
+
+{% macro ahvCreateSpec() -%}
+
+title: AHV CreateSpec
+type: object
+properties:
+  name:
+    type: string
+  categories:
+    type: object     # TODO get the respective(fix no. of categories)
+  resources:
+    {{ ahvResources() | indent(4) }}
+
+{%- endmacro %}
+
+
+components:
+  schemas:
+    provider_spec:
+      {{ ahvCreateSpec() | indent(6) }}
+    disk_list:
+      {{ ahv_DiskList() | indent(6) }}
+    vdisk_list:
+      {{ ahv_VDiskList() | indent(6) }}
+    cloud_init_script:
+      {{ ahvCloudInitScript() | indent(6) }}
+    sys_prep_script:
+      {{ ahvSysPrepScript() | indent(6) }}
