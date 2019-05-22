@@ -14,20 +14,20 @@ class ProviderSpecType(EntityType):
 
 
 class ProviderSpec(metaclass=ProviderSpecType):
-    def __init__(self, create_spec):
+    def __init__(self, spec):
 
-        self.create_spec = create_spec
+        self.spec = spec
 
     def __validate__(self, provider_type):
 
         Provider = get_provider(provider_type)
-        Provider.validate(self.create_spec)
+        Provider.validate(self.spec)
 
-        return self.create_spec
+        return self.spec
 
     def __get__(self, instance, cls):
 
-        return self.__validate__(cls.type)
+        return self.__validate__(cls.provider_type)
 
 
 class ProviderSpecValidator(PropertyValidator, openapi_type="app_provider_spec"):
@@ -35,8 +35,8 @@ class ProviderSpecValidator(PropertyValidator, openapi_type="app_provider_spec")
     __kind__ = ProviderSpec
 
 
-def provider_spec(create_spec):
-    return ProviderSpec(create_spec)
+def provider_spec(spec):
+    return ProviderSpec(spec)
 
 
 def read_provider_spec(filename):
@@ -46,6 +46,6 @@ def read_provider_spec(filename):
     )
 
     with open(file_path, "r") as f:
-        create_spec = yaml.safe_load(f.read())
+        spec = yaml.safe_load(f.read())
 
-    return provider_spec(create_spec)
+    return provider_spec(spec)

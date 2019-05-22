@@ -13,12 +13,14 @@ properties:
     maxLength: 1000
     default: ''
   type:
+    x-calm-dsl-display-name: provider_type
     type: string
     default: 'AHV_VM'
   os_type:
     type: string
     default: 'Linux'
   create_spec:
+    x-calm-dsl-display-name: provider_spec
     type: object
     x-calm-dsl-type: app_provider_spec
   variable_list:
