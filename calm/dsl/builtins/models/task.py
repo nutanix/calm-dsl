@@ -227,67 +227,76 @@ def exec_http(
         header_variables = []
         if not isinstance(headers, dict):
             raise TypeError(
-                "Headers for HTTP task " + name
-                or "" + " should be dictionary of strings"
+                "Headers for HTTP task "
+                + (name or "")
+                + " should be dictionary of strings"
             )
         for var_name, var_value in headers.items():
             if not isinstance(var_name, str):
                 raise TypeError(
-                    "Headers for HTTP task " + name
-                    or "" + " should be dictionary of strings"
+                    "Headers for HTTP task "
+                    + (name or "")
+                    + " should be dictionary of strings"
                 )
             if not isinstance(var_value, str):
                 raise TypeError(
-                    "Headers for HTTP task " + name
-                    or "" + " should be dictionary of strings"
+                    "Headers for HTTP task "
+                    + (name or "")
+                    + " should be dictionary of strings"
                 )
             header_variables.append(setvar(var_name, var_value))
-        kwargs["header_variables"] = header_variables
+        kwargs["attrs"]["header_variables"] = header_variables
 
     if status_mapping is not None:
         if not isinstance(status_mapping, dict):
             raise TypeError(
-                "Status mapping for HTTP task " + name
-                or "" + " should be dictionary of int keys and boolean values"
+                "Status mapping for HTTP task "
+                + (name or "")
+                + " should be dictionary of int keys and boolean values"
             )
         expected_response = []
         for code, state in status_mapping.items():
             if not isinstance(code, int):
                 raise TypeError(
-                    "Status mapping for HTTP task " + name
-                    or "" + " should be dictionary of int keys and boolean values"
+                    "Status mapping for HTTP task "
+                    + (name or "")
+                    + " should be dictionary of int keys and boolean values"
                 )
             if not isinstance(state, bool):
                 raise TypeError(
-                    "Status mapping for HTTP task " + name
-                    or "" + " should be dictionary of int keys and boolean values"
+                    "Status mapping for HTTP task "
+                    + (name or "")
+                    + " should be dictionary of int keys and boolean values"
                 )
             expected_response.append(
                 {"status": "SUCCESS" if state else "FAILURE", "code": code}
             )
-        kwargs["expected_response_params"] = expected_response
+        kwargs["attrs"]["expected_response_params"] = expected_response
 
     if response_paths is not None:
         if not isinstance(response_paths, dict):
             raise TypeError(
-                "Response paths for HTTP task " + name
-                or "" + " should be dictionary of strings"
+                "Response paths for HTTP task "
+                + (name or "")
+                + " should be dictionary of strings"
             )
         for prop, path in response_paths.items():
-            if not isinstance(prop, int):
+            if not isinstance(prop, str):
                 raise TypeError(
-                    "Response paths for HTTP task " + name
-                    or "" + " should be dictionary of strings"
+                    "Response paths for HTTP task "
+                    + (name or "")
+                    + " should be dictionary of strings"
                 )
-            if not isinstance(path, bool):
+            if not isinstance(path, str):
                 raise TypeError(
-                    "Response paths for HTTP task " + name
-                    or "" + " should be dictionary of strings"
+                    "Response paths for HTTP task "
+                    + (name or "")
+                    + " should be dictionary of strings"
                 )
             expected_response.append(
                 {"status": "SUCCESS" if state else "FAILURE", "code": code}
             )
-        kwargs["response_paths"] = response_paths
+        kwargs["attrs"]["response_paths"] = response_paths
 
     return _task_create(**kwargs)
 
