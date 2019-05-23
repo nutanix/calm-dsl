@@ -335,12 +335,12 @@ def _deployment_scaling_create(target, scaling_type, scaling_count, name=None):
     return _task_create(**kwargs)
 
 
-def deployment_scaleout(target, count, name=None):
+def deployment_scaleout(count, target, name=None):
     """
     Defines a deployment scale out task
     Args:
-        target (Ref): Target entity for scale out
         count (str): scaling_count
+        target (Ref): Target entity for scale out
         name (str): Name for this task
     Returns:
         (Task): Deployment scale out task
@@ -348,12 +348,12 @@ def deployment_scaleout(target, count, name=None):
     return _deployment_scaling_create(target, "SCALEOUT", count, name=name)
 
 
-def deployment_scalein(target, count, name=None):
+def deployment_scalein(count, target, name=None):
     """
     Defines a deployment scale in task
     Args:
-        target (Ref): Target entity for scale in
         count (str): scaling_count
+        target (Ref): Target entity for scale in
         name (str): Name for this task
     Returns:
         (Task): Deployment scale in task
