@@ -210,16 +210,12 @@ def exec_http(
             "method": method,
             "url": url,
             "request_body": body,
-            "auth": auth,
+            "authentication": {"auth_type": "none"},
             "content_type": content_type,
-            "timeout": timeout,
-            "verify": verify,
+            "connection_timeout": timeout,
+            "tls_verify": verify,
             "retry_count": retries + 1,
             "retry_interval": retry_interval,
-            "login_credential_local_reference": {
-                "kind": "app_credential",
-                "name": "default",  # TODO
-            },
         },
     }
 
@@ -245,7 +241,7 @@ def exec_http(
                     + " should be dictionary of strings"
                 )
             header_variables.append(setvar(var_name, var_value))
-        kwargs["attrs"]["header_variables"] = header_variables
+        kwargs["attrs"]["headers"] = header_variables
 
     if status_mapping is not None:
         if not isinstance(status_mapping, dict):
@@ -306,7 +302,7 @@ def _deployment_scaling_create(target, scaling_type, scaling_count, name=None):
         raise ValueError("A target is required for deployment scaling task")
     if not isinstance(target, RefType) and isinstance(target, EntityType):
         target = target.get_ref()
-    if not target.kind == "app_deployment":
+    if not target.kind == "app_blueprint_deployment":
         raise ValueError(
             "Target for deployment scaling cannot be {}".format(target.kind)
         )
@@ -321,14 +317,7 @@ def _deployment_scaling_create(target, scaling_type, scaling_count, name=None):
         # "timeout_secs": "0", # TODO - fix class creation params
         # "retries": "0",
         # "state": "ACTIVE",
-        "attrs": {
-            "scaling_type": scaling_type,
-            "scaling_count": str(scaling_count),
-            "login_credential_local_reference": {
-                "kind": "app_credential",
-                "name": "default",  # TODO
-            },
-        },
+        "attrs": {"scaling_type": scaling_type, "scaling_count": str(scaling_count)},
         "target_any_local_reference": target,
     }
 
