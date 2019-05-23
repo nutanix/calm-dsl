@@ -137,29 +137,36 @@ def exec_escript(script, name=None, target=None):
     return _exec_create(script, "static", name=name, target=target)
 
 
-def _set_variable_create(task, variables=None):
+def _set_variable_create(task, target=None, variables=None):
+    set_on_target = not isinstance(target, RefType) and isinstance(target, EntityType)
+    if not target:
+        raise ValueError("A target is required for deployment scaling task")
     task.type = "SET_VARIABLE"
     eval_variables = []
-    for var in variables or []:
-        if not isinstance(var, str):
+    for variable in variables or []:
+        if not isinstance(variable, str):
             raise TypeError(
                 "Expected string in set variable task variables list, got {}".format(
-                    type(var)
+                    type(variable)
                 )
             )
-        eval_variables.append(var)
+        if set_on_target:
+
+            # TODO: This doesn't work, find a fix
+            target.variables.append(setvar(variable, ""))
+        eval_variables.append(variable)
     task.attrs["eval_variables"] = eval_variables
     return task
 
 
 def set_variable_ssh(script, name=None, target=None, variables=None):
     task = exec_ssh(script, name=name, target=target)
-    return _set_variable_create(task, variables)
+    return _set_variable_create(task, target=target, variables=variables)
 
 
 def set_variable_escript(script, name=None, target=None, variables=None):
     task = exec_escript(script, name=name, target=target)
-    return _set_variable_create(task, variables)
+    return _set_variable_create(task, target=target, variables=variables)
 
 
 def exec_http(
