@@ -1,0 +1,18 @@
+{% macro EMCreateSpec() -%}
+title: Existing Machine CreateSpec
+type: object
+properties:
+  address:
+    type: string
+
+{%- endmacro %}
+
+info:
+  title: EXISTING_VM
+  description: Existing machine
+  version: 1.0.0
+
+components:
+  schemas:
+    provider_spec:
+      {{ EMCreateSpec() | indent(6) }}

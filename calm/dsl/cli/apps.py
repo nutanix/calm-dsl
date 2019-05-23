@@ -184,7 +184,7 @@ def describe_app(obj, app_name):
         )
 
     click.echo(
-        "# Hint: You can run actions on the app using: calm <action_name> app {}".format(
+        "# Hint: You can run actions on the app using: calm app {} <action_name>".format(
             app_name
         )
     )
