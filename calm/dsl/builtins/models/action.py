@@ -11,6 +11,16 @@ from .runbook import runbook_create
 # Action - Since action, runbook and DAG task are heavily coupled together,
 # the action type behaves as all three.
 
+TASK_FUNCS = [
+    "exec_ssh",
+    "exec_escript",
+    "set_variable_ssh",
+    "set_variable_escript",
+    "exec_http",
+    "deployment_scaleout",
+    "deployment_scalein"
+]
+
 
 class ActionType(EntityType):
     __schema_name__ = "Action"
@@ -60,7 +70,7 @@ class GetCallNodes(ast.NodeVisitor):
 
     def visit_Call(self, node):
         if isinstance(node.func, ast.Attribute) or (
-            isinstance(node.func, ast.Name) and node.func.id in ["exec_ssh"]
+            isinstance(node.func, ast.Name) and node.func.id in TASK_FUNCS
         ):
 
             task = eval(compile(ast.Expression(node), "", "eval"), self._globals)
