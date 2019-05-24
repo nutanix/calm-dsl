@@ -1,59 +1,29 @@
+from .resource import ResourceAPI
 from .connection import REQUEST
-from .entity import EntityAPI
 
 
-class BlueprintAPI(EntityAPI):
+class BlueprintAPI(ResourceAPI):
 
-    BP_PREFIX = EntityAPI.PREFIX + "blueprints"
-    LIST = BP_PREFIX + "/list"
-    UPLOAD = BP_PREFIX + "/import_json"
-    BP_ITEM = BP_PREFIX + "/{}"
-    LAUNCH = BP_ITEM + "/simple_launch"
-    FULL_LAUNCH = BP_ITEM + "/launch"
-    LAUNCH_POLL = BP_ITEM + "/pending_launches/{}"
-    BP_EDITABLES = BP_PREFIX + "/{}/runtime_editables"
-
-    def list(self, params=None):
-        return self.connection._call(
-            BlueprintAPI.LIST,
-            verify=False,
-            request_json=params,
-            method=REQUEST.METHOD.POST,
-        )
-
-    def get(self, blueprint_id):
-        return self.connection._call(
-            BlueprintAPI.BP_ITEM.format(blueprint_id),
-            verify=False,
-            method=REQUEST.METHOD.GET,
-        )
-
-    def update(self, uuid, payload):
-        return self.connection._call(
-            BlueprintAPI.BP_ITEM.format(uuid),
-            verify=False,
-            request_json=payload,
-            method=REQUEST.METHOD.PUT,
-        )
+    PREFIX = ResourceAPI.PREFIX + "blueprints"
+    LIST = PREFIX + "/list"
+    UPLOAD = PREFIX + "/import_json"
+    ITEM = PREFIX + "/{}"
+    LAUNCH = ITEM + "/simple_launch"
+    FULL_LAUNCH = ITEM + "/launch"
+    LAUNCH_POLL = ITEM + "/pending_launches/{}"
+    BP_EDITABLES = PREFIX + "/{}/runtime_editables"
 
     def upload(self, payload):
         return self.connection._call(
-            BlueprintAPI.UPLOAD,
+            self.UPLOAD,
             verify=False,
             request_json=payload,
             method=REQUEST.METHOD.POST,
-        )
-
-    def delete(self, uuid):
-        return self.connection._call(
-            BlueprintAPI.BP_ITEM.format(uuid),
-            verify=False,
-            method=REQUEST.METHOD.DELETE,
         )
 
     def launch(self, uuid, payload):
         return self.connection._call(
-            BlueprintAPI.LAUNCH.format(uuid),
+            self.LAUNCH.format(uuid),
             verify=False,
             request_json=payload,
             method=REQUEST.METHOD.POST,
@@ -61,7 +31,7 @@ class BlueprintAPI(EntityAPI):
 
     def full_launch(self, uuid, payload):
         return self.connection._call(
-            BlueprintAPI.FULL_LAUNCH.format(uuid),
+            self.FULL_LAUNCH.format(uuid),
             verify=False,
             request_json=payload,
             method=REQUEST.METHOD.POST,
@@ -69,14 +39,14 @@ class BlueprintAPI(EntityAPI):
 
     def poll_launch(self, blueprint_id, request_id):
         return self.connection._call(
-            BlueprintAPI.LAUNCH_POLL.format(blueprint_id, request_id),
+            self.LAUNCH_POLL.format(blueprint_id, request_id),
             verify=False,
             method=REQUEST.METHOD.GET,
         )
 
     def _get_editables(self, bp_uuid):
         return self.connection._call(
-            BlueprintAPI.BP_EDITABLES.format(bp_uuid),
+            self.BP_EDITABLES.format(bp_uuid),
             verify=False,
             method=REQUEST.METHOD.GET,
         )
