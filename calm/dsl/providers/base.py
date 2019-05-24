@@ -82,6 +82,10 @@ def get_providers():
     return ProviderType.providers
 
 
+def get_provider_types():
+    return ProviderType.providers.keys()
+
+
 def read_schema(spec_template_file):
 
     loader = PackageLoader(__name__, "schemas")
