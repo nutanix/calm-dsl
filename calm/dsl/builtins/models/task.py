@@ -34,6 +34,20 @@ def _task(**kwargs):
 Task = _task()
 
 
+def _get_target_ref(target):
+    """
+    Get the target reference. Converts target to a ref if it is an entity.
+    Args:
+        target (Entity/Ref): Entity/Ref that is the target for this task
+    Returns:
+        (Ref): Target reference
+    """
+    if target is not None:
+        if not isinstance(target, RefType) and isinstance(target, EntityType):
+            target = target.get_ref()
+    return target
+
+
 def _task_create(**kwargs):
     name = getattr(TaskType, "__schema_name__") + "_" + str(uuid.uuid4())[:8]
     name = kwargs.get("name", kwargs.get("__name__", name))
@@ -49,9 +63,7 @@ def create_call_rb(runbook, target=None, name=None):
         "attrs": {"runbook_reference": runbook.get_ref()},
     }
     if target is not None:
-        if not isinstance(target, RefType) and isinstance(target, EntityType):
-            target = target.get_ref()
-        kwargs["target_any_local_reference"] = target
+        kwargs["target_any_local_reference"] = _get_target_ref(target)
     else:
         main_dag = [
             task
@@ -66,6 +78,7 @@ def create_call_rb(runbook, target=None, name=None):
 def _exec_create(script, script_type, name=None, target=None):
 
     kwargs = {
+        "name": name,
         "type": "EXEC",
         # "timeout_secs": "0", # TODO - fix class creation params
         # "retries": "0",
@@ -79,12 +92,8 @@ def _exec_create(script, script_type, name=None, target=None):
             },
         },
     }
-    if name is not None:
-        kwargs["name"] = name
     if target is not None:
-        if not isinstance(target, RefType) and isinstance(target, EntityType):
-            target = target.get_ref()
-        kwargs["target_any_local_reference"] = target
+        kwargs["target_any_local_reference"] = _get_target_ref(target)
 
     return _task_create(**kwargs)
 
@@ -217,6 +226,7 @@ def exec_http(
         auth_obj = {"auth_type": "basic", "username": auth[0], "password": auth[1]}
 
     kwargs = {
+        "name": name,
         "type": "HTTP",
         # "timeout_secs": "0", # TODO - fix class creation params
         # "retries": "0",
@@ -233,6 +243,9 @@ def exec_http(
             "retry_interval": retry_interval,
         },
     }
+
+    if target is not None:
+        kwargs["target_any_local_reference"] = _get_target_ref(target)
 
     if headers is not None:
         header_variables = []
