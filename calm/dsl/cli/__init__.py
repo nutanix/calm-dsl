@@ -25,7 +25,7 @@ def main(ctx, verbose):
     ctx.obj["verbose"] = verbose
 
 
-@main.command("config")
+@main.command("configure")
 @click.option(
     "--ip",
     envvar="PRISM_SERVER_IP",
