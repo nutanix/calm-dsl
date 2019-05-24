@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from io import StringIO
 from pathlib import Path, PurePath
 import json
@@ -42,7 +43,7 @@ StrictDraft7Validator = set_additional_properties_false(Draft7Validator)
 
 class ProviderType(type):
 
-    providers = {}
+    providers = OrderedDict()
 
     def __new__(mcls, name, bases, ns):
 
@@ -80,6 +81,10 @@ def get_provider(provider_type):
 
 def get_providers():
     return ProviderType.providers
+
+
+def get_provider_types():
+    return ProviderType.providers.keys()
 
 
 def read_schema(spec_template_file):

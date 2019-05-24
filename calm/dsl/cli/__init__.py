@@ -1,6 +1,10 @@
 import json
 
+from ruamel import yaml
 import click
+
+# TODO - move providers to separate file
+from calm.dsl.providers import get_provider, get_provider_types
 from calm.dsl.tools import ping
 
 from .config import get_config, get_api_client
@@ -75,15 +79,11 @@ def validate():
 @click.option(
     "--type",
     "provider_type",
-    type=click.Choice(["AHV_VM", "EXISTING_VM"]),
+    type=click.Choice(get_provider_types()),
     default="AHV_VM",
     help="Provider type",
 )
 def validate_provider_spec(spec_file, provider_type):
-
-    # TODO - move to separate file
-    from ruamel import yaml
-    from calm.dsl.providers import get_provider
 
     with open(spec_file) as f:
         spec = yaml.safe_load(f.read())
