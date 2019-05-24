@@ -106,7 +106,7 @@ def _get_app(client, app_name, all=False):
 
     # 2. Get app details
     click.echo(">> Fetching app details")
-    res, err = client.application.get(app_id)
+    res, err = client.application.read(app_id)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
     app = res.json()
