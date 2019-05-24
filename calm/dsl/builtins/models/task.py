@@ -186,7 +186,8 @@ def exec_http(
         url (str): Request URL (https://example.com/dummy_url)
         body (str): Request body
         headers (dict): Request headers
-        auth (Credential): Credential object
+        auth (tuple (str, str)): Credential object. Currently only supports basic auth.
+                           Tuple of username and password. ("username", "password")
         content_type (string): Request Content-Type (application/json, application/xml, etc.)
         timeout (int): Request timeout in seconds (Default: 120)
         verify (bool): TLS verify (Default: False)
@@ -200,7 +201,21 @@ def exec_http(
     Returns:
         (Task): HTTP Task
     """
-    # TODO: Auth
+    auth_obj = {"auth_type": "none"}
+    if auth is not None:
+        if not (
+            isinstance(auth, tuple)
+            and len(auth) == 2
+            and isinstance(auth[0], str)
+            and isinstance(auth[1], str)
+        ):
+            raise ValueError(
+                "Auth for HTTP task "
+                + (name or "")
+                + ' should be a tuple of 2 strings ("username", "password")'
+            )
+        auth_obj = {"auth_type": "basic", "username": auth[0], "password": auth[1]}
+
     kwargs = {
         "type": "HTTP",
         # "timeout_secs": "0", # TODO - fix class creation params
@@ -210,7 +225,7 @@ def exec_http(
             "method": method,
             "url": url,
             "request_body": body,
-            "authentication": {"auth_type": "none"},
+            "authentication": auth_obj,
             "content_type": content_type,
             "connection_timeout": timeout,
             "tls_verify": verify,
