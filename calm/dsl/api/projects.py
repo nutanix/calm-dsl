@@ -1,5 +1,5 @@
 from .resource import ResourceAPI
-import time
+from .connection import REQUEST
 
 
 class ProjectAPI(ResourceAPI):
