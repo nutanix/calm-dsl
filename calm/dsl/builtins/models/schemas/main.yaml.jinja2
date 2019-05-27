@@ -5,6 +5,7 @@
 {% import "deployment.yaml.jinja2" as deployment %}
 {% import "profile.yaml.jinja2" as profile %}
 {% import "blueprint.yaml.jinja2" as blueprint %}
+{% import "blueprint_payload.yaml.jinja2" as blueprint_payload %}
 {% import "ref.yaml.jinja2" as ref %}
 {% import "descriptor.yaml.jinja2" as descriptor %}
 {% import "variable.yaml.jinja2" as variable %}
@@ -23,6 +24,7 @@
 {{ deployment.DeploymentSchema() }}
 {{ profile.ProfileSchema() }}
 {{ blueprint.BlueprintSchema() }}
+{{ blueprint_payload.BlueprintPayloadSchema() }}
 {{ ref.RefSchema() }}
 {{ descriptor.DescriptorSchema() }}
 {{ variable.VariableSchema() }}
