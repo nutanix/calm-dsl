@@ -9,6 +9,11 @@ class SubstrateType(EntityType):
     __schema_name__ = "Substrate"
     __openapi_type__ = "app_substrate"
 
+    ALLOWED_FRAGMENT_ACTIONS = {
+        "__pre_create__": "pre_action_create",
+        "__post_delete__": "post_action_delete",
+    }
+
     def compile(cls):
 
         cdict = super().compile()

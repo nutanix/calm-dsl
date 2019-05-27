@@ -170,10 +170,20 @@ class EntityType(EntityTypeBase):
         return cls.__name__
 
     def get_user_attrs(cls):
+        types = EntityTypeBase.get_entity_types()
+        ActionType = types.get("Action", None)
+        VariableType = types.get("Variable", None)
+        DescriptorType = types.get("Descriptor", None)
         user_attrs = {}
         for name, value in cls.__dict__.items():
-            if not (name.startswith("__") and name.endswith("__")):
-                user_attrs[name] = getattr(cls, name, value)
+            if (
+                name.startswith("__")
+                and name.endswith("__")
+                and not isinstance(value, (VariableType, ActionType))
+                and not isinstance(type(value), DescriptorType)
+            ):
+                continue
+            user_attrs[name] = getattr(cls, name, value)
 
         return user_attrs
 
