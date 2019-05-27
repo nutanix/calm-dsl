@@ -1,5 +1,3 @@
-import json
-
 import click
 from ..cli.config import get_config, get_api_client
 from .resources import create_resource, read_resource, delete_resource,\
@@ -191,6 +189,3 @@ def _list_resource(obj, baseUrl, payload):
     """ List the resources """
     client = obj.get("client")
     list_resource(client, baseUrl, payload)
-
-
-
