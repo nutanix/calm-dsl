@@ -45,33 +45,3 @@ class ResourceAPI:
             request_json=params,
             method=REQUEST.METHOD.POST,
         )
-
-    def get_name_uuid_map(self, params=None):
-        response = self.list(params)
-
-        totalMatches = response['metadata']['total_matches']
-        if totalMatches == 0:
-            return {}
-
-        name_uuid_map = {}
-
-        for entity in response['entities']:
-            entity_name = entity['status']['name']
-            entity_uuid = entity['metadata']['uuid']
-
-            if entity_name in name_uuid_map:
-                uuid = name_uuid_map[entity_name]
-
-                if type(uuid) is str:
-                    uuids = uuid.split()
-                    uuids.append(entity_uuid)
-                    name_uuid_map[entity_name] = uuids
-
-                elif type(uuid) is list:
-                    uuid.append(entity_uuid)
-                    name_uuid_map[entity_name] = uuid
-
-            else:
-                name_uuid_map[entity_name] = entity_uuid
-
-        return name_uuid_map
