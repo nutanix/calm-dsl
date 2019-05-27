@@ -1,4 +1,5 @@
-from .entity import ResourceAPI
+from .resource import ResourceAPI
+from .connection import REQUEST
 
 
 class SettingAPI(ResourceAPI):

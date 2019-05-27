@@ -1,4 +1,4 @@
-from .resources import ResourceAPI
+from .resource import ResourceAPI
 from .connection import REQUEST
 
 
