@@ -333,6 +333,9 @@ class EntityType(EntityTypeBase):
             attrs["kind"] = getattr(cls, "__kind__")
         return ref(name, bases, attrs)
 
+    def get_dict(cls):
+        return json.loads(cls.json_dumps())
+
 
 class Entity(metaclass=EntityType):
     pass

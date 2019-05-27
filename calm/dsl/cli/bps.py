@@ -9,7 +9,7 @@ import arrow
 import click
 from prettytable import PrettyTable
 
-from calm.dsl.builtins import Blueprint
+from calm.dsl.builtins import Blueprint, create_blueprint_payload
 from .config import get_config
 from .utils import get_name_query, get_states_filter, highlight_text
 from .constants import BLUEPRINT
@@ -127,24 +127,9 @@ def compile_blueprint(bp_file):
     if UserBlueprint is None:
         return None
 
-    # TODO - use secret option in cli to handle secrets
-    bp_resources = json.loads(UserBlueprint.json_dumps())
+    UserBlueprintPayload, _ = create_blueprint_payload(UserBlueprint)
 
-    # TODO - fill metadata section using module details (categories, project, etc)
-    bp_payload = {
-        "spec": {
-            "name": UserBlueprint.__name__,
-            "description": UserBlueprint.__doc__,
-            "resources": bp_resources,
-        },
-        "metadata": {
-            "spec_version": 1,
-            "name": UserBlueprint.__name__,
-            "kind": "blueprint",
-        },
-        "api_version": "3.0",
-    }
-
+    bp_payload = UserBlueprintPayload.get_dict()
     return bp_payload
 
 
