@@ -1,10 +1,14 @@
 import time
 import warnings
 from pprint import pprint
+import json
+from json import JSONEncoder
 
 import arrow
 import click
 from prettytable import PrettyTable
+from anytree import NodeMixin, RenderTree
+
 from .utils import get_name_query, get_states_filter, highlight_text
 from .constants import APPLICATION, RUNLOG
 
@@ -190,26 +194,94 @@ def describe_app(obj, app_name):
     )
 
 
-def watch_action(runlog_id, app_name, client):
-    app = _get_app(client, app_name)
-    app_id = app["metadata"]["uuid"]
+class RunlogNode(NodeMixin):
+    def __init__(self, runlog, parent=None, children=None):
+        self.runlog = runlog
+        self.parent = parent
+        if children:
+            self.children = children
 
-    url = client.application.APP_ITEM.format(app_id) + "/app_runlogs/list"
-    payload = {"filter": "root_reference=={}".format(runlog_id)}
+
+class RunlogJSONEncoder(JSONEncoder):
+    def default(self, obj):
+
+        if not isinstance(obj, RunlogNode):
+            return super().default(obj)
+
+        status = obj.runlog["status"]
+
+        if status["type"] == "task_runlog":
+            name = status["task_reference"]["name"]
+        elif status["type"] == "runbook_runlog":
+            if "call_runbook_reference" in status:
+                name = status["call_runbook_reference"]["name"]
+            else:
+                name = status["runbook_reference"]["name"]
+        else:
+            return "root"
+
+        state = status["state"]
+
+        return "{} (Status: {})".format(name, state)
+
+
+def watch_action(runlog_uuid, app_name, client):
+    app = _get_app(client, app_name)
+    app_uuid = app["metadata"]["uuid"]
+
+    url = client.application.APP_ITEM.format(app_uuid) + "/app_runlogs/list"
+    payload = {"filter": "root_reference=={}".format(runlog_uuid)}
 
     def poll_func():
-        click.echo("Polling action status...")
+        click.echo("\nPolling action status...")
         return client.application.poll_action_run(url, payload)
 
     def is_action_complete(response):
-        pprint(response)
-        if len(response["entities"]):
-            for action in response["entities"]:
+
+        entities = response["entities"]
+        if len(entities):
+
+            # Sort entities based on creation time
+            sorted_entities = sorted(
+                entities, key=lambda x: int(x["metadata"]["creation_time"])
+            )
+
+            # Create nodes of runlog tree and a map based on uuid
+            root = None
+            nodes = {}
+            for runlog in sorted_entities:
+                # Create root node
+                # TODO - Get details of root node
+                if not root:
+                    root_uuid = runlog["status"]["root_reference"]["uuid"]
+                    root_runlog = {
+                        "metadata": {"uuid": root_uuid},
+                        "status": {"type": "action_runlog", "state": ""},
+                    }
+                    root = RunlogNode(root_runlog)
+                    nodes[str(root_uuid)] = root
+
+                uuid = runlog["metadata"]["uuid"]
+                nodes[str(uuid)] = RunlogNode(runlog, parent=root)
+
+            # Attach parent to nodes
+            for runlog in sorted_entities:
+                uuid = runlog["metadata"]["uuid"]
+                parent_uuid = runlog["status"]["parent_reference"]["uuid"]
+                node = nodes[str(uuid)]
+                node.parent = nodes[str(parent_uuid)]
+
+            # Render Runlog Tree
+            for pre, _, node in RenderTree(root):
+                print("{}{}".format(pre, json.dumps(node, cls=RunlogJSONEncoder)))
+
+            for action in sorted_entities:
                 state = action["status"]["state"]
                 if state in RUNLOG.FAILURE_STATES:
                     return (True, "Action failed")
                 if state not in RUNLOG.TERMINAL_STATES:
                     return (False, "")
+
             return (True, "Action ran successfully")
         return (False, "")
 
@@ -278,42 +350,6 @@ def run_actions(obj, app_name, action_name, watch):
     app_spec = app["spec"]
     app_id = app["metadata"]["uuid"]
 
-    # Get action uuid from action name
-    if action_name.lower() in ["delete", "soft_delete"]:
-        action_name = action_name.lower()
-        is_soft_delete = action_name == "soft_delete"
-        action_label = "Soft Delete" if is_soft_delete else "Delete"
-        res, err = client.application.delete(app_id, is_soft_delete)
-        click.echo(">> Triggering {}".format(action_label))
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        else:
-            click.echo("{} action triggered".format(action_label))
-            response = res.json()
-            runlog_id = response["status"]["runlog_uuid"]
-            click.echo("Action runlog uuid: {}".format(runlog_id))
-
-            if watch:
-                url = client.application.APP_ITEM.format(app_id) + "/app_runlogs/list"
-                payload = {"filter": "root_reference=={}".format(runlog_id)}
-
-                def poll_func():
-                    click.echo("Polling action run ...")
-                    return client.application.poll_action_run(url, payload)
-
-                def is_action_complete(response):
-                    pprint(response)
-                    if len(response["entities"]):
-                        for action in response["entities"]:
-                            if action["status"]["state"] != "SUCCESS":
-                                return (False, "")
-                        return (True, "{} action complete".format(action_label))
-                    else:
-                        return (False, "")
-
-                poll_action(poll_func, is_action_complete)
-            return
-
     calm_action_name = "action_" + action_name.lower()
     action = next(
         action
@@ -333,28 +369,11 @@ def run_actions(obj, app_name, action_name, watch):
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     response = res.json()
-    runlog_id = response["status"]["runlog_uuid"]
-    click.echo("Runlog uuid: {}".format(runlog_id))
-    url = client.application.APP_ITEM.format(app_id) + "/app_runlogs/list"
-    payload = {"filter": "root_reference=={}".format(runlog_id)}
+    runlog_uuid = response["status"]["runlog_uuid"]
+    click.echo("Runlog uuid: {}".format(runlog_uuid))
 
     if watch:
-
-        def poll_func():
-            click.echo("Polling action run ...")
-            return client.application.poll_action_run(url, payload)
-
-        def is_action_complete(response):
-            pprint(response)
-            if len(response["entities"]):
-                for action in response["entities"]:
-                    if action["status"]["state"] != "SUCCESS":
-                        return (False, "")
-                return (True, "{} action complete".format(action_name))
-            else:
-                return (False, "")
-
-        poll_action(poll_func, is_action_complete)
+        watch_action(runlog_uuid, app_name, client)
 
 
 def poll_action(poll_func, completion_func):
