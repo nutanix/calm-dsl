@@ -225,7 +225,7 @@ class RunlogJSONEncoder(JSONEncoder):
         return "{} (Status: {})".format(name, state)
 
 
-def watch_action(runlog_uuid, app_name, client):
+def watch_action(runlog_uuid, app_name, client, screen=None):
     app = _get_app(client, app_name)
     app_uuid = app["metadata"]["uuid"]
 
@@ -233,7 +233,7 @@ def watch_action(runlog_uuid, app_name, client):
     payload = {"filter": "root_reference=={}".format(runlog_uuid)}
 
     def poll_func():
-        click.echo("\nPolling action status...")
+        # click.echo("\nPolling action status...")
         return client.application.poll_action_run(url, payload)
 
     def is_action_complete(response):
@@ -271,18 +271,47 @@ def watch_action(runlog_uuid, app_name, client):
                 node = nodes[str(uuid)]
                 node.parent = nodes[str(parent_uuid)]
 
-            # Render Runlog Tree
-            for pre, _, node in RenderTree(root):
-                print("{}{}".format(pre, json.dumps(node, cls=RunlogJSONEncoder)))
+            # Show Progress
+            # TODO - Draw progress bar
+            total_tasks = 0
+            completed_tasks = 0
+            for runlog in sorted_entities:
+                runlog_type = runlog["status"]["type"]
+                if runlog_type == "task_runlog":
+                    total_tasks += 1
+                    state = runlog["status"]["state"]
+                    if state in RUNLOG.STATUS.SUCCESS:
+                        completed_tasks += 1
 
-            for action in sorted_entities:
-                state = action["status"]["state"]
+            if total_tasks:
+                screen.clear()
+                progress = "{0:.2f}".format(completed_tasks / total_tasks * 100)
+                screen.print_at("Progress: {}%".format(progress), 0, 0)
+
+            # Render Tree on next line
+            line = 1
+            for pre, _, node in RenderTree(root):
+                screen.print_at(
+                    "{}{}".format(pre, json.dumps(node, cls=RunlogJSONEncoder)), 0, line
+                )
+                line += 1
+            screen.refresh()
+
+            for runlog in sorted_entities:
+                state = runlog["status"]["state"]
                 if state in RUNLOG.FAILURE_STATES:
+                    msg = "Action failed ..."
+                    screen.print_at(msg, 0, line)
+                    screen.refresh()
                     return (True, "Action failed")
                 if state not in RUNLOG.TERMINAL_STATES:
                     return (False, "")
 
-            return (True, "Action ran successfully")
+            msg = "Action ran successfully ..."
+            screen.print_at(msg, 0, line)
+            screen.refresh()
+
+            return (True, msg)
         return (False, "")
 
     poll_action(poll_func, is_action_complete)
@@ -343,7 +372,7 @@ def delete_app(obj, app_names, soft):
         click.echo("Action runlog uuid: {}".format(runlog_id))
 
 
-def run_actions(obj, app_name, action_name, watch):
+def run_actions(screen, obj, app_name, action_name, watch):
     client = obj.get("client")
 
     app = _get_app(client, app_name)
@@ -373,7 +402,7 @@ def run_actions(obj, app_name, action_name, watch):
     click.echo("Runlog uuid: {}".format(runlog_uuid))
 
     if watch:
-        watch_action(runlog_uuid, app_name, client)
+        watch_action(runlog_uuid, app_name, client, screen=screen)
 
 
 def poll_action(poll_func, completion_func):
@@ -388,7 +417,7 @@ def poll_action(poll_func, completion_func):
         response = res.json()
         (completed, msg) = completion_func(response)
         if completed:
-            click.echo(msg)
+            # click.echo(msg)
             break
         count += 10
         time.sleep(10)
