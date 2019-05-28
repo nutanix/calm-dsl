@@ -34,6 +34,7 @@ from .models.deployment import Deployment, deployment
 from .models.profile import Profile, profile
 
 from .models.blueprint import Blueprint, blueprint
+from .models.blueprint_payload import create_blueprint_payload
 
 
 __all__ = [
@@ -68,4 +69,5 @@ __all__ = [
     "profile",
     "Blueprint",
     "blueprint",
+    "create_blueprint_payload",
 ]

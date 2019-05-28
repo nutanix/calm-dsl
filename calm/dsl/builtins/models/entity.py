@@ -5,6 +5,8 @@ import sys
 from types import MappingProxyType
 
 from ruamel.yaml import YAML, resolver, SafeRepresenter
+from jsonschema import Draft7Validator
+
 
 from .schema import get_schema_details
 
@@ -112,6 +114,10 @@ class EntityType(EntityTypeBase):
 
     __schema_name__ = None
     __openapi_type__ = None
+
+    def validate_dict(cls, entity_dict):
+        validator = Draft7Validator(cls.__schema_props__)
+        validator.validate(entity_dict)
 
     @classmethod
     def to_yaml(mcls, representer, node):
@@ -335,6 +341,9 @@ class EntityType(EntityTypeBase):
             attrs["name"] = str(cls)
             attrs["kind"] = getattr(cls, "__kind__")
         return ref(name, bases, attrs)
+
+    def get_dict(cls):
+        return json.loads(cls.json_dumps())
 
 
 class Entity(metaclass=EntityType):
