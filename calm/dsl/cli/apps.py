@@ -102,14 +102,14 @@ def _get_app(client, app_name, all=False):
         if len(entities) != 1:
             raise Exception("More than one app found - {}".format(entities))
 
-        click.echo(">> {} found >>".format(app_name))
+        # click.echo(">> {} found >>".format(app_name))
         app = entities[0]
     else:
         raise Exception(">> No app found with name {} found >>".format(app_name))
     app_id = app["metadata"]["uuid"]
 
     # 2. Get app details
-    click.echo(">> Fetching app details")
+    # click.echo(">> Fetching app details")
     res, err = client.application.get(app_id)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -300,14 +300,14 @@ def watch_action(runlog_uuid, app_name, client, screen=None):
             for runlog in sorted_entities:
                 state = runlog["status"]["state"]
                 if state in RUNLOG.FAILURE_STATES:
-                    msg = "Action failed ..."
+                    msg = "Action failed. Exit screen? (y)"
                     screen.print_at(msg, 0, line)
                     screen.refresh()
-                    return (True, "Action failed")
+                    return (True, msg)
                 if state not in RUNLOG.TERMINAL_STATES:
                     return (False, "")
 
-            msg = "Action ran successfully ..."
+            msg = "Action ran successfully. Exit screen? (y)"
             screen.print_at(msg, 0, line)
             screen.refresh()
 
@@ -393,14 +393,15 @@ def run_actions(screen, obj, app_name, action_name, watch):
     app.pop("status")
     app["spec"] = {"args": [], "target_kind": "Application", "target_uuid": app_id}
     res, err = client.application.run_action(app_id, action_id, app)
-    click.echo(">> Triggering action run")
+
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     response = res.json()
     runlog_uuid = response["status"]["runlog_uuid"]
-    click.echo("Runlog uuid: {}".format(runlog_uuid))
-
+    screen.clear()
+    screen.print_at("Got Action Runlog uuid: {}. Fetching runlog tree ...".format(runlog_uuid), 0, 0)
+    screen.refresh()
     if watch:
         watch_action(runlog_uuid, app_name, client, screen=screen)
 
