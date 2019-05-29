@@ -25,7 +25,7 @@ def _credential(**kwargs):
 Credential = _credential()
 
 
-def basic_cred(username, password, name="default"):
+def basic_cred(username, password, name="default", default=False):
 
     secret = {"attrs": {"is_secret_modified": True}, "value": password}
 
@@ -34,5 +34,6 @@ def basic_cred(username, password, name="default"):
     kwargs["username"] = username
     kwargs["secret"] = secret
     kwargs["name"] = name
+    kwargs["default"] = default
 
     return _credential(**kwargs)

@@ -75,7 +75,7 @@ def create_call_rb(runbook, target=None, name=None):
     return _task_create(**kwargs)
 
 
-def _exec_create(script, script_type, name=None, target=None):
+def _exec_create(script, script_type, name=None, target=None, cred=None):
 
     kwargs = {
         "name": name,
@@ -83,15 +83,10 @@ def _exec_create(script, script_type, name=None, target=None):
         # "timeout_secs": "0", # TODO - fix class creation params
         # "retries": "0",
         # "state": "ACTIVE",
-        "attrs": {
-            "script_type": script_type,
-            "script": script,
-            "login_credential_local_reference": {
-                "kind": "app_credential",
-                "name": "default",  # TODO
-            },
-        },
+        "attrs": {"script_type": script_type, "script": script},
     }
+    if cred is not None:
+        kwargs["attrs"]["login_credential_local_reference"] = cred
     if target is not None:
         kwargs["target_any_local_reference"] = _get_target_ref(target)
 
@@ -138,8 +133,8 @@ def dag(name=None, child_tasks=None, edges=None, target=None):
     return _task_create(**kwargs)
 
 
-def exec_ssh(script, name=None, target=None):
-    return _exec_create(script, "sh", name=name, target=target)
+def exec_ssh(script, name=None, target=None, cred=None):
+    return _exec_create(script, "sh", name=name, target=target, cred=cred)
 
 
 def exec_escript(script, name=None, target=None):
