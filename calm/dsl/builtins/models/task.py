@@ -86,7 +86,7 @@ def _exec_create(script, script_type, name=None, target=None, cred=None):
         "attrs": {"script_type": script_type, "script": script},
     }
     if cred is not None:
-        kwargs["attrs"]["login_credential_local_reference"] = cred
+        kwargs["attrs"]["login_credential_local_reference"] = _get_target_ref(cred)
     if target is not None:
         kwargs["target_any_local_reference"] = _get_target_ref(target)
 
