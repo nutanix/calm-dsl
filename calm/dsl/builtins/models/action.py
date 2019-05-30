@@ -112,7 +112,7 @@ class action(metaclass=DescriptorType):
         """
 
         # Generate the entity names
-        self.action_name = " ".join(user_func.__name__.lower().split("_")).title()
+        self.action_name = user_func.__name__
         self.runbook_name = str(uuid.uuid4())[:8] + "_runbook"
         self.dag_name = str(uuid.uuid4())[:8] + "_dag"
         self.user_func = user_func

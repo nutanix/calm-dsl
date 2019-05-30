@@ -2,6 +2,8 @@ import json
 
 from ruamel import yaml
 import click
+from asciimatics.screen import Screen
+
 
 # TODO - move providers to separate file
 from calm.dsl.providers import get_provider, get_provider_types
@@ -324,7 +326,14 @@ def _describe_app(obj, app_name):
 def _run_actions(obj, app_name, action_name, watch):
     """App related functionality: launch, lcm actions, monitor, delete"""
 
-    run_actions(obj, app_name, action_name, watch)
+    def render_actions(screen):
+        screen.clear()
+        screen.print_at("Running action {} for app {} ...".format(action_name, app_name), 0, 0)
+        screen.refresh()
+        run_actions(screen, obj, app_name, action_name, watch)
+        screen.wait_for_input(10.0)
+
+    Screen.wrapper(render_actions)
 
 
 @main.group()
