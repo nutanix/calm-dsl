@@ -1,4 +1,7 @@
 import uuid
+import os
+import sys
+import inspect
 
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
@@ -75,7 +78,34 @@ def create_call_rb(runbook, target=None, name=None):
     return _task_create(**kwargs)
 
 
-def _exec_create(script, script_type, name=None, target=None, cred=None):
+def _exec_create(
+    script_type, script=None, filename=None, name=None, target=None, cred=None
+):
+
+    if script is not None:
+        if filename is not None:
+            raise ValueError(
+                "Only one of script or filename should be given for exec task "
+                + (name or "")
+            )
+
+    if filename is not None:
+        if script is not None:
+            raise ValueError(
+                "Only one of script or filename should be given for exec task "
+                + (name or "")
+            )
+        file_path = os.path.join(
+            os.path.dirname(inspect.getfile(sys._getframe(1))), filename
+        )
+
+        with open(file_path, "r") as scriptf:
+            script = scriptf.read()
+
+    if script is None:
+        raise ValueError(
+            "One of script or filename is required for exec task " + (name or "")
+        )
 
     kwargs = {
         "name": name,
@@ -133,12 +163,16 @@ def dag(name=None, child_tasks=None, edges=None, target=None):
     return _task_create(**kwargs)
 
 
-def exec_ssh(script, name=None, target=None, cred=None):
-    return _exec_create(script, "sh", name=name, target=target, cred=cred)
+def exec_ssh(script=None, filename=None, name=None, target=None, cred=None):
+    return _exec_create(
+        "sh", script=script, filename=filename, name=name, target=target, cred=cred
+    )
 
 
 def exec_escript(script, name=None, target=None):
-    return _exec_create(script, "static", name=name, target=target)
+    return _exec_create(
+        "static", script=script, filename=filename, name=name, target=target
+    )
 
 
 def _set_variable_create(task, variables=None):
