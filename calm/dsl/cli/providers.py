@@ -1,14 +1,14 @@
 import click
 import json
 
-from ..api.entity import EntityAPI
-from .constants import PROVIDER
 from .utils import highlight_text
+from calm.dsl.providers.api import AHV
 
 
 def create_ahv_spec(client):
 
     spec = {}
+    Obj = AHV(client.connection)
 
     spec["name"] = click.prompt("Name of the vm ")
     spec["resources"] = {}
@@ -17,8 +17,7 @@ def create_ahv_spec(client):
     spec["resources"]["coresPerCPU"] = int(click.prompt("Cores per Virtual CPU "))
     spec["resources"]["memory"] = int(click.prompt("Memory required "))
 
-    imgObj = EntityAPI(relURL=PROVIDER.AHV.IMAGES, connection=client.connection)
-    imagesNameUUIDMap = imgObj.get_name_uuid_map()
+    imagesNameUUIDMap = Obj.images()
     images = list(imagesNameUUIDMap.keys())
 
     click.echo(highlight_text("\nEnter the details of disks : \n"))
@@ -107,9 +106,7 @@ def create_ahv_spec(client):
     click.echo("")
 
     if choice[0] == "y":
-
-        subnetObj = EntityAPI(relURL=PROVIDER.AHV.SUBNETS, connection=client.connection)
-        subnetNameUUIDMap = subnetObj.get_name_uuid_map()
+        subnetNameUUIDMap = Obj.subnets()
         availableNics = list(subnetNameUUIDMap.keys())
 
         click.echo("Subnet names are {} \n ". format(availableNics))

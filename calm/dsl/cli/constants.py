@@ -61,9 +61,3 @@ class APPLICATION:
         BUSY = "busy"
         TIMEOUT = "timeout"
         RESTARTING = "restarting"
-
-
-class PROVIDER:
-    class AHV:
-        SUBNETS = "subnets"
-        IMAGES = "images"

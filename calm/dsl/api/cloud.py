@@ -1,7 +1,7 @@
 from .resource import ResourceAPI
 
 
-class EntityAPI(ResourceAPI):
+class CloudAPI(ResourceAPI):
 
     def __init__(self, relURL, connection):
 
