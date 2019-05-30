@@ -18,6 +18,7 @@ from .bps import (
     launch_blueprint_simple,
     delete_blueprint,
 )
+from .providers import create_ahv_spec
 
 
 @click.group()
@@ -349,3 +350,22 @@ def watch():
 def _watch_app(obj, app_name, action):
     """Watch an app"""
     watch_app(obj, app_name, action)
+
+
+@create.command("provider_spec")
+@click.option(
+    "--type",
+    "provider_type",
+    type=click.Choice(["AHV"]),
+    default="AHV",
+    help="Provider type",
+)
+@click.pass_obj
+def create_provider_spec(obj, provider_type):
+
+    client = obj.get("client")
+    if provider_type == 'AHV':
+        create_ahv_spec(client)
+
+    else:
+        click.echo("{} not supported right now")

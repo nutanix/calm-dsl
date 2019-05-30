@@ -1,6 +1,6 @@
 import json
 import click
-from .entity import EntityAPI
+from ..api.entity import EntityAPI
 
 
 def create_resource(obj, relURL, payload):
