@@ -14,6 +14,7 @@ def create_resource(obj, relURL, payload):
 def read_resource(obj, relURL, resourceID):
     """ will read the resource """
     entity = EntityAPI(relURL, obj.connection)
+    payload = json.loads(payload)
     res, err = entity.read(resourceID)
     click.echo(res.json())
 
