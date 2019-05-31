@@ -110,9 +110,6 @@ def _exec_create(
     kwargs = {
         "name": name,
         "type": "EXEC",
-        # "timeout_secs": "0", # TODO - fix class creation params
-        # "retries": "0",
-        # "state": "ACTIVE",
         "attrs": {"script_type": script_type, "script": script},
     }
     if cred is not None:
@@ -480,9 +477,6 @@ def exec_http(
     kwargs = {
         "name": name,
         "type": "HTTP",
-        # "timeout_secs": "0", # TODO - fix class creation params
-        # "retries": "0",
-        # "state": "ACTIVE",
         "attrs": {
             "method": method,
             "url": url,
@@ -594,9 +588,6 @@ def _deployment_scaling_create(target, scaling_type, scaling_count, name=None):
             scaling_type, target.name, str(uuid.uuid4())[:8]
         ),
         "type": "SCALING",
-        # "timeout_secs": "0", # TODO - fix class creation params
-        # "retries": "0",
-        # "state": "ACTIVE",
         "attrs": {"scaling_type": scaling_type, "scaling_count": str(scaling_count)},
         "target_any_local_reference": target,
     }
