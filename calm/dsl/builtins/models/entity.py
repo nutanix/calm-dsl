@@ -23,7 +23,9 @@ def _validate(vdict, name, value):
             if getattr(ValidatorType, "__is_object__", False):
                 if not isinstance(value, dict):
                     raise TypeError("{} is not of type {}".format(value, "dict"))
-                new_value = ValidatorType.__class__(ValidatorType.validators)
+                new_value = ValidatorType.__class__(
+                    ValidatorType.validators, ValidatorType.defaults
+                )
                 for k, v in value.items():
                     new_value[k] = v
                 return
