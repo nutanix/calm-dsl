@@ -83,7 +83,9 @@ def get_validator_details(schema_props, name):
         elif type_ == "object":
             object_type = True
             for name in props.get("properties", {}):
-                object_validators["name"], _, _ = get_validator_details(props["properties"], name)
+                object_validators["name"], _, _ = get_validator_details(
+                    props["properties"], name
+                )
 
     if type_ == "array":
         item_props = props.get("items", None)

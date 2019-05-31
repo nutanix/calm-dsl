@@ -13,7 +13,7 @@ class ObjectDict(EntityDict):
     def __call__(self):
         return self.__class__(self.validators)
 
-class ObjectValidator(PropertyValidator, openapi_type="object"):
 
+class ObjectValidator(PropertyValidator, openapi_type="object"):
     __default__ = ObjectDict
     __kind__ = ObjectDict
