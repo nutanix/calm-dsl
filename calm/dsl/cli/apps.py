@@ -400,7 +400,9 @@ def run_actions(screen, obj, app_name, action_name, watch):
     response = res.json()
     runlog_uuid = response["status"]["runlog_uuid"]
     screen.clear()
-    screen.print_at("Got Action Runlog uuid: {}. Fetching runlog tree ...".format(runlog_uuid), 0, 0)
+    screen.print_at(
+        "Got Action Runlog uuid: {}. Fetching runlog tree ...".format(runlog_uuid), 0, 0
+    )
     screen.refresh()
     if watch:
         watch_action(runlog_uuid, app_name, client, screen=screen)
