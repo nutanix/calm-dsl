@@ -136,9 +136,6 @@ class BlueprintAPI(EntityAPI):
                 )
             )
 
-        # Make first cred as default for now
-        # TODO - get the right cred default
-        # TODO - check if no creds
         bp_resources["default_credential_local_reference"] = {
             "kind": "app_credential",
             "name": default_creds[0]["name"],
