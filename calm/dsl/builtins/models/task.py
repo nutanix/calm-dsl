@@ -200,6 +200,229 @@ def set_variable_escript(script, name=None, target=None, variables=None):
     return _set_variable_create(task, variables)
 
 
+def exec_http_get(
+    url,
+    body=None,
+    headers=None,
+    auth=None,
+    content_type=None,
+    timeout=120,
+    verify=False,
+    retries=0,
+    retry_interval=10,
+    status_mapping=None,
+    response_paths=None,
+    name=None,
+    target=None,
+):
+    """
+
+    Defines a HTTP GET Task.
+
+    Args:
+        url (str): Request URL (https://example.com/dummy_url)
+        headers (dict): Request headers
+        auth (tuple (str, str)): Credential object. Currently only supports basic auth.
+                           Tuple of username and password. ("username", "password")
+        content_type (string): Request Content-Type (application/json, application/xml, etc.)
+        timeout (int): Request timeout in seconds (Default: 120)
+        verify (bool): TLS verify (Default: False)
+        retries (int): Number of times to retry this request if it fails. (Default: 0)
+        retry_interval (int): Time to wait in seconds between retries (Default: 10)
+        status_mapping (dict): Mapping of  Response status code (int) to
+                               task status (True: success, False: Failure)
+        response_paths (dict): Mapping of variable name (str) to path in response (str)
+        name (str): Task name
+        target (Ref): Target entity that this task runs under.
+    Returns:
+        (Task): HTTP Task
+    """
+    return exec_http(
+        "POST",
+        url,
+        body=None,
+        headers=headers,
+        auth=auth,
+        content_type=content_type,
+        timeout=timeout,
+        verify=verify,
+        retries=retries,
+        retry_interval=retry_interval,
+        status_mapping=status_mapping,
+        response_paths=response_paths,
+        name=name,
+        target=target,
+    )
+
+
+def exec_http_post(
+    url,
+    body=None,
+    headers=None,
+    auth=None,
+    content_type=None,
+    timeout=120,
+    verify=False,
+    retries=0,
+    retry_interval=10,
+    status_mapping=None,
+    response_paths=None,
+    name=None,
+    target=None,
+):
+    """
+
+    Defines a HTTP POST Task.
+
+    Args:
+        url (str): Request URL (https://example.com/dummy_url)
+        body (str): Request body
+        headers (dict): Request headers
+        auth (tuple (str, str)): Credential object. Currently only supports basic auth.
+                           Tuple of username and password. ("username", "password")
+        content_type (string): Request Content-Type (application/json, application/xml, etc.)
+        timeout (int): Request timeout in seconds (Default: 120)
+        verify (bool): TLS verify (Default: False)
+        retries (int): Number of times to retry this request if it fails. (Default: 0)
+        retry_interval (int): Time to wait in seconds between retries (Default: 10)
+        status_mapping (dict): Mapping of  Response status code (int) to
+                               task status (True: success, False: Failure)
+        response_paths (dict): Mapping of variable name (str) to path in response (str)
+        name (str): Task name
+        target (Ref): Target entity that this task runs under.
+    Returns:
+        (Task): HTTP Task
+    """
+    return exec_http(
+        "POST",
+        url,
+        body=body,
+        headers=headers,
+        auth=auth,
+        content_type=content_type,
+        timeout=timeout,
+        verify=verify,
+        retries=retries,
+        retry_interval=retry_interval,
+        status_mapping=status_mapping,
+        response_paths=response_paths,
+        name=name,
+        target=target,
+    )
+
+
+def exec_http_put(
+    url,
+    body=None,
+    headers=None,
+    auth=None,
+    content_type=None,
+    timeout=120,
+    verify=False,
+    retries=0,
+    retry_interval=10,
+    status_mapping=None,
+    response_paths=None,
+    name=None,
+    target=None,
+):
+    """
+
+    Defines a HTTP PUT Task.
+
+    Args:
+        url (str): Request URL (https://example.com/dummy_url)
+        body (str): Request body
+        headers (dict): Request headers
+        auth (tuple (str, str)): Credential object. Currently only supports basic auth.
+                           Tuple of username and password. ("username", "password")
+        content_type (string): Request Content-Type (application/json, application/xml, etc.)
+        timeout (int): Request timeout in seconds (Default: 120)
+        verify (bool): TLS verify (Default: False)
+        retries (int): Number of times to retry this request if it fails. (Default: 0)
+        retry_interval (int): Time to wait in seconds between retries (Default: 10)
+        status_mapping (dict): Mapping of  Response status code (int) to
+                               task status (True: success, False: Failure)
+        response_paths (dict): Mapping of variable name (str) to path in response (str)
+        name (str): Task name
+        target (Ref): Target entity that this task runs under.
+    Returns:
+        (Task): HTTP Task
+    """
+    return exec_http(
+        "PUT",
+        url,
+        body=body,
+        headers=headers,
+        auth=auth,
+        content_type=content_type,
+        timeout=timeout,
+        verify=verify,
+        retries=retries,
+        retry_interval=retry_interval,
+        status_mapping=status_mapping,
+        response_paths=response_paths,
+        name=name,
+        target=target,
+    )
+
+
+def exec_http_delete(
+    url,
+    body=None,
+    headers=None,
+    auth=None,
+    content_type=None,
+    timeout=120,
+    verify=False,
+    retries=0,
+    retry_interval=10,
+    status_mapping=None,
+    response_paths=None,
+    name=None,
+    target=None,
+):
+    """
+
+    Defines a HTTP DELETE Task.
+
+    Args:
+        url (str): Request URL (https://example.com/dummy_url)
+        body (str): Request body
+        headers (dict): Request headers
+        auth (tuple (str, str)): Credential object. Currently only supports basic auth.
+                           Tuple of username and password. ("username", "password")
+        content_type (string): Request Content-Type (application/json, application/xml, etc.)
+        timeout (int): Request timeout in seconds (Default: 120)
+        verify (bool): TLS verify (Default: False)
+        retries (int): Number of times to retry this request if it fails. (Default: 0)
+        retry_interval (int): Time to wait in seconds between retries (Default: 10)
+        status_mapping (dict): Mapping of  Response status code (int) to
+                               task status (True: success, False: Failure)
+        response_paths (dict): Mapping of variable name (str) to path in response (str)
+        name (str): Task name
+        target (Ref): Target entity that this task runs under.
+    Returns:
+        (Task): HTTP Task
+    """
+    return exec_http(
+        "DELETE",
+        url,
+        body=body,
+        headers=headers,
+        auth=auth,
+        content_type=content_type,
+        timeout=timeout,
+        verify=verify,
+        retries=retries,
+        retry_interval=retry_interval,
+        status_mapping=status_mapping,
+        response_paths=response_paths,
+        name=name,
+        target=target,
+    )
+
+
 def exec_http(
     method,
     url,

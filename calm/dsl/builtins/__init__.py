@@ -7,7 +7,6 @@
 from .models.ref import Ref, ref
 from .models.credential import basic_cred
 from .models.variable import Variable, var, setvar
-from .models.task import Task, exec_ssh
 from .models.action import action
 
 from .models.task import (
@@ -16,6 +15,10 @@ from .models.task import (
     exec_escript,
     set_variable_ssh,
     set_variable_escript,
+    exec_http_get,
+    exec_http_post,
+    exec_http_put,
+    exec_http_delete,
     exec_http,
     deployment_scaleout,
     deployment_scalein,
@@ -49,6 +52,10 @@ __all__ = [
     "exec_escript",
     "set_variable_ssh",
     "set_variable_escript",
+    "exec_http_get",
+    "exec_http_post",
+    "exec_http_put",
+    "exec_http_delete",
     "exec_http",
     "deployment_scaleout",
     "deployment_scalein",
