@@ -1,6 +1,7 @@
 class AHV:
     SUBNETS = "subnets"
     IMAGES = "images"
+    GROUPS = "groups"
 
 
 class AWS:

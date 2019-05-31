@@ -1,36 +1,109 @@
 import click
 import json
+from jsonschema import Draft7Validator
+import re
 
 from .utils import highlight_text
 from calm.dsl.providers.api import AHV
+from calm.dsl.providers import get_provider
 
 
 def create_ahv_spec(client):
 
     spec = {}
     Obj = AHV(client.connection)
+    validator = get_provider("AHV_VM")
+    schema = validator.provider_spec
+    path = []       # Path to the key
+    option = []     # Any option occured during finding key
 
-    spec["name"] = click.prompt("Name of the vm ")
+    click.echo("")
+    path.append("name")
+    spec["name"] = get_field(schema, path, option)
+
+    choice = click.prompt(highlight_text("\nWant to add some categories(y/n)"))
+    if choice[0] == "y":
+        categories = Obj.groups()
+        click.echo("\n Choose from given categories: \n")
+
+        for ind, group in enumerate(categories):
+            click.echo("\t {}. {}:{} ". format(str(ind + 1), group["key"], group["value"]))
+
+        result = {}
+        while True:
+
+            while True:
+                index = click.prompt("\nEnter the index of category ", type=int)
+                if index > len(categories):
+                    click.echo("Invalid index !!! ")
+
+                else:
+                    break
+
+            group = categories[index]
+            key = group["key"]
+            if result.get(key) is not None:
+                click.echo("Category corresponding to key {} already exists ". format(key))
+                choice = click.prompt("\nWant to replace old one (y/n) ", type=str)
+                if choice[0] == "y":
+                    result[key] = group["value"]
+
+            else:
+                result[key] = group["value"]
+
+            choice = click.prompt(highlight_text("\nWant to add more categories (y/n) "))
+            if choice[0] == "n":
+                break
+
+        spec["categories"] = result
+
     spec["resources"] = {}
+    path[-1] = "resources"
+    click.echo("")
 
-    spec["resources"]["vcpu"] = int(click.prompt("Number of virtual CPU "))
-    spec["resources"]["coresPerCPU"] = int(click.prompt("Cores per Virtual CPU "))
-    spec["resources"]["memory"] = int(click.prompt("Memory required "))
+    path.append("num_vcpus_per_socket")
+    spec["resources"]["num_vcpus_per_socket"] = get_field(schema, path, option, type=int)
+
+    path[-1] = "num_sockets"
+    spec["resources"]["num_sockets"] = get_field(schema, path, option, type=int)
+
+    path[-1] = "memory_size_mib"
+    spec["resources"]["memory_size_mib"] = get_field(schema, path, option, type=int)
+
+    click.echo(highlight_text("\nEnter the details of disks : \n"))
 
     imagesNameUUIDMap = Obj.images()
     images = list(imagesNameUUIDMap.keys())
+    click.echo("Choose from given images: \n")
+    for ind, name in enumerate(images):
+        click.echo("\t {}. {}".format(str(ind + 1), name))
 
-    click.echo(highlight_text("\nEnter the details of disks : \n"))
-    click.echo("Images Names are : {}\n". format(images))
     spec["resources"]["disk_list"] = []
-    adapterNameIndexMap = {}
+    path[-1] = "disk_list"
+    option.append("AHV Disk List")
 
+    adapterNameIndexMap = {}
     while True:
         image = {}
-        image["name"] = click.prompt("Image name ")
-        image["device_type"] = click.prompt("Device Type ")
-        image["adapter_type"] = click.prompt("Device Bus ")
-        image["bootable"] = True if click.prompt("Is it bootable(y/n) ") == "y" else False
+
+        while True:
+            nameIndex = click.prompt("\nEnter the index of image ", type=int)
+            if nameIndex > len(images):
+                click.echo("Invalid index !!! ")
+
+            else:
+                image["name"] = images[nameIndex - 1]
+                break
+
+        path.append("device_properties")
+        path.append("device_type")
+        image["device_type"] = get_field(schema, path, option)
+
+        path[-1] = "disk_address"
+        path.append("adapter_type")
+        image["adapter_type"] = get_field(schema, path, option)
+
+        image["bootable"] = click.prompt("Is it bootable(True/False)", type=bool)
 
         if not adapterNameIndexMap.get(image["adapter_type"]):
             adapterNameIndexMap[image["adapter_type"]] = 0
@@ -64,21 +137,32 @@ def create_ahv_spec(client):
 
         adapterNameIndexMap[image["adapter_type"]] += 1
         spec["resources"]["disk_list"].append(disk)
+        path = path[:-3]
 
         choice = click.prompt(highlight_text("\nWant to add more disks(y/n) "))
-        click.echo("")
         if choice[0] == "n":
             break
 
-    choice = click.prompt(highlight_text("Want any virtual disks(y/n) "))
+    choice = click.prompt(highlight_text("\nWant any virtual disks(y/n) "))
     click.echo("")
 
     if choice[0] == "y":
+        option[-1] = "AHV VDisk List"
+
         while True:
             vdisk = {}
-            vdisk["device_type"] = click.prompt("Device Type ")
-            vdisk["adapter_type"] = click.prompt("Device Bus ")
-            vdisk["size"] = click.prompt("Size of the disk ")
+
+            path.append("device_properties")
+            path.append("device_type")
+            vdisk["device_type"] = get_field(schema, path, option)
+
+            path[-1] = "disk_address"
+            path.append("adapter_type")
+            vdisk["adapter_type"] = get_field(schema, path, option)
+
+            path = path[:-2]
+            path[-1] = "disk_size_mib"
+            vdisk["size"] = get_field(schema, path, option, type=int)
 
             if not adapterNameIndexMap.get(vdisk["adapter_type"]):
                 adapterNameIndexMap[vdisk["adapter_type"]] = 0
@@ -92,10 +176,11 @@ def create_ahv_spec(client):
                         "adapter_type": vdisk["adapter_type"]
                     }
                 },
-                "disk_size_mib": int(vdisk["size"])
+                "disk_size_mib": vdisk["size"]
             }
 
             spec["resources"]["disk_list"].append(disk)
+            path = path[:-1]
 
             choice = click.prompt(highlight_text("\nWant to add more disks(y/n) "))
             click.echo("")
@@ -103,64 +188,157 @@ def create_ahv_spec(client):
                 break
 
     choice = click.prompt(highlight_text("Want any network adapters(y/n)"))
-    click.echo("")
 
     if choice[0] == "y":
         subnetNameUUIDMap = Obj.subnets()
-        availableNics = list(subnetNameUUIDMap.keys())
+        nics = list(subnetNameUUIDMap.keys())
 
-        click.echo("Subnet names are {} \n ". format(availableNics))
+        click.echo("\nChoose from given subnets : \n")
+        for ind, name in enumerate(nics):
+            click.echo("\t {}. {}".format(str(ind + 1), name))
+
         spec["resources"]["nic_list"] = []
 
         while True:
-            nic = click.prompt("Enter the nic name ")
-            if nic not in availableNics:
-                click.echo("choose from existing one !!")
 
-            else:
-                nic = {
-                    "subnet_reference": {
-                        "kind": "subnet",
-                        "name": nic,
-                        "uuid": subnetNameUUIDMap[nic]
-                    }
+            while True:
+                nameIndex = click.prompt("\nEnter the index of subnet's name ", type=int)
+                if nameIndex > len(nics):
+                    click.echo("Invalid index !!!")
+
+                else:
+                    nic = nics[nameIndex - 1]
+                    break
+
+            nic = {
+                "subnet_reference": {
+                    "kind": "subnet",
+                    "name": nic,
+                    "uuid": subnetNameUUIDMap[nic]
                 }
+            }
 
-                spec["resources"]["nic_list"].append(nic)
+            spec["resources"]["nic_list"].append(nic)
 
             choice = click.prompt(highlight_text("\nWant to add more network adpaters(y/n) "))
-            click.echo("")
             if choice[0] == "n":
                 break
 
-    choice = click.prompt(highlight_text("Want to add guest_customization script (y/n)"))
-    click.echo("")
+    path = ["resources"]
+    option = []
+    choice = click.prompt(highlight_text("\nWant to add Customization script (y/n)"))
 
     if choice[0] == "y":
-        script_type = click.prompt("Type of script (cloud_init/sys_prep) ")
+        path.append("guest_customization")
+        script_types = ["cloud_init", "sysprep"]       # TODO move to constants
+
+        click.echo("\nBelow are the script types ")
+        for index, scriptType in enumerate(script_types):
+            click.echo("\t {}. {}". format(str(index + 1), scriptType))
+
+        while True:
+            index = click.prompt("\nEnter the index for type of script", type=int)
+            if index > len(script_types):
+                click.echo("Invalid index !!!")
+            else:
+                script_type = script_types[index - 1]
+                break
 
         if script_type == "cloud_init":
-            user_data = click.prompt("Enter the script ")
+            option.append("AHV CLOUD INIT Script")
+            path = path + ["cloud_init", "user_data"]
+
+            user_data = get_field(schema, path, option)
             spec["resources"]["guest_customization"] = {
                 "cloud_init": {
                     "user_data": user_data
                 }
             }
 
-        elif script_type == "sys_prep":
+        elif script_type == "sysprep":
+            option.append("AHV Sys Prep Script")
+            path.append("sysprep")
             script = {}
-            script["unattend_xml"] = click.prompt("Unattend_xml ")
-            script["install_type"] = click.prompt("Type of install ")
+
+            path.append("unattend_xml")
+            script["unattend_xml"] = get_field(schema, path, option)
+
+            path[-1] = "install_type"
+            script["install_type"] = get_field(schema, path, option)
 
             spec["resources"]["guest_customization"] = {
-                "sys_prep": {
+                "sysprep": {
                     "unattend_xml": script["unattend_xml"],
                     "install_type": script["install_type"]
                 }
             }
 
-        else:
-            click.echo("Invalid script type ")
-
+    validator.validate(spec)            # Final validation (Insert some default's value)
     click.echo("\nCreate spec \n")
     click.echo(highlight_text(json.dumps(spec, sort_keys=True, indent=4)))
+
+
+def find_schema(schema, path, option):
+    if len(path) == 0:
+        return {}
+
+    indPath = 0
+    indOpt = 0
+
+    pathLength = len(path)
+
+    while(indPath < pathLength):
+
+        if schema.get("anyOf") is not None:
+
+            resDict = None
+            for optionDict in schema["anyOf"]:
+                if optionDict["title"] == option[indOpt]:
+                    resDict = optionDict
+                    break
+
+            if not resDict:
+                print("Not a valid key")
+
+            else:
+                schema = resDict
+                indOpt = indOpt + 1
+
+        elif schema["type"] == "array":
+            schema = schema["items"]
+
+        else:
+            schema = schema["properties"]
+            schema = schema[path[indPath]]
+            indPath = indPath + 1
+
+    return schema
+
+
+def validate_field(schema, path, options, spec):
+
+    keySchema = find_schema(schema, path, options)
+    return Draft7Validator(keySchema).is_valid(spec)
+
+
+def get_field(schema, path, options, type=str, msg=None):
+
+    field = path[-1]
+    field = field.replace("_", " ")
+    field = re.sub(r"(?<=\w)([A-Z])", r" \1", field)
+    field = field.capitalize()
+
+    if msg is None:
+        msg = "Enter {}".format(field)
+
+    data = ""
+    while True:
+        data = click.prompt(msg, type=type)
+
+        if not validate_field(schema, path, options, data):
+            click.echo("data incorrect. Enter again")
+
+        else:
+            break
+
+    return data
