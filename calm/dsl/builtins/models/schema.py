@@ -64,7 +64,9 @@ def get_schema_props(name):
 
 def get_validator_details(schema_props, name):
 
+    object_type = False
     is_array = False
+    object_validators = {}
 
     props = schema_props.get(name, None)
     if props is None:
@@ -78,6 +80,10 @@ def get_validator_details(schema_props, name):
         type_ = props.get("x-calm-dsl-type", None)
         if type_ is None:
             raise Exception("x-calm-dsl-type extension for {} not found".format(name))
+        elif type_ == "object":
+            object_type = True
+            for name in props.get("properties", {}):
+                object_validators["name"], _, _ = get_validator_details(props["properties"], name)
 
     if type_ == "array":
         item_props = props.get("items", None)
@@ -98,6 +104,8 @@ def get_validator_details(schema_props, name):
 
     property_validators = get_property_validators()
     ValidatorType = property_validators.get(type_, None)
+    if object_type:
+        ValidatorType = ValidatorType.__kind__(object_validators)
     if ValidatorType is None:
         raise TypeError("Type {} not supported".format(type_))
 

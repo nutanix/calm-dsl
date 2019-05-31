@@ -20,6 +20,13 @@ def _validate(vdict, name, value):
             if name not in vdict:
                 raise TypeError("Unknown attribute {} given".format(name))
             ValidatorType, is_array = vdict[name]
+            if getattr(ValidatorType, "__is_object__", False):
+                if not isinstance(value, dict):
+                    raise TypeError("{} is not of type {}".format(value, "dict"))
+                new_value = ValidatorType.__class__(ValidatorType.validators)
+                for k, v in value.items():
+                    new_value[k] = v
+                return
 
         except TypeError:
 
@@ -32,8 +39,8 @@ def _validate(vdict, name, value):
             if not DescriptorType:
                 raise TypeError("Descriptor type not defined")
             if not (
-                isinstance(value, (VariableType,))
-                or isinstance(type(value), DescriptorType)
+                ("variables" in vdict and isinstance(value, (VariableType,)))
+                or ("actions" in vdict and isinstance(type(value), DescriptorType))
             ):
                 raise
 
@@ -42,8 +49,6 @@ def _validate(vdict, name, value):
             if isinstance(value, VariableType):
                 ValidatorType, _ = vdict["variables"]
                 # Set name attribute in variable
-                # TODO - use __set__, __get__ interfaces for descriptors
-                # TODO - Avoid recursion. caller class should not be a VariableType
                 setattr(value, "name", name)
 
             elif isinstance(type(value), DescriptorType):
@@ -63,7 +68,6 @@ class EntityDict(OrderedDict):
         _validate(vdict, name, value)
 
     def __setitem__(self, name, value):
-
         self._validate(name, value)
         super().__setitem__(name, value)
 

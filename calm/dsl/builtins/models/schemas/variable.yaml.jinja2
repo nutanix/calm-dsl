@@ -1,3 +1,5 @@
+{% import "ref.yaml.jinja2" as ref %}
+
 {% macro Variable() -%}
 
 title: Variable
@@ -13,7 +15,8 @@ properties:
     maxLength: 1000
   type:
     type: string
-    default: 'LOCAL'
+    enum: [LOCAL, SECRET, EXTERNAL, EXEC_LOCAL, HTTP_LOCAL, EXEC_SECRET, HTTP_SECRET, EXEC_EXTERNAL, HTTP_EXTERNAL]
+    default: LOCAL
   label:
     type: string
   attrs:
@@ -22,9 +25,46 @@ properties:
     x-calm-dsl-type: dict
   val_type:
     type: string
-    default: 'STRING'
+    enum: [STRING, INT, DICT, DATE, TIME, DATE_TIME, MULTILINE_STRING]
+    default: STRING
   value:
     type: string
+  data_type:
+    type: string
+    enum: [BASE, LIST, SINGLE_SELECT_LIST]
+    default: BASE
+  editables:
+    additionalProperties: true
+    type: object
+    x-calm-dsl-type: dict
+  regex:
+    type: object
+    x-calm-dsl-type: object
+    properties:
+      value:
+        type: string
+      should_validate:
+        type: boolean
+  options:
+    type: object
+    x-calm-dsl-type: object
+    properties:
+      type:
+        type: string
+        enum: [PREDEFINED, EXEC, HTTP]
+      choices:
+        type: array
+        items:
+          type: string
+      attrs:
+        additionalProperties: true
+        type: object
+        x-calm-dsl-type: dict
+
+  is_hidden:
+    type: boolean
+  is_mandatory:
+    type: boolean
 
 {%- endmacro %}
 
