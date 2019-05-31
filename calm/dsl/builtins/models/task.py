@@ -169,7 +169,7 @@ def exec_ssh(script=None, filename=None, name=None, target=None, cred=None):
     )
 
 
-def exec_escript(script, name=None, target=None):
+def exec_escript(script=None, filename=None, name=None, target=None):
     return _exec_create(
         "static", script=script, filename=filename, name=name, target=target
     )
