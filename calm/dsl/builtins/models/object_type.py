@@ -8,8 +8,6 @@ class ObjectDict(EntityDict):
     def __init__(self, validators, defaults):
         self.validators = validators
         self.defaults = defaults
-        for k, v in self.defaults.items():
-            self[k] = v()
         super().__init__(validators)
 
     def get_default(self, is_array):
