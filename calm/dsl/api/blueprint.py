@@ -116,6 +116,7 @@ class BlueprintAPI(EntityAPI):
         # Remove creds before upload
         creds = bp_resources["credential_definition_list"]
         secret_map = {}
+        default_creds = []
         for cred in creds:
             name = cred["name"]
             secret_map[name] = cred.pop("secret", {})
@@ -124,13 +125,20 @@ class BlueprintAPI(EntityAPI):
             cred["secret"] = {
                 "attrs": {"is_secret_modified": False, "secret_reference": None}
             }
+            if cred.pop("default"):
+                default_creds.append(cred)
+        if not default_creds:
+            raise ValueError("No default cred provided")
+        if len(default_creds) > 1:
+            raise ValueError(
+                "Found more than one credential marked as default - {}".format(
+                    ", ".join(cred["name"] for cred in default_creds)
+                )
+            )
 
-        # Make first cred as default for now
-        # TODO - get the right cred default
-        # TODO - check if no creds
         bp_resources["default_credential_local_reference"] = {
             "kind": "app_credential",
-            "name": creds[0]["name"],
+            "name": default_creds[0]["name"],
         }
 
         upload_payload = self._make_blueprint_payload(bp_name, bp_desc, bp_resources)

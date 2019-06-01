@@ -11,6 +11,20 @@ from .runbook import runbook_create
 # Action - Since action, runbook and DAG task are heavily coupled together,
 # the action type behaves as all three.
 
+TASK_FUNCS = [
+    "exec_ssh",
+    "exec_escript",
+    "set_variable_ssh",
+    "set_variable_escript",
+    "exec_http_get",
+    "exec_http_post",
+    "exec_http_put",
+    "exec_http_delete",
+    "exec_http",
+    "deployment_scaleout",
+    "deployment_scalein",
+]
+
 
 class ActionType(EntityType):
     __schema_name__ = "Action"
@@ -60,7 +74,7 @@ class GetCallNodes(ast.NodeVisitor):
 
     def visit_Call(self, node):
         if isinstance(node.func, ast.Attribute) or (
-            isinstance(node.func, ast.Name) and node.func.id in ["exec_ssh"]
+            isinstance(node.func, ast.Name) and node.func.id in TASK_FUNCS
         ):
 
             task = eval(compile(ast.Expression(node), "", "eval"), self._globals)
@@ -164,12 +178,26 @@ class action(metaclass=DescriptorType):
         self.user_runbook.tasks = [self.user_dag] + tasks
         self.user_runbook.variables = [variable for variable in variables.values()]
 
+        # System action names
+        action_name = self.action_name
+        ACTION_TYPE = "user"
+        func_name = self.user_func.__name__.lower()
+        if func_name.startswith("__") and func_name.endswith("__"):
+            SYSTEM = getattr(cls, "ALLOWED_SYSTEM_ACTIONS", {})
+            FRAGMENT = getattr(cls, "ALLOWED_FRAGMENT_ACTIONS", {})
+            if func_name in SYSTEM:
+                ACTION_TYPE = "system"
+                action_name = SYSTEM[func_name]
+            elif func_name in FRAGMENT:
+                ACTION_TYPE = "fragment"
+                action_name = FRAGMENT[func_name]
+
         # Finally create the action
         self.user_action = _action_create(
             **{
-                "name": self.action_name,
-                "critical": False,
-                "type": "user",
+                "name": action_name,
+                "critical": ACTION_TYPE == "system",
+                "type": ACTION_TYPE,
                 "runbook": self.user_runbook,
             }
         )

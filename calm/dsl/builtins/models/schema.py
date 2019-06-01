@@ -64,7 +64,10 @@ def get_schema_props(name):
 
 def get_validator_details(schema_props, name):
 
+    object_type = False
     is_array = False
+    object_validators = {}
+    object_defaults = {}
 
     props = schema_props.get(name, None)
     if props is None:
@@ -78,6 +81,14 @@ def get_validator_details(schema_props, name):
         type_ = props.get("x-calm-dsl-type", None)
         if type_ is None:
             raise Exception("x-calm-dsl-type extension for {} not found".format(name))
+        elif type_ == "object":
+            object_type = True
+            for name in props.get("properties", {}):
+                validator, is_array, default = get_validator_details(
+                    props["properties"], name
+                )
+                object_validators[name] = (validator, is_array)
+                object_defaults[name] = default
 
     if type_ == "array":
         item_props = props.get("items", None)
@@ -85,19 +96,13 @@ def get_validator_details(schema_props, name):
         if item_type is None:
             raise Exception("Invalid schema {} given".format(item_props))
 
-        # TODO - refactor
-        if item_type == "object":
-            item_type = item_props.get("x-calm-dsl-type", None)
-            if item_type is None:
-                raise Exception(
-                    "x-calm-dsl-type extension for {} not found".format(name)
-                )
-
-        type_ = item_type
-        is_array = True
+        ValidatorType, _, _ = get_validator_details(props, "items")
+        return ValidatorType, True, list
 
     property_validators = get_property_validators()
     ValidatorType = property_validators.get(type_, None)
+    if object_type:
+        ValidatorType = ValidatorType.__kind__(object_validators, object_defaults)
     if ValidatorType is None:
         raise TypeError("Type {} not supported".format(type_))
 

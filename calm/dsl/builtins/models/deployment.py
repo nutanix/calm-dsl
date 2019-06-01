@@ -7,13 +7,13 @@ from .validator import PropertyValidator
 
 class DeploymentType(EntityType):
     __schema_name__ = "Deployment"
-    __openapi_type__ = "app_deployment"
+    __openapi_type__ = "app_blueprint_deployment"
 
     def get_task_target(cls):
         return cls.get_ref()
 
 
-class DeploymentValidator(PropertyValidator, openapi_type="app_deployment"):
+class DeploymentValidator(PropertyValidator, openapi_type="app_blueprint_deployment"):
     __default__ = None
     __kind__ = DeploymentType
 
