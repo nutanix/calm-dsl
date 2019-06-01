@@ -1,32 +1,17 @@
+from .resource import ResourceAPI
 from .connection import REQUEST
-from .entity import EntityAPI
 
 
-class ApplicationAPI(EntityAPI):
+class ApplicationAPI(ResourceAPI):
 
-    APP_PREFIX = EntityAPI.PREFIX + "apps"
-    APP_LIST = APP_PREFIX + "/list"
-    APP_ITEM = APP_PREFIX + "/{}"
-    ACTION_RUN = APP_PREFIX + "/{}/actions/{}/run"
-
-    def list(self, params=None):
-        return self.connection._call(
-            ApplicationAPI.APP_LIST,
-            verify=False,
-            request_json=params,
-            method=REQUEST.METHOD.POST,
-        )
-
-    def get(self, app_id):
-        return self.connection._call(
-            ApplicationAPI.APP_ITEM.format(app_id),
-            verify=False,
-            method=REQUEST.METHOD.GET,
-        )
+    PREFIX = ResourceAPI.PREFIX + "apps"
+    LIST = PREFIX + "/list"
+    ITEM = PREFIX + "/{}"
+    ACTION_RUN = PREFIX + "/{}/actions/{}/run"
 
     def run_action(self, app_id, action_id, payload):
         return self.connection._call(
-            ApplicationAPI.ACTION_RUN.format(app_id, action_id),
+            self.ACTION_RUN.format(app_id, action_id),
             request_json=payload,
             verify=False,
             method=REQUEST.METHOD.POST,
@@ -43,7 +28,7 @@ class ApplicationAPI(EntityAPI):
             )
 
     def delete(self, app_id, soft_delete=False):
-        delete_url = ApplicationAPI.APP_ITEM.format(app_id)
+        delete_url = self.ITEM.format(app_id)
         if soft_delete:
             delete_url += "?type=soft"
         return self.connection._call(
