@@ -229,7 +229,7 @@ def watch_action(runlog_uuid, app_name, client, screen=None):
     app = _get_app(client, app_name)
     app_uuid = app["metadata"]["uuid"]
 
-    url = client.application.APP_ITEM.format(app_uuid) + "/app_runlogs/list"
+    url = client.application.ITEM.format(app_uuid) + "/app_runlogs/list"
     payload = {"filter": "root_reference=={}".format(runlog_uuid)}
 
     def poll_func():
@@ -327,7 +327,7 @@ def watch_app(obj, app_name, action):
 
     app = _get_app(client, app_name)
     app_id = app["metadata"]["uuid"]
-    url = client.application.APP_ITEM.format(app_id) + "/app_runlogs/list"
+    url = client.application.ITEM.format(app_id) + "/app_runlogs/list"
 
     payload = {
         "filter": "application_reference=={};(type==action_runlog,type==audit_runlog,type==ngt_runlog,type==clone_action_runlog)".format(

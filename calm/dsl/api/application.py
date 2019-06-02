@@ -4,10 +4,10 @@ from .connection import REQUEST
 
 class ApplicationAPI(ResourceAPI):
 
-    PREFIX = ResourceAPI.PREFIX + "apps"
-    LIST = PREFIX + "/list"
-    ITEM = PREFIX + "/{}"
-    ACTION_RUN = PREFIX + "/{}/actions/{}/run"
+    def __init__(self, connection):
+        super().__init__(connection, resource_type="apps")
+
+        self.ACTION_RUN = self.ITEM + "/actions/{}/run"
 
     def run_action(self, app_id, action_id, payload):
         return self.connection._call(

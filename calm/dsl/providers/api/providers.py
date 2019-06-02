@@ -1,4 +1,4 @@
-from calm.dsl.api.cloud import CloudAPI
+from calm.dsl.api import get_resource_api
 from .constants import AHV as ahv
 
 
@@ -8,15 +8,15 @@ class AHV:
         self.connection = connection
 
     def images(self):
-        Obj = CloudAPI(ahv.IMAGES, self.connection)
+        Obj = get_resource_api(ahv.IMAGES, self.connection)
         return Obj.get_name_uuid_map()
 
     def subnets(self):
-        Obj = CloudAPI(ahv.SUBNETS, self.connection)
+        Obj = get_resource_api(ahv.SUBNETS, self.connection)
         return Obj.get_name_uuid_map()
 
     def groups(self):
-        Obj = CloudAPI(ahv.GROUPS, self.connection)
+        Obj = get_resource_api(ahv.GROUPS, self.connection)
         categories = []
 
         payload = {

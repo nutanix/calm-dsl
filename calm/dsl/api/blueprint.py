@@ -4,14 +4,13 @@ from .connection import REQUEST
 
 class BlueprintAPI(ResourceAPI):
 
-    PREFIX = ResourceAPI.PREFIX + "blueprints"
-    LIST = PREFIX + "/list"
-    UPLOAD = PREFIX + "/import_json"
-    ITEM = PREFIX + "/{}"
-    LAUNCH = ITEM + "/simple_launch"
-    FULL_LAUNCH = ITEM + "/launch"
-    LAUNCH_POLL = ITEM + "/pending_launches/{}"
-    BP_EDITABLES = PREFIX + "/{}/runtime_editables"
+    def __init__(self, connection):
+        super().__init__(connection, resource_type="blueprints")
+        self.UPLOAD = self.PREFIX + "/import_json"
+        self.LAUNCH = self.ITEM + "/simple_launch"
+        self.FULL_LAUNCH = self.ITEM + "/launch"
+        self.LAUNCH_POLL = self.ITEM + "/pending_launches/{}"
+        self.BP_EDITABLES = self.ITEM + "/runtime_editables"
 
     def upload(self, payload):
         return self.connection._call(
