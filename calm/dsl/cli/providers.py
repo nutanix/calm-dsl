@@ -14,8 +14,8 @@ def create_ahv_spec(client):
     Obj = AHV(client.connection)
     validator = get_provider("AHV_VM")
     schema = validator.provider_spec
-    path = []       # Path to the key
-    option = []     # Any option occured during finding key
+    path = []  # Path to the key
+    option = []  # Any option occured during finding key
 
     click.echo("")
     path.append("name")
@@ -27,7 +27,9 @@ def create_ahv_spec(client):
         click.echo("\n Choose from given categories: \n")
 
         for ind, group in enumerate(categories):
-            click.echo("\t {}. {}:{} ". format(str(ind + 1), group["key"], group["value"]))
+            click.echo(
+                "\t {}. {}:{} ".format(str(ind + 1), group["key"], group["value"])
+            )
 
         result = {}
         while True:
@@ -43,7 +45,9 @@ def create_ahv_spec(client):
             group = categories[index]
             key = group["key"]
             if result.get(key) is not None:
-                click.echo("Category corresponding to key {} already exists ". format(key))
+                click.echo(
+                    "Category corresponding to key {} already exists ".format(key)
+                )
                 choice = click.prompt("\nWant to replace old one (y/n) ", type=str)
                 if choice[0] == "y":
                     result[key] = group["value"]
@@ -51,7 +55,9 @@ def create_ahv_spec(client):
             else:
                 result[key] = group["value"]
 
-            choice = click.prompt(highlight_text("\nWant to add more categories (y/n) "))
+            choice = click.prompt(
+                highlight_text("\nWant to add more categories (y/n) ")
+            )
             if choice[0] == "n":
                 break
 
@@ -62,7 +68,9 @@ def create_ahv_spec(client):
     click.echo("")
 
     path.append("num_vcpus_per_socket")
-    spec["resources"]["num_vcpus_per_socket"] = get_field(schema, path, option, type=int)
+    spec["resources"]["num_vcpus_per_socket"] = get_field(
+        schema, path, option, type=int
+    )
 
     path[-1] = "num_sockets"
     spec["resources"]["num_sockets"] = get_field(schema, path, option, type=int)
@@ -112,25 +120,23 @@ def create_ahv_spec(client):
             "data_source_reference": {
                 "name": image["name"],
                 "kind": "image",
-                "uuid": imagesNameUUIDMap.get(image["name"])
+                "uuid": imagesNameUUIDMap.get(image["name"]),
             },
             "device_properties": {
                 "device_type": image["device_type"],
                 "disk_address": {
-                    "device_index":
-                        adapterNameIndexMap[image["adapter_type"]],
-                    "adapter_type": image["adapter_type"]
-                }
-            }
+                    "device_index": adapterNameIndexMap[image["adapter_type"]],
+                    "adapter_type": image["adapter_type"],
+                },
+            },
         }
 
         if image["bootable"]:
             spec["resources"]["boot_config"] = {
                 "boot_device": {
                     "disk_address": {
-                        "device_index":
-                            adapterNameIndexMap[image["adapter_type"]],
-                        "adapter_type": image["adapter_type"]
+                        "device_index": adapterNameIndexMap[image["adapter_type"]],
+                        "adapter_type": image["adapter_type"],
                     }
                 }
             }
@@ -171,12 +177,11 @@ def create_ahv_spec(client):
                 "device_properties": {
                     "device_type": vdisk["device_type"],
                     "disk_address": {
-                        "device_index":
-                            adapterNameIndexMap[vdisk["adapter_type"]],
-                        "adapter_type": vdisk["adapter_type"]
-                    }
+                        "device_index": adapterNameIndexMap[vdisk["adapter_type"]],
+                        "adapter_type": vdisk["adapter_type"],
+                    },
                 },
-                "disk_size_mib": vdisk["size"]
+                "disk_size_mib": vdisk["size"],
             }
 
             spec["resources"]["disk_list"].append(disk)
@@ -202,7 +207,9 @@ def create_ahv_spec(client):
         while True:
 
             while True:
-                nameIndex = click.prompt("\nEnter the index of subnet's name ", type=int)
+                nameIndex = click.prompt(
+                    "\nEnter the index of subnet's name ", type=int
+                )
                 if nameIndex > len(nics):
                     click.echo("Invalid index !!!")
 
@@ -214,13 +221,15 @@ def create_ahv_spec(client):
                 "subnet_reference": {
                     "kind": "subnet",
                     "name": nic,
-                    "uuid": subnetNameUUIDMap[nic]
+                    "uuid": subnetNameUUIDMap[nic],
                 }
             }
 
             spec["resources"]["nic_list"].append(nic)
 
-            choice = click.prompt(highlight_text("\nWant to add more network adpaters(y/n) "))
+            choice = click.prompt(
+                highlight_text("\nWant to add more network adpaters(y/n) ")
+            )
             if choice[0] == "n":
                 break
 
@@ -230,11 +239,11 @@ def create_ahv_spec(client):
 
     if choice[0] == "y":
         path.append("guest_customization")
-        script_types = ["cloud_init", "sysprep"]       # TODO move to constants
+        script_types = ["cloud_init", "sysprep"]  # TODO move to constants
 
         click.echo("\nBelow are the script types ")
         for index, scriptType in enumerate(script_types):
-            click.echo("\t {}. {}". format(str(index + 1), scriptType))
+            click.echo("\t {}. {}".format(str(index + 1), scriptType))
 
         while True:
             index = click.prompt("\nEnter the index for type of script", type=int)
@@ -250,9 +259,7 @@ def create_ahv_spec(client):
 
             user_data = get_field(schema, path, option)
             spec["resources"]["guest_customization"] = {
-                "cloud_init": {
-                    "user_data": user_data
-                }
+                "cloud_init": {"user_data": user_data}
             }
 
         elif script_type == "sysprep":
@@ -269,11 +276,11 @@ def create_ahv_spec(client):
             spec["resources"]["guest_customization"] = {
                 "sysprep": {
                     "unattend_xml": script["unattend_xml"],
-                    "install_type": script["install_type"]
+                    "install_type": script["install_type"],
                 }
             }
 
-    validator.validate(spec)            # Final validation (Insert some default's value)
+    validator.validate(spec)  # Final validation (Insert some default's value)
     click.echo("\nCreate spec \n")
     click.echo(highlight_text(json.dumps(spec, sort_keys=True, indent=4)))
 
@@ -287,7 +294,7 @@ def find_schema(schema, path, option):
 
     pathLength = len(path)
 
-    while(indPath < pathLength):
+    while indPath < pathLength:
 
         if schema.get("anyOf") is not None:
 
