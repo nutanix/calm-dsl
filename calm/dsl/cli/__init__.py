@@ -19,7 +19,7 @@ from .bps import (
     launch_blueprint_simple,
     delete_blueprint,
 )
-from .projects import get_projects
+from .projects import get_projects,delete_project
 from .providers import create_ahv_spec
 
 
@@ -302,6 +302,13 @@ def _delete_blueprint(obj, blueprint_names):
 @click.pass_obj
 def _delete_app(obj, app_names, soft):
     delete_app(obj, app_names, soft)
+
+
+@delete.command("project")
+@click.argument("project_names", nargs=-1)
+@click.pass_obj
+def _delete_project(obj, project_names):
+    delete_project(obj, project_names)
 
 
 @main.group()

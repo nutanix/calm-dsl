@@ -74,3 +74,38 @@ def get_projects(obj, name, filter_by, limit, offset, quiet):
             ]
         )
     click.echo(table)
+
+
+def get_project(client, name):
+
+    params = {"filter": "name=={}".format(name)}
+
+    res, err = client.project.list(params=params)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    response = res.json()
+    entities = response.get("entities", None)
+    project = None
+    if entities:
+        if len(entities) != 1:
+            raise Exception("More than one project found - {}".format(entities))
+
+        click.echo(">> {} found >>".format(name))
+        project = entities[0]
+    else:
+        raise Exception(">> No project found with name {} found >>".format(name))
+    return project
+
+
+def delete_project(obj, project_names):
+
+    client = obj.get("client")
+
+    for project_name in project_names:
+        project = get_project(client, project_name)
+        project_id = project["metadata"]["uuid"]
+        res, err = client.project.delete(project_id)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        click.echo("Project {} deleted".format(project_name))
