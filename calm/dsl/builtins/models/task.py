@@ -1,7 +1,6 @@
 import uuid
 import os
 import sys
-import inspect
 
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
@@ -52,8 +51,10 @@ def _get_target_ref(target):
 
 
 def _task_create(**kwargs):
-    name = getattr(TaskType, "__schema_name__") + "_" + str(uuid.uuid4())[:8]
-    name = kwargs.get("name", kwargs.get("__name__", name))
+    name = kwargs.get("name", kwargs.pop("__name__", None))
+    if name is None:
+        name = getattr(TaskType, "__schema_name__") + "_" + str(uuid.uuid4())[:8]
+        kwargs["name"] = name
     bases = (Task,)
     return TaskType(name, bases, kwargs)
 
