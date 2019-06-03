@@ -160,13 +160,13 @@ def dag(name=None, child_tasks=None, edges=None, target=None):
     return _task_create(**kwargs)
 
 
-def exec_ssh(script=None, filename=None, name=None, target=None, cred=None):
+def exec_task_ssh(script=None, filename=None, name=None, target=None, cred=None):
     return _exec_create(
         "sh", script=script, filename=filename, name=name, target=target, cred=cred
     )
 
 
-def exec_escript(script=None, filename=None, name=None, target=None):
+def exec_task_escript(script=None, filename=None, name=None, target=None):
     return _exec_create(
         "static", script=script, filename=filename, name=name, target=target
     )
@@ -187,17 +187,17 @@ def _set_variable_create(task, variables=None):
     return task
 
 
-def set_variable_ssh(script, name=None, target=None, variables=None):
-    task = exec_ssh(script, name=name, target=target)
+def set_variable_task_ssh(script, name=None, target=None, variables=None):
+    task = exec_task_ssh(script, name=name, target=target)
     return _set_variable_create(task, variables)
 
 
-def set_variable_escript(script, name=None, target=None, variables=None):
-    task = exec_escript(script, name=name, target=target)
+def set_variable_task_escript(script, name=None, target=None, variables=None):
+    task = exec_task_escript(script, name=name, target=target)
     return _set_variable_create(task, variables)
 
 
-def exec_http_get(
+def http_task_get(
     url,
     body=None,
     headers=None,
@@ -234,7 +234,7 @@ def exec_http_get(
     Returns:
         (Task): HTTP Task
     """
-    return exec_http(
+    return http_task(
         "POST",
         url,
         body=None,
@@ -252,7 +252,7 @@ def exec_http_get(
     )
 
 
-def exec_http_post(
+def http_task_post(
     url,
     body=None,
     headers=None,
@@ -290,7 +290,7 @@ def exec_http_post(
     Returns:
         (Task): HTTP Task
     """
-    return exec_http(
+    return http_task(
         "POST",
         url,
         body=body,
@@ -308,7 +308,7 @@ def exec_http_post(
     )
 
 
-def exec_http_put(
+def http_task_put(
     url,
     body=None,
     headers=None,
@@ -346,7 +346,7 @@ def exec_http_put(
     Returns:
         (Task): HTTP Task
     """
-    return exec_http(
+    return http_task(
         "PUT",
         url,
         body=body,
@@ -364,7 +364,7 @@ def exec_http_put(
     )
 
 
-def exec_http_delete(
+def http_task_delete(
     url,
     body=None,
     headers=None,
@@ -402,7 +402,7 @@ def exec_http_delete(
     Returns:
         (Task): HTTP Task
     """
-    return exec_http(
+    return http_task(
         "DELETE",
         url,
         body=body,
@@ -420,7 +420,7 @@ def exec_http_delete(
     )
 
 
-def exec_http(
+def http_task(
     method,
     url,
     body=None,
@@ -595,7 +595,7 @@ def _deployment_scaling_create(target, scaling_type, scaling_count, name=None):
     return _task_create(**kwargs)
 
 
-def deployment_scaleout(count, target, name=None):
+def scale_out_task(count, target, name=None):
     """
     Defines a deployment scale out task
     Args:
@@ -608,7 +608,7 @@ def deployment_scaleout(count, target, name=None):
     return _deployment_scaling_create(target, "SCALEOUT", count, name=name)
 
 
-def deployment_scalein(count, target, name=None):
+def scale_in_task(count, target, name=None):
     """
     Defines a deployment scale in task
     Args:
