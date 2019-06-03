@@ -4,10 +4,9 @@ from .connection import REQUEST
 
 class ProjectAPI(ResourceAPI):
 
-    CREATE_PREFIX = ResourceAPI.PREFIX + "projects_internal"
-    PREFIX = ResourceAPI.PREFIX + "projects"
-    LIST = PREFIX + "/list"
-    ITEM = PREFIX + "/{}"
+    def __init__(self, connection):
+        super().__init__(connection, resource_type="projects")
+        self.CREATE_PREFIX = ResourceAPI.ROOT + "/projects_internal"
 
     def create(self, payload):
         return self.connection._call(

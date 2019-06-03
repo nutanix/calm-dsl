@@ -4,8 +4,9 @@ from .connection import REQUEST
 
 class SettingAPI(ResourceAPI):
 
-    PREFIX = ResourceAPI.PREFIX + "accounts"
-    VERIFY = PREFIX + "/{}/verify"
+    def __init__(self, connection):
+        super().__init__(connection, resource_type="accounts")
+        self.VERIFY = self.PREFIX + '/{}/verify'
 
     def verify(self, id):
         return self.connection._call(
