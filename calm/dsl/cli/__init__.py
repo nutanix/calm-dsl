@@ -366,7 +366,7 @@ def _watch_app(obj, app_name, action):
 def create_provider_spec(obj, provider_type):
 
     client = obj.get("client")
-    if provider_type == 'AHV':
+    if provider_type == "AHV":
         create_ahv_spec(client)
 
     else:

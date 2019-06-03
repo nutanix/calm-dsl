@@ -3,7 +3,6 @@ from .constants import AHV as ahv
 
 
 class AHV:
-
     def __init__(self, connection):
         self.connection = connection
 
@@ -26,20 +25,13 @@ class AHV:
             "group_sort_attribute": "name",
             "group_count": 60,
             "group_attributes": [
-                {
-                    "attribute": "name",
-                    "ancestor_entity_type": "abac_category_key"
-                }
+                {"attribute": "name", "ancestor_entity_type": "abac_category_key"}
             ],
             "group_member_count": 1000,
             "group_member_offset": 0,
             "group_member_sort_attribute": "value",
-            "group_member_attributes": [
-                {
-                    "attribute": "value"
-                }
-            ],
-            "query_name": "prism:CategoriesQueryModel"
+            "group_member_attributes": [{"attribute": "value"}],
+            "query_name": "prism:CategoriesQueryModel",
         }
 
         response, err = Obj.create(payload)
@@ -51,11 +43,6 @@ class AHV:
 
             for entity in group["entity_results"]:
                 value = entity["data"][0]["values"][0]["values"][0]
-                categories.append(
-                    {
-                        "key": key,
-                        "value": value
-                    }
-                )
+                categories.append({"key": key, "value": value})
 
         return categories

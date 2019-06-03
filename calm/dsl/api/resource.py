@@ -13,17 +13,12 @@ class ResourceAPI:
 
     def create(self, payload):
         return self.connection._call(
-            self.PREFIX,
-            verify=False,
-            request_json=payload,
-            method=REQUEST.METHOD.POST,
+            self.PREFIX, verify=False, request_json=payload, method=REQUEST.METHOD.POST
         )
 
     def read(self, id):
         return self.connection._call(
-            self.ITEM.format(id),
-            verify=False,
-            method=REQUEST.METHOD.GET
+            self.ITEM.format(id), verify=False, method=REQUEST.METHOD.GET
         )
 
     def update(self, uuid, payload):
@@ -36,17 +31,12 @@ class ResourceAPI:
 
     def delete(self, uuid):
         return self.connection._call(
-            self.ITEM.format(uuid),
-            verify=False,
-            method=REQUEST.METHOD.DELETE,
+            self.ITEM.format(uuid), verify=False, method=REQUEST.METHOD.DELETE
         )
 
     def list(self, params=None):
         return self.connection._call(
-            self.LIST,
-            verify=False,
-            request_json=params,
-            method=REQUEST.METHOD.POST,
+            self.LIST, verify=False, request_json=params, method=REQUEST.METHOD.POST
         )
 
     def get_name_uuid_map(self, params=None):
@@ -57,15 +47,15 @@ class ResourceAPI:
         else:
             raise Exception(err)
 
-        total_matches = response['metadata']['total_matches']
+        total_matches = response["metadata"]["total_matches"]
         if total_matches == 0:
             return {}
 
         name_uuid_map = {}
 
-        for entity in response['entities']:
-            entity_name = entity['status']['name']
-            entity_uuid = entity['metadata']['uuid']
+        for entity in response["entities"]:
+            entity_name = entity["status"]["name"]
+            entity_uuid = entity["metadata"]["uuid"]
 
             if entity_name in name_uuid_map:
                 uuid = name_uuid_map[entity_name]

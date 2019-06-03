@@ -3,7 +3,6 @@ from .connection import REQUEST
 
 
 class BlueprintAPI(ResourceAPI):
-
     def __init__(self, connection):
         super().__init__(connection, resource_type="blueprints")
         self.UPLOAD = self.PREFIX + "/import_json"
@@ -14,10 +13,7 @@ class BlueprintAPI(ResourceAPI):
 
     def upload(self, payload):
         return self.connection._call(
-            self.UPLOAD,
-            verify=False,
-            request_json=payload,
-            method=REQUEST.METHOD.POST,
+            self.UPLOAD, verify=False, request_json=payload, method=REQUEST.METHOD.POST
         )
 
     def launch(self, uuid, payload):
@@ -45,9 +41,7 @@ class BlueprintAPI(ResourceAPI):
 
     def _get_editables(self, bp_uuid):
         return self.connection._call(
-            self.BP_EDITABLES.format(bp_uuid),
-            verify=False,
-            method=REQUEST.METHOD.GET,
+            self.BP_EDITABLES.format(bp_uuid), verify=False, method=REQUEST.METHOD.GET
         )
 
     @staticmethod
