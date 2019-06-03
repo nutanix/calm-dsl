@@ -82,21 +82,15 @@ def _exec_create(
     script_type, script=None, filename=None, name=None, target=None, cred=None
 ):
 
-    if script is not None:
-        if filename is not None:
-            raise ValueError(
-                "Only one of script or filename should be given for exec task "
-                + (name or "")
-            )
+    if script is not None and filename is not None:
+        raise ValueError(
+            "Only one of script or filename should be given for exec task "
+            + (name or "")
+        )
 
     if filename is not None:
-        if script is not None:
-            raise ValueError(
-                "Only one of script or filename should be given for exec task "
-                + (name or "")
-            )
         file_path = os.path.join(
-            os.path.dirname(inspect.getfile(sys._getframe(1))), filename
+            os.path.dirname(sys._getframe(2).f_globals.get("__file__")), filename
         )
 
         with open(file_path, "r") as scriptf:
