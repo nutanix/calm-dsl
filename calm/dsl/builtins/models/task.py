@@ -611,7 +611,7 @@ def scale_out_task(count, target, name=None):
     Defines a deployment scale out task
     Args:
         count (str): scaling_count
-        target (Ref): Target entity for scale out
+        target (Ref): Target deployment for scale out
         name (str): Name for this task
     Returns:
         (Task): Deployment scale out task
@@ -624,9 +624,31 @@ def scale_in_task(count, target, name=None):
     Defines a deployment scale in task
     Args:
         count (str): scaling_count
-        target (Ref): Target entity for scale in
+        target (Ref): Target deployment for scale in
         name (str): Name for this task
     Returns:
         (Task): Deployment scale in task
     """
     return _deployment_scaling_create(target, "SCALEIN", count, name=name)
+
+
+def delay_task(delay_seconds=None, name=None, target=None):
+    """
+    Defines a delay task.
+    Args:
+        delay_seconds(int): Delay in seconds
+        name (str): Name for this task
+        target (Ref): Target entity for this task
+    Returns:
+        (Task): Delay task
+    """
+    if not isinstance(delay_seconds, int):
+        raise TypeError(
+            "delay_seconds is expected to be an integer, got {}".format(
+                type(delay_seconds)
+            )
+        )
+    kwargs = {"name": name, "type": "DELAY", "attrs": {"interval_secs": delay_seconds}}
+    if target is not None:
+        kwargs["target_any_local_reference"] = _get_target_ref(target)
+    return _task_create(**kwargs)

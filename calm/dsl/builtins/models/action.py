@@ -25,6 +25,7 @@ TASK_FUNCS = [
     "http_task",
     "scale_out_task",
     "scale_in_task",
+    "delay_task",
 ]
 
 

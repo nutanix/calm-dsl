@@ -24,6 +24,7 @@ from .models.task import (
     http_task,
     scale_out_task,
     scale_in_task,
+    delay_task,
 )
 
 from .models.port import Port, port
@@ -63,6 +64,7 @@ __all__ = [
     "http_task",
     "scale_out_task",
     "scale_in_task",
+    "delay_task",
     "action",
     "Port",
     "port",
