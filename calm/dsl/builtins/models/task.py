@@ -1,7 +1,6 @@
 import uuid
 import os
 import sys
-import inspect
 
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
@@ -52,8 +51,10 @@ def _get_target_ref(target):
 
 
 def _task_create(**kwargs):
-    name = getattr(TaskType, "__schema_name__") + "_" + str(uuid.uuid4())[:8]
-    name = kwargs.get("name", kwargs.get("__name__", name))
+    name = kwargs.get("name", kwargs.pop("__name__", None))
+    if name is None:
+        name = getattr(TaskType, "__schema_name__") + "_" + str(uuid.uuid4())[:8]
+        kwargs["name"] = name
     bases = (Task,)
     return TaskType(name, bases, kwargs)
 
@@ -82,21 +83,15 @@ def _exec_create(
     script_type, script=None, filename=None, name=None, target=None, cred=None
 ):
 
-    if script is not None:
-        if filename is not None:
-            raise ValueError(
-                "Only one of script or filename should be given for exec task "
-                + (name or "")
-            )
+    if script is not None and filename is not None:
+        raise ValueError(
+            "Only one of script or filename should be given for exec task "
+            + (name or "")
+        )
 
     if filename is not None:
-        if script is not None:
-            raise ValueError(
-                "Only one of script or filename should be given for exec task "
-                + (name or "")
-            )
         file_path = os.path.join(
-            os.path.dirname(inspect.getfile(sys._getframe(1))), filename
+            os.path.dirname(sys._getframe(2).f_globals.get("__file__")), filename
         )
 
         with open(file_path, "r") as scriptf:
@@ -160,15 +155,21 @@ def dag(name=None, child_tasks=None, edges=None, target=None):
     return _task_create(**kwargs)
 
 
-def exec_ssh(script=None, filename=None, name=None, target=None, cred=None):
+def exec_task_ssh(script=None, filename=None, name=None, target=None, cred=None):
     return _exec_create(
         "sh", script=script, filename=filename, name=name, target=target, cred=cred
     )
 
 
-def exec_escript(script=None, filename=None, name=None, target=None):
+def exec_task_escript(script=None, filename=None, name=None, target=None):
     return _exec_create(
         "static", script=script, filename=filename, name=name, target=target
+    )
+
+
+def exec_task_powershell(script=None, filename=None, name=None, target=None, cred=None):
+    return _exec_create(
+        "ps", script=script, filename=filename, name=name, target=target, cred=cred
     )
 
 
@@ -187,17 +188,22 @@ def _set_variable_create(task, variables=None):
     return task
 
 
-def set_variable_ssh(script, name=None, target=None, variables=None):
-    task = exec_ssh(script, name=name, target=target)
+def set_variable_task_ssh(script, name=None, target=None, variables=None):
+    task = exec_task_ssh(script, name=name, target=target)
     return _set_variable_create(task, variables)
 
 
-def set_variable_escript(script, name=None, target=None, variables=None):
-    task = exec_escript(script, name=name, target=target)
+def set_variable_task_escript(script, name=None, target=None, variables=None):
+    task = exec_task_escript(script, name=name, target=target)
     return _set_variable_create(task, variables)
 
 
-def exec_http_get(
+def set_variable_task_powershell(script, name=None, target=None, variables=None):
+    task = exec_task_powershell(script, name=name, target=target)
+    return _set_variable_create(task, variables)
+
+
+def http_task_get(
     url,
     body=None,
     headers=None,
@@ -234,7 +240,7 @@ def exec_http_get(
     Returns:
         (Task): HTTP Task
     """
-    return exec_http(
+    return http_task(
         "POST",
         url,
         body=None,
@@ -252,7 +258,7 @@ def exec_http_get(
     )
 
 
-def exec_http_post(
+def http_task_post(
     url,
     body=None,
     headers=None,
@@ -290,7 +296,7 @@ def exec_http_post(
     Returns:
         (Task): HTTP Task
     """
-    return exec_http(
+    return http_task(
         "POST",
         url,
         body=body,
@@ -308,7 +314,7 @@ def exec_http_post(
     )
 
 
-def exec_http_put(
+def http_task_put(
     url,
     body=None,
     headers=None,
@@ -346,7 +352,7 @@ def exec_http_put(
     Returns:
         (Task): HTTP Task
     """
-    return exec_http(
+    return http_task(
         "PUT",
         url,
         body=body,
@@ -364,7 +370,7 @@ def exec_http_put(
     )
 
 
-def exec_http_delete(
+def http_task_delete(
     url,
     body=None,
     headers=None,
@@ -402,7 +408,7 @@ def exec_http_delete(
     Returns:
         (Task): HTTP Task
     """
-    return exec_http(
+    return http_task(
         "DELETE",
         url,
         body=body,
@@ -420,7 +426,7 @@ def exec_http_delete(
     )
 
 
-def exec_http(
+def http_task(
     method,
     url,
     body=None,
@@ -480,15 +486,19 @@ def exec_http(
         "attrs": {
             "method": method,
             "url": url,
-            "request_body": body,
             "authentication": auth_obj,
-            "content_type": content_type,
             "connection_timeout": timeout,
             "tls_verify": verify,
             "retry_count": retries + 1,
             "retry_interval": retry_interval,
         },
     }
+
+    if body is not None:
+        kwargs["attrs"]["request_body"] = body
+
+    if content_type is not None:
+        kwargs["attrs"]["content_type"] = content_type
 
     if target is not None:
         kwargs["target_any_local_reference"] = _get_target_ref(target)
@@ -595,12 +605,12 @@ def _deployment_scaling_create(target, scaling_type, scaling_count, name=None):
     return _task_create(**kwargs)
 
 
-def deployment_scaleout(count, target, name=None):
+def scale_out_task(count, target, name=None):
     """
     Defines a deployment scale out task
     Args:
         count (str): scaling_count
-        target (Ref): Target entity for scale out
+        target (Ref): Target deployment for scale out
         name (str): Name for this task
     Returns:
         (Task): Deployment scale out task
@@ -608,14 +618,36 @@ def deployment_scaleout(count, target, name=None):
     return _deployment_scaling_create(target, "SCALEOUT", count, name=name)
 
 
-def deployment_scalein(count, target, name=None):
+def scale_in_task(count, target, name=None):
     """
     Defines a deployment scale in task
     Args:
         count (str): scaling_count
-        target (Ref): Target entity for scale in
+        target (Ref): Target deployment for scale in
         name (str): Name for this task
     Returns:
         (Task): Deployment scale in task
     """
     return _deployment_scaling_create(target, "SCALEIN", count, name=name)
+
+
+def delay_task(delay_seconds=None, name=None, target=None):
+    """
+    Defines a delay task.
+    Args:
+        delay_seconds(int): Delay in seconds
+        name (str): Name for this task
+        target (Ref): Target entity for this task
+    Returns:
+        (Task): Delay task
+    """
+    if not isinstance(delay_seconds, int):
+        raise TypeError(
+            "delay_seconds is expected to be an integer, got {}".format(
+                type(delay_seconds)
+            )
+        )
+    kwargs = {"name": name, "type": "DELAY", "attrs": {"interval_secs": delay_seconds}}
+    if target is not None:
+        kwargs["target_any_local_reference"] = _get_target_ref(target)
+    return _task_create(**kwargs)

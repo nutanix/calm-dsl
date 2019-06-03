@@ -12,17 +12,20 @@ from .runbook import runbook_create
 # the action type behaves as all three.
 
 TASK_FUNCS = [
-    "exec_ssh",
-    "exec_escript",
-    "set_variable_ssh",
-    "set_variable_escript",
-    "exec_http_get",
-    "exec_http_post",
-    "exec_http_put",
-    "exec_http_delete",
-    "exec_http",
-    "deployment_scaleout",
-    "deployment_scalein",
+    "exec_task_ssh",
+    "exec_task_escript",
+    "exec_task_powershell",
+    "set_variable_task_ssh",
+    "set_variable_task_escript",
+    "set_variable_task_powershell",
+    "http_task_get",
+    "http_task_post",
+    "http_task_put",
+    "http_task_delete",
+    "http_task",
+    "scale_out_task",
+    "scale_in_task",
+    "delay_task",
 ]
 
 
@@ -148,7 +151,7 @@ class action(metaclass=DescriptorType):
         # Get the indent since this decorator is used within class definition
         # For this we split the code on newline and count the number of spaces
         # before the @action decorator.
-        # src = "    @action\n    def action1():\n    exec_ssh("Hello World")"
+        # src = "    @action\n    def action1():\n    exec_task_ssh("Hello World")"
         # The indentation here would be 4.
         padding = src.split("\n")[0].rstrip(" ").split(" ").count("")
 
