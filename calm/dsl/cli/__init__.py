@@ -19,6 +19,7 @@ from .bps import (
     launch_blueprint_simple,
     delete_blueprint,
 )
+from .projects import get_projects
 
 
 @click.group()
@@ -160,6 +161,20 @@ def _get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
 def _get_apps(obj, name, filter_by, limit, offset, quiet, all_items):
     """Get Apps, optionally filtered by a string"""
     get_apps(obj, name, filter_by, limit, offset, quiet, all_items)
+
+
+@get.command("projects")
+@click.option("--name", default=None, help="Search for projects by name")
+@click.option("--filter", "filter_by", default=None, help="Filter projects by this string")
+@click.option("--limit", default=20, help="Number of results to return")
+@click.option("--offset", default=0, help="Offset results by the specified amount")
+@click.option(
+    "--quiet", "-q", is_flag=True, default=False, help="Show only project names"
+)
+@click.pass_obj
+def _get_projects(obj, name, filter_by, limit, offset, quiet):
+    """Get projects, optionally filtered by a string"""
+    get_projects(obj, name, filter_by, limit, offset, quiet)
 
 
 @main.group()
