@@ -486,15 +486,19 @@ def http_task(
         "attrs": {
             "method": method,
             "url": url,
-            "request_body": body,
             "authentication": auth_obj,
-            "content_type": content_type,
             "connection_timeout": timeout,
             "tls_verify": verify,
             "retry_count": retries + 1,
             "retry_interval": retry_interval,
         },
     }
+
+    if body is not None:
+        kwargs["attrs"]["request_body"] = body
+
+    if content_type is not None:
+        kwargs["attrs"]["content_type"] = content_type
 
     if target is not None:
         kwargs["target_any_local_reference"] = _get_target_ref(target)
