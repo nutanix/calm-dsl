@@ -14,8 +14,10 @@ from .runbook import runbook_create
 TASK_FUNCS = [
     "exec_task_ssh",
     "exec_task_escript",
+    "exec_task_powershell",
     "set_variable_task_ssh",
     "set_variable_task_escript",
+    "set_variable_task_powershell",
     "http_task_get",
     "http_task_post",
     "http_task_put",

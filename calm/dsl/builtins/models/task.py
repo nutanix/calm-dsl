@@ -172,6 +172,12 @@ def exec_task_escript(script=None, filename=None, name=None, target=None):
     )
 
 
+def exec_task_powershell(script=None, filename=None, name=None, target=None, cred=None):
+    return _exec_create(
+        "ps", script=script, filename=filename, name=name, target=target, cred=cred
+    )
+
+
 def _set_variable_create(task, variables=None):
     task.type = "SET_VARIABLE"
     eval_variables = []
@@ -194,6 +200,11 @@ def set_variable_task_ssh(script, name=None, target=None, variables=None):
 
 def set_variable_task_escript(script, name=None, target=None, variables=None):
     task = exec_task_escript(script, name=name, target=target)
+    return _set_variable_create(task, variables)
+
+
+def set_variable_task_powershell(script, name=None, target=None, variables=None):
+    task = exec_task_powershell(script, name=name, target=target)
     return _set_variable_create(task, variables)
 
 
