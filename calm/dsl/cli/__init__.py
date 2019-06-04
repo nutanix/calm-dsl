@@ -282,6 +282,40 @@ def create_blueprint_command(obj, bp_file, name, description):
     assert bp_state == "ACTIVE"
 
 
+def create_project_from_file(client, file_location):
+
+    project_payload = yaml.safe_load(open(file_location, "r").read())
+    return create_project(client, project_payload)
+
+
+@create.command("project")
+@click.option(
+    "--file",
+    "-f",
+    "project_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path of Project file to upload",
+)
+@click.pass_obj
+def _create_project(obj, project_file):
+    """ Creates the project """
+
+    client = obj.get("client")
+
+    if project_file.endswith(".json") or project_file.endswith(".yaml"):
+        res, err = create_project_from_file(client, project_file)
+    else:
+        click.echo("Unknown file format")
+
+    if err:
+        click.echo(err["error"])
+        return
+
+    project = res.json()
+    state = project["status"]["state"]
+    click.echo(">> Project state: {}".format(state))
+
+
 @main.group()
 def delete():
     """Delete blueprints"""
