@@ -303,7 +303,7 @@ def _create_project(obj, project_file):
 
     client = obj.get("client")
 
-    if project_file.endswith(".json") or project_file.endswith(".json"):
+    if project_file.endswith(".json") or project_file.endswith(".yaml"):
         res, err = create_project_from_file(client, project_file)
     else:
         click.echo("Unknown file format")
