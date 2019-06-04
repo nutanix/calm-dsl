@@ -136,7 +136,7 @@ def create_project(client, payload):
     click.echo("Creating the project {}". format(name))
 
     # validating the payload
-    validator.validate(payload)
+    validator.validate_dict(payload)
     payload = {
         'api_version': "3.0",     # TODO Remove by a constant
         'metadata': {

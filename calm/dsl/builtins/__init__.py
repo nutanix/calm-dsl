@@ -41,7 +41,7 @@ from .models.profile import Profile, profile
 
 from .models.blueprint import Blueprint, blueprint
 from .models.blueprint_payload import create_blueprint_payload
-from .models.project import Validator as ProjectValidator
+from .models.project import Project as ProjectValidator
 
 
 __all__ = [
