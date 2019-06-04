@@ -265,4 +265,10 @@ properties:
 
 {%- endmacro %}
 
-{{ Project() }}
+
+{% macro ProjectSchema() -%}
+
+Project:
+  {{ Project() | indent(2) }}
+
+{%- endmacro %}
