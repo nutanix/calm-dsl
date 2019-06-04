@@ -43,6 +43,6 @@ def setvar(name, value, **kwargs):
     return VariableType(name, (Entity,), kwargs)
 
 
-def var(value, **kwargs):
+def var(value, data_type="string", task=None, **kwargs):
     name = getattr(VariableType, "__schema_name__")
     return setvar(name, value, **kwargs)

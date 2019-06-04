@@ -2,8 +2,6 @@ import json
 
 from ruamel import yaml
 import click
-from asciimatics.screen import Screen
-
 
 # TODO - move providers to separate file
 from calm.dsl.providers import get_provider, get_provider_types
@@ -11,9 +9,12 @@ from calm.dsl.tools import ping
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
 
+# from .config import get_config, get_api_client
+from .utils import Display
 from .apps import get_apps, describe_app, delete_app, run_actions, watch_app
 from .bps import (
     get_blueprint_list,
+    describe_bp,
     compile_blueprint_command,
     compile_blueprint,
     launch_blueprint_simple,
@@ -22,17 +23,6 @@ from .bps import (
 
 
 @click.group()
-@click.pass_context
-@click.option("--verbose", "-v", is_flag=True, help="Enables verbose mode.")
-@click.version_option("0.1")
-def main(ctx, verbose):
-    """Calm CLI"""
-    ctx.ensure_object(dict)
-    ctx.obj["client"] = get_api_client()
-    ctx.obj["verbose"] = verbose
-
-
-@main.command("configure")
 @click.option(
     "--ip",
     envvar="PRISM_SERVER_IP",
@@ -42,7 +32,7 @@ def main(ctx, verbose):
 @click.option(
     "--port",
     envvar="PRISM_SERVER_PORT",
-    default="9440",
+    default=9440,
     help="Prism Central server port number. Defaults to 9440.",
 )
 @click.option(
@@ -63,12 +53,17 @@ def main(ctx, verbose):
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path to config file, defaults to ~/.calm/config",
 )
-@click.pass_obj
-def _set_config(obj, ip, port, username, password, config_file):
-    """Configure values for PC details (IP, Port, Credentials) and Projects"""
-    set_config(
+@click.option("--verbose", "-v", is_flag=True, help="Enables verbose mode.")
+@click.version_option("0.1")
+@click.pass_context
+def main(ctx, ip, port, username, password, config_file, verbose):
+    """Calm CLI"""
+    ctx.ensure_object(dict)
+    ctx.obj["config"] = get_config(
         ip=ip, port=port, username=username, password=password, config_file=config_file
     )
+    ctx.obj["client"] = get_api_client()
+    ctx.obj["verbose"] = verbose
 
 
 @main.group()
@@ -317,6 +312,14 @@ def describe():
     pass
 
 
+@describe.command("bp")
+@click.argument("bp_name")
+@click.pass_obj
+def _describe_bp(obj, bp_name):
+    """Describe an app"""
+    describe_bp(obj, bp_name)
+
+
 @describe.command("app")
 @click.argument("app_name")
 @click.pass_obj
@@ -333,7 +336,7 @@ def _describe_app(obj, app_name):
 def _run_actions(obj, app_name, action_name, watch):
     """App related functionality: launch, lcm actions, monitor, delete"""
 
-    def render_actions(screen):
+    def render_actions(screen=None):
         screen.clear()
         screen.print_at(
             "Running action {} for app {} ...".format(action_name, app_name), 0, 0
@@ -342,7 +345,7 @@ def _run_actions(obj, app_name, action_name, watch):
         run_actions(screen, obj, app_name, action_name, watch)
         screen.wait_for_input(10.0)
 
-    Screen.wrapper(render_actions)
+    Display.wrapper(render_actions, watch)
 
 
 @main.group()

@@ -97,6 +97,71 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
     click.echo(table)
 
 
+def describe_bp(obj, blueprint_name):
+    client = obj.get("client")
+    bp = get_blueprint(client, blueprint_name, all=True)
+
+    res, err = client.blueprint.read(bp["metadata"]["uuid"])
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    bp = res.json()
+
+    click.echo("\n----Blueprint Summary----\n")
+    click.echo(
+        "Name: "
+        + highlight_text(blueprint_name)
+        + " (uuid: "
+        + highlight_text(bp["metadata"]["uuid"])
+        + ")"
+    )
+    click.echo("Description: " + highlight_text(bp["status"]["description"]))
+    click.echo("Status: " + highlight_text(bp["status"]["state"]))
+    click.echo(
+        "Owner: " + highlight_text(bp["metadata"]["owner_reference"]["name"]), nl=False
+    )
+    click.echo(
+        " Project: " + highlight_text(bp["metadata"]["project_reference"]["name"])
+    )
+
+    # import ipdb; ipdb.set_trace()
+
+    # click.echo(
+    #     "Profiles: "
+    #     + highlight_text(bp["status"]["resources"]["bp_blueprint_reference"]["name"])
+    # )
+
+    created_on = int(bp["metadata"]["creation_time"]) // 1000000
+    past = arrow.get(created_on).humanize()
+    click.echo(
+        "Created: {} ({})".format(
+            highlight_text(time.ctime(created_on)), highlight_text(past)
+        )
+    )
+
+    profile_list = bp.get("status").get("resources", {}).get("app_profile_list", [])
+    click.echo("Application Profiles [{}]:".format(highlight_text(len(profile_list))))
+    for profile in profile_list:
+        profile_name = profile["name"]
+        click.echo("\t" + highlight_text(profile_name))
+        click.echo("\tActions:")
+        for action in profile["action_list"]:
+            action_name = action["name"]
+            if action_name.startswith("action_"):
+                prefix_len = len("action_")
+                action_name = action_name[prefix_len:]
+            click.echo("\t\t" + highlight_text(action_name))
+
+    service_list = (
+        bp.get("status").get("resources", {}).get("service_definition_list", [])
+    )
+    click.echo("Services [{}]:".format(highlight_text(len(service_list))))
+    for service in service_list:
+        service_name = service["name"]
+        click.echo("\t" + highlight_text(service_name))
+        # click.echo("\tActions:")
+
+
 def get_blueprint_module_from_file(bp_file):
     """Returns Blueprint module given a user blueprint dsl file (.py)"""
 
@@ -148,10 +213,12 @@ def compile_blueprint_command(bp_file, out):
         click.echo("Unknown output format {} given".format(out))
 
 
-def get_blueprint(client, name):
+def get_blueprint(client, name, all=False):
 
     # find bp
-    params = {"filter": "name=={};state!=DELETED".format(name)}
+    params = {"filter": "name=={}".format(name)}
+    if not all:
+        params["filter"] += ";state!=DELETED"
 
     res, err = client.blueprint.list(params=params)
     if err:
