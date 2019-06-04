@@ -8,8 +8,9 @@ from asciimatics.screen import Screen
 # TODO - move providers to separate file
 from calm.dsl.providers import get_provider, get_provider_types
 from calm.dsl.tools import ping
+from calm.dsl.config import get_config
+from calm.dsl.api import get_api_client
 
-from .config import get_config, get_api_client
 from .apps import get_apps, describe_app, delete_app, run_actions, watch_app
 from .bps import (
     get_blueprint_list,

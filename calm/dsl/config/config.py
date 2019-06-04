@@ -1,8 +1,6 @@
 import os
 import configparser
 
-from calm.dsl.api import get_client_handle
-
 
 # Defaults to be used if no config file exists.
 # TODO - remove username/password
@@ -50,15 +48,3 @@ def _init_config(ip, port, username, password, config_file):
         config["SERVER"].setdefault("pc_password", password)
 
     return config
-
-
-def get_api_client():
-
-    config = get_config()
-
-    pc_ip = config["SERVER"].get("pc_ip")
-    pc_port = config["SERVER"].get("pc_port")
-    username = config["SERVER"].get("pc_username")
-    password = config["SERVER"].get("pc_password")
-
-    return get_client_handle(pc_ip, pc_port, auth=(username, password))

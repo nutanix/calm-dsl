@@ -10,7 +10,7 @@ import click
 from prettytable import PrettyTable
 
 from calm.dsl.builtins import Blueprint, create_blueprint_payload
-from .config import get_config
+from calm.dsl.config import get_config
 from .utils import get_name_query, get_states_filter, highlight_text
 from .constants import BLUEPRINT
 
