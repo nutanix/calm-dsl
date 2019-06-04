@@ -5,6 +5,7 @@ import arrow
 from prettytable import PrettyTable
 
 from .utils import get_name_query, highlight_text
+from calm.dsl.builtins import ProjectValidator
 
 
 def get_projects(obj, name, filter_by, limit, offset, quiet):
@@ -109,3 +110,39 @@ def delete_project(obj, project_names):
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
         click.echo("Project {} deleted".format(project_name))
+
+
+def create_project(client, payload):
+
+    validator = ProjectValidator()
+    name = payload["project_detail"]["name"]
+
+    # check if project having same name exists
+    click.echo("Searching for projects having same name ")
+    params = {"filter": "name=={}".format(name)}
+    res, err = client.project.list(params=params)
+    if err:
+        return None, err
+
+    response = res.json()
+    entities = response.get("entities", None)
+    if entities:
+        if len(entities) > 0:
+            err_msg = "Project with name {} already exists". format(name)
+            err = {"error": err_msg, "code": -1}
+            return None, err
+
+    click.echo("No project with same name exists")
+    click.echo("Creating the project {}". format(name))
+
+    # validating the payload
+    validator.validate(payload)
+    payload = {
+        'api_version': "3.0",     # TODO Remove by a constant
+        'metadata': {
+            'kind': 'project'
+        },
+        'spec': payload
+    }
+
+    return client.project.create(payload)

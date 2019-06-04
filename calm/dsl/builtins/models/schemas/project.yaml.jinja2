@@ -1,0 +1,268 @@
+
+{% macro References_With_Name(kind) -%}
+
+title: Reference
+type: object
+properties:
+  name:
+    type: string
+  kind:
+    type: string
+    enum:
+      - {{kind}}
+  uuid:                 # TODO Dynamic: need to call API
+    type: string
+
+{%- endmacro %}
+
+
+{% macro References_Without_Name(kind) -%}
+
+title: Reference
+type: object
+properties:
+  kind:
+    type: string
+    enum:
+      - {{kind}}
+  uuid:                 # TODO Dynamic: need to call API
+    type: string
+
+{%- endmacro %}
+
+
+{% macro Project_Resources() -%}
+
+title: Project Resources
+type: object
+properties:
+  user_reference_list:
+    type: array
+    items:
+      {{ References_With_Name('user') | indent(6) }}
+  external_user_group_reference_list:
+    type: array
+    items:
+      {{ References_With_Name('user_group') | indent(6) }}
+  subnet_reference_list:
+    type: array
+    items:
+      {{ References_With_Name('subnet') | indent(6) }}
+  account_reference_list:
+    type: array
+    items:
+      {{ References_With_Name('account') | indent(6) }}
+  environment_reference_list:
+    type: array
+    items:
+      {{ References_Without_Name('environment') | indent(6) }}
+  resource_domain:
+    type: object
+    properties:
+      resources:
+        type: array
+        items:
+          type: object
+          properties:
+            limit: 
+              type: integer
+            resource_type:
+              type: string
+  default_subnet_reference:
+    type: array
+    items:
+      {{ References_Without_Name('subnet') | indent(6) }}
+
+{%- endmacro %}
+
+
+{% macro Project_Detail() -%}
+
+title: Project Details
+type: object
+properties:
+  name:
+    type: string
+  description:
+    type: string
+  resources:
+    {{ Project_Resources() | indent(4) }}
+
+{%- endmacro %}
+
+
+{% macro User() -%}
+
+title: User
+type: object
+properties:
+  operation:
+    type: string
+  metadata:
+    {{ References_Without_Name('user') | indent(4) }}
+  user:
+    type: object
+    properties:
+      resources:
+        type: object
+        properties:
+          directory_service_user:
+            type: object
+            properties:
+              user_principal_name:
+                type: string
+              directory_service_reference:
+                {{ References_Without_Name('directory_service') | indent(16) }}
+
+{%- endmacro %}
+
+
+{% macro User_Group() -%}
+
+title: User Group
+type: object
+properties:
+  operation:
+    type: string
+  metadata:
+    {{ References_Without_Name('user_group') | indent(4) }}
+  user_group:
+    type: object
+    properties:
+      resources:
+        type: object
+        properties:
+          directory_service_user_group:
+            type: object
+            properties:
+              distinguished_name: 
+                type: string
+
+{%- endmacro %}
+
+
+{% macro ACP_Context() -%}
+
+title: object
+type: object
+properties:
+  scope_filter_expression_list:
+    type: array
+    items:
+      type: object
+      properties:
+        operator:
+          type: string
+        left_hand_side:
+          type: string
+        right_hand_side:
+          type: object
+          properties:
+            uuid_list:
+              type: array
+              items:
+                type: string
+    minItems: 0
+    maxItems: 1
+  entity_filter_expression_list:
+    type: array
+    items:
+      type: object
+      properties:
+        operator:
+          type: string
+        left_hand_side:
+          type: object
+          properties:
+            entity_type:
+              type: string
+        right_hand_side:
+          anyOf:
+          - type: object
+            properties:
+              collection:
+                type: string
+          - type: object
+            properties:
+              uuid_list:
+                type: array
+                items:
+                  type: string
+
+{%- endmacro %}
+
+
+{% macro ACP_Resources() -%}
+
+title: ACP Resources
+type: object
+properties:
+  role_reference:
+    {{ References_With_Name('role') | indent(4) }}
+  user_reference_list:
+    type: array
+    items:
+      {{ References_With_Name('user') | indent(6) }}
+  user_group_reference_list:
+    type: array
+    items:
+      {{ References_With_Name('user_group') | indent(6) }}
+  filter_list:
+    type: object
+    properties:
+      context_list:
+        type: array
+        items: 
+          {{ ACP_Context() | indent(10) }}  
+
+{%- endmacro %}
+
+
+{% macro Access_Control_Policy() -%}
+
+title: Access Control Policy
+type: object
+properties:
+  operation:
+    type: string
+  metadata:
+    type: object
+    properties:
+      kind:
+        type: string
+  acp:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
+      resources:
+        {{ ACP_Resources() | indent(8) }}
+
+{%- endmacro %}
+
+
+{% macro Project() -%}
+
+title: Project
+type: object
+properties:
+  project_detail:
+    {{ Project_Detail() | indent(4) }}
+  user_list:
+    type: array
+    items:
+      {{ User() | indent(6) }}
+  user_group_list:
+    type: array
+    items:
+      {{ User_Group() | indent(6) }}
+  access_control_policy_list:
+    type: array
+    items:
+      {{ Access_Control_Policy() | indent(6) }}
+
+{%- endmacro %}
+
+{{ Project() }}
