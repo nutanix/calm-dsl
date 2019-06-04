@@ -20,8 +20,10 @@ from .bps import (
     delete_blueprint,
 )
 
+CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
-@click.group()
+
+@click.group(context_settings=CONTEXT_SETTINGS)
 @click.option(
     "--ip",
     envvar="PRISM_SERVER_IP",
@@ -56,7 +58,17 @@ from .bps import (
 @click.version_option("0.1")
 @click.pass_context
 def main(ctx, ip, port, username, password, config_file, verbose):
-    """Calm CLI"""
+    """Calm CLI
+
+\b
+Commonly used commands:
+  calm get apps   -> Get list of apps
+  calm get bps   -> Get list of blueprints
+  calm launch bp --app_name Fancy-App-1 MyFancyBlueprint   -> Launch a new app from an existing blueprint
+  calm create bp -f sample_bp.py --name Sample-App-3   -> Upload a new blueprint from a python DSL file
+  calm describe app Fancy-App-1   -> Describe an existing app
+  calm app Fancy-App-1 -w my_action   -> Run an action on an app
+"""
     ctx.ensure_object(dict)
     ctx.obj["config"] = get_config(
         ip=ip, port=port, username=username, password=password, config_file=config_file
@@ -102,7 +114,7 @@ def validate_provider_spec(spec_file, provider_type):
 
 @main.group()
 def get():
-    """Get various things like blueprints, apps and so on"""
+    """Get various things like blueprints, apps: `get apps` and `get bps` are the primary ones."""
     pass
 
 
