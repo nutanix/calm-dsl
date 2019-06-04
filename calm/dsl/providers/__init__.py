@@ -2,20 +2,19 @@ from .base import (
     get_provider,
     get_providers,
     get_provider_types,
-    register_providers,
-    register_provider,
+    get_provider_interface,
 )
 
 
-# TODO - use init to register providers
-if not get_providers():
-    register_providers()
-
+# TODO Load plugin modules from a config
+from .plugins.ahv_vm.main import AhvVmProvider
+from .plugins.existing_vm.main import ExistingVmProvider
 
 __all__ = [
     "get_provider",
     "get_providers",
     "get_provider_types",
-    "register_providers",
-    "register_provider",
+    "get_provider_interface",
+    "AhvVmProvider",
+    "ExistingVmProvider",
 ]

@@ -21,7 +21,7 @@ class ProviderSpec(metaclass=ProviderSpecType):
     def __validate__(self, provider_type):
 
         Provider = get_provider(provider_type)
-        Provider.validate(self.spec)
+        Provider.validate_spec(self.spec)
 
         return self.spec
 

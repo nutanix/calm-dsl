@@ -19,7 +19,6 @@ from .bps import (
     launch_blueprint_simple,
     delete_blueprint,
 )
-from .providers import create_ahv_spec
 
 
 @click.group()
@@ -94,7 +93,7 @@ def validate_provider_spec(spec_file, provider_type):
 
     try:
         Provider = get_provider(provider_type)
-        Provider.validate(spec)
+        Provider.validate_spec(spec)
         click.echo("File {} is a valid {} spec.".format(spec_file, provider_type))
     except Exception as ee:
         click.echo("File {} is invalid {} spec".format(spec_file, provider_type))
@@ -359,16 +358,12 @@ def _watch_app(obj, app_name, action):
 @click.option(
     "--type",
     "provider_type",
-    type=click.Choice(["AHV"]),
-    default="AHV",
+    type=click.Choice(get_provider_types()),
+    default="AHV_VM",
     help="Provider type",
 )
 @click.pass_obj
 def create_provider_spec(obj, provider_type):
 
-    client = obj.get("client")
-    if provider_type == "AHV":
-        create_ahv_spec(client)
-
-    else:
-        click.echo("{} not supported right now")
+    Provider = get_provider(provider_type)
+    Provider.create_spec()
