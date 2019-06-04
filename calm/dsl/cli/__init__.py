@@ -19,12 +19,7 @@ from .bps import (
     launch_blueprint_simple,
     delete_blueprint,
 )
-<<<<<<< HEAD
-from .projects import get_projects
-=======
-from .projects import get_projects,delete_project
-from .providers import create_ahv_spec
->>>>>>> Added delete command for projects
+from .projects import get_projects, delete_project, create_project
 
 
 @click.group()
