@@ -1,3 +1,5 @@
+{% import "ref.yaml.jinja2" as ref %}
+
 {% macro Substrate() -%}
 
 title: Substrate
@@ -13,15 +15,19 @@ properties:
     maxLength: 1000
     default: ''
   type:
+    x-calm-dsl-display-name: provider_type
     type: string
     default: 'AHV_VM'
   os_type:
     type: string
     default: 'Linux'
   create_spec:
+    x-calm-dsl-display-name: provider_spec
     type: object
-    x-calm-dsl-type: dict
-    default: {}
+    x-calm-dsl-type: app_provider_spec
+  credential:
+    # TODO: Remove this, add readiness probe
+    {{ ref.Ref() | indent(4) }}
   variable_list:
     x-calm-dsl-display-name: variables
     type: array

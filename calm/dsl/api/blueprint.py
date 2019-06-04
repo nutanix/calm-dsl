@@ -1,59 +1,24 @@
+from .resource import ResourceAPI
 from .connection import REQUEST
-from .entity import EntityAPI
 
 
-class BlueprintAPI(EntityAPI):
-
-    BP_PREFIX = EntityAPI.PREFIX + "blueprints"
-    LIST = BP_PREFIX + "/list"
-    UPLOAD = BP_PREFIX + "/import_json"
-    BP_ITEM = BP_PREFIX + "/{}"
-    LAUNCH = BP_ITEM + "/simple_launch"
-    FULL_LAUNCH = BP_ITEM + "/launch"
-    LAUNCH_POLL = BP_ITEM + "/pending_launches/{}"
-    BP_EDITABLES = BP_PREFIX + "/{}/runtime_editables"
-
-    def list(self, params=None):
-        return self.connection._call(
-            BlueprintAPI.LIST,
-            verify=False,
-            request_json=params,
-            method=REQUEST.METHOD.POST,
-        )
-
-    def get(self, blueprint_id):
-        return self.connection._call(
-            BlueprintAPI.BP_ITEM.format(blueprint_id),
-            verify=False,
-            method=REQUEST.METHOD.GET,
-        )
-
-    def update(self, uuid, payload):
-        return self.connection._call(
-            BlueprintAPI.BP_ITEM.format(uuid),
-            verify=False,
-            request_json=payload,
-            method=REQUEST.METHOD.PUT,
-        )
+class BlueprintAPI(ResourceAPI):
+    def __init__(self, connection):
+        super().__init__(connection, resource_type="blueprints")
+        self.UPLOAD = self.PREFIX + "/import_json"
+        self.LAUNCH = self.ITEM + "/simple_launch"
+        self.FULL_LAUNCH = self.ITEM + "/launch"
+        self.LAUNCH_POLL = self.ITEM + "/pending_launches/{}"
+        self.BP_EDITABLES = self.ITEM + "/runtime_editables"
 
     def upload(self, payload):
         return self.connection._call(
-            BlueprintAPI.UPLOAD,
-            verify=False,
-            request_json=payload,
-            method=REQUEST.METHOD.POST,
-        )
-
-    def delete(self, uuid):
-        return self.connection._call(
-            BlueprintAPI.BP_ITEM.format(uuid),
-            verify=False,
-            method=REQUEST.METHOD.DELETE,
+            self.UPLOAD, verify=False, request_json=payload, method=REQUEST.METHOD.POST
         )
 
     def launch(self, uuid, payload):
         return self.connection._call(
-            BlueprintAPI.LAUNCH.format(uuid),
+            self.LAUNCH.format(uuid),
             verify=False,
             request_json=payload,
             method=REQUEST.METHOD.POST,
@@ -61,7 +26,7 @@ class BlueprintAPI(EntityAPI):
 
     def full_launch(self, uuid, payload):
         return self.connection._call(
-            BlueprintAPI.FULL_LAUNCH.format(uuid),
+            self.FULL_LAUNCH.format(uuid),
             verify=False,
             request_json=payload,
             method=REQUEST.METHOD.POST,
@@ -69,16 +34,14 @@ class BlueprintAPI(EntityAPI):
 
     def poll_launch(self, blueprint_id, request_id):
         return self.connection._call(
-            BlueprintAPI.LAUNCH_POLL.format(blueprint_id, request_id),
+            self.LAUNCH_POLL.format(blueprint_id, request_id),
             verify=False,
             method=REQUEST.METHOD.GET,
         )
 
     def _get_editables(self, bp_uuid):
         return self.connection._call(
-            BlueprintAPI.BP_EDITABLES.format(bp_uuid),
-            verify=False,
-            method=REQUEST.METHOD.GET,
+            self.BP_EDITABLES.format(bp_uuid), verify=False, method=REQUEST.METHOD.GET
         )
 
     @staticmethod
@@ -116,6 +79,7 @@ class BlueprintAPI(EntityAPI):
         # Remove creds before upload
         creds = bp_resources["credential_definition_list"]
         secret_map = {}
+        default_creds = []
         for cred in creds:
             name = cred["name"]
             secret_map[name] = cred.pop("secret", {})
@@ -124,13 +88,20 @@ class BlueprintAPI(EntityAPI):
             cred["secret"] = {
                 "attrs": {"is_secret_modified": False, "secret_reference": None}
             }
+            if cred.pop("default"):
+                default_creds.append(cred)
+        if not default_creds:
+            raise ValueError("No default cred provided")
+        if len(default_creds) > 1:
+            raise ValueError(
+                "Found more than one credential marked as default - {}".format(
+                    ", ".join(cred["name"] for cred in default_creds)
+                )
+            )
 
-        # Make first cred as default for now
-        # TODO - get the right cred default
-        # TODO - check if no creds
         bp_resources["default_credential_local_reference"] = {
             "kind": "app_credential",
-            "name": creds[0]["name"],
+            "name": default_creds[0]["name"],
         }
 
         upload_payload = self._make_blueprint_payload(bp_name, bp_desc, bp_resources)

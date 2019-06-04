@@ -9,6 +9,16 @@ class VariableType(EntityType):
     __schema_name__ = "Variable"
     __openapi_type__ = "app_variable"
 
+    def compile(cls):
+        cdict = super().compile()
+        if not cdict.get("options", {}):
+            del cdict["options"]
+        if not cdict.get("regex", {}):
+            del cdict["regex"]
+        if not cdict.get("editables", {}):
+            del cdict["editables"]
+        return cdict
+
 
 class VariableValidator(PropertyValidator, openapi_type="app_variable"):
     __default__ = None

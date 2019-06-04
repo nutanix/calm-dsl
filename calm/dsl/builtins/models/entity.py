@@ -5,6 +5,8 @@ import sys
 from types import MappingProxyType
 
 from ruamel.yaml import YAML, resolver, SafeRepresenter
+from jsonschema import Draft7Validator
+
 
 from .schema import get_schema_details
 
@@ -18,6 +20,15 @@ def _validate(vdict, name, value):
             if name not in vdict:
                 raise TypeError("Unknown attribute {} given".format(name))
             ValidatorType, is_array = vdict[name]
+            if getattr(ValidatorType, "__is_object__", False):
+                if not isinstance(value, dict):
+                    raise TypeError("{} is not of type {}".format(value, "dict"))
+                new_value = ValidatorType.__class__(
+                    ValidatorType.validators, ValidatorType.defaults
+                )
+                for k, v in value.items():
+                    new_value[k] = v
+                return
 
         except TypeError:
 
@@ -30,8 +41,8 @@ def _validate(vdict, name, value):
             if not DescriptorType:
                 raise TypeError("Descriptor type not defined")
             if not (
-                isinstance(value, (VariableType,))
-                or isinstance(type(value), DescriptorType)
+                ("variables" in vdict and isinstance(value, (VariableType,)))
+                or ("actions" in vdict and isinstance(type(value), DescriptorType))
             ):
                 raise
 
@@ -40,8 +51,6 @@ def _validate(vdict, name, value):
             if isinstance(value, VariableType):
                 ValidatorType, _ = vdict["variables"]
                 # Set name attribute in variable
-                # TODO - use __set__, __get__ interfaces for descriptors
-                # TODO - Avoid recursion. caller class should not be a VariableType
                 setattr(value, "name", name)
 
             elif isinstance(type(value), DescriptorType):
@@ -61,7 +70,6 @@ class EntityDict(OrderedDict):
         _validate(vdict, name, value)
 
     def __setitem__(self, name, value):
-
         self._validate(name, value)
         super().__setitem__(name, value)
 
@@ -112,6 +120,10 @@ class EntityType(EntityTypeBase):
 
     __schema_name__ = None
     __openapi_type__ = None
+
+    def validate_dict(cls, entity_dict):
+        validator = Draft7Validator(cls.__schema_props__)
+        validator.validate(entity_dict)
 
     @classmethod
     def to_yaml(mcls, representer, node):
@@ -170,10 +182,20 @@ class EntityType(EntityTypeBase):
         return cls.__name__
 
     def get_user_attrs(cls):
+        types = EntityTypeBase.get_entity_types()
+        ActionType = types.get("Action", None)
+        VariableType = types.get("Variable", None)
+        DescriptorType = types.get("Descriptor", None)
         user_attrs = {}
         for name, value in cls.__dict__.items():
-            if not (name.startswith("__") and name.endswith("__")):
-                user_attrs[name] = getattr(cls, name, value)
+            if (
+                name.startswith("__")
+                and name.endswith("__")
+                and not isinstance(value, (VariableType, ActionType))
+                and not isinstance(type(value), DescriptorType)
+            ):
+                continue
+            user_attrs[name] = getattr(cls, name, value)
 
         return user_attrs
 
@@ -201,7 +223,6 @@ class EntityType(EntityTypeBase):
         # Variables and actions have [] as defaults.
         # As this list can be modified/extended here,
         # make a copy of variables and actions
-        # TODO - Use lambdas for values in default attrs
         attrs["variables"] = list(attrs.get("variables", []))
         if "actions" in vdict:
             attrs["actions"] = list(attrs.get("actions", []))
@@ -326,6 +347,9 @@ class EntityType(EntityTypeBase):
             attrs["name"] = str(cls)
             attrs["kind"] = getattr(cls, "__kind__")
         return ref(name, bases, attrs)
+
+    def get_dict(cls):
+        return json.loads(cls.json_dumps())
 
 
 class Entity(metaclass=EntityType):

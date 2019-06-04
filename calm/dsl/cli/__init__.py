@@ -1,9 +1,16 @@
 import json
 
+from ruamel import yaml
 import click
-from calm.dsl.tools import ping
+from asciimatics.screen import Screen
 
-from .config import get_api_client, set_config
+
+# TODO - move providers to separate file
+from calm.dsl.providers import get_provider, get_provider_types
+from calm.dsl.tools import ping
+from calm.dsl.config import get_config
+from calm.dsl.api import get_api_client
+
 from .apps import get_apps, describe_app, delete_app, run_actions, watch_app
 from .bps import (
     get_blueprint_list,
@@ -62,6 +69,41 @@ def _set_config(obj, ip, port, username, password, config_file):
     set_config(
         ip=ip, port=port, username=username, password=password, config_file=config_file
     )
+
+
+@main.group()
+def validate():
+    """Validate provider specs"""
+    pass
+
+
+@validate.command("provider_spec")
+@click.option(
+    "--file",
+    "-f",
+    "spec_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path of provider spec file",
+)
+@click.option(
+    "--type",
+    "provider_type",
+    type=click.Choice(get_provider_types()),
+    default="AHV_VM",
+    help="Provider type",
+)
+def validate_provider_spec(spec_file, provider_type):
+
+    with open(spec_file) as f:
+        spec = yaml.safe_load(f.read())
+
+    try:
+        Provider = get_provider(provider_type)
+        Provider.validate_spec(spec)
+        click.echo("File {} is a valid {} spec.".format(spec_file, provider_type))
+    except Exception as ee:
+        click.echo("File {} is invalid {} spec".format(spec_file, provider_type))
+        raise ee
 
 
 @main.group()
@@ -291,7 +333,16 @@ def _describe_app(obj, app_name):
 def _run_actions(obj, app_name, action_name, watch):
     """App related functionality: launch, lcm actions, monitor, delete"""
 
-    run_actions(obj, app_name, action_name, watch)
+    def render_actions(screen):
+        screen.clear()
+        screen.print_at(
+            "Running action {} for app {} ...".format(action_name, app_name), 0, 0
+        )
+        screen.refresh()
+        run_actions(screen, obj, app_name, action_name, watch)
+        screen.wait_for_input(10.0)
+
+    Screen.wrapper(render_actions)
 
 
 @main.group()
@@ -307,3 +358,18 @@ def watch():
 def _watch_app(obj, app_name, action):
     """Watch an app"""
     watch_app(obj, app_name, action)
+
+
+@create.command("provider_spec")
+@click.option(
+    "--type",
+    "provider_type",
+    type=click.Choice(get_provider_types()),
+    default="AHV_VM",
+    help="Provider type",
+)
+@click.pass_obj
+def create_provider_spec(obj, provider_type):
+
+    Provider = get_provider(provider_type)
+    Provider.create_spec()

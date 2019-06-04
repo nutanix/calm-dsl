@@ -11,6 +11,23 @@ from .runbook import runbook_create
 # Action - Since action, runbook and DAG task are heavily coupled together,
 # the action type behaves as all three.
 
+TASK_FUNCS = [
+    "exec_task_ssh",
+    "exec_task_escript",
+    "exec_task_powershell",
+    "set_variable_task_ssh",
+    "set_variable_task_escript",
+    "set_variable_task_powershell",
+    "http_task_get",
+    "http_task_post",
+    "http_task_put",
+    "http_task_delete",
+    "http_task",
+    "scale_out_task",
+    "scale_in_task",
+    "delay_task",
+]
+
 
 class ActionType(EntityType):
     __schema_name__ = "Action"
@@ -60,7 +77,7 @@ class GetCallNodes(ast.NodeVisitor):
 
     def visit_Call(self, node):
         if isinstance(node.func, ast.Attribute) or (
-            isinstance(node.func, ast.Name) and node.func.id in ["exec_ssh"]
+            isinstance(node.func, ast.Name) and node.func.id in TASK_FUNCS
         ):
 
             task = eval(compile(ast.Expression(node), "", "eval"), self._globals)
@@ -102,7 +119,7 @@ class action(metaclass=DescriptorType):
         """
 
         # Generate the entity names
-        self.action_name = " ".join(user_func.__name__.lower().split("_")).title()
+        self.action_name = user_func.__name__
         self.runbook_name = str(uuid.uuid4())[:8] + "_runbook"
         self.dag_name = str(uuid.uuid4())[:8] + "_dag"
         self.user_func = user_func
@@ -134,7 +151,7 @@ class action(metaclass=DescriptorType):
         # Get the indent since this decorator is used within class definition
         # For this we split the code on newline and count the number of spaces
         # before the @action decorator.
-        # src = "    @action\n    def action1():\n    exec_ssh("Hello World")"
+        # src = "    @action\n    def action1():\n    exec_task_ssh("Hello World")"
         # The indentation here would be 4.
         padding = src.split("\n")[0].rstrip(" ").split(" ").count("")
 
@@ -164,12 +181,26 @@ class action(metaclass=DescriptorType):
         self.user_runbook.tasks = [self.user_dag] + tasks
         self.user_runbook.variables = [variable for variable in variables.values()]
 
+        # System action names
+        action_name = self.action_name
+        ACTION_TYPE = "user"
+        func_name = self.user_func.__name__.lower()
+        if func_name.startswith("__") and func_name.endswith("__"):
+            SYSTEM = getattr(cls, "ALLOWED_SYSTEM_ACTIONS", {})
+            FRAGMENT = getattr(cls, "ALLOWED_FRAGMENT_ACTIONS", {})
+            if func_name in SYSTEM:
+                ACTION_TYPE = "system"
+                action_name = SYSTEM[func_name]
+            elif func_name in FRAGMENT:
+                ACTION_TYPE = "fragment"
+                action_name = FRAGMENT[func_name]
+
         # Finally create the action
         self.user_action = _action_create(
             **{
-                "name": self.action_name,
-                "critical": False,
-                "type": "user",
+                "name": action_name,
+                "critical": ACTION_TYPE == "system",
+                "type": ACTION_TYPE,
                 "runbook": self.user_runbook,
             }
         )

@@ -11,6 +11,11 @@ class PackageType(EntityType):
     __schema_name__ = "Package"
     __openapi_type__ = "app_package"
 
+    ALLOWED_SYSTEM_ACTIONS = {
+        "__install__": "action_install",
+        "__uninstall__": "action_uninstall",
+    }
+
     def compile(cls):
 
         if not getattr(cls, "type") == "CUSTOM":
