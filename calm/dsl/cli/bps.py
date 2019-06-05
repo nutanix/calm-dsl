@@ -138,10 +138,17 @@ def describe_bp(obj, blueprint_name):
         profile_name = profile["name"]
         click.echo("\t" + highlight_text(profile_name))
 
-        substrate_ids = [dep.get("substrate_local_reference", {}).get("uuid") for dep in profile.get('deployment_create_list', [])]
-        substrate_types = [sub.get("type") for sub in bp_resources.get("substrate_definition_list") if sub.get("uuid") in substrate_ids]
+        substrate_ids = [
+            dep.get("substrate_local_reference", {}).get("uuid")
+            for dep in profile.get("deployment_create_list", [])
+        ]
+        substrate_types = [
+            sub.get("type")
+            for sub in bp_resources.get("substrate_definition_list")
+            if sub.get("uuid") in substrate_ids
+        ]
         click.echo("\tSubstrates[{}]:".format(highlight_text(len(substrate_types))))
-        click.echo("\t\t{}".format(highlight_text(', '.join(substrate_types))))
+        click.echo("\t\t{}".format(highlight_text(", ".join(substrate_types))))
 
         click.echo("\tActions[{}]:".format(highlight_text(len(profile["action_list"]))))
         for action in profile["action_list"]:
