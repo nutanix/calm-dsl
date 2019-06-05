@@ -124,13 +124,6 @@ def describe_bp(obj, blueprint_name):
         " Project: " + highlight_text(bp["metadata"]["project_reference"]["name"])
     )
 
-    # import ipdb; ipdb.set_trace()
-
-    # click.echo(
-    #     "Profiles: "
-    #     + highlight_text(bp["status"]["resources"]["bp_blueprint_reference"]["name"])
-    # )
-
     created_on = int(bp["metadata"]["creation_time"]) // 1000000
     past = arrow.get(created_on).humanize()
     click.echo(
@@ -138,13 +131,19 @@ def describe_bp(obj, blueprint_name):
             highlight_text(time.ctime(created_on)), highlight_text(past)
         )
     )
-
-    profile_list = bp.get("status").get("resources", {}).get("app_profile_list", [])
+    bp_resources = bp.get("status").get("resources", {})
+    profile_list = bp_resources.get("app_profile_list", [])
     click.echo("Application Profiles [{}]:".format(highlight_text(len(profile_list))))
     for profile in profile_list:
         profile_name = profile["name"]
         click.echo("\t" + highlight_text(profile_name))
-        click.echo("\tActions:")
+
+        substrate_ids = [dep.get("substrate_local_reference", {}).get("uuid") for dep in profile.get('deployment_create_list', [])]
+        substrate_types = [sub.get("type") for sub in bp_resources.get("substrate_definition_list") if sub.get("uuid") in substrate_ids]
+        click.echo("\tSubstrates[{}]:".format(highlight_text(len(substrate_types))))
+        click.echo("\t\t{}".format(highlight_text(', '.join(substrate_types))))
+
+        click.echo("\tActions[{}]:".format(highlight_text(len(profile["action_list"]))))
         for action in profile["action_list"]:
             action_name = action["name"]
             if action_name.startswith("action_"):
