@@ -114,7 +114,6 @@ def delete_project(obj, project_names):
 
 def create_project(client, payload):
 
-    validator = ProjectValidator()
     name = payload["project_detail"]["name"]
 
     # check if project having same name exists
@@ -136,7 +135,7 @@ def create_project(client, payload):
     click.echo("Creating the project {}". format(name))
 
     # validating the payload
-    validator.validate_dict(payload)
+    ProjectValidator.validate_dict(payload)
     payload = {
         'api_version': "3.0",     # TODO Remove by a constant
         'metadata': {
