@@ -221,8 +221,15 @@ class RunlogJSONEncoder(JSONEncoder):
             return "root"
 
         state = status["state"]
+        # if state not in RUNLOG.TERMINAL_STATES:
 
-        return "{} (Status: {})".format(name, state)
+        metadata = obj.runlog["metadata"]
+        creation_time = int(metadata["creation_time"]) // 1000000
+        # owner = metadata[]
+
+        return "{} (Status: {})\n\tStarted: {}".format(
+            name, state, time.ctime(creation_time)
+        )
 
 
 def watch_action(runlog_uuid, app_name, client, screen=None):
@@ -291,10 +298,18 @@ def watch_action(runlog_uuid, app_name, client, screen=None):
             # Render Tree on next line
             line = 1
             for pre, _, node in RenderTree(root):
-                screen.print_at(
-                    "{}{}".format(pre, json.dumps(node, cls=RunlogJSONEncoder)), 0, line
-                )
-                line += 1
+                lines = json.dumps(node, cls=RunlogJSONEncoder).split("\\n")
+                for linestr in lines:
+                    tabcount = linestr.count("\\t")
+                    if not tabcount:
+                        screen.print_at("{}{}".format(pre, linestr), 0, line)
+                    else:
+                        screen.print_at(
+                            "{}{}".format("", linestr.replace("\\t", "")),
+                            len(pre) + 2 + tabcount * 2,
+                            line,
+                        )
+                    line += 1
             screen.refresh()
 
             for runlog in sorted_entities:
