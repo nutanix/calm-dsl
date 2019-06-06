@@ -247,7 +247,7 @@ class RunlogJSONEncoder(JSONEncoder):
         return "\n".join(encodedStringList)
 
 
-def watch_action(runlog_uuid, app_name, client, screen=None):
+def watch_action(runlog_uuid, app_name, client, screen):
     app = _get_app(client, app_name)
     app_uuid = app["metadata"]["uuid"]
 
@@ -347,13 +347,13 @@ def watch_action(runlog_uuid, app_name, client, screen=None):
     poll_action(poll_func, is_action_complete)
 
 
-def watch_app(obj, app_name, action):
+def watch_app(obj, app_name, action, screen):
     """Watch an app"""
 
     client = obj.get("client")
 
     if action:
-        return watch_action(action, app_name, client)
+        return watch_action(action, app_name, client, screen)
 
     app = _get_app(client, app_name)
     app_id = app["metadata"]["uuid"]

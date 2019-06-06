@@ -9,7 +9,7 @@ from calm.dsl.tools import ping
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
 
-# from .config import get_config, get_api_client
+from asciimatics.screen import Screen
 from .utils import Display
 from .apps import get_apps, describe_app, delete_app, run_actions, watch_app
 from .bps import (
@@ -351,7 +351,7 @@ def _describe_app(obj, app_name):
 def _run_actions(obj, app_name, action_name, watch):
     """App related functionality: launch, lcm actions, monitor, delete"""
 
-    def render_actions(screen=None):
+    def render_actions(screen):
         screen.clear()
         screen.print_at(
             "Running action {} for app {} ...".format(action_name, app_name), 0, 0
@@ -375,7 +375,8 @@ def watch():
 @click.pass_obj
 def _watch_app(obj, app_name, action):
     """Watch an app"""
-    watch_app(obj, app_name, action)
+    Screen.wrapper(lambda screen: watch_app(obj, app_name, action, screen))
+    click.echo("Action completed")
 
 
 @create.command("provider_spec")
