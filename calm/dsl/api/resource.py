@@ -45,7 +45,7 @@ class ResourceAPI:
         if not err:
             response = response.json()
         else:
-            raise Exception(err)
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
         total_matches = response["metadata"]["total_matches"]
         if total_matches == 0:
