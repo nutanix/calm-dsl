@@ -2,8 +2,6 @@ import json
 
 from ruamel import yaml
 import click
-from asciimatics.screen import Screen
-
 
 # TODO - move providers to separate file
 from calm.dsl.providers import get_provider, get_provider_types
@@ -11,9 +9,12 @@ from calm.dsl.tools import ping
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
 
+from asciimatics.screen import Screen
+from .utils import Display
 from .apps import get_apps, describe_app, delete_app, run_actions, watch_app
 from .bps import (
     get_blueprint_list,
+    describe_bp,
     compile_blueprint_command,
     compile_blueprint,
     launch_blueprint_simple,
@@ -330,6 +331,14 @@ def describe():
     pass
 
 
+@describe.command("bp")
+@click.argument("bp_name")
+@click.pass_obj
+def _describe_bp(obj, bp_name):
+    """Describe an app"""
+    describe_bp(obj, bp_name)
+
+
 @describe.command("app")
 @click.argument("app_name")
 @click.pass_obj
@@ -355,12 +364,12 @@ def _run_actions(obj, app_name, action_name, watch):
         run_actions(screen, obj, app_name, action_name, watch)
         screen.wait_for_input(10.0)
 
-    Screen.wrapper(render_actions)
+    Display.wrapper(render_actions, watch)
 
 
 @main.group()
 def watch():
-    """Get various things like blueprints, apps and so on"""
+    """Track actions running on apps"""
     pass
 
 
@@ -370,7 +379,8 @@ def watch():
 @click.pass_obj
 def _watch_app(obj, app_name, action):
     """Watch an app"""
-    watch_app(obj, app_name, action)
+    Screen.wrapper(lambda screen: watch_app(obj, app_name, action, screen))
+    click.echo("Action completed")
 
 
 @create.command("provider_spec")
