@@ -89,6 +89,7 @@ def validate():
     "-f",
     "spec_file",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    required=True,
     help="Path of provider spec file",
 )
 @click.option(
@@ -186,6 +187,7 @@ def compile():
     "-f",
     "bp_file",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    required=True,
     help="Path of Blueprint file to upload",
 )
 @click.option(
@@ -247,6 +249,7 @@ def create_blueprint_from_dsl(client, bp_file, name=None, description=None):
     "-f",
     "bp_file",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    required=True,
     help="Path of Blueprint file to upload",
 )
 @click.option("--name", default=None, help="Blueprint name (Optional)")
