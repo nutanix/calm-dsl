@@ -20,7 +20,7 @@ from .bps import (
     launch_blueprint_simple,
     delete_blueprint,
 )
-from .projects import get_projects, delete_project, create_project
+from .projects import get_projects, delete_project, create_project, describe_project
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
@@ -407,6 +407,15 @@ def _describe_bp(obj, bp_name):
 def _describe_app(obj, app_name):
     """Describe an app"""
     describe_app(obj, app_name)
+
+
+@describe.command("project")
+@click.argument("project_name")
+@click.pass_obj
+def _describe_project(obj, project_name):
+    """Describe a project"""
+
+    describe_project(obj, project_name)
 
 
 @main.command("app")

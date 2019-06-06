@@ -4,6 +4,7 @@ from .connection import get_connection, REQUEST
 from .blueprint import BlueprintAPI
 from .application import ApplicationAPI
 from .project import ProjectAPI
+from .setting import SettingAPI
 
 
 class ClientHandle:
@@ -18,6 +19,7 @@ class ClientHandle:
         self.project = ProjectAPI(self.connection)
         self.blueprint = BlueprintAPI(self.connection)
         self.application = ApplicationAPI(self.connection)
+        self.account = SettingAPI(self.connection)
 
 
 _CLIENT_HANDLE = None

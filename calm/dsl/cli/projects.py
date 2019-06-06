@@ -96,6 +96,14 @@ def get_project(client, name):
         project = entities[0]
     else:
         raise Exception(">> No project found with name {} found >>".format(name))
+
+    project_id = project["metadata"]["uuid"]
+    click.echo(">> Fetching project details")
+    res, err = client.project.read(project_id)  # for getting additional fields
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    project = res.json()
     return project
 
 
@@ -145,3 +153,102 @@ def create_project(client, payload):
     }
 
     return client.project.create(payload)
+
+
+def describe_project(obj, project_name):
+
+    client = obj.get("client")
+    project = get_project(client, project_name)
+
+    click.echo("\n----Project Summary----\n")
+    click.echo(
+        "Name: "
+        + highlight_text(project_name)
+        + " (uuid: "
+        + highlight_text(project["metadata"]["uuid"])
+        + ")"
+    )
+
+    click.echo("Status: " + highlight_text(project["status"]["state"]))
+    click.echo(
+        "Owner: " + highlight_text(project["metadata"]["owner_reference"]["name"])
+    )
+
+    created_on = arrow.get(project["metadata"]["creation_time"])
+    past = created_on.humanize()
+    click.echo(
+        "Created on: {} ({})".format(
+            highlight_text(time.ctime(created_on.timestamp)), highlight_text(past)
+        )
+    )
+
+    accounts = project["status"]["project_status"]["resources"]["account_reference_list"]
+    account_name_uuid_map = client.account.get_name_uuid_map()
+    account_uuid_name_map = {v: k for k, v in account_name_uuid_map.items()}    # TODO check it
+
+    click.echo("Accounts registered: ", nl=False)
+    if not accounts:
+        click.echo(highlight_text("None"))
+    else:
+        click.echo("")
+        table = PrettyTable()
+        table.field_names = [
+            "Name",
+            "UUID"
+        ]
+        for account in accounts:    # TODO display in table
+            account_id = account["uuid"]
+            account_name = account_uuid_name_map[account_id]
+            table.add_row(
+                [
+                    highlight_text(account_name),
+                    highlight_text(account_id)
+                ]
+            )
+        click.echo(table)
+
+    acp_list = project["status"]["access_control_policy_list_status"]
+    click.echo("Users registered: ", nl=False)
+    if not accounts:
+        click.echo(highlight_text("None"))
+    else:
+        click.echo("")
+        table = PrettyTable()
+        table.field_names = [
+            "Name",
+            "Role"
+        ]
+
+        for acp in acp_list:
+            role = acp["access_control_policy_status"]["resources"]["role_reference"]
+            users = acp["access_control_policy_status"]["resources"]["user_reference_list"]
+
+            for user in users:
+                table.add_row(
+                    [
+                        highlight_text(user["name"]),
+                        highlight_text(role["name"])
+                    ]
+                )
+        click.echo(table)
+
+    subnets = project["status"]["project_status"]["resources"]["subnet_reference_list"]
+    click.echo("Subnets registered", nl=False)
+    if not subnets:
+        click.echo(highlight_text("None"))
+    else:
+        click.echo("")
+        table = PrettyTable()
+        table.field_names = [
+            "Name",
+            "UUID"
+        ]
+
+        for subnet in subnets:
+            table.add_row(
+                [
+                    highlight_text(subnet["name"]),
+                    highlight_text(subnet["uuid"])
+                ]
+            )
+        click.echo(table)
