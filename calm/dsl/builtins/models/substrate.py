@@ -18,14 +18,11 @@ class SubstrateType(EntityType):
 
         cdict = super().compile()
 
-        # TODO - fix this mess!
-        # readiness probe requires address to be set even if there is one nic
-
-        cred = cdict.pop("credential", None)
-
+        readiness_probe = {}
+        if "readiness_probe" in cdict and cdict["readiness_probe"]:
+            readiness_probe = cdict["readiness_probe"]
         if cdict["type"] == "AHV_VM":
-            # If readiness probe is not given by user, set defaults
-            if "readiness_probe" not in cdict:
+            if not readiness_probe:
                 readiness_probe = {
                     "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
                     "disable_readiness_probe": False,
@@ -33,9 +30,12 @@ class SubstrateType(EntityType):
                     "connection_type": "SSH",
                     "connection_port": 22,
                 }
-
+            elif not readiness_probe.get("address"):
+                readiness_probe[
+                    "address"
+                ] = "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@"
         elif cdict["type"] == "EXISTING_VM":
-            if "readiness_probe" not in cdict:
+            if not readiness_probe:
                 readiness_probe = {
                     "address": "@@{ip_address}@@",
                     "disable_readiness_probe": False,
@@ -43,11 +43,8 @@ class SubstrateType(EntityType):
                     "connection_type": "SSH",
                     "connection_port": 22,
                 }
-
-        else:
-            readiness_probe = {}
-        if readiness_probe and cred is not None:
-            readiness_probe["login_credential_local_reference"] = cred
+            elif not readiness_probe.get("address"):
+                readiness_probe["address"] = "@@{ip_address}@@"
 
         cdict["readiness_probe"] = readiness_probe
 
