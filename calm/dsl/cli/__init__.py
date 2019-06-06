@@ -276,7 +276,7 @@ def create_blueprint_from_dsl(client, bp_file, name=None, description=None):
 @click.option("--description", default=None, help="Blueprint description (Optional)")
 @click.pass_obj
 def create_blueprint_command(obj, bp_file, name, description):
-    """Create a blueprint"""
+    """Creates a blueprint"""
 
     client = obj.get("client")
 
@@ -318,7 +318,7 @@ def create_project_from_file(client, file_location):
 )
 @click.pass_obj
 def _create_project(obj, project_file):
-    """ Creates the project """
+    """Creates a project"""
 
     client = obj.get("client")
 
@@ -346,6 +346,8 @@ def delete():
 @click.argument("blueprint_names", nargs=-1)
 @click.pass_obj
 def _delete_blueprint(obj, blueprint_names):
+    """Deletes a blueprint"""
+
     delete_blueprint(obj, blueprint_names)
 
 
@@ -354,6 +356,8 @@ def _delete_blueprint(obj, blueprint_names):
 @click.option("--soft", "-s", is_flag=True, default=False, help="Soft delete app")
 @click.pass_obj
 def _delete_app(obj, app_names, soft):
+    """Deletes a application"""
+
     delete_app(obj, app_names, soft)
 
 
@@ -361,6 +365,8 @@ def _delete_app(obj, app_names, soft):
 @click.argument("project_names", nargs=-1)
 @click.pass_obj
 def _delete_project(obj, project_names):
+    """Deletes a project"""
+
     delete_project(obj, project_names)
 
 
@@ -449,6 +455,7 @@ def _watch_app(obj, app_name, action):
 )
 @click.pass_obj
 def create_provider_spec(obj, provider_type):
+    """Creates a provider_spec"""
 
     Provider = get_provider(provider_type)
     Provider.create_spec()
