@@ -29,7 +29,7 @@ class SubstrateType(EntityType):
                     "connection_type": "SSH",
                     "connection_port": 22,
                 }
-            if readiness_probe.get("address", None) is None:
+            if not readiness_probe.get("address"):
                 readiness_probe[
                     "address"
                 ] = "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@"
@@ -41,7 +41,7 @@ class SubstrateType(EntityType):
                     "connection_type": "SSH",
                     "connection_port": 22,
                 }
-            if readiness_probe.get("address", None) is None:
+            if not readiness_probe.get("address"):
                 readiness_probe["address"] = "@@{ip_address}@@"
 
         cdict["readiness_probe"] = readiness_probe
