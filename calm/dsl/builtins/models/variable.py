@@ -40,9 +40,16 @@ def setvar(name, value, **kwargs):
     kwargs["value"] = value
 
     # name = name.title() + getattr(VariableType, "__schema_name__")
-    return VariableType(name, (Entity,), kwargs)
+    return VariableType(name, (Variable,), kwargs)
 
 
-def var(value, **kwargs):
+def simple_variable(value, label=None, runtime=False):
+    editables = {}
     name = getattr(VariableType, "__schema_name__")
-    return setvar(name, value, **kwargs)
+    if runtime:
+        editables = {
+            "value": True
+        }
+    if label is None:
+        label = ""
+    return setvar(name, value, label=label, editables=editables)

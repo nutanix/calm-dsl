@@ -6,7 +6,7 @@
 
 from .models.ref import Ref, ref
 from .models.credential import basic_cred
-from .models.variable import Variable, var, setvar
+from .models.variable import Variable, simple_variable, setvar
 from .models.action import action
 
 from .models.task import (
@@ -48,7 +48,7 @@ __all__ = [
     "ref",
     "basic_cred",
     "Variable",
-    "var",
+    "simple_variable",
     "setvar",
     "Task",
     "exec_task_ssh",
