@@ -18,29 +18,31 @@ class SubstrateType(EntityType):
 
         cdict = super().compile()
 
+        readiness_probe = {}
         if "readiness_probe" in cdict and cdict["readiness_probe"]:
             readiness_probe = cdict["readiness_probe"]
-        else:
-            if cdict["type"] == "AHV_VM":
-
-                # If readiness probe is not given by user, set defaults
+        if cdict["type"] == "AHV_VM":
+            if not readiness_probe:
                 readiness_probe = {
-                    "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
                     "disable_readiness_probe": False,
                     "delay_secs": "0",
                     "connection_type": "SSH",
                     "connection_port": 22,
                 }
-            elif cdict["type"] == "EXISTING_VM":
+            if readiness_probe.get("address", None) is None:
+                readiness_probe[
+                    "address"
+                ] = "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@"
+        elif cdict["type"] == "EXISTING_VM":
+            if not readiness_probe:
                 readiness_probe = {
-                    "address": "@@{ip_address}@@",
                     "disable_readiness_probe": False,
                     "delay_secs": "0",
                     "connection_type": "SSH",
                     "connection_port": 22,
                 }
-            else:
-                readiness_probe = {}
+            if readiness_probe.get("address", None) is None:
+                readiness_probe["address"] = "@@{ip_address}@@"
 
         cdict["readiness_probe"] = readiness_probe
 

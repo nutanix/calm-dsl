@@ -9,6 +9,7 @@ class ObjectDict(EntityDict):
         self.validators = validators
         self.defaults = defaults
         self.display_map = display_map
+        self.__items_set__ = False
         super().__init__(validators)
 
     def get_default(self, is_array):
@@ -17,10 +18,20 @@ class ObjectDict(EntityDict):
     def __call__(self):
         return self.__class__(self.validators, self.defaults, self.display_map)
 
+    def __setitem__(self, name, value):
+        self.__items_set__ = True
+        super().__setitem__(name, value)
+
     def compile(self, cls):
         ret = {}
-        for key, value in self.items():
-            ret[self.display_map[key]] = value
+        if not self.__items_set__:
+            return ret
+        for key, value in self.defaults.items():
+            value = self.get(key, value())
+            if getattr(value, "__is_object__", False):
+                ret[self.display_map[key]] = value.compile(self)
+            else:
+                ret[self.display_map[key]] = value
         return ret
 
 
