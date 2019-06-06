@@ -45,7 +45,7 @@ class BlueprintAPI(ResourceAPI):
         )
 
     @staticmethod
-    def _make_blueprint_payload(bp_name, bp_desc, bp_resources):
+    def _make_blueprint_payload(bp_name, bp_desc, bp_resources, categories=None):
 
         bp_payload = {
             "spec": {
@@ -57,9 +57,12 @@ class BlueprintAPI(ResourceAPI):
             "api_version": "3.0",
         }
 
+        if categories:
+            bp_payload["categories"] = categories
+
         return bp_payload
 
-    def upload_with_secrets(self, bp_name, bp_desc, bp_resources):
+    def upload_with_secrets(self, bp_name, bp_desc, bp_resources, categories=None):
 
         # check if bp with the given name already exists
         params = {"filter": "name=={};state!=DELETED".format(bp_name)}
@@ -90,6 +93,7 @@ class BlueprintAPI(ResourceAPI):
             }
             if cred.pop("default"):
                 default_creds.append(cred)
+        """
         if not default_creds:
             raise ValueError("No default cred provided")
         if len(default_creds) > 1:
@@ -98,11 +102,12 @@ class BlueprintAPI(ResourceAPI):
                     ", ".join(cred["name"] for cred in default_creds)
                 )
             )
-
-        bp_resources["default_credential_local_reference"] = {
-            "kind": "app_credential",
-            "name": default_creds[0]["name"],
-        }
+        """
+        if default_creds:
+            bp_resources["default_credential_local_reference"] = {
+                "kind": "app_credential",
+                "name": default_creds[0]["name"],
+            }
 
         upload_payload = self._make_blueprint_payload(bp_name, bp_desc, bp_resources)
 
@@ -120,6 +125,10 @@ class BlueprintAPI(ResourceAPI):
         for cred in creds:
             name = cred["name"]
             cred["secret"] = secret_map[name]
+
+        # TODO - insert categories during update as /import_json fails if categories are given!
+        if categories:
+            bp["metadata"]["categories"] = categories
 
         # Update blueprint
         update_payload = bp

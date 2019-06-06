@@ -208,7 +208,7 @@ def create():
     pass
 
 
-def create_blueprint(client, bp_payload, name=None, description=None):
+def create_blueprint(client, bp_payload, name=None, description=None, categories=None):
 
     bp_payload.pop("status", None)
 
@@ -223,7 +223,9 @@ def create_blueprint(client, bp_payload, name=None, description=None):
     bp_name = bp_payload["spec"]["name"]
     bp_desc = bp_payload["spec"]["description"]
 
-    return client.blueprint.upload_with_secrets(bp_name, bp_desc, bp_resources)
+    categories = bp_payload["metadata"]["categories"]
+
+    return client.blueprint.upload_with_secrets(bp_name, bp_desc, bp_resources, categories=categories)
 
 
 def create_blueprint_from_json(client, path_to_json, name=None, description=None):
