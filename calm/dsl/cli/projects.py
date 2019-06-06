@@ -182,34 +182,9 @@ def describe_project(obj, project_name):
         )
     )
 
-    accounts = project["status"]["project_status"]["resources"]["account_reference_list"]
-    account_name_uuid_map = client.account.get_name_uuid_map()
-    account_uuid_name_map = {v: k for k, v in account_name_uuid_map.items()}    # TODO check it
-
-    click.echo("Accounts registered: ", nl=False)
-    if not accounts:
-        click.echo(highlight_text("None"))
-    else:
-        click.echo("")
-        table = PrettyTable()
-        table.field_names = [
-            "Name",
-            "UUID"
-        ]
-        for account in accounts:    # TODO display in table
-            account_id = account["uuid"]
-            account_name = account_uuid_name_map[account_id]
-            table.add_row(
-                [
-                    highlight_text(account_name),
-                    highlight_text(account_id)
-                ]
-            )
-        click.echo(table)
-
     acp_list = project["status"]["access_control_policy_list_status"]
-    click.echo("Users registered: ", nl=False)
-    if not accounts:
+    click.echo("\nUsers, Group and Roles: ", nl=False)
+    if not acp_list:
         click.echo(highlight_text("None"))
     else:
         click.echo("")
@@ -232,8 +207,34 @@ def describe_project(obj, project_name):
                 )
         click.echo(table)
 
+    click.echo("\nInfrastructure: ", nl=False)
+
+    accounts = project["status"]["project_status"]["resources"]["account_reference_list"]
+    account_name_uuid_map = client.account.get_name_uuid_map()
+    account_uuid_name_map = {v: k for k, v in account_name_uuid_map.items()}    # TODO check it
+
+    if not accounts:
+        click.echo(highlight_text("None"))
+    else:
+        click.echo("")
+        table = PrettyTable()
+        table.field_names = [
+            "Name",
+            "UUID"
+        ]
+        for account in accounts:    # TODO display in table
+            account_id = account["uuid"]
+            account_name = account_uuid_name_map[account_id]
+            table.add_row(
+                [
+                    highlight_text(account_name),
+                    highlight_text(account_id)
+                ]
+            )
+        click.echo(table)
+
     subnets = project["status"]["project_status"]["resources"]["subnet_reference_list"]
-    click.echo("Subnets registered", nl=False)
+    click.echo("\nSubnets registered", nl=False)
     if not subnets:
         click.echo(highlight_text("None"))
     else:

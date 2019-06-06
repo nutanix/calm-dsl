@@ -37,9 +37,15 @@ class AHV:
         Obj = get_resource_api(ahv.SUBNETS, self.connection)
         return Obj.get_name_uuid_map()
 
-    def groups(self):
+    def groups(self, payload):
         Obj = get_resource_api(ahv.GROUPS, self.connection)
-        categories = []
+
+        if not payload:
+            raise Exception("no payload")
+
+        return Obj.create(payload)
+
+    def categories(self):
 
         payload = {
             "entity_type": "category",
@@ -57,9 +63,13 @@ class AHV:
             "query_name": "prism:CategoriesQueryModel",
         }
 
-        response, err = Obj.create(payload)
-        response = response.json()
+        response, err = self.groups(payload)
+        categories = []
 
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        response = response.json()
         for group in response["group_results"]:
 
             key = group["group_summaries"]["sum:name"]["values"][0]["values"][0]
@@ -90,7 +100,7 @@ def create_ahv_spec(client):
 
     choice = click.prompt(highlight_text("\nWant to add some categories(y/n)"))
     if choice[0] == "y":
-        categories = Obj.groups()
+        categories = Obj.categories()
         click.echo("\n Choose from given categories: \n")
 
         for ind, group in enumerate(categories):
