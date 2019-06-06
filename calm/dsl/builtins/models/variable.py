@@ -47,9 +47,7 @@ def simple_variable(value, label=None, runtime=False):
     editables = {}
     name = getattr(VariableType, "__schema_name__")
     if runtime:
-        editables = {
-            "value": True
-        }
+        editables = {"value": True}
     if label is None:
         label = ""
     return setvar(name, value, label=label, editables=editables)
