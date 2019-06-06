@@ -68,6 +68,7 @@ def get_validator_details(schema_props, name):
     is_array = False
     object_validators = {}
     object_defaults = {}
+    object_display_map = {}
 
     props = schema_props.get(name, None)
     if props is None:
@@ -87,8 +88,12 @@ def get_validator_details(schema_props, name):
                 validator, is_array, default = get_validator_details(
                     props["properties"], name
                 )
-                object_validators[name] = (validator, is_array)
-                object_defaults[name] = default
+                attr_name = props["properties"][name].get(
+                    "x-calm-dsl-display-name", name
+                )
+                object_validators[attr_name] = (validator, is_array)
+                object_defaults[attr_name] = default
+                object_display_map[attr_name] = name
 
     if type_ == "array":
         item_props = props.get("items", None)
@@ -102,7 +107,9 @@ def get_validator_details(schema_props, name):
     property_validators = get_property_validators()
     ValidatorType = property_validators.get(type_, None)
     if object_type:
-        ValidatorType = ValidatorType.__kind__(object_validators, object_defaults)
+        ValidatorType = ValidatorType.__kind__(
+            object_validators, object_defaults, object_display_map
+        )
     if ValidatorType is None:
         raise TypeError("Type {} not supported".format(type_))
 

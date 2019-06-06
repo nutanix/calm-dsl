@@ -24,7 +24,9 @@ def _validate(vdict, name, value):
                 if not isinstance(value, dict):
                     raise TypeError("{} is not of type {}".format(value, "dict"))
                 new_value = ValidatorType.__class__(
-                    ValidatorType.validators, ValidatorType.defaults
+                    ValidatorType.validators,
+                    ValidatorType.defaults,
+                    ValidatorType.display_map,
                 )
                 for k, v in value.items():
                     new_value[k] = v
@@ -267,6 +269,8 @@ class EntityType(EntityTypeBase):
         cdict = {}
         display_map = getattr(type(cls), "__display_map__")
         for k, v in attrs.items():
+            if getattr(v, "__is_object__", False):
+                cdict.setdefault(display_map[k], v.compile(cls))
             cdict.setdefault(display_map[k], v)
 
         # Add name & description if present
