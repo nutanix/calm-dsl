@@ -6,6 +6,7 @@ from prettytable import PrettyTable
 
 from .utils import get_name_query, highlight_text
 from calm.dsl.builtins import ProjectValidator
+from calm.dsl.api import get_resource_api
 
 
 def get_projects(obj, name, filter_by, limit, offset, quiet):
@@ -182,10 +183,18 @@ def describe_project(obj, project_name):
         )
     )
 
+    environments = project["status"]["project_status"]["resources"]["environment_reference_list"]
+    click.echo("Environment Registered: ", nl=False)
+
+    if not environments:
+        click.echo(highlight_text("No"))
+    else:      # Handle Multiple Environments
+        click.echo("{} ( uuid: {} )". format(highlight_text("Yes"), environments[0]["uuid"]))
+
     acp_list = project["status"]["access_control_policy_list_status"]
-    click.echo("\nUsers, Group and Roles: ", nl=False)
+    click.echo("\nUsers, Group and Roles: \n-----------------")
     if not acp_list:
-        click.echo(highlight_text("None"))
+        click.echo(highlight_text("No users or groups registered"))
     else:
         click.echo("")
         table = PrettyTable()
@@ -207,49 +216,78 @@ def describe_project(obj, project_name):
                 )
         click.echo(table)
 
-    click.echo("\nInfrastructure: ", nl=False)
+    click.echo("\nInfrastructure: \n-----------------\n")
 
     accounts = project["status"]["project_status"]["resources"]["account_reference_list"]
     account_name_uuid_map = client.account.get_name_uuid_map()
     account_uuid_name_map = {v: k for k, v in account_name_uuid_map.items()}    # TODO check it
 
-    if not accounts:
-        click.echo(highlight_text("None"))
-    else:
-        click.echo("")
-        table = PrettyTable()
-        table.field_names = [
-            "Name",
-            "UUID"
-        ]
-        for account in accounts:    # TODO display in table
-            account_id = account["uuid"]
-            account_name = account_uuid_name_map[account_id]
-            table.add_row(
-                [
-                    highlight_text(account_name),
-                    highlight_text(account_id)
-                ]
-            )
-        click.echo(table)
+    res, err = client.account.list()
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    res = res.json()
+    account_name_type_map = {}
+    for entity in res["entities"]:
+        name = entity["status"]["name"]
+        account_type = entity["status"]["resources"]["type"]
+        account_name_type_map[name] = account_type
+
+    account_type_name_map = {}
+    for account in accounts:        # TODO remove this mess
+        account_uuid = account["uuid"]
+        account_name = account_uuid_name_map[account_uuid]
+        account_type = account_name_type_map[account_name]
+        account_type_name_map[account_type] = account_name
+
+    for account_type, account_name in account_type_name_map.items():
+        click.echo("Account Type: " + highlight_text(account_type.upper()))
+        click.echo(
+            "Name: {} (uuid: {})\n".
+            format(highlight_text(account_name), highlight_text(account_uuid))
+        )
 
     subnets = project["status"]["project_status"]["resources"]["subnet_reference_list"]
-    click.echo("\nSubnets registered", nl=False)
-    if not subnets:
-        click.echo(highlight_text("None"))
-    else:
-        click.echo("")
-        table = PrettyTable()
-        table.field_names = [
-            "Name",
-            "UUID"
-        ]
+    if subnets:
+        click.echo("Account Type: " + highlight_text("NUTANIX"))
 
-        for subnet in subnets:
-            table.add_row(
-                [
-                    highlight_text(subnet["name"]),
-                    highlight_text(subnet["uuid"])
-                ]
-            )
-        click.echo(table)
+    for subnet in subnets:
+        subnet_name = subnet["name"]
+        payload = {     # TODO move this
+            "entity_type": "subnet",
+            "group_member_attributes": [
+                {
+                    "attribute": "cluster_name"
+                }
+            ],
+            "filter_criteria": "_entity_id_=={}". format(subnet["uuid"])
+        }
+
+        Obj = get_resource_api("groups", client.connection)
+        res, err = Obj.create(payload)
+        res = res.json()
+
+        entity_data = res["group_results"][0]["entity_results"][0]["data"]
+        for data in entity_data:
+            if data["name"] == "cluster_name":
+                cluster_name = data["values"][0]["values"][0]
+
+        click.echo(
+            "Subnet Name: {}\tCluster Name: {}".
+            format(highlight_text(subnet_name), highlight_text(cluster_name))
+        )
+
+    if not(subnets or accounts):
+        click.echo(highlight_text("No provider's account registered"))
+
+    click.echo("\nQuotas: \n-----------------\n")
+    resources = project["status"]["project_status"]["resources"]
+
+    if not resources.get("resource_domain"):
+        click.echo(highlight_text("No quotas available"))
+    else:
+        resources = resources["resource_domain"]["resources"]
+        for resource in resources:
+            click.echo("{} : {}". format(resource["resource_type"], highlight_text(resource["value"])))
+
+    click.echo("\n")
