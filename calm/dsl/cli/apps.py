@@ -208,7 +208,9 @@ class RunlogJSONEncoder(JSONEncoder):
         if not isinstance(obj, RunlogNode):
             return super().default(obj)
 
+        metadata = obj.runlog["metadata"]
         status = obj.runlog["status"]
+        state = status["state"]
 
         if status["type"] == "task_runlog":
             name = status["task_reference"]["name"]
@@ -220,16 +222,29 @@ class RunlogJSONEncoder(JSONEncoder):
         else:
             return "root"
 
-        state = status["state"]
-        # if state not in RUNLOG.TERMINAL_STATES:
-
-        metadata = obj.runlog["metadata"]
         creation_time = int(metadata["creation_time"]) // 1000000
-        # owner = metadata[]
-
-        return "{} (Status: {})\n\tStarted: {}".format(
-            name, state, time.ctime(creation_time)
+        username = (
+            status["userdata_reference"]["name"]
+            if "userdata_reference" in status
+            else None
         )
+        last_update_time = int(metadata["last_update_time"]) // 1000000
+
+        encodedStringList = []
+        encodedStringList.append("{} (Status: {})".format(name, state))
+        encodedStringList.append("\tStarted: {}".format(time.ctime(creation_time)))
+        if username:
+            encodedStringList.append("\tRun by: {}".format(username))
+        if state in RUNLOG.TERMINAL_STATES:
+            encodedStringList.append(
+                "\tFinished: {}".format(time.ctime(last_update_time))
+            )
+        else:
+            encodedStringList.append(
+                "\tLast Updated: {}".format(time.ctime(last_update_time))
+            )
+
+        return "\n".join(encodedStringList)
 
 
 def watch_action(runlog_uuid, app_name, client, screen=None):
