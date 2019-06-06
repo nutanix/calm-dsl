@@ -357,8 +357,7 @@ def create_ahv_spec(client):
                 }
             }
 
-    Validator = AhvVmProvider.get_validator()
-    Validator.validate_spec(spec)  # Final validation (Insert some default's value)
+    AhvVmProvider.validate_spec(spec)  # Final validation (Insert some default's value)
     click.echo("\nCreate spec \n")
     click.echo(highlight_text(json.dumps(spec, sort_keys=True, indent=4)))
 
