@@ -19,7 +19,7 @@ from .bps import (
     launch_blueprint_simple,
     delete_blueprint,
 )
-from .projects import get_projects, delete_project, create_project
+from .projects import get_projects, delete_project, create_project, describe_project
 
 
 @click.group()
@@ -379,6 +379,15 @@ def describe():
 def _describe_app(obj, app_name):
     """Describe an app"""
     describe_app(obj, app_name)
+
+
+@describe.command("project")
+@click.argument("project_name")
+@click.pass_obj
+def _describe_project(obj, project_name):
+    """Describe a project"""
+
+    describe_project(obj, project_name)
 
 
 @main.command("app")
