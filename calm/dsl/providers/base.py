@@ -1,6 +1,5 @@
 from collections import OrderedDict
 from io import StringIO
-from pathlib import Path, PurePath
 import json
 
 from ruamel import yaml
@@ -41,98 +40,82 @@ def set_additional_properties_false(ValidatorClass):
 StrictDraft7Validator = set_additional_properties_false(Draft7Validator)
 
 
-class ProviderType(type):
+class ProviderBase:
 
     providers = OrderedDict()
 
-    def __new__(mcls, name, bases, ns):
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
 
-        cls = super().__new__(mcls, name, bases, ns)
+        provider_type = getattr(cls, "provider_type")
 
-        provider_type = ns.get("provider_type")
-        if provider_type is None:
-            raise Exception("Provider type not given.")
+        if provider_type:
 
-        cls.provider_type = provider_type
+            # Init Provider
+            cls._init()
 
-        provider_spec = ns.get("provider_spec")
-        if provider_spec is None:
-            raise Exception("Provider spec not given.")
+            # Register Provider
+            cls.providers[provider_type] = cls
 
-        cls.provider_spec = provider_spec
 
-        cls.validator = StrictDraft7Validator(provider_spec)
+class Provider(ProviderBase):
 
-        cls.providers[provider_type] = cls
+    provider_type = None
+    spec_template_file = None
+    package_name = None
 
-        return cls
+    @classmethod
+    def _init(cls):
 
-    def validate(cls, spec):
-        cls.validator.validate(spec)
+        if cls.package_name is None:
+            raise NotImplementedError("Package name not given")
+
+        if cls.spec_template_file is None:
+            raise NotImplementedError("Spec file not given")
+
+        loader = PackageLoader(cls.package_name, "")
+        env = Environment(loader=loader)
+        template = env.get_template(cls.spec_template_file)
+        tdict = yaml.safe_load(StringIO(template.render()))
+        tdict = jsonref.loads(json.dumps(tdict))
+
+        # TODO - Check if keys are present
+        cls.provider_spec = tdict["components"]["schemas"]["provider_spec"]
+        cls.Validator = StrictDraft7Validator(cls.provider_spec)
+
+    @classmethod
+    def get_provider_spec(cls):
+        return cls.provider_spec
+
+    @classmethod
+    def get_validator(cls):
+        return cls.Validator
+
+    @classmethod
+    def validate_spec(cls, spec):
+        Validator = cls.get_validator()
+        Validator.validate(spec)
+
+    @classmethod
+    def create_spec(cls):
+        raise NotImplementedError("Create spec not implemented")
 
 
 def get_provider(provider_type):
 
-    if provider_type not in ProviderType.providers:
+    if provider_type not in ProviderBase.providers:
         raise Exception("provider not registered")
 
-    return ProviderType.providers[provider_type]
+    return ProviderBase.providers[provider_type]
 
 
 def get_providers():
-    return ProviderType.providers
+    return ProviderBase.providers
 
 
 def get_provider_types():
-    return ProviderType.providers.keys()
+    return ProviderBase.providers.keys()
 
 
-def read_schema(spec_template_file):
-
-    loader = PackageLoader(__name__, "schemas")
-    env = Environment(loader=loader)
-    template = env.get_template(spec_template_file)
-    tdict = yaml.safe_load(StringIO(template.render()))
-    tdict = jsonref.loads(json.dumps(tdict))
-
-    # TODO - Check if keys are present
-    provider_type = tdict["info"]["title"]
-    provider_spec = tdict["components"]["schemas"]["provider_spec"]
-    return provider_type, provider_spec
-
-
-def register_provider(filename):
-
-    # Get spec template
-    spec_template_file = PurePath(filename).name
-
-    # Read spec schema
-    provider_type, provider_spec = read_schema(spec_template_file)
-
-    # Create namespace dict for class
-    ns = {"provider_type": provider_type, "provider_spec": provider_spec}
-
-    # Create provider class
-
-    # removes .yaml and .jinja2 suffix
-    file_stem = PurePath(PurePath(filename).stem).stem
-    name = file_stem.title().replace("_", "")
-
-    bases = (object,)
-    ProviderType(name, bases, ns)
-
-
-def register_providers():
-
-    path = Path(__file__)
-
-    for filename in list(path.parent.glob("schemas/*.yaml.jinja2")):
-        register_provider(filename)
-
-
-def main():
-    register_providers()
-
-
-if __name__ == "__main__":
-    main()
+def get_provider_interface():
+    return Provider

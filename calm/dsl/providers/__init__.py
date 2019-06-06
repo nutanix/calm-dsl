@@ -2,20 +2,16 @@ from .base import (
     get_provider,
     get_providers,
     get_provider_types,
-    register_providers,
-    register_provider,
+    get_provider_interface,
 )
 
-
-# TODO - use init to register providers
-if not get_providers():
-    register_providers()
-
+from .plugins import get_plugins
 
 __all__ = [
     "get_provider",
     "get_providers",
     "get_provider_types",
-    "register_providers",
-    "register_provider",
+    "get_provider_interface",
 ]
+
+get_plugins()
