@@ -148,8 +148,8 @@ def describe_aws_account(spec):
     regions = spec["regions"]
 
     click.echo("\nRegions:\n-------------- ")
-    for region in regions:
-        click.echo("\t{}". format(highlight_text(region["name"])))
+    for index, region in enumerate(regions):
+        click.echo("\t{}. {}". format(str(index + 1), highlight_text(region["name"])))
 
     click.echo("\nPublic Images:\n-------------- ")
     image_present = False
@@ -157,12 +157,12 @@ def describe_aws_account(spec):
         if region.get("images"):
             click.echo("\nRegion: {}". format(region["name"]))
             click.echo("Images: ")
-            for image in region["images"]:
+            for index, image in enumerate(region["images"]):
                 image_present = True
-                click.echo("\t{}". format(highlight_text(image["name"])))
+                click.echo("\t{}. {}". format(str(index + 1), highlight_text(image["name"])))
 
     if not image_present:
-        click.echo(highlight_text("No images provided"))
+        click.echo("\t{}". format(highlight_text("No images provided")))
 
 
 def describe_vmware_account(spec):
@@ -181,11 +181,11 @@ def describe_gcp_account(client, spec, account_id):
 
     click.echo("\nRegions:\n--------------\n")
     regions = spec["regions"]
-    for region in regions:
-        click.echo(highlight_text(region["name"]))
+    for index, region in enumerate(regions):
+        click.echo("\t{}. {}". format(str(index + 1), highlight_text(region["name"])))
 
     if not regions:
-        click.echo(highlight_text("No regions provided"))
+        click.echo("\t{}". format(highlight_text("No regions provided")))
 
     click.echo("\nPublic Images:\n--------------\n")
     images = spec["public_images"]
@@ -207,9 +207,9 @@ def describe_gcp_account(client, spec, account_id):
         selfLink = image["status"]["resources"]["selfLink"]
         image_selfLink_name_map[selfLink] = name
 
-    for image in images:
+    for index, image in enumerate(images):
         name = image_selfLink_name_map[image["selfLink"]]
-        click.echo(highlight_text(name))
+        click.echo("\t{}. {}". format(str(index + 1), highlight_text(name)))
 
     if not regions:     # TODO avoid unnecessary api call
         click.echo(highlight_text("No regions provided"))

@@ -193,7 +193,7 @@ def describe_project(obj, project_name):
         click.echo("{} ( uuid: {} )". format(highlight_text("Yes"), environments[0]["uuid"]))
 
     acp_list = project["status"]["access_control_policy_list_status"]
-    click.echo("\nUsers, Group and Roles: \n-----------------")
+    click.echo("\nUsers, Group and Roles: \n-----------------------\n")
     if not acp_list:
         click.echo(highlight_text("No users or groups registered\n"))
 
@@ -207,20 +207,20 @@ def describe_project(obj, project_name):
 
             if users:
                 click.echo("Users: ")
-                for user in users:
+                for index, user in enumerate(users):
                     name = user["name"].split("@")[0]
-                    click.echo("\t{}". format(highlight_text(name)))
+                    click.echo("\t{}. {}". format(str(index + 1), highlight_text(name)))
 
             if groups:
                 click.echo("User Groups: ")
-                for group in groups:
+                for index, group in enumerate(groups):
                     name = group["name"].split(",")[0]
                     name = name.split("=")[1]
-                    click.echo("\t{}". format(highlight_text(name)))
+                    click.echo("\t{}. {}". format(str(index + 1), highlight_text(name)))
 
             click.echo("")
 
-    click.echo("Infrastructure: \n-----------------\n")
+    click.echo("Infrastructure: \n---------------\n")
 
     accounts = project["status"]["project_status"]["resources"]["account_reference_list"]
     account_name_uuid_map = client.account.get_name_uuid_map()
@@ -287,7 +287,7 @@ def describe_project(obj, project_name):
     if not(subnets or accounts):
         click.echo(highlight_text("No provider's account registered"))
 
-    click.echo("\nQuotas: \n-----------------\n")
+    click.echo("\nQuotas: \n-------\n")
     resources = project["status"]["project_status"]["resources"]
 
     if not resources.get("resource_domain"):
