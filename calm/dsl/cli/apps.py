@@ -219,6 +219,10 @@ class RunlogJSONEncoder(JSONEncoder):
                 name = status["call_runbook_reference"]["name"]
             else:
                 name = status["runbook_reference"]["name"]
+        elif status["type"] == "action_runlog":
+            name = status["action_reference"]["name"]
+        elif status["type"] == "app":
+            return status["name"]
         else:
             return "root"
 
@@ -232,7 +236,10 @@ class RunlogJSONEncoder(JSONEncoder):
 
         encodedStringList = []
         encodedStringList.append("{} (Status: {})".format(name, state))
+        if status["type"] == "action_runlog":
+            encodedStringList.append("\tRunlog UUID: {}".format(metadata["uuid"]))
         encodedStringList.append("\tStarted: {}".format(time.ctime(creation_time)))
+
         if username:
             encodedStringList.append("\tRun by: {}".format(username))
         if state in RUNLOG.TERMINAL_STATES:
@@ -247,17 +254,7 @@ class RunlogJSONEncoder(JSONEncoder):
         return "\n".join(encodedStringList)
 
 
-def watch_action(runlog_uuid, app_name, client, screen):
-    app = _get_app(client, app_name)
-    app_uuid = app["metadata"]["uuid"]
-
-    url = client.application.ITEM.format(app_uuid) + "/app_runlogs/list"
-    payload = {"filter": "root_reference=={}".format(runlog_uuid)}
-
-    def poll_func():
-        # click.echo("\nPolling action status...")
-        return client.application.poll_action_run(url, payload)
-
+def get_completion_func(screen):
     def is_action_complete(response):
 
         entities = response["entities"]
@@ -344,7 +341,20 @@ def watch_action(runlog_uuid, app_name, client, screen):
             return (True, msg)
         return (False, "")
 
-    poll_action(poll_func, is_action_complete)
+    return is_action_complete
+
+
+def watch_action(runlog_uuid, app_name, client, screen):
+    app = _get_app(client, app_name)
+    app_uuid = app["metadata"]["uuid"]
+
+    url = client.application.ITEM.format(app_uuid) + "/app_runlogs/list"
+    payload = {"filter": "root_reference=={}".format(runlog_uuid)}
+
+    def poll_func():
+        return client.application.poll_action_run(url, payload)
+
+    poll_action(poll_func, get_completion_func(screen))
 
 
 def watch_app(obj, app_name, action, screen):
@@ -366,19 +376,91 @@ def watch_app(obj, app_name, action, screen):
     }
 
     def poll_func():
-        click.echo("Polling app status...")
+        # screen.echo("Polling app status...")
         return client.application.poll_action_run(url, payload)
 
     def is_complete(response):
-        pprint(response)
-        if len(response["entities"]):
-            for action in response["entities"]:
-                state = action["status"]["state"]
+        entities = response["entities"]
+
+        if len(entities):
+
+            # Sort entities based on creation time
+            sorted_entities = sorted(
+                entities, key=lambda x: int(x["metadata"]["creation_time"])
+            )
+
+            # Create nodes of runlog tree and a map based on uuid
+            root = RunlogNode(
+                {
+                    "metadata": {"uuid": app_id},
+                    "status": {"type": "app", "state": "", "name": app_name},
+                }
+            )
+            nodes = {}
+            nodes[app_id] = root
+            for runlog in sorted_entities:
+                uuid = runlog["metadata"]["uuid"]
+                nodes[str(uuid)] = RunlogNode(runlog, parent=root)
+
+            # Attach parent to nodes
+            for runlog in sorted_entities:
+                uuid = runlog["metadata"]["uuid"]
+                parent_uuid = runlog["status"]["application_reference"]["uuid"]
+                node = nodes[str(uuid)]
+                node.parent = nodes[str(parent_uuid)]
+
+            # Show Progress
+            # TODO - Draw progress bar
+            total_tasks = 0
+            completed_tasks = 0
+            for runlog in sorted_entities:
+                runlog_type = runlog["status"]["type"]
+                if runlog_type == "action_runlog":
+                    total_tasks += 1
+                    state = runlog["status"]["state"]
+                    if state in RUNLOG.STATUS.SUCCESS:
+                        completed_tasks += 1
+
+            if total_tasks:
+                screen.clear()
+                progress = "{0:.2f}".format(completed_tasks / total_tasks * 100)
+                screen.print_at("Progress: {}%".format(progress), 0, 0)
+
+            # Render Tree on next line
+            line = 1
+            for pre, _, node in RenderTree(root):
+                lines = json.dumps(node, cls=RunlogJSONEncoder).split("\\n")
+                for linestr in lines:
+                    tabcount = linestr.count("\\t")
+                    if not tabcount:
+                        screen.print_at("{}{}".format(pre, linestr), 0, line)
+                    else:
+                        screen.print_at(
+                            "{}{}".format("", linestr.replace("\\t", "")),
+                            len(pre) + 2 + tabcount * 2,
+                            line,
+                        )
+                    line += 1
+            screen.refresh()
+
+            msg = ""
+            for runlog in sorted_entities:
+                state = runlog["status"]["state"]
                 if state in RUNLOG.FAILURE_STATES:
-                    return (True, "Action failed")
+                    msg = "Action failed. Exit screen? (y)"
+                    # screen.print_at(msg, 0, line)
+                    # screen.refresh()
+                    is_complete = True
                 if state not in RUNLOG.TERMINAL_STATES:
-                    return (False, "")
-            return (True, "Action ran successfully")
+                    is_complete = False
+
+            # import ipdb; ipdb.set_trace()
+            if not msg:
+                msg = "Action ran successfully. Exit screen? (y)"
+            screen.print_at(msg, 0, line)
+            screen.refresh()
+            time.sleep(10)
+            return (is_complete, msg)
         return (False, "")
 
     poll_action(poll_func, is_complete)

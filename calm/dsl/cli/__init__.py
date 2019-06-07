@@ -375,7 +375,8 @@ def watch():
 @click.pass_obj
 def _watch_app(obj, app_name, action):
     """Watch an app"""
-    Screen.wrapper(lambda screen: watch_app(obj, app_name, action, screen))
+
+    Display.wrapper(lambda screen: watch_app(obj, app_name, action, screen), True)
     click.echo("Action completed")
 
 
