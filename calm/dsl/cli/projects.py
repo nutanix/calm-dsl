@@ -121,9 +121,10 @@ def delete_project(obj, project_names):
         click.echo("Project {} deleted".format(project_name))
 
 
-def create_project(client, payload):
+def create_project(obj, payload):
 
     name = payload["project_detail"]["name"]
+    client = obj.get("client")
 
     # check if project having same name exists
     click.echo("Searching for projects having same name ")
@@ -194,29 +195,32 @@ def describe_project(obj, project_name):
     acp_list = project["status"]["access_control_policy_list_status"]
     click.echo("\nUsers, Group and Roles: \n-----------------")
     if not acp_list:
-        click.echo(highlight_text("No users or groups registered"))
-    else:
-        click.echo("")
-        table = PrettyTable()
-        table.field_names = [
-            "Name",
-            "Role"
-        ]
+        click.echo(highlight_text("No users or groups registered\n"))
 
+    else:
         for acp in acp_list:
             role = acp["access_control_policy_status"]["resources"]["role_reference"]
             users = acp["access_control_policy_status"]["resources"]["user_reference_list"]
+            groups = acp["access_control_policy_status"]["resources"]["user_group_reference_list"]
 
-            for user in users:
-                table.add_row(
-                    [
-                        highlight_text(user["name"]),
-                        highlight_text(role["name"])
-                    ]
-                )
-        click.echo(table)
+            click.echo("Role: {}". format(highlight_text(role["name"])))
 
-    click.echo("\nInfrastructure: \n-----------------\n")
+            if users:
+                click.echo("Users: ")
+                for user in users:
+                    name = user["name"].split("@")[0]
+                    click.echo("\t{}". format(highlight_text(name)))
+
+            if groups:
+                click.echo("User Groups: ")
+                for group in groups:
+                    name = group["name"].split(",")[0]
+                    name = name.split("=")[1]
+                    click.echo("\t{}". format(highlight_text(name)))
+
+            click.echo("")
+
+    click.echo("Infrastructure: \n-----------------\n")
 
     accounts = project["status"]["project_status"]["resources"]["account_reference_list"]
     account_name_uuid_map = client.account.get_name_uuid_map()
@@ -290,4 +294,30 @@ def describe_project(obj, project_name):
         for resource in resources:
             click.echo("{} : {}". format(resource["resource_type"], highlight_text(resource["value"])))
 
+        if not resources:
+            click.echo(highlight_text("No quotas data provided"))
+
     click.echo("\n")
+
+
+def update_project(obj, name, payload):
+
+    client = obj.get("client")
+    click.echo("Searching for projects having same name ")
+    project = get_project(client, name)
+
+    project_id = project["metadata"]["uuid"]
+    spec_version = project["metadata"]["spec_version"]
+    ProjectValidator.validate_dict(payload)
+
+    payload = {
+        "api_version": "3.0",     # TODO Remove by a constant
+        "metadata": {
+            "kind": "project",
+            "uuid": project_id,
+            "spec_version": spec_version
+        },
+        "spec": payload
+    }
+
+    return client.project.update(project_id, payload)

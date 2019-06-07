@@ -19,7 +19,8 @@ from .bps import (
     launch_blueprint_simple,
     delete_blueprint,
 )
-from .projects import get_projects, delete_project, create_project, describe_project
+from .projects import get_projects, delete_project, create_project, \
+    describe_project, update_project
 
 
 @click.group()
@@ -205,7 +206,7 @@ def _compile_blueprint_command(bp_file, out):
 
 @main.group()
 def create():
-    """Create blueprint in Calm, from DSL (Python) or JSON file """
+    """Create entities in CALM (blueprint, project) """
     pass
 
 
@@ -282,10 +283,10 @@ def create_blueprint_command(obj, bp_file, name, description):
     assert bp_state == "ACTIVE"
 
 
-def create_project_from_file(client, file_location):
+def create_project_from_file(obj, file_location):
 
     project_payload = yaml.safe_load(open(file_location, "r").read())
-    return create_project(client, project_payload)
+    return create_project(obj, project_payload)
 
 
 @create.command("project")
@@ -300,10 +301,8 @@ def create_project_from_file(client, file_location):
 def _create_project(obj, project_file):
     """Creates a project"""
 
-    client = obj.get("client")
-
     if project_file.endswith(".json") or project_file.endswith(".yaml"):
-        res, err = create_project_from_file(client, project_file)
+        res, err = create_project_from_file(obj, project_file)
     else:
         click.echo("Unknown file format")
 
@@ -318,7 +317,7 @@ def _create_project(obj, project_file):
 
 @main.group()
 def delete():
-    """Delete blueprints"""
+    """Delete entities"""
     pass
 
 
@@ -439,3 +438,41 @@ def create_provider_spec(obj, provider_type):
 
     Provider = get_provider(provider_type)
     Provider.create_spec()
+
+
+@main.group()
+def update():
+    """Update entities"""
+    pass
+
+
+@update.command("project")
+@click.argument("project_name")
+@click.option(
+    "--file",
+    "-f",
+    "project_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path of Project file to upload",
+)
+@click.pass_obj
+def _update_project(obj, project_name, project_file):
+
+    if not project_file:
+        click.echo("no project file provided")
+        click.echo("please use --help for help")
+        return
+
+    if project_file.endswith(".json") or project_file.endswith(".yaml"):
+        payload = yaml.safe_load(open(project_file, "r").read())
+        res, err = update_project(obj, project_name, payload)
+    else:
+        click.echo("Unknown file format")
+
+    if err:
+        click.echo(err["error"])
+        return
+
+    project = res.json()
+    state = project["status"]["state"]
+    click.echo(">> Project state: {}".format(state))
