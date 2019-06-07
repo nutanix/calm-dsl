@@ -21,6 +21,7 @@ from .bps import (
 )
 from .projects import get_projects, delete_project, create_project, \
     describe_project, update_project
+from .accounts import get_accounts, delete_account, describe_account
 
 
 @click.group()
@@ -176,6 +177,23 @@ def _get_apps(obj, name, filter_by, limit, offset, quiet, all_items):
 def _get_projects(obj, name, filter_by, limit, offset, quiet):
     """Get projects, optionally filtered by a string"""
     get_projects(obj, name, filter_by, limit, offset, quiet)
+
+
+@get.command("accounts")
+@click.option("--name", default=None, help="Search for provider account by name")
+@click.option("--filter", "filter_by", default=None, help="Filter projects by this string")
+@click.option("--limit", default=20, help="Number of results to return")
+@click.option("--offset", default=0, help="Offset results by the specified amount")
+@click.option(
+    "--quiet", "-q", is_flag=True, default=False, help="Show only account names"
+)
+@click.option(
+    "--all-items", "-a", is_flag=True, help="Get all items, including deleted ones"
+)
+@click.pass_obj
+def _get_accounts(obj, name, filter_by, limit, offset, quiet, all_items):
+    """Get accounts, optionally filtered by a string"""
+    get_accounts(obj, name, filter_by, limit, offset, quiet, all_items)
 
 
 @main.group()
@@ -349,6 +367,15 @@ def _delete_project(obj, project_names):
     delete_project(obj, project_names)
 
 
+@delete.command("account")
+@click.argument("account_names", nargs=-1)
+@click.pass_obj
+def _delete_account(obj, account_names):
+    """Deletes a account from settings"""
+
+    delete_account(obj, account_names)
+
+
 @main.group()
 def launch():
     """Launch blueprints to create Apps"""
@@ -387,6 +414,15 @@ def _describe_project(obj, project_name):
     """Describe a project"""
 
     describe_project(obj, project_name)
+
+
+@describe.command("account")
+@click.argument("account_name")
+@click.pass_obj
+def _describe_account(obj, account_name):
+    """Describe a account"""
+
+    describe_account(obj, account_name)
 
 
 @main.command("app")

@@ -10,7 +10,7 @@ from calm.dsl.api import get_resource_api
 
 
 def get_projects(obj, name, filter_by, limit, offset, quiet):
-    """ Get the projects, optionally filtered by a string"""
+    """ Get the projects, optionally filtered by a string """
 
     client = obj.get("client")
     config = obj.get("config")
@@ -257,7 +257,7 @@ def describe_project(obj, project_name):
 
     for subnet in subnets:
         subnet_name = subnet["name"]
-        payload = {     # TODO move this
+        payload = {     # TODO move this to AHV specific method
             "entity_type": "subnet",
             "group_member_attributes": [
                 {
@@ -269,6 +269,9 @@ def describe_project(obj, project_name):
 
         Obj = get_resource_api("groups", client.connection)
         res, err = Obj.create(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
         res = res.json()
 
         entity_data = res["group_results"][0]["entity_results"][0]["data"]
