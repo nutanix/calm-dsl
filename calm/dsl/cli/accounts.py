@@ -119,7 +119,7 @@ def delete_account(obj, account_names):
         click.echo("account {} deleted".format(account_name))
 
 
-def describe_showback_data(spec):     # handle for non showback activated accounts
+def describe_showback_data(spec):
 
     cost_items = spec[0]["state_cost_list"]
 
@@ -285,16 +285,12 @@ def describe_account(obj, account_name):
 
     if account_type == "nutanix":
         describe_ahv_account(provider_data)
-        click.echo("\nResource Usage Costs:\n----------------------\n")
-        describe_showback_data(account["status"]["resources"]["price_items"])
 
     elif account_type == "aws":
         describe_aws_account(provider_data)
 
     elif account_type == "vmware":
         describe_vmware_account(provider_data)
-        click.echo("\nResource Usage Costs:\n----------------------\n")
-        describe_showback_data(account["status"]["resources"]["price_items"])
 
     elif account_type == "gcp":
         describe_gcp_account(client, provider_data, account_id)
@@ -307,5 +303,14 @@ def describe_account(obj, account_name):
 
     else:
         click.echo("Provider details not present")
+
+    if account_type in ["nutanix", "vmware"]:
+        price_items = account["status"]["resources"]["price_items"]
+        if not price_items:
+            click.echo("Showback Status: {}". format(highlight_text("Not Enabled")))
+        else:
+            click.echo("Showback Status: {}". format(highlight_text("Enabled")))
+            click.echo("\nResource Usage Costs:\n----------------------\n")
+            describe_showback_data(price_items)
 
     click.echo("")
