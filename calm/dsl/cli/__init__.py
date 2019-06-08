@@ -20,6 +20,9 @@ from .bps import (
     launch_blueprint_simple,
     delete_blueprint,
 )
+from .projects import get_projects, delete_project, create_project, \
+    describe_project, update_project
+from .accounts import get_accounts, delete_account, describe_account
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
@@ -176,6 +179,37 @@ def _get_apps(obj, name, filter_by, limit, offset, quiet, all_items):
     get_apps(obj, name, filter_by, limit, offset, quiet, all_items)
 
 
+@get.command("projects")
+@click.option("--name", default=None, help="Search for projects by name")
+@click.option("--filter", "filter_by", default=None, help="Filter projects by this string")
+@click.option("--limit", default=20, help="Number of results to return")
+@click.option("--offset", default=0, help="Offset results by the specified amount")
+@click.option(
+    "--quiet", "-q", is_flag=True, default=False, help="Show only project names"
+)
+@click.pass_obj
+def _get_projects(obj, name, filter_by, limit, offset, quiet):
+    """Get projects, optionally filtered by a string"""
+    get_projects(obj, name, filter_by, limit, offset, quiet)
+
+
+@get.command("accounts")
+@click.option("--name", default=None, help="Search for provider account by name")
+@click.option("--filter", "filter_by", default=None, help="Filter projects by this string")
+@click.option("--limit", default=20, help="Number of results to return")
+@click.option("--offset", default=0, help="Offset results by the specified amount")
+@click.option(
+    "--quiet", "-q", is_flag=True, default=False, help="Show only account names"
+)
+@click.option(
+    "--all-items", "-a", is_flag=True, help="Get all items, including deleted ones"
+)
+@click.pass_obj
+def _get_accounts(obj, name, filter_by, limit, offset, quiet, all_items):
+    """Get accounts, optionally filtered by a string"""
+    get_accounts(obj, name, filter_by, limit, offset, quiet, all_items)
+
+
 @main.group()
 def compile():
     """Compile blueprint to json / yaml"""
@@ -205,7 +239,7 @@ def _compile_blueprint_command(bp_file, out):
 
 @main.group()
 def create():
-    """Create blueprint in Calm, from DSL (Python) or JSON file """
+    """Create entities in CALM (blueprint, project) """
     pass
 
 
@@ -261,7 +295,7 @@ def create_blueprint_from_dsl(client, bp_file, name=None, description=None):
 @click.option("--description", default=None, help="Blueprint description (Optional)")
 @click.pass_obj
 def create_blueprint_command(obj, bp_file, name, description):
-    """Create a blueprint"""
+    """Creates a blueprint"""
 
     client = obj.get("client")
 
@@ -287,9 +321,41 @@ def create_blueprint_command(obj, bp_file, name, description):
     assert bp_state == "ACTIVE"
 
 
+def create_project_from_file(obj, file_location):
+
+    project_payload = yaml.safe_load(open(file_location, "r").read())
+    return create_project(obj, project_payload)
+
+
+@create.command("project")
+@click.option(
+    "--file",
+    "-f",
+    "project_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path of Project file to upload",
+)
+@click.pass_obj
+def _create_project(obj, project_file):
+    """Creates a project"""
+
+    if project_file.endswith(".json") or project_file.endswith(".yaml"):
+        res, err = create_project_from_file(obj, project_file)
+    else:
+        click.echo("Unknown file format")
+
+    if err:
+        click.echo(err["error"])
+        return
+
+    project = res.json()
+    state = project["status"]["state"]
+    click.echo(">> Project state: {}".format(state))
+
+
 @main.group()
 def delete():
-    """Delete blueprints"""
+    """Delete entities"""
     pass
 
 
@@ -297,6 +363,8 @@ def delete():
 @click.argument("blueprint_names", nargs=-1)
 @click.pass_obj
 def _delete_blueprint(obj, blueprint_names):
+    """Deletes a blueprint"""
+
     delete_blueprint(obj, blueprint_names)
 
 
@@ -305,7 +373,27 @@ def _delete_blueprint(obj, blueprint_names):
 @click.option("--soft", "-s", is_flag=True, default=False, help="Soft delete app")
 @click.pass_obj
 def _delete_app(obj, app_names, soft):
+    """Deletes a application"""
+
     delete_app(obj, app_names, soft)
+
+
+@delete.command("project")
+@click.argument("project_names", nargs=-1)
+@click.pass_obj
+def _delete_project(obj, project_names):
+    """Deletes a project"""
+
+    delete_project(obj, project_names)
+
+
+@delete.command("account")
+@click.argument("account_names", nargs=-1)
+@click.pass_obj
+def _delete_account(obj, account_names):
+    """Deletes a account from settings"""
+
+    delete_account(obj, account_names)
 
 
 @main.group()
@@ -345,6 +433,24 @@ def _describe_bp(obj, bp_name):
 def _describe_app(obj, app_name):
     """Describe an app"""
     describe_app(obj, app_name)
+
+
+@describe.command("project")
+@click.argument("project_name")
+@click.pass_obj
+def _describe_project(obj, project_name):
+    """Describe a project"""
+
+    describe_project(obj, project_name)
+
+
+@describe.command("account")
+@click.argument("account_name")
+@click.pass_obj
+def _describe_account(obj, account_name):
+    """Describe a account"""
+
+    describe_account(obj, account_name)
 
 
 @main.command("app")
@@ -393,6 +499,45 @@ def _watch_app(obj, app_name, action):
 )
 @click.pass_obj
 def create_provider_spec(obj, provider_type):
+    """Creates a provider_spec"""
 
     Provider = get_provider(provider_type)
     Provider.create_spec()
+
+
+@main.group()
+def update():
+    """Update entities"""
+    pass
+
+
+@update.command("project")
+@click.argument("project_name")
+@click.option(
+    "--file",
+    "-f",
+    "project_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path of Project file to upload",
+)
+@click.pass_obj
+def _update_project(obj, project_name, project_file):
+
+    if not project_file:
+        click.echo("no project file provided")
+        click.echo("please use --help for help")
+        return
+
+    if project_file.endswith(".json") or project_file.endswith(".yaml"):
+        payload = yaml.safe_load(open(project_file, "r").read())
+        res, err = update_project(obj, project_name, payload)
+    else:
+        click.echo("Unknown file format")
+
+    if err:
+        click.echo(err["error"])
+        return
+
+    project = res.json()
+    state = project["status"]["state"]
+    click.echo(">> Project state: {}".format(state))

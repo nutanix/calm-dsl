@@ -61,3 +61,14 @@ class APPLICATION:
         BUSY = "busy"
         TIMEOUT = "timeout"
         RESTARTING = "restarting"
+
+
+class ACCOUNT:
+    class STATES:
+        DELETED = "DELETED"
+        VERIFIED = "VERIFIED"
+        NOT_VERIFIED = "NOT_VERIFIED"
+        VERIFY_FAILED = "VERIFY_FAILED"
+        DRAFT = "DRAFT"
+        ACTIVE = "ACTIVE"
+        UNSAVED = "UNSAVED"
