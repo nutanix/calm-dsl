@@ -188,7 +188,7 @@ def describe_app(obj, app_name):
         )
 
     click.echo(
-        "# Hint: You can run actions on the app using: calm app {} <action_name>".format(
+        "# Hint: You can run actions on the app using: calm run action <action_name> --app {}".format(
             app_name
         )
     )
@@ -219,12 +219,16 @@ class RunlogJSONEncoder(JSONEncoder):
                 name = status["call_runbook_reference"]["name"]
             else:
                 name = status["runbook_reference"]["name"]
+        else:
+            return "root"
+
+        # TODO - Fix KeyError for action_runlog
+        """
         elif status["type"] == "action_runlog":
             name = status["action_reference"]["name"]
         elif status["type"] == "app":
             return status["name"]
-        else:
-            return "root"
+        """
 
         creation_time = int(metadata["creation_time"]) // 1000000
         username = (

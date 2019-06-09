@@ -11,7 +11,7 @@ from calm.dsl.api import get_api_client
 
 from asciimatics.screen import Screen
 from .utils import Display
-from .apps import get_apps, describe_app, delete_app, run_actions, watch_app
+from .apps import get_apps, describe_app, delete_app, run_actions, watch_action
 from .bps import (
     get_blueprint_list,
     describe_bp,
@@ -343,9 +343,17 @@ def _describe_app(obj, app_name):
     describe_app(obj, app_name)
 
 
-@main.command("app")
-@click.argument("app_name")
+@main.group("run")
+def run():
+    """Run actions on an App"""
+    pass
+
+
+@run.command("action")
 @click.argument("action_name")
+@click.option(
+    "--app", "app_name", default=None, required=True, help="Watch action run in an app"
+)
 @click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
 @click.pass_obj
 def _run_actions(obj, app_name, action_name, watch):
@@ -369,15 +377,30 @@ def watch():
     pass
 
 
-@watch.command("app")
-@click.argument("app_name")
-@click.option("--action", default=None, help="Watch specific action")
+@watch.command("action_runlog")
+@click.argument("runlog_uuid")
+@click.option(
+    "--app", "app_name", default=None, required=True, help="Watch action run in an app"
+)
+@click.option(
+    "--poll-interval",
+    "poll_interval",
+    type=int,
+    default=10,
+    show_default=True,
+    help="Give polling interval",
+)
 @click.pass_obj
-def _watch_app(obj, app_name, action):
+def _watch_action_runlog(obj, runlog_uuid, app_name, poll_interval):
     """Watch an app"""
 
-    Display.wrapper(lambda screen: watch_app(obj, app_name, action, screen), True)
-    click.echo("Action completed")
+    def display_action(screen):
+        # TODO - Pass poll_interval
+        watch_action(runlog_uuid, app_name, obj.get("client"), screen)
+        screen.wait_for_input(10.0)
+
+    Display.wrapper(display_action, True)
+    click.echo("Action run {} completed for app {}".format(runlog_uuid, app_name))
 
 
 @create.command("provider_spec")
