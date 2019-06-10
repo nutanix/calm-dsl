@@ -9,7 +9,6 @@ from calm.dsl.tools import ping
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
 
-from asciimatics.screen import Screen
 from .utils import Display
 from .apps import get_apps, describe_app, delete_app, run_actions, watch_action
 from .bps import (
