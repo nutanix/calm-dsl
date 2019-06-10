@@ -241,7 +241,7 @@ def http_task_get(
         (Task): HTTP Task
     """
     return http_task(
-        "POST",
+        "GET",
         url,
         body=None,
         headers=headers,

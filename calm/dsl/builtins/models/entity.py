@@ -5,7 +5,7 @@ import sys
 from types import MappingProxyType
 
 from ruamel.yaml import YAML, resolver, SafeRepresenter
-from jsonschema import Draft7Validator
+from calm.dsl.tools import StrictDraft7Validator
 
 
 from .schema import get_schema_details
@@ -126,7 +126,11 @@ class EntityType(EntityTypeBase):
     __openapi_type__ = None
 
     def validate_dict(cls, entity_dict):
-        validator = Draft7Validator(cls.__schema_props__)
+        schema = {
+            "type": "object",
+            "properties": cls.__schema_props__
+        }
+        validator = StrictDraft7Validator(schema)
         validator.validate(entity_dict)
 
     @classmethod

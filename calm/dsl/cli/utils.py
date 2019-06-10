@@ -1,5 +1,6 @@
 import click
 from functools import reduce
+from asciimatics.screen import Screen
 
 
 def get_states_filter(STATES_CLASS, state_key="state"):
@@ -9,7 +10,7 @@ def get_states_filter(STATES_CLASS, state_key="state"):
         if not field.startswith("__"):
             states.append(getattr(STATES_CLASS, field))
     state_prefix = ",{}==".format(state_key)
-    return ";({}=={})".format(state_key, state_prefix.join(states))
+    return ";{}=={}".format(state_key, state_prefix.join(states))
 
 
 def get_name_query(names):
@@ -28,3 +29,27 @@ def get_name_query(names):
 def highlight_text(text, **kwargs):
     """Highlight text in our standard format"""
     return click.style("{}".format(text), fg="blue", bold=False, **kwargs)
+
+
+class Display:
+    @classmethod
+    def wrapper(cls, func, watch=False):
+        if watch:
+            Screen.wrapper(func)
+        else:
+            func(display)
+
+    def clear(self):
+        pass
+
+    def refresh(self):
+        pass
+
+    def wait_for_input(self, *args):
+        pass
+
+    def print_at(self, *args):
+        click.echo(args[0])
+
+
+display = Display()

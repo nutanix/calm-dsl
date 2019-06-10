@@ -208,7 +208,9 @@ class RunlogJSONEncoder(JSONEncoder):
         if not isinstance(obj, RunlogNode):
             return super().default(obj)
 
+        metadata = obj.runlog["metadata"]
         status = obj.runlog["status"]
+        state = status["state"]
 
         if status["type"] == "task_runlog":
             name = status["task_reference"]["name"]
@@ -220,12 +222,32 @@ class RunlogJSONEncoder(JSONEncoder):
         else:
             return "root"
 
-        state = status["state"]
+        creation_time = int(metadata["creation_time"]) // 1000000
+        username = (
+            status["userdata_reference"]["name"]
+            if "userdata_reference" in status
+            else None
+        )
+        last_update_time = int(metadata["last_update_time"]) // 1000000
 
-        return "{} (Status: {})".format(name, state)
+        encodedStringList = []
+        encodedStringList.append("{} (Status: {})".format(name, state))
+        encodedStringList.append("\tStarted: {}".format(time.ctime(creation_time)))
+        if username:
+            encodedStringList.append("\tRun by: {}".format(username))
+        if state in RUNLOG.TERMINAL_STATES:
+            encodedStringList.append(
+                "\tFinished: {}".format(time.ctime(last_update_time))
+            )
+        else:
+            encodedStringList.append(
+                "\tLast Updated: {}".format(time.ctime(last_update_time))
+            )
+
+        return "\n".join(encodedStringList)
 
 
-def watch_action(runlog_uuid, app_name, client, screen=None):
+def watch_action(runlog_uuid, app_name, client, screen):
     app = _get_app(client, app_name)
     app_uuid = app["metadata"]["uuid"]
 
@@ -291,10 +313,18 @@ def watch_action(runlog_uuid, app_name, client, screen=None):
             # Render Tree on next line
             line = 1
             for pre, _, node in RenderTree(root):
-                screen.print_at(
-                    "{}{}".format(pre, json.dumps(node, cls=RunlogJSONEncoder)), 0, line
-                )
-                line += 1
+                lines = json.dumps(node, cls=RunlogJSONEncoder).split("\\n")
+                for linestr in lines:
+                    tabcount = linestr.count("\\t")
+                    if not tabcount:
+                        screen.print_at("{}{}".format(pre, linestr), 0, line)
+                    else:
+                        screen.print_at(
+                            "{}{}".format("", linestr.replace("\\t", "")),
+                            len(pre) + 2 + tabcount * 2,
+                            line,
+                        )
+                    line += 1
             screen.refresh()
 
             for runlog in sorted_entities:
@@ -317,13 +347,13 @@ def watch_action(runlog_uuid, app_name, client, screen=None):
     poll_action(poll_func, is_action_complete)
 
 
-def watch_app(obj, app_name, action):
+def watch_app(obj, app_name, action, screen):
     """Watch an app"""
 
     client = obj.get("client")
 
     if action:
-        return watch_action(action, app_name, client)
+        return watch_action(action, app_name, client, screen)
 
     app = _get_app(client, app_name)
     app_id = app["metadata"]["uuid"]
