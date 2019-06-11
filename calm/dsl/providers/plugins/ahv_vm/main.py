@@ -101,46 +101,50 @@ def create_ahv_spec(client):
     choice = click.prompt(highlight_text("\nWant to add some categories(y/n)"), default="n")
     if choice[0] == "y":
         categories = Obj.categories()
-        click.echo("\n Choose from given categories: \n")
 
-        for ind, group in enumerate(categories):
-            click.echo(
-                "\t {}. {}:{} ".format(str(ind + 1), group["key"], group["value"])
-            )
+        if not categories:
+            click.echo("\n{}\n". format(highlight_text("No Category present")))
 
-        result = {}
-        while True:
+        else:
+            click.echo("\n Choose from given categories: \n")
+            for ind, group in enumerate(categories):
+                click.echo(
+                    "\t {}. {}:{} ".format(str(ind + 1), group["key"], group["value"])
+                )
 
+            result = {}
             while True:
-                index = click.prompt("\nEnter the index of category", default=1)
-                if index > len(categories):
-                    click.echo("Invalid index !!! ")
+
+                while True:
+                    index = click.prompt("\nEnter the index of category", default=1)
+                    if index > len(categories):
+                        click.echo("Invalid index !!! ")
+
+                    else:
+                        break
+
+                group = categories[index]
+                key = group["key"]
+                if result.get(key) is not None:
+                    click.echo(
+                        "Category corresponding to key {} already exists ".format(key)
+                    )
+                    choice = click.prompt("\nWant to replace old one (y/n)", default="n")
+                    if choice[0] == "y":
+                        result[key] = group["value"]
+                        click.echo(highlight_text("category with (key = {}) updated". format(key)))
 
                 else:
+                    result[key] = group["value"]
+
+                choice = click.prompt(
+                    highlight_text("\nWant to add more categories (y/n)"),
+                    default="n"
+                )
+                if choice[0] == "n":
                     break
 
-            group = categories[index]
-            key = group["key"]
-            if result.get(key) is not None:
-                click.echo(
-                    "Category corresponding to key {} already exists ".format(key)
-                )
-                choice = click.prompt("\nWant to replace old one (y/n)", default="n")
-                if choice[0] == "y":
-                    result[key] = group["value"]
-                    click.echo(highlight_text("category with (key = {}) updated". format(key)))
-
-            else:
-                result[key] = group["value"]
-
-            choice = click.prompt(
-                highlight_text("\nWant to add more categories (y/n)"),
-                default="n"
-            )
-            if choice[0] == "n":
-                break
-
-        spec["categories"] = result
+            spec["categories"] = result
 
     spec["resources"] = {}
     path[-1] = "resources"
@@ -161,9 +165,11 @@ def create_ahv_spec(client):
 
     imagesNameUUIDMap = Obj.images()
     images = list(imagesNameUUIDMap.keys())
-    click.echo("Choose from given images: \n")
-    for ind, name in enumerate(images):
-        click.echo("\t {}. {}".format(str(ind + 1), name))
+
+    if images:
+        click.echo("Choose from given images: \n")
+        for ind, name in enumerate(images):
+            click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
     spec["resources"]["disk_list"] = []
     path[-1] = "disk_list"
@@ -174,6 +180,11 @@ def create_ahv_spec(client):
         image = {}
 
         while True:
+            if not images:
+                click.echo("\n{}". format(highlight_text("No image present")))
+                image["name"] = ""
+                break
+
             res = click.prompt("\nEnter the index of image", default=1)
             if res > len(images):
                 click.echo("Invalid index !!! ")
@@ -321,42 +332,46 @@ def create_ahv_spec(client):
         subnetNameUUIDMap = Obj.subnets()
         nics = list(subnetNameUUIDMap.keys())
 
-        click.echo("\nChoose from given subnets : \n")
-        for ind, name in enumerate(nics):
-            click.echo("\t {}. {}".format(str(ind + 1), name))
+        if not nics:
+            click.echo("\n{}". format(highlight_text("No network adapter present")))
 
-        spec["resources"]["nic_list"] = []
+        else:
+            click.echo("\nChoose from given subnets : \n")
+            for ind, name in enumerate(nics):
+                click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
-        while True:
+            spec["resources"]["nic_list"] = []
 
             while True:
-                res = click.prompt(
-                    "\nEnter the index of subnet's name", default=1
-                )
-                if res > len(nics):
-                    click.echo("Invalid index !!!")
 
-                else:
-                    nic = nics[res - 1]
-                    click.echo("{} selected". format(highlight_text(nic)))
-                    break
+                while True:
+                    res = click.prompt(
+                        "\nEnter the index of subnet's name", default=1
+                    )
+                    if res > len(nics):
+                        click.echo("Invalid index !!!")
 
-            nic = {
-                "subnet_reference": {
-                    "kind": "subnet",
-                    "name": nic,
-                    "uuid": subnetNameUUIDMap[nic],
+                    else:
+                        nic = nics[res - 1]
+                        click.echo("{} selected". format(highlight_text(nic)))
+                        break
+
+                nic = {
+                    "subnet_reference": {
+                        "kind": "subnet",
+                        "name": nic,
+                        "uuid": subnetNameUUIDMap[nic],
+                    }
                 }
-            }
 
-            spec["resources"]["nic_list"].append(nic)
+                spec["resources"]["nic_list"].append(nic)
 
-            choice = click.prompt(
-                highlight_text("\nWant to add more network adpaters(y/n)"),
-                default="n"
-            )
-            if choice[0] == "n":
-                break
+                choice = click.prompt(
+                    highlight_text("\nWant to add more network adpaters(y/n)"),
+                    default="n"
+                )
+                if choice[0] == "n":
+                    break
 
     path = ["resources"]
     option = []
