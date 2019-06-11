@@ -5,7 +5,7 @@ import sys
 from types import MappingProxyType
 
 from ruamel.yaml import YAML, resolver, SafeRepresenter
-from jsonschema import Draft7Validator
+from calm.dsl.tools import StrictDraft7Validator
 
 
 from .schema import get_schema_details
@@ -13,52 +13,56 @@ from .schema import get_schema_details
 
 def _validate(vdict, name, value):
 
-    if not (name.startswith("__") and name.endswith("__")):
+    if name.startswith("__") and name.endswith("__"):
+        return value
 
-        try:
+    try:
 
-            if name not in vdict:
-                raise TypeError("Unknown attribute {} given".format(name))
-            ValidatorType, is_array = vdict[name]
-            if getattr(ValidatorType, "__is_object__", False):
-                if not isinstance(value, dict):
-                    raise TypeError("{} is not of type {}".format(value, "dict"))
-                new_value = ValidatorType.__class__(
-                    ValidatorType.validators, ValidatorType.defaults
-                )
-                for k, v in value.items():
-                    new_value[k] = v
-                return
+        if name not in vdict:
+            raise TypeError("Unknown attribute {} given".format(name))
+        ValidatorType, is_array = vdict[name]
+        if getattr(ValidatorType, "__is_object__", False):
+            if not isinstance(value, dict):
+                raise TypeError("{} is not of type {}".format(value, "dict"))
+            new_value = ValidatorType.__class__(
+                ValidatorType.validators,
+                ValidatorType.defaults,
+                ValidatorType.display_map,
+            )
+            for k, v in value.items():
+                new_value[k] = v
+            return new_value
 
-        except TypeError:
+    except TypeError:
 
-            # Check if value is a variable/action
-            types = EntityTypeBase.get_entity_types()
-            VariableType = types.get("Variable", None)
-            if not VariableType:
-                raise TypeError("Variable type not defined")
-            DescriptorType = types.get("Descriptor", None)
-            if not DescriptorType:
-                raise TypeError("Descriptor type not defined")
-            if not (
-                ("variables" in vdict and isinstance(value, (VariableType,)))
-                or ("actions" in vdict and isinstance(type(value), DescriptorType))
-            ):
-                raise
+        # Check if value is a variable/action
+        types = EntityTypeBase.get_entity_types()
+        VariableType = types.get("Variable", None)
+        if not VariableType:
+            raise TypeError("Variable type not defined")
+        DescriptorType = types.get("Descriptor", None)
+        if not DescriptorType:
+            raise TypeError("Descriptor type not defined")
+        if not (
+            ("variables" in vdict and isinstance(value, (VariableType,)))
+            or ("actions" in vdict and isinstance(type(value), DescriptorType))
+        ):
+            raise
 
-            # Validate and set variable/action
-            # get validator for variables/action
-            if isinstance(value, VariableType):
-                ValidatorType, _ = vdict["variables"]
-                # Set name attribute in variable
-                setattr(value, "name", name)
+        # Validate and set variable/action
+        # get validator for variables/action
+        if isinstance(value, VariableType):
+            ValidatorType, _ = vdict["variables"]
+            # Set name attribute in variable
+            setattr(value, "name", name)
 
-            elif isinstance(type(value), DescriptorType):
-                ValidatorType = None
-            is_array = False
+        elif isinstance(type(value), DescriptorType):
+            ValidatorType = None
+        is_array = False
 
-        if ValidatorType is not None:
-            ValidatorType.validate(value, is_array)
+    if ValidatorType is not None:
+        ValidatorType.validate(value, is_array)
+    return value
 
 
 class EntityDict(OrderedDict):
@@ -67,10 +71,10 @@ class EntityDict(OrderedDict):
 
     def _validate(self, name, value):
         vdict = self.validators
-        _validate(vdict, name, value)
+        return _validate(vdict, name, value)
 
     def __setitem__(self, name, value):
-        self._validate(name, value)
+        value = self._validate(name, value)
         super().__setitem__(name, value)
 
 
@@ -122,7 +126,11 @@ class EntityType(EntityTypeBase):
     __openapi_type__ = None
 
     def validate_dict(cls, entity_dict):
-        validator = Draft7Validator(cls.__schema_props__)
+        schema = {
+            "type": "object",
+            "properties": cls.__schema_props__
+        }
+        validator = StrictDraft7Validator(schema)
         validator.validate(entity_dict)
 
     @classmethod
@@ -165,12 +173,12 @@ class EntityType(EntityTypeBase):
     def validate(mcls, name, value):
         if hasattr(mcls, "__validator_dict__"):
             vdict = mcls.__validator_dict__
-            _validate(vdict, name, value)
+            return _validate(vdict, name, value)
 
     def __setattr__(cls, name, value):
 
         # Validate attribute
-        cls.validate(name, value)
+        value = cls.validate(name, value)
 
         # Set attribute
         super().__setattr__(name, value)
@@ -267,6 +275,8 @@ class EntityType(EntityTypeBase):
         cdict = {}
         display_map = getattr(type(cls), "__display_map__")
         for k, v in attrs.items():
+            if getattr(v, "__is_object__", False):
+                cdict.setdefault(display_map[k], v.compile(cls))
             cdict.setdefault(display_map[k], v)
 
         # Add name & description if present

@@ -27,7 +27,7 @@ def _blueprint_payload(**kwargs):
 BlueprintPayload = _blueprint_payload()
 
 
-def create_blueprint_payload(UserBlueprint):
+def create_blueprint_payload(UserBlueprint, categories=None):
 
     err = {"error": "", "code": -1}
 
@@ -46,6 +46,9 @@ def create_blueprint_payload(UserBlueprint):
     }
 
     metadata = {"spec_version": 1, "kind": "blueprint", "name": UserBlueprint.__name__}
+
+    if categories:
+        metadata["categories"] = categories
 
     UserBlueprintPayload = _blueprint_payload()
     UserBlueprintPayload.metadata = metadata
