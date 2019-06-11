@@ -213,7 +213,7 @@ def _get_projects(obj, name, filter_by, limit, offset, quiet):
 @click.option(
     "--all-items", "-a", is_flag=True, help="Get all items, including deleted ones"
 )
-@click.pass_obj
+@click.pass_obj         # TODO ADD filter by type of account
 def _get_accounts(obj, name, filter_by, limit, offset, quiet, all_items):
     """Get accounts, optionally filtered by a string"""
     get_accounts(obj, name, filter_by, limit, offset, quiet, all_items)

@@ -1,10 +1,10 @@
 import click
 import json
-from jsonschema import Draft7Validator
 import re
 
 from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.providers import get_provider_interface
+from calm.dsl.tools import StrictDraft7Validator
 
 from .constants import AHV as ahv
 
@@ -461,7 +461,7 @@ def find_schema(schema, path, option):
 def validate_field(schema, path, options, spec):
 
     keySchema = find_schema(schema, path, options)
-    return Draft7Validator(keySchema).is_valid(spec)
+    return StrictDraft7Validator(keySchema).is_valid(spec)
 
 
 def get_field(schema, path, options, type=str, msg=None):
