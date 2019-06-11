@@ -98,7 +98,9 @@ def create_ahv_spec(client):
     path.append("name")
     spec["name"] = get_field(schema, path, option)
 
-    choice = click.prompt(highlight_text("\nWant to add some categories(y/n)"), default="n")
+    choice = click.prompt(
+        highlight_text("\nWant to add some categories(y/n)"), default="n"
+    )
     if choice[0] == "y":
         categories = Obj.categories()
         click.echo("\n Choose from given categories: \n")
@@ -128,14 +130,15 @@ def create_ahv_spec(client):
                 choice = click.prompt("\nWant to replace old one (y/n)", default="n")
                 if choice[0] == "y":
                     result[key] = group["value"]
-                    click.echo(highlight_text("category with (key = {}) updated". format(key)))
+                    click.echo(
+                        highlight_text("category with (key = {}) updated".format(key))
+                    )
 
             else:
                 result[key] = group["value"]
 
             choice = click.prompt(
-                highlight_text("\nWant to add more categories (y/n)"),
-                default="n"
+                highlight_text("\nWant to add more categories (y/n)"), default="n"
             )
             if choice[0] == "n":
                 break
@@ -180,13 +183,13 @@ def create_ahv_spec(client):
 
             else:
                 image["name"] = images[res - 1]
-                click.echo("{} selected". format(highlight_text(image["name"])))
+                click.echo("{} selected".format(highlight_text(image["name"])))
                 break
 
         click.echo("\nChoose from given Device Types :")
         device_types = list(ahv.DEVICE_TYPES.keys())
         for index, device_type in enumerate(device_types):
-            click.echo("\t{}. {}". format(index + 1, highlight_text(device_type)))
+            click.echo("\t{}. {}".format(index + 1, highlight_text(device_type)))
 
         while True:
             res = click.prompt("\nEnter the index for Device Type", default=1)
@@ -195,13 +198,13 @@ def create_ahv_spec(client):
 
             else:
                 image["device_type"] = ahv.DEVICE_TYPES[device_types[res - 1]]
-                click.echo("{} selected". format(highlight_text(image["device_type"])))
+                click.echo("{} selected".format(highlight_text(image["device_type"])))
                 break
 
         click.echo("\nChoose from given Device Bus :")
         device_bus_list = list(ahv.DEVICE_BUS.keys())
         for index, device_bus in enumerate(device_bus_list):
-            click.echo("\t{}. {}". format(index + 1, highlight_text(device_bus)))
+            click.echo("\t{}. {}".format(index + 1, highlight_text(device_bus)))
 
         while True:
             res = click.prompt("\nEnter the index for Device Bus", default=1)
@@ -210,7 +213,7 @@ def create_ahv_spec(client):
 
             else:
                 image["adapter_type"] = ahv.DEVICE_BUS[device_bus_list[res - 1]]
-                click.echo("{} selected". format(highlight_text(image["adapter_type"])))
+                click.echo("{} selected".format(highlight_text(image["adapter_type"])))
                 break
 
         image["bootable"] = click.prompt("\nIs it bootable(y/n)", default="y")
@@ -246,7 +249,9 @@ def create_ahv_spec(client):
         adapterNameIndexMap[image["adapter_type"]] += 1
         spec["resources"]["disk_list"].append(disk)
 
-        choice = click.prompt(highlight_text("\nWant to add more disks(y/n)"), default="n")
+        choice = click.prompt(
+            highlight_text("\nWant to add more disks(y/n)"), default="n"
+        )
         if choice[0] == "n":
             break
 
@@ -262,7 +267,7 @@ def create_ahv_spec(client):
             click.echo("\nChoose from given Device Types: ")
             device_types = list(ahv.DEVICE_TYPES.keys())
             for index, device_type in enumerate(device_types):
-                click.echo("\t{}. {}". format(index + 1, highlight_text(device_type)))
+                click.echo("\t{}. {}".format(index + 1, highlight_text(device_type)))
 
             while True:
                 res = click.prompt("\nEnter the index for Device Type", default=1)
@@ -271,13 +276,15 @@ def create_ahv_spec(client):
 
                 else:
                     vdisk["device_type"] = ahv.DEVICE_TYPES[device_types[res - 1]]
-                    click.echo("{} selected". format(highlight_text(vdisk["device_type"])))
+                    click.echo(
+                        "{} selected".format(highlight_text(vdisk["device_type"]))
+                    )
                     break
 
             click.echo("\nChoose from given Device Bus :")
             device_bus_list = list(ahv.DEVICE_BUS.keys())
             for index, device_bus in enumerate(device_bus_list):
-                click.echo("\t{}. {}". format(index + 1, highlight_text(device_bus)))
+                click.echo("\t{}. {}".format(index + 1, highlight_text(device_bus)))
 
             while True:
                 res = click.prompt("\nEnter the index for Device Bus: ", default=1)
@@ -286,7 +293,9 @@ def create_ahv_spec(client):
 
                 else:
                     vdisk["adapter_type"] = ahv.DEVICE_BUS[device_bus_list[res - 1]]
-                    click.echo("{} selected". format(highlight_text(vdisk["adapter_type"])))
+                    click.echo(
+                        "{} selected".format(highlight_text(vdisk["adapter_type"]))
+                    )
                     break
 
             path.append("disk_size_mib")
@@ -310,7 +319,9 @@ def create_ahv_spec(client):
             spec["resources"]["disk_list"].append(disk)
             path = path[:-1]
 
-            choice = click.prompt(highlight_text("\nWant to add more disks(y/n)"), default="n")
+            choice = click.prompt(
+                highlight_text("\nWant to add more disks(y/n)"), default="n"
+            )
             click.echo("")
             if choice[0] == "n":
                 break
@@ -330,15 +341,13 @@ def create_ahv_spec(client):
         while True:
 
             while True:
-                res = click.prompt(
-                    "\nEnter the index of subnet's name", default=1
-                )
+                res = click.prompt("\nEnter the index of subnet's name", default=1)
                 if res > len(nics):
                     click.echo("Invalid index !!!")
 
                 else:
                     nic = nics[res - 1]
-                    click.echo("{} selected". format(highlight_text(nic)))
+                    click.echo("{} selected".format(highlight_text(nic)))
                     break
 
             nic = {
@@ -352,15 +361,16 @@ def create_ahv_spec(client):
             spec["resources"]["nic_list"].append(nic)
 
             choice = click.prompt(
-                highlight_text("\nWant to add more network adpaters(y/n)"),
-                default="n"
+                highlight_text("\nWant to add more network adpaters(y/n)"), default="n"
             )
             if choice[0] == "n":
                 break
 
     path = ["resources"]
     option = []
-    choice = click.prompt(highlight_text("\nWant to add Customization script (y/n)"), default="n")
+    choice = click.prompt(
+        highlight_text("\nWant to add Customization script (y/n)"), default="n"
+    )
 
     if choice[0] == "y":
         path.append("guest_customization")
@@ -376,7 +386,7 @@ def create_ahv_spec(client):
                 click.echo("Invalid index !!!")
             else:
                 script_type = script_types[index - 1]
-                click.echo("{} selected\n". format(highlight_text(script_type)))
+                click.echo("{} selected\n".format(highlight_text(script_type)))
                 break
 
         if script_type == "cloud_init":

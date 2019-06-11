@@ -94,7 +94,7 @@ def get_account(client, account_name):
         click.echo(">> {} found >>".format(account_name))
         account = entities[0]
     else:
-        raise Exception("No account having name {} found". format(account_name))
+        raise Exception("No account having name {} found".format(account_name))
 
     account_id = account["metadata"]["uuid"]
     click.echo("Fetching account details")
@@ -129,7 +129,7 @@ def describe_showback_data(spec):
             for item in cost_list:
                 name = item["name"]
                 value = item["value"]
-                click.echo("{}: ". format(name.upper()), nl=False)
+                click.echo("{}: ".format(name.upper()), nl=False)
                 click.echo(highlight_text(str(value)))
 
 
@@ -138,64 +138,64 @@ def describe_ahv_account(spec):
     cluster_id = spec["cluster_uuid"]
     cluster_name = spec["cluster_name"]
 
-    click.echo("Cluster Id: {}". format(highlight_text(cluster_id)))
-    click.echo("Cluster Name: {}". format(highlight_text(cluster_name)))
+    click.echo("Cluster Id: {}".format(highlight_text(cluster_id)))
+    click.echo("Cluster Name: {}".format(highlight_text(cluster_name)))
 
 
 def describe_aws_account(spec):
 
-    click.echo("Access Key ID: {}". format(spec["access_key_id"]))
+    click.echo("Access Key ID: {}".format(spec["access_key_id"]))
     regions = spec["regions"]
 
     click.echo("\nRegions:\n-------------- ")
     for index, region in enumerate(regions):
-        click.echo("\t{}. {}". format(str(index + 1), highlight_text(region["name"])))
+        click.echo("\t{}. {}".format(str(index + 1), highlight_text(region["name"])))
 
     click.echo("\nPublic Images:\n-------------- ")
     image_present = False
     for region in regions:
         if region.get("images"):
-            click.echo("\nRegion: {}". format(region["name"]))
+            click.echo("\nRegion: {}".format(region["name"]))
             click.echo("Images: ")
             for index, image in enumerate(region["images"]):
                 image_present = True
-                click.echo("\t{}. {}". format(str(index + 1), highlight_text(image["name"])))
+                click.echo(
+                    "\t{}. {}".format(str(index + 1), highlight_text(image["name"]))
+                )
 
     if not image_present:
-        click.echo("\t{}". format(highlight_text("No images provided")))
+        click.echo("\t{}".format(highlight_text("No images provided")))
 
 
 def describe_vmware_account(spec):
 
-    click.echo("Server: {}". format(highlight_text(spec["server"])))
-    click.echo("Username: {}". format(highlight_text(spec["username"])))
-    click.echo("Port: {}". format(highlight_text(spec["port"])))
-    click.echo("Datacenter: {}". format(highlight_text(spec["datacenter"])))
+    click.echo("Server: {}".format(highlight_text(spec["server"])))
+    click.echo("Username: {}".format(highlight_text(spec["username"])))
+    click.echo("Port: {}".format(highlight_text(spec["port"])))
+    click.echo("Datacenter: {}".format(highlight_text(spec["datacenter"])))
 
 
 def describe_gcp_account(client, spec, account_id):
 
-    click.echo("Project Id: {}". format(highlight_text(spec["project_id"])))
-    click.echo("Client Email: {}". format(highlight_text(spec["client_email"])))
-    click.echo("Token URI: {}". format(highlight_text(spec["token_uri"])))
+    click.echo("Project Id: {}".format(highlight_text(spec["project_id"])))
+    click.echo("Client Email: {}".format(highlight_text(spec["client_email"])))
+    click.echo("Token URI: {}".format(highlight_text(spec["token_uri"])))
 
     click.echo("\nRegions:\n--------------\n")
     regions = spec["regions"]
     for index, region in enumerate(regions):
-        click.echo("\t{}. {}". format(str(index + 1), highlight_text(region["name"])))
+        click.echo("\t{}. {}".format(str(index + 1), highlight_text(region["name"])))
 
     if not regions:
-        click.echo("\t{}". format(highlight_text("No regions provided")))
+        click.echo("\t{}".format(highlight_text("No regions provided")))
 
     click.echo("\nPublic Images:\n--------------\n")
     images = spec["public_images"]
 
     Obj = get_resource_api("gcp/v1/images", client.connection)
-    payload = {
-        "filter": "account_uuid=={};public_only==true". format(account_id)
-    }
+    payload = {"filter": "account_uuid=={};public_only==true".format(account_id)}
 
-    res, err = Obj.list(payload)     # TODO move this to GCP specific method
+    res, err = Obj.list(payload)  # TODO move this to GCP specific method
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -209,16 +209,16 @@ def describe_gcp_account(client, spec, account_id):
 
     for index, image in enumerate(images):
         name = image_selfLink_name_map[image["selfLink"]]
-        click.echo("\t{}. {}". format(str(index + 1), highlight_text(name)))
+        click.echo("\t{}. {}".format(str(index + 1), highlight_text(name)))
 
-    if not regions:     # TODO avoid unnecessary api call
+    if not regions:  # TODO avoid unnecessary api call
         click.echo(highlight_text("No regions provided"))
 
     click.echo("\nGKE Details:\n--------------\n")
     gke_config = spec["gke_config"]
 
     if not gke_config:
-        click.echo("\t{}". format(highlight_text("GKE not enabled")))
+        click.echo("\t{}".format(highlight_text("GKE not enabled")))
     else:
         click.echo("{}: {}".format("Port", highlight_text(str(gke_config["port"]))))
         click.echo("{}: {}".format("Server", highlight_text(gke_config["server"])))
@@ -226,22 +226,24 @@ def describe_gcp_account(client, spec, account_id):
 
 def describe_azure_account(spec):
 
-    click.echo("Subscription ID: {}". format(highlight_text(spec["subscription_id"])))
-    click.echo("Tenant ID: {}". format(highlight_text(spec["tenant_id"])))
-    click.echo("Client ID: {}". format(highlight_text(spec["client_id"])))
-    click.echo("Cloud Environment: {}". format(highlight_text(spec["cloud_environment"])))
+    click.echo("Subscription ID: {}".format(highlight_text(spec["subscription_id"])))
+    click.echo("Tenant ID: {}".format(highlight_text(spec["tenant_id"])))
+    click.echo("Client ID: {}".format(highlight_text(spec["client_id"])))
+    click.echo(
+        "Cloud Environment: {}".format(highlight_text(spec["cloud_environment"]))
+    )
 
 
 def describe_k8s_account(spec):
 
-    click.echo("Server IP: {}". format(highlight_text(spec["server"])))
-    click.echo("Port: {}". format(highlight_text(spec["port"])))
+    click.echo("Server IP: {}".format(highlight_text(spec["server"])))
+    click.echo("Port: {}".format(highlight_text(spec["port"])))
 
     click.echo("Authentication Type: ", nl=False)
     auth_types = {
         "basic": "Basic Auth",
         "client_certificate": "Client Certificate",
-        "ca_certificate": "CA Certificate"
+        "ca_certificate": "CA Certificate",
     }
 
     auth = spec["authentication"]
@@ -269,7 +271,9 @@ def describe_account(obj, account_name):
     )
     click.echo("Status: " + highlight_text(account["status"]["resources"]["state"]))
     click.echo("Account Type: " + highlight_text(account_type.upper()))
-    click.echo("Owner: " + highlight_text(account["metadata"]["owner_reference"]["name"]))
+    click.echo(
+        "Owner: " + highlight_text(account["metadata"]["owner_reference"]["name"])
+    )
     created_on = int(account["metadata"]["creation_time"]) // 1000000
     past = arrow.get(created_on).humanize()
     click.echo(
@@ -307,9 +311,9 @@ def describe_account(obj, account_name):
     if account_type in ["nutanix", "vmware"]:
         price_items = account["status"]["resources"]["price_items"]
         if not price_items:
-            click.echo("Showback Status: {}". format(highlight_text("Not Enabled")))
+            click.echo("Showback Status: {}".format(highlight_text("Not Enabled")))
         else:
-            click.echo("Showback Status: {}". format(highlight_text("Enabled")))
+            click.echo("Showback Status: {}".format(highlight_text("Enabled")))
             click.echo("\nResource Usage Costs:\n----------------------\n")
             describe_showback_data(price_items)
 

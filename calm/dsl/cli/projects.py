@@ -72,7 +72,7 @@ def get_projects(obj, name, filter_by, limit, offset, quiet):
                 highlight_text(len(row["resources"]["user_reference_list"])),
                 highlight_text(time.ctime(creation_time)),
                 "{}".format(last_update_time.humanize()),
-                highlight_text(metadata["uuid"])
+                highlight_text(metadata["uuid"]),
             ]
         )
     click.echo(table)
@@ -137,21 +137,19 @@ def create_project(obj, payload):
     entities = response.get("entities", None)
     if entities:
         if len(entities) > 0:
-            err_msg = "Project with name {} already exists". format(name)
+            err_msg = "Project with name {} already exists".format(name)
             err = {"error": err_msg, "code": -1}
             return None, err
 
     click.echo("No project with same name exists")
-    click.echo("Creating the project {}". format(name))
+    click.echo("Creating the project {}".format(name))
 
     # validating the payload
     ProjectValidator.validate_dict(payload)
     payload = {
-        'api_version': "3.0",     # TODO Remove by a constant
-        'metadata': {
-            'kind': 'project'
-        },
-        'spec': payload
+        "api_version": "3.0",  # TODO Remove by a constant
+        "metadata": {"kind": "project"},
+        "spec": payload,
     }
 
     return client.project.create(payload)
@@ -184,13 +182,17 @@ def describe_project(obj, project_name):
         )
     )
 
-    environments = project["status"]["project_status"]["resources"]["environment_reference_list"]
+    environments = project["status"]["project_status"]["resources"][
+        "environment_reference_list"
+    ]
     click.echo("Environment Registered: ", nl=False)
 
     if not environments:
         click.echo(highlight_text("No"))
-    else:      # Handle Multiple Environments
-        click.echo("{} ( uuid: {} )". format(highlight_text("Yes"), environments[0]["uuid"]))
+    else:  # Handle Multiple Environments
+        click.echo(
+            "{} ( uuid: {} )".format(highlight_text("Yes"), environments[0]["uuid"])
+        )
 
     acp_list = project["status"]["access_control_policy_list_status"]
     click.echo("\nUsers, Group and Roles: \n-----------------------\n")
@@ -200,31 +202,39 @@ def describe_project(obj, project_name):
     else:
         for acp in acp_list:
             role = acp["access_control_policy_status"]["resources"]["role_reference"]
-            users = acp["access_control_policy_status"]["resources"]["user_reference_list"]
-            groups = acp["access_control_policy_status"]["resources"]["user_group_reference_list"]
+            users = acp["access_control_policy_status"]["resources"][
+                "user_reference_list"
+            ]
+            groups = acp["access_control_policy_status"]["resources"][
+                "user_group_reference_list"
+            ]
 
-            click.echo("Role: {}". format(highlight_text(role["name"])))
+            click.echo("Role: {}".format(highlight_text(role["name"])))
 
             if users:
                 click.echo("Users: ")
                 for index, user in enumerate(users):
                     name = user["name"].split("@")[0]
-                    click.echo("\t{}. {}". format(str(index + 1), highlight_text(name)))
+                    click.echo("\t{}. {}".format(str(index + 1), highlight_text(name)))
 
             if groups:
                 click.echo("User Groups: ")
                 for index, group in enumerate(groups):
                     name = group["name"].split(",")[0]
                     name = name.split("=")[1]
-                    click.echo("\t{}. {}". format(str(index + 1), highlight_text(name)))
+                    click.echo("\t{}. {}".format(str(index + 1), highlight_text(name)))
 
             click.echo("")
 
     click.echo("Infrastructure: \n---------------\n")
 
-    accounts = project["status"]["project_status"]["resources"]["account_reference_list"]
+    accounts = project["status"]["project_status"]["resources"][
+        "account_reference_list"
+    ]
     account_name_uuid_map = client.account.get_name_uuid_map()
-    account_uuid_name_map = {v: k for k, v in account_name_uuid_map.items()}    # TODO check it
+    account_uuid_name_map = {
+        v: k for k, v in account_name_uuid_map.items()
+    }  # TODO check it
 
     res, err = client.account.list()
     if err:
@@ -238,7 +248,7 @@ def describe_project(obj, project_name):
         account_name_type_map[name] = account_type
 
     account_type_name_map = {}
-    for account in accounts:        # TODO remove this mess
+    for account in accounts:  # TODO remove this mess
         account_uuid = account["uuid"]
         account_name = account_uuid_name_map[account_uuid]
         account_type = account_name_type_map[account_name]
@@ -247,8 +257,9 @@ def describe_project(obj, project_name):
     for account_type, account_name in account_type_name_map.items():
         click.echo("Account Type: " + highlight_text(account_type.upper()))
         click.echo(
-            "Name: {} (uuid: {})\n".
-            format(highlight_text(account_name), highlight_text(account_uuid))
+            "Name: {} (uuid: {})\n".format(
+                highlight_text(account_name), highlight_text(account_uuid)
+            )
         )
 
     subnets = project["status"]["project_status"]["resources"]["subnet_reference_list"]
@@ -257,14 +268,10 @@ def describe_project(obj, project_name):
 
     for subnet in subnets:
         subnet_name = subnet["name"]
-        payload = {     # TODO move this to AHV specific method
+        payload = {  # TODO move this to AHV specific method
             "entity_type": "subnet",
-            "group_member_attributes": [
-                {
-                    "attribute": "cluster_name"
-                }
-            ],
-            "filter_criteria": "_entity_id_=={}". format(subnet["uuid"])
+            "group_member_attributes": [{"attribute": "cluster_name"}],
+            "filter_criteria": "_entity_id_=={}".format(subnet["uuid"]),
         }
 
         Obj = get_resource_api("groups", client.connection)
@@ -280,11 +287,12 @@ def describe_project(obj, project_name):
                 cluster_name = data["values"][0]["values"][0]
 
         click.echo(
-            "Subnet Name: {}\tCluster Name: {}".
-            format(highlight_text(subnet_name), highlight_text(cluster_name))
+            "Subnet Name: {}\tCluster Name: {}".format(
+                highlight_text(subnet_name), highlight_text(cluster_name)
+            )
         )
 
-    if not(subnets or accounts):
+    if not (subnets or accounts):
         click.echo(highlight_text("No provider's account registered"))
 
     click.echo("\nQuotas: \n-------\n")
@@ -295,7 +303,11 @@ def describe_project(obj, project_name):
     else:
         resources = resources["resource_domain"]["resources"]
         for resource in resources:
-            click.echo("{} : {}". format(resource["resource_type"], highlight_text(resource["value"])))
+            click.echo(
+                "{} : {}".format(
+                    resource["resource_type"], highlight_text(resource["value"])
+                )
+            )
 
         if not resources:
             click.echo(highlight_text("No quotas data provided"))
@@ -314,13 +326,13 @@ def update_project(obj, name, payload):
     ProjectValidator.validate_dict(payload)
 
     payload = {
-        "api_version": "3.0",     # TODO Remove by a constant
+        "api_version": "3.0",  # TODO Remove by a constant
         "metadata": {
             "kind": "project",
             "uuid": project_id,
-            "spec_version": spec_version
+            "spec_version": spec_version,
         },
-        "spec": payload
+        "spec": payload,
     }
 
     return client.project.update(project_id, payload)
