@@ -9,7 +9,7 @@ from .constants import ACCOUNT
 from calm.dsl.api import get_resource_api
 
 
-def get_accounts(obj, name, filter_by, limit, offset, quiet, all_items):
+def get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_type):
     """ Get the accounts, optionally filtered by a string """
 
     client = obj.get("client")
@@ -21,6 +21,8 @@ def get_accounts(obj, name, filter_by, limit, offset, quiet, all_items):
         filter_query = get_name_query([name])
     if filter_by:
         filter_query = filter_query + ";" + filter_by if name else filter_by
+    if account_type:
+        filter_query += ";type=={}". format(account_type)
     if all_items:
         filter_query += get_states_filter(ACCOUNT.STATES)
     if filter_query.startswith(";"):
