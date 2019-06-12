@@ -110,9 +110,8 @@ def create_ahv_spec(client):
         else:
             click.echo("\n Choose from given categories: \n")
             for ind, group in enumerate(categories):
-                click.echo(
-                    "\t {}. {}:{} ".format(str(ind + 1), group["key"], group["value"])
-                )
+                category = "{}:{}". format(group["key"], group["value"])
+                click.echo("\t {}. {} ".format(str(ind + 1), highlight_text(category)))
 
             result = {}
             while True:
