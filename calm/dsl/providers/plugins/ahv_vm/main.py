@@ -98,17 +98,20 @@ def create_spec(client):
     path.append("name")
     spec["name"] = get_field(schema, path, option)
 
-    choice = click.prompt("\n{}(y/n)". format(highlight_text("Want to add some categories(y/n)")), default="n")
+    choice = click.prompt(
+        "\n{}(y/n)".format(highlight_text("Want to add some categories(y/n)")),
+        default="n",
+    )
     if choice[0] == "y":
         categories = Obj.categories()
 
         if not categories:
-            click.echo("\n{}\n". format(highlight_text("No Category present")))
+            click.echo("\n{}\n".format(highlight_text("No Category present")))
 
         else:
             click.echo("\n Choose from given categories: \n")
             for ind, group in enumerate(categories):
-                category = "{}:{}". format(group["key"], group["value"])
+                category = "{}:{}".format(group["key"], group["value"])
                 click.echo("\t {}. {} ".format(str(ind + 1), highlight_text(category)))
 
             result = {}
@@ -128,15 +131,26 @@ def create_spec(client):
                     click.echo(
                         "Category corresponding to key {} already exists ".format(key)
                     )
-                    choice = click.prompt("\nWant to replace old one (y/n)", default="n")
+                    choice = click.prompt(
+                        "\nWant to replace old one (y/n)", default="n"
+                    )
                     if choice[0] == "y":
                         result[key] = group["value"]
-                        click.echo(highlight_text("category with (key = {}) updated". format(key)))
+                        click.echo(
+                            highlight_text(
+                                "category with (key = {}) updated".format(key)
+                            )
+                        )
 
                 else:
                     result[key] = group["value"]
 
-                choice = click.prompt("\n{}(y/n)". format(highlight_text("Want to add more categories(y/n)")), default="n")
+                choice = click.prompt(
+                    "\n{}(y/n)".format(
+                        highlight_text("Want to add more categories(y/n)")
+                    ),
+                    default="n",
+                )
                 if choice[0] == "n":
                     break
 
@@ -178,11 +192,13 @@ def create_spec(client):
     while True:
         image = {}
         image_index += 1
-        click.secho("\nImage Device {}". format(str(image_index)), bold=True, underline=True)
+        click.secho(
+            "\nImage Device {}".format(str(image_index)), bold=True, underline=True
+        )
 
         while True:
             if not images:
-                click.echo("\n{}". format(highlight_text("No image present")))
+                click.echo("\n{}".format(highlight_text("No image present")))
                 image["name"] = ""
                 break
 
@@ -258,11 +274,15 @@ def create_spec(client):
         adapterNameIndexMap[image["adapter_type"]] += 1
         spec["resources"]["disk_list"].append(disk)
 
-        choice = click.prompt("\n{}(y/n)". format(highlight_text("Want to add more images")), default="n")
+        choice = click.prompt(
+            "\n{}(y/n)".format(highlight_text("Want to add more images")), default="n"
+        )
         if choice[0] == "n":
             break
 
-    choice = click.prompt("\n{}(y/n)". format(highlight_text("Want any virtual disks")), default="n")
+    choice = click.prompt(
+        "\n{}(y/n)".format(highlight_text("Want any virtual disks")), default="n"
+    )
     if choice[0] == "y":
         option[-1] = "AHV VDisk List"
 
@@ -326,17 +346,22 @@ def create_spec(client):
             spec["resources"]["disk_list"].append(disk)
             path = path[:-1]
 
-            choice = click.prompt("\n{}(y/n)". format(highlight_text("Want to add more disks")), default="n")
+            choice = click.prompt(
+                "\n{}(y/n)".format(highlight_text("Want to add more disks")),
+                default="n",
+            )
             if choice[0] == "n":
                 break
 
-    choice = click.prompt("\n{}(y/n)". format(highlight_text("Want any network adapters")), default="n")
+    choice = click.prompt(
+        "\n{}(y/n)".format(highlight_text("Want any network adapters")), default="n"
+    )
     if choice[0] == "y":
         subnetNameUUIDMap = Obj.subnets()
         nics = list(subnetNameUUIDMap.keys())
 
         if not nics:
-            click.echo("\n{}". format(highlight_text("No network adapter present")))
+            click.echo("\n{}".format(highlight_text("No network adapter present")))
 
         else:
             click.echo("\nChoose from given subnets:")
@@ -348,15 +373,13 @@ def create_spec(client):
             while True:
 
                 while True:
-                    res = click.prompt(
-                        "\nEnter the index of subnet's name", default=1
-                    )
+                    res = click.prompt("\nEnter the index of subnet's name", default=1)
                     if res > len(nics):
                         click.echo("Invalid index !!!")
 
                     else:
                         nic = nics[res - 1]
-                        click.echo("{} selected". format(highlight_text(nic)))
+                        click.echo("{} selected".format(highlight_text(nic)))
                         break
 
                 nic = {
@@ -368,14 +391,22 @@ def create_spec(client):
                 }
 
                 spec["resources"]["nic_list"].append(nic)
-                choice = click.prompt("\n{}(y/n)". format(highlight_text("Want to add more network adpaters")), default="n")
+                choice = click.prompt(
+                    "\n{}(y/n)".format(
+                        highlight_text("Want to add more network adpaters")
+                    ),
+                    default="n",
+                )
                 if choice[0] == "n":
                     break
 
     path = ["resources"]
     option = []
 
-    choice = click.prompt("\n{}(y/n)". format(highlight_text("Want to add Customization script")), default="n")
+    choice = click.prompt(
+        "\n{}(y/n)".format(highlight_text("Want to add Customization script")),
+        default="n",
+    )
     if choice[0] == "y":
         path.append("guest_customization")
         script_types = ahv.GUEST_CUSTOMIZATION_SCRIPT_TYPES

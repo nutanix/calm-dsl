@@ -12,19 +12,19 @@ class AWS:
         "RUNNING": "RUNNING",
         "REBOOTING": "REBOOTING",
         "STOPPED": "STOPPED",
-        "ON": 'ON',
-        "OFF": 'OFF'
+        "ON": "ON",
+        "OFF": "OFF",
     }
 
     VOLUME_TYPE_MAP = {
-        'Provisioned IOPS SSD': 'IO1',
-        'EBS Magnetic HDD': 'STANDARD',
-        'Cold HDD': 'SC1',
-        'Throughput Optimized HDD': 'ST1',
-        'General Purpose SSD': 'GP2'
+        "Provisioned IOPS SSD": "IO1",
+        "EBS Magnetic HDD": "STANDARD",
+        "Cold HDD": "SC1",
+        "Throughput Optimized HDD": "ST1",
+        "General Purpose SSD": "GP2",
     }
 
-    DeviceMountPoints = {       # Constants from calm-ui repoitory
+    DeviceMountPoints = {  # Constants from calm-ui repoitory
         "/dev/sdb": "/dev/sdb",
         "/dev/sdc": "/dev/sdc",
         "/dev/sdd": "/dev/sdd",
@@ -35,5 +35,5 @@ class AWS:
         "/dev/sdi": "/dev/sdi",
         "/dev/sdj": "/dev/sdj",
         "/dev/sdk": "/dev/sdk",
-        "/dev/sdl": "/dev/sdl"
+        "/dev/sdl": "/dev/sdl",
     }

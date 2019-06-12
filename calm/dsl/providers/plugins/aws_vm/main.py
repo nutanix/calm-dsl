@@ -27,7 +27,7 @@ class AWS:
 
     def regions(self, account_id):
         Obj = get_resource_api("accounts", self.connection)
-        res, err = Obj.read(account_id)     # TODO remove it from here
+        res, err = Obj.read(account_id)  # TODO remove it from here
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -68,7 +68,9 @@ class AWS:
 
     def availability_zones(self, account_id, region_name):
 
-        payload = {"filter": "account_uuid=={};region=={}". format(account_id, region_name)}
+        payload = {
+            "filter": "account_uuid=={};region=={}".format(account_id, region_name)
+        }
         Obj = get_resource_api(aws.AVAILABILTY_ZONES, self.connection)
         res, err = Obj.list(payload)
         if err:
@@ -88,7 +90,9 @@ class AWS:
             tupVal2 = root_device_name of the image
         """
 
-        payload = {"filter": "account_uuid=={};region=={}". format(account_id, region_name)}
+        payload = {
+            "filter": "account_uuid=={};region=={}".format(account_id, region_name)
+        }
         Obj = get_resource_api(aws.MIXED_IMAGES, self.connection)
         res, err = Obj.list(payload)
         if err:
@@ -107,7 +111,9 @@ class AWS:
 
     def roles(self, account_id, region_name):
 
-        payload = {"filter": "account_uuid=={};region=={}". format(account_id, region_name)}
+        payload = {
+            "filter": "account_uuid=={};region=={}".format(account_id, region_name)
+        }
         Obj = get_resource_api(aws.ROLES, self.connection)
         res, err = Obj.list(payload)
         if err:
@@ -122,7 +128,9 @@ class AWS:
 
     def key_pairs(self, account_id, region_name):
 
-        payload = {"filter": "account_uuid=={};region=={}". format(account_id, region_name)}
+        payload = {
+            "filter": "account_uuid=={};region=={}".format(account_id, region_name)
+        }
         Obj = get_resource_api(aws.KEY_PAIRS, self.connection)
         res, err = Obj.list(payload)
         if err:
@@ -137,7 +145,9 @@ class AWS:
 
     def VPCs(self, account_id, region_name):
 
-        payload = {"filter": "account_uuid=={};region=={}". format(account_id, region_name)}
+        payload = {
+            "filter": "account_uuid=={};region=={}".format(account_id, region_name)
+        }
         Obj = get_resource_api(aws.VPCS, self.connection)
         res, err = Obj.list(payload)
         if err:
@@ -156,8 +166,9 @@ class AWS:
 
         inc_classic_sg = "true" if inc_classic_sg else "false"
         payload = {
-            "filter": "account_uuid=={};region=={};vpc_id=={};include_classic_sg=={}".
-                      format(account_id, region_name, vpc_id, inc_classic_sg)
+            "filter": "account_uuid=={};region=={};vpc_id=={};include_classic_sg=={}".format(
+                account_id, region_name, vpc_id, inc_classic_sg
+            )
         }
 
         Obj = get_resource_api(aws.SECURITY_GROUPS, self.connection)
@@ -175,8 +186,9 @@ class AWS:
     def subnets(self, account_id, region_name, vpc_id, availability_zone):
 
         payload = {
-            "filter": "account_uuid=={};region=={};vpc_id=={};availability_zone=={}".
-            format(account_id, region_name, vpc_id, availability_zone)
+            "filter": "account_uuid=={};region=={};vpc_id=={};availability_zone=={}".format(
+                account_id, region_name, vpc_id, availability_zone
+            )
         }
 
         subnet_list = []
@@ -213,7 +225,9 @@ def create_spec(client):
     spec["resources"] = {}
 
     if not accounts:
-        click.echo("\n{}". format(highlight_text("No AWS account present. Please add first!")))
+        click.echo(
+            "\n{}".format(highlight_text("No AWS account present. Please add first!"))
+        )
         return
 
     click.echo("\nChoose from given AWS accounts")
@@ -228,10 +242,10 @@ def create_spec(client):
 
         else:
             account_name = accounts[res - 1]["status"]["name"]
-            account_id = accounts[res - 1]["metadata"]["uuid"]      # TO BE USED
+            account_id = accounts[res - 1]["metadata"]["uuid"]  # TO BE USED
 
             spec["resources"]["account_uuid"] = account_id
-            click.echo("{} selected". format(highlight_text(account_name)))
+            click.echo("{} selected".format(highlight_text(account_name)))
             break
 
     choice = click.prompt("\nEnable Associate Public Ip Address(y/n)", default="y")
@@ -239,11 +253,15 @@ def create_spec(client):
         spec["resources"]["associate_public_ip_address"] = True
     else:
         spec["resources"]["associate_public_ip_address"] = False
-        click.echo(highlight_text("Calm and AWS should be in the same private network for scripts to run"))
+        click.echo(
+            highlight_text(
+                "Calm and AWS should be in the same private network for scripts to run"
+            )
+        )
 
     ins_types = Obj.machine_types()
     if not ins_types:
-        click.echo("\n{}". format(highlight_text("No Instance Profiles present")))
+        click.echo("\n{}".format(highlight_text("No Instance Profiles present")))
 
     else:
         click.echo("\nChoose from given instance types")
@@ -258,12 +276,12 @@ def create_spec(client):
             else:
                 instance_type = ins_types[res - 1]
                 spec["resources"]["instance_type"] = instance_type
-                click.echo("{} selected". format(highlight_text(instance_type)))
+                click.echo("{} selected".format(highlight_text(instance_type)))
                 break
 
     regions = Obj.regions(account_id)
     if not regions:
-        click.echo("\n{}". format(highlight_text("No regions present")))
+        click.echo("\n{}".format(highlight_text("No regions present")))
 
     else:
         click.echo("\nChoose from given regions")
@@ -276,14 +294,14 @@ def create_spec(client):
                 click.echo("Invalid index !!! ")
 
             else:
-                region_name = regions[res - 1]      # TO BE USED
+                region_name = regions[res - 1]  # TO BE USED
                 spec["resources"]["region"] = region_name
-                click.echo("{} selected". format(highlight_text(region_name)))
+                click.echo("{} selected".format(highlight_text(region_name)))
                 break
 
     avl_zones = Obj.availability_zones(account_id, region_name)
     if not avl_zones:
-        click.echo("\n{}". format(highlight_text("No availabilty zones present")))
+        click.echo("\n{}".format(highlight_text("No availabilty zones present")))
 
     else:
         click.echo("\nChoose from given availabilty zones")
@@ -298,14 +316,14 @@ def create_spec(client):
             else:
                 availability_zone = avl_zones[res - 1]
                 spec["resources"]["availability_zone"] = availability_zone
-                click.echo("{} selected". format(highlight_text(availability_zone)))
+                click.echo("{} selected".format(highlight_text(availability_zone)))
                 break
 
     mixed_images = Obj.mixed_images(account_id, region_name)
     image_names = list(mixed_images.keys())
     image_names.sort(key=lambda y: y.lower())
     if not image_names:
-        click.echo("\n{}". format(highlight_text("No machine image present")))
+        click.echo("\n{}".format(highlight_text("No machine image present")))
 
     else:
         click.echo("\nChoose from given Machine images")
@@ -322,14 +340,14 @@ def create_spec(client):
                 res_tuple = mixed_images[image_name]
 
                 image_id = res_tuple[0]
-                root_device_name = res_tuple[1]         # TO BE USED
+                root_device_name = res_tuple[1]  # TO BE USED
                 spec["resources"]["image_id"] = image_id
-                click.echo("{} selected". format(highlight_text(image_name)))
+                click.echo("{} selected".format(highlight_text(image_name)))
                 break
 
     ins_pfl_names = Obj.roles(account_id, region_name)
     if not ins_pfl_names:
-        click.echo("\n{}". format(highlight_text("No instance profile present")))
+        click.echo("\n{}".format(highlight_text("No instance profile present")))
 
     else:
         click.echo("\nChoose from given IAM roles")
@@ -344,12 +362,12 @@ def create_spec(client):
             else:
                 role = ins_pfl_names[res - 1]
                 spec["resources"]["instance_profile_name"] = role
-                click.echo("{} selected". format(highlight_text(role)))
+                click.echo("{} selected".format(highlight_text(role)))
                 break
 
     key_pairs = Obj.key_pairs(account_id, region_name)
     if not key_pairs:
-        click.echo("\n{}". format(highlight_text("No key pairs present")))
+        click.echo("\n{}".format(highlight_text("No key pairs present")))
 
     else:
         click.echo("\nChoose from given Key Pairs")
@@ -364,14 +382,14 @@ def create_spec(client):
             else:
                 key_name = key_pairs[res - 1]
                 spec["resources"]["key_name"] = key_name
-                click.echo("{} selected". format(highlight_text(key_name)))
+                click.echo("{} selected".format(highlight_text(key_name)))
                 break
 
     vpc_map = Obj.VPCs(account_id, region_name)
     cidr_names = list(vpc_map.keys())
 
     if not cidr_names:
-        click.echo("\n{}". format(highlight_text("No VPC present")))
+        click.echo("\n{}".format(highlight_text("No VPC present")))
 
     else:
         click.echo("\nChoose from given VPC")
@@ -386,18 +404,23 @@ def create_spec(client):
 
             else:
                 cidr_name = cidr_names[res - 1]
-                vpc_id = vpc_map[cidr_name]     # TO BE USED
+                vpc_id = vpc_map[cidr_name]  # TO BE USED
                 spec["resources"]["vpc_id"] = vpc_id
                 dis_name = cidr_name + " | " + vpc_id
-                click.echo("{} selected". format(highlight_text(dis_name)))
+                click.echo("{} selected".format(highlight_text(dis_name)))
                 break
 
-    choice = click.prompt("\n{}(y/n)". format(highlight_text("Want to include security groups")), default="n")
+    choice = click.prompt(
+        "\n{}(y/n)".format(highlight_text("Want to include security groups")),
+        default="n",
+    )
     if choice[0] == "y":
 
         choice = click.prompt("\nInclude Classic Security Groups(y/n)", default="n")
         if choice[0] == "y":
-            sg_map = Obj.security_groups(account_id, region_name, vpc_id, inc_classic_sg=True)
+            sg_map = Obj.security_groups(
+                account_id, region_name, vpc_id, inc_classic_sg=True
+            )
         else:
             sg_map = Obj.security_groups(account_id, region_name, vpc_id)
 
@@ -413,7 +436,9 @@ def create_spec(client):
                 click.echo("\nChoose from given security groups: ")
                 for ind, name in enumerate(sg_names):
                     dis_name = sg_map[name] + " | " + name
-                    click.echo("\t {}. {}".format(str(ind + 1), highlight_text(dis_name)))
+                    click.echo(
+                        "\t {}. {}".format(str(ind + 1), highlight_text(dis_name))
+                    )
 
             while True:
                 res = click.prompt("\nEnter the index of security group", default=1)
@@ -425,20 +450,23 @@ def create_spec(client):
                     sg_id = sg_map[sg_name]
                     dis_name = sg_id + " | " + sg_name
 
-                    security_group = {
-                        "security_group_id": sg_id
-                    }
+                    security_group = {"security_group_id": sg_id}
 
                     spec["resources"]["security_group_list"].append(security_group)
-                    click.echo("{} selected". format(highlight_text(dis_name)))
+                    click.echo("{} selected".format(highlight_text(dis_name)))
                     sg_names.pop(res - 1)
                     break
 
-            choice = click.prompt("\n{}(y/n)". format(highlight_text("Want to add more security_groups")), default="n")
+            choice = click.prompt(
+                "\n{}(y/n)".format(highlight_text("Want to add more security_groups")),
+                default="n",
+            )
             if choice[0] == "n":
                 break
 
-    choice = click.prompt("\n{}(y/n)". format(highlight_text("Want to include subnets")), default="n")
+    choice = click.prompt(
+        "\n{}(y/n)".format(highlight_text("Want to include subnets")), default="n"
+    )
     if choice[0] == "y":
 
         subnets = Obj.subnets(account_id, region_name, vpc_id, availability_zone)
@@ -460,27 +488,30 @@ def create_spec(client):
                     subnet_name = subnets[res - 1]
                     spec["resources"]["subnet_id"] = subnet_name
                     dis_name = subnet_name + " | " + vpc_id
-                    click.echo("{} selected". format(highlight_text(dis_name)))
+                    click.echo("{} selected".format(highlight_text(dis_name)))
                     break
 
-    choice = click.prompt("\n{}(y/n)". format(highlight_text("Want to enter user data")), default="n")
+    choice = click.prompt(
+        "\n{}(y/n)".format(highlight_text("Want to enter user data")), default="n"
+    )
     if choice[0] == "y":
         user_data = click.prompt("\nEnter data: ", type=str)
         spec["resources"]["user_data"] = user_data
 
-    choice = click.prompt("\n{}(y/n)". format(highlight_text("Want to add any tags")), default="n")
+    choice = click.prompt(
+        "\n{}(y/n)".format(highlight_text("Want to add any tags")), default="n"
+    )
     if choice[0] == "y":
         tags = []
         while True:
             key = click.prompt("\n\tKey")
             value = click.prompt("\tValue")
 
-            tag = {
-                "key": key,
-                "value": value
-            }
+            tag = {"key": key, "value": value}
             tags.append(tag)
-            choice = click.prompt("\n{}(y/n)". format(highlight_text("Want to add more tags")), default="n")
+            choice = click.prompt(
+                "\n{}(y/n)".format(highlight_text("Want to add more tags")), default="n"
+            )
             if choice[0] == "n":
                 spec["resources"]["tag_list"] = tags
                 break
@@ -488,7 +519,9 @@ def create_spec(client):
     click.echo("\n\t\t", nl=False)
     click.secho("STORAGE DATA\n", bold=True, underline=True)
     click.secho("\tRoot Disk", bold=True)
-    click.echo("\nDevice for the root disk: {}". format(highlight_text(root_device_name)))
+    click.echo(
+        "\nDevice for the root disk: {}".format(highlight_text(root_device_name))
+    )
 
     spec["resources"]["block_device_map"] = {}
     root_disk = {}
@@ -502,7 +535,7 @@ def create_spec(client):
 
     else:
         for index, name in enumerate(volume_types):
-            click.echo("\t{}. {}". format(index + 1, highlight_text(name)))
+            click.echo("\t{}. {}".format(index + 1, highlight_text(name)))
 
         while True:
             res = click.prompt("\nEnter the index for Volume Type", default=1)
@@ -511,7 +544,7 @@ def create_spec(client):
 
             else:
                 root_disk["volume_type"] = aws.VOLUME_TYPE_MAP[volume_types[res - 1]]
-                click.echo("{} selected". format(highlight_text(volume_types[res - 1])))
+                click.echo("{} selected".format(highlight_text(volume_types[res - 1])))
                 break
 
         choice = click.prompt("\nWant to delete disk on termination(y/n)", default="y")
@@ -519,7 +552,9 @@ def create_spec(client):
         spec["resources"]["block_device_map"]["root_disk"] = root_disk
 
     click.secho("\n\tOther disks", bold=True)
-    choice = click.prompt("\n{}(y/n)". format(highlight_text("Want to add more disks")), default="n")
+    choice = click.prompt(
+        "\n{}(y/n)".format(highlight_text("Want to add more disks")), default="n"
+    )
 
     avl_device_names = list(aws.DeviceMountPoints.keys())
     spec["resources"]["block_device_map"]["data_disk_list"] = []
@@ -531,7 +566,7 @@ def create_spec(client):
 
         click.echo("\nChoose from given Device Names: ")
         for index, name in enumerate(avl_device_names):
-            click.echo("\t{}. {}". format(index + 1, highlight_text(name)))
+            click.echo("\t{}. {}".format(index + 1, highlight_text(name)))
 
         while True:
             res = click.prompt("\nEnter the index for Device Name", default=1)
@@ -540,13 +575,15 @@ def create_spec(client):
 
             else:
                 disk["device_name"] = aws.DeviceMountPoints[avl_device_names[res - 1]]
-                click.echo("{} selected". format(highlight_text(avl_device_names[res - 1])))
+                click.echo(
+                    "{} selected".format(highlight_text(avl_device_names[res - 1]))
+                )
                 avl_device_names.pop(res - 1)
                 break
 
         click.echo("\nChoose from given volume types: ")
         for index, name in enumerate(volume_types):
-            click.echo("\t{}. {}". format(index + 1, highlight_text(name)))
+            click.echo("\t{}. {}".format(index + 1, highlight_text(name)))
 
         while True:
             res = click.prompt("\nEnter the index for Volume Type", default=1)
@@ -555,7 +592,7 @@ def create_spec(client):
 
             else:
                 disk["volume_type"] = aws.VOLUME_TYPE_MAP[volume_types[res - 1]]
-                click.echo("{} selected". format(highlight_text(volume_types[res - 1])))
+                click.echo("{} selected".format(highlight_text(volume_types[res - 1])))
                 break
 
         disk["size_gb"] = click.prompt("\nEnter the size of disk(in gb)", default=8)
@@ -563,7 +600,9 @@ def create_spec(client):
         disk["delete_on_termination"] = True if choice[0] == "y" else False
 
         spec["resources"]["block_device_map"]["data_disk_list"].append(disk)
-        choice = click.prompt("\n{}(y/n)". format(highlight_text("Want to add more disks")), default="n")
+        choice = click.prompt(
+            "\n{}(y/n)".format(highlight_text("Want to add more disks")), default="n"
+        )
 
     AwsVmProvider.validate_spec(spec)
     click.secho("\nCreate spec\n", underline=True)
