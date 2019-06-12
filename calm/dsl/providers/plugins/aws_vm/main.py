@@ -18,7 +18,7 @@ class AwsVmProvider(Provider):
     @classmethod
     def create_spec(cls):
         client = get_api_client()
-        create_aws_spec(client)
+        create_spec(client)
 
 
 class AWS:
@@ -196,13 +196,12 @@ def highlight_text(text, **kwargs):
     return click.style("{}".format(text), fg="blue", bold=False, **kwargs)
 
 
-def create_aws_spec(client):
+def create_spec(client):
 
     spec = {}
     Obj = AWS(client.connection)
 
-    click.echo("")
-    spec["name"] = click.prompt("Enter instance name: ", type=str)
+    spec["name"] = click.prompt("\nEnter instance name", type=str)
 
     payload = {"filter": "type==aws"}
     res, err = client.account.list(payload)
@@ -211,19 +210,19 @@ def create_aws_spec(client):
 
     accounts = res.json()
     accounts = accounts["entities"]
-    click.echo("Choose from given AWS accounts")
     spec["resources"] = {}
-
-    for ind, account in enumerate(accounts):
-        name = account["status"]["name"]
-        click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
     if not accounts:
         click.echo("\n{}". format(highlight_text("No AWS account present. Please add first!")))
         return
 
+    click.echo("\nChoose from given AWS accounts")
+    for ind, account in enumerate(accounts):
+        name = account["status"]["name"]
+        click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
+
     while True:
-        res = click.prompt("\nEnter the index of account", default=1)
+        res = click.prompt("\nEnter the index of account to be used", default=1)
         if res > len(accounts):
             click.echo("Invalid index !!! ")
 
@@ -235,20 +234,19 @@ def create_aws_spec(client):
             click.echo("{} selected". format(highlight_text(account_name)))
             break
 
-    choice = click.prompt("\nWant to enable Associate Public Ip Address(y/n)", default="y")
+    choice = click.prompt("\nEnable Associate Public Ip Address(y/n)", default="y")
     if choice[0] == "y":
         spec["resources"]["associate_public_ip_address"] = True
     else:
         spec["resources"]["associate_public_ip_address"] = False
         click.echo(highlight_text("Calm and AWS should be in the same private network for scripts to run"))
 
-    click.echo("\nChoose from given instance types")
     ins_types = Obj.machine_types()
-
     if not ins_types:
-        click.echo("\n{}\n". format(highlight_text("No Instance Profiles present")))
+        click.echo("\n{}". format(highlight_text("No Instance Profiles present")))
 
     else:
+        click.echo("\nChoose from given instance types")
         for ind, name in enumerate(ins_types):
             click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
@@ -263,13 +261,12 @@ def create_aws_spec(client):
                 click.echo("{} selected". format(highlight_text(instance_type)))
                 break
 
-    click.echo("\nChoose from given regions")
     regions = Obj.regions(account_id)
-
     if not regions:
-        click.echo("\n{}\n". format(highlight_text("No regions present")))
+        click.echo("\n{}". format(highlight_text("No regions present")))
 
     else:
+        click.echo("\nChoose from given regions")
         for ind, name in enumerate(regions):
             click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
@@ -284,13 +281,12 @@ def create_aws_spec(client):
                 click.echo("{} selected". format(highlight_text(region_name)))
                 break
 
-    click.echo("\nChoose from given availabilty zones")
     avl_zones = Obj.availability_zones(account_id, region_name)
-
     if not avl_zones:
-        click.echo("\n{}\n". format(highlight_text("No availabilty zones present")))
+        click.echo("\n{}". format(highlight_text("No availabilty zones present")))
 
     else:
+        click.echo("\nChoose from given availabilty zones")
         for ind, name in enumerate(avl_zones):
             click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
@@ -305,15 +301,14 @@ def create_aws_spec(client):
                 click.echo("{} selected". format(highlight_text(availability_zone)))
                 break
 
-    click.echo("\nChoose from given Machine images")
     mixed_images = Obj.mixed_images(account_id, region_name)
     image_names = list(mixed_images.keys())
     image_names.sort(key=lambda y: y.lower())
-
     if not image_names:
-        click.echo("\n{}\n". format(highlight_text("No machine image present")))
+        click.echo("\n{}". format(highlight_text("No machine image present")))
 
     else:
+        click.echo("\nChoose from given Machine images")
         for ind, name in enumerate(image_names):
             click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
@@ -332,13 +327,12 @@ def create_aws_spec(client):
                 click.echo("{} selected". format(highlight_text(image_name)))
                 break
 
-    click.echo("\nChoose from given IAM roles")
     ins_pfl_names = Obj.roles(account_id, region_name)
-
     if not ins_pfl_names:
-        click.echo("\n{}\n". format(highlight_text("No instance profile present")))
+        click.echo("\n{}". format(highlight_text("No instance profile present")))
 
     else:
+        click.echo("\nChoose from given IAM roles")
         for ind, name in enumerate(ins_pfl_names):
             click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
@@ -353,18 +347,17 @@ def create_aws_spec(client):
                 click.echo("{} selected". format(highlight_text(role)))
                 break
 
-    click.echo("\nChoose from given Key Pairs")
     key_pairs = Obj.key_pairs(account_id, region_name)
-
     if not key_pairs:
-        click.echo("\n{}\n". format(highlight_text("No key pairs present")))
+        click.echo("\n{}". format(highlight_text("No key pairs present")))
 
     else:
+        click.echo("\nChoose from given Key Pairs")
         for ind, name in enumerate(key_pairs):
             click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
         while True:
-            res = click.prompt("\nEnter the index of IAM role", default=1)
+            res = click.prompt("\nEnter the index of Key-Pair", default=1)
             if res > len(key_pairs):
                 click.echo("Invalid index !!! ")
 
@@ -374,14 +367,14 @@ def create_aws_spec(client):
                 click.echo("{} selected". format(highlight_text(key_name)))
                 break
 
-    click.echo("\nChoose from given VPC")
     vpc_map = Obj.VPCs(account_id, region_name)
     cidr_names = list(vpc_map.keys())
 
     if not cidr_names:
-        click.echo("\n{}\n". format(highlight_text("No VPC present")))
+        click.echo("\n{}". format(highlight_text("No VPC present")))
 
     else:
+        click.echo("\nChoose from given VPC")
         for ind, name in enumerate(cidr_names):
             dis_name = name + " | " + vpc_map[name]
             click.echo("\t {}. {}".format(str(ind + 1), highlight_text(dis_name)))
@@ -399,11 +392,10 @@ def create_aws_spec(client):
                 click.echo("{} selected". format(highlight_text(dis_name)))
                 break
 
-    choice = click.prompt(highlight_text("\nWant to include security groups(y/n)"), default="n")
-
+    choice = click.prompt("\n{}(y/n)". format(highlight_text("Want to include security groups")), default="n")
     if choice[0] == "y":
 
-        choice = click.prompt(highlight_text("\nInclude Classic Security Groups(y/n)"), default="n")
+        choice = click.prompt("\nInclude Classic Security Groups(y/n)", default="n")
         if choice[0] == "y":
             sg_map = Obj.security_groups(account_id, region_name, vpc_id, inc_classic_sg=True)
         else:
@@ -414,11 +406,11 @@ def create_aws_spec(client):
 
         while True:
             if not sg_names:
-                click.echo("\n{}\n". format(highlight_text("No security group available")))
+                click.echo(highlight_text("\nNo security group available!!!"))
                 break
 
             else:
-                click.echo("\nAvailable security groups: ")
+                click.echo("\nChoose from given security groups: ")
                 for ind, name in enumerate(sg_names):
                     dis_name = sg_map[name] + " | " + name
                     click.echo("\t {}. {}".format(str(ind + 1), highlight_text(dis_name)))
@@ -442,21 +434,19 @@ def create_aws_spec(client):
                     sg_names.pop(res - 1)
                     break
 
-            choice = click.prompt(highlight_text("\nWant to add more security_groups(y/n)"), default="n")
+            choice = click.prompt("\n{}(y/n)". format(highlight_text("Want to add more security_groups")), default="n")
             if choice[0] == "n":
                 break
 
-    choice = click.prompt(highlight_text("\nWant to include subnets(y/n)"), default="n")
-
+    choice = click.prompt("\n{}(y/n)". format(highlight_text("Want to include subnets")), default="n")
     if choice[0] == "y":
 
         subnets = Obj.subnets(account_id, region_name, vpc_id, availability_zone)
-        click.echo("\nChoose from given subnets")
-
         if not subnets:
-            click.echo("\n{}\n". format(highlight_text("No subnet present")))
+            click.echo(highlight_text("\nNo subnet available!!!"))
 
         else:
+            click.echo("\nChoose from given subnets")
             for ind, name in enumerate(subnets):
                 dis_name = name + " | " + vpc_id
                 click.echo("\t {}. {}".format(str(ind + 1), highlight_text(dis_name)))
@@ -473,29 +463,31 @@ def create_aws_spec(client):
                     click.echo("{} selected". format(highlight_text(dis_name)))
                     break
 
-    choice = click.prompt(highlight_text("\nWant to enter user data(y/n)"), default="n")
+    choice = click.prompt("\n{}(y/n)". format(highlight_text("Want to enter user data")), default="n")
     if choice[0] == "y":
-        user_data = click.prompt("Enter the USER DATA: ", type=str)
+        user_data = click.prompt("\nEnter data: ", type=str)
         spec["resources"]["user_data"] = user_data
 
-    click.prompt(highlight_text("\nWant to add any tags(y/n)"), default="n")
+    choice = click.prompt("\n{}(y/n)". format(highlight_text("Want to add any tags")), default="n")
     if choice[0] == "y":
         tags = []
         while True:
-            key = click.prompt("\nKey: ")
-            value = click.prompt("Value: ")
+            key = click.prompt("\n\tKey")
+            value = click.prompt("\tValue")
 
             tag = {
                 "key": key,
                 "value": value
             }
             tags.append(tag)
-            choice = click.prompt(highlight_text("\n Want to add more tags(y/n)"), default="n")
+            choice = click.prompt("\n{}(y/n)". format(highlight_text("Want to add more tags")), default="n")
             if choice[0] == "n":
                 spec["resources"]["tag_list"] = tags
                 break
 
-    click.echo("\nEnter the data for root disk")
+    click.echo("\n\t\t", nl=False)
+    click.secho("STORAGE DATA\n", bold=True, underline=True)
+    click.secho("\tRoot Disk", bold=True)
     click.echo("\nDevice for the root disk: {}". format(highlight_text(root_device_name)))
 
     spec["resources"]["block_device_map"] = {}
@@ -506,7 +498,7 @@ def create_aws_spec(client):
     volume_types = list(aws.VOLUME_TYPE_MAP.keys())
     click.echo("\nChoose from given volume types: ")
     if not root_device_name:
-        click.echo("\n{}\n". format(highlight_text("No device can be added")))
+        click.echo(highlight_text("\nNo device name available!!!"))
 
     else:
         for index, name in enumerate(volume_types):
@@ -526,6 +518,7 @@ def create_aws_spec(client):
         root_disk["delete_on_termination"] = True if choice[0] == "y" else False
         spec["resources"]["block_device_map"]["root_disk"] = root_disk
 
+    click.secho("\n\tOther disks", bold=True)
     choice = click.prompt("\n{}(y/n)". format(highlight_text("Want to add more disks")), default="n")
 
     avl_device_names = list(aws.DeviceMountPoints.keys())
@@ -533,7 +526,7 @@ def create_aws_spec(client):
     while choice[0] == "y":
         disk = {}
         if not avl_device_names:
-            click.echo("\n{}\n". format(highlight_text("No devices present")))
+            click.echo(highlight_text("\nNo device name available!!!"))
             break
 
         click.echo("\nChoose from given Device Names: ")
@@ -573,5 +566,5 @@ def create_aws_spec(client):
         choice = click.prompt("\n{}(y/n)". format(highlight_text("Want to add more disks")), default="n")
 
     AwsVmProvider.validate_spec(spec)
-    click.echo("\nCreate spec \n")
+    click.secho("\nCreate spec\n", underline=True)
     click.echo(highlight_text(json.dumps(spec, sort_keys=True, indent=4)))
