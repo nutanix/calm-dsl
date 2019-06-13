@@ -357,7 +357,7 @@ def get_completion_func(screen):
     return is_action_complete
 
 
-def watch_action(runlog_uuid, app_name, client, screen):
+def watch_action(runlog_uuid, app_name, client, screen, poll_interval):
     app = _get_app(client, app_name)
     app_uuid = app["metadata"]["uuid"]
 
@@ -367,7 +367,7 @@ def watch_action(runlog_uuid, app_name, client, screen):
     def poll_func():
         return client.application.poll_action_run(url, payload)
 
-    poll_action(poll_func, get_completion_func(screen))
+    poll_action(poll_func, get_completion_func(screen), poll_interval)
 
 
 def watch_app(obj, app_name, action, screen):
@@ -533,7 +533,7 @@ def run_actions(screen, obj, app_name, action_name, watch):
         watch_action(runlog_uuid, app_name, client, screen=screen)
 
 
-def poll_action(poll_func, completion_func):
+def poll_action(poll_func, completion_func, poll_interval=10):
     # Poll every 10 seconds on the app status, for 5 mins
     maxWait = 5 * 60
     count = 0
@@ -547,8 +547,8 @@ def poll_action(poll_func, completion_func):
         if completed:
             # click.echo(msg)
             break
-        count += 10
-        time.sleep(10)
+        count += poll_interval
+        time.sleep(poll_interval)
 
 
 def download_runlog(obj, runlog_id, app_name, file_name):
@@ -561,7 +561,7 @@ def download_runlog(obj, runlog_id, app_name, file_name):
 
     res, err = client.application.download_runlog(app_id, runlog_id)
     if not err:
-        open(file_name, 'wb').write(res.content)
+        open(file_name, "wb").write(res.content)
         click.echo("Runlogs downloaded at {}".format(file_name))
     else:
         log.error(err)

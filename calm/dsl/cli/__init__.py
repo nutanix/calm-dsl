@@ -10,7 +10,14 @@ from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
 
 from .utils import Display
-from .apps import get_apps, describe_app, delete_app, run_actions, watch_action, download_runlog
+from .apps import (
+    get_apps,
+    describe_app,
+    delete_app,
+    run_actions,
+    watch_action,
+    download_runlog,
+)
 from .bps import (
     get_blueprint_list,
     describe_bp,
@@ -219,7 +226,7 @@ def _get_projects(obj, name, filter_by, limit, offset, quiet):
     help="Search for accounts of specific provider",
     type=click.Choice(["aws", "k8s", "vmware", "azure", "gcp", "nutanix"]),
 )
-@click.pass_obj         # TODO ADD filter by type of account
+@click.pass_obj  # TODO ADD filter by type of account
 def _get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_type):
     """Get accounts, optionally filtered by a string"""
     get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_type)
@@ -520,8 +527,7 @@ def _watch_action_runlog(obj, runlog_uuid, app_name, poll_interval):
     """Watch an app"""
 
     def display_action(screen):
-        # TODO - Pass poll_interval
-        watch_action(runlog_uuid, app_name, obj.get("client"), screen)
+        watch_action(runlog_uuid, app_name, obj.get("client"), screen, poll_interval)
         screen.wait_for_input(10.0)
 
     Display.wrapper(display_action, True)

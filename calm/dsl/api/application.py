@@ -37,4 +37,6 @@ class ApplicationAPI(ResourceAPI):
 
     def download_runlog(self, app_id, runlog_id):
         download_url = self.DOWNLOAD_RUNLOG.format(app_id, runlog_id)
-        return self.connection._call(download_url, method=REQUEST.METHOD.GET, verify=False)
+        return self.connection._call(
+            download_url, method=REQUEST.METHOD.GET, verify=False
+        )
