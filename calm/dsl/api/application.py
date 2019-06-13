@@ -7,6 +7,7 @@ class ApplicationAPI(ResourceAPI):
         super().__init__(connection, resource_type="apps")
 
         self.ACTION_RUN = self.ITEM + "/actions/{}/run"
+        self.DOWNLOAD_RUNLOG = self.ITEM + "/app_runlogs/{}/output/download"
 
     def run_action(self, app_id, action_id, payload):
         return self.connection._call(
@@ -33,3 +34,7 @@ class ApplicationAPI(ResourceAPI):
         return self.connection._call(
             delete_url, verify=False, method=REQUEST.METHOD.DELETE
         )
+
+    def download_runlog(self, app_id, runlog_id):
+        download_url = self.DOWNLOAD_RUNLOG.format(app_id, runlog_id)
+        return self.connection._call(download_url, method=REQUEST.METHOD.GET, verify=False)

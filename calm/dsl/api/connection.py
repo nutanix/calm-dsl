@@ -238,7 +238,8 @@ class Connection:
                     cookies=cookies,
                 )
             res.raise_for_status()
-            log.info("Server Response: {}".format(res.json()))
+            if not url.endswith("/download"):
+                log.info("Server Response: {}".format(res.json()))
         except Exception as ex:
             log.error("Got the traceback\n{}".format(traceback.format_exc()))
             err_msg = res.text if hasattr(res, "text") else "{}".format(ex)

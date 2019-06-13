@@ -10,7 +10,7 @@ from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
 
 from .utils import Display
-from .apps import get_apps, describe_app, delete_app, run_actions, watch_action
+from .apps import get_apps, describe_app, delete_app, run_actions, watch_action, download_runlog
 from .bps import (
     get_blueprint_list,
     describe_bp,
@@ -564,3 +564,19 @@ def _update_project(obj, project_name, project_file):
     project = res.json()
     state = project["status"]["state"]
     click.echo(">> Project state: {}".format(state))
+
+
+@main.group()
+def download():
+    """Download entities"""
+    pass
+
+
+@download.command("action_runlog")
+@click.argument("runlog_uuid")
+@click.option("--app", "app_name", required=True, help="App the action belongs to")
+@click.option("--file", "file_name", help="How to name the downloaded file")
+@click.pass_obj
+def _download_runlog(obj, runlog_uuid, app_name, file_name):
+    """Download runlogs, given runlog uuid and app name"""
+    download_runlog(obj, runlog_uuid, app_name, file_name)

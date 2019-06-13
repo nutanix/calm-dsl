@@ -1,5 +1,6 @@
 import time
 import warnings
+import logging
 import json
 from json import JSONEncoder
 
@@ -10,6 +11,8 @@ from anytree import NodeMixin, RenderTree
 
 from .utils import get_name_query, get_states_filter, highlight_text
 from .constants import APPLICATION, RUNLOG
+
+log = logging.getLogger(__name__)
 
 
 def get_apps(obj, name, filter_by, limit, offset, quiet, all_items):
@@ -98,8 +101,15 @@ def _get_app(client, app_name, all=False):
     entities = response.get("entities", None)
     app = None
     if entities:
+        app = entities[0]
         if len(entities) != 1:
-            raise Exception("More than one app found - {}".format(entities))
+            for ent in entities:
+                if ent["metadata"]["name"] == app_name:
+                    app = ent
+                    found = True
+                    break
+            if not found:
+                raise Exception("More than one app found - {}".format(entities))
 
         # click.echo(">> {} found >>".format(app_name))
         app = entities[0]
@@ -539,3 +549,19 @@ def poll_action(poll_func, completion_func):
             break
         count += 10
         time.sleep(10)
+
+
+def download_runlog(obj, runlog_id, app_name, file_name):
+    client = obj.get("client")
+    app = _get_app(client, app_name)
+    app_id = app["metadata"]["uuid"]
+
+    if not file_name:
+        file_name = "runlog_{}.zip".format(runlog_id)
+
+    res, err = client.application.download_runlog(app_id, runlog_id)
+    if not err:
+        open(file_name, 'wb').write(res.content)
+        click.echo("Runlogs downloaded at {}".format(file_name))
+    else:
+        log.error(err)
