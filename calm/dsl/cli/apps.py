@@ -103,6 +103,8 @@ def _get_app(client, app_name, all=False):
     if entities:
         app = entities[0]
         if len(entities) != 1:
+            # If more than one item found, check if an exact name match is present. Else raise.
+            found = False
             for ent in entities:
                 if ent["metadata"]["name"] == app_name:
                     app = ent
@@ -111,7 +113,7 @@ def _get_app(client, app_name, all=False):
             if not found:
                 raise Exception("More than one app found - {}".format(entities))
 
-        # click.echo(">> {} found >>".format(app_name))
+        click.echo(">> App {} found >>".format(app_name))
         app = entities[0]
     else:
         raise Exception(">> No app found with name {} found >>".format(app_name))
@@ -562,6 +564,6 @@ def download_runlog(obj, runlog_id, app_name, file_name):
     res, err = client.application.download_runlog(app_id, runlog_id)
     if not err:
         open(file_name, "wb").write(res.content)
-        click.echo("Runlogs downloaded at {}".format(file_name))
+        click.echo("Runlogs saved as {}".format(highlight_text(file_name)))
     else:
         log.error(err)
