@@ -1,0 +1,213 @@
+{% macro awsDisks() -%}
+
+title: AWS Disks
+type: object
+properties:
+  device_name: 
+    type: string
+  size_gb:
+    type: integer
+  volume_type:
+    type: string
+    enum: 
+    - IO1
+    - STANDARD
+    - SC1
+    - ST1
+    - GP2
+  delete_on_termination:
+    type: boolean
+  iops:
+    type: integer
+  snapshot_id:
+    type: string
+  type:
+    type: string
+
+{%- endmacro %}
+
+
+{% macro awsResource() -%}
+
+title: AWS Resource
+type: object
+properties:
+  account_uuid:
+    type: string
+    minLength: 36
+    maxLength: 36
+  instance_type:
+    type: string
+  key_name:
+    type: string
+  instance_profile_name:
+    type: string
+  availability_zone:
+    type: string
+  vpc_id:
+    type: string
+  associate_public_ip_address:
+    type: boolean
+  region:
+    type: string
+  security_group_list:
+    type: array
+    items:
+      type: object
+      properties:
+        security_group_id:
+          type: string
+        type:
+          type: string
+  subnet_id:
+    type: string
+  instance_initiated_shutdown_behavior:     # TODO add enums
+    type: string
+  image_id:
+    type: string
+  user_data:
+    type: string
+    maxLength: 16000
+  state:                                    # TODO add enums(POWER_STATE)
+    type: string
+  tag_list:
+    type: array
+    items:
+      type: object
+      properties: 
+        key:
+          type: string
+        value:
+          type: string
+  block_device_map:
+    type: object
+    properties:
+      root_disk:
+        {{ awsDisks() | indent(8) }}
+      type:
+        type: string
+      data_disk_list:
+        type: array
+        items: 
+          {{ awsDisks() | indent(10) }} 
+
+{%- endmacro %}
+
+
+{% macro kind_reference() -%}
+
+title: Reference 
+type: object
+properties:
+  kind:
+    type: string
+
+{%- endmacro %}
+
+
+{% macro nutanixSnapshotSchedule() -%}
+
+title: Nutanix Snapshot Schedule
+type: object
+properties:
+  is_suspended:
+    type: boolean
+  interval_multiple:
+    type: integer
+  duration_secs:
+    type: integer
+  end_time:
+    type: integer
+  interval_type:
+    type: string
+
+{%- endmacro %}
+
+
+{% macro nutanixSnapshotScheduleInfo() -%}
+
+title: Nutanix Snapshot Schedule Information
+type: object
+properties:
+  remote_retention_quantity:
+    type: integer
+  snapshot_type:
+    type: string
+  local_retention_quantity:
+    type: integer
+  schedule:
+    {{ nutanixSnapshotSchedule() | indent(4) }}
+
+{%- endmacro %}
+
+
+{% macro nutanixSnapshotPolicy() -%}
+
+title: Nutanix Snapshot Policy
+type: object
+properties:
+  replication_target:
+    type: object
+    properties:
+      cluster_reference:
+        {{ kind_reference() | indent(8) }}
+      availability_zone_reference:
+        {{ kind_reference() | indent(8) }}
+  snapshot_schedule_list:
+    type: array
+    items:
+      {{ nutanixSnapshotScheduleInfo() | indent(6) }}
+
+{%- endmacro %}
+
+
+{% macro nutanixBackupPolicy() -%}
+
+title: Nutanix Backup Policy
+type: object
+properties:
+  default_snapshot_type:
+    type: string
+  consistency_group_identifier:
+    type: string
+  snapshot_policy_list:
+    type: array
+    items:
+      {{ nutanixSnapshotPolicy() | indent(6) }}
+
+{%- endmacro %}
+
+
+{% macro awsCreateSpec() -%}
+
+title: AWS CreateSpec
+type: object
+properties:
+  name: 
+    type: string
+  type:
+    type: string
+    enum: 
+    - PROVISION_AWS_VM
+  resources:
+    {{ awsResource() | indent(4) }}
+  availability_zone_reference:          # TODO add enums['availability_zone']
+    {{ kind_reference() | indent(4) }}
+  backup_policy:
+    {{ nutanixBackupPolicy() | indent(4) }}
+  cluster_reference:                    # TODO add enums['cluster']
+    {{ kind_reference() | indent(4) }}
+
+{%- endmacro %}
+
+
+info:
+  title: AWS_VM
+  description: AWS VM spec payload using v3 API
+  version: 3.0.1      # TODO add right version of ahv schema
+
+
+components:
+  schemas:
+    provider_spec:
+      {{ awsCreateSpec() | indent(6) }}

@@ -19,8 +19,13 @@ from .bps import (
     launch_blueprint_simple,
     delete_blueprint,
 )
-from .projects import get_projects, delete_project, create_project, \
-    describe_project, update_project
+from .projects import (
+    get_projects,
+    delete_project,
+    create_project,
+    describe_project,
+    update_project,
+)
 from .accounts import get_accounts, delete_account, describe_account
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
@@ -180,7 +185,9 @@ def _get_apps(obj, name, filter_by, limit, offset, quiet, all_items):
 
 @get.command("projects")
 @click.option("--name", default=None, help="Search for projects by name")
-@click.option("--filter", "filter_by", default=None, help="Filter projects by this string")
+@click.option(
+    "--filter", "filter_by", default=None, help="Filter projects by this string"
+)
 @click.option("--limit", default=20, help="Number of results to return")
 @click.option("--offset", default=0, help="Offset results by the specified amount")
 @click.option(
@@ -194,7 +201,9 @@ def _get_projects(obj, name, filter_by, limit, offset, quiet):
 
 @get.command("accounts")
 @click.option("--name", default=None, help="Search for provider account by name")
-@click.option("--filter", "filter_by", default=None, help="Filter projects by this string")
+@click.option(
+    "--filter", "filter_by", default=None, help="Filter projects by this string"
+)
 @click.option("--limit", default=20, help="Number of results to return")
 @click.option("--offset", default=0, help="Offset results by the specified amount")
 @click.option(
@@ -203,10 +212,17 @@ def _get_projects(obj, name, filter_by, limit, offset, quiet):
 @click.option(
     "--all-items", "-a", is_flag=True, help="Get all items, including deleted ones"
 )
-@click.pass_obj
-def _get_accounts(obj, name, filter_by, limit, offset, quiet, all_items):
+@click.option(
+    "--type",
+    "account_type",
+    default=None,
+    help="Search for accounts of specific provider",
+    type=click.Choice(["aws", "k8s", "vmware", "azure", "gcp", "nutanix"]),
+)
+@click.pass_obj         # TODO ADD filter by type of account
+def _get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_type):
     """Get accounts, optionally filtered by a string"""
-    get_accounts(obj, name, filter_by, limit, offset, quiet, all_items)
+    get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_type)
 
 
 @main.group()
