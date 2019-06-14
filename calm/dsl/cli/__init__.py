@@ -9,9 +9,15 @@ from calm.dsl.tools import ping
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
 
-from asciimatics.screen import Screen
 from .utils import Display
-from .apps import get_apps, describe_app, delete_app, run_actions, watch_app
+from .apps import (
+    get_apps,
+    describe_app,
+    delete_app,
+    run_actions,
+    watch_action,
+    download_runlog,
+)
 from .bps import (
     get_blueprint_list,
     describe_bp,
@@ -220,7 +226,7 @@ def _get_projects(obj, name, filter_by, limit, offset, quiet):
     help="Search for accounts of specific provider",
     type=click.Choice(["aws", "k8s", "vmware", "azure", "gcp", "nutanix"]),
 )
-@click.pass_obj         # TODO ADD filter by type of account
+@click.pass_obj  # TODO ADD filter by type of account
 def _get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_type):
     """Get accounts, optionally filtered by a string"""
     get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_type)
@@ -469,13 +475,21 @@ def _describe_account(obj, account_name):
     describe_account(obj, account_name)
 
 
-@main.command("app")
-@click.argument("app_name")
+@main.group()
+def run():
+    """Run actions in an app"""
+    pass
+
+
+@run.command("action")
 @click.argument("action_name")
+@click.option(
+    "--app", "app_name", default=None, required=True, help="Watch action run in an app"
+)
 @click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
 @click.pass_obj
 def _run_actions(obj, app_name, action_name, watch):
-    """App related functionality: launch, lcm actions, monitor, delete"""
+    """App lcm actions"""
 
     def render_actions(screen):
         screen.clear()
@@ -495,14 +509,29 @@ def watch():
     pass
 
 
-@watch.command("app")
-@click.argument("app_name")
-@click.option("--action", default=None, help="Watch specific action")
+@watch.command("action_runlog")
+@click.argument("runlog_uuid")
+@click.option(
+    "--app", "app_name", default=None, required=True, help="Watch action run in an app"
+)
+@click.option(
+    "--poll-interval",
+    "poll_interval",
+    type=int,
+    default=10,
+    show_default=True,
+    help="Give polling interval",
+)
 @click.pass_obj
-def _watch_app(obj, app_name, action):
+def _watch_action_runlog(obj, runlog_uuid, app_name, poll_interval):
     """Watch an app"""
-    Screen.wrapper(lambda screen: watch_app(obj, app_name, action, screen))
-    click.echo("Action completed")
+
+    def display_action(screen):
+        watch_action(runlog_uuid, app_name, obj.get("client"), screen, poll_interval)
+        screen.wait_for_input(10.0)
+
+    Display.wrapper(display_action, True)
+    click.echo("Action run {} completed for app {}".format(runlog_uuid, app_name))
 
 
 @create.command("provider_spec")
@@ -557,3 +586,19 @@ def _update_project(obj, project_name, project_file):
     project = res.json()
     state = project["status"]["state"]
     click.echo(">> Project state: {}".format(state))
+
+
+@main.group()
+def download():
+    """Download entities"""
+    pass
+
+
+@download.command("action_runlog")
+@click.argument("runlog_uuid")
+@click.option("--app", "app_name", required=True, help="App the action belongs to")
+@click.option("--file", "file_name", help="How to name the downloaded file")
+@click.pass_obj
+def _download_runlog(obj, runlog_uuid, app_name, file_name):
+    """Download runlogs, given runlog uuid and app name"""
+    download_runlog(obj, runlog_uuid, app_name, file_name)
