@@ -50,46 +50,72 @@ def _var(**kwargs):
 Variable = _var()
 
 
-def setvar(name, value, **kwargs):
+def setvar(name, value, type_="LOCAL", **kwargs):
 
     kwargs["name"] = name
     kwargs["value"] = value
+    kwargs["type"] = type_
 
     # name = name.title() + getattr(VariableType, "__schema_name__")
     return VariableType(name, (Variable,), kwargs)
 
 
-def simple_variable(value, label=None, runtime=False):
+def simple_variable(
+    value, label=None, regex=None, is_hidden=False, is_mandatory=False, runtime=False
+):
+    kwargs = {"is_hidden": is_hidden, "is_mandatory": is_mandatory}
     editables = {}
     name = getattr(VariableType, "__schema_name__")
     if runtime:
         editables = {"value": True}
+        kwargs["editables"] = editables
     if label is None:
-        label = ""
+        kwargs["label"] = label
+    if regex is not None:
+        if not isinstance(regex, str):
+            raise TypeError(
+                "Expected string in field regex for variable "
+                + (name or "")
+                + ", got {}".format(type(regex))
+            )
+        regex = {"value": regex, "should_validate": True}
+        kwargs["regex"] = regex
     return setvar(name, value, label=label, editables=editables)
 
 
-def _get_runtime_editables(object_):
+def simple_variable_secret(
+    value,
+    label=None,
+    regex=None,
+    options=None,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    kwargs = {"is_hidden": is_hidden, "is_mandatory": is_mandatory}
     editables = {}
-    if not isinstance(object_, dict):
-        return True
-    for key, value in object_.items():
-        if isinstance(value, dict):
-            editables[key] = _get_runtime_editables(value)
-        if isinstance(value, list):
-            editables[key] = {
-                index: _get_runtime_editables(element)
-                for index, element in enumerate(value)
-            }
-        else:
-            editables[key] = True
-    return editables
+    name = getattr(VariableType, "__schema_name__")
+    if runtime:
+        editables = {"value": True}
+        kwargs["editables"] = editables
+    if label is None:
+        kwargs["label"] = label
+    if regex is not None:
+        if not isinstance(regex, str):
+            raise TypeError(
+                "Expected string in field regex for variable "
+                + (name or "")
+                + ", got {}".format(type(regex))
+            )
+        regex = {"value": regex, "should_validate": True}
+        kwargs["regex"] = regex
+    return setvar(name, value, type_="SECRET", label=label, editables=editables)
 
 
 def _advanced_variable(
     name,
-    value,
     type_,
+    value=None,
     label=None,
     task=None,
     value_type=None,
@@ -100,12 +126,13 @@ def _advanced_variable(
     is_mandatory=False,
     runtime=False,
 ):
-    kwargs = {"name": name, "value": str(value), "type": type_}
-    editables = {}
+    kwargs = {"name": name, "type": type_}
+    if runtime:
+        kwargs["editables"] = {"value": True}
+    if value is not None:
+        kwargs["value"] = str(value)
     if label is not None:
         kwargs["label"] = label
-        if runtime:
-            editables["label"] = True
     if task is not None:
         if not getattr(task, "__kind__") == "app_task":
             raise TypeError(
@@ -126,22 +153,16 @@ def _advanced_variable(
             )
         kwargs["options"]["type"] = task_type
         kwargs["options"]["attrs"] = task_attrs
-        if runtime:
-            editables["attrs"] = _get_runtime_editables(task_attrs)
     if value_type is not None:
         value_type = value_type.upper()
         if value_type not in VARIABLE_VALUE_TYPES.values():
             raise ValueError("Invalid value_type provided for variable " + (name or ""))
         kwargs["value_type"] = value_type
-        if runtime:
-            editables["value_type"] = True
     if data_type is not None:
         data_type = data_type.upper()
         if data_type not in VARIABLE_DATA_TYPES.values():
             raise ValueError("Invalid data_type provided for variable " + (name or ""))
         kwargs["data_type"] = data_type
-        if runtime:
-            editables["data_type"] = True
     if regex is not None:
         if not getattr(task, "__kind__") == "app_task":
             raise TypeError(
@@ -151,8 +172,6 @@ def _advanced_variable(
             )
         regex = {"value": regex, "should_validate": True}
         kwargs["regex"] = regex
-        if runtime:
-            editables["regex"] = _get_runtime_editables(regex)
     if options is not None:
         if kwargs.get("options", None) is not None:
             raise ValueError(
@@ -175,20 +194,563 @@ def _advanced_variable(
                     + (name or "")
                     + ", got {}".format(type(choice))
                 )
-        options = {
-            "type": "PREDEFINED",
-            "choices": choices
-        }
+        options = {"type": "PREDEFINED", "choices": choices}
         kwargs["options"] = options
-        if runtime:
-            editables["options"] = _get_runtime_editables(options)
     if is_hidden is not None:
         kwargs["is_hidden"] = bool(is_hidden)
-        if runtime:
-            editables["is_hidden"] = True
     if is_mandatory is not None:
         kwargs["is_mandatory"] = bool(is_mandatory)
-        if runtime:
-            editables["is_mandatory"] = True
 
     return setvar(name, value, **kwargs)
+
+
+def variable_string_with_predefined_options(
+    name,
+    options,
+    label=None,
+    regex=None,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        name,
+        "LOCAL",
+        label=label,
+        value_type="STRING",
+        data_type="BASE",
+        regex=regex,
+        options=options,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def variable_int_with_predefined_options(
+    name,
+    options,
+    label=None,
+    regex=None,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        name,
+        "LOCAL",
+        label=label,
+        value_type="INT",
+        data_type="BASE",
+        regex=regex,
+        options=options,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def variable_date_with_predefined_options(
+    name,
+    options,
+    label=None,
+    regex=None,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        name,
+        "LOCAL",
+        label=label,
+        value_type="DATE",
+        data_type="BASE",
+        regex=regex,
+        options=options,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def variable_time_with_predefined_options(
+    name,
+    options,
+    label=None,
+    regex=None,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        name,
+        "LOCAL",
+        label=label,
+        value_type="TIME",
+        data_type="BASE",
+        regex=regex,
+        options=options,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def variable_datetime_with_predefined_options(
+    name,
+    options,
+    label=None,
+    regex=None,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        name,
+        "LOCAL",
+        label=label,
+        value_type="DATE_TIME",
+        data_type="BASE",
+        regex=regex,
+        options=options,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def variable_multiline_with_predefined_options(
+    name,
+    options,
+    label=None,
+    regex=None,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        name,
+        "LOCAL",
+        label=label,
+        value_type="MULTILINE_STRING",
+        data_type="BASE",
+        regex=regex,
+        options=options,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def variable_string_with_predefined_options_array(
+    name,
+    options,
+    label=None,
+    regex=None,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        name,
+        "LOCAL",
+        label=label,
+        value_type="STRING",
+        data_type="LIST",
+        regex=regex,
+        options=options,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def variable_int_with_predefined_options_array(
+    name,
+    options,
+    label=None,
+    regex=None,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        name,
+        "LOCAL",
+        label=label,
+        value_type="INT",
+        data_type="LIST",
+        regex=regex,
+        options=options,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def variable_date_with_predefined_options_array(
+    name,
+    options,
+    label=None,
+    regex=None,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        name,
+        "LOCAL",
+        label=label,
+        value_type="DATE",
+        data_type="LIST",
+        regex=regex,
+        options=options,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def variable_time_with_predefined_options_array(
+    name,
+    options,
+    label=None,
+    regex=None,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        name,
+        "LOCAL",
+        label=label,
+        value_type="TIME",
+        data_type="LIST",
+        regex=regex,
+        options=options,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def variable_datetime_with_predefined_options_array(
+    name,
+    options,
+    label=None,
+    regex=None,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        name,
+        "LOCAL",
+        label=label,
+        value_type="DATE_TIME",
+        data_type="LIST",
+        regex=regex,
+        options=options,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def variable_multiline_with_predefined_options_array(
+    name,
+    options,
+    label=None,
+    regex=None,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        name,
+        "LOCAL",
+        label=label,
+        value_type="MULTILINE_STRING",
+        data_type="LIST",
+        regex=regex,
+        options=options,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def variable_string_with_options_from_task(
+    name,
+    task,
+    label=None,
+    regex=None,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        name,
+        "LOCAL",
+        label=label,
+        value_type="STRING",
+        data_type="BASE",
+        regex=regex,
+        task=task,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def variable_int_with_options_from_task(
+    name,
+    task,
+    label=None,
+    regex=None,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        name,
+        "LOCAL",
+        label=label,
+        value_type="INT",
+        data_type="BASE",
+        regex=regex,
+        task=task,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def variable_date_with_options_from_task(
+    name,
+    task,
+    label=None,
+    regex=None,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        name,
+        "LOCAL",
+        label=label,
+        value_type="DATE",
+        data_type="BASE",
+        regex=regex,
+        task=task,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def variable_time_with_options_from_task(
+    name,
+    task,
+    label=None,
+    regex=None,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        name,
+        "LOCAL",
+        label=label,
+        value_type="TIME",
+        data_type="BASE",
+        regex=regex,
+        task=task,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def variable_datetime_with_options_from_task(
+    name,
+    task,
+    label=None,
+    regex=None,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        name,
+        "LOCAL",
+        label=label,
+        value_type="DATE_TIME",
+        data_type="BASE",
+        regex=regex,
+        task=task,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def variable_multiline_with_options_from_task(
+    name,
+    task,
+    label=None,
+    regex=None,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        name,
+        "LOCAL",
+        label=label,
+        value_type="MULTILINE_STRING",
+        data_type="BASE",
+        regex=regex,
+        task=task,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def variable_string_with_options_from_task_array(
+    name,
+    task,
+    label=None,
+    regex=None,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        name,
+        "LOCAL",
+        label=label,
+        value_type="STRING",
+        data_type="LIST",
+        regex=regex,
+        task=task,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def variable_int_with_options_from_task_array(
+    name,
+    task,
+    label=None,
+    regex=None,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        name,
+        "LOCAL",
+        label=label,
+        value_type="INT",
+        data_type="LIST",
+        regex=regex,
+        task=task,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def variable_date_with_options_from_task_array(
+    name,
+    task,
+    label=None,
+    regex=None,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        name,
+        "LOCAL",
+        label=label,
+        value_type="DATE",
+        data_type="LIST",
+        regex=regex,
+        task=task,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def variable_time_with_options_from_task_array(
+    name,
+    task,
+    label=None,
+    regex=None,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        name,
+        "LOCAL",
+        label=label,
+        value_type="TIME",
+        data_type="LIST",
+        regex=regex,
+        task=task,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def variable_datetime_with_options_from_task_array(
+    name,
+    task,
+    label=None,
+    regex=None,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        name,
+        "LOCAL",
+        label=label,
+        value_type="DATE_TIME",
+        data_type="LIST",
+        regex=regex,
+        task=task,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def variable_multiline_with_options_from_task_array(
+    name,
+    task,
+    label=None,
+    regex=None,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        name,
+        "LOCAL",
+        label=label,
+        value_type="MULTILINE_STRING",
+        data_type="LIST",
+        regex=regex,
+        task=task,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
