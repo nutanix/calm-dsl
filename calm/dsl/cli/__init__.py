@@ -9,9 +9,15 @@ from calm.dsl.tools import ping
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
 
-from asciimatics.screen import Screen
 from .utils import Display
-from .apps import get_apps, describe_app, delete_app, run_actions, watch_app
+from .apps import (
+    get_apps,
+    describe_app,
+    delete_app,
+    run_actions,
+    watch_action,
+    download_runlog,
+)
 from .bps import (
     get_blueprint_list,
     describe_bp,
@@ -20,8 +26,13 @@ from .bps import (
     launch_blueprint_simple,
     delete_blueprint,
 )
-from .projects import get_projects, delete_project, create_project, \
-    describe_project, update_project
+from .projects import (
+    get_projects,
+    delete_project,
+    create_project,
+    describe_project,
+    update_project,
+)
 from .accounts import get_accounts, delete_account, describe_account
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
@@ -181,7 +192,9 @@ def _get_apps(obj, name, filter_by, limit, offset, quiet, all_items):
 
 @get.command("projects")
 @click.option("--name", default=None, help="Search for projects by name")
-@click.option("--filter", "filter_by", default=None, help="Filter projects by this string")
+@click.option(
+    "--filter", "filter_by", default=None, help="Filter projects by this string"
+)
 @click.option("--limit", default=20, help="Number of results to return")
 @click.option("--offset", default=0, help="Offset results by the specified amount")
 @click.option(
@@ -195,7 +208,9 @@ def _get_projects(obj, name, filter_by, limit, offset, quiet):
 
 @get.command("accounts")
 @click.option("--name", default=None, help="Search for provider account by name")
-@click.option("--filter", "filter_by", default=None, help="Filter projects by this string")
+@click.option(
+    "--filter", "filter_by", default=None, help="Filter projects by this string"
+)
 @click.option("--limit", default=20, help="Number of results to return")
 @click.option("--offset", default=0, help="Offset results by the specified amount")
 @click.option(
@@ -204,10 +219,17 @@ def _get_projects(obj, name, filter_by, limit, offset, quiet):
 @click.option(
     "--all-items", "-a", is_flag=True, help="Get all items, including deleted ones"
 )
-@click.pass_obj
-def _get_accounts(obj, name, filter_by, limit, offset, quiet, all_items):
+@click.option(
+    "--type",
+    "account_type",
+    default=None,
+    help="Search for accounts of specific provider",
+    type=click.Choice(["aws", "k8s", "vmware", "azure", "gcp", "nutanix"]),
+)
+@click.pass_obj  # TODO ADD filter by type of account
+def _get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_type):
     """Get accounts, optionally filtered by a string"""
-    get_accounts(obj, name, filter_by, limit, offset, quiet, all_items)
+    get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_type)
 
 
 @main.group()
@@ -453,13 +475,21 @@ def _describe_account(obj, account_name):
     describe_account(obj, account_name)
 
 
-@main.command("app")
-@click.argument("app_name")
+@main.group()
+def run():
+    """Run actions in an app"""
+    pass
+
+
+@run.command("action")
 @click.argument("action_name")
+@click.option(
+    "--app", "app_name", default=None, required=True, help="Watch action run in an app"
+)
 @click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
 @click.pass_obj
 def _run_actions(obj, app_name, action_name, watch):
-    """App related functionality: launch, lcm actions, monitor, delete"""
+    """App lcm actions"""
 
     def render_actions(screen):
         screen.clear()
@@ -479,14 +509,29 @@ def watch():
     pass
 
 
-@watch.command("app")
-@click.argument("app_name")
-@click.option("--action", default=None, help="Watch specific action")
+@watch.command("action_runlog")
+@click.argument("runlog_uuid")
+@click.option(
+    "--app", "app_name", default=None, required=True, help="Watch action run in an app"
+)
+@click.option(
+    "--poll-interval",
+    "poll_interval",
+    type=int,
+    default=10,
+    show_default=True,
+    help="Give polling interval",
+)
 @click.pass_obj
-def _watch_app(obj, app_name, action):
+def _watch_action_runlog(obj, runlog_uuid, app_name, poll_interval):
     """Watch an app"""
-    Screen.wrapper(lambda screen: watch_app(obj, app_name, action, screen))
-    click.echo("Action completed")
+
+    def display_action(screen):
+        watch_action(runlog_uuid, app_name, obj.get("client"), screen, poll_interval)
+        screen.wait_for_input(10.0)
+
+    Display.wrapper(display_action, True)
+    click.echo("Action run {} completed for app {}".format(runlog_uuid, app_name))
 
 
 @create.command("provider_spec")
@@ -541,3 +586,19 @@ def _update_project(obj, project_name, project_file):
     project = res.json()
     state = project["status"]["state"]
     click.echo(">> Project state: {}".format(state))
+
+
+@main.group()
+def download():
+    """Download entities"""
+    pass
+
+
+@download.command("action_runlog")
+@click.argument("runlog_uuid")
+@click.option("--app", "app_name", required=True, help="App the action belongs to")
+@click.option("--file", "file_name", help="How to name the downloaded file")
+@click.pass_obj
+def _download_runlog(obj, runlog_uuid, app_name, file_name):
+    """Download runlogs, given runlog uuid and app name"""
+    download_runlog(obj, runlog_uuid, app_name, file_name)

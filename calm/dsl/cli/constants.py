@@ -72,3 +72,11 @@ class ACCOUNT:
         DRAFT = "DRAFT"
         ACTIVE = "ACTIVE"
         UNSAVED = "UNSAVED"
+
+    class TYPES:
+        AWS = "aws"
+        AHV = "nutanix"
+        KUBERNETES = "k8s"
+        AZURE = "azure"
+        GCP = "gcp"
+        VMWARE = "vmware"

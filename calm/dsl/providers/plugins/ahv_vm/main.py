@@ -1,10 +1,10 @@
 import click
 import json
-from jsonschema import Draft7Validator
 import re
 
 from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.providers import get_provider_interface
+from calm.dsl.tools import StrictDraft7Validator
 
 from .constants import AHV as ahv
 
@@ -22,7 +22,7 @@ class AhvVmProvider(Provider):
     @classmethod
     def create_spec(cls):
         client = get_api_client()
-        create_ahv_spec(client)
+        create_spec(client)
 
 
 class AHV:
@@ -86,7 +86,7 @@ def highlight_text(text, **kwargs):
     return click.style("{}".format(text), fg="blue", bold=False, **kwargs)
 
 
-def create_ahv_spec(client):
+def create_spec(client):
 
     spec = {}
     Obj = AHV(client.connection)
@@ -98,49 +98,63 @@ def create_ahv_spec(client):
     path.append("name")
     spec["name"] = get_field(schema, path, option)
 
-    choice = click.prompt(highlight_text("\nWant to add some categories(y/n)"), default="n")
+    choice = click.prompt(
+        "\n{}(y/n)".format(highlight_text("Want to add some categories(y/n)")),
+        default="n",
+    )
     if choice[0] == "y":
         categories = Obj.categories()
-        click.echo("\n Choose from given categories: \n")
 
-        for ind, group in enumerate(categories):
-            click.echo(
-                "\t {}. {}:{} ".format(str(ind + 1), group["key"], group["value"])
-            )
+        if not categories:
+            click.echo("\n{}\n".format(highlight_text("No Category present")))
 
-        result = {}
-        while True:
+        else:
+            click.echo("\n Choose from given categories: \n")
+            for ind, group in enumerate(categories):
+                category = "{}:{}".format(group["key"], group["value"])
+                click.echo("\t {}. {} ".format(str(ind + 1), highlight_text(category)))
 
+            result = {}
             while True:
-                index = click.prompt("\nEnter the index of category", default=1)
-                if index > len(categories):
-                    click.echo("Invalid index !!! ")
+
+                while True:
+                    index = click.prompt("\nEnter the index of category", default=1)
+                    if index > len(categories):
+                        click.echo("Invalid index !!! ")
+
+                    else:
+                        break
+
+                group = categories[index]
+                key = group["key"]
+                if result.get(key) is not None:
+                    click.echo(
+                        "Category corresponding to key {} already exists ".format(key)
+                    )
+                    choice = click.prompt(
+                        "\nWant to replace old one (y/n)", default="n"
+                    )
+                    if choice[0] == "y":
+                        result[key] = group["value"]
+                        click.echo(
+                            highlight_text(
+                                "category with (key = {}) updated".format(key)
+                            )
+                        )
 
                 else:
+                    result[key] = group["value"]
+
+                choice = click.prompt(
+                    "\n{}(y/n)".format(
+                        highlight_text("Want to add more categories(y/n)")
+                    ),
+                    default="n",
+                )
+                if choice[0] == "n":
                     break
 
-            group = categories[index]
-            key = group["key"]
-            if result.get(key) is not None:
-                click.echo(
-                    "Category corresponding to key {} already exists ".format(key)
-                )
-                choice = click.prompt("\nWant to replace old one (y/n)", default="n")
-                if choice[0] == "y":
-                    result[key] = group["value"]
-                    click.echo(highlight_text("category with (key = {}) updated". format(key)))
-
-            else:
-                result[key] = group["value"]
-
-            choice = click.prompt(
-                highlight_text("\nWant to add more categories (y/n)"),
-                default="n"
-            )
-            if choice[0] == "n":
-                break
-
-        spec["categories"] = result
+            spec["categories"] = result
 
     spec["resources"] = {}
     path[-1] = "resources"
@@ -152,41 +166,55 @@ def create_ahv_spec(client):
     )
 
     path[-1] = "num_sockets"
+    click.echo("")
     spec["resources"]["num_sockets"] = get_field(schema, path, option, type=int)
 
     path[-1] = "memory_size_mib"
+    click.echo("")
     spec["resources"]["memory_size_mib"] = get_field(schema, path, option, type=int)
 
-    click.echo(highlight_text("\nEnter the details of disks : \n"))
+    click.secho("\nAdd some images:\n", fg="blue", bold=True)
 
     imagesNameUUIDMap = Obj.images()
     images = list(imagesNameUUIDMap.keys())
-    click.echo("Choose from given images: \n")
-    for ind, name in enumerate(images):
-        click.echo("\t {}. {}".format(str(ind + 1), name))
+
+    if images:
+        click.echo("Choose from given images: \n")
+        for ind, name in enumerate(images):
+            click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
     spec["resources"]["disk_list"] = []
     path[-1] = "disk_list"
     option.append("AHV Disk List")
 
     adapterNameIndexMap = {}
+    image_index = 0
     while True:
         image = {}
+        image_index += 1
+        click.secho(
+            "\nImage Device {}".format(str(image_index)), bold=True, underline=True
+        )
 
         while True:
+            if not images:
+                click.echo("\n{}".format(highlight_text("No image present")))
+                image["name"] = ""
+                break
+
             res = click.prompt("\nEnter the index of image", default=1)
             if res > len(images):
                 click.echo("Invalid index !!! ")
 
             else:
                 image["name"] = images[res - 1]
-                click.echo("{} selected". format(highlight_text(image["name"])))
+                click.echo("{} selected".format(highlight_text(image["name"])))
                 break
 
         click.echo("\nChoose from given Device Types :")
         device_types = list(ahv.DEVICE_TYPES.keys())
         for index, device_type in enumerate(device_types):
-            click.echo("\t{}. {}". format(index + 1, highlight_text(device_type)))
+            click.echo("\t{}. {}".format(index + 1, highlight_text(device_type)))
 
         while True:
             res = click.prompt("\nEnter the index for Device Type", default=1)
@@ -195,13 +223,13 @@ def create_ahv_spec(client):
 
             else:
                 image["device_type"] = ahv.DEVICE_TYPES[device_types[res - 1]]
-                click.echo("{} selected". format(highlight_text(image["device_type"])))
+                click.echo("{} selected".format(highlight_text(image["device_type"])))
                 break
 
         click.echo("\nChoose from given Device Bus :")
         device_bus_list = list(ahv.DEVICE_BUS.keys())
         for index, device_bus in enumerate(device_bus_list):
-            click.echo("\t{}. {}". format(index + 1, highlight_text(device_bus)))
+            click.echo("\t{}. {}".format(index + 1, highlight_text(device_bus)))
 
         while True:
             res = click.prompt("\nEnter the index for Device Bus", default=1)
@@ -210,7 +238,7 @@ def create_ahv_spec(client):
 
             else:
                 image["adapter_type"] = ahv.DEVICE_BUS[device_bus_list[res - 1]]
-                click.echo("{} selected". format(highlight_text(image["adapter_type"])))
+                click.echo("{} selected".format(highlight_text(image["adapter_type"])))
                 break
 
         image["bootable"] = click.prompt("\nIs it bootable(y/n)", default="y")
@@ -246,13 +274,15 @@ def create_ahv_spec(client):
         adapterNameIndexMap[image["adapter_type"]] += 1
         spec["resources"]["disk_list"].append(disk)
 
-        choice = click.prompt(highlight_text("\nWant to add more disks(y/n)"), default="n")
+        choice = click.prompt(
+            "\n{}(y/n)".format(highlight_text("Want to add more images")), default="n"
+        )
         if choice[0] == "n":
             break
 
-    choice = click.prompt(highlight_text("\nWant any virtual disks(y/n)"), default="n")
-    click.echo("")
-
+    choice = click.prompt(
+        "\n{}(y/n)".format(highlight_text("Want any virtual disks")), default="n"
+    )
     if choice[0] == "y":
         option[-1] = "AHV VDisk List"
 
@@ -262,7 +292,7 @@ def create_ahv_spec(client):
             click.echo("\nChoose from given Device Types: ")
             device_types = list(ahv.DEVICE_TYPES.keys())
             for index, device_type in enumerate(device_types):
-                click.echo("\t{}. {}". format(index + 1, highlight_text(device_type)))
+                click.echo("\t{}. {}".format(index + 1, highlight_text(device_type)))
 
             while True:
                 res = click.prompt("\nEnter the index for Device Type", default=1)
@@ -271,13 +301,15 @@ def create_ahv_spec(client):
 
                 else:
                     vdisk["device_type"] = ahv.DEVICE_TYPES[device_types[res - 1]]
-                    click.echo("{} selected". format(highlight_text(vdisk["device_type"])))
+                    click.echo(
+                        "{} selected".format(highlight_text(vdisk["device_type"]))
+                    )
                     break
 
             click.echo("\nChoose from given Device Bus :")
             device_bus_list = list(ahv.DEVICE_BUS.keys())
             for index, device_bus in enumerate(device_bus_list):
-                click.echo("\t{}. {}". format(index + 1, highlight_text(device_bus)))
+                click.echo("\t{}. {}".format(index + 1, highlight_text(device_bus)))
 
             while True:
                 res = click.prompt("\nEnter the index for Device Bus: ", default=1)
@@ -286,12 +318,16 @@ def create_ahv_spec(client):
 
                 else:
                     vdisk["adapter_type"] = ahv.DEVICE_BUS[device_bus_list[res - 1]]
-                    click.echo("{} selected". format(highlight_text(vdisk["adapter_type"])))
+                    click.echo(
+                        "{} selected".format(highlight_text(vdisk["adapter_type"]))
+                    )
                     break
 
             path.append("disk_size_mib")
             click.echo("")
-            vdisk["size"] = get_field(schema, path, option, type=int)
+            msg = "Enter disk size(GB)"
+            vdisk["size"] = get_field(schema, path, option, default=8, msg=msg)
+            vdisk["size"] = vdisk["size"] * 1024
 
             if not adapterNameIndexMap.get(vdisk["adapter_type"]):
                 adapterNameIndexMap[vdisk["adapter_type"]] = 0
@@ -310,65 +346,74 @@ def create_ahv_spec(client):
             spec["resources"]["disk_list"].append(disk)
             path = path[:-1]
 
-            choice = click.prompt(highlight_text("\nWant to add more disks(y/n)"), default="n")
-            click.echo("")
-            if choice[0] == "n":
-                break
-
-    choice = click.prompt(highlight_text("Want any network adapters(y/n)"), default="n")
-
-    if choice[0] == "y":
-        subnetNameUUIDMap = Obj.subnets()
-        nics = list(subnetNameUUIDMap.keys())
-
-        click.echo("\nChoose from given subnets : \n")
-        for ind, name in enumerate(nics):
-            click.echo("\t {}. {}".format(str(ind + 1), name))
-
-        spec["resources"]["nic_list"] = []
-
-        while True:
-
-            while True:
-                res = click.prompt(
-                    "\nEnter the index of subnet's name", default=1
-                )
-                if res > len(nics):
-                    click.echo("Invalid index !!!")
-
-                else:
-                    nic = nics[res - 1]
-                    click.echo("{} selected". format(highlight_text(nic)))
-                    break
-
-            nic = {
-                "subnet_reference": {
-                    "kind": "subnet",
-                    "name": nic,
-                    "uuid": subnetNameUUIDMap[nic],
-                }
-            }
-
-            spec["resources"]["nic_list"].append(nic)
-
             choice = click.prompt(
-                highlight_text("\nWant to add more network adpaters(y/n)"),
-                default="n"
+                "\n{}(y/n)".format(highlight_text("Want to add more disks")),
+                default="n",
             )
             if choice[0] == "n":
                 break
 
+    choice = click.prompt(
+        "\n{}(y/n)".format(highlight_text("Want any network adapters")), default="n"
+    )
+    if choice[0] == "y":
+        subnetNameUUIDMap = Obj.subnets()
+        nics = list(subnetNameUUIDMap.keys())
+
+        if not nics:
+            click.echo("\n{}".format(highlight_text("No network adapter present")))
+
+        else:
+            click.echo("\nChoose from given subnets:")
+            for ind, name in enumerate(nics):
+                click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
+
+            spec["resources"]["nic_list"] = []
+
+            while True:
+
+                while True:
+                    res = click.prompt("\nEnter the index of subnet's name", default=1)
+                    if res > len(nics):
+                        click.echo("Invalid index !!!")
+
+                    else:
+                        nic = nics[res - 1]
+                        click.echo("{} selected".format(highlight_text(nic)))
+                        break
+
+                nic = {
+                    "subnet_reference": {
+                        "kind": "subnet",
+                        "name": nic,
+                        "uuid": subnetNameUUIDMap[nic],
+                    }
+                }
+
+                spec["resources"]["nic_list"].append(nic)
+                choice = click.prompt(
+                    "\n{}(y/n)".format(
+                        highlight_text("Want to add more network adpaters")
+                    ),
+                    default="n",
+                )
+                if choice[0] == "n":
+                    break
+
     path = ["resources"]
     option = []
-    choice = click.prompt(highlight_text("\nWant to add Customization script (y/n)"), default="n")
 
+    choice = click.prompt(
+        "\n{}(y/n)".format(highlight_text("Want to add Customization script")),
+        default="n",
+    )
     if choice[0] == "y":
         path.append("guest_customization")
         script_types = ahv.GUEST_CUSTOMIZATION_SCRIPT_TYPES
 
-        click.echo("\nBelow are the script types ")
+        click.echo("\nChoose from given script types ")
         for index, scriptType in enumerate(script_types):
-            click.echo("\t {}. {}".format(str(index + 1), scriptType))
+            click.echo("\t {}. {}".format(str(index + 1), highlight_text(scriptType)))
 
         while True:
             index = click.prompt("\nEnter the index for type of script", default=1)
@@ -376,7 +421,7 @@ def create_ahv_spec(client):
                 click.echo("Invalid index !!!")
             else:
                 script_type = script_types[index - 1]
-                click.echo("{} selected\n". format(highlight_text(script_type)))
+                click.echo("{} selected\n".format(highlight_text(script_type)))
                 break
 
         if script_type == "cloud_init":
@@ -451,10 +496,10 @@ def find_schema(schema, path, option):
 def validate_field(schema, path, options, spec):
 
     keySchema = find_schema(schema, path, options)
-    return Draft7Validator(keySchema).is_valid(spec)
+    return StrictDraft7Validator(keySchema).is_valid(spec)
 
 
-def get_field(schema, path, options, type=str, msg=None):
+def get_field(schema, path, options, type=str, default=None, msg=None):
 
     field = path[-1]
     field = field.replace("_", " ")
@@ -466,7 +511,11 @@ def get_field(schema, path, options, type=str, msg=None):
 
     data = ""
     while True:
-        data = click.prompt(msg, type=type)
+        if not default:
+            data = click.prompt(msg, type=type)
+
+        else:
+            data = click.prompt(msg, default=default)
 
         if not validate_field(schema, path, options, data):
             click.echo("data incorrect. Enter again")
