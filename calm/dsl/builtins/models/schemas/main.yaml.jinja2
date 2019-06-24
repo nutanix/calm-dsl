@@ -15,6 +15,9 @@
 {% import "runbook.yaml.jinja2" as runbook %}
 {% import "action.yaml.jinja2" as action %}
 {% import "project.yaml.jinja2" as project %}
+{% import "simple_deployment.yaml.jinja2" as simple_deployment %}
+{% import "simple_profile.yaml.jinja2" as simple_profile %}
+{% import "simple_blueprint.yaml.jinja2" as simple_blueprint %}
 
 {% macro Schemas() -%}
 
@@ -35,6 +38,9 @@
 {{ runbook.RunbookSchema() }}
 {{ action.ActionSchema() }}
 {{ project.ProjectSchema() }}
+{{ simple_deployment.SimpleDeploymentSchema() }}
+{{ simple_profile.SimpleProfileSchema() }}
+{{ simple_blueprint.SimpleBlueprintSchema() }}
 
 {%- endmacro %}
 

@@ -1,0 +1,24 @@
+{% macro SimpleBlueprint() -%}
+
+title: SimpleBlueprint
+type: object
+x-calm-dsl-type: app_simple_blueprint
+properties:
+  credentials:
+    type: array
+    items:
+      $ref: '#/components/schemas/Credential'
+  profiles:
+    type: array
+    items:
+      $ref: '#/components/schemas/SimpleProfile'
+
+{%- endmacro %}
+
+
+{% macro SimpleBlueprintSchema() -%}
+
+SimpleBlueprint:
+  {{ SimpleBlueprint()|indent(2) }}
+
+{%- endmacro %}
