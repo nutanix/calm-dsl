@@ -48,8 +48,8 @@ class Display:
     def wait_for_input(self, *args):
         pass
 
-    def print_at(self, *args):
-        click.echo(args[0])
+    def print_at(self, text, y, *args):
+        click.echo("{}{}".format((" " * y), text))
 
 
 display = Display()
