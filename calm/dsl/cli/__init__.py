@@ -16,6 +16,7 @@ from .apps import (
     delete_app,
     run_actions,
     watch_action,
+    watch_app,
     download_runlog,
 )
 from .bps import (
@@ -509,6 +510,28 @@ def watch():
     pass
 
 
+@watch.command("app")
+@click.argument("app_name")
+@click.option(
+    "--poll-interval",
+    "poll_interval",
+    type=int,
+    default=10,
+    show_default=True,
+    help="Give polling interval",
+)
+@click.pass_obj
+def _watch_app(obj, app_name, poll_interval):
+    """Watch an app"""
+
+    def display_action(screen):
+        watch_app(obj, app_name, screen)
+        screen.wait_for_input(10.0)
+
+    Display.wrapper(display_action, watch=True)
+    click.echo("Action runs completed for app {}".format(app_name))
+
+
 @watch.command("action_runlog")
 @click.argument("runlog_uuid")
 @click.option(
@@ -530,7 +553,7 @@ def _watch_action_runlog(obj, runlog_uuid, app_name, poll_interval):
         watch_action(runlog_uuid, app_name, obj.get("client"), screen, poll_interval)
         screen.wait_for_input(10.0)
 
-    Display.wrapper(display_action, True)
+    Display.wrapper(display_action, watch=True)
     click.echo("Action run {} completed for app {}".format(runlog_uuid, app_name))
 
 
