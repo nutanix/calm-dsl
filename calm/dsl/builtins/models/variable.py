@@ -61,7 +61,13 @@ def setvar(name, value, type_="LOCAL", **kwargs):
 
 
 def simple_variable(
-    value, label=None, regex=None, is_hidden=False, is_mandatory=False, runtime=False
+    value,
+    label=None,
+    regex=None,
+    validate_regex=False,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
 ):
     kwargs = {"is_hidden": is_hidden, "is_mandatory": is_mandatory}
     editables = {}
@@ -78,16 +84,16 @@ def simple_variable(
                 + (name or "")
                 + ", got {}".format(type(regex))
             )
-        regex = {"value": regex, "should_validate": True}
+        regex = {"value": regex, "should_validate": validate_regex}
         kwargs["regex"] = regex
-    return setvar(name, value, label=label, editables=editables)
+    return setvar(name, value, **kwargs)
 
 
 def simple_variable_secret(
     value,
     label=None,
     regex=None,
-    options=None,
+    validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
@@ -107,26 +113,29 @@ def simple_variable_secret(
                 + (name or "")
                 + ", got {}".format(type(regex))
             )
-        regex = {"value": regex, "should_validate": True}
+        regex = {"value": regex, "should_validate": validate_regex}
         kwargs["regex"] = regex
-    return setvar(name, value, type_="SECRET", label=label, editables=editables)
+    return setvar(name, value, type_="SECRET", **kwargs)
 
 
 def _advanced_variable(
-    name,
     type_,
+    name=None,
     value=None,
     label=None,
     task=None,
     value_type=None,
     data_type=None,
     regex=None,
+    validate_regex=False,
     options=None,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
 ):
-    kwargs = {"name": name, "type": type_}
+    kwargs = {"type": type_}
+    if name is not None:
+        kwargs["name"] = name
     if runtime:
         kwargs["editables"] = {"value": True}
     if value is not None:
@@ -170,7 +179,7 @@ def _advanced_variable(
                 + (name or "")
                 + ", got {}".format(type(regex))
             )
-        regex = {"value": regex, "should_validate": True}
+        regex = {"value": regex, "should_validate": validate_regex}
         kwargs["regex"] = regex
     if options is not None:
         if kwargs.get("options", None) is not None:
@@ -205,21 +214,23 @@ def _advanced_variable(
 
 
 def variable_string_with_predefined_options(
-    name,
     options,
+    name=None,
     label=None,
     regex=None,
+    validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
 ):
     return _advanced_variable(
-        name,
         "LOCAL",
+        name=name,
         label=label,
         value_type="STRING",
         data_type="BASE",
         regex=regex,
+        validate_regex=validate_regex,
         options=options,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
@@ -228,21 +239,23 @@ def variable_string_with_predefined_options(
 
 
 def variable_int_with_predefined_options(
-    name,
     options,
+    name=None,
     label=None,
-    regex=None,
+    regex=r"^[\d]*$",
+    validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
 ):
     return _advanced_variable(
-        name,
         "LOCAL",
+        name=name,
         label=label,
         value_type="INT",
         data_type="BASE",
         regex=regex,
+        validate_regex=validate_regex,
         options=options,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
@@ -251,21 +264,23 @@ def variable_int_with_predefined_options(
 
 
 def variable_date_with_predefined_options(
-    name,
     options,
+    name=None,
     label=None,
-    regex=None,
+    regex=r"^((0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/[12]\d{3})$",
+    validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
 ):
     return _advanced_variable(
-        name,
         "LOCAL",
+        name=name,
         label=label,
         value_type="DATE",
         data_type="BASE",
         regex=regex,
+        validate_regex=validate_regex,
         options=options,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
@@ -274,21 +289,23 @@ def variable_date_with_predefined_options(
 
 
 def variable_time_with_predefined_options(
-    name,
     options,
+    name=None,
     label=None,
-    regex=None,
+    regex=r"^[\d]{2}:[\d]{2}(:[0-5]\d)?$",
+    validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
 ):
     return _advanced_variable(
-        name,
         "LOCAL",
+        name=name,
         label=label,
         value_type="TIME",
         data_type="BASE",
         regex=regex,
+        validate_regex=validate_regex,
         options=options,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
@@ -297,21 +314,23 @@ def variable_time_with_predefined_options(
 
 
 def variable_datetime_with_predefined_options(
-    name,
     options,
+    name=None,
     label=None,
-    regex=None,
+    regex=r"^((0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/[12]\d{3})((T)|(\s-\s))[\d]{2}:[\d]{2}(:[0-5]\d)?$",
+    validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
 ):
     return _advanced_variable(
-        name,
         "LOCAL",
+        name=name,
         label=label,
         value_type="DATE_TIME",
         data_type="BASE",
         regex=regex,
+        validate_regex=validate_regex,
         options=options,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
@@ -320,21 +339,23 @@ def variable_datetime_with_predefined_options(
 
 
 def variable_multiline_with_predefined_options(
-    name,
     options,
+    name=None,
     label=None,
     regex=None,
+    validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
 ):
     return _advanced_variable(
-        name,
         "LOCAL",
+        name=name,
         label=label,
         value_type="MULTILINE_STRING",
         data_type="BASE",
         regex=regex,
+        validate_regex=validate_regex,
         options=options,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
@@ -343,21 +364,23 @@ def variable_multiline_with_predefined_options(
 
 
 def variable_string_with_predefined_options_array(
-    name,
     options,
+    name=None,
     label=None,
     regex=None,
+    validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
 ):
     return _advanced_variable(
-        name,
         "LOCAL",
+        name=name,
         label=label,
         value_type="STRING",
         data_type="LIST",
         regex=regex,
+        validate_regex=validate_regex,
         options=options,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
@@ -366,21 +389,23 @@ def variable_string_with_predefined_options_array(
 
 
 def variable_int_with_predefined_options_array(
-    name,
     options,
+    name=None,
     label=None,
-    regex=None,
+    regex=r"^[\d]*$",
+    validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
 ):
     return _advanced_variable(
-        name,
         "LOCAL",
+        name=name,
         label=label,
         value_type="INT",
         data_type="LIST",
         regex=regex,
+        validate_regex=validate_regex,
         options=options,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
@@ -389,21 +414,23 @@ def variable_int_with_predefined_options_array(
 
 
 def variable_date_with_predefined_options_array(
-    name,
     options,
+    name=None,
     label=None,
-    regex=None,
+    regex=r"^((0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/[12]\d{3})$",
+    validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
 ):
     return _advanced_variable(
-        name,
         "LOCAL",
+        name=name,
         label=label,
         value_type="DATE",
         data_type="LIST",
         regex=regex,
+        validate_regex=validate_regex,
         options=options,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
@@ -412,21 +439,23 @@ def variable_date_with_predefined_options_array(
 
 
 def variable_time_with_predefined_options_array(
-    name,
     options,
+    name=None,
     label=None,
-    regex=None,
+    regex=r"^[\d]{2}:[\d]{2}(:[0-5]\d)?$",
+    validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
 ):
     return _advanced_variable(
-        name,
         "LOCAL",
+        name=name,
         label=label,
         value_type="TIME",
         data_type="LIST",
         regex=regex,
+        validate_regex=validate_regex,
         options=options,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
@@ -435,21 +464,23 @@ def variable_time_with_predefined_options_array(
 
 
 def variable_datetime_with_predefined_options_array(
-    name,
     options,
+    name=None,
     label=None,
-    regex=None,
+    regex=r"^((0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/[12]\d{3})((T)|(\s-\s))[\d]{2}:[\d]{2}(:[0-5]\d)?$",
+    validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
 ):
     return _advanced_variable(
-        name,
         "LOCAL",
+        name=name,
         label=label,
         value_type="DATE_TIME",
         data_type="LIST",
         regex=regex,
+        validate_regex=validate_regex,
         options=options,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
@@ -458,21 +489,23 @@ def variable_datetime_with_predefined_options_array(
 
 
 def variable_multiline_with_predefined_options_array(
-    name,
     options,
+    name=None,
     label=None,
     regex=None,
+    validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
 ):
     return _advanced_variable(
-        name,
         "LOCAL",
+        name=name,
         label=label,
         value_type="MULTILINE_STRING",
         data_type="LIST",
         regex=regex,
+        validate_regex=validate_regex,
         options=options,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
@@ -481,21 +514,23 @@ def variable_multiline_with_predefined_options_array(
 
 
 def variable_string_with_options_from_task(
-    name,
     task,
+    name=None,
     label=None,
     regex=None,
+    validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
 ):
     return _advanced_variable(
-        name,
         "LOCAL",
+        name=name,
         label=label,
         value_type="STRING",
         data_type="BASE",
         regex=regex,
+        validate_regex=validate_regex,
         task=task,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
@@ -504,21 +539,23 @@ def variable_string_with_options_from_task(
 
 
 def variable_int_with_options_from_task(
-    name,
     task,
+    name=None,
     label=None,
-    regex=None,
+    regex=r"^[\d]*$",
+    validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
 ):
     return _advanced_variable(
-        name,
         "LOCAL",
+        name=name,
         label=label,
         value_type="INT",
         data_type="BASE",
         regex=regex,
+        validate_regex=validate_regex,
         task=task,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
@@ -527,21 +564,23 @@ def variable_int_with_options_from_task(
 
 
 def variable_date_with_options_from_task(
-    name,
     task,
+    name=None,
     label=None,
-    regex=None,
+    regex=r"^((0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/[12]\d{3})$",
+    validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
 ):
     return _advanced_variable(
-        name,
         "LOCAL",
+        name=name,
         label=label,
         value_type="DATE",
         data_type="BASE",
         regex=regex,
+        validate_regex=validate_regex,
         task=task,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
@@ -550,21 +589,23 @@ def variable_date_with_options_from_task(
 
 
 def variable_time_with_options_from_task(
-    name,
     task,
+    name=None,
     label=None,
-    regex=None,
+    regex=r"^[\d]{2}:[\d]{2}(:[0-5]\d)?$",
+    validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
 ):
     return _advanced_variable(
-        name,
         "LOCAL",
+        name=name,
         label=label,
         value_type="TIME",
         data_type="BASE",
         regex=regex,
+        validate_regex=validate_regex,
         task=task,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
@@ -573,21 +614,23 @@ def variable_time_with_options_from_task(
 
 
 def variable_datetime_with_options_from_task(
-    name,
     task,
+    name=None,
     label=None,
-    regex=None,
+    regex=r"^((0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/[12]\d{3})((T)|(\s-\s))[\d]{2}:[\d]{2}(:[0-5]\d)?$",
+    validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
 ):
     return _advanced_variable(
-        name,
         "LOCAL",
+        name=name,
         label=label,
         value_type="DATE_TIME",
         data_type="BASE",
         regex=regex,
+        validate_regex=validate_regex,
         task=task,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
@@ -596,21 +639,23 @@ def variable_datetime_with_options_from_task(
 
 
 def variable_multiline_with_options_from_task(
-    name,
     task,
+    name=None,
     label=None,
     regex=None,
+    validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
 ):
     return _advanced_variable(
-        name,
         "LOCAL",
+        name=name,
         label=label,
         value_type="MULTILINE_STRING",
         data_type="BASE",
         regex=regex,
+        validate_regex=validate_regex,
         task=task,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
@@ -619,21 +664,23 @@ def variable_multiline_with_options_from_task(
 
 
 def variable_string_with_options_from_task_array(
-    name,
     task,
+    name=None,
     label=None,
     regex=None,
+    validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
 ):
     return _advanced_variable(
-        name,
         "LOCAL",
+        name=name,
         label=label,
         value_type="STRING",
         data_type="LIST",
         regex=regex,
+        validate_regex=validate_regex,
         task=task,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
@@ -642,21 +689,23 @@ def variable_string_with_options_from_task_array(
 
 
 def variable_int_with_options_from_task_array(
-    name,
     task,
+    name=None,
     label=None,
-    regex=None,
+    regex=r"^[\d]*$",
+    validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
 ):
     return _advanced_variable(
-        name,
         "LOCAL",
+        name=name,
         label=label,
         value_type="INT",
         data_type="LIST",
         regex=regex,
+        validate_regex=validate_regex,
         task=task,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
@@ -665,21 +714,23 @@ def variable_int_with_options_from_task_array(
 
 
 def variable_date_with_options_from_task_array(
-    name,
     task,
+    name=None,
     label=None,
-    regex=None,
+    regex=r"^((0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/[12]\d{3})$",
+    validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
 ):
     return _advanced_variable(
-        name,
         "LOCAL",
+        name=name,
         label=label,
         value_type="DATE",
         data_type="LIST",
         regex=regex,
+        validate_regex=validate_regex,
         task=task,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
@@ -688,21 +739,23 @@ def variable_date_with_options_from_task_array(
 
 
 def variable_time_with_options_from_task_array(
-    name,
     task,
+    name=None,
     label=None,
-    regex=None,
+    regex=r"^[\d]{2}:[\d]{2}(:[0-5]\d)?$",
+    validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
 ):
     return _advanced_variable(
-        name,
         "LOCAL",
+        name=name,
         label=label,
         value_type="TIME",
         data_type="LIST",
         regex=regex,
+        validate_regex=validate_regex,
         task=task,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
@@ -711,21 +764,23 @@ def variable_time_with_options_from_task_array(
 
 
 def variable_datetime_with_options_from_task_array(
-    name,
     task,
+    name=None,
     label=None,
-    regex=None,
+    regex=r"^((0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/[12]\d{3})((T)|(\s-\s))[\d]{2}:[\d]{2}(:[0-5]\d)?$",
+    validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
 ):
     return _advanced_variable(
-        name,
         "LOCAL",
+        name=name,
         label=label,
         value_type="DATE_TIME",
         data_type="LIST",
         regex=regex,
+        validate_regex=validate_regex,
         task=task,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
@@ -734,21 +789,23 @@ def variable_datetime_with_options_from_task_array(
 
 
 def variable_multiline_with_options_from_task_array(
-    name,
     task,
+    name=None,
     label=None,
     regex=None,
+    validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
 ):
     return _advanced_variable(
-        name,
         "LOCAL",
+        name=name,
         label=label,
         value_type="MULTILINE_STRING",
         data_type="LIST",
         regex=regex,
+        validate_regex=validate_regex,
         task=task,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
