@@ -274,7 +274,7 @@ def create_blueprint(client, bp_payload, name=None, description=None, categories
     bp_name = bp_payload["spec"]["name"]
     bp_desc = bp_payload["spec"]["description"]
 
-    categories = bp_payload["metadata"]["categories"]
+    categories = bp_payload["metadata"].get("categories")
 
     return client.blueprint.upload_with_secrets(
         bp_name, bp_desc, bp_resources, categories=categories
