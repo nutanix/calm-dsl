@@ -213,6 +213,182 @@ def _advanced_variable(
     return setvar(name, value, **kwargs)
 
 
+def simple_variable_int(
+    value,
+    label=None,
+    regex=None,
+    validate_regex=False,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        "LOCAL",
+        label=label,
+        value_type="INT",
+        data_type="BASE",
+        regex=regex,
+        validate_regex=validate_regex,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def simple_variable_date(
+    value,
+    label=None,
+    regex=None,
+    validate_regex=False,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        "LOCAL",
+        label=label,
+        value_type="DATE",
+        data_type="BASE",
+        regex=regex,
+        validate_regex=validate_regex,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def simple_variable_time(
+    value,
+    label=None,
+    regex=None,
+    validate_regex=False,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        "LOCAL",
+        label=label,
+        value_type="TIME",
+        data_type="BASE",
+        regex=regex,
+        validate_regex=validate_regex,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def simple_variable_datetime(
+    value,
+    label=None,
+    regex=None,
+    validate_regex=False,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        "LOCAL",
+        label=label,
+        value_type="DATE_TIME",
+        data_type="BASE",
+        regex=regex,
+        validate_regex=validate_regex,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def simple_variable_int_secret(
+    value,
+    label=None,
+    regex=None,
+    validate_regex=False,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        "SECRET",
+        label=label,
+        value_type="INT",
+        data_type="BASE",
+        regex=regex,
+        validate_regex=validate_regex,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def simple_variable_date_secret(
+    value,
+    label=None,
+    regex=None,
+    validate_regex=False,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        "SECRET",
+        label=label,
+        value_type="DATE",
+        data_type="BASE",
+        regex=regex,
+        validate_regex=validate_regex,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def simple_variable_time_secret(
+    value,
+    label=None,
+    regex=None,
+    validate_regex=False,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        "SECRET",
+        label=label,
+        value_type="TIME",
+        data_type="BASE",
+        regex=regex,
+        validate_regex=validate_regex,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def simple_variable_datetime_secret(
+    value,
+    label=None,
+    regex=None,
+    validate_regex=False,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        "SECRET",
+        label=label,
+        value_type="DATE_TIME",
+        data_type="BASE",
+        regex=regex,
+        validate_regex=validate_regex,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
 def variable_string_with_predefined_options(
     options,
     name=None,
