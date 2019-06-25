@@ -359,14 +359,10 @@ def create_project_from_file(obj, file_location, project_name):
     "project_file",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path of Project file to upload",
-    required=True
+    required=True,
 )
 @click.option(
-    "--name",
-    "project_name",
-    type=str,
-    default="",
-    help="Project name(optional)"
+    "--name", "project_name", type=str, default="", help="Project name(optional)"
 )
 @click.pass_obj
 def _create_project(obj, project_file, project_name):
@@ -576,7 +572,7 @@ def update():
     "project_file",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path of Project file to upload",
-    required=True
+    required=True,
 )
 @click.pass_obj
 def _update_project(obj, project_name, project_file):
