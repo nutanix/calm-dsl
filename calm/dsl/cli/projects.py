@@ -282,7 +282,9 @@ def describe_project(obj, project_name):
 
         click.echo(
             "Subnet Name: {}\tVLAN ID: {}\tCluster Name: {}".format(
-                highlight_text(subnet_name), highlight_text(vlan_id), highlight_text(cluster_name)
+                highlight_text(subnet_name),
+                highlight_text(vlan_id),
+                highlight_text(cluster_name),
             )
         )
 
@@ -318,14 +320,14 @@ def update_project(obj, name, payload):
     new_name = payload["project_detail"]["name"]
     if name != new_name:
         # Search whether any other project exists with new name
-        click.echo("\nSearching project with name {}". format(new_name))
+        click.echo("\nSearching project with name {}".format(new_name))
         try:
             get_project(client, new_name)
-            err = "Another project exists with name {}". format(new_name)
+            err = "Another project exists with name {}".format(new_name)
             return None, err
 
         except Exception:
-            click.echo("No project exists with name {}". format(new_name))
+            click.echo("No project exists with name {}".format(new_name))
 
     project_id = project["metadata"]["uuid"]
     spec_version = project["metadata"]["spec_version"]
@@ -345,28 +347,30 @@ def update_project(obj, name, payload):
     return client.project.update(project_id, payload)
 
 
-def poll_creation_status(client, name):
+def poll_status(client, name, op_type="creation"):
 
     cnt = 0
     while True:
         try:
+            click.echo("\nGetting status of project {}". format(op_type))
             project = get_project(client, name)
             if project["status"]["state"] == "COMPLETE":
-                click.echo("\nProject creation successful")
+                click.echo("Project {} successful !!!". format(op_type))
                 return
             elif project["status"]["state"] == "RUNNING":
-                click.echo("\nProject creation successful")
-                click.echo("It is in runnning state")
+                click.echo("Project is in runnning state...")
             else:
-                click.echo("\nProject creation unsuccessful")
+                click.echo("Project {} unsuccessful !!!". format(op_type))
                 return
         except Exception:
-            click.echo("\nEither project not found, or under creation")
+            click.echo("Project {} is in process...". format(op_type))
 
         time.sleep(2)
         cnt += 1
-        if cnt == 5:
+        if cnt == 10:
             break
+
+    click.echo("\nProject {} failed !!!". format(op_type))
 
 
 def poll_deletion_status(client, name):
@@ -374,13 +378,17 @@ def poll_deletion_status(client, name):
     cnt = 0
     while True:
         try:
+            click.echo("\nGetting status of project deletion")
             get_project(client, name)
+            click.echo("Project is deleting...")
 
         except Exception:
-            click.echo("\nProject Deleted")
+            click.echo("Project deletion successful !!!")
             return
 
         time.sleep(2)
         cnt += 1
-        if cnt == 5:
+        if cnt == 10:
             break
+
+    click.echo("Project not deleted !!!")
