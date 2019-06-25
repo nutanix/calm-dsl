@@ -344,9 +344,12 @@ def create_blueprint_command(obj, bp_file, name, description):
     assert bp_state == "ACTIVE"
 
 
-def create_project_from_file(obj, file_location):
+def create_project_from_file(obj, file_location, project_name):
 
     project_payload = yaml.safe_load(open(file_location, "r").read())
+    if project_name:
+        project_payload["project_detail"]["name"] = project_name
+
     return create_project(obj, project_payload)
 
 
@@ -357,15 +360,24 @@ def create_project_from_file(obj, file_location):
     "project_file",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path of Project file to upload",
+    required=True
+)
+@click.option(
+    "--name",
+    "project_name",
+    type=str,
+    default="",
+    help="Project name(optional)"
 )
 @click.pass_obj
-def _create_project(obj, project_file):
+def _create_project(obj, project_file, project_name):
     """Creates a project"""
 
     if project_file.endswith(".json") or project_file.endswith(".yaml"):
-        res, err = create_project_from_file(obj, project_file)
+        res, err = create_project_from_file(obj, project_file, project_name)
     else:
         click.echo("Unknown file format")
+        return
 
     if err:
         click.echo(err["error"])
@@ -587,20 +599,17 @@ def update():
     "project_file",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path of Project file to upload",
+    required=True
 )
 @click.pass_obj
 def _update_project(obj, project_name, project_file):
-
-    if not project_file:
-        click.echo("no project file provided")
-        click.echo("please use --help for help")
-        return
 
     if project_file.endswith(".json") or project_file.endswith(".yaml"):
         payload = yaml.safe_load(open(project_file, "r").read())
         res, err = update_project(obj, project_name, payload)
     else:
         click.echo("Unknown file format")
+        return
 
     if err:
         click.echo(err["error"])
