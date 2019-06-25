@@ -9,7 +9,7 @@ import click
 from prettytable import PrettyTable
 from anytree import NodeMixin, RenderTree
 
-from .utils import get_name_query, get_states_filter, highlight_text
+from .utils import get_name_query, get_states_filter, highlight_text, Display
 from .constants import APPLICATION, RUNLOG
 
 log = logging.getLogger(__name__)
@@ -198,6 +198,13 @@ def describe_app(obj, app_name):
             )
         )
 
+    click.echo("App Runlogs:")
+
+    def display_runlogs(screen):
+        watch_app(obj, app_name, screen, app)
+
+    Display.wrapper(display_runlogs, watch=False)
+
     click.echo(
         "# Hint: You can run actions on the app using: calm run action <action_name> --app {}".format(
             app_name
@@ -230,6 +237,8 @@ class RunlogJSONEncoder(JSONEncoder):
                 name = status["call_runbook_reference"]["name"]
             else:
                 name = status["runbook_reference"]["name"]
+        elif status["type"] == "action_runlog":
+            name = status["action_reference"]["name"]
         else:
             return "root"
 
@@ -372,15 +381,16 @@ def watch_action(runlog_uuid, app_name, client, screen, poll_interval):
     poll_action(poll_func, get_completion_func(screen), poll_interval)
 
 
-def watch_app(obj, app_name, action, screen):
+def watch_app(obj, app_name, screen, app=None):
     """Watch an app"""
 
     client = obj.get("client")
+    is_app_describe = False
 
-    if action:
-        return watch_action(action, app_name, client, screen)
-
-    app = _get_app(client, app_name)
+    if not app:
+        app = _get_app(client, app_name)
+    else:
+        is_app_describe = True
     app_id = app["metadata"]["uuid"]
     url = client.application.ITEM.format(app_id) + "/app_runlogs/list"
 
@@ -459,22 +469,22 @@ def watch_app(obj, app_name, action, screen):
             screen.refresh()
 
             msg = ""
-            for runlog in sorted_entities:
-                state = runlog["status"]["state"]
-                if state in RUNLOG.FAILURE_STATES:
-                    msg = "Action failed. Exit screen? (y)"
-                    # screen.print_at(msg, 0, line)
-                    # screen.refresh()
-                    is_complete = True
-                if state not in RUNLOG.TERMINAL_STATES:
-                    is_complete = False
+            is_complete = True
+            if not is_app_describe:
+                for runlog in sorted_entities:
+                    state = runlog["status"]["state"]
+                    if state in RUNLOG.FAILURE_STATES:
+                        msg = "Action failed. Exit screen? (y)"
+                        is_complete = True
+                    if state not in RUNLOG.TERMINAL_STATES:
+                        is_complete = False
 
-            # import ipdb; ipdb.set_trace()
             if not msg:
                 msg = "Action ran successfully. Exit screen? (y)"
-            screen.print_at(msg, 0, line)
-            screen.refresh()
-            time.sleep(10)
+            if not is_app_describe:
+                screen.print_at(msg, 0, line)
+                screen.refresh()
+                time.sleep(10)
             return (is_complete, msg)
         return (False, "")
 
