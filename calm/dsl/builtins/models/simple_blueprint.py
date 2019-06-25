@@ -10,16 +10,10 @@ from .blueprint import blueprint
 class SimpleBlueprintType(EntityType):
     __schema_name__ = "SimpleBlueprint"
     __openapi_type__ = "app_simple_blueprint"
+    __has_dag_target__ = False
 
-    def create_blueprint(cls):
-        """Returns blueprint given a simple blueprint"""
-
-        """
-        UserBlueprint = blueprint()
-        UserBlueprint.credentials = cls.credentials
-        """
-
-        return cls.__dict__
+    def get_task_target(cls):
+        return
 
 
 class SimpleBlueprintValidator(PropertyValidator, openapi_type="app_simple_blueprint"):

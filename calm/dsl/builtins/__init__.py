@@ -45,7 +45,6 @@ from .models.project import Project as ProjectValidator
 
 
 from .models.simple_deployment import SimpleDeployment
-from .models.simple_profile import SimpleProfile
 from .models.simple_blueprint import SimpleBlueprint
 
 
@@ -91,6 +90,5 @@ __all__ = [
     "create_blueprint_payload",
     "ProjectValidator",
     "SimpleDeployment",
-    "SimpleProfile",
     "SimpleBlueprint",
 ]
