@@ -55,7 +55,8 @@ def setvar(name, value, type_="LOCAL", **kwargs):
     if name is None:
         name = getattr(VariableType, "__schema_name__")
     kwargs["name"] = name
-    kwargs["value"] = value
+    if value is not None:
+        kwargs["value"] = value
     kwargs["type"] = type_
 
     return VariableType(name, (Variable,), kwargs)
@@ -76,7 +77,7 @@ def simple_variable(
     if runtime:
         editables = {"value": True}
         kwargs["editables"] = editables
-    if label is None:
+    if label is not None:
         kwargs["label"] = label
     if regex is not None:
         if not isinstance(regex, str):
@@ -105,7 +106,7 @@ def simple_variable_secret(
     if runtime:
         editables = {"value": True}
         kwargs["editables"] = editables
-    if label is None:
+    if label is not None:
         kwargs["label"] = label
     if regex is not None:
         if not isinstance(regex, str):
@@ -134,13 +135,9 @@ def _advanced_variable(
     is_mandatory=False,
     runtime=False,
 ):
-    kwargs = {"type": type_}
-    if name is not None:
-        kwargs["name"] = name
+    kwargs = {"name": name, "value": value, "type": type_}
     if runtime:
         kwargs["editables"] = {"value": True}
-    if value is not None:
-        kwargs["value"] = str(value)
     if label is not None:
         kwargs["label"] = label
     if task is not None:
@@ -211,7 +208,7 @@ def _advanced_variable(
     if is_mandatory is not None:
         kwargs["is_mandatory"] = bool(is_mandatory)
 
-    return setvar(name, value, **kwargs)
+    return setvar(**kwargs)
 
 
 def simple_variable_int(
