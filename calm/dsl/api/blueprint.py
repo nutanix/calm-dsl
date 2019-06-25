@@ -111,7 +111,30 @@ class BlueprintAPI(ResourceAPI):
 
         # Strip secret variable values
         # TODO: Refactor and/or clean this up later
+
         secret_variables = []
+
+        def strip_entity_secret_variables(path_list, obj):
+            for var_idx, variable in enumerate(obj.get("variable_list", []) or []):
+                if variable["type"] == "SECRET":
+                    secret_variables.append(
+                        (path_list + ["variable_list", var_idx], variable.pop("value"))
+                    )
+                    variable["attrs"] = {
+                        "is_secret_modified": False,
+                        "secret_reference": None,
+                    }
+
+        def strip_action_secret_varaibles(path_list, obj):
+            for action_idx, action in enumerate(obj.get("action_list", []) or []):
+                strip_entity_secret_variables(
+                    path_list + ["action_list", action_idx], action
+                )
+
+        def strip_all_secret_variables(path_list, obj):
+            strip_entity_secret_variables(path_list, obj)
+            strip_action_secret_varaibles(path_list, obj)
+
         object_lists = [
             "service_definition_list",
             "package_definition_list",
@@ -120,54 +143,16 @@ class BlueprintAPI(ResourceAPI):
         ]
         for object_list in object_lists:
             for obj_idx, obj in enumerate(bp_resources[object_list]):
-                for var_idx, variable in enumerate(obj.get("variable_list", []) or []):
-                    if variable["type"] == "SECRET":
-                        secret_variables.append(
-                            (
-                                [object_list, obj_idx, "variable_list", var_idx],
-                                variable.pop("value"),
-                            )
-                        )
-                        variable["attrs"] = {
-                            "is_secret_modified": False,
-                            "secret_reference": None,
-                        }
-                for action_idx, action in enumerate(obj.get("action_list", []) or []):
-                    for var_idx, variable in enumerate(
-                        action.get("variable_list", []) or []
-                    ):
-                        if variable["type"] == "SECRET":
-                            secret_variables.append(
-                                (
-                                    [
-                                        object_list,
-                                        obj_idx,
-                                        "action_list",
-                                        action_idx,
-                                        "variable_list",
-                                        var_idx,
-                                    ],
-                                    variable.pop("value"),
-                                )
-                            )
-                            variable["attrs"] = {
-                                "is_secret_modified": False,
-                                "secret_reference": None,
-                            }
+                strip_all_secret_variables([object_list, obj_idx], obj)
 
                 # Currently, deployment actions and variables are unsupported.
                 # Uncomment the following lines if and when the API does support them.
                 # if object_list == "app_profile_list":
                 #     for dep_idx, dep in enumerate(obj["deployment_create_list"]):
-                #         for var_idx, variable in enumerate(dep.get("variable_list", []) or []):
-                #             if variable["type"] == "SECRET":
-                #                 secret_variables.append(([object_list, obj_idx, "deployment_create_list", dep_idx, "variable_list", var_idx], variable.pop("value")))
-                #                 variable["attrs"] = {"is_secret_modified": False, "secret_reference": None}
-                #         for action_idx, action in enumerate(dep.get("action_list", []) or []):
-                #             for var_idx, variable in enumerate(action.get("variable_list", []) or []):
-                #                 if variable["type"] == "SECRET":
-                #                     secret_variables.append(([object_list, obj_idx, "deployment_create_list", dep_idx, "action_list", action_idx, "variable_list", var_idx], variable.pop("value")))
-                #                     variable["attrs"] = {"is_secret_modified": False, "secret_reference": None}
+                #         strip_all_secret_variables(
+                #             [object_list, obj_idx, "deployment_create_list", dep_idx],
+                #             dep,
+                #         )
 
         upload_payload = self._make_blueprint_payload(bp_name, bp_desc, bp_resources)
 
