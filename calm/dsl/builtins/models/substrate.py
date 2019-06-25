@@ -45,6 +45,17 @@ class SubstrateType(EntityType):
                 }
             elif not readiness_probe.get("address"):
                 readiness_probe["address"] = "@@{ip_address}@@"
+        elif cdict["type"] == "AWS_VM":
+            if not readiness_probe:
+                readiness_probe = {
+                    "address": "@@{public_ip_address}@@",
+                    "disable_readiness_probe": False,
+                    "delay_secs": "0",
+                    "connection_type": "SSH",
+                    "connection_port": 22,
+                }
+            elif not readiness_probe.get("address"):
+                readiness_probe["address"] = "@@{public_ip_address}@@"
 
         cdict["readiness_probe"] = readiness_probe
 
