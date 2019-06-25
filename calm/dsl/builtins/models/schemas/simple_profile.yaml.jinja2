@@ -4,22 +4,7 @@ title: SimpleProfile
 type: object
 x-calm-dsl-type: app_simple_profile
 properties:
-  name:
-    type: string
-  deployments:
-    type: array
-    items:
-      $ref: '#/components/schemas/SimpleDeployment'
-  variable_list:
-    x-calm-dsl-display-name: variables
-    type: array
-    items:
-      $ref: '#/components/schemas/Variable'
-  action_list:
-    x-calm-dsl-display-name: actions
-    type: array
-    items:
-      $ref: '#/components/schemas/Action'
+
 {%- endmacro %}
 
 
