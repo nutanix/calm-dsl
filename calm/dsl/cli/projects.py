@@ -347,28 +347,30 @@ def update_project(obj, name, payload):
     return client.project.update(project_id, payload)
 
 
-def poll_creation_status(client, name):
+def poll_status(client, name, op_type="creation"):
 
     cnt = 0
     while True:
         try:
+            click.echo("\nGetting status of project {}". format(op_type))
             project = get_project(client, name)
             if project["status"]["state"] == "COMPLETE":
-                click.echo("\nProject creation successful")
+                click.echo("Project {} successful !!!". format(op_type))
                 return
             elif project["status"]["state"] == "RUNNING":
-                click.echo("\nProject creation successful")
-                click.echo("It is in runnning state")
+                click.echo("Project is in runnning state...")
             else:
-                click.echo("\nProject creation unsuccessful")
+                click.echo("Project {} unsuccessful !!!". format(op_type))
                 return
         except Exception:
-            click.echo("\nEither project not found, or under creation")
+            click.echo("Project {} is in process...". format(op_type))
 
         time.sleep(2)
         cnt += 1
-        if cnt == 5:
+        if cnt == 10:
             break
+
+    click.echo("\nProject {} failed !!!". format(op_type))
 
 
 def poll_deletion_status(client, name):
