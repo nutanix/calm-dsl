@@ -2,11 +2,6 @@ from .entity import EntityType, Entity, EntityTypeBase
 from .validator import PropertyValidator
 
 
-from .service import service
-from .package import package
-from .substrate import substrate
-
-
 # SimpleDeployment
 
 
