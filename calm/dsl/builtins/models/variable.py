@@ -194,13 +194,22 @@ def _advanced_variable(
                 + ", got {}".format(type(options))
             )
         choices = []
-        for choice in choices:
+        for choice in options:
             if not isinstance(choice, str):
                 raise TypeError(
                     "Expected list of string choices for options for variable "
                     + (name or "")
                     + ", got {}".format(type(choice))
                 )
+            choices.append(choice)
+        if value is None and len(choices) > 0:
+            value = choices[0]
+        if value not in choices:
+            raise TypeError(
+                "Default value for variable with options "
+                + (name or "")
+                + "is {}, which is not one of the options".format(value)
+            )
         options = {"type": "PREDEFINED", "choices": choices}
         kwargs["options"] = options
     if is_hidden is not None:
@@ -222,6 +231,7 @@ def simple_variable_int(
 ):
     return _advanced_variable(
         "LOCAL",
+        value=value,
         label=label,
         value_type="INT",
         data_type="BASE",
@@ -244,6 +254,7 @@ def simple_variable_date(
 ):
     return _advanced_variable(
         "LOCAL",
+        value=value,
         label=label,
         value_type="DATE",
         data_type="BASE",
@@ -266,6 +277,7 @@ def simple_variable_time(
 ):
     return _advanced_variable(
         "LOCAL",
+        value=value,
         label=label,
         value_type="TIME",
         data_type="BASE",
@@ -288,6 +300,7 @@ def simple_variable_datetime(
 ):
     return _advanced_variable(
         "LOCAL",
+        value=value,
         label=label,
         value_type="DATE_TIME",
         data_type="BASE",
@@ -310,6 +323,7 @@ def simple_variable_int_secret(
 ):
     return _advanced_variable(
         "SECRET",
+        value=value,
         label=label,
         value_type="INT",
         data_type="BASE",
@@ -332,6 +346,7 @@ def simple_variable_date_secret(
 ):
     return _advanced_variable(
         "SECRET",
+        value=value,
         label=label,
         value_type="DATE",
         data_type="BASE",
@@ -354,6 +369,7 @@ def simple_variable_time_secret(
 ):
     return _advanced_variable(
         "SECRET",
+        value=value,
         label=label,
         value_type="TIME",
         data_type="BASE",
@@ -376,6 +392,7 @@ def simple_variable_datetime_secret(
 ):
     return _advanced_variable(
         "SECRET",
+        value=value,
         label=label,
         value_type="DATE_TIME",
         data_type="BASE",
@@ -389,6 +406,7 @@ def simple_variable_datetime_secret(
 
 def variable_string_with_predefined_options(
     options,
+    default=None,
     name=None,
     label=None,
     regex=None,
@@ -400,6 +418,7 @@ def variable_string_with_predefined_options(
     return _advanced_variable(
         "LOCAL",
         name=name,
+        value=default,
         label=label,
         value_type="STRING",
         data_type="BASE",
@@ -414,6 +433,7 @@ def variable_string_with_predefined_options(
 
 def variable_int_with_predefined_options(
     options,
+    default=None,
     name=None,
     label=None,
     regex=r"^[\d]*$",
@@ -425,6 +445,7 @@ def variable_int_with_predefined_options(
     return _advanced_variable(
         "LOCAL",
         name=name,
+        value=default,
         label=label,
         value_type="INT",
         data_type="BASE",
@@ -439,6 +460,7 @@ def variable_int_with_predefined_options(
 
 def variable_date_with_predefined_options(
     options,
+    default=None,
     name=None,
     label=None,
     regex=r"^((0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/[12]\d{3})$",
@@ -450,6 +472,7 @@ def variable_date_with_predefined_options(
     return _advanced_variable(
         "LOCAL",
         name=name,
+        value=default,
         label=label,
         value_type="DATE",
         data_type="BASE",
@@ -464,6 +487,7 @@ def variable_date_with_predefined_options(
 
 def variable_time_with_predefined_options(
     options,
+    default=None,
     name=None,
     label=None,
     regex=r"^[\d]{2}:[\d]{2}(:[0-5]\d)?$",
@@ -475,6 +499,7 @@ def variable_time_with_predefined_options(
     return _advanced_variable(
         "LOCAL",
         name=name,
+        value=default,
         label=label,
         value_type="TIME",
         data_type="BASE",
@@ -489,6 +514,7 @@ def variable_time_with_predefined_options(
 
 def variable_datetime_with_predefined_options(
     options,
+    default=None,
     name=None,
     label=None,
     regex=r"^((0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/[12]\d{3})((T)|(\s-\s))[\d]{2}:[\d]{2}(:[0-5]\d)?$",
@@ -500,6 +526,7 @@ def variable_datetime_with_predefined_options(
     return _advanced_variable(
         "LOCAL",
         name=name,
+        value=default,
         label=label,
         value_type="DATE_TIME",
         data_type="BASE",
@@ -514,6 +541,7 @@ def variable_datetime_with_predefined_options(
 
 def variable_multiline_with_predefined_options(
     options,
+    default=None,
     name=None,
     label=None,
     regex=None,
@@ -525,6 +553,7 @@ def variable_multiline_with_predefined_options(
     return _advanced_variable(
         "LOCAL",
         name=name,
+        value=default,
         label=label,
         value_type="MULTILINE_STRING",
         data_type="BASE",
