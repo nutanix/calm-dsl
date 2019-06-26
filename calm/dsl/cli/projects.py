@@ -347,30 +347,61 @@ def update_project(obj, name, payload):
     return client.project.update(project_id, payload)
 
 
-def poll_status(client, name, op_type="creation"):
+def poll_creation_status(client, name):
 
     cnt = 0
     while True:
         try:
-            click.echo("\nGetting status of project {}". format(op_type))
+            click.echo("\nGetting status of project creation")
             project = get_project(client, name)
             if project["status"]["state"] == "COMPLETE":
-                click.echo("Project {} successful !!!". format(op_type))
+                click.echo(">>Project creation successful !!!")
                 return
             elif project["status"]["state"] == "RUNNING":
-                click.echo("Project is in runnning state...")
+                click.echo(">>Project is in runnning state...")
             else:
-                click.echo("Project {} unsuccessful !!!". format(op_type))
-                return
+                click.echo(">>Project creation unsuccessful !!!")
+                break
         except Exception:
-            click.echo("Project {} is in process...". format(op_type))
+            click.echo(">>Project creation is in process...")
 
         time.sleep(2)
         cnt += 1
         if cnt == 10:
             break
 
-    click.echo("\nProject {} failed !!!". format(op_type))
+    raise Exception("Project creation failed !!!")
+
+
+def poll_updation_status(client, project_uuid, old_spec_version):
+    # On updation spec_version is incremented
+
+    cnt = 0
+    while True:
+        click.echo("\nGetting status of project updation")
+        res, err = client.project.read(project_uuid)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        project = res.json()
+        spec_version = project["metadata"]["spec_version"]
+
+        if spec_version == old_spec_version:
+            click.echo(">>Project updation is in process...")
+
+        elif project["status"]["state"] == "PENDING":
+            click.echo(">>Project updation is in pending state")
+
+        else:
+            click.echo(">>Project updated successfully !!!")
+            return
+
+        time.sleep(2)
+        cnt += 1
+        if cnt == 10:
+            break
+
+    raise Exception("Project updation failed !!!")
 
 
 def poll_deletion_status(client, name):
@@ -380,10 +411,10 @@ def poll_deletion_status(client, name):
         try:
             click.echo("\nGetting status of project deletion")
             get_project(client, name)
-            click.echo("Project is deleting...")
+            click.echo(">>Project is deleting...")
 
         except Exception:
-            click.echo("Project deletion successful !!!")
+            click.echo(">>Project deletion successful !!!")
             return
 
         time.sleep(2)
@@ -391,4 +422,4 @@ def poll_deletion_status(client, name):
         if cnt == 10:
             break
 
-    click.echo("Project not deleted !!!")
+    raise Exception("Project deletion failed !!!")
