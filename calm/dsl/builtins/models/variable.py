@@ -214,7 +214,7 @@ def _advanced_variable(
 def simple_variable_int(
     value,
     label=None,
-    regex=None,
+    regex=r"^[\d]*$",
     validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
@@ -236,7 +236,7 @@ def simple_variable_int(
 def simple_variable_date(
     value,
     label=None,
-    regex=None,
+    regex=r"^((0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/[12]\d{3})$",
     validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
@@ -258,7 +258,7 @@ def simple_variable_date(
 def simple_variable_time(
     value,
     label=None,
-    regex=None,
+    regex=r"^[\d]{2}:[\d]{2}(:[0-5]\d)?$",
     validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
@@ -280,7 +280,7 @@ def simple_variable_time(
 def simple_variable_datetime(
     value,
     label=None,
-    regex=None,
+    regex=r"^((0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/[12]\d{3})((T)|(\s-\s))[\d]{2}:[\d]{2}(:[0-5]\d)?$",
     validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
@@ -302,7 +302,7 @@ def simple_variable_datetime(
 def simple_variable_int_secret(
     value,
     label=None,
-    regex=None,
+    regex=r"^[\d]*$",
     validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
@@ -324,7 +324,7 @@ def simple_variable_int_secret(
 def simple_variable_date_secret(
     value,
     label=None,
-    regex=None,
+    regex=r"^((0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/[12]\d{3})$",
     validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
@@ -346,7 +346,7 @@ def simple_variable_date_secret(
 def simple_variable_time_secret(
     value,
     label=None,
-    regex=None,
+    regex=r"^[\d]{2}:[\d]{2}(:[0-5]\d)?$",
     validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
@@ -368,7 +368,7 @@ def simple_variable_time_secret(
 def simple_variable_datetime_secret(
     value,
     label=None,
-    regex=None,
+    regex=r"^((0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/[12]\d{3})((T)|(\s-\s))[\d]{2}:[\d]{2}(:[0-5]\d)?$",
     validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
