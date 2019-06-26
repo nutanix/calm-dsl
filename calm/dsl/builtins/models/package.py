@@ -70,7 +70,7 @@ class PackageValidator(PropertyValidator, openapi_type="app_package"):
 
 
 def package(**kwargs):
-    name = getattr(PackageType, "__schema_name__")
+    name = kwargs.get("name") or getattr(PackageType, "__schema_name__")
     bases = (Entity,)
     return PackageType(name, bases, kwargs)
 
