@@ -170,8 +170,8 @@ def _advanced_variable(
         if data_type not in VARIABLE_DATA_TYPES.values():
             raise ValueError("Invalid data_type provided for variable " + (name or ""))
         kwargs["data_type"] = data_type
-    if task is not None:
-        if not getattr(task, "__kind__") == "app_task":
+    if regex is not None:
+        if not isinstance(regex, str):
             raise TypeError(
                 "Expected string in field regex for variable "
                 + (name or "")
