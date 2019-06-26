@@ -202,13 +202,30 @@ def _advanced_variable(
                     + ", got {}".format(type(choice))
                 )
             choices.append(choice)
+        if isinstance(value, list) and data_type == "LIST":
+            for val in value:
+                if not isinstance(val, str):
+                    raise TypeError(
+                        "Expected list of string defaults for variable "
+                        + (name or "")
+                        + ", got {}".format(type(val))
+                    )
+                if val not in choices:
+                    raise TypeError(
+                        "Default value for variable array with options "
+                        + (name or "")
+                        + ", contains {}, which is not one of the options".format(val)
+                    )
+            value = ",".join(value)
+            kwargs["value"] = value
         if value is None and len(choices) > 0:
             value = choices[0]
-        if value not in choices:
+            kwargs["value"] = value
+        if data_type != "LIST" and value not in choices:
             raise TypeError(
                 "Default value for variable with options "
                 + (name or "")
-                + "is {}, which is not one of the options".format(value)
+                + ", is {}, which is not one of the options".format(value)
             )
         options = {"type": "PREDEFINED", "choices": choices}
         kwargs["options"] = options
@@ -614,6 +631,7 @@ def variable_multiline_with_predefined_options(
 
 def variable_string_with_predefined_options_array(
     options,
+    defaults=None,
     name=None,
     label=None,
     regex=None,
@@ -625,6 +643,7 @@ def variable_string_with_predefined_options_array(
     return _advanced_variable(
         "LOCAL",
         name=name,
+        value=defaults,
         label=label,
         value_type="STRING",
         data_type="LIST",
@@ -639,6 +658,7 @@ def variable_string_with_predefined_options_array(
 
 def variable_int_with_predefined_options_array(
     options,
+    defaults=None,
     name=None,
     label=None,
     regex=r"^[\d]*$",
@@ -650,6 +670,7 @@ def variable_int_with_predefined_options_array(
     return _advanced_variable(
         "LOCAL",
         name=name,
+        value=defaults,
         label=label,
         value_type="INT",
         data_type="LIST",
@@ -664,6 +685,7 @@ def variable_int_with_predefined_options_array(
 
 def variable_date_with_predefined_options_array(
     options,
+    defaults=None,
     name=None,
     label=None,
     regex=r"^((0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/[12]\d{3})$",
@@ -675,6 +697,7 @@ def variable_date_with_predefined_options_array(
     return _advanced_variable(
         "LOCAL",
         name=name,
+        value=defaults,
         label=label,
         value_type="DATE",
         data_type="LIST",
@@ -689,6 +712,7 @@ def variable_date_with_predefined_options_array(
 
 def variable_time_with_predefined_options_array(
     options,
+    defaults=None,
     name=None,
     label=None,
     regex=r"^[\d]{2}:[\d]{2}(:[0-5]\d)?$",
@@ -700,6 +724,7 @@ def variable_time_with_predefined_options_array(
     return _advanced_variable(
         "LOCAL",
         name=name,
+        value=defaults,
         label=label,
         value_type="TIME",
         data_type="LIST",
@@ -714,6 +739,7 @@ def variable_time_with_predefined_options_array(
 
 def variable_datetime_with_predefined_options_array(
     options,
+    defaults=None,
     name=None,
     label=None,
     regex=r"^((0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/[12]\d{3})((T)|(\s-\s))[\d]{2}:[\d]{2}(:[0-5]\d)?$",
@@ -725,6 +751,7 @@ def variable_datetime_with_predefined_options_array(
     return _advanced_variable(
         "LOCAL",
         name=name,
+        value=defaults,
         label=label,
         value_type="DATE_TIME",
         data_type="LIST",
@@ -739,6 +766,7 @@ def variable_datetime_with_predefined_options_array(
 
 def variable_multiline_with_predefined_options_array(
     options,
+    defaults=None,
     name=None,
     label=None,
     regex=None,
@@ -750,6 +778,7 @@ def variable_multiline_with_predefined_options_array(
     return _advanced_variable(
         "LOCAL",
         name=name,
+        value=defaults,
         label=label,
         value_type="MULTILINE_STRING",
         data_type="LIST",
