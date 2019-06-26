@@ -312,6 +312,29 @@ def simple_variable_datetime(
     )
 
 
+def simple_variable_multiline(
+    value,
+    label=None,
+    regex=None,
+    validate_regex=False,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        "LOCAL",
+        value=value,
+        label=label,
+        value_type="MULTILINE_STRING",
+        data_type="BASE",
+        regex=regex,
+        validate_regex=validate_regex,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
 def simple_variable_int_secret(
     value,
     label=None,
@@ -395,6 +418,29 @@ def simple_variable_datetime_secret(
         value=value,
         label=label,
         value_type="DATE_TIME",
+        data_type="BASE",
+        regex=regex,
+        validate_regex=validate_regex,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+    )
+
+
+def simple_variable_multiline_secret(
+    value,
+    label=None,
+    regex=None,
+    validate_regex=False,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+):
+    return _advanced_variable(
+        "SECRET",
+        value=value,
+        label=label,
+        value_type="MULTILINE_STRING",
         data_type="BASE",
         regex=regex,
         validate_regex=validate_regex,
