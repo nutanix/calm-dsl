@@ -281,7 +281,7 @@ def create_blueprint(client, bp_payload, name=None, description=None, categories
     bp_name = bp_payload["spec"]["name"]
     bp_desc = bp_payload["spec"]["description"]
 
-    categories = bp_payload["metadata"]["categories"]
+    categories = bp_payload["metadata"].get("categories", None)
 
     return client.blueprint.upload_with_secrets(
         bp_name, bp_desc, bp_resources, categories=categories
@@ -446,7 +446,7 @@ def launch_blueprint_command(obj, blueprint_name, app_name, blueprint=None):
 
 @main.group()
 def describe():
-    """Describe apps and blueprints"""
+    """Describe apps, blueprints, projects, accounts"""
     pass
 
 
