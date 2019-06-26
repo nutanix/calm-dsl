@@ -135,7 +135,7 @@ def _advanced_variable(
     is_mandatory=False,
     runtime=False,
 ):
-    kwargs = {"name": name, "value": value, "type": type_}
+    kwargs = {"name": name, "value": value, "type_": type_}
     if runtime:
         kwargs["editables"] = {"value": True}
     if label is not None:
@@ -147,7 +147,7 @@ def _advanced_variable(
                 + (name or "")
                 + ", got {}".format(type(task))
             )
-        task_attrs = getattr(task, "attrs")
+        task_attrs = task.compile().get("attrs")
         if not task_attrs:
             raise ValueError("Task for variable " + (name or "") + ", is not valid.")
         task_type = getattr(task, "type")
@@ -158,8 +158,9 @@ def _advanced_variable(
                 + ", is not valid, Expected one of"
                 + " ['HTTP', 'EXEC'], got {}".format(task_type)
             )
-        kwargs["options"]["type"] = task_type
-        kwargs["options"]["attrs"] = task_attrs
+        task_attrs["type"] = task_type
+        kwargs["type_"] = task_type + "_" + type_
+        kwargs["options"] = {"type": task_type, "attrs": task_attrs}
     if value_type is not None:
         value_type = value_type.upper()
         if value_type not in VARIABLE_VALUE_TYPES.values():
