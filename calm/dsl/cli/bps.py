@@ -270,7 +270,12 @@ def get_field_values(entity_dict, context, path=None):
 
 
 def launch_blueprint_simple(
-    client, blueprint_name, app_name=None, blueprint=None, profile_name=None
+    client,
+    blueprint_name,
+    app_name=None,
+    blueprint=None,
+    profile_name=None,
+    patch_editables=True,
 ):
     if not blueprint:
         blueprint = get_blueprint(client, blueprint_name)
@@ -301,7 +306,7 @@ def launch_blueprint_simple(
             "runtime_editables": runtime_editables,
         }
     }
-    if runtime_editables:
+    if runtime_editables and patch_editables:
         click.echo("Blueprint editables are:\n{}".format(runtime_editables))
         for entity_type, entity_list in runtime_editables.items():
             for entity in entity_list:
