@@ -360,8 +360,7 @@ def poll_creation_status(client, name):
             elif project["status"]["state"] == "RUNNING":
                 click.echo(">>Project is in runnning state...")
             else:
-                click.echo(">>Project creation unsuccessful !!!")
-                break
+                raise Exception(">>Project creation unsuccessful !!!")
         except Exception:
             click.echo(">>Project creation is in process...")
 
@@ -374,7 +373,6 @@ def poll_creation_status(client, name):
 
 
 def poll_updation_status(client, project_uuid, old_spec_version):
-    # On updation spec_version is incremented
 
     cnt = 0
     while True:
@@ -386,15 +384,19 @@ def poll_updation_status(client, project_uuid, old_spec_version):
         project = res.json()
         spec_version = project["metadata"]["spec_version"]
 
+        # On updation spec_version should be incremented
         if spec_version == old_spec_version:
-            click.echo(">>Project updation is in process...")
+            raise Exception("No update operation performed on project !!!")
 
         elif project["status"]["state"] == "PENDING":
             click.echo(">>Project updation is in pending state")
 
-        else:
+        elif project["status"]["state"] == "COMPLETE":
             click.echo(">>Project updated successfully !!!")
             return
+
+        else:
+            raise Exception("Project updation failed")
 
         time.sleep(2)
         cnt += 1
