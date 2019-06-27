@@ -19,7 +19,7 @@ class SimpleBlueprintType(EntityType):
     def get_task_target(cls):
         return
 
-    def get_bp_dict(cls):
+    def make_bp_dict(cls, categories=None):
 
         # Get simple blueprint dictionary
         cdict = cls.get_dict()
@@ -72,6 +72,7 @@ class SimpleBlueprintType(EntityType):
                 os_type=sd["os_type"],
             )
             subdict = sub.get_dict()
+
             for action in sd["action_list"]:
                 if action["name"] == "__pre_create__":
                     action["name"] = sub.ALLOWED_FRAGMENT_ACTIONS["__pre_create__"]
@@ -128,11 +129,33 @@ class SimpleBlueprintType(EntityType):
             "resources": blueprint_resources,
         }
 
-        metadata = {"spec_version": 1, "kind": "blueprint", "name": cls.__name__}
+        metadata = {
+            "spec_version": 1,
+            "kind": "blueprint",
+            "name": cls.__name__,
+            "categories": categories,
+        }
 
         blueprint = {"metadata": metadata, "spec": spec}
 
         return blueprint
+
+    def make_single_vm_bp_dict(cls):
+
+        bp_dict = cls.make_bp_dict()
+
+        if len(bp_dict["spec"]["resources"]["substrate_definition_list"]) > 1:
+            return None
+
+        subdict = bp_dict["spec"]["resources"]["substrate_definition_list"][0]
+        subdict["readiness_probe"] = {"disable_readiness_probe": True}
+
+        if bp_dict["metadata"]["categories"]:
+            bp_dict["metadata"]["categories"]["TemplateType"] = "Vm"
+        else:
+            bp_dict["metadata"]["categories"] = {"TemplateType": "Vm"}
+
+        return bp_dict
 
 
 class SimpleBlueprintValidator(PropertyValidator, openapi_type="app_simple_blueprint"):
