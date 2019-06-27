@@ -109,6 +109,51 @@ class BlueprintAPI(ResourceAPI):
                 "name": default_creds[0]["name"],
             }
 
+        # Strip secret variable values
+        # TODO: Refactor and/or clean this up later
+
+        secret_variables = []
+
+        def strip_entity_secret_variables(path_list, obj):
+            for var_idx, variable in enumerate(obj.get("variable_list", []) or []):
+                if variable["type"] == "SECRET":
+                    secret_variables.append(
+                        (path_list + ["variable_list", var_idx], variable.pop("value"))
+                    )
+                    variable["attrs"] = {
+                        "is_secret_modified": False,
+                        "secret_reference": None,
+                    }
+
+        def strip_action_secret_varaibles(path_list, obj):
+            for action_idx, action in enumerate(obj.get("action_list", []) or []):
+                strip_entity_secret_variables(
+                    path_list + ["action_list", action_idx], action
+                )
+
+        def strip_all_secret_variables(path_list, obj):
+            strip_entity_secret_variables(path_list, obj)
+            strip_action_secret_varaibles(path_list, obj)
+
+        object_lists = [
+            "service_definition_list",
+            "package_definition_list",
+            "substrate_definition_list",
+            "app_profile_list",
+        ]
+        for object_list in object_lists:
+            for obj_idx, obj in enumerate(bp_resources[object_list]):
+                strip_all_secret_variables([object_list, obj_idx], obj)
+
+                # Currently, deployment actions and variables are unsupported.
+                # Uncomment the following lines if and when the API does support them.
+                # if object_list == "app_profile_list":
+                #     for dep_idx, dep in enumerate(obj["deployment_create_list"]):
+                #         strip_all_secret_variables(
+                #             [object_list, obj_idx, "deployment_create_list", dep_idx],
+                #             dep,
+                #         )
+
         upload_payload = self._make_blueprint_payload(bp_name, bp_desc, bp_resources)
 
         res, err = self.upload(upload_payload)
@@ -125,6 +170,14 @@ class BlueprintAPI(ResourceAPI):
         for cred in creds:
             name = cred["name"]
             cred["secret"] = secret_map[name]
+
+        for path, secret in secret_variables:
+            variable = bp["spec"]["resources"]
+            for sub_path in path:
+                variable = variable[sub_path]
+            if variable.get("type", None) == "SECRET":
+                variable["attrs"] = {"is_secret_modified": True}
+                variable["value"] = secret
 
         # TODO - insert categories during update as /import_json fails if categories are given!
         if categories:

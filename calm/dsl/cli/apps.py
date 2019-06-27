@@ -237,8 +237,10 @@ class RunlogJSONEncoder(JSONEncoder):
                 name = status["call_runbook_reference"]["name"]
             else:
                 name = status["runbook_reference"]["name"]
-        elif status["type"] == "action_runlog":
+        elif status["type"] == "action_runlog" and "action_reference" in status:
             name = status["action_reference"]["name"]
+        elif status["type"] == "app":
+            return status["name"]
         else:
             return "root"
 
@@ -446,7 +448,7 @@ def watch_app(obj, app_name, screen, app=None):
                     if state in RUNLOG.STATUS.SUCCESS:
                         completed_tasks += 1
 
-            if total_tasks:
+            if not is_app_describe and total_tasks:
                 screen.clear()
                 progress = "{0:.2f}".format(completed_tasks / total_tasks * 100)
                 screen.print_at("Progress: {}%".format(progress), 0, 0)
