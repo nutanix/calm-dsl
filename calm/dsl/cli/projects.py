@@ -268,27 +268,23 @@ def describe_project(obj, project_name):
 
     for subnet in subnets:
         subnet_name = subnet["name"]
-        payload = {  # TODO move this to AHV specific method
-            "entity_type": "subnet",
-            "group_member_attributes": [{"attribute": "cluster_name"}],
-            "filter_criteria": "_entity_id_=={}".format(subnet["uuid"]),
-        }
 
-        Obj = get_resource_api("groups", client.connection)
-        res, err = Obj.create(payload)
+        # TODO move this to AHV specific method
+        Obj = get_resource_api("subnets", client.connection)
+        res, err = Obj.read(subnet["uuid"])
+
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
         res = res.json()
-
-        entity_data = res["group_results"][0]["entity_results"][0]["data"]
-        for data in entity_data:
-            if data["name"] == "cluster_name":
-                cluster_name = data["values"][0]["values"][0]
+        cluster_name = res["status"]["cluster_reference"]["name"]
+        vlan_id = res["status"]["resources"]["vlan_id"]
 
         click.echo(
-            "Subnet Name: {}\tCluster Name: {}".format(
-                highlight_text(subnet_name), highlight_text(cluster_name)
+            "Subnet Name: {}\tVLAN ID: {}\tCluster Name: {}".format(
+                highlight_text(subnet_name),
+                highlight_text(vlan_id),
+                highlight_text(cluster_name),
             )
         )
 
@@ -321,6 +317,18 @@ def update_project(obj, name, payload):
     click.echo("Searching for projects having same name ")
     project = get_project(client, name)
 
+    new_name = payload["project_detail"]["name"]
+    if name != new_name:
+        # Search whether any other project exists with new name
+        click.echo("\nSearching project with name {}".format(new_name))
+        try:
+            get_project(client, new_name)
+            err = "Another project exists with name {}".format(new_name)
+            return None, err
+
+        except Exception:
+            click.echo("No project exists with name {}".format(new_name))
+
     project_id = project["metadata"]["uuid"]
     spec_version = project["metadata"]["spec_version"]
     ProjectValidator.validate_dict(payload)
@@ -334,5 +342,86 @@ def update_project(obj, name, payload):
         },
         "spec": payload,
     }
+    click.echo("\nUpdating the project")
 
     return client.project.update(project_id, payload)
+
+
+def poll_creation_status(client, name):
+
+    cnt = 0
+    while True:
+        try:
+            click.echo("\nGetting status of project creation")
+            project = get_project(client, name)
+            if project["status"]["state"] == "COMPLETE":
+                click.echo(">>Project creation successful !!!")
+                return
+            elif project["status"]["state"] == "RUNNING":
+                click.echo(">>Project is in runnning state...")
+            else:
+                raise Exception(">>Project creation unsuccessful !!!")
+        except Exception:
+            click.echo(">>Project creation is in process...")
+
+        time.sleep(2)
+        cnt += 1
+        if cnt == 10:
+            break
+
+    raise Exception("Project creation failed !!!")
+
+
+def poll_updation_status(client, project_uuid, old_spec_version):
+
+    cnt = 0
+    while True:
+        click.echo("\nGetting status of project updation")
+        res, err = client.project.read(project_uuid)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        project = res.json()
+        spec_version = project["metadata"]["spec_version"]
+
+        # On updation spec_version should be incremented
+        if spec_version == old_spec_version:
+            raise Exception("No update operation performed on project !!!")
+
+        elif project["status"]["state"] == "PENDING":
+            click.echo(">>Project updation is in pending state")
+
+        elif project["status"]["state"] == "COMPLETE":
+            click.echo(">>Project updated successfully !!!")
+            return
+
+        else:
+            raise Exception("Project updation failed")
+
+        time.sleep(2)
+        cnt += 1
+        if cnt == 10:
+            break
+
+    raise Exception("Project updation failed !!!")
+
+
+def poll_deletion_status(client, name):
+
+    cnt = 0
+    while True:
+        try:
+            click.echo("\nGetting status of project deletion")
+            get_project(client, name)
+            click.echo(">>Project is deleting...")
+
+        except Exception:
+            click.echo(">>Project deletion successful !!!")
+            return
+
+        time.sleep(2)
+        cnt += 1
+        if cnt == 10:
+            break
+
+    raise Exception("Project deletion failed !!!")
