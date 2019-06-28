@@ -1,0 +1,41 @@
+{% macro SimpleBlueprint() -%}
+
+title: SimpleBlueprint
+type: object
+x-calm-dsl-type: app_simple_blueprint
+properties:
+  name:
+    type: string
+    maxLength: 64
+    default: ''
+  description:
+    type: string
+    maxLength: 1000
+    default: ''
+  credentials:
+    type: array
+    items:
+      $ref: '#/components/schemas/Credential'
+  deployments:
+    type: array
+    items:
+      $ref: '#/components/schemas/SimpleDeployment'
+  variables:
+    type: array
+    items:
+      $ref: '#/components/schemas/Variable'
+  action_list:
+    x-calm-dsl-display-name: actions
+    type: array
+    items:
+      $ref: '#/components/schemas/Action'
+
+{%- endmacro %}
+
+
+{% macro SimpleBlueprintSchema() -%}
+
+SimpleBlueprint:
+  {{ SimpleBlueprint()|indent(2) }}
+
+{%- endmacro %}

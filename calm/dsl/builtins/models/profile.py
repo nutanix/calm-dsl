@@ -20,7 +20,7 @@ class ProfileValidator(PropertyValidator, openapi_type="app_profile"):
 
 
 def profile(**kwargs):
-    name = getattr(ProfileType, "__schema_name__")
+    name = kwargs.get("name") or getattr(ProfileType, "__schema_name__")
     bases = (Entity,)
     return ProfileType(name, bases, kwargs)
 

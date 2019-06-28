@@ -29,8 +29,4 @@ def ref(cls):
     if isinstance(cls, RefType):
         return cls
 
-    kwargs = {}
-    kwargs["name"] = str(cls)
-    kwargs["kind"] = getattr(cls, "__kind__")
-
-    return _ref(**kwargs)
+    return cls.get_ref()
