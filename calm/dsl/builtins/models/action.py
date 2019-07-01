@@ -11,23 +11,6 @@ from .runbook import runbook_create
 # Action - Since action, runbook and DAG task are heavily coupled together,
 # the action type behaves as all three.
 
-TASK_FUNCS = [
-    "exec_task_ssh",
-    "exec_task_escript",
-    "exec_task_powershell",
-    "set_variable_task_ssh",
-    "set_variable_task_escript",
-    "set_variable_task_powershell",
-    "http_task_get",
-    "http_task_post",
-    "http_task_put",
-    "http_task_delete",
-    "http_task",
-    "scale_out_task",
-    "scale_in_task",
-    "delay_task",
-]
-
 
 class ActionType(EntityType):
     __schema_name__ = "Action"
@@ -76,15 +59,16 @@ class GetCallNodes(ast.NodeVisitor):
         return self.tasks, self.variables
 
     def visit_Call(self, node):
-        if isinstance(node.func, ast.Attribute) or (
-            isinstance(node.func, ast.Name) and node.func.id in TASK_FUNCS
-        ):
-
-            task = eval(compile(ast.Expression(node), "", "eval"), self._globals)
-            if task is not None:
-                if self.target is not None and not task.target_any_local_reference:
-                    task.target_any_local_reference = self.target
-                self.tasks.append(task)
+        if isinstance(node.func, ast.Attribute):
+            name_node = node.func
+            while not isinstance(name_node, ast.Name):
+                name_node = name_node.value
+            if name_node.id in list(self._globals.keys()) + ["CalmTask"]:
+                task = eval(compile(ast.Expression(node), "", "eval"), self._globals)
+                if task is not None:
+                    if self.target is not None and not task.target_any_local_reference:
+                        task.target_any_local_reference = self.target
+                    self.tasks.append(task)
 
     def visit_Assign(self, node):
         if len(node.targets) > 1:
@@ -151,7 +135,7 @@ class action(metaclass=DescriptorType):
         # Get the indent since this decorator is used within class definition
         # For this we split the code on newline and count the number of spaces
         # before the @action decorator.
-        # src = "    @action\n    def action1():\n    exec_task_ssh("Hello World")"
+        # src = "    @action\n    def action1():\n    CalmTask.Exec.ssh("Hello World")"
         # The indentation here would be 4.
         padding = src.split("\n")[0].rstrip(" ").split(" ").count("")
 

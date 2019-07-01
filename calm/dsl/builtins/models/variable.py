@@ -1078,3 +1078,226 @@ def variable_multiline_with_options_from_task_array(
         is_mandatory=is_mandatory,
         runtime=True,
     )
+
+
+class CalmVariable:
+    def __new__(
+        cls,
+        value,
+        label=None,
+        regex=None,
+        validate_regex=False,
+        is_hidden=False,
+        is_mandatory=False,
+        runtime=False,
+    ):
+        return simple_variable(
+            value,
+            label=label,
+            regex=regex,
+            validate_regex=validate_regex,
+            is_hidden=is_hidden,
+            is_mandatory=is_mandatory,
+            runtime=runtime,
+        )
+
+    class Simple:
+        def __new__(
+            cls,
+            value,
+            label=None,
+            regex=None,
+            validate_regex=False,
+            is_hidden=False,
+            is_mandatory=False,
+            runtime=False,
+        ):
+            return simple_variable(
+                value,
+                label=label,
+                regex=regex,
+                validate_regex=validate_regex,
+                is_hidden=is_hidden,
+                is_mandatory=is_mandatory,
+                runtime=runtime,
+            )
+
+        string = simple_variable
+        int = simple_variable_int
+        date = simple_variable_date
+        time = simple_variable_time
+        datetime = simple_variable_datetime
+        multiline = simple_variable_multiline
+
+        class Secret:
+            def __new__(
+                cls,
+                value,
+                label=None,
+                regex=None,
+                validate_regex=False,
+                is_hidden=False,
+                is_mandatory=False,
+                runtime=False,
+            ):
+                return simple_variable_secret(
+                    value,
+                    label=label,
+                    regex=regex,
+                    validate_regex=validate_regex,
+                    is_hidden=is_hidden,
+                    is_mandatory=is_mandatory,
+                    runtime=runtime,
+                )
+
+            string = simple_variable_secret
+            int = simple_variable_int_secret
+            date = simple_variable_date_secret
+            time = simple_variable_time_secret
+            datetime = simple_variable_datetime_secret
+            multiline = simple_variable_multiline_secret
+
+    class WithOptions:
+        def __new__(
+            cls,
+            options,
+            default=None,
+            name=None,
+            label=None,
+            regex=None,
+            validate_regex=False,
+            is_hidden=False,
+            is_mandatory=False,
+            runtime=False,
+        ):
+            return variable_string_with_predefined_options(
+                options,
+                default=default,
+                name=name,
+                label=label,
+                regex=regex,
+                validate_regex=validate_regex,
+                is_hidden=is_hidden,
+                is_mandatory=is_mandatory,
+                runtime=runtime,
+            )
+
+        class Predefined:
+            def __new__(
+                cls,
+                options,
+                default=None,
+                name=None,
+                label=None,
+                regex=None,
+                validate_regex=False,
+                is_hidden=False,
+                is_mandatory=False,
+                runtime=False,
+            ):
+                return variable_string_with_predefined_options(
+                    options,
+                    default=default,
+                    name=name,
+                    label=label,
+                    regex=regex,
+                    validate_regex=validate_regex,
+                    is_hidden=is_hidden,
+                    is_mandatory=is_mandatory,
+                    runtime=runtime,
+                )
+
+            string = variable_string_with_predefined_options
+            int = variable_int_with_predefined_options
+            date = variable_date_with_predefined_options
+            time = variable_time_with_predefined_options
+            datetime = variable_datetime_with_predefined_options
+            multiline = variable_multiline_with_predefined_options
+
+            class Array:
+                def __new__(
+                    cls,
+                    options,
+                    defaults=None,
+                    name=None,
+                    label=None,
+                    regex=None,
+                    validate_regex=False,
+                    is_hidden=False,
+                    is_mandatory=False,
+                    runtime=False,
+                ):
+                    return variable_string_with_predefined_options_array(
+                        options,
+                        defaults=defaults,
+                        name=name,
+                        label=label,
+                        regex=regex,
+                        validate_regex=validate_regex,
+                        is_hidden=is_hidden,
+                        is_mandatory=is_mandatory,
+                        runtime=runtime,
+                    )
+
+                string = variable_string_with_predefined_options_array
+                int = variable_int_with_predefined_options_array
+                date = variable_date_with_predefined_options_array
+                time = variable_time_with_predefined_options_array
+                datetime = variable_datetime_with_predefined_options_array
+                multiline = variable_multiline_with_predefined_options_array
+
+        class FromTask:
+            def __new__(
+                cls,
+                task,
+                name=None,
+                label=None,
+                regex=None,
+                validate_regex=False,
+                is_hidden=False,
+                is_mandatory=False,
+            ):
+                return variable_string_with_options_from_task(
+                    task,
+                    name=name,
+                    label=label,
+                    regex=regex,
+                    validate_regex=validate_regex,
+                    is_hidden=is_hidden,
+                    is_mandatory=is_mandatory,
+                )
+
+            string = variable_string_with_options_from_task
+            int = variable_int_with_options_from_task
+            date = variable_date_with_options_from_task
+            time = variable_time_with_options_from_task
+            datetime = variable_datetime_with_options_from_task
+            multiline = variable_multiline_with_options_from_task
+
+            class Array:
+                def __new__(
+                    cls,
+                    task,
+                    name=None,
+                    label=None,
+                    regex=None,
+                    validate_regex=False,
+                    is_hidden=False,
+                    is_mandatory=False,
+                ):
+                    return variable_string_with_options_from_task_array(
+                        task,
+                        name=name,
+                        label=label,
+                        regex=regex,
+                        validate_regex=validate_regex,
+                        is_hidden=is_hidden,
+                        is_mandatory=is_mandatory,
+                    )
+
+                string = variable_string_with_options_from_task_array
+                int = variable_int_with_options_from_task_array
+                date = variable_date_with_options_from_task_array
+                time = variable_time_with_options_from_task_array
+                datetime = variable_datetime_with_options_from_task_array
+                multiline = variable_multiline_with_options_from_task_array
