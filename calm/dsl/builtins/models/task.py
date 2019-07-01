@@ -651,3 +651,68 @@ def delay_task(delay_seconds=None, name=None, target=None):
     if target is not None:
         kwargs["target_any_local_reference"] = _get_target_ref(target)
     return _task_create(**kwargs)
+
+
+class CalmTask:
+    def __new__(cls):
+        raise TypeError("'{}' is not callable".format(cls.__name__))
+
+    class Exec:
+        def __new__(cls):
+            raise TypeError("'{}' is not callable".format(cls.__name__))
+
+        ssh = exec_task_ssh
+        powershell = exec_task_powershell
+        escript = exec_task_escript
+
+    class HTTP:
+        def __new__(
+            cls,
+            method,
+            url,
+            body=None,
+            headers=None,
+            auth=None,
+            content_type=None,
+            timeout=120,
+            verify=False,
+            retries=0,
+            retry_interval=10,
+            status_mapping=None,
+            response_paths=None,
+            name=None,
+            target=None,
+        ):
+            return http_task(
+                method,
+                url,
+                body=body,
+                headers=headers,
+                auth=auth,
+                content_type=content_type,
+                timeout=timeout,
+                verify=verify,
+                retries=retries,
+                retry_interval=retry_interval,
+                status_mapping=status_mapping,
+                response_paths=response_paths,
+                name=name,
+                target=target,
+            )
+
+        get = http_task_get
+        post = http_task_post
+        put = http_task_put
+        delete = http_task_delete
+
+    class SetVariable:
+        ssh = set_variable_task_ssh
+        escript = set_variable_task_escript
+
+    class Scaling:
+        scale_in = scale_in_task
+        scale_out = scale_out_task
+
+    class Delay:
+        def __new__(cls, delay_seconds=None, name=None, target=None):
+            return delay_task(delay_seconds=delay_seconds, name=name, target=target)

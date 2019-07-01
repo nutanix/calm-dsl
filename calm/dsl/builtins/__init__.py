@@ -15,23 +15,7 @@ from .models.variable import (
 )
 from .models.action import action
 
-from .models.task import (
-    Task,
-    exec_task_ssh,
-    exec_task_escript,
-    exec_task_powershell,
-    set_variable_task_ssh,
-    set_variable_task_escript,
-    set_variable_task_powershell,
-    http_task_get,
-    http_task_post,
-    http_task_put,
-    http_task_delete,
-    http_task,
-    scale_out_task,
-    scale_in_task,
-    delay_task,
-)
+from .models.task import Task, CalmTask
 
 from .models.port import Port, port
 from .models.service import Service, service
@@ -64,20 +48,7 @@ __all__ = [
     "simple_variable",
     "simple_variable_secret",
     "Task",
-    "exec_task_ssh",
-    "exec_task_escript",
-    "exec_task_powershell",
-    "set_variable_task_ssh",
-    "set_variable_task_escript",
-    "set_variable_task_powershell",
-    "http_task_get",
-    "http_task_post",
-    "http_task_put",
-    "http_task_delete",
-    "http_task",
-    "scale_out_task",
-    "scale_in_task",
-    "delay_task",
+    "CalmTask",
     "action",
     "Port",
     "port",
