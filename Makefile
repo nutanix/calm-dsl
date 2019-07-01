@@ -7,7 +7,10 @@ dev:
 	venv/bin/python3 setup.py develop
 
 test: dev
-	venv/bin/py.test
+	venv/bin/py.test -v -m "not slow"
+
+test-all: test
+	venv/bin/py.test -v -m "slow"
 
 gui: dev
 	# Setup Jupyter
