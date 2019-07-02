@@ -93,7 +93,6 @@ class GetCallNodes(ast.NodeVisitor):
 
     def visit_With(self, node):
         parallel_tasks = []
-        context_items = node.items
         if len(node.items) > 1:
             raise ValueError(
                 "Only a single context is supported in 'with' statements inside the action."
