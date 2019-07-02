@@ -50,15 +50,16 @@ class GetCallNodes(ast.NodeVisitor):
 
     # TODO: Need to add validations for unsupported nodes.
     def __init__(self, func_globals, target=None):
-        self.tasks = []
+        self.task_list = []
+        self.all_tasks = []
         self.variables = {}
         self.target = target or None
         self._globals = func_globals or {}.copy()
 
     def get_objects(self):
-        return self.tasks, self.variables
+        return self.all_tasks, self.variables, self.task_list
 
-    def visit_Call(self, node):
+    def visit_Call(self, node, return_task=False):
         if isinstance(node.func, ast.Attribute):
             name_node = node.func
             while not isinstance(name_node, ast.Name):
@@ -68,7 +69,10 @@ class GetCallNodes(ast.NodeVisitor):
                 if task is not None:
                     if self.target is not None and not task.target_any_local_reference:
                         task.target_any_local_reference = self.target
-                    self.tasks.append(task)
+                    if return_task:
+                        return task
+                    self.task_list.append(task)
+                    self.all_tasks.append(task)
 
     def visit_Assign(self, node):
         if len(node.targets) > 1:
@@ -86,6 +90,33 @@ class GetCallNodes(ast.NodeVisitor):
             )
             variable.name = variable_name
             self.variables[variable_name] = variable
+
+    def visit_With(self, node):
+        parallel_tasks = []
+        context_items = node.items
+        if len(node.items) > 1:
+            raise ValueError(
+                "Only a single context is supported in 'with' statements inside the action."
+            )
+        context = eval(
+            compile(ast.Expression(node.items[0].context_expr), "", "eval"),
+            self._globals,
+        )
+        if context.__calm_type__ == "parallel":
+            for statement in node.body:
+                if not isinstance(statement.value, ast.Call):
+                    raise ValueError(
+                        "Only calls to 'CalmTask' methods supported inside parallel context."
+                    )
+                task = self.visit_Call(statement.value, return_task=True)
+                if task:
+                    parallel_tasks.append(task)
+                    self.all_tasks.append(task)
+            self.task_list.append(parallel_tasks)
+        else:
+            raise ValueError(
+                "Unsupported context used in 'with' statement inside the action."
+            )
 
 
 class action(metaclass=DescriptorType):
@@ -149,8 +180,16 @@ class action(metaclass=DescriptorType):
         func_globals = self.user_func.__globals__.copy()
         node_visitor = GetCallNodes(func_globals, target=cls.get_task_target())
         node_visitor.visit(node)
-        tasks, variables = node_visitor.get_objects()
-        edges = [(frm.get_ref(), to.get_ref()) for frm, to in zip(tasks, tasks[1:])]
+        tasks, variables, task_list = node_visitor.get_objects()
+        edges = []
+        for from_tasks, to_tasks in zip(task_list, task_list[1:]):
+            if not isinstance(from_tasks, list):
+                from_tasks = [from_tasks]
+            if not isinstance(to_tasks, list):
+                to_tasks = [to_tasks]
+            for from_task in from_tasks:
+                for to_task in to_tasks:
+                    edges.append((from_task.get_ref(), to_task.get_ref()))
 
         # First create the dag
         self.user_dag = dag(
@@ -192,3 +231,7 @@ class action(metaclass=DescriptorType):
         self.__parsed__ = True
 
         return self.user_action
+
+
+class parallel:
+    __calm_type__ = "parallel"

@@ -13,7 +13,7 @@ from .models.variable import (
     simple_variable,
     simple_variable_secret,
 )
-from .models.action import action
+from .models.action import action, parallel
 
 from .models.task import Task, CalmTask
 
@@ -50,6 +50,7 @@ __all__ = [
     "Task",
     "CalmTask",
     "action",
+    "parallel",
     "Port",
     "port",
     "Service",
