@@ -64,6 +64,7 @@ def setvar(name, value, type_="LOCAL", **kwargs):
 
 def simple_variable(
     value,
+    name=None,
     label=None,
     regex=None,
     validate_regex=False,
@@ -73,7 +74,7 @@ def simple_variable(
 ):
     kwargs = {"is_hidden": is_hidden, "is_mandatory": is_mandatory}
     editables = {}
-    name = getattr(VariableType, "__schema_name__")
+    name = name or getattr(VariableType, "__schema_name__")
     if runtime:
         editables = {"value": True}
         kwargs["editables"] = editables
@@ -93,6 +94,7 @@ def simple_variable(
 
 def simple_variable_secret(
     value,
+    name=None,
     label=None,
     regex=None,
     validate_regex=False,
@@ -102,7 +104,7 @@ def simple_variable_secret(
 ):
     kwargs = {"is_hidden": is_hidden, "is_mandatory": is_mandatory}
     editables = {}
-    name = getattr(VariableType, "__schema_name__")
+    name = name or getattr(VariableType, "__schema_name__")
     if runtime:
         editables = {"value": True}
         kwargs["editables"] = editables
