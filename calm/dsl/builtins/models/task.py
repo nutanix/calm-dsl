@@ -5,7 +5,7 @@ import sys
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .ref import RefType
-from .variable import setvar
+from .variable import CalmVariable
 
 
 # Task
@@ -207,7 +207,8 @@ def http_task_get(
     url,
     body=None,
     headers=None,
-    auth=None,
+    secret_headers=None,
+    credential=None,
     content_type=None,
     timeout=120,
     verify=False,
@@ -225,8 +226,8 @@ def http_task_get(
     Args:
         url (str): Request URL (https://example.com/dummy_url)
         headers (dict): Request headers
-        auth (tuple (str, str)): Credential object. Currently only supports basic auth.
-                           Tuple of username and password. ("username", "password")
+        secret_headers (dict): Request headers that are to be masked
+        credential (Credential): Credential object. Currently only supports basic auth.
         content_type (string): Request Content-Type (application/json, application/xml, etc.)
         timeout (int): Request timeout in seconds (Default: 120)
         verify (bool): TLS verify (Default: False)
@@ -245,7 +246,8 @@ def http_task_get(
         url,
         body=None,
         headers=headers,
-        auth=auth,
+        secret_headers=secret_headers,
+        credential=credential,
         content_type=content_type,
         timeout=timeout,
         verify=verify,
@@ -262,7 +264,8 @@ def http_task_post(
     url,
     body=None,
     headers=None,
-    auth=None,
+    secret_headers=None,
+    credential=None,
     content_type=None,
     timeout=120,
     verify=False,
@@ -281,8 +284,8 @@ def http_task_post(
         url (str): Request URL (https://example.com/dummy_url)
         body (str): Request body
         headers (dict): Request headers
-        auth (tuple (str, str)): Credential object. Currently only supports basic auth.
-                           Tuple of username and password. ("username", "password")
+        secret_headers (dict): Request headers that are to be masked
+        credential (Credential): Credential object. Currently only supports basic auth.
         content_type (string): Request Content-Type (application/json, application/xml, etc.)
         timeout (int): Request timeout in seconds (Default: 120)
         verify (bool): TLS verify (Default: False)
@@ -301,7 +304,8 @@ def http_task_post(
         url,
         body=body,
         headers=headers,
-        auth=auth,
+        secret_headers=secret_headers,
+        credential=credential,
         content_type=content_type,
         timeout=timeout,
         verify=verify,
@@ -318,7 +322,8 @@ def http_task_put(
     url,
     body=None,
     headers=None,
-    auth=None,
+    secret_headers=None,
+    credential=None,
     content_type=None,
     timeout=120,
     verify=False,
@@ -337,8 +342,8 @@ def http_task_put(
         url (str): Request URL (https://example.com/dummy_url)
         body (str): Request body
         headers (dict): Request headers
-        auth (tuple (str, str)): Credential object. Currently only supports basic auth.
-                           Tuple of username and password. ("username", "password")
+        secret_headers (dict): Request headers that are to be masked
+        credential (Credential): Credential object. Currently only supports basic auth.
         content_type (string): Request Content-Type (application/json, application/xml, etc.)
         timeout (int): Request timeout in seconds (Default: 120)
         verify (bool): TLS verify (Default: False)
@@ -357,7 +362,8 @@ def http_task_put(
         url,
         body=body,
         headers=headers,
-        auth=auth,
+        secret_headers=secret_headers,
+        credential=credential,
         content_type=content_type,
         timeout=timeout,
         verify=verify,
@@ -374,7 +380,8 @@ def http_task_delete(
     url,
     body=None,
     headers=None,
-    auth=None,
+    secret_headers=None,
+    credential=None,
     content_type=None,
     timeout=120,
     verify=False,
@@ -393,8 +400,8 @@ def http_task_delete(
         url (str): Request URL (https://example.com/dummy_url)
         body (str): Request body
         headers (dict): Request headers
-        auth (tuple (str, str)): Credential object. Currently only supports basic auth.
-                           Tuple of username and password. ("username", "password")
+        secret_headers (dict): Request headers that are to be masked
+        credential (Credential): Credential object. Currently only supports basic auth.
         content_type (string): Request Content-Type (application/json, application/xml, etc.)
         timeout (int): Request timeout in seconds (Default: 120)
         verify (bool): TLS verify (Default: False)
@@ -413,7 +420,8 @@ def http_task_delete(
         url,
         body=body,
         headers=headers,
-        auth=auth,
+        secret_headers=secret_headers,
+        credential=credential,
         content_type=content_type,
         timeout=timeout,
         verify=verify,
@@ -426,12 +434,40 @@ def http_task_delete(
     )
 
 
+def _header_variables_from_dict(headers, secret=False):
+    variables = []
+    if not isinstance(headers, dict):
+        raise TypeError(
+            "Headers for HTTP task " + (name or "") + " should be dictionary of strings"
+        )
+    for var_name, var_value in headers.items():
+        if not isinstance(var_name, str):
+            raise TypeError(
+                "Headers for HTTP task "
+                + (name or "")
+                + " should be dictionary of strings"
+            )
+        if not isinstance(var_value, str):
+            raise TypeError(
+                "Headers for HTTP task "
+                + (name or "")
+                + " should be dictionary of strings"
+            )
+        if secret:
+            variable = CalmVariable.Simple.Secret.string(name=var_name, value=var_value)
+        else:
+            variable = CalmVariable.Simple.string(name=var_name, value=var_value)
+        variables.append(variable)
+    return variables
+
+
 def http_task(
     method,
     url,
     body=None,
     headers=None,
-    auth=None,
+    secret_headers=None,
+    credential=None,
     content_type=None,
     timeout=120,
     verify=False,
@@ -450,8 +486,8 @@ def http_task(
         url (str): Request URL (https://example.com/dummy_url)
         body (str): Request body
         headers (dict): Request headers
-        auth (tuple (str, str)): Credential object. Currently only supports basic auth.
-                           Tuple of username and password. ("username", "password")
+        secret_headers (dict): Request headers that are to be masked
+        credential (Credential): Credential object. Currently only supports basic auth.
         content_type (string): Request Content-Type (application/json, application/xml, etc.)
         timeout (int): Request timeout in seconds (Default: 120)
         verify (bool): TLS verify (Default: False)
@@ -466,19 +502,25 @@ def http_task(
         (Task): HTTP Task
     """
     auth_obj = {"auth_type": "none"}
-    if auth is not None:
-        if not (
-            isinstance(auth, tuple)
-            and len(auth) == 2
-            and isinstance(auth[0], str)
-            and isinstance(auth[1], str)
-        ):
+    if credential is not None:
+        if getattr(credential, "__kind__", None) != "app_credential":
             raise ValueError(
-                "Auth for HTTP task "
+                "Credential for HTTP task "
                 + (name or "")
-                + ' should be a tuple of 2 strings ("username", "password")'
+                + " should be a Credential object of PASSWORD type"
             )
-        auth_obj = {"auth_type": "basic", "username": auth[0], "password": auth[1]}
+
+        # TODO: Auth should be changed to basic auth with credential.
+        # This is dependent on https://jira.nutanix.com/browse/CALM-12149
+        # We could also possibly check calm server version to switch between
+        # the two auth mechanisms since basic auth will be deprecated.
+        auth_obj = {
+            "auth_type": "basic",
+            "basic_auth": {
+                "username": credential.username,
+                "password": {"value": credential.secret.get("value")},
+            },
+        }
 
     kwargs = {
         "name": name,
@@ -503,28 +545,15 @@ def http_task(
     if target is not None:
         kwargs["target_any_local_reference"] = _get_target_ref(target)
 
+    header_variables = []
     if headers is not None:
-        header_variables = []
-        if not isinstance(headers, dict):
-            raise TypeError(
-                "Headers for HTTP task "
-                + (name or "")
-                + " should be dictionary of strings"
-            )
-        for var_name, var_value in headers.items():
-            if not isinstance(var_name, str):
-                raise TypeError(
-                    "Headers for HTTP task "
-                    + (name or "")
-                    + " should be dictionary of strings"
-                )
-            if not isinstance(var_value, str):
-                raise TypeError(
-                    "Headers for HTTP task "
-                    + (name or "")
-                    + " should be dictionary of strings"
-                )
-            header_variables.append(setvar(var_name, var_value))
+        header_variables.extend(_header_variables_from_dict(headers))
+        kwargs["attrs"]["headers"] = header_variables
+
+    if secret_headers is not None:
+        header_variables.extend(
+            _header_variables_from_dict(secret_headers, secret=True)
+        )
         kwargs["attrs"]["headers"] = header_variables
 
     if status_mapping is not None:
@@ -672,7 +701,8 @@ class CalmTask:
             url,
             body=None,
             headers=None,
-            auth=None,
+            secret_headers=None,
+            credential=None,
             content_type=None,
             timeout=120,
             verify=False,
@@ -688,7 +718,8 @@ class CalmTask:
                 url,
                 body=body,
                 headers=headers,
-                auth=auth,
+                secret_headers=secret_headers,
+                credential=credential,
                 content_type=content_type,
                 timeout=timeout,
                 verify=verify,
