@@ -370,7 +370,7 @@ def get_completion_func(screen):
     return is_action_complete
 
 
-def watch_action(runlog_uuid, app_name, client, screen, poll_interval):
+def watch_action(runlog_uuid, app_name, client, screen, poll_interval=10):
     app = _get_app(client, app_name)
     app_uuid = app["metadata"]["uuid"]
 
