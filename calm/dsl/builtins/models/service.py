@@ -9,6 +9,15 @@ class ServiceType(EntityType):
     __schema_name__ = "Service"
     __openapi_type__ = "app_service"
 
+    ALLOWED_SYSTEM_ACTIONS = {
+        "__create__": "action_create",
+        "__delete__": "action_delete",
+        "__start__": "action_start",
+        "__stop__": "action_stop",
+        "__restart__": "action_restart",
+        "__soft_delete__": "action_soft_delete",
+    }
+
     def get_task_target(cls):
         return cls.get_ref()
 
