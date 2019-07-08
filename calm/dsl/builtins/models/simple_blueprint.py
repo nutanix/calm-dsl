@@ -47,7 +47,12 @@ class SimpleBlueprintType(EntityType):
             sdict["variable_list"] = sd["variable_list"]
             for action in sd["action_list"]:
                 if action["name"].startswith("__") and action["name"].endswith("__"):
-                    continue
+                    if action["name"] in s.ALLOWED_SYSTEM_ACTIONS:
+                        action["name"] = s.ALLOWED_SYSTEM_ACTIONS[action["name"]]
+                        action["type"] = "system"
+                        action["critical"] = True
+                    else:
+                        continue
                 sdict["action_list"].append(action)
             sdict["depends_on_list"] = sd["depends_on_list"]
             for dep in sdict["depends_on_list"]:
@@ -76,6 +81,7 @@ class SimpleBlueprintType(EntityType):
             for action in sd["action_list"]:
                 if action["name"] == "__pre_create__":
                     action["name"] = sub.ALLOWED_FRAGMENT_ACTIONS["__pre_create__"]
+                    action["type"] = "fragment"
 
                     for task in action["runbook"]["task_definition_list"]:
                         if task["target_any_local_reference"]:
@@ -88,6 +94,7 @@ class SimpleBlueprintType(EntityType):
 
                 elif action["name"] == "__post_delete__":
                     action["name"] = sub.ALLOWED_FRAGMENT_ACTIONS["__post_delete__"]
+                    action["type"] = "fragment"
 
                     for task in action["runbook"]["task_definition_list"]:
                         if task["target_any_local_reference"]:
