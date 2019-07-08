@@ -438,19 +438,19 @@ def _header_variables_from_dict(headers, secret=False):
     variables = []
     if not isinstance(headers, dict):
         raise TypeError(
-            "Headers for HTTP task " + (name or "") + " should be dictionary of strings"
+            "Headers for HTTP task " + (headers or "") + " should be dictionary of strings"
         )
     for var_name, var_value in headers.items():
         if not isinstance(var_name, str):
             raise TypeError(
                 "Headers for HTTP task "
-                + (name or "")
+                + (var_name or "")
                 + " should be dictionary of strings"
             )
         if not isinstance(var_value, str):
             raise TypeError(
                 "Headers for HTTP task "
-                + (name or "")
+                + (var_value or "")
                 + " should be dictionary of strings"
             )
         if secret:
