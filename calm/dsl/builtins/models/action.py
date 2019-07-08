@@ -5,6 +5,7 @@ import uuid
 from .entity import EntityType, Entity
 from .descriptor import DescriptorType
 from .validator import PropertyValidator
+from .variable import VariableType
 from .task import dag, create_call_rb
 from .runbook import runbook_create
 
@@ -84,12 +85,15 @@ class GetCallNodes(ast.NodeVisitor):
         variable_name = node.targets[0].id
         if variable_name in self.variables.keys():
             raise NameError("duplicate variable name {}".format(variable_name))
-        if isinstance(node.value, ast.Call) and node.value.func.id in ["var"]:
+        if isinstance(node.value, ast.Call) and node.value.func.id in list(
+            self._globals.keys()
+        ) + ["CalmVariable"]:
             variable = eval(
                 compile(ast.Expression(node.value), "", "eval"), self._globals
             )
-            variable.name = variable_name
-            self.variables[variable_name] = variable
+            if isinstance(variable, VariableType):
+                variable.name = variable_name
+                self.variables[variable_name] = variable
 
     def visit_With(self, node):
         parallel_tasks = []
