@@ -68,6 +68,7 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
         bp_type = (
             "Single VM"
             if "categories" in metadata
+            and "TemplateType" in metadata["categories"]
             and metadata["categories"]["TemplateType"] == "Vm"
             else "Multi VM/Pod"
         )
