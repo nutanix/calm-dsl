@@ -235,6 +235,7 @@ class EntityType(EntityTypeBase):
         types = EntityTypeBase.get_entity_types()
         ActionType = types.get("Action", None)
         VariableType = types.get("Variable", None)
+        DescriptorType = types.get("Descriptor", None)
 
         # Update list of variables with given class-level variables
         del_keys = []
@@ -244,6 +245,10 @@ class EntityType(EntityTypeBase):
                     attr_name = "actions"
                 elif isinstance(value, VariableType):
                     attr_name = "variables"
+                elif isinstance(value.__class__, DescriptorType):
+                    exception = getattr(value, "__exception__", None)
+                    if exception:
+                        raise exception
                 else:
                     raise TypeError(
                         "Field {} has value of type {} ".format(key, type(value))

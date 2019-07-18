@@ -184,7 +184,11 @@ class action(metaclass=DescriptorType):
         node = ast.parse(new_src)
         func_globals = self.user_func.__globals__.copy()
         node_visitor = GetCallNodes(func_globals, target=cls.get_task_target())
-        node_visitor.visit(node)
+        try:
+            node_visitor.visit(node)
+        except Exception as ex:
+            self.__exception__ = ex
+            raise
         tasks, variables, task_list = node_visitor.get_objects()
         edges = []
         for from_tasks, to_tasks in zip(task_list, task_list[1:]):
