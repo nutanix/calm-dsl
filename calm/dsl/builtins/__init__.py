@@ -30,12 +30,12 @@ from .models.deployment import Deployment, deployment
 from .models.profile import Profile, profile
 
 from .models.blueprint import Blueprint, blueprint
-from .models.blueprint_payload import create_blueprint_payload
-from .models.project import Project as ProjectValidator
-
 
 from .models.simple_deployment import SimpleDeployment
 from .models.simple_blueprint import SimpleBlueprint
+
+from .models.blueprint_payload import create_blueprint_payload
+from .models.project import Project as ProjectValidator
 
 
 __all__ = [

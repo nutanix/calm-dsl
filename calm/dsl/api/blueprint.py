@@ -80,7 +80,7 @@ class BlueprintAPI(ResourceAPI):
                 return None, err
 
         # Remove creds before upload
-        creds = bp_resources["credential_definition_list"]
+        creds = bp_resources.get("credential_definition_list", []) or []
         secret_map = {}
         default_creds = []
         for cred in creds:
@@ -188,7 +188,7 @@ class BlueprintAPI(ResourceAPI):
             "app_profile_list",
         ]
         for object_list in object_lists:
-            for obj_idx, obj in enumerate(bp_resources[object_list]):
+            for obj_idx, obj in enumerate(bp_resources.get(object_list, []) or []):
                 strip_all_secret_variables([object_list, obj_idx], obj)
 
                 # Currently, deployment actions and variables are unsupported.
