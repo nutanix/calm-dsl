@@ -6,13 +6,7 @@
 
 from .models.ref import Ref, ref
 from .models.credential import basic_cred
-from .models.variable import (
-    Variable,
-    setvar,
-    CalmVariable,
-    simple_variable,
-    simple_variable_secret,
-)
+from .models.variable import Variable, setvar, CalmVariable
 from .models.action import action, parallel
 
 from .models.task import Task, CalmTask
@@ -45,8 +39,6 @@ __all__ = [
     "Variable",
     "setvar",
     "CalmVariable",
-    "simple_variable",
-    "simple_variable_secret",
     "Task",
     "CalmTask",
     "action",

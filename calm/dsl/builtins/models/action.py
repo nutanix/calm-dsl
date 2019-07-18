@@ -89,10 +89,7 @@ class GetCallNodes(ast.NodeVisitor):
             name_node = node.value.func
             while not isinstance(name_node, ast.Name):
                 name_node = name_node.value
-            if name_node.id in list(self._globals.keys()) + [
-                "CalmVariable",
-                "simple_variable",
-            ]:
+            if name_node.id in list(self._globals.keys()) + ["CalmVariable"]:
                 variable = eval(
                     compile(ast.Expression(node.value), "", "eval"), self._globals
                 )
