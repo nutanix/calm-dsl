@@ -85,15 +85,20 @@ class GetCallNodes(ast.NodeVisitor):
         variable_name = node.targets[0].id
         if variable_name in self.variables.keys():
             raise NameError("duplicate variable name {}".format(variable_name))
-        if isinstance(node.value, ast.Call) and node.value.func.id in list(
-            self._globals.keys()
-        ) + ["CalmVariable"]:
-            variable = eval(
-                compile(ast.Expression(node.value), "", "eval"), self._globals
-            )
-            if isinstance(variable, VariableType):
-                variable.name = variable_name
-                self.variables[variable_name] = variable
+        if isinstance(node.value, ast.Call):
+            name_node = node.value.func
+            while not isinstance(name_node, ast.Name):
+                name_node = name_node.value
+            if name_node.id in list(self._globals.keys()) + [
+                "CalmVariable",
+                "simple_variable",
+            ]:
+                variable = eval(
+                    compile(ast.Expression(node.value), "", "eval"), self._globals
+                )
+                if isinstance(variable, VariableType):
+                    variable.name = variable_name
+                    self.variables[variable_name] = variable
 
     def visit_With(self, node):
         parallel_tasks = []
