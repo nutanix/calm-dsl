@@ -1,0 +1,46 @@
+{% macro RunbookPayload() -%}
+
+title: RunbookPayload
+type: object
+x-calm-dsl-type: runbook_payload
+properties:
+  spec:
+    type: object
+    x-calm-dsl-type: dict
+    properties:
+      name:
+        type: string
+        description: Runbook name
+      description:
+        type: string
+        description: Runbook description
+      resources:
+        type: object
+        properties:
+          $ref: '#/components/schemas/RunbookService'
+
+  api_version:
+    type: string
+    default: "3.0"
+
+  metadata:
+    type: object
+    x-calm-dsl-type: dict
+    additionalProperties: true
+    properties:
+      spec_version:
+        type: integer
+        default: 1
+      kind:
+        type: string
+        default: action
+
+{%- endmacro %}
+
+
+{% macro RunbookPayloadSchema() -%}
+
+RunbookPayload:
+  {{ RunbookPayload()|indent(2) }}
+
+{%- endmacro %}

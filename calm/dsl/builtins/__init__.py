@@ -10,6 +10,9 @@ from .models.variable import Variable, setvar, CalmVariable
 from .models.action import action, parallel
 
 from .models.task import Task, CalmTask
+from .models.runbook import Runbook, generate_runbook
+from .models.runbook_service import RunbookService
+from .models.runbook_payload import create_runbook_payload
 
 from .models.port import Port, port
 from .models.service import Service, service
@@ -61,6 +64,10 @@ __all__ = [
     "blueprint",
     "create_blueprint_payload",
     "ProjectValidator",
+    "Runbook",
+    "RunbookService",
+    "create_runbook_payload",
+    "generate_runbook",
     "SimpleDeployment",
     "SimpleBlueprint",
 ]

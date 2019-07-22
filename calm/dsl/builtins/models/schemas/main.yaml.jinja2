@@ -13,6 +13,8 @@
 {% import "credential.yaml.jinja2" as credential %}
 {% import "task.yaml.jinja2" as task %}
 {% import "runbook.yaml.jinja2" as runbook %}
+{% import "runbook_service.yaml.jinja2" as runbook_service %}
+{% import "runbook_payload.yaml.jinja2" as runbook_payload %}
 {% import "action.yaml.jinja2" as action %}
 {% import "project.yaml.jinja2" as project %}
 {% import "simple_deployment.yaml.jinja2" as simple_deployment %}
@@ -35,6 +37,8 @@
 {{ credential.CredentialSchema() }}
 {{ task.TaskSchema() }}
 {{ runbook.RunbookSchema() }}
+{{ runbook_service.RunbookServiceSchema() }}
+{{ runbook_payload.RunbookPayloadSchema() }}
 {{ action.ActionSchema() }}
 {{ project.ProjectSchema() }}
 {{ simple_deployment.SimpleDeploymentSchema() }}

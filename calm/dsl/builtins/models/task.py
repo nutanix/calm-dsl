@@ -155,6 +155,34 @@ def dag(name=None, child_tasks=None, edges=None, target=None):
     return _task_create(**kwargs)
 
 
+def meta(name=None, child_tasks=None, edges=None, target=None):
+    """
+    Create a META task
+    Args:
+        name (str): Name for the task
+        child_tasks (list [Task]): Child tasks within this dag
+        edges (list [tuple (Ref, Ref)]): List of tuples of ref(Task).
+                                         Each element denotes an edge from
+                                         first task to the second.
+        target (Ref): Target entity reference
+    Returns:
+        (Task): DAG task
+    """
+    # This follows UI naming convention for runbooks
+    name = name or str(uuid.uuid4())[:8] + "_meta"
+    kwargs = {
+        "name": name,
+        "child_tasks_local_reference_list": [
+            task.get_ref() for task in child_tasks or []
+        ],
+        "type": "META",
+    }
+    if target:
+        kwargs["target_any_local_reference"] = target
+
+    return _task_create(**kwargs)
+
+
 def exec_task_ssh(script=None, filename=None, name=None, target=None, cred=None):
     return _exec_create(
         "sh", script=script, filename=filename, name=name, target=target, cred=cred
