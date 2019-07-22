@@ -199,9 +199,13 @@ def compile_blueprint(bp_file):
     if UserBlueprint is None:
         return None
 
-    UserBlueprintPayload, _ = create_blueprint_payload(UserBlueprint)
+    bp_payload = None
+    if isinstance(UserBlueprint, type(SimpleBlueprint)):
+        bp_payload = UserBlueprint.make_bp_dict()
+    else:
+        UserBlueprintPayload, _ = create_blueprint_payload(UserBlueprint)
+        bp_payload = UserBlueprintPayload.get_dict()
 
-    bp_payload = UserBlueprintPayload.get_dict()
     return bp_payload
 
 
