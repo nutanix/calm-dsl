@@ -30,6 +30,9 @@ class SubstrateType(EntityType):
                     "connection_type": "SSH",
                     "connection_port": 22,
                 }
+                if "os_type" in cdict and cdict["os_type"] == "Windows":
+                    readiness_probe["connection_type"] = "POWERSHELL"
+                    readiness_probe["connection_port"] = 5985
             elif not readiness_probe.get("address"):
                 readiness_probe[
                     "address"
@@ -43,6 +46,9 @@ class SubstrateType(EntityType):
                     "connection_type": "SSH",
                     "connection_port": 22,
                 }
+                if "os_type" in cdict and cdict["os_type"] == "Windows":
+                    readiness_probe["connection_type"] = "POWERSHELL"
+                    readiness_probe["connection_port"] = 5985
             elif not readiness_probe.get("address"):
                 readiness_probe["address"] = "@@{ip_address}@@"
         elif cdict["type"] == "AWS_VM":
@@ -54,6 +60,9 @@ class SubstrateType(EntityType):
                     "connection_type": "SSH",
                     "connection_port": 22,
                 }
+                if "os_type" in cdict and cdict["os_type"] == "Windows":
+                    readiness_probe["connection_type"] = "POWERSHELL"
+                    readiness_probe["connection_port"] = 5985
             elif not readiness_probe.get("address"):
                 readiness_probe["address"] = "@@{public_ip_address}@@"
 
