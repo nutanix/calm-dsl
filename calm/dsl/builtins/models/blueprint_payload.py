@@ -1,6 +1,7 @@
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .blueprint import BlueprintType
+from .simple_blueprint import SimpleBlueprintType
 
 
 # Blueprint Payload
@@ -35,7 +36,7 @@ def create_blueprint_payload(UserBlueprint, categories=None):
         err["error"] = "Given blueprint is empty."
         return None, err
 
-    if not isinstance(UserBlueprint, BlueprintType):
+    if not isinstance(UserBlueprint, (BlueprintType, SimpleBlueprintType)):
         err["error"] = "Given blueprint is not of type Blueprint"
         return None, err
 

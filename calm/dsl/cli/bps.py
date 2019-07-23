@@ -9,7 +9,7 @@ import arrow
 import click
 from prettytable import PrettyTable
 
-from calm.dsl.builtins import Blueprint, create_blueprint_payload
+from calm.dsl.builtins import Blueprint, SimpleBlueprint, create_blueprint_payload
 from calm.dsl.config import get_config
 from .utils import get_name_query, get_states_filter, highlight_text
 from .constants import BLUEPRINT
@@ -68,6 +68,7 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
         bp_type = (
             "Single VM"
             if "categories" in metadata
+            and "TemplateType" in metadata["categories"]
             and metadata["categories"]["TemplateType"] == "Vm"
             else "Multi VM/Pod"
         )
@@ -184,8 +185,8 @@ def get_blueprint_class_from_module(user_bp_module):
     UserBlueprint = None
     for item in dir(user_bp_module):
         obj = getattr(user_bp_module, item)
-        if isinstance(obj, type(Blueprint)):
-            if obj.__bases__[0] == Blueprint:
+        if isinstance(obj, (type(Blueprint), type(SimpleBlueprint))):
+            if obj.__bases__[0] in (Blueprint, SimpleBlueprint):
                 UserBlueprint = obj
 
     return UserBlueprint
@@ -198,9 +199,13 @@ def compile_blueprint(bp_file):
     if UserBlueprint is None:
         return None
 
-    UserBlueprintPayload, _ = create_blueprint_payload(UserBlueprint)
+    bp_payload = None
+    if isinstance(UserBlueprint, type(SimpleBlueprint)):
+        bp_payload = UserBlueprint.make_bp_dict()
+    else:
+        UserBlueprintPayload, _ = create_blueprint_payload(UserBlueprint)
+        bp_payload = UserBlueprintPayload.get_dict()
 
-    bp_payload = UserBlueprintPayload.get_dict()
     return bp_payload
 
 

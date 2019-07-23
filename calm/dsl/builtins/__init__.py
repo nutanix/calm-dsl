@@ -6,14 +6,8 @@
 
 from .models.ref import Ref, ref
 from .models.credential import basic_cred
-from .models.variable import (
-    Variable,
-    setvar,
-    CalmVariable,
-    simple_variable,
-    simple_variable_secret,
-)
-from .models.action import action
+from .models.variable import Variable, setvar, CalmVariable
+from .models.action import action, parallel
 
 from .models.task import Task, CalmTask
 
@@ -30,12 +24,12 @@ from .models.deployment import Deployment, deployment
 from .models.profile import Profile, profile
 
 from .models.blueprint import Blueprint, blueprint
-from .models.blueprint_payload import create_blueprint_payload
-from .models.project import Project as ProjectValidator
-
 
 from .models.simple_deployment import SimpleDeployment
 from .models.simple_blueprint import SimpleBlueprint
+
+from .models.blueprint_payload import create_blueprint_payload
+from .models.project import Project as ProjectValidator
 
 
 __all__ = [
@@ -45,11 +39,10 @@ __all__ = [
     "Variable",
     "setvar",
     "CalmVariable",
-    "simple_variable",
-    "simple_variable_secret",
     "Task",
     "CalmTask",
     "action",
+    "parallel",
     "Port",
     "port",
     "Service",

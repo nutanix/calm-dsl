@@ -80,7 +80,7 @@ class BlueprintAPI(ResourceAPI):
                 return None, err
 
         # Remove creds before upload
-        creds = bp_resources["credential_definition_list"]
+        creds = bp_resources.get("credential_definition_list", []) or []
         secret_map = {}
         default_creds = []
         for cred in creds:
@@ -114,11 +114,11 @@ class BlueprintAPI(ResourceAPI):
 
         secret_variables = []
 
-        def strip_entity_secret_variables(path_list, obj):
-            for var_idx, variable in enumerate(obj.get("variable_list", []) or []):
+        def strip_entity_secret_variables(path_list, obj, field_name="variable_list"):
+            for var_idx, variable in enumerate(obj.get(field_name, []) or []):
                 if variable["type"] == "SECRET":
                     secret_variables.append(
-                        (path_list + ["variable_list", var_idx], variable.pop("value"))
+                        (path_list + [field_name, var_idx], variable.pop("value"))
                     )
                     variable["attrs"] = {
                         "is_secret_modified": False,
@@ -130,6 +130,52 @@ class BlueprintAPI(ResourceAPI):
                 strip_entity_secret_variables(
                     path_list + ["action_list", action_idx], action
                 )
+                tasks = (action.get("runbook", {}) or {}).get(
+                    "task_definition_list", []
+                ) or []
+                for task_idx, task in enumerate(tasks):
+                    if task.get("type", None) != "HTTP":
+                        continue
+                    auth = (task.get("attrs", {}) or {}).get("authentication", {}) or {}
+                    if auth.get("auth_type", None) == "basic":
+                        secret_variables.append(
+                            (
+                                path_list
+                                + [
+                                    "action_list",
+                                    action_idx,
+                                    "runbook",
+                                    "task_definition_list",
+                                    task_idx,
+                                    "attrs",
+                                    "authentication",
+                                    "basic_auth",
+                                    "password",
+                                ],
+                                auth["basic_auth"]["password"].pop("value"),
+                            )
+                        )
+                        auth["basic_auth"]["password"] = {
+                            "attrs": {
+                                "is_secret_modified": False,
+                                "secret_reference": None,
+                            }
+                        }
+                        if not (task.get("attrs", {}) or {}).get("headers", []) or []:
+                            continue
+                        strip_entity_secret_variables(
+                            path_list
+                            + [
+                                "action_list",
+                                action_idx,
+                                "runbook",
+                                "task_definition_list",
+                                task_idx,
+                                "attrs",
+                            ],
+                            task["attrs"],
+                            field_name="headers",
+                        )
 
         def strip_all_secret_variables(path_list, obj):
             strip_entity_secret_variables(path_list, obj)
@@ -142,7 +188,7 @@ class BlueprintAPI(ResourceAPI):
             "app_profile_list",
         ]
         for object_list in object_lists:
-            for obj_idx, obj in enumerate(bp_resources[object_list]):
+            for obj_idx, obj in enumerate(bp_resources.get(object_list, []) or []):
                 strip_all_secret_variables([object_list, obj_idx], obj)
 
                 # Currently, deployment actions and variables are unsupported.
@@ -175,9 +221,8 @@ class BlueprintAPI(ResourceAPI):
             variable = bp["spec"]["resources"]
             for sub_path in path:
                 variable = variable[sub_path]
-            if variable.get("type", None) == "SECRET":
-                variable["attrs"] = {"is_secret_modified": True}
-                variable["value"] = secret
+            variable["attrs"] = {"is_secret_modified": True}
+            variable["value"] = secret
 
         # TODO - insert categories during update as /import_json fails if categories are given!
         if categories:
