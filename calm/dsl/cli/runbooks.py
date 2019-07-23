@@ -1,15 +1,13 @@
 import time
 import warnings
-import json
 import importlib.util
-from pprint import pprint
 
-from ruamel import yaml
 import arrow
 import click
 from prettytable import PrettyTable
 
-from .utils import get_name_query, get_states_filter, highlight_text
+from calm.dsl.builtins import RunbookService, create_runbook_payload
+from .utils import get_name_query, highlight_text
 
 
 def get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
@@ -76,3 +74,40 @@ def get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
             ]
         )
     click.echo(table)
+
+
+def get_runbook_module_from_file(runbook_file):
+    """Return Runbook module given a user runbook dsl file (.py)"""
+
+    spec = importlib.util.spec_from_file_location("calm.dsl.user_bp", runbook_file)
+    user_runbook_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(user_runbook_module)
+
+    return user_runbook_module
+
+
+def get_runbook_class_from_module(user_runbook_module):
+    """Returns blueprint class given a module"""
+
+    UserRunbook = None
+    for item in dir(user_runbook_module):
+        obj = getattr(user_runbook_module, item)
+        if isinstance(obj, type(RunbookService)):
+            if obj.__bases__[0] is RunbookService:
+                UserRunbook = obj
+
+    return UserRunbook
+
+
+def compile_runbook(runbook_file):
+
+    user_runbook_module = get_runbook_module_from_file(runbook_file)
+    UserRunbook = get_runbook_class_from_module(user_runbook_module)
+    if UserRunbook is None:
+        return None
+
+    runbook_payload = None
+    UserRunbookPayload, _ = create_runbook_payload(UserRunbook)
+    runbook_payload = UserRunbookPayload.get_dict()
+
+    return runbook_payload

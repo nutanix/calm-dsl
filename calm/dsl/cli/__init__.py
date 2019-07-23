@@ -37,6 +37,7 @@ from .projects import (
 
 from .runbooks import (
     get_runbook_list,
+    compile_runbook,
 )
 from .accounts import get_accounts, delete_account, describe_account
 
@@ -285,7 +286,7 @@ def _compile_blueprint_command(bp_file, out):
 
 @main.group()
 def create():
-    """Create entities in CALM (blueprint, project) """
+    """Create entities in CALM (blueprint, project, runbook) """
     pass
 
 
@@ -405,6 +406,82 @@ def _create_project(obj, project_file, project_name):
     project = res.json()
     state = project["status"]["state"]
     click.echo(">> Project state: {}".format(state))
+
+
+def create_runbook(client, runbook_payload, name=None, description=None):
+
+    runbook_payload.pop("status", None)
+
+    if name:
+        runbook_payload["spec"]["name"] = name
+        runbook_payload["metadata"]["name"] = name
+
+    if description:
+        runbook_payload["spec"]["description"] = description
+
+    runbook_resources = runbook_payload["spec"]["resources"]
+    runbook_name = runbook_payload["spec"]["name"]
+    runbook_desc = runbook_payload["spec"]["description"]
+
+    return client.runbook.upload_with_secrets(
+        runbook_name, runbook_desc, runbook_resources
+    )
+
+
+def create_runbook_from_json(client, path_to_json, name=None, description=None):
+
+    runbook_payload = json.loads(open(path_to_json, "r").read())
+    return create_runbook(client, runbook_payload, name=name, description=description)
+
+
+def create_runbook_from_dsl(client, runbook_file, name=None, description=None):
+
+    runbook_payload = compile_runbook(runbook_file)
+    if runbook_payload is None:
+        err_msg = "User runbook not found in {}".format(runbook_file)
+        err = {"error": err_msg, "code": -1}
+        return None, err
+
+    return create_runbook(client, runbook_payload, name=name, description=description)
+
+
+@create.command("runbook")
+@click.option(
+    "--file",
+    "-f",
+    "runbook_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    required=True,
+    help="Path of Runbook file to upload",
+)
+@click.option("--name", default=None, help="Runbook name (Optional)")
+@click.option("--description", default=None, help="Runbook description (Optional)")
+@click.pass_obj
+def create_runbook_command(obj, runbook_file, name, description):
+    """Creates a runbook"""
+
+    client = obj.get("client")
+
+    if runbook_file.endswith(".json"):
+        res, err = create_runbook_from_json(
+            client, runbook_file, name=name, description=description
+        )
+    elif runbook_file.endswith(".py"):
+        res, err = create_runbook_from_dsl(
+            client, runbook_file, name=name, description=description
+        )
+    else:
+        click.echo("Unknown file format {}".format(runbook_file))
+        return
+
+    if err:
+        click.echo(err["error"])
+        return
+
+    runbook = res.json()
+    runbook_state = runbook["status"]["state"]
+    click.echo(">> Runbook state: {}".format(runbook_state))
+    assert runbook_state == "ACTIVE"
 
 
 @main.group()
