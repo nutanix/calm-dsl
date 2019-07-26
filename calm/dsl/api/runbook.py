@@ -143,6 +143,7 @@ class RunbookAPI(ResourceAPI):
             for obj_idx, obj in enumerate(runbook_resources.get(object_list, []) or []):
                 strip_all_secret_variables([object_list, obj_idx], obj)
 
+        strip_entity_secret_variables(["runbook"], runbook_resources.get("runbook", {}))
         strip_runbook_secret_variables(["runbook"], runbook_resources.get("runbook", {}))
 
         upload_payload = self._make_runbook_payload(runbook_name, runbook_desc, runbook_resources)
