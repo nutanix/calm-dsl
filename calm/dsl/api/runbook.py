@@ -6,6 +6,7 @@ class RunbookAPI(ResourceAPI):
     def __init__(self, connection):
         super().__init__(connection, resource_type="actions")
         self.UPLOAD = self.PREFIX + "/import_json"
+        self.PREVIOUS_RUNS = self.PREFIX + "/runlogs/list"
 
     def upload(self, payload):
         return self.connection._call(
@@ -173,3 +174,8 @@ class RunbookAPI(ResourceAPI):
         uuid = runbook["metadata"]["uuid"]
 
         return self.update(uuid, update_payload)
+
+    def list_previous_runs(self, params=None):
+        return self.connection._call(
+            self.PREVIOUS_RUNS, verify=False, request_json=params, method=REQUEST.METHOD.POST
+        )

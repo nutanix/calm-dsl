@@ -38,6 +38,7 @@ from .projects import (
 from .runbooks import (
     get_runbook_list,
     compile_runbook,
+    get_previous_runs,
 )
 from .accounts import get_accounts, delete_account, describe_account
 
@@ -85,8 +86,11 @@ def main(ctx, ip, port, username, password, config_file, verbose):
 Commonly used commands:
   calm get apps   -> Get list of apps
   calm get bps   -> Get list of blueprints
+  calm get runbooks  -> Get list of runbooks
+  calm get previous_runs  -> Get list of previous runbook runs
   calm launch bp --app_name Fancy-App-1 MyFancyBlueprint   -> Launch a new app from an existing blueprint
   calm create bp -f sample_bp.py --name Sample-App-3   -> Upload a new blueprint from a python DSL file
+  calm create runbook -f sample_rb.py --name Sample-RB  -> Upload a new runbook from a python DSL file
   calm describe app Fancy-App-1   -> Describe an existing app
   calm app Fancy-App-1 -w my_action   -> Run an action on an app
 """
@@ -196,6 +200,23 @@ def _get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
 def _get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
     """Get the runbooks, optionally filtered by a string"""
     get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items)
+
+
+@get.command("previous_runs")
+@click.option("--name", default=None, help="Search for previous runbook runs by name of runbook")
+@click.option("--filter", "filter_by", default=None, help="Filter previous runbook runs by this string")
+@click.option("--limit", default=20, help="Number of results to return")
+@click.option("--offset", default=0, help="Offset results by the specified amount")
+@click.option(
+    "--quiet", "-q", is_flag=True, default=False, help="Show only runbook names"
+)
+@click.option(
+    "--all-items", "-a", is_flag=True, help="Get all items, including deleted ones"
+)
+@click.pass_obj
+def _get_previous_runs(obj, name, filter_by, limit, offset, quiet, all_items):
+    """Get previous runbook runs, optionally filtered by a string"""
+    get_previous_runs(obj, name, filter_by, limit, offset, quiet, all_items)
 
 
 @get.command("apps")

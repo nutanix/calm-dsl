@@ -111,3 +111,65 @@ def compile_runbook(runbook_file):
     runbook_payload = UserRunbookPayload.get_dict()
 
     return runbook_payload
+
+
+def get_previous_runs(obj, name, filter_by, limit, offset, quiet, all_items):
+    client = obj.get("client")
+    config = obj.get("config")
+
+    params = {"length": limit, "offset": offset}
+    filter_query = ""
+    if name:
+        filter_query = get_name_query([name])
+    if filter_by:
+        filter_query = filter_query + ";" + filter_by if name else filter_by
+    # if all_items:
+    #    filter_query += get_states_filter(APPLICATION.STATES, state_key="_state")
+    if filter_query.startswith(";"):
+        filter_query = filter_query[1:]
+
+    if filter_query:
+        params["filter"] = filter_query
+
+    res, err = client.runbook.list_previous_runs(params=params)
+
+    if err:
+        pc_ip = config["SERVER"]["pc_ip"]
+        warnings.warn(UserWarning("Cannot fetch previous runs from {}".format(pc_ip)))
+        return
+
+    json_rows = res.json()["entities"]
+
+    if quiet:
+        for _row in json_rows:
+            row = _row["status"]
+            click.echo(highlight_text(row["action_reference"]["name"]))
+        return
+
+    table = PrettyTable()
+    table.field_names = [
+        "SOURCE RUNBOOK",
+        "STATE",
+        "OWNER",
+        "CREATED ON",
+        "LAST UPDATED",
+        "UUID",
+    ]
+    for _row in json_rows:
+        row = _row["status"]
+        metadata = _row["metadata"]
+
+        creation_time = int(metadata["creation_time"]) // 1000000
+        last_update_time = int(metadata["last_update_time"]) // 1000000
+
+        table.add_row(
+            [
+                highlight_text(row["action_reference"]["name"]),
+                highlight_text(row["state"]),
+                highlight_text(row["userdata_reference"]["name"]),
+                highlight_text(time.ctime(creation_time)),
+                "{}".format(arrow.get(last_update_time).humanize()),
+                highlight_text(metadata["uuid"]),
+            ]
+        )
+    click.echo(table)
