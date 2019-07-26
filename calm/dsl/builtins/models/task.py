@@ -685,11 +685,11 @@ def delay_task(delay_seconds=None, name=None, target=None):
 
 
 class CalmTask:
-    def __new__(cls):
+    def __new__(cls, *args, **kwargs):
         raise TypeError("'{}' is not callable".format(cls.__name__))
 
     class Exec:
-        def __new__(cls):
+        def __new__(cls, *args, **kwargs):
             raise TypeError("'{}' is not callable".format(cls.__name__))
 
         ssh = exec_task_ssh
