@@ -169,7 +169,12 @@ def exec_task_escript(script=None, filename=None, name=None, target=None):
 
 def exec_task_powershell(script=None, filename=None, name=None, target=None, cred=None):
     return _exec_create(
-        "npsscript", script=script, filename=filename, name=name, target=target, cred=cred
+        "npsscript",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        cred=cred,
     )
 
 
