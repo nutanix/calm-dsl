@@ -40,6 +40,8 @@ from .runbooks import (
     compile_runbook,
     get_previous_runs,
     run_runbook,
+    describe_runbook,
+    delete_runbook,
 )
 from .accounts import get_accounts, delete_account, describe_account
 
@@ -550,6 +552,15 @@ def _delete_account(obj, account_names):
     delete_account(obj, account_names)
 
 
+@delete.command("runbook")
+@click.argument("runbook_names", nargs=-1)
+@click.pass_obj
+def _delete_runbook(obj, runbook_names):
+    """Deletes a runbook"""
+
+    delete_runbook(obj, runbook_names)
+
+
 @main.group()
 def launch():
     """Launch blueprints to create Apps"""
@@ -569,7 +580,7 @@ def launch_blueprint_command(obj, blueprint_name, app_name, blueprint=None):
 
 @main.group()
 def describe():
-    """Describe apps, blueprints, projects, accounts"""
+    """Describe apps, blueprints, projects, accounts, runbooks"""
     pass
 
 
@@ -605,6 +616,15 @@ def _describe_account(obj, account_name):
     """Describe a account"""
 
     describe_account(obj, account_name)
+
+
+@describe.command("runbook")
+@click.argument("runbook_name")
+@click.pass_obj
+def _describe_runbook(obj, runbook_name):
+    """Describe a runbook"""
+
+    describe_runbook(obj, runbook_name)
 
 
 @main.group()

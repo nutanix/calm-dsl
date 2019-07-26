@@ -249,3 +249,84 @@ def run_runbook(
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
         count += 10
         time.sleep(10)
+
+
+def describe_runbook(obj, runbook_name):
+    client = obj.get("client")
+    runbook = get_runbook(client, runbook_name, all=True)
+
+    res, err = client.runbook.read(runbook["metadata"]["uuid"])
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    runbook = res.json()
+
+    click.echo("\n----Runbook Summary----\n")
+    click.echo(
+        "Name: "
+        + highlight_text(runbook_name)
+        + " (uuid: "
+        + highlight_text(runbook["metadata"]["uuid"])
+        + ")"
+    )
+    click.echo("Description: " + highlight_text(runbook["status"]["description"]))
+    click.echo("Status: " + highlight_text(runbook["status"]["state"]))
+    click.echo(
+        "Owner: " + highlight_text(runbook["metadata"]["owner_reference"]["name"])
+    )
+
+    created_on = int(runbook["metadata"]["creation_time"]) // 1000000
+    past = arrow.get(created_on).humanize()
+    click.echo(
+        "Created: {} ({})".format(
+            highlight_text(time.ctime(created_on)), highlight_text(past)
+        )
+    )
+    runbook_resources = runbook.get("status").get("resources", {})
+
+    click.echo("Runbook :")
+    runbook_dict = runbook_resources.get("runbook", {})
+    main_task = runbook_dict.get("main_task_local_reference", {})
+    click.echo("\tMainTask: {}".format(highlight_text(main_task.get("name", ""))))
+
+    task_list = runbook_dict.get("task_definition_list", [])
+    click.echo("\tTasks [{}]:".format(highlight_text(len(task_list))))
+    for task in task_list:
+        task_name = task.get("name", "")
+        task_type = task.get("type", "")
+        click.echo("\t\t{} ({})".format(highlight_text(task_name), highlight_text(task_type)))
+
+    variable_types = [
+        var.get("name", "")
+        for var in runbook_dict.get("variable_list", [])
+    ]
+    click.echo("\tVariables [{}]:".format(highlight_text(len(variable_types))))
+    click.echo("\t\t{}".format(highlight_text(", ".join(variable_types))))
+
+    substrate_types = [
+        "{} ({})".format(sub.get("name", ""), sub.get("type", ""))
+        for sub in runbook_resources.get("substrate_definition_list", [])
+    ]
+
+    click.echo("Substrates [{}]:".format(highlight_text(len(substrate_types))))
+    click.echo("\t{}".format(highlight_text(", ".join(substrate_types))))
+
+    credential_types = [
+        "{} ({})".format(cred.get("name", ""), cred.get("type", ""))
+        for cred in runbook_resources.get("credential_definition_list", [])
+    ]
+    click.echo("Credentials [{}]:".format(highlight_text(len(credential_types))))
+    click.echo("\t{}".format(highlight_text(", ".join(credential_types))))
+
+
+def delete_runbook(obj, runbook_names):
+
+    client = obj.get("client")
+
+    for runbook_name in runbook_names:
+        runbook = get_runbook(client, runbook_name)
+        runbook_id = runbook["metadata"]["uuid"]
+        res, err = client.runbook.delete(runbook_id)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        click.echo("Runbook {} deleted".format(runbook_name))
