@@ -7,6 +7,8 @@ class RunbookAPI(ResourceAPI):
         super().__init__(connection, resource_type="actions")
         self.UPLOAD = self.PREFIX + "/import_json"
         self.PREVIOUS_RUNS = self.PREFIX + "/runlogs/list"
+        self.RUN = self.PREFIX + "/{}/run"
+        self.POLL_RUN = self.PREFIX + "/runlogs/{}"
 
     def upload(self, payload):
         return self.connection._call(
@@ -180,3 +182,18 @@ class RunbookAPI(ResourceAPI):
         return self.connection._call(
             self.PREVIOUS_RUNS, verify=False, request_json=params, method=REQUEST.METHOD.POST
         )
+
+    def run(self, uuid, payload):
+        return self.connection._call(
+            self.RUN.format(uuid), verify=False, request_json=payload, method=REQUEST.METHOD.POST
+        )
+
+    def poll_action_run(self, uuid, payload=None):
+        if payload:
+            return self.connection._call(
+                self.POLL_RUN.format(uuid), request_json=payload, verify=False, method=REQUEST.METHOD.POST
+            )
+        else:
+            return self.connection._call(
+                self.POLL_RUN.format(uuid), verify=False, method=REQUEST.METHOD.GET
+            )

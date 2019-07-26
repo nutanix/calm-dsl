@@ -39,6 +39,7 @@ from .runbooks import (
     get_runbook_list,
     compile_runbook,
     get_previous_runs,
+    run_runbook,
 )
 from .accounts import get_accounts, delete_account, describe_account
 
@@ -86,13 +87,14 @@ def main(ctx, ip, port, username, password, config_file, verbose):
 Commonly used commands:
   calm get apps   -> Get list of apps
   calm get bps   -> Get list of blueprints
-  calm get runbooks  -> Get list of runbooks
-  calm get previous_runs  -> Get list of previous runbook runs
   calm launch bp --app_name Fancy-App-1 MyFancyBlueprint   -> Launch a new app from an existing blueprint
   calm create bp -f sample_bp.py --name Sample-App-3   -> Upload a new blueprint from a python DSL file
-  calm create runbook -f sample_rb.py --name Sample-RB  -> Upload a new runbook from a python DSL file
   calm describe app Fancy-App-1   -> Describe an existing app
   calm app Fancy-App-1 -w my_action   -> Run an action on an app
+  calm get runbooks  -> Get list of runbooks
+  calm create runbook -f sample_rb.py --name Sample-RB  -> Upload a new runbook from a python DSL file
+  calm run runbook MyFancyRunbook -> Runs the existing runbook MyFancyRunbook
+  calm get previous_runs  -> Get list of previous runbook runs
 """
     ctx.ensure_object(dict)
     ctx.obj["config"] = get_config(
@@ -607,8 +609,18 @@ def _describe_account(obj, account_name):
 
 @main.group()
 def run():
-    """Run actions in an app"""
+    """Run actions in an app or the existing Runbooks"""
     pass
+
+
+@run.command("runbook")
+@click.argument("runbook_name")
+@click.pass_obj
+def run_runbook_command(obj, runbook_name, runbook=None):
+
+    client = obj.get("client")
+
+    run_runbook(client, runbook_name, runbook=runbook)
 
 
 @run.command("action")

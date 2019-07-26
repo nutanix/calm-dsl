@@ -1,12 +1,14 @@
 import time
 import warnings
 import importlib.util
+from pprint import pprint
 
 import arrow
 import click
 from prettytable import PrettyTable
 
 from calm.dsl.builtins import RunbookService, create_runbook_payload
+from calm.dsl.config import get_config
 from .utils import get_name_query, highlight_text
 
 
@@ -173,3 +175,77 @@ def get_previous_runs(obj, name, filter_by, limit, offset, quiet, all_items):
             ]
         )
     click.echo(table)
+
+
+def get_runbook(client, name, all=False):
+
+    # find runbook
+    params = {"filter": "name=={}".format(name)}
+    if not all:
+        params["filter"] += ";deleted==FALSE"
+
+    res, err = client.runbook.list(params=params)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    response = res.json()
+    entities = response.get("entities", None)
+    runbook = None
+    if entities:
+        if len(entities) != 1:
+            raise Exception("More than one runbook found - {}".format(entities))
+
+        click.echo(">> {} found >>".format(name))
+        runbook = entities[0]
+    else:
+        raise Exception(">> No runbook found with name {} found >>".format(name))
+    return runbook
+
+
+def run_runbook(
+    client,
+    runbook_name,
+    runbook=None,
+):
+    if not runbook:
+        runbook = get_runbook(client, runbook_name)
+
+    runbook_uuid = runbook.get("metadata", {}).get("uuid", "")
+
+    res, err = client.runbook.run(runbook_uuid, {})
+    if not err:
+        click.echo(">> {} queued for run >>".format(runbook_name))
+    else:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    response = res.json()
+    runlog_uuid = response["status"]["runlog_uuid"]
+
+    # Poll every 10 seconds on the app status, for 5 mins
+    maxWait = 5 * 60
+    count = 0
+    while count < maxWait:
+        # call status api
+        click.echo("Polling status of Launch")
+        res, err = client.runbook.poll_action_run(runlog_uuid)
+        response = res.json()
+        pprint(response)
+        if response["status"]["state"] == "SUCCESS":
+            config = get_config()
+            pc_ip = config["SERVER"]["pc_ip"]
+            pc_port = config["SERVER"]["pc_port"]
+
+            click.echo("Successfully ran Runbook. Runlog uuid is: {}".format(runlog_uuid))
+
+            click.echo(
+                "Runbook run url: https://{}:{}/console/#page/explore/calm/runs/{}?runbookId={}".format(
+                    pc_ip, pc_port, runlog_uuid, runbook_uuid
+                )
+            )
+            break
+        elif response["status"]["state"] == "FAILURE":
+            click.echo("Failed to run runbook. Check API response above.")
+            break
+        elif err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        count += 10
+        time.sleep(10)
