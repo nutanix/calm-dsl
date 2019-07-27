@@ -80,9 +80,9 @@ def create_call_rb(runbook, target=None, name=None):
 
 
 def _exec_create(
-    script_type, script=None, filename=None, name=None, target=None, cred=None
+    script_type, script=None, filename=None, name=None,
+    target=None, cred=None, target_type=None, category=None
 ):
-
     if script is not None and filename is not None:
         raise ValueError(
             "Only one of script or filename should be given for exec task "
@@ -107,6 +107,10 @@ def _exec_create(
         "type": "EXEC",
         "attrs": {"script_type": script_type, "script": script},
     }
+    if target_type is not None:
+        kwargs["target_type"] = target_type
+    if category is not None:
+        kwargs["category"] = category
     if cred is not None:
         kwargs["attrs"]["login_credential_local_reference"] = _get_target_ref(cred)
     if target is not None:
@@ -183,9 +187,10 @@ def meta(name=None, child_tasks=None, edges=None, target=None):
     return _task_create(**kwargs)
 
 
-def exec_task_ssh(script=None, filename=None, name=None, target=None, cred=None):
+def exec_task_ssh(script=None, filename=None, name=None, target=None, cred=None, category=None):
+    target_type = get_target_type(name, target, category)
     return _exec_create(
-        "sh", script=script, filename=filename, name=name, target=target, cred=cred
+        "sh", script=script, filename=filename, name=name, target=target, cred=cred, target_type=target_type, category=category
     )
 
 
@@ -195,10 +200,25 @@ def exec_task_escript(script=None, filename=None, name=None, target=None):
     )
 
 
-def exec_task_powershell(script=None, filename=None, name=None, target=None, cred=None):
+def exec_task_powershell(script=None, filename=None, name=None, target=None, cred=None, category=None):
+    target_type = get_target_type(name, target, category)
     return _exec_create(
-        "npsscript", script=script, filename=filename, name=name, target=target, cred=cred
+        "npsscript", script=script, filename=filename, name=name, target=target, cred=cred, target_type=target_type, category=category
     )
+
+
+def get_target_type(name, target, category):
+    if target is not None and category is not None:
+        raise ValueError(
+            "Only one of catgeory or target should be given for exec task "
+            + (name or "")
+        )
+    elif category is not None:
+        return "category"
+    elif target is not None:
+        return "selected_substrate"
+    else:
+        return "all_substrates"
 
 
 def _set_variable_create(task, variables=None):
