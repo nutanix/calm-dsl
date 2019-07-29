@@ -44,7 +44,7 @@ Point the CLI to your Calm setup by using a config file, or command line args.
 
 ### Config file
 
-Sample config file below. Replace the inputs with your setup details.
+Below is a sample config file. Replace the inputs with your setup details.
 ```
 [SERVER]
 pc_ip = 10.26.14.230
@@ -52,7 +52,12 @@ pc_port = 9440
 pc_username = admin
 pc_password = ***REMOVED***
 ```
+By default, the CLI looks for this information in `~/.calm/config`.
+You can instruct it to look elsewhere by using the `--config` option to point to your config file.
+e.g. `calm --config=/home/my_dir/config get bps`
 
+You can also override setup details by passing any / all of them in explicitly:
+`calm --ip=10.20.4.35 --port=9220 --username=custom_user --password=something`
 
 ## ToDo
 
