@@ -150,6 +150,7 @@ class action(metaclass=DescriptorType):
 
         # Generate the entity names
         self.action_name = user_func.__name__
+        self.action_description = user_func.__doc__ or ""
         self.runbook_name = str(uuid.uuid4())[:8] + "_runbook"
         self.dag_name = str(uuid.uuid4())[:8] + "_dag"
         self.user_func = user_func
@@ -241,6 +242,7 @@ class action(metaclass=DescriptorType):
         self.user_action = _action_create(
             **{
                 "name": action_name,
+                "description": self.action_description,
                 "critical": ACTION_TYPE == "system",
                 "type": ACTION_TYPE,
                 "runbook": self.user_runbook,
