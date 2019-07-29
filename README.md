@@ -37,6 +37,23 @@ Use:
 
 Code formatted by [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
+
+## CLI Usage
+
+Point the CLI to your Calm setup by using a config file, or command line args.
+
+### Config file
+
+Sample config file below. Replace the inputs with your setup details.
+```
+[SERVER]
+pc_ip = 10.26.14.230
+pc_port = 9440
+pc_username = admin
+pc_password = ***REMOVED***
+```
+
+
 ## ToDo
 
  - Prototype ([Demoscript](https://docs.google.com/document/d/1Psr8wPD73xCV6r3ILMEIx4Zf-nlN8H2kzMfGWO2A8_Q/edit))
