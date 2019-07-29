@@ -52,11 +52,11 @@ pc_port = 9440
 pc_username = admin
 pc_password = ***REMOVED***
 ```
-By default, the CLI looks for this information in `~/.calm/config`.
-You can instruct it to look elsewhere by using the `--config` option to point to your config file.
-e.g. `calm --config=/home/my_dir/config get bps`
+By default, the CLI looks for this information in `~/.calm/config`.<br/>
+You can instruct it to look elsewhere by using the `--config` option to point to your config file:<br/>
+`calm --config=/home/my_dir/config get bps`
 
-You can also override setup details by passing any / all of them in explicitly:
+You can also override setup details by passing any / all of them in explicitly:<br/>
 `calm --ip=10.20.4.35 --port=9220 --username=custom_user --password=something`
 
 ## ToDo
