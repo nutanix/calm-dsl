@@ -56,8 +56,9 @@ By default, the CLI looks for this information in `~/.calm/config`.<br/>
 You can instruct it to look elsewhere by using the `--config` option to point to your config file:<br/>
 `calm --config=/home/my_dir/config get bps`
 
-You can also override setup details by passing any / all of them in explicitly:<br/>
-`calm --ip=10.20.4.35 --port=9220 --username=custom_user --password=something`
+### Config overrides
+You can override any setup details by passing them in explicitly:<br/>
+`calm --ip=10.20.4.35 --port=9220 --username=custom_user --password=something ...[the rest of your command]`
 
 ## ToDo
 
