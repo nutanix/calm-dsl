@@ -39,6 +39,21 @@ def runbook_create(**kwargs):
 def generate_runbook(**kwargs):
 
     tasks = kwargs.get("tasks")
+
+    category = kwargs.pop("category", None)
+    substrate_ips = kwargs.pop("substrate_ips", None)
+    if category is not None and substrate_ips is not None:
+        raise ValueError(
+            "Only one of category or substrate_ips is allowed at runbook level "
+            + kwargs.get("name", "")
+        )
+    if category is not None:
+        kwargs["target_type"] = "category"
+        kwargs["target_value"] = category
+    if substrate_ips is not None:
+        kwargs["target_type"] = "substrate_ips"
+        kwargs["target_value"] = substrate_ips
+
     meta_task = meta(
         name=str(uuid.uuid4())[:8] + "_meta",
         child_tasks=tasks,
