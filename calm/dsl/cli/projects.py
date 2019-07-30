@@ -20,7 +20,7 @@ def get_projects(obj, name, filter_by, limit, offset, quiet):
     if name:
         filter_query = get_name_query([name])
     if filter_by:
-        filter_query = filter_query + ";" + filter_by if name else filter_by
+        filter_query = filter_query + ";(" + filter_by + ")"
     if filter_query.startswith(";"):
         filter_query = filter_query[1:]
 
