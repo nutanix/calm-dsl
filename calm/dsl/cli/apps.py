@@ -40,15 +40,10 @@ def get_apps(obj, name, filter_by, limit, offset, quiet, all_items):
         warnings.warn(UserWarning("Cannot fetch blueprints from {}".format(pc_ip)))
         return
 
-    table = PrettyTable()
-    table.field_names = [
-        "Application Name",
-        "Source Blueprint",
-        "State",
-        "Owner",
-        "Created On",
-    ]
     json_rows = res.json()["entities"]
+    if not json_rows:
+        click.echo(highlight_text("No application found !!!\n"))
+        return
 
     if quiet:
         for _row in json_rows:
