@@ -37,6 +37,9 @@ def get_projects(obj, name, filter_by, limit, offset, quiet):
         return
 
     json_rows = res.json()["entities"]
+    if not json_rows:
+        click.echo(highlight_text("No project found !!!\n"))
+        return
 
     if quiet:
         for _row in json_rows:

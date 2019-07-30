@@ -39,6 +39,9 @@ def get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_
         return
 
     json_rows = res.json()["entities"]
+    if not json_rows:
+        click.echo(highlight_text("No account found !!!\n"))
+        return
 
     if quiet:
         for _row in json_rows:

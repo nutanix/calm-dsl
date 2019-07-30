@@ -43,6 +43,9 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
         return
 
     json_rows = res.json()["entities"]
+    if not json_rows:
+        click.echo(highlight_text("No blueprint found !!!\n"))
+        return
 
     if quiet:
         for _row in json_rows:
