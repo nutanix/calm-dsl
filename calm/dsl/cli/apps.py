@@ -24,7 +24,7 @@ def get_apps(obj, name, filter_by, limit, offset, quiet, all_items):
     if name:
         filter_query = get_name_query([name])
     if filter_by:
-        filter_query = filter_query + ";" + filter_by if name else filter_by
+        filter_query = filter_query + ";(" + filter_by + ")"
     if all_items:
         filter_query += get_states_filter(APPLICATION.STATES, state_key="_state")
     if filter_query.startswith(";"):
