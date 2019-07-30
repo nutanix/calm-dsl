@@ -1,5 +1,6 @@
 import click
 import json
+import uuid
 
 from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.providers import get_provider_interface
@@ -213,7 +214,13 @@ def create_spec(client):
     spec = {}
     Obj = AWS(client.connection)
 
-    spec["name"] = click.prompt("\nEnter instance name", type=str)
+    vpc_id = None
+    region_name = None
+    account_id = None
+    root_device_name = None
+
+    spec["name"] = "vm_{}".format(str(uuid.uuid4())[-10:])
+    spec["name"] = click.prompt("\nEnter instance name", default=spec["name"])
 
     payload = {"filter": "type==aws"}
     res, err = client.account.list(payload)
@@ -237,7 +244,7 @@ def create_spec(client):
 
     while True:
         res = click.prompt("\nEnter the index of account to be used", default=1)
-        if res > len(accounts):
+        if (res > len(accounts)) or (res <= 0):
             click.echo("Invalid index !!! ")
 
         else:
@@ -259,18 +266,23 @@ def create_spec(client):
             )
         )
 
-    ins_types = Obj.machine_types()
-    if not ins_types:
-        click.echo("\n{}".format(highlight_text("No Instance Profiles present")))
+    choice = click.prompt(
+        "\n{}(y/n)".format(highlight_text("Want to add an instance type")), default="n"
+    )
 
-    else:
+    ins_types = Obj.machine_types() if choice[0] == "y" else None
+
+    if (not ins_types) and (choice[0] == "y"):
+        click.echo("\n{}".format(highlight_text("No Instance Profile present")))
+
+    elif ins_types:
         click.echo("\nChoose from given instance types")
         for ind, name in enumerate(ins_types):
             click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
         while True:
             res = click.prompt("\nEnter the index of instance type", default=1)
-            if res > len(ins_types):
+            if (res > len(ins_types)) or (res <= 0):
                 click.echo("Invalid index !!! ")
 
             else:
@@ -279,11 +291,19 @@ def create_spec(client):
                 click.echo("{} selected".format(highlight_text(instance_type)))
                 break
 
-    regions = Obj.regions(account_id)
-    if not regions:
-        click.echo("\n{}".format(highlight_text("No regions present")))
+    choice = (
+        click.prompt(
+            "\n{}(y/n)".format(highlight_text("Want to add a region")), default="n"
+        )
+        if account_id
+        else "n"
+    )
 
-    else:
+    regions = Obj.regions(account_id) if choice[0] == "y" else None
+    if (not regions) and (choice[0] == "y"):
+        click.echo("\n{}".format(highlight_text("No region present")))
+
+    elif regions:
         click.echo("\nChoose from given regions")
         for ind, name in enumerate(regions):
             click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
@@ -299,11 +319,22 @@ def create_spec(client):
                 click.echo("{} selected".format(highlight_text(region_name)))
                 break
 
-    avl_zones = Obj.availability_zones(account_id, region_name)
-    if not avl_zones:
-        click.echo("\n{}".format(highlight_text("No availabilty zones present")))
+    choice = (
+        click.prompt(
+            "\n{}(y/n)".format(highlight_text("Want to add a availability zone")),
+            default="n",
+        )
+        if region_name
+        else "n"
+    )
 
-    else:
+    avl_zones = (
+        Obj.availability_zones(account_id, region_name) if choice[0] == "y" else None
+    )
+    if (not avl_zones) and (choice[0] == "y"):
+        click.echo("\n{}".format(highlight_text("No availabilty zone present")))
+
+    elif avl_zones:
         click.echo("\nChoose from given availabilty zones")
         for ind, name in enumerate(avl_zones):
             click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
@@ -319,13 +350,22 @@ def create_spec(client):
                 click.echo("{} selected".format(highlight_text(availability_zone)))
                 break
 
-    mixed_images = Obj.mixed_images(account_id, region_name)
+    choice = (
+        click.prompt(
+            "\n{}(y/n)".format(highlight_text("Want to add a machine image")),
+            default="n",
+        )
+        if region_name
+        else "n"
+    )
+
+    mixed_images = Obj.mixed_images(account_id, region_name) if choice[0] == "y" else {}
     image_names = list(mixed_images.keys())
     image_names.sort(key=lambda y: y.lower())
-    if not image_names:
+    if (not image_names) and (choice[0] == "y"):
         click.echo("\n{}".format(highlight_text("No machine image present")))
 
-    else:
+    elif image_names:
         click.echo("\nChoose from given Machine images")
         for ind, name in enumerate(image_names):
             click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
@@ -345,11 +385,19 @@ def create_spec(client):
                 click.echo("{} selected".format(highlight_text(image_name)))
                 break
 
-    ins_pfl_names = Obj.roles(account_id, region_name)
-    if not ins_pfl_names:
+    choice = (
+        click.prompt(
+            "\n{}(y/n)".format(highlight_text("Want to add an IAM Role")), default="n"
+        )
+        if region_name
+        else "n"
+    )
+
+    ins_pfl_names = Obj.roles(account_id, region_name) if choice[0] == "y" else None
+    if (not ins_pfl_names) and (choice[0] == "y"):
         click.echo("\n{}".format(highlight_text("No instance profile present")))
 
-    else:
+    elif ins_pfl_names:
         click.echo("\nChoose from given IAM roles")
         for ind, name in enumerate(ins_pfl_names):
             click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
@@ -365,11 +413,19 @@ def create_spec(client):
                 click.echo("{} selected".format(highlight_text(role)))
                 break
 
-    key_pairs = Obj.key_pairs(account_id, region_name)
-    if not key_pairs:
-        click.echo("\n{}".format(highlight_text("No key pairs present")))
+    choice = (
+        click.prompt(
+            "\n{}(y/n)".format(highlight_text("Want to add any Key Pair")), default="n"
+        )
+        if region_name
+        else "n"
+    )
 
-    else:
+    key_pairs = Obj.key_pairs(account_id, region_name) if choice[0] == "y" else None
+    if (not key_pairs) and (choice[0] == "y"):
+        click.echo("\n{}".format(highlight_text("No key pair present")))
+
+    elif key_pairs:
         click.echo("\nChoose from given Key Pairs")
         for ind, name in enumerate(key_pairs):
             click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
@@ -385,13 +441,21 @@ def create_spec(client):
                 click.echo("{} selected".format(highlight_text(key_name)))
                 break
 
-    vpc_map = Obj.VPCs(account_id, region_name)
+    choice = (
+        click.prompt(
+            "\n{}(y/n)".format(highlight_text("Want to add any VPC")), default="n"
+        )
+        if region_name
+        else "n"
+    )
+
+    vpc_map = Obj.VPCs(account_id, region_name) if choice[0] == "y" else {}
     cidr_names = list(vpc_map.keys())
 
-    if not cidr_names:
+    if (not cidr_names) and (choice[0] == "y"):
         click.echo("\n{}".format(highlight_text("No VPC present")))
 
-    else:
+    elif cidr_names:
         click.echo("\nChoose from given VPC")
         for ind, name in enumerate(cidr_names):
             dis_name = name + " | " + vpc_map[name]
@@ -410,13 +474,21 @@ def create_spec(client):
                 click.echo("{} selected".format(highlight_text(dis_name)))
                 break
 
-    choice = click.prompt(
-        "\n{}(y/n)".format(highlight_text("Want to include security groups")),
-        default="n",
+    choice = (
+        click.prompt(
+            "\n{}(y/n)".format(highlight_text("Want to include security groups")),
+            default="n",
+        )
+        if vpc_id
+        else "n"
     )
+
     if choice[0] == "y":
 
-        choice = click.prompt("\nInclude Classic Security Groups(y/n)", default="n")
+        choice = click.prompt(
+            "\n{}(y/n)".format(highlight_text("Include Classic Security Groups")),
+            default="n",
+        )
         if choice[0] == "y":
             sg_map = Obj.security_groups(
                 account_id, region_name, vpc_id, inc_classic_sg=True
@@ -464,9 +536,14 @@ def create_spec(client):
             if choice[0] == "n":
                 break
 
-    choice = click.prompt(
-        "\n{}(y/n)".format(highlight_text("Want to include subnets")), default="n"
+    choice = (
+        click.prompt(
+            "\n{}(y/n)".format(highlight_text("Want to include subnets")), default="n"
+        )
+        if (vpc_id and availability_zone)
+        else "n"
     )
+
     if choice[0] == "y":
 
         subnets = Obj.subnets(account_id, region_name, vpc_id, availability_zone)
@@ -495,7 +572,7 @@ def create_spec(client):
         "\n{}(y/n)".format(highlight_text("Want to enter user data")), default="n"
     )
     if choice[0] == "y":
-        user_data = click.prompt("\nEnter data: ", type=str)
+        user_data = click.prompt("\n\tEnter data", type=str)
         spec["resources"]["user_data"] = user_data
 
     choice = click.prompt(
@@ -519,13 +596,20 @@ def create_spec(client):
     click.echo("\n\t\t", nl=False)
     click.secho("STORAGE DATA\n", bold=True, underline=True)
     click.secho("\tRoot Disk", bold=True)
-    click.echo(
-        "\nDevice for the root disk: {}".format(highlight_text(root_device_name))
-    )
 
     spec["resources"]["block_device_map"] = {}
     root_disk = {}
-    root_disk["device_name"] = root_device_name
+
+    if not root_device_name:
+        click.echo(
+            "\nRoot device is dependent on the machine image. Select a machine image to complete root disk configuration"
+        )
+    else:
+        root_disk["device_name"] = root_device_name
+        click.echo(
+            "\nDevice for the root disk: {}".format(highlight_text(root_device_name))
+        )
+
     root_disk["size_gb"] = click.prompt("\nEnter the size of disk(in gb)", default=8)
 
     volume_types = list(aws.VOLUME_TYPE_MAP.keys())
@@ -547,7 +631,10 @@ def create_spec(client):
                 click.echo("{} selected".format(highlight_text(volume_types[res - 1])))
                 break
 
-        choice = click.prompt("\nWant to delete disk on termination(y/n)", default="y")
+        choice = click.prompt(
+            "\n{}(y/n)".format(highlight_text("Want to delete disk on termination")),
+            default="y",
+        )
         root_disk["delete_on_termination"] = True if choice[0] == "y" else False
         spec["resources"]["block_device_map"]["root_disk"] = root_disk
 
@@ -596,7 +683,10 @@ def create_spec(client):
                 break
 
         disk["size_gb"] = click.prompt("\nEnter the size of disk(in gb)", default=8)
-        choice = click.prompt("\nWant to delete disk on termination(y/n)", default="y")
+        choice = click.prompt(
+            "\n{}(y/n)".format(highlight_text("Want to delete disk on termination")),
+            default="y",
+        )
         disk["delete_on_termination"] = True if choice[0] == "y" else False
 
         spec["resources"]["block_device_map"]["data_disk_list"].append(disk)
