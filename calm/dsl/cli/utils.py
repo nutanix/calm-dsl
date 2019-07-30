@@ -10,7 +10,7 @@ def get_states_filter(STATES_CLASS, state_key="state"):
         if not field.startswith("__"):
             states.append(getattr(STATES_CLASS, field))
     state_prefix = ",{}==".format(state_key)
-    return ";{}=={}".format(state_key, state_prefix.join(states))
+    return ";({}=={})".format(state_key, state_prefix.join(states))
 
 
 def get_name_query(names):
@@ -23,7 +23,7 @@ def get_name_query(names):
             + ".*"
             for name in names
         ]
-        return ",".join(search_strings)
+        return "({})". format(",".join(search_strings))
 
 
 def highlight_text(text, **kwargs):
