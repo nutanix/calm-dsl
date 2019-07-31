@@ -76,10 +76,11 @@ class GetCallNodes(ast.NodeVisitor):
         self.task_list = []
         self.all_tasks = []
         self.variables = {}
+        self.args = {}
         self._globals = func_globals or {}.copy()
 
     def get_objects(self):
-        return self.all_tasks, self.variables, self.task_list
+        return self.all_tasks, self.variables, self.task_list, self.args
 
     def visit_Call(self, node, return_task=False):
         if isinstance(node.func, ast.Attribute):
@@ -93,6 +94,16 @@ class GetCallNodes(ast.NodeVisitor):
                         return task
                     self.task_list.append(task)
                     self.all_tasks.append(task)
+
+    def visit_FunctionDef(self, node):
+        args = node.args.args
+        defaults = node.args.defaults
+        for arg, val in zip(args, defaults):
+            if arg.arg in self.args.keys():
+                raise NameError("Duplicate argument name {}".format(arg.arg))
+            if not isinstance(val, ast.Str):
+                raise ValueError("Only arguments of type string allowed {}".format(arg.arg))
+            self.args[arg.arg] = val.s
 
     def visit_Assign(self, node):
         if len(node.targets) > 1:
@@ -205,8 +216,8 @@ class runbook(metaclass=DescriptorType):
         except Exception as ex:
             self.__exception__ = ex
             raise
-        all_tasks, variables, task_list = node_visitor.get_objects()
-        self.user_runbook = generate_runbook(name=self.runbook_name, tasks=task_list, variables=variables)
+        all_tasks, variables, task_list, args = node_visitor.get_objects()
+        self.user_runbook = generate_runbook(name=self.runbook_name, tasks=task_list, variables=variables, **args)
 
         self.__parsed__ = True
 
