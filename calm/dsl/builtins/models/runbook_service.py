@@ -1,6 +1,8 @@
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 
+# RunbookService
+
 
 class RunbookServiceType(EntityType):
     __schema_name__ = "RunbookService"
@@ -12,10 +14,10 @@ class RunbookServiceValidator(PropertyValidator, openapi_type="runbook_service")
     __kind__ = RunbookServiceType
 
 
-def _runbook_service(**kwargs):
+def runbook_service(**kwargs):
     name = getattr(RunbookServiceType, "__schema_name__")
     bases = (Entity,)
     return RunbookServiceType(name, bases, kwargs)
 
 
-RunbookService = _runbook_service()
+RunbookService = runbook_service()

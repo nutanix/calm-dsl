@@ -3,24 +3,24 @@ title: RunbookService
 type: object
 x-calm-dsl-type: runbook_service
 properties:
-    substrate_definition_list:
-      x-calm-dsl-display-name: substrates
-      description: Substrate definitions for runbook service.
-      type: array
-      items:
-        $ref: '#/components/schemas/Substrate'
-    credential_definition_list:
-      x-calm-dsl-display-name: credentials
-      description: Credential definitions for runbook service.
-      type: array
-      items:
-        $ref: '#/components/schemas/Credential'
-    client_attrs:
-      type: object
-      additionalProperties: true
-      x-calm-dsl-type: dict
-    runbook:
-      $ref: '#/components/schemas/Runbook'
+  substrate_definition_list:
+    x-calm-dsl-display-name: substrates
+    description: Substrate definitions for runbook service.
+    type: array
+    items:
+      $ref: '#/components/schemas/Substrate'
+  credential_definition_list:
+    x-calm-dsl-display-name: credentials
+    description: Credential definitions for runbook service.
+    type: array
+    items:
+      $ref: '#/components/schemas/Credential'
+  client_attrs:
+    type: object
+    additionalProperties: true
+    x-calm-dsl-type: dict
+  runbook:
+    $ref: '#/components/schemas/Runbook'
 {%- endmacro %}
 
 

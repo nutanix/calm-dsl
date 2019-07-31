@@ -35,7 +35,7 @@ def _validate(vdict, name, value):
 
     except TypeError:
 
-        # Check if value is a variable/action
+        # Check if value is a variable/action/runbook
         types = EntityTypeBase.get_entity_types()
         VariableType = types.get("Variable", None)
         if not VariableType:
@@ -46,11 +46,12 @@ def _validate(vdict, name, value):
         if not (
             ("variables" in vdict and isinstance(value, (VariableType,)))
             or ("actions" in vdict and isinstance(type(value), DescriptorType))
+            or ("runbook" in vdict and isinstance(type(value), DescriptorType))
         ):
             raise
 
-        # Validate and set variable/action
-        # get validator for variables/action
+        # Validate and set variable/action/runbook
+        # get validator for variables/action/runbook
         if isinstance(value, VariableType):
             ValidatorType, _ = vdict["variables"]
             # Set name attribute in variable
@@ -189,6 +190,7 @@ class EntityType(EntityTypeBase):
     def get_user_attrs(cls):
         types = EntityTypeBase.get_entity_types()
         ActionType = types.get("Action", None)
+        RunbookType = types.get("Runbook", None)
         VariableType = types.get("Variable", None)
         DescriptorType = types.get("Descriptor", None)
         user_attrs = {}
@@ -196,7 +198,7 @@ class EntityType(EntityTypeBase):
             if (
                 name.startswith("__")
                 and name.endswith("__")
-                and not isinstance(value, (VariableType, ActionType))
+                and not isinstance(value, (VariableType, ActionType, RunbookType))
                 and not isinstance(type(value), DescriptorType)
             ):
                 continue
@@ -222,13 +224,14 @@ class EntityType(EntityTypeBase):
             return
 
         vdict = getattr(mcls, "__validator_dict__")
-        if "variables" not in vdict and "actions" not in vdict:
+        if "variables" not in vdict and "actions" not in vdict and "runbook" not in vdict:
             return
 
         # Variables and actions have [] as defaults.
         # As this list can be modified/extended here,
         # make a copy of variables and actions
-        attrs["variables"] = list(attrs.get("variables", []))
+        if "variables" in vdict:
+            attrs["variables"] = list(attrs.get("variables", []))
         if "actions" in vdict:
             attrs["actions"] = list(attrs.get("actions", []))
 
@@ -236,6 +239,7 @@ class EntityType(EntityTypeBase):
         ActionType = types.get("Action", None)
         VariableType = types.get("Variable", None)
         DescriptorType = types.get("Descriptor", None)
+        RunbookType = types.get("Runbook", None)
 
         # Update list of variables with given class-level variables
         del_keys = []
@@ -245,6 +249,11 @@ class EntityType(EntityTypeBase):
                     attr_name = "actions"
                 elif isinstance(value, VariableType):
                     attr_name = "variables"
+                elif isinstance(value, RunbookType):
+                    attr_name = "runbook"
+                    attrs[attr_name] = value
+                    del_keys.append(key)
+                    continue
                 elif isinstance(value.__class__, DescriptorType):
                     exception = getattr(value, "__exception__", None)
                     if exception:
