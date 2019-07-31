@@ -2,7 +2,7 @@ import ast
 import inspect
 import uuid
 
-from .task import meta
+from .task import dag
 from .entity import EntityType, Entity
 from .descriptor import DescriptorType
 from .validator import PropertyValidator
@@ -40,35 +40,6 @@ def runbook_create(**kwargs):
     return RunbookType(name, bases, kwargs)
 
 
-def generate_runbook(**kwargs):
-
-    tasks = kwargs.get("tasks")
-
-    category = kwargs.pop("category", None)
-    substrate_ips = kwargs.pop("substrate_ips", None)
-    if category is not None and substrate_ips is not None:
-        raise ValueError(
-            "Only one of category or substrate_ips is allowed at runbook level "
-            + kwargs.get("name", "")
-        )
-    if category is not None:
-        kwargs["target_type"] = "category"
-        kwargs["target_value"] = category
-    if substrate_ips is not None:
-        kwargs["target_type"] = "substrate_ips"
-        kwargs["target_value"] = substrate_ips
-
-    meta_task = meta(
-        name=str(uuid.uuid4())[:8] + "_meta",
-        child_tasks=tasks,
-        edges=[],
-    )
-    runbook = runbook_create(**kwargs)
-    runbook.main_task_local_reference = meta_task.get_ref()
-    runbook.tasks = [meta_task] + tasks
-    return runbook
-
-
 class GetCallNodes(ast.NodeVisitor):
 
     # TODO: Need to add validations for unsupported nodes.
@@ -77,6 +48,7 @@ class GetCallNodes(ast.NodeVisitor):
         self.all_tasks = []
         self.variables = {}
         self.args = {}
+        self.target = target or None
         self._globals = func_globals or {}.copy()
 
     def get_objects(self):
@@ -90,20 +62,12 @@ class GetCallNodes(ast.NodeVisitor):
             if name_node.id in list(self._globals.keys()) + ["CalmTask"]:
                 task = eval(compile(ast.Expression(node), "", "eval"), self._globals)
                 if task is not None:
+                    if self.target is not None and not task.target_any_local_reference:
+                        task.target_any_local_reference = self.target
                     if return_task:
                         return task
                     self.task_list.append(task)
                     self.all_tasks.append(task)
-
-    def visit_FunctionDef(self, node):
-        args = node.args.args
-        defaults = node.args.defaults
-        for arg, val in zip(args, defaults):
-            if arg.arg in self.args.keys():
-                raise NameError("Duplicate argument name {}".format(arg.arg))
-            if not isinstance(val, ast.Str):
-                raise ValueError("Only arguments of type string allowed {}".format(arg.arg))
-            self.args[arg.arg] = val.s
 
     def visit_Assign(self, node):
         if len(node.targets) > 1:
@@ -153,6 +117,16 @@ class GetCallNodes(ast.NodeVisitor):
                 "Unsupported context used in 'with' statement inside the action."
             )
 
+    def visit_arguments(self, node):
+        args = node.args
+        defaults = node.defaults
+        for arg, val in zip(args, defaults):
+            if arg.arg in self.args.keys():
+                raise NameError("Duplicate argument name {}".format(arg.arg))
+            if not isinstance(val, ast.Str):
+                raise ValueError("Only arguments of type string allowed {}".format(arg.arg))
+            self.args[arg.arg] = val.s
+
 
 class runbook(metaclass=DescriptorType):
     """
@@ -170,6 +144,7 @@ class runbook(metaclass=DescriptorType):
 
         # Generate the entity names
         self.runbook_name = user_func.__name__
+        self.dag_name = str(uuid.uuid4())[:8] + "_dag"
         self.user_func = user_func
         self.__parsed__ = False
 
@@ -216,8 +191,46 @@ class runbook(metaclass=DescriptorType):
         except Exception as ex:
             self.__exception__ = ex
             raise
-        all_tasks, variables, task_list, args = node_visitor.get_objects()
-        self.user_runbook = generate_runbook(name=self.runbook_name, tasks=task_list, variables=variables, **args)
+        tasks, variables, task_list, args = node_visitor.get_objects()
+        edges = []
+        for from_tasks, to_tasks in zip(task_list, task_list[1:]):
+            if not isinstance(from_tasks, list):
+                from_tasks = [from_tasks]
+            if not isinstance(to_tasks, list):
+                to_tasks = [to_tasks]
+            for from_task in from_tasks:
+                for to_task in to_tasks:
+                    edges.append((from_task.get_ref(), to_task.get_ref()))
+
+        # First create the dag
+        self.user_dag = dag(
+            name=self.dag_name,
+            child_tasks=tasks,
+            edges=edges
+        )
+
+        category = args.pop("category", None)
+        substrate_ips = args.pop("substrate_ips", None)
+        if category is not None and substrate_ips is not None:
+            raise ValueError(
+                "Only one of category or substrate_ips is allowed at runbook level "
+                + self.runbook_name
+            )
+
+        kwargs = {}
+        if category is not None:
+            kwargs["target_type"] = "category"
+            kwargs["target_value"] = category
+        if substrate_ips is not None:
+            kwargs["target_type"] = "substrate_ips"
+            kwargs["target_value"] = substrate_ips
+        kwargs["name"] = self.runbook_name
+
+        # Modify the user runbook
+        self.user_runbook = runbook_create(**kwargs)
+        self.user_runbook.main_task_local_reference = self.user_dag.get_ref()
+        self.user_runbook.tasks = [self.user_dag] + tasks
+        self.user_runbook.variables = [variable for variable in variables.values()]
 
         self.__parsed__ = True
 
