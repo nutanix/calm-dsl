@@ -225,7 +225,7 @@ def run_runbook(
     count = 0
     while count < maxWait:
         # call status api
-        click.echo("Polling status of Launch")
+        click.echo("Polling status of Runlog")
         res, err = client.runbook.poll_action_run(runlog_uuid)
         response = res.json()
         pprint(response)
@@ -242,7 +242,7 @@ def run_runbook(
                 )
             )
             break
-        elif response["status"]["state"] == "FAILURE":
+        elif response["status"]["state"] == "FAILURE" or response["status"]["state"] == "SYS_ERROR":
             click.echo("Failed to run runbook. Check API response above.")
             break
         elif err:
