@@ -37,6 +37,29 @@ Use:
 
 Code formatted by [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
+
+## CLI Usage
+
+Point the CLI to your Calm setup by using a config file, or command line args.
+
+### Config file
+
+Below is a sample config file. Replace the inputs with your setup details.
+```
+[SERVER]
+pc_ip = 10.26.14.230
+pc_port = 9440
+pc_username = admin
+pc_password = ***REMOVED***
+```
+By default, the CLI looks for this information in `~/.calm/config`.<br/>
+You can instruct it to look elsewhere by using the `--config` option to point to your config file:<br/>
+`calm --config=/home/my_dir/config get bps`
+
+### Config overrides
+You can override any setup details by passing them in explicitly:<br/>
+`calm --ip=10.20.4.35 --port=9220 --username=custom_user --password=something ...[the rest of your command]`
+
 ## ToDo
 
  - Prototype ([Demoscript](https://docs.google.com/document/d/1Psr8wPD73xCV6r3ILMEIx4Zf-nlN8H2kzMfGWO2A8_Q/edit))

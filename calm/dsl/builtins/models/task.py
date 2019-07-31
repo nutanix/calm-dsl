@@ -203,7 +203,14 @@ def exec_task_escript(script=None, filename=None, name=None, target=None):
 def exec_task_powershell(script=None, filename=None, name=None, target=None, cred=None, category=None):
     target_type = get_target_type(name, target, category)
     return _exec_create(
-        "npsscript", script=script, filename=filename, name=name, target=target, cred=cred, target_type=target_type, category=category
+        "npsscript",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        cred=cred,
+        target_type=target_type,
+        category=category
     )
 
 
@@ -733,11 +740,11 @@ def delay_task(delay_seconds=None, name=None, target=None):
 
 
 class CalmTask:
-    def __new__(cls):
+    def __new__(cls, *args, **kwargs):
         raise TypeError("'{}' is not callable".format(cls.__name__))
 
     class Exec:
-        def __new__(cls):
+        def __new__(cls, *args, **kwargs):
             raise TypeError("'{}' is not callable".format(cls.__name__))
 
         ssh = exec_task_ssh
