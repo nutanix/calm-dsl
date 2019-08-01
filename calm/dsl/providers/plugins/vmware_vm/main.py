@@ -43,7 +43,6 @@ class VCenter:
         return name_id_map
 
     def datastores(self, account_id, cluster_name=None, host_id=None):
-
         Obj = get_resource_api(vmw.DATASTORE, self.connection)
         payload = ""
         if host_id:
@@ -63,13 +62,13 @@ class VCenter:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
         res = res.json()
-        datastore_name_url_map = {}
+        name_url_map = {}
         for entity in res["entities"]:
             name = entity["status"]["resources"]["name"]
             url = entity["status"]["resources"]["summary"]["url"]
-            datastore_name_url_map[name] = url
+            name_url_map[name] = url
 
-        return datastore_name_url_map
+        return name_url_map
 
     def clusters(self, account_id):
         Obj = get_resource_api(vmw.CLUSTER, self.connection)
@@ -96,12 +95,12 @@ class VCenter:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
         res = res.json()
-        storage_pod_list = []
+        pod_list = []
         for entity in res["entities"]:
             name = entity["status"]["resources"]["name"]
-            storage_pod_list.append(name)
+            pod_list.append(name)
 
-        return storage_pod_list
+        return pod_list
 
     def templates(self, account_id):
         Obj = get_resource_api(vmw.TEMPLATE, self.connection)
@@ -112,13 +111,48 @@ class VCenter:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
         res = res.json()
-        template_name_id_map = {}
+        name_id_map = {}
         for entity in res["entities"]:
             name = entity["status"]["resources"]["name"]
-            tem_id = entity["status"]["resources"]["config"]["instanceUuid"]
-            template_name_id_map[name] = tem_id
+            temp_id = entity["status"]["resources"]["config"]["instanceUuid"]
+            name_id_map[name] = temp_id
 
-        return template_name_id_map
+        return name_id_map
+
+    def customizations(self, account_id, os):
+
+        Obj = get_resource_api(vmw.CUSTOMIZATION, self.connection)
+        payload = {"filter": "account_uuid=={};". format(account_id)}
+
+        res, err = Obj.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        cust_list = []
+        for entity in res["entities"]:
+            if entity["status"]["resources"]["type"] == os:
+                cust_list.append(entity["status"]["resources"]["name"])
+
+        return cust_list
+
+    def timezones(self, os):
+
+        Obj = get_resource_api(vmw.TIMEZONE, self.connection)
+        payload = {"filter": "guest_os=={};". format(os)}
+
+        res, err = Obj.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        timezone_dict = {}
+        for entity in res["entities"]:
+            ind = entity["status"]["resources"]["index"]
+            name = entity["status"]["resources"]["name"]
+            timezone_dict[ind] = name
+
+        return timezone_dict
 
     def networks(self, account_id, host_id=None, cluster_name=None):
         Obj = get_resource_api(vmw.NETWORK, self.connection)
@@ -140,31 +174,37 @@ class VCenter:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
         res = res.json()
-        network_name_id_map = {}
+        name_id_map = {}
         for entity in res["entities"]:
             name = entity["status"]["resources"]["name"]
             entity_id = entity["status"]["resources"]["id"]
 
-            network_name_id_map[name] = entity_id
+            name_id_map[name] = entity_id
 
-        return network_name_id_map
+        return name_id_map
 
     def file_paths(
-        self, account_id, datastore_url=None, file_extension="iso", host_id=None
+        self, account_id, datastore_url=None, file_extension="iso", host_id=None, cluster_name=None
     ):
 
         Obj = get_resource_api(vmw.FILE_PATHS, self.connection)
         payload = ""
         if datastore_url:
             payload = {
-                "filter": "account_uuid=={};file_extension==iso;datastore_url=={}".format(
+                "filter": "account_uuid=={};file_extension=={};datastore_url=={}".format(
                     account_id, file_extension, datastore_url
+                )
+            }
+        elif host_id:
+            payload = {
+                "filter": "account_uuid=={};file_extension=={};host_id=={}".format(
+                    account_id, file_extension, host_id
                 )
             }
         else:
             payload = {
-                "filter": "account_uuid=={};file_extension==iso;host_id=={}".format(
-                    account_id, file_extension, host_id
+                "filter": "account_uuid=={};file_extension=={};cluster_name=={}".format(
+                    account_id, file_extension, cluster_name
                 )
             }
 
@@ -179,7 +219,7 @@ class VCenter:
 
         return fpaths
 
-    def template_defaults(self, account_id, template_id):
+    def template_defaults(self, account_id, template_id):   # TODO improve this mess
         payload = {"filter": 'template_uuids==["{}"];'.format(template_id)}
         Obj = get_resource_api(vmw.TEMPLATE_DEFS.format(account_id), self.connection)
         res, err = Obj.list(payload)
@@ -296,21 +336,24 @@ def highlight_text(text, **kwargs):
 
 def create_spec(client):
 
-    spec = {}
+    spec = {
+        "type": "PROVISION_VMWARE_VM"
+    }
     Obj = VCenter(client.connection)
 
     # VM Configuration
 
     projects = client.project.get_name_uuid_map()
     project_list = list(projects.keys())
-    click.echo("\nChoose from given projects:")
-    for ind, name in enumerate(project_list):
-        click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
     if not project_list:
         click.echo(highlight_text("No projects found!!!"))
         click.echo(highlight_text("Please add first"))
         return
+
+    click.echo("\nChoose from given projects:")
+    for ind, name in enumerate(project_list):
+        click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
     project_id = ""
     while True:
@@ -332,27 +375,42 @@ def create_spec(client):
         "account_reference_list"
     ]
 
-    res, err = client.account.list()
+    payload = {"filter": "type==vmware"}
+    res, err = client.account.list(payload)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     res = res.json()
-    account_id_type_map = {}
+    vmware_accounts = []
+
     for entity in res["entities"]:
-        account_type = entity["status"]["resources"]["type"]
-        account_id = entity["metadata"]["uuid"]
-        account_id_type_map[account_id] = account_type
+        vmware_accounts.append(entity["metadata"]["uuid"])
 
     account_id = ""
     for account in accounts:
-        if account_id_type_map[account["uuid"]] == "vmware":
+        if account["uuid"] in vmware_accounts:
             account_id = account["uuid"]
             break
 
     if not account_id:
-        click.echo(highlight_text("No vmware account found woth this project !!!"))
-        click.echo("Please add one")
+        click.echo(highlight_text("No vmware account found registered in this project !!!"))
+        click.echo("Please add one !!!")
         return
+
+    click.echo("\nChoose from given Operating System types:")
+    os_types = list(vmw.OperatingSystem.keys())
+    for ind, name in enumerate(os_types):
+        click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
+
+    while True:
+        ind = click.prompt("\nEnter the index of operating system", default=1)
+        if ind > len(os_types):
+            click.echo("Invalid index !!! ")
+
+        else:
+            os = os_types[ind - 1]
+            click.echo("{} selected".format(highlight_text(os)))
+            break
 
     drs_mode = click.prompt("\nEnable DRS Mode(y/n)", default="n")
     drs_mode = True if drs_mode[0] == "y" else False
@@ -476,7 +534,7 @@ def create_spec(client):
         "\nCores per vCPU", default=1
     )
 
-    spec["resources"]["memory_size_mib"] = click.prompt("\nMemory(in GB)", default=1)
+    spec["resources"]["memory_size_mib"] = click.prompt("\nMemory(in GiB)", default=1)
 
     response = Obj.template_defaults(account_id, template_id)
 
@@ -499,7 +557,7 @@ def create_spec(client):
     bus_sharing_inv_map = {v: k for k, v in vmw.BUS_SHARING.items()}
 
     if tempSATAContrlr or tempSCSIContrlr:
-        click.secho("\nConfig of template controllers:", underline=True)
+        click.secho("\nConfig of Template Controllers:", underline=True)
     else:
         click.echo("\nNo template controllers found!!")
 
@@ -517,7 +575,7 @@ def create_spec(client):
             click.echo("Bus Sharing: {}".format(highlight_text(bus_sharing)))
 
             choice = click.prompt(
-                highlight_text("\nWant to edit this controller(y/n)"), default="n"
+                "\n{}(y/n)".format(highlight_text("Want to edit this controller")), default="n"
             )
             if choice[0] == "y":
                 controllers = list(vmw.CONTROLLER["SCSI"].keys())
@@ -565,7 +623,7 @@ def create_spec(client):
                 spec["resources"]["template_controller_list"].append(controller)
 
     if tempSATAContrlr:
-        click.secho("\nSCSI Controllers", bold=True, underline=True)
+        click.secho("\nSATA Controllers", bold=True, underline=True)
 
         for cntlr in tempSATAContrlr:
             click.echo("\n\t\t", nl=False)
@@ -574,7 +632,10 @@ def create_spec(client):
             click.echo(
                 "\nController Type: {}".format(highlight_text(cntlr["controller_type"]))
             )
-            choice = click.prompt("Want to edit this controller(y/n)", default="n")
+
+            choice = click.prompt(
+                "\n{}(y/n)".format(highlight_text("Want to edit this controller")), default="n"
+            )
             if choice[0] == "y":
                 controllers = list(vmw.CONTROLLER["SATA"].keys())
                 click.echo("\nChoose from given controller types:")
@@ -604,9 +665,9 @@ def create_spec(client):
                 spec["resources"]["template_controller_list"].append(controller)
 
     if tempDisks:
-        click.secho("\nConfig of template disks:", underline=True)
+        click.secho("\nConfig of Template Disks:", underline=True)
     else:
-        click.echo("\nNo template disks found!!")
+        click.echo("\nNo template disks found !!!")
 
     for index, disk in enumerate(tempDisks):
         click.echo("\n\t\t", nl=False)
@@ -627,9 +688,10 @@ def create_spec(client):
             click.echo("Exclude from vm config: {}".format(highlight_text("No")))
 
             choice = click.prompt(
-                highlight_text("\nWant to edit this disk(y/n)"), default="n"
+                "\n{}(y/n)".format(highlight_text("Want to edit this disk")), default="n"
             )
-            # Only size, disk_mode and excluding checkbox is editable(FROM UI)
+
+            # Only size, disk_mode and excluding checkbox is editable(FROM CALM_UI repo)
             if choice[0] == "y":
                 size = click.prompt("\nEnter disk size (in GiB)", default=8)
                 click.echo("\nChoose from given disk modes:")
@@ -650,7 +712,7 @@ def create_spec(client):
                         break
 
                 is_deleted = click.prompt(
-                    "\nExclude disk from vm config(y/n)", default="n"
+                    "\n{}(y/n)".format(highlight_text("Exclude disk from vm config")), default="n"
                 )
                 is_deleted = True if is_deleted[0] == "y" else False
                 dsk = {
@@ -667,9 +729,9 @@ def create_spec(client):
             click.echo(highlight_text("\nNo field can be edited in this template disk"))
 
     if tempNics:
-        click.secho("\nConfig of template nics:", underline=True)
+        click.secho("\nConfig of Template Network Adapters:", underline=True)
     else:
-        click.echo("\nNo template nics found!!")
+        click.echo("\nNo template network adapters found !!!")
 
     for index, nic in enumerate(tempNics):
         click.echo("\n\t\t", nl=False)
@@ -679,7 +741,7 @@ def create_spec(client):
         click.echo("Exclude from vm config: {}".format(highlight_text("No")))
 
         choice = click.prompt(
-            highlight_text("\nWant to edit this nic(y/n)"), default="n"
+            "\n{}(y/n)".format(highlight_text("Want to edit this nic")), default="n"
         )
         if choice[0] == "y":
             click.echo("\nChoose from given network adapters:")
@@ -721,7 +783,7 @@ def create_spec(client):
                     break
 
             is_deleted = click.prompt(
-                "\nExclude network from vm config(y/n)", default="n"
+                "\n{}(y/n)".format(highlight_text("Exclude network from vm config")), default="n"
             )
             is_deleted = True if is_deleted[0] == "y" else False
 
@@ -735,7 +797,10 @@ def create_spec(client):
             spec["resources"]["template_nic_list"].append(network)
 
     click.secho("\nControllers", underline=True)
-    choice = click.prompt("\nWant to add SCSI controllers(y/n)", default="n")
+
+    choice = click.prompt(
+        "\n{}(y/n)".format(highlight_text("Want to add SCSI controllers")), default="n"
+    )
     while choice[0] == "y":
         if controller_count["SCSI"] == vmw.ControllerLimit["SCSI"]:
             click.echo(highlight_text("\nNo more SCSI controller can be added"))
@@ -754,8 +819,8 @@ def create_spec(client):
 
         while True:
             ind = click.prompt("\nEnter the index of controller type", default=1)
-            if ind > len(controllers):
-                click.echo("Invalid index !!! ")
+            if ((ind > len(controllers)) or (ind <= 0)):
+                click.echo("Invalid index !!!")
 
             else:
                 controller_type = controllers[ind - 1]
@@ -773,7 +838,7 @@ def create_spec(client):
 
         while True:
             ind = click.prompt("\nEnter the index of sharing type", default=1)
-            if ind > len(sharingOptions):
+            if ((ind > len(sharingOptions)) or (ind <= 0)):
                 click.echo("Invalid index !!! ")
 
             else:
@@ -786,17 +851,18 @@ def create_spec(client):
         controller = {
             "controller_type": controller_type,
             "bus_sharing": busSharing,
-            "is_deleted": False,
             "key": key,
         }
 
         controller_key_type_map[key] = ("SCSI", label)
         spec["resources"]["controller_list"].append(controller)
         choice = click.prompt(
-            highlight_text("\nWant to add more SCSI controllers(y/n)"), default="n"
+            "\n{}(y/n)".format(highlight_text("Want to add more SCSI controllers")), default="n"
         )
 
-    choice = click.prompt("\nWant to add SATA controllers(y/n)", default="n")
+    choice = click.prompt(
+        "\n{}(y/n)".format(highlight_text("Want to add SATA controllers")), default="n"
+    )
     while choice[0] == "y":
         if controller_count["SATA"] == vmw.ControllerLimit["SATA"]:
             click.echo(highlight_text("\nNo more SATA controller can be added"))
@@ -815,7 +881,7 @@ def create_spec(client):
 
         while True:
             ind = click.prompt("\nEnter the index of controller type", default=1)
-            if ind > len(controllers):
+            if ((ind > len(controllers)) or (ind <= 0)):
                 click.echo("Invalid index !!! ")
 
             else:
@@ -830,17 +896,18 @@ def create_spec(client):
         controller_count["SATA"] += 1
         controller = {
             "controller_type": controller_type,
-            "is_deleted": False,
             "key": key,
         }
 
         controller_key_type_map[key] = ("SATA", label)
         spec["resources"]["controller_list"].append(controller)
         choice = click.prompt(
-            highlight_text("\nWant to add more SATA controllers(y/n)"), default="n"
+            "\n{}(y/n)".format(highlight_text("Want to add more SATA controllers")), default="n"
         )
 
-    choice = click.prompt("\nWant to add disks(y/n)", default="n")
+    choice = click.prompt(
+        "\n{}(y/n)".format(highlight_text("Want to add disks")), default="n"
+    )
     while choice[0] == "y":
         click.echo("\nChoose from given disk types:")
         disk_types = list(vmw.DISK_TYPES.keys())
@@ -849,7 +916,7 @@ def create_spec(client):
 
         while True:
             ind = click.prompt("\nEnter the index of disk type", default=1)
-            if ind > len(disk_types):
+            if ((ind > len(disk_types)) or (ind <= 0)):
                 click.echo("Invalid index !!! ")
 
             else:
@@ -865,7 +932,7 @@ def create_spec(client):
 
         while True:
             ind = click.prompt("\nEnter the index of adapter type", default=1)
-            if ind > len(disk_adapters):
+            if ((ind > len(disk_adapters)) or (ind <= 0)):
                 click.echo("Invalid index !!! ")
 
             else:
@@ -878,14 +945,14 @@ def create_spec(client):
             disk_size = click.prompt("\nEnter disk size (in GiB)", default=8)
 
             if not drs_mode:
-                datastore_name_url_map = Obj.networks(account_id, host_id=host_id)
+                datastore_name_url_map = Obj.datastores(account_id, host_id=host_id)
             else:
-                datastore_name_url_map = Obj.networks(
+                datastore_name_url_map = Obj.datastores(
                     account_id, cluster_name=cluster_name
                 )
 
             locations = list(datastore_name_url_map.keys())
-            click.echo("\nChoose from given location:")
+            click.echo("\nChoose from given locations:")
             for ind, name in enumerate(locations):
                 click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
@@ -956,7 +1023,7 @@ def create_spec(client):
             dsk = {
                 "disk_size_mb": disk_size * 1024,
                 "disk_mode": disk_mode,
-                "device_slot": device_slot,
+                "device_slot": str(device_slot),
                 "adapter_type": adapter_type,
                 "location": datastore_url,
                 "controller_key": controller_key,
@@ -966,19 +1033,19 @@ def create_spec(client):
         else:
             click.echo(
                 highlight_text(
-                    "\nBy default, ISO images across all datastores are available for selection. To filter this list, select a datastore.\n"
+                    "\nBy default, ISO images across all datastores are available for selection. To filter this list, select a datastore."
                 )
             )
             datastore_url = None
 
             choice = click.prompt(
-                highlight_text("\nWant to enter datastore(y/n)"), default="y"
+                "\n{}(y/n)".format(highlight_text("Want to add datastore")), default="n"
             )
             if choice[0] == "y":
                 if not drs_mode:
-                    datastore_name_url_map = Obj.networks(account_id, host_id=host_id)
+                    datastore_name_url_map = Obj.datastores(account_id, host_id=host_id)
                 else:
-                    datastore_name_url_map = Obj.networks(
+                    datastore_name_url_map = Obj.datastores(
                         account_id, cluster_name=cluster_name
                     )
 
@@ -989,7 +1056,7 @@ def create_spec(client):
 
                 while True:
                     ind = click.prompt("\nEnter the index of datastore", default=1)
-                    if ind > len(locations):
+                    if ((ind > len(datastores)) or (ind <= 0)):
                         click.echo("Invalid index !!! ")
 
                     else:
@@ -1002,8 +1069,10 @@ def create_spec(client):
 
             if datastore_url:
                 file_paths = Obj.file_paths(account_id, datastore_url=datastore_url)
-            else:
+            elif not drs_mode:
                 file_paths = Obj.file_paths(account_id, host_id=host_id)
+            else:
+                file_paths = Obj.file_paths(account_id, cluster_name=cluster_name)
 
             click.echo("\nChoose from given ISO file paths:")
             for ind, name in enumerate(file_paths):
@@ -1028,15 +1097,19 @@ def create_spec(client):
 
         spec["resources"]["disk_list"].append(dsk)
         choice = click.prompt(
-            highlight_text("\nWant to add more disks(y/n)"), default="n"
+            "\n{}(y/n)".format(highlight_text("Want to add more disks")), default="n"
         )
 
+    click.secho("\nNETWORK ADAPTERS", underline=True)
     click.echo(
         highlight_text(
-            "\nNetwork Configuration is needed for Actions and Runbooks to work"
+            "Network Configuration is needed for Actions and Runbooks to work"
         )
     )
-    choice = click.prompt("Want to add nics(y/n)", default="n")
+
+    choice = click.prompt(
+        "\n{}(y/n)".format(highlight_text("Want to add nics")), default="n"
+    )
     while choice[0] == "y":
         click.echo("\nChoose from given network adapters:")
         adapter_types = list(vmw.NetworkAdapterMap.values())
@@ -1077,47 +1150,338 @@ def create_spec(client):
         network = {"nic_type": adapter_type, "net_name": network_id}
         spec["resources"]["nic_list"].append(network)
         choice = click.prompt(
-            highlight_text("\nWant to add more nics(y/n)"), default="n"
+            "\n{}(y/n)".format(highlight_text("Want to add more nics")), default="n"
         )
 
     click.secho("\nVM Guest Customization", underline=True)
 
-    gc_enable = click.prompt("Enable Guest Customization(y/n)", default="y")
-    if gc_enable:
+    gc_enable = click.prompt("\nEnable Guest Customization(y/n)", default="n")
+    if gc_enable[0] == "y":
+        spec["resources"]["guest_customization"] = _guest_customization(Obj, os, account_id)
 
-        click.echo("\nChoose from given Operating System types:")
-        os_types = list(vmw.OperatingSystem.keys())
-        for ind, name in enumerate(os_types):
+    import pdb
+    pdb.set_trace()
+    VCenterVmProvider.validate_spec(spec)
+    click.secho("\nCreate spec\n", underline=True)
+    click.echo(highlight_text(json.dumps(spec, sort_keys=True, indent=4)))
+
+
+def _windows_customization(Obj, account_id):
+
+    spec = {
+        "customization_type": vmw.OperatingSystem["Windows"],
+        "windows_data": {}
+    }
+
+    click.echo("\nChoose from given Guest Customization Modes:")
+    gc_modes = vmw.GuestCustomizationModes["Windows"]
+
+    for ind, name in enumerate(gc_modes):
+        click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
+
+    while True:
+        res = click.prompt(
+            "\nEnter the index of Guest Customization Mode", default=1
+        )
+        if ((res > len(gc_modes)) or (res <= 0)):
+            click.echo("Invalid index !!!")
+
+        else:
+            gc_mode = gc_modes[res - 1]
+            click.echo("{} selected".format(highlight_text(gc_mode)))
+            break
+
+    if gc_mode == "Predefined Customization":
+        customizations = Obj.customizations(account_id, "Windows")
+
+        if not customizations:
+            click.echo(highlight_text("No Predefined Guest Customization registered !!!"))
+            return {}
+
+        click.echo("\nChoose from given customization names:")
+        for ind, name in enumerate(customizations):
             click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
         while True:
-            ind = click.prompt("\nEnter the index of operating system", default=1)
-            if ind > len(os_types):
-                click.echo("Invalid index !!! ")
-
-            else:
-                guest_os = os_types[ind - 1]
-                click.echo("{} selected".format(highlight_text(guest_os)))
-                guest_os = vmw.OperatingSystem[guest_os]
-                break
-
-        click.echo("\nChoose from given Guest Customization Modes:")
-        gc_modes = list(vmw.GuestCustomizationModes.keys())
-        for ind, name in enumerate(gc_modes):
-            click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
-
-        while True:
-            ind = click.prompt(
-                "\nEnter the index of Guest Customization Mode", default=1
+            res = click.prompt(
+                "\nEnter the index of Customization Name", default=1
             )
-            if ind > len(gc_modes):
+            if ((res > len(customizations)) or (res <= 0)):
                 click.echo("Invalid index !!! ")
 
             else:
-                gc_mode = gc_modes[ind - 1]
-                click.echo("{} selected".format(highlight_text(gc_mode)))
-                gc_mode = vmw.GuestCustomizationModes[gc_mode]
+                custn_name = customizations[res - 1]
+                click.echo("{} selected".format(highlight_text(custn_name)))
                 break
+
+        return {
+            "customization_type": vmw.OperatingSystem["Linux"],
+            "customization_name": custn_name
+        }
+
+    else:
+        computer_name = click.prompt("\tComputer Name: ", default="")
+        full_name = click.prompt("\tFull name: ", default="")
+        organization_name = click.prompt("\tOrganization Name: ", default="")
+        product_id = click.prompt("\tProduct Id: ", default="")
+
+        timezone_dict = Obj.timezones(vmw.OperatingSystem["Windows"])
+        timezone = ""   # To call the api
+
+        timezone_list = list(timezone_dict.keys())
+        click.echo("\nChoose from given timezone names:")
+        for ind, name in enumerate(timezone_list):
+            click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
+
+        while True:
+            res = click.prompt(
+                "\nEnter the index of Timezone", default=1
+            )
+            if ((res > len(timezone_list)) or (res <= 0)):
+                click.echo("Invalid index !!! ")
+
+            else:
+                timezone = timezone_list[res - 1]
+                click.echo("{} selected".format(highlight_text(timezone)))
+                timezone = timezone_dict[timezone]
+                break
+
+        admin_password = click.prompt("Admin Password", hide_input=True)
+
+        choice = click.prompt("\nAutomatically logon as administrator(y/n)", default="n")
+        auto_logon = True if choice[0] == "y" else False
+
+        spec["windows_data"].update(
+            {
+                "product_id": product_id,
+                "computer_name": computer_name,
+                "auto_logon": auto_logon,
+                "organization_name": organization_name,
+                "timezone": timezone,
+                "full_name": full_name,
+                "password": {
+                    "value": admin_password,
+                    "attrs": {
+                        "is_secret_modified": True
+                    }
+                }
+            }
+        )
+
+        if auto_logon:
+            login_count = click.prompt("Number of times to logon automatically", default=1)
+            spec["windows_data"]["login_count"] = login_count
+
+        command_list = []
+        choice = click.prompt(
+            "\n{}(y/n)".format(highlight_text("Want to add commands")), default="n"
+        )
+
+        while choice[0] == "y":
+            command = click.prompt("\tCommand", default="")
+            command_list.append(command)
+            choice = click.prompt(
+                "\n{}(y/n)".format(highlight_text("Want to add more commands")), default="n"
+            )
+
+        spec["windows_data"]["command_list"] = command_list
+
+        # Domain and Workgroup Setting
+        choice = click.prompt("\nJoin a Domain(y/n)", default="n")
+        is_domain = True if choice[0] == "y" else False
+
+        if not is_domain:
+            workgroup = click.prompt("\tWorkgroup: ", default="")
+            spec["windows_data"].update(
+                {
+                    "is_domain": is_domain,
+                    "workgroup": workgroup
+                }
+            )
+
+        else:
+            domain = click.prompt("\tDomain Name: ", default="")
+            domain_user = click.prompt("\tUsername: ", default="")
+            domain_password = click.prompt("\tPassword: ", default="", hide_input=True)
+            spec["windows_data"].update(
+                {
+                    "is_domain": is_domain,
+                    "domain": domain,
+                    "domain_user": domain_user,
+                    "domain_password": {
+                        "value": domain_password,
+                        "attrs": {
+                            "is_secret_modified": True
+                        }
+                    }
+                }
+            )
+
+    return spec
+
+
+def _linux_customization(Obj, account_id):
+
+    click.echo("\nChoose from given Guest Customization Modes:")
+    gc_modes = vmw.GuestCustomizationModes["Linux"]
+
+    for ind, name in enumerate(gc_modes):
+        click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
+
+    while True:
+        res = click.prompt(
+            "\nEnter the index of Guest Customization Mode", default=1
+        )
+        if ((res > len(gc_modes)) or (res <= 0)):
+            click.echo("Invalid index !!!")
+
+        else:
+            gc_mode = gc_modes[res - 1]
+            click.echo("{} selected".format(highlight_text(gc_mode)))
+            break
+
+    if gc_mode == "Predefined Customization":
+        customizations = Obj.customizations(account_id, "Linux")
+
+        if not customizations:
+            click.echo(highlight_text("No Predefined Guest Customization registered !!!"))
+            return {}
+
+        click.echo("\nChoose from given customization names:")
+        for ind, name in enumerate(customizations):
+            click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
+
+        while True:
+            res = click.prompt(
+                "\nEnter the index of Customization Name", default=1
+            )
+            if ((res > len(customizations)) or (res <= 0)):
+                click.echo("Invalid index !!! ")
+
+            else:
+                custn_name = customizations[res - 1]
+                click.echo("{} selected".format(highlight_text(custn_name)))
+                break
+
+        return {
+            "customization_type": vmw.OperatingSystem["Linux"],
+            "customization_name": custn_name
+        }
+
+    elif gc_mode == "Cloud Init":
+        script = click.prompt("\nEnter script", default="")
+        return {
+            "customization_type": vmw.OperatingSystem["Linux"],
+            "cloud_init": script
+        }
+
+    else:
+        host_name = click.prompt("\nEnter Hostname", default="")
+        domain = click.prompt("\nEnter Domain", default="")
+
+        timezone_dict = Obj.timezones(vmw.OperatingSystem["Linux"])
+        timezone = ""
+
+        timezone_list = list(timezone_dict.keys())
+        click.echo("\nChoose from given timezone names:")
+        for ind, name in enumerate(timezone_list):
+            click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
+
+        while True:
+            res = click.prompt(
+                "\nEnter the index of Timezone", default=1
+            )
+            if ((res > len(timezone_list)) or (res <= 0)):
+                click.echo("Invalid index !!! ")
+
+            else:
+                timezone = timezone_list[res - 1]
+                click.echo("{} selected".format(highlight_text(timezone)))
+                timezone = timezone_dict[timezone]
+                break
+
+        choice = click.prompt("\nEnable Hardware clock UTC(y/n)", default="n")
+        hw_ctc_clock = True if choice[0] == "y" else False
+
+        return {
+            "customization_type": vmw.OperatingSystem["Linux"],
+            "linux_data": {
+                "hw_utc_clock": hw_ctc_clock,
+                "domain": domain,
+                "hostname": host_name,
+                "timezone": timezone
+            }
+        }
+
+
+def _guest_customization(Obj, os, account_id):
+
+    if os == "Windows":
+        gc = _windows_customization(Obj, account_id)
+        data = "windows_data"
+
+    else:
+        gc = _linux_customization(Obj, account_id)
+        data = "linux_data"
+
+    if gc.get(data):
+
+        click.secho("\nNetwork Settings", underline=True)
+        choice = click.prompt(
+            "\n{}(y/n)".format(highlight_text("Want to add a network")), default="n"
+        )
+
+        network_settings = []
+        while choice[0] == "y":
+            choice = click.prompt("\n\tUse DHCP(y/n)", default="y")
+            is_dhcp = True if choice[0] == "y" else False
+
+            if not is_dhcp:
+                settings_name = click.prompt("\tSetting name: ", default="")
+                ip = click.prompt("\tIP: ", default="")
+                subnet_mask = click.prompt("\tSubnet Mask: ", default="")
+                gateway_default = click.prompt("\tDefault Gateway: ", default="")
+                gateway_alternate = click.prompt("\tAlternate Gateway: ", default="")
+
+                network_settings.append(
+                    {
+                        "is_dhcp": is_dhcp,
+                        "name": settings_name,
+                        "ip": ip,
+                        "subnet_mask": subnet_mask,
+                        "gateway_default": gateway_default,
+                        "gateway_alternate": gateway_alternate
+                    }
+                )
+
+            else:
+                network_settings.append(
+                    {
+                        "is_dhcp": is_dhcp
+                    }
+                )
+
+            choice = click.prompt(
+                "\n{}(y/n)".format(highlight_text("Want to add more networks")), default="n"
+            )
+
+        click.secho("\nDNS Setting", underline=True)
+        dns_primary = click.prompt("\n\tDNS Primary: ", default="")
+        dns_secondary = click.prompt("\tDNS Secondary: ", default="")
+        dns_tertiary = click.prompt("\tDNS Tertiary: ", default="")
+        dns_search_path = click.prompt("\tDNS Search Path: ", default="")
+
+        gc[data].update(
+            {
+                "network_settings": network_settings,
+                "dns_search_path": [dns_search_path],
+                "dns_tertiary": dns_tertiary,
+                "dns_primary": dns_primary,
+                "dns_secondary": dns_secondary
+            }
+        )
+
+    return gc
 
 
 def generate_free_slots(limit):

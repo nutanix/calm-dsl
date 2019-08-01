@@ -58,12 +58,11 @@ class VCENTER:
 
     ControllerLimit = {"SCSI": 4, "SATA": 4, "IDE": 2}
 
-    OperatingSystem = {"Windows": "GUEST_OS_WINDOWS", "LINUX": "GUEST_OS_LINUX"}
+    OperatingSystem = {"Linux": "GUEST_OS_LINUX", "Windows": "GUEST_OS_WINDOWS"}
 
     GuestCustomizationModes = {
-        "CloudInit": "CLOUD_INIT",
-        "CustomSpec": "CUSTOM_SPEC",
-        "PredefinedCustomization": "PREDEFINED_CUSTOMIZATION",
+        "Linux": ["Cloud Init", "Custom Spec", "Predefined Customization"],
+        "Windows": ["Predefined Customization", "Windows Data"]
     }
 
     VirtualControllerNameMap = {
@@ -115,11 +114,6 @@ class VCENTER:
         "vim.vm.device.VirtualVmxnet": "vmxnet",
         "vim.vm.device.VirtualVmxnet2": "vmxnet2",
         "vim.vm.device.VirtualVmxnet3": "vmxnet3",
-    }
-
-    templateDiskEditables = {
-        "Disk Size in GB": "disk_size_mb",
-        "Disk Mode ": "disk_mode",
     }
 
     DiskMap = {

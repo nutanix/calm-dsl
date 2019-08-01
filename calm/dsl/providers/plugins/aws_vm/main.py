@@ -219,41 +219,87 @@ def create_spec(client):
     account_id = None
     root_device_name = None
 
-    spec["name"] = "vm_{}".format(str(uuid.uuid4())[-10:])
-    spec["name"] = click.prompt("\nEnter instance name", default=spec["name"])
+    # VM Configuration
+
+    projects = client.project.get_name_uuid_map()
+    project_list = list(projects.keys())
+
+    if not project_list:
+        click.echo(highlight_text("No projects found!!!"))
+        click.echo(highlight_text("Please add first"))
+        return
+
+    click.echo("\nChoose from given projects:")
+    for ind, name in enumerate(project_list):
+        click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
+
+    project_id = ""
+    while True:
+        ind = click.prompt("\nEnter the index of project", default=1)
+        if ind > len(project_list):
+            click.echo("Invalid index !!! ")
+
+        else:
+            project_id = projects[project_list[ind - 1]]
+            click.echo("{} selected".format(highlight_text(project_list[ind - 1])))
+            break
+
+    res, err = client.project.read(project_id)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    project = res.json()
+    accounts = project["status"]["project_status"]["resources"][
+        "account_reference_list"
+    ]
+
+    reg_accounts = []
+    for account in accounts:
+        reg_accounts.append(account["uuid"])
 
     payload = {"filter": "type==aws"}
     res, err = client.account.list(payload)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-    accounts = res.json()
-    accounts = accounts["entities"]
-    spec["resources"] = {}
+    res = res.json()
+    aws_accounts = {}
 
-    if not accounts:
+    for entity in res["entities"]:
+        entity_name = entity["metadata"]["name"]
+        entity_id = entity["metadata"]["uuid"]
+        if entity_id in reg_accounts:
+            aws_accounts[entity_name] = entity_id
+
+    if not aws_accounts:
         click.echo(
-            "\n{}".format(highlight_text("No AWS account present. Please add first!"))
+            highlight_text("No aws account found registered in this project !!!")
         )
+        click.echo("Please add one !!!")
         return
 
+    accounts = list(aws_accounts.keys())
+    spec["resources"] = {}
+
     click.echo("\nChoose from given AWS accounts")
-    for ind, account in enumerate(accounts):
-        name = account["status"]["name"]
+    for ind, name in enumerate(accounts):
         click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
     while True:
         res = click.prompt("\nEnter the index of account to be used", default=1)
-        if (res > len(accounts)) or (res <= 0):
+        if ((res > len(accounts)) or (res <= 0)):
             click.echo("Invalid index !!! ")
 
         else:
-            account_name = accounts[res - 1]["status"]["name"]
-            account_id = accounts[res - 1]["metadata"]["uuid"]  # TO BE USED
+            account_name = accounts[res - 1]
+            account_id = aws_accounts[account_name]  # TO BE USED
 
             spec["resources"]["account_uuid"] = account_id
             click.echo("{} selected".format(highlight_text(account_name)))
             break
+
+    spec["name"] = "vm_{}".format(str(uuid.uuid4())[-10:])
+    spec["name"] = click.prompt("\nEnter instance name", default=spec["name"])
 
     choice = click.prompt("\nEnable Associate Public Ip Address(y/n)", default="y")
     if choice[0] == "y":
