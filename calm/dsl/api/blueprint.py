@@ -127,12 +127,13 @@ class BlueprintAPI(ResourceAPI):
 
         def strip_action_secret_varaibles(path_list, obj):
             for action_idx, action in enumerate(obj.get("action_list", []) or []):
+                runbook = action.get("runbook", {}) or {}
+                if not runbook:
+                    return
                 strip_entity_secret_variables(
-                    path_list + ["action_list", action_idx], action
+                    path_list + ["action_list", action_idx, "runbook"], runbook
                 )
-                tasks = (action.get("runbook", {}) or {}).get(
-                    "task_definition_list", []
-                ) or []
+                tasks = runbook.get("task_definition_list", []) or []
                 for task_idx, task in enumerate(tasks):
                     if task.get("type", None) != "HTTP":
                         continue

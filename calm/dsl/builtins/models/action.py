@@ -5,8 +5,8 @@ import uuid
 from .entity import EntityType, Entity
 from .descriptor import DescriptorType
 from .validator import PropertyValidator
-from .variable import VariableType
-from .task import dag, create_call_rb
+from .variable import VariableType, CalmVariable
+from .task import dag, create_call_rb, CalmTask
 from .runbook import runbook_create
 
 # Action - Since action, runbook and DAG task are heavily coupled together,
@@ -61,41 +61,51 @@ class GetCallNodes(ast.NodeVisitor):
         return self.all_tasks, self.variables, self.task_list
 
     def visit_Call(self, node, return_task=False):
-        if isinstance(node.func, ast.Attribute):
-            name_node = node.func
-            while not isinstance(name_node, ast.Name):
-                name_node = name_node.value
-            if name_node.id in list(self._globals.keys()) + ["CalmTask"]:
-                task = eval(compile(ast.Expression(node), "", "eval"), self._globals)
-                if task is not None:
-                    if self.target is not None and not task.target_any_local_reference:
-                        task.target_any_local_reference = self.target
-                    if return_task:
-                        return task
-                    self.task_list.append(task)
-                    self.all_tasks.append(task)
+        sub_node = node.func
+        while not isinstance(sub_node, ast.Name):
+            sub_node = sub_node.value
+        if (
+            eval(compile(ast.Expression(sub_node), "", "eval"), self._globals)
+            == CalmTask
+        ):
+            task = eval(compile(ast.Expression(node), "", "eval"), self._globals)
+            if task is not None:
+                if self.target is not None and not task.target_any_local_reference:
+                    task.target_any_local_reference = self.target
+                if return_task:
+                    return task
+                self.task_list.append(task)
+                self.all_tasks.append(task)
+                return
+        return self.generic_visit(node)
 
     def visit_Assign(self, node):
-        if len(node.targets) > 1:
-            raise ValueError(
-                "not enough values to unpack (expected {}, got 1)".format(
-                    len(node.targets)
+        if not isinstance(node.value, ast.Call):
+            return self.generic_visit(node)
+        sub_node = node.value.func
+        while not isinstance(sub_node, ast.Name):
+            sub_node = sub_node.value
+        if (
+            eval(compile(ast.Expression(sub_node), "", "eval"), self._globals)
+            == CalmVariable
+        ):
+            if len(node.targets) > 1:
+                raise ValueError(
+                    "not enough values to unpack (expected {}, got 1)".format(
+                        len(node.targets)
+                    )
                 )
+            variable_name = node.targets[0].id
+            if variable_name in self.variables.keys():
+                raise NameError("duplicate variable name {}".format(variable_name))
+            variable = eval(
+                compile(ast.Expression(node.value), "", "eval"), self._globals
             )
-        variable_name = node.targets[0].id
-        if variable_name in self.variables.keys():
-            raise NameError("duplicate variable name {}".format(variable_name))
-        if isinstance(node.value, ast.Call):
-            name_node = node.value.func
-            while not isinstance(name_node, ast.Name):
-                name_node = name_node.value
-            if name_node.id in list(self._globals.keys()) + ["CalmVariable"]:
-                variable = eval(
-                    compile(ast.Expression(node.value), "", "eval"), self._globals
-                )
-                if isinstance(variable, VariableType):
-                    variable.name = variable_name
-                    self.variables[variable_name] = variable
+            if isinstance(variable, VariableType):
+                variable.name = variable_name
+                self.variables[variable_name] = variable
+                return
+        return self.generic_visit(node)
 
     def visit_With(self, node):
         parallel_tasks = []
@@ -140,6 +150,7 @@ class action(metaclass=DescriptorType):
 
         # Generate the entity names
         self.action_name = user_func.__name__
+        self.action_description = user_func.__doc__ or ""
         self.runbook_name = str(uuid.uuid4())[:8] + "_runbook"
         self.dag_name = str(uuid.uuid4())[:8] + "_dag"
         self.user_func = user_func
@@ -231,6 +242,7 @@ class action(metaclass=DescriptorType):
         self.user_action = _action_create(
             **{
                 "name": action_name,
+                "description": self.action_description,
                 "critical": ACTION_TYPE == "system",
                 "type": ACTION_TYPE,
                 "runbook": self.user_runbook,

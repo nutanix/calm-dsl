@@ -8,7 +8,7 @@ PC_IP = "10.46.34.230"
 PC_PORT = 9440
 PC_USERNAME = "admin"
 PC_PASSWORD = "***REMOVED***"
-CONFIG_FILE = os.path.expanduser("~/.calm/config")
+CONFIG_FILE = os.path.expanduser("~/.calm/server/config.ini")
 
 
 _CONFIG = None
