@@ -1,4 +1,6 @@
 from .main import main
-from .foo import *
+from .bp_commands import *  # NoQA
+from .app_commands import *  # NoQA
+from calm.dsl.api import get_api_client
 
-# __all__ = ["main"]
+__all__ = [main, get_api_client]
