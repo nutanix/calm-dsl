@@ -115,8 +115,5 @@ venv.bak/
 # jupyter notebook stuff
 *.ipynb
 
-# CLI config file
-config.ini
-
 # jupyter extension, until we need it
 calm_nb_ext/
