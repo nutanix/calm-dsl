@@ -350,22 +350,30 @@ def update_project(obj, name, payload):
     return client.project.update(project_id, payload)
 
 
-def poll_creation_status(client, name):
+def poll_creation_status(client, project_uuid):
 
     cnt = 0
     while True:
-        try:
-            click.echo("\nGetting status of project creation")
-            project = get_project(client, name)
-            if project["status"]["state"] == "COMPLETE":
-                click.echo(">>Project creation successful !!!")
-                return
-            elif project["status"]["state"] == "RUNNING":
-                click.echo(">>Project is in runnning state...")
-            else:
-                raise Exception(">>Project creation unsuccessful !!!")
-        except Exception:
-            click.echo(">>Project creation is in process...")
+        click.echo("\nGetting status of project creation")
+        res, err = client.project.read(project_uuid)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        project = res.json()
+        if project["status"]["state"] == "COMPLETE":
+            click.echo(">>Project creation successful !!!")
+            return
+
+        elif project["status"]["state"] == "RUNNING":
+            click.echo(">>Project is in runnning state...")
+
+        elif project["status"]["state"] == "PENDING":
+            click.echo(">>Project is in pending state")
+
+        else:
+            msg = str(project["status"]["message_list"])
+            msg = ">>Project creation unsuccessful !!!\nmessage={}".format(msg)
+            raise Exception(msg)
 
         time.sleep(2)
         cnt += 1
@@ -399,7 +407,9 @@ def poll_updation_status(client, project_uuid, old_spec_version):
             return
 
         else:
-            raise Exception("Project updation failed")
+            msg = str(project["status"]["message_list"])
+            msg = ">>Project updation failed !!!\nmessage={}".format(msg)
+            raise Exception(msg)
 
         time.sleep(2)
         cnt += 1
