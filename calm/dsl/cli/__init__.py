@@ -1,4 +1,5 @@
 import json
+import uuid
 
 from ruamel import yaml
 import click
@@ -634,11 +635,50 @@ def run():
 
 
 @run.command("runbook")
-@click.argument("runbook_name")
+@click.argument("runbook_name", required=False)
+@click.option(
+    "--file",
+    "-f",
+    "runbook_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    required=False,
+    help="Path of Runbook file to directly run runbook"
+)
 @click.pass_obj
-def run_runbook_command(obj, runbook_name, runbook=None):
+def run_runbook_command(obj, runbook_name, runbook_file=None):
+
+    if runbook_file is None and runbook_name is None:
+        click.echo("One of either Runbook Name or Runbook File is required to run runbook.")
+        return
 
     client = obj.get("client")
+    runbook = None
+
+    if runbook_file:
+        click.echo(">> Uploading runbook: {}".format(runbook_file))
+        name = "runbook" + "_" + str(uuid.uuid4())[:8]
+        if runbook_file.endswith(".json"):
+            res, err = create_runbook_from_json(
+                client, runbook_file, name=name
+            )
+        elif runbook_file.endswith(".py"):
+            res, err = create_runbook_from_dsl(
+                client, runbook_file, name=name
+            )
+        else:
+            click.echo("Unknown file format {}".format(runbook_file))
+            return
+
+        if err:
+            click.echo(err["error"])
+            return
+
+        click.echo(">> Uploaded runbook: {}".format(runbook_file))
+        runbook = res.json()
+        runbook_id = runbook["metadata"]["uuid"]
+        res, err = client.runbook.delete(runbook_id)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     run_runbook(client, runbook_name, runbook=runbook)
 

@@ -1,7 +1,7 @@
 import time
 import warnings
 import importlib.util
-from pprint import pprint
+import datetime
 
 import arrow
 import click
@@ -214,7 +214,7 @@ def run_runbook(
 
     res, err = client.runbook.run(runbook_uuid, {})
     if not err:
-        click.echo(">> {} queued for run >>".format(runbook_name))
+        click.echo(">> {} queued for run".format(runbook_name or "Runbook"))
     else:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
     response = res.json()
@@ -225,30 +225,75 @@ def run_runbook(
     count = 0
     while count < maxWait:
         # call status api
-        click.echo("Polling status of Runlog")
         res, err = client.runbook.poll_action_run(runlog_uuid)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
         response = res.json()
-        pprint(response)
+        click.echo("[{}] Runbook run is in {} state. Runlog uuid is: {}".format(
+            highlight_text(str(datetime.datetime.now())), highlight_text(response["status"]["state"]), highlight_text(runlog_uuid)
+        ))
         if response["status"]["state"] == "SUCCESS":
             config = get_config()
             pc_ip = config["SERVER"]["pc_ip"]
             pc_port = config["SERVER"]["pc_port"]
 
-            click.echo("Successfully ran Runbook. Runlog uuid is: {}".format(runlog_uuid))
+            click.echo("[{}] Successfully ran Runbook. Runlog uuid is: {}".format(highlight_text(str(datetime.datetime.now())), highlight_text(runlog_uuid)))
 
-            click.echo(
-                "Runbook run url: https://{}:{}/console/#page/explore/calm/runs/{}?runbookId={}".format(
-                    pc_ip, pc_port, runlog_uuid, runbook_uuid
-                )
-            )
+            click.echo(">> run completed".format(runbook_name or "Runbook"))
+            run_url = "https://{}:{}/console/#page/explore/calm/runs/{}?runbookId={}".format(pc_ip, pc_port, runlog_uuid, runbook_uuid)
+            click.echo("\nRunbook run url: {}".format(highlight_text(run_url)))
+            describe_runlog(client, runlog_uuid)
             break
         elif response["status"]["state"] == "FAILURE" or response["status"]["state"] == "SYS_ERROR":
-            click.echo("Failed to run runbook. Check API response above.")
+            click.echo("[{}] Failed to run runbook -".format(str(datetime.datetime.now())))
+            for reason in response["status"]["reason_list"]:
+                click.echo("\tERROR: {}".format(str(reason)))
+            click.echo(">> run completed".format(runbook_name or "Runbook"))
+            run_url = "https://{}:{}/console/#page/explore/calm/runs/{}?runbookId={}".format(pc_ip, pc_port, runlog_uuid, runbook_uuid)
+            click.echo("\nRunbook run url: {}".format(highlight_text(run_url)))
+            describe_runlog(client, runlog_uuid)
             break
-        elif err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
         count += 10
         time.sleep(10)
+
+
+def describe_runlog(client, uuid, level=0):
+    res, err = client.runbook.poll_action_run(uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    response = res.json()
+    if response['status']['type'] == 'action_runlog':
+        click.echo("\n---------Runbook Run Recap-----------\n")
+        click.echo("\n{} [{}]".format(response['status']['action_reference']['name'], highlight_text(response['status']['state'])))
+
+    res, err = client.runbook.list_runlogs(uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    response = res.json()
+
+    level += 1
+    indent = "\t" * level
+    for entity in response['entities']:
+        runlog_uuid = entity['metadata']['uuid']
+        if entity['status']['type'] == 'task_runlog':
+            click.echo("{}{} [{}]".format(indent, entity['status']['task_reference']['name'], highlight_text(entity['status']['state'])))
+            res, err = client.runbook.runlog_output(runlog_uuid)
+            if err:
+                raise Exception("\n{}[{}] - {}".format(indent, err["code"], err["error"]))
+            runlog_output = res.json()
+            for output in runlog_output['status']['output_list']:
+                output_lines = str(output['output']).splitlines()
+                click.echo("{}---------------------------------".format(indent))
+                for line in output_lines:
+                    click.echo("{}{}".format(indent, highlight_text(line)))
+                click.echo("{}---------------------------------".format(indent))
+        elif entity['status']['type'] == 'runbook_runlog':
+            click.echo("\n{}{} [{}]".format(indent, entity['status']['runbook_reference']['name'], highlight_text(entity['status']['state'])))
+            describe_runlog(client, runlog_uuid, level)
+        else:
+            describe_runlog(client, runlog_uuid, level)
 
 
 def describe_runbook(obj, runbook_name):
