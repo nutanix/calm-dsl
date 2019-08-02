@@ -122,7 +122,7 @@ class VCenter:
     def customizations(self, account_id, os):
 
         Obj = get_resource_api(vmw.CUSTOMIZATION, self.connection)
-        payload = {"filter": "account_uuid=={};". format(account_id)}
+        payload = {"filter": "account_uuid=={};".format(account_id)}
 
         res, err = Obj.list(payload)
         if err:
@@ -139,7 +139,7 @@ class VCenter:
     def timezones(self, os):
 
         Obj = get_resource_api(vmw.TIMEZONE, self.connection)
-        payload = {"filter": "guest_os=={};". format(os)}
+        payload = {"filter": "guest_os=={};".format(os)}
 
         res, err = Obj.list(payload)
         if err:
@@ -184,7 +184,12 @@ class VCenter:
         return name_id_map
 
     def file_paths(
-        self, account_id, datastore_url=None, file_extension="iso", host_id=None, cluster_name=None
+        self,
+        account_id,
+        datastore_url=None,
+        file_extension="iso",
+        host_id=None,
+        cluster_name=None,
     ):
 
         Obj = get_resource_api(vmw.FILE_PATHS, self.connection)
@@ -219,7 +224,7 @@ class VCenter:
 
         return fpaths
 
-    def template_defaults(self, account_id, template_id):   # TODO improve this mess
+    def template_defaults(self, account_id, template_id):  # TODO improve this mess
         payload = {"filter": 'template_uuids==["{}"];'.format(template_id)}
         Obj = get_resource_api(vmw.TEMPLATE_DEFS.format(account_id), self.connection)
         res, err = Obj.list(payload)
@@ -336,9 +341,7 @@ def highlight_text(text, **kwargs):
 
 def create_spec(client):
 
-    spec = {
-        "type": "PROVISION_VMWARE_VM"
-    }
+    spec = {"type": "PROVISION_VMWARE_VM"}
     Obj = VCenter(client.connection)
 
     # VM Configuration
@@ -393,7 +396,9 @@ def create_spec(client):
             break
 
     if not account_id:
-        click.echo(highlight_text("No vmware account found registered in this project !!!"))
+        click.echo(
+            highlight_text("No vmware account found registered in this project !!!")
+        )
         click.echo("Please add one !!!")
         return
 
@@ -575,7 +580,8 @@ def create_spec(client):
             click.echo("Bus Sharing: {}".format(highlight_text(bus_sharing)))
 
             choice = click.prompt(
-                "\n{}(y/n)".format(highlight_text("Want to edit this controller")), default="n"
+                "\n{}(y/n)".format(highlight_text("Want to edit this controller")),
+                default="n",
             )
             if choice[0] == "y":
                 controllers = list(vmw.CONTROLLER["SCSI"].keys())
@@ -634,7 +640,8 @@ def create_spec(client):
             )
 
             choice = click.prompt(
-                "\n{}(y/n)".format(highlight_text("Want to edit this controller")), default="n"
+                "\n{}(y/n)".format(highlight_text("Want to edit this controller")),
+                default="n",
             )
             if choice[0] == "y":
                 controllers = list(vmw.CONTROLLER["SATA"].keys())
@@ -688,7 +695,8 @@ def create_spec(client):
             click.echo("Exclude from vm config: {}".format(highlight_text("No")))
 
             choice = click.prompt(
-                "\n{}(y/n)".format(highlight_text("Want to edit this disk")), default="n"
+                "\n{}(y/n)".format(highlight_text("Want to edit this disk")),
+                default="n",
             )
 
             # Only size, disk_mode and excluding checkbox is editable(FROM CALM_UI repo)
@@ -712,7 +720,8 @@ def create_spec(client):
                         break
 
                 is_deleted = click.prompt(
-                    "\n{}(y/n)".format(highlight_text("Exclude disk from vm config")), default="n"
+                    "\n{}(y/n)".format(highlight_text("Exclude disk from vm config")),
+                    default="n",
                 )
                 is_deleted = True if is_deleted[0] == "y" else False
                 dsk = {
@@ -783,7 +792,8 @@ def create_spec(client):
                     break
 
             is_deleted = click.prompt(
-                "\n{}(y/n)".format(highlight_text("Exclude network from vm config")), default="n"
+                "\n{}(y/n)".format(highlight_text("Exclude network from vm config")),
+                default="n",
             )
             is_deleted = True if is_deleted[0] == "y" else False
 
@@ -819,7 +829,7 @@ def create_spec(client):
 
         while True:
             ind = click.prompt("\nEnter the index of controller type", default=1)
-            if ((ind > len(controllers)) or (ind <= 0)):
+            if (ind > len(controllers)) or (ind <= 0):
                 click.echo("Invalid index !!!")
 
             else:
@@ -838,7 +848,7 @@ def create_spec(client):
 
         while True:
             ind = click.prompt("\nEnter the index of sharing type", default=1)
-            if ((ind > len(sharingOptions)) or (ind <= 0)):
+            if (ind > len(sharingOptions)) or (ind <= 0):
                 click.echo("Invalid index !!! ")
 
             else:
@@ -857,7 +867,8 @@ def create_spec(client):
         controller_key_type_map[key] = ("SCSI", label)
         spec["resources"]["controller_list"].append(controller)
         choice = click.prompt(
-            "\n{}(y/n)".format(highlight_text("Want to add more SCSI controllers")), default="n"
+            "\n{}(y/n)".format(highlight_text("Want to add more SCSI controllers")),
+            default="n",
         )
 
     choice = click.prompt(
@@ -881,7 +892,7 @@ def create_spec(client):
 
         while True:
             ind = click.prompt("\nEnter the index of controller type", default=1)
-            if ((ind > len(controllers)) or (ind <= 0)):
+            if (ind > len(controllers)) or (ind <= 0):
                 click.echo("Invalid index !!! ")
 
             else:
@@ -894,15 +905,13 @@ def create_spec(client):
             vmw.ControllerDeviceSlotMap[controller_type]
         )
         controller_count["SATA"] += 1
-        controller = {
-            "controller_type": controller_type,
-            "key": key,
-        }
+        controller = {"controller_type": controller_type, "key": key}
 
         controller_key_type_map[key] = ("SATA", label)
         spec["resources"]["controller_list"].append(controller)
         choice = click.prompt(
-            "\n{}(y/n)".format(highlight_text("Want to add more SATA controllers")), default="n"
+            "\n{}(y/n)".format(highlight_text("Want to add more SATA controllers")),
+            default="n",
         )
 
     choice = click.prompt(
@@ -916,7 +925,7 @@ def create_spec(client):
 
         while True:
             ind = click.prompt("\nEnter the index of disk type", default=1)
-            if ((ind > len(disk_types)) or (ind <= 0)):
+            if (ind > len(disk_types)) or (ind <= 0):
                 click.echo("Invalid index !!! ")
 
             else:
@@ -932,7 +941,7 @@ def create_spec(client):
 
         while True:
             ind = click.prompt("\nEnter the index of adapter type", default=1)
-            if ((ind > len(disk_adapters)) or (ind <= 0)):
+            if (ind > len(disk_adapters)) or (ind <= 0):
                 click.echo("Invalid index !!! ")
 
             else:
@@ -1056,7 +1065,7 @@ def create_spec(client):
 
                 while True:
                     ind = click.prompt("\nEnter the index of datastore", default=1)
-                    if ((ind > len(datastores)) or (ind <= 0)):
+                    if (ind > len(datastores)) or (ind <= 0):
                         click.echo("Invalid index !!! ")
 
                     else:
@@ -1157,9 +1166,12 @@ def create_spec(client):
 
     gc_enable = click.prompt("\nEnable Guest Customization(y/n)", default="n")
     if gc_enable[0] == "y":
-        spec["resources"]["guest_customization"] = _guest_customization(Obj, os, account_id)
+        spec["resources"]["guest_customization"] = _guest_customization(
+            Obj, os, account_id
+        )
 
     import pdb
+
     pdb.set_trace()
     VCenterVmProvider.validate_spec(spec)
     click.secho("\nCreate spec\n", underline=True)
@@ -1168,10 +1180,7 @@ def create_spec(client):
 
 def _windows_customization(Obj, account_id):
 
-    spec = {
-        "customization_type": vmw.OperatingSystem["Windows"],
-        "windows_data": {}
-    }
+    spec = {"customization_type": vmw.OperatingSystem["Windows"], "windows_data": {}}
 
     click.echo("\nChoose from given Guest Customization Modes:")
     gc_modes = vmw.GuestCustomizationModes["Windows"]
@@ -1180,10 +1189,8 @@ def _windows_customization(Obj, account_id):
         click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
     while True:
-        res = click.prompt(
-            "\nEnter the index of Guest Customization Mode", default=1
-        )
-        if ((res > len(gc_modes)) or (res <= 0)):
+        res = click.prompt("\nEnter the index of Guest Customization Mode", default=1)
+        if (res > len(gc_modes)) or (res <= 0):
             click.echo("Invalid index !!!")
 
         else:
@@ -1195,7 +1202,9 @@ def _windows_customization(Obj, account_id):
         customizations = Obj.customizations(account_id, "Windows")
 
         if not customizations:
-            click.echo(highlight_text("No Predefined Guest Customization registered !!!"))
+            click.echo(
+                highlight_text("No Predefined Guest Customization registered !!!")
+            )
             return {}
 
         click.echo("\nChoose from given customization names:")
@@ -1203,10 +1212,8 @@ def _windows_customization(Obj, account_id):
             click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
         while True:
-            res = click.prompt(
-                "\nEnter the index of Customization Name", default=1
-            )
-            if ((res > len(customizations)) or (res <= 0)):
+            res = click.prompt("\nEnter the index of Customization Name", default=1)
+            if (res > len(customizations)) or (res <= 0):
                 click.echo("Invalid index !!! ")
 
             else:
@@ -1216,7 +1223,7 @@ def _windows_customization(Obj, account_id):
 
         return {
             "customization_type": vmw.OperatingSystem["Linux"],
-            "customization_name": custn_name
+            "customization_name": custn_name,
         }
 
     else:
@@ -1226,7 +1233,7 @@ def _windows_customization(Obj, account_id):
         product_id = click.prompt("\tProduct Id: ", default="")
 
         timezone_dict = Obj.timezones(vmw.OperatingSystem["Windows"])
-        timezone = ""   # To call the api
+        timezone = ""  # To call the api
 
         timezone_list = list(timezone_dict.keys())
         click.echo("\nChoose from given timezone names:")
@@ -1234,10 +1241,8 @@ def _windows_customization(Obj, account_id):
             click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
         while True:
-            res = click.prompt(
-                "\nEnter the index of Timezone", default=1
-            )
-            if ((res > len(timezone_list)) or (res <= 0)):
+            res = click.prompt("\nEnter the index of Timezone", default=1)
+            if (res > len(timezone_list)) or (res <= 0):
                 click.echo("Invalid index !!! ")
 
             else:
@@ -1248,7 +1253,9 @@ def _windows_customization(Obj, account_id):
 
         admin_password = click.prompt("Admin Password", hide_input=True)
 
-        choice = click.prompt("\nAutomatically logon as administrator(y/n)", default="n")
+        choice = click.prompt(
+            "\nAutomatically logon as administrator(y/n)", default="n"
+        )
         auto_logon = True if choice[0] == "y" else False
 
         spec["windows_data"].update(
@@ -1261,15 +1268,15 @@ def _windows_customization(Obj, account_id):
                 "full_name": full_name,
                 "password": {
                     "value": admin_password,
-                    "attrs": {
-                        "is_secret_modified": True
-                    }
-                }
+                    "attrs": {"is_secret_modified": True},
+                },
             }
         )
 
         if auto_logon:
-            login_count = click.prompt("Number of times to logon automatically", default=1)
+            login_count = click.prompt(
+                "Number of times to logon automatically", default=1
+            )
             spec["windows_data"]["login_count"] = login_count
 
         command_list = []
@@ -1281,7 +1288,8 @@ def _windows_customization(Obj, account_id):
             command = click.prompt("\tCommand", default="")
             command_list.append(command)
             choice = click.prompt(
-                "\n{}(y/n)".format(highlight_text("Want to add more commands")), default="n"
+                "\n{}(y/n)".format(highlight_text("Want to add more commands")),
+                default="n",
             )
 
         spec["windows_data"]["command_list"] = command_list
@@ -1293,10 +1301,7 @@ def _windows_customization(Obj, account_id):
         if not is_domain:
             workgroup = click.prompt("\tWorkgroup: ", default="")
             spec["windows_data"].update(
-                {
-                    "is_domain": is_domain,
-                    "workgroup": workgroup
-                }
+                {"is_domain": is_domain, "workgroup": workgroup}
             )
 
         else:
@@ -1310,10 +1315,8 @@ def _windows_customization(Obj, account_id):
                     "domain_user": domain_user,
                     "domain_password": {
                         "value": domain_password,
-                        "attrs": {
-                            "is_secret_modified": True
-                        }
-                    }
+                        "attrs": {"is_secret_modified": True},
+                    },
                 }
             )
 
@@ -1329,10 +1332,8 @@ def _linux_customization(Obj, account_id):
         click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
     while True:
-        res = click.prompt(
-            "\nEnter the index of Guest Customization Mode", default=1
-        )
-        if ((res > len(gc_modes)) or (res <= 0)):
+        res = click.prompt("\nEnter the index of Guest Customization Mode", default=1)
+        if (res > len(gc_modes)) or (res <= 0):
             click.echo("Invalid index !!!")
 
         else:
@@ -1344,7 +1345,9 @@ def _linux_customization(Obj, account_id):
         customizations = Obj.customizations(account_id, "Linux")
 
         if not customizations:
-            click.echo(highlight_text("No Predefined Guest Customization registered !!!"))
+            click.echo(
+                highlight_text("No Predefined Guest Customization registered !!!")
+            )
             return {}
 
         click.echo("\nChoose from given customization names:")
@@ -1352,10 +1355,8 @@ def _linux_customization(Obj, account_id):
             click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
         while True:
-            res = click.prompt(
-                "\nEnter the index of Customization Name", default=1
-            )
-            if ((res > len(customizations)) or (res <= 0)):
+            res = click.prompt("\nEnter the index of Customization Name", default=1)
+            if (res > len(customizations)) or (res <= 0):
                 click.echo("Invalid index !!! ")
 
             else:
@@ -1365,14 +1366,14 @@ def _linux_customization(Obj, account_id):
 
         return {
             "customization_type": vmw.OperatingSystem["Linux"],
-            "customization_name": custn_name
+            "customization_name": custn_name,
         }
 
     elif gc_mode == "Cloud Init":
         script = click.prompt("\nEnter script", default="")
         return {
             "customization_type": vmw.OperatingSystem["Linux"],
-            "cloud_init": script
+            "cloud_init": script,
         }
 
     else:
@@ -1388,10 +1389,8 @@ def _linux_customization(Obj, account_id):
             click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
         while True:
-            res = click.prompt(
-                "\nEnter the index of Timezone", default=1
-            )
-            if ((res > len(timezone_list)) or (res <= 0)):
+            res = click.prompt("\nEnter the index of Timezone", default=1)
+            if (res > len(timezone_list)) or (res <= 0):
                 click.echo("Invalid index !!! ")
 
             else:
@@ -1409,8 +1408,8 @@ def _linux_customization(Obj, account_id):
                 "hw_utc_clock": hw_ctc_clock,
                 "domain": domain,
                 "hostname": host_name,
-                "timezone": timezone
-            }
+                "timezone": timezone,
+            },
         }
 
 
@@ -1450,19 +1449,16 @@ def _guest_customization(Obj, os, account_id):
                         "ip": ip,
                         "subnet_mask": subnet_mask,
                         "gateway_default": gateway_default,
-                        "gateway_alternate": gateway_alternate
+                        "gateway_alternate": gateway_alternate,
                     }
                 )
 
             else:
-                network_settings.append(
-                    {
-                        "is_dhcp": is_dhcp
-                    }
-                )
+                network_settings.append({"is_dhcp": is_dhcp})
 
             choice = click.prompt(
-                "\n{}(y/n)".format(highlight_text("Want to add more networks")), default="n"
+                "\n{}(y/n)".format(highlight_text("Want to add more networks")),
+                default="n",
             )
 
         click.secho("\nDNS Setting", underline=True)
@@ -1477,7 +1473,7 @@ def _guest_customization(Obj, os, account_id):
                 "dns_search_path": [dns_search_path],
                 "dns_tertiary": dns_tertiary,
                 "dns_primary": dns_primary,
-                "dns_secondary": dns_secondary
+                "dns_secondary": dns_secondary,
             }
         )
 

@@ -287,7 +287,7 @@ def create_spec(client):
 
     while True:
         res = click.prompt("\nEnter the index of account to be used", default=1)
-        if ((res > len(accounts)) or (res <= 0)):
+        if (res > len(accounts)) or (res <= 0):
             click.echo("Invalid index !!! ")
 
         else:
