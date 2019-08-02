@@ -5,9 +5,9 @@ import uuid
 from .entity import EntityType, Entity
 from .descriptor import DescriptorType
 from .validator import PropertyValidator
-from .variable import VariableType, CalmVariable
-from .task import dag, create_call_rb, CalmTask
+from .task import dag, create_call_rb
 from .runbook import runbook_create
+from .node_visitor import GetCallNodes
 
 # Action - Since action, runbook and DAG task are heavily coupled together,
 # the action type behaves as all three.
@@ -45,93 +45,6 @@ def _action_create(**kwargs):
     name = kwargs.get("name", kwargs.get("__name__", name))
     bases = (Action,)
     return ActionType(name, bases, kwargs)
-
-
-class GetCallNodes(ast.NodeVisitor):
-
-    # TODO: Need to add validations for unsupported nodes.
-    def __init__(self, func_globals, target=None):
-        self.task_list = []
-        self.all_tasks = []
-        self.variables = {}
-        self.target = target or None
-        self._globals = func_globals or {}.copy()
-
-    def get_objects(self):
-        return self.all_tasks, self.variables, self.task_list
-
-    def visit_Call(self, node, return_task=False):
-        sub_node = node.func
-        while not isinstance(sub_node, ast.Name):
-            sub_node = sub_node.value
-        if (
-            eval(compile(ast.Expression(sub_node), "", "eval"), self._globals)
-            == CalmTask
-        ):
-            task = eval(compile(ast.Expression(node), "", "eval"), self._globals)
-            if task is not None:
-                if self.target is not None and not task.target_any_local_reference:
-                    task.target_any_local_reference = self.target
-                if return_task:
-                    return task
-                self.task_list.append(task)
-                self.all_tasks.append(task)
-                return
-        return self.generic_visit(node)
-
-    def visit_Assign(self, node):
-        if not isinstance(node.value, ast.Call):
-            return self.generic_visit(node)
-        sub_node = node.value.func
-        while not isinstance(sub_node, ast.Name):
-            sub_node = sub_node.value
-        if (
-            eval(compile(ast.Expression(sub_node), "", "eval"), self._globals)
-            == CalmVariable
-        ):
-            if len(node.targets) > 1:
-                raise ValueError(
-                    "not enough values to unpack (expected {}, got 1)".format(
-                        len(node.targets)
-                    )
-                )
-            variable_name = node.targets[0].id
-            if variable_name in self.variables.keys():
-                raise NameError("duplicate variable name {}".format(variable_name))
-            variable = eval(
-                compile(ast.Expression(node.value), "", "eval"), self._globals
-            )
-            if isinstance(variable, VariableType):
-                variable.name = variable_name
-                self.variables[variable_name] = variable
-                return
-        return self.generic_visit(node)
-
-    def visit_With(self, node):
-        parallel_tasks = []
-        if len(node.items) > 1:
-            raise ValueError(
-                "Only a single context is supported in 'with' statements inside the action."
-            )
-        context = eval(
-            compile(ast.Expression(node.items[0].context_expr), "", "eval"),
-            self._globals,
-        )
-        if context.__calm_type__ == "parallel":
-            for statement in node.body:
-                if not isinstance(statement.value, ast.Call):
-                    raise ValueError(
-                        "Only calls to 'CalmTask' methods supported inside parallel context."
-                    )
-                task = self.visit_Call(statement.value, return_task=True)
-                if task:
-                    parallel_tasks.append(task)
-                    self.all_tasks.append(task)
-            self.task_list.append(parallel_tasks)
-        else:
-            raise ValueError(
-                "Unsupported context used in 'with' statement inside the action."
-            )
 
 
 class action(metaclass=DescriptorType):
@@ -200,7 +113,7 @@ class action(metaclass=DescriptorType):
         except Exception as ex:
             self.__exception__ = ex
             raise
-        tasks, variables, task_list = node_visitor.get_objects()
+        tasks, variables, task_list, _ = node_visitor.get_objects()
         edges = []
         for from_tasks, to_tasks in zip(task_list, task_list[1:]):
             if not isinstance(from_tasks, list):

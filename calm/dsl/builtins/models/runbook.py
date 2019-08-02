@@ -6,7 +6,7 @@ from .task import dag
 from .entity import EntityType, Entity
 from .descriptor import DescriptorType
 from .validator import PropertyValidator
-from .variable import VariableType
+from .node_visitor import GetCallNodes
 
 
 class RunbookType(EntityType):
@@ -38,94 +38,6 @@ def runbook_create(**kwargs):
     name = kwargs.get("name", kwargs.get("__name__", name))
     bases = (Runbook,)
     return RunbookType(name, bases, kwargs)
-
-
-class GetCallNodes(ast.NodeVisitor):
-
-    # TODO: Need to add validations for unsupported nodes.
-    def __init__(self, func_globals, target=None):
-        self.task_list = []
-        self.all_tasks = []
-        self.variables = {}
-        self.args = {}
-        self.target = target or None
-        self._globals = func_globals or {}.copy()
-
-    def get_objects(self):
-        return self.all_tasks, self.variables, self.task_list, self.args
-
-    def visit_Call(self, node, return_task=False):
-        if isinstance(node.func, ast.Attribute):
-            name_node = node.func
-            while not isinstance(name_node, ast.Name):
-                name_node = name_node.value
-            if name_node.id in list(self._globals.keys()) + ["CalmTask"]:
-                task = eval(compile(ast.Expression(node), "", "eval"), self._globals)
-                if task is not None:
-                    if self.target is not None and not task.target_any_local_reference:
-                        task.target_any_local_reference = self.target
-                    if return_task:
-                        return task
-                    self.task_list.append(task)
-                    self.all_tasks.append(task)
-
-    def visit_Assign(self, node):
-        if len(node.targets) > 1:
-            raise ValueError(
-                "not enough values to unpack (expected {}, got 1)".format(
-                    len(node.targets)
-                )
-            )
-        variable_name = node.targets[0].id
-        if variable_name in self.variables.keys():
-            raise NameError("duplicate variable name {}".format(variable_name))
-        if isinstance(node.value, ast.Call):
-            name_node = node.value.func
-            while not isinstance(name_node, ast.Name):
-                name_node = name_node.value
-            if name_node.id in list(self._globals.keys()) + ["CalmVariable"]:
-                variable = eval(
-                    compile(ast.Expression(node.value), "", "eval"), self._globals
-                )
-                if isinstance(variable, VariableType):
-                    variable.name = variable_name
-                    self.variables[variable_name] = variable
-
-    def visit_With(self, node):
-        parallel_tasks = []
-        if len(node.items) > 1:
-            raise ValueError(
-                "Only a single context is supported in 'with' statements inside the action."
-            )
-        context = eval(
-            compile(ast.Expression(node.items[0].context_expr), "", "eval"),
-            self._globals,
-        )
-        if context.__calm_type__ == "parallel":
-            for statement in node.body:
-                if not isinstance(statement.value, ast.Call):
-                    raise ValueError(
-                        "Only calls to 'CalmTask' methods supported inside parallel context."
-                    )
-                task = self.visit_Call(statement.value, return_task=True)
-                if task:
-                    parallel_tasks.append(task)
-                    self.all_tasks.append(task)
-            self.task_list.append(parallel_tasks)
-        else:
-            raise ValueError(
-                "Unsupported context used in 'with' statement inside the action."
-            )
-
-    def visit_arguments(self, node):
-        args = node.args
-        defaults = node.defaults
-        for arg, val in zip(args, defaults):
-            if arg.arg in self.args.keys():
-                raise NameError("Duplicate argument name {}".format(arg.arg))
-            if not isinstance(val, ast.Str):
-                raise ValueError("Only arguments of type string allowed {}".format(arg.arg))
-            self.args[arg.arg] = val.s
 
 
 class runbook(metaclass=DescriptorType):
@@ -172,8 +84,8 @@ class runbook(metaclass=DescriptorType):
 
         # Get the indent since this decorator is used within class definition
         # For this we split the code on newline and count the number of spaces
-        # before the @action decorator.
-        # src = "    @action\n    def action1():\n    CalmTask.Exec.ssh("Hello World")"
+        # before the @runbook decorator.
+        # src = "    @runbook\n    def runbook1():\n    CalmTask.Exec.ssh("Hello World")"
         # The indentation here would be 4.
         padding = src.split("\n")[0].rstrip(" ").split(" ").count("")
 
