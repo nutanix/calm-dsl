@@ -1170,9 +1170,6 @@ def create_spec(client):
             Obj, os, account_id
         )
 
-    import pdb
-
-    pdb.set_trace()
     VCenterVmProvider.validate_spec(spec)
     click.secho("\nCreate spec\n", underline=True)
     click.echo(highlight_text(json.dumps(spec, sort_keys=True, indent=4)))
