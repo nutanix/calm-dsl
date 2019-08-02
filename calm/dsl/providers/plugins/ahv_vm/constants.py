@@ -7,3 +7,5 @@ class AHV:
     DEVICE_BUS = {"SATA": "SATA", "IDE": "IDE"}
 
     GUEST_CUSTOMIZATION_SCRIPT_TYPES = ["cloud_init", "sysprep"]
+
+    SYS_PREP_INSTALL_TYPES = ["Fresh", "Prepared"]

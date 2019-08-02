@@ -660,8 +660,8 @@ def create_spec(client):
 
     volume_types = list(aws.VOLUME_TYPE_MAP.keys())
     click.echo("\nChoose from given volume types: ")
-    if not root_device_name:
-        click.echo(highlight_text("\nNo device name available!!!"))
+    if not volume_types:
+        click.echo(highlight_text("\nNo volume type available!!!"))
 
     else:
         for index, name in enumerate(volume_types):
@@ -677,12 +677,12 @@ def create_spec(client):
                 click.echo("{} selected".format(highlight_text(volume_types[res - 1])))
                 break
 
-        choice = click.prompt(
-            "\n{}(y/n)".format(highlight_text("Want to delete disk on termination")),
-            default="y",
-        )
-        root_disk["delete_on_termination"] = True if choice[0] == "y" else False
-        spec["resources"]["block_device_map"]["root_disk"] = root_disk
+    choice = click.prompt(
+        "\n{}(y/n)".format(highlight_text("Want to delete disk on termination")),
+        default="y",
+    )
+    root_disk["delete_on_termination"] = True if choice[0] == "y" else False
+    spec["resources"]["block_device_map"]["root_disk"] = root_disk
 
     click.secho("\n\tOther disks", bold=True)
     choice = click.prompt(
