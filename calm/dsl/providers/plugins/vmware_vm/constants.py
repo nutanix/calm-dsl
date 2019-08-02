@@ -44,6 +44,15 @@ class VCENTER:
         "SATA": {"Virtual SATA Controller": "VirtualAHCIController"},
     }
 
+    SCSIControllerOptions = {
+        "VirtualLsiLogicController": "Lsi Logic Parallel",
+        "VirtualLsiLogicSASController": "Lsi Logic SAS",
+        "ParaVirtualSCSIController": "VMware Paravirtual",
+        "VirtualBusLogicController": "Bus Logic Parallel",
+    }
+
+    SATAControllerOptions = {"VirtualAHCIController": "Virtual SATA Controller"}
+
     BUS_SHARING = {
         "No Sharing": "noSharing",
         "Virtual Sharing": "virtualSharing",
@@ -62,7 +71,7 @@ class VCENTER:
 
     GuestCustomizationModes = {
         "Linux": ["Cloud Init", "Custom Spec", "Predefined Customization"],
-        "Windows": ["Predefined Customization", "Windows Data"]
+        "Windows": ["Predefined Customization", "Windows Data"],
     }
 
     VirtualControllerNameMap = {
@@ -75,15 +84,6 @@ class VCENTER:
         "vim.vm.device.VirtualBusLogicController": "VirtualBusLogicController",
         "vim.vm.device.VirtualLsiLogicController": "VirtualLsiLogicController",
     }
-
-    SCSIControllerOptions = {
-        "VirtualLsiLogicController": "Lsi Logic Parallel",
-        "VirtualLsiLogicSASController": "Lsi Logic SAS",
-        "ParaVirtualSCSIController": "VMware Paravirtual",
-        "VirtualBusLogicController": "Bus Logic Parallel",
-    }
-
-    SATAControllerOptions = {"VirtualAHCIController": "Virtual SATA Controller"}
 
     ControllerMap = {
         "vim.vm.device.VirtualIDEController": "IDE",
