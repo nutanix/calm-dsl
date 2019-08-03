@@ -3,6 +3,7 @@ import json
 import uuid
 
 from .main import get, describe, delete, run, create
+from .utils import Display
 from .runbooks import (
     get_runbook_list,
     compile_runbook,
@@ -189,4 +190,10 @@ def run_runbook_command(obj, runbook_name, runbook_file=None):
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-    run_runbook(client, runbook_name, runbook=runbook)
+    def render_runbook(screen):
+        screen.clear()
+        screen.refresh()
+        run_runbook(screen, client, runbook_name, runbook=runbook)
+        screen.wait_for_input(10.0)
+
+    Display.wrapper(render_runbook)
