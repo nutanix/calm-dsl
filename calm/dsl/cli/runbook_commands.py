@@ -154,8 +154,9 @@ def _describe_runbook(obj, runbook_name):
     required=False,
     help="Path of Runbook file to directly run runbook"
 )
+@click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
 @click.pass_obj
-def run_runbook_command(obj, runbook_name, runbook_file=None):
+def run_runbook_command(obj, runbook_name, watch, runbook_file=None):
 
     if runbook_file is None and runbook_name is None:
         click.echo("One of either Runbook Name or Runbook File is required to run runbook.")
@@ -193,7 +194,7 @@ def run_runbook_command(obj, runbook_name, runbook_file=None):
     def render_runbook(screen):
         screen.clear()
         screen.refresh()
-        run_runbook(screen, client, runbook_name, runbook=runbook)
+        run_runbook(screen, client, runbook_name, watch, runbook=runbook)
         screen.wait_for_input(10.0)
 
-    Display.wrapper(render_runbook)
+    Display.wrapper(render_runbook, watch)

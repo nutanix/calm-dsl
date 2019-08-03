@@ -204,6 +204,7 @@ def run_runbook(
     screen,
     client,
     runbook_name,
+    watch,
     runbook=None,
 ):
     if not runbook:
@@ -213,19 +214,24 @@ def run_runbook(
 
     res, err = client.runbook.run(runbook_uuid, {})
     if not err:
+        screen.clear()
         screen.print_at(">> {} queued for run".format(runbook_name or "Runbook"), 0, 0)
     else:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
     response = res.json()
     runlog_uuid = response["status"]["runlog_uuid"]
 
-    watch_runbook(runlog_uuid, client, screen=screen)
+    if watch:
+        screen.refresh()
+        watch_runbook(runlog_uuid, client, screen=screen)
+    else:
+        screen.print_at(">> {} run triggered".format(runbook_name or "Runbook"), 0, 0)
 
     config = get_config()
     pc_ip = config["SERVER"]["pc_ip"]
     pc_port = config["SERVER"]["pc_port"]
     run_url = "https://{}:{}/console/#page/explore/calm/runs/{}?runbookId={}".format(pc_ip, pc_port, runlog_uuid, runbook_uuid)
-    click.echo("\nRunbook run url: {}".format(highlight_text(run_url)))
+    screen.print_at("\nRunbook run url: {}".format(highlight_text(run_url)), 0, 0)
 
 
 def watch_runbook(runlog_uuid, client, screen, poll_interval=10):
