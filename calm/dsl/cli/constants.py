@@ -39,6 +39,14 @@ class RUNLOG:
     ]
 
 
+class RUNBOOK:
+    class STATES:
+        ACTIVE = "ACTIVE"
+        DELETED = "DELETED"
+        DRAFT = "DRAFT"
+        ERROR = "ERROR"
+
+
 class BLUEPRINT:
     class STATES:
         ACTIVE = "ACTIVE"

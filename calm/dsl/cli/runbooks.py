@@ -1,7 +1,6 @@
 import time
 import warnings
 import importlib.util
-import datetime
 
 import arrow
 import click
@@ -9,8 +8,8 @@ from prettytable import PrettyTable
 
 from calm.dsl.builtins import RunbookService, create_runbook_payload
 from calm.dsl.config import get_config
-from .utils import get_name_query, highlight_text
-from .constants import RUNLOG
+from .utils import get_name_query, highlight_text, get_states_filter
+from .constants import RUNBOOK
 from .runlog import get_completion_func
 
 
@@ -27,9 +26,8 @@ def get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
     if filter_by:
         filter_query = filter_query + ";" + filter_by if name else filter_by
 
-    # TODO
-    # if all_items:
-    #    filter_query += get_states_filter(BLUEPRINT.STATES)
+    if all_items:
+        filter_query += get_states_filter(RUNBOOK.STATES)
     if filter_query.startswith(";"):
         filter_query = filter_query[1:]
 
@@ -117,7 +115,7 @@ def compile_runbook(runbook_file):
     return runbook_payload
 
 
-def get_previous_runs(obj, name, filter_by, limit, offset, quiet, all_items):
+def get_previous_runs(obj, name, filter_by, limit, offset, quiet):
     client = obj.get("client")
     config = obj.get("config")
 
@@ -127,8 +125,6 @@ def get_previous_runs(obj, name, filter_by, limit, offset, quiet, all_items):
         filter_query = get_name_query([name])
     if filter_by:
         filter_query = filter_query + ";" + filter_by if name else filter_by
-    # if all_items:
-    #    filter_query += get_states_filter(APPLICATION.STATES, state_key="_state")
     if filter_query.startswith(";"):
         filter_query = filter_query[1:]
 
