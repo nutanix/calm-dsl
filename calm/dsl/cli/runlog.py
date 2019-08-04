@@ -176,3 +176,24 @@ def get_completion_func(screen):
         return (False, "")
 
     return is_action_complete
+
+
+def get_runlog_status(screen):
+    def check_runlog_status(response, client=None):
+
+
+        if response["status"]["state"] == "PENDING":
+            msg = ">> Runlog run is in PENDING state"
+            screen.print_at(msg, 0, 0)
+            screen.refresh()
+        elif response["status"]["state"] in RUNLOG.FAILURE_STATES:
+            msg = ">> Runlog run is in {} state.".format(response["status"]["state"])
+            msg += " {}".format("\n".join(response["status"]["reason_list"]))
+            screen.print_at(msg, 0, 0)
+            screen.refresh()
+            return (True, msg)
+        else:
+            return (True, "")
+        return (False, msg)
+
+    return check_runlog_status

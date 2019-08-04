@@ -10,7 +10,7 @@ from calm.dsl.builtins import RunbookService, create_runbook_payload
 from calm.dsl.config import get_config
 from .utils import get_name_query, highlight_text, get_states_filter
 from .constants import RUNBOOK
-from .runlog import get_completion_func
+from .runlog import get_completion_func, get_runlog_status
 
 
 def get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
@@ -221,6 +221,12 @@ def run_runbook(
     response = res.json()
     runlog_uuid = response["status"]["runlog_uuid"]
 
+    def poll_runlog_status():
+        return client.runbook.poll_action_run(runlog_uuid)
+    should_continue = poll_action(poll_runlog_status, get_runlog_status(screen))
+    if not should_continue:
+        return
+
     if watch:
         screen.refresh()
         watch_runbook(runlog_uuid, client, screen=screen)
@@ -336,6 +342,9 @@ def poll_action(poll_func, completion_func, client=None, poll_interval=10):
         (completed, msg) = completion_func(response, client=client)
         if completed:
             # click.echo(msg)
+            if msg:
+                return False
             break
         count += poll_interval
         time.sleep(poll_interval)
+    return True
