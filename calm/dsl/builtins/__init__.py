@@ -21,6 +21,8 @@ from .models.package import Package, package
 from .models.provider_spec import provider_spec, read_provider_spec
 from .models.substrate import Substrate, substrate
 
+from .models.endpoint import Endpoint, endpoint
+
 from .models.deployment import Deployment, deployment
 
 from .models.profile import Profile, profile
@@ -61,6 +63,8 @@ __all__ = [
     "read_provider_spec",
     "Substrate",
     "substrate",
+    "Endpoint",
+    "endpoint",
     "Deployment",
     "deployment",
     "Profile",

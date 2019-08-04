@@ -305,6 +305,13 @@ def describe_runbook(obj, runbook_name):
     click.echo("\tVariables [{}]:".format(highlight_text(len(variable_types))))
     click.echo("\t\t{}".format(highlight_text(", ".join(variable_types))))
 
+    endpoint_types = [
+        "{} ({})".format(ep.get("name", ""), ep.get("type", ""))
+        for ep in endpoint_resources.get("endpoint_definition_list", [])
+    ]
+    click.echo("Endpoints [{}]:".format(highlight_text(len(endpoint_types))))
+    click.echo("\t{}".format(highlight_text(", ".join(endpoint_types))))
+
     substrate_types = [
         "{} ({})".format(sub.get("name", ""), sub.get("type", ""))
         for sub in runbook_resources.get("substrate_definition_list", [])

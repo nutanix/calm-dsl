@@ -9,6 +9,12 @@ properties:
     type: array
     items:
       $ref: '#/components/schemas/Substrate'
+  endpoint_definition_list:
+    x-calm-dsl-display-name: endpoints
+    description: Endpoint definitions for runbook service.
+    type: array
+    items:
+      $ref: '#/components/schemas/Endpoint'
   credential_definition_list:
     x-calm-dsl-display-name: credentials
     description: Credential definitions for runbook service.

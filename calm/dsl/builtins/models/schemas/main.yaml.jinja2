@@ -2,6 +2,7 @@
 {% import "service.yaml.jinja2" as service %}
 {% import "provider_spec.yaml.jinja2" as provider_spec %}
 {% import "substrate.yaml.jinja2" as substrate %}
+{% import "endpoint.yaml.jinja2" as endpoint %}
 {% import "deployment.yaml.jinja2" as deployment %}
 {% import "profile.yaml.jinja2" as profile %}
 {% import "blueprint.yaml.jinja2" as blueprint %}
@@ -27,6 +28,7 @@
 {{ service.ServiceSchema() }}
 {{ provider_spec.ProviderSpecSchema() }}
 {{ substrate.SubstrateSchema() }}
+{{ endpoint.EndpointSchema() }}
 {{ deployment.DeploymentSchema() }}
 {{ profile.ProfileSchema() }}
 {{ blueprint.BlueprintSchema() }}

@@ -1,0 +1,34 @@
+{% macro Endpoint() -%}
+
+title: Endpoint
+type: object
+x-calm-dsl-type: app_endpoint
+properties:
+  name:
+    type: string
+    maxLength: 64
+  type:
+    type: string
+    maxLength: 64
+  os_type:
+    type: string
+    maxLength: 64
+  value:
+    type: string
+    maxLength: 64
+  protocol:
+    type: string
+    maxLength: 64
+  port:
+    type: string
+    maxLength: 64
+
+{%- endmacro %}
+
+
+{% macro EndpointSchema() -%}
+
+Endpoint:
+  {{ Endpoint()|indent(2) }}
+
+{%- endmacro %}
