@@ -49,8 +49,8 @@ Point the CLI to your Calm setup by using a config file, or command line args.
  | Option  		    | Type 			    | Description	                                |
  | -------------  | ------------- |---------------------------------------------|
  | -f, --file  	  | File path  	  | Path of Blueprint file to upload  [Required]|
- | \-\-name  		  | Text          |	Blueprint name (Optional)                   |
- | \-\-description | Text          |	Blueprint description (Optional)            |
+ | \-\-name  		  | Text          |	Blueprint name |
+ | \-\-description | Text          |	Blueprint description            |
 
  Both relative and absolute paths are supported.
 
@@ -59,17 +59,18 @@ Point the CLI to your Calm setup by using a config file, or command line args.
 
  | Option  		    | Type     			| Description	                                |
  | -------------  | ------------- |---------------------------------------------|
- | \-\-name  		  | Text          |	Search for blueprints by name (Optional)    |
- | \-\-description | Text          |	Blueprint description (Optional)            |
- | \-\-filter      | Text          |	Filter for blueprints. All Rest API filters are supported. |
- | \-\-limit       | Integer       |	Number of blueprints to fetch              |
- | \-\-offset      | Integer       |	Starting point of blueprints (for pagination)            |
+ | \-\-name  		  | Text          |	Search for blueprints by name |
+ | \-\-description | Text         |	Blueprint description |
+ | \-\-filter      | Text         |	Filter for blueprints. All Rest API filters are supported. |
+ | \-\-limit       | Integer      |	Number of blueprints to fetch              |
+ | \-\-offset      | Integer      |	Starting point of blueprints (for pagination)            |
 
  **Examples:**
-  | Aim  		                        | Command	                                    |
-  | ----------------------------    | --------------------------------------------|
-  | Get blueprint named `MySQL`     | `calm get bps --name=MySQL`           |
-  | Get blueprint in Active state   | `calm get bps --filter=state==ACTIVE` |
+
+ | Aim  		                        | Command	                                    |
+ | ----------------------------    | --------------------------------------------|
+ | Get blueprint named `MySQL`     | `calm get bps --name=MySQL`           |
+ | Get blueprint in Active state   | `calm get bps --filter=state==ACTIVE` |
 
 
 ## Reference
