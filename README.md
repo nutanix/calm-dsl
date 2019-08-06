@@ -27,24 +27,25 @@ Code formatted by [![Code style: black](https://img.shields.io/badge/code%20styl
 
 ## CLI Usage
 
-Point the CLI to your Calm setup by using a config file, or command line args.
+### Setup
 
-### Config file
+ To start using the CLI, point it to your Calm setup by using a config file, or command line args.
 
- By default, the CLI looks for this information in `~/.calm/server/config.ini`.<br/>
+ #### Config file
+
+ By default, the CLI looks for Calm setup information in `~/.calm/server/config.ini`.<br/>
  You can instruct it to look elsewhere by using the `--config` option to point to your config file:<br/>
  `calm --config=/home/my_dir/config.ini get bps`
  An example config is given at `server/config.ini`.
 
-### Config overrides
+#### Config overrides
  You can override any setup details by passing them in explicitly:<br/>
  `calm --ip=10.20.4.35 --port=9220 --username=custom_user --password=something ...[the rest of your command]`
 
 ### CLI Examples:
 
 #### Create Blueprint:
- Run `calm create bp` to upload your DSL blueprint to Calm:
- `calm create bp --file <path/to/your_bp.py>`
+ `calm create bp` will upload your DSL blueprint to Calm:
 
  | Option  		    | Type 			    | Description	                                |
  | -------------  | ------------- |---------------------------------------------|
@@ -53,6 +54,8 @@ Point the CLI to your Calm setup by using a config file, or command line args.
  | \-\-description | Text          |	Blueprint description            |
 
  Both relative and absolute paths are supported.
+ **Example:**
+ `calm create bp --file <path/to/your_bp.py>`
 
 #### List Blueprints:
  `calm get bps` fetches blueprints on the Calm server.
@@ -71,7 +74,7 @@ Point the CLI to your Calm setup by using a config file, or command line args.
  | Aim  		                       | Command	                                   |
  | ----------------------------    | --------------------------------------------|
  | Get blueprint named `MySQL`     | `calm get bps --name=MySQL`           |
- | Get blueprint in Active state   | `calm get bps --filter=state==ACTIVE` |
+ | Get blueprints in Active state   | `calm get bps --filter=state==ACTIVE` |
  | Get deleted blueprints          | `calm get bps --filter=state==DELETED` |
  | Get the third page of 20 blueprints | `calm get bps --offset=40 --limit=20` |
 
