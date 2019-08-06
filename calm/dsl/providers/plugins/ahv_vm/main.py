@@ -421,7 +421,7 @@ def create_spec(client):
                 click.echo("Invalid index !!!")
             else:
                 script_type = script_types[index - 1]
-                click.echo("{} selected\n".format(highlight_text(script_type)))
+                click.echo("{} selected".format(highlight_text(script_type)))
                 break
 
         if script_type == "cloud_init":
@@ -438,11 +438,24 @@ def create_spec(client):
             path.append("sysprep")
             script = {}
 
+            install_types = ahv.SYS_PREP_INSTALL_TYPES
+            click.echo("\nChoose from given install types ")
+            for index, value in enumerate(install_types):
+                click.echo("\t {}. {}".format(str(index + 1), highlight_text(value)))
+
+            while True:
+                index = click.prompt("\nEnter the index for type of installing script", default=1)
+                if index > len(install_types):
+                    click.echo("Invalid index !!!")
+                else:
+                    install_type = install_types[index - 1]
+                    click.echo("{} selected\n".format(highlight_text(install_type)))
+                    break
+
+            script["install_type"] = install_type
+
             path.append("unattend_xml")
             script["unattend_xml"] = get_field(schema, path, option)
-
-            path[-1] = "install_type"
-            script["install_type"] = get_field(schema, path, option)
 
             spec["resources"]["guest_customization"] = {
                 "sysprep": {

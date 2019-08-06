@@ -1,0 +1,374 @@
+
+{% macro VcenterNicInfo() -%}
+
+title: VCenter NICs
+type: object
+properties:
+  nic_type: 
+    type: string
+  net_name:
+    type: string
+
+{%- endmacro %}
+
+
+{% macro VcenterTemplateNicInfo() -%}
+
+title: VCenter Template NIC
+type: object
+properties:
+  nicType:
+    type: string
+  netName: 
+    type: string
+  is_deleted:
+    type: boolean
+    default: False
+  key:
+    type: integer
+    default: -1
+
+{%- endmacro %}
+
+
+{% macro VcenterVdiskInfo() -%}
+
+title: VCenter Disk
+type: object
+properties:
+  disk_type:
+    type: string
+    default: disk
+  adapter_type: 
+    type: string
+    default: SCSI
+  disk_size_mb:
+    type: integer
+    default: -1
+  disk_mode:
+    type: string
+  location:
+    type: string
+  controller_key:
+    type: integer
+    default: -1
+  device_slot:
+    type: integer
+    default: -1
+  iso_path:
+    type: string
+    default: ""
+
+{%- endmacro %}
+
+
+{% macro VcenterTemplateDiskInfo() -%}
+
+title: VCenter Template DISK 
+type: object
+properties:
+  disk_type:
+    type: string
+    default: disk
+  adapter_type: 
+    type: string
+    default: SCSI
+  disk_size_mb:
+    type: integer
+    default: -1
+  disk_mode:
+    type: string
+  location:
+    type: string
+  controller_key:
+    type: integer
+    default: -1
+  device_slot:
+    type: integer
+    default: -1
+  iso_path:
+    type: string
+    default: ""
+  is_deleted:
+    type: boolean
+    default: False
+  key:
+    type: integer
+
+{%- endmacro %}
+
+
+{% macro VcenterVControllerInfo() -%}
+
+title: VCenter Controller
+type: object
+properties:
+  controller_type:
+    type: string
+  key: 
+    type: integer
+    default: -1
+  bus_sharing:
+    type: string
+
+{%- endmacro %}
+
+
+{% macro VcenterTemplateControllerInfo() -%}
+
+title: VCenter Template Controller 
+type: object
+properties:
+  controller_type:
+    type: string
+  key: 
+    type: integer
+  bus_sharing:
+    type: string
+  is_deleted:
+    type: boolean
+    default: False
+
+{%- endmacro %}
+
+
+{% macro VcenterNetworkSetting() -%}
+
+title: Guest Customization Network Settings
+type: object
+properties:
+  name: 
+    type: string
+  subnet_mask:
+    type: string
+  gateway_default:
+    type: string
+  gateway_alternate:
+    type: string
+  is_dhcp:
+    type: boolean
+  ip:
+    type: string
+
+{%- endmacro %}
+
+
+{% macro VcenterLinuxSpecInfo() -%}
+
+title: Guest Customization Linux data
+type: object
+properties:
+  hostname: 
+    type: string
+  domain:
+    type: string
+  timezone:
+    type: string
+  hw_utc_clock:
+    type: boolean
+  dns_primary:
+    type: string
+  dns_secondary:
+    type: string
+  dns_tertiary:
+    type: string
+  dns_search_path:
+    type: array
+    items: 
+      type: string
+  network_settings:
+    type: array
+    items: 
+      {{ VcenterNetworkSetting() | indent(6) }}
+
+{%- endmacro %}
+
+
+{% macro VcenterWindowsSpecInfo() -%}
+
+title: Guest Customization Windows data
+type: object
+properties:
+  computer_name:
+    type: string
+  product_id:
+    type: string
+  full_name:
+    type: string
+  organization_name:
+    type: string
+  workgroup:
+    type: string
+  timezone:
+    type: string
+  is_domain:
+    type: string
+  domain:
+    type: string
+  domain_user:
+    type: string
+  command_list:
+    type: array
+    items:
+      type: string
+  dns_primary:
+    type: string
+  dns_secondary:
+    type: string
+  dns_tertiary:
+    type: string
+  dns_search_path:
+    type: array
+    items: 
+      type: string
+  network_settings:
+    type: array
+    items: 
+      {{ VcenterNetworkSetting() | indent(6) }}
+  auto_logon:
+    type: boolean
+    default: False
+  login_count:
+    type: integer
+    default: 1
+  password:
+    type: object
+    properties:
+      attrs:
+        type: object
+        properties:
+          is_secret_modified:
+            type: boolean
+            default: False
+          secret_reference:
+            type: object
+  domain_password:
+    type: object
+    properties:
+      attrs:
+        type: object
+        properties:
+          is_secret_modified:
+            type: boolean
+            default: False
+          secret_reference:
+            type: object
+
+{%- endmacro %}
+
+
+{% macro VcenterGuestCustomization() -%}
+
+title:  VMWARE Guest Customization
+type: object
+properties:
+  customization_type: 
+    type: string
+    enum:
+    - GUEST_OS_LINUX
+    - GUEST_OS_WINDOWS
+  cloud_init:
+    type: string
+  customization_name:
+    type: string
+  linux_data:
+    {{ VcenterLinuxSpecInfo() | indent(4) }}
+  windows_data:
+    {{ VcenterWindowsSpecInfo() | indent(4) }}
+
+{%- endmacro %}
+
+
+{% macro VcenterVMResource() -%}
+
+title: VMWARE Resources
+type: object
+properties:
+  account_uuid:
+    type: string
+    minLength: 36
+    maxLength: 36
+  num_vcpus_per_socket:
+    type: integer
+    default: 0
+  num_sockets:
+    type: integer
+    default: 0
+  memory_size_mib:
+    type: integer
+    default: 0
+  power_state:
+    type: string
+    default: poweron
+  nic_list:
+    type: array
+    items:
+      {{ VcenterNicInfo() | indent(6) }}
+  disk_list:
+    type: array
+    items: 
+      {{ VcenterVdiskInfo() | indent(6) }}
+  controller_list:
+    type: array
+    items:
+      {{ VcenterVControllerInfo() | indent(6) }}
+  template_nic_list:
+    type: array
+    items:
+      {{ VcenterTemplateNicInfo() | indent(6) }}
+  template_disk_list:
+    type: array
+    items:
+      {{ VcenterTemplateDiskInfo() | indent(6) }}
+  template_controller_list:
+    type: array
+    items:
+      {{ VcenterTemplateControllerInfo() | indent(6) }}
+  guest_customization:
+    {{ VcenterGuestCustomization() | indent(4) }} 
+
+{%- endmacro %}
+
+
+{% macro VMWCreateSpec() -%}
+
+title: VMWare CreateSpec
+type: object
+properties:
+  name: 
+    type: string
+  type:
+    type: string
+    enum: 
+    - PROVISION_VMWARE_VM
+  drs_mode:
+    type: boolean
+    default: False
+  cluster:
+    type: string
+  template:
+    type: string
+  storage_pod:
+    type: string
+  host:
+    type: string
+  datastore:
+    type: string
+  clone_is_template:
+    type: boolean
+    default: False
+  resources:
+    {{ VcenterVMResource() | indent(4) }}
+
+{%- endmacro %}
+
+
+info:
+  title: VMWARE_VM
+  description: VMWARE VM spec payload using v3 API
+  version: 3.0.1      # TODO add right version of ahv schema
+
+components:
+  schemas:
+    provider_spec:
+      {{ VMWCreateSpec() | indent(6) }}
