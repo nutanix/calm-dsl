@@ -26,7 +26,7 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
     if name:
         filter_query = get_name_query([name])
     if filter_by:
-        filter_query = filter_query + ";" + filter_by if name else filter_by
+        filter_query = filter_query + ";(" + filter_by + ")"
     if all_items:
         filter_query += get_states_filter(BLUEPRINT.STATES)
     if filter_query.startswith(";"):
@@ -43,6 +43,9 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
         return
 
     json_rows = res.json()["entities"]
+    if not json_rows:
+        click.echo(highlight_text("No blueprint found !!!\n"))
+        return
 
     if quiet:
         for _row in json_rows:
