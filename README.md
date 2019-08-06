@@ -44,7 +44,7 @@ Point the CLI to your Calm setup by using a config file, or command line args.
 
 #### Create Blueprint:
  Run `calm create bp` to upload your DSL blueprint to Calm:
- `calm create bp --file path/to/your_bp.py`
+ `calm create bp --file <path/to/your_bp.py>`
 
  | Option  		    | Type 			    | Description	                                |
  | -------------  | ------------- |---------------------------------------------|
@@ -75,6 +75,9 @@ Point the CLI to your Calm setup by using a config file, or command line args.
  | Get deleted blueprints          | `calm get bps --filter=state==DELETED` |
  | Get the third page of 20 blueprints | `calm get bps --offset=40 --limit=20` |
 
+#### Show Blueprint Details:
+ `calm describe bp <bp name>` shows information about the blueprint, including Profiles, Substrates, Services and Actions.
+
 #### Launch Blueprint:
  `calm launch bp <blueprint name>` deploys a blueprint. The blueprint must exist on the Calm server.
 
@@ -94,7 +97,7 @@ Point the CLI to your Calm setup by using a config file, or command line args.
   Delete blueprint `MySQL1` and `Cassandra2`: <br/>
   `calm delete bp MySQL1 Cassandra2`
 
-#### List Apps:
+#### List Applications:
  `calm get apps` fetches applications on the Calm server.<br/>
  (Options are same as those for listing blueprints.)
 
@@ -106,6 +109,9 @@ Point the CLI to your Calm setup by using a config file, or command line args.
  | \-\-offset      | Integer      |	Starting point of applications (for pagination)            |
  | -q, \-\-quiet   | Flag         |	Show only blueprint names              |
  | -a, \-\-all-items| Flag        |	Get all items, including deleted ones              |
+
+#### Show Applications Details:
+ `calm describe app <bp name>` shows information about the app, including Source Blueprint, Profile, Deployments and Actions.
 
 #### Run Actions:
  `calm run action <action name> --app=<app name>` will trigger `action name` on application `app name`.
@@ -127,7 +133,7 @@ Point the CLI to your Calm setup by using a config file, or command line args.
  | \-\-app  		  | Text          |	Application where the action is running [Required] |
  | \-\-poll-interval | Integer    |	Specify polling interval (Default: 10 seconds) |
 
-#### Monitor App:
+#### Monitor Application:
  `calm watch app <app name>` will poll on the application until it is in a non-busy state.
 
  | Option  		    | Type     			| Description	                                |
@@ -135,6 +141,9 @@ Point the CLI to your Calm setup by using a config file, or command line args.
  | \-\-app  		  | Text          |	Application to watch [Required] |
  | \-\-poll-interval | Integer    |	Specify polling interval (Default: 10 seconds) |
 
+#### Delete Application:
+ `calm delete app <app names>` deletes the app(s) named. <br/>
+ Multiple apps can be deleted by giving space separated names.
 
 
 
