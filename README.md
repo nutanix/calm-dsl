@@ -128,8 +128,8 @@ Code formatted by [![Code style: black](https://img.shields.io/badge/code%20styl
   Run action `scale_out_by_1` on app `MySQL`: <br/>
   `calm run action scale_out_by_1 --app=MySQL`
 
-#### Monitor Actions:
- `calm watch action_runlog <runlog_uuid> --app=<app name>` will poll on the action until it terminates.
+#### Monitor Running Actions:
+ `calm watch action_runlog <runlog_uuid> --app=<app name>` will poll on the action associated with the `runlog_uuid` until it terminates.
 
  | Option  		    | Type     			| Description	                                |
  | -------------  | ------------- |---------------------------------------------|
