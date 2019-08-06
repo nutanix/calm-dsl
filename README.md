@@ -42,7 +42,7 @@ Point the CLI to your Calm setup by using a config file, or command line args.
 
 ### CLI Examples:
 
-#### Create Blueprint :
+#### Create Blueprint:
  Run `calm create bp` to upload your DSL blueprint to Calm:
  `calm create bp --file path/to/your_bp.py`
 
@@ -54,23 +54,88 @@ Point the CLI to your Calm setup by using a config file, or command line args.
 
  Both relative and absolute paths are supported.
 
-#### List Blueprints :
+#### List Blueprints:
  `calm get bps` fetches blueprints on the Calm server.
 
  | Option  		    | Type     			| Description	                                |
  | -------------  | ------------- |---------------------------------------------|
  | \-\-name  		  | Text          |	Search for blueprints by name |
- | \-\-description | Text         |	Blueprint description |
  | \-\-filter      | Text         |	Filter for blueprints. All Rest API filters are supported. |
  | \-\-limit       | Integer      |	Number of blueprints to fetch              |
  | \-\-offset      | Integer      |	Starting point of blueprints (for pagination)            |
+ | -q, \-\-quiet   | Flag         |	Show only blueprint names              |
+ | -a, \-\-all-items| Flag        |	Get all items, including deleted ones              |
 
  **Examples:**
 
- | Aim  		                        | Command	                                    |
+ | Aim  		                       | Command	                                   |
  | ----------------------------    | --------------------------------------------|
  | Get blueprint named `MySQL`     | `calm get bps --name=MySQL`           |
  | Get blueprint in Active state   | `calm get bps --filter=state==ACTIVE` |
+ | Get deleted blueprints          | `calm get bps --filter=state==DELETED` |
+ | Get the third page of 20 blueprints | `calm get bps --offset=40 --limit=20` |
+
+#### Launch Blueprint:
+ `calm launch bp <blueprint name>` deploys a blueprint. The blueprint must exist on the Calm server.
+
+ | Option  		    | Type     			| Description	                                |
+ | -------------  | ------------- |---------------------------------------------|
+ | \-\-app_name   | Text          |	Name of application to be created |
+
+ **Example:**
+  Launch blueprint `MySQL` as app named `Prod_DB`: <br/>
+  `calm launch bp MySQL --app_name=Prod_DB`
+
+#### Delete Blueprint:
+ `calm delete bp <blueprint names>` deletes the blueprint(s) named. <br/>
+ Multiple blueprints can be deleted by giving space separated names.
+
+**Example:**
+  Delete blueprint `MySQL1` and `Cassandra2`: <br/>
+  `calm delete bp MySQL1 Cassandra2`
+
+#### List Apps:
+ `calm get apps` fetches applications on the Calm server.<br/>
+ (Options are same as those for listing blueprints.)
+
+ | Option  		    | Type     			| Description	                                |
+ | -------------  | ------------- |---------------------------------------------|
+ | \-\-name  		  | Text          |	Search for applications by name |
+ | \-\-filter      | Text         |	Filter for applications. All Rest API filters are supported. |
+ | \-\-limit       | Integer      |	Number of applications to fetch              |
+ | \-\-offset      | Integer      |	Starting point of applications (for pagination)            |
+ | -q, \-\-quiet   | Flag         |	Show only blueprint names              |
+ | -a, \-\-all-items| Flag        |	Get all items, including deleted ones              |
+
+#### Run Actions:
+ `calm run action <action name> --app=<app name>` will trigger `action name` on application `app name`.
+
+ | Option  		    | Type     			| Description	                                |
+ | -------------  | ------------- |---------------------------------------------|
+ | \-\-app  		  | Text          |	Application on which to run the action [Required] |
+ | -w \-\-watch   | Flag          |	Watch scrolling output as the action executes. |
+
+ **Example:**
+  Run action `scale_out_by_1` on app `MySQL`: <br/>
+  `calm run action scale_out_by_1 --app=MySQL`
+
+#### Monitor Actions:
+ `calm watch action_runlog <runlog_uuid> --app=<app name>` will poll on the action until it terminates.
+
+ | Option  		    | Type     			| Description	                                |
+ | -------------  | ------------- |---------------------------------------------|
+ | \-\-app  		  | Text          |	Application where the action is running [Required] |
+ | \-\-poll-interval | Integer    |	Specify polling interval (Default: 10 seconds) |
+
+#### Monitor App:
+ `calm watch app <app name>` will poll on the application until it is in a non-busy state.
+
+ | Option  		    | Type     			| Description	                                |
+ | -------------  | ------------- |---------------------------------------------|
+ | \-\-app  		  | Text          |	Application to watch [Required] |
+ | \-\-poll-interval | Integer    |	Specify polling interval (Default: 10 seconds) |
+
+
 
 
 ## Reference
