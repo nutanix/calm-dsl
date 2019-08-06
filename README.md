@@ -35,7 +35,7 @@ Code formatted by [![Code style: black](https://img.shields.io/badge/code%20styl
 
  By default, the CLI looks for Calm setup information in `~/.calm/server/config.ini`.<br/>
  You can instruct it to look elsewhere by using the `--config` option to point to your config file:<br/>
- `calm --config=/home/my_dir/config.ini get bps`
+ `calm --config=/home/my_dir/config.ini get bps`<br/>
  An example config is given at `server/config.ini`.
 
 #### Config overrides
@@ -53,8 +53,8 @@ Code formatted by [![Code style: black](https://img.shields.io/badge/code%20styl
  | \-\-name  		  | Text          |	Blueprint name |
  | \-\-description | Text          |	Blueprint description            |
 
- Both relative and absolute paths are supported.
- **Example:**
+ Both relative and absolute paths are supported.<br/>
+ **_Example_:**
  `calm create bp --file <path/to/your_bp.py>`
 
 #### List Blueprints:
@@ -69,7 +69,7 @@ Code formatted by [![Code style: black](https://img.shields.io/badge/code%20styl
  | -q, \-\-quiet   | Flag         |	Show only blueprint names              |
  | -a, \-\-all-items| Flag        |	Get all items, including deleted ones              |
 
- **Examples:**
+ **_Examples_:**
 
  | Aim  		                       | Command	                                   |
  | ----------------------------    | --------------------------------------------|
@@ -88,7 +88,7 @@ Code formatted by [![Code style: black](https://img.shields.io/badge/code%20styl
  | -------------  | ------------- |---------------------------------------------|
  | \-\-app_name   | Text          |	Name of application to be created |
 
- **Example:**
+ **_Example_:**
   Launch blueprint `MySQL` as app named `Prod_DB`: <br/>
   `calm launch bp MySQL --app_name=Prod_DB`
 
@@ -96,7 +96,7 @@ Code formatted by [![Code style: black](https://img.shields.io/badge/code%20styl
  `calm delete bp <blueprint names>` deletes the blueprint(s) named. <br/>
  Multiple blueprints can be deleted by giving space separated names.
 
-**Example:**
+**_Example_:**
   Delete blueprint `MySQL1` and `Cassandra2`: <br/>
   `calm delete bp MySQL1 Cassandra2`
 
@@ -124,7 +124,7 @@ Code formatted by [![Code style: black](https://img.shields.io/badge/code%20styl
  | \-\-app  		  | Text          |	Application on which to run the action [Required] |
  | -w \-\-watch   | Flag          |	Watch scrolling output as the action executes. |
 
- **Example:**
+ **_Example_:**
   Run action `scale_out_by_1` on app `MySQL`: <br/>
   `calm run action scale_out_by_1 --app=MySQL`
 
