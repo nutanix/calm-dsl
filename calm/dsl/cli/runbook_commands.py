@@ -2,9 +2,10 @@ import click
 import json
 import uuid
 
-from .main import get, describe, delete, run, create
+from .main import get, describe, delete, run, create, update
 from .utils import Display
 from .runbooks import (
+    get_runbook,
     get_runbook_list,
     compile_runbook,
     get_previous_runs,
@@ -110,6 +111,85 @@ def create_runbook_command(obj, runbook_file, name, description):
         )
     elif runbook_file.endswith(".py"):
         res, err = create_runbook_from_dsl(
+            client, runbook_file, name=name, description=description
+        )
+    else:
+        click.echo("Unknown file format {}".format(runbook_file))
+        return
+
+    if err:
+        click.echo(err["error"])
+        return
+
+    runbook = res.json()
+    runbook_state = runbook["status"]["state"]
+    click.echo(">> Runbook state: {}".format(runbook_state))
+    assert runbook_state == "ACTIVE"
+
+
+def update_runbook(client, runbook_payload, name=None, description=None):
+
+    runbook_payload.pop("status", None)
+
+    if name:
+        runbook_payload["spec"]["name"] = name
+        runbook_payload["metadata"]["name"] = name
+
+    if description:
+        runbook_payload["spec"]["description"] = description
+
+    runbook_resources = runbook_payload["spec"]["resources"]
+    runbook_name = runbook_payload["spec"]["name"]
+    runbook_desc = runbook_payload["spec"]["description"]
+
+    runbook = get_runbook(client, runbook_payload["spec"]["name"])
+    uuid = runbook['metadata']['uuid']
+
+    return client.runbook.update_with_secrets(
+        uuid, runbook_name, runbook_desc, runbook_resources
+    )
+
+
+def update_runbook_from_json(client, path_to_json, name=None, description=None):
+
+    runbook_payload = json.loads(open(path_to_json, "r").read())
+    return update_runbook(client, runbook_payload, name=name, description=description)
+
+
+def update_runbook_from_dsl(client, runbook_file, name=None, description=None):
+
+    runbook_payload = compile_runbook(runbook_file)
+    if runbook_payload is None:
+        err_msg = "User runbook not found in {}".format(runbook_file)
+        err = {"error": err_msg, "code": -1}
+        return None, err
+
+    return update_runbook(client, runbook_payload, name=name, description=description)
+
+
+@update.command("runbook")
+@click.option(
+    "--file",
+    "-f",
+    "runbook_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    required=True,
+    help="Path of Runbook file to upload",
+)
+@click.option("--name", default=None, help="Runbook name (Optional)")
+@click.option("--description", default=None, help="Runbook description (Optional)")
+@click.pass_obj
+def update_runbook_command(obj, runbook_file, name, description):
+    """Updates a runbook"""
+
+    client = obj.get("client")
+
+    if runbook_file.endswith(".json"):
+        res, err = update_runbook_from_json(
+            client, runbook_file, name=name, description=description
+        )
+    elif runbook_file.endswith(".py"):
+        res, err = update_runbook_from_dsl(
             client, runbook_file, name=name, description=description
         )
     else:

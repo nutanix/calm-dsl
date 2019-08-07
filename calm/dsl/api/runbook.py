@@ -6,6 +6,7 @@ class RunbookAPI(ResourceAPI):
     def __init__(self, connection):
         super().__init__(connection, resource_type="actions")
         self.UPLOAD = self.PREFIX + "/import_json"
+        self.UPDATE2 = self.PREFIX + "/{}/update"
         self.PREVIOUS_RUNS = self.PREFIX + "/runlogs/list"
         self.RUN = self.PREFIX + "/{}/run"
         self.POLL_RUN = self.PREFIX + "/runlogs/{}"
@@ -15,6 +16,11 @@ class RunbookAPI(ResourceAPI):
     def upload(self, payload):
         return self.connection._call(
             self.UPLOAD, verify=False, request_json=payload, method=REQUEST.METHOD.POST
+        )
+
+    def update2(self, uuid, payload):
+        return self.connection._call(
+            self.UPDATE2.format(uuid), verify=False, request_json=payload, method=REQUEST.METHOD.PUT
         )
 
     @staticmethod
@@ -209,3 +215,136 @@ class RunbookAPI(ResourceAPI):
             return self.connection._call(
                 self.POLL_RUN.format(uuid), verify=False, method=REQUEST.METHOD.GET
             )
+
+    def update_with_secrets(self, uuid, runbook_name, runbook_desc, runbook_resources):
+
+        # Remove creds before upload
+        creds = runbook_resources.get("credential_definition_list", []) or []
+        secret_map = {}
+        default_creds = []
+        for cred in creds:
+            name = cred["name"]
+            secret_map[name] = cred.pop("secret", {})
+            # Explicitly set defaults so that secret is not created at server
+            # TODO - Fix bug in server: {} != None
+            cred["secret"] = {
+                "attrs": {"is_secret_modified": False, "secret_reference": None}
+            }
+            if cred.pop("default"):
+                default_creds.append(cred)
+        """
+        if not default_creds:
+            raise ValueError("No default cred provided")
+        if len(default_creds) > 1:
+            raise ValueError(
+                "Found more than one credential marked as default - {}".format(
+                    ", ".join(cred["name"] for cred in default_creds)
+                )
+            )
+        """
+        if default_creds:
+            runbook_resources["default_credential_local_reference"] = {
+                "kind": "app_credential",
+                "name": default_creds[0]["name"],
+            }
+
+        # Strip secret variable values
+        # TODO: Refactor and/or clean this up later
+
+        secret_variables = []
+
+        def strip_entity_secret_variables(path_list, obj, field_name="variable_list"):
+            for var_idx, variable in enumerate(obj.get(field_name, []) or []):
+                if variable["type"] == "SECRET":
+                    secret_variables.append(
+                        (path_list + [field_name, var_idx], variable.pop("value"))
+                    )
+                    variable["attrs"] = {
+                        "is_secret_modified": False,
+                        "secret_reference": None,
+                    }
+
+        def strip_runbook_secret_variables(path_list, obj):
+            tasks = obj.get("task_definition_list", [])
+            for task_idx, task in enumerate(tasks):
+                if task.get("type", None) != "HTTP":
+                    continue
+                auth = (task.get("attrs", {}) or {}).get("authentication", {}) or {}
+                if auth.get("auth_type", None) == "basic":
+                    secret_variables.append(
+                        (
+                            path_list
+                            + [
+                                "task_definition_list",
+                                task_idx,
+                                "attrs",
+                                "authentication",
+                                "basic_auth",
+                                "password",
+                            ],
+                            auth["basic_auth"]["password"].pop("value"),
+                        )
+                    )
+                    auth["basic_auth"]["password"] = {
+                        "attrs": {
+                            "is_secret_modified": False,
+                            "secret_reference": None,
+                        }
+                    }
+                    if not (task.get("attrs", {}) or {}).get("headers", []) or []:
+                        continue
+                    strip_entity_secret_variables(
+                        path_list
+                        + [
+                            "runbook",
+                            "task_definition_list",
+                            task_idx,
+                            "attrs",
+                        ],
+                        task["attrs"],
+                        field_name="headers",
+                    )
+
+        def strip_all_secret_variables(path_list, obj):
+            strip_entity_secret_variables(path_list, obj)
+            strip_runbook_secret_variables(path_list, obj)
+
+        object_lists = [
+            "substrate_definition_list",
+        ]
+        for object_list in object_lists:
+            for obj_idx, obj in enumerate(runbook_resources.get(object_list, []) or []):
+                strip_all_secret_variables([object_list, obj_idx], obj)
+
+        strip_entity_secret_variables(["runbook"], runbook_resources.get("runbook", {}))
+        strip_runbook_secret_variables(["runbook"], runbook_resources.get("runbook", {}))
+
+        update_payload = self._make_runbook_payload(runbook_name, runbook_desc, runbook_resources)
+
+        res, err = self.update2(uuid, update_payload)
+
+        if err:
+            return res, err
+
+        # Add secrets and update bp
+        runbook = res.json()
+        del runbook["status"]
+
+        # Add secrets back
+        creds = runbook["spec"]["resources"]["credential_definition_list"]
+        for cred in creds:
+            name = cred["name"]
+            cred["secret"] = secret_map[name]
+
+        for path, secret in secret_variables:
+            variable = runbook["spec"]["resources"]
+            for sub_path in path:
+                variable = variable[sub_path]
+            variable["attrs"] = {"is_secret_modified": True}
+            variable["value"] = secret
+
+        # Update blueprint
+        update_payload = runbook
+        uuid = runbook["metadata"]["uuid"]
+
+        return self.update(uuid, update_payload)
