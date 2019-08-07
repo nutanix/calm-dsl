@@ -1,5 +1,5 @@
 import time
-import json
+import itertools
 
 from anytree import NodeMixin, RenderTree
 from json import JSONEncoder
@@ -14,6 +14,92 @@ class RunlogNode(NodeMixin):
         self.outputs = outputs or []
         if children:
             self.children = children
+
+
+def displayRunLog(screen, obj, pre, line):
+
+    if not isinstance(obj, RunlogNode):
+        return super().default(obj)
+
+    metadata = obj.runlog["metadata"]
+    status = obj.runlog["status"]
+    state = status["state"]
+    output = ""
+
+    idx = itertools.count(start=line, step=1).__next__
+
+    if status["type"] == "task_runlog":
+        name = status["task_reference"]["name"]
+        for out in obj.outputs:
+            output += "\'{}\'\n".format(out)
+    elif status["type"] == "runbook_runlog":
+        if "call_runbook_reference" in status:
+            name = status["call_runbook_reference"]["name"]
+        else:
+            name = status["runbook_reference"]["name"]
+    elif status["type"] == "action_runlog" and "action_reference" in status:
+        name = status["action_reference"]["name"]
+    elif status["type"] == "app":
+        screen.print_at("{}{}".format(pre, status["name"]), 0, idx())
+        return idx()
+    else:
+        screen.print_at("{}root".format(pre), 0, idx())
+        return idx()
+
+    # TODO - Fix KeyError for action_runlog
+
+    creation_time = int(metadata["creation_time"]) // 1000000
+    username = (
+        status["userdata_reference"]["name"]
+        if "userdata_reference" in status
+        else None
+    )
+    last_update_time = int(metadata["last_update_time"]) // 1000000
+
+    prefix = "{}{} (Status:".format(pre, name)
+    screen.print_at(prefix, 0, line)
+    colour = 3  # yellow for pending state
+    if state == RUNLOG.STATUS.SUCCESS:
+        colour = 2  # green for success
+    elif state in RUNLOG.FAILURE_STATES:
+        colour = 1  # red for failure
+    elif state == RUNLOG.STATUS.RUNNING:
+        colour = 4  # blue for running state
+    screen.print_at("{})".format(state), len(prefix) + 1, idx(), colour=colour)
+
+    if status["type"] == "action_runlog":
+        screen.print_at(
+            "Runlog UUID: {}".format(metadata["uuid"]),
+            len(pre) + 4, idx()
+        )
+    screen.print_at(
+        "Started: {}".format(time.ctime(creation_time)),
+        len(pre) + 4, idx()
+    )
+
+    if username:
+        screen.print_at(
+            "Run by: {}".format(username),
+            len(pre) + 4, idx()
+        )
+    if state in RUNLOG.TERMINAL_STATES:
+        screen.print_at(
+            "Finished: {}".format(time.ctime(last_update_time)),
+            len(pre) + 4, idx()
+        )
+    else:
+        screen.print_at(
+            "Last Updated: {}".format(time.ctime(last_update_time)),
+            len(pre) + 4, idx()
+        )
+
+    if output:
+        screen.print_at("Output :", len(pre) + 4, idx())
+        output_lines = output.splitlines()
+        for line in output_lines:
+            screen.print_at(line, len(pre) + 6, idx(), colour=5, attr=1)
+
+    return idx()
 
 
 class RunlogJSONEncoder(JSONEncoder):
@@ -144,18 +230,7 @@ def get_completion_func(screen):
             # Render Tree on next line
             line = 1
             for pre, _, node in RenderTree(root):
-                lines = json.dumps(node, cls=RunlogJSONEncoder).split("\\n")
-                for linestr in lines:
-                    tabcount = linestr.count("\\t")
-                    if not tabcount:
-                        screen.print_at("{}{}".format(pre, linestr), 0, line)
-                    else:
-                        screen.print_at(
-                            "{}{}".format("", linestr.replace("\\t", "")),
-                            len(pre) + 2 + tabcount * 2,
-                            line,
-                        )
-                    line += 1
+                line = displayRunLog(screen, node, pre, line)
             screen.refresh()
 
             for runlog in sorted_entities:
@@ -180,7 +255,6 @@ def get_completion_func(screen):
 
 def get_runlog_status(screen):
     def check_runlog_status(response, client=None):
-
 
         if response["status"]["state"] == "PENDING":
             msg = ">> Runlog run is in PENDING state"
