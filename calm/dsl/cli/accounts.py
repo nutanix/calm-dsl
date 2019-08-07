@@ -20,9 +20,9 @@ def get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_
     if name:
         filter_query = get_name_query([name])
     if filter_by:
-        filter_query = filter_query + ";" + filter_by if name else filter_by
+        filter_query = filter_query + ";(" + filter_by + ")"
     if account_type:
-        filter_query += ";type=={}".format(account_type)
+        filter_query += ";(type=={})".format(account_type)
     if all_items:
         filter_query += get_states_filter(ACCOUNT.STATES)
     if filter_query.startswith(";"):
@@ -39,6 +39,9 @@ def get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_
         return
 
     json_rows = res.json()["entities"]
+    if not json_rows:
+        click.echo(highlight_text("No account found !!!\n"))
+        return
 
     if quiet:
         for _row in json_rows:

@@ -24,7 +24,7 @@ def get_apps(obj, name, filter_by, limit, offset, quiet, all_items):
     if name:
         filter_query = get_name_query([name])
     if filter_by:
-        filter_query = filter_query + ";" + filter_by if name else filter_by
+        filter_query = filter_query + ";(" + filter_by + ")"
     if all_items:
         filter_query += get_states_filter(APPLICATION.STATES, state_key="_state")
     if filter_query.startswith(";"):
@@ -40,15 +40,10 @@ def get_apps(obj, name, filter_by, limit, offset, quiet, all_items):
         warnings.warn(UserWarning("Cannot fetch blueprints from {}".format(pc_ip)))
         return
 
-    table = PrettyTable()
-    table.field_names = [
-        "Application Name",
-        "Source Blueprint",
-        "State",
-        "Owner",
-        "Created On",
-    ]
     json_rows = res.json()["entities"]
+    if not json_rows:
+        click.echo(highlight_text("No application found !!!\n"))
+        return
 
     if quiet:
         for _row in json_rows:
