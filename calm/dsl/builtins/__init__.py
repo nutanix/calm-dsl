@@ -5,6 +5,7 @@
 # the import for these below the entities will cause a TypeError.
 
 from .models.ref import Ref, ref
+from .models.task_input import TaskInput
 from .models.credential import basic_cred
 from .models.variable import Variable, setvar, CalmVariable
 from .models.action import action, parallel
@@ -39,6 +40,7 @@ from .models.project import Project as ProjectValidator
 __all__ = [
     "Ref",
     "ref",
+    "TaskInput",
     "basic_cred",
     "Variable",
     "setvar",

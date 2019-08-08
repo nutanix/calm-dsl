@@ -5,6 +5,7 @@ import sys
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .ref import RefType
+from .task_input import TaskInputType
 from .variable import CalmVariable
 
 
@@ -739,6 +740,34 @@ def delay_task(delay_seconds=None, name=None, target=None):
     return _task_create(**kwargs)
 
 
+def input_task(timeout=None, name=None, inputs=[]):
+    """
+    Defines a input task.
+    Args:
+        timeout(int): Task timeout in seconds
+        name (str): Name for this task
+        inputs (list): list of inputs for the task
+    Returns:
+        (Task): Delay task
+    """
+    if not isinstance(timeout, int):
+        raise TypeError(
+            "timeout is expected to be an integer, got {}".format(
+                type(timeout)
+            )
+        )
+    kwargs = {"name": name, "type": "INPUT", "attrs": {"task_timeout": timeout, "inputs": []}}
+    for task_input in inputs:
+        if not isinstance(task_input, TaskInputType):
+            raise TypeError(
+                "All inputs is expected to be an TaskInputType, got {}".format(
+                    type(task_input)
+                )
+            )
+        kwargs["attrs"]["inputs"].append({"name": task_input.name, "input_type": task_input.input_type})
+    return _task_create(**kwargs)
+
+
 class CalmTask:
     def __new__(cls, *args, **kwargs):
         raise TypeError("'{}' is not callable".format(cls.__name__))
@@ -804,3 +833,7 @@ class CalmTask:
     class Delay:
         def __new__(cls, delay_seconds=None, name=None, target=None):
             return delay_task(delay_seconds=delay_seconds, name=name, target=target)
+
+    class Input:
+        def __new__(cls, timeout=500, name=None, inputs=[]):
+            return input_task(timeout=timeout, name=name, inputs=inputs)
