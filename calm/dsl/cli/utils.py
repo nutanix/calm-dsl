@@ -23,7 +23,7 @@ def get_name_query(names):
             + ".*"
             for name in names
         ]
-        return "({})". format(",".join(search_strings))
+        return "({})".format(",".join(search_strings))
 
 
 def highlight_text(text, **kwargs):
