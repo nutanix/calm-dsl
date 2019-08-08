@@ -4,11 +4,12 @@ import configparser
 
 # Defaults to be used if no config file exists.
 # TODO - remove username/password
-PC_IP = "10.46.34.230"
+PC_IP = "10.45.5.30" #"10.46.34.230"
 PC_PORT = 9440
 PC_USERNAME = "admin"
-PC_PASSWORD = "***REMOVED***"
-CONFIG_FILE = os.path.expanduser("~/.calm/server/config.ini")
+PC_PASSWORD = "NTNX4ever/" #"***REMOVED***"
+
+CONFIG_FILE = os.path.expanduser("~/server/config.ini")
 
 
 _CONFIG = None
