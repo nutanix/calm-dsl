@@ -26,10 +26,7 @@ def highlight_text(text, **kwargs):
 def create_spec():
 
     addr = click.prompt("Enter the address :", default="")
-    spec = {
-        "type": "PROVISION_EXISTING_MACHINE",
-        "address": addr
-    }
+    spec = {"type": "PROVISION_EXISTING_MACHINE", "address": addr}
 
-    click.secho("\nCreate spec\n", underline=True)
+    click.secho("\nCreate spec for your Existing Machine VM:\n", underline=True)
     click.echo(highlight_text(json.dumps(spec, sort_keys=True, indent=4)))
