@@ -144,9 +144,10 @@ def update_runbook(client, runbook_payload, name=None, description=None):
 
     runbook = get_runbook(client, runbook_payload["spec"]["name"])
     uuid = runbook['metadata']['uuid']
+    spec_version = runbook['metadata']['spec_version']
 
     return client.runbook.update_with_secrets(
-        uuid, runbook_name, runbook_desc, runbook_resources
+        uuid, runbook_name, runbook_desc, runbook_resources, spec_version
     )
 
 

@@ -216,7 +216,7 @@ class RunbookAPI(ResourceAPI):
                 self.POLL_RUN.format(uuid), verify=False, method=REQUEST.METHOD.GET
             )
 
-    def update_with_secrets(self, uuid, runbook_name, runbook_desc, runbook_resources):
+    def update_with_secrets(self, uuid, runbook_name, runbook_desc, runbook_resources, spec_version):
 
         # Remove creds before upload
         creds = runbook_resources.get("credential_definition_list", []) or []
@@ -320,6 +320,8 @@ class RunbookAPI(ResourceAPI):
         strip_runbook_secret_variables(["runbook"], runbook_resources.get("runbook", {}))
 
         update_payload = self._make_runbook_payload(runbook_name, runbook_desc, runbook_resources)
+        update_payload["metadata"]["uuid"] = uuid
+        update_payload["metadata"]["spec_version"] = spec_version
 
         res, err = self.update2(uuid, update_payload)
 
