@@ -308,7 +308,10 @@ class VCenter:
             if dsk["disk_type"] == "disk":
                 dsk["size"] = disk["capacityInKB"] // 1024
                 dsk["mode"] = disk_mode_inv[disk["backing"]["diskMode"]]
-                dsk["location"] = disk["backing"]["datastore"]["name"]
+                dsk["location"] = (
+                    disk["backing"]["datastore"]["url"],
+                    disk["backing"]["datastore"]["name"],
+                )
                 dsk["device_slot"] = disk["unitNumber"]
 
             tempDisks.append(dsk)
@@ -539,7 +542,9 @@ def create_spec(client):
         "\nCores per vCPU", default=1
     )
 
-    spec["resources"]["memory_size_mib"] = click.prompt("\nMemory(in GiB)", default=1)
+    spec["resources"]["memory_size_mib"] = (
+        click.prompt("\nMemory(in GiB)", default=1)
+    ) * 1024
 
     response = Obj.template_defaults(account_id, template_id)
 
@@ -687,7 +692,7 @@ def create_spec(client):
 
         if disk_type == "disk":
             click.echo("Size (in GiB): {}".format(highlight_text(disk["size"] // 1024)))
-            click.echo("Location : {}".format(highlight_text(disk["location"])))
+            click.echo("Location : {}".format(highlight_text(disk["location"][1])))
             controller_label = controller_key_type_map[disk["controller_key"]][1]
             click.echo("Controller: {}".format(highlight_text(controller_label)))
             click.echo("Device Slot: {}".format(highlight_text(disk["device_slot"])))
@@ -731,6 +736,9 @@ def create_spec(client):
                     "adapter_type": adapter_type,
                     "disk_type": disk_type,
                     "key": disk["key"],
+                    "controller_key": disk["controller_key"],
+                    "device_slot": disk["device_slot"],
+                    "location": disk["location"][0],
                 }
 
                 spec["resources"]["template_disk_list"].append(dsk)
@@ -984,7 +992,7 @@ def create_spec(client):
 
                 while True:
                     ind = click.prompt("\nEnter the index of controller", default=1)
-                    if ind > len(controller):
+                    if ind > len(controllers):
                         click.echo("Invalid index !!! ")
 
                     else:
@@ -1032,7 +1040,7 @@ def create_spec(client):
             dsk = {
                 "disk_size_mb": disk_size * 1024,
                 "disk_mode": disk_mode,
-                "device_slot": str(device_slot),
+                "device_slot": device_slot,  # It differs from the request_payload from the UI
                 "adapter_type": adapter_type,
                 "location": datastore_url,
                 "controller_key": controller_key,
@@ -1045,7 +1053,7 @@ def create_spec(client):
                     "\nBy default, ISO images across all datastores are available for selection. To filter this list, select a datastore."
                 )
             )
-            datastore_url = None
+            datastore_url = ""
 
             choice = click.prompt(
                 "\n{}(y/n)".format(highlight_text("Want to add datastore")), default="n"
@@ -1171,7 +1179,7 @@ def create_spec(client):
         )
 
     VCenterVmProvider.validate_spec(spec)
-    click.secho("\nCreate spec\n", underline=True)
+    click.secho("\nCreate spec for your VMW VM:\n", underline=True)
     click.echo(highlight_text(json.dumps(spec, sort_keys=True, indent=4)))
 
 

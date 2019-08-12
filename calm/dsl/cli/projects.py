@@ -406,6 +406,9 @@ def poll_updation_status(client, project_uuid, old_spec_version):
             click.echo(">>Project updated successfully !!!")
             return
 
+        elif project["status"]["state"] == "RUNNING":
+            click.echo(">>Project updation is in running state")
+
         else:
             msg = str(project["status"]["message_list"])
             msg = ">>Project updation failed !!!\nmessage={}".format(msg)
