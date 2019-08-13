@@ -12,10 +12,19 @@ class RunbookAPI(ResourceAPI):
         self.POLL_RUN = self.PREFIX + "/runlogs/{}"
         self.RUNLOG_LIST = self.PREFIX + "/runlogs/{}/list"
         self.RUNLOG_OUTPUT = self.PREFIX + "/8857ab8d-c216-41d4-85ac-a6880b15aaeb/runlogs/{}/output"
+        self.RUNLOG_RESUME = self.PREFIX + "/runlogs/{}/resume"
 
     def upload(self, payload):
         return self.connection._call(
             self.UPLOAD, verify=False, request_json=payload, method=REQUEST.METHOD.POST
+        )
+
+    def resume(self, uuid, input_payload):
+        payload = {
+            "properties": input_payload
+        }
+        return self.connection._call(
+            self.RUNLOG_RESUME.format(uuid), verify=False, request_json=payload, method=REQUEST.METHOD.POST
         )
 
     def update2(self, uuid, payload):
