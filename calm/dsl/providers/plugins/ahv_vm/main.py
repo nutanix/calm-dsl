@@ -99,8 +99,7 @@ def create_spec(client):
     spec["name"] = get_field(schema, path, option)
 
     choice = click.prompt(
-        "\n{}(y/n)".format(highlight_text("Want to add some categories(y/n)")),
-        default="n",
+        "\n{}(y/n)".format(highlight_text("Want to add some categories")), default="n"
     )
     if choice[0] == "y":
         categories = Obj.categories()
@@ -119,20 +118,21 @@ def create_spec(client):
 
                 while True:
                     index = click.prompt("\nEnter the index of category", default=1)
-                    if index > len(categories):
+                    if (index > len(categories)) or (index <= 0):
                         click.echo("Invalid index !!! ")
 
                     else:
                         break
 
-                group = categories[index]
+                group = categories[index - 1]
                 key = group["key"]
                 if result.get(key) is not None:
                     click.echo(
                         "Category corresponding to key {} already exists ".format(key)
                     )
                     choice = click.prompt(
-                        "\nWant to replace old one (y/n)", default="n"
+                        "\n{}(y/n)".format(highlight_text("Want to replace old one")),
+                        default="n",
                     )
                     if choice[0] == "y":
                         result[key] = group["value"]
@@ -162,16 +162,16 @@ def create_spec(client):
 
     path.append("num_vcpus_per_socket")
     spec["resources"]["num_vcpus_per_socket"] = get_field(
-        schema, path, option, type=int
+        schema, path, option, default=1
     )
 
     path[-1] = "num_sockets"
     click.echo("")
-    spec["resources"]["num_sockets"] = get_field(schema, path, option, type=int)
+    spec["resources"]["num_sockets"] = get_field(schema, path, option, default=1)
 
     path[-1] = "memory_size_mib"
     click.echo("")
-    spec["resources"]["memory_size_mib"] = get_field(schema, path, option, type=int)
+    spec["resources"]["memory_size_mib"] = get_field(schema, path, option, default=1)
 
     click.secho("\nAdd some images:\n", fg="blue", bold=True)
 
@@ -203,7 +203,7 @@ def create_spec(client):
                 break
 
             res = click.prompt("\nEnter the index of image", default=1)
-            if res > len(images):
+            if (res > len(images)) or (res <= 0):
                 click.echo("Invalid index !!! ")
 
             else:
@@ -218,7 +218,7 @@ def create_spec(client):
 
         while True:
             res = click.prompt("\nEnter the index for Device Type", default=1)
-            if res > len(device_types):
+            if (res > len(device_types)) or (res <= 0):
                 click.echo("Invalid index !!! ")
 
             else:
@@ -227,17 +227,19 @@ def create_spec(client):
                 break
 
         click.echo("\nChoose from given Device Bus :")
-        device_bus_list = list(ahv.DEVICE_BUS.keys())
+        device_bus_list = list(ahv.DEVICE_BUS[image["device_type"]].keys())
         for index, device_bus in enumerate(device_bus_list):
             click.echo("\t{}. {}".format(index + 1, highlight_text(device_bus)))
 
         while True:
             res = click.prompt("\nEnter the index for Device Bus", default=1)
-            if res > len(device_bus_list):
+            if (res > len(device_bus_list)) or (res <= 0):
                 click.echo("Invalid index !!! ")
 
             else:
-                image["adapter_type"] = ahv.DEVICE_BUS[device_bus_list[res - 1]]
+                image["adapter_type"] = ahv.DEVICE_BUS[image["device_type"]][
+                    device_bus_list[res - 1]
+                ]
                 click.echo("{} selected".format(highlight_text(image["adapter_type"])))
                 break
 
@@ -296,7 +298,7 @@ def create_spec(client):
 
             while True:
                 res = click.prompt("\nEnter the index for Device Type", default=1)
-                if res > len(device_types):
+                if (res > len(device_types)) or (res <= 0):
                     click.echo("Invalid index !!! ")
 
                 else:
@@ -307,17 +309,19 @@ def create_spec(client):
                     break
 
             click.echo("\nChoose from given Device Bus :")
-            device_bus_list = list(ahv.DEVICE_BUS.keys())
+            device_bus_list = list(ahv.DEVICE_BUS[vdisk["device_type"]].keys())
             for index, device_bus in enumerate(device_bus_list):
                 click.echo("\t{}. {}".format(index + 1, highlight_text(device_bus)))
 
             while True:
                 res = click.prompt("\nEnter the index for Device Bus: ", default=1)
-                if res > len(device_bus_list):
+                if (res > len(device_bus_list)) or (res <= 0):
                     click.echo("Invalid index !!! ")
 
                 else:
-                    vdisk["adapter_type"] = ahv.DEVICE_BUS[device_bus_list[res - 1]]
+                    vdisk["adapter_type"] = ahv.DEVICE_BUS[vdisk["device_type"]][
+                        device_bus_list[res - 1]
+                    ]
                     click.echo(
                         "{} selected".format(highlight_text(vdisk["adapter_type"]))
                     )
@@ -326,8 +330,12 @@ def create_spec(client):
             path.append("disk_size_mib")
             click.echo("")
             msg = "Enter disk size(GB)"
-            vdisk["size"] = get_field(schema, path, option, default=8, msg=msg)
-            vdisk["size"] = vdisk["size"] * 1024
+
+            if vdisk["device_type"] == ahv.DEVICE_TYPES["DISK"]:
+                vdisk["size"] = get_field(schema, path, option, default=8, msg=msg)
+                vdisk["size"] = vdisk["size"] * 1024
+            else:
+                vdisk["size"] = 0
 
             if not adapterNameIndexMap.get(vdisk["adapter_type"]):
                 adapterNameIndexMap[vdisk["adapter_type"]] = 0
@@ -347,7 +355,7 @@ def create_spec(client):
             path = path[:-1]
 
             choice = click.prompt(
-                "\n{}(y/n)".format(highlight_text("Want to add more disks")),
+                "\n{}(y/n)".format(highlight_text("Want to add more virtual disks")),
                 default="n",
             )
             if choice[0] == "n":
@@ -374,7 +382,7 @@ def create_spec(client):
 
                 while True:
                     res = click.prompt("\nEnter the index of subnet's name", default=1)
-                    if res > len(nics):
+                    if (res > len(nics)) or (res <= 0):
                         click.echo("Invalid index !!!")
 
                     else:
@@ -417,7 +425,7 @@ def create_spec(client):
 
         while True:
             index = click.prompt("\nEnter the index for type of script", default=1)
-            if index > len(script_types):
+            if (index > len(script_types)) or (index <= 0):
                 click.echo("Invalid index !!!")
             else:
                 script_type = script_types[index - 1]
@@ -447,7 +455,7 @@ def create_spec(client):
                 index = click.prompt(
                     "\nEnter the index for type of installing script", default=1
                 )
-                if index > len(install_types):
+                if (index > len(install_types)) or (index <= 0):
                     click.echo("Invalid index !!!")
                 else:
                     install_type = install_types[index - 1]

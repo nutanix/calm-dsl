@@ -146,13 +146,12 @@ class VCenter:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
         res = res.json()
-        timezone_dict = {}
+        timezone_names = []
         for entity in res["entities"]:
-            ind = entity["status"]["resources"]["index"]
             name = entity["status"]["resources"]["name"]
-            timezone_dict[ind] = name
+            timezone_names.append(name)
 
-        return timezone_dict
+        return timezone_names
 
     def networks(self, account_id, host_id=None, cluster_name=None):
         Obj = get_resource_api(vmw.NETWORK, self.connection)
@@ -364,7 +363,7 @@ def create_spec(client):
     project_id = ""
     while True:
         ind = click.prompt("\nEnter the index of project", default=1)
-        if ind > len(project_list):
+        if (ind > len(project_list)) or (ind <= 0):
             click.echo("Invalid index !!! ")
 
         else:
@@ -412,7 +411,7 @@ def create_spec(client):
 
     while True:
         ind = click.prompt("\nEnter the index of operating system", default=1)
-        if ind > len(os_types):
+        if (ind > len(os_types)) or (ind <= 0):
             click.echo("Invalid index !!! ")
 
         else:
@@ -437,7 +436,7 @@ def create_spec(client):
 
             while True:
                 ind = click.prompt("\nEnter the index of host", default=1)
-                if ind > len(host_names):
+                if (ind > len(host_names)) or (ind <= 0):
                     click.echo("Invalid index !!! ")
 
                 else:
@@ -459,7 +458,7 @@ def create_spec(client):
 
             while True:
                 ind = click.prompt("\nEnter the index of datastore", default=1)
-                if ind > len(datastore_names):
+                if (ind > len(datastore_names)) or (ind <= 0):
                     click.echo("Invalid index !!! ")
 
                 else:
@@ -481,7 +480,7 @@ def create_spec(client):
 
             while True:
                 ind = click.prompt("\nEnter the index of cluster", default=1)
-                if ind > len(cluster_list):
+                if (ind > len(cluster_list)) or (ind <= 0):
                     click.echo("Invalid index !!! ")
 
                 else:
@@ -501,7 +500,7 @@ def create_spec(client):
 
             while True:
                 ind = click.prompt("\nEnter the index of storage", default=1)
-                if ind > len(storage_pod_list):
+                if (ind > len(storage_pod_list)) or (ind <= 0):
                     click.echo("Invalid index !!! ")
 
                 else:
@@ -522,7 +521,7 @@ def create_spec(client):
 
         while True:
             ind = click.prompt("\nEnter the index of template", default=1)
-            if ind > len(template_names):
+            if (ind > len(template_names)) or (ind <= 0):
                 click.echo("Invalid index !!! ")
 
             else:
@@ -598,7 +597,7 @@ def create_spec(client):
                     ind = click.prompt(
                         "\nEnter the index of controller type", default=1
                     )
-                    if ind > len(controllers):
+                    if (ind > len(controllers)) or (ind <= 0):
                         click.echo("Invalid index !!! ")
 
                     else:
@@ -616,7 +615,7 @@ def create_spec(client):
 
                 while True:
                     ind = click.prompt("\nEnter the index of sharing type", default=1)
-                    if ind > len(sharingOptions):
+                    if (ind > len(sharingOptions)) or (ind <= 0):
                         click.echo("Invalid index !!! ")
 
                     else:
@@ -658,7 +657,7 @@ def create_spec(client):
                     ind = click.prompt(
                         "\nEnter the index of controller type", default=1
                     )
-                    if ind > len(controllers):
+                    if (ind > len(controllers)) or (ind <= 0):
                         click.echo("Invalid index !!! ")
 
                     else:
@@ -715,7 +714,7 @@ def create_spec(client):
 
                 while True:
                     ind = click.prompt("\nEnter the index of disk mode", default=1)
-                    if ind > len(disk_mode_list):
+                    if (ind > len(disk_mode_list)) or (ind <= 0):
                         click.echo("Invalid index !!! ")
 
                     else:
@@ -768,7 +767,7 @@ def create_spec(client):
 
             while True:
                 ind = click.prompt("\nEnter the index of adapter type", default=1)
-                if ind > len(adapter_types):
+                if (ind > len(adapter_types)) or (ind <= 0):
                     click.echo("Invalid index !!! ")
 
                 else:
@@ -790,7 +789,7 @@ def create_spec(client):
 
             while True:
                 ind = click.prompt("\nEnter the index of network type", default=1)
-                if ind > len(network_names):
+                if (ind > len(network_names)) or (ind <= 0):
                     click.echo("Invalid index !!! ")
 
                 else:
@@ -1097,7 +1096,7 @@ def create_spec(client):
 
             while True:
                 ind = click.prompt("\nEnter the index of file path", default=1)
-                if ind > len(file_paths):
+                if (ind > len(file_paths)) or (ind <= 0):
                     click.echo("Invalid index !!! ")
 
                 else:
@@ -1135,7 +1134,7 @@ def create_spec(client):
 
         while True:
             ind = click.prompt("\nEnter the index of adapter type", default=1)
-            if ind > len(adapter_types):
+            if (ind > len(adapter_types)) or (ind <= 0):
                 click.echo("Invalid index !!! ")
 
             else:
@@ -1237,26 +1236,26 @@ def _windows_customization(Obj, account_id):
         organization_name = click.prompt("\tOrganization Name: ", default="")
         product_id = click.prompt("\tProduct Id: ", default="")
 
-        timezone_dict = Obj.timezones(vmw.OperatingSystem["Windows"])
-        timezone = ""  # To call the api
+        timezone_names = Obj.timezones(vmw.OperatingSystem["Windows"])
+        timezone = ""
 
-        timezone_list = list(timezone_dict.keys())
         click.echo("\nChoose from given timezone names:")
-        for ind, name in enumerate(timezone_list):
+        for ind, name in enumerate(timezone_names):
             click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
         while True:
             res = click.prompt("\nEnter the index of Timezone", default=1)
-            if (res > len(timezone_list)) or (res <= 0):
+            if (res > len(timezone_names)) or (res <= 0):
                 click.echo("Invalid index !!! ")
 
             else:
-                timezone = timezone_list[res - 1]
+                timezone = timezone_names[res - 1]
                 click.echo("{} selected".format(highlight_text(timezone)))
-                timezone = timezone_dict[timezone]
                 break
 
-        admin_password = click.prompt("Admin Password", hide_input=True)
+        admin_password = click.prompt(
+            "Admin Password", default="***REMOVED***", hide_input=True
+        )
 
         choice = click.prompt(
             "\nAutomatically logon as administrator(y/n)", default="n"
@@ -1311,8 +1310,10 @@ def _windows_customization(Obj, account_id):
 
         else:
             domain = click.prompt("\tDomain Name: ", default="")
-            domain_user = click.prompt("\tUsername: ", default="")
-            domain_password = click.prompt("\tPassword: ", default="", hide_input=True)
+            domain_user = click.prompt("\tUsername: ", default="admin")
+            domain_password = click.prompt(
+                "\tPassword: ", default="***REMOVED***", hide_input=True
+            )
             spec["windows_data"].update(
                 {
                     "is_domain": is_domain,
@@ -1385,23 +1386,21 @@ def _linux_customization(Obj, account_id):
         host_name = click.prompt("\nEnter Hostname", default="")
         domain = click.prompt("\nEnter Domain", default="")
 
-        timezone_dict = Obj.timezones(vmw.OperatingSystem["Linux"])
+        timezone_names = Obj.timezones(vmw.OperatingSystem["Linux"])
         timezone = ""
 
-        timezone_list = list(timezone_dict.keys())
         click.echo("\nChoose from given timezone names:")
-        for ind, name in enumerate(timezone_list):
+        for ind, name in enumerate(timezone_names):
             click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
         while True:
             res = click.prompt("\nEnter the index of Timezone", default=1)
-            if (res > len(timezone_list)) or (res <= 0):
+            if (res > len(timezone_names)) or (res <= 0):
                 click.echo("Invalid index !!! ")
 
             else:
-                timezone = timezone_list[res - 1]
+                timezone = timezone_names[res - 1]
                 click.echo("{} selected".format(highlight_text(timezone)))
-                timezone = timezone_dict[timezone]
                 break
 
         choice = click.prompt("\nEnable Hardware clock UTC(y/n)", default="n")
