@@ -514,13 +514,13 @@ def run_actions(screen, obj, app_name, action_name, watch):
     app_id = app["metadata"]["uuid"]
 
     if action_name.lower() == SYSTEM_ACTIONS.CREATE:
-        click.echo("The Create Action is triggered automatically when you deploy a blueprint. It cannot be called manually ")
+        click.echo("The Create Action is triggered automatically when you deploy a blueprint. It cannot be run separately.")
         return
     if action_name.lower() == SYSTEM_ACTIONS.DELETE:
-        delete_app([app_name])
+        delete_app([app_name])  # Because Delete requries a differernt API workflow
         return
     if action_name.lower() == SYSTEM_ACTIONS.SOFT_DELETE:
-        delete_app([app_name], soft=True)
+        delete_app([app_name], soft=True)   # Because Soft Delete also requries a differernt API workflow
         return
 
     calm_action_name = "action_" + action_name.lower()
