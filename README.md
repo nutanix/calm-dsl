@@ -148,7 +148,7 @@ Code formatted by [![Code style: black](https://img.shields.io/badge/code%20styl
  `calm delete app <app names>` deletes the app(s) named. <br/>
  Multiple apps can be deleted by giving space separated names.
 
-| Option  		    | Type     			| Description	                                |
+ | Option  		    | Type     			| Description	                                |
  | -------------  | ------------- |---------------------------------------------|
  | -s, \-\-soft  	| Flag          |	Soft-delete the application (i.e. remove it only from Calm) |
 
