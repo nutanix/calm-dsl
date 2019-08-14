@@ -488,7 +488,7 @@ def watch_app(obj, app_name, screen, app=None):
     poll_action(poll_func, is_complete)
 
 
-def delete_app(obj, app_names, soft):
+def delete_app(obj, app_names, soft=False):
     client = obj.get("client")
 
     for app_name in app_names:
@@ -509,19 +509,20 @@ def delete_app(obj, app_names, soft):
 def run_actions(screen, obj, app_name, action_name, watch):
     client = obj.get("client")
 
-    app = _get_app(client, app_name)
-    app_spec = app["spec"]
-    app_id = app["metadata"]["uuid"]
-
     if action_name.lower() == SYSTEM_ACTIONS.CREATE:
         click.echo("The Create Action is triggered automatically when you deploy a blueprint. It cannot be run separately.")
         return
     if action_name.lower() == SYSTEM_ACTIONS.DELETE:
-        delete_app([app_name])  # Because Delete requries a differernt API workflow
+        delete_app(obj, [app_name])  # Because Delete requries a differernt API workflow
         return
     if action_name.lower() == SYSTEM_ACTIONS.SOFT_DELETE:
-        delete_app([app_name], soft=True)   # Because Soft Delete also requries a differernt API workflow
+        delete_app(obj, [app_name], soft=True)   # Because Soft Delete also requries the differernt API workflow
         return
+
+    app = _get_app(client, app_name)
+    app_spec = app["spec"]
+    app_id = app["metadata"]["uuid"]
+
 
     calm_action_name = "action_" + action_name.lower()
     action = next(
