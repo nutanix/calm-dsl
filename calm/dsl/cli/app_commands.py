@@ -1,6 +1,6 @@
 import click
 
-from .main import get, describe, delete, run, watch, download
+from .main import main, get, describe, delete, run, watch, download
 from .utils import Display
 from .apps import (
     get_apps,
@@ -47,7 +47,11 @@ def _describe_app(obj, app_name):
 @click.pass_obj
 def _run_actions(obj, app_name, action_name, watch):
     """App lcm actions"""
+    render_actions = display_with_screen(obj, app_name, action_name, watch)
+    Display.wrapper(render_actions, watch)
 
+
+def display_with_screen(obj, app_name, action_name, watch):
     def render_actions(screen):
         screen.clear()
         screen.print_at(
@@ -57,7 +61,7 @@ def _run_actions(obj, app_name, action_name, watch):
         run_actions(screen, obj, app_name, action_name, watch)
         screen.wait_for_input(10.0)
 
-    Display.wrapper(render_actions, watch)
+    return render_actions
 
 
 @watch.command("action_runlog")
@@ -122,6 +126,57 @@ def _download_runlog(obj, runlog_uuid, app_name, file_name):
 @click.option("--soft", "-s", is_flag=True, default=False, help="Soft delete app")
 @click.pass_obj
 def _delete_app(obj, app_names, soft):
-    """Deletes a application"""
+    """Deletes an application"""
 
     delete_app(obj, app_names, soft)
+
+
+@main.group()
+def start():
+    """Start entities"""
+    pass
+
+
+@main.group()
+def stop():
+    """Stop entities"""
+    pass
+
+
+@main.group()
+def restart():
+    """Restart entities"""
+    pass
+
+
+@start.command("app")
+@click.argument("app_name")
+@click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
+@click.pass_obj
+def start_app(obj, app_name, watch):
+    """Starts an application"""
+
+    render_actions = display_with_screen(obj, app_name, "start", watch)
+    Display.wrapper(render_actions, watch)
+
+
+@stop.command("app")
+@click.argument("app_name")
+@click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
+@click.pass_obj
+def stop_app(obj, app_name, watch):
+    """Stops an application"""
+
+    render_actions = display_with_screen(obj, app_name, "stop", watch)
+    Display.wrapper(render_actions, watch)
+
+
+@restart.command("app")
+@click.argument("app_name")
+@click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
+@click.pass_obj
+def restart_app(obj, app_name, watch):
+    """Restarts an application"""
+
+    render_actions = display_with_screen(obj, app_name, "restart", watch)
+    Display.wrapper(render_actions, watch)

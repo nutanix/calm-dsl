@@ -10,7 +10,7 @@ from prettytable import PrettyTable
 from anytree import NodeMixin, RenderTree
 
 from .utils import get_name_query, get_states_filter, highlight_text, Display
-from .constants import APPLICATION, RUNLOG
+from .constants import APPLICATION, RUNLOG, SYSTEM_ACTIONS
 
 log = logging.getLogger(__name__)
 
@@ -512,6 +512,16 @@ def run_actions(screen, obj, app_name, action_name, watch):
     app = _get_app(client, app_name)
     app_spec = app["spec"]
     app_id = app["metadata"]["uuid"]
+
+    if action_name.lower() == SYSTEM_ACTIONS.CREATE:
+        click.echo("The Create Action is triggered automatically when you deploy a blueprint. It cannot be called manually ")
+        return
+    if action_name.lower() == SYSTEM_ACTIONS.DELETE:
+        delete_app([app_name])
+        return
+    if action_name.lower() == SYSTEM_ACTIONS.SOFT_DELETE:
+        delete_app([app_name], soft=True)
+        return
 
     calm_action_name = "action_" + action_name.lower()
     action = next(
