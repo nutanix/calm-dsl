@@ -80,3 +80,12 @@ class ACCOUNT:
         AZURE = "azure"
         GCP = "gcp"
         VMWARE = "vmware"
+
+
+class SYSTEM_ACTIONS:
+    CREATE = "create"
+    START = "start"
+    RESTART = "restart"
+    STOP = "stop"
+    DELETE = "delete"
+    SOFT_DELETE = "soft_delete"
