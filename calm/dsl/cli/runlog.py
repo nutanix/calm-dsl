@@ -1,10 +1,65 @@
+from asciimatics.widgets import Frame, Layout, Divider, Text, Button, DatePicker, TimePicker, Label
+from asciimatics.scene import Scene
+from asciimatics.exceptions import StopApplication
 import time
+from time import sleep
 import itertools
 
 from anytree import NodeMixin, RenderTree
 from json import JSONEncoder
 
-from .constants import RUNLOG
+from .constants import RUNLOG, SINGLE_INPUT
+
+
+class InputFrame(Frame):
+    def __init__(self, name, screen, inputs, data):
+        super(InputFrame, self).__init__(screen,
+                                         int(screen.height * 1 // 3),
+                                         int(screen.width * 2 // 3),
+                                         has_shadow=True,
+                                         data=data,
+                                         name=name)
+        layout = Layout([1, len(inputs), 1])
+        self.add_layout(layout)
+        layout.add_widget(Label("Inputs for the input task '{}'".format(name), height=2), 1)
+        for singleinput in inputs:
+            if singleinput.get("input_type", SINGLE_INPUT.TYPE.TEXT) == SINGLE_INPUT.TYPE.TEXT:
+                layout.add_widget(
+                    Text(label=singleinput.get("name") + ":",
+                         name=singleinput.get("name"),
+                         on_change=self._on_change), 1)
+            elif singleinput.get("input_type", SINGLE_INPUT.TYPE.TEXT) == SINGLE_INPUT.TYPE.DATE:
+                layout.add_widget(
+                    DatePicker(label=singleinput.get("name") + ":",
+                               name=singleinput.get("name"),
+                               year_range=range(1999, 2100),
+                               on_change=self._on_change), 1)
+            elif singleinput.get("input_type", SINGLE_INPUT.TYPE.TEXT) == SINGLE_INPUT.TYPE.TIME:
+                layout.add_widget(
+                    TimePicker(label=singleinput.get("name") + ":",
+                               name=singleinput.get("name"),
+                               seconds=True,
+                               on_change=self._on_change), 1)
+            elif singleinput.get("input_type", SINGLE_INPUT.TYPE.TEXT) == SINGLE_INPUT.TYPE.PASSWORD:
+                layout.add_widget(
+                    Text(label=singleinput.get("name") + ":",
+                         name=singleinput.get("name"),
+                         hide_char="*",
+                         on_change=self._on_change), 1)
+
+        layout.add_widget(Divider(height=3), 1)
+        layout2 = Layout([1, 1, 1])
+        self.add_layout(layout2)
+        layout2.add_widget(Button("Submit", self._submit), 1)
+        self.fix()
+
+    def _on_change(self):
+        self.save()
+
+    def _submit(self):
+        for key, value in self.data.items():
+            input_payload[key]['value'] = value
+        raise StopApplication("User requested exit")
 
 
 class RunlogNode(NodeMixin):
@@ -65,6 +120,8 @@ def displayRunLog(screen, obj, pre, line):
         colour = 1  # red for failure
     elif state == RUNLOG.STATUS.RUNNING:
         colour = 4  # blue for running state
+    elif state == RUNLOG.STATUS.INPUT:
+        colour = 6  # cyan for input state
     screen.print_at("{})".format(state), len(prefix) + 1, idx(), colour=colour)
 
     if status["type"] == "action_runlog":
@@ -99,6 +156,14 @@ def displayRunLog(screen, obj, pre, line):
         for line in output_lines:
             screen.print_at(line, len(pre) + 6, idx(), colour=5, attr=1)
 
+    if status["type"] == "task_runlog" and state == RUNLOG.STATUS.INPUT:
+        attrs = status.get("attrs", None)
+        if not isinstance(attrs, dict):
+            return idx()
+
+        input_tasks.append({"name": name,
+                            "uuid": metadata["uuid"],
+                            "inputs": attrs.get("inputs", [])})
     return idx()
 
 
@@ -168,6 +233,9 @@ class RunlogJSONEncoder(JSONEncoder):
 def get_completion_func(screen):
     def is_action_complete(response, client=None):
 
+        global input_tasks
+        global input_payload
+        input_tasks = []
         entities = response["entities"]
         if len(entities):
 
@@ -193,7 +261,7 @@ def get_completion_func(screen):
 
                 uuid = runlog["metadata"]["uuid"]
                 outputs = []
-                if client is not None and runlog['status']['type'] == "task_runlog":
+                if client is not None and runlog['status']['type'] == "task_runlog" and not runlog["status"].get("attrs", None):
                     res, err = client.runbook.runlog_output(uuid)
                     if err:
                         raise Exception("\n[{}] - {}".format(err["code"], err["error"]))
@@ -232,6 +300,37 @@ def get_completion_func(screen):
             for pre, _, node in RenderTree(root):
                 line = displayRunLog(screen, node, pre, line)
             screen.refresh()
+
+            # Check if any tasks is in INPUT state
+            if len(input_tasks) > 0:
+                sleep(2)
+                for input_task in input_tasks:
+                    name = input_task.get("name", "")
+                    inputs = input_task.get("inputs", [])
+                    task_uuid = input_task.get("uuid", "")
+                    input_payload = {}
+                    data = {}
+                    for singleinput in inputs:
+                        if singleinput.get("input_type", SINGLE_INPUT.TYPE.TEXT) == SINGLE_INPUT.TYPE.PASSWORD:
+                            input_payload.update({singleinput.get("name", None): {"secret": True, "value": ""}})
+                        else:
+                            input_payload.update({singleinput.get("name", None): {"secret": False, "value": ""}})
+                        data.update({singleinput.get("name", None): ""})
+                    screen.play([Scene([InputFrame(name, screen, inputs, data)], -1)])
+                    if client is not None:
+                        client.runbook.resume(task_uuid, input_payload)
+                input_tasks = []
+                screen.clear()
+                if total_tasks:
+                    progress = "{0:.2f}".format(completed_tasks / total_tasks * 100)
+                    screen.print_at("Progress: {}%".format(progress), 0, 0)
+
+                line = 1
+                for pre, _, node in RenderTree(root):
+                    line = displayRunLog(screen, node, pre, line)
+                screen.print_at("Sending resume for input tasks with input values", 0, line, colour=6)
+                line = line + 1
+                screen.refresh()
 
             for runlog in sorted_entities:
                 state = runlog["status"]["state"]

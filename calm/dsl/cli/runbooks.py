@@ -223,21 +223,23 @@ def run_runbook(
 
     def poll_runlog_status():
         return client.runbook.poll_action_run(runlog_uuid)
+    screen.refresh()
     should_continue = poll_action(poll_runlog_status, get_runlog_status(screen))
     if not should_continue:
         return
 
+    height = 0
     if watch:
         screen.refresh()
         watch_runbook(runlog_uuid, client, screen=screen)
-    else:
-        screen.print_at(">> {} run triggered".format(runbook_name or "Runbook"), 0, 0)
+        height = screen.height
 
     config = get_config()
     pc_ip = config["SERVER"]["pc_ip"]
     pc_port = config["SERVER"]["pc_port"]
     run_url = "https://{}:{}/console/#page/explore/calm/runs/{}?runbookId={}".format(pc_ip, pc_port, runlog_uuid, runbook_uuid)
-    screen.print_at("\nRunbook run url: {}".format(highlight_text(run_url)), 0, 0)
+    screen.print_at("Runbook run url: {}".format(highlight_text(run_url)), 0, height - 3)
+    screen.refresh()
 
 
 def watch_runbook(runlog_uuid, client, screen, poll_interval=10):

@@ -15,6 +15,8 @@ class RUNLOG:
         SYS_ABORTED = "SYS_ABORTED"
         ALREADY_RUN = "ALREADY_RUN"
         TIMEOUT = "TIMEOUT"
+        INPUT = "INPUT"
+        CONFIRM = "CONFIRM"
 
     TERMINAL_STATES = [
         STATUS.SUCCESS,
@@ -88,3 +90,27 @@ class ACCOUNT:
         AZURE = "azure"
         GCP = "gcp"
         VMWARE = "vmware"
+
+
+class SINGLE_INPUT:
+    class TYPE:
+        TEXT = "text"
+        PASSWORD = "password"
+        CHECKBOX = "checkbox"
+        SELECT = "select"
+        SELECTMULTIPLE = "selectmultiple"
+        DATE = "date"
+        TIME = "time"
+        DATETIME = "datetime"
+        FILE = "file"
+
+    VALID_TYPES = [
+        TYPE.TEXT,
+        TYPE.PASSWORD,
+        TYPE.CHECKBOX,
+        TYPE.SELECT,
+        TYPE.SELECTMULTIPLE,
+        TYPE.DATE,
+        TYPE.DATETIME,
+        TYPE.FILE,
+    ]
