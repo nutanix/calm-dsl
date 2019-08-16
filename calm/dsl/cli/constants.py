@@ -114,3 +114,12 @@ class SINGLE_INPUT:
         TYPE.DATETIME,
         TYPE.FILE,
     ]
+
+
+class SYSTEM_ACTIONS:
+    CREATE = "create"
+    START = "start"
+    RESTART = "restart"
+    STOP = "stop"
+    DELETE = "delete"
+    SOFT_DELETE = "soft_delete"

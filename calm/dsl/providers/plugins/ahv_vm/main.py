@@ -444,7 +444,9 @@ def create_spec(client):
                 click.echo("\t {}. {}".format(str(index + 1), highlight_text(value)))
 
             while True:
-                index = click.prompt("\nEnter the index for type of installing script", default=1)
+                index = click.prompt(
+                    "\nEnter the index for type of installing script", default=1
+                )
                 if index > len(install_types):
                     click.echo("Invalid index !!!")
                 else:
