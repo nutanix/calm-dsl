@@ -111,6 +111,7 @@ class SINGLE_INPUT:
         TYPE.SELECT,
         TYPE.SELECTMULTIPLE,
         TYPE.DATE,
+        TYPE.TIME,
         TYPE.DATETIME,
         TYPE.FILE,
     ]

@@ -17,6 +17,7 @@ class TASK_INPUT:
         TYPE.SELECT,
         TYPE.SELECTMULTIPLE,
         TYPE.DATE,
+        TYPE.TIME,
         TYPE.DATETIME,
         TYPE.FILE,
     ]

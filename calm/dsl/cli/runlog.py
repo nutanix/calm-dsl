@@ -7,6 +7,7 @@ import itertools
 
 from anytree import NodeMixin, RenderTree
 from json import JSONEncoder
+import datetime
 
 from .constants import RUNLOG, SINGLE_INPUT
 
@@ -14,7 +15,7 @@ from .constants import RUNLOG, SINGLE_INPUT
 class InputFrame(Frame):
     def __init__(self, name, screen, inputs, data):
         super(InputFrame, self).__init__(screen,
-                                         int(screen.height * 1 // 3),
+                                         int(len(inputs) * 2 + 8),
                                          int(screen.width * 2 // 3),
                                          has_shadow=True,
                                          data=data,
@@ -58,7 +59,7 @@ class InputFrame(Frame):
 
     def _submit(self):
         for key, value in self.data.items():
-            input_payload[key]['value'] = value
+            input_payload[key]['value'] = str(value)
         raise StopApplication("User requested exit")
 
 
@@ -311,11 +312,16 @@ def get_completion_func(screen):
                     input_payload = {}
                     data = {}
                     for singleinput in inputs:
-                        if singleinput.get("input_type", SINGLE_INPUT.TYPE.TEXT) == SINGLE_INPUT.TYPE.PASSWORD:
-                            input_payload.update({singleinput.get("name", None): {"secret": True, "value": ""}})
-                        else:
-                            input_payload.update({singleinput.get("name", None): {"secret": False, "value": ""}})
-                        data.update({singleinput.get("name", None): ""})
+                        input_type = singleinput.get("input_type", SINGLE_INPUT.TYPE.TEXT)
+                        input_name = singleinput.get("name", "")
+                        data.update({input_name: ""})
+                        input_payload.update({input_name: {"secret": False, "value": ""}})
+                        if input_type == SINGLE_INPUT.TYPE.PASSWORD:
+                            input_payload.update({input_name: {"secret": True, "value": ""}})
+                        elif input_type == SINGLE_INPUT.TYPE.DATE:
+                            data.update({input_name: datetime.datetime.now().date()})
+                        elif input_type == SINGLE_INPUT.TYPE.TIME:
+                            data.update({input_name: datetime.datetime.now().time()})
                     screen.play([Scene([InputFrame(name, screen, inputs, data)], -1)])
                     if client is not None:
                         client.runbook.resume(task_uuid, input_payload)
