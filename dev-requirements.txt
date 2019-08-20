@@ -12,6 +12,5 @@ pytest-icdiff>=0.0.4
 pytest-xdist>=1.26.1
 pytest-gitignore>=1.3
 black>=19.3b0
-pytest-dependency>=0.4.0
 #python-language-server[all]
 #pyls
