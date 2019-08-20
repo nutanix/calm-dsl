@@ -54,6 +54,9 @@ class InputFrame(Frame):
         layout2.add_widget(Button("Submit", self._submit), 1)
         self.fix()
 
+    def _set_default(self):
+        self.set_theme("bright")
+
     def _on_change(self):
         self.save()
 
