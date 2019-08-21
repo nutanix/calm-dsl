@@ -126,6 +126,8 @@ def displayRunLog(screen, obj, pre, line):
         colour = 4  # blue for running state
     elif state == RUNLOG.STATUS.INPUT:
         colour = 6  # cyan for input state
+    elif state == RUNLOG.STATUS.PAUSED:
+        colour = 5  # magenta for paused state
     screen.print_at("{})".format(state), len(prefix) + 1, idx(), colour=colour)
 
     if status["type"] == "action_runlog":
@@ -235,7 +237,7 @@ class RunlogJSONEncoder(JSONEncoder):
 
 
 def get_completion_func(screen):
-    def is_action_complete(response, client=None):
+    def is_action_complete(response, client=None, input_data={}, **kwargs):
 
         global input_tasks
         global input_payload
@@ -314,18 +316,24 @@ def get_completion_func(screen):
                     task_uuid = input_task.get("uuid", "")
                     input_payload = {}
                     data = {}
+                    inputs_required = []
+                    input_value = input_data.get(name, {})
                     for singleinput in inputs:
                         input_type = singleinput.get("input_type", SINGLE_INPUT.TYPE.TEXT)
                         input_name = singleinput.get("name", "")
-                        data.update({input_name: ""})
-                        input_payload.update({input_name: {"secret": False, "value": ""}})
+                        value = input_value.get(input_name, "")
+                        if not value:
+                            inputs_required.append(singleinput)
+                            data.update({input_name: ""})
+                        input_payload.update({input_name: {"secret": False, "value": value}})
                         if input_type == SINGLE_INPUT.TYPE.PASSWORD:
-                            input_payload.update({input_name: {"secret": True, "value": ""}})
+                            input_payload.update({input_name: {"secret": True, "value": value}})
                         elif input_type == SINGLE_INPUT.TYPE.DATE:
                             data.update({input_name: datetime.datetime.now().date()})
                         elif input_type == SINGLE_INPUT.TYPE.TIME:
                             data.update({input_name: datetime.datetime.now().time()})
-                    screen.play([Scene([InputFrame(name, screen, inputs, data)], -1)])
+                    if len(inputs_required) > 0:
+                        screen.play([Scene([InputFrame(name, screen, inputs_required, data)], -1)])
                     if client is not None:
                         client.runbook.resume(task_uuid, input_payload)
                 input_tasks = []
@@ -362,7 +370,7 @@ def get_completion_func(screen):
 
 
 def get_runlog_status(screen):
-    def check_runlog_status(response, client=None):
+    def check_runlog_status(response, client=None, **kwargs):
 
         if response["status"]["state"] == "PENDING":
             msg = ">> Runlog run is in PENDING state"

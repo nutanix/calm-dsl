@@ -17,6 +17,7 @@ class RUNLOG:
         TIMEOUT = "TIMEOUT"
         INPUT = "INPUT"
         CONFIRM = "CONFIRM"
+        PAUSED = "PAUSED"
 
     TERMINAL_STATES = [
         STATUS.SUCCESS,

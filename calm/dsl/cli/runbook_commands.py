@@ -235,9 +235,17 @@ def _describe_runbook(obj, runbook_name):
     required=False,
     help="Path of Runbook file to directly run runbook"
 )
+@click.option(
+    "--input-file",
+    "-i",
+    "input_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    required=False,
+    help="Path of input file to get the inputs for runbook"
+)
 @click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
 @click.pass_obj
-def run_runbook_command(obj, runbook_name, watch, runbook_file=None):
+def run_runbook_command(obj, runbook_name, watch, runbook_file=None, input_file=None):
 
     if runbook_file is None and runbook_name is None:
         click.echo("One of either Runbook Name or Runbook File is required to run runbook.")
@@ -272,10 +280,17 @@ def run_runbook_command(obj, runbook_name, watch, runbook_file=None):
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
+    input_data = None
+    if input_file is not None and input_file.endswith(".json"):
+        input_data = json.loads(open(input_file, "r").read())
+    elif input_file is not None:
+        click.echo("Unknown input file format {}".format(input_file))
+        return
+
     def render_runbook(screen):
         screen.clear()
         screen.refresh()
-        run_runbook(screen, client, runbook_name, watch, runbook=runbook)
+        run_runbook(screen, client, runbook_name, watch, runbook=runbook, input_data=input_data)
         screen.wait_for_input(10.0)
 
     Display.wrapper(render_runbook, watch)
