@@ -1,5 +1,7 @@
 from ruamel import yaml
 import click
+import click_completion
+import click_completion.core
 
 # TODO - move providers to separate file
 from calm.dsl.providers import get_provider, get_provider_types
@@ -17,6 +19,8 @@ from .projects import (
 from .accounts import get_accounts, delete_account, describe_account
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
+
+click_completion.init()
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
@@ -350,3 +354,64 @@ def _update_project(obj, project_name, project_file):
 def download():
     """Download entities"""
     pass
+
+
+completion_cmd_help = """Shell completion for click-completion-command
+Available shell types:
+\b
+  %s
+Default type: auto
+""" % "\n  ".join(
+    "{:<12} {}".format(k, click_completion.core.shells[k])
+    for k in sorted(click_completion.core.shells.keys())
+)
+
+
+@main.group(help=completion_cmd_help)
+def completion():
+    pass
+
+
+@completion.command()
+@click.option(
+    "-i", "--case-insensitive/--no-case-insensitive", help="Case insensitive completion"
+)
+@click.argument(
+    "shell",
+    required=False,
+    type=click_completion.DocumentedChoice(click_completion.core.shells),
+)
+def show(shell, case_insensitive):
+    """Show the click-completion-command completion code"""
+    extra_env = (
+        {"_CLICK_COMPLETION_COMMAND_CASE_INSENSITIVE_COMPLETE": "ON"}
+        if case_insensitive
+        else {}
+    )
+    click.echo(click_completion.core.get_code(shell, extra_env=extra_env))
+
+
+@completion.command()
+@click.option(
+    "--append/--overwrite", help="Append the completion code to the file", default=None
+)
+@click.option(
+    "-i", "--case-insensitive/--no-case-insensitive", help="Case insensitive completion"
+)
+@click.argument(
+    "shell",
+    required=False,
+    type=click_completion.DocumentedChoice(click_completion.core.shells),
+)
+@click.argument("path", required=False)
+def install(append, case_insensitive, shell, path):
+    """Install the click-completion-command completion"""
+    extra_env = (
+        {"_CLICK_COMPLETION_COMMAND_CASE_INSENSITIVE_COMPLETE": "ON"}
+        if case_insensitive
+        else {}
+    )
+    shell, path = click_completion.core.install(
+        shell=shell, path=path, append=append, extra_env=extra_env
+    )
+    click.echo("%s completion installed in %s" % (shell, path))
