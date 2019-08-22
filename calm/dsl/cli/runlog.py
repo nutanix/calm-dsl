@@ -67,10 +67,11 @@ class InputFrame(Frame):
 
 
 class RunlogNode(NodeMixin):
-    def __init__(self, runlog, parent=None, children=None, outputs=None):
+    def __init__(self, runlog, machine=None, parent=None, children=None, outputs=None):
         self.runlog = runlog
         self.parent = parent
         self.outputs = outputs or []
+        self.machine = machine
         if children:
             self.children = children
 
@@ -107,6 +108,9 @@ def displayRunLog(screen, obj, pre, line):
 
     # TODO - Fix KeyError for action_runlog
 
+    if obj.machine:
+        name = "{} [machine: '{}']".format(name, obj.machine)
+
     creation_time = int(metadata["creation_time"]) // 1000000
     username = (
         status["userdata_reference"]["name"]
@@ -126,8 +130,6 @@ def displayRunLog(screen, obj, pre, line):
         colour = 4  # blue for running state
     elif state == RUNLOG.STATUS.INPUT:
         colour = 6  # cyan for input state
-    elif state == RUNLOG.STATUS.PAUSED:
-        colour = 5  # magenta for paused state
     screen.print_at("{})".format(state), len(prefix) + 1, idx(), colour=colour)
 
     if status["type"] == "action_runlog":
@@ -156,7 +158,7 @@ def displayRunLog(screen, obj, pre, line):
             len(pre) + 4, idx()
         )
 
-    if output:
+    if output and not obj.children:
         screen.print_at("Output :", len(pre) + 4, idx())
         output_lines = output.splitlines()
         for line in output_lines:
@@ -267,6 +269,7 @@ def get_completion_func(screen):
 
                 uuid = runlog["metadata"]["uuid"]
                 outputs = []
+                machine = runlog['status'].get("machine_name", None)
                 if client is not None and runlog['status']['type'] == "task_runlog" and not runlog["status"].get("attrs", None):
                     res, err = client.runbook.runlog_output(uuid)
                     if err:
@@ -275,7 +278,7 @@ def get_completion_func(screen):
                     output_list = runlog_output['status']['output_list']
                     for task_output in output_list:
                         outputs.append(task_output["output"])
-                nodes[str(uuid)] = RunlogNode(runlog, parent=root, outputs=outputs)
+                nodes[str(uuid)] = RunlogNode(runlog, parent=root, outputs=outputs, machine=machine)
 
             # Attach parent to nodes
             for runlog in sorted_entities:
