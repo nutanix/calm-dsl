@@ -4,8 +4,7 @@ import configparser
 
 # Defaults to be used if no config file exists.
 # TODO - remove username/password
-#PC_IP = "10.46.34.230"
-PC_IP = "10.46.4.2"
+PC_IP = "10.46.34.230"
 PC_PORT = 9440
 PC_USERNAME = "admin"
 PC_PASSWORD = "***REMOVED***"
