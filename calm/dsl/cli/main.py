@@ -8,9 +8,6 @@ from click_didyoumean import DYMGroup
 from click_repl import repl
 import click_log
 
-logger = logging.getLogger(__name__)
-click_log.basic_config(logger)
-
 # TODO - move providers to separate file
 from calm.dsl.providers import get_provider, get_provider_types
 from calm.dsl.tools import ping
@@ -25,6 +22,9 @@ from .projects import (
     update_project,
 )
 from .accounts import get_accounts, delete_account, describe_account
+
+logger = logging.getLogger(__name__)
+click_log.basic_config(logger)
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
