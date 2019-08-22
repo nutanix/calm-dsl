@@ -1,10 +1,15 @@
 from ruamel import yaml
+import logging
 import click
 
 import click_completion
 import click_completion.core
 from click_didyoumean import DYMGroup
 from click_repl import repl
+import click_log
+
+logger = logging.getLogger(__name__)
+click_log.basic_config(logger)
 
 # TODO - move providers to separate file
 from calm.dsl.providers import get_provider, get_provider_types
@@ -57,10 +62,10 @@ click_completion.init()
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path to config file, defaults to ~/.calm/config",
 )
-@click.option("--verbose", "-v", is_flag=True, help="Enables verbose mode.")
+@click_log.simple_verbosity_option(logger)
 @click.version_option("0.1")
 @click.pass_context
-def main(ctx, ip, port, username, password, config_file, verbose):
+def main(ctx, ip, port, username, password, config_file):
     """Calm CLI
 
 \b
@@ -77,7 +82,7 @@ Commonly used commands:
         ip=ip, port=port, username=username, password=password, config_file=config_file
     )
     ctx.obj["client"] = get_api_client()
-    ctx.obj["verbose"] = verbose
+    ctx.obj["verbose"] = True
 
 
 @main.group(cls=DYMGroup)
@@ -421,6 +426,6 @@ def install(append, case_insensitive, shell, path):
 
 
 @main.command("repl")
-def myrepl():
+def calmrepl():
     """Enable an interactive REPL"""
     repl(click.get_current_context())
