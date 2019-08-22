@@ -422,4 +422,5 @@ def install(append, case_insensitive, shell, path):
 
 @main.command("repl")
 def myrepl():
+    """Enable an interactive REPL"""
     repl(click.get_current_context())
