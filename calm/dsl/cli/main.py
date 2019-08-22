@@ -1,7 +1,10 @@
 from ruamel import yaml
 import click
+
 import click_completion
 import click_completion.core
+from click_didyoumean import DYMGroup
+from click_repl import repl
 
 # TODO - move providers to separate file
 from calm.dsl.providers import get_provider, get_provider_types
@@ -77,7 +80,7 @@ Commonly used commands:
     ctx.obj["verbose"] = verbose
 
 
-@main.group()
+@main.group(cls=DYMGroup)
 def validate():
     """Validate provider specs"""
     pass
@@ -113,13 +116,13 @@ def validate_provider_spec(spec_file, provider_type):
         raise ee
 
 
-@main.group()
+@main.group(cls=DYMGroup)
 def get():
     """Get various things like blueprints, apps: `get apps` and `get bps` are the primary ones."""
     pass
 
 
-@get.group()
+@get.group(cls=DYMGroup)
 def server():
     """Get calm server details"""
     pass
@@ -181,13 +184,13 @@ def _get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account
     get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_type)
 
 
-@main.group()
+@main.group(cls=DYMGroup)
 def compile():
     """Compile blueprint to json / yaml"""
     pass
 
 
-@main.group()
+@main.group(cls=DYMGroup)
 def create():
     """Create entities in CALM (blueprint, project) """
     pass
@@ -233,7 +236,7 @@ def _create_project(obj, project_file, project_name):
     click.echo(">> Project state: {}".format(state))
 
 
-@main.group()
+@main.group(cls=DYMGroup)
 def delete():
     """Delete entities"""
     pass
@@ -257,13 +260,13 @@ def _delete_account(obj, account_names):
     delete_account(obj, account_names)
 
 
-@main.group()
+@main.group(cls=DYMGroup)
 def launch():
     """Launch blueprints to create Apps"""
     pass
 
 
-@main.group()
+@main.group(cls=DYMGroup)
 def describe():
     """Describe apps, blueprints, projects, accounts"""
     pass
@@ -287,13 +290,13 @@ def _describe_account(obj, account_name):
     describe_account(obj, account_name)
 
 
-@main.group()
+@main.group(cls=DYMGroup)
 def run():
     """Run actions in an app"""
     pass
 
 
-@main.group()
+@main.group(cls=DYMGroup)
 def watch():
     """Track actions running on apps"""
     pass
@@ -315,7 +318,7 @@ def create_provider_spec(obj, provider_type):
     Provider.create_spec()
 
 
-@main.group()
+@main.group(cls=DYMGroup)
 def update():
     """Update entities"""
     pass
@@ -350,7 +353,7 @@ def _update_project(obj, project_name, project_file):
     click.echo(">> Project state: {}".format(state))
 
 
-@main.group()
+@main.group(cls=DYMGroup)
 def download():
     """Download entities"""
     pass
@@ -367,7 +370,7 @@ Default type: auto
 )
 
 
-@main.group(help=completion_cmd_help)
+@main.group(cls=DYMGroup, help=completion_cmd_help)
 def completion():
     pass
 
@@ -415,3 +418,8 @@ def install(append, case_insensitive, shell, path):
         shell=shell, path=path, append=append, extra_env=extra_env
     )
     click.echo("%s completion installed in %s" % (shell, path))
+
+
+@main.command("repl")
+def myrepl():
+    repl(click.get_current_context())
