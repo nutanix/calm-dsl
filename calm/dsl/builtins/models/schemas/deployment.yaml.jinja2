@@ -6,6 +6,11 @@ title: Deployment
 type: object
 x-calm-dsl-type: app_blueprint_deployment
 properties:
+  published_service_local_reference_list:
+    x-calm-dsl-display-name: published_services
+    type: array
+    items:
+      $ref: '#/components/schemas/Ref'
   package_local_reference_list:
     x-calm-dsl-display-name: packages
     type: array
@@ -27,6 +32,9 @@ properties:
     default: 'GREENFIELD'
   name:
     type: string
+  options:
+    x-calm-dsl-type: dict
+    type: object
 
 {%- endmacro %}
 

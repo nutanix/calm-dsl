@@ -1,0 +1,29 @@
+{% macro PODDeployment() -%}
+
+title: PODDeployment
+type: object
+x-calm-dsl-type: app_pod_deployment
+properties:
+  type:
+    type: string
+    default: 
+  deployment_spec:
+    x-calm-dsl-type: dict
+    type: object
+  service_spec:
+    x-calm-dsl-type: dict
+    type: object
+  depends_on_list:
+    x-calm-dsl-display-name: dependencies
+    type: object
+    x-calm-dsl-type: dict
+
+{%- endmacro %}
+
+
+{% macro PODDeploymentSchema() -%}
+
+PODDeployment:
+  {{ PODDeployment()|indent(2) }}
+
+{%- endmacro %}

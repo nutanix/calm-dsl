@@ -1,8 +1,8 @@
-{% macro Service() -%}
+{% macro PublishedService() -%}
 
-title: Service
+title: PublishedService
 type: object
-x-calm-dsl-type: app_service
+x-calm-dsl-type: app_published_service
 properties:
   name:
     type: string
@@ -12,6 +12,10 @@ properties:
     type: string
     maxLength: 1000
     default: ''
+  type:
+    type: string
+    default: K8S_SERVICE
+    enum: [K8S_SERVICE]
   port_list:
     x-calm-dsl-display-name: ports
     type: array
@@ -20,7 +24,7 @@ properties:
     default: []
   singleton:
     type: boolean
-    default: False
+    default: true
   tier:
     type: string
     default: ''
@@ -39,16 +43,16 @@ properties:
     type: array
     items:
       $ref: '#/components/schemas/Action'
-  container_spec:
+  options:      # Improve this validation
     x-calm-dsl-type: dict
     type: object
 
 {%- endmacro %}
 
 
-{% macro ServiceSchema() -%}
+{% macro PublishedServiceSchema() -%}
 
-Service:
-  {{ Service()|indent(2) }}
+PublishedService:
+  {{ PublishedService()|indent(2) }}
 
 {%- endmacro %}

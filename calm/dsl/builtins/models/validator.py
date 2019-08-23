@@ -48,6 +48,8 @@ class PropertyValidator(_PropertyValidatorBase, openapi_type=None):
 
         kind = cls.get_kind()
         if not isinstance(value, kind):
+            import pdb
+            pdb.set_trace()
             raise TypeError("{} is not of type {}".format(value, kind))
 
     @staticmethod
