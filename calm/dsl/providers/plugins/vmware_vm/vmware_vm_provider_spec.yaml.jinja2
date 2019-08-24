@@ -17,9 +17,9 @@ properties:
 title: VCenter Template NIC
 type: object
 properties:
-  nicType:
+  nic_type:
     type: string
-  netName: 
+  net_name: 
     type: string
   is_deleted:
     type: boolean
@@ -47,14 +47,14 @@ properties:
     default: -1
   disk_mode:
     type: string
+    default: "persistent"
   location:
     type: string
+    default: ""
   controller_key:
     type: integer
-    default: -1
   device_slot:
     type: integer
-    default: -1
   iso_path:
     type: string
     default: ""
@@ -80,6 +80,7 @@ properties:
     type: string
   location:
     type: string
+    default: ""
   controller_key:
     type: integer
     default: -1
@@ -202,7 +203,7 @@ properties:
   timezone:
     type: string
   is_domain:
-    type: string
+    type: boolean
   domain:
     type: string
   domain_user:
@@ -242,6 +243,9 @@ properties:
             default: False
           secret_reference:
             type: object
+            default: {}
+      value:
+        type: string
   domain_password:
     type: object
     properties:
@@ -253,6 +257,9 @@ properties:
             default: False
           secret_reference:
             type: object
+            default: {}
+      value:
+        type: string
 
 {%- endmacro %}
 

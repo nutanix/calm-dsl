@@ -236,7 +236,7 @@ def create_spec(client):
     project_id = ""
     while True:
         ind = click.prompt("\nEnter the index of project", default=1)
-        if ind > len(project_list):
+        if (ind > len(project_list)) or (ind <= 0):
             click.echo("Invalid index !!! ")
 
         else:
@@ -356,7 +356,7 @@ def create_spec(client):
 
         while True:
             res = click.prompt("\nEnter the index of region", default=1)
-            if res > len(regions):
+            if (res > len(regions)) or (res <= 0):
                 click.echo("Invalid index !!! ")
 
             else:
@@ -387,7 +387,7 @@ def create_spec(client):
 
         while True:
             res = click.prompt("\nEnter the index of availability zone", default=1)
-            if res > len(avl_zones):
+            if (res > len(avl_zones)) or (res <= 0):
                 click.echo("Invalid index !!! ")
 
             else:
@@ -418,7 +418,7 @@ def create_spec(client):
 
         while True:
             res = click.prompt("\nEnter the index of machine image", default=1)
-            if res > len(image_names):
+            if (res > len(image_names)) or (res <= 0):
                 click.echo("Invalid index !!! ")
 
             else:
@@ -450,7 +450,7 @@ def create_spec(client):
 
         while True:
             res = click.prompt("\nEnter the index of IAM role", default=1)
-            if res > len(ins_pfl_names):
+            if (res > len(ins_pfl_names)) or (res <= 0):
                 click.echo("Invalid index !!! ")
 
             else:
@@ -478,7 +478,7 @@ def create_spec(client):
 
         while True:
             res = click.prompt("\nEnter the index of Key-Pair", default=1)
-            if res > len(key_pairs):
+            if (res > len(key_pairs)) or (res <= 0):
                 click.echo("Invalid index !!! ")
 
             else:
@@ -509,7 +509,7 @@ def create_spec(client):
 
         while True:
             res = click.prompt("\nEnter the index of VPC", default=1)
-            if res > len(cidr_names):
+            if (res > len(cidr_names)) or (res <= 0):
                 click.echo("Invalid index !!! ")
 
             else:
@@ -560,7 +560,7 @@ def create_spec(client):
 
             while True:
                 res = click.prompt("\nEnter the index of security group", default=1)
-                if res > len(sg_names):
+                if (res > len(sg_names)) or (res <= 0):
                     click.echo("Invalid index !!! ")
 
                 else:
@@ -604,7 +604,7 @@ def create_spec(client):
 
             while True:
                 res = click.prompt("\nEnter the index of subnet", default=1)
-                if res > len(subnets):
+                if (res > len(subnets)) or (res <= 0):
                     click.echo("Invalid index !!! ")
 
                 else:
@@ -669,7 +669,7 @@ def create_spec(client):
 
         while True:
             res = click.prompt("\nEnter the index for Volume Type", default=1)
-            if res > len(volume_types):
+            if (res > len(volume_types)) or (res <= 0):
                 click.echo("Invalid index !!! ")
 
             else:
@@ -703,7 +703,7 @@ def create_spec(client):
 
         while True:
             res = click.prompt("\nEnter the index for Device Name", default=1)
-            if res > len(avl_device_names):
+            if (res > len(avl_device_names)) or (res <= 0):
                 click.echo("Invalid index !!! ")
 
             else:
@@ -720,7 +720,7 @@ def create_spec(client):
 
         while True:
             res = click.prompt("\nEnter the index for Volume Type", default=1)
-            if res > len(volume_types):
+            if (res > len(volume_types)) or (res <= 0):
                 click.echo("Invalid index !!! ")
 
             else:
@@ -741,5 +741,5 @@ def create_spec(client):
         )
 
     AwsVmProvider.validate_spec(spec)
-    click.secho("\nCreate spec\n", underline=True)
+    click.secho("\nCreate spec for your AWS VM:\n", underline=True)
     click.echo(highlight_text(json.dumps(spec, sort_keys=True, indent=4)))
