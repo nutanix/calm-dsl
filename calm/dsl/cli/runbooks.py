@@ -247,7 +247,7 @@ def watch_runbook(runlog_uuid, client, screen, poll_interval=10, input_data={}):
     def poll_func():
         return client.runbook.list_runlogs(runlog_uuid)
 
-    poll_action(poll_func, get_completion_func(screen), poll_interval=poll_interval, client=client, input_data=input_data)
+    poll_action(poll_func, get_completion_func(screen), poll_interval=poll_interval, client=client, input_data=input_data, runlog_uuid=runlog_uuid)
 
 
 def describe_runbook(obj, runbook_name):
@@ -331,9 +331,9 @@ def delete_runbook(obj, runbook_names):
         click.echo("Runbook {} deleted".format(runbook_name))
 
 
-def poll_action(poll_func, completion_func, client=None, poll_interval=10, input_data={}):
+def poll_action(poll_func, completion_func, client=None, poll_interval=10, input_data={}, runlog_uuid=None):
     # Poll every 10 seconds on the app status, for 5 mins
-    maxWait = 5 * 60
+    maxWait = 10 * 60
     count = 0
     while count < maxWait:
         # call status api
@@ -341,7 +341,7 @@ def poll_action(poll_func, completion_func, client=None, poll_interval=10, input
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
         response = res.json()
-        (completed, msg) = completion_func(response, client=client, input_data=input_data)
+        (completed, msg) = completion_func(response, client=client, input_data=input_data, runlog_uuid=runlog_uuid)
         if completed:
             # click.echo(msg)
             if msg:

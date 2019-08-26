@@ -13,6 +13,7 @@ class RunbookAPI(ResourceAPI):
         self.POLL_RUN = self.PREFIX + "/runlogs/{}"
         self.PAUSE = self.PREFIX + "/runlogs/{}/pause"
         self.PLAY = self.PREFIX + "/runlogs/{}/play"
+        self.RERUN = self.PREFIX + "/runlogs/{}/rerun"
         self.RUNLOG_LIST = self.PREFIX + "/runlogs/{}/list"
         self.RUNLOG_OUTPUT = self.PREFIX + "/8857ab8d-c216-41d4-85ac-a6880b15aaeb/runlogs/{}/output"
         self.RUNLOG_RESUME = self.PREFIX + "/runlogs/{}/resume"
@@ -38,6 +39,11 @@ class RunbookAPI(ResourceAPI):
     def play(self, uuid):
         return self.connection._call(
             self.PLAY.format(uuid), verify=False, request_json={}, method=REQUEST.METHOD.POST
+        )
+
+    def rerun(self, uuid):
+        return self.connection._call(
+            self.RERUN.format(uuid), verify=False, request_json={}, method=REQUEST.METHOD.POST
         )
 
     def update2(self, uuid, payload):

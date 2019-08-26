@@ -66,6 +66,46 @@ class InputFrame(Frame):
         raise StopApplication("User requested exit")
 
 
+class RerunFrame(Frame):
+    def __init__(self, status, screen):
+        super(RerunFrame, self).__init__(screen,
+                                         int(8),
+                                         int(screen.width * 3 // 4),
+                                         has_shadow=True,
+                                         name="Rerun popup box")
+        layout = Layout([1, 4, 1])
+        self.add_layout(layout)
+        layout.add_widget(Label("Runbook run is in FAILURE STATE '{}'".format(status), height=2), 1)
+        layout2 = Layout([1, 2, 1])
+        self.add_layout(layout2)
+        layout2.add_widget(Button("Re-run", self._rerun), 1)
+        layout2.add_widget(Button("Exit", self._exit), 2)
+        self.fix()
+
+    def _rerun(self):
+        rerun.update({'rerun': True})
+        self._exit()
+
+    def _exit(self):
+        raise StopApplication("User requested exit")
+
+
+def displayRunLogTree(screen, root, completed_tasks, total_tasks, msg=None):
+    screen.clear()
+    if total_tasks:
+        progress = "{0:.2f}".format(completed_tasks / total_tasks * 100)
+        screen.print_at("Progress: {}%".format(progress), 0, 0)
+
+    line = 1
+    for pre, _, node in RenderTree(root):
+        line = displayRunLog(screen, node, pre, line)
+    if msg:
+        screen.print_at(msg, 0, line, colour=6)
+    line = line + 1
+    screen.refresh()
+    return line
+
+
 class RunlogNode(NodeMixin):
     def __init__(self, runlog, machine=None, parent=None, children=None, outputs=None):
         self.runlog = runlog
@@ -239,10 +279,11 @@ class RunlogJSONEncoder(JSONEncoder):
 
 
 def get_completion_func(screen):
-    def is_action_complete(response, client=None, input_data={}, **kwargs):
+    def is_action_complete(response, client=None, input_data={}, runlog_uuid=None, **kwargs):
 
         global input_tasks
         global input_payload
+        global rerun
         input_tasks = []
         entities = response["entities"]
         if len(entities):
@@ -299,16 +340,7 @@ def get_completion_func(screen):
                     if state in RUNLOG.STATUS.SUCCESS:
                         completed_tasks += 1
 
-            if total_tasks:
-                screen.clear()
-                progress = "{0:.2f}".format(completed_tasks / total_tasks * 100)
-                screen.print_at("Progress: {}%".format(progress), 0, 0)
-
-            # Render Tree on next line
-            line = 1
-            for pre, _, node in RenderTree(root):
-                line = displayRunLog(screen, node, pre, line)
-            screen.refresh()
+            line = displayRunLogTree(screen, root, completed_tasks, total_tasks)
 
             # Check if any tasks is in INPUT state
             if len(input_tasks) > 0:
@@ -340,30 +372,28 @@ def get_completion_func(screen):
                     if client is not None:
                         client.runbook.resume(task_uuid, input_payload)
                 input_tasks = []
-                screen.clear()
-                if total_tasks:
-                    progress = "{0:.2f}".format(completed_tasks / total_tasks * 100)
-                    screen.print_at("Progress: {}%".format(progress), 0, 0)
+                msg = "Sending resume for input tasks with input values"
+                line = displayRunLogTree(screen, root, completed_tasks, total_tasks, msg=msg)
 
-                line = 1
-                for pre, _, node in RenderTree(root):
-                    line = displayRunLog(screen, node, pre, line)
-                screen.print_at("Sending resume for input tasks with input values", 0, line, colour=6)
-                line = line + 1
-                screen.refresh()
-
+            rerun = {}
             for runlog in sorted_entities:
                 state = runlog["status"]["state"]
                 if state in RUNLOG.FAILURE_STATES:
+                    sleep(2)
                     msg = "Action failed. Exit screen? (y)"
-                    screen.print_at(msg, 0, line)
-                    screen.refresh()
+                    screen.play([Scene([RerunFrame(state, screen)], -1)])
+                    if rerun.get('rerun', False):
+                        client.runbook.rerun(runlog_uuid)
+                        msg = "Triggered rerun for the Runbook Runlog"
+                        displayRunLogTree(screen, root, completed_tasks, total_tasks, msg=msg)
+                        return (False, "")
+                    displayRunLogTree(screen, root, completed_tasks, total_tasks, msg=msg)
                     return (True, msg)
                 if state not in RUNLOG.TERMINAL_STATES:
                     return (False, "")
 
             msg = "Action ran successfully. Exit screen? (y)"
-            screen.print_at(msg, 0, line)
+            screen.print_at(msg, 0, line, colour=6)
             screen.refresh()
 
             return (True, msg)
