@@ -798,6 +798,25 @@ def input_task(timeout=None, name=None, inputs=[]):
     return _task_create(**kwargs)
 
 
+def confirm_task(timeout=None, name=None):
+    """
+    Defines a confirm task.
+    Args:
+        timeout(int): Task timeout in seconds
+        name (str): Name for this task
+    Returns:
+        (Task): Delay task
+    """
+    if not isinstance(timeout, int):
+        raise TypeError(
+            "timeout is expected to be an integer, got {}".format(
+                type(timeout)
+            )
+        )
+    kwargs = {"name": name, "type": "CONFIRM", "attrs": {"task_timeout": timeout}}
+    return _task_create(**kwargs)
+
+
 class CalmTask:
     def __new__(cls, *args, **kwargs):
         raise TypeError("'{}' is not callable".format(cls.__name__))
@@ -867,3 +886,7 @@ class CalmTask:
     class Input:
         def __new__(cls, timeout=500, name=None, inputs=[]):
             return input_task(timeout=timeout, name=name, inputs=inputs)
+
+    class Confirm:
+        def __new__(cls, timeout=500, name=None):
+            return confirm_task(timeout=timeout, name=name)

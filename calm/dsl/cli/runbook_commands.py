@@ -280,7 +280,7 @@ def run_runbook_command(obj, runbook_name, watch, runbook_file=None, input_file=
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-    input_data = None
+    input_data = {}
     if input_file is not None and input_file.endswith(".json"):
         input_data = json.loads(open(input_file, "r").read())
     elif input_file is not None:

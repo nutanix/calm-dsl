@@ -90,6 +90,31 @@ class RerunFrame(Frame):
         raise StopApplication("User requested exit")
 
 
+class ConfirmFrame(Frame):
+    def __init__(self, name, screen):
+        super(ConfirmFrame, self).__init__(screen,
+                                           int(8),
+                                           int(screen.width * 3 // 4),
+                                           has_shadow=True,
+                                           name=name)
+        layout = Layout([1, 4, 1])
+        self.add_layout(layout)
+        layout.add_widget(Label("Confirmation for '{}' task".format(name), height=2), 1)
+        layout2 = Layout([1, 2, 1])
+        self.add_layout(layout2)
+        layout2.add_widget(Button("Pass", self._pass), 1)
+        layout2.add_widget(Button("Fail", self._fail), 2)
+        self.fix()
+
+    def _pass(self):
+        confirm_payload["confirm_answer"] = "SUCCESS"
+        raise StopApplication("User requested exit")
+
+    def _fail(self):
+        confirm_payload["confirm_answer"] = "FAILURE"
+        raise StopApplication("User requested exit")
+
+
 def displayRunLogTree(screen, root, completed_tasks, total_tasks, msg=None):
     screen.clear()
     if total_tasks:
@@ -212,6 +237,10 @@ def displayRunLog(screen, obj, pre, line):
         input_tasks.append({"name": name,
                             "uuid": metadata["uuid"],
                             "inputs": attrs.get("inputs", [])})
+
+    if status["type"] == "task_runlog" and state == RUNLOG.STATUS.CONFIRM:
+        confirm_tasks.append({"name": name,
+                              "uuid": metadata["uuid"]})
     return idx()
 
 
@@ -283,8 +312,11 @@ def get_completion_func(screen):
 
         global input_tasks
         global input_payload
+        global confirm_tasks
+        global confirm_payload
         global rerun
         input_tasks = []
+        confirm_tasks = []
         entities = response["entities"]
         if len(entities):
 
@@ -370,9 +402,24 @@ def get_completion_func(screen):
                     if len(inputs_required) > 0:
                         screen.play([Scene([InputFrame(name, screen, inputs_required, data)], -1)])
                     if client is not None:
-                        client.runbook.resume(task_uuid, input_payload)
+                        client.runbook.resume(task_uuid, {"properties": input_payload})
                 input_tasks = []
                 msg = "Sending resume for input tasks with input values"
+                line = displayRunLogTree(screen, root, completed_tasks, total_tasks, msg=msg)
+
+            # Check if any tasks is in CONFIRM state
+            if len(confirm_tasks) > 0:
+                sleep(2)
+                for confirm_task in confirm_tasks:
+                    name = confirm_task.get("name", "")
+                    task_uuid = confirm_task.get("uuid", "")
+                    confirm_payload = {}
+                    screen.play([Scene([ConfirmFrame(name, screen)], -1)])
+                    if client is not None:
+                        client.runbook.resume(task_uuid, confirm_payload)
+                confirm_tasks = []
+                msg = "Sending confirmation for confirm tasks"
+                msg = "Sending resume for confirm tasks with confirmation"
                 line = displayRunLogTree(screen, root, completed_tasks, total_tasks, msg=msg)
 
             rerun = {}

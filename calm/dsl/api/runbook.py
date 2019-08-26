@@ -23,10 +23,7 @@ class RunbookAPI(ResourceAPI):
             self.UPLOAD, verify=False, request_json=payload, method=REQUEST.METHOD.POST
         )
 
-    def resume(self, uuid, input_payload):
-        payload = {
-            "properties": input_payload
-        }
+    def resume(self, uuid, payload):
         return self.connection._call(
             self.RUNLOG_RESUME.format(uuid), verify=False, request_json=payload, method=REQUEST.METHOD.POST
         )
