@@ -1,5 +1,12 @@
 from ruamel import yaml
+import logging
 import click
+
+import click_completion
+import click_completion.core
+from click_didyoumean import DYMGroup
+from click_repl import repl
+import click_log
 
 # TODO - move providers to separate file
 from calm.dsl.providers import get_provider, get_provider_types
@@ -16,7 +23,12 @@ from .projects import (
 )
 from .accounts import get_accounts, delete_account, describe_account
 
+logger = logging.getLogger(__name__)
+click_log.basic_config(logger)
+
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
+
+click_completion.init()
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
@@ -50,10 +62,10 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path to config file, defaults to ~/.calm/config",
 )
-@click.option("--verbose", "-v", is_flag=True, help="Enables verbose mode.")
+@click_log.simple_verbosity_option(logger)
 @click.version_option("0.1")
 @click.pass_context
-def main(ctx, ip, port, username, password, config_file, verbose):
+def main(ctx, ip, port, username, password, config_file):
     """Calm CLI
 
 \b
@@ -70,10 +82,10 @@ Commonly used commands:
         ip=ip, port=port, username=username, password=password, config_file=config_file
     )
     ctx.obj["client"] = get_api_client()
-    ctx.obj["verbose"] = verbose
+    ctx.obj["verbose"] = True
 
 
-@main.group()
+@main.group(cls=DYMGroup)
 def validate():
     """Validate provider specs"""
     pass
@@ -109,13 +121,13 @@ def validate_provider_spec(spec_file, provider_type):
         raise ee
 
 
-@main.group()
+@main.group(cls=DYMGroup)
 def get():
     """Get various things like blueprints, apps: `get apps` and `get bps` are the primary ones."""
     pass
 
 
-@get.group()
+@get.group(cls=DYMGroup)
 def server():
     """Get calm server details"""
     pass
@@ -177,13 +189,13 @@ def _get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account
     get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_type)
 
 
-@main.group()
+@main.group(cls=DYMGroup)
 def compile():
     """Compile blueprint to json / yaml"""
     pass
 
 
-@main.group()
+@main.group(cls=DYMGroup)
 def create():
     """Create entities in CALM (blueprint, project) """
     pass
@@ -229,7 +241,7 @@ def _create_project(obj, project_file, project_name):
     click.echo(">> Project state: {}".format(state))
 
 
-@main.group()
+@main.group(cls=DYMGroup)
 def delete():
     """Delete entities"""
     pass
@@ -253,13 +265,13 @@ def _delete_account(obj, account_names):
     delete_account(obj, account_names)
 
 
-@main.group()
+@main.group(cls=DYMGroup)
 def launch():
     """Launch blueprints to create Apps"""
     pass
 
 
-@main.group()
+@main.group(cls=DYMGroup)
 def describe():
     """Describe apps, blueprints, projects, accounts"""
     pass
@@ -283,13 +295,13 @@ def _describe_account(obj, account_name):
     describe_account(obj, account_name)
 
 
-@main.group()
+@main.group(cls=DYMGroup)
 def run():
     """Run actions in an app"""
     pass
 
 
-@main.group()
+@main.group(cls=DYMGroup)
 def watch():
     """Track actions running on apps"""
     pass
@@ -311,7 +323,7 @@ def create_provider_spec(obj, provider_type):
     Provider.create_spec()
 
 
-@main.group()
+@main.group(cls=DYMGroup)
 def update():
     """Update entities"""
     pass
@@ -346,7 +358,74 @@ def _update_project(obj, project_name, project_file):
     click.echo(">> Project state: {}".format(state))
 
 
-@main.group()
+@main.group(cls=DYMGroup)
 def download():
     """Download entities"""
     pass
+
+
+completion_cmd_help = """Shell completion for click-completion-command
+Available shell types:
+\b
+  %s
+Default type: auto
+""" % "\n  ".join(
+    "{:<12} {}".format(k, click_completion.core.shells[k])
+    for k in sorted(click_completion.core.shells.keys())
+)
+
+
+@main.group(cls=DYMGroup, help=completion_cmd_help)
+def completion():
+    pass
+
+
+@completion.command()
+@click.option(
+    "-i", "--case-insensitive/--no-case-insensitive", help="Case insensitive completion"
+)
+@click.argument(
+    "shell",
+    required=False,
+    type=click_completion.DocumentedChoice(click_completion.core.shells),
+)
+def show(shell, case_insensitive):
+    """Show the click-completion-command completion code"""
+    extra_env = (
+        {"_CLICK_COMPLETION_COMMAND_CASE_INSENSITIVE_COMPLETE": "ON"}
+        if case_insensitive
+        else {}
+    )
+    click.echo(click_completion.core.get_code(shell, extra_env=extra_env))
+
+
+@completion.command()
+@click.option(
+    "--append/--overwrite", help="Append the completion code to the file", default=None
+)
+@click.option(
+    "-i", "--case-insensitive/--no-case-insensitive", help="Case insensitive completion"
+)
+@click.argument(
+    "shell",
+    required=False,
+    type=click_completion.DocumentedChoice(click_completion.core.shells),
+)
+@click.argument("path", required=False)
+def install(append, case_insensitive, shell, path):
+    """Install the click-completion-command completion"""
+    extra_env = (
+        {"_CLICK_COMPLETION_COMMAND_CASE_INSENSITIVE_COMPLETE": "ON"}
+        if case_insensitive
+        else {}
+    )
+    shell, path = click_completion.core.install(
+        shell=shell, path=path, append=append, extra_env=extra_env
+    )
+    click.echo("%s completion installed in %s" % (shell, path))
+
+
+@main.command("repl")
+def calmrepl():
+    """Enable an interactive REPL"""
+    repl(click.get_current_context())
