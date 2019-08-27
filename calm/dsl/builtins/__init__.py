@@ -21,7 +21,7 @@ from .models.provider_spec import provider_spec, read_provider_spec
 from .models.substrate import Substrate, substrate
 
 from .models.deployment import Deployment, deployment
-from .models.pod_deployment import PODDeployment, pod_deployment
+from .models.pod_deployment import PODDeployment, pod_deployment, read_k8s_spec
 
 from .models.profile import Profile, profile
 
@@ -60,7 +60,8 @@ __all__ = [
     "Deployment",
     "deployment",
     "PODDeployment",
-    "pod_deployment"
+    "pod_deployment",
+    "read_k8s_spec",
     "Profile",
     "profile",
     "Blueprint",
