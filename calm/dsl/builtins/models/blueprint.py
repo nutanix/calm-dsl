@@ -105,17 +105,26 @@ class BlueprintType(EntityType):
             for dep in pod_deployments:
                 dependencies = getattr(dep, "dependencies")
                 for key, entities in dependencies.items():
-                    if key.find(".") == -1:
-                        key = dep.__name__ + "." + key  # Key for finding service class
+                    if isinstance(key, str):
+                        if key.find(".") == -1:
+                            key = dep.__name__ + "." + key  # Key for finding service class
+
+                        serv1 = container_service_map[key]
+                    else:
+                        serv1 = key     # If it is a class(Service like PHPService)
 
                     for entity in entities:
                         if isinstance(entity, str):
                             if entity.find(".") == -1:
                                 entity = dep.__name__ + "." + entity    # Key for finding service class
 
-                            container_service_map[key].dependencies.append(ref(container_service_map[entity]))
+                            serv2 = container_service_map[entity]
                         else:
-                            container_service_map[key].dependencies.append(entity)
+                            serv2 = entity      # If it is a class(Service like PHPService)
+
+                        cur_depends = serv1.dependencies
+                        cur_depends.append(ref(serv2))
+                        setattr(serv1, "dependencies", cur_depends)
 
         cdict["service_definition_list"].extend(service_definition_list)
         cdict["package_definition_list"].extend(package_definition_list)
