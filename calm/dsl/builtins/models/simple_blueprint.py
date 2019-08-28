@@ -7,6 +7,7 @@ from .substrate import substrate
 from .service import service
 from .package import package
 from .ref import ref
+from .blueprint import extract_pod_deployment
 
 # Simple Blueprint
 
@@ -20,6 +21,12 @@ class SimpleBlueprintType(EntityType):
         return
 
     def make_bp_dict(cls, categories=None):
+
+        # Extract pod_deployments
+        pod_deployments = getattr(cls, "pod_deployments", [])
+        pod_dict = extract_pod_deployment(pod_deployments)
+        if pod_deployments:
+            delattr(cls, "pod_deployments")
 
         # Get simple blueprint dictionary
         cdict = cls.get_dict()
@@ -38,6 +45,7 @@ class SimpleBlueprintType(EntityType):
         service_definition_list = []
         package_definition_list = []
         substrate_definition_list = []
+        published_service_definition_list = []
 
         for sd in cdict["deployments"]:
 
@@ -55,8 +63,6 @@ class SimpleBlueprintType(EntityType):
                         continue
                 sdict["action_list"].append(action)
             sdict["depends_on_list"] = sd["depends_on_list"]
-            for dep in sdict["depends_on_list"]:
-                dep["kind"] = "app_service"
 
             # Init package dict
             p = package(name=sd["name"] + "Package")
@@ -121,6 +127,29 @@ class SimpleBlueprintType(EntityType):
             substrate_definition_list.append(subdict)
 
             app_profile["deployment_create_list"].append(ddict)
+
+        for sd in pod_dict["service_definition_list"]:
+            sdict = sd.get_dict()
+            service_definition_list.append(sdict)
+
+        for pd in pod_dict["package_definition_list"]:
+            pdict = pd.get_dict()
+            package_definition_list.append(pdict)
+
+        for sub in pod_dict["substrate_definition_list"]:
+            subdict = sub.get_dict()
+            substrate_definition_list.append(subdict)
+
+        for psd in pod_dict["published_service_definition_list"]:
+            psddict = psd.get_dict()
+            published_service_definition_list.append(psddict)
+
+        for dep in pod_dict["deployment_definition_list"]:
+            depdict = dep.get_dict()
+            for dep in depdict["depends_on_list"]:    # Managing dependency kind to deployment
+                dep["name"] = dep["name"][:-7]        # Removing "Service" from end
+                dep["kind"] = "app_blueprint_deployment"
+            app_profile["deployment_create_list"].append(depdict)
 
         blueprint_resources = {
             "service_definition_list": service_definition_list,

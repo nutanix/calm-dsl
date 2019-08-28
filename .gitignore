@@ -117,3 +117,7 @@ venv.bak/
 
 # jupyter extension, until we need it
 calm_nb_ext/
+
+# pycharm settings
+*.xml
+*.iml
