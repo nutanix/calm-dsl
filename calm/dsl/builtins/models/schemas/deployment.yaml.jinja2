@@ -19,6 +19,11 @@ properties:
   substrate_local_reference:
     x-calm-dsl-display-name: substrate
     {{ ref.Ref() | indent(4) }}
+  depends_on_list:
+    x-calm-dsl-display-name: dependencies
+    type: array
+    items:
+      $ref: '#/components/schemas/Ref'
   min_replicas:
     description: Minimum replicas for the deployment.
     type: string

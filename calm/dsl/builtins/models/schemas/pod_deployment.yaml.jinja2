@@ -15,8 +15,9 @@ properties:
     type: object
   depends_on_list:
     x-calm-dsl-display-name: dependencies
-    type: object
-    x-calm-dsl-type: dict
+    type: array
+    items:
+      $ref: '#/components/schemas/Ref'
 
 {%- endmacro %}
 

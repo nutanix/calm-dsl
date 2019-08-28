@@ -12,7 +12,7 @@ from .validator import PropertyValidator
 
 class PODDeploymentType(EntityType):
     __schema_name__ = "PODDeployment"
-    __openapi_type__ = "app_pod_deployment"
+    __openapi_type__ = "app_blueprint_deployment"         # TODO set as app_pod_deployment(right now for referece)
 
     def get_task_target(cls):
         return cls.get_ref()
