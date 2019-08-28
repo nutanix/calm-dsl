@@ -31,8 +31,6 @@ class BlueprintType(EntityType):
                 if pod_deployments:
                     delattr(profile, "pod_deployments")
 
-                container_service_map = {}
-
                 for dep in pod_deployments:
                     pub_service_name = dep.__name__ + "Published_Service"
                     ps_options = {"type": "PROVISION_K8S_SERVICE"}
@@ -54,7 +52,6 @@ class BlueprintType(EntityType):
                             name=container_name + str(uuid.uuid4())[-10:] + "Service",
                             container_spec=container
                         )
-                        container_service_map[dep.__name__ + "." + container_name] = s
 
                         if img_pull_policy:
                             image_spec = {
@@ -90,7 +87,7 @@ class BlueprintType(EntityType):
                     dep_options = {"type": "PROVISION_K8S_DEPLOYMENT"}
                     dep_options = {**dep_options, **(dep.deployment_spec)}
                     d = deployment(
-                        name=dep.__name__,
+                        name=dep.__name__,      # Dependecies depends on this name
                         options=dep_options,
                         type="K8S_DEPLOYMENT",
                         max_replicas="100"
@@ -102,32 +99,6 @@ class BlueprintType(EntityType):
                     d.dependencies = getattr(dep, "dependencies")
 
                     profile.deployments.append(d)
-
-                """     Container-level dependencies
-                for dep in pod_deployments:
-                    dependencies = getattr(dep, "dependencies")
-                    for key, entities in dependencies.items():
-                        if isinstance(key, str):
-                            if key.find(".") == -1:
-                                key = dep.__name__ + "." + key  # Key for finding service class
-
-                            serv1 = container_service_map[key]
-                        else:
-                            serv1 = key     # If it is a class(Service like PHPService)
-
-                        for entity in entities:
-                            if isinstance(entity, str):
-                                if entity.find(".") == -1:
-                                    entity = dep.__name__ + "." + entity    # Key for finding service class
-
-                                serv2 = container_service_map[entity]
-                            else:
-                                serv2 = entity      # If it is a class(Service like PHPService)
-
-                            cur_depends = serv1.dependencies
-                            cur_depends.append(ref(serv2))
-                            setattr(serv1, "dependencies", cur_depends)
-                """
 
             cdict["service_definition_list"].extend(service_definition_list)
             cdict["package_definition_list"].extend(package_definition_list)
