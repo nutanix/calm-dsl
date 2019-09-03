@@ -18,7 +18,6 @@ class BlueprintType(EntityType):
     __openapi_type__ = "app_blueprint"
 
     def compile(cls):
-
         def pod_deployment_creation(cdict):
             """ Implement pod deployment if exists """
 
@@ -30,10 +29,18 @@ class BlueprintType(EntityType):
                 pod_dict = extract_pod_deployment(pod_deployments)
                 profile.deployments.extend(pod_dict["deployment_definition_list"])
 
-                cdict["service_definition_list"].extend(pod_dict["service_definition_list"])
-                cdict["package_definition_list"].extend(pod_dict["package_definition_list"])
-                cdict["substrate_definition_list"].extend(pod_dict["substrate_definition_list"])
-                cdict["published_service_definition_list"].extend(pod_dict["published_service_definition_list"])
+                cdict["service_definition_list"].extend(
+                    pod_dict["service_definition_list"]
+                )
+                cdict["package_definition_list"].extend(
+                    pod_dict["package_definition_list"]
+                )
+                cdict["substrate_definition_list"].extend(
+                    pod_dict["substrate_definition_list"]
+                )
+                cdict["published_service_definition_list"].extend(
+                    pod_dict["published_service_definition_list"]
+                )
 
             return cdict
 
@@ -73,7 +80,9 @@ def extract_pod_deployment(deployments):
         ps = published_service(name=pub_service_name, options=ps_options)
         published_service_definition_list.append(ps)
 
-        containers_list = dep.deployment_spec["spec"]["template"]["spec"].pop("containers", None)
+        containers_list = dep.deployment_spec["spec"]["template"]["spec"].pop(
+            "containers", None
+        )
 
         package_references = []
         for container in containers_list:
@@ -84,14 +93,11 @@ def extract_pod_deployment(deployments):
 
             s = service(
                 name=container_name + str(uuid.uuid4())[-10:] + "Service",
-                container_spec=container
+                container_spec=container,
             )
 
             if img_pull_policy:
-                image_spec = {
-                    "image": img,
-                    "imagePullPolicy": img_pull_policy
-                }
+                image_spec = {"image": img, "imagePullPolicy": img_pull_policy}
 
             else:
                 image_spec = {"image": img}
@@ -99,7 +105,7 @@ def extract_pod_deployment(deployments):
             p = package(
                 name=container_name + str(uuid.uuid4())[-10:] + "Package",
                 image_spec=image_spec,
-                type="K8S_IMAGE"
+                type="K8S_IMAGE",
             )
             p.services = [ref(s)]
             package_references.append(ref(p))
@@ -113,7 +119,7 @@ def extract_pod_deployment(deployments):
         sub = substrate(
             name=container_name + str(uuid.uuid4())[-10:] + "Substrate",
             provider_type="K8S_POD",
-            provider_spec=sub_provider_spec
+            provider_spec=sub_provider_spec,
         )
 
         substrate_definition_list.append(sub)
@@ -121,10 +127,10 @@ def extract_pod_deployment(deployments):
         dep_options = {"type": "PROVISION_K8S_DEPLOYMENT"}
         dep_options = {**dep_options, **(dep.deployment_spec)}
         d = deployment(
-            name=dep.__name__,      # Dependecies depends on this name
+            name=dep.__name__,  # Dependecies depends on this name
             options=dep_options,
             type="K8S_DEPLOYMENT",
-            max_replicas="100"
+            max_replicas="100",
         )
 
         d.published_services = [ref(ps)]
@@ -139,5 +145,5 @@ def extract_pod_deployment(deployments):
         "package_definition_list": package_definition_list,
         "substrate_definition_list": substrate_definition_list,
         "published_service_definition_list": published_service_definition_list,
-        "deployment_definition_list": deployment_definition_list
+        "deployment_definition_list": deployment_definition_list,
     }

@@ -3,6 +3,7 @@ from .validator import PropertyValidator
 
 from .profile import profile
 from .deployment import deployment
+from .pod_deployment import pod_deployment
 from .substrate import substrate
 from .service import service
 from .package import package
@@ -22,11 +23,30 @@ class SimpleBlueprintType(EntityType):
 
     def make_bp_dict(cls, categories=None):
 
+        deployments = getattr(cls, "deployments", [])
+
+        pod_deployments = []
+        pod_dep_name_map = {}  # Used for managing deployment-level dependencies
+        normal_deployments = []
+        for dep in deployments:
+            if dep.deployment_spec and dep.service_spec:
+                pod_dep = pod_deployment(
+                    name=dep.__name__,
+                    service_spec=dep.service_spec,
+                    deployment_spec=dep.deployment_spec,
+                    dependencies=dep.dependencies,
+                )
+
+                pod_deployments.append(pod_dep)
+                pod_dep_name_map[dep.__name__] = pod_dep
+
+            else:
+                normal_deployments.append(dep)
+
+        setattr(cls, "deployments", normal_deployments)
+
         # Extract pod_deployments
-        pod_deployments = getattr(cls, "pod_deployments", [])
         pod_dict = extract_pod_deployment(pod_deployments)
-        if pod_deployments:
-            delattr(cls, "pod_deployments")
 
         # Get simple blueprint dictionary
         cdict = cls.get_dict()
@@ -62,7 +82,19 @@ class SimpleBlueprintType(EntityType):
                     else:
                         continue
                 sdict["action_list"].append(action)
-            sdict["depends_on_list"] = sd["depends_on_list"]
+
+            # Handling of dependencies
+            # For dependency between normal and pod deployment
+            deployment_dependencies = []
+            for entity in sd["depends_on_list"]:
+                name = entity["name"][
+                    :-7
+                ]  # Finding name of class(Remove "Service" from end)
+                if name in pod_dep_name_map.keys():
+                    deployment_dependencies.append(ref(pod_dep_name_map[name]))
+
+                else:
+                    sdict["depends_on_list"].append(entity)
 
             # Init package dict
             p = package(name=sd["name"] + "Package")
@@ -119,6 +151,7 @@ class SimpleBlueprintType(EntityType):
             )
             d.packages = [ref(p)]
             d.substrate = ref(sub)
+            d.dependencies = deployment_dependencies
             ddict = d.get_dict()
 
             # Add items
@@ -146,8 +179,9 @@ class SimpleBlueprintType(EntityType):
 
         for dep in pod_dict["deployment_definition_list"]:
             depdict = dep.get_dict()
-            for dep in depdict["depends_on_list"]:    # Managing dependency kind to deployment
-                dep["name"] = dep["name"][:-7]        # Removing "Service" from end
+            # Managing dependency kind to deployment
+            for dep in depdict["depends_on_list"]:
+                dep["name"] = dep["name"][:-7]  # Removing "Service" from end
                 dep["kind"] = "app_blueprint_deployment"
             app_profile["deployment_create_list"].append(depdict)
 
