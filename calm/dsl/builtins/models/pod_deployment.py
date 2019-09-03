@@ -3,7 +3,7 @@ import sys
 import inspect
 from ruamel import yaml
 
-from .entity import EntityType, Entity
+from .entity import EntityType, Entity, EntityTypeBase
 from .validator import PropertyValidator
 
 
@@ -12,7 +12,23 @@ from .validator import PropertyValidator
 
 class PODDeploymentType(EntityType):
     __schema_name__ = "PODDeployment"
-    __openapi_type__ = "app_blueprint_deployment"         # TODO set as app_pod_deployment(right now for referece)
+    __openapi_type__ = "app_pod_deployment"
+
+    def get_ref(cls):
+        types = EntityTypeBase.get_entity_types()
+        ref = types.get("Ref")
+        if not ref:
+            return
+        name = getattr(ref, "__schema_name__")
+        bases = (Entity,)
+        if ref:
+            attrs = {}
+            attrs["name"] = str(cls)
+
+            # Note: app_blueprint_deployment kind to be used for pod deployment
+            attrs["kind"] = "app_blueprint_deployment"
+
+        return ref(name, bases, attrs)
 
     def get_task_target(cls):
         return cls.get_ref()
