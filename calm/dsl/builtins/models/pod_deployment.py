@@ -3,14 +3,17 @@ import sys
 import inspect
 from ruamel import yaml
 
-from .entity import EntityType, Entity, EntityTypeBase
+from .entity import Entity, EntityTypeBase
 from .validator import PropertyValidator
+from .deployment import DeploymentType
 
 
 # PODDeployment
 
+# Note parent class of PODDeploymentType is DeploymentType
+# As deployments in profile class need to be of same type
 
-class PODDeploymentType(EntityType):
+class PODDeploymentType(DeploymentType):
     __schema_name__ = "PODDeployment"
     __openapi_type__ = "app_pod_deployment"
 
@@ -48,8 +51,9 @@ def pod_deployment(**kwargs):
 PODDeployment = pod_deployment()
 
 
-def read_k8s_spec(file_location, spec_type="deployment"):
+def read_spec(file_location):
     """ Read Deployment/Service Spec """
+    # TODO Replace read_spec by read_deployment_spec and read_service_spec
 
     file_path = os.path.join(
         os.path.dirname(inspect.getfile(sys._getframe(1))), file_location

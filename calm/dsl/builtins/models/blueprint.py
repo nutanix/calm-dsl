@@ -6,6 +6,7 @@ from .package import package
 from .substrate import substrate
 from .ref import ref
 from .deployment import deployment
+from .pod_deployment import pod_deployment
 
 import uuid
 
@@ -22,11 +23,20 @@ class BlueprintType(EntityType):
             """ Implement pod deployment if exists """
 
             for profile in cdict["app_profile_list"]:
-                pod_deployments = getattr(profile, "pod_deployments", [])
-                if pod_deployments:
-                    delattr(profile, "pod_deployments")
+                deployments = getattr(profile, "deployments", [])
 
+                normal_deployments = []
+                pod_deployments = []
+
+                for dep in deployments:
+                    if dep.type == "K8S_DEPLOYMENT":
+                        pod_deployments.append(dep)
+                    else:
+                        normal_deployments.append(dep)
+
+                setattr(profile, "deployments", normal_deployments)
                 pod_dict = extract_pod_deployment(pod_deployments)
+
                 profile.deployments.extend(pod_dict["deployment_definition_list"])
 
                 cdict["service_definition_list"].extend(
