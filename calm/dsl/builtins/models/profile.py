@@ -12,7 +12,6 @@ class ProfileType(EntityType):
 
     def compile(cls):
         cdict = super().compile()
-        cdict.pop("pod_deployments", None)
         return cdict
 
     def get_task_target(cls):
