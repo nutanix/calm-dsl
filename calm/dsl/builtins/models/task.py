@@ -80,7 +80,7 @@ def create_call_rb(runbook, target=None, name=None):
 
 
 def _exec_create(
-    script_type, script=None, filename=None, name=None, target=None, cred=None
+    script_type, script=None, filename=None, name=None, target=None, cred=None, depth=2
 ):
 
     if script is not None and filename is not None:
@@ -91,7 +91,7 @@ def _exec_create(
 
     if filename is not None:
         file_path = os.path.join(
-            os.path.dirname(sys._getframe(2).f_globals.get("__file__")), filename
+            os.path.dirname(sys._getframe(depth).f_globals.get("__file__")), filename
         )
 
         with open(file_path, "r") as scriptf:
@@ -155,19 +155,34 @@ def dag(name=None, child_tasks=None, edges=None, target=None):
     return _task_create(**kwargs)
 
 
-def exec_task_ssh(script=None, filename=None, name=None, target=None, cred=None):
+def exec_task_ssh(
+    script=None, filename=None, name=None, target=None, cred=None, depth=2
+):
     return _exec_create(
-        "sh", script=script, filename=filename, name=name, target=target, cred=cred
+        "sh",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        cred=cred,
+        depth=depth,
     )
 
 
-def exec_task_escript(script=None, filename=None, name=None, target=None):
+def exec_task_escript(script=None, filename=None, name=None, target=None, depth=2):
     return _exec_create(
-        "static", script=script, filename=filename, name=name, target=target
+        "static",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        depth=depth,
     )
 
 
-def exec_task_powershell(script=None, filename=None, name=None, target=None, cred=None):
+def exec_task_powershell(
+    script=None, filename=None, name=None, target=None, cred=None, depth=2
+):
     return _exec_create(
         "npsscript",
         script=script,
@@ -175,6 +190,7 @@ def exec_task_powershell(script=None, filename=None, name=None, target=None, cre
         name=name,
         target=target,
         cred=cred,
+        depth=depth,
     )
 
 
@@ -193,18 +209,30 @@ def _set_variable_create(task, variables=None):
     return task
 
 
-def set_variable_task_ssh(script, name=None, target=None, variables=None):
-    task = exec_task_ssh(script, name=name, target=target)
+def set_variable_task_ssh(
+    script=None, filename=None, name=None, target=None, variables=None, depth=3
+):
+    task = exec_task_ssh(
+        script=script, filename=filename, name=name, target=target, depth=depth
+    )
     return _set_variable_create(task, variables)
 
 
-def set_variable_task_escript(script, name=None, target=None, variables=None):
-    task = exec_task_escript(script, name=name, target=target)
+def set_variable_task_escript(
+    script=None, filename=None, name=None, target=None, variables=None, depth=3
+):
+    task = exec_task_escript(
+        script=script, filename=filename, name=name, target=target, depth=depth
+    )
     return _set_variable_create(task, variables)
 
 
-def set_variable_task_powershell(script, name=None, target=None, variables=None):
-    task = exec_task_powershell(script, name=name, target=target)
+def set_variable_task_powershell(
+    script=None, filename=None, name=None, target=None, variables=None, depth=3
+):
+    task = exec_task_powershell(
+        script=script, filename=filename, name=name, target=target, depth=depth
+    )
     return _set_variable_create(task, variables)
 
 

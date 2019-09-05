@@ -71,7 +71,7 @@ class VCENTER:
 
     GuestCustomizationModes = {
         "Linux": ["Cloud Init", "Custom Spec", "Predefined Customization"],
-        "Windows": ["Predefined Customization", "Windows Data"],
+        "Windows": ["Predefined Customization", "Custom Spec"],
     }
 
     VirtualControllerNameMap = {
