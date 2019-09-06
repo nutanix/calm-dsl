@@ -113,7 +113,7 @@ Code formatted by [![Code style: black](https://img.shields.io/badge/code%20styl
  | -q, \-\-quiet   | Flag         |	Show only blueprint names              |
  | -a, \-\-all-items| Flag        |	Get all items, including deleted ones              |
 
-#### Show Applications Details:
+#### Show Application Details:
  `calm describe app <bp name>` shows information about the app, including Source Blueprint, Profile, Deployments and Actions.
 
 #### Run Actions:
