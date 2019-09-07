@@ -10,10 +10,6 @@ class ProfileType(EntityType):
     __openapi_type__ = "app_profile"
     __has_dag_target__ = False
 
-    def compile(cls):
-        cdict = super().compile()
-        return cdict
-
     def get_task_target(cls):
         return
 
