@@ -6,7 +6,6 @@ from .package import package
 from .substrate import substrate
 from .ref import ref
 from .deployment import deployment
-from .pod_deployment import pod_deployment
 
 import uuid
 
