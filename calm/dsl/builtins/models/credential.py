@@ -43,3 +43,18 @@ def basic_cred(
     kwargs["default"] = default
 
     return _credential(**kwargs)
+
+
+def secret_cred(username, password, name="default", default=False):
+    # TODO Handing of PASSWORD/SSH
+
+    secret = {"attrs": {"is_secret_modified": True}, "value": password}
+
+    kwargs = {}
+    kwargs["type"] = "SECRET"       # Will replace to PASSWORD at runtime
+    kwargs["username"] = username
+    kwargs["secret"] = secret
+    kwargs["name"] = name
+    kwargs["default"] = default
+
+    return _credential(**kwargs)
