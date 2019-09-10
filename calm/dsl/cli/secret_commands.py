@@ -1,38 +1,25 @@
 import click
 
 from .main import get, create, update, delete
-from .utils import highlight_text
 from .secrets import create_secret, get_secrets, delete_secret, update_secret
 
 # TODO Apply --type = local/server parameter
 @create.command("secret")
 @click.argument("name", nargs=1)
-@click.option("--value", prompt=True, hide_input=True, confirmation_prompt=True, help="Value for secret")
+@click.option("--value", prompt=True, hide_input=True, confirmation_prompt=True)
 @click.pass_obj
 def _create_secret(obj, name, value):
-    """Creates the secret
+    """Creates the secret"""
 
-    NAME is the alias for your secret
-    """
-
-    choice = click.prompt(
-        "\n{}(y/n)".format(highlight_text("Want any pass_phrase associated with secret")),
-        default="n",
-    )
-
-    pass_phrase = click.prompt("Passphrase") if choice[0] == "y" else None
-    create_secret(name, value, pass_phrase)
+    create_secret(name, value)
 
 
 @get.command("secrets")
-@click.option(
-    "--quiet", "-q", is_flag=True, default=False, help="Show only sceret names."
-)
 @click.pass_obj
-def _get_secrets(obj, quiet):
+def _get_secrets(obj):
     """List the secrets """
 
-    get_secrets(quiet)
+    get_secrets()
 
 
 @delete.command("secret")
@@ -49,15 +36,6 @@ def _delete_secret(obj, name):
 @click.option("--value", prompt=True, hide_input=True, confirmation_prompt=True)
 @click.pass_obj
 def _update_secret(obj, name, value):
-    """Update the secret
+    """Update the secret """
 
-    NAME is the alias for your secret
-    """
-
-    choice = click.prompt(
-        "\n{}(y/n)".format(highlight_text("Want any pass_phrase associated with secret")),
-        default="n",
-    )
-
-    pass_phrase = click.prompt("Passphrase") if choice[0] == "y" else None
-    update_secret(name, value, pass_phrase)
+    update_secret(name, value)
