@@ -10,7 +10,6 @@ class RunbookAPI(ResourceAPI):
         self.PREVIOUS_RUNS = self.PREFIX + "/runlogs/list"
         self.RUN = self.PREFIX + "/{}/run"
         self.POLL_RUN = self.PREFIX + "/runlogs/{}"
-        self.POLL_RUN = self.PREFIX + "/runlogs/{}"
         self.PAUSE = self.PREFIX + "/runlogs/{}/pause"
         self.PLAY = self.PREFIX + "/runlogs/{}/play"
         self.RERUN = self.PREFIX + "/runlogs/{}/rerun"

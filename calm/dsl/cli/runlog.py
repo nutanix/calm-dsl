@@ -472,6 +472,8 @@ def get_runlog_status(screen):
             msg += " {}".format("\n".join(response["status"]["reason_list"]))
             screen.print_at(msg, 0, 0)
             screen.refresh()
+            if response["status"]["reason_list"] == []:
+                return (True, "")
             return (True, msg)
         else:
             return (True, "")
