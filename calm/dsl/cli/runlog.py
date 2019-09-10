@@ -132,10 +132,11 @@ def displayRunLogTree(screen, root, completed_tasks, total_tasks, msg=None):
 
 
 class RunlogNode(NodeMixin):
-    def __init__(self, runlog, machine=None, parent=None, children=None, outputs=None):
+    def __init__(self, runlog, machine=None, parent=None, children=None, outputs=None, reasons=None):
         self.runlog = runlog
         self.parent = parent
         self.outputs = outputs or []
+        self.reasons = reasons or []
         self.machine = machine
         if children:
             self.children = children
@@ -150,6 +151,7 @@ def displayRunLog(screen, obj, pre, line):
     status = obj.runlog["status"]
     state = status["state"]
     output = ""
+    reason_list = ""
 
     idx = itertools.count(start=line, step=1).__next__
 
@@ -157,6 +159,8 @@ def displayRunLog(screen, obj, pre, line):
         name = status["task_reference"]["name"]
         for out in obj.outputs:
             output += "\'{}\'\n".format(out)
+        for reason in obj.reasons:
+            reason_list += "\'{}\'\n".format(reason)
     elif status["type"] == "runbook_runlog":
         if "call_runbook_reference" in status:
             name = status["call_runbook_reference"]["name"]
@@ -228,6 +232,12 @@ def displayRunLog(screen, obj, pre, line):
         output_lines = output.splitlines()
         for line in output_lines:
             screen.print_at(line, len(pre) + 6, idx(), colour=5, attr=1)
+
+    if reason_list:
+        screen.print_at("Reasons :", len(pre) + 4, idx())
+        reason_lines = reason_list.splitlines()
+        for line in reason_lines:
+            screen.print_at(line, len(pre) + 6, idx(), colour=1, attr=1)
 
     if status["type"] == "task_runlog" and state == RUNLOG.STATUS.INPUT:
         attrs = status.get("attrs", None)
@@ -341,6 +351,7 @@ def get_completion_func(screen):
                     nodes[str(root_uuid)] = root
 
                 uuid = runlog["metadata"]["uuid"]
+                reasons = runlog["status"].get("reason_list", [])
                 outputs = []
                 machine = runlog['status'].get("machine_name", None)
                 if client is not None and runlog['status']['type'] == "task_runlog" and not runlog["status"].get("attrs", None):
@@ -351,7 +362,7 @@ def get_completion_func(screen):
                     output_list = runlog_output['status']['output_list']
                     for task_output in output_list:
                         outputs.append(task_output["output"])
-                nodes[str(uuid)] = RunlogNode(runlog, parent=root, outputs=outputs, machine=machine)
+                nodes[str(uuid)] = RunlogNode(runlog, parent=root, outputs=outputs, machine=machine, reasons=reasons)
 
             # Attach parent to nodes
             for runlog in sorted_entities:
