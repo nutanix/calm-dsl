@@ -6,10 +6,13 @@ from .secrets import create_secret, get_secrets, delete_secret, update_secret
 # TODO Apply --type = local/server parameter
 @create.command("secret")
 @click.argument("name", nargs=1)
-@click.option("--value", prompt=True, hide_input=True, confirmation_prompt=True)
+@click.option("--value", prompt=True, hide_input=True, confirmation_prompt=True, help="Value for secret")
 @click.pass_obj
 def _create_secret(obj, name, value):
-    """Creates the secret"""
+    """Creates the secret
+
+    NAME is the alias for your secret
+    """
 
     create_secret(name, value)
 
@@ -36,6 +39,9 @@ def _delete_secret(obj, name):
 @click.option("--value", prompt=True, hide_input=True, confirmation_prompt=True)
 @click.pass_obj
 def _update_secret(obj, name, value):
-    """Update the secret """
+    """Update the secret
+
+    NAME is the alias for your secret
+    """
 
     update_secret(name, value)
