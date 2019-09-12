@@ -79,7 +79,7 @@ def create_blueprint(client, bp_payload, name=None, description=None, categories
                 value = click.prompt("It's value: ", hide_input=True)
 
                 choice = click.prompt(
-                    "\n{}(y/n)\n".format(highlight_text("Want to store it locally")),
+                    "\n{}(y/n)".format(highlight_text("Want to store it locally")),
                     default="n",
                 )
                 if choice[0] == "y":
