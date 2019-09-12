@@ -15,3 +15,4 @@ arrow==0.13.1
 jsonschema>=3.0.1
 anytree>=2.6.0
 asciimatics>=1.11.0
+peewee==3.10.0
