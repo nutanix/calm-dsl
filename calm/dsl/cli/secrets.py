@@ -1,67 +1,55 @@
 import click
-import os
 
 from .utils import highlight_text
-
-file_dir = "calm/secrets"
-file_helper = "calm/secrets/{}.txt"
+from calm.dsl.builtins import _create_secret, _delete_secret, _update_secret, list_secrets
 
 
-def create_secret(name, value):
+def create_secret(name, value, pass_phrase=""):
     """Creates the secret"""
 
-    file_location = file_helper.format(name)
-    if os.path.exists(file_location):
+    secrets = list_secrets()
+    if name in secrets:
         click.echo(highlight_text("Secret Already present !!!\nTry to update secret\n"))
         return
 
-    with open(file_location, "w+") as file:
-        file.write(value)
-
+    _create_secret(name, value)
     click.echo(highlight_text("\nSecret created !!! \n"))
 
 
 def get_secrets():
     """List the secrets"""
 
-    avl_files = os.listdir(file_dir)
-    for file in avl_files:
-        fname = file[: file.index(".")]
-        click.echo(highlight_text(fname))
+    avl_secrets = list_secrets()
+    for secret in avl_secrets:
+        click.echo(highlight_text(secret))
 
 
 def delete_secret(name):
     """Deletes the secret"""
 
-    file_location = file_helper.format(name)
-    if os.path.exists(file_location):
-        os.remove(file_location)
-        click.echo(highlight_text("\nSecret deleted !!!\n"))
-
-    else:
+    secrets = list_secrets()
+    if name not in secrets:
         click.echo(highlight_text("\nSecret not present !!!\n"))
+        return
+
+    _delete_secret(name)
+    click.echo(highlight_text("\nSecret deleted !!!\n"))
 
 
-def update_secret(name, value):
+def update_secret(name, value, pass_phrase):
     """Updates the secret"""
 
-    file_location = file_helper.format(name)
-    if os.path.exists(file_location):
-        with open(file_location, "w+") as file:
-            file.write(value)
-        click.echo(highlight_text("\nSecret updated !!!\n"))
-
-    else:
+    secrets = list_secrets()
+    if name not in secrets:
         click.echo(highlight_text("\nSecret not present !!!\n"))
+        return
+
+    _update_secret(name, value)
+    click.echo(highlight_text("\nSecret updated !!!\n"))
 
 
 def find_secret(name):
     """ Gives you the value stored correponding to secret"""
 
-    file_location = file_helper.format(name)
-    if os.path.exists(file_location):
-        with open(file_location, "r") as file:
-            return file.read()
-
-    else:
-        raise Exception("No secret found !!!")
+    # Query and provide result
+    pass
