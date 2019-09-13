@@ -1,8 +1,9 @@
-from peewee import SqliteDatabase, Model, CharField, BlobField
+from peewee import SqliteDatabase, Model, CharField, BlobField, DateTimeField
 import os
+import datetime
+import uuid
 
 from .crypto import encrypt_AES_GCM, decrypt_AES_GCM
-
 
 db_location = "calm/db/dsl.db"
 db_location = os.path.abspath(db_location)
@@ -18,9 +19,12 @@ class Secret(Model):
     iv = BlobField()
     auth_tag = BlobField()
     pass_phrase = BlobField()
+    uuid = CharField()
+    creation_time = DateTimeField(default=datetime.datetime.now())
+    last_update_time = DateTimeField(default=datetime.datetime.now())
 
     def generate_enc_msg(self):
-        return (self.kdf_salt, self.ciphertext, self.iv, self.auth_tag) 
+        return (self.kdf_salt, self.ciphertext, self.iv, self.auth_tag)
 
     class Meta:
         database = db
@@ -52,9 +56,8 @@ def _create_secret(name, value, pass_phrase):
         iv=iv,
         auth_tag=auth_tag,
         pass_phrase=pass_phrase,
+        uuid=uuid.uuid4()
     )
-    import pdb
-    pdb.set_trace()
 
     secret.save()
     db.close()
@@ -102,6 +105,7 @@ def _update_secret(name, value, pass_phrase):
         iv=iv,
         auth_tag=auth_tag,
         pass_phrase=pass_phrase,
+        last_update_time=datetime.datetime.now()
     ).where(Secret.name == name)
 
     query.execute()
@@ -111,12 +115,7 @@ def _update_secret(name, value, pass_phrase):
 def list_secrets():
 
     db.connect()
-    secrets = []
-    for secret in Secret.select():
-        secrets.append(secret.name)
-
-    db.close()
-    return secrets
+    return Secret.select()
 
 
 def _find_secret(name, pass_phrase=None):
