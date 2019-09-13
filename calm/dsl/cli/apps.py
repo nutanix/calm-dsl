@@ -2,15 +2,15 @@ import time
 import warnings
 import logging
 import json
+from json import JSONEncoder
 
 import arrow
 import click
 from prettytable import PrettyTable
-from anytree import RenderTree
+from anytree import NodeMixin, RenderTree
 
 from .utils import get_name_query, get_states_filter, highlight_text, Display
 from .constants import APPLICATION, RUNLOG, SYSTEM_ACTIONS
-from .runlog import RunlogNode, RunlogJSONEncoder, get_completion_func
 
 log = logging.getLogger(__name__)
 
@@ -205,6 +205,164 @@ def describe_app(obj, app_name):
             app_name
         )
     )
+
+
+class RunlogNode(NodeMixin):
+    def __init__(self, runlog, parent=None, children=None):
+        self.runlog = runlog
+        self.parent = parent
+        if children:
+            self.children = children
+
+
+class RunlogJSONEncoder(JSONEncoder):
+    def default(self, obj):
+
+        if not isinstance(obj, RunlogNode):
+            return super().default(obj)
+
+        metadata = obj.runlog["metadata"]
+        status = obj.runlog["status"]
+        state = status["state"]
+
+        if status["type"] == "task_runlog":
+            name = status["task_reference"]["name"]
+        elif status["type"] == "runbook_runlog":
+            if "call_runbook_reference" in status:
+                name = status["call_runbook_reference"]["name"]
+            else:
+                name = status["runbook_reference"]["name"]
+        elif status["type"] == "action_runlog" and "action_reference" in status:
+            name = status["action_reference"]["name"]
+        elif status["type"] == "app":
+            return status["name"]
+        else:
+            return "root"
+
+        # TODO - Fix KeyError for action_runlog
+        """
+        elif status["type"] == "action_runlog":
+            name = status["action_reference"]["name"]
+        elif status["type"] == "app":
+            return status["name"]
+        """
+
+        creation_time = int(metadata["creation_time"]) // 1000000
+        username = (
+            status["userdata_reference"]["name"]
+            if "userdata_reference" in status
+            else None
+        )
+        last_update_time = int(metadata["last_update_time"]) // 1000000
+
+        encodedStringList = []
+        encodedStringList.append("{} (Status: {})".format(name, state))
+        if status["type"] == "action_runlog":
+            encodedStringList.append("\tRunlog UUID: {}".format(metadata["uuid"]))
+        encodedStringList.append("\tStarted: {}".format(time.ctime(creation_time)))
+
+        if username:
+            encodedStringList.append("\tRun by: {}".format(username))
+        if state in RUNLOG.TERMINAL_STATES:
+            encodedStringList.append(
+                "\tFinished: {}".format(time.ctime(last_update_time))
+            )
+        else:
+            encodedStringList.append(
+                "\tLast Updated: {}".format(time.ctime(last_update_time))
+            )
+
+        return "\n".join(encodedStringList)
+
+
+def get_completion_func(screen):
+    def is_action_complete(response):
+
+        entities = response["entities"]
+        if len(entities):
+
+            # Sort entities based on creation time
+            sorted_entities = sorted(
+                entities, key=lambda x: int(x["metadata"]["creation_time"])
+            )
+
+            # Create nodes of runlog tree and a map based on uuid
+            root = None
+            nodes = {}
+            for runlog in sorted_entities:
+                # Create root node
+                # TODO - Get details of root node
+                if not root:
+                    root_uuid = runlog["status"]["root_reference"]["uuid"]
+                    root_runlog = {
+                        "metadata": {"uuid": root_uuid},
+                        "status": {"type": "action_runlog", "state": ""},
+                    }
+                    root = RunlogNode(root_runlog)
+                    nodes[str(root_uuid)] = root
+
+                uuid = runlog["metadata"]["uuid"]
+                nodes[str(uuid)] = RunlogNode(runlog, parent=root)
+
+            # Attach parent to nodes
+            for runlog in sorted_entities:
+                uuid = runlog["metadata"]["uuid"]
+                parent_uuid = runlog["status"]["parent_reference"]["uuid"]
+                node = nodes[str(uuid)]
+                node.parent = nodes[str(parent_uuid)]
+
+            # Show Progress
+            # TODO - Draw progress bar
+            total_tasks = 0
+            completed_tasks = 0
+            for runlog in sorted_entities:
+                runlog_type = runlog["status"]["type"]
+                if runlog_type == "task_runlog":
+                    total_tasks += 1
+                    state = runlog["status"]["state"]
+                    if state in RUNLOG.STATUS.SUCCESS:
+                        completed_tasks += 1
+
+            if total_tasks:
+                screen.clear()
+                progress = "{0:.2f}".format(completed_tasks / total_tasks * 100)
+                screen.print_at("Progress: {}%".format(progress), 0, 0)
+
+            # Render Tree on next line
+            line = 1
+            for pre, _, node in RenderTree(root):
+                lines = json.dumps(node, cls=RunlogJSONEncoder).split("\\n")
+                for linestr in lines:
+                    tabcount = linestr.count("\\t")
+                    if not tabcount:
+                        screen.print_at("{}{}".format(pre, linestr), 0, line)
+                    else:
+                        screen.print_at(
+                            "{}{}".format("", linestr.replace("\\t", "")),
+                            len(pre) + 2 + tabcount * 2,
+                            line,
+                        )
+                    line += 1
+            screen.refresh()
+
+            for runlog in sorted_entities:
+                state = runlog["status"]["state"]
+                if state in RUNLOG.FAILURE_STATES:
+                    msg = "Action failed. Exit screen? (y)"
+                    screen.print_at(msg, 0, line)
+                    screen.refresh()
+                    return (True, msg)
+                if state not in RUNLOG.TERMINAL_STATES:
+                    return (False, "")
+
+            msg = "Action ran successfully. Exit screen? (y)"
+            screen.print_at(msg, 0, line)
+            screen.refresh()
+
+            return (True, msg)
+        return (False, "")
+
+    return is_action_complete
 
 
 def watch_action(runlog_uuid, app_name, client, screen, poll_interval=10):
