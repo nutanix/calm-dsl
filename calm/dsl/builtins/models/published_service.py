@@ -13,7 +13,9 @@ class PublishedServiceType(EntityType):
         return cls.get_ref()
 
 
-class PublishedServiceValidator(PropertyValidator, openapi_type="app_published_service"):
+class PublishedServiceValidator(
+    PropertyValidator, openapi_type="app_published_service"
+):
     __default__ = None
     __kind__ = PublishedServiceType
 

@@ -65,14 +65,14 @@ class SubstrateType(EntityType):
                     readiness_probe["connection_port"] = 5985
             elif not readiness_probe.get("address"):
                 readiness_probe["address"] = "@@{public_ip_address}@@"
-        elif cdict["type"] == "K8S_POD":        # Never used (Omit after discussion)
+        elif cdict["type"] == "K8S_POD":  # Never used (Omit after discussion)
             readiness_probe = {
                 "address": "",
                 "disable_readiness_probe": False,
                 "delay_secs": "60",
                 "connection_type": "SSH",
                 "connection_port": 22,
-                "retries": "5"
+                "retries": "5",
             }
             cdict.pop("editables", None)
 

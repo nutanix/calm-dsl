@@ -3,7 +3,7 @@ import sys
 import inspect
 from ruamel import yaml
 
-from .entity import Entity, EntityTypeBase
+from .entity import Entity
 from .validator import PropertyValidator
 from .deployment import DeploymentType
 
@@ -12,6 +12,7 @@ from .deployment import DeploymentType
 
 # Note parent class of PODDeploymentType is DeploymentType
 # As deployments in profile class need to be of same type
+
 
 class PODDeploymentType(DeploymentType):
     __schema_name__ = "PODDeployment"
