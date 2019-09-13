@@ -81,10 +81,11 @@ class runbook(metaclass=DescriptorType):
         # Get the source code for the user function.
         # Also replace tabs with 4 spaces.
         src = inspect.getsource(self.user_func).replace("\t", "    ")
-        argspec = inspect.getargspec(self.user_func)
         args = {}
-        for argument, value in zip(argspec.args, argspec.defaults):
-            args[argument] = value
+        sign = inspect.signature(self.user_func)
+        for name, param in sign.parameters.items():
+            if param.default != inspect._empty:
+                args[name] = param.default
 
         # Get the indent since this decorator is used within class definition
         # For this we split the code on newline and count the number of spaces
