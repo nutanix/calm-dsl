@@ -1,7 +1,7 @@
 import click
 
 from .utils import highlight_text
-from calm.dsl.builtins import _create_secret, _delete_secret, _update_secret, list_secrets
+from calm.dsl.builtins import _create_secret, _delete_secret, _update_secret, list_secrets, _find_secret
 
 
 def create_secret(name, value, pass_phrase=""):
@@ -12,7 +12,7 @@ def create_secret(name, value, pass_phrase=""):
         click.echo(highlight_text("Secret Already present !!!\nTry to update secret\n"))
         return
 
-    _create_secret(name, value)
+    _create_secret(name, value, pass_phrase)
     click.echo(highlight_text("\nSecret created !!! \n"))
 
 
@@ -44,12 +44,12 @@ def update_secret(name, value, pass_phrase):
         click.echo(highlight_text("\nSecret not present !!!\n"))
         return
 
-    _update_secret(name, value)
+    _update_secret(name, value, pass_phrase)
     click.echo(highlight_text("\nSecret updated !!!\n"))
 
 
-def find_secret(name):
+def find_secret(name, pass_phrase):
     """ Gives you the value stored correponding to secret"""
 
-    # Query and provide result
-    pass
+    secret_val = _find_secret(name, pass_phrase)
+    return secret_val
