@@ -76,7 +76,7 @@ def create_blueprint(client, bp_payload, name=None, description=None, categories
 
             except Exception:
                 click.echo("\nNo secret corresponding to {} found !!!\n". format(secret))
-                value = click.prompt("It's value: ", hide_input=True)
+                value = click.prompt("Please enter its value", hide_input=True)
 
                 choice = click.prompt(
                     "\n{}(y/n)".format(highlight_text("Want to store it locally")),
