@@ -6,6 +6,7 @@ from prettytable import PrettyTable
 from .utils import highlight_text
 from calm.dsl.builtins import Secret
 
+
 def create_secret(name, value, pass_phrase=""):
     """Creates the secret"""
 
@@ -62,18 +63,6 @@ def delete_secret(name):
 
     Secret.delete(name)
     click.echo(highlight_text("\nSecret deleted !!!\n"))
-
-    _delete_secret(name)
-    click.echo(highlight_text("\nSecret deleted !!!\n"))
-
-
-    secrets = get_secrets_names()
-    if name not in secrets:
-        click.echo(highlight_text("\nSecret not present !!!\n"))
-        return
-
-    Secret.update(name, value)
-    click.echo(highlight_text("\nSecret updated !!!\n"))
 
 
 def find_secret(name, pass_phrase=""):
