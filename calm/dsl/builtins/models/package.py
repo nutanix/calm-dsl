@@ -18,8 +18,14 @@ class PackageType(EntityType):
 
     def compile(cls):
 
+        if getattr(cls, "type") == "K8S_IMAGE":
+            cdict = super().compile()
+            cdict["options"] = {}
+            return cdict
+
         if not getattr(cls, "type") == "CUSTOM":
             cdict = super().compile()
+            cdict.pop("image_spec", None)
             return cdict
 
         def make_empty_runbook(action_name):
@@ -52,6 +58,7 @@ class PackageType(EntityType):
 
         cdict["options"]["install_runbook"] = install_runbook
         cdict["options"]["uninstall_runbook"] = uninstall_runbook
+        cdict.pop("image_spec", None)
 
         return cdict
 

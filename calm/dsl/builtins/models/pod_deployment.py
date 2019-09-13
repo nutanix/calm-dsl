@@ -1,0 +1,32 @@
+from .entity import Entity
+from .validator import PropertyValidator
+from .deployment import DeploymentType
+
+
+# PODDeployment
+
+# Note parent class of PODDeploymentType is DeploymentType
+# As deployments in profile class need to be of same type
+
+
+class PODDeploymentType(DeploymentType):
+    __schema_name__ = "PODDeployment"
+    __openapi_type__ = "app_pod_deployment"
+
+    def get_ref(cls, kind=None):
+        """Note: app_blueprint_deployment kind to be used for pod deploymen t"""
+        return super().get_ref(kind="app_blueprint_deployment")
+
+
+class PODDeploymentValidator(PropertyValidator, openapi_type="app_pod_deployment"):
+    __default__ = None
+    __kind__ = PODDeploymentType
+
+
+def pod_deployment(**kwargs):
+    name = kwargs.get("name") or getattr(PODDeploymentType, "__schema_name__")
+    bases = (Entity,)
+    return PODDeploymentType(name, bases, kwargs)
+
+
+PODDeployment = pod_deployment()
