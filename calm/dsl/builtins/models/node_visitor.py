@@ -11,12 +11,11 @@ class GetCallNodes(ast.NodeVisitor):
         self.task_list = []
         self.all_tasks = []
         self.variables = {}
-        self.args = {}
         self.target = target or None
         self._globals = func_globals or {}.copy()
 
     def get_objects(self):
-        return self.all_tasks, self.variables, self.task_list, self.args
+        return self.all_tasks, self.variables, self.task_list
 
     def visit_Call(self, node, return_task=False):
         sub_node = node.func
@@ -90,13 +89,3 @@ class GetCallNodes(ast.NodeVisitor):
             raise ValueError(
                 "Unsupported context used in 'with' statement inside the action."
             )
-
-    def visit_arguments(self, node):
-        args = node.args
-        defaults = node.defaults
-        for arg, val in zip(args, defaults):
-            if arg.arg in self.args.keys():
-                raise NameError("Duplicate argument name {}".format(arg.arg))
-            if not isinstance(val, ast.Str):
-                raise ValueError("Only arguments of type string allowed {}".format(arg.arg))
-            self.args[arg.arg] = val.s

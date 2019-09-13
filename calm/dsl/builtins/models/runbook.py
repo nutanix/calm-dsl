@@ -81,6 +81,10 @@ class runbook(metaclass=DescriptorType):
         # Get the source code for the user function.
         # Also replace tabs with 4 spaces.
         src = inspect.getsource(self.user_func).replace("\t", "    ")
+        argspec = inspect.getargspec(self.user_func)
+        args = {}
+        for argument, value in zip(argspec.args, argspec.defaults):
+            args[argument] = value
 
         # Get the indent since this decorator is used within class definition
         # For this we split the code on newline and count the number of spaces
@@ -103,7 +107,7 @@ class runbook(metaclass=DescriptorType):
         except Exception as ex:
             self.__exception__ = ex
             raise
-        tasks, variables, task_list, args = node_visitor.get_objects()
+        tasks, variables, task_list = node_visitor.get_objects()
         edges = []
         for from_tasks, to_tasks in zip(task_list, task_list[1:]):
             if not isinstance(from_tasks, list):
