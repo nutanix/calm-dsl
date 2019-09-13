@@ -32,7 +32,7 @@ from .models.simple_blueprint import SimpleBlueprint
 
 from .models.blueprint_payload import create_blueprint_payload
 from .models.project import Project as ProjectValidator
-from calm.db.helper import _create_secret, _delete_secret, _update_secret, list_secrets
+from calm.db.helper import _create_secret, _delete_secret, _update_secret, list_secrets, _find_secret
 
 
 __all__ = [
@@ -42,6 +42,7 @@ __all__ = [
     "_delete_secret",
     "_update_secret",
     "list_secrets",
+    "_find_secret",
     "basic_cred",
     "secret_cred",
     "Variable",
