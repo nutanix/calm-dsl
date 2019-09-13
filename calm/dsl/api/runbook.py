@@ -14,7 +14,7 @@ class RunbookAPI(ResourceAPI):
         self.PLAY = self.PREFIX + "/runlogs/{}/play"
         self.RERUN = self.PREFIX + "/runlogs/{}/rerun"
         self.RUNLOG_LIST = self.PREFIX + "/runlogs/{}/list"
-        self.RUNLOG_OUTPUT = self.PREFIX + "/8857ab8d-c216-41d4-85ac-a6880b15aaeb/runlogs/{}/output"
+        self.RUNLOG_OUTPUT = self.PREFIX + "/{}/runlogs/{}/output"
         self.RUNLOG_RESUME = self.PREFIX + "/runlogs/{}/resume"
 
     def upload(self, payload):
@@ -225,9 +225,9 @@ class RunbookAPI(ResourceAPI):
             self.RUNLOG_LIST.format(uuid), verify=False, request_json={}, method=REQUEST.METHOD.POST
         )
 
-    def runlog_output(self, uuid):
+    def runlog_output(self, arl_id, trl_id):
         return self.connection._call(
-            self.RUNLOG_OUTPUT.format(uuid), verify=False, method=REQUEST.METHOD.GET
+            self.RUNLOG_OUTPUT.format(arl_id, trl_id), verify=False, method=REQUEST.METHOD.GET
         )
 
     def poll_action_run(self, uuid, payload=None):

@@ -355,7 +355,7 @@ def get_completion_func(screen):
                 outputs = []
                 machine = runlog['status'].get("machine_name", None)
                 if client is not None and runlog['status']['type'] == "task_runlog" and not runlog["status"].get("attrs", None):
-                    res, err = client.runbook.runlog_output(uuid)
+                    res, err = client.runbook.runlog_output(runlog_uuid, uuid)
                     if err:
                         raise Exception("\n[{}] - {}".format(err["code"], err["error"]))
                     runlog_output = res.json()
