@@ -25,11 +25,14 @@ def _create_secret(obj, name, value):
 
 
 @get.command("secrets")
+@click.option(
+    "--quiet", "-q", is_flag=True, default=False, help="Show only sceret names."
+)
 @click.pass_obj
-def _get_secrets(obj):
+def _get_secrets(obj, quiet):
     """List the secrets """
 
-    get_secrets()
+    get_secrets(quiet)
 
 
 @delete.command("secret")
