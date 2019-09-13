@@ -44,6 +44,9 @@ class DataTable(BaseModel):
     iv = BlobField()
     auth_tag = BlobField()
     pass_phrase = BlobField()
+    uuid = CharField()
+    creation_time = DateTimeField(default=datetime.datetime.now())
+    last_update_time = DateTimeField(default=datetime.datetime.now())
 
     def generate_enc_msg(self):
         return (self.kdf_salt, self.ciphertext, self.iv, self.auth_tag)
