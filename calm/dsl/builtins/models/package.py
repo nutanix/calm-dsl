@@ -18,6 +18,8 @@ class PackageType(EntityType):
 
     def compile(cls):
 
+        cdict = {}
+
         if getattr(cls, "type") == "K8S_IMAGE":
             cdict = super().compile()
             cdict["options"] = {}
@@ -57,6 +59,10 @@ class PackageType(EntityType):
 
             cdict["options"]["install_runbook"] = install_runbook
             cdict["options"]["uninstall_runbook"] = uninstall_runbook
+
+        else:
+            ptype = getattr(cls, "type")
+            raise Exception("Un-supported package type {}".format(ptype))
 
         return cdict
 
