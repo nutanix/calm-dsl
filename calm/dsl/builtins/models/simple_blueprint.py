@@ -25,7 +25,6 @@ class SimpleBlueprintType(EntityType):
         deployments = getattr(cls, "deployments", [])
 
         pod_deployments = []
-        pod_dep_name_map = {}  # Used for managing deployment-level dependencies
         normal_deployments = []
         for dep in deployments:
             if dep.deployment_spec and dep.service_spec:
@@ -37,7 +36,6 @@ class SimpleBlueprintType(EntityType):
                 )
 
                 pod_deployments.append(pod_dep)
-                pod_dep_name_map[dep.__name__] = pod_dep
 
             else:
                 normal_deployments.append(dep)
@@ -175,6 +173,7 @@ class SimpleBlueprintType(EntityType):
             "substrate_definition_list": substrate_definition_list,
             "credential_definition_list": credential_definition_list,
             "app_profile_list": app_profile_list,
+            "published_service_definition_list": published_service_definition_list
         }
 
         spec = {
