@@ -57,7 +57,6 @@ class PackageType(EntityType):
 
             cdict["options"]["install_runbook"] = install_runbook
             cdict["options"]["uninstall_runbook"] = uninstall_runbook
-            cdict.pop("image_spec", None)
 
         return cdict
 
