@@ -40,17 +40,11 @@ class PackageType(EntityType):
             install_runbook = (
                 getattr(getattr(cls, "__install__", None), "runbook", None) or None
             )
-            if install_runbook:
-                delattr(cls, "__install__")
-            else:
-                install_runbook = make_empty_runbook("action_install")
-            uninstall_runbook = (
-                getattr(getattr(cls, "__uninstall__", None), "runbook", None) or None
+            return runbook_create(
+                name="Runbook_for_Package_{}_{}".format(str(cls), action_name),
+                main_task_local_reference=user_dag.get_ref(),
+                tasks=[user_dag],
             )
-            if uninstall_runbook:
-                delattr(cls, "__uninstall__")
-            else:
-                uninstall_runbook = make_empty_runbook("action_uninstall")
 
             cdict = super().compile()
 
