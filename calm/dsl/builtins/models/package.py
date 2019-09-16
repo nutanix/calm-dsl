@@ -18,15 +18,11 @@ class PackageType(EntityType):
 
     def compile(cls):
 
-        cdict = super().compile()
-
         if getattr(cls, "type") == "K8S_IMAGE":
+            cdict = super().compile()
             cdict["options"] = {}
 
         elif getattr(cls, "type") == "CUSTOM":
-
-            # Remove image_spec field created during compile step
-            cdict.pop("image_spec", None)
 
             def make_empty_runbook(action_name):
                 user_dag = dag(
@@ -53,6 +49,11 @@ class PackageType(EntityType):
                 delattr(cls, "__uninstall__")
             else:
                 uninstall_runbook = make_empty_runbook("action_uninstall")
+
+            cdict = super().compile()
+
+            # Remove image_spec field created during compile step
+            cdict.pop("image_spec", None)
 
             cdict["options"]["install_runbook"] = install_runbook
             cdict["options"]["uninstall_runbook"] = uninstall_runbook
