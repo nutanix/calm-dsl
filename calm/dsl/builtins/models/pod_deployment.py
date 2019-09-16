@@ -21,7 +21,7 @@ class PODDeploymentType(DeploymentType):
     __openapi_type__ = "app_pod_deployment"
 
     def get_ref(cls, kind=None):
-        """Note: app_blueprint_deployment kind to be used for pod deploymen t"""
+        """Note: app_blueprint_deployment kind to be used for pod deployment"""
         return super().get_ref(kind="app_blueprint_deployment")
 
     def extract_deployment(cls):
