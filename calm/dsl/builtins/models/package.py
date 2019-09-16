@@ -23,7 +23,6 @@ class PackageType(EntityType):
         if getattr(cls, "type") == "K8S_IMAGE":
             cdict = super().compile()
             cdict["options"] = {}
-            return cdict
 
         elif getattr(cls, "type") == "CUSTOM":
 
@@ -41,38 +40,23 @@ class PackageType(EntityType):
             install_runbook = (
                 getattr(getattr(cls, "__install__", None), "runbook", None) or None
             )
-            return runbook_create(
-                name="Runbook_for_Package_{}_{}".format(str(cls), action_name),
-                main_task_local_reference=user_dag.get_ref(),
-                tasks=[user_dag],
+            if install_runbook:
+                delattr(cls, "__install__")
+            else:
+                install_runbook = make_empty_runbook("action_install")
+            uninstall_runbook = (
+                getattr(getattr(cls, "__uninstall__", None), "runbook", None) or None
             )
+            if uninstall_runbook:
+                delattr(cls, "__uninstall__")
+            else:
+                uninstall_runbook = make_empty_runbook("action_uninstall")
 
             cdict = super().compile()
 
             # Remove image_spec field created during compile step
             cdict.pop("image_spec", None)
 
-        install_runbook = (
-            getattr(getattr(cls, "__install__", None), "runbook", None) or None
-        )
-        if install_runbook:
-            delattr(cls, "__install__")
-        else:
-            install_runbook = make_empty_runbook("action_install")
-
-        uninstall_runbook = (
-            getattr(getattr(cls, "__uninstall__", None), "runbook", None) or None
-        )
-        if uninstall_runbook:
-            delattr(cls, "__uninstall__")
-        else:
-            uninstall_runbook = make_empty_runbook("action_uninstall")
-
-        cdict = super().compile()
-        # Remove image_spec field created during compile step for non-k8s packages
-        cdict.pop("image_spec", None)
-
-        if getattr(cls, "type") == "CUSTOM":
             cdict["options"]["install_runbook"] = install_runbook
             cdict["options"]["uninstall_runbook"] = uninstall_runbook
 
