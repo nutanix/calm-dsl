@@ -21,7 +21,9 @@ class BlueprintType(EntityType):
                     if dep.type == "K8S_DEPLOYMENT":
                         pod_dict = dep.extract_deployment()
 
-                        normal_deployments.extend(pod_dict["deployment_definition_list"])
+                        normal_deployments.extend(
+                            pod_dict["deployment_definition_list"]
+                        )
                         cdict["service_definition_list"].extend(
                             pod_dict["service_definition_list"]
                         )
