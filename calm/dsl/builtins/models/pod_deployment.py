@@ -8,12 +8,12 @@ from .substrate import substrate
 from .ref import ref
 from .deployment import deployment
 
-import uuid
-
 # PODDeployment
 
 # Note parent class of PODDeploymentType is DeploymentType
 # As deployments in profile class need to be of same type
+# For macros of container, Use:
+#   "{}_{}_{}".format(dep.name, container_name, "Service"),
 
 
 class PODDeploymentType(DeploymentType):
@@ -52,7 +52,7 @@ class PODDeploymentType(DeploymentType):
             container_name = container["name"]
 
             s = service(
-                name=container_name + str(uuid.uuid4())[-10:] + "Service",
+                name="{}_{}_{}".format(cls.__name__, container_name, "Service",),
                 container_spec=container,
             )
 
@@ -63,7 +63,7 @@ class PODDeploymentType(DeploymentType):
                 image_spec = {"image": img}
 
             p = package(
-                name=container_name + str(uuid.uuid4())[-10:] + "Package",
+                name="{}_{}_{}".format(cls.__name__, container_name, "Package"),
                 image_spec=image_spec,
                 type="K8S_IMAGE",
             )
@@ -77,7 +77,7 @@ class PODDeploymentType(DeploymentType):
         sub_provider_spec = cls.deployment_spec["spec"].pop("template", {})
         sub_provider_spec = {**({"type": "PROVISION_K8S_POD"}), **sub_provider_spec}
         sub = substrate(
-            name=container_name + str(uuid.uuid4())[-10:] + "Substrate",
+            name="{}_{}_{}".format(cls.__name__, container_name, "Substrate"),
             provider_type="K8S_POD",
             provider_spec=sub_provider_spec,
         )
