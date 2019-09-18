@@ -173,7 +173,7 @@ class SimpleBlueprintType(EntityType):
             "substrate_definition_list": substrate_definition_list,
             "credential_definition_list": credential_definition_list,
             "app_profile_list": app_profile_list,
-            "published_service_definition_list": published_service_definition_list
+            "published_service_definition_list": published_service_definition_list,
         }
 
         spec = {
