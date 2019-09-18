@@ -45,7 +45,7 @@ class PODDeploymentType(DeploymentType):
         )
 
         package_references = []
-        for container in containers_list:
+        for ind, container in enumerate(containers_list):
             img = container.pop("image", "")
             img_pull_policy = container.pop("imagePullPolicy", None)
 
