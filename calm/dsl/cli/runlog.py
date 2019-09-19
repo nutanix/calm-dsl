@@ -413,7 +413,7 @@ def get_completion_func(screen):
                     if len(inputs_required) > 0:
                         screen.play([Scene([InputFrame(name, screen, inputs_required, data)], -1)])
                     if client is not None:
-                        client.runbook.resume(task_uuid, {"properties": input_payload})
+                        client.runbook.resume(runlog_uuid, task_uuid, {"properties": input_payload})
                 input_tasks = []
                 msg = "Sending resume for input tasks with input values"
                 line = displayRunLogTree(screen, root, completed_tasks, total_tasks, msg=msg)
@@ -427,7 +427,7 @@ def get_completion_func(screen):
                     confirm_payload = {}
                     screen.play([Scene([ConfirmFrame(name, screen)], -1)])
                     if client is not None:
-                        client.runbook.resume(task_uuid, confirm_payload)
+                        client.runbook.resume(runlog_uuid, task_uuid, confirm_payload)
                 confirm_tasks = []
                 msg = "Sending confirmation for confirm tasks"
                 msg = "Sending resume for confirm tasks with confirmation"

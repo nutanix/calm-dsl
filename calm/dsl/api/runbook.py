@@ -5,7 +5,7 @@ from .util import strip_secrets, patch_secrets
 
 class RunbookAPI(ResourceAPI):
     def __init__(self, connection):
-        super().__init__(connection, resource_type="actions")
+        super().__init__(connection, resource_type="runbooks")
         self.UPLOAD = self.PREFIX + "/import_json"
         self.UPDATE2 = self.PREFIX + "/{}/update"
         self.PREVIOUS_RUNS = self.PREFIX + "/runlogs/list"
@@ -14,18 +14,18 @@ class RunbookAPI(ResourceAPI):
         self.PAUSE = self.PREFIX + "/runlogs/{}/pause"
         self.PLAY = self.PREFIX + "/runlogs/{}/play"
         self.RERUN = self.PREFIX + "/runlogs/{}/rerun"
-        self.RUNLOG_LIST = self.PREFIX + "/runlogs/{}/list"
-        self.RUNLOG_OUTPUT = self.PREFIX + "/{}/runlogs/{}/output"
-        self.RUNLOG_RESUME = self.PREFIX + "/runlogs/{}/resume"
+        self.RUNLOG_LIST = self.PREFIX + "/runlogs/{}/childrens/list"
+        self.RUNLOG_OUTPUT = self.PREFIX + "/runlogs/{}/childrens/{}/output"
+        self.RUNLOG_RESUME = self.PREFIX + "/runlogs/{}/childrens/{}/resume"
 
     def upload(self, payload):
         return self.connection._call(
             self.UPLOAD, verify=False, request_json=payload, method=REQUEST.METHOD.POST
         )
 
-    def resume(self, uuid, payload):
+    def resume(self, arlid, trlid, payload):
         return self.connection._call(
-            self.RUNLOG_RESUME.format(uuid), verify=False, request_json=payload, method=REQUEST.METHOD.POST
+            self.RUNLOG_RESUME.format(arlid, trlid), verify=False, request_json=payload, method=REQUEST.METHOD.POST
         )
 
     def pause(self, uuid):
@@ -57,7 +57,7 @@ class RunbookAPI(ResourceAPI):
                 "description": runbook_desc or "",
                 "resources": runbook_resources,
             },
-            "metadata": {"spec_version": 1, "name": runbook_name, "kind": "action"},
+            "metadata": {"spec_version": 1, "name": runbook_name, "kind": "runbook"},
             "api_version": "3.0",
         }
 
