@@ -52,7 +52,7 @@ class PODDeploymentType(DeploymentType):
             container_name = container["name"]
 
             s = service(
-                name="{}_{}_{}".format(cls.__name__, container_name, "Service",),
+                name="{}_{}_{}".format(cls.__name__, container_name, "Service"),
                 container_spec=container,
             )
 
