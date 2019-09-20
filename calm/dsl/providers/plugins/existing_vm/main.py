@@ -14,6 +14,7 @@ class ExistingVmProvider(Provider):
     provider_type = "EXISTING_VM"
     spec_template_file = "existing_vm_provider_spec.yaml.jinja2"
 
+    @classmethod
     def create_spec(cls):
         create_spec()
 
