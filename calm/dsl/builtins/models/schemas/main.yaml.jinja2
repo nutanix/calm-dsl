@@ -19,6 +19,7 @@
 {% import "simple_blueprint.yaml.jinja2" as simple_blueprint %}
 {% import "published_service.yaml.jinja2" as published_service %}
 {% import "pod_deployment.yaml.jinja2" as pod_deployment %}
+{% import "ahv_vm.yaml.jinja2" as ahv_vm %}
 
 {% macro Schemas() -%}
 
@@ -43,6 +44,7 @@
 {{ project.ProjectSchema() }}
 {{ simple_deployment.SimpleDeploymentSchema() }}
 {{ simple_blueprint.SimpleBlueprintSchema() }}
+{{ ahv_vm.AhvVmSchema() }}
 
 {%- endmacro %}
 
