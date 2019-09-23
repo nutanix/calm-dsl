@@ -38,7 +38,7 @@ def get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
 
     if err:
         pc_ip = config["SERVER"]["pc_ip"]
-        warnings.warn(UserWarning("Cannot fetch blueprints from {}".format(pc_ip)))
+        warnings.warn(UserWarning("Cannot fetch runbooks from {}".format(pc_ip)))
         return
 
     json_rows = res.json()["entities"]
@@ -89,7 +89,7 @@ def get_runbook_module_from_file(runbook_file):
 
 
 def get_runbook_class_from_module(user_runbook_module):
-    """Returns blueprint class given a module"""
+    """Returns runbook class given a module"""
 
     UserRunbook = None
     for item in dir(user_runbook_module):
