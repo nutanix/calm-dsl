@@ -57,6 +57,7 @@ def get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
         "CREATED ON",
         "LAST UPDATED",
         "UUID",
+        "PROJECT",
     ]
     for _row in json_rows:
         row = _row["status"]
@@ -64,6 +65,7 @@ def get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
 
         creation_time = int(metadata["creation_time"]) // 1000000
         last_update_time = int(metadata["last_update_time"]) // 1000000
+        project = metadata["project_reference"]["name"]
 
         table.add_row(
             [
@@ -73,6 +75,7 @@ def get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
                 highlight_text(time.ctime(creation_time)),
                 "{}".format(arrow.get(last_update_time).humanize()),
                 highlight_text(row["uuid"]),
+                highlight_text(project),
             ]
         )
     click.echo(table)

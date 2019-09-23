@@ -3,6 +3,7 @@ import json
 import uuid
 
 from .main import get, describe, delete, run, create, update
+from .projects import get_project
 from .utils import Display
 from .runbooks import (
     get_runbook,
@@ -48,10 +49,10 @@ def _get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
 @click.pass_obj
 def _get_previous_runs(obj, name, filter_by, limit, offset, quiet, all_items):
     """Get previous runbook runs, optionally filtered by a string"""
-    get_previous_runs(obj, name, filter_by, limit, offset, quiet, all_items)
+    get_previous_runs(obj, name, filter_by, limit, offset, quiet)
 
 
-def create_runbook(client, runbook_payload, name=None, description=None):
+def create_runbook(client, runbook_payload, name=None, description=None, project_name=None):
 
     runbook_payload.pop("status", None)
 
@@ -65,19 +66,28 @@ def create_runbook(client, runbook_payload, name=None, description=None):
     runbook_resources = runbook_payload["spec"]["resources"]
     runbook_name = runbook_payload["spec"]["name"]
     runbook_desc = runbook_payload["spec"]["description"]
+    if project_name:
+        project = get_project(client, project_name)
+        project_ref = {
+            "uuid": project["metadata"]["uuid"],
+            "kind": "project"
+        }
+    else:
+        project_ref = None
 
     return client.runbook.upload_with_secrets(
-        runbook_name, runbook_desc, runbook_resources
+        runbook_name, runbook_desc, runbook_resources, project_ref=project_ref
     )
 
 
-def create_runbook_from_json(client, path_to_json, name=None, description=None):
+def create_runbook_from_json(client, path_to_json, name=None, description=None, project=None):
 
     runbook_payload = json.loads(open(path_to_json, "r").read())
-    return create_runbook(client, runbook_payload, name=name, description=description)
+    return create_runbook(client, runbook_payload, name=name,
+                          description=description, project_name=project)
 
 
-def create_runbook_from_dsl(client, runbook_file, name=None, description=None):
+def create_runbook_from_dsl(client, runbook_file, name=None, description=None, project=None):
 
     runbook_payload = compile_runbook(runbook_file)
     if runbook_payload is None:
@@ -85,7 +95,8 @@ def create_runbook_from_dsl(client, runbook_file, name=None, description=None):
         err = {"error": err_msg, "code": -1}
         return None, err
 
-    return create_runbook(client, runbook_payload, name=name, description=description)
+    return create_runbook(client, runbook_payload, name=name,
+                          description=description, project_name=project)
 
 
 @create.command("runbook")
@@ -98,20 +109,23 @@ def create_runbook_from_dsl(client, runbook_file, name=None, description=None):
     help="Path of Runbook file to upload",
 )
 @click.option("--name", default=None, help="Runbook name (Optional)")
+@click.option("--project", default=None, help="Project name (Optional)")
 @click.option("--description", default=None, help="Runbook description (Optional)")
 @click.pass_obj
-def create_runbook_command(obj, runbook_file, name, description):
+def create_runbook_command(obj, runbook_file, name, description, project):
     """Creates a runbook"""
 
     client = obj.get("client")
+    if not project:
+        project = "default"
 
     if runbook_file.endswith(".json"):
         res, err = create_runbook_from_json(
-            client, runbook_file, name=name, description=description
+            client, runbook_file, name=name, description=description, project=project
         )
     elif runbook_file.endswith(".py"):
         res, err = create_runbook_from_dsl(
-            client, runbook_file, name=name, description=description
+            client, runbook_file, name=name, description=description, project=project
         )
     else:
         click.echo("Unknown file format {}".format(runbook_file))
@@ -145,9 +159,10 @@ def update_runbook(client, runbook_payload, name=None, description=None):
     runbook = get_runbook(client, runbook_payload["spec"]["name"])
     uuid = runbook['metadata']['uuid']
     spec_version = runbook['metadata']['spec_version']
+    project_ref = runbook['metadata']['project_reference']
 
     return client.runbook.update_with_secrets(
-        uuid, runbook_name, runbook_desc, runbook_resources, spec_version
+        uuid, runbook_name, runbook_desc, runbook_resources, spec_version, project_ref
     )
 
 

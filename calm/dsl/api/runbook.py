@@ -49,7 +49,7 @@ class RunbookAPI(ResourceAPI):
         )
 
     @staticmethod
-    def _make_runbook_payload(runbook_name, runbook_desc, runbook_resources):
+    def _make_runbook_payload(runbook_name, runbook_desc, runbook_resources, project_ref=None, spec_version=None):
 
         runbook_payload = {
             "spec": {
@@ -57,13 +57,20 @@ class RunbookAPI(ResourceAPI):
                 "description": runbook_desc or "",
                 "resources": runbook_resources,
             },
-            "metadata": {"spec_version": 1, "name": runbook_name, "kind": "runbook"},
-            "api_version": "3.0",
+            "metadata": {
+                "spec_version": spec_version or 1,
+                "name": runbook_name,
+                "kind": "runbook",
+            },
+            "api_version": "3.0"
         }
+
+        if project_ref:
+            runbook_payload['metadata']['project_reference'] = project_ref
 
         return runbook_payload
 
-    def upload_with_secrets(self, runbook_name, runbook_desc, runbook_resources):
+    def upload_with_secrets(self, runbook_name, runbook_desc, runbook_resources, project_ref=None):
 
         # check if runbook with the given name already exists
         params = {"filter": "name=={};deleted==FALSE".format(runbook_name)}
@@ -86,7 +93,7 @@ class RunbookAPI(ResourceAPI):
 
         strip_secrets(runbook_resources, secret_map, secret_variables, object_lists=object_lists, objects=objects)
 
-        upload_payload = self._make_runbook_payload(runbook_name, runbook_desc, runbook_resources)
+        upload_payload = self._make_runbook_payload(runbook_name, runbook_desc, runbook_resources, project_ref=project_ref)
 
         res, err = self.upload(upload_payload)
 
@@ -133,7 +140,7 @@ class RunbookAPI(ResourceAPI):
                 self.POLL_RUN.format(uuid), verify=False, method=REQUEST.METHOD.GET
             )
 
-    def update_with_secrets(self, uuid, runbook_name, runbook_desc, runbook_resources, spec_version):
+    def update_with_secrets(self, uuid, runbook_name, runbook_desc, runbook_resources, spec_version, project_ref):
 
         secret_map = {}
         secret_variables = []
@@ -141,9 +148,8 @@ class RunbookAPI(ResourceAPI):
         objects = ["runbook"]
         strip_secrets(runbook_resources, secret_map, secret_variables, object_lists=object_lists, objects=objects)
 
-        update_payload = self._make_runbook_payload(runbook_name, runbook_desc, runbook_resources)
+        update_payload = self._make_runbook_payload(runbook_name, runbook_desc, runbook_resources, project_ref=project_ref, spec_version=spec_version)
         update_payload["metadata"]["uuid"] = uuid
-        update_payload["metadata"]["spec_version"] = spec_version
 
         res, err = self.update2(uuid, update_payload)
 
