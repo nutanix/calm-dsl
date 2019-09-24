@@ -39,7 +39,7 @@ def provider_spec(spec):
     return ProviderSpec(spec)
 
 
-def read_file(filename, depth=1):
+def read_spec(filename, depth=1):
     file_path = os.path.join(
         os.path.dirname(inspect.getfile(sys._getframe(depth))), filename
     )
@@ -51,5 +51,5 @@ def read_file(filename, depth=1):
 
 
 def read_provider_spec(filename):
-    spec = read_file(filename, depth=2)
+    spec = read_spec(filename, depth=2)
     return provider_spec(spec)
