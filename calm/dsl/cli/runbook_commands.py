@@ -3,7 +3,6 @@ import json
 import uuid
 
 from .main import get, describe, delete, run, create, update
-from .projects import get_project
 from .utils import Display
 from .runbooks import (
     get_runbook,
@@ -17,7 +16,9 @@ from .runbooks import (
 
 
 @get.command("runbooks")
-@click.option("--name", default=None, help="Search for runbooks by name")
+@click.option(
+    "--name", "-n", default=None, help="Runbook name (Optional)"
+)
 @click.option(
     "--filter", "filter_by", default=None, help="Filter runbooks by this string"
 )
@@ -36,7 +37,9 @@ def _get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
 
 
 @get.command("previous_runs")
-@click.option("--name", default=None, help="Search for previous runbook runs by name of runbook")
+@click.option(
+    "--name", "-n", default=None, help="Search for previous runbook runs by name of runbook (Optional)"
+)
 @click.option("--filter", "filter_by", default=None, help="Filter previous runbook runs by this string")
 @click.option("--limit", default=20, help="Number of results to return")
 @click.option("--offset", default=0, help="Offset results by the specified amount")
@@ -66,10 +69,22 @@ def create_runbook(client, runbook_payload, name=None, description=None, project
     runbook_resources = runbook_payload["spec"]["resources"]
     runbook_name = runbook_payload["spec"]["name"]
     runbook_desc = runbook_payload["spec"]["description"]
+
     if project_name:
-        project = get_project(client, project_name)
+        params = {"filter": "name=={}".format(project_name)}
+        res, err = client.project.list(params=params)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        res = res.json()
+        entities = res.get("entities", None)
+        if not entities:
+            return None, {"error": ">> No project found with name {} >>".format(name)}
+        if len(entities) != 1:
+            return None, {"error": "More than one project found - {}".format(entities)}
+        click.echo(">> Project {} found >>".format(project_name))
+
         project_ref = {
-            "uuid": project["metadata"]["uuid"],
+            "uuid": entities[0]["metadata"]["uuid"],
             "kind": "project"
         }
     else:
@@ -108,8 +123,12 @@ def create_runbook_from_dsl(client, runbook_file, name=None, description=None, p
     required=True,
     help="Path of Runbook file to upload",
 )
-@click.option("--name", default=None, help="Runbook name (Optional)")
-@click.option("--project", default=None, help="Project name (Optional)")
+@click.option(
+    "--name", "-n", default=None, help="Runbook name (Optional)"
+)
+@click.option(
+    "--project", "-p", default=None, help="Project name (Optional)"
+)
 @click.option("--description", default=None, help="Runbook description (Optional)")
 @click.pass_obj
 def create_runbook_command(obj, runbook_file, name, description, project):
@@ -137,7 +156,8 @@ def create_runbook_command(obj, runbook_file, name, description, project):
 
     runbook = res.json()
     runbook_state = runbook["status"]["state"]
-    click.echo(">> Runbook state: {}".format(runbook_state))
+    runbook_name = runbook["status"]["name"]
+    click.echo(">> Runbook {} created".format(runbook_name))
     assert runbook_state == "ACTIVE"
 
 
@@ -192,7 +212,9 @@ def update_runbook_from_dsl(client, runbook_file, name=None, description=None):
     required=True,
     help="Path of Runbook file to upload",
 )
-@click.option("--name", default=None, help="Runbook name (Optional)")
+@click.option(
+    "--name", "-n", default=None, help="Runbook name (Optional)"
+)
 @click.option("--description", default=None, help="Runbook description (Optional)")
 @click.pass_obj
 def update_runbook_command(obj, runbook_file, name, description):
@@ -218,7 +240,8 @@ def update_runbook_command(obj, runbook_file, name, description):
 
     runbook = res.json()
     runbook_state = runbook["status"]["state"]
-    click.echo(">> Runbook state: {}".format(runbook_state))
+    runbook_name = runbook["status"]["name"]
+    click.echo(">> Runbook {} updated".format(runbook_name))
     assert runbook_state == "ACTIVE"
 
 

@@ -196,7 +196,7 @@ def get_runbook(client, name, all=False):
         if len(entities) != 1:
             raise Exception("More than one runbook found - {}".format(entities))
 
-        click.echo(">> {} found >>".format(name))
+        click.echo(">> Runbook {} found >>".format(name))
         runbook = entities[0]
     else:
         raise Exception(">> No runbook found with name {} found >>".format(name))

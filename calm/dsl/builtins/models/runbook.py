@@ -56,7 +56,7 @@ class runbook(metaclass=DescriptorType):
 
         # Generate the entity names
         self.runbook_name = user_func.__name__
-        self.dag_name = str(uuid.uuid4())[:8] + "_dag"
+        self.dag_name = "Main"
         self.user_func = user_func
         self.__parsed__ = False
 
