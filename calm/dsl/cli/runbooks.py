@@ -65,7 +65,7 @@ def get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
 
         creation_time = int(metadata["creation_time"]) // 1000000
         last_update_time = int(metadata["last_update_time"]) // 1000000
-        project = metadata["project_reference"]["name"]
+        project = metadata.get("project_reference", {}).get("name", "")
 
         table.add_row(
             [
