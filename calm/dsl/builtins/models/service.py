@@ -51,11 +51,11 @@ class ServiceType(EntityType):
                     "description": "",
                     "critical": True,
                     "type": "system",
-                    "runbook": make_empty_runbook(action_name)
+                    "runbook": make_empty_runbook(action_name),
                 }
             )
             cdict["action_list"].append(user_action)
-        
+
         return cdict
 
 
