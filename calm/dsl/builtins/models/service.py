@@ -34,7 +34,7 @@ class ServiceType(EntityType):
                 target=cls.get_task_target(),
             )
             return runbook_create(
-                name="Runbook_for_Package_{}_{}".format(str(cls), action_name),
+                name="Runbook_for_Service_{}_{}".format(str(cls), action_name),
                 main_task_local_reference=user_dag.get_ref(),
                 tasks=[user_dag],
             )
