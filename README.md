@@ -36,7 +36,7 @@ Code formatted by [![Code style: black](https://img.shields.io/badge/code%20styl
  By default, the CLI looks for Calm setup information in `~/.calm/server/config.ini`.<br/>
  You can instruct it to look elsewhere by using the `--config` option to point to your config file:<br/>
  `calm --config=/home/my_dir/config.ini get bps`<br/>
- An example config is given at `server/config.ini`.
+ An example config is given at `config/server/config.ini`.
 
 #### Config overrides
  You can override any setup details by passing them in explicitly:<br/>
