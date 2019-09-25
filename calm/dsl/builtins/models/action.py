@@ -6,7 +6,7 @@ from .entity import EntityType, Entity
 from .descriptor import DescriptorType
 from .validator import PropertyValidator
 from .variable import VariableType, CalmVariable
-from .task import dag, create_call_rb, CalmTask
+from .task import dag, create_call_rb, CalmTask, TaskType
 from .runbook import runbook_create
 
 # Action - Since action, runbook and DAG task are heavily coupled together,
@@ -64,12 +64,12 @@ class GetCallNodes(ast.NodeVisitor):
         sub_node = node.func
         while not isinstance(sub_node, ast.Name):
             sub_node = sub_node.value
+        py_object = eval(compile(ast.Expression(sub_node), "", "eval"), self._globals)
         if (
-            eval(compile(ast.Expression(sub_node), "", "eval"), self._globals)
-            == CalmTask
+            py_object == CalmTask or isinstance(py_object, EntityType)
         ):
             task = eval(compile(ast.Expression(node), "", "eval"), self._globals)
-            if task is not None:
+            if task is not None and isinstance(task, TaskType):
                 if self.target is not None and not task.target_any_local_reference:
                     task.target_any_local_reference = self.target
                 if return_task:
