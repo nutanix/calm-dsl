@@ -38,7 +38,7 @@ def _get_secrets(obj, quiet):
 @delete.command("secret")
 @click.argument("name", nargs=1)
 @click.pass_obj
-def _delete_secrets(obj, name):
+def _delete_secret(obj, name):
     """Delete a secret"""
 
     delete_secret(name)

@@ -1,7 +1,7 @@
 import json
 import click
 
-from calm.dsl.cli.secrets import find_secret, create_secret
+from .secrets import find_secret, create_secret
 from .utils import highlight_text
 from .main import get, compile, describe, create, launch, delete
 from .bps import (
