@@ -347,7 +347,7 @@ class EntityType(EntityTypeBase):
         yaml.indent(mapping=2, sequence=4, offset=2)
         yaml.dump(cls, stream=stream)
 
-    def get_ref(cls):
+    def get_ref(cls, kind=None):
         types = EntityTypeBase.get_entity_types()
         ref = types.get("Ref")
         if not ref:
@@ -357,7 +357,7 @@ class EntityType(EntityTypeBase):
         if ref:
             attrs = {}
             attrs["name"] = str(cls)
-            attrs["kind"] = getattr(cls, "__kind__")
+            attrs["kind"] = kind or getattr(cls, "__kind__")
         return ref(name, bases, attrs)
 
     def get_dict(cls):

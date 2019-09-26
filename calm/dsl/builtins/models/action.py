@@ -216,7 +216,9 @@ class action(metaclass=DescriptorType):
             name=self.dag_name,
             child_tasks=tasks,
             edges=edges,
-            target=cls.get_ref() if getattr(cls, "__has_dag_target__", True) else None,
+            target=cls.get_task_target()
+            if getattr(cls, "__has_dag_target__", True)
+            else None,
         )
 
         # Modify the user runbook
