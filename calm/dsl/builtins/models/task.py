@@ -770,7 +770,9 @@ def input_task(timeout=None, name=None, inputs=[]):
                     type(task_input)
                 )
             )
-        kwargs["attrs"]["inputs"].append({"name": task_input.name, "input_type": task_input.input_type})
+        kwargs["attrs"]["inputs"].append({
+            "name": task_input.name, "input_type": task_input.input_type, "options": task_input.options
+        })
     return _task_create(**kwargs)
 
 

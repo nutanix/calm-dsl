@@ -1,4 +1,4 @@
-from asciimatics.widgets import Frame, Layout, Divider, Text, Button, DatePicker, TimePicker, Label
+from asciimatics.widgets import Frame, Layout, Divider, Text, Button, DatePicker, TimePicker, Label, DropdownList
 from asciimatics.scene import Scene
 from asciimatics.exceptions import StopApplication
 import time
@@ -33,7 +33,7 @@ class InputFrame(Frame):
                 layout.add_widget(
                     DatePicker(label=singleinput.get("name") + ":",
                                name=singleinput.get("name"),
-                               year_range=range(1999, 2100),
+                               year_range=range(1899, 2300),
                                on_change=self._on_change), 1)
             elif singleinput.get("input_type", SINGLE_INPUT.TYPE.TEXT) == SINGLE_INPUT.TYPE.TIME:
                 layout.add_widget(
@@ -41,6 +41,12 @@ class InputFrame(Frame):
                                name=singleinput.get("name"),
                                seconds=True,
                                on_change=self._on_change), 1)
+            elif singleinput.get("input_type", SINGLE_INPUT.TYPE.TEXT) in [SINGLE_INPUT.TYPE.SELECT, SINGLE_INPUT.TYPE.MULTIPLESELECT]:
+                layout.add_widget(
+                    DropdownList([(option, option) for option in singleinput.get("options")],
+                                 label=singleinput.get("name") + ":",
+                                 name=singleinput.get("name"),
+                                 on_change=self._on_change), 1)
             elif singleinput.get("input_type", SINGLE_INPUT.TYPE.TEXT) == SINGLE_INPUT.TYPE.PASSWORD:
                 layout.add_widget(
                     Text(label=singleinput.get("name") + ":",

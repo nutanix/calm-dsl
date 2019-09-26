@@ -19,6 +19,7 @@ class TaskInputValidator(PropertyValidator, openapi_type="task_input"):
 def _task_input(*args, **kwargs):
     name = kwargs.get("name", None)
     input_type = kwargs.get("input_type", None)
+    options = kwargs.get("options", [])
     if not name:
         if len(args) > 0 and isinstance(args[0], str):
             kwargs["name"] = args[0]
@@ -29,6 +30,10 @@ def _task_input(*args, **kwargs):
         kwargs["input_type"] = TASK_INPUT.TYPE.TEXT
     elif input_type not in TASK_INPUT.VALID_TYPES:
         raise ValueError("Input type is not valid. Supported input types are {}.".format(TASK_INPUT.VALID_TYPES))
+
+    if input_type == TASK_INPUT.TYPE.SELECT or input_type == TASK_INPUT.TYPE.SELECTMULTIPLE:
+        if len(options) == 0:
+            raise ValueError("There must be atleast one option for input of type {}.".format(input_type))
     bases = (Entity,)
     return TaskInputType(name, bases, kwargs)
 

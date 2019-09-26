@@ -8,7 +8,6 @@ class TASK_INPUT:
         DATE = "date"
         TIME = "time"
         DATETIME = "datetime"
-        FILE = "file"
 
     VALID_TYPES = [
         TYPE.TEXT,
@@ -19,5 +18,4 @@ class TASK_INPUT:
         TYPE.DATE,
         TYPE.TIME,
         TYPE.DATETIME,
-        TYPE.FILE,
     ]

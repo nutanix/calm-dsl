@@ -103,7 +103,6 @@ class SINGLE_INPUT:
         DATE = "date"
         TIME = "time"
         DATETIME = "datetime"
-        FILE = "file"
 
     VALID_TYPES = [
         TYPE.TEXT,
@@ -114,7 +113,6 @@ class SINGLE_INPUT:
         TYPE.DATE,
         TYPE.TIME,
         TYPE.DATETIME,
-        TYPE.FILE,
     ]
 
 
