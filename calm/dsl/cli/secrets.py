@@ -28,10 +28,6 @@ def get_secrets(quiet):
         click.echo(highlight_text("No secrets found !!!\n"))
         return
 
-    if not avl_secrets:
-        click.echo(highlight_text("No secrets found !!!\n"))
-        return
-
     if quiet:
         for secret in avl_secrets:
             click.echo(highlight_text(secret["name"]))
