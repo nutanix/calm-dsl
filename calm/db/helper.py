@@ -68,8 +68,8 @@ class Secret:
         if not cls.db.table_exists((cls.secret_table.__name__).lower()):
             cls.db.create_tables([cls.secret_table])
 
-        if not cls.db.table_exists((cls.secret_table.__name__).lower()):
-            cls.db.create_tables([cls.secret_table])
+        if not cls.db.table_exists((cls.data_table.__name__).lower()):
+            cls.db.create_tables([cls.data_table])
 
     @classmethod
     def close(cls):
