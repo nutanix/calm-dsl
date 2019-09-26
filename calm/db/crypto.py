@@ -3,30 +3,38 @@ import scrypt
 import os
 
 
-def encrypt_AES_GCM(msg, password):
-
-    kdf_salt = os.urandom(16)
-    msg = msg.encode()
-    secret_key = generate_key(kdf_salt, password)
-    aes_cipher = AES.new(secret_key, AES.MODE_GCM)
-    ciphertext, auth_tag = aes_cipher.encrypt_and_digest(msg)
-    iv = aes_cipher.nonce
-
-    return (kdf_salt, ciphertext, iv, auth_tag)
+# Crypto class for encryption/decryption
 
 
-def decrypt_AES_GCM(encryptedMsg, password):
+class Crypto:
 
-    (kdf_salt, ciphertext, iv, auth_tag) = encryptedMsg
-    secret_key = scrypt.hash(password, kdf_salt, N=16384, r=8, p=1, buflen=32)
-    aes_cipher = AES.new(secret_key, AES.MODE_GCM, iv)
-    plaintext = aes_cipher.decrypt_and_verify(ciphertext, auth_tag)
+    @staticmethod
+    def encrypt_AES_GCM(msg, password):
+        """Used for encryption of msg"""
 
-    return plaintext
+        kdf_salt = os.urandom(16)
+        msg = msg.encode()
+        secret_key = Crypto.generate_key(kdf_salt, password)
+        aes_cipher = AES.new(secret_key, AES.MODE_GCM)
+        ciphertext, auth_tag = aes_cipher.encrypt_and_digest(msg)
+        iv = aes_cipher.nonce
 
+        return (kdf_salt, ciphertext, iv, auth_tag)
 
-def generate_key(kdf_salt, password, iterations=16384, r=8, p=1, buflen=32):
+    @staticmethod
+    def decrypt_AES_GCM(encryptedMsg, password):
+        """Used for decryption of msg"""
 
-    secret_key = scrypt.hash(password, kdf_salt, N=iterations, r=r, p=p, buflen=buflen)
+        (kdf_salt, ciphertext, iv, auth_tag) = encryptedMsg
+        secret_key = scrypt.hash(password, kdf_salt, N=16384, r=8, p=1, buflen=32)
+        aes_cipher = AES.new(secret_key, AES.MODE_GCM, iv)
+        plaintext = aes_cipher.decrypt_and_verify(ciphertext, auth_tag)
 
-    return secret_key
+        return plaintext
+
+    @staticmethod
+    def generate_key(kdf_salt, password, iterations=16384, r=8, p=1, buflen=32):
+        """Generates the key that is used for encryption/decryption"""
+
+        secret_key = scrypt.hash(password, kdf_salt, N=iterations, r=r, p=p, buflen=buflen)
+        return secret_key

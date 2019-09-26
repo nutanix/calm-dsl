@@ -4,7 +4,7 @@ import datetime
 from prettytable import PrettyTable
 
 from .utils import highlight_text
-from calm.dsl.builtins import _create_secret, _delete_secret, _update_secret, list_secrets, _find_secret
+from calm.dsl.builtins import Secret
 
 
 def create_secret(name, value, pass_phrase=""):
@@ -15,14 +15,14 @@ def create_secret(name, value, pass_phrase=""):
         click.echo(highlight_text("Secret Already present !!!\nTry to update secret\n"))
         return
 
-    _create_secret(name, value, pass_phrase)
+    Secret.create(name, value, pass_phrase)
     click.echo(highlight_text("\nSecret created !!! \n"))
 
 
 def get_secrets(quiet):
     """List the secrets"""
 
-    avl_secrets = list_secrets()
+    avl_secrets = Secret.list()
 
     if not avl_secrets:
         click.echo(highlight_text("No secrets found !!!\n"))
@@ -64,7 +64,7 @@ def delete_secret(name):
         click.echo(highlight_text("\nSecret not present !!!\n"))
         return
 
-    _delete_secret(name)
+    Secret.delete(name)
     click.echo(highlight_text("\nSecret deleted !!!\n"))
 
 
@@ -76,20 +76,21 @@ def update_secret(name, value, pass_phrase):
         click.echo(highlight_text("\nSecret not present !!!\n"))
         return
 
-    _update_secret(name, value, pass_phrase)
+    Secret.update(name, value, pass_phrase)
     click.echo(highlight_text("\nSecret updated !!!\n"))
 
 
 def find_secret(name, pass_phrase=""):
     """ Gives you the value stored correponding to secret"""
 
-    secret_val = _find_secret(name, pass_phrase)
+    secret_val = Secret.find(name, pass_phrase)
     return secret_val
 
 
 def get_secrets_names():
+    """ To find the names stored in db"""
 
-    secrets = list_secrets()
+    secrets = Secret.list()
     secret_names = []
     for secret in secrets:
         secret_names.append(secret["name"])
