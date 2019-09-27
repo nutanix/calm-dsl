@@ -56,7 +56,7 @@ class SubstrateType(EntityType):
                 readiness_probe = {
                     "address": "@@{public_ip_address}@@",
                     "disable_readiness_probe": False,
-                    "delay_secs": "0",
+                    "delay_secs": "60",
                     "connection_type": "SSH",
                     "connection_port": 22,
                 }

@@ -1,6 +1,9 @@
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 
+from .task import dag
+from .action import runbook_create, _action_create
+
 
 # Service
 
@@ -20,6 +23,40 @@ class ServiceType(EntityType):
 
     def get_task_target(cls):
         return cls.get_ref()
+
+    def compile(cls):
+
+        cdict = super().compile()
+
+        def make_empty_runbook(action_name):
+            user_dag = dag(
+                name="DAG_Task_for_Service_{}_{}".format(str(cls), action_name),
+                target=cls.get_task_target(),
+            )
+            return runbook_create(
+                name="Runbook_for_Service_{}_{}".format(str(cls), action_name),
+                main_task_local_reference=user_dag.get_ref(),
+                tasks=[user_dag],
+            )
+
+        compulsory_actions = list(cls.ALLOWED_SYSTEM_ACTIONS.values())
+        for action in cdict["action_list"]:
+            if action.__name__ in compulsory_actions:
+                compulsory_actions.remove(action.__name__)
+
+        for action_name in compulsory_actions:
+            user_action = _action_create(
+                **{
+                    "name": action_name,
+                    "description": "",
+                    "critical": True,
+                    "type": "system",
+                    "runbook": make_empty_runbook(action_name),
+                }
+            )
+            cdict["action_list"].append(user_action)
+
+        return cdict
 
 
 class ServiceValidator(PropertyValidator, openapi_type="app_service"):
