@@ -1,5 +1,5 @@
 import click
-import json
+from ruamel import yaml
 
 from calm.dsl.providers import get_provider_interface
 
@@ -29,4 +29,4 @@ def create_spec():
     spec = {"type": "PROVISION_EXISTING_MACHINE", "address": addr}
 
     click.secho("\nCreate spec for your Existing Machine VM:\n", underline=True)
-    click.echo(highlight_text(json.dumps(spec, sort_keys=True, indent=4)))
+    click.echo(highlight_text(yaml.dump(spec)))
