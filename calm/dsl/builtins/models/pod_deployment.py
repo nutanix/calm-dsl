@@ -49,7 +49,7 @@ class PODDeploymentType(DeploymentType):
             img = container.pop("image", "")
             img_pull_policy = container.pop("imagePullPolicy", None)
 
-            container_name = container["name"]
+            container_name = container["name"].replace("-", "")
 
             s = service(
                 name="{}_{}_{}".format(cls.__name__, container_name, "Service"),
