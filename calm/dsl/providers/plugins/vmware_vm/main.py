@@ -1,5 +1,5 @@
 import click
-import json
+from ruamel import yaml
 
 from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.providers import get_provider_interface
@@ -1179,7 +1179,7 @@ def create_spec(client):
 
     VCenterVmProvider.validate_spec(spec)
     click.secho("\nCreate spec for your VMW VM:\n", underline=True)
-    click.echo(highlight_text(json.dumps(spec, sort_keys=True, indent=4)))
+    click.echo(highlight_text(yaml.dump(spec)))
 
 
 def _windows_customization(Obj, account_id):
