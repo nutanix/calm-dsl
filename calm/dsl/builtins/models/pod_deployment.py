@@ -34,6 +34,10 @@ class PODDeploymentType(DeploymentType):
         deployment_definition_list = []
 
         pub_service_name = cls.__name__ + "Published_Service"
+        if "apiVersion" in cls.service_spec:
+            del cls.service_spec["apiVersion"]
+        if "kind" in cls.service_spec:
+            del cls.service_spec["kind"]
         ps_options = {"type": "PROVISION_K8S_SERVICE"}
         ps_options = {**ps_options, **cls.service_spec}
 
@@ -85,6 +89,10 @@ class PODDeploymentType(DeploymentType):
         substrate_definition_list.append(sub)
 
         dep_options = {"type": "PROVISION_K8S_DEPLOYMENT"}
+        if "apiVersion" in cls.deployment_spec:
+            del cls.deployment_spec["apiVersion"]
+        if "kind" in cls.deployment_spec:
+            del cls.deployment_spec["kind"]
         dep_options = {**dep_options, **(cls.deployment_spec)}
         d = deployment(
             name=cls.__name__,  # Dependecies depends on this name
