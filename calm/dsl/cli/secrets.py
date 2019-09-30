@@ -34,22 +34,19 @@ def get_secrets(quiet):
         return
 
     table = PrettyTable()
-    table.field_names = [
-        "NAME",
-        "CREATED ON",
-        "LAST UPDATED",
-        "UUID",
-    ]
+    table.field_names = ["NAME", "CREATED ON", "LAST UPDATED", "UUID"]
 
     for secret in avl_secrets:
         creation_time = (secret["creation_time"]).strftime("%A, %d. %B %Y %I:%M%p")
-        last_update_time = arrow.get(secret["last_update_time"].astimezone(datetime.timezone.utc)).humanize()
+        last_update_time = arrow.get(
+            secret["last_update_time"].astimezone(datetime.timezone.utc)
+        ).humanize()
         table.add_row(
             [
                 highlight_text(secret["name"]),
                 highlight_text(creation_time),
                 highlight_text(last_update_time),
-                highlight_text(secret["uuid"])
+                highlight_text(secret["uuid"]),
             ]
         )
 
@@ -68,7 +65,7 @@ def delete_secret(name):
     click.echo(highlight_text("\nSecret deleted !!!\n"))
 
 
-def update_secret(name, value, pass_phrase):
+def update_secret(name, value, pass_phrase=""):
     """Updates the secret"""
 
     secrets = get_secrets_names()

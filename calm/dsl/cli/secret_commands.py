@@ -7,7 +7,13 @@ from .secrets import create_secret, get_secrets, delete_secret, update_secret
 # TODO Apply --type = local/server parameter
 @create.command("secret")
 @click.argument("name", nargs=1)
-@click.option("--value", prompt=True, hide_input=True, confirmation_prompt=True, help="Value for secret")
+@click.option(
+    "--value",
+    prompt=True,
+    hide_input=True,
+    confirmation_prompt=True,
+    help="Value for secret",
+)
 @click.pass_obj
 def _create_secret(obj, name, value):
     """Creates the secret
@@ -16,7 +22,9 @@ def _create_secret(obj, name, value):
     """
 
     choice = click.prompt(
-        "\n{}(y/n)".format(highlight_text("Want any pass_phrase associated with secret")),
+        "\n{}(y/n)".format(
+            highlight_text("Want any pass_phrase associated with secret")
+        ),
         default="n",
     )
 
@@ -55,7 +63,9 @@ def _update_secret(obj, name, value):
     """
 
     choice = click.prompt(
-        "\n{}(y/n)".format(highlight_text("Want any pass_phrase associated with secret")),
+        "\n{}(y/n)".format(
+            highlight_text("Want any pass_phrase associated with secret")
+        ),
         default="n",
     )
 

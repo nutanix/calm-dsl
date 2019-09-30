@@ -1,5 +1,3 @@
 from .secret import Secret
 
-__all__ = [
-    "Secret"
-]
+__all__ = ["Secret"]
