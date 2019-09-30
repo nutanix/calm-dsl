@@ -16,7 +16,7 @@ db_location = os.path.abspath(db_location)
 
 # Creating a database file if not exists
 if not os.path.exists(db_location):
-    with open(db_location, 'w'):
+    with open(db_location, "w"):
         pass
 
 # Initialization of database
@@ -39,7 +39,7 @@ class SecretTable(BaseModel):
             "name": self.name,
             "uuid": self.uuid,
             "creation_time": self.creation_time,
-            "last_update_time": self.last_update_time
+            "last_update_time": self.last_update_time,
         }
 
 

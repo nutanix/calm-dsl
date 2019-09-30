@@ -7,7 +7,6 @@ import os
 
 
 class Crypto:
-
     @staticmethod
     def encrypt_AES_GCM(msg, password):
         """Used for encryption of msg"""
@@ -26,7 +25,7 @@ class Crypto:
         """Used for decryption of msg"""
 
         (kdf_salt, ciphertext, iv, auth_tag) = encryptedMsg
-        secret_key = scrypt.hash(password, kdf_salt, N=16384, r=8, p=1, buflen=32)
+        secret_key = Crypto.generate_key(kdf_salt, password)
         aes_cipher = AES.new(secret_key, AES.MODE_GCM, iv)
         plaintext = aes_cipher.decrypt_and_verify(ciphertext, auth_tag)
 
@@ -36,5 +35,7 @@ class Crypto:
     def generate_key(kdf_salt, password, iterations=16384, r=8, p=1, buflen=32):
         """Generates the key that is used for encryption/decryption"""
 
-        secret_key = scrypt.hash(password, kdf_salt, N=iterations, r=r, p=p, buflen=buflen)
+        secret_key = scrypt.hash(
+            password, kdf_salt, N=iterations, r=r, p=p, buflen=buflen
+        )
         return secret_key

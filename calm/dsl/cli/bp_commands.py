@@ -68,14 +68,15 @@ def create_blueprint(client, bp_payload, name=None, description=None, categories
 
     credential_list = bp_payload["spec"]["resources"]["credential_definition_list"]
     for cred in credential_list:
-        if cred["type"] == "SECRET":   # Finding if secret present
+        if cred["type"].find("_") != -1:
+            (cred_type, pass_phrase) = cred["type"].split("_")
             secret = cred["secret"]["value"]
 
             try:
-                value = find_secret(secret)
+                value = find_secret(secret, pass_phrase)
 
             except Exception:
-                click.echo("\nNo secret corresponding to {} found !!!\n". format(secret))
+                click.echo("\nNo secret corresponding to {} found !!!\n".format(secret))
                 value = click.prompt("Please enter its value", hide_input=True)
 
                 choice = click.prompt(
@@ -86,7 +87,7 @@ def create_blueprint(client, bp_payload, name=None, description=None, categories
                     create_secret(secret, value)
 
             cred["secret"]["value"] = value
-            cred["type"] = "PASSWORD"   # Restore it to PASSWORD
+            cred["type"] = cred_type  # Restore it to valid type
 
     if name:
         bp_payload["spec"]["name"] = name
