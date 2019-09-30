@@ -22,7 +22,9 @@ def _create_secret(obj, name, value):
     """
 
     choice = click.prompt(
-        "\n{}(y/n)".format(highlight_text("Want any pass_phrase associated with secret")),
+        "\n{}(y/n)".format(
+            highlight_text("Want any pass_phrase associated with secret")
+        ),
         default="n",
     )
 
@@ -61,7 +63,9 @@ def _update_secret(obj, name, value):
     """
 
     choice = click.prompt(
-        "\n{}(y/n)".format(highlight_text("Want any pass_phrase associated with secret")),
+        "\n{}(y/n)".format(
+            highlight_text("Want any pass_phrase associated with secret")
+        ),
         default="n",
     )
 

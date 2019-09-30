@@ -72,7 +72,7 @@ def create_blueprint(client, bp_payload, name=None, description=None, categories
             secret = cred["secret"].pop("secret")
 
             try:
-                value = find_secret(secret)
+                value = find_secret(secret, pass_phrase)
 
             except Exception:
                 click.echo("\nNo secret corresponding to {} found !!!\n".format(secret))

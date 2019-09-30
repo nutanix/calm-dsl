@@ -42,7 +42,7 @@ class Secret:
     def delete(cls, name):
         """Deletes the secret from db"""
 
-        with Database() as db:      # noqa
+        with Database() as db:  # noqa
             secret = cls.get_instance(name)
             for secret_data in secret.data:
                 secret_data.delete_instance()  # deleting its data

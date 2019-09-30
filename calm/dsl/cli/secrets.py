@@ -38,13 +38,15 @@ def get_secrets(quiet):
 
     for secret in avl_secrets:
         creation_time = (secret["creation_time"]).strftime("%A, %d. %B %Y %I:%M%p")
-        last_update_time = arrow.get(secret["last_update_time"].astimezone(datetime.timezone.utc)).humanize()
+        last_update_time = arrow.get(
+            secret["last_update_time"].astimezone(datetime.timezone.utc)
+        ).humanize()
         table.add_row(
             [
                 highlight_text(secret["name"]),
                 highlight_text(creation_time),
                 highlight_text(last_update_time),
-                highlight_text(secret["uuid"])
+                highlight_text(secret["uuid"]),
             ]
         )
 
