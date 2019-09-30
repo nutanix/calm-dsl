@@ -46,7 +46,7 @@ class Secret:
     def delete(cls, name):
         """Deletes the secret from db"""
 
-        with Database() as db:      # noqa
+        with Database() as db:  # noqa
             secret = cls.get_instance(name)
             for secret_data in secret.data:
                 secret_data.delete_instance()  # deleting its data
@@ -59,7 +59,7 @@ class Secret:
 
         with Database() as db:
             secret = cls.get_instance(name)
-            secret_data = secret.data[0]    # using backref
+            secret_data = secret.data[0]  # using backref
 
             if not pass_phrase:
                 pass_phrase = secret_data.pass_phrase
@@ -79,9 +79,9 @@ class Secret:
 
             query.execute()
 
-            query = db.secret_table.update(last_update_time=datetime.datetime.now()).where(
-                db.secret_table.name == name
-            )
+            query = db.secret_table.update(
+                last_update_time=datetime.datetime.now()
+            ).where(db.secret_table.name == name)
 
             query.execute()
 
@@ -101,7 +101,7 @@ class Secret:
     def find(cls, name, pass_phrase=None):
         """Find the value of secret"""
 
-        with Database() as db:      # noqa
+        with Database() as db:  # noqa
             secret = cls.get_instance(name)
             secret_data = secret.data[0]  # using backref
 
