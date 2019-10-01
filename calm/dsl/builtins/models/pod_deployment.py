@@ -7,6 +7,8 @@ from .package import package
 from .substrate import substrate
 from .ref import ref
 from .deployment import deployment
+from .action import action
+from inspect import signature
 
 # PODDeployment
 
@@ -44,6 +46,21 @@ class PODDeploymentType(DeploymentType):
             "containers", None
         )
 
+        container_action_map = {}
+
+        for key, value in cls.__dict__.items():
+            if (isinstance(value, action)):
+                sig = signature(value.user_func)
+                sig_paramter = sig.parameters.get('container_name', None)
+                if not sig_paramter:
+                    raise Exception("container name not supplied action {}". format(key))
+
+                container_name = sig_paramter.default
+                if container_action_map.get(container_name, None):
+                    container_action_map[container_name].append((key, value))
+                else:
+                    container_action_map[container_name] = [(key, value)]
+
         package_references = []
         for ind, container in enumerate(containers_list):
             img = container.pop("image", "")
@@ -55,6 +72,11 @@ class PODDeploymentType(DeploymentType):
                 name="{}_{}_{}".format(cls.__name__, container_name, "Service",),
                 container_spec=container,
             )
+
+            if container_action_map.get(container_name, None):
+                for service_action in container_action_map[container_name]:
+                    (name, func) = service_action
+                    setattr(s, name, func)
 
             if img_pull_policy:
                 image_spec = {"image": img, "imagePullPolicy": img_pull_policy}

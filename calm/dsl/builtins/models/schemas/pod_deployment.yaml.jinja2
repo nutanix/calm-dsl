@@ -7,6 +7,10 @@ properties:
   type:
     type: string
     default: K8S_DEPLOYMENT
+  containers:
+    type: array
+    items:
+      $ref: '#/components/schemas/Service'
   deployment_spec:
     x-calm-dsl-type: dict
     type: object
@@ -18,6 +22,11 @@ properties:
     type: array
     items:
       $ref: '#/components/schemas/Ref'
+  action_list:
+    x-calm-dsl-display-name: actions
+    type: array
+    items:
+      $ref: '#/components/schemas/Action'
 
 {%- endmacro %}
 
