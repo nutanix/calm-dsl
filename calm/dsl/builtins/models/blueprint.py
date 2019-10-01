@@ -24,9 +24,6 @@ class BlueprintType(EntityType):
                         normal_deployments.extend(
                             pod_dict["deployment_definition_list"]
                         )
-                        cdict["service_definition_list"].extend(
-                            pod_dict["service_definition_list"]
-                        )
                         cdict["package_definition_list"].extend(
                             pod_dict["package_definition_list"]
                         )

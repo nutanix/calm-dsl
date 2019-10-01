@@ -48,6 +48,11 @@ class PODDeploymentType(DeploymentType):
             "containers", None
         )
 
+        if len(containers_list) != len(cls.containers):
+            raise Exception(
+                "No. of container services does not match k8s deployment spec"
+            )
+
         package_references = []
         for ind, container in enumerate(containers_list):
             img = container.pop("image", "")
@@ -55,10 +60,8 @@ class PODDeploymentType(DeploymentType):
 
             container_name = container["name"].replace("-", "")
 
-            s = service(
-                name="{}_{}_{}".format(cls.__name__, container_name, "Service"),
-                container_spec=container,
-            )
+            s = cls.containers[ind]
+            s.container_spec = container
 
             if img_pull_policy:
                 image_spec = {"image": img, "imagePullPolicy": img_pull_policy}

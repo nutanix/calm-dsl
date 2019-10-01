@@ -65,9 +65,7 @@ class GetCallNodes(ast.NodeVisitor):
         while not isinstance(sub_node, ast.Name):
             sub_node = sub_node.value
         py_object = eval(compile(ast.Expression(sub_node), "", "eval"), self._globals)
-        if (
-            py_object == CalmTask or isinstance(py_object, EntityType)
-        ):
+        if py_object == CalmTask or isinstance(py_object, EntityType):
             task = eval(compile(ast.Expression(node), "", "eval"), self._globals)
             if task is not None and isinstance(task, TaskType):
                 if self.target is not None and not task.target_any_local_reference:
