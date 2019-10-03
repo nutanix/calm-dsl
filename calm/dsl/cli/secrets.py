@@ -7,7 +7,7 @@ from .utils import highlight_text
 from calm.dsl.builtins import Secret
 
 
-def create_secret(name, value, pass_phrase=""):
+def create_secret(name, value):
     """Creates the secret"""
 
     secrets = get_secrets_names()
@@ -15,7 +15,7 @@ def create_secret(name, value, pass_phrase=""):
         click.echo(highlight_text("Secret Already present !!!\nTry to update secret\n"))
         return
 
-    Secret.create(name, value, pass_phrase)
+    Secret.create(name, value)
     click.echo(highlight_text("\nSecret created !!! \n"))
 
 
@@ -65,7 +65,7 @@ def delete_secret(name):
     click.echo(highlight_text("\nSecret deleted !!!\n"))
 
 
-def update_secret(name, value, pass_phrase=""):
+def update_secret(name, value):
     """Updates the secret"""
 
     secrets = get_secrets_names()
@@ -73,7 +73,7 @@ def update_secret(name, value, pass_phrase=""):
         click.echo(highlight_text("\nSecret not present !!!\n"))
         return
 
-    Secret.update(name, value, pass_phrase)
+    Secret.update(name, value)
     click.echo(highlight_text("\nSecret updated !!!\n"))
 
 

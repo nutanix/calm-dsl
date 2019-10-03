@@ -1,8 +1,6 @@
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 
-import re
-
 
 # Credential
 
@@ -42,27 +40,14 @@ def basic_cred(username, password, name="default", default=False):
 
 
 def secret_cred(
-    username,
-    name="default",
-    secret="default",
-    pass_phrase="",
-    type="PASSWORD",
-    default=False,
+    username, name="default", secret="default", type="PASSWORD", default=False
 ):
 
-    secret = {"attrs": {"is_secret_modified": True}, "value": secret}
-
     # This secret value will be replaced when user is creatring a blueprint
-    # Adding "_" as separtor between type and passphrase for identification of secret cred
-    # ex: type = "PASSWORD_dslphrase" or "KEY_phrase" or ("KEY_" when phrase = "")
-
-    if not re.match("^[a-zA-Z0-9]*$", pass_phrase):
-        raise Exception("Passphrase must be aplhanumeric string only")
-
-    type = "{}_{}".format(type, pass_phrase)
+    secret = {"attrs": {"is_secret_modified": True}, "value": "", "secret": secret}
 
     kwargs = {}
-    kwargs["type"] = type  # Will replace to valid type at runtime
+    kwargs["type"] = type
     kwargs["username"] = username
     kwargs["secret"] = secret
     kwargs["name"] = name
