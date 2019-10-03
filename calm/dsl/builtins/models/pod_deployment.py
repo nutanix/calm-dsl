@@ -84,6 +84,11 @@ class PODDeploymentType(DeploymentType):
                     (name, func) = service_action
                     setattr(s, name, func)
 
+            if container_action_map.get(container_name, None):
+                for service_action in container_action_map[container_name]:
+                    (name, func) = service_action
+                    setattr(s, name, func)
+
             if img_pull_policy:
                 image_spec = {"image": img, "imagePullPolicy": img_pull_policy}
 
