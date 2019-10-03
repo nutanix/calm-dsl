@@ -119,7 +119,11 @@ class PODDeploymentType(DeploymentType):
 
         # If not existing container's name is provided in action, raise an Exception\
         if container_action_map:
-            raise Exception("Unknown containers : {} provided in action". format(list(container_action_map.keys())))
+            raise Exception(
+                "Unknown containers : {} provided in action".format(
+                    list(container_action_map.keys())
+                )
+            )
 
         sub_provider_spec = cls.deployment_spec["spec"].pop("template", {})
         sub_provider_spec = {**({"type": "PROVISION_K8S_POD"}), **sub_provider_spec}

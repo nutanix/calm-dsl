@@ -11,7 +11,9 @@ class SimplePODDeploymentType(PODDeploymentType):
         return super().extract_deployment(is_simple_deployment=True)
 
 
-class SimplePODDeploymentValidator(PropertyValidator, openapi_type="app_simple_pod_deployment"):
+class SimplePODDeploymentValidator(
+    PropertyValidator, openapi_type="app_simple_pod_deployment"
+):
     __default__ = None
     __kind__ = SimplePODDeploymentType
 

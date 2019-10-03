@@ -33,7 +33,7 @@ class SimpleBlueprintType(EntityType):
                     name=dep.__name__,
                     service_spec=dep.service_spec,
                     deployment_spec=dep.deployment_spec,
-                    dependencies=dep.dependencies
+                    dependencies=dep.dependencies,
                 )
 
                 pod_deployments.append(pod_dep)
