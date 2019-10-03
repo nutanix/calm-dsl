@@ -9,16 +9,12 @@ class Secret:
     """Secret class implementation"""
 
     @classmethod
-    def create(cls, name, value, pass_phrase):
+    def create(cls, name, value):
         """Stores the secret in db"""
 
         with Database() as db:
 
-            if not pass_phrase:
-                pass_phrase = b"dslp4ssw0rd"  # TODO Replace by random
-
-            else:
-                pass_phrase = pass_phrase.encode()
+            pass_phrase = b"dslp4ssw0rd"
 
             encrypted_msg = Crypto.encrypt_AES_GCM(value, pass_phrase)
             (kdf_salt, ciphertext, iv, auth_tag) = encrypted_msg
@@ -49,22 +45,19 @@ class Secret:
         with Database() as db:  # noqa
             secret = cls.get_instance(name)
             for secret_data in secret.data:
-                secret_data.delete_instance()  # deleting its data
+                secret_data.delete_instance()  # deleting cryptography data
 
             secret.delete_instance()
 
     @classmethod
-    def update(cls, name, value, pass_phrase):
+    def update(cls, name, value):
         """Updates the secret in Database"""
 
         with Database() as db:
             secret = cls.get_instance(name)
             secret_data = secret.data[0]  # using backref
 
-            if not pass_phrase:
-                pass_phrase = secret_data.pass_phrase
-            else:
-                pass_phrase = pass_phrase.encode()
+            pass_phrase = secret_data.pass_phrase
 
             encrypted_msg = Crypto.encrypt_AES_GCM(value, pass_phrase)
             (kdf_salt, ciphertext, iv, auth_tag) = encrypted_msg
@@ -106,7 +99,7 @@ class Secret:
             secret_data = secret.data[0]  # using backref
 
             if not pass_phrase:
-                pass_phrase = secret_data.pass_phrase  # TODO Replace by random
+                pass_phrase = secret_data.pass_phrase
             else:
                 pass_phrase = pass_phrase.encode()
 

@@ -1,7 +1,6 @@
 import click
 
 from .main import get, create, update, delete
-from .utils import highlight_text
 from .secrets import create_secret, get_secrets, delete_secret, update_secret
 
 # TODO Apply --type = local/server parameter
@@ -21,15 +20,7 @@ def _create_secret(obj, name, value):
     NAME is the alias for your secret
     """
 
-    choice = click.prompt(
-        "\n{}(y/n)".format(
-            highlight_text("Want any pass_phrase associated with secret")
-        ),
-        default="n",
-    )
-
-    pass_phrase = click.prompt("Passphrase") if choice[0] == "y" else None
-    create_secret(name, value, pass_phrase)
+    create_secret(name, value)
 
 
 @get.command("secrets")
@@ -62,12 +53,4 @@ def _update_secret(obj, name, value):
     NAME is the alias for your secret
     """
 
-    choice = click.prompt(
-        "\n{}(y/n)".format(
-            highlight_text("Want any pass_phrase associated with secret")
-        ),
-        default="n",
-    )
-
-    pass_phrase = click.prompt("Passphrase") if choice[0] == "y" else None
-    update_secret(name, value, pass_phrase)
+    update_secret(name, value)
