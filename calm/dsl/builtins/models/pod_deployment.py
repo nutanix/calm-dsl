@@ -15,7 +15,7 @@ from inspect import signature
 # Note parent class of PODDeploymentType is DeploymentType
 # As deployments in profile class need to be of same type
 # For macros of container, Use:
-#   "{}_{}_{}".format(dep.name, container_name, "Service"),
+#   "{}_{}_{}".format(dep.name, container_name, "PublishedService"),
 
 
 class PODDeploymentType(DeploymentType):
@@ -26,7 +26,7 @@ class PODDeploymentType(DeploymentType):
         """Note: app_blueprint_deployment kind to be used for pod deployment"""
         return super().get_ref(kind="app_blueprint_deployment")
 
-    def extract_deployment(cls):
+    def extract_deployment(cls, is_simple_deployment=False):
         """ extract service, packages etc. from service and deployment spec"""
 
         service_definition_list = []
@@ -50,18 +50,25 @@ class PODDeploymentType(DeploymentType):
             "containers", None
         )
 
-        if len(containers_list) != len(cls.containers):
-            raise Exception(
-                "No. of container services does not match k8s deployment spec"
-            )
+        if not is_simple_deployment:
+            # In simple deployment there will be no explicit contianers
+            if len(containers_list) != len(cls.containers):
+                raise Exception(
+                    "No. of container services does not match k8s deployment spec"
+                )
+
         container_action_map = {}
 
         for key, value in cls.__dict__.items():
-            if (isinstance(value, action)):
+            if isinstance(value, action):
                 sig = signature(value.user_func)
-                sig_paramter = sig.parameters.get('container_name', None)
+                sig_paramter = sig.parameters.get("container_name", None)
                 if not sig_paramter:
-                    raise Exception("container name not supplied action {}". format(key))
+                    raise Exception(
+                        "container name not supplied action '{}' in deployment '{}'".format(
+                            key, cls.__name__
+                        )
+                    )
 
                 container_name = sig_paramter.default
                 if container_action_map.get(container_name, None):
@@ -76,18 +83,21 @@ class PODDeploymentType(DeploymentType):
 
             container_name = container["name"].replace("-", "")
 
-            s = cls.containers[ind]
-            s.container_spec = container
+            if not is_simple_deployment:
+                s = cls.containers[ind]
+                s.container_spec = container
 
-            if container_action_map.get(container_name, None):
-                for service_action in container_action_map[container_name]:
-                    (name, func) = service_action
-                    setattr(s, name, func)
+            else:
+                s = service(
+                    name="{}_{}_{}".format(cls.__name__, container_name, "Service"),
+                    container_spec=container,
+                )
 
-            if container_action_map.get(container_name, None):
-                for service_action in container_action_map[container_name]:
-                    (name, func) = service_action
-                    setattr(s, name, func)
+                if container_action_map.get(container_name, None):
+                    for service_action in container_action_map[container_name]:
+                        (name, func) = service_action
+                        setattr(s, name, func)
+                    container_action_map.pop(container_name, None)
 
             if img_pull_policy:
                 image_spec = {"image": img, "imagePullPolicy": img_pull_policy}
@@ -106,6 +116,10 @@ class PODDeploymentType(DeploymentType):
             # Storing services and packages to serivce list
             service_definition_list.append(s)
             package_definition_list.append(p)
+
+        # If not existing container's name is provided in action, raise an Exception\
+        if container_action_map:
+            raise Exception("Unknown containers : {} provided in action". format(list(container_action_map.keys())))
 
         sub_provider_spec = cls.deployment_spec["spec"].pop("template", {})
         sub_provider_spec = {**({"type": "PROVISION_K8S_POD"}), **sub_provider_spec}
