@@ -7,7 +7,7 @@ from .utils import highlight_text
 from calm.dsl.builtins import Secret
 
 
-def create_secret(name, value, pass_phrase=""):
+def create_secret(name, value):
     """Creates the secret"""
 
     secrets = get_secrets_names()

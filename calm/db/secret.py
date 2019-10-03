@@ -45,7 +45,7 @@ class Secret:
         with Database() as db:  # noqa
             secret = cls.get_instance(name)
             for secret_data in secret.data:
-                secret_data.delete_instance()  # deleting its data
+                secret_data.delete_instance()  # deleting cryptography data
 
             secret.delete_instance()
 
