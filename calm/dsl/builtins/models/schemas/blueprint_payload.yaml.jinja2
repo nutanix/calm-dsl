@@ -34,6 +34,16 @@ properties:
       kind:
         type: string
         default: blueprint
+      project_reference:
+        type: object
+        properties:
+          name:
+            type: string
+          kind:
+            type: string
+          uuid:
+            type: string
+          
 
 {%- endmacro %}
 

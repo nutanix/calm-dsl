@@ -66,7 +66,6 @@ click_completion.init()
     "--project",
     "-p",
     "project_name",
-    default="default",
     help="Project name for entity"
 )
 @click_log.simple_verbosity_option(logger)

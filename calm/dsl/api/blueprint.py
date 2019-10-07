@@ -1,5 +1,7 @@
 from .resource import ResourceAPI
 from .connection import REQUEST
+from calm.dsl.config import get_config
+from .project import ProjectAPI
 
 
 class BlueprintAPI(ResourceAPI):
@@ -202,6 +204,30 @@ class BlueprintAPI(ResourceAPI):
                 #         )
 
         upload_payload = self._make_blueprint_payload(bp_name, bp_desc, bp_resources)
+
+        config = get_config()
+        project_name = config["PROJECT"]["name"]
+        projectObj = ProjectAPI(self.connection)
+
+        # Fetch project details
+        params = {"filter": "name=={}".format(project_name)}
+        res, err = projectObj.list(params=params)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        response = res.json()
+        entities = response.get("entities", None)
+        if not entities:
+            raise Exception("No project with name {} exists". format(project_name))
+
+        project_id = entities[0]["metadata"]["uuid"]
+
+        # Setting project reference
+        upload_payload["metadata"]["project_reference"] = {
+            "kind": "project",
+            "uuid": project_id,
+            "name": project_name
+        }
 
         res, err = self.upload(upload_payload)
 
