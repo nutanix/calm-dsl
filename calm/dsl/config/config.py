@@ -31,18 +31,38 @@ def _init_config(ip, port, username, password, config_file, project_name):
         config.read(config_file)
 
     if "SERVER" in config:
-        config["SERVER"]["pc_ip"] = ip or config["SERVER"]["pc_ip"]
-        config["SERVER"]["pc_port"] = port or config["SERVER"]["pc_port"]
-        config["SERVER"]["pc_username"] = username or config["SERVER"]["pc_username"]
-        config["SERVER"]["pc_password"] = password or config["SERVER"]["pc_password"]
+        ip = ip or config["SERVER"].get("pc_ip")
+        port = port or config["SERVER"].get("pc_port")
+        username = username or config["SERVER"].get("pc_username")
+        password = password or config["SERVER"].get("pc_password")
+
+    ip = ip or PC_IP
+    port = port or PC_PORT
+    username = username or PC_USERNAME
+    password = password or PC_PASSWORD
+
+    config["SERVER"] = {
+        "pc_ip": ip,
+        "pc_port": port,
+        "pc_username": username,
+        "pc_password": password,
+    }
 
     if "PROJECT" in config:
-        config["PROJECT"]["name"] = project_name or config["PROJECT"]["name"]
+        stored_project_name = config["PROJECT"].get("name")
+        if stored_project_name:
+            if project_name != stored_project_name:
+                config.remove_option("PROJECT", "uuid")
+        else:
+            config.remove_option("PROJECT", "uuid")
 
-    config["SERVER"].setdefault("pc_ip", PC_IP)
-    config["SERVER"].setdefault("pc_port", PC_PORT)
-    config["SERVER"].setdefault("pc_username", PC_USERNAME)
-    config["SERVER"].setdefault("pc_password", PC_PASSWORD)
-    config["PROJECT"].setdefault("name", PROJECT_NAME)
+        project_name = project_name or stored_project_name
+        project_name = project_name or PROJECT_NAME
+        config["PROJECT"]["name"] = project_name
+
+    else:
+        config["PROJECT"] = {
+            "name": project_name or PROJECT_NAME
+        }
 
     return config
