@@ -224,7 +224,7 @@ def compile_blueprint_command(bp_file, out):
         if config["PROJECT"].get("uuid"):
             bp_payload["metadata"]["project_reference"] = {
                 "type": "project",
-                "uuid": config["PROJECT"]["uuid"]
+                "uuid": config["PROJECT"]["uuid"],
             }
 
     if out == "json":
@@ -360,7 +360,6 @@ def launch_blueprint_simple(
             app_uuid = response["status"]["application_uuid"]
 
             config = get_config()
-            import pdb; pdb.set_trace()
             pc_ip = config["SERVER"]["pc_ip"]
             pc_port = config["SERVER"]["pc_port"]
 

@@ -15,7 +15,14 @@ CONFIG_FILE = os.path.expanduser("~/calm-dsl-engine/config/server/config.ini")
 _CONFIG = None
 
 
-def get_config(ip=None, port=None, username=None, password=None, config_file=None, project_name=None):
+def get_config(
+    ip=None,
+    port=None,
+    username=None,
+    password=None,
+    config_file=None,
+    project_name=None,
+):
     global _CONFIG
     if not _CONFIG:
         _CONFIG = _init_config(ip, port, username, password, config_file, project_name)
@@ -51,7 +58,7 @@ def _init_config(ip, port, username, password, config_file, project_name):
     if "PROJECT" in config:
         stored_project_name = config["PROJECT"].get("name")
         if stored_project_name:
-            if project_name != stored_project_name:
+            if project_name and (project_name != stored_project_name):
                 config.remove_option("PROJECT", "uuid")
         else:
             config.remove_option("PROJECT", "uuid")
@@ -61,8 +68,6 @@ def _init_config(ip, port, username, password, config_file, project_name):
         config["PROJECT"]["name"] = project_name
 
     else:
-        config["PROJECT"] = {
-            "name": project_name or PROJECT_NAME
-        }
+        config["PROJECT"] = {"name": project_name or PROJECT_NAME}
 
     return config

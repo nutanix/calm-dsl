@@ -218,7 +218,7 @@ class BlueprintAPI(ResourceAPI):
         response = res.json()
         entities = response.get("entities", None)
         if not entities:
-            raise Exception("No project with name {} exists". format(project_name))
+            raise Exception("No project with name {} exists".format(project_name))
 
         project_id = entities[0]["metadata"]["uuid"]
 
@@ -226,7 +226,7 @@ class BlueprintAPI(ResourceAPI):
         upload_payload["metadata"]["project_reference"] = {
             "kind": "project",
             "uuid": project_id,
-            "name": project_name
+            "name": project_name,
         }
 
         res, err = self.upload(upload_payload)
