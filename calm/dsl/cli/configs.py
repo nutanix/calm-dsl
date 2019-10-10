@@ -1,11 +1,13 @@
 import os
-from calm.dsl.config import get_config
-
-
-CONFIG_FILE = os.path.expanduser("~/calm-dsl-engine/config/server/config.ini")
+from calm.dsl.config import get_config, CONFIG_FILE
 
 
 def set_config(section, **kwargs):
+
+    # Creating config file if not present
+    if not os.path.exists(CONFIG_FILE):
+        os.makedirs(os.path.dirname(CONFIG_FILE))
+        open(CONFIG_FILE, "w+").close()
 
     section_field_mapping = {
         "SERVER": {

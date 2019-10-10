@@ -9,7 +9,7 @@ PC_PORT = "9440"
 PC_USERNAME = "admin"
 PC_PASSWORD = "***REMOVED***"
 PROJECT_NAME = "default"
-CONFIG_FILE = os.path.expanduser("~/calm-dsl-engine/config/server/config.ini")
+CONFIG_FILE = os.path.expanduser("~/.calm/server/config.ini")
 
 
 _CONFIG = None
@@ -70,5 +70,8 @@ def _init_config(ip, port, username, password, config_file, project_name):
 
     else:
         config["PROJECT"] = {"name": project_name or PROJECT_NAME}
+
+    if "CATEGORIES" not in config:
+        config["CATEGORIES"] = {}
 
     return config
