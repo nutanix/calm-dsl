@@ -33,6 +33,7 @@ def _init_config(ip, port, username, password, config_file, project_name):
 
     config_file = config_file or CONFIG_FILE
     config = configparser.ConfigParser()
+    config.optionxform = str        # Maintaining case sensitivity
 
     if os.path.isfile(config_file):
         config.read(config_file)

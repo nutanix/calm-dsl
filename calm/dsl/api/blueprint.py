@@ -252,8 +252,12 @@ class BlueprintAPI(ResourceAPI):
             variable["value"] = secret
 
         # TODO - insert categories during update as /import_json fails if categories are given!
+        # Populating the categories at runtime
+        config_categories = dict(config.items("CATEGORIES"))
         if categories:
-            bp["metadata"]["categories"] = categories
+            config_categories.update(categories)
+
+        bp["metadata"]["categories"] = config_categories
 
         # Update blueprint
         update_payload = bp

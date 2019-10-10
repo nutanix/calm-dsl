@@ -437,12 +437,6 @@ def calmrepl():
     repl(click.get_current_context())
 
 
-@get.group(cls=DYMGroup)
-def server():
-    """Get calm server details"""
-    pass
-
-
 @main.group(cls=DYMGroup)
 def set():
     """Sets the configuration to server/project/categories"""
