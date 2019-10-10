@@ -476,7 +476,7 @@ def create_spec(client):
 
     AhvVmProvider.validate_spec(spec)  # Final validation (Insert some default's value)
     click.echo("\nCreate spec for your AHV VM:\n")
-    click.echo(highlight_text(yaml.dump(spec)))
+    click.echo(highlight_text(yaml.dump(spec, default_flow_style=False)))
 
 
 def find_schema(schema, path, option):

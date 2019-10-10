@@ -219,6 +219,14 @@ def compile_blueprint_command(bp_file, out):
         click.echo("User blueprint not found in {}".format(bp_file))
         return
 
+    config = get_config()
+    if "PROJECT" in config:
+        if config["PROJECT"].get("uuid"):
+            bp_payload["metadata"]["project_reference"] = {
+                "type": "project",
+                "uuid": config["PROJECT"]["uuid"],
+            }
+
     if out == "json":
         click.echo(json.dumps(bp_payload, indent=4, separators=(",", ": ")))
     elif out == "yaml":

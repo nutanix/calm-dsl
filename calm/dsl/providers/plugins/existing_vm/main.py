@@ -30,4 +30,4 @@ def create_spec():
     spec = {"type": "PROVISION_EXISTING_MACHINE", "address": addr}
 
     click.secho("\nCreate spec for your Existing Machine VM:\n", underline=True)
-    click.echo(highlight_text(yaml.dump(spec)))
+    click.echo(highlight_text(yaml.dump(spec, default_flow_style=False)))
