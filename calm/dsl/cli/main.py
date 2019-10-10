@@ -439,11 +439,11 @@ def calmrepl():
 
 @main.group(cls=DYMGroup)
 def set():
-    """Sets the configuration to server/project/categories"""
+    """Sets the entities"""
     pass
 
 
 @set.group(cls=DYMGroup)
 def config():
-    """Configuration setup"""
+    """Configuration setup for server, projects"""
     pass

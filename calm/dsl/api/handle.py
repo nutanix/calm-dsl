@@ -1,9 +1,9 @@
 from calm.dsl.config import get_config
 
 from .connection import get_connection, REQUEST
-from .project import ProjectAPI
 from .blueprint import BlueprintAPI
 from .application import ApplicationAPI
+from .project import ProjectAPI
 from .setting import SettingAPI
 
 
