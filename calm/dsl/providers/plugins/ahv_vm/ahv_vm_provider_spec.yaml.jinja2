@@ -166,6 +166,16 @@ properties:
     anyOf:
       - $ref: '#/components/schemas/cloud_init_script'
       - $ref: '#/components/schemas/sys_prep_script'
+  serial_port_list:
+    type: array
+    items:
+      type: object
+      properties:
+        index:
+          type: integer
+        is_connected:
+          type: boolean
+          default: False
 
 {%- endmacro %}
 
