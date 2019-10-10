@@ -742,4 +742,4 @@ def create_spec(client):
 
     AwsVmProvider.validate_spec(spec)
     click.secho("\nCreate spec for your AWS VM:\n", underline=True)
-    click.echo(highlight_text(yaml.dump(spec)))
+    click.echo(highlight_text(yaml.dump(spec, default_flow_style=False)))
