@@ -1,6 +1,8 @@
 from .resource import ResourceAPI
 from .connection import REQUEST
 from .util import strip_secrets, patch_secrets
+from calm.dsl.config import get_config
+from .project import ProjectAPI
 
 
 class EndpointAPI(ResourceAPI):
@@ -14,7 +16,7 @@ class EndpointAPI(ResourceAPI):
         )
 
     @staticmethod
-    def _make_endpoint_payload(endpoint_name, endpoint_desc, endpoint_resources, project_ref=None, spec_version=None):
+    def _make_endpoint_payload(endpoint_name, endpoint_desc, endpoint_resources, spec_version=None):
 
         endpoint_payload = {
             "spec": {
@@ -30,12 +32,9 @@ class EndpointAPI(ResourceAPI):
             "api_version": "3.0"
         }
 
-        if project_ref:
-            endpoint_payload['metadata']['project_reference'] = project_ref
-
         return endpoint_payload
 
-    def upload_with_secrets(self, endpoint_name, endpoint_desc, endpoint_resources, project_ref=None):
+    def upload_with_secrets(self, endpoint_name, endpoint_desc, endpoint_resources):
 
         # check if endpoint with the given name already exists
         params = {"filter": "name=={};deleted==FALSE".format(endpoint_name)}
@@ -59,7 +58,31 @@ class EndpointAPI(ResourceAPI):
         # default cred is login cred in endpoint
         endpoint_resources["login_credential_reference"] = endpoint_resources.pop("default_credential_local_reference", {})
 
-        upload_payload = self._make_endpoint_payload(endpoint_name, endpoint_desc, endpoint_resources, project_ref=project_ref)
+        upload_payload = self._make_endpoint_payload(endpoint_name, endpoint_desc, endpoint_resources)
+
+        config = get_config()
+        project_name = config["PROJECT"]["name"]
+        projectObj = ProjectAPI(self.connection)
+
+        # Fetch project details
+        params = {"filter": "name=={}".format(project_name)}
+        res, err = projectObj.list(params=params)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        response = res.json()
+        entities = response.get("entities", None)
+        if not entities:
+            raise Exception("No project with name {} exists".format(project_name))
+
+        project_id = entities[0]["metadata"]["uuid"]
+
+        # Setting project reference
+        upload_payload["metadata"]["project_reference"] = {
+            "kind": "project",
+            "uuid": project_id,
+            "name": project_name,
+        }
 
         res, err = self.upload(upload_payload)
 

@@ -31,7 +31,7 @@ def _get_endpoint_list(obj, name, filter_by, limit, offset, quiet, all_items):
     get_endpoint_list(obj, name, filter_by, limit, offset, quiet, all_items)
 
 
-def create_endpoint(client, endpoint_payload, name=None, description=None, project_name=None):
+def create_endpoint(client, endpoint_payload, name=None, description=None):
 
     endpoint_payload.pop("status", None)
 
@@ -46,39 +46,18 @@ def create_endpoint(client, endpoint_payload, name=None, description=None, proje
     endpoint_name = endpoint_payload["spec"]["name"]
     endpoint_desc = endpoint_payload["spec"]["description"]
 
-    if project_name:
-        params = {"filter": "name=={}".format(project_name)}
-        res, err = client.project.list(params=params)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        res = res.json()
-        entities = res.get("entities", None)
-        if not entities:
-            return None, {"error": ">> No project found with name {} >>".format(name)}
-        if len(entities) != 1:
-            return None, {"error": "More than one project found - {}".format(entities)}
-        click.echo(">> Project {} found >>".format(project_name))
-
-        project_ref = {
-            "uuid": entities[0]["metadata"]["uuid"],
-            "kind": "project"
-        }
-    else:
-        project_ref = None
-
     return client.endpoint.upload_with_secrets(
-        endpoint_name, endpoint_desc, endpoint_resources, project_ref=project_ref
+        endpoint_name, endpoint_desc, endpoint_resources
     )
 
 
-def create_endpoint_from_json(client, path_to_json, name=None, description=None, project=None):
+def create_endpoint_from_json(client, path_to_json, name=None, description=None):
 
     endpoint_payload = json.loads(open(path_to_json, "r").read())
-    return create_endpoint(client, endpoint_payload, name=name,
-                           description=description, project_name=project)
+    return create_endpoint(client, endpoint_payload, name=name, description=description)
 
 
-def create_endpoint_from_dsl(client, endpoint_file, name=None, description=None, project=None):
+def create_endpoint_from_dsl(client, endpoint_file, name=None, description=None):
 
     endpoint_payload = compile_endpoint(endpoint_file)
     if endpoint_payload is None:
@@ -86,8 +65,7 @@ def create_endpoint_from_dsl(client, endpoint_file, name=None, description=None,
         err = {"error": err_msg, "code": -1}
         return None, err
 
-    return create_endpoint(client, endpoint_payload, name=name,
-                           description=description, project_name=project)
+    return create_endpoint(client, endpoint_payload, name=name, description=description)
 
 
 @create.command("endpoint")
@@ -102,25 +80,20 @@ def create_endpoint_from_dsl(client, endpoint_file, name=None, description=None,
 @click.option(
     "--name", "-n", default=None, help="Endpoint name (Optional)"
 )
-@click.option(
-    "--project", "-p", default=None, help="Project name (Optional)"
-)
 @click.option("--description", default=None, help="Endpoint description (Optional)")
 @click.pass_obj
-def create_endpoint_command(obj, endpoint_file, name, description, project):
+def create_endpoint_command(obj, endpoint_file, name, description):
     """Creates a endpoint"""
 
     client = obj.get("client")
-    if not project:
-        project = "default"
 
     if endpoint_file.endswith(".json"):
         res, err = create_endpoint_from_json(
-            client, endpoint_file, name=name, description=description, project=project
+            client, endpoint_file, name=name, description=description
         )
     elif endpoint_file.endswith(".py"):
         res, err = create_endpoint_from_dsl(
-            client, endpoint_file, name=name, description=description, project=project
+            client, endpoint_file, name=name, description=description
         )
     else:
         click.echo("Unknown file format {}".format(endpoint_file))

@@ -1,6 +1,8 @@
 from .resource import ResourceAPI
 from .connection import REQUEST
 from .util import strip_secrets, patch_secrets
+from calm.dsl.config import get_config
+from .project import ProjectAPI
 
 
 class RunbookAPI(ResourceAPI):
@@ -49,7 +51,7 @@ class RunbookAPI(ResourceAPI):
         )
 
     @staticmethod
-    def _make_runbook_payload(runbook_name, runbook_desc, runbook_resources, project_ref=None, spec_version=None):
+    def _make_runbook_payload(runbook_name, runbook_desc, runbook_resources, spec_version=None):
 
         runbook_payload = {
             "spec": {
@@ -65,12 +67,9 @@ class RunbookAPI(ResourceAPI):
             "api_version": "3.0"
         }
 
-        if project_ref:
-            runbook_payload['metadata']['project_reference'] = project_ref
-
         return runbook_payload
 
-    def upload_with_secrets(self, runbook_name, runbook_desc, runbook_resources, project_ref=None):
+    def upload_with_secrets(self, runbook_name, runbook_desc, runbook_resources):
 
         # check if runbook with the given name already exists
         params = {"filter": "name=={};deleted==FALSE".format(runbook_name)}
@@ -93,7 +92,31 @@ class RunbookAPI(ResourceAPI):
 
         strip_secrets(runbook_resources, secret_map, secret_variables, object_lists=object_lists, objects=objects)
 
-        upload_payload = self._make_runbook_payload(runbook_name, runbook_desc, runbook_resources, project_ref=project_ref)
+        upload_payload = self._make_runbook_payload(runbook_name, runbook_desc, runbook_resources)
+
+        config = get_config()
+        project_name = config["PROJECT"]["name"]
+        projectObj = ProjectAPI(self.connection)
+
+        # Fetch project details
+        params = {"filter": "name=={}".format(project_name)}
+        res, err = projectObj.list(params=params)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        response = res.json()
+        entities = response.get("entities", None)
+        if not entities:
+            raise Exception("No project with name {} exists".format(project_name))
+
+        project_id = entities[0]["metadata"]["uuid"]
+
+        # Setting project reference
+        upload_payload["metadata"]["project_reference"] = {
+            "kind": "project",
+            "uuid": project_id,
+            "name": project_name,
+        }
 
         res, err = self.upload(upload_payload)
 
@@ -140,7 +163,7 @@ class RunbookAPI(ResourceAPI):
                 self.POLL_RUN.format(uuid), verify=False, method=REQUEST.METHOD.GET
             )
 
-    def update_with_secrets(self, uuid, runbook_name, runbook_desc, runbook_resources, spec_version, project_ref):
+    def update_with_secrets(self, uuid, runbook_name, runbook_desc, runbook_resources, spec_version):
 
         secret_map = {}
         secret_variables = []
@@ -148,8 +171,32 @@ class RunbookAPI(ResourceAPI):
         objects = ["runbook"]
         strip_secrets(runbook_resources, secret_map, secret_variables, object_lists=object_lists, objects=objects)
 
-        update_payload = self._make_runbook_payload(runbook_name, runbook_desc, runbook_resources, project_ref=project_ref, spec_version=spec_version)
+        update_payload = self._make_runbook_payload(runbook_name, runbook_desc, runbook_resources, spec_version=spec_version)
         update_payload["metadata"]["uuid"] = uuid
+
+        config = get_config()
+        project_name = config["PROJECT"]["name"]
+        projectObj = ProjectAPI(self.connection)
+
+        # Fetch project details
+        params = {"filter": "name=={}".format(project_name)}
+        res, err = projectObj.list(params=params)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        response = res.json()
+        entities = response.get("entities", None)
+        if not entities:
+            raise Exception("No project with name {} exists".format(project_name))
+
+        project_id = entities[0]["metadata"]["uuid"]
+
+        # Setting project reference
+        update_payload["metadata"]["project_reference"] = {
+            "kind": "project",
+            "uuid": project_id,
+            "name": project_name,
+        }
 
         res, err = self.update2(uuid, update_payload)
 
