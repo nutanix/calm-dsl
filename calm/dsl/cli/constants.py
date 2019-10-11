@@ -50,6 +50,15 @@ class RUNBOOK:
         ERROR = "ERROR"
 
 
+class ENDPOINT:
+    class STATES:
+        PROVISIONING = "provisioning"
+        STOPPED = "stopped"
+        RUNNING = "running"
+        ERROR = "error"
+        DELETED = "deleted"
+
+
 class BLUEPRINT:
     class STATES:
         ACTIVE = "ACTIVE"

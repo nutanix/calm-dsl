@@ -21,13 +21,13 @@ from .models.package import Package, package
 from .models.provider_spec import provider_spec, read_provider_spec
 from .models.substrate import Substrate, substrate
 
-from .models.endpoint import Endpoint, endpoint
-
 from .models.deployment import Deployment, deployment
 
 from .models.profile import Profile, profile
 
 from .models.blueprint import Blueprint, blueprint
+
+from .models.endpoint import Endpoint, endpoint
 
 from .models.runbook_service import RunbookService
 
@@ -35,6 +35,7 @@ from .models.simple_deployment import SimpleDeployment
 from .models.simple_blueprint import SimpleBlueprint
 
 from .models.blueprint_payload import create_blueprint_payload
+from .models.endpoint_payload import create_endpoint_payload
 from .models.runbook_payload import create_runbook_payload
 from .models.project import Project as ProjectValidator
 
@@ -63,16 +64,17 @@ __all__ = [
     "read_provider_spec",
     "Substrate",
     "substrate",
-    "Endpoint",
-    "endpoint",
     "Deployment",
     "deployment",
     "Profile",
     "profile",
     "Blueprint",
     "blueprint",
+    "Endpoint",
+    "endpoint",
     "RunbookService",
     "create_blueprint_payload",
+    "create_endpoint_payload",
     "create_runbook_payload",
     "ProjectValidator",
     "SimpleDeployment",

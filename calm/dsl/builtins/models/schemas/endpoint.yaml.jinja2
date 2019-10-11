@@ -22,7 +22,13 @@ properties:
   port:
     type: string
     maxLength: 64
-
+  credential_definition_list:
+     x-calm-dsl-display-name: credentials
+     description: Credential definitions for endpoint.
+     type: array
+     items:
+       $ref: '#/components/schemas/Credential'
+  
 {%- endmacro %}
 
 

@@ -2,7 +2,6 @@
 {% import "service.yaml.jinja2" as service %}
 {% import "provider_spec.yaml.jinja2" as provider_spec %}
 {% import "substrate.yaml.jinja2" as substrate %}
-{% import "endpoint.yaml.jinja2" as endpoint %}
 {% import "deployment.yaml.jinja2" as deployment %}
 {% import "profile.yaml.jinja2" as profile %}
 {% import "blueprint.yaml.jinja2" as blueprint %}
@@ -13,6 +12,8 @@
 {% import "variable.yaml.jinja2" as variable %}
 {% import "package.yaml.jinja2" as package %}
 {% import "credential.yaml.jinja2" as credential %}
+{% import "endpoint.yaml.jinja2" as endpoint %}
+{% import "endpoint_payload.yaml.jinja2" as endpoint_payload %}
 {% import "task.yaml.jinja2" as task %}
 {% import "runbook.yaml.jinja2" as runbook %}
 {% import "runbook_service.yaml.jinja2" as runbook_service %}
@@ -28,7 +29,6 @@
 {{ service.ServiceSchema() }}
 {{ provider_spec.ProviderSpecSchema() }}
 {{ substrate.SubstrateSchema() }}
-{{ endpoint.EndpointSchema() }}
 {{ deployment.DeploymentSchema() }}
 {{ profile.ProfileSchema() }}
 {{ blueprint.BlueprintSchema() }}
@@ -39,6 +39,8 @@
 {{ variable.VariableSchema() }}
 {{ package.PackageSchema() }}
 {{ credential.CredentialSchema() }}
+{{ endpoint.EndpointSchema() }}
+{{ endpoint_payload.EndpointPayloadSchema() }}
 {{ task.TaskSchema() }}
 {{ runbook.RunbookSchema() }}
 {{ runbook_service.RunbookServiceSchema() }}

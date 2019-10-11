@@ -2,6 +2,7 @@ from calm.dsl.config import get_config
 
 from .connection import get_connection, REQUEST
 from .blueprint import BlueprintAPI
+from .endpoint import EndpointAPI
 from .runbook import RunbookAPI
 from .application import ApplicationAPI
 from .project import ProjectAPI
@@ -19,6 +20,7 @@ class ClientHandle:
         # Note - add entity api classes here
         self.project = ProjectAPI(self.connection)
         self.blueprint = BlueprintAPI(self.connection)
+        self.endpoint = EndpointAPI(self.connection)
         self.runbook = RunbookAPI(self.connection)
         self.application = ApplicationAPI(self.connection)
         self.account = SettingAPI(self.connection)

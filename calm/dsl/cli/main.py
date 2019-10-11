@@ -81,6 +81,8 @@ Commonly used commands:
   calm run runbook MyFancyRunbook -> Runs the existing runbook MyFancyRunbook
   calm run runbook -f sample_rb.py -> Runs the runbook from a python DSL file
   calm get previous_runs  -> Get list of previous runbook runs
+  calm get endpoints -> Get list of endpoints
+  calm create endpoint -f sample_ep.py --name Sample-Endpoint -> Upload a new endpoint from a python DSL file
 """
     ctx.ensure_object(dict)
     ctx.obj["config"] = get_config(
@@ -128,7 +130,7 @@ def validate_provider_spec(spec_file, provider_type):
 
 @main.group(cls=DYMGroup)
 def get():
-    """Get various things like blueprints, apps: `get apps`, `get bps` and `get runbooks` are the primary ones."""
+    """Get various things like blueprints, apps: `get apps`, `get bps`, `get endpoints` and `get runbooks` are the primary ones."""
     pass
 
 
@@ -202,7 +204,7 @@ def compile():
 
 @main.group(cls=DYMGroup)
 def create():
-    """Create entities in CALM (blueprint, project, runbook) """
+    """Create entities in CALM (blueprint, project, endpoint, runbook) """
     pass
 
 
@@ -278,7 +280,7 @@ def launch():
 
 @main.group(cls=DYMGroup)
 def describe():
-    """Describe apps, blueprints, projects, accounts, runbooks"""
+    """Describe apps, blueprints, projects, accounts, endpoints, runbooks"""
     pass
 
 

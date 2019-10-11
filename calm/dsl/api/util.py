@@ -35,7 +35,7 @@ def strip_secrets(resources, secret_map, secret_variables, object_lists=[], obje
     if default_creds:
         resources["default_credential_local_reference"] = {
             "kind": "app_credential",
-            "name": default_creds[0]["name"],
+            "name": default_creds[0]["name"] if default_creds else cred[0]["name"],
         }
 
     # Strip secret variable values
