@@ -45,7 +45,7 @@ def create_runbook_payload(UserRunbook):
         "resources": UserRunbook,
     }
 
-    metadata = {"spec_version": 1, "kind": "action", "name": UserRunbook.__name__}
+    metadata = {"spec_version": 1, "kind": "runbook", "name": UserRunbook.__name__}
 
     UserRunbookPayload = _runbook_payload()
     UserRunbookPayload.metadata = metadata

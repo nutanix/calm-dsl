@@ -274,7 +274,11 @@ def describe_runbook(obj, runbook_name):
     click.echo("Description: " + highlight_text(runbook["status"]["description"]))
     click.echo("Status: " + highlight_text(runbook["status"]["state"]))
     click.echo(
-        "Owner: " + highlight_text(runbook["metadata"]["owner_reference"]["name"])
+        "Owner: " + highlight_text(runbook["metadata"]["owner_reference"]["name"]), nl=False
+    )
+    project = runbook["metadata"].get("project_reference", {})
+    click.echo(
+        " Project: " + highlight_text(project.get("name", ""))
     )
 
     created_on = int(runbook["metadata"]["creation_time"]) // 1000000
@@ -307,7 +311,7 @@ def describe_runbook(obj, runbook_name):
 
     endpoint_types = [
         "{} ({})".format(ep.get("name", ""), ep.get("type", ""))
-        for ep in endpoint_resources.get("endpoint_definition_list", [])
+        for ep in runbook_resources.get("endpoint_definition_list", [])
     ]
     click.echo("Endpoints [{}]:".format(highlight_text(len(endpoint_types))))
     click.echo("\t{}".format(highlight_text(", ".join(endpoint_types))))

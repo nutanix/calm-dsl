@@ -88,7 +88,7 @@ class RunbookAPI(ResourceAPI):
 
         secret_map = {}
         secret_variables = []
-        object_lists = ["substrate_definition_list"]
+        object_lists = ["endpoint_definition_list"]
         objects = ["runbook"]
 
         strip_secrets(runbook_resources, secret_map, secret_variables, object_lists=object_lists, objects=objects)
