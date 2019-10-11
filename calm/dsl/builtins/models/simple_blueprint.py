@@ -3,6 +3,7 @@ from .validator import PropertyValidator
 
 from .profile import profile
 from .deployment import deployment
+from .pod_deployment import pod_deployment
 from .substrate import substrate
 from .service import service
 from .package import package
@@ -21,6 +22,27 @@ class SimpleBlueprintType(EntityType):
 
     def make_bp_dict(cls, categories=None):
 
+        deployments = getattr(cls, "deployments", [])
+
+        pod_deployments = []
+        normal_deployments = []
+        for dep in deployments:
+            if dep.deployment_spec and dep.service_spec:
+                pod_dep = pod_deployment(
+                    name=dep.__name__,
+                    service_spec=dep.service_spec,
+                    deployment_spec=dep.deployment_spec,
+                    dependencies=dep.dependencies,
+                )
+
+                pod_deployments.append(pod_dep)
+
+            else:
+                normal_deployments.append(dep)
+
+        # Removing pod deployments from the deployments
+        setattr(cls, "deployments", normal_deployments)
+
         # Get simple blueprint dictionary
         cdict = cls.get_dict()
 
@@ -38,6 +60,7 @@ class SimpleBlueprintType(EntityType):
         service_definition_list = []
         package_definition_list = []
         substrate_definition_list = []
+        published_service_definition_list = []
 
         for sd in cdict["deployments"]:
 
@@ -54,9 +77,6 @@ class SimpleBlueprintType(EntityType):
                     else:
                         continue
                 sdict["action_list"].append(action)
-            sdict["depends_on_list"] = sd["depends_on_list"]
-            for dep in sdict["depends_on_list"]:
-                dep["kind"] = "app_service"
 
             # Init package dict
             p = package(name=sd["name"] + "Package")
@@ -115,6 +135,9 @@ class SimpleBlueprintType(EntityType):
             d.substrate = ref(sub)
             ddict = d.get_dict()
 
+            # Setting the deployment level dependencies
+            ddict["depends_on_list"] = sd["depends_on_list"]
+
             # Add items
             service_definition_list.append(sdict)
             package_definition_list.append(pdict)
@@ -122,12 +145,35 @@ class SimpleBlueprintType(EntityType):
 
             app_profile["deployment_create_list"].append(ddict)
 
+        for dep in pod_deployments:
+            pod_dict = dep.extract_deployment()
+            for sd in pod_dict["service_definition_list"]:
+                sdict = sd.get_dict()
+                service_definition_list.append(sdict)
+
+            for pd in pod_dict["package_definition_list"]:
+                pdict = pd.get_dict()
+                package_definition_list.append(pdict)
+
+            for sub in pod_dict["substrate_definition_list"]:
+                subdict = sub.get_dict()
+                substrate_definition_list.append(subdict)
+
+            for psd in pod_dict["published_service_definition_list"]:
+                psddict = psd.get_dict()
+                published_service_definition_list.append(psddict)
+
+            for dep in pod_dict["deployment_definition_list"]:
+                depdict = dep.get_dict()
+                app_profile["deployment_create_list"].append(depdict)
+
         blueprint_resources = {
             "service_definition_list": service_definition_list,
             "package_definition_list": package_definition_list,
             "substrate_definition_list": substrate_definition_list,
             "credential_definition_list": credential_definition_list,
             "app_profile_list": app_profile_list,
+            "published_service_definition_list": published_service_definition_list,
         }
 
         spec = {

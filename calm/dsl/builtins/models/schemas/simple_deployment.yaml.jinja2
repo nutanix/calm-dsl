@@ -75,6 +75,12 @@ properties:
     description: Maximum replicas for the deployment.
     type: string
     default: "1"
+  deployment_spec:
+    type: object
+    x-calm-dsl-type: dict
+  service_spec:
+    type: object
+    x-calm-dsl-type: dict
 
 {%- endmacro %}
 

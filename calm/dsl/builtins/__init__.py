@@ -15,13 +15,15 @@ from .models.runbook import Runbook, runbook
 
 from .models.port import Port, port
 from .models.service import Service, service
+from .models.published_service import PublishedService, published_service
 
 from .models.package import Package, package
 
-from .models.provider_spec import provider_spec, read_provider_spec
+from .models.provider_spec import provider_spec, read_provider_spec, read_spec
 from .models.substrate import Substrate, substrate
 
 from .models.deployment import Deployment, deployment
+from .models.pod_deployment import PODDeployment, pod_deployment
 
 from .models.profile import Profile, profile
 
@@ -58,6 +60,8 @@ __all__ = [
     "port",
     "Service",
     "service",
+    "PublishedService",
+    "published_service",
     "Package",
     "package",
     "provider_spec",
@@ -66,6 +70,9 @@ __all__ = [
     "substrate",
     "Deployment",
     "deployment",
+    "PODDeployment",
+    "pod_deployment",
+    "read_spec",
     "Profile",
     "profile",
     "Blueprint",

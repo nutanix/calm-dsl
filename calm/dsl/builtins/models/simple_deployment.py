@@ -1,4 +1,4 @@
-from .entity import EntityType, Entity, EntityTypeBase
+from .entity import EntityType, Entity
 from .validator import PropertyValidator
 
 
@@ -10,25 +10,17 @@ class SimpleDeploymentType(EntityType):
     __openapi_type__ = "app_blueprint_simple_deployment"
 
     def get_ref(cls):
-        types = EntityTypeBase.get_entity_types()
-        ref = types.get("Ref")
-        if not ref:
-            return
-        name = getattr(ref, "__schema_name__")
-        bases = (Entity,)
-        if ref:
-            attrs = {}
-
-            # Note: Service to be appeneded in name
-            attrs["name"] = str(cls) + "Service"
-
-            # Note: app_service kind to be used for simple deployment
-            attrs["kind"] = "app_service"
-
-        return ref(name, bases, attrs)
+        """Note: Only deployment-level dependencies in simple blueprint"""
+        return super().get_ref(kind="app_blueprint_deployment")
 
     def get_task_target(cls):
-        return cls.get_ref()
+        cls_ref = cls.get_ref()
+
+        # Note: Service to be appeneded in name for task targets
+        cls_ref.kind = "app_service"
+        cls_ref.name = str(cls) + "Service"
+
+        return cls_ref
 
 
 class SimpleDeploymentValidator(

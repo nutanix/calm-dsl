@@ -19,6 +19,12 @@ properties:
     type: array
     items:
       $ref: '#/components/schemas/Package'
+  published_service_definition_list:
+    x-calm-dsl-display-name: published_services
+    description: Published Service defination for K8S pods
+    type: array
+    items:
+      $ref: '#/components/schemas/PublishedService'
   substrate_definition_list:
     x-calm-dsl-display-name: substrates
     description: Substrate definitions for blueprint.

@@ -1,6 +1,8 @@
 from .resource import ResourceAPI
 from .connection import REQUEST
 from .util import strip_secrets, patch_secrets
+from calm.dsl.config import get_config
+from .project import ProjectAPI
 
 
 class BlueprintAPI(ResourceAPI):
@@ -92,6 +94,30 @@ class BlueprintAPI(ResourceAPI):
 
         upload_payload = self._make_blueprint_payload(bp_name, bp_desc, bp_resources)
 
+        config = get_config()
+        project_name = config["PROJECT"]["name"]
+        projectObj = ProjectAPI(self.connection)
+
+        # Fetch project details
+        params = {"filter": "name=={}".format(project_name)}
+        res, err = projectObj.list(params=params)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        response = res.json()
+        entities = response.get("entities", None)
+        if not entities:
+            raise Exception("No project with name {} exists".format(project_name))
+
+        project_id = entities[0]["metadata"]["uuid"]
+
+        # Setting project reference
+        upload_payload["metadata"]["project_reference"] = {
+            "kind": "project",
+            "uuid": project_id,
+            "name": project_name,
+        }
+
         res, err = self.upload(upload_payload)
 
         if err:
@@ -104,8 +130,12 @@ class BlueprintAPI(ResourceAPI):
         patch_secrets(bp, secret_map, secret_variables)
 
         # TODO - insert categories during update as /import_json fails if categories are given!
+        # Populating the categories at runtime
+        config_categories = dict(config.items("CATEGORIES"))
         if categories:
-            bp["metadata"]["categories"] = categories
+            config_categories.update(categories)
+
+        bp["metadata"]["categories"] = config_categories
 
         # Update blueprint
         update_payload = bp

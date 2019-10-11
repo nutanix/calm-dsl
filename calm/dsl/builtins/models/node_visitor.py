@@ -1,6 +1,7 @@
 import ast
 
-from .task import CalmTask
+from .entity import EntityType
+from .task import CalmTask, TaskType
 from .variable import CalmVariable, VariableType
 
 
@@ -21,12 +22,10 @@ class GetCallNodes(ast.NodeVisitor):
         sub_node = node.func
         while not isinstance(sub_node, ast.Name):
             sub_node = sub_node.value
-        if (
-            eval(compile(ast.Expression(sub_node), "", "eval"), self._globals)
-            == CalmTask
-        ):
+        py_object = eval(compile(ast.Expression(sub_node), "", "eval"), self._globals)
+        if py_object == CalmTask or isinstance(py_object, EntityType):
             task = eval(compile(ast.Expression(node), "", "eval"), self._globals)
-            if task is not None:
+            if task is not None and isinstance(task, TaskType):
                 if self.target is not None and not task.target_any_local_reference:
                     task.target_any_local_reference = self.target
                 if return_task:

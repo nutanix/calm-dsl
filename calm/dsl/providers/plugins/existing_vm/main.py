@@ -1,5 +1,5 @@
 import click
-import json
+from ruamel import yaml
 
 from calm.dsl.providers import get_provider_interface
 
@@ -14,6 +14,7 @@ class ExistingVmProvider(Provider):
     provider_type = "EXISTING_VM"
     spec_template_file = "existing_vm_provider_spec.yaml.jinja2"
 
+    @classmethod
     def create_spec(cls):
         create_spec()
 
@@ -29,4 +30,4 @@ def create_spec():
     spec = {"type": "PROVISION_EXISTING_MACHINE", "address": addr}
 
     click.secho("\nCreate spec for your Existing Machine VM:\n", underline=True)
-    click.echo(highlight_text(json.dumps(spec, sort_keys=True, indent=4)))
+    click.echo(highlight_text(yaml.dump(spec, default_flow_style=False)))

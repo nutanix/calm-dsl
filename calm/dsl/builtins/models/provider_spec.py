@@ -39,13 +39,17 @@ def provider_spec(spec):
     return ProviderSpec(spec)
 
 
-def read_provider_spec(filename):
-
+def read_spec(filename, depth=1):
     file_path = os.path.join(
-        os.path.dirname(inspect.getfile(sys._getframe(1))), filename
+        os.path.dirname(inspect.getfile(sys._getframe(depth))), filename
     )
 
     with open(file_path, "r") as f:
         spec = yaml.safe_load(f.read())
 
+    return spec
+
+
+def read_provider_spec(filename):
+    spec = read_spec(filename, depth=2)
     return provider_spec(spec)

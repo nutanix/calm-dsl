@@ -239,10 +239,21 @@ def _set_variable_create(task, variables=None):
 
 
 def set_variable_task_ssh(
-    script=None, filename=None, name=None, target=None, variables=None, depth=3
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    variables=None,
+    depth=3,
+    cred=None,
 ):
     task = exec_task_ssh(
-        script=script, filename=filename, name=name, target=target, depth=depth
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        depth=depth,
+        cred=cred,
     )
     return _set_variable_create(task, variables)
 
@@ -257,10 +268,21 @@ def set_variable_task_escript(
 
 
 def set_variable_task_powershell(
-    script=None, filename=None, name=None, target=None, variables=None, depth=3
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    variables=None,
+    depth=3,
+    cred=None,
 ):
     task = exec_task_powershell(
-        script=script, filename=filename, name=name, target=target, depth=depth
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        depth=depth,
+        cred=cred,
     )
     return _set_variable_create(task, variables)
 

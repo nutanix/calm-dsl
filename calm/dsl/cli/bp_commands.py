@@ -141,12 +141,26 @@ def create_blueprint_command(obj, bp_file, name, description):
 @launch.command("bp")
 @click.argument("blueprint_name")
 @click.option("--app_name", default=None, help="Name of your app")
+@click.option(
+    "--ignore_runtime_variables",
+    is_flag=True,
+    default=False,
+    help="Ignore runtime variables and use defaults",
+)
 @click.pass_obj
-def launch_blueprint_command(obj, blueprint_name, app_name, blueprint=None):
+def launch_blueprint_command(
+    obj, blueprint_name, app_name, ignore_runtime_variables, blueprint=None
+):
 
     client = obj.get("client")
 
-    launch_blueprint_simple(client, blueprint_name, app_name, blueprint=blueprint)
+    launch_blueprint_simple(
+        client,
+        blueprint_name,
+        app_name,
+        blueprint=blueprint,
+        patch_editables=not ignore_runtime_variables,
+    )
 
 
 @delete.command("bp")
