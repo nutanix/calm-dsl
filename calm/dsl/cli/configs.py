@@ -29,3 +29,15 @@ def set_config(section, **kwargs):
 
     with open(CONFIG_FILE, "w") as configfile:
         config_parser.write(configfile)
+
+
+def print_config():
+
+    config_parser = get_config()
+    for section_name in config_parser.sections():
+        print("\n{}". format(section_name))
+        if not config_parser[section_name]:
+            print("  configuration not found")
+
+        for key, value in config_parser.items(section_name):
+            print('  {} = {}'.format(key, value))
