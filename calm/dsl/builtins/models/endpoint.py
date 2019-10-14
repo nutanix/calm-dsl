@@ -8,6 +8,9 @@ class EndpointType(EntityType):
     __schema_name__ = "Endpoint"
     __openapi_type__ = "app_endpoint"
 
+    def get_ref(cls, name=None):
+        return super().get_ref(cls_name=name)
+
     def __call__(*args, **kwargs):
         pass
 
