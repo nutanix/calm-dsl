@@ -26,13 +26,9 @@ from .main import get, delete, describe
     type=click.Choice(["aws", "k8s", "vmware", "azure", "gcp", "nutanix"]),
 )
 @click.pass_obj
-def _get_accounts(
-    obj, name, filter_by, limit, offset, quiet, all_items, account_type
-):
+def _get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_type):
     """Get accounts, optionally filtered by a string"""
-    get_accounts(
-        obj, name, filter_by, limit, offset, quiet, all_items, account_type
-    )
+    get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_type)
 
 
 @delete.command("account")

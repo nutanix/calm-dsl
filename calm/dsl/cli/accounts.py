@@ -9,9 +9,7 @@ from .constants import ACCOUNT
 from calm.dsl.api import get_resource_api
 
 
-def get_accounts(
-    obj, name, filter_by, limit, offset, quiet, all_items, account_type
-):
+def get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_type):
     """ Get the accounts, optionally filtered by a string """
 
     client = obj.get("client")
