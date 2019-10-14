@@ -17,7 +17,7 @@ from .models.published_service import PublishedService, published_service
 
 from .models.package import Package, package
 
-from .models.provider_spec import provider_spec, read_provider_spec, read_file
+from .models.provider_spec import provider_spec, read_provider_spec, read_spec
 from .models.substrate import Substrate, substrate
 
 from .models.deployment import Deployment, deployment
@@ -69,7 +69,7 @@ __all__ = [
     "deployment",
     "PODDeployment",
     "pod_deployment",
-    "read_file",
+    "read_spec",
     "Profile",
     "profile",
     "Blueprint",

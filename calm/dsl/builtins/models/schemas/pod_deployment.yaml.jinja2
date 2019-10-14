@@ -7,6 +7,10 @@ properties:
   type:
     type: string
     default: K8S_DEPLOYMENT
+  containers:
+    type: array
+    items:
+      $ref: '#/components/schemas/Service'
   deployment_spec:
     x-calm-dsl-type: dict
     type: object

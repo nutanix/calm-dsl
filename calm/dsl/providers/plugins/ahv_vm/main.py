@@ -1,5 +1,5 @@
 import click
-import json
+from ruamel import yaml
 import re
 
 from calm.dsl.api import get_resource_api, get_api_client
@@ -476,7 +476,7 @@ def create_spec(client):
 
     AhvVmProvider.validate_spec(spec)  # Final validation (Insert some default's value)
     click.echo("\nCreate spec for your AHV VM:\n")
-    click.echo(highlight_text(json.dumps(spec, sort_keys=True, indent=4)))
+    click.echo(highlight_text(yaml.dump(spec, default_flow_style=False)))
 
 
 def find_schema(schema, path, option):

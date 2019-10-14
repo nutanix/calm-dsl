@@ -1,5 +1,6 @@
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
+from .utils import read_file
 
 
 # Credential
@@ -25,12 +26,17 @@ def _credential(**kwargs):
 Credential = _credential()
 
 
-def basic_cred(username, password, name="default", default=False):
+def basic_cred(
+    username, password="", name="default", default=False, type="PASSWORD", filename=None
+):
+
+    if filename:
+        password = read_file(filename, depth=2)
 
     secret = {"attrs": {"is_secret_modified": True}, "value": password}
 
     kwargs = {}
-    kwargs["type"] = "PASSWORD"
+    kwargs["type"] = type
     kwargs["username"] = username
     kwargs["secret"] = secret
     kwargs["name"] = name

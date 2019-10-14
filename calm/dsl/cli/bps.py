@@ -219,6 +219,14 @@ def compile_blueprint_command(bp_file, out):
         click.echo("User blueprint not found in {}".format(bp_file))
         return
 
+    config = get_config()
+    if "PROJECT" in config:
+        if config["PROJECT"].get("uuid"):
+            bp_payload["metadata"]["project_reference"] = {
+                "type": "project",
+                "uuid": config["PROJECT"]["uuid"],
+            }
+
     if out == "json":
         click.echo(json.dumps(bp_payload, indent=4, separators=(",", ": ")))
     elif out == "yaml":
@@ -308,20 +316,29 @@ def launch_blueprint_simple(
         "spec": {
             "app_name": app_name
             if app_name
-            else "TestSimpleLaunch-{}".format(int(time.time())),
+            else "App-{}-{}".format(blueprint_name, int(time.time())),
             "app_description": "",
             "app_profile_reference": profile.get("app_profile_reference", {}),
             "runtime_editables": runtime_editables,
         }
     }
+
     if runtime_editables and patch_editables:
-        click.echo("Blueprint editables are:\n{}".format(runtime_editables))
+        runtime_editables_json = json.dumps(
+            runtime_editables, indent=4, separators=(",", ": ")
+        )
+        click.echo("Blueprint editables are:\n{}".format(runtime_editables_json))
         for entity_type, entity_list in runtime_editables.items():
             for entity in entity_list:
                 context = entity["context"]
                 editables = entity["value"]
                 get_field_values(editables, context, path=entity.get("name", ""))
-        click.echo("Updated blueprint editables are:\n{}".format(runtime_editables))
+        runtime_editables_json = json.dumps(
+            runtime_editables, indent=4, separators=(",", ": ")
+        )
+        click.echo(
+            "Updated blueprint editables are:\n{}".format(runtime_editables_json)
+        )
     res, err = client.blueprint.launch(blueprint_uuid, launch_payload)
     if not err:
         click.echo(">> {} queued for launch >>".format(blueprint_name))
