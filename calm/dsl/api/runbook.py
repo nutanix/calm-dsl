@@ -87,10 +87,20 @@ class RunbookAPI(ResourceAPI):
 
         secret_map = {}
         secret_variables = []
-        object_lists = ["endpoint_definition_list"]
+        object_lists = []
         objects = ["runbook"]
 
         strip_secrets(runbook_resources, secret_map, secret_variables, object_lists=object_lists, objects=objects)
+
+        endpoint_secret_map = {}
+        endpoint_secret_variables = {}
+
+        for endpoint in runbook_resources.get("endpoint_definition_list"):
+            endpoint_name = endpoint.get("name")
+            endpoint_secret_map[endpoint_name] = {}
+            endpoint_secret_variables[endpoint_name] = []
+            strip_secrets(endpoint, endpoint_secret_map[endpoint_name], endpoint_secret_variables[endpoint_name])
+            endpoint["login_credential_reference"] = endpoint.pop("default_credential_local_reference", {})
 
         upload_payload = self._make_runbook_payload(runbook_name, runbook_desc, runbook_resources)
 
@@ -128,10 +138,14 @@ class RunbookAPI(ResourceAPI):
         del runbook["status"]
 
         # Update blueprint
-        update_payload = patch_secrets(runbook, secret_map, secret_variables)
+        patch_secrets(runbook['spec']['resources'], secret_map, secret_variables)
+        for endpoint in runbook['spec']['resources'].get('endpoint_definition_list', []):
+            endpoint_name = endpoint.get("name")
+            patch_secrets(endpoint, endpoint_secret_map[endpoint_name], endpoint_secret_variables[endpoint_name])
+
         uuid = runbook["metadata"]["uuid"]
 
-        return self.update(uuid, update_payload)
+        return self.update(uuid, runbook)
 
     def list_previous_runs(self, params=None):
         return self.connection._call(

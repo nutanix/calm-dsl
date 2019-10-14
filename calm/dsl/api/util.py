@@ -168,11 +168,11 @@ def strip_secrets(resources, secret_map, secret_variables, object_lists=[], obje
         strip_all_secret_variables(obj, resources.get(obj, {}))
 
 
-def patch_secrets(payload, secret_map, secret_variables):
+def patch_secrets(resources, secret_map, secret_variables):
     """
     Patches the secrests to payload
     Args:
-        Payload (dict): API request payload
+        resources (dict): resources in API request payload
         secret_map (dict): credential secret values
         secret_variables (list): list of secret variables
     Returns:
@@ -180,16 +180,16 @@ def patch_secrets(payload, secret_map, secret_variables):
     """
 
     # Add creds back
-    creds = payload["spec"]["resources"]["credential_definition_list"]
+    creds = resources["credential_definition_list"]
     for cred in creds:
         name = cred["name"]
         cred["secret"] = secret_map[name]
 
     for path, secret in secret_variables:
-        variable = payload["spec"]["resources"]
+        variable = resources
         for sub_path in path:
             variable = variable[sub_path]
         variable["attrs"] = {"is_secret_modified": True}
         variable["value"] = secret
 
-    return payload
+    return resources

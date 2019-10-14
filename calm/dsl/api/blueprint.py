@@ -127,7 +127,7 @@ class BlueprintAPI(ResourceAPI):
         bp = res.json()
         del bp["status"]
 
-        patch_secrets(bp, secret_map, secret_variables)
+        patch_secrets(bp['spec']['resources'], secret_map, secret_variables)
 
         # TODO - insert categories during update as /import_json fails if categories are given!
         # Populating the categories at runtime

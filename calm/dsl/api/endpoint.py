@@ -104,6 +104,6 @@ class EndpointAPI(ResourceAPI):
         del endpoint["status"]
 
         # Update endpoint
-        update_payload = patch_secrets(endpoint, secret_map, secret_variables)
+        patch_secrets(endpoint['spec']['resources'], secret_map, secret_variables)
 
-        return self.update(uuid, update_payload)
+        return self.update(uuid, endpoint)
