@@ -1,7 +1,7 @@
 import click
 
-from .main import config
-from .configs import set_config
+from .main import config, get
+from .configs import set_config, print_config
 
 
 @config.command("server")
@@ -24,3 +24,9 @@ def set_project_config(name, uuid):
     """Sets the configuration for default project"""
     set_config("PROJECT", name=name, uuid=uuid)
     pass
+
+
+@get.command("config")
+def _get_config():
+    """Prints the server, project and categories etc/ configuration"""
+    print_config()
