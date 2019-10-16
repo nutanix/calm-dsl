@@ -14,15 +14,6 @@ from calm.dsl.tools import ping
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
 
-from .projects import (
-    get_projects,
-    delete_project,
-    create_project,
-    describe_project,
-    update_project,
-)
-from .accounts import get_accounts, delete_account, describe_account
-
 logger = logging.getLogger(__name__)
 click_log.basic_config(logger)
 
@@ -160,48 +151,6 @@ def get_server_status(obj):
     # TODO - Add info about PC and Calm server version
 
 
-@get.command("projects")
-@click.option("--name", default=None, help="Search for projects by name")
-@click.option(
-    "--filter", "filter_by", default=None, help="Filter projects by this string"
-)
-@click.option("--limit", default=20, help="Number of results to return")
-@click.option("--offset", default=0, help="Offset results by the specified amount")
-@click.option(
-    "--quiet", "-q", is_flag=True, default=False, help="Show only project names"
-)
-@click.pass_obj
-def _get_projects(obj, name, filter_by, limit, offset, quiet):
-    """Get projects, optionally filtered by a string"""
-    get_projects(obj, name, filter_by, limit, offset, quiet)
-
-
-@get.command("accounts")
-@click.option("--name", default=None, help="Search for provider account by name")
-@click.option(
-    "--filter", "filter_by", default=None, help="Filter projects by this string"
-)
-@click.option("--limit", default=20, help="Number of results to return")
-@click.option("--offset", default=0, help="Offset results by the specified amount")
-@click.option(
-    "--quiet", "-q", is_flag=True, default=False, help="Show only account names"
-)
-@click.option(
-    "--all-items", "-a", is_flag=True, help="Get all items, including deleted ones"
-)
-@click.option(
-    "--type",
-    "account_type",
-    default=None,
-    help="Search for accounts of specific provider",
-    type=click.Choice(["aws", "k8s", "vmware", "azure", "gcp", "nutanix"]),
-)
-@click.pass_obj  # TODO ADD filter by type of account
-def _get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_type):
-    """Get accounts, optionally filtered by a string"""
-    get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_type)
-
-
 @main.group(cls=DYMGroup)
 def compile():
     """Compile blueprint to json / yaml"""
@@ -214,68 +163,10 @@ def create():
     pass
 
 
-def create_project_from_file(obj, file_location, project_name):
-
-    project_payload = yaml.safe_load(open(file_location, "r").read())
-    if project_name:
-        project_payload["project_detail"]["name"] = project_name
-
-    return create_project(obj, project_payload)
-
-
-@create.command("project")
-@click.option(
-    "--file",
-    "-f",
-    "project_file",
-    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
-    help="Path of Project file to upload",
-    required=True,
-)
-@click.option(
-    "--name", "project_name", type=str, default="", help="Project name(optional)"
-)
-@click.pass_obj
-def _create_project(obj, project_file, project_name):
-    """Creates a project"""
-
-    if project_file.endswith(".json") or project_file.endswith(".yaml"):
-        res, err = create_project_from_file(obj, project_file, project_name)
-    else:
-        click.echo("Unknown file format")
-        return
-
-    if err:
-        click.echo(err["error"])
-        return
-
-    project = res.json()
-    state = project["status"]["state"]
-    click.echo(">> Project state: {}".format(state))
-
-
 @main.group(cls=DYMGroup)
 def delete():
     """Delete entities"""
     pass
-
-
-@delete.command("project")
-@click.argument("project_names", nargs=-1)
-@click.pass_obj
-def _delete_project(obj, project_names):
-    """Deletes a project"""
-
-    delete_project(obj, project_names)
-
-
-@delete.command("account")
-@click.argument("account_names", nargs=-1)
-@click.pass_obj
-def _delete_account(obj, account_names):
-    """Deletes a account from settings"""
-
-    delete_account(obj, account_names)
 
 
 @main.group(cls=DYMGroup)
@@ -288,24 +179,6 @@ def launch():
 def describe():
     """Describe apps, blueprints, projects, accounts, endpoints, runbooks"""
     pass
-
-
-@describe.command("project")
-@click.argument("project_name")
-@click.pass_obj
-def _describe_project(obj, project_name):
-    """Describe a project"""
-
-    describe_project(obj, project_name)
-
-
-@describe.command("account")
-@click.argument("account_name")
-@click.pass_obj
-def _describe_account(obj, account_name):
-    """Describe a account"""
-
-    describe_account(obj, account_name)
 
 
 @main.group(cls=DYMGroup)
@@ -340,35 +213,6 @@ def create_provider_spec(obj, provider_type):
 def update():
     """Update entities"""
     pass
-
-
-@update.command("project")
-@click.argument("project_name")
-@click.option(
-    "--file",
-    "-f",
-    "project_file",
-    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
-    help="Path of Project file to upload",
-    required=True,
-)
-@click.pass_obj
-def _update_project(obj, project_name, project_file):
-
-    if project_file.endswith(".json") or project_file.endswith(".yaml"):
-        payload = yaml.safe_load(open(project_file, "r").read())
-        res, err = update_project(obj, project_name, payload)
-    else:
-        click.echo("Unknown file format")
-        return
-
-    if err:
-        click.echo(err["error"])
-        return
-
-    project = res.json()
-    state = project["status"]["state"]
-    click.echo(">> Project state: {}".format(state))
 
 
 @main.group(cls=DYMGroup)

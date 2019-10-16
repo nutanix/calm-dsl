@@ -29,8 +29,13 @@ def get_config(
     return _CONFIG
 
 
+def get_config_file():
+    return CONFIG_FILE
+
+
 def _init_config(ip, port, username, password, config_file, project_name):
 
+    global CONFIG_FILE
     config_file = config_file or CONFIG_FILE
     config = configparser.ConfigParser()
     config.optionxform = str  # Maintaining case sensitivity for field names
@@ -38,6 +43,7 @@ def _init_config(ip, port, username, password, config_file, project_name):
     if os.path.isfile(config_file):
         config.read(config_file)
 
+    CONFIG_FILE = config_file
     if "SERVER" in config:
         ip = ip or config["SERVER"].get("pc_ip")
         port = port or config["SERVER"].get("pc_port")
