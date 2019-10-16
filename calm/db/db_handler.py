@@ -83,8 +83,16 @@ class Database:
         return self
 
     def __exit__(self, exc_type, exc_value, tb):
-        if exc_type is not None:
-            traceback.print_exception(exc_type, exc_value, tb)
 
         if not self.db.is_closed():
             self.db.close()
+
+        if exc_type:
+            # If ValueError is raised, don't print Exception
+            # forwarding it further for catching
+            if exc_type.__name__ == "ValueError":
+                raise exc_type(exc_value)
+
+            else:
+                print("Hi {}". format(exc_type))
+                traceback.print_exception(exc_type, exc_value, tb)

@@ -58,3 +58,5 @@ def secret_cred(
     kwargs["secret"] = secret
     kwargs["name"] = name
     kwargs["default"] = default
+
+    return _credential(**kwargs)

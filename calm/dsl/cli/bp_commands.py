@@ -74,7 +74,7 @@ def create_blueprint(client, bp_payload, name=None, description=None, categories
             try:
                 value = find_secret(secret)
 
-            except Exception:
+            except ValueError:
                 click.echo("\nNo secret corresponding to {} found !!!\n".format(secret))
                 value = click.prompt("Please enter its value", hide_input=True)
 
