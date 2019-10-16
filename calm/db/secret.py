@@ -1,5 +1,6 @@
 import datetime
 import uuid
+import peewee
 
 from .crypto import Crypto
 from .db_handler import Database
@@ -35,7 +36,11 @@ class Secret:
         """Return secret instance"""
 
         with Database() as db:
-            secret = db.secret_table.get(db.secret_table.name == name)
+            try:
+                secret = db.secret_table.get(db.secret_table.name == name)
+            except peewee.DoesNotExist:
+                raise ValueError("Entity not found !!!")
+
             return secret
 
     @classmethod

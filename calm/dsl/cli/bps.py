@@ -219,6 +219,18 @@ def compile_blueprint_command(bp_file, out):
         click.echo("User blueprint not found in {}".format(bp_file))
         return
 
+    credential_list = bp_payload["spec"]["resources"]["credential_definition_list"]
+    is_secret_avl = False
+    for cred in credential_list:
+        if cred["secret"].get("secret", None):
+            cred["secret"].pop("secret")
+            is_secret_avl = True
+            # At compile time, value will be empty
+            cred["secret"]["value"] = ""
+
+    if is_secret_avl:
+        click.echo(highlight_text("Warning: Secrets are not shown in payload !!!"))
+
     if out == "json":
         click.echo(json.dumps(bp_payload, indent=4, separators=(",", ": ")))
     elif out == "yaml":
