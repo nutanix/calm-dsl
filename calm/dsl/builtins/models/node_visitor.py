@@ -1,8 +1,47 @@
 import ast
+import uuid
 
+from .task import dag
 from .entity import EntityType
 from .task import CalmTask, TaskType
 from .variable import CalmVariable, VariableType
+
+
+def handle_dag_create(node, func_globals, dag_name):
+    """
+    helper for create parsing tasks and creating dag
+    """
+
+    node_visitor = GetCallNodes(func_globals)
+    try:
+        node_visitor.visit(node)
+    except Exception as ex:
+        raise ex
+    tasks, variables, task_list = node_visitor.get_objects()
+    edges = []
+    for from_tasks, to_tasks in zip(task_list, task_list[1:]):
+        if not isinstance(from_tasks, list):
+            from_tasks = [from_tasks]
+        if not isinstance(to_tasks, list):
+            to_tasks = [to_tasks]
+        for from_task in from_tasks:
+            for to_task in to_tasks:
+                edges.append((from_task.get_ref(), to_task.get_ref()))
+
+    child_tasks = []
+    for child_task in task_list:
+        if not isinstance(child_task, list):
+            child_task = [child_task]
+        child_tasks.extend(child_task)
+
+    # First create the dag
+    user_dag = dag(
+        name=dag_name,
+        child_tasks=child_tasks,
+        edges=edges
+    )
+
+    return user_dag, tasks, variables
 
 
 class GetCallNodes(ast.NodeVisitor):
@@ -73,7 +112,7 @@ class GetCallNodes(ast.NodeVisitor):
             compile(ast.Expression(node.items[0].context_expr), "", "eval"),
             self._globals,
         )
-        if context.__calm_type__ == "parallel":
+        if hasattr(context, '__calm_type__') and context.__calm_type__ == "parallel":
             for statement in node.body:
                 if not isinstance(statement.value, ast.Call):
                     raise ValueError(
@@ -84,6 +123,33 @@ class GetCallNodes(ast.NodeVisitor):
                     parallel_tasks.append(task)
                     self.all_tasks.append(task)
             self.task_list.append(parallel_tasks)
+
+        # for decision tasks
+        elif isinstance(context, TaskType) and context.type == "DECISION":
+            for statement in node.body:
+                if isinstance(statement, ast.FunctionDef):
+                    if statement.name == "success":
+                        success_dag, tasks, variables = handle_dag_create(statement, self._globals, "success-" + str(uuid.uuid4())[:4])
+                        self.all_tasks.extend([success_dag] + tasks)
+                        self.variables.update(variables)
+
+                    elif statement.name == "failure":
+                        failure_dag, tasks, variables = handle_dag_create(statement, self._globals, "failure-" + str(uuid.uuid4())[:4])
+                        self.all_tasks.extend([failure_dag] + tasks)
+                        self.variables.update(variables)
+                    else:
+                        raise ValueError(
+                            "Only \"success\" and \"failure\" flows are supported inside decision context"
+                        )
+                else:
+                    raise ValueError(
+                        "Only calls to 'FunctionDef' methods supported inside decision context."
+                    )
+
+            context.attrs['success_child_reference'] = success_dag.get_ref()
+            context.attrs['failure_child_reference'] = failure_dag.get_ref()
+            self.all_tasks.append(context)
+            self.task_list.append(context)
         else:
             raise ValueError(
                 "Unsupported context used in 'with' statement inside the action."

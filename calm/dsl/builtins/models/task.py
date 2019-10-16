@@ -116,6 +116,42 @@ def _exec_create(
     return _task_create(**kwargs)
 
 
+def _decision_create(
+    script_type, script=None, filename=None, name=None,
+    target=None, cred=None, depth=2
+):
+    if script is not None and filename is not None:
+        raise ValueError(
+            "Only one of script or filename should be given for decision task "
+            + (name or "")
+        )
+
+    if filename is not None:
+        file_path = os.path.join(
+            os.path.dirname(sys._getframe(depth).f_globals.get("__file__")), filename
+        )
+
+        with open(file_path, "r") as scriptf:
+            script = scriptf.read()
+
+    if script is None:
+        raise ValueError(
+            "One of script or filename is required for decision task " + (name or "")
+        )
+
+    kwargs = {
+        "name": name,
+        "type": "DECISION",
+        "attrs": {"script_type": script_type, "script": script},
+    }
+    if cred is not None:
+        kwargs["attrs"]["login_credential_local_reference"] = _get_target_ref(cred)
+    if target is not None:
+        kwargs["target_any_local_reference"] = _get_target_ref(target)
+
+    return _task_create(**kwargs)
+
+
 def dag(name=None, child_tasks=None, edges=None, target=None):
     """
     Create a DAG task
@@ -213,6 +249,45 @@ def exec_task_powershell(
         script=None, filename=None, name=None, target=None, cred=None, depth=2
 ):
     return _exec_create(
+        "npsscript",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        cred=cred,
+        depth=depth
+    )
+
+
+def decision_task_ssh(
+    script=None, filename=None, name=None, target=None, cred=None, depth=2
+):
+    return _decision_create(
+        "sh",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        cred=cred,
+        depth=depth,
+    )
+
+
+def decision_task_escript(script=None, filename=None, name=None, target=None, depth=2):
+    return _decision_create(
+        "static",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        depth=depth,
+    )
+
+
+def decision_task_powershell(
+        script=None, filename=None, name=None, target=None, cred=None, depth=2
+):
+    return _decision_create(
         "npsscript",
         script=script,
         filename=filename,
@@ -828,6 +903,14 @@ class CalmTask:
         ssh = exec_task_ssh
         powershell = exec_task_powershell
         escript = exec_task_escript
+
+    class Decision:
+        def __new__(cls, *args, **kwargs):
+            raise TypeError("'{}' is not callable".format(cls.__name__))
+
+        ssh = decision_task_ssh
+        powershell = decision_task_powershell
+        escript = decision_task_escript
 
     class HTTP:
         def __new__(
