@@ -65,6 +65,18 @@ def delete_secret(name):
     click.echo(highlight_text("\nSecret deleted !!!\n"))
 
 
+def update_secret(name, value):
+    """Updates the secret"""
+
+    secrets = get_secrets_names()
+    if name not in secrets:
+        click.echo(highlight_text("\nSecret not present !!!\n"))
+        return
+
+    Secret.update(name, value)
+    click.echo(highlight_text("\nSecret updated !!!\n"))
+
+
 def find_secret(name, pass_phrase=""):
     """ Gives you the value stored correponding to secret"""
 

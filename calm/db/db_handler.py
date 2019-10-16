@@ -94,5 +94,4 @@ class Database:
                 raise exc_type(exc_value)
 
             else:
-                print("Hi {}". format(exc_type))
                 traceback.print_exception(exc_type, exc_value, tb)
