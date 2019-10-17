@@ -273,17 +273,6 @@ def decision_task_ssh(
     )
 
 
-def decision_task_escript(script=None, filename=None, name=None, target=None, depth=2):
-    return _decision_create(
-        "static",
-        script=script,
-        filename=filename,
-        name=name,
-        target=target,
-        depth=depth,
-    )
-
-
 def decision_task_powershell(
         script=None, filename=None, name=None, target=None, cred=None, depth=2
 ):
@@ -910,7 +899,6 @@ class CalmTask:
 
         ssh = decision_task_ssh
         powershell = decision_task_powershell
-        escript = decision_task_escript
 
     class HTTP:
         def __new__(
