@@ -1,7 +1,6 @@
 import ast
-import uuid
 
-from .task import dag
+from .task import dag, meta
 from .entity import EntityType
 from .task import CalmTask, TaskType
 from .variable import CalmVariable, VariableType
@@ -42,6 +41,33 @@ def handle_dag_create(node, func_globals, dag_name):
     )
 
     return user_dag, tasks, variables
+
+
+def handle_meta_create(node, func_globals, meta_name):
+    """
+    helper for create parsing tasks and creating meta
+    """
+
+    node_visitor = GetCallNodes(func_globals)
+    try:
+        node_visitor.visit(node)
+    except Exception as ex:
+        raise ex
+    tasks, variables, task_list = node_visitor.get_objects()
+
+    child_tasks = []
+    for child_task in task_list:
+        if not isinstance(child_task, list):
+            child_task = [child_task]
+        child_tasks.extend(child_task)
+
+    # First create the meta
+    user_meta = meta(
+        name=meta_name,
+        child_tasks=child_tasks
+    )
+
+    return user_meta, tasks, variables
 
 
 class GetCallNodes(ast.NodeVisitor):
@@ -129,12 +155,12 @@ class GetCallNodes(ast.NodeVisitor):
             for statement in node.body:
                 if isinstance(statement, ast.FunctionDef):
                     if statement.name == "success":
-                        success_dag, tasks, variables = handle_dag_create(statement, self._globals, "success-" + str(uuid.uuid4())[:4])
+                        success_dag, tasks, variables = handle_meta_create(statement, self._globals, context.name + "-success")
                         self.all_tasks.extend([success_dag] + tasks)
                         self.variables.update(variables)
 
                     elif statement.name == "failure":
-                        failure_dag, tasks, variables = handle_dag_create(statement, self._globals, "failure-" + str(uuid.uuid4())[:4])
+                        failure_dag, tasks, variables = handle_meta_create(statement, self._globals, context.name + "-failure")
                         self.all_tasks.extend([failure_dag] + tasks)
                         self.variables.update(variables)
                     else:
