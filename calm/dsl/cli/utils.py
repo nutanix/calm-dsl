@@ -35,7 +35,7 @@ class Display:
     @classmethod
     def wrapper(cls, func, watch=False):
         if watch:
-            Screen.wrapper(func)
+            Screen.wrapper(func, height=1000, catch_interrupt=True)
         else:
             func(display)
 

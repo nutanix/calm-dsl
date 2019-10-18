@@ -41,7 +41,7 @@ class InputFrame(Frame):
                                name=singleinput.get("name"),
                                seconds=True,
                                on_change=self._on_change), 1)
-            elif singleinput.get("input_type", SINGLE_INPUT.TYPE.TEXT) in [SINGLE_INPUT.TYPE.SELECT, SINGLE_INPUT.TYPE.MULTIPLESELECT]:
+            elif singleinput.get("input_type", SINGLE_INPUT.TYPE.TEXT) in [SINGLE_INPUT.TYPE.SELECT, SINGLE_INPUT.TYPE.SELECTMULTIPLE]:
                 layout.add_widget(
                     DropdownList([(option, option) for option in singleinput.get("options")],
                                  label=singleinput.get("name") + ":",
@@ -123,11 +123,12 @@ class ConfirmFrame(Frame):
 
 def displayRunLogTree(screen, root, completed_tasks, total_tasks, msg=None):
     screen.clear()
+    screen.print_at("NOTE: For pausing/stoping runbook press 'S'. For play/resume press 'R'.", 0, 0, colour=6)
     if total_tasks:
         progress = "{0:.2f}".format(completed_tasks / total_tasks * 100)
-        screen.print_at("Progress: {}%".format(progress), 0, 0)
+        screen.print_at("Progress: {}%".format(progress), 0, 1)
 
-    line = 1
+    line = 2
     for pre, _, node in RenderTree(root):
         line = displayRunLog(screen, node, pre, line)
     if msg:
@@ -336,6 +337,9 @@ def get_completion_func(screen):
         entities = response["entities"]
         if len(entities):
 
+            # catching interrupt for pause and play
+            interrupt = screen.get_event()
+
             # Sort entities based on creation time
             sorted_entities = sorted(
                 entities, key=lambda x: int(x["metadata"]["creation_time"])
@@ -435,8 +439,20 @@ def get_completion_func(screen):
                     if client is not None:
                         client.runbook.resume(runlog_uuid, task_uuid, confirm_payload)
                 confirm_tasks = []
-                msg = "Sending confirmation for confirm tasks"
                 msg = "Sending resume for confirm tasks with confirmation"
+                line = displayRunLogTree(screen, root, completed_tasks, total_tasks, msg=msg)
+
+            if interrupt and hasattr(interrupt, 'key_code') and interrupt.key_code == 83:
+                client.runbook.pause(runlog_uuid)
+
+                # 'KeyS' KeyboardEvent.code, pause/stop the runlog
+                msg = "Triggered pause/stop for the Runbook Runlog"
+                line = displayRunLogTree(screen, root, completed_tasks, total_tasks, msg=msg)
+            elif interrupt and hasattr(interrupt, 'key_code') and interrupt.key_code == 82:
+                client.runbook.play(runlog_uuid)
+
+                # 'KeyR' KeyboardEvent.code, play/resume the runlog
+                msg = "Triggered play/resume for the Runbook Runlog"
                 line = displayRunLogTree(screen, root, completed_tasks, total_tasks, msg=msg)
 
             rerun = {}
