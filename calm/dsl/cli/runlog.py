@@ -3,6 +3,7 @@ from asciimatics.scene import Scene
 from asciimatics.exceptions import StopApplication
 import time
 from time import sleep
+from datetime import timedelta
 import itertools
 
 from anytree import NodeMixin, RenderTree
@@ -195,8 +196,14 @@ def displayRunLog(screen, obj, pre, line):
     )
     last_update_time = int(metadata["last_update_time"]) // 1000000
 
+    if state in RUNLOG.TERMINAL_STATES:
+        time_stats = '[Started: {} Time Taken: {:0>8}]'.format(datetime.datetime.fromtimestamp(creation_time).strftime("%m/%d/%Y, %H:%M:%S"),
+                                                               str(timedelta(seconds=last_update_time - creation_time)))
+    else:
+        time_stats = '[Started: {}]'.format(datetime.datetime.fromtimestamp(creation_time).strftime("%m/%d/%Y, %H:%M:%S"))
+
     prefix = "{}{} (Status:".format(pre, name)
-    screen.print_at(prefix, 0, line)
+    screen.print_at("{} {}) {}".format(prefix, state, time_stats), 0, line)
     colour = 3  # yellow for pending state
     if state == RUNLOG.STATUS.SUCCESS:
         colour = 2  # green for success
@@ -206,31 +213,17 @@ def displayRunLog(screen, obj, pre, line):
         colour = 4  # blue for running state
     elif state == RUNLOG.STATUS.INPUT:
         colour = 6  # cyan for input state
-    screen.print_at("{})".format(state), len(prefix) + 1, idx(), colour=colour)
+    screen.print_at("{}".format(state), len(prefix) + 1, idx(), colour=colour)
 
     if status["type"] == "action_runlog":
         screen.print_at(
             "Runlog UUID: {}".format(metadata["uuid"]),
             len(pre) + 4, idx()
         )
-    screen.print_at(
-        "Started: {}".format(time.ctime(creation_time)),
-        len(pre) + 4, idx()
-    )
 
     if username:
         screen.print_at(
             "Run by: {}".format(username),
-            len(pre) + 4, idx()
-        )
-    if state in RUNLOG.TERMINAL_STATES:
-        screen.print_at(
-            "Finished: {}".format(time.ctime(last_update_time)),
-            len(pre) + 4, idx()
-        )
-    else:
-        screen.print_at(
-            "Last Updated: {}".format(time.ctime(last_update_time)),
             len(pre) + 4, idx()
         )
 
@@ -442,7 +435,13 @@ def get_completion_func(screen):
                 msg = "Sending resume for confirm tasks with confirmation"
                 line = displayRunLogTree(screen, root, completed_tasks, total_tasks, msg=msg)
 
-            if interrupt and hasattr(interrupt, 'key_code') and interrupt.key_code == 83:
+            if interrupt and hasattr(interrupt, 'key_code') and interrupt.key_code == 4:
+                client.runbook.pause(runlog_uuid)
+
+                # exit inerrupt
+                screen.close()
+                exit()
+            elif interrupt and hasattr(interrupt, 'key_code') and interrupt.key_code == 83:
                 client.runbook.pause(runlog_uuid)
 
                 # 'KeyS' KeyboardEvent.code, pause/stop the runlog
