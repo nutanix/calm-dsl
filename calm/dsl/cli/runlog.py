@@ -1,5 +1,6 @@
 from asciimatics.widgets import Frame, Layout, Divider, Text, Button, DatePicker, TimePicker, Label, DropdownList
 from asciimatics.scene import Scene
+from asciimatics.screen import Screen
 from asciimatics.exceptions import StopApplication
 import time
 from time import sleep
@@ -124,14 +125,25 @@ class ConfirmFrame(Frame):
 
 def displayRunLogTree(screen, root, completed_tasks, total_tasks, msg=None):
     screen.clear()
-    screen.print_at("NOTE: For pausing/stoping runbook press 'S'. For play/resume press 'R'.", 0, 0, colour=6)
     if total_tasks:
         progress = "{0:.2f}".format(completed_tasks / total_tasks * 100)
-        screen.print_at("Progress: {}%".format(progress), 0, 1)
+        screen.print_at("Progress: {}%".format(progress), 0, 0)
 
-    line = 2
-    for pre, _, node in RenderTree(root):
-        line = displayRunLog(screen, node, pre, line)
+    runlog_state = root.children[0].runlog["status"]["state"]
+    colour = 3  # yellow for pending state
+    if runlog_state == RUNLOG.STATUS.SUCCESS:
+        colour = 2  # green for success
+    elif runlog_state in RUNLOG.FAILURE_STATES:
+        colour = 1  # red for failure
+    elif runlog_state == RUNLOG.STATUS.RUNNING:
+        colour = 4  # blue for running state
+    elif runlog_state == RUNLOG.STATUS.INPUT:
+        colour = 6  # cyan for input state
+
+    screen.print_at(runlog_state, screen.width - len(runlog_state) - 5, 0, colour=colour, attr=Screen.A_BOLD)
+    line = 1
+    for pre, fill, node in RenderTree(root):
+        line = displayRunLog(screen, node, pre, fill, line)
     if msg:
         screen.print_at(msg, 0, line, colour=6)
     line = line + 1
@@ -150,7 +162,7 @@ class RunlogNode(NodeMixin):
             self.children = children
 
 
-def displayRunLog(screen, obj, pre, line):
+def displayRunLog(screen, obj, pre, fill, line):
 
     if not isinstance(obj, RunlogNode):
         return super().default(obj)
@@ -166,7 +178,7 @@ def displayRunLog(screen, obj, pre, line):
     if status["type"] == "task_runlog":
         name = status["task_reference"]["name"]
         for out in obj.outputs:
-            output += "\'{}\'\n".format(out)
+            output += "\'{}\'\n".format(out[:-1])
         for reason in obj.reasons:
             reason_list += "\'{}\'\n".format(reason)
     elif status["type"] == "runbook_runlog":
@@ -197,10 +209,9 @@ def displayRunLog(screen, obj, pre, line):
     last_update_time = int(metadata["last_update_time"]) // 1000000
 
     if state in RUNLOG.TERMINAL_STATES:
-        time_stats = '[Started: {} Time Taken: {:0>8}]'.format(datetime.datetime.fromtimestamp(creation_time).strftime("%m/%d/%Y, %H:%M:%S"),
-                                                               str(timedelta(seconds=last_update_time - creation_time)))
+        time_stats = '[Time Taken: {:0>8}]'.format(str(timedelta(seconds=last_update_time - creation_time)))
     else:
-        time_stats = '[Started: {}]'.format(datetime.datetime.fromtimestamp(creation_time).strftime("%m/%d/%Y, %H:%M:%S"))
+        time_stats = '[Started: {}]'.format(time.ctime(creation_time))
 
     prefix = "{}{} (Status:".format(pre, name)
     screen.print_at("{} {}) {}".format(prefix, state, time_stats), 0, line)
@@ -217,27 +228,31 @@ def displayRunLog(screen, obj, pre, line):
 
     if status["type"] == "action_runlog":
         screen.print_at(
-            "Runlog UUID: {}".format(metadata["uuid"]),
-            len(pre) + 4, idx()
+            "{}\t Runlog UUID: {}".format(fill, metadata["uuid"]),
+            0, idx()
         )
 
     if username:
         screen.print_at(
-            "Run by: {}".format(username),
-            len(pre) + 4, idx()
+            "{}\t Run by: {}".format(fill, username),
+            0, idx()
         )
 
     if output and not obj.children:
-        screen.print_at("Output :", len(pre) + 4, idx())
+        screen.print_at("{}\t Output :".format(fill), 0, idx())
         output_lines = output.splitlines()
         for line in output_lines:
-            screen.print_at(line, len(pre) + 6, idx(), colour=5, attr=1)
+            y_coord = idx()
+            screen.print_at('{}\t  {}'.format(fill, line), 0, y_coord, colour=5, attr=1)
+            screen.print_at(fill, 0, y_coord)
 
     if reason_list:
-        screen.print_at("Reasons :", len(pre) + 4, idx())
+        screen.print_at("{}\t Reasons :".format(fill), 0, idx())
         reason_lines = reason_list.splitlines()
         for line in reason_lines:
-            screen.print_at(line, len(pre) + 6, idx(), colour=1, attr=1)
+            y_coord = idx()
+            screen.print_at('{}\t  {}'.format(fill, line), 0, y_coord, colour=1, attr=1)
+            screen.print_at(fill, 0, y_coord)
 
     if status["type"] == "task_runlog" and state == RUNLOG.STATUS.INPUT:
         attrs = status.get("attrs", None)
@@ -268,7 +283,7 @@ class RunlogJSONEncoder(JSONEncoder):
         if status["type"] == "task_runlog":
             name = status["task_reference"]["name"]
             for out in obj.outputs:
-                output += "\'{}\'\n".format(out)
+                output += "\'{}\'\n".format(out[:-1])
         elif status["type"] == "runbook_runlog":
             if "call_runbook_reference" in status:
                 name = status["call_runbook_reference"]["name"]
