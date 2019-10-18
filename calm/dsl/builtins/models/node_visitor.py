@@ -155,13 +155,13 @@ class GetCallNodes(ast.NodeVisitor):
             for statement in node.body:
                 if isinstance(statement, ast.FunctionDef):
                     if statement.name == "success":
-                        success_dag, tasks, variables = handle_meta_create(statement, self._globals, context.name + "-success")
-                        self.all_tasks.extend([success_dag] + tasks)
+                        success_path, tasks, variables = handle_meta_create(statement, self._globals, context.name + "-success")
+                        self.all_tasks.extend([success_path] + tasks)
                         self.variables.update(variables)
 
                     elif statement.name == "failure":
-                        failure_dag, tasks, variables = handle_meta_create(statement, self._globals, context.name + "-failure")
-                        self.all_tasks.extend([failure_dag] + tasks)
+                        failure_path, tasks, variables = handle_meta_create(statement, self._globals, context.name + "-failure")
+                        self.all_tasks.extend([failure_path] + tasks)
                         self.variables.update(variables)
                     else:
                         raise ValueError(
@@ -172,8 +172,29 @@ class GetCallNodes(ast.NodeVisitor):
                         "Only calls to 'FunctionDef' methods supported inside decision context."
                     )
 
-            context.attrs['success_child_reference'] = success_dag.get_ref()
-            context.attrs['failure_child_reference'] = failure_dag.get_ref()
+            context.attrs['success_child_reference'] = success_path.get_ref()
+            context.attrs['failure_child_reference'] = failure_path.get_ref()
+            self.all_tasks.append(context)
+            self.task_list.append(context)
+
+        # for parallel tasks
+        elif isinstance(context, TaskType) and context.type == "PARALLEL":
+            for statement in node.body:
+                if isinstance(statement, ast.FunctionDef):
+                    meta_task, tasks, variables = handle_meta_create(statement, self._globals, context.name + "-" + statement.name)
+                    self.all_tasks.extend([meta_task] + tasks)
+                    self.variables.update(variables)
+                    context.child_tasks_local_reference_list.append(meta_task.get_ref())
+                elif isinstance(statement.value, ast.Call):
+                    task = self.visit_Call(statement.value, return_task=True)
+                    if task:
+                        self.all_tasks.append(task)
+                        context.child_tasks_local_reference_list.append(task.get_ref())
+                else:
+                    raise ValueError(
+                        "Only calls to 'CalmTask' or 'FunctionDef' methods supported inside parallel context."
+                    )
+
             self.all_tasks.append(context)
             self.task_list.append(context)
         else:

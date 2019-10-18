@@ -192,6 +192,30 @@ def dag(name=None, child_tasks=None, edges=None, target=None):
     return _task_create(**kwargs)
 
 
+def parallel_task(name=None, child_tasks=[], attrs={}):
+    """
+    Create a PARALLEL task
+    Args:
+        name (str): Name for the task
+        child_tasks (list [Task]): Child tasks within this dag
+        attrs (dict): Task's attrs
+    Returns:
+        (Task): PARALLEL task
+    """
+
+    # This follows UI naming convention for runbooks
+    name = name or str(uuid.uuid4())[:8] + "_parallel"
+    kwargs = {
+        "name": name,
+        "child_tasks_local_reference_list": [
+            task.get_ref() for task in child_tasks or []
+        ],
+        "type": "PARALLEL",
+    }
+
+    return _task_create(**kwargs)
+
+
 def meta(name=None, child_tasks=None, edges=None, target=None):
     """
     Create a META task
@@ -949,6 +973,10 @@ class CalmTask:
     class Scaling:
         scale_in = scale_in_task
         scale_out = scale_out_task
+
+    class Parallel:
+        def __new__(cls, name=None, child_tasks=[], attrs={}):
+            return parallel_task(name=name, child_tasks=child_tasks, attrs=attrs)
 
     class Delay:
         def __new__(cls, delay_seconds=None, name=None, target=None):
