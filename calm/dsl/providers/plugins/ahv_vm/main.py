@@ -33,9 +33,9 @@ class AHV:
         Obj = get_resource_api(ahv.IMAGES, self.connection)
         return Obj.get_name_uuid_map()
 
-    def subnets(self):
+    def subnets(self, payload):
         Obj = get_resource_api(ahv.SUBNETS, self.connection)
-        return Obj.get_name_uuid_map()
+        return Obj.get_name_uuid_map(payload)
 
     def groups(self, payload):
         Obj = get_resource_api(ahv.GROUPS, self.connection)
@@ -94,9 +94,43 @@ def create_spec(client):
     path = []  # Path to the key
     option = []  # Any option occured during finding key
 
+    # VM Configuration
+
+    projects = client.project.get_name_uuid_map()
+    project_list = list(projects.keys())
+
+    if not project_list:
+        click.echo(highlight_text("No projects found!!!"))
+        click.echo(highlight_text("Please add first"))
+        return
+
+    click.echo("\nChoose from given projects:")
+    for ind, name in enumerate(project_list):
+        click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
+
+    project_id = ""
+    while True:
+        ind = click.prompt("\nEnter the index of project", default=1)
+        if (ind > len(project_list)) or (ind <= 0):
+            click.echo("Invalid index !!! ")
+
+        else:
+            project_id = projects[project_list[ind - 1]]
+            click.echo("{} selected".format(highlight_text(project_list[ind - 1])))
+            break
+
+    res, err = client.project.read(project_id)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    project = res.json()
+    subnets_list = []
+    for subnet in project["status"]["project_status"]["resources"]["subnet_reference_list"]:
+        subnets_list.append(subnet["name"])
+
     click.echo("")
     path.append("name")
-    spec["name"] = get_field(schema, path, option)
+    spec["name"] = get_field(schema, path, option, default="vm_@@{calm_application_name}@@-@@{calm_array_index}@@")
 
     choice = click.prompt(
         "\n{}(y/n)".format(highlight_text("Want to add some categories")), default="n"
@@ -365,7 +399,13 @@ def create_spec(client):
         "\n{}(y/n)".format(highlight_text("Want any network adapters")), default="n"
     )
     if choice[0] == "y":
-        subnetNameUUIDMap = Obj.subnets()
+
+        if subnets_list:
+            payload = {"filter": "(name=={})".format(",name==".join(subnets_list))}
+        else:
+            payload = {}
+
+        subnetNameUUIDMap = Obj.subnets(payload)
         nics = list(subnetNameUUIDMap.keys())
 
         if not nics:
