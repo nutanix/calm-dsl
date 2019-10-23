@@ -24,28 +24,6 @@ def ahv_vm_nic(**kwargs):
 AhvVmNic = ahv_vm_nic()
 
 
-# AHV VM Vdisk
-
-
-class AhvVdiskType(EntityType):
-    __schema_name__ = "AhvVdisk"
-    __openapi_type__ = "vm_ahv_vdisk"
-
-
-class AhvVdiskValidator(PropertyValidator, openapi_type="vm_ahv_vdisk"):
-    __default__ = None
-    __kind__ = AhvVdiskType
-
-
-def ahv_vm_vdisk(**kwargs):
-    name = getattr(AhvVdiskType, "__schema_name__")
-    bases = (Entity,)
-    return AhvVdiskType(name, bases, kwargs)
-
-
-AhvVmVdisk = ahv_vm_vdisk()
-
-
 # AHV VM Disk
 
 

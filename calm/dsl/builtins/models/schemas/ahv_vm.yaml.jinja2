@@ -23,6 +23,31 @@ properties:
         default: subnet
       name:
         type: string
+  network_function_chain_reference:
+    type: object
+    x-calm-dsl-type: dict
+    properties:
+      uuid:
+        type: string
+      kind:
+        type: string
+        default: network_function_chain
+      name:
+        type: string
+    default: null
+  mac_address:
+    type: string
+  ip_endpoint_list:
+    type: array
+    items:
+      type: object
+      x-calm-dsl-type: dict
+      properties:
+        ip:
+          type: string
+        type:
+          type: string
+          enum: [ASSIGNED, LEARNED]
 
 {%- endmacro %}
 
@@ -69,33 +94,6 @@ properties:
 {%- endmacro %}
 
 
-{% macro AhvVdisk() -%}
-
-title: AHV VDisk
-type: object
-x-calm-dsl-type: vm_ahv_vdisk
-properties:
-  device_properties:
-    type: object
-    x-calm-dsl-type: dict
-    properties:
-      device_type:
-        type: string
-      disk_address:
-        type: object
-        x-calm-dsl-type: dict
-        properties:
-          device_index:
-            type: integer
-          adapter_type:
-            type: string
-  disk_size_mib:
-    type: integer
-    default: 0
-
-{%- endmacro %}
-
-
 {% macro AhvVmResources() -%}
 
 title: AHV Resources
@@ -125,10 +123,8 @@ properties:
     type: array
     items:
       $ref: '#/components/schemas/AhvDisk'
-  vdisk_list: # vdisk and disk lists to be merged during compile
-    type: array
-    items:
-      $ref: '#/components/schemas/AhvVdisk'
+  boot_type:      # Will merge to boot_config at compile time
+    type: string
   boot_config:
     type: object
     x-calm-dsl-type: dict
@@ -147,6 +143,8 @@ properties:
               adapter_type:
                 type: string
                 default: SCCI
+      boot_type:
+        type: string
 
   guest_customization:
     type: object
