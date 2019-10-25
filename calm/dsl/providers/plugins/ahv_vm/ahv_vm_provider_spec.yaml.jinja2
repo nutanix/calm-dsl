@@ -22,7 +22,6 @@ properties:
         default: subnet
       name:
         type: string
-    required: ["kind", "uuid"]
   network_function_chain_reference:
     type: [object, "null"]
     properties:
@@ -33,7 +32,6 @@ properties:
         default: network_function_chain
       name:
         type: string
-    required: ["kind", "uuid"]
   mac_address:
     type: string
   ip_endpoint_list:
@@ -45,6 +43,7 @@ properties:
           type: string
         type:
           type: string
+          default: ASSIGNED
           enum: [ASSIGNED, LEARNED]
 
 {%- endmacro %}
@@ -292,7 +291,6 @@ properties:
         default: cluster
       name:
         type: string
-    required: ["kind", "uuid"]
   availability_zone_reference:
     type: [object, "null"]
     properties:
@@ -303,7 +301,6 @@ properties:
         default: availability_zone
       name:
         type: string
-    required: ["kind", "uuid"]
 
 {%- endmacro %}
 

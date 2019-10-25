@@ -29,13 +29,29 @@ class AHV:
     def __init__(self, connection):
         self.connection = connection
 
-    def images(self):
+    def images(self, image_type="DISK_IMAGE"):
         Obj = get_resource_api(ahv.IMAGES, self.connection)
-        return Obj.get_name_uuid_map()
+        res, err = Obj.list()
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        img_name_uuid_map = {}
+
+        for image in res["entities"]:
+            img_type = image["status"]["resources"]["image_type"]
+            if img_type == image_type:
+                img_name_uuid_map[image["status"]["name"]] = image["metadata"]["uuid"]
+
+        return img_name_uuid_map
 
     def subnets(self, payload):
         Obj = get_resource_api(ahv.SUBNETS, self.connection)
-        return Obj.get_name_uuid_map(payload)
+        res, err = Obj.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        return res.json()
 
     def groups(self, payload):
         Obj = get_resource_api(ahv.GROUPS, self.connection)
@@ -125,12 +141,19 @@ def create_spec(client):
 
     project = res.json()
     subnets_list = []
-    for subnet in project["status"]["project_status"]["resources"]["subnet_reference_list"]:
+    for subnet in project["status"]["project_status"]["resources"][
+        "subnet_reference_list"
+    ]:
         subnets_list.append(subnet["name"])
 
     click.echo("")
     path.append("name")
-    spec["name"] = get_field(schema, path, option, default="vm_@@{calm_application_name}@@-@@{calm_array_index}@@")
+    spec["name"] = get_field(
+        schema,
+        path,
+        option,
+        default="vm_@@{calm_application_name}@@-@@{calm_array_index}@@",
+    )
 
     choice = click.prompt(
         "\n{}(y/n)".format(highlight_text("Want to add some categories")), default="n"
@@ -177,6 +200,8 @@ def create_spec(client):
                         )
 
                 else:
+                    category = "{}:{}".format(group["key"], group["value"])
+                    click.echo("{} selected".format(highlight_text(category)))
                     result[key] = group["value"]
 
                 choice = click.prompt(
@@ -192,34 +217,30 @@ def create_spec(client):
 
     spec["resources"] = {}
     path[-1] = "resources"
-    click.echo("")
 
-    path.append("num_vcpus_per_socket")
-    spec["resources"]["num_vcpus_per_socket"] = get_field(
-        schema, path, option, default=1
+    path.append("num_sockets")
+    click.echo("")
+    spec["resources"]["num_sockets"] = get_field(
+        schema, path, option, default=1, msg="Enter vCPUs count"
     )
 
-    path[-1] = "num_sockets"
+    path[-1] = "num_vcpus_per_socket"
     click.echo("")
-    spec["resources"]["num_sockets"] = get_field(schema, path, option, default=1)
+    spec["resources"]["num_vcpus_per_socket"] = get_field(
+        schema, path, option, default=1, msg="Enter Cores per vCPU count"
+    )
 
     path[-1] = "memory_size_mib"
     click.echo("")
-    spec["resources"]["memory_size_mib"] = get_field(schema, path, option, default=1)
+    spec["resources"]["memory_size_mib"] = (
+        get_field(schema, path, option, default=1, msg="Enter Memory(GiB)") * 1024
+    )
 
-    click.secho("\nAdd some images:\n", fg="blue", bold=True)
-
-    imagesNameUUIDMap = Obj.images()
-    images = list(imagesNameUUIDMap.keys())
-
-    if images:
-        click.echo("Choose from given images: \n")
-        for ind, name in enumerate(images):
-            click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
+    click.secho("\nAdd some disks:\n", fg="blue", bold=True)
 
     spec["resources"]["disk_list"] = []
     path[-1] = "disk_list"
-    option.append("AHV Disk List")
+    option.append("AHV Disk")
 
     adapterNameIndexMap = {}
     image_index = 0
@@ -229,21 +250,6 @@ def create_spec(client):
         click.secho(
             "\nImage Device {}".format(str(image_index)), bold=True, underline=True
         )
-
-        while True:
-            if not images:
-                click.echo("\n{}".format(highlight_text("No image present")))
-                image["name"] = ""
-                break
-
-            res = click.prompt("\nEnter the index of image", default=1)
-            if (res > len(images)) or (res <= 0):
-                click.echo("Invalid index !!! ")
-
-            else:
-                image["name"] = images[res - 1]
-                click.echo("{} selected".format(highlight_text(image["name"])))
-                break
 
         click.echo("\nChoose from given Device Types :")
         device_types = list(ahv.DEVICE_TYPES.keys())
@@ -275,6 +281,29 @@ def create_spec(client):
                     device_bus_list[res - 1]
                 ]
                 click.echo("{} selected".format(highlight_text(image["adapter_type"])))
+                break
+
+        # Add image details
+        imagesNameUUIDMap = Obj.images(ahv.IMAGE_TYPES[image["device_type"]])
+        images = list(imagesNameUUIDMap.keys())
+
+        while True:
+            if not images:
+                click.echo("\n{}".format(highlight_text("No image present")))
+                image["name"] = ""
+                break
+
+            click.echo("\nChoose from given images: \n")
+            for ind, name in enumerate(images):
+                click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
+
+            res = click.prompt("\nEnter the index of image", default=1)
+            if (res > len(images)) or (res <= 0):
+                click.echo("Invalid index !!! ")
+
+            else:
+                image["name"] = images[res - 1]
+                click.echo("{} selected".format(highlight_text(image["name"])))
                 break
 
         image["bootable"] = click.prompt("\nIs it bootable(y/n)", default="y")
@@ -311,7 +340,7 @@ def create_spec(client):
         spec["resources"]["disk_list"].append(disk)
 
         choice = click.prompt(
-            "\n{}(y/n)".format(highlight_text("Want to add more images")), default="n"
+            "\n{}(y/n)".format(highlight_text("Want to add more disks")), default="n"
         )
         if choice[0] == "n":
             break
@@ -320,7 +349,7 @@ def create_spec(client):
         "\n{}(y/n)".format(highlight_text("Want any virtual disks")), default="n"
     )
     if choice[0] == "y":
-        option[-1] = "AHV VDisk List"
+        option[-1] = "AHV VDisk"
 
         while True:
             vdisk = {}
@@ -362,10 +391,10 @@ def create_spec(client):
                     break
 
             path.append("disk_size_mib")
-            click.echo("")
-            msg = "Enter disk size(GB)"
 
             if vdisk["device_type"] == ahv.DEVICE_TYPES["DISK"]:
+                click.echo("")
+                msg = "Enter disk size(GB)"
                 vdisk["size"] = get_field(schema, path, option, default=8, msg=msg)
                 vdisk["size"] = vdisk["size"] * 1024
             else:
@@ -405,38 +434,57 @@ def create_spec(client):
         else:
             payload = {}
 
-        subnetNameUUIDMap = Obj.subnets(payload)
-        nics = list(subnetNameUUIDMap.keys())
+        nics = Obj.subnets(payload)
+        nics = nics["entities"]
 
         if not nics:
             click.echo("\n{}".format(highlight_text("No network adapter present")))
 
         else:
             click.echo("\nChoose from given subnets:")
-            for ind, name in enumerate(nics):
-                click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
+            for ind, nic in enumerate(nics):
+                click.echo(
+                    "\t {}. {}".format(
+                        str(ind + 1), highlight_text(nic["status"]["name"])
+                    )
+                )
 
             spec["resources"]["nic_list"] = []
-
             while True:
-
+                nic_config = {}
                 while True:
                     res = click.prompt("\nEnter the index of subnet's name", default=1)
                     if (res > len(nics)) or (res <= 0):
                         click.echo("Invalid index !!!")
 
                     else:
-                        nic = nics[res - 1]
-                        click.echo("{} selected".format(highlight_text(nic)))
+                        nic_config = nics[res - 1]
+                        click.echo(
+                            "{} selected".format(
+                                highlight_text(nic_config["status"]["name"])
+                            )
+                        )
                         break
 
-                nic = {
-                    "subnet_reference": {
-                        "kind": "subnet",
-                        "name": nic,
-                        "uuid": subnetNameUUIDMap[nic],
+                # Check for static vlan
+                nic = {}
+                if nic_config["status"]["resources"].get("ip_config"):
+                    choice = click.prompt(
+                        "\n{}(y/n)".format(highlight_text("Use static Ip")), default="n"
+                    )
+                    if choice[0] == "y":
+                        ip = click.prompt("\nEnter Ip")
+                        nic = {"ip_endpoint_list": [{"ip": ip}]}
+
+                nic.update(
+                    {
+                        "subnet_reference": {
+                            "kind": "subnet",
+                            "name": nic_config["status"]["name"],
+                            "uuid": nic_config["metadata"]["uuid"],
+                        }
                     }
-                }
+                )
 
                 spec["resources"]["nic_list"].append(nic)
                 choice = click.prompt(
@@ -476,6 +524,7 @@ def create_spec(client):
             option.append("AHV CLOUD INIT Script")
             path = path + ["cloud_init", "user_data"]
 
+            click.echo("")
             user_data = get_field(schema, path, option)
             spec["resources"]["guest_customization"] = {
                 "cloud_init": {"user_data": user_data}
@@ -540,6 +589,9 @@ def find_schema(schema, path, option):
 
             if not resDict:
                 print("Not a valid key")
+                import pdb
+
+                pdb.set_trace()
 
             else:
                 schema = resDict
