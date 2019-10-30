@@ -32,7 +32,7 @@ from .models.simple_blueprint import SimpleBlueprint
 
 from .models.blueprint_payload import create_blueprint_payload
 from .models.project import Project as ProjectValidator
-from calm.db import Secret
+from calm.db_config import Secret
 
 
 __all__ = [

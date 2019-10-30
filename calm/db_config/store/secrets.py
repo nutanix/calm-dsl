@@ -2,21 +2,20 @@ import datetime
 import uuid
 import peewee
 
-from .crypto import Crypto
-from .db_handler import Database
+from ..crypto import Crypto
+from ..db import Database
 
 
 class Secret:
     """Secret class implementation"""
 
     @classmethod
-    def create(cls, name, value):
+    def create(cls, name, value, pass_phrase="dslp4ssw0rd"):
         """Stores the secret in db"""
 
         with Database() as db:
 
-            pass_phrase = b"dslp4ssw0rd"
-
+            pass_phrase = pass_phrase.encode()
             encrypted_msg = Crypto.encrypt_AES_GCM(value, pass_phrase)
             (kdf_salt, ciphertext, iv, auth_tag) = encrypted_msg
 
@@ -110,6 +109,5 @@ class Secret:
 
             enc_msg = secret_data.generate_enc_msg()
             secret_val = Crypto.decrypt_AES_GCM(enc_msg, pass_phrase)
-            secret_val = secret_val.decode("utf8")
 
             return secret_val
