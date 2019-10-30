@@ -1,6 +1,8 @@
 import json
 import click
 
+from .secrets import find_secret, create_secret
+from .utils import highlight_text
 from .main import get, compile, describe, create, launch, delete
 from .bps import (
     get_blueprint_list,
@@ -63,6 +65,29 @@ def _compile_blueprint_command(bp_file, out):
 def create_blueprint(client, bp_payload, name=None, description=None, categories=None):
 
     bp_payload.pop("status", None)
+
+    credential_list = bp_payload["spec"]["resources"]["credential_definition_list"]
+    for cred in credential_list:
+        if cred["secret"].get("secret", None):
+            secret = cred["secret"].pop("secret")
+
+            try:
+                value = find_secret(secret)
+
+            except ValueError:
+                click.echo(
+                    "\nNo secret corresponding to '{}' found !!!\n".format(secret)
+                )
+                value = click.prompt("Please enter its value", hide_input=True)
+
+                choice = click.prompt(
+                    "\n{}(y/n)".format(highlight_text("Want to store it locally")),
+                    default="n",
+                )
+                if choice[0] == "y":
+                    create_secret(secret, value)
+
+            cred["secret"]["value"] = value
 
     if name:
         bp_payload["spec"]["name"] = name
