@@ -33,7 +33,7 @@ click_completion.init()
     "--port",
     envvar="PRISM_SERVER_PORT",
     default=None,
-    help="Prism Central server port number. Defaults to 9440.",
+    help="Prism Central server port number",
 )
 @click.option(
     "--username",
