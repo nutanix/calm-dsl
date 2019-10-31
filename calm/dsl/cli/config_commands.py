@@ -6,9 +6,7 @@ from .configs import set_config, print_config
 
 @config.command("server")
 @click.option("--ip", default=None, help="Prism Central server IP or hostname")
-@click.option(
-    "--port", default=None, help="Prism Central server port number"
-)
+@click.option("--port", default=None, help="Prism Central server port number")
 @click.option("--username", envvar="PRISM_USERNAME", help="Prism Central username")
 @click.option("--password", default=None, help="Prism Central password")
 def set_server_config(ip, port, username, password):

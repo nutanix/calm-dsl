@@ -36,10 +36,7 @@ click_completion.init()
     help="Prism Central server port number",
 )
 @click.option(
-    "--username",
-    envvar="PRISM_USERNAME",
-    default=None,
-    help="Prism Central username",
+    "--username", envvar="PRISM_USERNAME", default=None, help="Prism Central username"
 )
 @click.option(
     "--password", envvar="PRISM_PASSWORD", default=None, help="Prism Central password"

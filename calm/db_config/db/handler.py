@@ -7,6 +7,7 @@ from .table_config import dsl_database, SecretTable, DataTable
 
 class Database:
     """DSL database connection"""
+
     db = None
 
     @classmethod

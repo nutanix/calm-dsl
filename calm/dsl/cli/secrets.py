@@ -12,7 +12,9 @@ def create_secret(name, value):
 
     secrets = get_secrets_names()
     if name in secrets:
-        click.echo(highlight_text("\nSecret Already present !!!\nTry to update secret\n"))
+        click.echo(
+            highlight_text("\nSecret Already present !!!\nTry to update secret\n")
+        )
         return
 
     Secret.create(name, value)
