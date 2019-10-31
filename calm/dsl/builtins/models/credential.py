@@ -43,3 +43,20 @@ def basic_cred(
     kwargs["default"] = default
 
     return _credential(**kwargs)
+
+
+def secret_cred(
+    username, name="default", secret="default", type="PASSWORD", default=False
+):
+
+    # This secret value will be replaced when user is creatring a blueprint
+    secret = {"attrs": {"is_secret_modified": True}, "value": "", "secret": secret}
+
+    kwargs = {}
+    kwargs["type"] = type
+    kwargs["username"] = username
+    kwargs["secret"] = secret
+    kwargs["name"] = name
+    kwargs["default"] = default
+
+    return _credential(**kwargs)

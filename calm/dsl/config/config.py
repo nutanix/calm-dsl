@@ -10,6 +10,7 @@ PC_USERNAME = "admin"
 PC_PASSWORD = "***REMOVED***"
 PROJECT_NAME = "default"
 CONFIG_FILE = os.path.expanduser("~/.calm/server/config.ini")
+DB_LOCATION = os.path.expanduser("~/calm-dsl-engine/calm/db_config/db/dsl.db")
 
 
 _CONFIG = None
@@ -79,5 +80,10 @@ def _init_config(ip, port, username, password, config_file, project_name):
 
     if "CATEGORIES" not in config:
         config["CATEGORIES"] = {}
+
+    if "DATABASE" not in config:
+        config["DATABASE"] = {}
+
+    config["DATABASE"]["location"] = config["DATABASE"].get("location", DB_LOCATION)
 
     return config
