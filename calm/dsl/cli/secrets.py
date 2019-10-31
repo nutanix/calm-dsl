@@ -12,7 +12,7 @@ def create_secret(name, value):
 
     secrets = get_secrets_names()
     if name in secrets:
-        click.echo(highlight_text("Secret Already present !!!\nTry to update secret\n"))
+        click.echo(highlight_text("\nSecret Already present !!!\nTry to update secret\n"))
         return
 
     Secret.create(name, value)
@@ -25,7 +25,7 @@ def get_secrets(quiet):
     avl_secrets = Secret.list()
 
     if not avl_secrets:
-        click.echo(highlight_text("No secrets found !!!\n"))
+        click.echo(highlight_text("\nNo secrets found !!!\n"))
         return
 
     if quiet:
