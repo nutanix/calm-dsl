@@ -140,7 +140,7 @@ def displayRunLogTree(screen, root, completed_tasks, total_tasks, msg=None):
     elif runlog_state == RUNLOG.STATUS.INPUT:
         colour = 6  # cyan for input state
 
-    screen.print_at(runlog_state, screen.width - len(runlog_state) - 5, 0, colour=colour, attr=Screen.A_BOLD)
+    screen.print_at(runlog_state, screen.width - len(runlog_state) - 5, 0, colour=colour, attr=Screen.A_UNDERLINE)
     line = 1
     for pre, fill, node in RenderTree(root):
         line = displayRunLog(screen, node, pre, fill, line)
