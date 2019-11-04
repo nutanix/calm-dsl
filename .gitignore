@@ -117,3 +117,6 @@ venv.bak/
 
 # jupyter extension, until we need it
 calm_nb_ext/
+
+# DSL DB File
+calm/dsl/db/dsl.db
