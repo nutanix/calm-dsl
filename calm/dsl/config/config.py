@@ -68,9 +68,4 @@ def _init_config(ip, port, username, password, config_file, project_name):
     if "CATEGORIES" not in config:
         config["CATEGORIES"] = {}
 
-    if "DATABASE" not in config:
-        config["DATABASE"] = {}
-
-    config["DATABASE"]["location"] = config["DATABASE"].get("location")
-
     return config

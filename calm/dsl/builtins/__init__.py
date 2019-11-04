@@ -32,13 +32,11 @@ from .models.simple_blueprint import SimpleBlueprint
 
 from .models.blueprint_payload import create_blueprint_payload
 from .models.project import Project as ProjectValidator
-from calm.db_config import Secret
 
 
 __all__ = [
     "Ref",
     "ref",
-    "Secret",
     "basic_cred",
     "secret_cred",
     "Variable",
