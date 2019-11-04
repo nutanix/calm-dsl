@@ -4,7 +4,7 @@ from peewee import (
     CharField,
     BlobField,
     DateTimeField,
-    ForeignKeyField
+    ForeignKeyField,
 )
 import datetime
 
