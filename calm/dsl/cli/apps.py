@@ -56,6 +56,7 @@ def get_apps(obj, name, filter_by, limit, offset, quiet, all_items):
         "NAME",
         "SOURCE BLUEPRINT",
         "STATE",
+        "PROJECT",
         "OWNER",
         "CREATED ON",
         "LAST UPDATED",
@@ -65,6 +66,12 @@ def get_apps(obj, name, filter_by, limit, offset, quiet, all_items):
         row = _row["status"]
         metadata = _row["metadata"]
 
+        project = (
+            metadata["project_reference"]["name"]
+            if "project_reference" in metadata
+            else None
+        )
+
         creation_time = int(metadata["creation_time"]) // 1000000
         last_update_time = int(metadata["last_update_time"]) // 1000000
 
@@ -73,6 +80,7 @@ def get_apps(obj, name, filter_by, limit, offset, quiet, all_items):
                 highlight_text(row["name"]),
                 highlight_text(row["resources"]["app_blueprint_reference"]["name"]),
                 highlight_text(row["state"]),
+                highlight_text(project),
                 highlight_text(metadata["owner_reference"]["name"]),
                 highlight_text(time.ctime(creation_time)),
                 "{}".format(arrow.get(last_update_time).humanize()),
