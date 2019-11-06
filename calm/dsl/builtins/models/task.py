@@ -8,6 +8,12 @@ from .ref import RefType
 from .task_input import TaskInputType
 from .variable import CalmVariable
 
+EXIT_CONDITION_MAP = {
+    "SUCCESS": "on_success",
+    "FAILURE": "on_failure",
+    "DONT_CARE": "dont_care"
+}
+
 
 # Task
 
@@ -211,6 +217,31 @@ def parallel_task(name=None, child_tasks=[], attrs={}):
             task.get_ref() for task in child_tasks or []
         ],
         "type": "PARALLEL",
+    }
+
+    return _task_create(**kwargs)
+
+
+def while_loop(name=None, child_tasks=[], attrs={}):
+    """
+    Create a WHILE LOOP
+    Args:
+        name (str): Name for the task
+        child_tasks (list [Task]): Child tasks within this dag
+        attrs (dict): Task's attrs
+    Returns:
+        (Task): WHILE task
+    """
+
+    # This follows UI naming convention for runbooks
+    name = name or str(uuid.uuid4())[:8] + "_while_loop"
+    kwargs = {
+        "name": name,
+        "child_tasks_local_reference_list": [
+            task.get_ref() for task in child_tasks or []
+        ],
+        "type": "WHILE_LOOP",
+        "attrs": attrs,
     }
 
     return _task_create(**kwargs)
@@ -977,6 +1008,27 @@ class CalmTask:
     class Parallel:
         def __new__(cls, name=None, child_tasks=[], attrs={}):
             return parallel_task(name=name, child_tasks=child_tasks, attrs=attrs)
+
+    class While:
+        def __new__(cls, repeat_count, name=None, child_tasks=[],
+                    loop_counter="loop_counter", parallel_factor=1, exit_condition="SUCCESS"):
+            if not isinstance(repeat_count, int):
+                raise ValueError(
+                    "Repeat Count must be an integer, got {}".format(repeat_count)
+                )
+            attrs = {
+                "apf": str(parallel_factor),
+                "repeat_count": str(repeat_count),
+                "loop_counter": loop_counter
+            }
+            exit_code = EXIT_CONDITION_MAP.get(exit_condition, None)
+            if exit_code:
+                attrs["exit_condition_type"] = exit_code
+            else:
+                raise ValueError(
+                    "Valid Exit Conditions for while loop are {}".format(EXIT_CONDITION_MAP.keys())
+                )
+            return while_loop(name=name, child_tasks=child_tasks, attrs=attrs)
 
     class Delay:
         def __new__(cls, delay_seconds=None, name=None, target=None):
