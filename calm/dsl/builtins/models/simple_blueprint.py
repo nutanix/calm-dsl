@@ -3,11 +3,12 @@ from .validator import PropertyValidator
 
 from .profile import profile
 from .deployment import deployment
-from .pod_deployment import pod_deployment
+from .simple_pod_deployment import simple_pod_deployment
 from .substrate import substrate
 from .service import service
 from .package import package
 from .ref import ref
+from .action import action as Action
 
 # Simple Blueprint
 
@@ -28,7 +29,7 @@ class SimpleBlueprintType(EntityType):
         normal_deployments = []
         for dep in deployments:
             if dep.deployment_spec and dep.service_spec:
-                pod_dep = pod_deployment(
+                pod_dep = simple_pod_deployment(
                     name=dep.__name__,
                     service_spec=dep.service_spec,
                     deployment_spec=dep.deployment_spec,
@@ -36,6 +37,9 @@ class SimpleBlueprintType(EntityType):
                 )
 
                 pod_deployments.append(pod_dep)
+                for key, value in dep.__dict__.items():
+                    if isinstance(value, Action):
+                        setattr(pod_dep, key, value)
 
             else:
                 normal_deployments.append(dep)
