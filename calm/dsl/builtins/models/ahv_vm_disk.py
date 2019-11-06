@@ -14,12 +14,12 @@ def get_boot_config():
     return BOOT_CONFIG
 
 
-def allocate_disk_on_storage_container(device_type="DISK", adapter_type="SCSI", size=8):
+def allocate_on_storage_container(adapter_type="SCSI", size=8):
     global ADAPTER_INDEX_MAP
     kwargs = {
         "data_source_reference": None,  # Must be there
         "device_properties": {
-            "device_type": device_type,
+            "device_type": "DISK",
             "disk_address": {
                 "adapter_type": adapter_type,
                 "device_index": ADAPTER_INDEX_MAP[adapter_type],
@@ -32,7 +32,7 @@ def allocate_disk_on_storage_container(device_type="DISK", adapter_type="SCSI", 
     return ahv_vm_disk(**kwargs)
 
 
-def clone_disk_from_image_service(
+def clone_from_image_service(
     device_type="DISK", adapter_type="SCSI", image_name="", bootable=False
 ):
     global ADAPTER_INDEX_MAP
@@ -68,8 +68,26 @@ def clone_disk_from_image_service(
     return ahv_vm_disk(**kwargs)
 
 
+def empty_cd_rom(adapter_type="IDE"):
+    global ADAPTER_INDEX_MAP
+    kwargs = {
+        "data_source_reference": None,  # Must be there
+        "device_properties": {
+            "device_type": "CDROM",
+            "disk_address": {
+                "adapter_type": adapter_type,
+                "device_index": ADAPTER_INDEX_MAP[adapter_type],
+            },
+        },
+        "disk_size_mib": 0,
+    }
+
+    ADAPTER_INDEX_MAP[adapter_type] += 1
+    return ahv_vm_disk(**kwargs)
+
+
 def disk_scsi_clone_from_image(image_name=None, bootable=False):
-    return clone_disk_from_image_service(
+    return clone_from_image_service(
         device_type="DISK",
         adapter_type="SCSI",
         image_name=image_name,
@@ -78,14 +96,14 @@ def disk_scsi_clone_from_image(image_name=None, bootable=False):
 
 
 def disk_pci_clone_from_image(image_name=None, bootable=False):
-    return clone_disk_from_image_service(
+    return clone_from_image_service(
         device_type="DISK", adapter_type="PCI", image_name=image_name, bootable=bootable
     )
 
 
 def cd_rom_ide_clone_from_image(image_name=None, bootable=False):
-    return clone_disk_from_image_service(
-        device_type="CD-ROM",
+    return clone_from_image_service(
+        device_type="CDROM",
         adapter_type="IDE",
         image_name=image_name,
         bootable=bootable,
@@ -93,8 +111,8 @@ def cd_rom_ide_clone_from_image(image_name=None, bootable=False):
 
 
 def cd_rom_sata_clone_from_image(image_name=None, bootable=False):
-    return clone_disk_from_image_service(
-        device_type="CD-ROM",
+    return clone_from_image_service(
+        device_type="CDROM",
         adapter_type="SATA",
         image_name=image_name,
         bootable=bootable,
@@ -102,27 +120,23 @@ def cd_rom_sata_clone_from_image(image_name=None, bootable=False):
 
 
 def disk_scsi_allocate_on_container(size=8):
-    return allocate_disk_on_storage_container(
-        device_type="DISK", adapter_type="SCSI", size=size
+    return allocate_on_storage_container(
+        adapter_type="SCSI", size=size
     )
 
 
 def disk_pci_allocate_on_container(size=8):
-    return allocate_disk_on_storage_container(
-        device_type="DISK", adapter_type="PCI", size=size
+    return allocate_on_storage_container(
+        adapter_type="PCI", size=size
     )
 
 
-def cd_rom_ide_allocate_on_container(size=8):
-    return allocate_disk_on_storage_container(
-        device_type="CD-ROM", adapter_type="IDE", size=size
-    )
+def cd_rom_ide_use_empty_cd_rom():
+    return empty_cd_rom(adapter_type="IDE")
 
 
-def cd_rom_sata_allocate_on_container(size=8):
-    return allocate_disk_on_storage_container(
-        device_type="CD-ROM", adapter_type="SATA", size=size
-    )
+def cd_rom_sata_use_empty_cd_rom():
+    return empty_cd_rom(adapter_type="SATA")
 
 
 class AhvVmDisk:
@@ -158,7 +172,7 @@ class AhvVmDisk:
                 )
 
             cloneFromImageService = cd_rom_ide_clone_from_image
-            allocateOnStorageContainer = cd_rom_ide_clone_from_image
+            emptyCdRom = cd_rom_ide_use_empty_cd_rom
 
         class Sata:
             def __new__(cls, image_name=None, bootable=False):
@@ -167,4 +181,4 @@ class AhvVmDisk:
                 )
 
             cloneFromImageService = cd_rom_sata_clone_from_image
-            allocateOnStorageContainer = cd_rom_sata_allocate_on_container
+            emptyCdRom = cd_rom_sata_use_empty_cd_rom
