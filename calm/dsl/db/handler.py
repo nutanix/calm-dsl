@@ -1,7 +1,6 @@
 import os
 import traceback
 
-from calm.dsl.config import get_config
 from .table_config import dsl_database, SecretTable, DataTable
 
 
@@ -16,14 +15,7 @@ class Database:
 
     @staticmethod
     def instantiate_db():
-        config = get_config()
-        db_location = config["DATABASE"]["location"]
-
-        # Creating a database file if not exists
-        if not os.path.exists(db_location):
-            with open(db_location, "w"):
-                pass
-
+        db_location = os.path.join(os.path.dirname(os.path.realpath(__file__)), "dsl.db")
         dsl_database.init(db_location)
         return dsl_database
 

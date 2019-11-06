@@ -4,7 +4,8 @@ import datetime
 from prettytable import PrettyTable
 
 from .utils import highlight_text
-from calm.dsl.builtins import Secret
+
+from calm.dsl.store import Secret
 
 
 def create_secret(name, value):

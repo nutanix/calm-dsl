@@ -40,14 +40,12 @@ from .models.blueprint_payload import create_blueprint_payload
 from .models.endpoint_payload import create_endpoint_payload
 from .models.runbook_payload import create_runbook_payload
 from .models.project import Project as ProjectValidator
-from calm.db_config import Secret
 
 
 __all__ = [
     "Ref",
     "ref",
     "TaskInput",
-    "Secret",
     "basic_cred",
     "secret_cred",
     "Variable",
