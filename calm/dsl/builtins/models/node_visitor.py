@@ -216,7 +216,7 @@ class GetCallNodes(ast.NodeVisitor):
                 "Only CalmTasks or repeat_count (int) are supported inside while context."
             )
         whileBody = ast.FunctionDef(body=node.body, col_offset=node.col_offset)
-        meta_task, tasks, variables = handle_meta_create(whileBody, self._globals, while_task.name + "-loop")
+        meta_task, tasks, variables = handle_meta_create(whileBody, self._globals, while_task.name + "-meta")
         self.all_tasks.extend([meta_task] + tasks)
         self.variables.update(variables)
         while_task.child_tasks_local_reference_list.append(meta_task.get_ref())
