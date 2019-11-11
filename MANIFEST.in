@@ -1,2 +1,3 @@
 include calm/dsl/builtins/models/schemas/*.yaml.jinja2
+include calm/dsl/config/config.ini
 recursive-include calm/dsl/providers/plugins *

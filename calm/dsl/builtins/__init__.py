@@ -5,7 +5,7 @@
 # the import for these below the entities will cause a TypeError.
 
 from .models.ref import Ref, ref
-from .models.credential import basic_cred
+from .models.credential import basic_cred, secret_cred
 from .models.variable import Variable, setvar, CalmVariable
 from .models.action import action, parallel
 
@@ -45,6 +45,7 @@ __all__ = [
     "Ref",
     "ref",
     "basic_cred",
+    "secret_cred",
     "Variable",
     "setvar",
     "CalmVariable",

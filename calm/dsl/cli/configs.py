@@ -1,13 +1,14 @@
 import os
-from calm.dsl.config import get_config, CONFIG_FILE
+from calm.dsl.config import get_config, get_config_file
 
 
 def set_config(section, **kwargs):
 
     # Creating config file if not present
-    if not os.path.exists(CONFIG_FILE):
-        os.makedirs(os.path.dirname(CONFIG_FILE))
-        open(CONFIG_FILE, "w+").close()
+    config_file = get_config_file()
+    if not os.path.exists(config_file):
+        os.makedirs(os.path.dirname(config_file))
+        open(config_file, "w+").close()
 
     section_field_mapping = {
         "SERVER": {
@@ -17,6 +18,7 @@ def set_config(section, **kwargs):
             "password": "pc_password",
         },
         "PROJECT": {"name": "name", "uuid": "uuid"},
+        "DATABASE": {"location": "location"},
     }
 
     config_parser = get_config()
@@ -27,5 +29,17 @@ def set_config(section, **kwargs):
         if value:
             config_parser.set(section, field_map[key], value)
 
-    with open(CONFIG_FILE, "w") as configfile:
+    with open(config_file, "w") as configfile:
         config_parser.write(configfile)
+
+
+def print_config():
+
+    config_parser = get_config()
+    for section_name in config_parser.sections():
+        print("\n{}".format(section_name))
+        if not config_parser[section_name]:
+            print("  configuration not found")
+
+        for key, value in config_parser.items(section_name):
+            print("  {} = {}".format(key, value))

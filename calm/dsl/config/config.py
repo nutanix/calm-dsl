@@ -2,14 +2,8 @@ import os
 import configparser
 
 
-# Defaults to be used if no config file exists.
-# TODO - remove username/password
-PC_IP = "10.46.34.230"
-PC_PORT = "9440"
-PC_USERNAME = "admin"
-PC_PASSWORD = "***REMOVED***"
-PROJECT_NAME = "default"
-CONFIG_FILE = os.path.expanduser("~/.calm/server/config.ini")
+# Default config file
+CONFIG_FILE = os.path.join(os.path.dirname(os.path.realpath(__file__)), "config.ini")
 
 
 _CONFIG = None
@@ -29,8 +23,13 @@ def get_config(
     return _CONFIG
 
 
+def get_config_file():
+    return CONFIG_FILE
+
+
 def _init_config(ip, port, username, password, config_file, project_name):
 
+    global CONFIG_FILE
     config_file = config_file or CONFIG_FILE
     config = configparser.ConfigParser()
     config.optionxform = str  # Maintaining case sensitivity for field names
@@ -38,16 +37,12 @@ def _init_config(ip, port, username, password, config_file, project_name):
     if os.path.isfile(config_file):
         config.read(config_file)
 
+    CONFIG_FILE = config_file
     if "SERVER" in config:
         ip = ip or config["SERVER"].get("pc_ip")
         port = port or config["SERVER"].get("pc_port")
         username = username or config["SERVER"].get("pc_username")
         password = password or config["SERVER"].get("pc_password")
-
-    ip = ip or PC_IP
-    port = port or PC_PORT
-    username = username or PC_USERNAME
-    password = password or PC_PASSWORD
 
     config["SERVER"] = {
         "pc_ip": ip,
@@ -65,11 +60,10 @@ def _init_config(ip, port, username, password, config_file, project_name):
             config.remove_option("PROJECT", "uuid")
 
         project_name = project_name or stored_project_name
-        project_name = project_name or PROJECT_NAME
         config["PROJECT"]["name"] = project_name
 
     else:
-        config["PROJECT"] = {"name": project_name or PROJECT_NAME}
+        config["PROJECT"] = {"name": project_name}
 
     if "CATEGORIES" not in config:
         config["CATEGORIES"] = {}
