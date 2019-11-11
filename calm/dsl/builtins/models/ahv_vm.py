@@ -46,6 +46,28 @@ def ahv_vm_disk(**kwargs):
 AhvVmDisk = ahv_vm_disk()
 
 
+# AHV VM Guest Custmization
+
+
+class AhvGCType(EntityType):
+    __schema_name__ = "AhvGuestCustomization"
+    __openapi_type__ = "vm_ahv_gc"
+
+
+class AhvGCValidator(PropertyValidator, openapi_type="vm_ahv_gc"):
+    __default__ = None
+    __kind__ = AhvGCType
+
+
+def ahv_vm_guest_customization(**kwargs):
+    name = getattr(AhvGCType, "__schema_name__")
+    bases = (Entity,)
+    return AhvGCType(name, bases, kwargs)
+
+
+AhvVmGC = ahv_vm_guest_customization()
+
+
 # AHV VM Resources
 
 

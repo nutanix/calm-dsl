@@ -33,12 +33,7 @@ from .models.simple_blueprint import SimpleBlueprint
 from .models.blueprint_payload import create_blueprint_payload
 from .models.project import Project as ProjectValidator
 
-from .models.ahv_vm import (
-    ahv_vm_nic,
-    ahv_vm_disk,
-    ahv_vm_resources,
-    ahv_vm,
-)
+from .models.ahv_vm import ahv_vm_nic, ahv_vm_disk, ahv_vm_resources, ahv_vm
 
 
 __all__ = [

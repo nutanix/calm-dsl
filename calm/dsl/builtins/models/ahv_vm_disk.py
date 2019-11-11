@@ -120,15 +120,11 @@ def cd_rom_sata_clone_from_image(image_name=None, bootable=False):
 
 
 def disk_scsi_allocate_on_container(size=8):
-    return allocate_on_storage_container(
-        adapter_type="SCSI", size=size
-    )
+    return allocate_on_storage_container(adapter_type="SCSI", size=size)
 
 
 def disk_pci_allocate_on_container(size=8):
-    return allocate_on_storage_container(
-        adapter_type="PCI", size=size
-    )
+    return allocate_on_storage_container(adapter_type="PCI", size=size)
 
 
 def cd_rom_ide_use_empty_cd_rom():

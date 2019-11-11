@@ -1,3 +1,6 @@
+{% import "ref.yaml.jinja2" as ref %}
+
+
 {% macro AhvNic() -%}
 
 title: AHV NIC
@@ -94,6 +97,42 @@ properties:
 {%- endmacro %}
 
 
+{% macro AhvGuestCustomization() -%}
+
+title: Ahv Guest Customization
+type: object
+x-calm-dsl-type: vm_ahv_gc
+properties:
+  sysprep:
+    type: object
+    x-calm-dsl-type: dict
+    properties:
+      unattend_xml:
+        type: string
+      install_type:
+        type: string
+      is_domain:
+        type: boolean
+        default: False
+      domain:
+        type: string
+      dns_ip:
+        type: string
+      dns_search_path:
+        type: string
+      domain_credential_reference:
+        x-calm-dsl-display-name: credential
+        {{ ref.Ref() | indent(8) }}
+  cloud_init:
+    type: object
+    x-calm-dsl-type: dict
+    properties:
+      user_data:
+        type: string
+
+{%- endmacro %}
+
+
 {% macro AhvVmResources() -%}
 
 title: AHV Resources
@@ -145,25 +184,8 @@ properties:
                 default: SCCI
       boot_type:
         type: string
-
   guest_customization:
-    type: object
-    x-calm-dsl-type: dict
-    properties:
-      sysprep:
-        type: object
-        x-calm-dsl-type: dict
-        properties:
-          unattend_xml:
-            type: string
-          install_type:
-            type: string
-      cloud_init:
-        type: object
-        x-calm-dsl-type: dict
-        properties:
-          user_data:
-            type: string
+    $ref : '#/components/schemas/AhvGuestCustomization'
 
 {%- endmacro %}
 
@@ -191,6 +213,8 @@ AhvDisk:
   {{ AhvDisk() | indent(2) }}
 AhvNic:
   {{ AhvNic() | indent(2) }}
+AhvGuestCustomization:
+  {{ AhvGuestCustomization() | indent(2) }}
 AhvVmResources:
   {{ AhvVmResources() | indent(2) }}
 AhvVm:
