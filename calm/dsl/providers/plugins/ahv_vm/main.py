@@ -525,7 +525,7 @@ def create_spec(client):
             path = path + ["cloud_init", "user_data"]
 
             click.echo("")
-            user_data = get_field(schema, path, option)
+            user_data = get_field(schema, path, option, default="")
             spec["resources"]["guest_customization"] = {
                 "cloud_init": {"user_data": user_data}
             }
@@ -554,14 +554,39 @@ def create_spec(client):
             script["install_type"] = install_type
 
             path.append("unattend_xml")
-            script["unattend_xml"] = get_field(schema, path, option)
+            script["unattend_xml"] = get_field(schema, path, option, default="")
 
-            spec["resources"]["guest_customization"] = {
-                "sysprep": {
-                    "unattend_xml": script["unattend_xml"],
-                    "install_type": script["install_type"],
-                }
+            sysprep_dict = {
+                "unattend_xml": script["unattend_xml"],
+                "install_type": script["install_type"],
             }
+
+            choice = click.prompt(
+                "\n{}(y/n)".format(highlight_text("Want to join a domain")), default="n"
+            )
+
+            if choice[0] == "y":
+                domain = click.prompt("\nEnter Domain Name", default="")
+                dns_ip = click.prompt("\nEnter DNS IP", default="")
+                dns_search_path = click.prompt("\nEnter DNS Search Path", default="")
+                credential = click.prompt("\nEnter Credential", default="")
+
+                sysprep_dict.update(
+                    {
+                        "is_domain": True,
+                        "domain": domain,
+                        "dns_ip": dns_ip,
+                        "dns_search_path": dns_search_path,
+                    }
+                )
+
+                if credential:  # Review after CALM-15575 is resolved
+                    sysprep_dict["domain_credential_reference"] = {
+                        "kind": "app_credential",
+                        "name": credential,
+                    }
+
+            spec["resources"]["guest_customization"] = {"sysprep": sysprep_dict}
 
     AhvVmProvider.validate_spec(spec)  # Final validation (Insert some default's value)
     click.echo("\nCreate spec for your AHV VM:\n")

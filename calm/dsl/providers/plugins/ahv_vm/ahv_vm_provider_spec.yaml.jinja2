@@ -151,6 +151,25 @@ properties:
         type: string
       install_type:
         type: string
+      is_domain:
+        type: boolean
+        default: False
+      domain:
+        type: string
+      dns_ip:
+        type: string
+      dns_search_path:
+        type: string
+      domain_credential_reference:
+        type: [object, "null"]
+        properties:
+          uuid:
+            type: string
+          kind:
+            type: string
+            default: subnet
+          name:
+            type: string
 
 {%- endmacro %}
 
@@ -172,7 +191,7 @@ properties:
 
 {% macro ahvSerialPort() -%}
 
-title: AHV Serial ahvSerialPort
+title: AHV Serial Port
 type: object
 properties:
   index:
@@ -265,7 +284,7 @@ properties:
   serial_port_list:
     type: array
     items:
-      $ref: '#/components/schemas/serialPort'
+      $ref: '#/components/schemas/serial_port'
 
 {%- endmacro %}
 
@@ -325,5 +344,5 @@ components:
       {{ ahvCloudInitScript() | indent(6) }}
     sys_prep_script:
       {{ ahvSysPrepScript() | indent(6) }}
-    serialPort:
+    serial_port:
       {{ ahvSerialPort() | indent(6) }}
