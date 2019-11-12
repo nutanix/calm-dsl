@@ -72,15 +72,25 @@ class SimpleBlueprintType(EntityType):
             s = service(name=sd["name"] + "Service", description=sd["description"])
             sdict = s.get_dict()
             sdict["variable_list"] = sd["variable_list"]
+
+            compulsory_actions = sdict.pop("action_list", [])
+            existing_system_actions = []
+            sdict["action_list"] = []       # Initializing by empty list
             for action in sd["action_list"]:
                 if action["name"].startswith("__") and action["name"].endswith("__"):
                     if action["name"] in s.ALLOWED_SYSTEM_ACTIONS:
                         action["name"] = s.ALLOWED_SYSTEM_ACTIONS[action["name"]]
                         action["type"] = "system"
                         action["critical"] = True
+                        existing_system_actions.append(action["name"])
                     else:
                         continue
                 sdict["action_list"].append(action)
+
+            # Adding compulsory action action, if not supplied by user
+            for action in compulsory_actions:
+                if action["name"] not in existing_system_actions:
+                    sdict["action_list"].append(action)
 
             # Init package dict
             p = package(name=sd["name"] + "Package")
