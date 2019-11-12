@@ -1,0 +1,35 @@
+{% macro SimplePODDeployment() -%}
+
+title: SimplePODDeployment
+type: object
+x-calm-dsl-type: app_simple_pod_deployment
+properties:
+  type:
+    type: string
+    default: K8S_DEPLOYMENT
+  deployment_spec:
+    x-calm-dsl-type: dict
+    type: object
+  service_spec:
+    x-calm-dsl-type: dict
+    type: object
+  depends_on_list:
+    x-calm-dsl-display-name: dependencies
+    type: array
+    items:
+      $ref: '#/components/schemas/Ref'
+  action_list:
+    x-calm-dsl-display-name: actions
+    type: array
+    items:
+      $ref: '#/components/schemas/Action'
+
+{%- endmacro %}
+
+
+{% macro SimplePODDeploymentSchema() -%}
+
+SimplePODDeployment:
+  {{ SimplePODDeployment()|indent(2) }}
+
+{%- endmacro %}

@@ -1179,7 +1179,7 @@ def create_spec(client):
 
     VCenterVmProvider.validate_spec(spec)
     click.secho("\nCreate spec for your VMW VM:\n", underline=True)
-    click.echo(highlight_text(yaml.dump(spec)))
+    click.echo(highlight_text(yaml.dump(spec, default_flow_style=False)))
 
 
 def _windows_customization(Obj, account_id):
