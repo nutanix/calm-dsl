@@ -75,7 +75,7 @@ class SimpleBlueprintType(EntityType):
 
             compulsory_actions = sdict.pop("action_list", [])
             existing_system_actions = []
-            sdict["action_list"] = []       # Initializing by empty list
+            sdict["action_list"] = []  # Initializing by empty list
             for action in sd["action_list"]:
                 if action["name"].startswith("__") and action["name"].endswith("__"):
                     if action["name"] in s.ALLOWED_SYSTEM_ACTIONS:

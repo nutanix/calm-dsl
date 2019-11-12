@@ -15,7 +15,9 @@ class Database:
 
     @staticmethod
     def instantiate_db():
-        db_location = os.path.join(os.path.dirname(os.path.realpath(__file__)), "dsl.db")
+        db_location = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), "dsl.db"
+        )
         dsl_database.init(db_location)
         return dsl_database
 
