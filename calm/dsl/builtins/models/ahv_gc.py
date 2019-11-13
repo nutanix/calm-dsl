@@ -116,7 +116,7 @@ class AhvVmGC:
                 dns_ip=dns_ip,
                 dns_search_path=dns_search_path,
                 credential=credential,
-                filename=filename
+                filename=filename,
             )
 
         freshScript = fresh_sys_prep

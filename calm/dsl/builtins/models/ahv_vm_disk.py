@@ -137,34 +137,38 @@ def cd_rom_sata_use_empty_cd_rom():
 
 class AhvVmDisk:
     def __new__(cls, image_name=None, bootable=False):
-        return disk_scsi_clone_from_image(image_name=image_name, bootable=False)
+        return disk_scsi_clone_from_image(image_name=image_name, bootable=bootable)
 
     class Disk:
         def __new__(cls, image_name=None, bootable=False):
-            return disk_scsi_clone_from_image(image_name=image_name, bootable=False)
+            return disk_scsi_clone_from_image(image_name=image_name, bootable=bootable)
 
         class Scsi:
             def __new__(cls, image_name=None, bootable=False):
-                return disk_scsi_clone_from_image(image_name=image_name, bootable=False)
+                return disk_scsi_clone_from_image(
+                    image_name=image_name, bootable=bootable
+                )
 
             cloneFromImageService = disk_scsi_clone_from_image
             allocateOnStorageContainer = disk_scsi_allocate_on_container
 
         class Pci:
             def __new__(cls, image_name=None, bootable=False):
-                return disk_pci_clone_from_image(image_name=image_name, bootable=False)
+                return disk_pci_clone_from_image(
+                    image_name=image_name, bootable=bootable
+                )
 
             cloneFromImageService = disk_pci_clone_from_image
             allocateOnStorageContainer = disk_pci_allocate_on_container
 
     class CdRom:
         def __new__(cls, image_name=None, bootable=False):
-            return cd_rom_ide_clone_from_image(image_name=image_name, bootable=False)
+            return cd_rom_ide_clone_from_image(image_name=image_name, bootable=bootable)
 
         class Ide:
             def __new__(cls, image_name=None, bootable=False):
                 return cd_rom_ide_clone_from_image(
-                    image_name=image_name, bootable=False
+                    image_name=image_name, bootable=bootable
                 )
 
             cloneFromImageService = cd_rom_ide_clone_from_image
@@ -173,7 +177,7 @@ class AhvVmDisk:
         class Sata:
             def __new__(cls, image_name=None, bootable=False):
                 return cd_rom_sata_clone_from_image(
-                    image_name=image_name, bootable=False
+                    image_name=image_name, bootable=bootable
                 )
 
             cloneFromImageService = cd_rom_sata_clone_from_image

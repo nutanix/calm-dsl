@@ -105,7 +105,7 @@ x-calm-dsl-type: vm_ahv_gc
 properties:
   sysprep:
     type: object
-    x-calm-dsl-type: dict
+    x-calm-dsl-type: object
     properties:
       unattend_xml:
         type: string
@@ -129,6 +129,23 @@ properties:
     properties:
       user_data:
         type: string
+    default: null
+
+{%- endmacro %}
+
+
+{% macro AhvGpu() -%}
+
+title: AHV GPU
+type: object
+x-calm-dsl-type: vm_ahv_gpu
+properties:
+  vendor:
+    type: string
+  mode:
+    type: string
+  device_id:
+    type: string
 
 {%- endmacro %}
 
@@ -156,14 +173,15 @@ properties:
   gpu_list:
     type: array
     items:
-      type: object
-      x-calm-dsl-type: dict
+      $ref: '#/components/schemas/AhvGpu'
   disk_list:
     type: array
     items:
       $ref: '#/components/schemas/AhvDisk'
   boot_type:      # Will merge to boot_config at compile time
     type: string
+    enum: [LEGACY, UEFI]
+    default: LEGACY
   boot_config:
     type: object
     x-calm-dsl-type: dict
@@ -186,6 +204,9 @@ properties:
         type: string
   guest_customization:
     $ref : '#/components/schemas/AhvGuestCustomization'
+  serial_port_list:
+    type: object
+    x-calm-dsl-type: dict
 
 {%- endmacro %}
 
@@ -219,5 +240,7 @@ AhvVmResources:
   {{ AhvVmResources() | indent(2) }}
 AhvVm:
   {{ AhvVm() | indent(2) }}
+AhvGpu:
+  {{ AhvGpu() | indent(2) }}
 
 {%- endmacro %}
