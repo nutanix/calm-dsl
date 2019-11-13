@@ -22,6 +22,8 @@ def _validate(vdict, name, value):
             raise TypeError("Unknown attribute {} given".format(name))
         ValidatorType, is_array = vdict[name]
         if getattr(ValidatorType, "__is_object__", False):
+            if value is None:  # Handling default value to null
+                return value
             if not isinstance(value, dict):
                 raise TypeError("{} is not of type {}".format(value, "dict"))
             new_value = ValidatorType.__class__(

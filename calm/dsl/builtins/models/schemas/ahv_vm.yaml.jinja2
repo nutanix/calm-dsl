@@ -123,9 +123,10 @@ properties:
       domain_credential_reference:
         x-calm-dsl-display-name: credential
         {{ ref.Ref() | indent(8) }}
+    default: null
   cloud_init:
     type: object
-    x-calm-dsl-type: dict
+    x-calm-dsl-type: object
     properties:
       user_data:
         type: string
