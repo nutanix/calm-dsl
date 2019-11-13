@@ -158,6 +158,35 @@ class EntityType(EntityTypeBase):
         openapi_type = getattr(mcls, "__openapi_type__")
         setattr(cls, "__kind__", openapi_type)
 
+        validators = getattr(mcls, "__validator_dict__", {})
+
+        # Validating user attributes
+        for k, v in validators.items():
+            ValidatorType, is_array = validators[k]
+            if getattr(ValidatorType, "__is_object__", False):
+                if hasattr(cls, k):
+                    value = getattr(cls, k)
+                    if not isinstance(value, dict):
+                        raise TypeError("{} is not of type {}".format(value, "dict"))
+
+                    new_value = ValidatorType.__class__(
+                        ValidatorType.validators,
+                        ValidatorType.defaults,
+                        ValidatorType.display_map,
+                    )
+                    for obj_key, obj_val in value.items():
+                        new_value[obj_key] = obj_val
+
+                    setattr(cls, k, new_value)
+
+            elif hasattr(cls, k):
+                # As we have used descriptors for provider_spec
+                if k == "provider_spec":
+                    value = cls.__dict__["provider_spec"]
+                else:
+                    value = getattr(cls, k)
+                setattr(cls, k, _validate(validators, k, value))
+
         for k, v in cls.get_default_attrs().items():
             # Check if attr was set during class creation
             # else - set default value
