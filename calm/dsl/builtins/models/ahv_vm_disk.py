@@ -1,10 +1,28 @@
-from .ahv_vm import ahv_vm_disk
+from .entity import EntityType, Entity
+from .validator import PropertyValidator
 
 
-# AHV Disk
+# AHV VM Disk
+
 
 ADAPTER_INDEX_MAP = {"SCSI": 0, "PCI": 0, "IDE": 0, "SATA": 0}
 BOOT_CONFIG = {}
+
+
+class AhvDiskType(EntityType):
+    __schema_name__ = "AhvDisk"
+    __openapi_type__ = "vm_ahv_disk"
+
+
+class AhvDiskValidator(PropertyValidator, openapi_type="vm_ahv_disk"):
+    __default__ = None
+    __kind__ = AhvDiskType
+
+
+def ahv_vm_disk(**kwargs):
+    name = getattr(AhvDiskType, "__schema_name__")
+    bases = (Entity,)
+    return AhvDiskType(name, bases, kwargs)
 
 
 def get_boot_config():
@@ -58,7 +76,7 @@ def clone_from_image_service(
                 "boot_device": {
                     "disk_address": {
                         "device_index": ADAPTER_INDEX_MAP[adapter_type],
-                        "device_type": adapter_type,
+                        "adapter_type": adapter_type,
                     }
                 }
             }

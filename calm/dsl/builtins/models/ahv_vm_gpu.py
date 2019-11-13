@@ -1,7 +1,24 @@
-from .ahv_vm import ahv_vm_gpu
+from .entity import EntityType, Entity
+from .validator import PropertyValidator
 
 
 # AHV GPU
+
+
+class AhvGpuType(EntityType):
+    __schema_name__ = "AhvGpu"
+    __openapi_type__ = "vm_ahv_gpu"
+
+
+class AhvGpuValidator(PropertyValidator, openapi_type="vm_ahv_gpu"):
+    __default__ = None
+    __kind__ = AhvGpuType
+
+
+def ahv_vm_gpu(**kwargs):
+    name = getattr(AhvGpuType, "__schema_name__")
+    bases = (Entity,)
+    return AhvGpuType(name, bases, kwargs)
 
 
 def create_ahv_gpu(vendor="", mode="", device_id=""):

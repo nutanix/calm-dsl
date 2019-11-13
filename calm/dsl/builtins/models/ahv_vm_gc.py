@@ -1,8 +1,25 @@
-from .ahv_vm import ahv_vm_guest_customization
+from .entity import EntityType, Entity
+from .validator import PropertyValidator
 from .utils import read_file
 
 
 # AHV Guest Customization
+
+
+class AhvGCType(EntityType):
+    __schema_name__ = "AhvGuestCustomization"
+    __openapi_type__ = "vm_ahv_gc"
+
+
+class AhvGCValidator(PropertyValidator, openapi_type="vm_ahv_gc"):
+    __default__ = None
+    __kind__ = AhvGCType
+
+
+def ahv_vm_guest_customization(**kwargs):
+    name = getattr(AhvGCType, "__schema_name__")
+    bases = (Entity,)
+    return AhvGCType(name, bases, kwargs)
 
 
 def create_ahv_guest_customization(

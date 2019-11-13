@@ -1,7 +1,24 @@
-from .ahv_vm import ahv_vm_nic
+from .entity import EntityType, Entity
+from .validator import PropertyValidator
 
 
 # AHV Nic
+
+
+class AhvNicType(EntityType):
+    __schema_name__ = "AhvNic"
+    __openapi_type__ = "vm_ahv_nic"
+
+
+class AhvNicValidator(PropertyValidator, openapi_type="vm_ahv_nic"):
+    __default__ = None
+    __kind__ = AhvNicType
+
+
+def ahv_vm_nic(**kwargs):
+    name = getattr(AhvNicType, "__schema_name__")
+    bases = (Entity,)
+    return AhvNicType(name, bases, kwargs)
 
 
 def create_ahv_nic(
