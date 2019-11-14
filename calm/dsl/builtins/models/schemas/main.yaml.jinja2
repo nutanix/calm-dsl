@@ -24,6 +24,7 @@
 {% import "simple_blueprint.yaml.jinja2" as simple_blueprint %}
 {% import "published_service.yaml.jinja2" as published_service %}
 {% import "pod_deployment.yaml.jinja2" as pod_deployment %}
+{% import "simple_pod_deployment.yaml.jinja2" as simple_pod_deployment %}
 
 {% macro Schemas() -%}
 
@@ -34,6 +35,7 @@
 {{ substrate.SubstrateSchema() }}
 {{ deployment.DeploymentSchema() }}
 {{ pod_deployment.PODDeploymentSchema() }}
+{{ simple_pod_deployment.SimplePODDeploymentSchema() }}
 {{ profile.ProfileSchema() }}
 {{ blueprint.BlueprintSchema() }}
 {{ blueprint_payload.BlueprintPayloadSchema() }}
