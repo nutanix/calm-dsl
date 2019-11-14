@@ -10,24 +10,10 @@ properties:
   type:
     type: string
     maxLength: 64
-  os_type:
-    type: string
-    maxLength: 64
-  value:
-    type: string
-    maxLength: 64
-  protocol:
-    type: string
-    maxLength: 64
-  port:
-    type: string
-    maxLength: 64
-  credential_definition_list:
-     x-calm-dsl-display-name: credentials
-     description: Credential definitions for endpoint.
-     type: array
-     items:
-       $ref: '#/components/schemas/Credential'
+  attrs:
+    additionalProperties: true
+    type: object
+    x-calm-dsl-type: dict
   
 {%- endmacro %}
 

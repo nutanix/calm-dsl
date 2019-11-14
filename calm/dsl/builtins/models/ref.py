@@ -24,8 +24,8 @@ def _ref(**kwargs):
 Ref = _ref()
 
 
-def ref(cls, **kwargs):
+def ref(cls):
 
     if isinstance(cls, RefType):
         return cls
-    return cls.get_ref(**kwargs)
+    return cls.get_ref()
