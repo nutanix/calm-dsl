@@ -4,6 +4,7 @@ from .validator import PropertyValidator
 from .profile import profile
 from .deployment import deployment
 from .simple_pod_deployment import simple_pod_deployment
+from .provider_spec import ProviderSpec
 from .substrate import substrate
 from .service import service
 from .package import package
@@ -30,7 +31,6 @@ class SimpleBlueprintType(EntityType):
         for dep in deployments:
             if dep.deployment_spec and dep.service_spec:
                 pod_dep = simple_pod_deployment(
-                    name=dep.__name__,
                     service_spec=dep.service_spec,
                     deployment_spec=dep.deployment_spec,
                     dependencies=dep.dependencies,
@@ -106,7 +106,7 @@ class SimpleBlueprintType(EntityType):
             sub = substrate(
                 name=sd["name"] + "Substrate",
                 provider_type=sd["provider_type"],
-                provider_spec=sd["provider_spec"],
+                provider_spec=ProviderSpec(sd["provider_spec"]),
                 readiness_probe=sd["readiness_probe"],
                 os_type=sd["os_type"],
             )
