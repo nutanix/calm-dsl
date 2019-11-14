@@ -99,8 +99,8 @@ class RunbookAPI(ResourceAPI):
             endpoint_name = endpoint.get("name")
             endpoint_secret_map[endpoint_name] = {}
             endpoint_secret_variables[endpoint_name] = []
-            strip_secrets(endpoint, endpoint_secret_map[endpoint_name], endpoint_secret_variables[endpoint_name])
-            endpoint["login_credential_reference"] = endpoint.pop("default_credential_local_reference", {})
+            strip_secrets(endpoint["attrs"], endpoint_secret_map[endpoint_name], endpoint_secret_variables[endpoint_name])
+            endpoint["attrs"].pop("default_credential_local_reference", None)
 
         upload_payload = self._make_runbook_payload(runbook_name, runbook_desc, runbook_resources)
 
@@ -141,7 +141,7 @@ class RunbookAPI(ResourceAPI):
         patch_secrets(runbook['spec']['resources'], secret_map, secret_variables)
         for endpoint in runbook['spec']['resources'].get('endpoint_definition_list', []):
             endpoint_name = endpoint.get("name")
-            patch_secrets(endpoint, endpoint_secret_map[endpoint_name], endpoint_secret_variables[endpoint_name])
+            patch_secrets(endpoint["attrs"], endpoint_secret_map[endpoint_name], endpoint_secret_variables[endpoint_name])
 
         uuid = runbook["metadata"]["uuid"]
 

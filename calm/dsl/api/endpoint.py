@@ -53,11 +53,8 @@ class EndpointAPI(ResourceAPI):
         secret_map = {}
         secret_variables = []
 
-        strip_secrets(endpoint_resources, secret_map, secret_variables)
-
-        # default cred is login cred in endpoint
-        endpoint_resources["login_credential_reference"] = endpoint_resources.pop("default_credential_local_reference", {})
-
+        strip_secrets(endpoint_resources["attrs"], secret_map, secret_variables)
+        endpoint_resources["attrs"].pop("default_credential_local_reference", None)
         upload_payload = self._make_endpoint_payload(endpoint_name, endpoint_desc, endpoint_resources)
 
         config = get_config()
@@ -104,6 +101,6 @@ class EndpointAPI(ResourceAPI):
         del endpoint["status"]
 
         # Update endpoint
-        patch_secrets(endpoint['spec']['resources'], secret_map, secret_variables)
+        patch_secrets(endpoint['spec']['resources']['attrs'], secret_map, secret_variables)
 
         return self.update(uuid, endpoint)
