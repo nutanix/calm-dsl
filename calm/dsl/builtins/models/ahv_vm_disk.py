@@ -35,7 +35,6 @@ def get_boot_config():
 def allocate_on_storage_container(adapter_type="SCSI", size=8):
     global ADAPTER_INDEX_MAP
     kwargs = {
-        "data_source_reference": None,  # Must be there
         "device_properties": {
             "device_type": "DISK",
             "disk_address": {

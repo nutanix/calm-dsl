@@ -27,7 +27,7 @@ properties:
     default: null
   network_function_chain_reference:
     type: object
-    x-calm-dsl-type: dict
+    x-calm-dsl-type: object
     properties:
       uuid:
         type: string
@@ -43,7 +43,7 @@ properties:
     type: array
     items:
       type: object
-      x-calm-dsl-type: dict
+      x-calm-dsl-type: object
       properties:
         ip:
           type: string
@@ -62,7 +62,7 @@ x-calm-dsl-type: vm_ahv_disk
 properties:
   data_source_reference:
     type: object
-    x-calm-dsl-type: dict
+    x-calm-dsl-type: object
     properties:
       name:
         type: string
@@ -72,16 +72,17 @@ properties:
         default: image
       uuid:
         type: string
+    default: null
   device_properties:
     type: object
-    x-calm-dsl-type: dict
+    x-calm-dsl-type: object
     properties:
       device_type:
         type: string
         default: DISK
       disk_address:
         type: object
-        x-calm-dsl-type: dict
+        x-calm-dsl-type: object
         properties:
           device_index:
             type: integer
@@ -184,15 +185,15 @@ properties:
     default: LEGACY
   boot_config:
     type: object
-    x-calm-dsl-type: dict
+    x-calm-dsl-type: object
     properties:
       boot_device:
         type: object
-        x-calm-dsl-type: dict
+        x-calm-dsl-type: object
         properties:
           disk_address:
             type: object
-            x-calm-dsl-type: dict
+            x-calm-dsl-type: object
             properties:
               device_index:
                 type: integer
