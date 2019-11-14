@@ -64,13 +64,8 @@ def cloud_init(filename=None):
     )
 
 
-def fresh_sys_prep(
-    is_domain=False,
-    domain="",
-    dns_ip="",
-    dns_search_path="",
-    credential=None,
-    filename=None,
+def fresh_sys_prep_with_domain(
+    domain="", dns_ip="", dns_search_path="", credential=None, filename=None
 ):
     unattend_xml = ""
     if filename:
@@ -80,7 +75,7 @@ def fresh_sys_prep(
         customization_type="sysprep",
         install_type="FRESH",
         unattend_xml=unattend_xml,
-        is_domain=is_domain,
+        is_domain=True,
         domain=domain,
         dns_ip=dns_ip,
         dns_search_path=dns_search_path,
@@ -88,13 +83,25 @@ def fresh_sys_prep(
     )
 
 
-def prepared_sys_prep(
-    is_domain=False,
-    domain="",
-    dns_ip="",
-    dns_search_path="",
-    credential=None,
-    filename=None,
+def fresh_sys_prep_without_domain(filename=None,):
+    unattend_xml = ""
+    if filename:
+        unattend_xml = read_file(filename, depth=3)
+
+    return create_ahv_guest_customization(
+        customization_type="sysprep",
+        install_type="FRESH",
+        unattend_xml=unattend_xml,
+        is_domain=False,
+        domain="",
+        dns_ip="",
+        dns_search_path="",
+        credential=None,
+    )
+
+
+def prepared_sys_prep_with_domain(
+    domain="", dns_ip="", dns_search_path="", credential=None, filename=None
 ):
     unattend_xml = ""
     if filename:
@@ -104,11 +111,28 @@ def prepared_sys_prep(
         customization_type="sysprep",
         install_type="PREPARED",
         unattend_xml=unattend_xml,
-        is_domain=is_domain,
+        is_domain=True,
         domain=domain,
         dns_ip=dns_ip,
         dns_search_path=dns_search_path,
         credential=credential,
+    )
+
+
+def prepared_sys_prep_without_domain(filename=None,):
+    unattend_xml = ""
+    if filename:
+        unattend_xml = read_file(filename, depth=3)
+
+    return create_ahv_guest_customization(
+        customization_type="sysprep",
+        install_type="PREPARED",
+        unattend_xml=unattend_xml,
+        is_domain=False,
+        domain="",
+        dns_ip="",
+        dns_search_path="",
+        credential=None,
     )
 
 
@@ -118,23 +142,19 @@ class AhvVmGC:
             return cloud_init(filename)
 
     class Sysprep:
-        def __new__(
-            cls,
-            is_domain=False,
-            domain="",
-            dns_ip="",
-            dns_search_path="",
-            credential=None,
-            filename=None,
-        ):
-            return fresh_sys_prep(
-                is_domain=is_domain,
-                domain=domain,
-                dns_ip=dns_ip,
-                dns_search_path=dns_search_path,
-                credential=credential,
-                filename=filename,
-            )
+        def __new__(cls, filename=None):
+            return fresh_sys_prep_without_domain(filename=filename)
 
-        freshScript = fresh_sys_prep
-        preparedScript = prepared_sys_prep
+        class FreshScript:
+            def __new__(cls, filename=None):
+                return fresh_sys_prep_without_domain(filename=filename)
+
+            withDomain = fresh_sys_prep_with_domain
+            withoutDomain = fresh_sys_prep_without_domain
+
+        class PreparedScript:
+            def __new__(cls, filename=None):
+                return prepared_sys_prep_without_domain(filename=filename)
+
+            withDomain = prepared_sys_prep_with_domain
+            withoutDomain = prepared_sys_prep_without_domain

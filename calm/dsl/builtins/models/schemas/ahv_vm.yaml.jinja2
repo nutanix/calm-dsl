@@ -15,17 +15,16 @@ properties:
     default: NORMAL_NIC
   subnet_reference:
     type: object
-    x-calm-dsl-type: dict
+    x-calm-dsl-type: object
     properties:
       uuid:
         type: string
-        minLength: 36
-        maxLength: 36
       kind:
         type: string
         default: subnet
       name:
         type: string
+    default: null
   network_function_chain_reference:
     type: object
     x-calm-dsl-type: dict
