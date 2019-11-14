@@ -7,7 +7,7 @@ dev:
 	venv/bin/python3 setup.py develop
 
 test: dev
-	venv/bin/py.test -v -m "not slow"
+	venv/bin/py.test -v -m "not slow" --ignore=examples/
 
 test-all: test
 	venv/bin/py.test -v -m "slow"
