@@ -156,7 +156,7 @@ class EntityType(EntityTypeBase):
         return representer.represent_mapping(yaml_tag, node.compile())
 
     @classmethod
-    def __prepare__(mcls, name, bases, **kwargs):
+    def __prepare__(mcls, name, bases):
 
         schema_name = mcls.__schema_name__
 
@@ -171,7 +171,14 @@ class EntityType(EntityTypeBase):
         # Look at __setitem__ in EntityDict
         return EntityDict(validators)
 
-    def __new__(mcls, name, bases, entitydict):
+    def __new__(mcls, name, bases, kwargs):
+
+        if not isinstance(kwargs, EntityDict):
+            entitydict = mcls.__prepare__(name, bases)
+            for k, v in kwargs.items():
+                entitydict[k] = v
+        else:
+            entitydict = kwargs
 
         cls = super().__new__(mcls, name, bases, entitydict)
 

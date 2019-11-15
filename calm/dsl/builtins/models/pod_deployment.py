@@ -1,5 +1,6 @@
 from .entity import Entity
 from .validator import PropertyValidator
+from .provider_spec import ProviderSpec
 from .deployment import DeploymentType
 from .published_service import published_service
 from .service import service
@@ -130,7 +131,7 @@ class PODDeploymentType(DeploymentType):
         sub = substrate(
             name="{}_{}_{}".format(cls.__name__, container_name, "Substrate"),
             provider_type="K8S_POD",
-            provider_spec=sub_provider_spec,
+            provider_spec=ProviderSpec(sub_provider_spec),
         )
 
         substrate_definition_list.append(sub)

@@ -7,7 +7,7 @@ dev:
 	venv/bin/python3 setup.py develop
 
 test: dev
-	venv/bin/py.test -v -m "not slow"
+	venv/bin/py.test -v -m "not slow" --ignore=examples/
 
 test-all: test
 	venv/bin/py.test -v -m "slow"
@@ -40,7 +40,7 @@ docker: dist gui
 		docker build --rm -t ideadevice/calm-dsl-engine .
 
 black:
-	black --exclude '/(\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|venv|_build|buck-out|build|dist)/' .
+	black --exclude '/(\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|venv|_build|buck-out|build|dist|examples)/' .
 
 run:
 	docker run -it -p 8888:8888 ideadevice/calm-dsl-engine

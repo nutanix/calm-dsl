@@ -1,0 +1,18 @@
+{% macro K8sCreateSpec() -%}
+title: K8S CreateSpec
+type: object
+properties:
+  name:
+    type: string
+
+{%- endmacro %}
+
+info:
+  title: K8S_POD
+  description: Kubernete spec
+  version: #TODO
+
+components:
+  schemas:
+    provider_spec:
+      {{ K8sCreateSpec() | indent(6) }}
