@@ -185,15 +185,6 @@ class EntityType(EntityTypeBase):
         openapi_type = getattr(mcls, "__openapi_type__")
         setattr(cls, "__kind__", openapi_type)
 
-        validators = getattr(mcls, "__validator_dict__", {})
-
-        # Validating user attributes
-        for k, v in cls.__dict__.items():
-            if k.startswith("__") and k.endswith("__"):
-                continue
-
-            setattr(cls, k, _validate(validators, k, v))
-
         for k, v in cls.get_default_attrs().items():
             # Check if attr was set during class creation
             # else - set default value
