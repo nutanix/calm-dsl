@@ -5,6 +5,7 @@ from peewee import (
     BlobField,
     DateTimeField,
     ForeignKeyField,
+    CompositeKey
 )
 import datetime
 
@@ -42,3 +43,14 @@ class DataTable(BaseModel):
 
     def generate_enc_msg(self):
         return (self.kdf_salt, self.ciphertext, self.iv, self.auth_tag)
+
+
+class CacheTable(BaseModel):
+    entity_type = CharField()
+    entity_name = CharField()
+    entity_uuid = CharField()
+    entity_list_api_suffix = CharField()
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey('entity_type', 'entity_name')

@@ -1,5 +1,6 @@
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
+from calm.dsl.store import Cache
 
 
 # AHV Nic
@@ -32,9 +33,10 @@ def create_ahv_nic(
 
     kwargs = {}
     if subnet:
+        subnet_uuid = Cache.get_entity_uuid("AHV_SUBNETS", subnet)
         kwargs["subnet_reference"] = {
             "name": subnet,
-            "uuid": "subnet_uuid",  # TODO call api
+            "uuid": subnet_uuid,
         }
 
     if network_function_chain:

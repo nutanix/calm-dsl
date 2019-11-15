@@ -1,5 +1,6 @@
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
+from calm.dsl.store import Cache
 
 
 # AHV VM Disk
@@ -56,8 +57,10 @@ def clone_from_image_service(
 
     if not image_name:
         raise ValueError("image name not supplied !!!")
+
+    image_uuid = Cache.get_entity_uuid("AHV_DISK_IMAGE", image_name)
     kwargs = {
-        "data_source_reference": {"kind": "image", "name": image_name},  # TODO add UUID
+        "data_source_reference": {"kind": "image", "name": image_name, "uuid": image_uuid},
         "device_properties": {
             "device_type": device_type,
             "disk_address": {
@@ -88,7 +91,6 @@ def clone_from_image_service(
 def empty_cd_rom(adapter_type="IDE"):
     global ADAPTER_INDEX_MAP
     kwargs = {
-        "data_source_reference": None,  # Must be there
         "device_properties": {
             "device_type": "CDROM",
             "disk_address": {

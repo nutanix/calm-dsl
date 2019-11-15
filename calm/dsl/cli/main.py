@@ -13,6 +13,7 @@ from calm.dsl.providers import get_provider, get_provider_types
 from calm.dsl.tools import ping
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
+from calm.dsl.store import Cache
 
 logger = logging.getLogger(__name__)
 click_log.basic_config(logger)
@@ -181,6 +182,12 @@ def run():
 def watch():
     """Track actions running on apps"""
     pass
+
+
+@main.command("sync")
+def sync():
+    """Sync the data available in cache"""
+    Cache.sync()
 
 
 @create.command("provider_spec")
