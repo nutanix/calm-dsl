@@ -614,10 +614,6 @@ def find_schema(schema, path, option):
 
             if not resDict:
                 print("Not a valid key")
-                import pdb
-
-                pdb.set_trace()
-
             else:
                 schema = resDict
                 indOpt = indOpt + 1

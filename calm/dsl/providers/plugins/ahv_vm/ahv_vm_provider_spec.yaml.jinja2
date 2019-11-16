@@ -64,6 +64,9 @@ properties:
             type: integer
           adapter_type:
             type: string
+  boot_type:
+    type: string
+    enum: [LEGACY, UEFI]
 
 {%- endmacro %}
 
