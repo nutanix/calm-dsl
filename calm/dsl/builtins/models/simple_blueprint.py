@@ -3,11 +3,13 @@ from .validator import PropertyValidator
 
 from .profile import profile
 from .deployment import deployment
-from .pod_deployment import pod_deployment
+from .simple_pod_deployment import simple_pod_deployment
+from .provider_spec import ProviderSpec
 from .substrate import substrate
 from .service import service
 from .package import package
 from .ref import ref
+from .action import action as Action
 
 # Simple Blueprint
 
@@ -28,14 +30,16 @@ class SimpleBlueprintType(EntityType):
         normal_deployments = []
         for dep in deployments:
             if dep.deployment_spec and dep.service_spec:
-                pod_dep = pod_deployment(
-                    name=dep.__name__,
+                pod_dep = simple_pod_deployment(
                     service_spec=dep.service_spec,
                     deployment_spec=dep.deployment_spec,
                     dependencies=dep.dependencies,
                 )
 
                 pod_deployments.append(pod_dep)
+                for key, value in dep.__dict__.items():
+                    if isinstance(value, Action):
+                        setattr(pod_dep, key, value)
 
             else:
                 normal_deployments.append(dep)
@@ -68,15 +72,25 @@ class SimpleBlueprintType(EntityType):
             s = service(name=sd["name"] + "Service", description=sd["description"])
             sdict = s.get_dict()
             sdict["variable_list"] = sd["variable_list"]
+
+            compulsory_actions = sdict.pop("action_list", [])
+            existing_system_actions = []
+            sdict["action_list"] = []  # Initializing by empty list
             for action in sd["action_list"]:
                 if action["name"].startswith("__") and action["name"].endswith("__"):
                     if action["name"] in s.ALLOWED_SYSTEM_ACTIONS:
                         action["name"] = s.ALLOWED_SYSTEM_ACTIONS[action["name"]]
                         action["type"] = "system"
                         action["critical"] = True
+                        existing_system_actions.append(action["name"])
                     else:
                         continue
                 sdict["action_list"].append(action)
+
+            # Adding compulsory action action, if not supplied by user
+            for action in compulsory_actions:
+                if action["name"] not in existing_system_actions:
+                    sdict["action_list"].append(action)
 
             # Init package dict
             p = package(name=sd["name"] + "Package")
@@ -92,7 +106,7 @@ class SimpleBlueprintType(EntityType):
             sub = substrate(
                 name=sd["name"] + "Substrate",
                 provider_type=sd["provider_type"],
-                provider_spec=sd["provider_spec"],
+                provider_spec=ProviderSpec(sd["provider_spec"]),
                 readiness_probe=sd["readiness_probe"],
                 os_type=sd["os_type"],
             )

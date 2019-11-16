@@ -795,6 +795,7 @@ class CalmTask:
 
     class SetVariable:
         ssh = set_variable_task_ssh
+        powershell = set_variable_task_powershell
         escript = set_variable_task_escript
 
     class Scaling:

@@ -1,7 +1,9 @@
-FROM alpine:edge
+FROM python:3.6-alpine
 
 # Alpine is not manylinux compatible, so any package containing C extensions
 # must be built from source [PEP 513].
+
+ENV PATH=/root/.local/bin:$PATH
 
 # Add required C extensions to packages.
 ENV PACKAGES="\
@@ -18,6 +20,8 @@ ENV BUILD_PACKAGES="\
         musl-dev \
         zeromq-dev \
         libxml2-dev \
+        openssl-dev \
+        jpeg-dev \
         libxslt-dev \
         "
 
@@ -30,11 +34,13 @@ RUN pip3 install --no-cache-dir --upgrade pip setuptools
 # Install build packages for building from source
 RUN apk add --no-cache $BUILD_PACKAGES
 
-# Install Jupyter requirements for GUI
+WORKDIR /root
+RUN mkdir -p `python3 -m site --user-site`
+COPY requirements.txt /requirements.txt
 COPY gui-requirements.txt /gui-requirements.txt
-RUN pip3 install --no-cache-dir -r /gui-requirements.txt
+RUN pip3 install --no-cache-dir -r /requirements.txt -r /gui-requirements.txt --user
+RUN rm /requirements.txt
 RUN rm /gui-requirements.txt
-
 
 # Configure jupyter extensions
 ## RUN jupyter contrib nbextension install --user
@@ -43,12 +49,6 @@ RUN rm /gui-requirements.txt
 ## RUN jupyter nbextension enable --py jupyter_dashboards --sys-prefix
 
 # Use root env instead of virtualenv for installing requirements [PEP 370]
-WORKDIR /root
-RUN mkdir -p `python3 -m site --user-site`
-COPY requirements.txt /requirements.txt
-RUN pip3 install --no-cache-dir -r /requirements.txt --user
-RUN rm /requirements.txt
-
 # Cleanup all build packages
 RUN apk del $BUILD_PACKAGES
 
