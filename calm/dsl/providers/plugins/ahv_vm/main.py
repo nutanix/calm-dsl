@@ -239,6 +239,7 @@ def create_spec(client):
     click.secho("\nAdd some disks:\n", fg="blue", bold=True)
 
     spec["resources"]["disk_list"] = []
+    spec["resources"]["boot_config"] = {}
     path[-1] = "disk_list"
     option.append("AHV Disk")
 
@@ -312,11 +313,7 @@ def create_spec(client):
             adapterNameIndexMap[image["adapter_type"]] = 0
 
         disk = {
-            "data_source_reference": {
-                "name": image["name"],
-                "kind": "image",
-                "uuid": imagesNameUUIDMap.get(image["name"]),
-            },
+            "data_source_reference": {},
             "device_properties": {
                 "device_type": image["device_type"],
                 "disk_address": {
@@ -325,6 +322,14 @@ def create_spec(client):
                 },
             },
         }
+
+        # If image exists, then update data_source_reference
+        if image["name"]:
+            disk["data_source_reference"] = {
+                "name": image["name"],
+                "kind": "image",
+                "uuid": imagesNameUUIDMap.get(image["name"], ""),
+            }
 
         if image["bootable"]:
             spec["resources"]["boot_config"] = {
@@ -343,6 +348,23 @@ def create_spec(client):
             "\n{}(y/n)".format(highlight_text("Want to add more disks")), default="n"
         )
         if choice[0] == "n":
+            break
+
+    click.echo("\nChoose from given Boot Type :")
+    boot_types = list(ahv.BOOT_TYPES.keys())
+    for index, boot_type in enumerate(boot_types):
+        click.echo("\t{}. {}".format(index + 1, highlight_text(boot_type)))
+
+    while True:
+        res = click.prompt("\nEnter the index for Boot Type", default=1)
+        if (res > len(boot_types)) or (res <= 0):
+            click.echo("Invalid index !!! ")
+
+        else:
+            boot_type = ahv.BOOT_TYPES[boot_types[res - 1]]
+            if boot_type == ahv.BOOT_TYPES["UEFI"]:
+                spec["resources"]["boot_config"]["boot_type"] = boot_type
+            click.echo("{} selected".format(highlight_text(boot_type)))
             break
 
     choice = click.prompt(
