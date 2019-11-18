@@ -22,16 +22,7 @@ def _validate(vdict, name, value):
             raise TypeError("Unknown attribute {} given".format(name))
         ValidatorType, is_array = vdict[name]
         if getattr(ValidatorType, "__is_object__", False):
-            if not isinstance(value, dict):
-                raise TypeError("{} is not of type {}".format(value, "dict"))
-            new_value = ValidatorType.__class__(
-                ValidatorType.validators,
-                ValidatorType.defaults,
-                ValidatorType.display_map,
-            )
-            for k, v in value.items():
-                new_value[k] = v
-            return new_value
+            return ValidatorType.validate(value, is_array)
 
     except TypeError:
 
