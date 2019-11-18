@@ -9,7 +9,9 @@ class AHV:
         "CDROM": {"SATA": "SATA", "IDE": "IDE"},
         "DISK": {"SCSI": "SCSI", "PCI": "PCI"},
     }
+    IMAGE_TYPES = {"DISK": "DISK_IMAGE", "CDROM": "ISO_IMAGE"}
 
     GUEST_CUSTOMIZATION_SCRIPT_TYPES = ["cloud_init", "sysprep"]
 
     SYS_PREP_INSTALL_TYPES = ["Fresh", "Prepared"]
+    BOOT_TYPES = {"Legacy BIOS": "LEGACY", "UEFI": "UEFI"}

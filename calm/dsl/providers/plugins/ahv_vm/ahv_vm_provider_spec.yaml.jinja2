@@ -1,5 +1,5 @@
 
-{% macro ahvNICs() -%}
+{% macro ahvNIC() -%}
 
 title: AHV NIC
 type: object
@@ -7,25 +7,49 @@ properties:
   network_function_nic_type:
     type: string
     default: INGRESS
+    enum: [INGRESS, EGRESS, TAP]
   nic_type:
     type: string
     default: NORMAL_NIC
+    enum: [NORMAL_NIC, DIRECT_NIC, NETWORK_FUNCTION_NIC]
   subnet_reference:
-    type: object
+    type: [object, "null"]
     properties:
       uuid:
         type: string
-        minLength: 36
-        maxLength: 36
       kind:
         type: string
+        default: subnet
       name:
         type: string
+  network_function_chain_reference:
+    type: [object, "null"]
+    properties:
+      uuid:
+        type: string
+      kind:
+        type: string
+        default: network_function_chain
+      name:
+        type: string
+  mac_address:
+    type: string
+  ip_endpoint_list:
+    type: array
+    items:
+      type: object
+      properties:
+        ip:
+          type: string
+        type:
+          type: string
+          default: ASSIGNED
+          enum: [ASSIGNED, LEARNED]
 
 {%- endmacro %}
 
 
-{% macro ahv_BootConfig() -%}
+{% macro ahvBootConfig() -%}
 
 title: AHV Boot Configuration
 type: object
@@ -40,13 +64,16 @@ properties:
             type: integer
           adapter_type:
             type: string
+  boot_type:
+    type: string
+    enum: [LEGACY, UEFI]
 
 {%- endmacro %}
 
 
-{% macro ahv_DiskList() -%}
+{% macro ahvDisk() -%}
 
-title: AHV Disk List
+title: AHV Disk
 type: object
 properties:
   data_source_reference:
@@ -59,8 +86,6 @@ properties:
         enum: [image]
       uuid:
         type: string
-        minLength: 36
-        maxLength: 36
   device_properties:
     type: object
     properties:
@@ -75,13 +100,14 @@ properties:
             type: string
   disk_size_mib:
     type: integer
+    default: 0
 
 {%- endmacro %}
 
 
-{% macro ahv_VDiskList() -%}
+{% macro ahvVDisk() -%}
 
-title: AHV VDisk List
+title: AHV VDisk
 type: object
 properties:
   device_properties:
@@ -128,6 +154,85 @@ properties:
         type: string
       install_type:
         type: string
+      is_domain:
+        type: boolean
+        default: False
+      domain:
+        type: string
+      dns_ip:
+        type: string
+      dns_search_path:
+        type: string
+      domain_credential_reference:
+        type: [object, "null"]
+        properties:
+          uuid:
+            type: string
+          kind:
+            type: string
+            default: subnet
+          name:
+            type: string
+
+{%- endmacro %}
+
+
+{% macro ahvGPU() -%}
+
+title: AHV GPU
+type: object
+properties:
+  vendor:
+    type: string
+  mode:
+    type: string
+  device_id:
+    type: integer
+
+{%- endmacro %}
+
+
+{% macro ahvSerialPort() -%}
+
+title: AHV Serial Port
+type: object
+properties:
+  index:
+    type: integer
+  is_connected:
+    type: boolean
+    default: False
+
+{%- endmacro %}
+
+
+{% macro ahvGuestTools() -%}
+
+title: AHV Guest Tools
+type: [object, "null"]
+properties:
+  nutanix_guest_tools:
+    type: object
+    properties:
+      state:
+        type: string
+      version:
+        type: string
+      ngt_state:
+        type: string
+      iso_mount_state:
+        type: string
+      credentials:
+        type: object
+        properties:
+          username:
+            type: string
+          password:
+            type: string
+      enabled_capability_list:
+        type: array
+        items:
+          type: string
 
 {%- endmacro %}
 
@@ -140,7 +245,7 @@ properties:
   nic_list:
     type: array
     items:
-      {{ ahvNICs() | indent(6) }}
+      {{ ahvNIC() | indent(6) }}
   num_vcpus_per_socket:
     type: integer
   num_sockets:
@@ -153,15 +258,28 @@ properties:
   gpu_list:
     type: array
     items:
-      type: object
+      $ref: '#/components/schemas/gpu'
+  hardware_clock_timezone:
+    type: string
+  parent_reference:
+    type: [object, "null"]
+    properties:
+      uuid:
+        type: string
+      kind:
+        type: string
+      name:
+        type: string
+  guest_tools:
+    $ref: '#/components/schemas/guest_tools'
   disk_list:
     type: array
     items:
       anyOf:
-        - $ref: '#/components/schemas/disk_list'
-        - $ref: '#/components/schemas/vdisk_list'
+        - $ref: '#/components/schemas/disk'
+        - $ref: '#/components/schemas/vdisk'
   boot_config:
-    {{ ahv_BootConfig() | indent(4) }}
+    {{ ahvBootConfig() | indent(4) }}
   guest_customization:
     anyOf:
       - $ref: '#/components/schemas/cloud_init_script'
@@ -169,13 +287,7 @@ properties:
   serial_port_list:
     type: array
     items:
-      type: object
-      properties:
-        index:
-          type: integer
-        is_connected:
-          type: boolean
-          default: False
+      $ref: '#/components/schemas/serial_port'
 
 {%- endmacro %}
 
@@ -188,9 +300,29 @@ properties:
   name:
     type: string
   categories:
-    type: object     # TODO get the respective(fix no. of categories)
+    type: object
   resources:
     {{ ahvResources() | indent(4) }}
+  cluster_reference:
+    type: [object, "null"]
+    properties:
+      uuid:
+        type: string
+      kind:
+        type: string
+        default: cluster
+      name:
+        type: string
+  availability_zone_reference:
+    type: [object, "null"]
+    properties:
+      uuid:
+        type: string
+      kind:
+        type: string
+        default: availability_zone
+      name:
+        type: string
 
 {%- endmacro %}
 
@@ -203,11 +335,17 @@ components:
   schemas:
     provider_spec:
       {{ ahvCreateSpec() | indent(6) }}
-    disk_list:
-      {{ ahv_DiskList() | indent(6) }}
-    vdisk_list:
-      {{ ahv_VDiskList() | indent(6) }}
+    disk:
+      {{ ahvDisk() | indent(6) }}
+    vdisk:
+      {{ ahvVDisk() | indent(6) }}
+    gpu:
+      {{ ahvGPU() | indent(6) }}
+    guest_tools:
+      {{ ahvGuestTools() | indent(6) }}
     cloud_init_script:
       {{ ahvCloudInitScript() | indent(6) }}
     sys_prep_script:
       {{ ahvSysPrepScript() | indent(6) }}
+    serial_port:
+      {{ ahvSerialPort() | indent(6) }}
