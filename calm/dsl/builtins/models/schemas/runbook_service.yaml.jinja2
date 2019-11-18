@@ -21,6 +21,10 @@ properties:
     x-calm-dsl-type: dict
   runbook:
     $ref: '#/components/schemas/Runbook'
+  default_target_reference:
+    type: object
+    x-calm-dsl-type: app_ref
+    x-calm-dsl-display-name: default_target
 {%- endmacro %}
 
 
