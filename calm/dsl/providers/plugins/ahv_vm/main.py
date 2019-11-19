@@ -39,7 +39,12 @@ class AHV:
         img_name_uuid_map = {}
 
         for image in res["entities"]:
-            img_type = image["status"]["resources"]["image_type"]
+            img_type = image["status"]["resources"].get("image_type", None)
+
+            # Ignoring images, if they don't have any image type(Ex: Karbon Image)
+            if not img_type:
+                continue
+
             if img_type == image_type:
                 img_name_uuid_map[image["status"]["name"]] = image["metadata"]["uuid"]
 
