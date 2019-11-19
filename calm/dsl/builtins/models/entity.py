@@ -22,16 +22,7 @@ def _validate(vdict, name, value):
             raise TypeError("Unknown attribute {} given".format(name))
         ValidatorType, is_array = vdict[name]
         if getattr(ValidatorType, "__is_object__", False):
-            if not isinstance(value, dict):
-                raise TypeError("{} is not of type {}".format(value, "dict"))
-            new_value = ValidatorType.__class__(
-                ValidatorType.validators,
-                ValidatorType.defaults,
-                ValidatorType.display_map,
-            )
-            for k, v in value.items():
-                new_value[k] = v
-            return new_value
+            return ValidatorType.validate(value, is_array)
 
     except TypeError:
 
@@ -137,7 +128,7 @@ class EntityType(EntityTypeBase):
         return representer.represent_mapping(yaml_tag, node.compile())
 
     @classmethod
-    def __prepare__(mcls, name, bases, **kwargs):
+    def __prepare__(mcls, name, bases):
 
         schema_name = mcls.__schema_name__
 
@@ -152,7 +143,14 @@ class EntityType(EntityTypeBase):
         # Look at __setitem__ in EntityDict
         return EntityDict(validators)
 
-    def __new__(mcls, name, bases, entitydict):
+    def __new__(mcls, name, bases, kwargs):
+
+        if not isinstance(kwargs, EntityDict):
+            entitydict = mcls.__prepare__(name, bases)
+            for k, v in kwargs.items():
+                entitydict[k] = v
+        else:
+            entitydict = kwargs
 
         cls = super().__new__(mcls, name, bases, entitydict)
 
