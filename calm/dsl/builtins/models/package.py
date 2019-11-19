@@ -60,6 +60,11 @@ class PackageType(EntityType):
             cdict["options"]["install_runbook"] = install_runbook
             cdict["options"]["uninstall_runbook"] = uninstall_runbook
 
+        elif getattr(cls, "type") == "SUBSTRATE_IMAGE":
+            cdict = super().compile()
+            cdict.pop("image_spec", None)
+            return cdict
+
         else:
             ptype = getattr(cls, "type")
             raise Exception("Un-supported package type {}".format(ptype))

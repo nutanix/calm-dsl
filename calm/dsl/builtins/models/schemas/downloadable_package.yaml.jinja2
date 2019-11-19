@@ -1,0 +1,43 @@
+{% macro DownloadablePackage() -%}
+
+title: Downloadable Package
+type: object
+x-calm-dsl-type: app_downloadable_package
+properties:
+  name:
+    type: string
+    default: ''
+  type:
+    type: string
+    default: SUBSTRATE_IMAGE
+    enum: [SUBSTRATE_IMAGE]
+  description:
+    type: string
+    default: ''
+  image_name:
+    type: string
+  image_type:
+    type: string
+    default: DISK_IMAGE
+    enum: [DISK_IMAGE, ISO_IMAGE]
+  architecture:
+    type: string
+    default: X86_64
+    enum: [X86_64, PPC64, PPC64LE]
+  product_name:
+    type: string
+  product_version:
+    type: string
+    default: ''
+  source_uri:
+    type: string
+
+{%- endmacro %}
+
+
+{% macro DownloadablePackageSchema() -%}
+
+DownloadablePackage:
+  {{ DownloadablePackage()|indent(2) }}
+
+{%- endmacro %}
