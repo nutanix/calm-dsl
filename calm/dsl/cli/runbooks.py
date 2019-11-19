@@ -11,6 +11,7 @@ from calm.dsl.config import get_config
 from .utils import get_name_query, highlight_text, get_states_filter
 from .constants import RUNBOOK
 from .runlog import get_completion_func, get_runlog_status
+from .endpoints import get_endpoint
 
 
 def get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
@@ -203,23 +204,49 @@ def get_runbook(client, name, all=False):
     return runbook
 
 
+def patch_runbook_runtime_editables(client, runbook):
+
+    args = []
+    variable_list = runbook["spec"]["resources"]["runbook"].get("variable_list", [])
+    for variable in variable_list:
+        if variable.get("editables", {}).get("value", False):
+            new_val = input(
+                "Value for Variable {} in Runbook (default value={}): ".format(
+                    variable.get("name"), variable.get("value", "")
+                )
+            )
+            if new_val:
+                args.append({"name": variable.get("name"), "value": type(variable.get("value"))(new_val)})
+
+    payload = {"spec": {"args": args}}
+    default_target = runbook["spec"]["resources"].get("default_target_reference", {}).get("name", None)
+    target = input(
+        "Endpoint target for the Runbook Run (default target={}): ".format(default_target)
+    )
+    if target:
+        endpoint = get_endpoint(client, target)
+        endpoint_id = endpoint.get("metadata", {}).get("uuid", "")
+        payload["spec"]["default_target_reference"] = {
+            "kind": "app_endpoint",
+            "uuid": endpoint_id,
+            "name": target
+        }
+    return payload
+
+
 def run_runbook(
     screen,
     client,
-    runbook_name,
+    runbook_uuid,
     watch,
-    runbook=None,
     input_data={},
+    payload={}
 ):
-    if not runbook:
-        runbook = get_runbook(client, runbook_name)
 
-    runbook_uuid = runbook.get("metadata", {}).get("uuid", "")
-
-    res, err = client.runbook.run(runbook_uuid, {})
+    res, err = client.runbook.run(runbook_uuid, payload)
     if not err:
         screen.clear()
-        screen.print_at(">> {} queued for run".format(runbook_name or "Runbook"), 0, 0)
+        screen.print_at(">> Runbook queued for run", 0, 0)
     else:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
     response = res.json()

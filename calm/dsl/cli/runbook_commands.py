@@ -12,6 +12,7 @@ from .runbooks import (
     run_runbook,
     describe_runbook,
     delete_runbook,
+    patch_runbook_runtime_editables,
 )
 
 
@@ -246,8 +247,14 @@ def _describe_runbook(obj, runbook_name):
     help="Path of Runbook file to directly run runbook"
 )
 @click.option(
-    "--input-file",
+    "--ignore_runtime_variables",
     "-i",
+    is_flag=True,
+    default=False,
+    help="Ignore runtime variables and use defaults",
+)
+@click.option(
+    "--input-file",
     "input_file",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     required=False,
@@ -255,7 +262,7 @@ def _describe_runbook(obj, runbook_name):
 )
 @click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
 @click.pass_obj
-def run_runbook_command(obj, runbook_name, watch, runbook_file=None, input_file=None):
+def run_runbook_command(obj, runbook_name, watch, ignore_runtime_variables, runbook_file=None, input_file=None):
 
     if runbook_file is None and runbook_name is None:
         click.echo("One of either Runbook Name or Runbook File is required to run runbook.")
@@ -289,6 +296,9 @@ def run_runbook_command(obj, runbook_name, watch, runbook_file=None, input_file=
         res, err = client.runbook.delete(runbook_id)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    else:
+        runbook = get_runbook(client, runbook_name)
+    runbook_uuid = runbook.get("metadata", {}).get("uuid", "")
 
     input_data = {}
     if input_file is not None and input_file.endswith(".json"):
@@ -297,10 +307,14 @@ def run_runbook_command(obj, runbook_name, watch, runbook_file=None, input_file=
         click.echo("Unknown input file format {}".format(input_file))
         return
 
+    payload = {}
+    if not ignore_runtime_variables:
+        payload = patch_runbook_runtime_editables(client, runbook)
+
     def render_runbook(screen):
         screen.clear()
         screen.refresh()
-        run_runbook(screen, client, runbook_name, watch, runbook=runbook, input_data=input_data)
+        run_runbook(screen, client, runbook_uuid, watch, input_data=input_data, payload=payload)
         screen.wait_for_input(10.0)
 
     Display.wrapper(render_runbook, watch)
