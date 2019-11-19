@@ -6,7 +6,7 @@ from .task import dag
 from .entity import EntityType, Entity
 from .descriptor import DescriptorType
 from .validator import PropertyValidator
-from .node_visitor import handle_dag_create
+from .node_visitor import GetCallNodes
 
 
 class RunbookType(EntityType):
@@ -81,11 +81,6 @@ class runbook(metaclass=DescriptorType):
         # Get the source code for the user function.
         # Also replace tabs with 4 spaces.
         src = inspect.getsource(self.user_func).replace("\t", "    ")
-        args = {}
-        sign = inspect.signature(self.user_func)
-        for name, param in sign.parameters.items():
-            if param.default != inspect._empty:
-                args[name] = param.default
 
         # Get the indent since this decorator is used within class definition
         # For this we split the code on newline and count the number of spaces
@@ -102,17 +97,41 @@ class runbook(metaclass=DescriptorType):
         # ast.Call nodes. ast.Assign nodes become variables.
         node = ast.parse(new_src)
         func_globals = self.user_func.__globals__.copy()
-        self.user_dag, tasks, variables = handle_dag_create(node, func_globals, self.dag_name)
+        node_visitor = GetCallNodes(func_globals, target=cls.get_task_target() if hasattr(cls, 'get_task_target') else None)
+        try:
+            node_visitor.visit(node)
+        except Exception as ex:
+            self.__exception__ = ex
+            raise
+        tasks, variables, task_list = node_visitor.get_objects()
+        edges = []
+        for from_tasks, to_tasks in zip(task_list, task_list[1:]):
+            if not isinstance(from_tasks, list):
+                from_tasks = [from_tasks]
+            if not isinstance(to_tasks, list):
+                to_tasks = [to_tasks]
+            for from_task in from_tasks:
+                for to_task in to_tasks:
+                    edges.append((from_task.get_ref(), to_task.get_ref()))
 
-        kwargs = {}
-        # TODO add target at runbook level
-        # target = args.pop("target", None)
-        # if target is not None:
-        #     kwargs["target"] = target
-        # kwargs["name"] = self.runbook_name
+        child_tasks = []
+        for child_task in task_list:
+            if not isinstance(child_task, list):
+                child_task = [child_task]
+            child_tasks.extend(child_task)
+
+        # First create the dag
+        self.user_dag = dag(
+            name=self.dag_name,
+            child_tasks=child_tasks,
+            edges=edges,
+            target=cls.get_task_target()
+            if getattr(cls, "__has_dag_target__", True) and hasattr(cls, 'get_task_target')
+            else None,
+        )
 
         # Modify the user runbook
-        self.user_runbook = runbook_create(**kwargs)
+        self.user_runbook = runbook_create(**{"name": self.runbook_name})
         self.user_runbook.main_task_local_reference = self.user_dag.get_ref()
         self.user_runbook.tasks = [self.user_dag] + tasks
         self.user_runbook.variables = [variable for variable in variables.values()]

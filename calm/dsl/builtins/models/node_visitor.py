@@ -1,46 +1,9 @@
 import ast
 
-from .task import dag, meta
+from .task import meta
 from .entity import EntityType
 from .task import CalmTask, TaskType
 from .variable import CalmVariable, VariableType
-
-
-def handle_dag_create(node, func_globals, dag_name):
-    """
-    helper for create parsing tasks and creating dag
-    """
-
-    node_visitor = GetCallNodes(func_globals)
-    try:
-        node_visitor.visit(node)
-    except Exception as ex:
-        raise ex
-    tasks, variables, task_list = node_visitor.get_objects()
-    edges = []
-    for from_tasks, to_tasks in zip(task_list, task_list[1:]):
-        if not isinstance(from_tasks, list):
-            from_tasks = [from_tasks]
-        if not isinstance(to_tasks, list):
-            to_tasks = [to_tasks]
-        for from_task in from_tasks:
-            for to_task in to_tasks:
-                edges.append((from_task.get_ref(), to_task.get_ref()))
-
-    child_tasks = []
-    for child_task in task_list:
-        if not isinstance(child_task, list):
-            child_task = [child_task]
-        child_tasks.extend(child_task)
-
-    # First create the dag
-    user_dag = dag(
-        name=dag_name,
-        child_tasks=child_tasks,
-        edges=edges
-    )
-
-    return user_dag, tasks, variables
 
 
 def handle_meta_create(node, func_globals, meta_name):
