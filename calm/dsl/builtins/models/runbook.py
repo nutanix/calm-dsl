@@ -97,7 +97,9 @@ class runbook(metaclass=DescriptorType):
         # ast.Call nodes. ast.Assign nodes become variables.
         node = ast.parse(new_src)
         func_globals = self.user_func.__globals__.copy()
-        node_visitor = GetCallNodes(func_globals, target=cls.get_task_target() if hasattr(cls, 'get_task_target') else None)
+        node_visitor = GetCallNodes(func_globals,
+                                    target=cls.get_task_target() if hasattr(cls, 'get_task_target') else None,
+                                    is_runbook=True if self.__class__ == runbook else False)
         try:
             node_visitor.visit(node)
         except Exception as ex:

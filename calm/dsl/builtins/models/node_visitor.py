@@ -36,12 +36,15 @@ def handle_meta_create(node, func_globals, meta_name):
 class GetCallNodes(ast.NodeVisitor):
 
     # TODO: Need to add validations for unsupported nodes.
-    def __init__(self, func_globals, target=None):
+    def __init__(self, func_globals, target=None, is_runbook=False):
         self.task_list = []
         self.all_tasks = []
         self.variables = {}
         self.target = target or None
         self._globals = func_globals or {}.copy()
+
+        # flag to check if this runbook is in context of RaaS, as decision, while, parallel tasks are supported only in RaaS
+        self.is_runbook = is_runbook
 
     def get_objects(self):
         return self.all_tasks, self.variables, self.task_list
@@ -114,7 +117,7 @@ class GetCallNodes(ast.NodeVisitor):
             self.task_list.append(parallel_tasks)
 
         # for decision tasks
-        elif isinstance(context, TaskType) and context.type == "DECISION":
+        elif self.is_runbook and isinstance(context, TaskType) and context.type == "DECISION":
             for statement in node.body:
                 if isinstance(statement, ast.FunctionDef):
                     if statement.name == "success":
@@ -141,7 +144,7 @@ class GetCallNodes(ast.NodeVisitor):
             self.task_list.append(context)
 
         # for parallel tasks
-        elif isinstance(context, TaskType) and context.type == "PARALLEL":
+        elif self.is_runbook and isinstance(context, TaskType) and context.type == "PARALLEL":
             for statement in node.body:
                 if isinstance(statement, ast.FunctionDef):
                     meta_task, tasks, variables = handle_meta_create(statement, self._globals, context.name + "-" + statement.name)
@@ -166,6 +169,11 @@ class GetCallNodes(ast.NodeVisitor):
             )
 
     def visit_While(self, node):
+        if not self.is_runbook:
+            raise ValueError(
+                "Unsupported 'while' usage inside the action."
+            )
+
         if isinstance(node.test, ast.Call):
             while_task = self.visit_Call(node.test, return_task=True)
             if not isinstance(while_task, TaskType) or while_task.type != 'WHILE_LOOP':
