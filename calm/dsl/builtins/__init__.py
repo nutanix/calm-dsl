@@ -32,7 +32,7 @@ from .models.simple_blueprint import SimpleBlueprint
 
 from .models.blueprint_payload import create_blueprint_payload
 from .models.project import Project as ProjectValidator
-from .models.downloadable_package import DownloadablePackage, downloadable_package
+from .models.ahv_vm_disk_package import ahv_vm_disk_package
 
 
 __all__ = [
@@ -55,8 +55,7 @@ __all__ = [
     "published_service",
     "Package",
     "package",
-    "DownloadablePackage",
-    "downloadable_package",
+    "ahv_vm_disk_package",
     "provider_spec",
     "read_provider_spec",
     "Substrate",

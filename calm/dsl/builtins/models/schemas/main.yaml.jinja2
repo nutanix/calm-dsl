@@ -20,7 +20,6 @@
 {% import "published_service.yaml.jinja2" as published_service %}
 {% import "pod_deployment.yaml.jinja2" as pod_deployment %}
 {% import "simple_pod_deployment.yaml.jinja2" as simple_pod_deployment %}
-{% import "downloadable_package.yaml.jinja2" as downloadable_package %}
 
 {% macro Schemas() -%}
 
@@ -46,7 +45,6 @@
 {{ project.ProjectSchema() }}
 {{ simple_deployment.SimpleDeploymentSchema() }}
 {{ simple_blueprint.SimpleBlueprintSchema() }}
-{{ downloadable_package.DownloadablePackageSchema() }}
 
 {%- endmacro %}
 

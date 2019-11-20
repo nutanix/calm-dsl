@@ -18,7 +18,45 @@ properties:
   options:
     additionalProperties: true
     type: object
-    x-calm-dsl-type: dict
+    x-calm-dsl-type: object
+    properties:
+      install_runbook:
+        type: object
+        x-calm-dsl-type: dict
+      uninstall_runbook:
+        type: object
+        x-calm-dsl-type: dict
+      name:
+        type: string
+      description:
+        type: string
+      resources:
+        type: object
+        x-calm-dsl-type: object
+        properties:
+          image_type:
+            type: string
+          source_uri:
+            type: string
+          architecture:
+            type: string
+          version:
+            type: object
+            x-calm-dsl-type: object
+            properties:
+              product_version:
+                type: string
+              product_name:
+                type: string
+          checksum:
+            type: object
+            x-calm-dsl-type: object
+            properties:
+              checksum_algorithm:
+                type: string
+              checksum_value:
+                type: string
+          
     # TODO - fix this mess!
     default: {"install_runbook": {}, "uninstall_runbook": {}}
   service_local_reference_list:

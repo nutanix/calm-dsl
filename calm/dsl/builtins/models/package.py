@@ -62,6 +62,9 @@ class PackageType(EntityType):
 
         elif getattr(cls, "type") == "SUBSTRATE_IMAGE":
             cdict = super().compile()
+            if cdict.get("options"):
+                cdict["options"].pop("install_runbook", None)
+                cdict["options"].pop("uninstall_runbook", None)
             cdict.pop("image_spec", None)
             return cdict
 
