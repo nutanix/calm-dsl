@@ -11,6 +11,7 @@ import configparser
 ImageType = "DISK_IMAGE"
 ImageArchitecture = "X86_64"
 ProductVersion = "1.0"
+ConfigSections = ["IMAGE", "PRODUCT", "CHECKSUM"]
 
 
 def ahv_vm_disk_package(name="", description="", config_file=None):
@@ -24,6 +25,11 @@ def ahv_vm_disk_package(name="", description="", config_file=None):
     if os.path.isfile(config_file):
         config.read(config_file)
 
+    # Check for given sections, if not present add an empty one
+    for section in ConfigSections:
+        if section not in config:
+            config.add_section(section)
+
     kwargs = {
         "type": "SUBSTRATE_IMAGE",
         "options": {
@@ -33,7 +39,7 @@ def ahv_vm_disk_package(name="", description="", config_file=None):
                 "image_type": config["IMAGE"].get("type", ImageType),
                 "source_uri": config["IMAGE"].get("source_uri", ""),
                 "version": {
-                    "product_version": config["PRODUCT"].get("version", "1.0"),
+                    "product_version": config["PRODUCT"].get("version", ProductVersion),
                     "product_name": config["PRODUCT"].get("name", name)
                 },
                 "architecture": config["IMAGE"].get("architecture", ImageArchitecture)
