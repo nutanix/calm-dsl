@@ -45,6 +45,14 @@ class ProviderSpec(metaclass=ProviderSpecType):
                 if "data_source_reference" not in disk:
                     raise ValueError("unable to set downloadable image in disk {}". format(disk_address))
 
+                pkg = img_address.compile()
+                image_type = pkg["options"]["resources"]["image_type"]
+
+                IMAGE_DISK_TYPE_MAP = {"DISK_IMAGE": "DISK", "ISO_IMAGE": "CDROM"}
+
+                if IMAGE_DISK_TYPE_MAP[image_type] != disk["device_properties"]["device_type"]:
+                    raise ValueError("image type mismatch in disk {}". format(disk_address))
+
                 # Set the reference of this disk
                 disk["data_source_reference"] = ref(img_address).compile()
 

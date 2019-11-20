@@ -36,6 +36,7 @@ properties:
         properties:
           image_type:
             type: string
+            enum: [DISK_IMAGE, ISO_IMAGE]
           source_uri:
             type: string
           architecture:
@@ -54,6 +55,7 @@ properties:
             properties:
               checksum_algorithm:
                 type: string
+                enum: ['SHA_1', 'SHA_256', '']
               checksum_value:
                 type: string
           
