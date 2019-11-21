@@ -18,6 +18,7 @@ from .models.published_service import PublishedService, published_service
 from .models.package import Package, package
 
 from .models.provider_spec import provider_spec, read_provider_spec, read_spec
+from .models.provider_spec import read_ahv_spec, read_vmw_spec
 from .models.substrate import Substrate, substrate
 
 from .models.deployment import Deployment, deployment
@@ -58,6 +59,8 @@ __all__ = [
     "ahv_vm_disk_package",
     "provider_spec",
     "read_provider_spec",
+    "read_ahv_spec",
+    "read_vmw_spec",
     "Substrate",
     "substrate",
     "Deployment",

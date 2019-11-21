@@ -20,6 +20,12 @@ class VCenterVmProvider(Provider):
         client = get_api_client()
         create_spec(client)
 
+    @classmethod
+    def update_vm_image_config(cls, spec, vm_template=None):
+        """vm_template is the downloadable class"""
+        if spec.get("template"):
+            spec["template"] = vm_template.__name__
+
 
 class VCenter:
     def __init__(self, connection):

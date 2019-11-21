@@ -6,7 +6,6 @@ from calm.dsl.providers import get_provider
 
 from .entity import EntityType
 from .validator import PropertyValidator
-from .ref import ref
 
 
 class ProviderSpecType(EntityType):
@@ -15,11 +14,9 @@ class ProviderSpecType(EntityType):
 
 
 class ProviderSpec(metaclass=ProviderSpecType):
-    def __init__(self, spec, disk_packages={}, vm_template=None):
+    def __init__(self, spec):
 
         self.spec = spec
-        self.ahv_disk_packages = disk_packages
-        self.vm_template = vm_template
 
     def __validate__(self, provider_type):
 
@@ -30,36 +27,6 @@ class ProviderSpec(metaclass=ProviderSpecType):
 
     def __get__(self, instance, cls):
 
-        provider_type = cls.provider_type
-
-        # If there are disk_packages, unrool them here for AHV provider
-        if provider_type == "AHV_VM":
-            disk_list = self.spec["resources"].get("disk_list", [])
-
-            for disk_address, img_address in self.ahv_disk_packages.items():
-                if disk_address > len(disk_list):
-                    raise ValueError("invalid disk address ({})". format(disk_address))
-
-                disk = disk_list[disk_address - 1]
-
-                if "data_source_reference" not in disk:
-                    raise ValueError("unable to set downloadable image in disk {}". format(disk_address))
-
-                pkg = img_address.compile()
-                image_type = pkg["options"]["resources"]["image_type"]
-
-                IMAGE_DISK_TYPE_MAP = {"DISK_IMAGE": "DISK", "ISO_IMAGE": "CDROM"}
-
-                if IMAGE_DISK_TYPE_MAP[image_type] != disk["device_properties"]["device_type"]:
-                    raise ValueError("image type mismatch in disk {}". format(disk_address))
-
-                # Set the reference of this disk
-                disk["data_source_reference"] = ref(img_address).compile()
-
-        # If downloadable temnplate is given for VMW provider
-        elif provider_type == "VMW_VM":
-            self.spec["template"] = self.vm_template.__name__
-
         return self.__validate__(cls.provider_type)
 
 
@@ -68,8 +35,8 @@ class ProviderSpecValidator(PropertyValidator, openapi_type="app_provider_spec")
     __kind__ = ProviderSpec
 
 
-def provider_spec(spec, disk_packages={}, vm_template=""):
-    return ProviderSpec(spec, disk_packages=disk_packages, vm_template=vm_template)
+def provider_spec(spec):
+    return ProviderSpec(spec)
 
 
 def read_spec(filename, depth=1):
@@ -83,6 +50,24 @@ def read_spec(filename, depth=1):
     return spec
 
 
-def read_provider_spec(filename, disk_packages={}, vm_template=""):
+def read_provider_spec(filename):
     spec = read_spec(filename, depth=2)
-    return provider_spec(spec, disk_packages=disk_packages, vm_template=vm_template)
+    return provider_spec(spec)
+
+
+def read_ahv_spec(filename, disk_packages={}):
+    spec = read_spec(filename, depth=2)
+    if disk_packages:
+        Provider = get_provider("AHV_VM")
+        Provider.update_vm_image_config(spec, disk_packages)
+
+    return provider_spec(spec)
+
+
+def read_vmw_spec(filename, vm_template=None):
+    spec = read_spec(filename, depth=2)
+    if vm_template:
+        Provider = get_provider("VMW_VM")
+        Provider.update_vm_image_config(spec, vm_template)
+
+    return provider_spec(spec)
