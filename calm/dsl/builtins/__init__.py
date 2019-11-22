@@ -18,6 +18,7 @@ from .models.published_service import PublishedService, published_service
 from .models.package import Package, package
 
 from .models.provider_spec import provider_spec, read_provider_spec, read_spec
+from .models.provider_spec import read_ahv_spec, read_vmw_spec
 from .models.substrate import Substrate, substrate
 
 from .models.deployment import Deployment, deployment
@@ -32,6 +33,7 @@ from .models.simple_blueprint import SimpleBlueprint
 
 from .models.blueprint_payload import create_blueprint_payload
 from .models.project import Project as ProjectValidator
+from .models.ahv_vm_disk_package import ahv_vm_disk_package
 
 
 __all__ = [
@@ -54,8 +56,11 @@ __all__ = [
     "published_service",
     "Package",
     "package",
+    "ahv_vm_disk_package",
     "provider_spec",
     "read_provider_spec",
+    "read_ahv_spec",
+    "read_vmw_spec",
     "Substrate",
     "substrate",
     "Deployment",
