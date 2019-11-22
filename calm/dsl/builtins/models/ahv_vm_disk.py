@@ -121,6 +121,14 @@ def clone_from_vm_image_service(
 
     if not isinstance(vm_disk_package, PackageType):
         raise TypeError("{} is not of type {}".format(vm_disk_package, PackageType))
+
+    AHV_IMAGE_TYPES = {"DISK": "DISK_IMAGE", "CDROM": "ISO_IMAGE"}
+    pkg = vm_disk_package.compile()
+    vm_image_type = pkg["options"]["resources"]["image_type"]
+
+    if vm_image_type != AHV_IMAGE_TYPES[device_type]:
+        raise ValueError("Invalid vm image {} supplied in disk". format(vm_disk_package))
+
     image_data = ref(vm_disk_package).compile()
 
     return update_disk_config(device_type, adapter_type, image_data, bootable)
