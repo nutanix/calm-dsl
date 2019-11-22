@@ -1,6 +1,8 @@
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from calm.dsl.store import Cache
+from .ref import ref
+from .package import PackageType
 
 
 # AHV VM Disk
@@ -50,17 +52,15 @@ def allocate_on_storage_container(adapter_type="SCSI", size=8):
     return ahv_vm_disk(**kwargs)
 
 
-def clone_from_image_service(
-    device_type="DISK", adapter_type="SCSI", image_name="", bootable=False
+def update_disk_config(
+    device_type="DISK", adapter_type="SCSI", image_data={}, bootable=False
 ):
+    if not image_data:
+        raise ValueError("Invalid image configuration")
+
     global ADAPTER_INDEX_MAP
-
-    if not image_name:
-        raise ValueError("image name not supplied !!!")
-
-    image_uuid = Cache.get_entity_uuid("AHV_DISK_IMAGE", image_name)
     kwargs = {
-        "data_source_reference": {"kind": "image", "name": image_name, "uuid": image_uuid},
+        "data_source_reference": image_data,
         "device_properties": {
             "device_type": device_type,
             "disk_address": {
@@ -86,6 +86,33 @@ def clone_from_image_service(
 
     ADAPTER_INDEX_MAP[adapter_type] += 1
     return ahv_vm_disk(**kwargs)
+
+
+def clone_from_image_service(
+    device_type="DISK", adapter_type="SCSI", image_name="", bootable=False
+):
+    if not image_name:
+        raise ValueError("image_name not provided !!!")
+
+    image_uuid = Cache.get_entity_uuid("AHV_DISK_IMAGE", image_name)
+    image_data = {"kind": "image", "name": image_name, "uuid": image_uuid}
+
+    return update_disk_config(device_type, adapter_type, image_data, bootable)
+
+
+def clone_from_vm_image_service(
+    device_type="DISK", adapter_type="SCSI", bootable=False, vm_disk_package=None
+):
+    global ADAPTER_INDEX_MAP
+
+    if not vm_disk_package:
+        raise ValueError("vm_disk_package not provided !!!")
+
+    if not isinstance(vm_disk_package, PackageType):
+        raise TypeError("{} is not of type {}".format(vm_disk_package, PackageType))
+    image_data = ref(vm_disk_package).compile()
+
+    return update_disk_config(device_type, adapter_type, image_data, bootable)
 
 
 def empty_cd_rom(adapter_type="IDE"):
@@ -138,6 +165,39 @@ def cd_rom_sata_clone_from_image(image_name=None, bootable=False):
     )
 
 
+def disk_scsi_clone_from_pkg_image(vm_disk_package=None, bootable=False):
+    return clone_from_vm_image_service(
+        device_type="DISK",
+        adapter_type="SCSI",
+        vm_disk_package=vm_disk_package,
+        bootable=bootable,
+    )
+
+
+def disk_pci_clone_from_pkg_image(vm_disk_package=None, bootable=False):
+    return clone_from_vm_image_service(
+        device_type="DISK", adapter_type="PCI", vm_disk_package=vm_disk_package, bootable=bootable
+    )
+
+
+def cd_rom_ide_clone_from_pkg_image(vm_disk_package=None, bootable=False):
+    return clone_from_vm_image_service(
+        device_type="CDROM",
+        adapter_type="IDE",
+        vm_disk_package=vm_disk_package,
+        bootable=bootable,
+    )
+
+
+def cd_rom_sata_clone_from_pkg_image(vm_disk_package=None, bootable=False):
+    return clone_from_vm_image_service(
+        device_type="CDROM",
+        adapter_type="SATA",
+        vm_disk_package=vm_disk_package,
+        bootable=bootable,
+    )
+
+
 def disk_scsi_allocate_on_container(size=8):
     return allocate_on_storage_container(adapter_type="SCSI", size=size)
 
@@ -170,6 +230,7 @@ class AhvVmDisk:
 
             cloneFromImageService = disk_scsi_clone_from_image
             allocateOnStorageContainer = disk_scsi_allocate_on_container
+            cloneFromVMDiskPackage = disk_scsi_clone_from_pkg_image
 
         class Pci:
             def __new__(cls, image_name=None, bootable=False):
@@ -179,6 +240,7 @@ class AhvVmDisk:
 
             cloneFromImageService = disk_pci_clone_from_image
             allocateOnStorageContainer = disk_pci_allocate_on_container
+            cloneFromVMDiskPackage = disk_pci_clone_from_pkg_image
 
     class CdRom:
         def __new__(cls, image_name=None, bootable=False):
@@ -192,6 +254,7 @@ class AhvVmDisk:
 
             cloneFromImageService = cd_rom_ide_clone_from_image
             emptyCdRom = cd_rom_ide_use_empty_cd_rom
+            cloneFromVMDiskPackage = cd_rom_ide_clone_from_pkg_image
 
         class Sata:
             def __new__(cls, image_name=None, bootable=False):
@@ -201,3 +264,4 @@ class AhvVmDisk:
 
             cloneFromImageService = cd_rom_sata_clone_from_image
             emptyCdRom = cd_rom_sata_use_empty_cd_rom
+            cloneFromVMDiskPackage = cd_rom_sata_clone_from_pkg_image
