@@ -186,8 +186,14 @@ def watch():
 
 @main.command("sync")
 def sync():
-    """Sync the data available in cache"""
+    """Sync the dynamic data available in cache"""
     Cache.sync()
+
+
+@main.command("desync")
+def desync():
+    """Desync(Delete all) the dynamic data available in cache"""
+    Cache.desync()
 
 
 @create.command("provider_spec")

@@ -1,6 +1,9 @@
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
-from .ahv_vm_disk import get_boot_config
+from .ahv_vm_disk import get_boot_config, get_image_sync_status
+from .ahv_vm_nic import get_subnet_sync_status
+
+import click
 
 
 # AHV VM Resources
@@ -13,11 +16,10 @@ class AhvVmResourcesType(EntityType):
     def compile(cls):
         cdict = super().compile()
 
-        # Merging boot_type to boot_config
-        boot_type = cdict.pop("boot_type")
-
         cdict["boot_config"] = get_boot_config()
 
+        # Merging boot_type to boot_config
+        boot_type = cdict.pop("boot_type")
         if boot_type == "UEFI":
             cdict["boot_config"]["boot_type"] = "UEFI"
 
@@ -26,6 +28,15 @@ class AhvVmResourcesType(EntityType):
             serial_port_list.append({"index": ind, "is_connected": connection_status})
 
         cdict["serial_port_list"] = serial_port_list
+
+        # Checking dynamic entity used got their uuid or not
+        if not (get_image_sync_status() and get_subnet_sync_status):
+            click.secho(
+                "Dynamic data not synced !!!\nPlease run `calm sync`\n",
+                bold=True,
+                underline=True,
+                fg="red",
+            )
 
         return cdict
 

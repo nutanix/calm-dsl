@@ -11,6 +11,8 @@ from .package import PackageType
 ADAPTER_INDEX_MAP = {"SCSI": 0, "PCI": 0, "IDE": 0, "SATA": 0}
 BOOT_CONFIG = {}
 
+ImageSyncFlag = True
+
 
 class AhvDiskType(EntityType):
     __schema_name__ = "AhvDisk"
@@ -33,6 +35,10 @@ def get_boot_config():
         raise ValueError("There is no bootable disk selected.")
 
     return BOOT_CONFIG
+
+
+def get_image_sync_status():
+    return ImageSyncFlag
 
 
 def allocate_on_storage_container(adapter_type="SCSI", size=8):
@@ -96,6 +102,11 @@ def clone_from_image_service(
 
     image_uuid = Cache.get_entity_uuid("AHV_DISK_IMAGE", image_name)
     image_data = {"kind": "image", "name": image_name, "uuid": image_uuid}
+
+    # Setting the flag to False, if image is not present in cache
+    if not image_uuid:
+        global ImageSyncFlag
+        ImageSyncFlag = False
 
     return update_disk_config(device_type, adapter_type, image_data, bootable)
 
