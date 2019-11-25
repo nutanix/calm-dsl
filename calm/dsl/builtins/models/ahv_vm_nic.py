@@ -44,13 +44,12 @@ def create_ahv_nic(
         if not subnet_uuid:
             SubnetSyncFlag = False
 
-        kwargs["subnet_reference"] = {
-            "name": subnet,
-            "uuid": subnet_uuid,
-        }
+        kwargs["subnet_reference"] = {"name": subnet, "uuid": subnet_uuid}
 
     if network_function_chain:
-        nfc_uuid = Cache.get_entity_uuid("AHV_NETWORK_FUNCTION_CHAIN", network_function_chain)
+        nfc_uuid = Cache.get_entity_uuid(
+            "AHV_NETWORK_FUNCTION_CHAIN", network_function_chain
+        )
         if not nfc_uuid:
             SubnetSyncFlag = False
 

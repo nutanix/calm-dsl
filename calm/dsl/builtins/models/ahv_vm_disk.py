@@ -127,7 +127,7 @@ def clone_from_vm_image_service(
     vm_image_type = pkg["options"]["resources"]["image_type"]
 
     if vm_image_type != AHV_IMAGE_TYPES[device_type]:
-        raise ValueError("Invalid vm image {} supplied in disk". format(vm_disk_package))
+        raise ValueError("Invalid vm image {} supplied in disk".format(vm_disk_package))
 
     image_data = ref(vm_disk_package).compile()
 
@@ -195,7 +195,10 @@ def disk_scsi_clone_from_pkg_image(vm_disk_package=None, bootable=False):
 
 def disk_pci_clone_from_pkg_image(vm_disk_package=None, bootable=False):
     return clone_from_vm_image_service(
-        device_type="DISK", adapter_type="PCI", vm_disk_package=vm_disk_package, bootable=bootable
+        device_type="DISK",
+        adapter_type="PCI",
+        vm_disk_package=vm_disk_package,
+        bootable=bootable,
     )
 
 

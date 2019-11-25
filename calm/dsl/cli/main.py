@@ -13,7 +13,6 @@ from calm.dsl.providers import get_provider, get_provider_types
 from calm.dsl.tools import ping
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
-from calm.dsl.store import Cache
 
 logger = logging.getLogger(__name__)
 click_log.basic_config(logger)
@@ -122,6 +121,12 @@ def get():
     pass
 
 
+@main.group(cls=DYMGroup)
+def clear():
+    """Clear the data stored in local db: cache, secrets etc."""
+    pass
+
+
 @get.group(cls=DYMGroup)
 def server():
     """Get calm server details"""
@@ -182,18 +187,6 @@ def run():
 def watch():
     """Track actions running on apps"""
     pass
-
-
-@main.command("sync")
-def sync():
-    """Sync the dynamic data available in cache"""
-    Cache.sync()
-
-
-@main.command("desync")
-def desync():
-    """Desync(Delete all) the dynamic data available in cache"""
-    Cache.desync()
 
 
 @create.command("provider_spec")

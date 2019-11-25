@@ -1,4 +1,7 @@
 import peewee
+import datetime
+import warnings
+
 from ..db import Database
 from calm.dsl.api import get_resource_api, get_api_client
 import click
@@ -47,7 +50,7 @@ class Cache:
                 return ""
 
     @classmethod
-    def sync(cls):
+    def update_entities(cls):
         """Sync with the api of corresponding entities"""
 
         with Database() as db:
@@ -59,24 +62,40 @@ class Cache:
                 api_suffix = db_entity.entity_list_api_suffix
                 Obj = get_resource_api(api_suffix, client.connection)
 
-                res = Obj.get_name_uuid_map()
-                entity_uuid = res.get(name, None)
+                try:
+                    res = Obj.get_name_uuid_map()
+                except Exception:
+                    pc_ip = client.connection.host
+                    warnings.warn(
+                        UserWarning("Cannot fetch data from {}".format(pc_ip))
+                    )
+                    return
 
+                entity_uuid = res.get(name, None)
                 if not entity_uuid:
                     entity_type = db_entity.entity_type
                     invalid_entities.append((entity_type, name))
+                    db_entity.delete_instance()  # Deleting entity if not found
                     continue
 
                 db_entity.entity_uuid = entity_uuid
+                db_entity.last_update_time = datetime.datetime.now()
                 db_entity.save()
 
             if invalid_entities:
-                click.secho("Command run unccessfully !!!", fg="red")
+                error = ""
                 for entity in invalid_entities:
-                    click.secho("- Entity {} of type {} not found". format(entity[1], entity[0]), fg="red")
+                    click.secho(
+                        "- Entity {} of type {} not found".format(entity[1], entity[0]),
+                        fg="red",
+                    )
+                    error += "\n- Entity {} of type {} not found".format(
+                        entity[1], entity[0]
+                    )
+                raise Exception(error)
 
     @classmethod
-    def desync(cls):
+    def clear_entities(cls):
         """Deletes all the data present in the cache"""
 
         with Database() as db:
@@ -94,3 +113,15 @@ class Cache:
             )
 
             entity.delete_instance()
+
+    @classmethod
+    def list(cls):
+        """return the list of entities stored in db"""
+
+        with Database() as db:
+
+            cache_data = []
+            for entity in db.cache_table.select():
+                cache_data.append(entity.get_detail_dict())
+
+            return cache_data

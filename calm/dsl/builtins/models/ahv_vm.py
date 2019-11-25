@@ -3,9 +3,6 @@ from .validator import PropertyValidator
 from .ahv_vm_disk import get_boot_config, get_image_sync_status
 from .ahv_vm_nic import get_subnet_sync_status
 
-import click
-
-
 # AHV VM Resources
 
 
@@ -31,12 +28,7 @@ class AhvVmResourcesType(EntityType):
 
         # Checking dynamic entity used got their uuid or not
         if not (get_image_sync_status() and get_subnet_sync_status):
-            click.secho(
-                "Dynamic data not synced !!!\nPlease run `calm sync`\n",
-                bold=True,
-                underline=True,
-                fg="red",
-            )
+            raise Exception("Dynamic data not found !!!\nPlease run: calm update cache")
 
         return cdict
 
