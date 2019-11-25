@@ -3,14 +3,14 @@ import arrow
 import datetime
 from prettytable import PrettyTable
 
-from .main import get, update, clear
+from .main import show, update, clear
 from calm.dsl.store import Cache
 from .utils import highlight_text
 
 
-@get.command("cache")
+@show.command("cache")
 @click.pass_obj
-def get_cache(obj):
+def show_cache(obj):
 
     avl_entities = Cache.list()
 
