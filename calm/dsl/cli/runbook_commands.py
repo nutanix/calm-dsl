@@ -297,8 +297,12 @@ def run_runbook_command(obj, runbook_name, watch, ignore_runtime_variables, runb
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
     else:
-        runbook = get_runbook(client, runbook_name)
-    runbook_uuid = runbook.get("metadata", {}).get("uuid", "")
+        runbook_id = get_runbook(client, runbook_name)['metadata']['uuid']
+        res, err = client.runbook.read(runbook_id)
+        if err:
+            click.echo(err["error"])
+            return
+        runbook = res.json()
 
     input_data = {}
     if input_file is not None and input_file.endswith(".json"):
@@ -314,7 +318,7 @@ def run_runbook_command(obj, runbook_name, watch, ignore_runtime_variables, runb
     def render_runbook(screen):
         screen.clear()
         screen.refresh()
-        run_runbook(screen, client, runbook_uuid, watch, input_data=input_data, payload=payload)
+        run_runbook(screen, client, runbook_id, watch, input_data=input_data, payload=payload)
         screen.wait_for_input(10.0)
 
     Display.wrapper(render_runbook, watch)
