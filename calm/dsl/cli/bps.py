@@ -13,6 +13,7 @@ from calm.dsl.builtins import Blueprint, SimpleBlueprint, create_blueprint_paylo
 from calm.dsl.config import get_config
 from .utils import get_name_query, get_states_filter, highlight_text
 from .constants import BLUEPRINT
+from calm.dsl.store import Cache
 
 
 def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
@@ -221,11 +222,18 @@ def compile_blueprint_command(bp_file, out):
 
     config = get_config()
     if "PROJECT" in config:
-        if config["PROJECT"].get("uuid"):
-            bp_payload["metadata"]["project_reference"] = {
-                "type": "project",
-                "uuid": config["PROJECT"]["uuid"],
-            }
+        project_name = config["PROJECT"].get("name", "default")
+        project_uuid = Cache.get_entity_uuid("PROJECT", project_name)
+
+        if not project_uuid:
+            raise Exception("Dynamic data not found !!!\nPlease run: calm update cache")
+
+        bp_payload["metadata"]["project_reference"] = {
+            "type": "project",
+            "uuid": project_uuid,
+            "name": project_name
+        }
+
     credential_list = bp_payload["spec"]["resources"]["credential_definition_list"]
     is_secret_avl = False
     for cred in credential_list:

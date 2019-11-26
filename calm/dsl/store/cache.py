@@ -15,6 +15,7 @@ class Cache:
         "AHV_DISK_IMAGE": "images",
         "AHV_SUBNETS": "subnets",
         "AHV_NETWORK_FUNCTION_CHAIN": "network_function_chains",
+        "PROJECT": "projects"
     }
 
     @classmethod
