@@ -32,7 +32,7 @@ class ProviderSpec(metaclass=ProviderSpecType):
 
 class ProviderSpecValidator(PropertyValidator, openapi_type="app_provider_spec"):
     __default__ = None
-    __kind__ = ProviderSpec
+    __kind__ = ProviderSpecType
 
 
 def provider_spec(spec):
