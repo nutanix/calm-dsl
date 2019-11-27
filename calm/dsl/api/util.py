@@ -111,7 +111,7 @@ def strip_secrets(resources, secret_map, secret_variables, object_lists=[], obje
             if task.get("type", None) != "HTTP":
                 continue
             auth = (task.get("attrs", {}) or {}).get("authentication", {}) or {}
-            path_list = path_list + ["runbook", "task_definition_list", task_idx, "attrs"]
+            path_list = path_list + ["runbook", "task_definition_list", task_idx, "attrs", ]
             strip_authentication_secret_variables(path_list, task.get("attrs", {}) or {})
             if auth.get("auth_type", None) == "basic":
                 if not (task.get("attrs", {}) or {}).get("headers", []) or []:
@@ -140,6 +140,7 @@ def strip_secrets(resources, secret_map, secret_variables, object_lists=[], obje
                 "attrs": {
                     "is_secret_modified": False,
                 }
+            }
 
     def strip_all_secret_variables(path_list, obj):
         strip_entity_secret_variables(path_list, obj)
@@ -161,7 +162,7 @@ def strip_secrets(resources, secret_map, secret_variables, object_lists=[], obje
             #         )
 
     for obj in objects:
-        strip_all_secret_variables(obj, resources.get(obj, {}))
+        strip_all_secret_variables([obj], resources.get(obj, {}))
 
 
 def patch_secrets(resources, secret_map, secret_variables):
@@ -176,7 +177,7 @@ def patch_secrets(resources, secret_map, secret_variables):
     """
 
     # Add creds back
-    creds = resources["credential_definition_list"]
+    creds = resources.get("credential_definition_list", [])
     for cred in creds:
         name = cred["name"]
         cred["secret"] = secret_map[name]

@@ -753,7 +753,7 @@ def http_task(
     Returns:
         (Task): HTTP Task
     """
-    auth_obj = {"auth_type": "none"}
+    auth_obj = {"type": "none"}
     if credential is not None:
         if getattr(credential, "__kind__", None) != "app_credential":
             raise ValueError(
@@ -767,7 +767,7 @@ def http_task(
         # We could also possibly check calm server version to switch between
         # the two auth mechanisms since basic auth will be deprecated.
         auth_obj = {
-            "auth_type": "basic",
+            "type": "basic",
             "basic_auth": {
                 "username": credential.username,
                 "password": {"value": credential.secret.get("value")},
