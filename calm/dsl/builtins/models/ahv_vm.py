@@ -2,6 +2,7 @@ from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .ahv_vm_disk import get_boot_config, get_image_sync_status
 from .ahv_vm_nic import get_subnet_sync_status
+from .provider_spec import ProviderSpecType
 
 # AHV VM Resources
 
@@ -50,7 +51,7 @@ AhvVmResources = ahv_vm_resources()
 # AHV VM
 
 
-class AhvVmType(EntityType):
+class AhvVmType(ProviderSpecType):
     __schema_name__ = "AhvVm"
     __openapi_type__ = "vm_ahv"
 

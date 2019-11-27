@@ -39,7 +39,7 @@ from .models.ahv_vm_nic import ahv_vm_nic, AhvVmNic
 from .models.ahv_vm_disk import ahv_vm_disk, AhvVmDisk
 from .models.ahv_vm_gpu import ahv_vm_gpu, AhvVmGpu
 from .models.ahv_vm_gc import ahv_vm_guest_customization, AhvVmGC
-from .models.ahv_vm import ahv_vm_resources, ahv_vm
+from .models.ahv_vm import ahv_vm_resources, AhvVmResources, ahv_vm, AhvVm
 
 
 __all__ = [
@@ -91,5 +91,7 @@ __all__ = [
     "ahv_vm_guest_customization",
     "AhvVmGC",
     "ahv_vm_resources",
+    "AhvVmResources",
     "ahv_vm",
+    "AhvVm"
 ]
