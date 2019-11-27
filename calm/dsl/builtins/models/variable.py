@@ -39,6 +39,8 @@ class VariableType(EntityType):
             # Only EScript/HTTP request info needed for dynamically fetching options
             if options["type"] == "PREDEFINED":
                 del options["attrs"]
+            else:
+                del options["choices"]  # Choices are only for PREDEFINED Type
 
         return cdict
 
