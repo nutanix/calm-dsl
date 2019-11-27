@@ -39,18 +39,18 @@ def _endpoint_create(**kwargs):
 
 
 def _http_endpoint(
-        url, name=None, retry_count=1, retry_interval=1,
-        connection_timeout=120, tls_verify=False, auth=None
+        url, name=None, retries=0, retry_interval=10,
+        timeout=120, verify=False, auth=None
 ):
     kwargs = {
         "name": name,
         "type": "HTTP",
         "attrs": {
             "url": url,
-            "retry_count": retry_count,
+            "retry_count": retries + 1,
             "retry_interval": retry_interval,
-            "connection_timeout": connection_timeout,
-            "tls_verify": tls_verify,
+            "connection_timeout": timeout,
+            "tls_verify": verify,
         }
     }
     if auth:
