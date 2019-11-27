@@ -29,7 +29,7 @@ from .models.profile import Profile, profile
 
 from .models.blueprint import Blueprint, blueprint
 
-from .models.endpoint import Endpoint, _endpoint, CalmEndpoint
+from .models.endpoint import Endpoint, _endpoint, CalmEndpoint, Auth
 
 from .models.runbook_service import RunbookService
 
@@ -81,6 +81,7 @@ __all__ = [
     "Endpoint",
     "_endpoint",
     "CalmEndpoint",
+    "Auth",
     "RunbookService",
     "create_blueprint_payload",
     "create_endpoint_payload",

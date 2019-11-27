@@ -38,6 +38,28 @@ def _endpoint_create(**kwargs):
     return EndpointType(name, bases, kwargs)
 
 
+def _http_endpoint(
+        url, name=None, retry_count=1, retry_interval=1,
+        connection_timeout=120, tls_verify=False, auth=None
+):
+    kwargs = {
+        "name": name,
+        "type": "HTTP",
+        "attrs": {
+            "url": url,
+            "retry_count": retry_count,
+            "retry_interval": retry_interval,
+            "connection_timeout": connection_timeout,
+            "tls_verify": tls_verify,
+        }
+    }
+    if auth:
+        kwargs["attrs"]["authentication"] = auth
+    else:
+        kwargs["attrs"]["authentication"] = {"auth_type": "none"}
+    return _endpoint_create(**kwargs)
+
+
 def _exec_create(
         value_type, value, name=None, connection_type="SSH",
         port=22, os_type="Linux", cred=None
@@ -102,3 +124,29 @@ class CalmEndpoint:
 
         ip = exec_endpoint_ip
         vm = exec_endpoint_vm
+
+    class HTTP:
+        def __new__(cls, *args, **kwargs):
+            return _http_endpoint(*args, **kwargs)
+
+
+class Auth:
+    def __new__(cls, name):
+        raise TypeError("'{}' is not callable".format(cls.__name__))
+
+    def Basic(username, password):
+        secret = {"attrs": {"is_secret_modified": True}, "value": password}
+        auth = {}
+        auth["type"] = "basic"
+        auth["username"] = username
+        auth["password"] = secret
+        return auth
+
+    def BasicCred(cred):
+        if not isinstance(cred, CredentialType):
+            raise TypeError("{} should of type CredentialType".format(cred))
+
+        auth = {}
+        auth["type"] = "basic_with_cred"
+        auth["credential_local_reference"] = cred.get_ref()
+        return auth
