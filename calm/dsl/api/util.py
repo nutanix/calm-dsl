@@ -111,45 +111,41 @@ def strip_secrets(resources, secret_map, secret_variables, object_lists=[], obje
             if task.get("type", None) != "HTTP":
                 continue
             auth = (task.get("attrs", {}) or {}).get("authentication", {}) or {}
+            path_list = path_list + ["runbook", "task_definition_list", task_idx, "attrs"]
+            strip_authentication_secret_variables(path_list, task.get("attrs", {}) or {})
             if auth.get("auth_type", None) == "basic":
-                secret_variables.append(
-                    (
-                        path_list
-                        + [
-                            "task_definition_list",
-                            task_idx,
-                            "attrs",
-                            "authentication",
-                            "basic_auth",
-                            "password",
-                        ],
-                        auth["basic_auth"]["password"].pop("value"),
-                    )
-                )
-                auth["basic_auth"]["password"] = {
-                    "attrs": {
-                        "is_secret_modified": False,
-                        "secret_reference": None,
-                    }
-                }
                 if not (task.get("attrs", {}) or {}).get("headers", []) or []:
                     continue
                 strip_entity_secret_variables(
-                    path_list
-                    + [
-                        "runbook",
-                        "task_definition_list",
-                        task_idx,
-                        "attrs",
-                    ],
+                    path_list,
                     task["attrs"],
                     field_name="headers",
                 )
+
+    def strip_authentication_secret_variables(path_list, obj):
+        auth = obj.get("authentication", {})
+        if auth.get("auth_type", None) == "basic":
+            secret_variables.append(
+                (
+                    path_list
+                    + [
+                        "authentication",
+                        "basic_auth",
+                        "password",
+                    ],
+                    auth["password"].pop("value"),
+                )
+            )
+            auth["password"] = {
+                "attrs": {
+                    "is_secret_modified": False,
+                }
 
     def strip_all_secret_variables(path_list, obj):
         strip_entity_secret_variables(path_list, obj)
         strip_action_secret_variables(path_list, obj)
         strip_runbook_secret_variables(path_list, obj)
+        strip_authentication_secret_variables(path_list, obj)
 
     for object_list in object_lists:
         for obj_idx, obj in enumerate(resources.get(object_list, []) or []):

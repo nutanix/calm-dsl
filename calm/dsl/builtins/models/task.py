@@ -406,6 +406,53 @@ def set_variable_task_powershell(
     return _set_variable_create(task, variables)
 
 
+def http_task_on_endpoint(
+    method,
+    body=None,
+    headers=None,
+    secret_headers=None,
+    content_type=None,
+    status_mapping=None,
+    response_paths=None,
+    name=None,
+    target=None,
+):
+    """
+
+    Defines a HTTP Task on http endpoint target.
+
+    Args:
+        method (str): HTTP method ("GET", "POST", "PUT", "DELETE", ..)
+        headers (dict): Request headers
+        secret_headers (dict): Request headers that are to be masked
+        credential (Credential): Credential object. Currently only supports basic auth.
+        content_type (string): Request Content-Type (application/json, application/xml, etc.)
+        timeout (int): Request timeout in seconds (Default: 120)
+        verify (bool): TLS verify (Default: False)
+        retries (int): Number of times to retry this request if it fails. (Default: 0)
+        retry_interval (int): Time to wait in seconds between retries (Default: 10)
+        status_mapping (dict): Mapping of  Response status code (int) to
+                               task status (True: success, False: Failure)
+        response_paths (dict): Mapping of variable name (str) to path in response (str)
+        name (str): Task name
+        target (Ref): Target entity that this task runs under.
+    Returns:
+        (Task): HTTP Task
+    """
+    return http_task(
+        method,
+        "",  # As url is present is target endpoint
+        body=None,
+        headers=headers,
+        secret_headers=secret_headers,
+        content_type=content_type,
+        status_mapping=status_mapping,
+        response_paths=response_paths,
+        name=name,
+        target=target,
+    )
+
+
 def http_task_get(
     url,
     body=None,
@@ -996,6 +1043,7 @@ class CalmTask:
         post = http_task_post
         put = http_task_put
         delete = http_task_delete
+        endpoint = http_task_on_endpoint
 
     class SetVariable:
         ssh = set_variable_task_ssh
