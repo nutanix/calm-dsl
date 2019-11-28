@@ -337,7 +337,7 @@ def describe_runbook(obj, runbook_name):
     click.echo("\t\t{}".format(highlight_text(", ".join(variable_types))))
 
     endpoint_types = [
-        "{} ({})".format(ep.get("name", ""), ep.get("type", ""))
+        "{} ({})".format(ep.get("name", ""), ep.get("resources", {}).get("type", ""))
         for ep in runbook_resources.get("endpoint_definition_list", [])
     ]
     click.echo("Endpoints [{}]:".format(highlight_text(len(endpoint_types))))
