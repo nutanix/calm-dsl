@@ -368,8 +368,10 @@ def create_spec(client):
     click.echo("\n\t\t", nl=False)
     click.secho("VM Configuration", bold=True, underline=True)
 
-    spec["name"] = "vm-@@{calm_unique_hash}@@-@@{calm_array_index}@@"
-    spec["name"] = click.prompt("\nEnter instance name", default=spec["name"])
+    vm_name = "vm-@@{calm_unique_hash}@@-@@{calm_array_index}@@"
+    spec["resources"]["vm_name"] = click.prompt(
+        "\nEnter instance name", default=vm_name
+    )
 
     # Add resource group
     resource_groups = Obj.resource_groups(account_id)
@@ -502,7 +504,6 @@ def create_spec(client):
                 spec["resources"]["tag_list"] = tags
                 break
 
-    click.echo(highlight_text(yaml.dump(spec, default_flow_style=False)))
     AzureVmProvider.validate_spec(spec)
     click.secho("\nCreate spec for your AZURE VM:\n", underline=True)
     click.echo(highlight_text(yaml.dump(spec, default_flow_style=False)))
@@ -695,7 +696,9 @@ def get_data_disks():
         click.secho("Data-Disk {}".format(disk_index + 1), underline=True)
 
         storage_type = ""
-        disk_name = "data-disk-@@{calm_unique_hash}@@-@@{calm_array_index}@@-" + str(disk_index)
+        disk_name = "data-disk-@@{calm_unique_hash}@@-@@{calm_array_index}@@-" + str(
+            disk_index
+        )
         disk_name = click.prompt("\nEnter data disk name", default=disk_name)
 
         # Add storage type
@@ -1056,10 +1059,10 @@ def get_nw_profile(azure_obj, account_id, resource_grp, location):
                     break
 
         click.secho("\nPublic IP Config", underline=True)
-        public_ip_info = get_public_ip_info()
+        public_ip_info = get_public_ip_info(nic_index)
 
         click.secho("\nPrivate IP Config", underline=True)
-        private_ip_info = get_private_ip_info()
+        private_ip_info = get_private_ip_info(nic_index)
 
         nics.append(
             {
@@ -1080,12 +1083,14 @@ def get_nw_profile(azure_obj, account_id, resource_grp, location):
     return nics
 
 
-def get_public_ip_info():
+def get_public_ip_info(nic_index=0):
 
-    ip_name = "public-ip-@@{calm_unique_hash}@@-@@{calm_array_index}@@"
+    ip_name = "public-ip-@@{calm_unique_hash}@@-@@{calm_array_index}@@-" + str(
+        nic_index
+    )
     ip_name = click.prompt("\nEnter public ip name", default=ip_name)
 
-    dns_label = "dns-@@{calm_unique_hash}@@-@@{calm_array_index}@@"
+    dns_label = "dns-@@{calm_unique_hash}@@-@@{calm_array_index}@@-" + str(nic_index)
     dns_label = click.prompt("\nEnter DNS Label", default=dns_label)
 
     allocation_methods = azure.ALLOCATION_METHODS

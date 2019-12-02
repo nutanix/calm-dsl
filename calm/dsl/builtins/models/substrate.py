@@ -75,6 +75,16 @@ class SubstrateType(EntityType):
                 "retries": "5",
             }
             cdict.pop("editables", None)
+        elif cdict["type"] == "AZURE_VM":
+            readiness_probe = {
+                "connection_type": "SSH",
+                "retries": "5",
+                "connection_protocol": "",
+                "connection_port": 22,
+                "address": "@@{platform.publicIPAddressList[0]}@@",
+                "delay_secs": "60",
+                "disable_readiness_probe": False,
+            }
 
         cdict["readiness_probe"] = readiness_probe
 
