@@ -16,6 +16,9 @@ class AhvVmResourcesType(EntityType):
 
         cdict["boot_config"] = get_boot_config()
 
+        # Converting memory from GiB to mib
+        cdict["memory_size_mib"] *= 1024
+
         # Merging boot_type to boot_config
         boot_type = cdict.pop("boot_type")
         if boot_type == "UEFI":
@@ -29,7 +32,7 @@ class AhvVmResourcesType(EntityType):
 
         # Checking dynamic entity used got their uuid or not
         if not (get_image_sync_status() and get_subnet_sync_status):
-            raise Exception("Dynamic data not found !!!\nPlease run: calm update cache")
+            raise RuntimeError("Dynamic data not found !!!\nPlease run: calm update cache")
 
         return cdict
 

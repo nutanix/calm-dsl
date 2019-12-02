@@ -158,55 +158,45 @@ type: object
 x-calm-dsl-type: vm_ahv_resources
 properties:
   nic_list:
+    x-calm-dsl-display-name: nics
     type: array
     items:
       $ref: '#/components/schemas/AhvNic'
   num_vcpus_per_socket:
     type: integer
+    x-calm-dsl-display-name: cores_per_vCPU
+    default: 1
   num_sockets:
     type: integer
+    x-calm-dsl-display-name: vCPUs
+    default: 2
   memory_size_mib:
+    x-calm-dsl-display-name: memory
     type: integer
+    default: 4
   power_state:
     type: string
     enum: [ON, OFF]
     default: ON
   gpu_list:
     type: array
+    x-calm-dsl-display-name: gpus
     items:
       $ref: '#/components/schemas/AhvGpu'
   disk_list:
     type: array
+    x-calm-dsl-display-name: disks
     items:
       $ref: '#/components/schemas/AhvDisk'
   boot_type:      # Will merge to boot_config at compile time
     type: string
     enum: [LEGACY, UEFI]
     default: LEGACY
-  boot_config:
-    type: object
-    x-calm-dsl-type: object
-    properties:
-      boot_device:
-        type: object
-        x-calm-dsl-type: object
-        properties:
-          disk_address:
-            type: object
-            x-calm-dsl-type: object
-            properties:
-              device_index:
-                type: integer
-                default: 0
-              adapter_type:
-                type: string
-                default: SCCI
-      boot_type:
-        type: string
   guest_customization:
     $ref : '#/components/schemas/AhvGuestCustomization'
   serial_port_list:
     type: object
+    x-calm-dsl-display-name: serial_ports
     x-calm-dsl-type: dict
 
 {%- endmacro %}
