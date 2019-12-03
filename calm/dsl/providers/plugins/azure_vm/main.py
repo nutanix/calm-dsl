@@ -529,8 +529,17 @@ def get_os_profile(os_type):
 
         vault_certificates = []
         while choice[0] == "y":
-            certificate_url = click.prompt("\n\tEnter Certificate URL ", default="URL")
-            vault_certificates.append({"certificate_url": certificate_url})
+            certificate_store = ""
+            certificate_url = click.prompt("\n\tEnter Certificate URL", default="URL")
+            if os_type == "Windows":
+                certificate_store = click.prompt("\n\tEnter Certificate Store", default="Store")
+
+            vault_certificates.append(
+                {
+                    "certificate_url": certificate_url,
+                    "certificate_store": certificate_store
+                }
+            )
 
             if certificate_url:
                 certificate_list.append(certificate_url)
@@ -565,14 +574,18 @@ def get_linux_config():
 def get_windows_config(certificate_list):
 
     provision_vm_agent = click.prompt(
-        "\nEnable Provision Windows Guest Agent", default="n"
+        "\n{}(y/n)".format(highlight_text("Enable Provision Windows Guest Agent")), default="n"
     )
     provision_vm_agent = True if provision_vm_agent[0] == "y" else False
-    auto_updates = click.prompt("\nEnable Automatic OS Upgrades", default="y")
+    auto_updates = click.prompt(
+        "\n{}(y/n)".format(highlight_text("Enable Automatic OS Upgrades")), default="n"
+    )
     auto_updates = True if auto_updates[0] == "y" else False
 
     unattend_content = []
-    choice = click.prompt("\nWant to add ADDITIONAL UNATTENDED CONTENT", default="y")
+    choice = click.prompt(
+        "\n{}(y/n)".format(highlight_text("Want to add ADDITIONAL UNATTENDED CONTENT")), default="n"
+    )
     settings = azure.UNATTENDED_SETTINGS
     while (choice[0] == "y") and settings:
         click.echo("\nChoose from given Setting Names")
@@ -592,14 +605,18 @@ def get_windows_config(certificate_list):
                 break
 
         xml_content = click.prompt(
-            "\nEnter XML Content(must start with {})".format(setting), default=""
+            "\nEnter XML Content(Please use <{}> as the root element)".format(setting), default=""
         )
         unattend_content.append({"setting_name": setting, "xml_content": xml_content})
 
-        choice = click.prompt("Add more Unattended content", default="n")
+        choice = click.prompt(
+            "\n{}(y/n)".format(highlight_text("Want to add more Unattended content")), default="n"
+        )
 
     winrm_listensers = []
-    choice = click.prompt("\nAdd WINRM LISTENERS", default="y")
+    choice = click.prompt(
+        "\n{}(y/n)".format(highlight_text("Want to add WINRM LISTENERS")), default="n"
+    )
     protocols = azure.PROTOCOLS
     while (choice[0] == "y") and protocols:
         click.echo("\nChoose from given Protocols")
@@ -639,7 +656,9 @@ def get_windows_config(certificate_list):
         else:
             winrm_listensers.append({"protocol": protocol})
 
-        choice = click.prompt("Add more winrm_listeners", default="n")
+        choice = click.prompt(
+            "\n{}(y/n)".format(highlight_text("Want to add more Winrm Listeners")), default="n"
+        )
 
     return {
         "winrm_listeners": winrm_listensers,
@@ -820,6 +839,11 @@ def get_os_disk(use_custom_image):
     # Add Disk Create Option
     if use_custom_image:
         disk_create_option = azure.DISK_CREATE_OPTIONS["FROMIMAGE"]
+        click.secho(
+            "\nNote: In case of custom vm image, Os Disk Create Option : {}".format(
+                disk_create_option
+            )
+        )
 
     else:
         disk_create_options = azure.DISK_CREATE_OPTIONS
@@ -1062,7 +1086,7 @@ def get_nw_profile(azure_obj, account_id, resource_grp, location):
         public_ip_info = get_public_ip_info(nic_index)
 
         click.secho("\nPrivate IP Config", underline=True)
-        private_ip_info = get_private_ip_info(nic_index)
+        private_ip_info = get_private_ip_info()
 
         nics.append(
             {
