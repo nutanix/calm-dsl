@@ -17,7 +17,10 @@ class AZURE:
     IMAGES = '{}/images'. format(URL)
 
     UNATTENDED_SETTINGS = ["FirstLogonCommands", "AutoLogon"]
-    PROTOCOLS = ["HTTP", "HTTPS"]
+    PROTOCOLS = {
+        "HTTP": "Http",
+        "HTTPS": "Https"
+    }
     OPERATING_SYSTEMS = ["Linux", "Windows"]
     CACHE_TYPES = {
         'None': 'None',

@@ -617,7 +617,7 @@ def get_windows_config(certificate_list):
     choice = click.prompt(
         "\n{}(y/n)".format(highlight_text("Want to add WINRM LISTENERS")), default="n"
     )
-    protocols = azure.PROTOCOLS
+    protocols = list(azure.PROTOCOLS.keys())
     while (choice[0] == "y") and protocols:
         click.echo("\nChoose from given Protocols")
         protocol = ""
@@ -651,10 +651,10 @@ def get_windows_config(certificate_list):
                     click.echo("{} selected".format(highlight_text(cert_url)))
                     break
 
-            winrm_listensers.append({"protocol": protocol, "certificate_url": cert_url})
+            winrm_listensers.append({"protocol": azure.PROTOCOLS[protocol], "certificate_url": cert_url})
 
         else:
-            winrm_listensers.append({"protocol": protocol})
+            winrm_listensers.append({"protocol": azure.PROTOCOLS[protocol]})
 
         choice = click.prompt(
             "\n{}(y/n)".format(highlight_text("Want to add more Winrm Listeners")), default="n"
