@@ -1182,6 +1182,10 @@ def create_spec(client):
         spec["resources"]["guest_customization"] = _guest_customization(
             Obj, os, account_id
         )
+    else:
+        spec["resources"]["guest_customization"] = {
+            "customization_type": vmw.OperatingSystem[os]
+        }
 
     VCenterVmProvider.validate_spec(spec)
     click.secho("\nCreate spec for your VMW VM:\n", underline=True)
