@@ -203,6 +203,43 @@ class BlueprintAPI(ResourceAPI):
                 #             dep,
                 #         )
 
+        # Handling vmware secrets
+        def strip_vmware_secrets(path_list, obj):
+            path_list.extend(["create_spec", "resources", "guest_customization"])
+            obj = obj["create_spec"]["resources"]["guest_customization"]
+
+            if "windows_data" in obj:
+                path_list.append("windows_data")
+                obj = obj["windows_data"]
+
+                # Check for admin_password
+                if "password" in obj:
+                    secret_variables.append(
+                        (path_list + ["password"], obj["password"].pop("value", ""))
+                    )
+                    obj["password"]["attrs"] = {
+                        "is_secret_modified": False,
+                        "secret_reference": None,
+                    }
+
+                # Now check for domain password
+                if obj.get("is_domain", False):
+                    if "domain_password" in obj:
+                        secret_variables.append(
+                            (
+                                path_list + ["domain_password"],
+                                obj["domain_password"].pop("value", ""),
+                            )
+                        )
+                        obj["domain_password"]["attrs"] = {
+                            "is_secret_modified": False,
+                            "secret_reference": None,
+                        }
+
+        for obj_index, obj in enumerate(bp_resources.get("substrate_definition_list", []) or []):
+            if (obj["type"] == "VMWARE_VM") and (obj["os_type"] == "Windows"):
+                strip_vmware_secrets(["substrate_definition_list", obj_index], obj)
+
         upload_payload = self._make_blueprint_payload(bp_name, bp_desc, bp_resources)
 
         config = get_config()
