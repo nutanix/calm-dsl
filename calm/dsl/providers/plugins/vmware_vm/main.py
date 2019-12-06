@@ -152,12 +152,13 @@ class VCenter:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
         res = res.json()
-        timezone_names = []
+        name_ind_map = {}
         for entity in res["entities"]:
             name = entity["status"]["resources"]["name"]
-            timezone_names.append(name)
+            ind = entity["status"]["resources"]["index"]
+            name_ind_map[name] = ind
 
-        return timezone_names
+        return name_ind_map
 
     def networks(self, account_id, host_id=None, cluster_name=None):
         Obj = get_resource_api(vmw.NETWORK, self.connection)
@@ -1246,7 +1247,8 @@ def _windows_customization(Obj, account_id):
         organization_name = click.prompt("\tOrganization Name: ", default="")
         product_id = click.prompt("\tProduct Id: ", default="")
 
-        timezone_names = Obj.timezones(vmw.OperatingSystem["Windows"])
+        timezone_name_ind_map = Obj.timezones(vmw.OperatingSystem["Windows"])
+        timezone_names = list(timezone_name_ind_map.keys())
         timezone = ""
 
         click.echo("\nChoose from given timezone names:")
@@ -1261,10 +1263,11 @@ def _windows_customization(Obj, account_id):
             else:
                 timezone = timezone_names[res - 1]
                 click.echo("{} selected".format(highlight_text(timezone)))
+                timezone = timezone_name_ind_map[timezone]
                 break
 
         admin_password = click.prompt(
-            "Admin Password", default="***REMOVED***", hide_input=True
+            "\nAdmin Password", default="Admin_password", hide_input=True
         )
 
         choice = click.prompt(
@@ -1309,11 +1312,13 @@ def _windows_customization(Obj, account_id):
         spec["windows_data"]["command_list"] = command_list
 
         # Domain and Workgroup Setting
-        choice = click.prompt("\nJoin a Domain(y/n)", default="n")
+        choice = click.prompt(
+            "\n{}(y/n)".format(highlight_text("Want to join domain")), default="n"
+        )
         is_domain = True if choice[0] == "y" else False
 
         if not is_domain:
-            workgroup = click.prompt("\tWorkgroup: ", default="")
+            workgroup = click.prompt("\n\tWorkgroup: ", default="")
             spec["windows_data"].update(
                 {"is_domain": is_domain, "workgroup": workgroup}
             )
@@ -1322,7 +1327,7 @@ def _windows_customization(Obj, account_id):
             domain = click.prompt("\tDomain Name: ", default="")
             domain_user = click.prompt("\tUsername: ", default="admin")
             domain_password = click.prompt(
-                "\tPassword: ", default="***REMOVED***", hide_input=True
+                "\tPassword: ", default="Domain_password", hide_input=True
             )
             spec["windows_data"].update(
                 {
@@ -1396,7 +1401,8 @@ def _linux_customization(Obj, account_id):
         host_name = click.prompt("\nEnter Hostname", default="")
         domain = click.prompt("\nEnter Domain", default="")
 
-        timezone_names = Obj.timezones(vmw.OperatingSystem["Linux"])
+        timezone_name_ind_map = Obj.timezones(vmw.OperatingSystem["Linux"])
+        timezone_names = list(timezone_name_ind_map.keys())
         timezone = ""
 
         click.echo("\nChoose from given timezone names:")
@@ -1411,6 +1417,7 @@ def _linux_customization(Obj, account_id):
             else:
                 timezone = timezone_names[res - 1]
                 click.echo("{} selected".format(highlight_text(timezone)))
+                timezone = timezone_name_ind_map[timezone]
                 break
 
         choice = click.prompt("\nEnable Hardware clock UTC(y/n)", default="n")
