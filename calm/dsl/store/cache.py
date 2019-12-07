@@ -15,7 +15,7 @@ class Cache:
         "AHV_DISK_IMAGE": "images",
         "AHV_SUBNETS": "subnets",
         "AHV_NETWORK_FUNCTION_CHAIN": "network_function_chains",
-        "PROJECT": "projects"
+        "PROJECT": "projects",
     }
 
     @classmethod
@@ -46,54 +46,29 @@ class Cache:
                 return entity.entity_uuid
 
             except peewee.DoesNotExist:
-                # Store the the entity_details in the cache
-                cls.create(entity_type=entity_type, entity_name=entity_name)
-                return ""
+                return None
 
     @classmethod
-    def update_entities(cls):
-        """Sync with the api of corresponding entities"""
+    def sync(cls):
 
         with Database() as db:
+
+            for db_entity in db.cache_table.select():
+                db_entity.delete_instance()
+
             client = get_api_client()
 
-            invalid_entities = []
-            for db_entity in db.cache_table.select():
-                name = db_entity.entity_name
-                api_suffix = db_entity.entity_list_api_suffix
+            for typ, api_suffix in cls.entity_type_api_map.items():
                 Obj = get_resource_api(api_suffix, client.connection)
-
                 try:
                     res = Obj.get_name_uuid_map()
+                    for name, uuid in res.items():
+                        cls.create(entity_type=typ, entity_name=name, entity_uuid=uuid)
                 except Exception:
                     pc_ip = client.connection.host
                     warnings.warn(
                         UserWarning("Cannot fetch data from {}".format(pc_ip))
                     )
-                    return
-
-                entity_uuid = res.get(name, None)
-                if not entity_uuid:
-                    entity_type = db_entity.entity_type
-                    invalid_entities.append((entity_type, name))
-                    db_entity.delete_instance()  # Deleting entity if not found
-                    continue
-
-                db_entity.entity_uuid = entity_uuid
-                db_entity.last_update_time = datetime.datetime.now()
-                db_entity.save()
-
-            if invalid_entities:
-                error = ""
-                for entity in invalid_entities:
-                    click.secho(
-                        "- Entity {} of type {} not found".format(entity[1], entity[0]),
-                        fg="red",
-                    )
-                    error += "\n- Entity {} of type {} not found".format(
-                        entity[1], entity[0]
-                    )
-                raise Exception(error)
 
     @classmethod
     def clear_entities(cls):
@@ -102,18 +77,6 @@ class Cache:
         with Database() as db:
             for db_entity in db.cache_table.select():
                 db_entity.delete_instance()
-
-    @classmethod
-    def delete_entity(cls, entity_type, entity_name):
-        """Deletes data corresponding to enity present in the cache"""
-
-        with Database() as db:
-            entity = db.cache_table.get(
-                db.cache_table.entity_type == entity_type
-                and db.cache_table.entity_name == entity_name
-            )
-
-            entity.delete_instance()
 
     @classmethod
     def list(cls):

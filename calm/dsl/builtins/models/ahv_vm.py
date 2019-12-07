@@ -1,7 +1,6 @@
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
-from .ahv_vm_disk import get_boot_config, get_image_sync_status
-from .ahv_vm_nic import get_subnet_sync_status
+from .ahv_vm_disk import get_boot_config
 from .provider_spec import ProviderSpecType
 
 # AHV VM Resources
@@ -29,10 +28,6 @@ class AhvVmResourcesType(EntityType):
             serial_port_list.append({"index": ind, "is_connected": connection_status})
 
         cdict["serial_port_list"] = serial_port_list
-
-        # Checking dynamic entity used got their uuid or not
-        if not (get_image_sync_status() and get_subnet_sync_status):
-            raise RuntimeError("Dynamic data not found !!!\nPlease run: calm update cache")
 
         return cdict
 

@@ -198,6 +198,9 @@ def get_blueprint_class_from_module(user_bp_module):
 
 def compile_blueprint(bp_file):
 
+    # ToDo - Sync using cli flag
+    Cache.sync()
+
     user_bp_module = get_blueprint_module_from_file(bp_file)
     UserBlueprint = get_blueprint_class_from_module(user_bp_module)
     if UserBlueprint is None:
@@ -226,12 +229,16 @@ def compile_blueprint_command(bp_file, out):
         project_uuid = Cache.get_entity_uuid("PROJECT", project_name)
 
         if not project_uuid:
-            raise Exception("Dynamic data not found !!!\nPlease run: calm update cache")
+            raise Exception(
+                "Project {} not found. Please run: calm update cache".format(
+                    project_name
+                )
+            )
 
         bp_payload["metadata"]["project_reference"] = {
             "type": "project",
             "uuid": project_uuid,
-            "name": project_name
+            "name": project_name,
         }
 
     credential_list = bp_payload["spec"]["resources"]["credential_definition_list"]

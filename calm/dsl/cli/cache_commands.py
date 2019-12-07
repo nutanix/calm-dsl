@@ -3,13 +3,12 @@ import arrow
 import datetime
 from prettytable import PrettyTable
 
-from .main import show, update, clear
 from calm.dsl.store import Cache
+
+from .main import show, update, clear
 from .utils import highlight_text
 
 
-@show.command("cache")
-@click.pass_obj
 def show_cache(obj):
 
     avl_entities = Cache.list()
@@ -37,6 +36,12 @@ def show_cache(obj):
     click.echo(table)
 
 
+@show.command("cache")
+@click.pass_obj
+def show_cache_command(obj):
+    show_cache(obj)
+
+
 @clear.command("cache")
 @click.pass_obj
 def clear_cache(obj):
@@ -51,5 +56,7 @@ def clear_cache(obj):
 def update_cache(obj):
     """Update the data for dynamic entities stored in the cache"""
 
-    Cache.update_entities()
-    click.echo(highlight_text("\nCache updated !!!\n"))
+    click.echo(highlight_text("Updating cache ..."))
+    Cache.sync()
+    show_cache(obj)
+    click.echo(highlight_text("Cache updated at {}".format(datetime.datetime.now())))

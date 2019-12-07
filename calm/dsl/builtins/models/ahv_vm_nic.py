@@ -5,8 +5,6 @@ from calm.dsl.store import Cache
 
 # AHV Nic
 
-SubnetSyncFlag = True
-
 
 class AhvNicType(EntityType):
     __schema_name__ = "AhvNic"
@@ -24,10 +22,6 @@ def ahv_vm_nic(**kwargs):
     return AhvNicType(name, bases, kwargs)
 
 
-def get_subnet_sync_status():
-    return SubnetSyncFlag
-
-
 def create_ahv_nic(
     subnet=None,
     network_function_nic_type="INGRESS",
@@ -37,21 +31,15 @@ def create_ahv_nic(
     ip_endpoints=[],
 ):
 
-    global SubnetSyncFlag
     kwargs = {}
     if subnet:
         subnet_uuid = Cache.get_entity_uuid("AHV_SUBNETS", subnet)
-        if not subnet_uuid:
-            SubnetSyncFlag = False
-
         kwargs["subnet_reference"] = {"name": subnet, "uuid": subnet_uuid}
 
     if network_function_chain:
         nfc_uuid = Cache.get_entity_uuid(
             "AHV_NETWORK_FUNCTION_CHAIN", network_function_chain
         )
-        if not nfc_uuid:
-            SubnetSyncFlag = False
 
         kwargs["network_function_chain_reference"] = {
             "name": network_function_chain,

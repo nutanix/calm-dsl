@@ -93,5 +93,5 @@ __all__ = [
     "ahv_vm_resources",
     "AhvVmResources",
     "ahv_vm",
-    "AhvVm"
+    "AhvVm",
 ]
