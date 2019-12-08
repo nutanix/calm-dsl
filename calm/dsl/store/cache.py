@@ -11,7 +11,7 @@ class Cache:
     # TODO move this mapping to constants(api may change)
     entity_type_api_map = {
         "AHV_DISK_IMAGE": "images",
-        "AHV_SUBNETS": "subnets",
+        "AHV_SUBNET": "subnets",
         "AHV_NETWORK_FUNCTION_CHAIN": "network_function_chains",
         "PROJECT": "projects",
     }

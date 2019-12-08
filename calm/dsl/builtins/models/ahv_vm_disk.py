@@ -95,6 +95,13 @@ def clone_from_image_service(
         raise ValueError("image_name not provided !!!")
 
     image_uuid = Cache.get_entity_uuid("AHV_DISK_IMAGE", image_name)
+    if not image_uuid:
+        raise Exception(
+            "Ahv Disk Image {} not found. Please run: calm update cache".format(
+                image_name
+            )
+        )
+
     image_data = {"kind": "image", "name": image_name, "uuid": image_uuid}
 
     return update_disk_config(device_type, adapter_type, image_data, bootable)

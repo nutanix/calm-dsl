@@ -33,7 +33,15 @@ def create_ahv_nic(
 
     kwargs = {}
     if subnet:
-        subnet_uuid = Cache.get_entity_uuid("AHV_SUBNETS", subnet)
+        subnet_uuid = Cache.get_entity_uuid("AHV_SUBNET", subnet)
+
+        if not subnet_uuid:
+            raise Exception(
+                "AHV Subnet {} not found. Please run: calm update cache".format(
+                    subnet
+                )
+            )
+
         kwargs["subnet_reference"] = {"name": subnet, "uuid": subnet_uuid}
 
     if network_function_chain:
@@ -41,9 +49,17 @@ def create_ahv_nic(
             "AHV_NETWORK_FUNCTION_CHAIN", network_function_chain
         )
 
+        if not nfc_uuid:
+            raise Exception(
+                "AHV Network Function Chain {} not found. Please run: calm update cache".format(
+                    network_function_chain
+                )
+            )
+
         kwargs["network_function_chain_reference"] = {
             "name": network_function_chain,
-            "uuid": "network_function_chain_uuid",  # TODO call api
+            "uuid": nfc_uuid,
+            "kind": "network_function_chain"
         }
 
     for ip in ip_endpoints:
