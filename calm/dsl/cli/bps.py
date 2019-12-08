@@ -196,10 +196,11 @@ def get_blueprint_class_from_module(user_bp_module):
     return UserBlueprint
 
 
-def compile_blueprint(bp_file):
+def compile_blueprint(bp_file, no_sync=False):
 
-    # ToDo - Sync using cli flag
-    Cache.sync()
+    # Sync only if no_sync flag is not set
+    if not no_sync:
+        Cache.sync()
 
     user_bp_module = get_blueprint_module_from_file(bp_file)
     UserBlueprint = get_blueprint_class_from_module(user_bp_module)
@@ -216,9 +217,9 @@ def compile_blueprint(bp_file):
     return bp_payload
 
 
-def compile_blueprint_command(bp_file, out):
+def compile_blueprint_command(bp_file, out, no_sync=False):
 
-    bp_payload = compile_blueprint(bp_file)
+    bp_payload = compile_blueprint(bp_file, no_sync)
     if bp_payload is None:
         click.echo("User blueprint not found in {}".format(bp_file))
         return

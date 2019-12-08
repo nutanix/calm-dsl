@@ -1,10 +1,8 @@
 import peewee
-import datetime
 import warnings
 
 from ..db import Database
 from calm.dsl.api import get_resource_api, get_api_client
-import click
 
 
 class Cache:
@@ -17,6 +15,11 @@ class Cache:
         "AHV_NETWORK_FUNCTION_CHAIN": "network_function_chains",
         "PROJECT": "projects",
     }
+
+    @classmethod
+    def get_entity_types(cls):
+        """Entity types used in the cache"""
+        return list(cls.entity_type_api_map.keys())
 
     @classmethod
     def create(cls, entity_type="", entity_name="", entity_uuid=""):
@@ -49,21 +52,34 @@ class Cache:
                 return None
 
     @classmethod
-    def sync(cls):
+    def sync(cls, entity_type=None):
+
+        updating_entity_types = []
+
+        if entity_type:
+            if entity_type not in list(cls.entity_type_api_map.keys()):
+                raise ValueError("Entity type {} not registered". format(entity_type))
+
+            updating_entity_types.append(entity_type)
+
+        else:
+            updating_entity_types.extend(list(cls.entity_type_api_map.keys()))
 
         with Database() as db:
 
-            for db_entity in db.cache_table.select():
-                db_entity.delete_instance()
+            for entity_type in updating_entity_types:
+                query = db.cache_table.delete().where(db.cache_table.entity_type == entity_type)
+                query.execute()
 
             client = get_api_client()
 
-            for typ, api_suffix in cls.entity_type_api_map.items():
+            for entity_type in updating_entity_types:
+                api_suffix = cls.entity_type_api_map[entity_type]
                 Obj = get_resource_api(api_suffix, client.connection)
                 try:
                     res = Obj.get_name_uuid_map()
                     for name, uuid in res.items():
-                        cls.create(entity_type=typ, entity_name=name, entity_uuid=uuid)
+                        cls.create(entity_type=entity_type, entity_name=name, entity_uuid=uuid)
                 except Exception:
                     pc_ip = client.connection.host
                     warnings.warn(
