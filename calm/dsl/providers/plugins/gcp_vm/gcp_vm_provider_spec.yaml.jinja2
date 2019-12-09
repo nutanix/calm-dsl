@@ -1,0 +1,311 @@
+{% macro GcpServiceAccount() -%}
+
+title: GCP Service Accounts
+type: object
+properties:
+  email:
+    type: string
+  scopes:
+    type: array
+    items:
+      type: string
+
+{%- endmacro %}
+
+
+{% macro GcpEncryptionKey() -%}
+
+title: GCP Encryption Key
+type: object
+properties:
+  rawKey:
+    type: string
+
+{%- endmacro %}
+
+
+{% macro GcpDiskInitParams() -%}
+
+title: GCP Disk Initialize Params
+type: object
+properties:
+  diskName:
+    type: string
+  sourceImage:
+    type: string
+  diskSizeGb:
+    type: integer
+    default: -1
+  sourceImageEncryptionKey:
+    {{ GcpEncryptionKey() | indent(4) }}
+
+{%- endmacro %}
+
+
+{% macro GcpDisk() -%}
+
+title: GCP Disk
+type: object
+properties:
+  disk_type:
+    type: string
+  mode:
+    type: string
+  deviceName:
+    type: string
+  source:
+    type: string
+  interface:
+    type: string
+  boot:
+    type: boolean
+    default: False
+  initializeParams:
+    {{ GcpDiskInitParams() | indent(4) }}
+  autoDelete:
+    type: boolean
+    default: False
+  diskEncryptionKey:
+    {{ GcpEncryptionKey() | indent(4) }}
+
+{%- endmacro %}
+
+
+{% macro GcpBlankDisk() -%}
+
+title: GCP Blank Disk
+type: object
+properties:
+  disk_type:
+    type: string
+  autoDelete:
+    type: boolean
+  name:
+    type: string
+  sizeGb:
+    type: integer
+    default: -1
+
+{%- endmacro %}
+
+
+{% macro GcpAccessConfig() -%}
+
+title: GCP Access Configuration
+type: object
+properties:
+  config_type:
+    type: string
+  name:
+    type: string
+  natIP:
+    type: string
+
+{%- endmacro %}
+
+
+{% macro GcpIpRange() -%}
+
+title: GCP IP Range
+type: object
+properties:
+  ipCidrRange:
+    type: string
+  subnetworkRangeName:
+    type: string
+
+{%- endmacro %}
+
+
+{% macro GcpNetworkInterface() -%}
+
+title: GCP Network Interface
+type: object
+properties:
+  network:
+    type: string
+  subnetwork:
+    type: string
+  networkIP:
+    type: string
+  associatePublicIP:
+    type: boolean
+    default: True
+  accessConfigs:
+    type: array
+    items:
+      {{ GcpAccessConfig() | indent(6) }}
+  aliasIpRanges:
+    type: array
+    items:
+      {{ GcpIpRange() | indent(6) }}
+
+{%- endmacro %}
+
+
+{% macro GcpMetadataItem() -%}
+
+title: GCP Metadata Item
+type: object
+properties:
+  key:
+    type: string
+  value:
+    type: string
+
+{%- endmacro %}
+
+
+{% macro GcpMetadata() -%}
+
+title: GCP Metadata
+type: object
+properties:
+  fingerprint:
+    type: string
+  items:
+    type: array
+    items:
+      {{ GcpMetadataItem() | indent(6) }}
+
+{%- endmacro %}
+
+
+{% macro GcpTag() -%}
+
+title: GCP Tags
+type: object
+properties:
+  fingerprint:
+    type: string
+  items:
+    type: array
+    items:
+      type: string
+
+{%- endmacro %}
+
+
+{% macro GcpScheduling() -%}
+
+title: GCP Schedule
+type: object
+properties:
+  onHostMaintenance:
+    type: string
+    default: TERMINATE
+  automaticRestart:
+    type: boolean
+  preemptible:
+    type: boolean
+
+{%- endmacro %}
+
+
+{% macro GcpKeyValuePair() -%}
+
+title: GCP Key Value Pair
+type: object
+properties:
+  key:
+    type: string
+  value:
+    type: string
+
+{%- endmacro %}
+
+
+{% macro GcpGuestCustomization() -%}
+
+title: Gcp Guest Customization
+type: object
+properties:
+  startupScript:
+    type: string
+  sysprep:
+    type: string
+
+{%- endmacro %}
+
+
+{% macro GcpVMResource() -%}
+
+title: GCP VM Resource
+type: object
+properties:
+  name: 
+    type: string
+  description:
+    type: string
+  tags:
+    {{ GcpTag() | indent(4) }}
+  machineType: 
+    type: string
+  zone: 
+    type: string
+  account_uuid:
+    type: string
+  canIpForward:
+    type: boolean
+  networkInterfaces:
+    type: array
+    items:
+      {{ GcpNetworkInterface() | indent(6) }}
+  disks:
+    type: array
+    items:
+      {{ GcpDisk() | indent(6) }}
+  blankDisks:
+    type: array
+    items:
+      {{ GcpBlankDisk() | indent(6) }}
+  metadata:
+    {{ GcpMetadata() | indent(4) }}
+  serviceAccounts:
+    type: array
+    items: 
+      {{ GcpServiceAccount() | indent(6) }}
+  scheduling:
+    {{ GcpScheduling() | indent(4) }}
+  labels:
+    type: array
+    items: 
+      {{ GcpKeyValuePair() | indent(6) }}
+  labelFingerprint:
+    type: string
+  minCpuPlatform:
+    type: string
+  sshKeys:
+    type: array
+    items:
+      type: string
+  guestCustomization:
+    {{ GcpGuestCustomization() | indent(4) }}
+
+{%- endmacro %}
+
+
+{% macro GcpCreateSpec() -%}
+
+title: GCP Create Spec
+type: object
+properties:
+  type:
+    type: string
+    enum: 
+    - PROVISION_GCP_VM
+  resources:
+    {{ GcpVMResource() | indent(4) }}
+
+{%- endmacro %}
+
+
+info:
+  title: GCP_VM
+  description: GCP VM spec payload using v3 API
+
+
+components:
+  schemas:
+    provider_spec:
+      {{ GcpCreateSpec() | indent(6) }}
