@@ -21,56 +21,56 @@ def ahv_vm_gpu(**kwargs):
     return AhvGpuType(name, bases, kwargs)
 
 
-def create_ahv_gpu(vendor="", mode="", device_id=""):
+def create_ahv_gpu(vendor="", mode="", device_id=-1):
 
     kwargs = {"vendor": vendor, "mode": mode, "device_id": device_id}
 
     return ahv_vm_gpu(**kwargs)
 
 
-def amd_gpu_pass_through_graphic_mode(device_id=""):
+def amd_gpu_pass_through_graphic_mode(device_id=-1):
     return create_ahv_gpu(
         vendor="AMD", mode="PASSTHROUGH_GRAPHICS", device_id=device_id
     )
 
 
-def amd_gpu_pass_through_compute_mode(device_id=""):
+def amd_gpu_pass_through_compute_mode(device_id=-1):
     return create_ahv_gpu(vendor="AMD", mode="PASSTHROUGH_COMPUTE", device_id=device_id)
 
 
-def amd_gpu_virtual_mode(device_id=""):
+def amd_gpu_virtual_mode(device_id=-1):
     return create_ahv_gpu(vendor="AMD", mode="VIRTUAL", device_id=device_id)
 
 
-def intel_gpu_pass_through_graphic_mode(device_id=""):
+def intel_gpu_pass_through_graphic_mode(device_id=-1):
     return create_ahv_gpu(
         vendor="INTEL", mode="PASSTHROUGH_GRAPHICS", device_id=device_id
     )
 
 
-def intel_gpu_pass_through_compute_mode(device_id=""):
+def intel_gpu_pass_through_compute_mode(device_id=-1):
     return create_ahv_gpu(
         vendor="INTEL", mode="PASSTHROUGH_COMPUTE", device_id=device_id
     )
 
 
-def intel_gpu_virtual_mode(device_id=""):
+def intel_gpu_virtual_mode(device_id=-1):
     return create_ahv_gpu(vendor="INTEL", mode="VIRTUAL", device_id=device_id)
 
 
-def nvidia_gpu_pass_through_graphic_mode(device_id=""):
+def nvidia_gpu_pass_through_graphic_mode(device_id=-1):
     return create_ahv_gpu(
         vendor="NVIDIA", mode="PASSTHROUGH_GRAPHICS", device_id=device_id
     )
 
 
-def nvidia_gpu_pass_through_compute_mode(device_id=""):
+def nvidia_gpu_pass_through_compute_mode(device_id=-1):
     return create_ahv_gpu(
         vendor="NVIDIA", mode="PASSTHROUGH_COMPUTE", device_id=device_id
     )
 
 
-def nvidia_gpu_virtual_mode(device_id=""):
+def nvidia_gpu_virtual_mode(device_id=-1):
     return create_ahv_gpu(vendor="NVIDIA", mode="VIRTUAL", device_id=device_id)
 
 

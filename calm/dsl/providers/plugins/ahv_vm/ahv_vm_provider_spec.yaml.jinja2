@@ -110,6 +110,8 @@ properties:
 title: AHV VDisk
 type: object
 properties:
+  data_source_reference:
+    type: ["null"]
   device_properties:
     type: object
     properties:
@@ -138,6 +140,8 @@ properties:
     properties:
       user_data:
         type: string
+  sysprep:
+    type: ["null"]
 
 {%- endmacro %}
 
@@ -147,6 +151,8 @@ properties:
 title: AHV Sys Prep Script
 type: object
 properties:
+  cloud_init:
+    type: ["null"]
   sysprep:
     type: object
     properties:

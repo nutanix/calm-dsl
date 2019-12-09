@@ -25,6 +25,12 @@ class AhvVmResourcesType(EntityType):
 
         serial_port_list = []
         for ind, connection_status in cdict["serial_port_list"].items():
+            if not isinstance(ind, int):
+                raise TypeError("index {} is not of type integer". format(ind))
+
+            if not isinstance(connection_status, bool):
+                raise TypeError("index {} is not of type integer". format(ind))
+
             serial_port_list.append({"index": ind, "is_connected": connection_status})
 
         cdict["serial_port_list"] = serial_port_list
