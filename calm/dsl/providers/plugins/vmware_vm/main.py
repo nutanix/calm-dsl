@@ -11,7 +11,7 @@ Provider = get_provider_interface()
 
 class VCenterVmProvider(Provider):
 
-    provider_type = "VMW_VM"
+    provider_type = "VMWARE_VM"
     package_name = __name__
     spec_template_file = "vmware_vm_provider_spec.yaml.jinja2"
 
@@ -19,6 +19,12 @@ class VCenterVmProvider(Provider):
     def create_spec(cls):
         client = get_api_client()
         create_spec(client)
+
+    @classmethod
+    def update_vm_image_config(cls, spec, vm_template=None):
+        """vm_template is the downloadable class"""
+        if spec.get("template"):
+            spec["template"] = vm_template.__name__
 
 
 class VCenter:

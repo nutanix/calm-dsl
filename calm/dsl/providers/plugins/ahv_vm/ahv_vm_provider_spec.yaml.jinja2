@@ -83,7 +83,7 @@ properties:
         type: string
       kind:
         type: string
-        enum: [image]
+        enum: [image, app_package]
       uuid:
         type: string
   device_properties:
@@ -154,13 +154,16 @@ properties:
         type: string
       install_type:
         type: string
+        enum: [PREPARED, FRESH]
+      is_domain:
+        type: boolean
       domain:
         type: string
       dns_ip:
         type: string
       dns_search_path:
         type: string
-      domain_credential_reference:
+      domain_credential_reference:  # Review after CALM-15575 is resolved
         type: [object, "null"]
         properties:
           uuid:

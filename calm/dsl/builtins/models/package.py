@@ -56,9 +56,18 @@ class PackageType(EntityType):
 
             # Remove image_spec field created during compile step
             cdict.pop("image_spec", None)
+            cdict["options"] = {
+                "install_runbook": install_runbook,
+                "uninstall_runbook": uninstall_runbook
+            }
 
-            cdict["options"]["install_runbook"] = install_runbook
-            cdict["options"]["uninstall_runbook"] = uninstall_runbook
+        elif getattr(cls, "type") == "SUBSTRATE_IMAGE":
+            cdict = super().compile()
+            if cdict.get("options"):
+                cdict["options"].pop("install_runbook", None)
+                cdict["options"].pop("uninstall_runbook", None)
+            cdict.pop("image_spec", None)
+            return cdict
 
         else:
             ptype = getattr(cls, "type")

@@ -53,3 +53,21 @@ def read_spec(filename, depth=1):
 def read_provider_spec(filename):
     spec = read_spec(filename, depth=2)
     return provider_spec(spec)
+
+
+def read_ahv_spec(filename, disk_packages={}):
+    spec = read_spec(filename, depth=2)
+    if disk_packages:
+        Provider = get_provider("AHV_VM")
+        Provider.update_vm_image_config(spec, disk_packages)
+
+    return provider_spec(spec)
+
+
+def read_vmw_spec(filename, vm_template=None):
+    spec = read_spec(filename, depth=2)
+    if vm_template:
+        Provider = get_provider("VMWARE_VM")
+        Provider.update_vm_image_config(spec, vm_template)
+
+    return provider_spec(spec)

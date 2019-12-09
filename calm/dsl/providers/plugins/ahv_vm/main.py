@@ -5,6 +5,7 @@ import re
 from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.providers import get_provider_interface
 from calm.dsl.tools import StrictDraft7Validator
+from calm.dsl.builtins import ref
 
 from .constants import AHV as ahv
 
@@ -24,6 +25,31 @@ class AhvVmProvider(Provider):
         client = get_api_client()
         create_spec(client)
 
+    @classmethod
+    def update_vm_image_config(cls, spec, disk_packages={}):
+        """Ex: disk_packages = {disk_index: vmImageClass}"""
+        disk_list = spec["resources"].get("disk_list", [])
+
+        for disk_ind, img_cls in disk_packages.items():
+            if disk_ind > len(disk_list):
+                raise ValueError("invalid disk address ({})".format(disk_ind))
+
+            disk = disk_list[disk_ind - 1]
+            if "data_source_reference" not in disk:
+                raise ValueError(
+                    "unable to set downloadable image in disk {}".format(disk_ind)
+                )
+
+            pkg = img_cls.compile()
+            vm_image_type = pkg["options"]["resources"]["image_type"]
+            disk_img_type = ahv.IMAGE_TYPES[disk["device_properties"]["device_type"]]
+
+            if vm_image_type != disk_img_type:
+                raise ValueError("image type mismatch in disk {}".format(disk_ind))
+
+            # Set the reference of this disk
+            disk["data_source_reference"] = ref(img_cls).compile()
+
 
 class AHV:
     def __init__(self, connection):
@@ -39,7 +65,12 @@ class AHV:
         img_name_uuid_map = {}
 
         for image in res["entities"]:
-            img_type = image["status"]["resources"]["image_type"]
+            img_type = image["status"]["resources"].get("image_type", None)
+
+            # Ignoring images, if they don't have any image type(Ex: Karbon Image)
+            if not img_type:
+                continue
+
             if img_type == image_type:
                 img_name_uuid_map[image["status"]["name"]] = image["metadata"]["uuid"]
 
