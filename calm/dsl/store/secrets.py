@@ -48,10 +48,7 @@ class Secret:
 
         with Database() as db:  # noqa
             secret = cls.get_instance(name)
-            for secret_data in secret.data:
-                secret_data.delete_instance()  # deleting cryptography data
-
-            secret.delete_instance()
+            secret.delete_instance(recursive=True)
 
     @classmethod
     def update(cls, name, value):
@@ -84,7 +81,7 @@ class Secret:
 
     @classmethod
     def list(cls):
-        """returns the Secret object"""
+        """returns the list of secrets stored in db"""
 
         with Database() as db:
 
@@ -111,3 +108,11 @@ class Secret:
             secret_val = Crypto.decrypt_AES_GCM(enc_msg, pass_phrase)
 
             return secret_val
+
+    @classmethod
+    def clear(cls):
+        """Deletes all the secrets present in the data"""
+
+        with Database() as db:
+            for secret in db.secret_table.select():
+                secret.delete_instance(recursive=True)

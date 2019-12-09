@@ -21,7 +21,9 @@ def ahv_vm_disk_package(name="", description="", config_file=None):
     config = configparser.ConfigParser()
     config.optionxform = str
 
-    config_file = os.path.join(os.path.dirname(inspect.getfile(sys._getframe(1))), config_file)
+    config_file = os.path.join(
+        os.path.dirname(inspect.getfile(sys._getframe(1))), config_file
+    )
     if os.path.isfile(config_file):
         config.read(config_file)
 
@@ -40,11 +42,11 @@ def ahv_vm_disk_package(name="", description="", config_file=None):
                 "source_uri": config["IMAGE"].get("source_uri", ""),
                 "version": {
                     "product_version": config["PRODUCT"].get("version", ProductVersion),
-                    "product_name": config["PRODUCT"].get("name", name)
+                    "product_name": config["PRODUCT"].get("name", name),
                 },
-                "architecture": config["IMAGE"].get("architecture", ImageArchitecture)
-            }
-        }
+                "architecture": config["IMAGE"].get("architecture", ImageArchitecture),
+            },
+        },
     }
 
     # If image is ISO type, search for checksum data

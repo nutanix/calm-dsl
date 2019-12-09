@@ -13,6 +13,7 @@ from calm.dsl.builtins import Blueprint, SimpleBlueprint, create_blueprint_paylo
 from calm.dsl.config import get_config
 from .utils import get_name_query, get_states_filter, highlight_text
 from .constants import BLUEPRINT
+from calm.dsl.store import Cache
 
 
 def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
@@ -195,7 +196,11 @@ def get_blueprint_class_from_module(user_bp_module):
     return UserBlueprint
 
 
-def compile_blueprint(bp_file):
+def compile_blueprint(bp_file, no_sync=False):
+
+    # Sync only if no_sync flag is not set
+    if not no_sync:
+        Cache.sync()
 
     user_bp_module = get_blueprint_module_from_file(bp_file)
     UserBlueprint = get_blueprint_class_from_module(user_bp_module)
@@ -212,20 +217,31 @@ def compile_blueprint(bp_file):
     return bp_payload
 
 
-def compile_blueprint_command(bp_file, out):
+def compile_blueprint_command(bp_file, out, no_sync=False):
 
-    bp_payload = compile_blueprint(bp_file)
+    bp_payload = compile_blueprint(bp_file, no_sync)
     if bp_payload is None:
         click.echo("User blueprint not found in {}".format(bp_file))
         return
 
     config = get_config()
     if "PROJECT" in config:
-        if config["PROJECT"].get("uuid"):
-            bp_payload["metadata"]["project_reference"] = {
-                "type": "project",
-                "uuid": config["PROJECT"]["uuid"],
-            }
+        project_name = config["PROJECT"].get("name", "default")
+        project_uuid = Cache.get_entity_uuid("PROJECT", project_name)
+
+        if not project_uuid:
+            raise Exception(
+                "Project {} not found. Please run: calm update cache".format(
+                    project_name
+                )
+            )
+
+        bp_payload["metadata"]["project_reference"] = {
+            "type": "project",
+            "uuid": project_uuid,
+            "name": project_name,
+        }
+
     credential_list = bp_payload["spec"]["resources"]["credential_definition_list"]
     is_secret_avl = False
     for cred in credential_list:

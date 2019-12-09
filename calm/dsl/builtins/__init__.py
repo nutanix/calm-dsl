@@ -35,6 +35,12 @@ from .models.blueprint_payload import create_blueprint_payload
 from .models.project import Project as ProjectValidator
 from .models.ahv_vm_disk_package import ahv_vm_disk_package
 
+from .models.ahv_vm_nic import ahv_vm_nic, AhvVmNic
+from .models.ahv_vm_disk import ahv_vm_disk, AhvVmDisk
+from .models.ahv_vm_gpu import ahv_vm_gpu, AhvVmGpu
+from .models.ahv_vm_gc import ahv_vm_guest_customization, AhvVmGC
+from .models.ahv_vm import ahv_vm_resources, AhvVmResources, ahv_vm, AhvVm
+
 
 __all__ = [
     "Ref",
@@ -76,4 +82,16 @@ __all__ = [
     "ProjectValidator",
     "SimpleDeployment",
     "SimpleBlueprint",
+    "ahv_vm_nic",
+    "AhvVmNic",
+    "ahv_vm_disk",
+    "AhvVmDisk",
+    "ahv_vm_gpu",
+    "AhvVmGpu",
+    "ahv_vm_guest_customization",
+    "AhvVmGC",
+    "ahv_vm_resources",
+    "AhvVmResources",
+    "ahv_vm",
+    "AhvVm",
 ]
