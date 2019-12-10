@@ -166,24 +166,24 @@ class AhvVmGC:
             return cloud_init(filename=filename, config=config)
 
     class Sysprep:
-        def __new__(cls, filename=None, config=""):
+        def __new__(cls, filename=None, unattend_xml=""):
             return fresh_sys_prep_without_domain(
-                filename=filename, unattend_xml=config
+                filename=filename, unattend_xml=unattend_xml
             )
 
         class FreshScript:
-            def __new__(cls, filename=None, config=""):
+            def __new__(cls, filename=None, unattend_xml=""):
                 return fresh_sys_prep_without_domain(
-                    filename=filename, unattend_xml=config
+                    filename=filename, unattend_xml=unattend_xml
                 )
 
             withDomain = fresh_sys_prep_with_domain
             withoutDomain = fresh_sys_prep_without_domain
 
         class PreparedScript:
-            def __new__(cls, filename=None, config=""):
+            def __new__(cls, filename=None, unattend_xml=""):
                 return prepared_sys_prep_without_domain(
-                    filename=filename, unattend_xml=config
+                    filename=filename, unattend_xml=unattend_xml
                 )
 
             withDomain = prepared_sys_prep_with_domain
