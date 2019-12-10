@@ -16,9 +16,9 @@ class RunbookAPI(ResourceAPI):
         self.PAUSE = self.PREFIX + "/runlogs/{}/pause"
         self.PLAY = self.PREFIX + "/runlogs/{}/play"
         self.RERUN = self.PREFIX + "/runlogs/{}/rerun"
-        self.RUNLOG_LIST = self.PREFIX + "/runlogs/{}/childrens/list"
-        self.RUNLOG_OUTPUT = self.PREFIX + "/runlogs/{}/childrens/{}/output"
-        self.RUNLOG_RESUME = self.PREFIX + "/runlogs/{}/childrens/{}/resume"
+        self.RUNLOG_LIST = self.PREFIX + "/runlogs/{}/children/list"
+        self.RUNLOG_OUTPUT = self.PREFIX + "/runlogs/{}/children/{}/output"
+        self.RUNLOG_RESUME = self.PREFIX + "/runlogs/{}/children/{}/resume"
 
     def upload(self, payload):
         return self.connection._call(
