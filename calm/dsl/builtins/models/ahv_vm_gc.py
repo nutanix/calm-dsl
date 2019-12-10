@@ -2,9 +2,6 @@ from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .utils import read_file, yaml
 
-import os
-import sys
-import inspect
 import re
 
 
@@ -58,31 +55,26 @@ def create_ahv_guest_customization(
     return ahv_vm_guest_customization(**kwargs)
 
 
-def cloud_init(filename=None, user_data={}):
+def cloud_init(filename=None, config={}):
 
-    if not user_data:
-        file_path = os.path.join(
-            os.path.dirname(inspect.getfile(sys._getframe(2))), filename
-        )
-
-        # Reading the file
-        with open(file_path, "r", encoding="utf-8") as f:
-            user_data = f.read()
+    if not config:
+        # reading the file
+        config = read_file(filename, depth=3)
 
         # Checking whether macros exists in file
-        if re.search("@@{.*}@@", user_data):
+        if re.search("@@{.*}@@", config):
             return create_ahv_guest_customization(
-                customization_type="cloud_init", user_data=user_data
+                customization_type="cloud_init", user_data=config
             )
 
         # If macros doesn't exists, then safe load the yaml file
         else:
-            user_data = yaml.safe_load(user_data)
+            config = yaml.safe_load(config)
 
-    user_data = "#cloud-config\n" + yaml.dump(user_data, default_flow_style=False)
+    config = "#cloud-config\n" + yaml.dump(config, default_flow_style=False)
 
     return create_ahv_guest_customization(
-        customization_type="cloud_init", user_data=user_data
+        customization_type="cloud_init", user_data=config
     )
 
 
@@ -170,28 +162,28 @@ def prepared_sys_prep_without_domain(filename=None, unattend_xml=""):
 
 class AhvVmGC:
     class CloudInit:
-        def __new__(cls, filename=None, user_data={}):
-            return cloud_init(filename=filename, user_data=user_data)
+        def __new__(cls, filename=None, config={}):
+            return cloud_init(filename=filename, config=config)
 
     class Sysprep:
-        def __new__(cls, filename=None, unattend_xml=""):
+        def __new__(cls, filename=None, config=""):
             return fresh_sys_prep_without_domain(
-                filename=filename, unattend_xml=unattend_xml
+                filename=filename, unattend_xml=config
             )
 
         class FreshScript:
-            def __new__(cls, filename=None, unattend_xml=""):
+            def __new__(cls, filename=None, config=""):
                 return fresh_sys_prep_without_domain(
-                    filename=filename, unattend_xml=unattend_xml
+                    filename=filename, unattend_xml=config
                 )
 
             withDomain = fresh_sys_prep_with_domain
             withoutDomain = fresh_sys_prep_without_domain
 
         class PreparedScript:
-            def __new__(cls, filename=None, unattend_xml=""):
+            def __new__(cls, filename=None, config=""):
                 return prepared_sys_prep_without_domain(
-                    filename=filename, unattend_xml=unattend_xml
+                    filename=filename, unattend_xml=config
                 )
 
             withDomain = prepared_sys_prep_with_domain

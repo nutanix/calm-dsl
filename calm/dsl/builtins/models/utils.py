@@ -7,9 +7,15 @@ from ruamel import yaml
 def read_file(filename, depth=1):
     """reads the file"""
 
+    if not filename:
+        raise ValueError("filename not supplied")
+
     file_path = os.path.join(
         os.path.dirname(inspect.getfile(sys._getframe(depth))), filename
     )
+
+    if not os.path.exists(file_path):
+        raise ValueError("file {} not found". format(filename))
 
     with open(file_path, "r") as data:
         return data.read()
