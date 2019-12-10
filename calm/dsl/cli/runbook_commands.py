@@ -293,9 +293,6 @@ def run_runbook_command(obj, runbook_name, watch, ignore_runtime_variables, runb
         click.echo(">> Uploaded runbook: {}".format(runbook_file))
         runbook = res.json()
         runbook_id = runbook["metadata"]["uuid"]
-        res, err = client.runbook.delete(runbook_id)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
     else:
         runbook_id = get_runbook(client, runbook_name)['metadata']['uuid']
         res, err = client.runbook.read(runbook_id)
@@ -319,6 +316,10 @@ def run_runbook_command(obj, runbook_name, watch, ignore_runtime_variables, runb
         screen.clear()
         screen.refresh()
         run_runbook(screen, client, runbook_id, watch, input_data=input_data, payload=payload)
+        if runbook_file:
+            res, err = client.runbook.delete(runbook_id)
+            if err:
+                raise Exception("[{}] - {}".format(err["code"], err["error"]))
         screen.wait_for_input(10.0)
 
     Display.wrapper(render_runbook, watch)
