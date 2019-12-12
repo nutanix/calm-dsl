@@ -239,9 +239,9 @@ def completion():
     pass
 
 
-@main.command("repl")
+@main.command("prompt")
 def calmrepl():
-    """Enable an interactive REPL"""
+    """Enable an interactive prompt shell"""
     repl(click.get_current_context())
 
 
