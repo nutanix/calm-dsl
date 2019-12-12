@@ -57,9 +57,12 @@ def _describe_bp(obj, bp_name):
     default="json",
     help="output format [json|yaml].",
 )
-def _compile_blueprint_command(bp_file, out):
+@click.option(
+    "--no-sync", "-ns", is_flag=True, default=False, help="Doesn't sync the cache on compilation"
+)
+def _compile_blueprint_command(bp_file, out, no_sync):
     """Compiles a DSL (Python) blueprint into JSON or YAML"""
-    compile_blueprint_command(bp_file, out)
+    compile_blueprint_command(bp_file, out, no_sync)
 
 
 def create_blueprint(client, bp_payload, name=None, description=None, categories=None):

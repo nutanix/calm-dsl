@@ -1,7 +1,13 @@
 import click
 
-from .main import get, create, update, delete
-from .secrets import create_secret, get_secrets, delete_secret, update_secret
+from .main import get, create, update, delete, clear
+from .secrets import (
+    create_secret,
+    get_secrets,
+    delete_secret,
+    update_secret,
+    clear_secrets,
+)
 
 # TODO Apply --type = local/server parameter
 @create.command("secret")
@@ -54,3 +60,11 @@ def _update_secret(obj, name, value):
     """
 
     update_secret(name, value)
+
+
+@clear.command("secrets")
+@click.pass_obj
+def _clear_secrets(obj):
+    """Delete alll the secrets stored in the local db"""
+
+    clear_secrets()

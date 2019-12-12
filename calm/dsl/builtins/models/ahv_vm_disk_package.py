@@ -1,8 +1,5 @@
 from .package import package
-import os
-import inspect
-import sys
-import configparser
+from .provider_spec import read_spec
 
 
 # Downloadable package
@@ -11,47 +8,47 @@ import configparser
 ImageType = "DISK_IMAGE"
 ImageArchitecture = "X86_64"
 ProductVersion = "1.0"
-ConfigSections = ["IMAGE", "PRODUCT", "CHECKSUM"]
+ConfigSections = ["image", "product", "checksum"]
 
 
-def ahv_vm_disk_package(name="", description="", config_file=None):
-    if not config_file:
-        raise ValueError("file not valid !!!")
+def ahv_vm_disk_package(name="", description="", config_file=None, config_data={}):
 
-    config = configparser.ConfigParser()
-    config.optionxform = str
+    if not (config_file or config_data):
+        raise ValueError("downloadable image configuration not found !!!")
 
-    config_file = os.path.join(os.path.dirname(inspect.getfile(sys._getframe(1))), config_file)
-    if os.path.isfile(config_file):
-        config.read(config_file)
+    if not config_data:
+        config = read_spec(filename=config_file, depth=2)
+
+    else:
+        config = config_data
 
     # Check for given sections, if not present add an empty one
     for section in ConfigSections:
         if section not in config:
-            config.add_section(section)
+            config[section] = {}
 
     kwargs = {
         "type": "SUBSTRATE_IMAGE",
         "options": {
-            "name": config["IMAGE"].get("name", name),
+            "name": config["image"].get("name", name),
             "description": "",
             "resources": {
-                "image_type": config["IMAGE"].get("type", ImageType),
-                "source_uri": config["IMAGE"].get("source_uri", ""),
+                "image_type": config["image"].get("type", ImageType),
+                "source_uri": config["image"].get("source_uri", ""),
                 "version": {
-                    "product_version": config["PRODUCT"].get("version", ProductVersion),
-                    "product_name": config["PRODUCT"].get("name", name)
+                    "product_version": str(config["product"].get("version", ProductVersion)),
+                    "product_name": config["product"].get("name", name),
                 },
-                "architecture": config["IMAGE"].get("architecture", ImageArchitecture)
-            }
-        }
+                "architecture": config["image"].get("architecture", ImageArchitecture),
+            },
+        },
     }
 
     # If image is ISO type, search for checksum data
     if kwargs["options"]["resources"]["image_type"] == "ISO_IMAGE":
         kwargs["options"]["resources"]["checksum"] = {
-            "checksum_algorithm": config["CHECKSUM"].get("algorithm", ""),
-            "checksum_value": config["CHECKSUM"].get("value", ""),
+            "checksum_algorithm": config["checksum"].get("algorithm", ""),
+            "checksum_value": str(config["checksum"].get("value", "")),
         }
 
     return package(name=name, description=description, **kwargs)

@@ -32,7 +32,7 @@ class ProviderSpec(metaclass=ProviderSpecType):
 
 class ProviderSpecValidator(PropertyValidator, openapi_type="app_provider_spec"):
     __default__ = None
-    __kind__ = ProviderSpec
+    __kind__ = ProviderSpecType
 
 
 def provider_spec(spec):
@@ -67,7 +67,7 @@ def read_ahv_spec(filename, disk_packages={}):
 def read_vmw_spec(filename, vm_template=None):
     spec = read_spec(filename, depth=2)
     if vm_template:
-        Provider = get_provider("VMW_VM")
+        Provider = get_provider("VMWARE_VM")
         Provider.update_vm_image_config(spec, vm_template)
 
     return provider_spec(spec)
