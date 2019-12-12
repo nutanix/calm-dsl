@@ -58,7 +58,11 @@ def _describe_bp(obj, bp_name):
     help="output format [json|yaml].",
 )
 @click.option(
-    "--no-sync", "-ns", is_flag=True, default=False, help="Doesn't sync the cache on compilation"
+    "--no-sync",
+    "-ns",
+    is_flag=True,
+    default=False,
+    help="Doesn't sync the cache on compilation",
 )
 def _compile_blueprint_command(bp_file, out, no_sync):
     """Compiles a DSL (Python) blueprint into JSON or YAML"""
@@ -168,7 +172,13 @@ def create_blueprint_command(obj, bp_file, name, description):
 
 @launch.command("bp")
 @click.argument("blueprint_name")
-@click.option("--app_name", default=None, help="Name of your app")
+@click.option("--app_name", "-a", default=None, help="Name of your app")
+@click.option(
+    "--profile_name",
+    "-p",
+    default=None,
+    help="Name of app profile to be used for blueprint launch",
+)
 @click.option(
     "--ignore_runtime_variables",
     is_flag=True,
@@ -177,7 +187,12 @@ def create_blueprint_command(obj, bp_file, name, description):
 )
 @click.pass_obj
 def launch_blueprint_command(
-    obj, blueprint_name, app_name, ignore_runtime_variables, blueprint=None
+    obj,
+    blueprint_name,
+    app_name,
+    ignore_runtime_variables,
+    profile_name,
+    blueprint=None,
 ):
 
     client = obj.get("client")
@@ -187,6 +202,7 @@ def launch_blueprint_command(
         blueprint_name,
         app_name,
         blueprint=blueprint,
+        profile_name=profile_name,
         patch_editables=not ignore_runtime_variables,
     )
 
