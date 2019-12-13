@@ -25,21 +25,31 @@ click_completion.init()
 @click.group(context_settings=CONTEXT_SETTINGS)
 @click.option(
     "--ip",
+    "-i",
     envvar="PRISM_SERVER_IP",
     default=None,
     help="Prism Central server IP or hostname",
 )
 @click.option(
     "--port",
+    "-P",
     envvar="PRISM_SERVER_PORT",
     default=None,
     help="Prism Central server port number",
 )
 @click.option(
-    "--username", envvar="PRISM_USERNAME", default=None, help="Prism Central username"
+    "--username",
+    "-u",
+    envvar="PRISM_USERNAME",
+    default=None,
+    help="Prism Central username",
 )
 @click.option(
-    "--password", envvar="PRISM_PASSWORD", default=None, help="Prism Central password"
+    "--password",
+    "-p",
+    envvar="PRISM_PASSWORD",
+    default=None,
+    help="Prism Central password",
 )
 @click.option(
     "--config",
@@ -96,6 +106,7 @@ def validate():
 )
 @click.option(
     "--type",
+    "-t",
     "provider_type",
     type=click.Choice(get_provider_types()),
     default="AHV_VM",
@@ -199,6 +210,7 @@ def watch():
 @click.option(
     "--type",
     "provider_type",
+    "-t",
     type=click.Choice(get_provider_types()),
     default="AHV_VM",
     help="Provider type",

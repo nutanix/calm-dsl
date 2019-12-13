@@ -14,6 +14,7 @@ from .secrets import (
 @click.argument("name", nargs=1)
 @click.option(
     "--value",
+    "-v",
     prompt=True,
     hide_input=True,
     confirmation_prompt=True,
@@ -51,7 +52,7 @@ def _delete_secret(obj, name):
 
 @update.command("secret")
 @click.argument("name", nargs=1)
-@click.option("--value", prompt=True, hide_input=True, confirmation_prompt=True)
+@click.option("--value", "-v", prompt=True, hide_input=True, confirmation_prompt=True)
 @click.pass_obj
 def _update_secret(obj, name, value):
     """Update the secret

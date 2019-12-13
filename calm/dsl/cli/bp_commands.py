@@ -15,12 +15,14 @@ from .bps import (
 
 
 @get.command("bps")
-@click.option("--name", default=None, help="Search for blueprints by name")
+@click.option("--name", "-n", default=None, help="Search for blueprints by name")
 @click.option(
-    "--filter", "filter_by", default=None, help="Filter blueprints by this string"
+    "--filter", "filter_by", "-f", default=None, help="Filter blueprints by this string"
 )
-@click.option("--limit", default=20, help="Number of results to return")
-@click.option("--offset", default=0, help="Offset results by the specified amount")
+@click.option("--limit", "-l", default=20, help="Number of results to return")
+@click.option(
+    "--offset", "-o", default=0, help="Offset results by the specified amount"
+)
 @click.option(
     "--quiet", "-q", is_flag=True, default=False, help="Show only blueprint names."
 )
@@ -52,6 +54,7 @@ def _describe_bp(obj, bp_name):
 )
 @click.option(
     "--out",
+    "-o",
     "out",
     type=click.Choice(["json", "yaml"]),
     default="json",
@@ -59,7 +62,7 @@ def _describe_bp(obj, bp_name):
 )
 @click.option(
     "--no-sync",
-    "-ns",
+    "-n",
     is_flag=True,
     default=False,
     help="Doesn't sync the cache on compilation",
@@ -140,8 +143,10 @@ def create_blueprint_from_dsl(client, bp_file, name=None, description=None):
     required=True,
     help="Path of Blueprint file to upload",
 )
-@click.option("--name", default=None, help="Blueprint name (Optional)")
-@click.option("--description", default=None, help="Blueprint description (Optional)")
+@click.option("--name", "-n", default=None, help="Blueprint name (Optional)")
+@click.option(
+    "--description", "-d", default=None, help="Blueprint description (Optional)"
+)
 @click.pass_obj
 def create_blueprint_command(obj, bp_file, name, description):
     """Creates a blueprint"""
@@ -181,6 +186,7 @@ def create_blueprint_command(obj, bp_file, name, description):
 )
 @click.option(
     "--ignore_runtime_variables",
+    "-i",
     is_flag=True,
     default=False,
     help="Ignore runtime variables and use defaults",
