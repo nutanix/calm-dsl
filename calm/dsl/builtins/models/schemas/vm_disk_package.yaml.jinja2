@@ -1,0 +1,52 @@
+{% macro VmDiskPackage() -%}
+
+title: Vm Disk Package
+type: object
+x-calm-dsl-type: app_vm_disk_package
+properties:
+  name:
+    type: string
+    maxLength: 64
+    default: ''
+  description:
+    type: string
+    maxLength: 1000
+    default: ''
+  image:
+    type: object
+    x-calm-dsl-type: object
+    properties:
+      name:
+        type: string
+      type:
+        type: string
+      source_uri:
+        type: string
+      architecture:
+        type: string
+  product:
+    type: object
+    x-calm-dsl-type: object
+    properties:
+      name:
+        type: string
+      version:
+        type: string
+  checksum:
+    type: object
+    x-calm-dsl-type: object
+    properties:
+      algorithm:
+        type: string
+      value:
+        type: string
+
+{%- endmacro %}
+
+
+{% macro VmDiskPackageSchema() -%}
+
+VmDiskPackage:
+  {{ VmDiskPackage() | indent(2) }}
+
+{%- endmacro %}
