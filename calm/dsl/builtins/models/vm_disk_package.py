@@ -31,16 +31,15 @@ class VmDiskPackageType(PackageType):
         kwargs = {
             "type": "SUBSTRATE_IMAGE",
             "options": {
-                "name": config["image"].get("name", pkg_name),
+                "name": config["image"].get("name") or pkg_name,
                 "description": "",
                 "resources": {
-                    "image_type": config["image"].get("type", ImageType),
+                    "image_type": config["image"].get("type") or ImageType,
                     "source_uri": config["image"].get("source_uri", ""),
                     "version": {
-                        "product_version": config["product"].get(
-                            "version", ProductVersion
-                        ),
-                        "product_name": config["product"].get("name", pkg_name),
+                        "product_version": config["product"].get("version")
+                        or ProductVersion,
+                        "product_name": config["product"].get("name") or pkg_name,
                     },
                     "architecture": config["image"].get(
                         "architecture", ImageArchitecture
@@ -61,9 +60,7 @@ class VmDiskPackageType(PackageType):
         return pkg.compile()
 
 
-class VmDiskPackageValidator(
-    PropertyValidator, openapi_type="app_vm_disk_package"
-):
+class VmDiskPackageValidator(PropertyValidator, openapi_type="app_vm_disk_package"):
     __default__ = None
     __kind__ = VmDiskPackageType
 
@@ -79,7 +76,7 @@ def vm_disk_package(name="", description="", config_file=None, config={}):
     if not isinstance(config, dict):
         raise TypeError("Invalid downloadable image configuration !!!")
 
-    config["description"] = description or config.get("description")
+    config["description"] = description or config.get("description", "")
     name = name or config.get("name") or getattr(VmDiskPackageType, "__schema_name__")
     bases = (Entity,)
 
