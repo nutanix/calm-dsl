@@ -5,12 +5,14 @@ from .main import get, delete, describe
 
 
 @get.command("accounts")
-@click.option("--name", default=None, help="Search for provider account by name")
+@click.option("--name", "-n", default=None, help="Search for provider account by name")
 @click.option(
-    "--filter", "filter_by", default=None, help="Filter projects by this string"
+    "--filter", "filter_by", "-f", default=None, help="Filter projects by this string"
 )
-@click.option("--limit", default=20, help="Number of results to return")
-@click.option("--offset", default=0, help="Offset results by the specified amount")
+@click.option("--limit", "-l", default=20, help="Number of results to return")
+@click.option(
+    "--offset", "-o", default=0, help="Offset results by the specified amount"
+)
 @click.option(
     "--quiet", "-q", is_flag=True, default=False, help="Show only account names"
 )

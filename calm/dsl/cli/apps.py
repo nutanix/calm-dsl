@@ -37,7 +37,7 @@ def get_apps(obj, name, filter_by, limit, offset, quiet, all_items):
 
     if err:
         pc_ip = config["SERVER"]["pc_ip"]
-        warnings.warn(UserWarning("Cannot fetch blueprints from {}".format(pc_ip)))
+        warnings.warn(UserWarning("Cannot fetch applications from {}".format(pc_ip)))
         return
 
     json_rows = res.json()["entities"]
