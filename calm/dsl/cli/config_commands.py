@@ -18,17 +18,9 @@ def set_server_config(ip, port, username, password):
 
 @config.command("project")
 @click.option("--name", "-n", default=None, help="Project Name")
-@click.option("--uuid", "-u", default=None, help="Project UUID")
 def set_project_config(name, uuid):
     """Sets the configuration for default project"""
     set_config("PROJECT", name=name, uuid=uuid)
-
-
-@config.command("db")
-@click.option("--location", "-l", default=None, help="Location Name")
-def set_db_config(location):
-    """Sets the configuration for local database"""
-    set_config("DATABASE", location=location)
 
 
 @get.command("config")

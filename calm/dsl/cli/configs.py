@@ -17,8 +17,7 @@ def set_config(section, **kwargs):
             "username": "pc_username",
             "password": "pc_password",
         },
-        "PROJECT": {"name": "name", "uuid": "uuid"},
-        "DATABASE": {"location": "location"},
+        "PROJECT": {"name": "name"},
     }
 
     config_parser = get_config()
