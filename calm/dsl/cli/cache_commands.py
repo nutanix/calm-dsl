@@ -54,9 +54,10 @@ def clear_cache(obj):
 @update.command("cache")
 @click.option(
     "--entity_type",
+    "-e",
     default=None,
     type=click.Choice(Cache.get_entity_types()),
-    help="Cache entity type"
+    help="Cache entity type",
 )
 @click.pass_obj
 def update_cache(obj, entity_type):
