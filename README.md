@@ -2,6 +2,7 @@
 
 Calm DSL Engine describes a simpler Python 3 based DSL for writing Calm blueprints.
 Look at this [example](https://github.com/ideadevice/calm-dsl-engine/blob/master/tests/next_demo/test_next_demo.py) to see a blueprint in action.
+Another [AHV_HELPER_DEMO](https://github.com/ideadevice/calm-dsl-engine/blob/master/examples/AHV_HELPERS_Demo/ahv_helper_demo.py) example that uses ahv helpers and downloadbale images for ahv provider vm.
 
 ## Dev Setup
 

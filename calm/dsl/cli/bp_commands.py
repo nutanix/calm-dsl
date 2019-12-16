@@ -15,12 +15,14 @@ from .bps import (
 
 
 @get.command("bps")
-@click.option("--name", default=None, help="Search for blueprints by name")
+@click.option("--name", "-n", default=None, help="Search for blueprints by name")
 @click.option(
-    "--filter", "filter_by", default=None, help="Filter blueprints by this string"
+    "--filter", "filter_by", "-f", default=None, help="Filter blueprints by this string"
 )
-@click.option("--limit", default=20, help="Number of results to return")
-@click.option("--offset", default=0, help="Offset results by the specified amount")
+@click.option("--limit", "-l", default=20, help="Number of results to return")
+@click.option(
+    "--offset", "-o", default=0, help="Offset results by the specified amount"
+)
 @click.option(
     "--quiet", "-q", is_flag=True, default=False, help="Show only blueprint names."
 )
@@ -52,14 +54,22 @@ def _describe_bp(obj, bp_name):
 )
 @click.option(
     "--out",
+    "-o",
     "out",
     type=click.Choice(["json", "yaml"]),
     default="json",
     help="output format [json|yaml].",
 )
-def _compile_blueprint_command(bp_file, out):
+@click.option(
+    "--no-sync",
+    "-n",
+    is_flag=True,
+    default=False,
+    help="Doesn't sync the cache on compilation",
+)
+def _compile_blueprint_command(bp_file, out, no_sync):
     """Compiles a DSL (Python) blueprint into JSON or YAML"""
-    compile_blueprint_command(bp_file, out)
+    compile_blueprint_command(bp_file, out, no_sync)
 
 
 def create_blueprint(client, bp_payload, name=None, description=None, categories=None):
@@ -133,8 +143,10 @@ def create_blueprint_from_dsl(client, bp_file, name=None, description=None):
     required=True,
     help="Path of Blueprint file to upload",
 )
-@click.option("--name", default=None, help="Blueprint name (Optional)")
-@click.option("--description", default=None, help="Blueprint description (Optional)")
+@click.option("--name", "-n", default=None, help="Blueprint name (Optional)")
+@click.option(
+    "--description", "-d", default=None, help="Blueprint description (Optional)"
+)
 @click.pass_obj
 def create_blueprint_command(obj, bp_file, name, description):
     """Creates a blueprint"""
@@ -165,16 +177,28 @@ def create_blueprint_command(obj, bp_file, name, description):
 
 @launch.command("bp")
 @click.argument("blueprint_name")
-@click.option("--app_name", default=None, help="Name of your app")
+@click.option("--app_name", "-a", default=None, help="Name of your app")
+@click.option(
+    "--profile_name",
+    "-p",
+    default=None,
+    help="Name of app profile to be used for blueprint launch",
+)
 @click.option(
     "--ignore_runtime_variables",
+    "-i",
     is_flag=True,
     default=False,
     help="Ignore runtime variables and use defaults",
 )
 @click.pass_obj
 def launch_blueprint_command(
-    obj, blueprint_name, app_name, ignore_runtime_variables, blueprint=None
+    obj,
+    blueprint_name,
+    app_name,
+    ignore_runtime_variables,
+    profile_name,
+    blueprint=None,
 ):
 
     client = obj.get("client")
@@ -184,6 +208,7 @@ def launch_blueprint_command(
         blueprint_name,
         app_name,
         blueprint=blueprint,
+        profile_name=profile_name,
         patch_editables=not ignore_runtime_variables,
     )
 

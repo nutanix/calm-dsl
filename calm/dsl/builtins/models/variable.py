@@ -33,6 +33,15 @@ class VariableType(EntityType):
             del cdict["regex"]
         if not cdict.get("editables", {}):
             del cdict["editables"]
+
+        if cdict.get("options", None):
+            options = cdict["options"]
+            # Only EScript/HTTP request info needed for dynamically fetching options
+            if options["type"] == "PREDEFINED":
+                del options["attrs"]
+            else:
+                del options["choices"]  # Choices are only for PREDEFINED Type
+
         return cdict
 
 

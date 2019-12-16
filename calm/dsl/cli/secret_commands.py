@@ -1,13 +1,20 @@
 import click
 
-from .main import get, create, update, delete
-from .secrets import create_secret, get_secrets, delete_secret, update_secret
+from .main import get, create, update, delete, clear
+from .secrets import (
+    create_secret,
+    get_secrets,
+    delete_secret,
+    update_secret,
+    clear_secrets,
+)
 
 # TODO Apply --type = local/server parameter
 @create.command("secret")
 @click.argument("name", nargs=1)
 @click.option(
     "--value",
+    "-v",
     prompt=True,
     hide_input=True,
     confirmation_prompt=True,
@@ -45,7 +52,7 @@ def _delete_secret(obj, name):
 
 @update.command("secret")
 @click.argument("name", nargs=1)
-@click.option("--value", prompt=True, hide_input=True, confirmation_prompt=True)
+@click.option("--value", "-v", prompt=True, hide_input=True, confirmation_prompt=True)
 @click.pass_obj
 def _update_secret(obj, name, value):
     """Update the secret
@@ -54,3 +61,11 @@ def _update_secret(obj, name, value):
     """
 
     update_secret(name, value)
+
+
+@clear.command("secrets")
+@click.pass_obj
+def _clear_secrets(obj):
+    """Delete alll the secrets stored in the local db"""
+
+    clear_secrets()

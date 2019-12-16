@@ -47,7 +47,9 @@ class PropertyValidator(_PropertyValidatorBase, openapi_type=None):
             return
 
         kind = cls.get_kind()
-        if not isinstance(value, kind):
+        # Value may be a class or an object
+        # If not an class, check for metaclass for object's class(Ex: Provider Spec)
+        if not (isinstance(value, kind) or isinstance(type(value), kind)):
             raise TypeError("{} is not of type {}".format(value, kind))
 
     @staticmethod
