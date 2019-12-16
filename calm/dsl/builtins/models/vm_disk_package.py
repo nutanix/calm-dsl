@@ -90,3 +90,17 @@ def vm_disk_package(name="", description="", config_file=None, config={}):
     config["checksum"]["value"] = str(config["checksum"].get("value", ""))
 
     return VmDiskPackageType(name, bases, config)
+
+
+def ahv_vm_disk_package(name="", description="", config_file=None, config_data={}):
+
+    if not (config_file or config_data):
+        raise ValueError("Downloadable image configuration not found !!!")
+
+    if not config_data:
+        config_data = read_spec(filename=config_file, depth=2)
+
+    if not isinstance(config_data, dict):
+        raise TypeError("Invalid downloadable image configuration !!!")
+
+    return vm_disk_package(name=name, description=description, config=config_data)
