@@ -15,7 +15,7 @@ def read_file(filename, depth=1):
     )
 
     if not os.path.exists(file_path):
-        raise ValueError("file {} not found". format(filename))
+        raise ValueError("file {} not found".format(filename))
 
     with open(file_path, "r") as data:
         return data.read()
@@ -30,8 +30,8 @@ def read_local_file(filename):
 def str_presenter(dumper, data):
     """For handling multiline strings"""
     if len(data.splitlines()) > 1:  # check for multiline string
-        return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
-    return dumper.represent_scalar('tag:yaml.org,2002:str', data)
+        return dumper.represent_scalar("tag:yaml.org,2002:str", data, style="|")
+    return dumper.represent_scalar("tag:yaml.org,2002:str", data)
 
 
 yaml.add_representer(str, str_presenter)
