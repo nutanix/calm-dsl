@@ -532,12 +532,14 @@ def get_os_profile(os_type):
             certificate_store = ""
             certificate_url = click.prompt("\n\tEnter Certificate URL", default="URL")
             if os_type == "Windows":
-                certificate_store = click.prompt("\n\tEnter Certificate Store", default="Store")
+                certificate_store = click.prompt(
+                    "\n\tEnter Certificate Store", default="Store"
+                )
 
             vault_certificates.append(
                 {
                     "certificate_url": certificate_url,
-                    "certificate_store": certificate_store
+                    "certificate_store": certificate_store,
                 }
             )
 
@@ -574,7 +576,8 @@ def get_linux_config():
 def get_windows_config(certificate_list):
 
     provision_vm_agent = click.prompt(
-        "\n{}(y/n)".format(highlight_text("Enable Provision Windows Guest Agent")), default="n"
+        "\n{}(y/n)".format(highlight_text("Enable Provision Windows Guest Agent")),
+        default="n",
     )
     provision_vm_agent = True if provision_vm_agent[0] == "y" else False
     auto_updates = click.prompt(
@@ -584,7 +587,8 @@ def get_windows_config(certificate_list):
 
     unattend_content = []
     choice = click.prompt(
-        "\n{}(y/n)".format(highlight_text("Want to add ADDITIONAL UNATTENDED CONTENT")), default="n"
+        "\n{}(y/n)".format(highlight_text("Want to add ADDITIONAL UNATTENDED CONTENT")),
+        default="n",
     )
     settings = azure.UNATTENDED_SETTINGS
     while (choice[0] == "y") and settings:
@@ -605,12 +609,14 @@ def get_windows_config(certificate_list):
                 break
 
         xml_content = click.prompt(
-            "\nEnter XML Content(Please use <{}> as the root element)".format(setting), default=""
+            "\nEnter XML Content(Please use <{}> as the root element)".format(setting),
+            default="",
         )
         unattend_content.append({"setting_name": setting, "xml_content": xml_content})
 
         choice = click.prompt(
-            "\n{}(y/n)".format(highlight_text("Want to add more Unattended content")), default="n"
+            "\n{}(y/n)".format(highlight_text("Want to add more Unattended content")),
+            default="n",
         )
 
     winrm_listensers = []
@@ -651,13 +657,16 @@ def get_windows_config(certificate_list):
                     click.echo("{} selected".format(highlight_text(cert_url)))
                     break
 
-            winrm_listensers.append({"protocol": azure.PROTOCOLS[protocol], "certificate_url": cert_url})
+            winrm_listensers.append(
+                {"protocol": azure.PROTOCOLS[protocol], "certificate_url": cert_url}
+            )
 
         else:
             winrm_listensers.append({"protocol": azure.PROTOCOLS[protocol]})
 
         choice = click.prompt(
-            "\n{}(y/n)".format(highlight_text("Want to add more Winrm Listeners")), default="n"
+            "\n{}(y/n)".format(highlight_text("Want to add more Winrm Listeners")),
+            default="n",
         )
 
     return {

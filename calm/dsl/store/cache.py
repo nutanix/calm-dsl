@@ -58,7 +58,7 @@ class Cache:
 
         if entity_type:
             if entity_type not in list(cls.entity_type_api_map.keys()):
-                raise ValueError("Entity type {} not registered". format(entity_type))
+                raise ValueError("Entity type {} not registered".format(entity_type))
 
             updating_entity_types.append(entity_type)
 
@@ -68,7 +68,9 @@ class Cache:
         with Database() as db:
 
             for entity_type in updating_entity_types:
-                query = db.cache_table.delete().where(db.cache_table.entity_type == entity_type)
+                query = db.cache_table.delete().where(
+                    db.cache_table.entity_type == entity_type
+                )
                 query.execute()
 
             client = get_api_client()
@@ -79,7 +81,9 @@ class Cache:
                 try:
                     res = Obj.get_name_uuid_map()
                     for name, uuid in res.items():
-                        cls.create(entity_type=entity_type, entity_name=name, entity_uuid=uuid)
+                        cls.create(
+                            entity_type=entity_type, entity_name=name, entity_uuid=uuid
+                        )
                 except Exception:
                     pc_ip = client.connection.host
                     warnings.warn(
