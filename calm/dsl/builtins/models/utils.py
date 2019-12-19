@@ -21,6 +21,12 @@ def read_file(filename, depth=1):
         return data.read()
 
 
+def read_local_file(filename):
+    filename = ".local/" + filename
+    # TODO - Add support to read from user local dir ~/.calm/.local/ if not present here
+    return read_file(filename, depth=2)
+
+
 def str_presenter(dumper, data):
     """For handling multiline strings"""
     if len(data.splitlines()) > 1:  # check for multiline string

@@ -120,3 +120,6 @@ calm_nb_ext/
 
 # DSL DB File
 calm/dsl/db/dsl.db
+
+# Local sensitive files
+.local/
