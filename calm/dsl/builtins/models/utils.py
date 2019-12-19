@@ -22,9 +22,19 @@ def read_file(filename, depth=1):
 
 
 def read_local_file(filename):
-    filename = ".local/" + filename
-    # TODO - Add support to read from user local dir ~/.calm/.local/ if not present here
-    return read_file(filename, depth=2)
+    file_path = ".local/" + filename
+
+    # Checking if file exists
+    abs_file_path = os.path.join(
+        os.path.dirname(inspect.getfile(sys._getframe(1))), file_path
+    )
+
+    # If not exists read from home directory
+    if not os.path.exists(abs_file_path):
+        file_path = os.path.expanduser("~/.calm/.local/") + filename
+        return read_file(file_path, 0).rstrip()     # To remove \n, use rstrip
+
+    return read_file(file_path, depth=2)
 
 
 def str_presenter(dumper, data):
