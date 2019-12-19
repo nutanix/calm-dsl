@@ -37,9 +37,7 @@ def create_ahv_nic(
 
         if not subnet_uuid:
             raise Exception(
-                "AHV Subnet {} not found. Please run: calm update cache".format(
-                    subnet
-                )
+                "AHV Subnet {} not found. Please run: calm update cache".format(subnet)
             )
 
         kwargs["subnet_reference"] = {"name": subnet, "uuid": subnet_uuid}
@@ -59,7 +57,7 @@ def create_ahv_nic(
         kwargs["network_function_chain_reference"] = {
             "name": network_function_chain,
             "uuid": nfc_uuid,
-            "kind": "network_function_chain"
+            "kind": "network_function_chain",
         }
 
     for ip in ip_endpoints:
