@@ -65,6 +65,7 @@ __all__ = [
     "Package",
     "package",
     "read_file",
+    "read_local_file",
     "vm_disk_package",
     "ahv_vm_disk_package",
     "provider_spec",
