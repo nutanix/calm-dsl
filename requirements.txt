@@ -18,3 +18,4 @@ asciimatics>=1.11.0
 peewee==3.10.0
 pycryptodome==3.9.0
 scrypt==0.8.13
+checksumdir==1.1.7

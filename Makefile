@@ -6,7 +6,10 @@ dev:
 	venv/bin/pip3 install -r requirements.txt -r dev-requirements.txt
 	venv/bin/python3 setup.py develop
 
-test: dev
+test-local-test-file-requirements: dev
+	venv/bin/py.test -v tests/test_local_tests_dir_hash_check.py
+
+test: test-local-test-file-requirements
 	venv/bin/py.test -v --durations 10 -m "not slow" --ignore=examples/
 
 test-all: test
