@@ -1,0 +1,38 @@
+
+input:
+- "1"  # project = default
+- "1"  # OS = Linux
+- "n"  # Enable DRS mode
+- "1"  # Host = 10.46.33.228
+- "1"  # Datastore = Test-Container
+- "8"  # Template = DND_CENTOS_MUL_DISKS
+- "vm-@@{calm_array_index}@@-@@{calm_time}@@"  # Instance name
+- "1"  # no. of VCPU
+- "1"  # cores per VCPU
+- "1"  # memory in (GiB)
+- "y"  # Edit template controller
+- "1"  # Controller Type = Lsi Logic Parallel
+- "1"  # Bus Sharing = No Sharing
+- "y"  # Want to edit this disk
+- "8"  # Size of disk
+- "1"  # Disk mode = Independent - Persistent
+- "y"  # Exclude disk from vm_config
+- "n"  # Edit this disk
+- "y"  # Edit this nic
+- "1"  # network adapter = e1000
+- "1"  # network type = vlan.112
+- "n"  # Exclude network from vm_config
+- "n"  # Add SCSI controller
+- "n"  # Add SATA controller
+- "n"  # Add disks
+- "n"  # Add nics
+- "n"  # Enable Guest Customization
+
+cli_assertions:
+- "Create spec for your VMW VM:"
+
+spec_assertions:
+- "00000000-0000-0000-0000-0cc47ac3fbf2"  # Check for Host ID
+- "VirtualLsiLogicController" # Check for Controller Type
+- "independent_persistent"  # Check for disk mode
+- "key-vim.host.PortGroup-vlan.112" # Check for nic net name

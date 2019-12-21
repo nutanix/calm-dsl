@@ -1,0 +1,33 @@
+
+input:
+- "1"   # project = default
+- "1"   # select account
+- "1"   # os = Linux
+- "vm-@@{calm_unique_hash}@@-@@{calm_array_index}@@"  # VM name
+- "1"   # resource group = calmrg
+- "n"   # Want Availability set
+- "5"   # Location = East US 2
+- "11"  # Hardware Profile = Standard_D1_v2
+- "n"   # Want secrets
+- "echo 'Sample azure cloud init script'"   # Cloud Init Script
+- "y"   # Use custom image
+- "1"   # Custom image= DND-CENTOS-IMAGE
+- "os-@@{calm_unique_hash}@@-@@{calm_array_index}@@-disk"   # OS Disk Name
+- "n"   # Want to add storage type
+- "1"   # Cache type = None
+- "n"   # Want to add data disks
+- "n"   # Want to add nics
+- "n"   # Want any tags
+
+cli_assertions:
+- "Create spec for your AZURE VM:"
+- "Note: In case of custom vm image, Os Disk Create Option : FromImage"
+
+spec_assertions:
+- "eastus2"   # Location
+- "Standard_D1_v2"  # Hardware Profile
+- "calmrg"    # Resource group
+- "/subscriptions/c88c75b1-c860-411e-b920-a48d02a8ce45/resourceGroups/CALMRG/providers/Microsoft.Compute/images/DND-CENTOS-IMAGE"   # Custom image id
+- "data_disk_list: []"   # Data disks = No
+- "os-@@{calm_unique_hash}@@-@@{calm_array_index}@@-disk"   # Os disk name
+- "FromImage"    # Os disk create option always set to FromImage in case of custom image
