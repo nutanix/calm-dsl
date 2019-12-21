@@ -7,6 +7,7 @@ dev:
 	venv/bin/python3 setup.py develop
 
 test: dev
+	venv/bin/calm update cache
 	venv/bin/py.test -v --durations 10 -m "not slow" --ignore=examples/
 
 test-all: test
