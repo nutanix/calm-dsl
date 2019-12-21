@@ -1,0 +1,18 @@
+spec:
+  ports:
+  - name: gossip
+    port: 16379
+    protocol: TCP
+    targetPort: 16379
+  - name: redis
+    port: 6379
+    protocol: TCP
+    targetPort: 6379
+  selector:
+    app: redis-cluster
+  type: ClusterIP
+metadata:
+  labels:
+    app: redis-cluster
+  name: redis-cluster
+  namespace: default

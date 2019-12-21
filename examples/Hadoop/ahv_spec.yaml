@@ -1,0 +1,36 @@
+# name: "Hadoop" # Check Substrate subclasses under DSL
+resources:
+  boot_config:
+    boot_device:
+      disk_address:
+        adapter_type: SCSI
+        device_index: 0
+  disk_list:
+  - data_source_reference:
+      kind: image
+      name: CENTOS_76
+      uuid: cd2819f0-c641-461d-94d0-0159e77d4f86
+    disk_size_mib: 0
+    device_properties:
+      device_type: DISK
+      disk_address:
+        adapter_type: SCSI
+        device_index: 0
+  num_sockets: 2
+  num_vcpus_per_socket: 1
+  memory_size_mib: 4096
+  guest_customization:
+    cloud_init:
+      user_data: |-
+        #cloud-config
+        users:
+          - name: centos
+            sudo: ['ALL=(ALL) NOPASSWD:ALL']
+          expire: False
+        ssh_pwauth:   true
+  nic_list:
+  - nic_type: NORMAL_NIC
+    network_function_nic_type: INGRESS
+    subnet_reference:
+      kind: subnet
+      uuid: a578f7d7-da86-484c-82c7-1ba14e48551b

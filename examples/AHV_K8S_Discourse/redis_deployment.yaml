@@ -1,0 +1,51 @@
+metadata:
+  name: redis
+  labels:
+    app: discourse
+    tier: redis
+  namespace: default
+  annotations:
+    member: sarat
+    team: devops
+spec:
+  selector:
+    matchLabels:
+      app: discourse
+      tier: redis
+  replicas: 1
+  template:
+    metadata:
+      name: redis-dep
+      namespace: default
+      labels:
+        app: discourse
+        tier: redis
+    spec:
+      dnsPolicy: ClusterFirst
+      containers:
+      - name: redis
+        image: gcr.io/google_containers/redis:e2e
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        readinessProbe:
+          exec:
+            command:
+            - sh
+            - "-c"
+            - redis-cli $(hostname) ping
+          initialDelaySeconds: 15
+          timeoutSeconds: 5
+        ports:
+        - containerPort: 6379
+          name: redis
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - "-c"
+            - redis-cli -h $(hostname) ping
+          initialDelaySeconds: 20
+          periodSeconds: 3
