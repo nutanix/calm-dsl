@@ -1,0 +1,55 @@
+spec:
+  replicas: '1'
+  selector:
+    matchLabels:
+      tier: web
+      app: discourse
+  template:
+    metadata:
+      labels:
+        tier: web
+        app: discourse
+      namespace: default
+      name: POD1
+    spec:
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      containers:
+      - name: redis
+        readinessProbe:
+          initialDelaySeconds: 15
+          timeoutSeconds: 5
+          exec:
+            command:
+            - sh
+            - "-c"
+            - redis-cli $(hostname) ping
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+          limits:
+            cpu: '1'
+            memory: 256Mi
+        ports:
+        - containerPort: 6379
+          name: redis
+        image: gcr.io/google_containers/redis:e2e
+        imagePullPolicy: Always
+      - name: discourse
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        ports:
+        - containerPort: 80
+          name: discourse
+        image: kumarsarath588/mail-receiver:latest
+        imagePullPolicy: Always
+metadata:
+  labels:
+    tier: web
+    app: discourse
+  namespace: default
+  name: k8sdep-@@{calm_random_hash}@@
+  annotations: {}

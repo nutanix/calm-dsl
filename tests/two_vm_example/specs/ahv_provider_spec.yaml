@@ -1,0 +1,27 @@
+name: "@@{calm_application_name}@@-@@{calm_array_index}@@"
+resources:
+  nic_list:
+  - subnet_reference:
+      kind: subnet
+      name: vlan.0
+      uuid: 6a049405-a612-48b6-b098-c922fe024964
+  num_vcpus_per_socket: 1
+  num_sockets: 1
+  memory_size_mib: 1024
+  power_state: ON
+  boot_config:
+    boot_device:
+      disk_address:
+        device_index: 0
+        adapter_type: SCSI
+  disk_list:
+  - data_source_reference:
+      kind: image
+      name: Centos7-Base
+      uuid: 78a86047-00dc-409e-a700-7ec3c0f7cfa1
+    disk_size_mib: 0
+    device_properties:
+      disk_address:
+        device_index: 0
+        adapter_type: SCSI
+      device_type: DISK

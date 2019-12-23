@@ -1,0 +1,35 @@
+resources:
+  boot_config:
+    boot_device:
+      disk_address:
+        adapter_type: SCSI
+        device_index: 0
+  disk_list:
+  - data_source_reference:
+      kind: image
+      name: Centos_7
+      uuid: b58b61ab-57e4-47e0-ad97-bc307d5a6de2
+    disk_size_mib: 0
+    device_properties:
+      device_type: DISK
+      disk_address:
+        adapter_type: SCSI
+        device_index: 0
+  num_sockets: 2
+  num_vcpus_per_socket: 1
+  memory_size_mib: 4096
+  guest_customization:
+    cloud_init:
+      user_data: |-
+        #cloud-config
+        users:
+          - name: centos
+            sudo: ['ALL=(ALL) NOPASSWD:ALL']
+          expire: False
+        ssh_pwauth:   true
+  nic_list:
+  - nic_type: NORMAL_NIC
+    network_function_nic_type: INGRESS
+    subnet_reference:
+      kind: subnet
+      uuid: 0e26c135-d478-428e-9fb8-22c0acfa5f3a

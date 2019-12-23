@@ -1,0 +1,18 @@
+spec:
+  sessionAffinity: None
+  type: NodePort
+  ports:
+  - protocol: TCP
+    targetPort: 80
+    port: 80
+    name: discourse
+    nodePort: 30080
+  selector:
+    tier: web
+    app: discourse
+metadata:
+  labels:
+    tier: web
+    app: discourse
+  namespace: default
+  name: k8spublishedservice-@@{calm_random_hash}@@

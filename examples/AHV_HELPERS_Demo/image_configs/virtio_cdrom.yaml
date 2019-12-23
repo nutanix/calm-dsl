@@ -1,0 +1,9 @@
+image:
+  name : Virtio
+  type : ISO_IMAGE
+  source : http://10.40.64.33/GoldImages/NuCalm/ISO/Nutanix-VirtIO-1.1.4.iso
+  architecture : X86_64
+
+product:
+  name : Virtio
+  version : 1.0

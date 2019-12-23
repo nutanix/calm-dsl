@@ -1,0 +1,238 @@
+{% import "ref.yaml.jinja2" as ref %}
+
+
+{% macro AhvNic() -%}
+
+title: AHV NIC
+type: object
+x-calm-dsl-type: vm_ahv_nic
+properties:
+  network_function_nic_type:
+    type: string
+    default: INGRESS
+  nic_type:
+    type: string
+    default: NORMAL_NIC
+  subnet_reference:
+    type: object
+    x-calm-dsl-type: object
+    properties:
+      uuid:
+        type: string
+      kind:
+        type: string
+        default: subnet
+      name:
+        type: string
+    default: null
+  network_function_chain_reference:
+    type: object
+    x-calm-dsl-type: object
+    properties:
+      uuid:
+        type: string
+      kind:
+        type: string
+        default: network_function_chain
+      name:
+        type: string
+    default: null
+  mac_address:
+    type: string
+  ip_endpoint_list:
+    type: array
+    items:
+      type: object
+      x-calm-dsl-type: object
+      properties:
+        ip:
+          type: string
+        type:
+          type: string
+          enum: [ASSIGNED, LEARNED]
+
+{%- endmacro %}
+
+
+{% macro AhvDisk() -%}
+
+title: AHV Disk
+type: object
+x-calm-dsl-type: vm_ahv_disk
+properties:
+  data_source_reference:
+    type: object
+    x-calm-dsl-type: object
+    properties:
+      name:
+        type: string
+      kind:
+        type: string
+        enum: [image]
+        default: image
+      uuid:
+        type: string
+    default: null
+  device_properties:
+    type: object
+    x-calm-dsl-type: object
+    properties:
+      device_type:
+        type: string
+        default: DISK
+      disk_address:
+        type: object
+        x-calm-dsl-type: object
+        properties:
+          device_index:
+            type: integer
+            default: 0
+          adapter_type:
+            type: string
+            default: SCSI
+  disk_size_mib:
+    type: integer
+    default: 0
+
+{%- endmacro %}
+
+
+{% macro AhvGuestCustomization() -%}
+
+title: Ahv Guest Customization
+type: object
+x-calm-dsl-type: vm_ahv_gc
+properties:
+  sysprep:
+    type: object
+    x-calm-dsl-type: object
+    properties:
+      unattend_xml:
+        type: string
+      install_type:
+        type: string
+      is_domain:
+        type: boolean
+        default: False
+      domain:
+        type: string
+      dns_ip:
+        type: string
+      dns_search_path:
+        type: string
+      domain_credential_reference:
+        x-calm-dsl-display-name: credential
+        {{ ref.Ref() | indent(8) }}
+    default: null
+  cloud_init:
+    type: object
+    x-calm-dsl-type: object
+    properties:
+      user_data:
+        type: string
+    default: null
+
+{%- endmacro %}
+
+
+{% macro AhvGpu() -%}
+
+title: AHV GPU
+type: object
+x-calm-dsl-type: vm_ahv_gpu
+properties:
+  vendor:
+    type: string
+  mode:
+    type: string
+  device_id:
+    type: integer
+    default: -1
+
+{%- endmacro %}
+
+
+{% macro AhvVmResources() -%}
+
+title: AHV Resources
+type: object
+x-calm-dsl-type: vm_ahv_resources
+properties:
+  nic_list:
+    x-calm-dsl-display-name: nics
+    type: array
+    items:
+      $ref: '#/components/schemas/AhvNic'
+  num_vcpus_per_socket:
+    type: integer
+    x-calm-dsl-display-name: cores_per_vCPU
+    default: 1
+  num_sockets:
+    type: integer
+    x-calm-dsl-display-name: vCPUs
+    default: 2
+  memory_size_mib:
+    x-calm-dsl-display-name: memory
+    type: integer
+    default: 4
+  power_state:
+    type: string
+    enum: [ON, OFF]
+    default: ON
+  gpu_list:
+    type: array
+    x-calm-dsl-display-name: gpus
+    items:
+      $ref: '#/components/schemas/AhvGpu'
+  disk_list:
+    type: array
+    x-calm-dsl-display-name: disks
+    items:
+      $ref: '#/components/schemas/AhvDisk'
+  boot_type:      # Will merge to boot_config at compile time
+    type: string
+    enum: [LEGACY, UEFI]
+    default: LEGACY
+  guest_customization:
+    $ref : '#/components/schemas/AhvGuestCustomization'
+  serial_port_list:
+    type: object
+    x-calm-dsl-display-name: serial_ports
+    x-calm-dsl-type: dict
+
+{%- endmacro %}
+
+
+{% macro AhvVm() -%}
+
+title: AHV VM Create Spec
+type: object
+x-calm-dsl-type: vm_ahv
+properties:
+  name:
+    type: string
+  categories:
+    type: object
+    x-calm-dsl-type: dict
+  resources:
+    $ref: '#/components/schemas/AhvVmResources'
+
+{%- endmacro %}
+
+
+{% macro AhvVmSchema() -%}
+
+AhvDisk:
+  {{ AhvDisk() | indent(2) }}
+AhvNic:
+  {{ AhvNic() | indent(2) }}
+AhvGuestCustomization:
+  {{ AhvGuestCustomization() | indent(2) }}
+AhvVmResources:
+  {{ AhvVmResources() | indent(2) }}
+AhvVm:
+  {{ AhvVm() | indent(2) }}
+AhvGpu:
+  {{ AhvGpu() | indent(2) }}
+
+{%- endmacro %}

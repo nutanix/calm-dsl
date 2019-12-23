@@ -20,6 +20,11 @@ class PackageType(EntityType):
 
         cdict = {}
 
+        # As downloadable images have no type attribute
+        # So just return it's compiled dict
+        if getattr(cls, "__kind__") == "app_vm_disk_package":
+            return super().compile()
+
         if getattr(cls, "type") == "K8S_IMAGE":
             cdict = super().compile()
             cdict["options"] = {}
@@ -58,7 +63,7 @@ class PackageType(EntityType):
             cdict.pop("image_spec", None)
             cdict["options"] = {
                 "install_runbook": install_runbook,
-                "uninstall_runbook": uninstall_runbook
+                "uninstall_runbook": uninstall_runbook,
             }
 
         elif getattr(cls, "type") == "SUBSTRATE_IMAGE":

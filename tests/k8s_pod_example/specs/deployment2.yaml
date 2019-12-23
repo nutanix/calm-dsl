@@ -1,0 +1,34 @@
+spec:
+  selector:
+    matchLabels:
+      tier: mail
+      app: discourse
+  replicas: '1'
+  template:
+    metadata:
+      labels:
+        tier: mail
+        app: discourse
+      namespace: default
+      name: MailPod
+    spec:
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      containers:
+      - name: mail
+        command:
+        - "/sbin/boot"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        ports:
+        - containerPort: 25
+        image: kumarsarath588/mail-receiver:latest
+        imagePullPolicy: Always
+metadata:
+  name: mail
+  labels:
+    tier: mail
+    app: discourse
+  namespace: default

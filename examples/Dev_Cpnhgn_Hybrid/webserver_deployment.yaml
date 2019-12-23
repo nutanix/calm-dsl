@@ -1,0 +1,21 @@
+metadata:
+  name: dev-docker-app-@@{calm_application_uuid}@@
+  namespace: default
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: dev-docker-app-@@{calm_application_uuid}@@
+  template:
+    metadata:
+      labels:
+        app: dev-docker-app-@@{calm_application_uuid}@@
+      name: dev-docker-app-@@{calm_application_uuid}@@
+      namespace: default
+    spec:
+      containers:
+      - name: dev-docker-app
+        image: michaelatnutanix/dev-docker-app:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000

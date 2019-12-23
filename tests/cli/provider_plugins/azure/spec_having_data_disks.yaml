@@ -1,0 +1,67 @@
+
+input:
+- "1"   # project = default
+- "1"   # select account
+- "1"   # os = Linux
+- "vm-@@{calm_unique_hash}@@-@@{calm_array_index}@@"  # VM name
+- "1"   # resource group = calmrg
+- "n"   # Want Availability set
+- "5"   # Location = East US 2
+- "11"  # Hardware Profile = Standard_D1_v2
+- "n"   # Want secrets
+- "echo 'Sample azure cloud init script'"   # Cloud Init Script
+- "n"   # Use custom image
+- "127"   # Publisher = Canonical
+- "13"    # Image Offer = UbuntuServer
+- "18"    # Image Sku = 18.04-LTS
+- "27"    # Image Version = 18.04.201903121
+- "os-@@{calm_unique_hash}@@-@@{calm_array_index}@@-disk"   # OS Disk Name
+- "n"   # Want to add storage type
+- "1"   # Cache type = None
+- "1"   # Disk create option = Attach
+- "y"   # Want to add data disks
+- "data-disk-@@{calm_unique_hash}@@-@@{calm_array_index}@@-0"   # Data disk 1 Name
+- "y"   # Add storage type
+- "1"   # Storage Type = Standard
+- "1"   # Cache Type = None
+- "8"   # Size of disk
+- "0"   # LUN of disk
+- "y"   # Want more disks
+- "data-disk-@@{calm_unique_hash}@@-@@{calm_array_index}@@-1"   # Data disk 1 Name
+- "y"   # Add storage type
+- "2"   # Storage Type = Premium
+- "2"   # Cache Type = Read Write
+- "4"   # Size of disk
+- "1"   # LUN of disk
+- "n"   # Want more disks
+- "n"   # Want to add nics
+- "n"   # Want any tags
+
+cli_assertions:
+- "Create spec for your AZURE VM:"
+- "ATTACH"    # OS disk create option
+
+spec_assertions:
+- "eastus2"   # Location
+- "Standard_D1_v2"  # Hardware Profile
+- "calmrg"    # Resource group
+- "Canonical"   # Publisher
+- "18.04-LTS"   # Image Sku
+- "18.04.201903121"   # Image Version
+- "Attach"    # Os disk create option
+- "UbuntuServer"  # Image offer
+- "os-@@{calm_unique_hash}@@-@@{calm_array_index}@@-disk"   # Os disk name
+- "caching_type: None"    # Caching type for 1st disk
+- "create_option: Empty"   # Create option for data disks
+- "storage_type: Standard_LRS"  # Storage type for Disk 1
+- "size_in_gb: 8"   # Size of disk 1
+- "lun: 1"    # LUN for Disk 1
+- "data-disk-@@{calm_unique_hash}@@-@@{calm_array_index}@@-0"   # name of disk 1
+- "caching_type: ReadWrite"   # Caching type for Disk 2
+- "lun: 1"    # LUN for Disk 2
+- "data-disk-@@{calm_unique_hash}@@-@@{calm_array_index}@@-1"   # name of disk 2
+- "size_in_gb: 4"   # Size of disk 2
+- "storage_type: Premium_LRS"   # Storage type for Disk 2
+
+spec_false_assertions:
+- "ATTACH"    # OS disk create option
