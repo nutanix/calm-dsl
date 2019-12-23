@@ -36,6 +36,8 @@ properties:
   diskSizeGb:
     type: integer
     default: -1
+  diskType:
+    type: string
   sourceImageEncryptionKey:
     {{ GcpEncryptionKey() | indent(4) }}
 
