@@ -11,7 +11,7 @@ def handle_meta_create(node, func_globals, meta_name):
     helper for create parsing tasks and creating meta
     """
 
-    node_visitor = GetCallNodes(func_globals)
+    node_visitor = GetCallNodes(func_globals, is_runbook=True)
     try:
         node_visitor.visit(node)
     except Exception as ex:
