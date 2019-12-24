@@ -23,8 +23,20 @@ def get_config(
 ):
     global _CONFIG
     if not _CONFIG:
-        _CONFIG = _init_config(ip, port, username, password, config_file, project_name)
+        update_config(ip, port, username, password, config_file, project_name)
     return _CONFIG
+
+
+def update_config(
+    ip=None,
+    port=None,
+    username=None,
+    password=None,
+    config_file=None,
+    project_name=None,
+):
+    global _CONFIG
+    _CONFIG = _init_config(ip, port, username, password, config_file, project_name)
 
 
 def get_config_file():
