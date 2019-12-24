@@ -1,0 +1,36 @@
+
+input:
+- "1" # Project name = default
+- "vm-@@{calm_array_index}@@-@@{calm_time}@@"
+- "y"  # Want Category
+- "1"  # Category: App-Family:Backup
+- "y"  # Add more categories
+- "4"  # Category: AppFamily:Databases
+- "y"  # Replace old one
+- "n"  # Add more catergories
+- "1"  # no. of VCPU
+- "1"  # cores per VCPU
+- "1"  # memory in (GiB)
+- "1"  # Device Type = CD_ROM
+- "1"  # Device Bus = SATA (SATA/IDE)
+- "1"  # Image Name = SQLServer2014SP2-FullSlipstream-x64
+- "y"  # Is it bootable
+- "n"  # Want more disks
+- "1"  # Boot_type = "Legacy BIOS"
+- "y"  # Want virtual disks
+- "1"  # Device Type = CD_ROM
+- "1"  # Device Bus = SATA
+- "y"  # Want more virtual disks
+- "2"  # Device Type = DISK
+- "2"  # Device Bus = PCI
+- "8"  # Disk Size
+- "n"  # Add more virtual disks
+- "n"  # Want network adapters
+- "n"  # Want Customization script
+
+cli_assertions:
+- "Create spec for your AHV VM:"
+
+spec_assertions:
+- "PCI"  # Device Bus of Virtual Disk 2
+- "CDROM"  # Device Type of Virtual Disk 1

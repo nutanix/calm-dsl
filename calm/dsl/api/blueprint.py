@@ -125,7 +125,9 @@ class BlueprintAPI(ResourceAPI):
                             "secret_reference": None,
                         }
 
-        for obj_index, obj in enumerate(bp_resources.get("substrate_definition_list", []) or []):
+        for obj_index, obj in enumerate(
+            bp_resources.get("substrate_definition_list", []) or []
+        ):
             if (obj["type"] == "VMWARE_VM") and (obj["os_type"] == "Windows"):
                 strip_vmware_secrets(["substrate_definition_list", obj_index], obj)
 

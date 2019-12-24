@@ -12,12 +12,14 @@ from .main import create, get, update, delete, describe
 
 
 @get.command("projects")
-@click.option("--name", default=None, help="Search for projects by name")
+@click.option("--name", "-n", default=None, help="Search for projects by name")
 @click.option(
-    "--filter", "filter_by", default=None, help="Filter projects by this string"
+    "--filter", "filter_by", "-f", default=None, help="Filter projects by this string"
 )
-@click.option("--limit", default=20, help="Number of results to return")
-@click.option("--offset", default=0, help="Offset results by the specified amount")
+@click.option("--limit", "-l", default=20, help="Number of results to return")
+@click.option(
+    "--offset", "-o", default=0, help="Offset results by the specified amount"
+)
 @click.option(
     "--quiet", "-q", is_flag=True, default=False, help="Show only project names"
 )
@@ -46,7 +48,7 @@ def create_project_from_file(obj, file_location, project_name):
     required=True,
 )
 @click.option(
-    "--name", "project_name", type=str, default="", help="Project name(optional)"
+    "--name", "-n", "project_name", type=str, default="", help="Project name(optional)"
 )
 @click.pass_obj
 def _create_project(obj, project_file, project_name):

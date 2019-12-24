@@ -96,3 +96,9 @@ def get_secrets_names():
         secret_names.append(secret["name"])
 
     return secret_names
+
+
+def clear_secrets():
+    """Delete all the secrets"""
+
+    Secret.clear()

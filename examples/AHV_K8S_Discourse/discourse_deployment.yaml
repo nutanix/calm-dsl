@@ -1,0 +1,89 @@
+metadata:
+  labels:
+    app: discourse
+    tier: web
+  name: discourse
+  namespace: default
+  annotations:
+    member: sarat
+    team: devops
+spec:
+  replicas: '3'
+  selector:
+    matchLabels:
+      app: discourse
+      tier: web
+  template:
+    metadata:
+      labels:
+        app: discourse
+        tier: web
+      name: Discourse
+      namespace: default
+    spec:
+      dnsPolicy: ClusterFirst
+      containers:
+      - command:
+        - "/bin/bash"
+        - "-c"
+        - cd /var/www/discourse && rake db:migrate && /sbin/boot
+        env:
+        - name: DISCOURSE_DB_HOST
+          value: "@@{AHVPostgresService.address}@@"
+        - name: DISCOURSE_DB_NAME
+          value: "@@{DISCOURSE_DB_NAME}@@"
+        - name: DISCOURSE_DB_PASSWORD
+          value: "@@{DISCOURSE_DB_PASSWORD}@@"
+        - name: DISCOURSE_DB_USERNAME
+          value: "@@{DISCOURSE_DB_USERNAME}@@"
+        - name: DISCOURSE_DEVELOPER_EMAILS
+          value: saratkumar.k@nutanix.com
+        - name: DISCOURSE_HOSTNAME
+          value: calm.nutanix.com
+        - name: DISCOURSE_REDIS_HOST
+          value: "@@{RedisDeploymentPublished_Service.name}@@"     # Change it
+        - name: DISCOURSE_SMTP_ADDRESS
+          value: 10.4.8.37
+        - name: DISCOURSE_SMTP_PORT
+          value: '25'
+        name: discourse
+        image: kumarsarath588/discourse:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+          name: discourse
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+        lifecycle:
+          postStart:
+            exec:
+              command:
+              - sh
+              - "-c"
+              - "/usr/bin/touch @@{MailDeploymentPublished_Service.address}@@"
+          preStop:
+            httpGet:
+              path: "/"
+              port: discourse
+              scheme: HTTP
+        livenessProbe:
+          httpGet:
+            path: "/"
+            port: discourse
+            scheme: HTTP
+          initialDelaySeconds: 60
+          periodSeconds: 5
+          timeoutSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: "/"
+            port: discourse
+            scheme: HTTP
+          initialDelaySeconds: 60
+          periodSeconds: 5
+          timeoutSeconds: 3

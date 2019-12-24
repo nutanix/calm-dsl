@@ -1,0 +1,36 @@
+
+input:
+- "1"  # project = default
+- "1"  # OS = Linux
+- "n"  # Enable DRS mode
+- "1"  # Host = 10.46.33.228
+- "1"  # Datastore = Test-Container
+- "8"  # Template = DND_CENTOS_MUL_DISKS
+- "vm-@@{calm_array_index}@@-@@{calm_time}@@"  # Instance name
+- "1"  # no. of VCPU
+- "1"  # cores per VCPU
+- "1"  # memory in (GiB)
+- "n"  # Edit template controller
+- "n"  # Edit template disk
+- "n"  # Edit this template disk
+- "n"  # Edit template nic
+- "n"  # Add SCSI controller
+- "n"  # Add SATA controller
+- "n"  # Add disks
+- "y"  # Add nics
+- "1"  # Adapter Type = e1000
+- "1"  # Network Type = vlan.112
+- "y"  # Add more nics
+- "2"  # Adapter Type = e1000e
+- "2"  # Network Type = VM Network
+- "n"  # Add more nics
+- "n"  # Enable Guest Customization
+
+cli_assertions:
+- "Create spec for your VMW VM:"
+
+spec_assertions:
+- "key-vim.host.PortGroup-vlan.112"  # Check for 1st nic network type
+- "e1000" # Check for 1st nic adapter type
+- "key-vim.host.PortGroup-VM Network"   # Check for 2nd nic network type
+- "e1000e"    # Check for 2nd nic adapter type

@@ -1,0 +1,50 @@
+name: "XtractVM"
+resources:
+  boot_config:
+    boot_device:
+      disk_address:
+        adapter_type: SCSI
+        device_index: 0
+  disk_list:
+  - data_source_reference:
+      kind: image
+      name: Xtract_VM
+      uuid: e3c60fce-aa2a-4376-aab4-41e71e0e25b0
+    disk_size_mib: 0
+    device_properties:
+      device_type: DISK
+      disk_address:
+        adapter_type: SCSI
+        device_index: 0
+  num_sockets: 2
+  num_vcpus_per_socket: 1
+  memory_size_mib: 4096
+  guest_customization:
+    cloud_init:
+      user_data: |-
+        #cloud-config
+        disable_root: true
+        ssh_enabled: True
+        ssh_pwauth: True
+        runcmd:
+        - systemctl restart sshd
+        - userdel -r centos
+        - touch /opt/xtract-vm/.hermeskey
+        - 'dmidecode -s system-uuid | tee /opt/xtract-vm/.hermeskey'
+        - chown mgmtserver:vmxtract /opt/xtract-vm/.hermeskey
+        - chmod 440 /opt/xtract-vm/.hermeskey
+        - usermod -s /sbin/nologin root
+        - passwd -l root
+        # Set capabilities so that mgmtserver can bind to port 80 and tgtagent can mount
+        - setcap CAP_NET_BIND_SERVICE=ep /opt/xtract-vm/bin/mgmt-server
+        - setcap CAP_SYS_ADMIN=ep /opt/xtract-vm/bin/tgtagent
+        - systemctl restart mgmtserver tgtagent iptables
+        - chmod 555 /
+        - 'semanage fcontext --add --type user_home_dir_t "/home/admin(/.*)?"'
+        - restorecon -FRv /
+  nic_list:
+  - nic_type: NORMAL_NIC
+    network_function_nic_type: INGRESS
+    subnet_reference:
+      kind: subnet
+      uuid: c37571b5-51d2-4340-8db0-d62c89ce3c9e

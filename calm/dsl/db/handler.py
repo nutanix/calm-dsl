@@ -1,7 +1,7 @@
 import os
 import traceback
 
-from .table_config import dsl_database, SecretTable, DataTable
+from .table_config import dsl_database, SecretTable, DataTable, CacheTable
 
 
 class Database:
@@ -27,6 +27,7 @@ class Database:
 
         self.secret_table = self.set_and_verify(SecretTable)
         self.data_table = self.set_and_verify(DataTable)
+        self.cache_table = self.set_and_verify(CacheTable)
 
     def set_and_verify(self, table_cls):
         """ Verify whether this class exists in db

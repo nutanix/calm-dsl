@@ -1,0 +1,27 @@
+
+input:
+- "1" # Project name = default
+- "vm-@@{calm_array_index}@@-@@{calm_time}@@"
+- "y"  # Want Category
+- "1"  # Category: App-Family:Backup
+- "n"  # Want more catergories
+- "1"  # no. of VCPU
+- "1"  # cores per VCPU
+- "1"  # memory in (GiB)
+- "1"  # Device Type = CD_ROM
+- "1"  # Device Bus = SATA (SATA/IDE)
+- "1"  # Image Name = SQLServer2014SP2-FullSlipstream-x64
+- "y"  # Is it bootable
+- "n"  # Want more disks
+- "1"  # Boot_type = "Legacy BIOS"
+- "n"  # Want virtual disks
+- "y"  # Want network adapters
+- "1"  # Subnet name = vlan.0
+- "n"  # Want more network adapters
+- "n"  # Want Customization script
+
+cli_assertions:
+- "Create spec for your AHV VM:"
+
+spec_assertions:
+- "vlan.0"  # Check subnet name

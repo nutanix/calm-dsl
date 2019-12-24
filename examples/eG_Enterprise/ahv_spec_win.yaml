@@ -1,0 +1,99 @@
+name: "WindowsServer2016-@@{calm_array_index}@@-@@{calm_time}@@"
+resources:
+  disk_list:
+  - data_source_reference:
+      kind: image
+      name: Win2k12r2_Sysprep.qcow2
+      uuid: 2fb604e1-d5b2-4372-8847-f930d1907305
+    disk_size_mib: 0
+    device_properties:
+      device_type: DISK
+      disk_address:
+        adapter_type: SCSI
+        device_index: 0
+  - disk_size_mib: 10240
+    device_properties:
+      device_type: DISK
+      disk_address:
+        adapter_type: SCSI
+        device_index: 1
+  memory_size_mib: 2048
+  num_sockets: 2
+  num_vcpus_per_socket: 1
+  boot_config:
+    boot_device:
+      disk_address:
+        adapter_type: SCSI
+        device_index: 0
+  guest_customization:
+    sysprep:
+      unattend_xml: |-
+        <?xml version="1.0" encoding="UTF-8"?>
+        <unattend xmlns="urn:schemas-microsoft-com:unattend">
+           <settings pass="specialize">
+              <component xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+                 <ComputerName>Windows2016</ComputerName>
+                 <RegisteredOrganization>Nutanix</RegisteredOrganization>
+                 <RegisteredOwner>Calm</RegisteredOwner>
+                 <TimeZone>UTC</TimeZone>
+              </component>
+              <component xmlns="" name="Microsoft-Windows-TerminalServices-LocalSessionManager" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" processorArchitecture="amd64">
+                 <fDenyTSConnections>false</fDenyTSConnections>
+              </component>
+              <component xmlns="" name="Microsoft-Windows-TerminalServices-RDP-WinStationExtensions" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS" processorArchitecture="amd64">
+                 <UserAuthentication>0</UserAuthentication>
+              </component>
+              <component xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Networking-MPSSVC-Svc" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+                 <FirewallGroups>
+                    <FirewallGroup wcm:action="add" wcm:keyValue="RemoteDesktop">
+                       <Active>true</Active>
+                       <Profile>all</Profile>
+                       <Group>@FirewallAPI.dll,-28752</Group>
+                    </FirewallGroup>
+                 </FirewallGroups>
+              </component>
+           </settings>
+           <settings pass="oobeSystem">
+              <component xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+                 <UserAccounts>
+                    <AdministratorPassword>
+                       <Value>@@{LOCAL.secret}@@</Value>
+                       <PlainText>true</PlainText>
+                    </AdministratorPassword>
+                 </UserAccounts>
+                 <AutoLogon>
+                    <Password>
+                       <Value>@@{LOCAL.secret}@@</Value>
+                       <PlainText>true</PlainText>
+                    </Password>
+                    <Enabled>true</Enabled>
+                    <Username>Administrator</Username>
+                 </AutoLogon>
+                 <FirstLogonCommands>
+                    <SynchronousCommand wcm:action="add">
+                       <CommandLine>cmd.exe /c netsh firewall add portopening TCP 5985 "Port 5985"</CommandLine>
+                       <Description>Win RM port open</Description>
+                       <Order>1</Order>
+                       <RequiresUserInput>true</RequiresUserInput>
+                    </SynchronousCommand>
+                 </FirstLogonCommands>
+                 <OOBE>
+                    <HideEULAPage>true</HideEULAPage>
+                    <SkipMachineOOBE>true</SkipMachineOOBE>
+                 </OOBE>
+              </component>
+              <component xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Microsoft-Windows-International-Core" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+                 <InputLocale>en-US</InputLocale>
+                 <SystemLocale>en-US</SystemLocale>
+                 <UILanguageFallback>en-us</UILanguageFallback>
+                 <UILanguage>en-US</UILanguage>
+                 <UserLocale>en-US</UserLocale>
+              </component>
+           </settings>
+        </unattend>
+  nic_list:
+  - nic_type: NORMAL_NIC
+    network_function_nic_type: INGRESS
+    subnet_reference:
+      kind: subnet
+      uuid: c37571b5-51d2-4340-8db0-d62c89ce3c9e

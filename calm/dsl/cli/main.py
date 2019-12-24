@@ -25,21 +25,31 @@ click_completion.init()
 @click.group(context_settings=CONTEXT_SETTINGS)
 @click.option(
     "--ip",
+    "-i",
     envvar="PRISM_SERVER_IP",
     default=None,
     help="Prism Central server IP or hostname",
 )
 @click.option(
     "--port",
+    "-P",
     envvar="PRISM_SERVER_PORT",
     default=None,
     help="Prism Central server port number",
 )
 @click.option(
-    "--username", envvar="PRISM_USERNAME", default=None, help="Prism Central username"
+    "--username",
+    "-u",
+    envvar="PRISM_USERNAME",
+    default=None,
+    help="Prism Central username",
 )
 @click.option(
-    "--password", envvar="PRISM_PASSWORD", default=None, help="Prism Central password"
+    "--password",
+    "-p",
+    envvar="PRISM_PASSWORD",
+    default=None,
+    help="Prism Central password",
 )
 @click.option(
     "--config",
@@ -103,6 +113,7 @@ def validate():
 )
 @click.option(
     "--type",
+    "-t",
     "provider_type",
     type=click.Choice(get_provider_types()),
     default="AHV_VM",
@@ -125,6 +136,18 @@ def validate_provider_spec(spec_file, provider_type):
 @main.group(cls=DYMGroup)
 def get():
     """Get various things like blueprints, apps: `get apps`, `get bps`, `get endpoints` and `get runbooks` are the primary ones."""
+    pass
+
+
+@main.group(cls=DYMGroup)
+def show():
+    """Shows the cached data(Dynamic data) etc."""
+    pass
+
+
+@main.group(cls=DYMGroup)
+def clear():
+    """Clear the data stored in local db: cache, secrets etc."""
     pass
 
 
@@ -194,6 +217,7 @@ def watch():
 @click.option(
     "--type",
     "provider_type",
+    "-t",
     type=click.Choice(get_provider_types()),
     default="AHV_VM",
     help="Provider type",
@@ -234,54 +258,9 @@ def completion():
     pass
 
 
-@completion.command()
-@click.option(
-    "-i", "--case-insensitive/--no-case-insensitive", help="Case insensitive completion"
-)
-@click.argument(
-    "shell",
-    required=False,
-    type=click_completion.DocumentedChoice(click_completion.core.shells),
-)
-def show(shell, case_insensitive):
-    """Show the click-completion-command completion code"""
-    extra_env = (
-        {"_CLICK_COMPLETION_COMMAND_CASE_INSENSITIVE_COMPLETE": "ON"}
-        if case_insensitive
-        else {}
-    )
-    click.echo(click_completion.core.get_code(shell, extra_env=extra_env))
-
-
-@completion.command()
-@click.option(
-    "--append/--overwrite", help="Append the completion code to the file", default=None
-)
-@click.option(
-    "-i", "--case-insensitive/--no-case-insensitive", help="Case insensitive completion"
-)
-@click.argument(
-    "shell",
-    required=False,
-    type=click_completion.DocumentedChoice(click_completion.core.shells),
-)
-@click.argument("path", required=False)
-def install(append, case_insensitive, shell, path):
-    """Install the click-completion-command completion"""
-    extra_env = (
-        {"_CLICK_COMPLETION_COMMAND_CASE_INSENSITIVE_COMPLETE": "ON"}
-        if case_insensitive
-        else {}
-    )
-    shell, path = click_completion.core.install(
-        shell=shell, path=path, append=append, extra_env=extra_env
-    )
-    click.echo("%s completion installed in %s" % (shell, path))
-
-
-@main.command("repl")
+@main.command("prompt")
 def calmrepl():
-    """Enable an interactive REPL"""
+    """Enable an interactive prompt shell"""
     repl(click.get_current_context())
 
 

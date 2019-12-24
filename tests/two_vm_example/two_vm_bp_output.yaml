@@ -1,0 +1,556 @@
+app_profile_list:
+- action_list: []
+  deployment_create_list:
+  - depends_on_list: []
+    max_replicas: '1'
+    min_replicas: '1'
+    name: MySQLDeployment
+    options: {}
+    package_local_reference_list:
+    - kind: app_package
+      name: MySQLPackage
+    published_service_local_reference_list: []
+    substrate_local_reference:
+      kind: app_substrate
+      name: AHVMedVM
+    type: GREENFIELD
+  - depends_on_list: []
+    max_replicas: '1'
+    min_replicas: '1'
+    name: PHPDeployment
+    options: {}
+    package_local_reference_list:
+    - kind: app_package
+      name: PHPPackage
+    published_service_local_reference_list: []
+    substrate_local_reference:
+      kind: app_substrate
+      name: AHVMedVMForPHP
+    type: GREENFIELD
+  name: NxProfile
+  variable_list:
+  - attrs: {}
+    data_type: BASE
+    description: ''
+    is_hidden: false
+    is_mandatory: false
+    label: ''
+    name: env
+    type: LOCAL
+    val_type: STRING
+    value: dev
+  - attrs: {}
+    data_type: BASE
+    description: ''
+    is_hidden: false
+    is_mandatory: false
+    label: Local DNS resolver
+    name: DNS_Server
+    type: LOCAL
+    val_type: STRING
+    value: 10.0.0.1
+client_attrs: {}
+credential_definition_list:
+- default: true
+  description: ''
+  name: default
+  secret:
+    attrs:
+      is_secret_modified: true
+    value: passwd
+  type: PASSWORD
+  username: root
+package_definition_list:
+- description: Example package with variables and link to service
+  name: MySQLPackage
+  options:
+    install_runbook:
+      description: ''
+      main_task_local_reference:
+        kind: app_task
+        name: DAG_Task_for_Package_MySQLPackage_action_install
+      name: Runbook_for_Package_MySQLPackage_action_install
+      task_definition_list:
+      - attrs:
+          edges: []
+        child_tasks_local_reference_list: []
+        description: ''
+        name: DAG_Task_for_Package_MySQLPackage_action_install
+        target_any_local_reference:
+          kind: app_service
+          name: MySQLService
+        type: DAG
+        variable_list: []
+      variable_list: []
+    uninstall_runbook:
+      description: ''
+      main_task_local_reference:
+        kind: app_task
+        name: DAG_Task_for_Package_MySQLPackage_action_uninstall
+      name: Runbook_for_Package_MySQLPackage_action_uninstall
+      task_definition_list:
+      - attrs:
+          edges: []
+        child_tasks_local_reference_list: []
+        description: ''
+        name: DAG_Task_for_Package_MySQLPackage_action_uninstall
+        target_any_local_reference:
+          kind: app_service
+          name: MySQLService
+        type: DAG
+        variable_list: []
+      variable_list: []
+  service_local_reference_list:
+  - kind: app_service
+    name: MySQLService
+  type: CUSTOM
+  variable_list:
+  - attrs: {}
+    data_type: BASE
+    description: ''
+    is_hidden: false
+    is_mandatory: false
+    label: ''
+    name: ENV
+    type: LOCAL
+    val_type: STRING
+    value: DEV
+  version: ''
+- description: Example PHP package using Package as parent class
+  name: PHPPackage
+  options:
+    install_runbook:
+      description: ''
+      main_task_local_reference:
+        kind: app_task
+        name: DAG_Task_for_Package_PHPPackage_action_install
+      name: Runbook_for_Package_PHPPackage_action_install
+      task_definition_list:
+      - attrs:
+          edges: []
+        child_tasks_local_reference_list: []
+        description: ''
+        name: DAG_Task_for_Package_PHPPackage_action_install
+        target_any_local_reference:
+          kind: app_service
+          name: PHPService
+        type: DAG
+        variable_list: []
+      variable_list: []
+    uninstall_runbook:
+      description: ''
+      main_task_local_reference:
+        kind: app_task
+        name: DAG_Task_for_Package_PHPPackage_action_uninstall
+      name: Runbook_for_Package_PHPPackage_action_uninstall
+      task_definition_list:
+      - attrs:
+          edges: []
+        child_tasks_local_reference_list: []
+        description: ''
+        name: DAG_Task_for_Package_PHPPackage_action_uninstall
+        target_any_local_reference:
+          kind: app_service
+          name: PHPService
+        type: DAG
+        variable_list: []
+      variable_list: []
+  service_local_reference_list:
+  - kind: app_service
+    name: PHPService
+  type: CUSTOM
+  variable_list: []
+  version: ''
+published_service_definition_list: []
+service_definition_list:
+- action_list:
+  - critical: true
+    description: ''
+    name: action_create
+    runbook:
+      description: ''
+      main_task_local_reference:
+        kind: app_task
+        name: DAG_Task_for_Service_MySQLService_action_create
+      name: Runbook_for_Service_MySQLService_action_create
+      task_definition_list:
+      - attrs:
+          edges: []
+        child_tasks_local_reference_list: []
+        description: ''
+        name: DAG_Task_for_Service_MySQLService_action_create
+        target_any_local_reference:
+          kind: app_service
+          name: MySQLService
+        type: DAG
+        variable_list: []
+      variable_list: []
+    type: system
+  - critical: true
+    description: ''
+    name: action_delete
+    runbook:
+      description: ''
+      main_task_local_reference:
+        kind: app_task
+        name: DAG_Task_for_Service_MySQLService_action_delete
+      name: Runbook_for_Service_MySQLService_action_delete
+      task_definition_list:
+      - attrs:
+          edges: []
+        child_tasks_local_reference_list: []
+        description: ''
+        name: DAG_Task_for_Service_MySQLService_action_delete
+        target_any_local_reference:
+          kind: app_service
+          name: MySQLService
+        type: DAG
+        variable_list: []
+      variable_list: []
+    type: system
+  - critical: true
+    description: ''
+    name: action_start
+    runbook:
+      description: ''
+      main_task_local_reference:
+        kind: app_task
+        name: DAG_Task_for_Service_MySQLService_action_start
+      name: Runbook_for_Service_MySQLService_action_start
+      task_definition_list:
+      - attrs:
+          edges: []
+        child_tasks_local_reference_list: []
+        description: ''
+        name: DAG_Task_for_Service_MySQLService_action_start
+        target_any_local_reference:
+          kind: app_service
+          name: MySQLService
+        type: DAG
+        variable_list: []
+      variable_list: []
+    type: system
+  - critical: true
+    description: ''
+    name: action_stop
+    runbook:
+      description: ''
+      main_task_local_reference:
+        kind: app_task
+        name: DAG_Task_for_Service_MySQLService_action_stop
+      name: Runbook_for_Service_MySQLService_action_stop
+      task_definition_list:
+      - attrs:
+          edges: []
+        child_tasks_local_reference_list: []
+        description: ''
+        name: DAG_Task_for_Service_MySQLService_action_stop
+        target_any_local_reference:
+          kind: app_service
+          name: MySQLService
+        type: DAG
+        variable_list: []
+      variable_list: []
+    type: system
+  - critical: true
+    description: ''
+    name: action_restart
+    runbook:
+      description: ''
+      main_task_local_reference:
+        kind: app_task
+        name: DAG_Task_for_Service_MySQLService_action_restart
+      name: Runbook_for_Service_MySQLService_action_restart
+      task_definition_list:
+      - attrs:
+          edges: []
+        child_tasks_local_reference_list: []
+        description: ''
+        name: DAG_Task_for_Service_MySQLService_action_restart
+        target_any_local_reference:
+          kind: app_service
+          name: MySQLService
+        type: DAG
+        variable_list: []
+      variable_list: []
+    type: system
+  - critical: true
+    description: ''
+    name: action_soft_delete
+    runbook:
+      description: ''
+      main_task_local_reference:
+        kind: app_task
+        name: DAG_Task_for_Service_MySQLService_action_soft_delete
+      name: Runbook_for_Service_MySQLService_action_soft_delete
+      task_definition_list:
+      - attrs:
+          edges: []
+        child_tasks_local_reference_list: []
+        description: ''
+        name: DAG_Task_for_Service_MySQLService_action_soft_delete
+        target_any_local_reference:
+          kind: app_service
+          name: MySQLService
+        type: DAG
+        variable_list: []
+      variable_list: []
+    type: system
+  container_spec: {}
+  depends_on_list: []
+  description: Sample mysql service with inline port definition
+  name: MySQLService
+  port_list:
+  - endpoint_name: ''
+    exposed_address: ''
+    exposed_port: ''
+    protocol: SSH
+    target_port: '3306'
+  singleton: false
+  tier: ''
+  variable_list: []
+- action_list:
+  - critical: true
+    description: ''
+    name: action_create
+    runbook:
+      description: ''
+      main_task_local_reference:
+        kind: app_task
+        name: DAG_Task_for_Service_PHPService_action_create
+      name: Runbook_for_Service_PHPService_action_create
+      task_definition_list:
+      - attrs:
+          edges: []
+        child_tasks_local_reference_list: []
+        description: ''
+        name: DAG_Task_for_Service_PHPService_action_create
+        target_any_local_reference:
+          kind: app_service
+          name: PHPService
+        type: DAG
+        variable_list: []
+      variable_list: []
+    type: system
+  - critical: true
+    description: ''
+    name: action_delete
+    runbook:
+      description: ''
+      main_task_local_reference:
+        kind: app_task
+        name: DAG_Task_for_Service_PHPService_action_delete
+      name: Runbook_for_Service_PHPService_action_delete
+      task_definition_list:
+      - attrs:
+          edges: []
+        child_tasks_local_reference_list: []
+        description: ''
+        name: DAG_Task_for_Service_PHPService_action_delete
+        target_any_local_reference:
+          kind: app_service
+          name: PHPService
+        type: DAG
+        variable_list: []
+      variable_list: []
+    type: system
+  - critical: true
+    description: ''
+    name: action_start
+    runbook:
+      description: ''
+      main_task_local_reference:
+        kind: app_task
+        name: DAG_Task_for_Service_PHPService_action_start
+      name: Runbook_for_Service_PHPService_action_start
+      task_definition_list:
+      - attrs:
+          edges: []
+        child_tasks_local_reference_list: []
+        description: ''
+        name: DAG_Task_for_Service_PHPService_action_start
+        target_any_local_reference:
+          kind: app_service
+          name: PHPService
+        type: DAG
+        variable_list: []
+      variable_list: []
+    type: system
+  - critical: true
+    description: ''
+    name: action_stop
+    runbook:
+      description: ''
+      main_task_local_reference:
+        kind: app_task
+        name: DAG_Task_for_Service_PHPService_action_stop
+      name: Runbook_for_Service_PHPService_action_stop
+      task_definition_list:
+      - attrs:
+          edges: []
+        child_tasks_local_reference_list: []
+        description: ''
+        name: DAG_Task_for_Service_PHPService_action_stop
+        target_any_local_reference:
+          kind: app_service
+          name: PHPService
+        type: DAG
+        variable_list: []
+      variable_list: []
+    type: system
+  - critical: true
+    description: ''
+    name: action_restart
+    runbook:
+      description: ''
+      main_task_local_reference:
+        kind: app_task
+        name: DAG_Task_for_Service_PHPService_action_restart
+      name: Runbook_for_Service_PHPService_action_restart
+      task_definition_list:
+      - attrs:
+          edges: []
+        child_tasks_local_reference_list: []
+        description: ''
+        name: DAG_Task_for_Service_PHPService_action_restart
+        target_any_local_reference:
+          kind: app_service
+          name: PHPService
+        type: DAG
+        variable_list: []
+      variable_list: []
+    type: system
+  - critical: true
+    description: ''
+    name: action_soft_delete
+    runbook:
+      description: ''
+      main_task_local_reference:
+        kind: app_task
+        name: DAG_Task_for_Service_PHPService_action_soft_delete
+      name: Runbook_for_Service_PHPService_action_soft_delete
+      task_definition_list:
+      - attrs:
+          edges: []
+        child_tasks_local_reference_list: []
+        description: ''
+        name: DAG_Task_for_Service_PHPService_action_soft_delete
+        target_any_local_reference:
+          kind: app_service
+          name: PHPService
+        type: DAG
+        variable_list: []
+      variable_list: []
+    type: system
+  container_spec: {}
+  depends_on_list:
+  - kind: app_service
+    name: MySQLService
+  description: "Sample PHP service using Service as parent class\n    with previously
+    defined port.\n    "
+  name: PHPService
+  port_list:
+  - endpoint_name: ''
+    exposed_address: ''
+    exposed_port: ''
+    protocol: SSH
+    target_port: '80'
+  singleton: false
+  tier: ''
+  variable_list:
+  - attrs: {}
+    data_type: BASE
+    description: ''
+    is_hidden: false
+    is_mandatory: false
+    label: ''
+    name: sample_string_var
+    type: LOCAL
+    val_type: STRING
+    value: hello world!
+substrate_definition_list:
+- action_list: []
+  create_spec:
+    name: '@@{calm_application_name}@@-@@{calm_array_index}@@'
+    resources:
+      boot_config:
+        boot_device:
+          disk_address:
+            adapter_type: SCSI
+            device_index: 0
+      disk_list:
+      - data_source_reference:
+          kind: image
+          name: Centos7-Base
+          uuid: 78a86047-00dc-409e-a700-7ec3c0f7cfa1
+        device_properties:
+          device_type: DISK
+          disk_address:
+            adapter_type: SCSI
+            device_index: 0
+        disk_size_mib: 0
+      memory_size_mib: 1024
+      nic_list:
+      - network_function_nic_type: INGRESS
+        nic_type: NORMAL_NIC
+        subnet_reference:
+          kind: subnet
+          name: vlan.0
+          uuid: 6a049405-a612-48b6-b098-c922fe024964
+      num_sockets: 1
+      num_vcpus_per_socket: 1
+      power_state: ON
+  description: Medium size AHV VM config given by reading a spec file
+  name: AHVMedVM
+  os_type: Linux
+  readiness_probe:
+    address: '@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@'
+    connection_port: 22
+    connection_type: SSH
+    delay_secs: '0'
+    disable_readiness_probe: false
+  type: AHV_VM
+  variable_list: []
+- action_list: []
+  create_spec:
+    name: '@@{calm_application_name}@@-@@{calm_array_index}@@'
+    resources:
+      boot_config:
+        boot_device:
+          disk_address:
+            adapter_type: SCSI
+            device_index: 0
+      disk_list:
+      - data_source_reference:
+          kind: image
+          name: Centos7-Base
+          uuid: 78a86047-00dc-409e-a700-7ec3c0f7cfa1
+        device_properties:
+          device_type: DISK
+          disk_address:
+            adapter_type: SCSI
+            device_index: 0
+        disk_size_mib: 0
+      memory_size_mib: 1024
+      nic_list:
+      - network_function_nic_type: INGRESS
+        nic_type: NORMAL_NIC
+        subnet_reference:
+          kind: subnet
+          name: vlan.0
+          uuid: 6a049405-a612-48b6-b098-c922fe024964
+      num_sockets: 1
+      num_vcpus_per_socket: 1
+      power_state: ON
+  description: Medium size AHV VM config given by reading a spec file
+  name: AHVMedVMForPHP
+  os_type: Linux
+  readiness_probe:
+    address: '@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@'
+    connection_port: 22
+    connection_type: SSH
+    delay_secs: '0'
+    disable_readiness_probe: false
+  type: AHV_VM
+  variable_list: []
+type: USER

@@ -7,7 +7,7 @@ Example:
 pc_ip = "<pc_ip>"
 pc_port = 9440
 client = get_connection(pc_ip, pc_port,
-                        auth=("admin", "***REMOVED***"))
+                        auth=("<pc_username>", "<pc_passwd>"))
 
 """
 

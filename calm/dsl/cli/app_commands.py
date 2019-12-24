@@ -14,10 +14,14 @@ from .apps import (
 
 
 @get.command("apps")
-@click.option("--name", default=None, help="Search for apps by name")
-@click.option("--filter", "filter_by", default=None, help="Filter apps by this string")
-@click.option("--limit", default=20, help="Number of results to return")
-@click.option("--offset", default=0, help="Offset results by the specified amount")
+@click.option("--name", "-n", default=None, help="Search for apps by name")
+@click.option(
+    "--filter", "filter_by", "-f", default=None, help="Filter apps by this string"
+)
+@click.option("--limit", "-l", default=20, help="Number of results to return")
+@click.option(
+    "--offset", "-o", default=0, help="Offset results by the specified amount"
+)
 @click.option(
     "--quiet", "-q", is_flag=True, default=False, help="Show only application names"
 )
@@ -41,7 +45,12 @@ def _describe_app(obj, app_name):
 @run.command("action")
 @click.argument("action_name")
 @click.option(
-    "--app", "app_name", default=None, required=True, help="Watch action run in an app"
+    "--app",
+    "app_name",
+    "-a",
+    default=None,
+    required=True,
+    help="Watch action run in an app",
 )
 @click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
 @click.pass_obj
@@ -67,11 +76,17 @@ def display_with_screen(obj, app_name, action_name, watch):
 @watch.command("action_runlog")
 @click.argument("runlog_uuid")
 @click.option(
-    "--app", "app_name", default=None, required=True, help="Watch action run in an app"
+    "--app",
+    "app_name",
+    "-a",
+    default=None,
+    required=True,
+    help="Watch action run in an app",
 )
 @click.option(
     "--poll-interval",
     "poll_interval",
+    "-p",
     type=int,
     default=10,
     show_default=True,
@@ -94,6 +109,7 @@ def _watch_action_runlog(obj, runlog_uuid, app_name, poll_interval):
 @click.option(
     "--poll-interval",
     "poll_interval",
+    "-p",
     type=int,
     default=10,
     show_default=True,
@@ -113,8 +129,10 @@ def _watch_app(obj, app_name, poll_interval):
 
 @download.command("action_runlog")
 @click.argument("runlog_uuid")
-@click.option("--app", "app_name", required=True, help="App the action belongs to")
-@click.option("--file", "file_name", help="How to name the downloaded file")
+@click.option(
+    "--app", "app_name", "-a", required=True, help="App the action belongs to"
+)
+@click.option("--file", "file_name", "-f", help="How to name the downloaded file")
 @click.pass_obj
 def _download_runlog(obj, runlog_uuid, app_name, file_name):
     """Download runlogs, given runlog uuid and app name"""

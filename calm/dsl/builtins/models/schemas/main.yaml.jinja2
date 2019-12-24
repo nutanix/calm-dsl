@@ -24,7 +24,9 @@
 {% import "simple_blueprint.yaml.jinja2" as simple_blueprint %}
 {% import "published_service.yaml.jinja2" as published_service %}
 {% import "pod_deployment.yaml.jinja2" as pod_deployment %}
+{% import "ahv_vm.yaml.jinja2" as ahv_vm %}
 {% import "simple_pod_deployment.yaml.jinja2" as simple_pod_deployment %}
+{% import "vm_disk_package.yaml.jinja2" as vm_disk_package %}
 
 {% macro Schemas() -%}
 
@@ -55,6 +57,8 @@
 {{ project.ProjectSchema() }}
 {{ simple_deployment.SimpleDeploymentSchema() }}
 {{ simple_blueprint.SimpleBlueprintSchema() }}
+{{ ahv_vm.AhvVmSchema() }}
+{{ vm_disk_package.VmDiskPackageSchema() }}
 
 {%- endmacro %}
 

@@ -1,0 +1,21 @@
+
+input:
+- "1"  # project = default
+- "1"  # account
+- "vm-@@{calm_array_index}@@-@@{calm_time}@@"  # instance name
+- "y"  # Enable Associate Public Ip Address
+- "y"  # Want Instance type
+- "1"  # Instance Type = c3.2xlarge
+- "n"  # Want Region
+- "n"  # Want user-data
+- "n"  # Want tags
+- "8"  # Size of root disk
+- "1"  # Volume Type = Provisioned IOPS SSD
+- "n"  # Want to delete on termination
+- "n"  # Want more disks
+
+cli_assertions:
+- "Create spec for your AWS VM:"
+
+spec_assertions:
+- c3.2xlarge  # Check for instance name
