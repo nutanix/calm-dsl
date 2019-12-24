@@ -3,6 +3,9 @@ import traceback
 
 from .table_config import dsl_database, SecretTable, DataTable, CacheTable
 
+# database location
+DB_LOCATION = os.path.join(os.path.dirname(os.path.realpath(__file__)), "dsl.db")
+
 
 class Database:
     """DSL database connection"""
@@ -15,10 +18,7 @@ class Database:
 
     @staticmethod
     def instantiate_db():
-        db_location = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), "dsl.db"
-        )
-        dsl_database.init(db_location)
+        dsl_database.init(DB_LOCATION)
         return dsl_database
 
     def __init__(self):
