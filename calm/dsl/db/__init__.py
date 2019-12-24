@@ -1,3 +1,3 @@
-from .handler import Database
+from .handler import Database, DB_LOCATION
 
-__all__ = [Database]
+__all__ = [Database, DB_LOCATION]
