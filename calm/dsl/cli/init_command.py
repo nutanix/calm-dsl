@@ -2,7 +2,7 @@ from .main import main
 from .utils import highlight_text
 from .configs import set_config
 from calm.dsl.tools import ping
-from calm.dsl.db import Database, DB_LOCATION
+from calm.dsl.db import Database
 from calm.dsl.api import get_resource_api, update_client_handle
 from calm.dsl.api.connection import Connection, REQUEST
 from calm.dsl.store import Cache
@@ -18,6 +18,7 @@ def initialize_engine():
     """Initializes the calm dsl engine"""
 
     click.echo(highlight_text("\nIntializing Engine..."))
+
     click.echo(highlight_text("\n1. Server Configuration"))
     set_server_details()
 
@@ -35,8 +36,8 @@ def initialize_engine():
 def set_server_details():
 
     host = click.prompt("\tEnter Host IP", default="")
-    port = click.prompt("\tEnter Port No.", default="")
-    username = click.prompt("\tEnter Username", default="")
+    port = click.prompt("\tEnter Port No.", default="9440")
+    username = click.prompt("\tEnter Username", default="admin")
     password = click.prompt("\tEnter Password", default="", hide_input=True)
 
     click.echo("\nValidating Host ...")
@@ -69,7 +70,7 @@ def set_server_details():
             )
         )
 
-    # If validation for host and cred is successfull, then update config file
+    # If validation for host and cred is successful, then update config file
     set_config("SERVER", ip=host, port=port, username=username, password=password)
 
     # Updating default config object
@@ -80,9 +81,18 @@ def set_server_details():
 
 
 def init_db():
-    # Deleting existing db file
-    if os.path.exists(DB_LOCATION):
-        os.remove(DB_LOCATION)
+
+    location = click.prompt(
+        "\tEnter DSL DB location", default=os.path.expanduser("~/.calm/dsl.db")
+    )
+
+    if os.path.exists(location):
+        os.remove(location)
+
+    set_config("DB", location=location)
+
+    # Updating default config object
+    update_config()
 
     Database()
     click.echo("Success \U0001f600")

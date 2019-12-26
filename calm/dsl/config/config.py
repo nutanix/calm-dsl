@@ -34,16 +34,19 @@ def update_config(
     password=None,
     config_file=None,
     project_name=None,
+    db_location=None,
 ):
     global _CONFIG
-    _CONFIG = _init_config(ip, port, username, password, config_file, project_name)
+    _CONFIG = _init_config(
+        ip, port, username, password, config_file, project_name, db_location
+    )
 
 
 def get_config_file():
     return USER_CONFIG_FILE
 
 
-def _init_config(ip, port, username, password, config_file, project_name):
+def _init_config(ip, port, username, password, config_file, project_name, db_location):
 
     global CONFIG_FILE
     global USER_CONFIG_FILE
@@ -88,7 +91,25 @@ def _init_config(ip, port, username, password, config_file, project_name):
 
     config["PROJECT"] = {"name": project_name}
 
+    if "DB" in config:
+        db_location = db_location or config["DB"].get("location")
+
     if "CATEGORIES" not in config:
         config["CATEGORIES"] = {}
 
     return config
+
+
+def get_db_location():
+
+    config = get_config()
+
+    db_location = None
+    if "DB" in config:
+        db_location = config["DB"].get("location", None)
+
+    if not db_location:
+        # Default DB location
+        db_location = os.path.expanduser("~/.calm/dsl.db")
+
+    return db_location
