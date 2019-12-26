@@ -1,0 +1,400 @@
+
+{% macro VmwNic() -%}
+
+title: VCenter NICs
+type: object
+x-calm-dsl-type: vmw_vm_nic
+properties:
+  nic_type:
+    type: string
+  net_name:
+    type: string
+
+{%- endmacro %}
+
+
+{% macro VmwTemplateNic() -%}
+
+title: VCenter Template NIC
+type: object
+x-calm-dsl-type: vmw_vm_template_nic
+properties:
+  nic_type:
+    type: string
+  net_name:
+    type: string
+  is_deleted:
+    type: boolean
+    default: False
+  key:
+    type: integer
+    default: -1
+
+{%- endmacro %}
+
+
+{% macro VmwDisk() -%}
+
+title: VCenter Disk
+type: object
+x-calm-dsl-type: vmw_vm_disk
+properties:
+  disk_type:
+    type: string
+    default: disk
+  adapter_type:
+    type: string
+    default: SCSI
+  disk_size_mb:
+    type: integer
+    default: -1
+  disk_mode:
+    type: string
+    default: "persistent"
+  location:
+    type: string
+    default: ""
+  controller_key:
+    type: integer
+  device_slot:
+    type: integer
+  iso_path:
+    type: string
+    default: ""
+
+{%- endmacro %}
+
+
+{% macro VmwTemplateDisk() -%}
+
+title: VCenter Template DISK
+type: object
+x-calm-dsl-type: vmw_vm_template_disk
+properties:
+  disk_type:
+    type: string
+    default: disk
+  adapter_type:
+    type: string
+    default: SCSI
+  disk_size_mb:
+    type: integer
+    default: -1
+  disk_mode:
+    type: string
+  location:
+    type: string
+    default: ""
+  controller_key:
+    type: integer
+    default: -1
+  device_slot:
+    type: integer
+    default: -1
+  iso_path:
+    type: string
+    default: ""
+  is_deleted:
+    type: boolean
+    default: False
+  key:
+    type: integer
+
+{%- endmacro %}
+
+
+{% macro VmwController() -%}
+
+title: VCenter Controller
+type: object
+x-calm-dsl-type: vmw_vm_controller
+properties:
+  controller_type:
+    type: string
+  key:
+    type: integer
+    default: -1
+  bus_sharing:
+    type: string
+
+{%- endmacro %}
+
+
+{% macro VmwTemplateController() -%}
+
+title: VCenter Template Controller
+type: object
+x-calm-dsl-type: vmw_vm_template_controller
+properties:
+  controller_type:
+    type: string
+  key:
+    type: integer
+  bus_sharing:
+    type: string
+  is_deleted:
+    type: boolean
+    default: False
+
+{%- endmacro %}
+
+
+{% macro VmwGCNetworkSetting() -%}
+
+title: Guest Customization Network Settings
+type: object
+x-calm-dsl-type: vmw_vm_gc_network_settings
+properties:
+  name:
+    type: string
+  subnet_mask:
+    type: string
+  gateway_default:
+    type: string
+  gateway_alternate:
+    type: string
+  is_dhcp:
+    type: boolean
+  ip:
+    type: string
+
+{%- endmacro %}
+
+
+{% macro VmwGCLinuxSpec() -%}
+
+title: Guest Customization Linux data
+type: object
+x-calm-dsl-type: vmw_vm_gc_lnx_spec
+properties:
+  hostname:
+    type: string
+  domain:
+    type: string
+  timezone:
+    type: string
+  hw_utc_clock:
+    type: boolean
+  dns_primary:
+    type: string
+  dns_secondary:
+    type: string
+  dns_tertiary:
+    type: string
+  dns_search_path:
+    type: array
+    items:
+      type: string
+  network_settings:
+    type: array
+    items:
+      {{ VmwGCNetworkSetting() | indent(6) }}
+
+{%- endmacro %}
+
+
+{% macro VmwGCWindowsSpec() -%}
+
+title: Guest Customization Windows data
+type: object
+x-calm-dsl-type: vmw_vm_gc_win_spec
+properties:
+  computer_name:
+    type: string
+  product_id:
+    type: string
+  full_name:
+    type: string
+  organization_name:
+    type: string
+  workgroup:
+    type: string
+  timezone:
+    type: string
+  is_domain:
+    type: boolean
+  domain:
+    type: string
+  domain_user:
+    type: string
+  command_list:
+    type: array
+    items:
+      type: string
+  dns_primary:
+    type: string
+  dns_secondary:
+    type: string
+  dns_tertiary:
+    type: string
+  dns_search_path:
+    type: array
+    items:
+      type: string
+  network_settings:
+    type: array
+    items:
+      {{ VmwGCNetworkSetting() | indent(6) }}
+  auto_logon:
+    type: boolean
+    default: False
+  login_count:
+    type: integer
+    default: 1
+  password:
+    type: object
+    x-calm-dsl-type: object
+    properties:
+      attrs:
+        type: object
+        x-calm-dsl-type: object
+        properties:
+          is_secret_modified:
+            type: boolean
+            default: False
+          secret_reference:
+            type: object
+            x-calm-dsl-type: object
+            default: {}
+      value:
+        type: string
+  domain_password:
+    type: object
+    x-calm-dsl-type: object
+    properties:
+      attrs:
+        type: object
+        x-calm-dsl-type: object
+        properties:
+          is_secret_modified:
+            type: boolean
+            default: False
+          secret_reference:
+            type: object
+            x-calm-dsl-type: object
+            default: {}
+      value:
+        type: string
+
+{%- endmacro %}
+
+
+{% macro VmwGuestCustomization() -%}
+
+title:  VMWARE Guest Customization
+type: object
+x-calm-dsl-type: vmw_vm_gc
+properties:
+  customization_type:
+    type: string
+    enum:
+    - GUEST_OS_LINUX
+    - GUEST_OS_WINDOWS
+  cloud_init:
+    type: string
+  customization_name:
+    type: string
+  linux_data:
+    {{ VmwGCLinuxSpec() | indent(4) }}
+  windows_data:
+    {{ VmwGCWindowsSpec() | indent(4) }}
+
+{%- endmacro %}
+
+
+{% macro VmwVMResource() -%}
+
+title: VMWARE Resources
+type: object
+x-calm-dsl-type: vmw_vm_resources
+properties:
+  account_uuid:
+    type: string
+    minLength: 36
+    maxLength: 36
+  num_vcpus_per_socket:
+    type: integer
+    default: 0
+  num_sockets:
+    type: integer
+    default: 0
+  memory_size_mib:
+    type: integer
+    default: 0
+  power_state:
+    type: string
+    default: poweron
+  nic_list:
+    type: array
+    items:
+      {{ VmwNic() | indent(6) }}
+  disk_list:
+    type: array
+    items:
+      {{ VmwDisk() | indent(6) }}
+  controller_list:
+    type: array
+    items:
+      {{ VmwController() | indent(6) }}
+  template_nic_list:
+    type: array
+    items:
+      {{ VmwTemplateNic() | indent(6) }}
+  template_disk_list:
+    type: array
+    items:
+      {{ VmwTemplateDisk() | indent(6) }}
+  template_controller_list:
+    type: array
+    items:
+      {{ VmwTemplateController() | indent(6) }}
+  guest_customization:
+    {{ VmwGuestCustomization() | indent(4) }}
+
+{%- endmacro %}
+
+
+{% macro VmwVm() -%}
+
+title: VMWare CreateSpec
+type: object
+x-calm-dsl-type: vmw_vm
+properties:
+  name:
+    type: string
+  type:
+    type: string
+    enum:
+    - PROVISION_VMWARE_VM
+    default: PROVISION_VMWARE_VM
+  drs_mode:
+    type: boolean
+    default: False
+  cluster:
+    type: string
+  template:
+    type: string
+  storage_pod:
+    type: string
+  host:
+    type: string
+  datastore:
+    type: string
+  clone_is_template:
+    type: boolean
+    default: False
+  resources:
+    {{ VmwVMResource() | indent(4) }}
+
+{%- endmacro %}
+
+
+info:
+  title: VMWARE_VM
+  description: VMWARE VM spec payload using v3 API
+  version: 3.0.1      # TODO add right version of ahv schema
+
+components:
+  schemas:
+    provider_spec:
+      {{ VmwVm() | indent(6) }}
