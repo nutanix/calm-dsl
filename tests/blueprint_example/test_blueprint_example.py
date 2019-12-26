@@ -7,7 +7,7 @@ from calm.dsl.builtins import (
     Service,
     basic_cred,
     ref,
-    read_local_file
+    read_local_file,
 )
 from calm.dsl.builtins import CalmTask, CalmVariable, action, parallel, provider_spec
 
@@ -18,8 +18,12 @@ ROOT_CRED_PASSWORD = read_local_file(".tests/root_cred_password")
 EXISTING_VM_IP = read_local_file(".tests/existing_machine_ip")
 DNS_SERVER = read_local_file(".tests/dns_server")
 
-DefaultCred = basic_cred(DEFAULT_CRED_USERNAME, DEFAULT_CRED_PASSWORD, name="default cred", default=True)
-RootCred = basic_cred(ROOT_CRED_USERNAME, ROOT_CRED_PASSWORD, name="root cred", default=True)
+DefaultCred = basic_cred(
+    DEFAULT_CRED_USERNAME, DEFAULT_CRED_PASSWORD, name="default cred", default=True
+)
+RootCred = basic_cred(
+    ROOT_CRED_USERNAME, ROOT_CRED_PASSWORD, name="root cred", default=True
+)
 
 
 class AppService(Service):

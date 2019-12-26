@@ -103,7 +103,9 @@ class SimpleLampBlueprint(SimpleBlueprint):
 
     nameserver = Var(DNS_SERVER, label="Local DNS resolver")
 
-    credentials = [basic_cred(CRED_USERNAME, CRED_PASSWORD, name="default cred", default=True)]
+    credentials = [
+        basic_cred(CRED_USERNAME, CRED_PASSWORD, name="default cred", default=True)
+    ]
     deployments = [MySQLDeployment, PHPDeployment, K8SDeployment1]
 
     @action
