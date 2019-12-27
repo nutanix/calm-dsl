@@ -3,26 +3,27 @@
 Sample Calm DSL for {{service_name}} blueprint
 """
 
-from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC
-from calm.dsl.builtins import ref, basic_cred, AhvVmResources, AhvVm
-from calm.dsl.builtins import vm_disk_package, read_local_file
-
 from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import CalmVariable, CalmTask, action
+from calm.dsl.builtins import ref, basic_cred, read_local_file
+
+from calm.dsl.builtins import vm_disk_package, AhvVmDisk, AhvVmNic
+from calm.dsl.builtins import AhvVmGC, AhvVmResources, AhvVm
 
 
+CENTOS_USER = "centos"
+CENTOS_IMAGE_SOURCE = "http://download.nutanix.com/calm/CentOS-7-x86_64-1810.qcow2"
 CENTOS_KEY = read_local_file("keys/centos")
 CENTOS_PUBLIC_KEY = read_local_file("keys/centos_pub")
 
-CentosCred = basic_cred("centos", CENTOS_KEY, name="Centos", type="KEY", default=True)
+CentosCred = basic_cred(CENTOS_USER, CENTOS_KEY, name="Centos", type="KEY", default=True)
 
 Centos_Image = vm_disk_package(
     name="centos_disk",
     config={
-        # By default image type is set to DISK_IMAGE
         "image": {
-            "source": "http://download.nutanix.com/calm/CentOS-7-x86_64-1810.qcow2"
+            "source": CENTOS_IMAGE_SOURCE,
         }
     },
 )
@@ -30,6 +31,7 @@ Centos_Image = vm_disk_package(
 
 class {{service_name}}Service(Service):
     """Sample Service"""
+
     @action
     def __create__():
         pass
@@ -56,6 +58,7 @@ class {{service_name}}Package(Package):
     def __uninstall__():
         pass
 
+
 class MyAhvVmResources(AhvVmResources):
 
     memory = 4
@@ -70,7 +73,7 @@ class MyAhvVmResources(AhvVmResources):
         config={
             "users": [
                 {
-                    "name": "centos",
+                    "name": CENTOS_USER,
                     "ssh-authorized-keys": [CENTOS_PUBLIC_KEY],
                     "sudo": ["ALL=(ALL) NOPASSWD:ALL"],
                 }
