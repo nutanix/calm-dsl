@@ -1,0 +1,136 @@
+{% macro BlueprintTemplate(service_name, subnet_name) -%}
+"""
+Sample Calm DSL for {{service_name}} blueprint
+"""
+
+from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC
+from calm.dsl.builtins import ref, basic_cred, AhvVmResources, AhvVm
+from calm.dsl.builtins import vm_disk_package, read_local_file
+
+from calm.dsl.builtins import Service, Package, Substrate
+from calm.dsl.builtins import Deployment, Profile, Blueprint
+from calm.dsl.builtins import CalmVariable, CalmTask, action
+
+
+CENTOS_KEY = read_local_file("keys/centos")
+CENTOS_PUBLIC_KEY = read_local_file("keys/centos_pub")
+CENTOS_IMAGE_SOURCE = read_local_file("images/centos7")
+
+CentosCred = basic_cred("centos", CENTOS_KEY, name="Centos", type="KEY", default=True)
+
+Centos_Image = vm_disk_package(
+    name="centos_disk",
+    config={
+        # By default image type is set to DISK_IMAGE
+        "image": {
+            "source": CENTOS_IMAGE_SOURCE
+        }
+    },
+)
+
+
+class {{service_name}}Service(Service):
+
+    @action
+    def __create__():
+        pass
+
+    @action
+    def __start__():
+        pass
+
+    @action
+    def __stop__():
+        pass
+
+
+class {{service_name}}Package(Package):
+
+    services = [ref({{service_name}}Service)]
+
+    @action
+    def __install__():
+        pass
+
+    @action
+    def __uninstall__():
+        pass
+
+class MyAhvVmResources(AhvVmResources):
+
+    memory = 4
+    vCPUs = 2
+    cores_per_vCPU = 1
+    disks = [
+        AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(Centos_Image),
+    ]
+    nics = [AhvVmNic.DirectNic.ingress("{{subnet_name}}")]
+
+    guest_customization = AhvVmGC.CloudInit(
+        config={
+            "users": [
+                {
+                    "name": "centos",
+                    "ssh-authorized-keys": [CENTOS_PUBLIC_KEY],
+                    "sudo": ["ALL=(ALL) NOPASSWD:ALL"],
+                }
+            ]
+        }
+    )
+
+    serial_ports = {0: False, 1: False, 2: True, 3: True}
+
+
+class MyAhvVm(AhvVm):
+
+    resources = MyAhvVmResources
+    categories = {"AppFamily": "Backup", "AppType": "Default"}
+
+
+class MyAhvVMSubstrate(Substrate):
+    """AHV VM"""
+
+    provider_type = "AHV_VM"
+    provider_spec = MyAhvVm
+    readiness_probe = {
+        "disabled": False,
+        "delay_secs": "10",
+        "connection_type": "SSH",
+        "connection_port": 22,
+        "credential": ref(CentosCred),
+    }
+
+    @action
+    def __pre_create__():
+        pass
+
+    @action
+    def __post_delete__():
+        pass
+
+
+class {{service_name}}Deployment(Deployment):
+
+    packages = [ref({{service_name}}Package)]
+    substrate = ref(MyAhvVMSubstrate)
+
+
+class DefaultProfile(Profile):
+
+    deployments = [{{service_name}}Deployment]
+
+
+class {{service_name}}Blueprint(Blueprint):
+    """ Sample blueprint for {{service_name}} app using AHV VM"""
+
+    credentials = [CentosCred]
+    services = [{{service_name}}Service]
+    packages = [{{service_name}}Package]
+    substrates = [MyAhvVMSubstrate]
+    profiles = [DefaultProfile]
+
+
+{%- endmacro %}
+
+
+{{BlueprintTemplate(service_name, subnet_name)}}
