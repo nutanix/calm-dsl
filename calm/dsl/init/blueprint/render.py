@@ -8,10 +8,6 @@ from calm.dsl.api import get_api_client
 from calm.dsl.config import get_config
 from calm.dsl.store import Cache
 
-DOWNLOADABLE_IMAGES = {
-        "centos7": "http://download.nutanix.com/calm/CentOS-7-x86_64-1810.qcow2"
-}
-
 
 def render_blueprint_template(service_name, subnet_name, schema_file="blueprint.py.jinja2"):
 
@@ -46,15 +42,6 @@ def create_cred_keys(dir_name):
     public_key = key.publickey().export_key()
     file_out = open("{}/centos_pub".format(dir_name), "wb")
     file_out.write(public_key)
-
-
-def create_image_files(dir_name):
-
-    # Will create files for downloadable images
-    
-    for image_name, image_link in DOWNLOADABLE_IMAGES.items():
-        with open("{}/centos".format(dir_name), "w") as file_out:
-            file_out.write(image_link)
 
 
 def make_bp_dirs(dir_name, bp_name):
@@ -116,9 +103,6 @@ def init_bp(service_name, dir_name):
 
     # Creating keys
     create_cred_keys(key_dir)
-
-    # create images files
-    create_image_files(images_dir)
 
 
 def main():

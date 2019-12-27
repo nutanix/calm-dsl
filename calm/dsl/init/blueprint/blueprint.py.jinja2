@@ -14,7 +14,6 @@ from calm.dsl.builtins import CalmVariable, CalmTask, action
 
 CENTOS_KEY = read_local_file("keys/centos")
 CENTOS_PUBLIC_KEY = read_local_file("keys/centos_pub")
-CENTOS_IMAGE_SOURCE = read_local_file("images/centos7")
 
 CentosCred = basic_cred("centos", CENTOS_KEY, name="Centos", type="KEY", default=True)
 
@@ -23,7 +22,7 @@ Centos_Image = vm_disk_package(
     config={
         # By default image type is set to DISK_IMAGE
         "image": {
-            "source": CENTOS_IMAGE_SOURCE
+            "source": "http://download.nutanix.com/calm/CentOS-7-x86_64-1810.qcow2"
         }
     },
 )
