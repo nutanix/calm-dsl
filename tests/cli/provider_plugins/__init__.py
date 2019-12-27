@@ -87,6 +87,7 @@ def run_test(
         print("\n{}".format(result.output))
 
         # Delete created bp
+        import pdb; pdb.set_trace()
         print(">> Deleting bp {}".format(bp_name))
         command = "delete bp {}".format(bp_name)
         result = runner.invoke(cli, command)

@@ -36,6 +36,7 @@ class GCP:
     NETWORKS = "{}/networks". format(RELATIVE_URL)
     SUBNETWORKS = "{}/subnetworks". format(RELATIVE_URL)
     FIREWALLS = "{}/firewalls". format(RELATIVE_URL)
+    SNAPSHOTS = "{}/snapshots". format(RELATIVE_URL)
 
     PROJECT_ID = 'nucalm-devopos'
     COMPUTE_URL = 'https://www.googleapis.com/compute/v1'

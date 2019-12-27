@@ -1,0 +1,79 @@
+
+input:
+- "1"   # project = default
+- "1"   # select account
+- "1"   # os = Linux
+- "vm-@@{calm_unique_hash}@@-@@{calm_array_index}@@"  # VM name
+- "7"   # zone  = us_central1-c
+- "21"  # Machine Type = f1-micro
+# Boot Disk
+- "y"   # Use existing Disk
+- "1"   # Persistent Disk = bdisk-delete-0-51fb2ad8
+- "y"   # Delete disk when instance is deleted
+# Additional Disks
+- "y"   # Add Additional Disks
+- "y"   # Use existing disk
+- "1"   # Persistent Disk = bdisk-delete-0-56f01278
+- "y"   # Delete disk when instance is deleted
+- "y"   # Add more additional disks
+- "n"   # Use existing disk
+- "1"   # Storage Type = pd - standard
+- "4"   # Source Image = Centos7
+- "10"   # Size of disk in GiB
+- "y"   # Delete disk when instance is deleted
+- "y"   # Add more additional disks
+- "n"   # Use existing disk
+- "2"   # Storage Type = pd - ssd
+- "3"   # Source Image = postgres-image
+- "11"   # Size of disk in GiB
+- "n"   # Delete disk when instance is deleted
+- "y"   # Add more additional disks
+- "n"   # Use existing disk
+- "3"   # Storage Type = local - ssd
+- "1"   # Interface  = SCSI
+- "n"   # Delete disk when instance is deleted
+- "y"   # Add more additional disks
+- "n"   # Use existing disk
+- "3"   # Storage Type = local - ssd
+- "2"   # Interface  = NVMe
+- "n"   # Delete disk when instance is deleted
+- "n"   # Add more additional disks
+- "n"   # Add Blank Disks
+- "n"   # Add Networks
+- "n"   # Add ssh keys
+- "y"   # block project-wide SSH keys
+- "n"   # Add Cutomization script
+- "n"   # Add key value pairs to metadata
+- "n"   # Add network tags
+- "n"   # Add labels
+- "108048128720-compute@developer.gserviceaccount.com"  # Service Account Email
+- "1"   # Scope = Default Access
+
+cli_assertions:
+- "Create spec for your GCP VM:"
+
+spec_assertions:
+- "zone: us-central1-c" # Zone
+- "machineType: f1-micro"   # Machine Type
+- "source: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/disks/bdisk-delete-0-51fb2ad8"   # Disk image for boot disk
+- "email: 108048128720-compute@developer.gserviceaccount.com" # Service account email
+# Scope = Default Scope
+- "https://www.googleapis.com/auth/devstorage.read_only"
+- "https://www.googleapis.com/auth/logging.write"
+- "https://www.googleapis.com/auth/monitoring.write"
+- "https://www.googleapis.com/auth/servicecontrol"
+- "https://www.googleapis.com/auth/service.management.readonly"
+- "https://www.googleapis.com/auth/trace.append"
+- "source: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/disks/bdisk-delete-0-56f01278"   # disk image for additional disk 0
+- "diskType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/diskTypes/pd-standard"   #  disk type for additional disk 1
+- "sourceImage: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/images/centos-7"   # image for additional disk 1
+- "diskSizeGb:10"   # disk size for additional disk 1
+- "diskType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/diskTypes/pd-ssd"    # disk type for additional disk 2
+- "sourceImage: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/snapshots/postgres-image"    # image for additional disk 2
+- "diskSizeGb: 11"   # disk size for additional disk 2
+- "diskType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/diskTypes/local-ssd"   # disk type for additional disk 3
+- "interface: NVMe"   # interface for additional disk 4
+- "disk_type: SCRATCH"    # disk type for local disk
+
+spec_false_assertions:
+- "SCSI"  # It is considered default, (Doesn't show anything for it)

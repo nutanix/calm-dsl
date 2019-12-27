@@ -1,0 +1,50 @@
+
+input:
+- "1"   # project = default
+- "1"   # select account
+- "1"   # os = Linux
+- "vm-@@{calm_unique_hash}@@-@@{calm_array_index}@@"  # VM name
+- "7"   # zone  = us_central1-c
+- "21"  # Machine Type = f1-micro
+- "n"   # Use existing Disk
+- "2"   # Storage type = pd-standard
+- "4"   # Source image = centos-7
+- "10"  # Size of disk
+- "y"   # Delete disk when instance is deleted
+- "n"   # Add Additional Disks
+- "n"   # Add Blank Disks
+- "n"   # Add Networks
+- "y"   # Add ssh keys
+- "invalid ssh" # Invalid ssh key
+- "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQChUKmbS+OF472u7vC5Y3+50Ejhtbyo2sA9iwIwcYjLNUh9/1PtUyFBRgoir6x86WRCgXWkgrkLpmKOT7A9WHA8EQcWaZ2j2cJ/t5cescirBMO/7xAcYTZL7luG6YtHxEYdzNLADY6NxnoWMXm0s7UUGT+qMZXS37t7OcPfr76zS8RXgEPU2OGji2d42KVtgo7OD+hm7nM81RZ1NDLojtwqL2HkD93dWTlvbyJ143BjFEhh+0jdU/gtqWp1S+R4jGPt/TMAA0NU2QP21aiwLLPbvTjbWR4HDLCZ3Froan4FyR5hZD3uuNwCyu0A5IfUmu1vDPOy7XgH0qpzn78/iakJXtSzRh57R29MOMae1dxtrsSVlIkPNmPg0/VRS2tdgKKuHSalLandkTUShmdW6mKShkDSLd9pbvclAcVzYO9zumXyssyn28TBvYQRlTojwyQAkJqdJE+2sZ7H0eUNNhK4vaRNQqtTrFQwGsuttC7GbYza60VMY0Css5Q0iaraobjxFJAqQ41HRih+/Li4U9d9MK9y3JUHA5DSXwJ27Vpm1eWumkcH5OBu1w2vlevz5q0qqR7I+bFEjxnlU444YmII5gID4c6nqZZb6k3OyL1nZXOVFCWG5ImCUZlha9oDrFRIVVnD93CoLkPzKGawid6q+TE0u/e80kJUY3+RBTj3UQ== abhijeet.kaurav@C02XF4HMJHD3"
+- "n"   # Add more ssh keys
+- "y"   # block project-wide SSH keys
+- "n"   # Add Cutomization script
+- "n"   # Add key value pairs to metadata
+- "n"   # Add network tags
+- "n"   # Add labels
+- "108048128720-compute@developer.gserviceaccount.com"  # Service Account Email
+- "1"   # Scope = Default Access
+
+cli_assertions:
+- "Create spec for your GCP VM:"
+
+spec_assertions:
+- "zone: us-central1-c" # Zone
+- "machineType: f1-micro"   # Machine Type
+- "sourceImage: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/images/centos-7"   # Source image of boot disk
+- "diskType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/diskTypes/pd-standard"   # Disk type for boot disk
+- "diskSizeGb: 10"    # Size of boot disk
+- "email: 108048128720-compute@developer.gserviceaccount.com" # Service account email
+# Scope = Default Scope
+- "https://www.googleapis.com/auth/devstorage.read_only"
+- "https://www.googleapis.com/auth/logging.write"
+- "https://www.googleapis.com/auth/monitoring.write"
+- "https://www.googleapis.com/auth/servicecontrol"
+- "https://www.googleapis.com/auth/service.management.readonly"
+- "https://www.googleapis.com/auth/trace.append"
+- "vm-@@{calm_array_index}@@-@@{calm_time}@@-blankdisk-1"   # Blank Disk 1 Name
+- "sizeGb: 5"   # Size of disk 1
+- "vm-@@{calm_array_index}@@-@@{calm_time}@@-blankdisk-1"   # Blank Disk 2 Name
+- "sizeGb: 6"   # Size of disk 2
+- "abhijeet.kaurav:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQChUKmbS+OF472u7vC5Y3+50Ejhtbyo2sA9iwIwcYjLNUh9/1PtUyFBRgoir6x86WRCgXWkgrkLpmKOT7A9WHA8EQcWaZ2j2cJ/t5cescirBMO/7xAcYTZL7luG6YtHxEYdzNLADY6NxnoWMXm0s7UUGT+qMZXS37t7OcPfr76zS8RXgEPU2OGji2d42KVtgo7OD+hm7nM81RZ1NDLojtwqL2HkD93dWTlvbyJ143BjFEhh+0jdU/gtqWp1S+R4jGPt/TMAA0NU2QP21aiwLLPbvTjbWR4HDLCZ3Froan4FyR5hZD3uuNwCyu0A5IfUmu1vDPOy7XgH0qpzn78/iakJXtSzRh57R29MOMae1dxtrsSVlIkPNmPg0/VRS2tdgKKuHSalLandkTUShmdW6mKShkDSLd9pbvclAcVzYO9zumXyssyn28TBvYQRlTojwyQAkJqdJE+2sZ7H0eUNNhK4vaRNQqtTrFQwGsuttC7GbYza60VMY0Css5Q0iaraobjxFJAqQ41HRih+/Li4U9d9MK9y3JUHA5DSXwJ27Vpm1eWumkcH5OBu1w2vlevz5q0qqR7I+bFEjxnlU444YmII5gID4c6nqZZb6k3OyL1nZXOVFCWG5ImCUZlha9oDrFRIVVnD93CoLkPzKGawid6q+TE0u/e80kJUY3+RBTj3UQ== abhijeet.kaurav@C02XF4HMJHD3"   # ssh key

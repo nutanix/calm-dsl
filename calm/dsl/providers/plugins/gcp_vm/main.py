@@ -74,12 +74,48 @@ class GCP:
         for entity in res["entities"]:
             name = entity["status"]["resources"]["name"]
             self_link = entity["status"]["resources"]["selfLink"]
-            disk_type = entity["status"]["resources"]["type"]
-            entity_map[name] = (self_link, disk_type)
+            entity_map[name] = self_link
 
         return entity_map
+    
+    def snapshots(self, account_id, zone):
+        Obj = get_resource_api(gcp.SNAPSHOTS, self.connection)
+        payload = {
+            "filter": "account_uuid=={};zone=={};unused==true;private_only==true".format(
+                account_id, zone
+            )
+        }
+        res, err = Obj.list(payload)
 
-    def disk_images(self, account_id, zone):
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        entity_map = {}
+        res = res.json()
+        for entity in res["entities"]:
+            name = entity["status"]["resources"]["name"]
+            selfLink = entity["status"]["resources"]["selfLink"]
+            entity_map[name] = selfLink
+
+        return entity_map
+    
+    def configured_public_images(self, account_id):
+        Obj = get_resource_api("accounts", self.connection)
+        res, err = Obj.read(account_id)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        
+        res = res.json()
+        public_images = res["status"]["resources"]["data"]["public_images"]
+        public_image_map = {}
+        for entity in public_images:
+            selfLink = entity["selfLink"]
+            name = selfLink[selfLink.rindex("/")+1:]
+            public_image_map[name] = selfLink
+        
+        return public_image_map
+
+    def images(self, account_id, zone):
         Obj = get_resource_api(gcp.DISK_IMAGES, self.connection)
         payload = {
             "filter": "account_uuid=={};zone=={};unused==true;private_only==true".format(
@@ -99,6 +135,18 @@ class GCP:
             entity_map[name] = selfLink
 
         return entity_map
+    
+    def disk_images(self, account_id, zone):
+        """
+            Returns gcpImages + gcpSnapshots + configuredPublicImages
+        """
+        
+        image_map = {}
+        image_map.update(self.configured_public_images(account_id))
+        image_map.update(self.snapshots(account_id, zone))
+        image_map.update(self.images(account_id, zone))
+
+        return image_map
 
     def networks(self, account_id, zone):
         Obj = get_resource_api(gcp.NETWORKS, self.connection)
@@ -456,16 +504,17 @@ def get_disks(gcp_obj, account_id, zone):
     click.secho("DISKS", bold=True, underline=True)
 
     click.secho("\n1. BOOT DISK", underline=True)
+    # Only persistent disks are allowed in boot disk
 
     choice = click.prompt(
         "\n{}(y/n)".format(highlight_text("Want to use existing disk")), default="n"
     )
     choice = True if choice[0] == "y" else False
 
+    # Same set of persistent disk will be used for additional disks too
+    persistent_disk_map = gcp_obj.persistent_disks(account_id, zone)
     if choice:
-        disk_map = gcp_obj.persistent_disks(account_id, zone)
-        entity_names = list(disk_map.keys())
-
+        entity_names = list(persistent_disk_map.keys())
         click.echo("\nChoose from given disks")
         for ind, name in enumerate(entity_names):
             click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
@@ -480,10 +529,11 @@ def get_disks(gcp_obj, account_id, zone):
                 click.echo("{} selected".format(highlight_text(disk_name)))
                 break
 
-        init_params = {
-            "diskType": disk_map[disk_name][1],
-            "sourceImage": disk_map[disk_name][0],
+        init_params = {}
+        disk_data = {
+            "source": persistent_disk_map[disk_name]
         }
+        persistent_disk_map.pop(disk_name)
 
     else:
         storage_types = gcp.STORAGE_TYPES
@@ -523,6 +573,7 @@ def get_disks(gcp_obj, account_id, zone):
         disk_type_link = "{}/zones/{}/diskTypes/{}".format(
             gcp.PROJECT_URL, zone, storage_type
         )
+        disk_data = {}
         init_params = {
             "diskType": disk_type_link,
             "sourceImage": source_image_link,
@@ -535,7 +586,7 @@ def get_disks(gcp_obj, account_id, zone):
     )
     auto_delete = True if choice[0] == "y" else False
 
-    gcp_disks.append(
+    disk_data.update(
         {
             "disk_type": "PERSISTENT",
             "boot": True,
@@ -543,6 +594,7 @@ def get_disks(gcp_obj, account_id, zone):
             "initializeParams": init_params,
         }
     )
+    gcp_disks.append(disk_data)
 
     # Additional disks
     click.secho("\n2. ADDITIONAL DISK", underline=True)
@@ -562,8 +614,7 @@ def get_disks(gcp_obj, account_id, zone):
         choice = True if choice[0] == "y" else False
 
         if choice:
-            disk_map = gcp_obj.persistent_disks(account_id, zone)
-            entity_names = list(disk_map.keys())
+            entity_names = list(persistent_disk_map.keys())
 
             click.echo("\nChoose from given disks")
             for ind, name in enumerate(entity_names):
@@ -579,10 +630,12 @@ def get_disks(gcp_obj, account_id, zone):
                     click.echo("{} selected".format(highlight_text(disk_name)))
                     break
 
-            init_params = {
-                "diskType": disk_map[disk_name][1],
-                "sourceImage": disk_map[disk_name][0],
+            init_params = {}
+            disk_data = {
+                "source": persistent_disk_map[disk_name],
+                "disk_type": "PERSISTENT"
             }
+            persistent_disk_map.pop(disk_name)  # Pop used disk
 
         else:
             storage_types = gcp.ADDITIONAL_DISK_STORAGE_TYPES
@@ -620,7 +673,16 @@ def get_disks(gcp_obj, account_id, zone):
                         click.echo("{} selected".format(highlight_text(disk_interface)))
                         break
 
-                additional_disk = {"interface": disk_interface}
+                if disk_interface == "SCSI":
+                    disk_interface = ""
+
+                disk_data = {
+                    "interface": disk_interface,
+                    "disk_type": gcp.STORAGE_DISK_MAP[storage_type]
+                }
+                init_params = {
+                    "diskType": disk_type_link
+                }
 
             else:
                 source_image_map = gcp_obj.disk_images(account_id, zone)
@@ -642,11 +704,14 @@ def get_disks(gcp_obj, account_id, zone):
                         break
 
                 disk_size = click.prompt("\nEnter the size of disk in GB", default=-1)
-            init_params = {
-                "diskType": disk_type_link,
-                "sourceImage": source_image_link,
-                "diskSizeGb": disk_size,
-            }
+                disk_data = {
+                    "disk_type": gcp.STORAGE_DISK_MAP[storage_type]
+                }
+                init_params = {
+                    "diskType": disk_type_link,
+                    "sourceImage": source_image_link,
+                    "diskSizeGb": disk_size,
+                }
 
         choice = click.prompt(
             "\n{}(y/n)".format(
@@ -656,15 +721,15 @@ def get_disks(gcp_obj, account_id, zone):
         )
         auto_delete = True if choice[0] == "y" else False
 
-        additional_disk.update(
+        disk_data.update(
             {
-                "disk_type": gcp.STORAGE_DISK_MAP[storage_type],
                 "boot": False,
                 "autoDelete": auto_delete,
                 "initializeParams": init_params,
             }
         )
-        gcp_disks.append(additional_disk)
+
+        gcp_disks.append(disk_data)
         disk_ind += 1
         choice = click.prompt(
             "\n{}(y/n)".format(highlight_text("Want to add more additional disks")),
