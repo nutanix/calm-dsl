@@ -1,4 +1,4 @@
-from .main import main
+from .main import init
 from .utils import highlight_text
 from .configs import set_config
 from calm.dsl.tools import ping
@@ -7,13 +7,14 @@ from calm.dsl.api import get_resource_api, update_client_handle
 from calm.dsl.api.connection import Connection, REQUEST
 from calm.dsl.store import Cache
 from calm.dsl.config import update_config
+from calm.dsl.init import init_bp
 
 import click
 import os
 import json
 
 
-@main.command("init")
+@init.command("dsl")
 def initialize_engine():
     """Initializes the calm dsl engine"""
 
@@ -101,3 +102,21 @@ def init_db():
 def sync_cache():
     Cache.sync()
     click.echo("Success \U0001f600")
+
+
+@init.command("bp")
+@click.option(
+    "--service",
+    "-s",
+    default="Sample",
+    help="Name for service in blueprint"
+)
+@click.option(
+    "--dir_name",
+    "-d",
+    default=None,
+    help="Directory path for the blueprint"
+)
+def init_dsl_bp(service, dir_name):
+    """Creates a starting directory for blueprint"""
+    init_bp(service, dir_name)

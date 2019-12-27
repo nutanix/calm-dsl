@@ -29,7 +29,7 @@ Centos_Image = vm_disk_package(
 
 
 class {{service_name}}Service(Service):
-
+    """Sample Service"""
     @action
     def __create__():
         pass
@@ -44,6 +44,7 @@ class {{service_name}}Service(Service):
 
 
 class {{service_name}}Package(Package):
+    """Sample Package"""
 
     services = [ref({{service_name}}Service)]
 
@@ -77,8 +78,6 @@ class MyAhvVmResources(AhvVmResources):
         }
     )
 
-    serial_ports = {0: False, 1: False, 2: True, 3: True}
-
 
 class MyAhvVm(AhvVm):
 
@@ -87,17 +86,10 @@ class MyAhvVm(AhvVm):
 
 
 class MyAhvVMSubstrate(Substrate):
-    """AHV VM"""
+    """AHV VM Substrate"""
 
     provider_type = "AHV_VM"
     provider_spec = MyAhvVm
-    readiness_probe = {
-        "disabled": False,
-        "delay_secs": "10",
-        "connection_type": "SSH",
-        "connection_port": 22,
-        "credential": ref(CentosCred),
-    }
 
     @action
     def __pre_create__():
@@ -109,6 +101,7 @@ class MyAhvVMSubstrate(Substrate):
 
 
 class {{service_name}}Deployment(Deployment):
+    """Sample Deployment"""
 
     packages = [ref({{service_name}}Package)]
     substrate = ref(MyAhvVMSubstrate)

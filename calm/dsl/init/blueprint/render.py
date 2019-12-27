@@ -64,18 +64,14 @@ def make_bp_dirs(dir_name, bp_name):
      if not os.path.isdir(script_dir):
         os.makedirs(script_dir)
 
-     images_dir = "{}/{}". format(local_dir, "images")
-     if not os.path.isdir(images_dir):
-        os.makedirs(images_dir)
-
-     return (bp_dir, local_dir, key_dir, script_dir, images_dir)
+     return (bp_dir, local_dir, key_dir, script_dir)
 
 
 def init_bp(service_name, dir_name):
 
     bp_name = "{}Blueprint". format(service_name, )
 
-    bp_dir, local_dir, key_dir, script_dir, images_dir = make_bp_dirs(dir_name, bp_name)
+    bp_dir, local_dir, key_dir, script_dir = make_bp_dirs(dir_name, bp_name)
     
     # sync cache
     Cache.sync()
