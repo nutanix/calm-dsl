@@ -1,0 +1,152 @@
+{% macro BlueprintTemplate(service_name, subnet_name) -%}
+"""
+Sample Calm DSL for {{service_name}} blueprint
+"""
+
+from calm.dsl.builtins import Service, Package, Substrate
+from calm.dsl.builtins import Deployment, Profile, Blueprint
+from calm.dsl.builtins import CalmVariable, CalmTask, action
+from calm.dsl.builtins import ref, basic_cred, read_local_file
+
+from calm.dsl.builtins import vm_disk_package, AhvVmDisk, AhvVmNic
+from calm.dsl.builtins import AhvVmGC, AhvVmResources, AhvVm
+
+
+CENTOS_USER = "centos"
+CENTOS_IMAGE_SOURCE = "http://download.nutanix.com/calm/CentOS-7-x86_64-1810.qcow2"
+CENTOS_KEY = read_local_file("keys/centos")
+CENTOS_PUBLIC_KEY = read_local_file("keys/centos_pub")
+
+CentosCred = basic_cred(CENTOS_USER, CENTOS_KEY, name="Centos", type="KEY", default=True)
+
+Centos_Image = vm_disk_package(
+    name="centos_disk",
+    config={
+        "image": {
+            "source": CENTOS_IMAGE_SOURCE,
+        }
+    },
+)
+
+
+class {{service_name}}Service(Service):
+    """Sample Service"""
+
+    ENV = CalmVariable.Simple("DEV")
+    
+    @action
+    def __create__():
+        pass
+
+    @action
+    def __start__():
+        pass
+
+    @action
+    def __stop__():
+        pass
+    
+    @action
+    def {{service_name}}_sample_action():
+        """Sample service action"""
+
+        blah = CalmVariable.Simple("2")  # noqa
+        CalmTask.Exec.ssh(name="Task1", script='echo "Hello"')
+        CalmTask.Exec.ssh(name="Task2", script='echo "Hello again"') 
+
+
+class {{service_name}}Package(Package):
+    """Sample Package"""
+
+    sample_pkg_var = CalmVariable.Simple("bar")
+    services = [ref({{service_name}}Service)]
+
+    @action
+    def __install__():
+        CalmTask.Exec.ssh(name="Task1", filename="scripts/pkg_install_task.sh")
+        CalmTask.Exec.ssh(name="Task2", script="echo @@{sample_pkg_var}@@")
+
+    @action
+    def __uninstall__():
+        pass
+
+
+class MyAhvVmResources(AhvVmResources):
+
+    memory = 4
+    vCPUs = 2
+    cores_per_vCPU = 1
+    disks = [
+        AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(Centos_Image, bootable=True),
+    ]
+    nics = [AhvVmNic.DirectNic.ingress("{{subnet_name}}")]
+
+    guest_customization = AhvVmGC.CloudInit(
+        config={
+            "users": [
+                {
+                    "name": CENTOS_USER,
+                    "ssh-authorized-keys": [CENTOS_PUBLIC_KEY],
+                    "sudo": ["ALL=(ALL) NOPASSWD:ALL"],
+                }
+            ]
+        }
+    )
+
+
+class MyAhvVm(AhvVm):
+
+    resources = MyAhvVmResources
+    categories = {"AppFamily": "Backup", "AppType": "Default"}
+
+
+class MyAhvVMSubstrate(Substrate):
+    """AHV VM Substrate"""
+
+    provider_type = "AHV_VM"
+    provider_spec = MyAhvVm
+
+    @action
+    def __pre_create__():
+        pass
+
+    @action
+    def __post_delete__():
+        pass
+
+
+class {{service_name}}Deployment(Deployment):
+    """Sample Deployment"""
+
+    packages = [ref({{service_name}}Package)]
+    substrate = ref(MyAhvVMSubstrate)
+
+
+class DefaultProfile(Profile):
+
+    var1 = CalmVariable.Simple("sample_val1", runtime=True)
+    var2 = CalmVariable.Simple("sample_val1", runtime=True)
+
+    deployments = [{{service_name}}Deployment]
+
+    @action
+    def test_profile_action():
+        """Sample description for a profile action"""
+        CalmTask.Exec.ssh(name="Task5", script='echo "Profile level action"', target=ref({{service_name}}Service))
+        {{service_name}}Service.{{service_name}}_sample_action(name="Task6")
+
+
+class {{service_name}}Blueprint(Blueprint):
+    """ Sample blueprint for {{service_name}} app using AHV VM"""
+
+    credentials = [CentosCred]
+    services = [{{service_name}}Service]
+    packages = [{{service_name}}Package, Centos_Image]
+    substrates = [MyAhvVMSubstrate]
+    profiles = [DefaultProfile]
+
+
+{%- endmacro %}
+
+
+{{BlueprintTemplate(service_name, subnet_name)}}

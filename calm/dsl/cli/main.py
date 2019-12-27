@@ -144,6 +144,12 @@ def clear():
     pass
 
 
+@main.group(cls=DYMGroup)
+def init():
+    """Initializes the dsl for basic configs and bp directory etc."""
+    pass
+
+
 @get.group(cls=DYMGroup)
 def server():
     """Get calm server details"""
