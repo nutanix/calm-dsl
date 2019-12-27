@@ -114,7 +114,7 @@ def sync_cache():
 @click.option(
     "--dir_name",
     "-d",
-    default=None,
+    default=os.getcwd(),
     help="Directory path for the blueprint"
 )
 def init_dsl_bp(service, dir_name):

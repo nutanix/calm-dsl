@@ -32,6 +32,8 @@ Centos_Image = vm_disk_package(
 class {{service_name}}Service(Service):
     """Sample Service"""
 
+    ENV = CalmVariable.Simple("DEV")
+    
     @action
     def __create__():
         pass
@@ -43,16 +45,26 @@ class {{service_name}}Service(Service):
     @action
     def __stop__():
         pass
+    
+    @action
+    def {{service_name}}_sample_action():
+        """Sample service action"""
+
+        blah = CalmVariable.Simple("2")  # noqa
+        CalmTask.Exec.ssh(name="Task1", script='echo "Hello"')
+        CalmTask.Exec.ssh(name="Task2", script='echo "Hello again"') 
 
 
 class {{service_name}}Package(Package):
     """Sample Package"""
 
+    sample_pkg_var = CalmVariable.Simple("bar")
     services = [ref({{service_name}}Service)]
 
     @action
     def __install__():
-        pass
+        CalmTask.Exec.ssh(name="Task1", filename="scripts/pkg_install_task.sh")
+        CalmTask.Exec.ssh(name="Task2", script="echo @@{sample_pkg_var}@@")
 
     @action
     def __uninstall__():
@@ -65,7 +77,7 @@ class MyAhvVmResources(AhvVmResources):
     vCPUs = 2
     cores_per_vCPU = 1
     disks = [
-        AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(Centos_Image),
+        AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(Centos_Image, bootable=True),
     ]
     nics = [AhvVmNic.DirectNic.ingress("{{subnet_name}}")]
 
@@ -112,7 +124,16 @@ class {{service_name}}Deployment(Deployment):
 
 class DefaultProfile(Profile):
 
+    var1 = CalmVariable.Simple("sample_val1", runtime=True)
+    var2 = CalmVariable.Simple("sample_val1", runtime=True)
+
     deployments = [{{service_name}}Deployment]
+
+    @action
+    def test_profile_action():
+        """Sample description for a profile action"""
+        CalmTask.Exec.ssh(name="Task5", script='echo "Profile level action"', target=ref({{service_name}}Service))
+        {{service_name}}Service.{{service_name}}_sample_action(name="Task6")
 
 
 class {{service_name}}Blueprint(Blueprint):
@@ -120,7 +141,7 @@ class {{service_name}}Blueprint(Blueprint):
 
     credentials = [CentosCred]
     services = [{{service_name}}Service]
-    packages = [{{service_name}}Package]
+    packages = [{{service_name}}Package, Centos_Image]
     substrates = [MyAhvVMSubstrate]
     profiles = [DefaultProfile]
 
