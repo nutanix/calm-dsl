@@ -58,11 +58,13 @@ def create_cred_keys(dir_name):
 
 def create_scripts(dir_name):
 
-    # Read a file and create a script file at user location
-    data = read_file("scripts/pkg_install_task.sh")
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    scripts_dir = os.path.join(dir_path, "scripts")
+    for script_file in os.listdir(scripts_dir):
+        data = read_file("scripts/{}".format(script_file))
 
-    with open("{}/pkg_install_task.sh".format(dir_name), "w+") as script_file:
-        script_file.write(data)
+        with open("{}/{}".format(dir_name, script_file), "w+") as fd:
+            fd.write(data)
 
 
 def make_bp_dirs(dir_name, bp_name):
