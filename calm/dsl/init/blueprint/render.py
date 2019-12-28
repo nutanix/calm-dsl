@@ -10,11 +10,20 @@ from calm.dsl.store import Cache
 from calm.dsl.builtins import read_file
 
 
-def render_blueprint_template(
-    service_name, subnet_name, schema_file="blueprint.py.jinja2"
-):
+template_map = {
+    "AHV_VM": "ahv_blueprint.py.jinja2",
+}
+
+
+def render_blueprint_template(service_name, subnet_name, provider_type):
 
     service_name = service_name.strip().split()[0].title()
+
+    if provider_type not in template_map:
+        print("Provider {} not supported. Using AHV_VM as provider ...".format(provider_type))
+        provider_type = "AHV_VM"
+
+    schema_file = template_map.get(provider_type)
 
     loader = PackageLoader(__name__, "")
     env = Environment(loader=loader)
@@ -23,9 +32,9 @@ def render_blueprint_template(
     return text.strip() + "\n"
 
 
-def create_bp_file(dir_name, service_name, subnet_name):
+def create_bp_file(dir_name, service_name, subnet_name, provider_type):
 
-    bp_text = render_blueprint_template(service_name, subnet_name)
+    bp_text = render_blueprint_template(service_name, subnet_name, provider_type)
 
     bp_path = os.path.join(dir_name, "blueprint.py")
 
@@ -77,7 +86,7 @@ def make_bp_dirs(dir_name, bp_name):
     return (bp_dir, local_dir, key_dir, script_dir)
 
 
-def init_bp(service_name, dir_name):
+def init_bp(service_name, dir_name, provider_type):
 
     bp_name = "{}Blueprint".format(service_name,)
 
@@ -107,7 +116,7 @@ def init_bp(service_name, dir_name):
 
     default_subnet = subnets[0]["name"]
 
-    create_bp_file(bp_dir, service_name, default_subnet)
+    create_bp_file(bp_dir, service_name, default_subnet, provider_type)
 
     # Creating keys
     create_cred_keys(key_dir)

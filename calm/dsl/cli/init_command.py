@@ -1,3 +1,7 @@
+import click
+import os
+import json
+
 from .main import init
 from .utils import highlight_text
 from .configs import set_config
@@ -8,10 +12,7 @@ from calm.dsl.api.connection import Connection, REQUEST
 from calm.dsl.store import Cache
 from calm.dsl.config import update_config
 from calm.dsl.init import init_bp
-
-import click
-import os
-import json
+from calm.dsl.providers import get_provider_types
 
 
 @init.command("dsl")
@@ -108,7 +109,7 @@ def sync_cache():
 @click.option(
     "--service",
     "-s",
-    default="Sample",
+    default="Hello",
     help="Name for service in blueprint"
 )
 @click.option(
@@ -117,6 +118,14 @@ def sync_cache():
     default=os.getcwd(),
     help="Directory path for the blueprint"
 )
-def init_dsl_bp(service, dir_name):
+@click.option(
+    "--type",
+    "-t",
+    "provider_type",
+    type=click.Choice(get_provider_types()),
+    default="AHV_VM",
+    help="Provider type",
+)
+def init_dsl_bp(service, dir_name, provider_type):
     """Creates a starting directory for blueprint"""
-    init_bp(service, dir_name)
+    init_bp(service, dir_name, provider_type)
