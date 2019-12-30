@@ -49,13 +49,20 @@ def create_cred_keys(dir_name):
     # Will create key via name centos/centos_pub
 
     key = RSA.generate(2048)
-    private_key = key.export_key("PEM")
-    file_out = open("{}/centos".format(dir_name), "wb")
-    file_out.write(private_key)
 
+    # Write private key
+    private_key = key.export_key("PEM")
+    private_key_filename = "{}/centos".format(dir_name)
+    with open(private_key_filename, "wb") as fd:
+        fd.write(private_key)
+    os.chmod(private_key_filename, 0o600)
+
+    # Write public key
     public_key = key.publickey().export_key("OpenSSH")
-    file_out = open("{}/centos_pub".format(dir_name), "wb")
-    file_out.write(public_key)
+    public_key_filename = "{}/centos_pub".format(dir_name)
+    with open(public_key_filename, "wb") as fd:
+        fd.write(public_key)
+    os.chmod(public_key_filename, 0o600)
 
 
 def create_scripts(dir_name):
