@@ -23,48 +23,10 @@ click_completion.init()
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
-@click.option(
-    "--ip",
-    "-i",
-    envvar="PRISM_SERVER_IP",
-    default=None,
-    help="Prism Central server IP or hostname",
-)
-@click.option(
-    "--port",
-    "-P",
-    envvar="PRISM_SERVER_PORT",
-    default=None,
-    help="Prism Central server port number",
-)
-@click.option(
-    "--username",
-    "-u",
-    envvar="PRISM_USERNAME",
-    default=None,
-    help="Prism Central username",
-)
-@click.option(
-    "--password",
-    "-p",
-    envvar="PRISM_PASSWORD",
-    default=None,
-    help="Prism Central password",
-)
-@click.option(
-    "--config",
-    "-c",
-    "config_file",
-    envvar="CALM_CONFIG",
-    default=None,
-    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
-    help="Path to config file, defaults to ~/.calm/config",
-)
-@click.option("--project", "-p", "project_name", help="Project name for entity")
 @click_log.simple_verbosity_option(logger)
 @click.version_option("0.1")
 @click.pass_context
-def main(ctx, ip, port, username, password, config_file, project_name):
+def main(ctx):
     """Calm CLI
 
 \b
@@ -77,14 +39,7 @@ Commonly used commands:
   calm app Fancy-App-1 -w my_action   -> Run an action on an app
 """
     ctx.ensure_object(dict)
-    ctx.obj["config"] = get_config(
-        ip=ip,
-        port=port,
-        username=username,
-        password=password,
-        config_file=config_file,
-        project_name=project_name,
-    )
+    ctx.obj["config"] = get_config()
     ctx.obj["client"] = get_api_client()
     ctx.obj["verbose"] = True
 

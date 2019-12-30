@@ -50,6 +50,7 @@ def update_client_handle(
     connection = get_connection(host, port, auth_type, scheme, auth)
     _CLIENT_HANDLE = ClientHandle(connection)
     _CLIENT_HANDLE._connect()
+    return _CLIENT_HANDLE
 
 
 def get_api_client():

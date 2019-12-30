@@ -1,0 +1,18 @@
+{% macro ConfigTemplate(ip, port, username, password, project_name, db_location) -%}
+
+[SERVER]
+pc_ip = {{ip}}
+pc_port = {{port}}
+pc_username = {{username}}
+pc_password = {{password}}
+
+[PROJECT]
+name = {{project_name}}
+
+[DB]
+location = {{db_location}}
+
+{%- endmacro %}
+
+
+{{ConfigTemplate(ip, port, username, password, project_name, db_location)}}

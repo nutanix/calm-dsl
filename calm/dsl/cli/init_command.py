@@ -2,121 +2,89 @@ import click
 import os
 import json
 
-from .main import init
-from .utils import highlight_text
-from .configs import set_config
-from calm.dsl.tools import ping
+from calm.dsl.config import init_config, get_config_file
 from calm.dsl.db import Database
 from calm.dsl.api import get_resource_api, update_client_handle
-from calm.dsl.api.connection import Connection, REQUEST
+from calm.dsl.api.connection import REQUEST
 from calm.dsl.store import Cache
-from calm.dsl.config import update_config
 from calm.dsl.init import init_bp
 from calm.dsl.providers import get_provider_types
+
+from .main import init
 
 
 @init.command("dsl")
 def initialize_engine():
     """Initializes the calm dsl engine"""
 
-    click.echo(highlight_text("\nIntializing Engine..."))
+    click.echo("Please provide Calm DSL settings:\n")
 
-    click.echo(highlight_text("\n1. Server Configuration"))
     set_server_details()
-
-    click.echo(highlight_text("\n2. Initializing local store"))
     init_db()
-
-    click.echo(highlight_text("\n3. Syncing the cache"))
     sync_cache()
 
+    click.echo("\nHINT: To get started, follow the 3 steps below:")
+    click.echo("1. Initialize an example blueprint DSL: calm init bp")
     click.echo(
-        highlight_text("\nAll set \U0001F389. Start creating the bps \U0001F64C")
+        "2. Create and validate the blueprint: calm create bp --file HelloBlueprint/blueprint.py"
     )
+    click.echo(
+        "3. Start an application using the blueprint: calm launch bp HelloBlueprint --app_name HelloApp01 -i"
+    )
+
+    click.echo("\nKeep Calm and DSL On!\n")
 
 
 def set_server_details():
 
-    host = click.prompt("\tEnter Host IP", default="")
-    port = click.prompt("\tEnter Port No.", default="9440")
-    username = click.prompt("\tEnter Username", default="admin")
-    password = click.prompt("\tEnter Password", default="", hide_input=True)
+    host = click.prompt("Prism Central IP", default="")
+    port = click.prompt("Port", default="9440")
+    username = click.prompt("Username", default="admin")
+    password = click.prompt("Password", default="", hide_input=True)
+    project_name = click.prompt("Project", default="default")
 
-    click.echo("\nValidating Host ...")
-    ping_status = "Success" if ping(ip=host) is True else "Fail"
+    # Keep initial DB location to default. User need not give this option initially.
+    # db_location = click.prompt(
+    #    "DSL local DB location", default=os.path.expanduser("~/.calm/dsl.db")
+    # )
 
-    if ping_status == "Fail":
-        raise Exception("Unable to ping {}".format(host))
-    else:
-        click.echo("Ping to host {} is successful \U0001f600".format(host))
+    db_location = os.path.expanduser("~/.calm/dsl.db")
 
-    # Validating creds
-    click.echo("\nValidating Credentials ...")
-    connection_obj = Connection(host, port, auth=(username, password))
-    connection_obj.connect()
-    Obj = get_resource_api("services/nucalm/status", connection_obj)
+    click.echo("Writing config to {} ... ".format(get_config_file()), nl=False)
+    init_config(host, port, username, password, project_name, db_location)
+    click.echo("[Success]")
+
+    click.echo("Checking if Calm is enabled on Server ... ", nl=False)
+    # Update client handle with new settings
+    client = update_client_handle(host, port, auth=(username, password))
+    Obj = get_resource_api("services/nucalm/status", client.connection)
     res, err = Obj.connection._call(Obj.PREFIX, verify=False, method=REQUEST.METHOD.GET)
 
     if err:
+        click.echo("[Fail]")
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-    else:
-        click.echo("Success \U0001f600")
-        result = json.loads(res.content)
-        service_enablement_status = result["service_enablement_status"]
-        click.echo(
-            highlight_text(
-                "\nCalm Enablement status on {}: {}".format(
-                    host, service_enablement_status
-                )
-            )
-        )
-
-    # If validation for host and cred is successful, then update config file
-    set_config("SERVER", ip=host, port=port, username=username, password=password)
-
-    # Updating default config object
-    update_config()
-
-    # Updating default client handle
-    update_client_handle(host, port, auth=(username, password))
+    result = json.loads(res.content)
+    service_enablement_status = result["service_enablement_status"]
+    click.echo("[{}]".format(service_enablement_status))
 
 
 def init_db():
-
-    location = click.prompt(
-        "\tEnter DSL DB location", default=os.path.expanduser("~/.calm/dsl.db")
-    )
-
-    if os.path.exists(location):
-        os.remove(location)
-
-    set_config("DB", location=location)
-
-    # Updating default config object
-    update_config()
-
+    click.echo("Creating local database ... ", nl=False)
     Database()
-    click.echo("Success \U0001f600")
+    click.echo("[Success]")
 
 
 def sync_cache():
+    click.echo("Updating Cache ... ", nl=False)
     Cache.sync()
-    click.echo("Success \U0001f600")
+    click.echo("[Success]")
 
 
 @init.command("bp")
+@click.option("--service", "-s", default="Hello", help="Name for service in blueprint")
 @click.option(
-    "--service",
-    "-s",
-    default="Hello",
-    help="Name for service in blueprint"
-)
-@click.option(
-    "--dir_name",
-    "-d",
-    default=os.getcwd(),
-    help="Directory path for the blueprint"
+    "--dir_name", "-d", default=os.getcwd(), help="Directory path for the blueprint"
 )
 @click.option(
     "--type",

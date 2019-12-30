@@ -1,119 +1,74 @@
 import os
+import errno
 import configparser
-
-
-# config file template
-CONFIG_FILE = os.path.join(os.path.dirname(os.path.realpath(__file__)), "config.ini")
-
-# User config file
-USER_CONFIG_DIRECTORY = os.path.expanduser("~/.calm/")
-USER_CONFIG_FILE = os.path.expanduser("~/.calm/config.ini")
+from jinja2 import Environment, PackageLoader
 
 
 _CONFIG = None
 
 
-def get_config(
-    ip=None,
-    port=None,
-    username=None,
-    password=None,
-    config_file=None,
-    project_name=None,
+def render_config_template(
+    ip,
+    port,
+    username,
+    password,
+    project_name,
+    db_location,
+    schema_file="config.ini.jinja2",
 ):
-    global _CONFIG
-    if not _CONFIG:
-        update_config(ip, port, username, password, config_file, project_name)
-    return _CONFIG
 
-
-def update_config(
-    ip=None,
-    port=None,
-    username=None,
-    password=None,
-    config_file=None,
-    project_name=None,
-    db_location=None,
-):
-    global _CONFIG
-    _CONFIG = _init_config(
-        ip, port, username, password, config_file, project_name, db_location
+    loader = PackageLoader(__name__, "")
+    env = Environment(loader=loader)
+    template = env.get_template(schema_file)
+    text = template.render(
+        ip=ip,
+        port=port,
+        username=username,
+        password=password,
+        project_name=project_name,
+        db_location=db_location,
     )
+    return text.strip() + "\n"
 
 
 def get_config_file():
-    return USER_CONFIG_FILE
+
+    # Default user config file
+    # TODO - Check if config.ini is present in cwd
+    user_config_file = os.path.join(os.path.expanduser("~/.calm/"), "config.ini")
+
+    return user_config_file
 
 
-def _init_config(ip, port, username, password, config_file, project_name, db_location):
+def init_config(ip, port, username, password, project_name, db_location):
 
-    global CONFIG_FILE
-    global USER_CONFIG_FILE
+    user_config_file = get_config_file()
 
-    config = configparser.ConfigParser()
-    config.optionxform = str  # Maintaining case sensitivity for field names
+    # Create parent directory if not present
+    if not os.path.exists(os.path.dirname(user_config_file)):
+        try:
+            os.makedirs(os.path.dirname(user_config_file))
+        except OSError as exc:
+            if exc.errno != errno.EEXIST:
+                raise
 
-    # If user file not exists, it will create one
-    if not os.path.exists(USER_CONFIG_FILE):
-        # Creating directory
-        if not os.path.isdir(USER_CONFIG_DIRECTORY):
-            os.makedirs(os.path.dirname(USER_CONFIG_FILE))
+    # Render config template
+    text = render_config_template(
+        ip, port, username, password, project_name, db_location
+    )
 
-        # Writing the template for config in user's place
-        config.read(CONFIG_FILE)
-        with open(USER_CONFIG_FILE, "w+") as user_config_file:
-            config.write(user_config_file)
-
-    config_file = config_file or USER_CONFIG_FILE
-    config = configparser.ConfigParser()
-    config.optionxform = str  # Maintaining case sensitivity for field names
-
-    if os.path.isfile(config_file):
-        config.read(config_file)
-
-    USER_CONFIG_FILE = config_file
-    if "SERVER" in config:
-        ip = ip or config["SERVER"].get("pc_ip")
-        port = port or config["SERVER"].get("pc_port")
-        username = username or config["SERVER"].get("pc_username")
-        password = password or config["SERVER"].get("pc_password")
-
-    config["SERVER"] = {
-        "pc_ip": ip,
-        "pc_port": port,
-        "pc_username": username,
-        "pc_password": password,
-    }
-
-    if "PROJECT" in config:
-        project_name = project_name or config["PROJECT"].get("name")
-
-    config["PROJECT"] = {"name": project_name}
-
-    if "DB" in config:
-        db_location = db_location or config["DB"].get("location")
-    else:
-        config["DB"] = {
-            "location": db_location or os.path.expanduser("~/.calm/dsl.db"),
-        }
-
-    if "CATEGORIES" not in config:
-        config["CATEGORIES"] = {}
-
-    return config
+    # Write config
+    with open(user_config_file, "w") as fd:
+        fd.write(text)
 
 
-def get_db_location():
-
-    config = get_config()
-
-    db_location = None
-    if "DB" in config:
-        db_location = config["DB"].get("location", None)
-
-    if not db_location:
-        # Default DB location
-        db_location = os.path.expanduser("~/.calm/dsl.db")
-
-    return db_location
+def get_config():
+    global _CONFIG
+    if not _CONFIG:
+        # Create config object
+        user_config_file = get_config_file()
+        config = configparser.ConfigParser()
+        config.optionxform = str  # Maintaining case sensitivity for field names
+        config.read(user_config_file)
+        _CONFIG = config
+    return _CONFIG

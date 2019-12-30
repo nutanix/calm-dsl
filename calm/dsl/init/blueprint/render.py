@@ -1,11 +1,9 @@
 import os
-from io import StringIO
 from jinja2 import Environment, PackageLoader
 from Crypto.PublicKey import RSA
 
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
-from calm.dsl.config import get_config
 from calm.dsl.store import Cache
 from calm.dsl.builtins import read_file
 
@@ -20,7 +18,11 @@ def render_blueprint_template(service_name, subnet_name, provider_type):
     service_name = service_name.strip().split()[0].title()
 
     if provider_type not in template_map:
-        print("Provider {} not supported. Using AHV_VM as provider ...".format(provider_type))
+        print(
+            "Provider {} not supported. Using AHV_VM as provider ...".format(
+                provider_type
+            )
+        )
         provider_type = "AHV_VM"
 
     schema_file = template_map.get(provider_type)

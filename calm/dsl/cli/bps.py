@@ -225,22 +225,20 @@ def compile_blueprint_command(bp_file, out, no_sync=False):
         return
 
     config = get_config()
-    if "PROJECT" in config:
-        project_name = config["PROJECT"].get("name", "default")
-        project_uuid = Cache.get_entity_uuid("PROJECT", project_name)
 
-        if not project_uuid:
-            raise Exception(
-                "Project {} not found. Please run: calm update cache".format(
-                    project_name
-                )
-            )
+    project_name = config["PROJECT"].get("name", "default")
+    project_uuid = Cache.get_entity_uuid("PROJECT", project_name)
 
-        bp_payload["metadata"]["project_reference"] = {
-            "type": "project",
-            "uuid": project_uuid,
-            "name": project_name,
-        }
+    if not project_uuid:
+        raise Exception(
+            "Project {} not found. Please run: calm update cache".format(project_name)
+        )
+
+    bp_payload["metadata"]["project_reference"] = {
+        "type": "project",
+        "uuid": project_uuid,
+        "name": project_name,
+    }
 
     credential_list = bp_payload["spec"]["resources"]["credential_definition_list"]
     is_secret_avl = False
