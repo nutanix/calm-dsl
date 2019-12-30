@@ -93,6 +93,10 @@ def _init_config(ip, port, username, password, config_file, project_name, db_loc
 
     if "DB" in config:
         db_location = db_location or config["DB"].get("location")
+    else:
+        config["DB"] = {
+            "location": db_location or os.path.expanduser("~/.calm/dsl.db"),
+        }
 
     if "CATEGORIES" not in config:
         config["CATEGORIES"] = {}
