@@ -11,7 +11,6 @@ import click_log
 # TODO - move providers to separate file
 from calm.dsl.providers import get_provider, get_provider_types
 from calm.dsl.tools import ping
-from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
 
 logger = logging.getLogger(__name__)
@@ -39,8 +38,6 @@ Commonly used commands:
   calm app Fancy-App-1 -w my_action   -> Run an action on an app
 """
     ctx.ensure_object(dict)
-    ctx.obj["config"] = get_config()
-    ctx.obj["client"] = get_api_client()
     ctx.obj["verbose"] = True
 
 
@@ -116,7 +113,7 @@ def server():
 def get_server_status(obj):
     """Get calm server connection status"""
 
-    client = obj.get("client")
+    client = get_api_client()
     host = client.connection.host
     ping_status = "Success" if ping(ip=host) is True else "Fail"
 

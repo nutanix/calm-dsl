@@ -4,16 +4,18 @@ import click
 import arrow
 from prettytable import PrettyTable
 
+from calm.dsl.api import get_resource_api, get_api_client
+from calm.dsl.config import get_config
+
 from .utils import get_name_query, get_states_filter, highlight_text
 from .constants import ACCOUNT
-from calm.dsl.api import get_resource_api
 
 
 def get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_type):
     """ Get the accounts, optionally filtered by a string """
 
-    client = obj.get("client")
-    config = obj.get("config")
+    client = get_api_client()
+    config = get_config()
 
     params = {"length": limit, "offset": offset}
     filter_query = ""
@@ -113,7 +115,7 @@ def get_account(client, account_name):
 
 def delete_account(obj, account_names):
 
-    client = obj.get("client")
+    client = get_api_client()
 
     for account_name in account_names:
         account = get_account(client, account_name)
@@ -258,7 +260,7 @@ def describe_k8s_account(spec):
 
 def describe_account(obj, account_name):
 
-    client = obj.get("client")
+    client = get_api_client()
     account = get_account(client, account_name)
     account_type = account["status"]["resources"]["type"]
     account_id = account["metadata"]["uuid"]

@@ -11,6 +11,8 @@ from prettytable import PrettyTable
 
 from calm.dsl.builtins import Blueprint, SimpleBlueprint, create_blueprint_payload
 from calm.dsl.config import get_config
+from calm.dsl.api import get_api_client
+
 from .utils import get_name_query, get_states_filter, highlight_text
 from .constants import BLUEPRINT
 from calm.dsl.store import Cache
@@ -19,8 +21,8 @@ from calm.dsl.store import Cache
 def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
     """Get the blueprints, optionally filtered by a string"""
 
-    client = obj.get("client")
-    config = obj.get("config")
+    client = get_api_client()
+    config = get_config()
 
     params = {"length": limit, "offset": offset}
     filter_query = ""
@@ -103,7 +105,7 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
 
 
 def describe_bp(obj, blueprint_name):
-    client = obj.get("client")
+    client = get_api_client()
     bp = get_blueprint(client, blueprint_name, all=True)
 
     res, err = client.blueprint.read(bp["metadata"]["uuid"])
@@ -407,7 +409,7 @@ def launch_blueprint_simple(
 
 def delete_blueprint(obj, blueprint_names):
 
-    client = obj.get("client")
+    client = get_api_client()
 
     for blueprint_name in blueprint_names:
         blueprint = get_blueprint(client, blueprint_name)

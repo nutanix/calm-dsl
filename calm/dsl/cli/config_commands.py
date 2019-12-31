@@ -1,5 +1,5 @@
+from calm.dsl.config import print_config
 from .main import show
-from .configs import print_config
 
 
 @show.command("config")

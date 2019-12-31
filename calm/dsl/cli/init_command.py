@@ -2,7 +2,7 @@ import click
 import os
 import json
 
-from calm.dsl.config import init_config, get_config_file
+from calm.dsl.config import init_config, get_default_user_config_file
 from calm.dsl.db import Database
 from calm.dsl.api import get_resource_api, update_client_handle
 from calm.dsl.api.connection import REQUEST
@@ -50,7 +50,10 @@ def set_server_details():
 
     db_location = os.path.expanduser("~/.calm/dsl.db")
 
-    click.echo("Writing config to {} ... ".format(get_config_file()), nl=False)
+    # Default user config file
+    user_config_file = get_default_user_config_file()
+
+    click.echo("Writing config to {} ... ".format(user_config_file), nl=False)
     init_config(host, port, username, password, project_name, db_location)
     click.echo("[Success]")
 

@@ -1,13 +1,31 @@
 import os
 import errno
 import configparser
+
 from jinja2 import Environment, PackageLoader
+
+from .config_schema import validate_config
 
 
 _CONFIG = None
 
 
-def render_config_template(
+def get_default_user_config_file():
+
+    user_config_file = os.path.join(os.path.expanduser("~/.calm"), "config.ini")
+
+    # Create parent directory if not present
+    if not os.path.exists(os.path.dirname(user_config_file)):
+        try:
+            os.makedirs(os.path.dirname(user_config_file))
+        except OSError as exc:
+            if exc.errno != errno.EEXIST:
+                raise
+
+    return user_config_file
+
+
+def _render_config_template(
     ip,
     port,
     username,
@@ -31,29 +49,31 @@ def render_config_template(
     return text.strip() + "\n"
 
 
-def get_config_file():
+def _get_config_file():
 
-    # Default user config file
-    # TODO - Check if config.ini is present in cwd
-    user_config_file = os.path.join(os.path.expanduser("~/.calm/"), "config.ini")
+    cwd = os.getcwd()
+    if "config.ini" in os.listdir(cwd):
+        user_config_file = os.path.join(cwd, "config.ini")
+
+    else:
+        user_config_file = get_default_user_config_file()
+        if not os.path.exists(user_config_file):
+            raise Exception(
+                "Config file {} not found. Please run: calm init dsl".format(
+                    user_config_file
+                )
+            )
 
     return user_config_file
 
 
 def init_config(ip, port, username, password, project_name, db_location):
 
-    user_config_file = get_config_file()
-
-    # Create parent directory if not present
-    if not os.path.exists(os.path.dirname(user_config_file)):
-        try:
-            os.makedirs(os.path.dirname(user_config_file))
-        except OSError as exc:
-            if exc.errno != errno.EEXIST:
-                raise
+    # Default user config file
+    user_config_file = get_default_user_config_file()
 
     # Render config template
-    text = render_config_template(
+    text = _render_config_template(
         ip, port, username, password, project_name, db_location
     )
 
@@ -63,12 +83,28 @@ def init_config(ip, port, username, password, project_name, db_location):
 
 
 def get_config():
+
     global _CONFIG
+
     if not _CONFIG:
         # Create config object
-        user_config_file = get_config_file()
+        user_config_file = _get_config_file()
         config = configparser.ConfigParser()
         config.optionxform = str  # Maintaining case sensitivity for field names
         config.read(user_config_file)
+
+        # Validate config
+        if not validate_config(config):
+            raise Exception("Invalid config file: {}".format(user_config_file))
+
         _CONFIG = config
+
     return _CONFIG
+
+
+def print_config():
+
+    config_file = _get_config_file()
+    print(config_file)
+    with open(config_file) as fd:
+        print(fd.read())

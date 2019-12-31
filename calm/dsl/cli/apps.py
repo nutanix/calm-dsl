@@ -9,6 +9,9 @@ import click
 from prettytable import PrettyTable
 from anytree import NodeMixin, RenderTree
 
+from calm.dsl.api import get_api_client
+from calm.dsl.config import get_config
+
 from .utils import get_name_query, get_states_filter, highlight_text, Display
 from .constants import APPLICATION, RUNLOG, SYSTEM_ACTIONS
 
@@ -16,8 +19,8 @@ log = logging.getLogger(__name__)
 
 
 def get_apps(obj, name, filter_by, limit, offset, quiet, all_items):
-    client = obj.get("client")
-    config = obj.get("config")
+    client = get_api_client()
+    config = get_config()
 
     params = {"length": limit, "offset": offset}
     filter_query = ""
@@ -132,7 +135,7 @@ def _get_app(client, app_name, all=False):
 
 
 def describe_app(obj, app_name):
-    client = obj.get("client")
+    client = get_api_client()
     app = _get_app(client, app_name, all=True)
 
     click.echo("\n----Application Summary----\n")
@@ -389,7 +392,7 @@ def watch_action(runlog_uuid, app_name, client, screen, poll_interval=10):
 def watch_app(obj, app_name, screen, app=None):
     """Watch an app"""
 
-    client = obj.get("client")
+    client = get_api_client()
     is_app_describe = False
 
     if not app:
@@ -497,7 +500,7 @@ def watch_app(obj, app_name, screen, app=None):
 
 
 def delete_app(obj, app_names, soft=False):
-    client = obj.get("client")
+    client = get_api_client()
 
     for app_name in app_names:
         app = _get_app(client, app_name)
@@ -515,7 +518,7 @@ def delete_app(obj, app_names, soft=False):
 
 
 def run_actions(screen, obj, app_name, action_name, watch):
-    client = obj.get("client")
+    client = get_api_client()
 
     if action_name.lower() == SYSTEM_ACTIONS.CREATE:
         click.echo(
@@ -583,7 +586,7 @@ def poll_action(poll_func, completion_func, poll_interval=10):
 
 
 def download_runlog(obj, runlog_id, app_name, file_name):
-    client = obj.get("client")
+    client = get_api_client()
     app = _get_app(client, app_name)
     app_id = app["metadata"]["uuid"]
 
