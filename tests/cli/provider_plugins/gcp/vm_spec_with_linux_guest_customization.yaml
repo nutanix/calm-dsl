@@ -6,15 +6,22 @@ input:
 - "vm-@@{calm_unique_hash}@@-@@{calm_array_index}@@"  # VM name
 - "7"   # zone  = us_central1-c
 - "21"  # Machine Type = f1-micro
-- "y"   # Use existing Disk
-- "1"   # Persistent Disk = bdisk-delete-0-051a66b8
+- "n"   # Use existing Disk
+- "2"   # Storage type = pd-ssd
+- "4"   # Source image = centos-7
+- "10"  # Size of disk
 - "y"   # Delete disk when instance is deleted
 - "n"   # Add Additional Disks
 - "n"   # Add Blank Disks
-- "n"   # Add Networks
+- "y"   # Add Networks
+- "n"   # Associate public ip address
+- "1"   # Network = default
+- "1"   # Subnetwork = default
+- "n"   # Add more networks
 - "n"   # Add ssh keys
 - "y"   # block project-wide SSH keys
-- "n"   # Add Cutomization script
+- "y"   # Add Cutomization script
+- "echo('Linux os script')"   # Startup script  
 - "n"   # Add key value pairs to metadata
 - "n"   # Add network tags
 - "n"   # Add labels
@@ -27,7 +34,9 @@ cli_assertions:
 spec_assertions:
 - "zone: us-central1-c" # Zone
 - "machineType: f1-micro"   # Machine Type
-- "source: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/disks/bdisk-delete-0-051a66b8"   # Disk image for boot disk
+- "sourceImage: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/images/centos-7"   # Source image of boot disk
+- "diskType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/diskTypes/pd-ssd"   # Disk type for boot disk
+- "diskSizeGb: 10"    # Size of boot disk
 - "email: 108048128720-compute@developer.gserviceaccount.com" # Service account email
 # Scope = Default Scope
 - "https://www.googleapis.com/auth/devstorage.read_only"
@@ -36,3 +45,9 @@ spec_assertions:
 - "https://www.googleapis.com/auth/servicecontrol"
 - "https://www.googleapis.com/auth/service.management.readonly"
 - "https://www.googleapis.com/auth/trace.append"
+# Network 0
+- "network: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/networks/default"    # Nic0's network
+- "subnetwork: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/regions/us-central1/subnetworks/default"   # Nic0's subnetwork
+- "associatePublicIP: false"
+# Guest Customization
+- "startupScript: echo('Linux os script')"

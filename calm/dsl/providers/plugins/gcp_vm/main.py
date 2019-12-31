@@ -77,7 +77,7 @@ class GCP:
             entity_map[name] = self_link
 
         return entity_map
-    
+
     def snapshots(self, account_id, zone):
         Obj = get_resource_api(gcp.SNAPSHOTS, self.connection)
         payload = {
@@ -98,21 +98,21 @@ class GCP:
             entity_map[name] = selfLink
 
         return entity_map
-    
+
     def configured_public_images(self, account_id):
         Obj = get_resource_api("accounts", self.connection)
         res, err = Obj.read(account_id)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        
+
         res = res.json()
         public_images = res["status"]["resources"]["data"]["public_images"]
         public_image_map = {}
         for entity in public_images:
             selfLink = entity["selfLink"]
-            name = selfLink[selfLink.rindex("/")+1:]
+            name = selfLink[selfLink.rindex("/") + 1 :]
             public_image_map[name] = selfLink
-        
+
         return public_image_map
 
     def images(self, account_id, zone):
@@ -135,12 +135,12 @@ class GCP:
             entity_map[name] = selfLink
 
         return entity_map
-    
+
     def disk_images(self, account_id, zone):
         """
             Returns gcpImages + gcpSnapshots + configuredPublicImages
         """
-        
+
         image_map = {}
         image_map.update(self.configured_public_images(account_id))
         image_map.update(self.snapshots(account_id, zone))
@@ -399,7 +399,7 @@ def create_spec(client):
     )
     while choice[0] == "y":
         Key = click.prompt("\n\tKey", default="")
-        Value = click.prompt("\n\tValue", default="")
+        Value = click.prompt("\tValue", default="")
 
         metadata["items"].append({"key": Key, "value": Value})
         choice = choice = click.prompt(
@@ -530,9 +530,7 @@ def get_disks(gcp_obj, account_id, zone):
                 break
 
         init_params = {}
-        disk_data = {
-            "source": persistent_disk_map[disk_name]
-        }
+        disk_data = {"source": persistent_disk_map[disk_name]}
         persistent_disk_map.pop(disk_name)
 
     else:
@@ -633,7 +631,7 @@ def get_disks(gcp_obj, account_id, zone):
             init_params = {}
             disk_data = {
                 "source": persistent_disk_map[disk_name],
-                "disk_type": "PERSISTENT"
+                "disk_type": "PERSISTENT",
             }
             persistent_disk_map.pop(disk_name)  # Pop used disk
 
@@ -678,11 +676,9 @@ def get_disks(gcp_obj, account_id, zone):
 
                 disk_data = {
                     "interface": disk_interface,
-                    "disk_type": gcp.STORAGE_DISK_MAP[storage_type]
+                    "disk_type": gcp.STORAGE_DISK_MAP[storage_type],
                 }
-                init_params = {
-                    "diskType": disk_type_link
-                }
+                init_params = {"diskType": disk_type_link}
 
             else:
                 source_image_map = gcp_obj.disk_images(account_id, zone)
@@ -704,9 +700,7 @@ def get_disks(gcp_obj, account_id, zone):
                         break
 
                 disk_size = click.prompt("\nEnter the size of disk in GB", default=-1)
-                disk_data = {
-                    "disk_type": gcp.STORAGE_DISK_MAP[storage_type]
-                }
+                disk_data = {"disk_type": gcp.STORAGE_DISK_MAP[storage_type]}
                 init_params = {
                     "diskType": disk_type_link,
                     "sourceImage": source_image_link,
@@ -722,11 +716,7 @@ def get_disks(gcp_obj, account_id, zone):
         auto_delete = True if choice[0] == "y" else False
 
         disk_data.update(
-            {
-                "boot": False,
-                "autoDelete": auto_delete,
-                "initializeParams": init_params,
-            }
+            {"boot": False, "autoDelete": auto_delete, "initializeParams": init_params,}
         )
 
         gcp_disks.append(disk_data)
@@ -774,9 +764,8 @@ def get_blank_disks(zone):
         )
         disk_name = click.prompt(
             "\nEnter Disk Name",
-            default="vm-@@{calm_array_index}@@-@@{calm_time}@@-blankdisk-" + str(
-                bdisk_ind + 1
-            ),
+            default="vm-@@{calm_array_index}@@-@@{calm_time}@@-blankdisk-"
+            + str(bdisk_ind + 1),
         )
         disk_size = click.prompt("\nEnter the size of disk in GB", default=-1)
         choice = click.prompt(
@@ -902,21 +891,25 @@ def get_networks(gcp_obj, account_id, zone):
                     "associatePublicIP": False,
                 }
             )
-        network_map.pop(network)    # Pop out used network
+        network_map.pop(network)  # Pop out used network
+        nic_index += 1
+        choice = click.prompt(
+            "\n{}(y/n)".format(highlight_text("Want to add more networks")),
+            default="n",
+        )
 
     return networks
 
 
 def get_ssh_keys():
-
     def check_key_format(key):
         arr = key.split(" ")
         arr_len = len(arr)
 
-        if (arr_len != 3):
+        if arr_len != 3:
             return False
 
-        elif (not arr[2].find('@')):
+        elif not arr[2].find("@"):
             return False
 
         return True
@@ -924,7 +917,7 @@ def get_ssh_keys():
     def format_key(key):
         arr = key.split(" ")
         username = arr[2].split("@")[0]
-        result = "{}:{}". format(username, key)
+        result = "{}:{}".format(username, key)
         return result
 
     choice = click.prompt(
@@ -932,7 +925,9 @@ def get_ssh_keys():
     )
     ssh_keys = []
     if choice[0] == "y":
-        click.echo(highlight_text("\n\tFormat: '<protocol> <key-blob> <username@example.com>'"))
+        click.echo(
+            highlight_text("\n\tFormat: '<protocol> <key-blob> <username@example.com>'")
+        )
 
     while choice[0] == "y":
         key = click.prompt("\nEnter ssh key", default="")

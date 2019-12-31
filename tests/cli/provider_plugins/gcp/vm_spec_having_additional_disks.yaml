@@ -8,7 +8,7 @@ input:
 - "21"  # Machine Type = f1-micro
 # Boot Disk
 - "y"   # Use existing Disk
-- "1"   # Persistent Disk = bdisk-delete-0-51fb2ad8
+- "1"   # Persistent Disk = bdisk-delete-0-051a66b8
 - "y"   # Delete disk when instance is deleted
 # Additional Disks
 - "y"   # Add Additional Disks
@@ -55,7 +55,7 @@ cli_assertions:
 spec_assertions:
 - "zone: us-central1-c" # Zone
 - "machineType: f1-micro"   # Machine Type
-- "source: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/disks/bdisk-delete-0-51fb2ad8"   # Disk image for boot disk
+- "source: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/disks/bdisk-delete-0-051a66b8"   # Disk image for boot disk
 - "email: 108048128720-compute@developer.gserviceaccount.com" # Service account email
 # Scope = Default Scope
 - "https://www.googleapis.com/auth/devstorage.read_only"
@@ -64,10 +64,10 @@ spec_assertions:
 - "https://www.googleapis.com/auth/servicecontrol"
 - "https://www.googleapis.com/auth/service.management.readonly"
 - "https://www.googleapis.com/auth/trace.append"
-- "source: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/disks/bdisk-delete-0-56f01278"   # disk image for additional disk 0
+- "source: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/disks/bdisk-delete-0-16cb5db9"   # disk image for additional disk 0
 - "diskType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/diskTypes/pd-standard"   #  disk type for additional disk 1
 - "sourceImage: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/images/centos-7"   # image for additional disk 1
-- "diskSizeGb:10"   # disk size for additional disk 1
+- "diskSizeGb: 10"   # disk size for additional disk 1
 - "diskType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/diskTypes/pd-ssd"    # disk type for additional disk 2
 - "sourceImage: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/snapshots/postgres-image"    # image for additional disk 2
 - "diskSizeGb: 11"   # disk size for additional disk 2

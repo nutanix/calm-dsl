@@ -40,7 +40,7 @@ class TestGCPSpec:
             Guest Customization: No
         """
         pass
-    
+
     def test_vm_spec_having_blank_disks(self):
         """
             VM OS: Linux
@@ -57,7 +57,7 @@ class TestGCPSpec:
             Guest Customization: No
         """
         pass
-    
+
     def test_vm_spec_with_ssh_keys(self):
         """
             VM OS: Linux
@@ -70,5 +70,72 @@ class TestGCPSpec:
             Networks: No
             Ssh Keys: Yes
             Guest Customization: No
+        """
+        pass
+
+    def test_vm_spec_with_networks(self):
+        """
+            VM OS: Linux
+            Zone: Yes
+            Root Disk: Yes
+                Use Existing Disk: No
+                Storage Type: pd-ssd
+            Additional Disks: No
+            Blank Disks: No
+            Networks: Yes(2)
+                Associate Public Ip: Yes(1)
+                Not Associate Public Ip: Yes(1)
+            Ssh Keys: No
+            Guest Customization: No
+        """
+        pass
+
+    def test_vm_spec_with_linux_guest_customization(self):
+        """
+            VM OS: Linux
+            Zone: Yes
+            Root Disk: Yes
+                Use Existing Disk: No
+                Storage Type: pd-ssd
+            Additional Disks: No
+            Blank Disks: No
+            Networks: Yes(1)
+                Not Associate Public Ip: Yes(1)
+            Ssh Keys: No
+            Guest Customization: Yes
+        """
+        pass
+
+    def test_vm_spec_with_windows_guest_customization(self):
+        """
+            VM OS: Windows
+            Zone: Yes
+            Root Disk: Yes
+                Use Existing Disk: No
+                Storage Type: pd-ssd
+            Additional Disks: No
+            Blank Disks: No
+            Networks: Yes(1)
+                Not Associate Public Ip: Yes(1)
+            Ssh Keys: No
+            Guest Customization: Yes
+        """
+        pass
+
+    def test_vm_spec_with_tags_and_labels(self):
+        """
+            VM OS: Windows
+            Zone: Yes
+            Root Disk: Yes
+                Use Existing Disk: No
+                Storage Type: pd-ssd
+            Additional Disks: No
+            Blank Disks: No
+            Networks: Yes(1)
+                Not Associate Public Ip: Yes(1)
+            Ssh Keys: No
+            Guest Customization: No
+            Network Tags: Yes
+            Labels: Yes
         """
         pass
