@@ -1,5 +1,7 @@
 import click
 
+from calm.dsl.api import get_api_client
+
 from .main import main, get, describe, delete, run, watch, download
 from .utils import Display
 from .apps import (
@@ -97,7 +99,7 @@ def _watch_action_runlog(obj, runlog_uuid, app_name, poll_interval):
     """Watch an app"""
 
     def display_action(screen):
-        watch_action(runlog_uuid, app_name, obj.get("client"), screen, poll_interval)
+        watch_action(runlog_uuid, app_name, get_api_client(), screen, poll_interval)
         screen.wait_for_input(10.0)
 
     Display.wrapper(display_action, watch=True)

@@ -15,7 +15,9 @@ from calm.dsl.builtins import provider_spec, read_local_file
 CRED_USERNAME = read_local_file(".tests/username")
 CRED_PASSWORD = read_local_file(".tests/password")
 
-DefaultCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="default cred", default=True)
+DefaultCred = basic_cred(
+    CRED_USERNAME, CRED_PASSWORD, name="default cred", default=True
+)
 
 
 def test_ping_code():

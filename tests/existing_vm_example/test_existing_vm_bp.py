@@ -19,7 +19,9 @@ CRED_PASSWORD = read_local_file(".tests/password")
 TEST_PC_IP = read_local_file(".tests/test_pc_ip")
 DNS_SERVER = read_local_file(".tests/dns_server")
 
-DefaultCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="default cred", default=True)
+DefaultCred = basic_cred(
+    CRED_USERNAME, CRED_PASSWORD, name="default cred", default=True
+)
 
 
 def test_ping_code():

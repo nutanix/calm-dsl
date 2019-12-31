@@ -33,7 +33,9 @@ Virtio = vm_disk_package(name="era", config_file="specs/virtio_image_config.yaml
 class AHVVMforMySQL(Substrate):
     """AHV VM config given by reading a spec file"""
 
-    provider_spec = read_ahv_spec("specs/ahv_provider_spec.yaml", disk_packages={1: Virtio})
+    provider_spec = read_ahv_spec(
+        "specs/ahv_provider_spec.yaml", disk_packages={1: Virtio}
+    )
 
 
 class MySQLDeployment(Deployment):

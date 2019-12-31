@@ -43,8 +43,12 @@ setuptools.setup(
     include_package_data=True,
     entry_points={"console_scripts": ["calm=calm.dsl.cli:main"]},
     classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: GNU General Public License (GPL)",
+        "Development Status :: 3 - Alpha",
+        "Environment :: Console",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: Apache Software License",
+        "Natural Language :: English",
         "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3.7",
     ],
 )

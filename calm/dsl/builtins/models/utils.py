@@ -32,7 +32,7 @@ def read_local_file(filename):
     # If not exists read from home directory
     if not os.path.exists(abs_file_path):
         file_path = os.path.expanduser("~/.calm/.local/") + filename
-        return read_file(file_path, 0).rstrip()     # To remove \n, use rstrip
+        return read_file(file_path, 0).rstrip()  # To remove \n, use rstrip
 
     return read_file(file_path, depth=2)
 
