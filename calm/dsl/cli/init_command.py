@@ -2,24 +2,50 @@ import click
 import os
 import json
 
-from calm.dsl.config import init_config, get_default_user_config_file
+from calm.dsl.config import init_config, get_default_user_config_file, get_config
 from calm.dsl.db import Database
-from calm.dsl.api import get_resource_api, update_client_handle
-from calm.dsl.api.connection import REQUEST
+from calm.dsl.api import get_resource_api, update_client_handle, get_client_handle
 from calm.dsl.store import Cache
 from calm.dsl.init import init_bp
 from calm.dsl.providers import get_provider_types
 
-from .main import init
+from .main import init, set
 
 
 @init.command("dsl")
-def initialize_engine():
+@click.option(
+    "--ip",
+    "-i",
+    envvar="PRISM_SERVER_IP",
+    default=None,
+    help="Prism Central server IP or hostname",
+)
+@click.option(
+    "--port",
+    "-P",
+    envvar="PRISM_SERVER_PORT",
+    default=None,
+    help="Prism Central server port number",
+)
+@click.option(
+    "--username",
+    "-u",
+    envvar="PRISM_USERNAME",
+    default=None,
+    help="Prism Central username",
+)
+@click.option(
+    "--password",
+    "-p",
+    envvar="PRISM_PASSWORD",
+    default=None,
+    help="Prism Central password",
+)
+@click.option("--project", "-pj", "project_name", help="Project name for entity")
+def initialize_engine(ip, port, username, password, project_name):
     """Initializes the calm dsl engine"""
 
-    click.echo("Please provide Calm DSL settings:\n")
-
-    set_server_details()
+    set_server_details(ip, port, username, password, project_name)
     init_db()
     sync_cache()
 
@@ -35,13 +61,30 @@ def initialize_engine():
     click.echo("\nKeep Calm and DSL On!\n")
 
 
-def set_server_details():
+def set_server_details(ip, port, username, password, project_name):
 
-    host = click.prompt("Prism Central IP", default="")
-    port = click.prompt("Port", default="9440")
-    username = click.prompt("Username", default="admin")
-    password = click.prompt("Password", default="", hide_input=True)
-    project_name = click.prompt("Project", default="default")
+    if not (ip and port and username and password and project_name):
+        click.echo("Please provide Calm DSL settings:\n")
+
+    host = ip or click.prompt("Prism Central IP", default="")
+    port = port or click.prompt("Port", default="9440")
+    username = username or click.prompt("Username", default="admin")
+    password = password or click.prompt("Password", default="", hide_input=True)
+    project_name = project_name or click.prompt("Project", default="default")
+
+    click.echo("\nChecking if Calm is enabled on Server ... ", nl=False)
+    # Get temporary client handle
+    client = get_client_handle(host, port, auth=(username, password), temp=True)
+    Obj = get_resource_api("services/nucalm/status", client.connection)
+    res, err = Obj.read()
+
+    if err:
+        click.echo("[Fail]")
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    result = json.loads(res.content)
+    service_enablement_status = result["service_enablement_status"]
+    click.echo("[{}]".format(service_enablement_status))
 
     # Keep initial DB location to default. User need not give this option initially.
     # db_location = click.prompt(
@@ -57,19 +100,8 @@ def set_server_details():
     init_config(host, port, username, password, project_name, db_location)
     click.echo("[Success]")
 
-    click.echo("Checking if Calm is enabled on Server ... ", nl=False)
-    # Update client handle with new settings
-    client = update_client_handle(host, port, auth=(username, password))
-    Obj = get_resource_api("services/nucalm/status", client.connection)
-    res, err = Obj.connection._call(Obj.PREFIX, verify=False, method=REQUEST.METHOD.GET)
-
-    if err:
-        click.echo("[Fail]")
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-    result = json.loads(res.content)
-    service_enablement_status = result["service_enablement_status"]
-    click.echo("[{}]".format(service_enablement_status))
+    # Update client handle with new settings if no exception occurs
+    update_client_handle(host, port, auth=(username, password))
 
 
 def init_db():
@@ -100,3 +132,77 @@ def sync_cache():
 def init_dsl_bp(service, dir_name, provider_type):
     """Creates a starting directory for blueprint"""
     init_bp(service, dir_name, provider_type)
+
+
+@set.command("config")
+@click.option(
+    "--ip",
+    "-i",
+    "host",
+    envvar="PRISM_SERVER_IP",
+    default=None,
+    help="Prism Central server IP or hostname",
+)
+@click.option(
+    "--port",
+    "-P",
+    envvar="PRISM_SERVER_PORT",
+    default=None,
+    help="Prism Central server port number",
+)
+@click.option(
+    "--username",
+    "-u",
+    envvar="PRISM_USERNAME",
+    default=None,
+    help="Prism Central username",
+)
+@click.option(
+    "--password",
+    "-p",
+    envvar="PRISM_PASSWORD",
+    default=None,
+    help="Prism Central password",
+)
+@click.option("--project", "-pj", "project_name", help="Project name for entity")
+@click.option(
+    "--db_file",
+    "-d",
+    "db_location",
+    envvar="DATABASE_LOCATION",
+    default=None,
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to local database file",
+)
+@click.option(
+    "--config",
+    "-c",
+    "config_file",
+    envvar="CALM_CONFIG",
+    default=os.path.expanduser("~/.calm/config.ini"),
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to config file, defaults to ~/.calm/config",
+)
+def set_config(host, port, username, password, project_name, db_location, config_file):
+    """Will write the configuration to config file"""
+
+    click.echo("Writing config to {} ... ".format(config_file), nl=False)
+
+    config = get_config()
+    host = host or config["SERVER"]["pc_ip"]
+    username = username or config["SERVER"]["pc_username"]
+    port = port or config["SERVER"]["pc_port"]
+    password = password or config["SERVER"]["pc_password"]
+    project_name = project_name or config["PROJECT"]["name"]
+    db_location = db_location or config["DB"]["location"]
+
+    init_config(
+        host,
+        port,
+        username,
+        password,
+        project_name,
+        db_location,
+        config_file=config_file,
+    )
+    click.echo("[Success]")

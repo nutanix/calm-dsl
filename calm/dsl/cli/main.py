@@ -1,6 +1,7 @@
 from ruamel import yaml
 import logging
 import click
+import json
 
 import click_completion
 import click_completion.core
@@ -10,8 +11,7 @@ import click_log
 
 # TODO - move providers to separate file
 from calm.dsl.providers import get_provider, get_provider_types
-from calm.dsl.tools import ping
-from calm.dsl.api import get_api_client
+from calm.dsl.api import get_api_client, get_resource_api
 
 logger = logging.getLogger(__name__)
 click_log.basic_config(logger)
@@ -113,11 +113,19 @@ def server():
 def get_server_status(obj):
     """Get calm server connection status"""
 
+    click.echo("Checking if Calm is enabled on Server ... ", nl=False)
     client = get_api_client()
-    host = client.connection.host
-    ping_status = "Success" if ping(ip=host) is True else "Fail"
+    Obj = get_resource_api("services/nucalm/status", client.connection)
+    res, err = Obj.read()
 
-    click.echo("Server Ping Status: {}".format(ping_status))
+    if err:
+        click.echo("[Fail]")
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    result = json.loads(res.content)
+    service_enablement_status = result["service_enablement_status"]
+
+    click.echo("[{}]".format(service_enablement_status))
     click.echo("Server URL: {}".format(client.connection.base_url))
     # TODO - Add info about PC and Calm server version
 
@@ -218,10 +226,4 @@ def calmrepl():
 @main.group(cls=DYMGroup)
 def set():
     """Sets the entities"""
-    pass
-
-
-@set.group(cls=DYMGroup)
-def config():
-    """Configuration setup for server, projects"""
     pass

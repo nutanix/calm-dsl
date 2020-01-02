@@ -1,6 +1,6 @@
 from calm.dsl.config import get_config
 
-from .connection import get_connection, update_connection, REQUEST
+from .connection import get_connection, update_connection, REQUEST, Connection
 from .blueprint import BlueprintAPI
 from .application import ApplicationAPI
 from .project import ProjectAPI
@@ -31,11 +31,19 @@ def get_client_handle(
     auth_type=REQUEST.AUTH_TYPE.BASIC,
     scheme=REQUEST.SCHEME.HTTPS,
     auth=None,
+    temp=False,  # This flag is used to generate temp handle
 ):
     global _CLIENT_HANDLE
-    if not _CLIENT_HANDLE:
-        update_client_handle(host, port, auth_type, scheme, auth)
-    return _CLIENT_HANDLE
+    if temp:
+        connection = Connection(host, port, auth_type, scheme, auth)
+        handle = ClientHandle(connection)
+        handle._connect()
+        return handle
+
+    else:
+        if not _CLIENT_HANDLE:
+            update_client_handle(host, port, auth_type, scheme, auth)
+        return _CLIENT_HANDLE
 
 
 def update_client_handle(
