@@ -186,10 +186,7 @@ def init_dsl_bp(service, dir_name, provider_type):
 def set_config(host, port, username, password, project_name, db_location, config_file):
     """Will write the configuration to config file"""
 
-    # Default user config file
-    user_config_file = get_default_user_config_file()
-
-    click.echo("Writing config to {} ... ".format(user_config_file), nl=False)
+    click.echo("Writing config to {} ... ".format(config_file), nl=False)
 
     config = get_config()
     host = host or config["SERVER"]["pc_ip"]
