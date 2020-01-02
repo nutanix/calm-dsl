@@ -63,9 +63,9 @@ def initialize_engine(ip, port, username, password, project_name):
 
 def set_server_details(ip, port, username, password, project_name):
 
-    if not (ip and  port and username and password and project_name):
-       click.echo("Please provide Calm DSL settings:\n")
- 
+    if not (ip and port and username and password and project_name):
+        click.echo("Please provide Calm DSL settings:\n")
+
     host = ip or click.prompt("Prism Central IP", default="")
     port = port or click.prompt("Port", default="9440")
     username = username or click.prompt("Username", default="admin")
@@ -132,3 +132,54 @@ def sync_cache():
 def init_dsl_bp(service, dir_name, provider_type):
     """Creates a starting directory for blueprint"""
     init_bp(service, dir_name, provider_type)
+
+
+@init.command("config")
+@click.option(
+    "--ip",
+    "-i",
+    "host",
+    envvar="PRISM_SERVER_IP",
+    default=None,
+    help="Prism Central server IP or hostname",
+)
+@click.option(
+    "--port",
+    "-P",
+    envvar="PRISM_SERVER_PORT",
+    default=None,
+    help="Prism Central server port number",
+)
+@click.option(
+    "--username",
+    "-u",
+    envvar="PRISM_USERNAME",
+    default=None,
+    help="Prism Central username",
+)
+@click.option(
+    "--password",
+    "-p",
+    envvar="PRISM_PASSWORD",
+    default=None,
+    help="Prism Central password",
+)
+@click.option("--project", "-pj", "project_name", help="Project name for entity")
+@click.option(
+    "--db_file",
+    "-d",
+    "db_location",
+    envvar="DATABASE_LOCATION",
+    default=os.path.expanduser("~/.calm/dsl.db"),
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to local database file",
+)
+def set_config(host, port, username, password, project_name, db_location):
+    """Will write the configuration to config file"""
+
+    # Default user config file
+    user_config_file = get_default_user_config_file()
+
+    click.echo("Writing config to {} ... ".format(user_config_file), nl=False)
+    init_config(host, port, username, password, project_name, db_location)
+    click.echo("[Success]")
