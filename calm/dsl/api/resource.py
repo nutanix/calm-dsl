@@ -16,10 +16,11 @@ class ResourceAPI:
             self.PREFIX, verify=False, request_json=payload, method=REQUEST.METHOD.POST
         )
 
-    def read(self, id):
+    def read(self, id=None):
+        url = self.ITEM.format(id) if id else self.PREFIX
         return self.connection._call(
-            self.ITEM.format(id), verify=False, method=REQUEST.METHOD.GET
-        )
+                url, verify=False, method=REQUEST.METHOD.GET
+            )
 
     def update(self, uuid, payload):
         return self.connection._call(
