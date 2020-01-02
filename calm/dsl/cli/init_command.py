@@ -2,7 +2,7 @@ import click
 import os
 import json
 
-from calm.dsl.config import init_config, get_default_user_config_file, get_config
+from calm.dsl.config import init_config, get_default_user_config_file, set_config
 from calm.dsl.db import Database
 from calm.dsl.api import get_resource_api, update_client_handle, get_client_handle
 from calm.dsl.store import Cache
@@ -174,29 +174,12 @@ def init_dsl_bp(service, dir_name, provider_type):
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path to local database file",
 )
-@click.option(
-    "--config",
-    "-c",
-    "config_file",
-    envvar="CALM_CONFIG",
-    default=os.path.expanduser("~/.calm/config.ini"),
-    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
-    help="Path to config file, defaults to ~/.calm/config",
-)
-def set_config(host, port, username, password, project_name, db_location, config_file):
+@click.argument("config_file", default=get_default_user_config_file())
+def _set_config(host, port, username, password, project_name, db_location, config_file):
     """Will write the configuration to config file"""
 
     click.echo("Writing config to {} ... ".format(config_file), nl=False)
-
-    config = get_config()
-    host = host or config["SERVER"]["pc_ip"]
-    username = username or config["SERVER"]["pc_username"]
-    port = port or config["SERVER"]["pc_port"]
-    password = password or config["SERVER"]["pc_password"]
-    project_name = project_name or config["PROJECT"]["name"]
-    db_location = db_location or config["DB"]["location"]
-
-    init_config(
+    set_config(
         host,
         port,
         username,

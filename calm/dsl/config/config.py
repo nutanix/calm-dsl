@@ -10,18 +10,21 @@ from .config_schema import validate_config
 _CONFIG = None
 
 
-def get_default_user_config_file():
-
-    user_config_file = os.path.join(os.path.expanduser("~/.calm"), "config.ini")
+def make_config_file_dir(config_file):
 
     # Create parent directory if not present
-    if not os.path.exists(os.path.dirname(user_config_file)):
+    if not os.path.exists(os.path.dirname(config_file)):
         try:
-            os.makedirs(os.path.dirname(user_config_file))
+            os.makedirs(os.path.dirname(config_file))
         except OSError as exc:
             if exc.errno != errno.EEXIST:
                 raise
 
+
+def get_default_user_config_file():
+
+    user_config_file = os.path.join(os.path.expanduser("~/.calm"), "config.ini")
+    make_config_file_dir(user_config_file)
     return user_config_file
 
 
@@ -103,6 +106,30 @@ def get_config():
         _CONFIG = config
 
     return _CONFIG
+
+
+def set_config(host, port, username, password, project_name, db_location, config_file):
+    """Will write the configuration to config file"""
+
+    config = get_config()
+
+    host = host or config["SERVER"]["pc_ip"]
+    username = username or config["SERVER"]["pc_username"]
+    port = port or config["SERVER"]["pc_port"]
+    password = password or config["SERVER"]["pc_password"]
+    project_name = project_name or config["PROJECT"]["name"]
+    db_location = db_location or config["DB"]["location"]
+
+    make_config_file_dir(config_file)
+    init_config(
+        host,
+        port,
+        username,
+        password,
+        project_name,
+        db_location,
+        config_file=config_file,
+    )
 
 
 def print_config():
