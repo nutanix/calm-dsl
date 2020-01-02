@@ -2,14 +2,14 @@ import click
 import os
 import json
 
-from calm.dsl.config import init_config, get_default_user_config_file
+from calm.dsl.config import init_config, get_default_user_config_file, get_config
 from calm.dsl.db import Database
 from calm.dsl.api import get_resource_api, update_client_handle, get_client_handle
 from calm.dsl.store import Cache
 from calm.dsl.init import init_bp
 from calm.dsl.providers import get_provider_types
 
-from .main import init
+from .main import init, set
 
 
 @init.command("dsl")
@@ -134,7 +134,7 @@ def init_dsl_bp(service, dir_name, provider_type):
     init_bp(service, dir_name, provider_type)
 
 
-@init.command("config")
+@set.command("config")
 @click.option(
     "--ip",
     "-i",
@@ -170,16 +170,42 @@ def init_dsl_bp(service, dir_name, provider_type):
     "-d",
     "db_location",
     envvar="DATABASE_LOCATION",
-    default=os.path.expanduser("~/.calm/dsl.db"),
+    default=None,
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path to local database file",
 )
-def set_config(host, port, username, password, project_name, db_location):
+@click.option(
+    "--config",
+    "-c",
+    "config_file",
+    envvar="CALM_CONFIG",
+    default=os.path.expanduser("~/.calm/config.ini"),
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to config file, defaults to ~/.calm/config",
+)
+def set_config(host, port, username, password, project_name, db_location, config_file):
     """Will write the configuration to config file"""
 
     # Default user config file
     user_config_file = get_default_user_config_file()
 
     click.echo("Writing config to {} ... ".format(user_config_file), nl=False)
-    init_config(host, port, username, password, project_name, db_location)
+
+    config = get_config()
+    host = host or config["SERVER"]["pc_ip"]
+    username = username or config["SERVER"]["pc_username"]
+    port = port or config["SERVER"]["pc_port"]
+    password = password or config["SERVER"]["pc_password"]
+    project_name = project_name or config["PROJECT"]["name"]
+    db_location = db_location or config["DB"]["location"]
+
+    init_config(
+        host,
+        port,
+        username,
+        password,
+        project_name,
+        db_location,
+        config_file=config_file,
+    )
     click.echo("[Success]")

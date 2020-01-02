@@ -18,9 +18,7 @@ class ResourceAPI:
 
     def read(self, id=None):
         url = self.ITEM.format(id) if id else self.PREFIX
-        return self.connection._call(
-                url, verify=False, method=REQUEST.METHOD.GET
-            )
+        return self.connection._call(url, verify=False, method=REQUEST.METHOD.GET)
 
     def update(self, uuid, payload):
         return self.connection._call(

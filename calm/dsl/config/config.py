@@ -67,10 +67,13 @@ def _get_config_file():
     return user_config_file
 
 
-def init_config(ip, port, username, password, project_name, db_location):
+def init_config(
+    ip, port, username, password, project_name, db_location, config_file=None
+):
 
     # Default user config file
     user_config_file = get_default_user_config_file()
+    config_file = config_file or user_config_file
 
     # Render config template
     text = _render_config_template(
@@ -78,7 +81,7 @@ def init_config(ip, port, username, password, project_name, db_location):
     )
 
     # Write config
-    with open(user_config_file, "w") as fd:
+    with open(config_file, "w") as fd:
         fd.write(text)
 
 

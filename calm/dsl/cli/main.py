@@ -11,7 +11,6 @@ import click_log
 
 # TODO - move providers to separate file
 from calm.dsl.providers import get_provider, get_provider_types
-from calm.dsl.tools import ping
 from calm.dsl.api import get_api_client, get_resource_api
 
 logger = logging.getLogger(__name__)
@@ -227,10 +226,4 @@ def calmrepl():
 @main.group(cls=DYMGroup)
 def set():
     """Sets the entities"""
-    pass
-
-
-@set.group(cls=DYMGroup)
-def config():
-    """Configuration setup for server, projects"""
     pass

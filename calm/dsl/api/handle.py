@@ -31,7 +31,7 @@ def get_client_handle(
     auth_type=REQUEST.AUTH_TYPE.BASIC,
     scheme=REQUEST.SCHEME.HTTPS,
     auth=None,
-    temp=False      # This flag is used to generate temp handle
+    temp=False,  # This flag is used to generate temp handle
 ):
     global _CLIENT_HANDLE
     if temp:
