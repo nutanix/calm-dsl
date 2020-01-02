@@ -143,7 +143,7 @@ properties:
 
 title: Guest Customization Network Settings
 type: object
-x-calm-dsl-type: vmw_vm_gc_network_settings
+x-calm-dsl-type: object
 properties:
   name:
     type: string
@@ -155,6 +155,7 @@ properties:
     type: string
   is_dhcp:
     type: boolean
+    default: True
   ip:
     type: string
 
@@ -165,7 +166,7 @@ properties:
 
 title: Guest Customization Linux data
 type: object
-x-calm-dsl-type: vmw_vm_gc_lnx_spec
+x-calm-dsl-type: object
 properties:
   hostname:
     type: string
@@ -197,7 +198,7 @@ properties:
 
 title: Guest Customization Windows data
 type: object
-x-calm-dsl-type: vmw_vm_gc_win_spec
+x-calm-dsl-type: object
 properties:
   computer_name:
     type: string
@@ -302,7 +303,7 @@ properties:
 {%- endmacro %}
 
 
-{% macro VmwVMResource() -%}
+{% macro VmwVMResources() -%}
 
 title: VMWARE Resources
 type: object
@@ -325,27 +326,33 @@ properties:
     type: string
     default: poweron
   nic_list:
+    x-calm-dsl-display-name: nics
     type: array
     items:
       {{ VmwNic() | indent(6) }}
   disk_list:
+    x-calm-dsl-display-name: disks
     type: array
     items:
       {{ VmwDisk() | indent(6) }}
   controller_list:
     type: array
+    x-calm-dsl-display-name: controllers
     items:
       {{ VmwController() | indent(6) }}
   template_nic_list:
     type: array
+    x-calm-dsl-display-name: template_nics
     items:
       {{ VmwTemplateNic() | indent(6) }}
   template_disk_list:
     type: array
+    x-calm-dsl-display-name: template_disks
     items:
       {{ VmwTemplateDisk() | indent(6) }}
   template_controller_list:
     type: array
+    x-calm-dsl-display-name: template_controllers
     items:
       {{ VmwTemplateController() | indent(6) }}
   guest_customization:
@@ -384,17 +391,27 @@ properties:
     type: boolean
     default: False
   resources:
-    {{ VmwVMResource() | indent(4) }}
+    {{ VmwVMResources() | indent(4) }}
 
 {%- endmacro %}
 
-
-info:
-  title: VMWARE_VM
-  description: VMWARE VM spec payload using v3 API
-  version: 3.0.1      # TODO add right version of ahv schema
-
-components:
-  schemas:
-    provider_spec:
-      {{ VmwVm() | indent(6) }}
+{% macro VmwVmSchema() -%}
+VmwVm:
+  {{ VmwVm() | indent(2) }}
+VmwVMResources:
+  {{ VmwVMResources() | indent(2) }}
+VmwDisk:
+  {{ VmwDisk() | indent(2) }}
+VmwTemplateDisk:
+  {{ VmwTemplateDisk() | indent(2) }}
+VmwNic:
+  {{ VmwNic() | indent(2) }}
+VmwTemplateNic:
+  {{ VmwTemplateNic() | indent(2) }}
+VmwController:
+  {{ VmwController() | indent(2) }}
+VmwTemplateController:
+  {{ VmwTemplateController() | indent(2) }}
+VmwGuestCustomization:
+  {{ VmwGuestCustomization() | indent(2) }}
+{%- endmacro %}
