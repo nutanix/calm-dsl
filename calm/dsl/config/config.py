@@ -13,9 +13,9 @@ _CONFIG = None
 def make_config_file_dir(config_file):
 
     # Create parent directory if not present
-    if not os.path.exists(os.path.dirname(config_file)):
+    if not os.path.exists(os.path.dirname(os.path.realpath(config_file))):
         try:
-            os.makedirs(os.path.dirname(config_file))
+            os.makedirs(os.path.dirname(os.path.realpath(config_file)))
         except OSError as exc:
             if exc.errno != errno.EEXIST:
                 raise
