@@ -110,7 +110,7 @@ class GCP:
         public_image_map = {}
         for entity in public_images:
             selfLink = entity["selfLink"]
-            name = selfLink[selfLink.rindex("/") + 1:]
+            name = selfLink[selfLink.rindex("/") + 1:]  # NoQA
             public_image_map[name] = selfLink
 
         return public_image_map

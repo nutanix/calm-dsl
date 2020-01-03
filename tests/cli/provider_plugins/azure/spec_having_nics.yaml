@@ -22,7 +22,7 @@ input:
 - "n"   # Want to add data disks
 - "y"   # Want to add nics
 - "nic-@@{calm_unique_hash}@@-@@{calm_array_index}@@-0"   # nic name
-- "1"   # Security Groups = DND-CENTOS-IMAGE-nsg
+- "3"   # Security Groups = DND-CENTOS-IMAGE-nsg
 - "1"   # Virtual network = calm-virtual-network-eastus2
 - "1"   # Subnet = default
 - "public-ip-@@{calm_unique_hash}@@-@@{calm_array_index}@@-0"   # Public ip name
@@ -31,14 +31,15 @@ input:
 - "1"   # Private Ip Allocation method = Dynamic
 - "y"   # Want more nics
 - "nic-@@{calm_unique_hash}@@-@@{calm_array_index}@@-1"   # nic name
-- "1"   # Security Groups = DND-CENTOS-IMAGE-nsg
+- "3"   # Security Groups = DND-CENTOS-IMAGE-nsg
 - "1"   # Virtual network = calm-virtual-network-eastus2
 - "2"   # Subnet = subnet1
 - "public-ip-@@{calm_unique_hash}@@-@@{calm_array_index}@@-1"   # Public ip name
 - "dns-@@{calm_unique_hash}@@-@@{calm_array_index}@@-1"   # DNS Label
-- "1"   # Public Ip Allocation method = Static
+- "2"   # Public Ip Allocation method = Static
 - "2"   # Private Ip Allocation method = Static
 - "1.1.1.1"   # Private IP Address
+- "n"   # Add more nics
 - "n"   # Want any tags
 
 cli_assertions:
