@@ -6,6 +6,8 @@ from .. import plugin_test
 @pytest.mark.presetup_required
 @plugin_test("GCP_VM")
 class TestGCPSpec:
+
+    @pytest.mark.skip("dependent on availabilty of existing disks")
     def test_normal_spec(self):
         """
             VM OS: Linux
@@ -25,9 +27,8 @@ class TestGCPSpec:
             VM OS: Linux
             Zone: Yes
             Root Disk: Yes
-                Use Existing Disk: Yes
-            Additional Disks: Yes(5)
-                Existing Disk: Yes(1)
+                Use Existing Disk: No
+            Additional Disks: Yes(4)
                 local-ssd: Yes(2)
                     Interface :
                         SCSI(1)

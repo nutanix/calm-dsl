@@ -11,7 +11,7 @@ input:
 - "y"  # Want availability zone
 - "1"  # Availability Zone = us-east-1a
 - "y"  # Want machine image
-- "24"  # Machine Image = CALM_1.8.2
+- "22"  # Machine Image = CALM_1.8.2
 - "y"  # Want IAM Role
 - "1"  # IAM Role = aws-ec2-spot-fleet-role
 - "y"  # Want Key Pair

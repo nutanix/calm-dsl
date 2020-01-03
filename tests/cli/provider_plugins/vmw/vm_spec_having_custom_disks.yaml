@@ -5,7 +5,7 @@ input:
 - "n"  # Enable DRS mode
 - "1"  # Host = 10.46.33.228
 - "1"  # Datastore = Test-Container
-- "9"  # Template = DND_CENTOS_MUL_DISKS
+- "8"  # Template = DND_CENTOS_MUL_DISKS
 - "vm-@@{calm_array_index}@@-@@{calm_time}@@"  # Instance name
 - "1"  # no. of VCPU
 - "1"  # cores per VCPU
@@ -29,12 +29,12 @@ input:
 - "1"  # Adapter Type = IDE
 - "y"  # Add datastore
 - "1"  # Datastore = Test-Container
-- "1"  # File Path = [Test-Container] Nagios-0-200102-223032/Nagios-0-200102-223032-cloud-init.iso
+- "1"  # File Path = [Test-Container] v-0-190424-052646-cloud-init.iso
 - "y"  # Add more disks
 - "2"  # Disk Type = CD-ROM
 - "1"  # Adapter Type = IDE
 - "n"  # Add datastore
-- "1"  # File Path = [Test-Container] Nagios-0-200102-223032/Nagios-0-200102-223032-cloud-init.iso
+- "1"  # File Path = [Test-Container] v-0-190424-052646-cloud-init.iso
 - "n"  # Add more disks
 - "n"  # Add nics
 - "n"  # Enable Guest Customization
@@ -43,6 +43,6 @@ cli_assertions:
 - "Create spec for your VMW VM:"
 
 spec_assertions:
-- "[Test-Container] Nagios-0-200102-223032/Nagios-0-200102-223032-cloud-init.iso"  # Check for ISO path of 2nd disk
+- "[Test-Container] v-0-190424-052646-cloud-init.iso"  # Check for ISO path of 2nd disk
 - "ds:///vmfs/volumes/6a3745a8-ed215600/" # Check for datastore
 - "12288" # Check for size of first disk

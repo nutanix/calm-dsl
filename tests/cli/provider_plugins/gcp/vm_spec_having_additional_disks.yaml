@@ -7,15 +7,13 @@ input:
 - "7"   # zone  = us_central1-c
 - "21"  # Machine Type = f1-micro
 # Boot Disk
-- "y"   # Use existing Disk
-- "1"   # Persistent Disk = bdisk-delete-0-2b60af1a
+- "n"   # Use existing Disk
+- "1"   # Storage type = pd-standard
+- "4"   # Source image = centos-7
+- "10"  # Size of disk
 - "y"   # Delete disk when instance is deleted
 # Additional Disks
 - "y"   # Add Additional Disks
-- "y"   # Use existing disk
-- "1"   # Persistent Disk = bdisk-delete-0-692100c6
-- "y"   # Delete disk when instance is deleted
-- "y"   # Add more additional disks
 - "n"   # Use existing disk
 - "1"   # Storage Type = pd - standard
 - "4"   # Source Image = Centos7
@@ -55,7 +53,6 @@ cli_assertions:
 spec_assertions:
 - "zone: us-central1-c" # Zone
 - "machineType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/machineTypes/f1-micro"   # Machine Type
-- "source: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/disks/bdisk-delete-0-2b60af1a"   # Disk image for boot disk
 - "email: 108048128720-compute@developer.gserviceaccount.com" # Service account email
 # Scope = Default Scope
 - "https://www.googleapis.com/auth/devstorage.read_only"
@@ -64,7 +61,6 @@ spec_assertions:
 - "https://www.googleapis.com/auth/servicecontrol"
 - "https://www.googleapis.com/auth/service.management.readonly"
 - "https://www.googleapis.com/auth/trace.append"
-- "source: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/disks/bdisk-delete-0-692100c6"   # disk image for additional disk 0
 - "diskType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/diskTypes/pd-standard"   #  disk type for additional disk 1
 - "sourceImage: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/images/centos-7"   # image for additional disk 1
 - "diskSizeGb: 10"   # disk size for additional disk 1
