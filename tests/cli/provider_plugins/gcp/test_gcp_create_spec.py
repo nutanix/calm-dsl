@@ -6,7 +6,6 @@ from .. import plugin_test
 @pytest.mark.presetup_required
 @plugin_test("GCP_VM")
 class TestGCPSpec:
-
     @pytest.mark.skip("dependent on availabilty of existing disks")
     def test_normal_spec(self):
         """

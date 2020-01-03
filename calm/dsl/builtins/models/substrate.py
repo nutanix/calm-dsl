@@ -29,7 +29,7 @@ class SubstrateType(EntityType):
                     "delay_secs": "0",
                     "connection_type": "SSH",
                     "connection_port": 22,
-                    "connection_protocol": ""
+                    "connection_protocol": "",
                 }
                 if "os_type" in cdict and cdict["os_type"] == "Windows":
                     readiness_probe["connection_type"] = "POWERSHELL"
@@ -48,7 +48,7 @@ class SubstrateType(EntityType):
                     "delay_secs": "0",
                     "connection_type": "SSH",
                     "connection_port": 22,
-                    "connection_protocol": ""
+                    "connection_protocol": "",
                 }
                 if "os_type" in cdict and cdict["os_type"] == "Windows":
                     readiness_probe["connection_type"] = "POWERSHELL"
@@ -65,7 +65,7 @@ class SubstrateType(EntityType):
                     "delay_secs": "60",
                     "connection_type": "SSH",
                     "connection_port": 22,
-                    "connection_protocol": ""
+                    "connection_protocol": "",
                 }
                 if "os_type" in cdict and cdict["os_type"] == "Windows":
                     readiness_probe["connection_type"] = "POWERSHELL"
