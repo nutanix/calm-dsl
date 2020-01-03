@@ -106,7 +106,7 @@ class TestGCPSpec:
         """
         pass
 
-    def test_vm_spec_with_windows_guest_customization(self):
+    def test_vm_spec_with_windows_guest_customization(self, os_type="Windows"):
         """
             VM OS: Windows
             Zone: Yes
@@ -124,7 +124,7 @@ class TestGCPSpec:
 
     def test_vm_spec_with_tags_and_labels(self):
         """
-            VM OS: Windows
+            VM OS: Linux
             Zone: Yes
             Root Disk: Yes
                 Use Existing Disk: No

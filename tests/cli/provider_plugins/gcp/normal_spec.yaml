@@ -7,7 +7,7 @@ input:
 - "7"   # zone  = us_central1-c
 - "21"  # Machine Type = f1-micro
 - "y"   # Use existing Disk
-- "1"   # Persistent Disk = bdisk-delete-0-051a66b8
+- "1"   # Persistent Disk = bdisk-delete-0-2b60af1a
 - "y"   # Delete disk when instance is deleted
 - "n"   # Add Additional Disks
 - "n"   # Add Blank Disks
@@ -26,8 +26,8 @@ cli_assertions:
 
 spec_assertions:
 - "zone: us-central1-c" # Zone
-- "machineType: f1-micro"   # Machine Type
-- "source: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/disks/bdisk-delete-0-051a66b8"   # Disk image for boot disk
+- "machineType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/machineTypes/f1-micro"   # Machine Type
+- "source: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/disks/bdisk-delete-0-2b60af1a"   # Disk image for boot disk
 - "email: 108048128720-compute@developer.gserviceaccount.com" # Service account email
 # Scope = Default Scope
 - "https://www.googleapis.com/auth/devstorage.read_only"

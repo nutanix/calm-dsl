@@ -110,7 +110,7 @@ class GCP:
         public_image_map = {}
         for entity in public_images:
             selfLink = entity["selfLink"]
-            name = selfLink[selfLink.rindex("/") + 1 :]
+            name = selfLink[selfLink.rindex("/") + 1:]
             public_image_map[name] = selfLink
 
         return public_image_map
@@ -332,8 +332,8 @@ def create_spec(client):
             click.echo("{} selected".format(highlight_text(zone)))
             break
 
-    machine_map = Obj.machine_types(account_id, zone)
-    entity_names = list(machine_map.keys())
+    machine_type_map = Obj.machine_types(account_id, zone)
+    entity_names = list(machine_type_map.keys())
     click.echo("\nChoose from given machine types")
     for ind, name in enumerate(entity_names):
         click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
@@ -346,7 +346,7 @@ def create_spec(client):
         else:
             machine_type = entity_names[ind - 1]
             click.echo("{} selected".format(highlight_text(machine_type)))
-            spec["resources"]["machineType"] = machine_type
+            spec["resources"]["machineType"] = machine_type_map[machine_type]
             break
 
     # Disk Details
@@ -605,7 +605,6 @@ def get_disks(gcp_obj, account_id, zone):
         click.echo("\n\t\t", nl=False)
         click.secho("ADDITIONAL DISK - {}".format(disk_ind), underline=True)
 
-        additional_disk = {}
         choice = click.prompt(
             "\n{}(y/n)".format(highlight_text("Want to use existing disk")), default="n"
         )
@@ -716,7 +715,7 @@ def get_disks(gcp_obj, account_id, zone):
         auto_delete = True if choice[0] == "y" else False
 
         disk_data.update(
-            {"boot": False, "autoDelete": auto_delete, "initializeParams": init_params,}
+            {"boot": False, "autoDelete": auto_delete, "initializeParams": init_params}
         )
 
         gcp_disks.append(disk_data)

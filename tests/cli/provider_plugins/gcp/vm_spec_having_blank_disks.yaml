@@ -38,7 +38,7 @@ cli_assertions:
 
 spec_assertions:
 - "zone: us-central1-c" # Zone
-- "machineType: f1-micro"   # Machine Type
+- "machineType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/machineTypes/f1-micro"   # Machine Type
 - "sourceImage: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/images/centos-7"   # Source image of boot disk
 - "diskType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/diskTypes/pd-standard"   # Disk type for boot disk
 - "diskSizeGb: 10"    # Size of boot disk
