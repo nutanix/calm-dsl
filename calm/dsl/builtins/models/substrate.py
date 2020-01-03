@@ -29,10 +29,12 @@ class SubstrateType(EntityType):
                     "delay_secs": "0",
                     "connection_type": "SSH",
                     "connection_port": 22,
+                    "connection_protocol": ""
                 }
                 if "os_type" in cdict and cdict["os_type"] == "Windows":
                     readiness_probe["connection_type"] = "POWERSHELL"
                     readiness_probe["connection_port"] = 5985
+                    readiness_probe["connection_protocol"] = "http"
             elif not readiness_probe.get("address"):
                 readiness_probe[
                     "address"
@@ -46,11 +48,12 @@ class SubstrateType(EntityType):
                     "delay_secs": "0",
                     "connection_type": "SSH",
                     "connection_port": 22,
+                    "connection_protocol": ""
                 }
                 if "os_type" in cdict and cdict["os_type"] == "Windows":
                     readiness_probe["connection_type"] = "POWERSHELL"
                     readiness_probe["connection_port"] = 5985
-                    readiness_probe["connection_ptotocol"] = "http"
+                    readiness_probe["connection_protocol"] = "http"
             elif not readiness_probe.get("address"):
                 readiness_probe["address"] = "@@{ip_address}@@"
 
@@ -62,11 +65,12 @@ class SubstrateType(EntityType):
                     "delay_secs": "60",
                     "connection_type": "SSH",
                     "connection_port": 22,
+                    "connection_protocol": ""
                 }
                 if "os_type" in cdict and cdict["os_type"] == "Windows":
                     readiness_probe["connection_type"] = "POWERSHELL"
                     readiness_probe["connection_port"] = 5985
-                    readiness_probe["connection_ptotocol"] = "http"
+                    readiness_probe["connection_protocol"] = "http"
             elif not readiness_probe.get("address"):
                 readiness_probe["address"] = "@@{public_ip_address}@@"
 
@@ -96,7 +100,7 @@ class SubstrateType(EntityType):
                 if "os_type" in cdict and cdict["os_type"] == "Windows":
                     readiness_probe["connection_type"] = "POWERSHELL"
                     readiness_probe["connection_port"] = 5985
-                    readiness_probe["connection_ptotocol"] = "http"
+                    readiness_probe["connection_protocol"] = "http"
             elif not readiness_probe.get("address"):
                 readiness_probe["address"] = "@@{platform.publicIPAddressList[0]}@@"
 
@@ -115,7 +119,7 @@ class SubstrateType(EntityType):
                 if "os_type" in cdict and cdict["os_type"] == "Windows":
                     readiness_probe["connection_type"] = "POWERSHELL"
                     readiness_probe["connection_port"] = 5985
-                    readiness_probe["connection_ptotocol"] = "http"
+                    readiness_probe["connection_protocol"] = "http"
             elif not readiness_probe.get("address"):
                 readiness_probe["address"] = "@@{platform.ipAddressList[0]}@@"
 
@@ -134,7 +138,7 @@ class SubstrateType(EntityType):
                 if "os_type" in cdict and cdict["os_type"] == "Windows":
                     readiness_probe["connection_type"] = "POWERSHELL"
                     readiness_probe["connection_port"] = 5985
-                    readiness_probe["connection_ptotocol"] = "http"
+                    readiness_probe["connection_protocol"] = "http"
             elif not readiness_probe.get("address"):
                 readiness_probe[
                     "address"
