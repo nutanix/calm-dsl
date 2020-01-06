@@ -1,6 +1,8 @@
 import json
 import click
 
+from calm.dsl.api import get_api_client
+
 from .secrets import find_secret, create_secret
 from .utils import highlight_text
 from .main import get, compile, describe, create, launch, delete
@@ -151,7 +153,7 @@ def create_blueprint_from_dsl(client, bp_file, name=None, description=None):
 def create_blueprint_command(obj, bp_file, name, description):
     """Creates a blueprint"""
 
-    client = obj.get("client")
+    client = get_api_client()
 
     if bp_file.endswith(".json"):
         res, err = create_blueprint_from_json(
@@ -201,7 +203,7 @@ def launch_blueprint_command(
     blueprint=None,
 ):
 
-    client = obj.get("client")
+    client = get_api_client()
 
     launch_blueprint_simple(
         client,

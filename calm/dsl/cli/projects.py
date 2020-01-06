@@ -4,16 +4,18 @@ import click
 import arrow
 from prettytable import PrettyTable
 
-from .utils import get_name_query, highlight_text
 from calm.dsl.builtins import ProjectValidator
-from calm.dsl.api import get_resource_api
+from calm.dsl.api import get_resource_api, get_api_client
+from calm.dsl.config import get_config
+
+from .utils import get_name_query, highlight_text
 
 
 def get_projects(obj, name, filter_by, limit, offset, quiet):
     """ Get the projects, optionally filtered by a string """
 
-    client = obj.get("client")
-    config = obj.get("config")
+    client = get_api_client()
+    config = get_config()
 
     params = {"length": limit, "offset": offset}
     filter_query = ""
@@ -113,7 +115,7 @@ def get_project(client, name):
 
 def delete_project(obj, project_names):
 
-    client = obj.get("client")
+    client = get_api_client()
 
     for project_name in project_names:
         project = get_project(client, project_name)
@@ -127,7 +129,7 @@ def delete_project(obj, project_names):
 def create_project(obj, payload):
 
     name = payload["project_detail"]["name"]
-    client = obj.get("client")
+    client = get_api_client()
 
     # check if project having same name exists
     click.echo("Searching for projects having same name ")
@@ -160,7 +162,7 @@ def create_project(obj, payload):
 
 def describe_project(obj, project_name):
 
-    client = obj.get("client")
+    client = get_api_client()
     project = get_project(client, project_name)
 
     click.echo("\n----Project Summary----\n")
@@ -316,7 +318,7 @@ def describe_project(obj, project_name):
 
 def update_project(obj, name, payload):
 
-    client = obj.get("client")
+    client = get_api_client()
     click.echo("Searching for projects having same name ")
     project = get_project(client, name)
 

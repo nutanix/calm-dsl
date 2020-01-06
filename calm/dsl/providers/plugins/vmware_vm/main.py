@@ -538,9 +538,10 @@ def create_spec(client):
                 click.echo("{} selected".format(highlight_text(template_name)))
                 break
 
-    spec["name"] = click.prompt("\nEnter instance name", type=str)
+    # VM Configuration
+    vm_name = "vm-@@{calm_unique_hash}@@-@@{calm_array_index}@@"
+    spec["name"] = click.prompt("\nEnter instance name", default=vm_name)
 
-    # TODO check for the validation by the spec(as done in AHV)
     spec["resources"] = {}
     spec["resources"]["num_sockets"] = click.prompt("\nEnter no. of vCPUs", default=1)
 

@@ -1,6 +1,7 @@
 from ruamel import yaml
 import logging
 import click
+import json
 
 import click_completion
 import click_completion.core
@@ -10,9 +11,7 @@ import click_log
 
 # TODO - move providers to separate file
 from calm.dsl.providers import get_provider, get_provider_types
-from calm.dsl.tools import ping
-from calm.dsl.config import get_config
-from calm.dsl.api import get_api_client
+from calm.dsl.api import get_api_client, get_resource_api
 
 logger = logging.getLogger(__name__)
 click_log.basic_config(logger)
@@ -23,48 +22,10 @@ click_completion.init()
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
-@click.option(
-    "--ip",
-    "-i",
-    envvar="PRISM_SERVER_IP",
-    default=None,
-    help="Prism Central server IP or hostname",
-)
-@click.option(
-    "--port",
-    "-P",
-    envvar="PRISM_SERVER_PORT",
-    default=None,
-    help="Prism Central server port number",
-)
-@click.option(
-    "--username",
-    "-u",
-    envvar="PRISM_USERNAME",
-    default=None,
-    help="Prism Central username",
-)
-@click.option(
-    "--password",
-    "-p",
-    envvar="PRISM_PASSWORD",
-    default=None,
-    help="Prism Central password",
-)
-@click.option(
-    "--config",
-    "-c",
-    "config_file",
-    envvar="CALM_CONFIG",
-    default=None,
-    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
-    help="Path to config file, defaults to ~/.calm/config",
-)
-@click.option("--project", "-p", "project_name", help="Project name for entity")
 @click_log.simple_verbosity_option(logger)
 @click.version_option("0.1")
 @click.pass_context
-def main(ctx, ip, port, username, password, config_file, project_name):
+def main(ctx):
     """Calm CLI
 
 \b
@@ -84,15 +45,6 @@ Commonly used commands:
   calm create endpoint -f sample_ep.py --name Sample-Endpoint -> Upload a new endpoint from a python DSL file
 """
     ctx.ensure_object(dict)
-    ctx.obj["config"] = get_config(
-        ip=ip,
-        port=port,
-        username=username,
-        password=password,
-        config_file=config_file,
-        project_name=project_name,
-    )
-    ctx.obj["client"] = get_api_client()
     ctx.obj["verbose"] = True
 
 
@@ -151,6 +103,12 @@ def clear():
     pass
 
 
+@main.group(cls=DYMGroup)
+def init():
+    """Initializes the dsl for basic configs and bp directory etc."""
+    pass
+
+
 @get.group(cls=DYMGroup)
 def server():
     """Get calm server details"""
@@ -162,11 +120,19 @@ def server():
 def get_server_status(obj):
     """Get calm server connection status"""
 
-    client = obj.get("client")
-    host = client.connection.host
-    ping_status = "Success" if ping(ip=host) is True else "Fail"
+    click.echo("Checking if Calm is enabled on Server ... ", nl=False)
+    client = get_api_client()
+    Obj = get_resource_api("services/nucalm/status", client.connection)
+    res, err = Obj.read()
 
-    click.echo("Server Ping Status: {}".format(ping_status))
+    if err:
+        click.echo("[Fail]")
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    result = json.loads(res.content)
+    service_enablement_status = result["service_enablement_status"]
+
+    click.echo("[{}]".format(service_enablement_status))
     click.echo("Server URL: {}".format(client.connection.base_url))
     # TODO - Add info about PC and Calm server version
 
@@ -267,10 +233,4 @@ def calmrepl():
 @main.group(cls=DYMGroup)
 def set():
     """Sets the entities"""
-    pass
-
-
-@set.group(cls=DYMGroup)
-def config():
-    """Configuration setup for server, projects"""
     pass
