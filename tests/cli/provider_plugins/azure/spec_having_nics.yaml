@@ -1,0 +1,70 @@
+
+input:
+- "1"   # project = default
+- "1"   # select account
+- "1"   # os = Linux
+- "vm-@@{calm_unique_hash}@@-@@{calm_array_index}@@"  # VM name
+- "1"   # resource group = calmrg
+- "n"   # Want Availability set
+- "5"   # Location = East US 2
+- "11"  # Hardware Profile = Standard_D1_v2
+- "n"   # Want secrets
+- "echo 'Sample azure cloud init script'"   # Cloud Init Script
+- "n"   # Use custom image
+- "127"   # Publisher = Canonical
+- "13"    # Image Offer = UbuntuServer
+- "18"    # Image Sku = 18.04-LTS
+- "27"    # Image Version = 18.04.201903121
+- "os-@@{calm_unique_hash}@@-@@{calm_array_index}@@-disk"   # OS Disk Name
+- "n"   # Want to add storage type
+- "1"   # Cache type = None
+- "1"   # Disk create option = Attach
+- "n"   # Want to add data disks
+- "y"   # Want to add nics
+- "nic-@@{calm_unique_hash}@@-@@{calm_array_index}@@-0"   # nic name
+- "3"   # Security Groups = DND-CENTOS-IMAGE-nsg
+- "1"   # Virtual network = calm-virtual-network-eastus2
+- "1"   # Subnet = default
+- "public-ip-@@{calm_unique_hash}@@-@@{calm_array_index}@@-0"   # Public ip name
+- "dns-@@{calm_unique_hash}@@-@@{calm_array_index}@@-0"   # DNS Label
+- "1"   # Public Ip Allocation method = Dynamic
+- "1"   # Private Ip Allocation method = Dynamic
+- "y"   # Want more nics
+- "nic-@@{calm_unique_hash}@@-@@{calm_array_index}@@-1"   # nic name
+- "3"   # Security Groups = DND-CENTOS-IMAGE-nsg
+- "1"   # Virtual network = calm-virtual-network-eastus2
+- "2"   # Subnet = subnet1
+- "public-ip-@@{calm_unique_hash}@@-@@{calm_array_index}@@-1"   # Public ip name
+- "dns-@@{calm_unique_hash}@@-@@{calm_array_index}@@-1"   # DNS Label
+- "2"   # Public Ip Allocation method = Static
+- "2"   # Private Ip Allocation method = Static
+- "1.1.1.1"   # Private IP Address
+- "n"   # Add more nics
+- "n"   # Want any tags
+
+cli_assertions:
+- "Create spec for your AZURE VM:"
+- "ATTACH"    # OS disk create option
+
+spec_assertions:
+- "eastus2"   # Location
+- "Standard_D1_v2"  # Hardware Profile
+- "calmrg"    # Resource group
+- "Canonical"   # Publisher
+- "18.04-LTS"   # Image Sku
+- "18.04.201903121"   # Image Version
+- "Attach"    # Os disk create option
+- "UbuntuServer"  # Image offer
+- "data_disk_list: []"   # Data disks = No
+- "nic-@@{calm_unique_hash}@@-@@{calm_array_index}@@-0"   # nic1 name
+- "public-ip-@@{calm_unique_hash}@@-@@{calm_array_index}@@-0"   # Nic1 Public name
+- "dns-@@{calm_unique_hash}@@-@@{calm_array_index}@@-0"   # Nic1 DNS Label
+- "DND-CENTOS-IMAGE-nsg"    # Security Groups for nic
+- "calm-virtual-network-eastus2"    # Viurtual network for subnet
+- "subnet_name: subnet1"    # Subnet nic 2
+- "subnet_name: default"    # Subnet nic 1
+- "ip_address: 1.1.1.1"     # Private Ip address nic 2
+- "nic-@@{calm_unique_hash}@@-@@{calm_array_index}@@-1"   # Nic2 name
+- "public-ip-@@{calm_unique_hash}@@-@@{calm_array_index}@@-1"   # Nic2 Public name
+- "dns-@@{calm_unique_hash}@@-@@{calm_array_index}@@-1"   # Nic2 DNS Label
+- "os-@@{calm_unique_hash}@@-@@{calm_array_index}@@-disk"   # Os disk name

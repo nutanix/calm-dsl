@@ -1,0 +1,5 @@
+image:
+  name : Centos74
+  type : DISK_IMAGE
+  source : http://10.40.64.33/GoldImages/NuCalm/AHV-UVM-Images/centos74_uefi_legacy_vdisk.qcow2
+  architecture : X86_64

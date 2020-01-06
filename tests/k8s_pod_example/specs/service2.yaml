@@ -1,0 +1,15 @@
+spec:
+  ports:
+  - protocol: TCP
+    targetPort: 25
+    name: ''
+    port: 25
+  selector:
+    tier: mail
+    app: discourse
+metadata:
+  labels:
+    tier: mail
+    app: discourse
+  namespace: default
+  name: mail-service

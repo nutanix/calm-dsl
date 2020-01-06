@@ -18,3 +18,4 @@ asciimatics>=1.11.0
 peewee==3.10.0
 pycryptodome==3.9.0
 scrypt==0.8.13
+schema==0.7.1

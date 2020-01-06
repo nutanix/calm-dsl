@@ -33,7 +33,7 @@ setuptools.setup(
     description="Calm DSL for blueprints",
     long_description=read_file("README.md"),
     long_description_content_type="text/markdown",
-    url="https://github.com/ideadevice/calm/calm-dsl-engine",
+    url="https://github.com/ideadevice/calm-dsl",
     packages=setuptools.find_namespace_packages(include=["calm.*"]),
     namespace_packages=["calm"],
     install_requires=read_file("requirements.txt"),
@@ -43,8 +43,12 @@ setuptools.setup(
     include_package_data=True,
     entry_points={"console_scripts": ["calm=calm.dsl.cli:main"]},
     classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: GNU General Public License (GPL)",
+        "Development Status :: 3 - Alpha",
+        "Environment :: Console",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: Apache Software License",
+        "Natural Language :: English",
         "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3.7",
     ],
 )

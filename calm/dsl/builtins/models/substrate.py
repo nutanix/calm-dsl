@@ -29,14 +29,17 @@ class SubstrateType(EntityType):
                     "delay_secs": "0",
                     "connection_type": "SSH",
                     "connection_port": 22,
+                    "connection_protocol": "",
                 }
                 if "os_type" in cdict and cdict["os_type"] == "Windows":
                     readiness_probe["connection_type"] = "POWERSHELL"
                     readiness_probe["connection_port"] = 5985
+                    readiness_probe["connection_protocol"] = "http"
             elif not readiness_probe.get("address"):
                 readiness_probe[
                     "address"
                 ] = "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@"
+
         elif cdict["type"] == "EXISTING_VM":
             if not readiness_probe:
                 readiness_probe = {
@@ -45,12 +48,15 @@ class SubstrateType(EntityType):
                     "delay_secs": "0",
                     "connection_type": "SSH",
                     "connection_port": 22,
+                    "connection_protocol": "",
                 }
                 if "os_type" in cdict and cdict["os_type"] == "Windows":
                     readiness_probe["connection_type"] = "POWERSHELL"
                     readiness_probe["connection_port"] = 5985
+                    readiness_probe["connection_protocol"] = "http"
             elif not readiness_probe.get("address"):
                 readiness_probe["address"] = "@@{ip_address}@@"
+
         elif cdict["type"] == "AWS_VM":
             if not readiness_probe:
                 readiness_probe = {
@@ -59,12 +65,15 @@ class SubstrateType(EntityType):
                     "delay_secs": "60",
                     "connection_type": "SSH",
                     "connection_port": 22,
+                    "connection_protocol": "",
                 }
                 if "os_type" in cdict and cdict["os_type"] == "Windows":
                     readiness_probe["connection_type"] = "POWERSHELL"
                     readiness_probe["connection_port"] = 5985
+                    readiness_probe["connection_protocol"] = "http"
             elif not readiness_probe.get("address"):
                 readiness_probe["address"] = "@@{public_ip_address}@@"
+
         elif cdict["type"] == "K8S_POD":  # Never used (Omit after discussion)
             readiness_probe = {
                 "address": "",
@@ -75,16 +84,65 @@ class SubstrateType(EntityType):
                 "retries": "5",
             }
             cdict.pop("editables", None)
+
         elif cdict["type"] == "AZURE_VM":
-            readiness_probe = {
-                "connection_type": "SSH",
-                "retries": "5",
-                "connection_protocol": "",
-                "connection_port": 22,
-                "address": "@@{platform.publicIPAddressList[0]}@@",
-                "delay_secs": "60",
-                "disable_readiness_probe": False,
-            }
+            if not readiness_probe:
+                readiness_probe = {
+                    "connection_type": "SSH",
+                    "retries": "5",
+                    "connection_protocol": "",
+                    "connection_port": 22,
+                    "address": "@@{platform.publicIPAddressList[0]}@@",
+                    "delay_secs": "60",
+                    "disable_readiness_probe": False,
+                }
+
+                if "os_type" in cdict and cdict["os_type"] == "Windows":
+                    readiness_probe["connection_type"] = "POWERSHELL"
+                    readiness_probe["connection_port"] = 5985
+                    readiness_probe["connection_protocol"] = "http"
+            elif not readiness_probe.get("address"):
+                readiness_probe["address"] = "@@{platform.publicIPAddressList[0]}@@"
+
+        elif cdict["type"] == "VMWARE_VM":
+            if not readiness_probe:
+                readiness_probe = {
+                    "connection_type": "SSH",
+                    "retries": "5",
+                    "connection_protocol": "",
+                    "connection_port": 22,
+                    "address": "@@{platform.ipAddressList[0]}@@",
+                    "delay_secs": "60",
+                    "disable_readiness_probe": False,
+                }
+
+                if "os_type" in cdict and cdict["os_type"] == "Windows":
+                    readiness_probe["connection_type"] = "POWERSHELL"
+                    readiness_probe["connection_port"] = 5985
+                    readiness_probe["connection_protocol"] = "http"
+            elif not readiness_probe.get("address"):
+                readiness_probe["address"] = "@@{platform.ipAddressList[0]}@@"
+
+        elif cdict["type"] == "GCP_VM":
+            if not readiness_probe:
+                readiness_probe = {
+                    "connection_type": "SSH",
+                    "retries": "5",
+                    "connection_protocol": "",
+                    "disable_readiness_probe": False,
+                    "address": "@@{platform.networkInterfaces[0].networkIP}@@",
+                    "delay_secs": "0",
+                    "connection_port": 22,
+                }
+
+                if "os_type" in cdict and cdict["os_type"] == "Windows":
+                    readiness_probe["connection_type"] = "POWERSHELL"
+                    readiness_probe["connection_port"] = 5985
+                    readiness_probe["connection_protocol"] = "http"
+            elif not readiness_probe.get("address"):
+                readiness_probe[
+                    "address"
+                ] = "@@{platform.networkInterfaces[0].networkIP}@@"
 
         cdict["readiness_probe"] = readiness_probe
 

@@ -1,0 +1,18 @@
+spec:
+  type: NodePort
+  ports:
+  - targetPort: 80
+    protocol: TCP
+    port: 80
+    name: discourse
+    nodePort: 31201
+  selector:
+    app: discourse
+    tier: web
+  sessionAffinity: None
+metadata:
+  labels:
+    app: discourse
+    tier: web
+  namespace: default
+  name: discourse-service

@@ -1,0 +1,14 @@
+spec:
+  ports:
+  - port: 6379
+    targetPort: 6379
+  selector:
+    app: discourse
+    tier: redis
+  type: ClusterIP
+metadata:
+  labels:
+    app: discourse
+    tier: redis
+  name: redisservice
+  namespace: default

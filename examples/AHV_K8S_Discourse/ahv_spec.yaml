@@ -1,0 +1,38 @@
+name: Postgres-@@{calm_array_index}@@-@@{calm_time}@@
+resources:
+  boot_config:
+    boot_device:
+      disk_address:
+        adapter_type: SCSI
+        device_index: 0
+  disk_list:
+  - data_source_reference:
+      kind: image
+      name: CENTOS7
+      uuid: 294fa133-be65-4393-aae8-e3b10a0b4293
+    device_properties:
+      device_type: DISK
+      disk_address:
+        adapter_type: SCSI
+        device_index: 0
+    disk_size_mib: 0
+  gpu_list: []
+  guest_customization:
+    cloud_init:
+      user_data: |-
+        #cloud-config
+        users:
+          - name: centos
+            ssh-authorized-keys:
+              - @@{INSTANCE_PUBLIC_KEY}@@
+            sudo: ['ALL=(ALL) NOPASSWD:ALL']
+  memory_size_mib: 2048
+  nic_list:
+  - nic_type: NORMAL_NIC
+    network_function_nic_type: INGRESS
+    subnet_reference:
+      kind: subnet
+      uuid: c37571b5-51d2-4340-8db0-d62c89ce3c9e
+  num_sockets: 2
+  num_vcpus_per_socket: 1
+  power_state: 'ON'

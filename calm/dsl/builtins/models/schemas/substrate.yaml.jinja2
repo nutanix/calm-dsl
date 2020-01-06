@@ -48,6 +48,8 @@ properties:
       connection_port:
         type: integer
         default: 22
+      connection_protocol:
+        type: string
       login_credential_local_reference:
         x-calm-dsl-display-name: credential
         {{ ref.Ref() | indent(8) }}

@@ -7,7 +7,7 @@ Example:
 pc_ip = "<pc_ip>"
 pc_port = 9440
 client = get_connection(pc_ip, pc_port,
-                        auth=("admin", "***REMOVED***"))
+                        auth=("<pc_username>", "<pc_passwd>"))
 
 """
 
@@ -78,7 +78,7 @@ class Connection:
         self,
         host,
         port,
-        auth_type,
+        auth_type=REQUEST.AUTH_TYPE.BASIC,
         scheme=REQUEST.SCHEME.HTTPS,
         auth=None,
         pool_maxsize=20,
@@ -275,5 +275,16 @@ def get_connection(
     """
     global _CONNECTION
     if not _CONNECTION:
-        _CONNECTION = Connection(host, port, auth_type, scheme=scheme, auth=auth)
+        update_connection(host, port, auth_type, scheme, auth)
     return _CONNECTION
+
+
+def update_connection(
+    host,
+    port,
+    auth_type=REQUEST.AUTH_TYPE.BASIC,
+    scheme=REQUEST.SCHEME.HTTPS,
+    auth=None,
+):
+    global _CONNECTION
+    _CONNECTION = Connection(host, port, auth_type, scheme=scheme, auth=auth)

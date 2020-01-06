@@ -7,6 +7,7 @@ dev:
 	venv/bin/python3 setup.py develop
 
 test: dev
+	venv/bin/calm update cache
 	venv/bin/py.test -v --durations 10 -m "not slow" --ignore=examples/
 
 test-all: test
@@ -37,13 +38,13 @@ dist:
 
 docker: dist gui
 	[ -S /var/run/docker.sock ] && \
-		docker build --rm -t ideadevice/calm-dsl-engine .
+		docker build --rm -t ideadevice/calm-dsl .
 
 black:
 	black --exclude '/(\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|venv|_build|buck-out|build|dist|examples)/' .
 
 run:
-	docker run -it -p 8888:8888 ideadevice/calm-dsl-engine
+	docker run -it -p 8888:8888 ideadevice/calm-dsl
 
 _init_centos:
 	# Lets get python3 in
