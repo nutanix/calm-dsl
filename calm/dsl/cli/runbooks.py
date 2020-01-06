@@ -8,6 +8,7 @@ from prettytable import PrettyTable
 
 from calm.dsl.builtins import RunbookService, create_runbook_payload
 from calm.dsl.config import get_config
+from calm.dsl.api import get_api_client
 from .utils import get_name_query, highlight_text, get_states_filter
 from .constants import RUNBOOK
 from .runlog import get_completion_func, get_runlog_status
@@ -17,8 +18,8 @@ from .endpoints import get_endpoint
 def get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
     """Get the runbooks, optionally filtered by a string"""
 
-    client = obj.get("client")
-    config = obj.get("config")
+    client = get_api_client()
+    config = get_config()
 
     params = {"length": limit, "offset": offset}
     filter_query = ""
@@ -120,8 +121,8 @@ def compile_runbook(runbook_file):
 
 
 def get_previous_runs(obj, name, filter_by, limit, offset, quiet):
-    client = obj.get("client")
-    config = obj.get("config")
+    client = get_api_client()
+    config = get_config()
 
     params = {"length": limit, "offset": offset}
     filter_query = ""
@@ -281,7 +282,7 @@ def watch_runbook(runlog_uuid, client, screen, poll_interval=10, input_data={}):
 
 
 def describe_runbook(obj, runbook_name):
-    client = obj.get("client")
+    client = get_api_client()
     runbook = get_runbook(client, runbook_name, all=True)
 
     res, err = client.runbook.read(runbook["metadata"]["uuid"])
@@ -353,7 +354,7 @@ def describe_runbook(obj, runbook_name):
 
 def delete_runbook(obj, runbook_names):
 
-    client = obj.get("client")
+    client = get_api_client()
 
     for runbook_name in runbook_names:
         runbook = get_runbook(client, runbook_name)

@@ -89,18 +89,14 @@ class EndpointAPI(ResourceAPI):
         # Add secrets and update endpoint
         endpoint = res.json()
         del endpoint["status"]
-        uuid = endpoint["metadata"]["uuid"]
-
-        res, err = self.read(uuid)
-
-        if err:
-            return res, err
-
-        # Add secrets and update endpoint
-        endpoint = res.json()
-        del endpoint["status"]
 
         # Update endpoint
         patch_secrets(endpoint['spec']['resources']['attrs'], secret_map, secret_variables)
+
+        # TODO - insert categories during update as /import_json fails if categories are given!
+        # Populating the categories at runtime
+        config_categories = dict(config.items("CATEGORIES"))
+        endpoint["metadata"]["categories"] = config_categories
+        uuid = endpoint["metadata"]["uuid"]
 
         return self.update(uuid, endpoint)

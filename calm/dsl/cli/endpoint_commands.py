@@ -8,6 +8,7 @@ from .endpoints import (
     delete_endpoint,
     describe_endpoint
 )
+from calm.dsl.api import get_api_client
 
 
 @get.command("endpoints")
@@ -85,7 +86,7 @@ def create_endpoint_from_dsl(client, endpoint_file, name=None, description=None)
 def create_endpoint_command(obj, endpoint_file, name, description):
     """Creates a endpoint"""
 
-    client = obj.get("client")
+    client = get_api_client()
 
     if endpoint_file.endswith(".json"):
         res, err = create_endpoint_from_json(
@@ -107,7 +108,8 @@ def create_endpoint_command(obj, endpoint_file, name, description):
     endpoint_state = endpoint["status"]["state"]
     endpoint_name = endpoint["status"]["name"]
     click.echo(">> Endpoint {} created".format(endpoint_name))
-    assert endpoint_state in ["running", "provisioning"]
+    click.echo(">> Endpoint state: {}".format(endpoint_state))
+    assert endpoint_state == "ACTIVE"
 
 
 @delete.command("endpoint")

@@ -2,6 +2,7 @@ import click
 import json
 import uuid
 
+from calm.dsl.api import get_api_client
 from .main import get, describe, delete, run, create, update
 from .utils import Display
 from .runbooks import (
@@ -110,7 +111,7 @@ def create_runbook_from_dsl(client, runbook_file, name=None, description=None):
 def create_runbook_command(obj, runbook_file, name, description):
     """Creates a runbook"""
 
-    client = obj.get("client")
+    client = get_api_client()
 
     if runbook_file.endswith(".json"):
         res, err = create_runbook_from_json(
@@ -193,7 +194,7 @@ def update_runbook_from_dsl(client, runbook_file, name=None, description=None):
 def update_runbook_command(obj, runbook_file, name, description):
     """Updates a runbook"""
 
-    client = obj.get("client")
+    client = get_api_client()
 
     if runbook_file.endswith(".json"):
         res, err = update_runbook_from_json(

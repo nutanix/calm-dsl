@@ -7,6 +7,9 @@ import click
 from prettytable import PrettyTable
 
 from calm.dsl.builtins import Endpoint, create_endpoint_payload
+from calm.dsl.config import get_config
+from calm.dsl.api import get_api_client
+
 from .utils import get_name_query, highlight_text, get_states_filter
 from .constants import ENDPOINT
 
@@ -14,8 +17,8 @@ from .constants import ENDPOINT
 def get_endpoint_list(obj, name, filter_by, limit, offset, quiet, all_items):
     """Get the endpoints, optionally filtered by a string"""
 
-    client = obj.get("client")
-    config = obj.get("config")
+    client = get_api_client()
+    config = get_config()
 
     params = {"length": limit, "offset": offset}
     filter_query = ""
@@ -142,7 +145,7 @@ def get_endpoint(client, name, all=False):
 
 
 def describe_endpoint(obj, endpoint_name):
-    client = obj.get("client")
+    client = get_api_client()
     endpoint = get_endpoint(client, endpoint_name, all=True)
 
     res, err = client.endpoint.read(endpoint["metadata"]["uuid"])
@@ -195,7 +198,7 @@ def describe_endpoint(obj, endpoint_name):
 
 def delete_endpoint(obj, endpoint_names):
 
-    client = obj.get("client")
+    client = get_api_client()
 
     for endpoint_name in endpoint_names:
         endpoint = get_endpoint(client, endpoint_name)
