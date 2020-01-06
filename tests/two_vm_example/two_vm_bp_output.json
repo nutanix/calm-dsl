@@ -636,7 +636,8 @@
                 "disable_readiness_probe": false,
                 "delay_secs": "0",
                 "connection_type": "SSH",
-                "connection_port": 22
+                "connection_port": 22,
+                "connection_protocol": ""
             }
         },
         {
@@ -696,7 +697,8 @@
                 "disable_readiness_probe": false,
                 "delay_secs": "0",
                 "connection_type": "SSH",
-                "connection_port": 22
+                "connection_port": 22,
+                "connection_protocol": ""
             }
         }
     ],

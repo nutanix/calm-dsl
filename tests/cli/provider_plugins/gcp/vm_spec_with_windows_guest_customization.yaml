@@ -1,0 +1,53 @@
+
+input:
+- "1"   # project = default
+- "1"   # select account
+- "2"   # os = Windows
+- "vm-@@{calm_unique_hash}@@-@@{calm_array_index}@@"  # VM name
+- "7"   # zone  = us_central1-c
+- "21"  # Machine Type = f1-micro
+- "n"   # Use existing Disk
+- "2"   # Storage type = pd-ssd
+- "4"   # Source image = centos-7
+- "10"  # Size of disk
+- "y"   # Delete disk when instance is deleted
+- "n"   # Add Additional Disks
+- "n"   # Add Blank Disks
+- "y"   # Add Networks
+- "n"   # Associate public ip address
+- "1"   # Network = default
+- "1"   # Subnetwork = default
+- "n"   # Add more networks
+- "n"   # Add ssh keys
+- "y"   # block project-wide SSH keys
+- "y"   # Add Cutomization script
+- "print('Windows sysprep script')"   # Startup script  
+- "n"   # Add key value pairs to metadata
+- "n"   # Add network tags
+- "n"   # Add labels
+- "108048128720-compute@developer.gserviceaccount.com"  # Service Account Email
+- "1"   # Scope = Default Access
+
+cli_assertions:
+- "Create spec for your GCP VM:"
+
+spec_assertions:
+- "zone: us-central1-c" # Zone
+- "machineType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/machineTypes/f1-micro"   # Machine Type
+- "sourceImage: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/images/centos-7"   # Source image of boot disk
+- "diskType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/diskTypes/pd-ssd"   # Disk type for boot disk
+- "diskSizeGb: 10"    # Size of boot disk
+- "email: 108048128720-compute@developer.gserviceaccount.com" # Service account email
+# Scope = Default Scope
+- "https://www.googleapis.com/auth/devstorage.read_only"
+- "https://www.googleapis.com/auth/logging.write"
+- "https://www.googleapis.com/auth/monitoring.write"
+- "https://www.googleapis.com/auth/servicecontrol"
+- "https://www.googleapis.com/auth/service.management.readonly"
+- "https://www.googleapis.com/auth/trace.append"
+# Network 0
+- "network: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/networks/default"    # Nic0's network
+- "subnetwork: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/regions/us-central1/subnetworks/default"   # Nic0's subnetwork
+- "associatePublicIP: false"
+# Guest Customization
+- "sysprep: print('Windows sysprep script')"
