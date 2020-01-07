@@ -1,0 +1,9 @@
+image:
+  name: ESX_CENTOS_76 
+  type: DISK_IMAGE
+  source: http://download.nutanix.com/calm/CentOS-7-x86_64-1810.ova 
+  architecture: X86_64
+
+product:
+  name: ESX_CENTOS_76
+  version: 1.0

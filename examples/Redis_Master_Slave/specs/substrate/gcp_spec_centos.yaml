@@ -1,0 +1,40 @@
+resources:
+  account_uuid: 9fe486b4-901e-5268-82f6-a9ddd6968b99
+  blankDisks:
+  - autoDelete: true
+    disk_type: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-east1-b/diskTypes/pd-ssd
+    name: vm-@@{calm_array_index}@@-@@{calm_time}@@-blankdisk-1
+    sizeGb: 30
+  disks:
+  - autoDelete: true
+    boot: true
+    disk_type: PERSISTENT
+    initializeParams:
+      diskSizeGb: 10
+      diskType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-east1-b/diskTypes/pd-standard
+      sourceImage: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/images/centos-7
+  guestCustomization: {}
+  labels: []
+  machineType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-east1-b/machineTypes/n1-highcpu-16
+  metadata:
+    items: []
+  name: redis-@@{calm_array_index}@@-@@{calm_random}@@
+  networkInterfaces:
+  - accessConfigs:
+    - config_type: ONE_TO_ONE_NAT
+      name: gcp
+    associatePublicIP: true
+    network: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/networks/default
+    subnetwork: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/regions/us-east1/subnetworks/default
+  serviceAccounts:
+  - email: 108048128720-compute@developer.gserviceaccount.com
+    scopes:
+    - https://www.googleapis.com/auth/devstorage.read_only
+    - https://www.googleapis.com/auth/logging.write
+    - https://www.googleapis.com/auth/monitoring.write
+    - https://www.googleapis.com/auth/servicecontrol
+    - https://www.googleapis.com/auth/service.management.readonly
+    - https://www.googleapis.com/auth/trace.append
+  sshKeys: ["centos:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCyh19kFkO3oAYZrL2wbjOoK3DzGReYF6ZY59TYyvW7bCEGh2RFsCHsGlyNSFp8U19oGykSiIQAabGR42IbByqNgZ3IGr5+4hB29+IPMHo8Qk1LnNO9O+Cb+1XxOGmX0eRZl7HJcNDAZxMgTKghmT35odMXEjX9mQaX85NYKA0/id1kd7GOQGagLVcNPklZmYbAsaTXurTwLL5M0V0M3v5cBiwT/M4SWi1e/SJoCt0wGf4EsRb6PZo2rpqB7Z+9Vv1jadS+0cOjlzJ0eAPCkliPt6LP4wcCCMYcfEMcZmvGpKhIVzppPGl7X6lCE/OXUA+7GjqsX+QjCXIgN6fQUDPbW5HzejSG+xiOF3m9WJbylzGvogx+ESyNbgweqnZ+DPraUD5pLeszidWLZXQBOaIM9plOyww9rwd+lul2fgmf73V5R4+W8Nl7eZVjC33Tar5cUEi75AroURiKS+f1YAvQ8HjLlWkIGWURIpy9GhQaz9HGWwtqwDLTcAmUg1BDTHEjKaHYz849eGxoSl+cXTxMMUulALClXvBPadKdJWYXBDQ6N0gKi4TF6XK7Lyi5IGYPuyyKqX2xkntQoGmqRV5Ovxk7h9eAgSPy8DfbSLB3nUBTmXy7/cCgVQwwSGL7L/d54kisrYdMuwRZlfRF83v30mmZmeVxZmaklbg5WRmNtQ== centos@nutanix.com"]
+  tags: {}
+  zone: us-east1-b
