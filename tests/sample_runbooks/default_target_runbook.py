@@ -12,7 +12,7 @@ CRED_PASSWORD = read_local_file(".tests/runbook_tests/password")
 VM_IP = read_local_file(".tests/runbook_tests/vm_ip")
 
 Cred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
-endpoint = CalmEndpoint.Exec.ip([VM_IP], cred=Cred)
+endpoint = CalmEndpoint.Linux.ip([VM_IP], cred=Cred)
 
 
 class DslDefaultEndpoint(RunbookService):

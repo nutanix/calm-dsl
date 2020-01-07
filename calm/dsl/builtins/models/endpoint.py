@@ -61,50 +61,58 @@ def _http_endpoint(
 
 
 def _exec_create(
-        value_type, value, name=None, connection_type="SSH",
-        port=22, os_type="Linux", cred=None
+        value_type, ip_list, name=None, ep_type="Linux",
+        port=22, connection_protocol=None, cred=None
 ):
     kwargs = {
         "name": name,
-        "type": "EXEC",
+        "type": ep_type,
         "attrs": {
-            "value": value,
+            "values": ip_list,
             "value_type": value_type,
-            "os_type": os_type,
             "port": port,
-            "connection_type": connection_type,
         }
     }
+    if connection_protocol:
+        kwargs["attrs"]["connection_protocol"] = connection_protocol
     if cred is not None and isinstance(cred, CredentialType):
         kwargs["attrs"]["credential_definition_list"] = [cred]
         kwargs["attrs"]["login_credential_reference"] = cred.get_ref()
     return _endpoint_create(**kwargs)
 
 
-def exec_endpoint_ip(
-    value, name=None, connection_type="SSH", port=22, os_type="Linux", cred=None
+def linux_endpoint_ip(
+    value, name=None, port=22, os_type="Linux", cred=None
 ):
     return _exec_create(
-        "ip",
+        "IP",
         value,
+        ep_type="Linux",
         name=name,
-        connection_type=connection_type,
         port=port,
-        os_type=os_type,
         cred=cred
     )
 
 
-def exec_endpoint_vm(
-    value, name=None, connection_type="SSH", port=22, os_type="Linux", cred=None
+def windows_endpoint_ip(
+    value, name=None, connection_protocol="HTTP", port=None, cred=None
 ):
+    connection_protocol = connection_protocol.lower()
+    if connection_protocol not in ["http", "https"]:
+        raise TypeError("Connection Protocol ({}) should be HTTP/HTTPS".format(connection_protocol))
+
+    if port is None:
+        if connection_protocol == "http":
+            port = 5985
+        else:
+            port = 5986
     return _exec_create(
-        "vm",
+        "IP",
         value,
+        ep_type="Windows",
+        connection_protocol=connection_protocol,
         name=name,
-        connection_type=connection_type,
         port=port,
-        os_type=os_type,
         cred=cred
     )
 
@@ -118,12 +126,17 @@ class CalmEndpoint:
         bases = (Endpoint,)
         return EndpointType(name, bases, kwargs)
 
-    class Exec:
+    class Linux:
         def __new__(cls, *args, **kwargs):
             raise TypeError("'{}' is not callable".format(cls.__name__))
 
-        ip = exec_endpoint_ip
-        vm = exec_endpoint_vm
+        ip = linux_endpoint_ip
+
+    class Windows:
+        def __new__(cls, *args, **kwargs):
+            raise TypeError("'{}' is not callable".format(cls.__name__))
+
+        ip = windows_endpoint_ip
 
     class HTTP:
         def __new__(cls, *args, **kwargs):
