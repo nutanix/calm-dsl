@@ -7,6 +7,16 @@ from calm.dsl.providers import get_provider
 from .entity import EntityType
 from .validator import PropertyValidator
 
+# TODO move to constants
+spec_provider_map = {
+    "PROVISION_AHV_VM": "AHV_VM",
+    "PROVISION_VMWARE_VM": "VMWARE_VM",
+    "PROVISION_GCP_VM": "GCP_VM",
+    "PROVISION_EXISTING_MACHINE": "EXISTING_VM",
+    "PROVISION_AWS_VM": "AWS_VM",
+    "PROVISION_AZURE_VM": "AZURE_VM",
+}
+
 
 class ProviderSpecType(EntityType):
     __schema_name__ = "ProviderSpec"
@@ -26,6 +36,16 @@ class ProviderSpec(metaclass=ProviderSpecType):
         return self.spec
 
     def __get__(self, instance, cls):
+
+        spec_type = self.spec.get("type", "PROVISION_AHV_VM")
+        spec_type = spec_provider_map[spec_type]
+
+        if spec_type != cls.provider_type:
+            raise TypeError(
+                "provider type mismatch in substrate({}) and spec type({}) at {} substrate!!!".format(
+                    cls.provider_type, spec_type, cls.__name__
+                )
+            )
 
         return self.__validate__(cls.provider_type)
 

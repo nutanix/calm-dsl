@@ -54,7 +54,7 @@ class validation_error(_Error):
                 self.validator,
                 self._word_for_schema_in_error_message,
                 _utils.format_as_index(list(self.relative_schema_path)[:-1]),
-                pschema,  
+                pschema,
             )
         )
 
