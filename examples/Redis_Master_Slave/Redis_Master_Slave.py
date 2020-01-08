@@ -139,6 +139,7 @@ class AzureRedisMasterSubstrate(Substrate):
 
 class GCPRedisMasterSubstrate(Substrate):
     provider_spec = read_provider_spec( "specs/substrate/gcp_spec_centos.yaml")
+    provider_spec.spec["resources"]["sshKeys"] = [read_local_file("secrets/public_key")]
     os_type = "Linux"
     provider_type = "GCP_VM"
     readiness_probe = {
@@ -307,6 +308,7 @@ class GCPRedisSlaveSubstrate(Substrate):
     os_type = "Linux"
     provider_type="GCP_VM"
     provider_spec = read_provider_spec( "specs/substrate/gcp_spec_centos.yaml")
+    provider_spec.spec["resources"]["sshKeys"] = [read_local_file("secrets/public_key")]
     readiness_probe = {
         "disabled": False,
         "delay_secs": "60",

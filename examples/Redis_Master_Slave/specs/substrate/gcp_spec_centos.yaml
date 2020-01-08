@@ -3,7 +3,7 @@ resources:
   blankDisks:
   - autoDelete: true
     disk_type: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-east1-b/diskTypes/pd-ssd
-    name: vm-@@{calm_array_index}@@-@@{calm_time}@@-blankdisk-1
+    name: vm-@@{calm_array_index}@@-@@{calm_random}@@-blankdisk
     sizeGb: 30
   disks:
   - autoDelete: true
@@ -35,6 +35,6 @@ resources:
     - https://www.googleapis.com/auth/servicecontrol
     - https://www.googleapis.com/auth/service.management.readonly
     - https://www.googleapis.com/auth/trace.append
-  sshKeys: ["centos:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCyh19kFkO3oAYZrL2wbjOoK3DzGReYF6ZY59TYyvW7bCEGh2RFsCHsGlyNSFp8U19oGykSiIQAabGR42IbByqNgZ3IGr5+4hB29+IPMHo8Qk1LnNO9O+Cb+1XxOGmX0eRZl7HJcNDAZxMgTKghmT35odMXEjX9mQaX85NYKA0/id1kd7GOQGagLVcNPklZmYbAsaTXurTwLL5M0V0M3v5cBiwT/M4SWi1e/SJoCt0wGf4EsRb6PZo2rpqB7Z+9Vv1jadS+0cOjlzJ0eAPCkliPt6LP4wcCCMYcfEMcZmvGpKhIVzppPGl7X6lCE/OXUA+7GjqsX+QjCXIgN6fQUDPbW5HzejSG+xiOF3m9WJbylzGvogx+ESyNbgweqnZ+DPraUD5pLeszidWLZXQBOaIM9plOyww9rwd+lul2fgmf73V5R4+W8Nl7eZVjC33Tar5cUEi75AroURiKS+f1YAvQ8HjLlWkIGWURIpy9GhQaz9HGWwtqwDLTcAmUg1BDTHEjKaHYz849eGxoSl+cXTxMMUulALClXvBPadKdJWYXBDQ6N0gKi4TF6XK7Lyi5IGYPuyyKqX2xkntQoGmqRV5Ovxk7h9eAgSPy8DfbSLB3nUBTmXy7/cCgVQwwSGL7L/d54kisrYdMuwRZlfRF83v30mmZmeVxZmaklbg5WRmNtQ== centos@nutanix.com"]
+  sshKeys: []
   tags: {}
   zone: us-east1-b
