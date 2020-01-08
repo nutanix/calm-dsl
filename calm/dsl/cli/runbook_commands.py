@@ -269,7 +269,7 @@ def run_runbook_command(obj, runbook_name, watch, ignore_runtime_variables, runb
         click.echo("One of either Runbook Name or Runbook File is required to run runbook.")
         return
 
-    client = obj.get("client")
+    client = get_api_client()
     runbook = None
 
     if runbook_file:
