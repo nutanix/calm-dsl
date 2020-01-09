@@ -259,10 +259,15 @@ def run_runbook(
     should_continue = poll_action(poll_runlog_status, get_runlog_status(screen))
     if not should_continue:
         return
+    res, err = client.runbook.poll_action_run(runlog_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    response = res.json()
+    runbook = response['status']['runbook_json']['resources']['runbook']
 
     if watch:
         screen.refresh()
-        watch_runbook(runlog_uuid, client, screen=screen, input_data=input_data)
+        watch_runbook(runlog_uuid, runbook, screen=screen, input_data=input_data)
 
     config = get_config()
     pc_ip = config["SERVER"]["pc_ip"]
@@ -273,12 +278,27 @@ def run_runbook(
     screen.refresh()
 
 
-def watch_runbook(runlog_uuid, client, screen, poll_interval=10, input_data={}):
+def watch_runbook(runlog_uuid, runbook, screen, poll_interval=10, input_data={}):
+
+    client = get_api_client()
 
     def poll_func():
         return client.runbook.list_runlogs(runlog_uuid)
 
-    poll_action(poll_func, get_completion_func(screen), poll_interval=poll_interval, client=client, input_data=input_data, runlog_uuid=runlog_uuid)
+    # following code block gets list of metaTask uuids and list of top level tasks uuid of runbook
+    tasks = runbook['task_definition_list']
+    main_task_reference = runbook['main_task_local_reference']['uuid']
+    metatasks = []
+    top_level_tasks = []
+    for task in tasks:
+        if task.get('type', '') == 'META':
+            metatasks.append(task.get('uuid'))
+        if task.get('uuid') == main_task_reference:
+            task_list = task.get('child_tasks_local_reference_list', [])
+            for t in task_list:
+                top_level_tasks.append(t.get('uuid', ''))
+
+    poll_action(poll_func, get_completion_func(screen), poll_interval=poll_interval, metatasks=metatasks, top_level_tasks=top_level_tasks, input_data=input_data, runlog_uuid=runlog_uuid)
 
 
 def describe_runbook(obj, runbook_name):
@@ -365,7 +385,7 @@ def delete_runbook(obj, runbook_names):
         click.echo("Runbook {} deleted".format(runbook_name))
 
 
-def poll_action(poll_func, completion_func, client=None, poll_interval=10, input_data={}, runlog_uuid=None):
+def poll_action(poll_func, completion_func, poll_interval=10, **kwargs):
     # Poll every 10 seconds on the app status, for 5 mins
     maxWait = 10 * 60
     count = 0
@@ -375,7 +395,7 @@ def poll_action(poll_func, completion_func, client=None, poll_interval=10, input
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
         response = res.json()
-        (completed, msg) = completion_func(response, client=client, input_data=input_data, runlog_uuid=runlog_uuid)
+        (completed, msg) = completion_func(response, **kwargs)
         if completed:
             # click.echo(msg)
             if msg:

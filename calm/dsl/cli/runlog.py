@@ -8,10 +8,10 @@ from datetime import timedelta
 import itertools
 
 from anytree import NodeMixin, RenderTree
-from json import JSONEncoder
 import datetime
 
 from .constants import RUNLOG, SINGLE_INPUT
+from calm.dsl.api import get_api_client
 
 
 class InputFrame(Frame):
@@ -269,72 +269,10 @@ def displayRunLog(screen, obj, pre, fill, line):
     return idx()
 
 
-class RunlogJSONEncoder(JSONEncoder):
-    def default(self, obj):
-
-        if not isinstance(obj, RunlogNode):
-            return super().default(obj)
-
-        metadata = obj.runlog["metadata"]
-        status = obj.runlog["status"]
-        state = status["state"]
-        output = ""
-
-        if status["type"] == "task_runlog":
-            name = status["task_reference"]["name"]
-            for out in obj.outputs:
-                output += "\'{}\'\n".format(out[:-1])
-        elif status["type"] == "runbook_runlog":
-            if "call_runbook_reference" in status:
-                name = status["call_runbook_reference"]["name"]
-            else:
-                name = status["runbook_reference"]["name"]
-        elif status["type"] == "action_runlog" and "action_reference" in status:
-            name = status["action_reference"]["name"]
-        elif status["type"] == "app":
-            return status["name"]
-        else:
-            return "root"
-
-        # TODO - Fix KeyError for action_runlog
-
-        creation_time = int(metadata["creation_time"]) // 1000000
-        username = (
-            status["userdata_reference"]["name"]
-            if "userdata_reference" in status
-            else None
-        )
-        last_update_time = int(metadata["last_update_time"]) // 1000000
-
-        encodedStringList = []
-        encodedStringList.append("{} (Status: {})".format(name, state))
-        if status["type"] == "action_runlog":
-            encodedStringList.append("\tRunlog UUID: {}".format(metadata["uuid"]))
-        encodedStringList.append("\tStarted: {}".format(time.ctime(creation_time)))
-
-        if username:
-            encodedStringList.append("\tRun by: {}".format(username))
-        if state in RUNLOG.TERMINAL_STATES:
-            encodedStringList.append(
-                "\tFinished: {}".format(time.ctime(last_update_time))
-            )
-        else:
-            encodedStringList.append(
-                "\tLast Updated: {}".format(time.ctime(last_update_time))
-            )
-
-        if output:
-            encodedStringList.append("\tOutput :")
-            output_lines = output.splitlines()
-            for line in output_lines:
-                encodedStringList.append("\t\t{}".format(line))
-
-        return "\n".join(encodedStringList)
-
-
 def get_completion_func(screen):
-    def is_action_complete(response, client=None, input_data={}, runlog_uuid=None, **kwargs):
+    def is_action_complete(response, metatasks=[], top_level_tasks=[], input_data={}, runlog_uuid=None, **kwargs):
 
+        client = get_api_client()
         global input_tasks
         global input_payload
         global confirm_tasks
@@ -372,7 +310,7 @@ def get_completion_func(screen):
                 reasons = runlog["status"].get("reason_list", [])
                 outputs = []
                 machine = runlog['status'].get("machine_name", None)
-                if client is not None and runlog['status']['type'] == "task_runlog" and not runlog["status"].get("attrs", None):
+                if runlog['status']['type'] == "task_runlog" and not runlog["status"].get("attrs", None):
                     res, err = client.runbook.runlog_output(runlog_uuid, uuid)
                     if err:
                         raise Exception("\n[{}] - {}".format(err["code"], err["error"]))
@@ -391,14 +329,14 @@ def get_completion_func(screen):
 
             # Show Progress
             # TODO - Draw progress bar
-            total_tasks = 0
+            total_tasks = len(top_level_tasks)
             completed_tasks = 0
             for runlog in sorted_entities:
                 runlog_type = runlog["status"]["type"]
                 if runlog_type == "task_runlog":
-                    total_tasks += 1
+                    task_id = runlog["status"]["task_reference"]["uuid"]
                     state = runlog["status"]["state"]
-                    if state in RUNLOG.STATUS.SUCCESS:
+                    if state in RUNLOG.STATUS.SUCCESS and task_id in top_level_tasks:
                         completed_tasks += 1
 
             line = displayRunLogTree(screen, root, completed_tasks, total_tasks)
