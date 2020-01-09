@@ -7,6 +7,9 @@ from calm.dsl.store import Cache
 
 from .main import show, update, clear
 from .utils import highlight_text
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 def show_cache(obj):
@@ -63,7 +66,8 @@ def clear_cache(obj):
 def update_cache(obj, entity_type):
     """Update the data for dynamic entities stored in the cache"""
 
-    click.echo(highlight_text("Updating cache ..."))
+    click.echo(highlight_text("Updating cache ... "), nl=False)
     Cache.sync(entity_type)
+    click.echo("[Success]")
     show_cache(obj)
-    click.echo(highlight_text("Cache updated at {}".format(datetime.datetime.now())))
+    LOG.info("Cache updated at {}".format(datetime.datetime.now()))

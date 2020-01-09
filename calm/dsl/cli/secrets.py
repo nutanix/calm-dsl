@@ -6,6 +6,9 @@ from prettytable import PrettyTable
 from .utils import highlight_text
 
 from calm.dsl.store import Secret
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 def create_secret(name, value):
@@ -13,13 +16,13 @@ def create_secret(name, value):
 
     secrets = get_secrets_names()
     if name in secrets:
-        click.echo(
-            highlight_text("\nSecret Already present !!!\nTry to update secret\n")
-        )
+        click.echo("\nSecret {} Already present !!!".format(name))
         return
 
+    click.echo("Creating secret {} ... ".format(name), nl=False)
     Secret.create(name, value)
-    click.echo(highlight_text("\nSecret created !!! \n"))
+    click.echo("[Success]")
+    LOG.info("Secret {} created !!!".format(name))
 
 
 def get_secrets(quiet):
@@ -28,7 +31,7 @@ def get_secrets(quiet):
     avl_secrets = Secret.list()
 
     if not avl_secrets:
-        click.echo(highlight_text("\nNo secrets found !!!\n"))
+        click.echo("\nNo secrets found !!!")
         return
 
     if quiet:
@@ -61,11 +64,13 @@ def delete_secret(name):
 
     secrets = get_secrets_names()
     if name not in secrets:
-        click.echo(highlight_text("\nSecret not present !!!\n"))
+        click.echo("\nSecret {} not present !!!".format(name))
         return
 
+    click.echo("Deleting secret {} ... ".format(name), nl=False)
     Secret.delete(name)
-    click.echo(highlight_text("\nSecret deleted !!!\n"))
+    click.echo("[Success]")
+    LOG.info("Secret {} deleted !!!".format(name))
 
 
 def update_secret(name, value):
@@ -73,11 +78,13 @@ def update_secret(name, value):
 
     secrets = get_secrets_names()
     if name not in secrets:
-        click.echo(highlight_text("\nSecret not present !!!\n"))
+        click.echo("\nSecret {} not present !!!".format(name))
         return
 
+    click.echo("Updating secret {} ... ".format(name), nl=False)
     Secret.update(name, value)
-    click.echo(highlight_text("\nSecret updated !!!\n"))
+    click.echo("[Success]")
+    LOG.info("Secret {} updated !!!".format(name))
 
 
 def find_secret(name, pass_phrase=""):
@@ -101,4 +108,7 @@ def get_secrets_names():
 def clear_secrets():
     """Delete all the secrets"""
 
+    click.echo("Clearing the secrets ... ", nl=False)
     Secret.clear()
+    click.echo("[Success]")
+    LOG.info("All secrets deleted !!!")

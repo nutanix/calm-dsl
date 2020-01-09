@@ -9,6 +9,9 @@ from calm.dsl.config import get_config
 
 from .utils import get_name_query, get_states_filter, highlight_text
 from .constants import ACCOUNT
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 def get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_type):
@@ -37,7 +40,7 @@ def get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_
 
     if err:
         pc_ip = config["SERVER"]["pc_ip"]
-        warnings.warn(UserWarning("Cannot fetch accounts from {}".format(pc_ip)))
+        LOG.warning("Cannot fetch accounts from {}".format(pc_ip))
         return
 
     json_rows = res.json()["entities"]
@@ -89,25 +92,25 @@ def get_account(client, account_name):
 
     res, err = client.account.list(params=params)
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
 
     response = res.json()
     entities = response.get("entities", None)
     account = None
     if entities:
         if len(entities) != 1:
-            raise Exception("More than one account found - {}".format(entities))
+            LOG.exception("More than one account found - {}".format(entities))
 
-        click.echo(">> {} found >>".format(account_name))
+        LOG.info("{} found ".format(account_name))
         account = entities[0]
     else:
-        raise Exception("No account having name {} found".format(account_name))
+        LOG.exception("No account having name {} found".format(account_name))
 
     account_id = account["metadata"]["uuid"]
-    click.echo("Fetching account details")
+    LOG.info("Fetching account details ...")
     res, err = client.account.read(account_id)
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
 
     account = res.json()
     return account
@@ -122,7 +125,7 @@ def delete_account(obj, account_names):
         account_id = account["metadata"]["uuid"]
         res, err = client.account.delete(account_id)
         if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+            LOG.exception("[{}] - {}".format(err["code"], err["error"]))
         click.echo("account {} deleted".format(account_name))
 
 
@@ -204,7 +207,7 @@ def describe_gcp_account(client, spec, account_id):
 
     res, err = Obj.list(payload)  # TODO move this to GCP specific method
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
 
     public_images = res.json()["entities"]
     image_selfLink_name_map = {}

@@ -10,6 +10,9 @@ from calm.dsl.init import init_bp
 from calm.dsl.providers import get_provider_types
 
 from .main import init, set
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 @init.command("dsl")
@@ -80,7 +83,7 @@ def set_server_details(ip, port, username, password, project_name):
 
     if err:
         click.echo("[Fail]")
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
 
     result = json.loads(res.content)
     service_enablement_status = result["service_enablement_status"]

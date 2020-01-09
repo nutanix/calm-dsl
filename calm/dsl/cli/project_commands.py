@@ -9,6 +9,9 @@ from .projects import (
     update_project,
 )
 from .main import create, get, update, delete, describe
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 @get.command("projects")
@@ -57,16 +60,16 @@ def _create_project(obj, project_file, project_name):
     if project_file.endswith(".json") or project_file.endswith(".yaml"):
         res, err = create_project_from_file(obj, project_file, project_name)
     else:
-        click.echo("Unknown file format")
+        LOG.error("Unknown file format")
         return
 
     if err:
-        click.echo(err["error"])
+        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
         return
 
     project = res.json()
     state = project["status"]["state"]
-    click.echo(">> Project state: {}".format(state))
+    LOG.status(">> Project state: {}".format(state))
 
 
 @delete.command("project")
@@ -104,13 +107,13 @@ def _update_project(obj, project_name, project_file):
         payload = yaml.safe_load(open(project_file, "r").read())
         res, err = update_project(obj, project_name, payload)
     else:
-        click.echo("Unknown file format")
+        LOG.error("Unknown file format")
         return
 
     if err:
-        click.echo(err["error"])
+        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
         return
 
     project = res.json()
     state = project["status"]["state"]
-    click.echo(">> Project state: {}".format(state))
+    LOG.status(">> Project state: {}".format(state))

@@ -16,6 +16,9 @@ from calm.dsl.api import get_api_client
 from .utils import get_name_query, get_states_filter, highlight_text
 from .constants import BLUEPRINT
 from calm.dsl.store import Cache
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
@@ -42,7 +45,7 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
 
     if err:
         pc_ip = config["SERVER"]["pc_ip"]
-        warnings.warn(UserWarning("Cannot fetch blueprints from {}".format(pc_ip)))
+        LOG.warning("Cannot fetch blueprints from {}".format(pc_ip))
         return
 
     json_rows = res.json()["entities"]
@@ -110,7 +113,7 @@ def describe_bp(obj, blueprint_name):
 
     res, err = client.blueprint.read(bp["metadata"]["uuid"])
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
 
     bp = res.json()
 
@@ -232,7 +235,7 @@ def compile_blueprint_command(bp_file, out, no_sync=False):
     project_uuid = Cache.get_entity_uuid("PROJECT", project_name)
 
     if not project_uuid:
-        raise Exception(
+        LOG.exception(
             "Project {} not found. Please run: calm update cache".format(project_name)
         )
 
@@ -252,14 +255,14 @@ def compile_blueprint_command(bp_file, out, no_sync=False):
             cred["secret"]["value"] = ""
 
     if is_secret_avl:
-        click.echo(highlight_text("Warning: Secrets are not shown in payload !!!"))
+        LOG.warning("Secrets are not shown in payload !!!")
 
     if out == "json":
         click.echo(json.dumps(bp_payload, indent=4, separators=(",", ": ")))
     elif out == "yaml":
         click.echo(yaml.dump(bp_payload, default_flow_style=False))
     else:
-        click.echo("Unknown output format {} given".format(out))
+        LOG.error("Unknown output format {} given".format(out))
 
 
 def get_blueprint(client, name, all=False):
@@ -271,19 +274,19 @@ def get_blueprint(client, name, all=False):
 
     res, err = client.blueprint.list(params=params)
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
 
     response = res.json()
     entities = response.get("entities", None)
     blueprint = None
     if entities:
         if len(entities) != 1:
-            raise Exception("More than one blueprint found - {}".format(entities))
+            LOG.exception("More than one blueprint found - {}".format(entities))
 
-        click.echo(">> {} found >>".format(name))
+        LOG.info("{} found ".format(name))
         blueprint = entities[0]
     else:
-        raise Exception(">> No blueprint found with name {} found >>".format(name))
+        LOG.exception(">> No blueprint found with name {} found >>".format(name))
     return blueprint
 
 
@@ -291,7 +294,7 @@ def get_blueprint_runtime_editables(client, blueprint):
 
     bp_uuid = blueprint.get("metadata", {}).get("uuid", None)
     if not bp_uuid:
-        raise Exception(">> Invalid blueprint provided {} >>".format(blueprint))
+        LOG.exception("Invalid blueprint provided {} ".format(blueprint))
     res, err = client.blueprint._get_editables(bp_uuid)
     response = res.json()
     return response.get("resources", [])
@@ -336,7 +339,7 @@ def launch_blueprint_simple(
 
                 break
         if not profile:
-            raise Exception(">> No profile found with name {} >>".format(profile_name))
+            LOG.exception("No profile found with name {}".format(profile_name))
 
     runtime_editables = profile.pop("runtime_editables", [])
     launch_payload = {
@@ -368,9 +371,9 @@ def launch_blueprint_simple(
         )
     res, err = client.blueprint.launch(blueprint_uuid, launch_payload)
     if not err:
-        click.echo(">> {} queued for launch >>".format(blueprint_name))
+        LOG.status(">> {} queued for launch >>".format(blueprint_name))
     else:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
     response = res.json()
     launch_req_id = response["status"]["request_id"]
 
@@ -397,12 +400,13 @@ def launch_blueprint_simple(
                     pc_ip, pc_port, app_uuid
                 )
             )
+            LOG.status("Success")
             break
         elif response["status"]["state"] == "failure":
-            click.echo("Failed to launch blueprint. Check API response above.")
+            LOG.error("Failed to launch blueprint. Check API response above.")
             break
         elif err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+            LOG.exception("[{}] - {}".format(err["code"], err["error"]))
         count += 10
         time.sleep(10)
 
@@ -416,5 +420,6 @@ def delete_blueprint(obj, blueprint_names):
         blueprint_id = blueprint["metadata"]["uuid"]
         res, err = client.blueprint.delete(blueprint_id)
         if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+            LOG.exception("[{}] - {}".format(err["code"], err["error"]))
         click.echo("Blueprint {} deleted".format(blueprint_name))
+        LOG.status("Success")

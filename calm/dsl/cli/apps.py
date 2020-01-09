@@ -16,6 +16,9 @@ from .utils import get_name_query, get_states_filter, highlight_text, Display
 from .constants import APPLICATION, RUNLOG, SYSTEM_ACTIONS
 
 log = logging.getLogger(__name__)
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 def get_apps(obj, name, filter_by, limit, offset, quiet, all_items):
@@ -40,7 +43,7 @@ def get_apps(obj, name, filter_by, limit, offset, quiet, all_items):
 
     if err:
         pc_ip = config["SERVER"]["pc_ip"]
-        warnings.warn(UserWarning("Cannot fetch applications from {}".format(pc_ip)))
+        LOG.warning("Cannot fetch applications from {}".format(pc_ip))
         return
 
     json_rows = res.json()["entities"]
@@ -101,7 +104,7 @@ def _get_app(client, app_name, all=False):
 
     res, err = client.application.list(params=params)
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
 
     response = res.json()
     entities = response.get("entities", None)
@@ -117,19 +120,19 @@ def _get_app(client, app_name, all=False):
                     found = True
                     break
             if not found:
-                raise Exception("More than one app found - {}".format(entities))
+                LOG.exception("More than one app found - {}".format(entities))
 
         click.echo(">> App {} found >>".format(app_name))
         app = entities[0]
     else:
-        raise Exception(">> No app found with name {} found >>".format(app_name))
+        LOG.exception(">> No app found with name {} found >>".format(app_name))
     app_id = app["metadata"]["uuid"]
 
     # 2. Get app details
     click.echo(">> Fetching app details")
     res, err = client.application.read(app_id)
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
     app = res.json()
     return app
 
@@ -509,7 +512,7 @@ def delete_app(obj, app_names, soft=False):
         click.echo(">> Triggering {}".format(action_label))
         res, err = client.application.delete(app_id, soft_delete=soft)
         if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+            LOG.exception("[{}] - {}".format(err["code"], err["error"]))
 
         click.echo("{} action triggered".format(action_label))
         response = res.json()
@@ -545,7 +548,7 @@ def run_actions(screen, obj, app_name, action_name, watch):
         if action["name"] == calm_action_name or action["name"] == action_name
     )
     if not action:
-        raise Exception("No action found matching name {}".format(action_name))
+        LOG.exception("No action found matching name {}".format(action_name))
     action_id = action["uuid"]
 
     # Hit action run api (with metadata and minimal spec: [args, target_kind, target_uuid])
@@ -554,7 +557,7 @@ def run_actions(screen, obj, app_name, action_name, watch):
     res, err = client.application.run_action(app_id, action_id, app)
 
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
 
     response = res.json()
     runlog_uuid = response["status"]["runlog_uuid"]
@@ -575,7 +578,7 @@ def poll_action(poll_func, completion_func, poll_interval=10):
         # call status api
         res, err = poll_func()
         if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+            LOG.exception("[{}] - {}".format(err["code"], err["error"]))
         response = res.json()
         (completed, msg) = completion_func(response)
         if completed:
@@ -598,4 +601,4 @@ def download_runlog(obj, runlog_id, app_name, file_name):
         open(file_name, "wb").write(res.content)
         click.echo("Runlogs saved as {}".format(highlight_text(file_name)))
     else:
-        log.error(err)
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
