@@ -14,6 +14,13 @@ from .constants import RUNLOG, SINGLE_INPUT
 from calm.dsl.api import get_api_client
 
 
+def parse_machine_name(runlog_id, machine_name):
+    if machine_name is None:
+        return None
+    machine_info = machine_name.split('-{} - '.format(runlog_id))
+    return '{} ({})'.format(machine_info[1], machine_info[0])
+
+
 class InputFrame(Frame):
     def __init__(self, name, screen, inputs, data):
         super(InputFrame, self).__init__(screen,
@@ -198,7 +205,7 @@ def displayRunLog(screen, obj, pre, fill, line):
     # TODO - Fix KeyError for action_runlog
 
     if obj.machine:
-        name = "{} [machine: '{}']".format(name, obj.machine)
+        name = "{} ['{}']".format(name, obj.machine)
 
     creation_time = int(metadata["creation_time"]) // 1000000
     username = (
@@ -312,7 +319,8 @@ def get_completion_func(screen):
                 runlog_map[str(uuid)] = runlog
                 reasons = runlog["status"].get("reason_list", [])
                 outputs = []
-                machine = runlog['status'].get("machine_name", None)
+                machine_name = runlog['status'].get("machine_name", None)
+                machine = parse_machine_name(runlog_uuid, machine_name)
                 if runlog['status']['type'] == "task_runlog" and not runlog["status"].get("attrs", None):
                     res, err = client.runbook.runlog_output(runlog_uuid, uuid)
                     if err:
