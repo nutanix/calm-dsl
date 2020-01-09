@@ -294,6 +294,7 @@ def get_completion_func(screen):
             # Create nodes of runlog tree and a map based on uuid
             root = None
             nodes = {}
+            runlog_map = {}
             for runlog in sorted_entities:
                 # Create root node
                 # TODO - Get details of root node
@@ -303,10 +304,12 @@ def get_completion_func(screen):
                         "metadata": {"uuid": root_uuid},
                         "status": {"type": "action_runlog", "state": ""},
                     }
+                    runlog_map[str(root_uuid)] = root_runlog
                     root = RunlogNode(root_runlog)
                     nodes[str(root_uuid)] = root
 
                 uuid = runlog["metadata"]["uuid"]
+                runlog_map[str(uuid)] = runlog
                 reasons = runlog["status"].get("reason_list", [])
                 outputs = []
                 machine = runlog['status'].get("machine_name", None)
@@ -318,12 +321,23 @@ def get_completion_func(screen):
                     output_list = runlog_output['status']['output_list']
                     for task_output in output_list:
                         outputs.append(task_output["output"])
+                    if runlog["status"]["task_reference"]["uuid"] in metatasks:
+                        continue  # don't add metatask's trl in runlogTree
                 nodes[str(uuid)] = RunlogNode(runlog, parent=root, outputs=outputs, machine=machine, reasons=reasons)
 
             # Attach parent to nodes
             for runlog in sorted_entities:
                 uuid = runlog["metadata"]["uuid"]
+                if nodes.get(str(uuid), None) is None:
+                    continue
                 parent_uuid = runlog["status"]["parent_reference"]["uuid"]
+                parent_runlog = runlog_map[str(parent_uuid)]
+                parent_type = parent_runlog['status']['type']
+                while parent_type == "task_runlog" and parent_runlog["status"]["task_reference"]["uuid"] in metatasks:
+                    parent_uuid = parent_runlog["status"]["parent_reference"]["uuid"]
+                    parent_runlog = runlog_map[str(parent_uuid)]
+                    parent_type = parent_runlog['status']['type']
+
                 node = nodes[str(uuid)]
                 node.parent = nodes[str(parent_uuid)]
 
