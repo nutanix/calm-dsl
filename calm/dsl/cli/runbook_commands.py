@@ -38,23 +38,17 @@ def _get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
     get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items)
 
 
-@get.command("previous_runs")
+@get.command("run_history")
 @click.option(
     "--name", "-n", default=None, help="Search for previous runbook runs by name of runbook (Optional)"
 )
 @click.option("--filter", "filter_by", default=None, help="Filter previous runbook runs by this string")
 @click.option("--limit", default=20, help="Number of results to return")
 @click.option("--offset", default=0, help="Offset results by the specified amount")
-@click.option(
-    "--quiet", "-q", is_flag=True, default=False, help="Show only runbook names"
-)
-@click.option(
-    "--all-items", "-a", is_flag=True, help="Get all items, including deleted ones"
-)
 @click.pass_obj
-def _get_previous_runs(obj, name, filter_by, limit, offset, quiet, all_items):
+def _get_previous_runs(obj, name, filter_by, limit, offset):
     """Get previous runbook runs, optionally filtered by a string"""
-    get_previous_runs(obj, name, filter_by, limit, offset, quiet)
+    get_previous_runs(obj, name, filter_by, limit, offset)
 
 
 def create_runbook(client, runbook_payload, name=None, description=None):

@@ -10,7 +10,7 @@ from calm.dsl.builtins import RunbookService, create_runbook_payload
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
 from .utils import get_name_query, highlight_text, get_states_filter
-from .constants import RUNBOOK
+from .constants import RUNBOOK, RUNLOG
 from .runlog import get_completion_func, get_runlog_status
 from .endpoints import get_endpoint
 
@@ -120,14 +120,16 @@ def compile_runbook(runbook_file):
     return runbook_payload
 
 
-def get_previous_runs(obj, name, filter_by, limit, offset, quiet):
+def get_previous_runs(obj, name, filter_by, limit, offset):
     client = get_api_client()
     config = get_config()
 
     params = {"length": limit, "offset": offset}
     filter_query = ""
     if name:
-        filter_query = get_name_query([name])
+        runbook = get_runbook(client, name)
+        runbook_uuid = runbook["metadata"]["uuid"]
+        filter_query = filter_query + ";action_reference=={}".format(runbook_uuid)
     if filter_by:
         filter_query = filter_query + ";" + filter_by if name else filter_by
     if filter_query.startswith(";"):
@@ -145,36 +147,46 @@ def get_previous_runs(obj, name, filter_by, limit, offset, quiet):
 
     json_rows = res.json()["entities"]
 
-    if quiet:
-        for _row in json_rows:
-            row = _row["status"]
-            click.echo(highlight_text(row["action_reference"]["name"]))
-        return
-
     table = PrettyTable()
     table.field_names = [
         "SOURCE RUNBOOK",
-        "STATE",
-        "OWNER",
-        "CREATED ON",
-        "LAST UPDATED",
+        "STARTED AT",
+        "ENDED AT",
+        "COMPLETED IN",
+        "RUN BY",
         "UUID",
+        "STATE",
     ]
     for _row in json_rows:
         row = _row["status"]
         metadata = _row["metadata"]
 
-        creation_time = int(metadata["creation_time"]) // 1000000
+        state = row["state"]
+        started_at = int(metadata["creation_time"]) // 1000000
         last_update_time = int(metadata["last_update_time"]) // 1000000
+        completed_in = last_update_time - started_at
+        hours, rem = divmod(completed_in, 3600)
+        minutes, seconds = divmod(rem, 60)
+        timetaken = ""
+        if hours:
+            timetaken = "{} hours {} minutes".format(hours, minutes)
+        elif minutes:
+            timetaken = "{} minutes {} seconds".format(minutes, seconds)
+        else:
+            timetaken = "{} seconds".format(seconds)
+
+        if state not in RUNLOG.TERMINAL_STATES:
+            timetaken = "-"
 
         table.add_row(
             [
                 highlight_text(row["action_reference"]["name"]),
-                highlight_text(row["state"]),
+                highlight_text(time.ctime(started_at)),
+                "{}".format(arrow.get(last_update_time).humanize()) if state in RUNLOG.TERMINAL_STATES else "-",
+                highlight_text(timetaken),
                 highlight_text(row["userdata_reference"]["name"]),
-                highlight_text(time.ctime(creation_time)),
-                "{}".format(arrow.get(last_update_time).humanize()),
                 highlight_text(metadata["uuid"]),
+                highlight_text(state),
             ]
         )
     click.echo(table)
