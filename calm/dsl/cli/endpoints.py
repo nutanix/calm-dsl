@@ -28,7 +28,7 @@ def get_endpoint_list(obj, name, filter_by, limit, offset, quiet, all_items):
         filter_query = filter_query + ";" + filter_by if name else filter_by
 
     if all_items:
-        filter_query += get_states_filter(ENDPOINT.STATES)
+        filter_query += get_states_filter(ENDPOINT.STATES, state_key="_state")
     if filter_query.startswith(";"):
         filter_query = filter_query[1:]
 
@@ -53,30 +53,32 @@ def get_endpoint_list(obj, name, filter_by, limit, offset, quiet, all_items):
     table = PrettyTable()
     table.field_names = [
         "NAME",
+        "TYPE",
         "DESCRIPTION",
+        "PROJECT",
         "STATE",
-        "CREATED ON",
+        "CREATED BY",
         "LAST UPDATED",
         "UUID",
-        "PROJECT",
     ]
     for _row in json_rows:
         row = _row["status"]
         metadata = _row["metadata"]
 
-        creation_time = int(metadata["creation_time"]) // 1000000
+        created_by = metadata.get("owner_reference", {}).get("name", "")
         last_update_time = int(metadata["last_update_time"]) // 1000000
         project = metadata.get("project_reference", {}).get("name", "")
 
         table.add_row(
             [
                 highlight_text(row["name"]),
+                highlight_text(row["type"]),
                 highlight_text(row["description"]),
+                highlight_text(project),
                 highlight_text(row["state"]),
-                highlight_text(time.ctime(creation_time)),
+                highlight_text(created_by),
                 "{}".format(arrow.get(last_update_time).humanize()),
                 highlight_text(row["uuid"]),
-                highlight_text(project),
             ]
         )
     click.echo(table)
@@ -179,21 +181,28 @@ def describe_endpoint(obj, endpoint_name):
             highlight_text(time.ctime(created_on)), highlight_text(past)
         )
     )
+    last_updated = int(endpoint["metadata"]["last_update_time"]) // 1000000
+    past = arrow.get(last_updated).humanize()
+    click.echo(
+        "Last Updated: {} ({})\n".format(
+            highlight_text(time.ctime(last_updated)), highlight_text(past)
+        )
+    )
     endpoint_resources = endpoint.get("status").get("resources", {})
 
     endpoint_type = endpoint_resources.get("type", "")
-    endpoint_value = endpoint_resources.get("value", "")
+    endpoint_attrs = endpoint_resources.get("attrs", {})
     click.echo("Type: {}".format(highlight_text(endpoint_type)))
-    click.echo("Value: {}".format(highlight_text(endpoint_value)))
-
-    credential_types = [
-        "{} ({})".format(cred.get("name", ""), cred.get("type", ""))
-        for cred in endpoint_resources.get("credential_definition_list", [])
-    ]
-    click.echo("Credentials [{}]:".format(highlight_text(len(credential_types))))
-    click.echo("\t{}".format(highlight_text(", ".join(credential_types))))
-    login_cred = endpoint_resources.get("login_credential_reference", {})
-    click.echo("Login Credential: {}".format(highlight_text(login_cred.get("name", ""))))
+    if endpoint_type == ENDPOINT.TYPES.HTTP:
+        url = endpoint_attrs.get("url", "")
+        click.echo("URL: {}\n".format(highlight_text(url)))
+    else:
+        value_type = endpoint_attrs.get("value_type", "IP")
+        value_type += "s"
+        values = endpoint_attrs.get("values", [])
+        element_count = endpoint_resources.get("element_count")
+        click.echo("VM Count: {}".format(highlight_text(element_count)))
+        click.echo("{}: {}\n".format(value_type, highlight_text(values)))
 
 
 def delete_endpoint(obj, endpoint_names):

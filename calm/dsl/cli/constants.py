@@ -52,11 +52,15 @@ class RUNBOOK:
 
 class ENDPOINT:
     class STATES:
-        PROVISIONING = "provisioning"
-        STOPPED = "stopped"
-        RUNNING = "running"
-        ERROR = "error"
-        DELETED = "deleted"
+        ACTIVE = "ACTIVE"
+        DELETED = "DELETED"
+        DRAFT = "DRAFT"
+        ERROR = "ERROR"
+
+    class TYPES:
+        HTTP = "HTTP"
+        WINDOWS = "Windows"
+        LINUX = "Linux"
 
 
 class BLUEPRINT:

@@ -21,7 +21,7 @@ from calm.dsl.api import get_api_client
 @click.option("--limit", default=20, help="Number of results to return")
 @click.option("--offset", default=0, help="Offset results by the specified amount")
 @click.option(
-    "--quiet", "-q", is_flag=True, default=False, help="Show only endpoint names."
+    "--quiet", "-q", is_flag=True, default=False, help="Show only endpoint names"
 )
 @click.option(
     "--all-items", "-a", is_flag=True, help="Get all items, including deleted ones"
