@@ -3,9 +3,24 @@ import logging
 from colorlog import ColoredFormatter
 import time
 import click
+import sys
 
 # Used for looking at verbose level
 VERBOSE_LEVEL = 20
+
+
+class StdOutFilter(logging.Filter):
+    """Filter for Stdout stream handler"""
+
+    def filter(self, rec):
+        return rec.levelno <= logging.WARNING
+
+
+class StdErrFilter(logging.Filter):
+    """Filter for Stderr stream handler"""
+
+    def filter(self, rec):
+        return rec.levelno > logging.WARNING
 
 
 class CustomLogging:
@@ -15,28 +30,20 @@ class CustomLogging:
     custom logger with following log levels with appropriate color codes and
     custom formatting for messages::“
 
-        * LOG.response  - [RESPONSE]
-        * LOG.payload   - [PAYLOAD]
-        * LOG.status    - [STATUS]
-        * log.url       - [URL]
+        * LOG.debug     - [DEBUG]
         * LOG.info      - [INFO]
         * LOG.warn      - [WARNING]
         * LOG.error     - [ERROR]
-        * LOG.
-        critical  - [CRITICAL]
+        * LOG.critical  - [CRITICAL]
+        * LOG.exception - [ERROR]
 
     """
 
-    NOTSET = 0
-    RESPONSE = 5
-    PAYLOAD = 6
-    DEBUG = 10
-    STATUS = 15
-    URL = 16
-    INFO = 20
-    WARNING = 30
-    ERROR = 40
-    CRITICAL = 50
+    DEBUG = logging.DEBUG
+    INFO = logging.INFO
+    WARNING = logging.WARNING
+    ERROR = logging.ERROR
+    CRITICAL = logging.CRITICAL
 
     def __init__(self, name):
         """
@@ -49,20 +56,23 @@ class CustomLogging:
            None
         """
 
-        # create custom levels
-        self.__addCustomLevels()
-
         # create console and file handler
-        self._ch = logging.StreamHandler()
+        self._ch1 = logging.StreamHandler(sys.stdout)
+        self._ch1.addFilter(StdOutFilter())
+
+        self._ch2 = logging.StreamHandler()
+        self._ch2.addFilter(StdErrFilter())
 
         # add custom formatter to console handler
-        self.__addCustomFormatter()
+        self.__addCustomFormatter(self._ch1)
+        self.__addCustomFormatter(self._ch2)
 
         # create custom logger
         self._logger = logging.getLogger(name)
 
         # add console to logger
-        self._logger.addHandler(self._ch)
+        self._logger.addHandler(self._ch1)
+        self._logger.addHandler(self._ch2)
 
         # set level to log level
         self._logger.setLevel("INFO")
@@ -73,12 +83,7 @@ class CustomLogging:
 
     def get_logging_levels(self):
         return [
-            "NOTSET",
-            "RESPONSE",
-            "PAYLOAD",
             "DEBUG",
-            "STATUS",
-            "URL",
             "INFO",
             "WARNING",
             "ERROR",
@@ -88,59 +93,6 @@ class CustomLogging:
     def set_logger_level(self, lvl):
         """sets the logger verbose level"""
         self._logger.setLevel(lvl)
-
-    def response(self, msg):
-        """
-        custom response log level
-
-        Args:
-            msg (str): message to log
-
-        Returns:
-            None
-        """
-
-        logger = self.get_logger()
-        return logger.response(msg)
-
-    def payload(self, msg):
-        """
-        custom payload log level
-
-        Args:
-            msg (str): message to log
-
-        Returns:
-            None
-        """
-        logger = self.get_logger()
-        return logger.payload(msg)
-
-    def url(self, msg):
-        """
-        custom url log level
-
-        Args:
-            msg (str): message to log
-
-        Returns:
-            None
-        """
-        logger = self.get_logger()
-        return logger.url(msg)
-
-    def status(self, msg):
-        """
-        custom status log level
-
-        Args:
-            msg (str): message to log
-
-        Returns:
-            None
-        """
-        logger = self.get_logger()
-        return logger.status(msg)
 
     def info(self, msg):
         """
@@ -197,148 +149,35 @@ class CustomLogging:
         logger = self.get_logger()
         return logger.exception(msg)
 
-    def red(self, string):
+    def critical(self, msg):
         """
-        log red colored string, useful for highlighting errors
+        critical log level
 
         Args:
-            string(str): string to be colored red
+            msg (str): message to log
 
         Returns:
             None
         """
 
-        return self.__color(string, "31m")
+        logger = self.get_logger()
+        return logger.critical(msg)
 
-    def green(self, string):
+    def debug(self, msg):
         """
-        log green colored string, useful for highlighting success
+        debug log level
 
         Args:
-            string(str): string to be colored green
+            msg (str): message to log
 
         Returns:
             None
         """
 
-        return self.__color(string, "32m")
+        logger = self.get_logger()
+        return logger.debug(msg)
 
-    def yellow(self, string):
-        """
-        log yellow colored string, useful for highlighting data
-
-        Args:
-            string(str): string to be colored green
-
-        Returns:
-            None
-        """
-
-        return self.__color(string, "33m")
-
-    def blue(self, string):
-        """
-        log blue colored string, useful for highlighting data
-
-        Args:
-            string(str): string to be colored green
-
-        Returns:
-            None
-        """
-
-        return self.__color(string, "34m")
-
-    def __addCustomLevels(self):
-        """
-        add new custom level RESPONSE, PAYLOAD, STATUS, URL to logging
-
-        Args:
-            None
-
-        Returns:
-            None
-        """
-
-        RESPONSE = 5
-        PAYLOAD = 6
-        STATUS = 15
-        URL = 16
-
-        levels = [
-            (RESPONSE, "RESPONSE"),
-            (PAYLOAD, "PAYLOAD"),
-            (STATUS, "STATUS"),
-            (URL, "URL"),
-        ]
-
-        for level in levels:
-            value, name = level
-            logging.addLevelName(value, name)
-            setattr(logging, name, value)
-
-        def response(self, *args, **kwargs):
-            """
-            new response log level
-
-            Args:
-                *args: variable arguments
-                **kwargs: variable keyword arguments
-
-            Returns:
-                None
-            """
-
-            self.log(RESPONSE, *args, **kwargs)
-
-        def payload(self, *args, **kwargs):
-            """
-            new payload log level
-
-            Args:
-                *args: variable arguments
-                **kwargs: variable keyword arguments
-
-            Returns:
-                None
-            """
-
-            self.log(PAYLOAD, *args, **kwargs)
-
-        def url(self, *args, **kwargs):
-            """
-            new url log level
-
-            Args:
-                *args: variable arguments
-                **kwargs: variable keyword arguments
-
-            Returns:
-                None
-            """
-
-            self.log(URL, *args, **kwargs)
-
-        def status(self, *args, **kwargs):
-            """
-            new status log level
-
-            Args:
-                *args: variable arguments
-                **kwargs: variable keyword arguments
-
-            Returns:
-                None
-            """
-
-            self.log(STATUS, *args, **kwargs)
-
-        logging.Logger.response = response
-        logging.Logger.payload = payload
-        logging.Logger.url = url
-        logging.Logger.status = status
-
-    def __addCustomFormatter(self):
+    def __addCustomFormatter(self, ch):
         """
         add ColorFormatter with custom colors for each log level
 
@@ -359,38 +198,17 @@ class CustomLogging:
             datefmt="%Y-%m-%d %H:%M:%S",
             reset=True,
             log_colors={
-                "RESPONSE": "purple",
-                "PAYLOAD": "yellow",
                 "DEBUG": "purple",
-                "URL": "blue",
-                "STATUS": "cyan",
                 "INFO": "green",
                 "WARNING": "yellow",
                 "ERROR": "red",
+                "CRITICAL": "red",
             },
         )
         formatter.converter = time.gmtime
 
         # add formatter to console handler
-        self._ch.setFormatter(formatter)
-
-    def __color(self, string, color):
-        """
-        set specified color string
-
-        Args:
-            string(str): string to be color colded
-            color(str): color to be set
-
-        Returns:
-            ascii colored string
-        """
-
-        if not isinstance(string, str):
-            string = str(string)
-        COLOR = "\033[0;{}".format(color)
-        NC = "\033[0m"
-        return COLOR + string + NC
+        ch.setFormatter(formatter)
 
 
 def get_logging_handle(name):
