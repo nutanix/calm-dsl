@@ -14,6 +14,8 @@ from .constants import RUNBOOK, RUNLOG
 from .runlog import get_completion_func, get_runlog_status
 from .endpoints import get_endpoint
 
+from anytree import NodeMixin, RenderTree
+
 
 def get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
     """Get the runbooks, optionally filtered by a string"""
@@ -55,29 +57,35 @@ def get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
     table.field_names = [
         "NAME",
         "DESCRIPTION",
-        "RUN COUNT",
-        "CREATED ON",
-        "LAST UPDATED",
-        "UUID",
         "PROJECT",
+        "STATE",
+        "RUN COUNT",
+        "CREATED BY",
+        "LAST UPDATED",
+        "LAST RUN",
+        "UUID",
     ]
     for _row in json_rows:
         row = _row["status"]
         metadata = _row["metadata"]
 
-        creation_time = int(metadata["creation_time"]) // 1000000
+        created_by = metadata.get("owner_reference", {}).get("name", "-")
+        last_run = int(row.get("last_run_time", 0)) // 1000000
         last_update_time = int(metadata["last_update_time"]) // 1000000
         project = metadata.get("project_reference", {}).get("name", "")
+        total_runs = int(row.get("run_count", 0)) + int(row.get("running_runs", 0))
 
         table.add_row(
             [
                 highlight_text(row["name"]),
                 highlight_text(row["description"]),
-                highlight_text(row["run_count"]),
-                highlight_text(time.ctime(creation_time)),
-                "{}".format(arrow.get(last_update_time).humanize()),
-                highlight_text(row["uuid"]),
                 highlight_text(project),
+                highlight_text(row["state"]),
+                highlight_text(total_runs if total_runs else '-'),
+                highlight_text(created_by),
+                "{}".format(arrow.get(last_update_time).humanize()),
+                "{}".format(arrow.get(last_run).humanize()) if last_run else "-",
+                highlight_text(row["uuid"]),
             ]
         )
     click.echo(table)
@@ -348,40 +356,47 @@ def describe_runbook(obj, runbook_name):
             highlight_text(time.ctime(created_on)), highlight_text(past)
         )
     )
+    last_updated = int(runbook["metadata"]["last_update_time"]) // 1000000
+    past = arrow.get(last_updated).humanize()
+    click.echo(
+        "Last Updated: {} ({})\n".format(
+            highlight_text(time.ctime(last_updated)), highlight_text(past)
+        )
+    )
     runbook_resources = runbook.get("status").get("resources", {})
+    runbook_dict = runbook_resources.get("runbook", {})
 
     click.echo("Runbook :")
-    runbook_dict = runbook_resources.get("runbook", {})
-    main_task = runbook_dict.get("main_task_local_reference", {})
-    click.echo("\tMainTask: {}".format(highlight_text(main_task.get("name", ""))))
 
     task_list = runbook_dict.get("task_definition_list", [])
-    click.echo("\tTasks [{}]:".format(highlight_text(len(task_list))))
+    task_map = {}
     for task in task_list:
-        task_name = task.get("name", "")
-        task_type = task.get("type", "")
-        click.echo("\t\t{} ({})".format(highlight_text(task_name), highlight_text(task_type)))
+        task_map[task.get("uuid")] = task
+
+    # creating task tree for runbook
+    main_task = runbook_dict.get("main_task_local_reference").get("uuid")
+    root = addTaskNodes(main_task, task_map)
+    for pre, _, node in RenderTree(root):
+        displayTaskNode(node, pre)
+
+    click.echo("\n")
 
     variable_types = [
-        var.get("name", "")
+        var["label"] if var.get("label", "") else var.get("name")
         for var in runbook_dict.get("variable_list", [])
     ]
     click.echo("\tVariables [{}]:".format(highlight_text(len(variable_types))))
-    click.echo("\t\t{}".format(highlight_text(", ".join(variable_types))))
-
-    endpoint_types = [
-        "{} ({})".format(ep.get("name", ""), ep.get("resources", {}).get("type", ""))
-        for ep in runbook_resources.get("endpoint_definition_list", [])
-    ]
-    click.echo("Endpoints [{}]:".format(highlight_text(len(endpoint_types))))
-    click.echo("\t{}".format(highlight_text(", ".join(endpoint_types))))
+    click.echo("\t\t{}\n".format(highlight_text(", ".join(variable_types))))
 
     credential_types = [
         "{} ({})".format(cred.get("name", ""), cred.get("type", ""))
         for cred in runbook_resources.get("credential_definition_list", [])
     ]
     click.echo("Credentials [{}]:".format(highlight_text(len(credential_types))))
-    click.echo("\t{}".format(highlight_text(", ".join(credential_types))))
+    click.echo("\t{}\n".format(highlight_text(", ".join(credential_types))))
+
+    default_target = runbook_resources.get("default_target_reference", {}).get("name", "-")
+    click.echo("Default Endpoint Target: {}\n".format(highlight_text(default_target)))
 
 
 def delete_runbook(obj, runbook_names):
@@ -416,3 +431,50 @@ def poll_action(poll_func, completion_func, poll_interval=10, **kwargs):
         count += poll_interval
         time.sleep(poll_interval)
     return True
+
+
+class TaskNode(NodeMixin):
+    def __init__(self, name, task_type=None, target=None, parent=None):
+        self.name = name
+        self.type = task_type
+        self.target = target
+        self.parent = parent
+
+
+def addTaskNodes(task_uuid, task_map, parent=None):
+    task = task_map[task_uuid]
+    task_name = task.get("name", "")
+    task_target = task.get("target_any_local_reference", {}).get("name", "")
+    task_type = task.get("type", "")
+
+    if task_type == "DAG":
+        node = TaskNode("ROOT")
+    elif task_type != "META":
+        node = TaskNode(task_name, task_type=task_type, target=task_target, parent=parent)
+    else:
+        node = parent
+
+    if task_type == "DECISION":
+        success_node = TaskNode("SUCCESS", parent=node)
+        failure_node = TaskNode("FAILURE", parent=node)
+        success_task = task.get("attrs", {}).get("success_child_reference", {}).get("uuid", "")
+        if success_task:
+            addTaskNodes(success_task, task_map, success_node)
+        failure_task = task.get("attrs", {}).get("failure_child_reference", {}).get("uuid", "")
+        if failure_task:
+            addTaskNodes(failure_task, task_map, failure_node)
+        return node
+
+    child_tasks = task.get("child_tasks_local_reference_list", [])
+    for child_task in child_tasks:
+        addTaskNodes(child_task.get("uuid"), task_map, node)
+    return node
+
+
+def displayTaskNode(node, pre):
+    if node.type and node.target:
+        click.echo("\t{}{} (Type: {}, Target: {})".format(pre, highlight_text(node.name), highlight_text(node.type), highlight_text(node.target)))
+    elif node.type:
+        click.echo("\t{}{} (Type: {})".format(pre, highlight_text(node.name), highlight_text(node.type)))
+    else:
+        click.echo("\t{}{}".format(pre, highlight_text(node.name)))
