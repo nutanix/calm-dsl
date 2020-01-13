@@ -1,3 +1,4 @@
 include calm/dsl/builtins/models/schemas/*.yaml.jinja2
-include calm/dsl/config/config.ini
+include calm/dsl/config/config.ini.jinja2
+include calm/dsl/init/blueprint/*.py.jinja2
 recursive-include calm/dsl/providers/plugins *
