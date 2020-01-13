@@ -7,7 +7,6 @@ import click_completion
 import click_completion.core
 from click_didyoumean import DYMGroup
 from click_repl import repl
-import click_log
 
 # TODO - move providers to separate file
 from calm.dsl.providers import get_provider, get_provider_types
