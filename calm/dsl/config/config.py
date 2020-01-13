@@ -49,7 +49,7 @@ def _render_config_template(
         project_name=project_name,
         db_location=db_location,
     )
-    return text.strip() + "\n"
+    return text.strip() + os.linesep
 
 
 def _get_config_file():
