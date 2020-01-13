@@ -86,12 +86,7 @@ def set_server_details(ip, port, username, password, project_name):
     service_enablement_status = result["service_enablement_status"]
     click.echo("[{}]".format(service_enablement_status))
 
-    # Keep initial DB location to default. User need not give this option initially.
-    # db_location = click.prompt(
-    #    "DSL local DB location", default=os.path.expanduser("~/.calm/dsl.db")
-    # )
-
-    db_location = os.path.expanduser("~/.calm/dsl.db")
+    db_location = os.path.joing(os.path.expanduser("~"), ".calm", "dsl.db")
 
     # Default user config file
     user_config_file = get_default_user_config_file()
