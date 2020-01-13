@@ -31,7 +31,7 @@ def render_blueprint_template(service_name, subnet_name, provider_type):
     env = Environment(loader=loader)
     template = env.get_template(schema_file)
     text = template.render(service_name=service_name, subnet_name=subnet_name)
-    return text.strip() + "\n"
+    return text.strip() + os.linesep
 
 
 def create_bp_file(dir_name, service_name, subnet_name, provider_type):
