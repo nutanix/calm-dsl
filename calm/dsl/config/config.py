@@ -23,7 +23,7 @@ def make_config_file_dir(config_file):
 
 def get_default_user_config_file():
 
-    user_config_file = os.path.join(os.path.expanduser("~/.calm"), "config.ini")
+    user_config_file = os.path.join(os.path.expanduser("~"), ".calm", "config.ini")
     make_config_file_dir(user_config_file)
     return user_config_file
 
