@@ -22,7 +22,7 @@ def read_file(filename, depth=1):
 
 
 def read_local_file(filename):
-    file_path = ".local/" + filename
+    file_path = os.path.join(".local", filename)
 
     # Checking if file exists
     abs_file_path = os.path.join(
@@ -31,7 +31,7 @@ def read_local_file(filename):
 
     # If not exists read from home directory
     if not os.path.exists(abs_file_path):
-        file_path = os.path.expanduser("~/.calm/.local/") + filename
+        file_path = os.path.join(os.path.expanduser("~"), ".calm", ".local", filename)
         return read_file(file_path, 0).rstrip()  # To remove \n, use rstrip
 
     return read_file(file_path, depth=2)

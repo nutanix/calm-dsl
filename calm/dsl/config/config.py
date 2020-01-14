@@ -23,7 +23,7 @@ def make_config_file_dir(config_file):
 
 def get_default_user_config_file():
 
-    user_config_file = os.path.join(os.path.expanduser("~/.calm"), "config.ini")
+    user_config_file = os.path.join(os.path.expanduser("~"), ".calm", "config.ini")
     make_config_file_dir(user_config_file)
     return user_config_file
 
@@ -49,7 +49,7 @@ def _render_config_template(
         project_name=project_name,
         db_location=db_location,
     )
-    return text.strip() + "\n"
+    return text.strip() + os.linesep
 
 
 def _get_config_file():

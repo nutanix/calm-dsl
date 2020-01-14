@@ -31,7 +31,7 @@ def render_blueprint_template(service_name, subnet_name, provider_type):
     env = Environment(loader=loader)
     template = env.get_template(schema_file)
     text = template.render(service_name=service_name, subnet_name=subnet_name)
-    return text.strip() + "\n"
+    return text.strip() + os.linesep
 
 
 def create_bp_file(dir_name, service_name, subnet_name, provider_type):
@@ -52,14 +52,14 @@ def create_cred_keys(dir_name):
 
     # Write private key
     private_key = key.export_key("PEM")
-    private_key_filename = "{}/centos".format(dir_name)
+    private_key_filename = os.path.join(dir_name, "centos")
     with open(private_key_filename, "wb") as fd:
         fd.write(private_key)
     os.chmod(private_key_filename, 0o600)
 
     # Write public key
     public_key = key.publickey().export_key("OpenSSH")
-    public_key_filename = "{}/centos_pub".format(dir_name)
+    public_key_filename = os.path.join(dir_name, "centos_pub")
     with open(public_key_filename, "wb") as fd:
         fd.write(public_key)
     os.chmod(public_key_filename, 0o600)
@@ -70,27 +70,28 @@ def create_scripts(dir_name):
     dir_path = os.path.dirname(os.path.realpath(__file__))
     scripts_dir = os.path.join(dir_path, "scripts")
     for script_file in os.listdir(scripts_dir):
-        data = read_file("scripts/{}".format(script_file))
+        script_path = os.path.join(scripts_dir, script_file)
+        data = read_file(script_path)
 
-        with open("{}/{}".format(dir_name, script_file), "w+") as fd:
+        with open(os.path.join(dir_name, script_file), "w+") as fd:
             fd.write(data)
 
 
 def make_bp_dirs(dir_name, bp_name):
 
-    bp_dir = "{}/{}".format(dir_name, bp_name)
+    bp_dir = os.path.join(dir_name, bp_name)
     if not os.path.isdir(bp_dir):
         os.makedirs(bp_dir)
 
-    local_dir = "{}/{}".format(bp_dir, ".local")
+    local_dir = os.path.join(bp_dir, ".local")
     if not os.path.isdir(local_dir):
         os.makedirs(local_dir)
 
-    key_dir = "{}/{}".format(local_dir, "keys")
+    key_dir = os.path.join(local_dir, "keys")
     if not os.path.isdir(key_dir):
         os.makedirs(key_dir)
 
-    script_dir = "{}/{}".format(bp_dir, "scripts")
+    script_dir = os.path.join(bp_dir, "scripts")
     if not os.path.isdir(script_dir):
         os.makedirs(script_dir)
 
