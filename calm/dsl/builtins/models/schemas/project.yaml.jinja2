@@ -69,7 +69,7 @@ properties:
             resource_type:
               type: string
   default_subnet_reference:
-    {{ References_Without_Name('subnet') | indent(6) }}
+    {{ References_Without_Name('subnet') | indent(4) }}
 
 {%- endmacro %}
 
