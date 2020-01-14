@@ -4,6 +4,8 @@
 Sample Calm DSL for {{service_name}} blueprint
 """
 
+import os
+
 from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import CalmVariable as Variable
@@ -16,8 +18,8 @@ from calm.dsl.builtins import AhvVmGC, AhvVmResources, AhvVm
 
 # SSH Credentials
 CENTOS_USER = "centos"
-CENTOS_KEY = read_local_file("keys/centos")
-CENTOS_PUBLIC_KEY = read_local_file("keys/centos_pub")
+CENTOS_KEY = read_local_file(os.path.join("keys", "centos"))
+CENTOS_PUBLIC_KEY = read_local_file(os.path.join("keys", "centos_pub"))
 CentosCred = basic_cred(
     CENTOS_USER, CENTOS_KEY, name="Centos", type="KEY", default=True,
 )
@@ -98,13 +100,17 @@ class {{service_name}}Package(Package):
     def __install__():
 
         # Step 1
-        Task.Exec.ssh(name="Task1", filename="scripts/pkg_install_task.sh")
+        Task.Exec.ssh(
+            name="Task1", filename=os.path.join("scripts", "pkg_install_task.sh")
+        )
 
     @action
     def __uninstall__():
 
         # Step 1
-        Task.Exec.ssh(name="Task1", filename="scripts/pkg_uninstall_task.sh")
+        Task.Exec.ssh(
+            name="Task1", filename=os.path.join("scripts", "pkg_uninstall_task.sh")
+        )
 
 
 class MyAhvVmResources(AhvVmResources):
@@ -156,7 +162,7 @@ class MyAhvVMSubstrate(Substrate):
 
         # Step 1
         Task.Exec.escript(
-            name="Task1", script="print 'Pre Create task runs after VM is deleted'"
+            name="Task1", script="print 'Post delete task runs after VM is deleted'"
         )
 
 
