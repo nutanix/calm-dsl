@@ -1,0 +1,44 @@
+resources:
+  account_uuid: a52ba5f0-e5c3-42ed-a8fc-db077b1c586f
+  hw_profile:
+    max_data_disk_count: 4
+    vm_size: Standard_D1_v2
+  location: eastus2
+  nw_profile:
+    nic_list:
+    - nic_name: nic-@@{calm_unique_hash}@@-@@{calm_array_index}@@-0
+      nsg_name: sg-allow-only-ssh-eastus2
+      private_ip_info:
+        ip_address: ''
+        ip_allocation_method: Dynamic
+      public_ip_info:
+        dns_label: dns-@@{calm_unique_hash}@@-@@{calm_array_index}@@-0
+        ip_allocation_method: Dynamic
+        ip_name: public-ip-@@{calm_unique_hash}@@-@@{calm_array_index}@@-0
+      subnet_name: default
+      vnet_name: calm-virtual-network-eastus2
+    primary_nic: -1
+  os_profile:
+    linux_config:
+      custom_data: ''
+      disable_password_auth: false
+    secrets: []
+  resource_group: calmrg
+  storage_profile:
+    data_disk_list: []
+    image_details:
+      offer: CentOS-HPC
+      publisher: OpenLogic
+      sku: '7.4'
+      use_custom_image: false
+      version: 7.4.20180301
+    is_managed: true
+    os_disk_details:
+      caching_type: ReadWrite
+      create_option: FromImage
+      lun: -1
+      name: os-@@{calm_unique_hash}@@-@@{calm_array_index}@@-disk
+      size_in_gb: -1
+      storage_type: Standard_LRS
+  vm_name: azure-@@{calm_unique_hash}@@-@@{calm_array_index}@@
+type: PROVISION_AZURE_VM
