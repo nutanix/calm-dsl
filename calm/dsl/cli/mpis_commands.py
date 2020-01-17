@@ -40,18 +40,17 @@ def _get_mpis(obj, name, quiet, app_family, display_all):
 
 @describe.command("mpi")
 @click.argument("mpi_name")
-@click.option("version", "-v", required=True, help="Version of MPI")
+@click.option("version", "-v", default=None, help="Version of MPI")
 @click.pass_obj
 def _describe_mpi(obj, mpi_name, version):
     """Describe a market place item"""
 
-    # TODO Add default version
     describe_mpi(mpi_name, version)
 
 
 @launch.command("mpi")
 @click.argument("mpi_name")
-@click.option("--version", "-v", required=True, help="Version of MPI")
+@click.option("--version", "-v", default=None, help="Version of MPI")
 @click.option("--project", "-pj", default=None, help="Project for the application")
 @click.option("--app_name", "-a", default=None, help="Name of your app")
 @click.option(
@@ -73,7 +72,6 @@ def _launch_mpi(
 ):
     """Launch a market place blueprint"""
 
-    # TODO Add default version
     launch_mpi(
         mpi_name=mpi_name,
         version=version,

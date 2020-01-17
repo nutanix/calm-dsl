@@ -43,16 +43,23 @@ def trunc_string(data="", max_length=50):
         return data[: max_length - 1] + "..."
 
 
-def get_published_mpis(name, quiet, app_family, display_all):
+def get_mpis(mpi_name, app_family="All", app_state=None, group_member_count=0):
+    """ 
+        To call groups() api for marketplace items
+        if group_member_count is 0, it will not appply the filter at all
+    """
 
     client = get_api_client()
+    filter = "marketplace_item_type_list==APP"
 
-    filter = "marketplace_item_type_list==APP;(app_state==PUBLISHED)"
+    if app_state:
+        filter += ";(app_state=={})".format(app_state)
+
     if app_family != "All":
         filter += ";category_name==AppFamily;category_value=={}".format(app_family)
 
-    if name:
-        filter += ";name=={}".format(name)
+    if mpi_name:
+        filter += ";name=={}".format(mpi_name)
 
     payload = {
         "group_member_sort_attribute": "version",
@@ -72,8 +79,8 @@ def get_published_mpis(name, quiet, app_family, display_all):
         ],
     }
 
-    if not display_all:
-        payload["group_member_count"] = 1
+    if group_member_count:
+        payload["group_member_count"] = group_member_count
 
     Obj = get_resource_api("groups", client.connection)
     res, err = Obj.create(payload=payload)
@@ -82,6 +89,21 @@ def get_published_mpis(name, quiet, app_family, display_all):
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     res = res.json()
+    return res
+
+
+def get_published_mpis(name, quiet, app_family, display_all):
+
+    group_member_count = 0
+    if not display_all:
+        group_member_count = 1
+
+    res = get_mpis(
+        mpi_name=name,
+        app_family=app_family,
+        app_state="PUBLISHED",
+        group_member_count=group_member_count,
+    )
     group_results = res["group_results"]
 
     if quiet:
@@ -126,9 +148,28 @@ def get_published_mpis(name, quiet, app_family, display_all):
     click.echo(table)
 
 
-def describe_mpi(name, version):
+def get_mpi_latest_version(mpi_name):
 
-    client = get_api_client()
+    res = get_mpis(mpi_name=mpi_name, app_state="PUBLISHED", group_member_count=1)
+    group_results = res["group_results"]
+
+    if not group_results:
+        raise Exception("No published MPI found with name {}".format(mpi_name))
+
+    # import pdb; pdb.set_trace()
+    entity_results = group_results[0]["entity_results"]
+    entity_version = get_group_data_value(entity_results[0]["data"], "version")
+
+    return entity_version
+
+
+def describe_mpi(name, version=None):
+
+    if not version:
+        click.echo("Fetching ltest version of MPI {} ...".format(name), nl=False)
+        version = get_mpi_latest_version(name)
+        click.echo("[Success]")
+
     bp = get_mpi_by_name_n_version(name, version)
 
     click.echo("\n----MarketPlace Blueprint Summary----\n")
@@ -178,7 +219,7 @@ def describe_mpi(name, version):
         )
 
 
-def get_mpi_by_name_n_version(mpi_name, mpi_version):
+def get_mpi_by_name_n_version(mpi_name, mpi_version=None):
     """
     It will fetch marketplace item with particular version.
     Args:
@@ -186,6 +227,7 @@ def get_mpi_by_name_n_version(mpi_name, mpi_version):
     Returns:
         apps (dict): All bp:uuid dict
     """
+
     filters = "name==" + mpi_name + ";version==" + mpi_version
 
     client = get_api_client()
@@ -217,6 +259,11 @@ def convert_mpi_into_blueprint(mpi_name, mpi_version, project_name):
 
     config = get_config()
     client = get_api_client()
+
+    if not mpi_version:
+        click.echo("Fetching latest version of MPI {} ...".format(mpi_name), nl=False)
+        mpi_version = get_mpi_latest_version(mpi_name)
+        click.echo("[Success]")
 
     click.echo("Fetching mpi store item ...", nl=False)
     mpi_data = get_mpi_by_name_n_version(mpi_name, mpi_version)
