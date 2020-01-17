@@ -4,7 +4,7 @@ from prettytable import PrettyTable
 
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.config import get_config
-from .utils import highlight_text
+from .utils import highlight_text, get_states_filter
 from .bps import launch_blueprint_simple
 
 
@@ -43,7 +43,7 @@ def trunc_string(data="", max_length=50):
         return data[: max_length - 1] + "..."
 
 
-def get_mpis(mpi_name, app_family="All", app_state=None, group_member_count=0):
+def get_mpis(mpi_name, app_family="All", app_states=[], group_member_count=0):
     """ 
         To call groups() api for marketplace items
         if group_member_count is 0, it will not appply the filter at all
@@ -52,8 +52,8 @@ def get_mpis(mpi_name, app_family="All", app_state=None, group_member_count=0):
     client = get_api_client()
     filter = "marketplace_item_type_list==APP"
 
-    if app_state:
-        filter += ";(app_state=={})".format(app_state)
+    if app_states:
+        filter += get_states_filter(state_key="app_state", states=app_states)
 
     if app_family != "All":
         filter += ";category_name==AppFamily;category_value=={}".format(app_family)
@@ -101,7 +101,7 @@ def get_published_mpis(name, quiet, app_family, display_all):
     res = get_mpis(
         mpi_name=name,
         app_family=app_family,
-        app_state="PUBLISHED",
+        app_states=["PUBLISHED"],
         group_member_count=group_member_count,
     )
     group_results = res["group_results"]
@@ -148,15 +148,14 @@ def get_published_mpis(name, quiet, app_family, display_all):
     click.echo(table)
 
 
-def get_mpi_latest_version(mpi_name):
+def get_mpi_latest_version(mpi_name, app_states=[]):
 
-    res = get_mpis(mpi_name=mpi_name, app_state="PUBLISHED", group_member_count=1)
+    res = get_mpis(mpi_name=mpi_name, app_states=app_states, group_member_count=1)
     group_results = res["group_results"]
 
     if not group_results:
-        raise Exception("No published MPI found with name {}".format(mpi_name))
+        raise Exception("No MPI found with name {}".format(mpi_name))
 
-    # import pdb; pdb.set_trace()
     entity_results = group_results[0]["entity_results"]
     entity_version = get_group_data_value(entity_results[0]["data"], "version")
 
@@ -166,9 +165,9 @@ def get_mpi_latest_version(mpi_name):
 def describe_mpi(name, version=None):
 
     if not version:
-        click.echo("Fetching ltest version of MPI {} ...".format(name), nl=False)
-        version = get_mpi_latest_version(name)
-        click.echo("[Success]")
+        click.echo("Fetching latest version of MPI {} ...".format(name), nl=False)
+        version = get_mpi_latest_version(name, app_states=["PUBLISHED"])
+        click.echo("[{}]". format(version))
 
     bp = get_mpi_by_name_n_version(name, version)
 
@@ -255,15 +254,15 @@ def get_mpi_by_name_n_version(mpi_name, mpi_version=None):
     return res
 
 
-def convert_mpi_into_blueprint(mpi_name, mpi_version, project_name):
+def convert_mpi_into_blueprint(mpi_name, project_name, mpi_version=None):
 
     config = get_config()
     client = get_api_client()
 
     if not mpi_version:
         click.echo("Fetching latest version of MPI {} ...".format(mpi_name), nl=False)
-        mpi_version = get_mpi_latest_version(mpi_name)
-        click.echo("[Success]")
+        mpi_version = get_mpi_latest_version(mpi_name, app_states=["PUBLISHED"])
+        click.echo("[{}]". format(mpi_version))
 
     click.echo("Fetching mpi store item ...", nl=False)
     mpi_data = get_mpi_by_name_n_version(mpi_name, mpi_version)
