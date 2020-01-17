@@ -10,6 +10,7 @@ class BlueprintAPI(ResourceAPI):
         self.UPLOAD = self.PREFIX + "/import_json"
         self.LAUNCH = self.ITEM + "/simple_launch"
         self.FULL_LAUNCH = self.ITEM + "/launch"
+        self.MARKETPLACE_LAUNCH = self.PREFIX + "/marketplace_launch"
         self.LAUNCH_POLL = self.ITEM + "/pending_launches/{}"
         self.BP_EDITABLES = self.ITEM + "/runtime_editables"
 
@@ -29,6 +30,14 @@ class BlueprintAPI(ResourceAPI):
     def full_launch(self, uuid, payload):
         return self.connection._call(
             self.FULL_LAUNCH.format(uuid),
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
+        )
+
+    def marketplace_launch(self, payload):
+        return self.connection._call(
+            self.MARKETPLACE_LAUNCH,
             verify=False,
             request_json=payload,
             method=REQUEST.METHOD.POST,

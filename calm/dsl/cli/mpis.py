@@ -1,8 +1,11 @@
+import uuid
 import click
 from prettytable import PrettyTable
 
 from calm.dsl.api import get_api_client, get_resource_api
+from calm.dsl.config import get_config
 from .utils import highlight_text
+from .bps import launch_blueprint_simple
 
 
 def get_app_family_list():
@@ -208,3 +211,97 @@ def get_mpi_by_name_n_version(mpi_name, mpi_version):
 
     res = res.json()
     return res
+
+
+def convert_mpi_into_blueprint(mpi_name, mpi_version, project_name):
+
+    config = get_config()
+    client = get_api_client()
+
+    click.echo("Fetching mpi store item ...", nl=False)
+    mpi_data = get_mpi_by_name_n_version(mpi_name, mpi_version)
+    click.echo("[Success]")
+
+    # Finding the projects associated with mpi
+    shared_projects = mpi_data["status"]["resources"]["project_reference_list"]
+
+    project = project_name or config["PROJECT"]["name"]
+    project_uuid = None
+    project_name_list = []
+    for project_ref in shared_projects:
+        project_name_list.append(project_ref["name"])
+        if project == project_ref["name"]:
+            project_uuid = project_ref["uuid"]
+
+    if not shared_projects:
+        raise Exception("MPI {} is not shared with any project !!!".format(mpi_name))
+
+    if not project_uuid:
+        raise Exception("choose from {} projects".format(project_name_list))
+
+    click.echo("Fetching environment data ...", nl=False)
+    res, err = client.project.read(project_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    click.echo("[Success]")
+
+    res = res.json()
+    environments = res["status"]["project_status"]["resources"][
+        "environment_reference_list"
+    ]
+
+    # For now only single environment exists
+    env_uuid = environments[0]["uuid"]
+
+    bp_spec = {}
+    bp_spec["spec"] = mpi_data["spec"]["resources"]["app_blueprint_template"]["spec"]
+    del bp_spec["spec"]["name"]
+    bp_spec["spec"]["environment_uuid"] = env_uuid
+
+    bp_spec["spec"]["app_blueprint_name"] = "Mpi-Bp-{}-{}".format(
+        mpi_name, str(uuid.uuid4())[-10:]
+    )
+
+    bp_spec["metadata"] = {
+        "kind": "blueprint",
+        "project_reference": {"kind": "project", "uuid": project_uuid},
+        "categories": mpi_data["metadata"]["categories"],
+    }
+    bp_spec["api_version"] = "3.0"
+
+    click.echo("Creating mpi blueprint ...", nl=False)
+    bp_res, err = client.blueprint.marketplace_launch(bp_spec)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    click.echo("[Success]")
+
+    bp_res = bp_res.json()
+
+    del bp_res["spec"]["environment_uuid"]
+    bp_status = bp_res["status"]["state"]
+    bp_uuid = bp_res["metadata"]["uuid"]
+    if bp_status != "ACTIVE":
+        raise Exception("blueprint went to {} state".format(bp_status))
+
+    return bp_res
+
+
+def launch_mpi(
+    mpi_name, version, project, app_name=None, profile_name=None, patch_editables=True,
+):
+
+    config = get_config()
+    client = get_api_client()
+
+    bp_payload = convert_mpi_into_blueprint(mpi_name, version, project)
+    bp_name = bp_payload["metadata"].get("name")
+
+    click.echo("Launching mpi blueprint {} ...".format(bp_name))
+    app_name = app_name or "Mpi-App-{}-{}".format(mpi_name, str(uuid.uuid4())[-10:])
+    launch_blueprint_simple(
+        client,
+        patch_editables=patch_editables,
+        profile_name=profile_name,
+        app_name=app_name,
+        blueprint=bp_payload,
+    )

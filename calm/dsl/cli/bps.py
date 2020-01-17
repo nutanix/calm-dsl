@@ -314,7 +314,7 @@ def get_field_values(entity_dict, context, path=None):
 
 def launch_blueprint_simple(
     client,
-    blueprint_name,
+    blueprint_name=None,
     app_name=None,
     blueprint=None,
     profile_name=None,
@@ -324,6 +324,7 @@ def launch_blueprint_simple(
         blueprint = get_blueprint(client, blueprint_name)
 
     blueprint_uuid = blueprint.get("metadata", {}).get("uuid", "")
+    blueprint_name = blueprint_name or blueprint.get("metadata", {}).get("name", "")
     profiles = get_blueprint_runtime_editables(client, blueprint)
     profile = None
     if profile_name is None:
@@ -339,6 +340,9 @@ def launch_blueprint_simple(
             raise Exception(">> No profile found with name {} >>".format(profile_name))
 
     runtime_editables = profile.pop("runtime_editables", [])
+
+    # Popping out substrate list in runtime editables for now.
+    runtime_editables.pop("substrate_list", None)
     launch_payload = {
         "spec": {
             "app_name": app_name
@@ -374,6 +378,10 @@ def launch_blueprint_simple(
     response = res.json()
     launch_req_id = response["status"]["request_id"]
 
+    poll_launch_status(client, blueprint_uuid, launch_req_id)
+
+
+def poll_launch_status(client, blueprint_uuid, launch_req_id):
     # Poll every 10 seconds on the app status, for 5 mins
     maxWait = 5 * 60
     count = 0
