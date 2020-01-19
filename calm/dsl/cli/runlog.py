@@ -15,7 +15,7 @@ from calm.dsl.api import get_api_client
 
 
 def parse_machine_name(runlog_id, machine_name):
-    if machine_name is None:
+    if not machine_name:
         return None
     machine_info = machine_name.split('-{} - '.format(runlog_id))
     return '{} ({})'.format(machine_info[1], machine_info[0])
@@ -25,7 +25,7 @@ class InputFrame(Frame):
     def __init__(self, name, screen, inputs, data):
         super(InputFrame, self).__init__(screen,
                                          int(len(inputs) * 2 + 8),
-                                         int(screen.width * 2 // 3),
+                                         int(screen.width * 4 // 5),
                                          has_shadow=True,
                                          data=data,
                                          name=name)
@@ -320,6 +320,8 @@ def get_completion_func(screen):
                 reasons = runlog["status"].get("reason_list", [])
                 outputs = []
                 machine_name = runlog['status'].get("machine_name", None)
+                if machine_name == '-':
+                    continue  # this runlog corresponds to endpoint loop
                 machine = parse_machine_name(runlog_uuid, machine_name)
                 if runlog['status']['type'] == "task_runlog" and not runlog["status"].get("attrs", None):
                     res, err = client.runbook.runlog_output(runlog_uuid, uuid)
@@ -341,7 +343,9 @@ def get_completion_func(screen):
                 parent_uuid = runlog["status"]["parent_reference"]["uuid"]
                 parent_runlog = runlog_map[str(parent_uuid)]
                 parent_type = parent_runlog['status']['type']
-                while parent_type == "task_runlog" and parent_runlog["status"]["task_reference"]["uuid"] in metatasks:
+                while ((parent_type == "task_runlog"
+                       and parent_runlog["status"]["task_reference"]["uuid"] in metatasks)
+                       or parent_runlog['status'].get("machine_name", None) == '-'):
                     parent_uuid = parent_runlog["status"]["parent_reference"]["uuid"]
                     parent_runlog = runlog_map[str(parent_uuid)]
                     parent_type = parent_runlog['status']['type']
