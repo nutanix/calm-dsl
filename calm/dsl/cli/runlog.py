@@ -233,6 +233,9 @@ def displayRunLog(screen, obj, pre, fill, line):
         colour = 6  # cyan for input state
     screen.print_at("{}".format(state), len(prefix) + 1, idx(), colour=colour)
 
+    if obj.children:
+        fill = fill + u'\u2502'
+
     if status["type"] == "action_runlog":
         screen.print_at(
             "{}\t Runlog UUID: {}".format(fill, metadata["uuid"]),
@@ -245,7 +248,7 @@ def displayRunLog(screen, obj, pre, fill, line):
             0, idx()
         )
 
-    if output and not obj.children:
+    if output:
         screen.print_at("{}\t Output :".format(fill), 0, idx())
         output_lines = output.splitlines()
         for line in output_lines:
@@ -329,8 +332,8 @@ def get_completion_func(screen):
                         raise Exception("\n[{}] - {}".format(err["code"], err["error"]))
                     runlog_output = res.json()
                     output_list = runlog_output['status']['output_list']
-                    for task_output in output_list:
-                        outputs.append(task_output["output"])
+                    if len(output_list) > 0:
+                        outputs.append(output_list[0]["output"])
                     if runlog["status"]["task_reference"]["uuid"] in metatasks:
                         continue  # don't add metatask's trl in runlogTree
                 nodes[str(uuid)] = RunlogNode(runlog, parent=root, outputs=outputs, machine=machine, reasons=reasons)
@@ -356,14 +359,20 @@ def get_completion_func(screen):
             # Show Progress
             # TODO - Draw progress bar
             total_tasks = len(top_level_tasks)
+            task_status_map = {}
             completed_tasks = 0
             for runlog in sorted_entities:
                 runlog_type = runlog["status"]["type"]
                 if runlog_type == "task_runlog":
                     task_id = runlog["status"]["task_reference"]["uuid"]
                     state = runlog["status"]["state"]
-                    if state in RUNLOG.STATUS.SUCCESS and task_id in top_level_tasks:
-                        completed_tasks += 1
+                    if state in RUNLOG.TERMINAL_STATES and task_id in top_level_tasks and not task_status_map.get(task_id, None):
+                        task_status_map[task_id] = "COMPLETED"
+                    elif state not in RUNLOG.TERMINAL_STATES and task_id in top_level_tasks:
+                        task_status_map[task_id] = "RUNNING"
+            for key, val in task_status_map.items():
+                if val == "COMPLETED":
+                    completed_tasks += 1
 
             line = displayRunLogTree(screen, root, completed_tasks, total_tasks)
 
