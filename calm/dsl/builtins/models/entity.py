@@ -6,9 +6,10 @@ from types import MappingProxyType
 
 from ruamel.yaml import YAML, resolver, SafeRepresenter
 from calm.dsl.tools import StrictDraft7Validator
-
-
+from calm.dsl.tools import get_logging_handle
 from .schema import get_schema_details
+
+LOG = get_logging_handle(__name__)
 
 
 def _validate(vdict, name, value):
@@ -216,6 +217,7 @@ class EntityType(EntityTypeBase):
     @classmethod
     def update_attrs(mcls, attrs):
 
+        LOG.debug("Updating {} attributes". format(mcls))
         if not hasattr(mcls, "__validator_dict__"):
             return
 
@@ -258,6 +260,8 @@ class EntityType(EntityTypeBase):
         # Delete attrs
         for k in del_keys:
             attrs.pop(k)
+        LOG.debug("Success. Updated attributes of {} class :{}". format(mcls, attrs))
+
 
     def get_all_attrs(cls):
         default_attrs = cls.get_default_attrs()

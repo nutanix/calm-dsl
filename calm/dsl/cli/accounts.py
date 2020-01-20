@@ -99,12 +99,12 @@ def get_account(client, account_name):
     account = None
     if entities:
         if len(entities) != 1:
-            LOG.exception("More than one account found - {}".format(entities))
+            raise Exception("More than one account found - {}".format(entities))
 
         LOG.info("{} found ".format(account_name))
         account = entities[0]
     else:
-        LOG.exception("No account having name {} found".format(account_name))
+        raise Exception("No account having name {} found".format(account_name))
 
     account_id = account["metadata"]["uuid"]
     LOG.info("Fetching account details ...")
@@ -125,7 +125,7 @@ def delete_account(obj, account_names):
         account_id = account["metadata"]["uuid"]
         res, err = client.account.delete(account_id)
         if err:
-            LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
         LOG.info("account {} deleted".format(account_name))
 
 
@@ -207,7 +207,7 @@ def describe_gcp_account(client, spec, account_id):
 
     res, err = Obj.list(payload)  # TODO move this to GCP specific method
     if err:
-        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     public_images = res.json()["entities"]
     image_selfLink_name_map = {}
@@ -218,8 +218,9 @@ def describe_gcp_account(client, spec, account_id):
         image_selfLink_name_map[selfLink] = name
 
     for index, image in enumerate(images):
-        name = image_selfLink_name_map[image["selfLink"]]
-        click.echo("\t{}. {}".format(str(index + 1), highlight_text(name)))
+        name = image_selfLink_name_map.get(image["selfLink"], None)
+        if name:
+            click.echo("\t{}. {}".format(str(index + 1), highlight_text(name)))
 
     if not regions:
         click.echo(highlight_text("No regions provided"))

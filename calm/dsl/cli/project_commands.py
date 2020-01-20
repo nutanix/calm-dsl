@@ -64,7 +64,7 @@ def _create_project(obj, project_file, project_name):
         return
 
     if err:
-        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
         return
 
     project = res.json()
@@ -111,7 +111,7 @@ def _update_project(obj, project_name, project_file):
         return
 
     if err:
-        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
         return
 
     project = res.json()

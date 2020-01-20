@@ -83,7 +83,7 @@ def set_server_details(ip, port, username, password, project_name):
 
     if err:
         click.echo("[Fail]")
-        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     result = json.loads(res.content)
     service_enablement_status = result["service_enablement_status"]

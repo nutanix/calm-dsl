@@ -93,25 +93,25 @@ def get_project(client, name):
     LOG.info("Searcing for the project {} ...". format(name))
     res, err = client.project.list(params=params)
     if err:
-        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     response = res.json()
     entities = response.get("entities", None)
     project = None
     if entities:
         if len(entities) != 1:
-            LOG.exception("More than one project found - {}".format(entities))
+            raise Exception("More than one project found - {}".format(entities))
 
         LOG.info("Project {} found ".format(name))
         project = entities[0]
     else:
-        LOG.exception("No project found with name {} found".format(name))
+        raise Exception("No project found with name {} found".format(name))
 
     project_id = project["metadata"]["uuid"]
     LOG.info("Fetching project details ...")
     res, err = client.project.read(project_id)  # for getting additional fields
     if err:
-        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     project = res.json()
     return project
@@ -126,7 +126,7 @@ def delete_project(obj, project_names):
         project_id = project["metadata"]["uuid"]
         res, err = client.project.delete(project_id)
         if err:
-            LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
         LOG.info("Project {} deleted".format(project_name))
 
 
@@ -246,7 +246,7 @@ def describe_project(obj, project_name):
 
     res, err = client.account.list()
     if err:
-        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     res = res.json()
     account_name_type_map = {}
@@ -282,7 +282,7 @@ def describe_project(obj, project_name):
         res, err = Obj.read(subnet["uuid"])
 
         if err:
-            LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
         res = res.json()
         cluster_name = res["status"]["cluster_reference"]["name"]
@@ -363,7 +363,7 @@ def poll_creation_status(client, project_uuid):
         LOG.info("Fetching status of project creation")
         res, err = client.project.read(project_uuid)
         if err:
-            LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
         project = res.json()
         if project["status"]["state"] == "COMPLETE":
@@ -379,7 +379,7 @@ def poll_creation_status(client, project_uuid):
         else:
             msg = str(project["status"]["message_list"])
             msg = "Project creation unsuccessful !!!\nmessage={}".format(msg)
-            LOG.exception(msg)
+            raise Exception(msg)
 
         time.sleep(2)
         cnt += 1
@@ -397,14 +397,14 @@ def poll_updation_status(client, project_uuid, old_spec_version):
         LOG.info("Fetching status of project updation")
         res, err = client.project.read(project_uuid)
         if err:
-            LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
         project = res.json()
         spec_version = project["metadata"]["spec_version"]
 
         # On updation spec_version should be incremented
         if spec_version == old_spec_version:
-            LOG.exception("No update operation performed on project !!!")
+            raise Exception("No update operation performed on project !!!")
 
         elif project["status"]["state"] == "PENDING":
             LOG.info("PENDING ...")
@@ -419,7 +419,7 @@ def poll_updation_status(client, project_uuid, old_spec_version):
         else:
             msg = str(project["status"]["message_list"])
             msg = "Project updation failed !!!\nmessage={}".format(msg)
-            LOG.exception(msg)
+            raise Exception(msg)
 
         time.sleep(2)
         cnt += 1
@@ -427,7 +427,7 @@ def poll_updation_status(client, project_uuid, old_spec_version):
             break
 
     LOG.debug("Waited for project updation for 20 seconds(polled at 2 sec interval)")
-    LOG.exception(["Project updation failed !!!"])
+    LOG.exception("Project updation failed !!!")
 
 
 def poll_deletion_status(client, name):

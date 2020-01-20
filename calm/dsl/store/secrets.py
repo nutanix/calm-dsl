@@ -4,6 +4,9 @@ import peewee
 
 from ..crypto import Crypto
 from ..db import Database
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 class Secret:
@@ -16,7 +19,9 @@ class Secret:
         with Database() as db:
 
             pass_phrase = pass_phrase.encode()
+            LOG.debug("Encryting secret ...")
             encrypted_msg = Crypto.encrypt_AES_GCM(value, pass_phrase)
+            LOG.debug("Success")
             (kdf_salt, ciphertext, iv, auth_tag) = encrypted_msg
 
             secret = db.secret_table.create(name=name, uuid=str(uuid.uuid4()))
@@ -60,7 +65,9 @@ class Secret:
 
             pass_phrase = secret_data.pass_phrase
 
+            LOG.debug("Encrypting new data ...")
             encrypted_msg = Crypto.encrypt_AES_GCM(value, pass_phrase)
+            LOG.debug("Success")
             (kdf_salt, ciphertext, iv, auth_tag) = encrypted_msg
 
             query = db.data_table.update(
@@ -105,7 +112,9 @@ class Secret:
                 pass_phrase = pass_phrase.encode()
 
             enc_msg = secret_data.generate_enc_msg()
+            LOG.debug("Decrypting data ...")
             secret_val = Crypto.decrypt_AES_GCM(enc_msg, pass_phrase)
+            LOG.debug("Success")
 
             return secret_val
 

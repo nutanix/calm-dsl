@@ -242,10 +242,11 @@ class Connection:
             if not url.endswith("/download"):
                 LOG.debug("Server Response: {}".format(res.json()))
         except Exception as ex:
-            # Let these exceptions should be handled where api has been called for better traceback
+            LOG.error("Got the traceback\n{}".format(traceback.format_exc()))
             err_msg = res.text if hasattr(res, "text") else "{}".format(ex)
             status_code = res.status_code if hasattr(res, "status_code") else 500
             err = {"error": err_msg, "code": status_code}
+            LOG.error("Error Response: {}".format(err))
         return res, err
 
 

@@ -3,6 +3,9 @@ import traceback
 from calm.dsl.config import get_config
 
 from .table_config import dsl_database, SecretTable, DataTable, CacheTable
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 class Database:
@@ -44,13 +47,16 @@ class Database:
 
     def __enter__(self):
 
+        LOG.debug("Connecting to local DB ...")
         if self.db.is_closed():
             self.db.connect()
+        LOG.debug("Success")
 
         return self
 
     def __exit__(self, exc_type, exc_value, tb):
 
+        LOG.debug("Closing connection to local DB ...")
         if not self.db.is_closed():
             self.db.close()
 
@@ -62,3 +68,4 @@ class Database:
 
             else:
                 traceback.print_exception(exc_type, exc_value, tb)
+        LOG.debug("Success")

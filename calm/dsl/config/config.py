@@ -24,7 +24,7 @@ def make_config_file_dir(config_file):
             LOG.debug("Success")
         except OSError as exc:
             if exc.errno != errno.EEXIST:
-                LOG.exception("[{}] - {}".format(exc["code"], exc["error"]))
+                raise Exception("[{}] - {}".format(exc["code"], exc["error"]))
 
 
 def get_default_user_config_file():
@@ -69,7 +69,7 @@ def _get_config_file():
     else:
         user_config_file = get_default_user_config_file()
         if not os.path.exists(user_config_file):
-            LOG.exception(
+            raise Exception(
                 "Config file {} not found. Please run: calm init dsl".format(
                     user_config_file
                 )
@@ -115,7 +115,7 @@ def get_config():
 
         # Validate config
         if not validate_config(config):
-            LOG.exception("Invalid config file: {}".format(user_config_file))
+            raise Exception("Invalid config file: {}".format(user_config_file))
 
         _CONFIG = config
 

@@ -101,7 +101,7 @@ def _get_app(client, app_name, all=False):
 
     res, err = client.application.list(params=params)
     if err:
-        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     response = res.json()
     entities = response.get("entities", None)
@@ -117,19 +117,19 @@ def _get_app(client, app_name, all=False):
                     found = True
                     break
             if not found:
-                LOG.exception("More than one app found - {}".format(entities))
+                raise Exception("More than one app found - {}".format(entities))
 
         LOG.info("App {} found >>".format(app_name))
         app = entities[0]
     else:
-        LOG.exception(">> No app found with name {} found >>".format(app_name))
+        raise Exception(">> No app found with name {} found >>".format(app_name))
     app_id = app["metadata"]["uuid"]
 
     # 2. Get app details
     LOG.info("Fetching app details")
     res, err = client.application.read(app_id)
     if err:
-        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
     app = res.json()
     return app
 
@@ -509,7 +509,7 @@ def delete_app(obj, app_names, soft=False):
         LOG.info("Triggering {}".format(action_label))
         res, err = client.application.delete(app_id, soft_delete=soft)
         if err:
-            LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
         LOG.info("{} action triggered".format(action_label))
         response = res.json()
@@ -545,7 +545,7 @@ def run_actions(screen, obj, app_name, action_name, watch):
         if action["name"] == calm_action_name or action["name"] == action_name
     )
     if not action:
-        LOG.exception("No action found matching name {}".format(action_name))
+        raise Exception("No action found matching name {}".format(action_name))
     action_id = action["uuid"]
 
     # Hit action run api (with metadata and minimal spec: [args, target_kind, target_uuid])
@@ -554,7 +554,7 @@ def run_actions(screen, obj, app_name, action_name, watch):
     res, err = client.application.run_action(app_id, action_id, app)
 
     if err:
-        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     response = res.json()
     runlog_uuid = response["status"]["runlog_uuid"]
@@ -575,7 +575,7 @@ def poll_action(poll_func, completion_func, poll_interval=10):
         # call status api
         res, err = poll_func()
         if err:
-            LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
         response = res.json()
         (completed, msg) = completion_func(response)
         if completed:
