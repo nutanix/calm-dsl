@@ -69,7 +69,7 @@ def _create_project(obj, project_file, project_name):
 
     project = res.json()
     state = project["status"]["state"]
-    LOG.status(">> Project state: {}".format(state))
+    LOG.info("Project state: {}".format(state))
 
 
 @delete.command("project")
@@ -116,4 +116,4 @@ def _update_project(obj, project_name, project_file):
 
     project = res.json()
     state = project["status"]["state"]
-    LOG.status(">> Project state: {}".format(state))
+    LOG.info("Project state: {}".format(state))

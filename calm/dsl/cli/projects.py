@@ -90,6 +90,7 @@ def get_project(client, name):
 
     params = {"filter": "name=={}".format(name)}
 
+    LOG.info("Searcing for the project {} ...". format(name))
     res, err = client.project.list(params=params)
     if err:
         LOG.exception("[{}] - {}".format(err["code"], err["error"]))
@@ -101,13 +102,13 @@ def get_project(client, name):
         if len(entities) != 1:
             LOG.exception("More than one project found - {}".format(entities))
 
-        LOG.info("{} found ".format(name))
+        LOG.info("Project {} found ".format(name))
         project = entities[0]
     else:
-        LOG.exception(">> No project found with name {} found >>".format(name))
+        LOG.exception("No project found with name {} found".format(name))
 
     project_id = project["metadata"]["uuid"]
-    click.echo("Fetching project details ...")
+    LOG.info("Fetching project details ...")
     res, err = client.project.read(project_id)  # for getting additional fields
     if err:
         LOG.exception("[{}] - {}".format(err["code"], err["error"]))
@@ -126,7 +127,7 @@ def delete_project(obj, project_names):
         res, err = client.project.delete(project_id)
         if err:
             LOG.exception("[{}] - {}".format(err["code"], err["error"]))
-        click.echo("Project {} deleted".format(project_name))
+        LOG.info("Project {} deleted".format(project_name))
 
 
 def create_project(obj, payload):
@@ -149,7 +150,7 @@ def create_project(obj, payload):
             err = {"error": err_msg, "code": -1}
             return None, err
 
-    click.echo("Creating the project {}".format(name))
+    LOG.info("Creating the project {}".format(name))
 
     # validating the payload
     ProjectValidator.validate_dict(payload)
@@ -350,30 +351,30 @@ def update_project(obj, name, payload):
         },
         "spec": payload,
     }
-    click.echo("\nUpdating the project ... ")
 
+    LOG.info("Updating the project ... ")
     return client.project.update(project_id, payload)
 
 
 def poll_creation_status(client, project_uuid):
 
     cnt = 0
-    click.echo("\nFetching status of project creation")
     while True:
+        LOG.info("Fetching status of project creation")
         res, err = client.project.read(project_uuid)
         if err:
             LOG.exception("[{}] - {}".format(err["code"], err["error"]))
 
         project = res.json()
         if project["status"]["state"] == "COMPLETE":
-            click.echo("[SUCCESS]")
+            LOG.info("SUCCESS")
             return
 
         elif project["status"]["state"] == "RUNNING":
-            click.echo("[RUNNING] ...")
+            LOG.info("RUNNING ...")
 
         elif project["status"]["state"] == "PENDING":
-            click.echo("[PENDING] ...")
+            LOG.info("PENDING ...")
 
         else:
             msg = str(project["status"]["message_list"])
@@ -385,17 +386,18 @@ def poll_creation_status(client, project_uuid):
         if cnt == 10:
             break
 
+    LOG.debug("Waited for project creation for 20 seconds(polled at 2 sec interval)")
     LOG.exception("Project creation failed !!!")
 
 
 def poll_updation_status(client, project_uuid, old_spec_version):
 
     cnt = 0
-    click.echo("\nFetching status of project updation")
     while True:
+        LOG.info("Fetching status of project updation")
         res, err = client.project.read(project_uuid)
         if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+            LOG.exception("[{}] - {}".format(err["code"], err["error"]))
 
         project = res.json()
         spec_version = project["metadata"]["spec_version"]
@@ -405,18 +407,17 @@ def poll_updation_status(client, project_uuid, old_spec_version):
             LOG.exception("No update operation performed on project !!!")
 
         elif project["status"]["state"] == "PENDING":
-            click.echo("[PENDING] ...")
+            LOG.info("PENDING ...")
 
         elif project["status"]["state"] == "COMPLETE":
-            click.echo("[SUCCESS]")
+            LOG.info("SUCCESS")
             return
 
         elif project["status"]["state"] == "RUNNING":
-            click.echo("[RUNNING]")
+            LOG.info("RUNNING ...")
 
         else:
             msg = str(project["status"]["message_list"])
-            click.echo("[FAIL]")
             msg = "Project updation failed !!!\nmessage={}".format(msg)
             LOG.exception(msg)
 
@@ -425,20 +426,21 @@ def poll_updation_status(client, project_uuid, old_spec_version):
         if cnt == 10:
             break
 
+    LOG.debug("Waited for project updation for 20 seconds(polled at 2 sec interval)")
     LOG.exception(["Project updation failed !!!"])
 
 
 def poll_deletion_status(client, name):
 
     cnt = 0
-    click.echo("\nFetching status of project deletion")
     while True:
+        LOG.info("Fetching status of project deletion")
         try:
             get_project(client, name)
-            click.echo("[DELETING] ...")
+            LOG.info("DELETING ...")
 
         except Exception:
-            click.echo("[Success]")
+            LOG.info("Success")
             return
 
         time.sleep(2)
@@ -446,5 +448,5 @@ def poll_deletion_status(client, name):
         if cnt == 10:
             break
 
-    click.echo(["FAIL"])
+    LOG.debug("Waited for project deletion for 20 seconds(polled at 2 sec interval)")
     LOG.exception("Project deletion failed !!!")

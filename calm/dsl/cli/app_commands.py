@@ -129,7 +129,6 @@ def _watch_app(obj, app_name, poll_interval):
         screen.wait_for_input(10.0)
 
     Display.wrapper(display_action, watch=True)
-
     LOG.info("Action runs completed for app {}".format(app_name))
 
 

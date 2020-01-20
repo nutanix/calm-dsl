@@ -94,24 +94,24 @@ def set_server_details(ip, port, username, password, project_name):
     # Default user config file
     user_config_file = get_default_user_config_file()
 
-    click.echo("Writing config to {} ... ".format(user_config_file), nl=False)
+    LOG.info("Writing config to {} ... ".format(user_config_file))
     init_config(host, port, username, password, project_name, db_location)
-    click.echo("[Success]")
+    LOG.info("Success")
 
     # Update client handle with new settings if no exception occurs
     update_client_handle(host, port, auth=(username, password))
 
 
 def init_db():
-    click.echo("Creating local database ... ", nl=False)
+    LOG.info("Creating local database ... ")
     Database()
-    click.echo("[Success]")
+    LOG.info("Success")
 
 
 def sync_cache():
-    click.echo("Updating Cache ... ", nl=False)
+    LOG.info("Updating Cache ... ")
     Cache.sync()
-    click.echo("[Success]")
+    LOG.info("Success")
 
 
 @init.command("bp")
@@ -174,9 +174,8 @@ def init_dsl_bp(service, dir_name, provider_type):
 )
 @click.argument("config_file", default=get_default_user_config_file())
 def _set_config(host, port, username, password, project_name, db_location, config_file):
-    """Will write the configuration to config file"""
+    """writes the configuration to config file"""
 
-    click.echo("Writing config to {} ... ".format(config_file), nl=False)
     set_config(
         host,
         port,
@@ -186,4 +185,3 @@ def _set_config(host, port, username, password, project_name, db_location, confi
         db_location,
         config_file=config_file,
     )
-    click.echo("[Success]")

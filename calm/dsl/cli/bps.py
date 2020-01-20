@@ -205,6 +205,7 @@ def compile_blueprint(bp_file, no_sync=False):
 
     # Sync only if no_sync flag is not set
     if not no_sync:
+        LOG.info("Syncing the cache")
         Cache.sync()
 
     user_bp_module = get_blueprint_module_from_file(bp_file)
@@ -226,7 +227,7 @@ def compile_blueprint_command(bp_file, out, no_sync=False):
 
     bp_payload = compile_blueprint(bp_file, no_sync)
     if bp_payload is None:
-        click.echo("User blueprint not found in {}".format(bp_file))
+        LOG.error("User blueprint not found in {}".format(bp_file))
         return
 
     config = get_config()
@@ -235,7 +236,7 @@ def compile_blueprint_command(bp_file, out, no_sync=False):
     project_uuid = Cache.get_entity_uuid("PROJECT", project_name)
 
     if not project_uuid:
-        LOG.exception(
+        LOG.error(
             "Project {} not found. Please run: calm update cache".format(project_name)
         )
 
@@ -286,7 +287,7 @@ def get_blueprint(client, name, all=False):
         LOG.info("{} found ".format(name))
         blueprint = entities[0]
     else:
-        LOG.exception(">> No blueprint found with name {} found >>".format(name))
+        LOG.exception("No blueprint found with name {} found >>".format(name))
     return blueprint
 
 
@@ -294,6 +295,7 @@ def get_blueprint_runtime_editables(client, blueprint):
 
     bp_uuid = blueprint.get("metadata", {}).get("uuid", None)
     if not bp_uuid:
+        LOG.debug("Blueprint UUID not present in metadata")
         LOG.exception("Invalid blueprint provided {} ".format(blueprint))
     res, err = client.blueprint._get_editables(bp_uuid)
     response = res.json()
@@ -327,6 +329,7 @@ def launch_blueprint_simple(
         blueprint = get_blueprint(client, blueprint_name)
 
     blueprint_uuid = blueprint.get("metadata", {}).get("uuid", "")
+    LOG.info("Fetching runtime editables in the blueprint")
     profiles = get_blueprint_runtime_editables(client, blueprint)
     profile = None
     if profile_name is None:
@@ -366,12 +369,12 @@ def launch_blueprint_simple(
         runtime_editables_json = json.dumps(
             runtime_editables, indent=4, separators=(",", ": ")
         )
-        click.echo(
+        LOG.info(
             "Updated blueprint editables are:\n{}".format(runtime_editables_json)
         )
     res, err = client.blueprint.launch(blueprint_uuid, launch_payload)
     if not err:
-        LOG.status(">> {} queued for launch >>".format(blueprint_name))
+        LOG.info("{} queued for launch >>".format(blueprint_name))
     else:
         LOG.exception("[{}] - {}".format(err["code"], err["error"]))
     response = res.json()
@@ -382,7 +385,7 @@ def launch_blueprint_simple(
     count = 0
     while count < maxWait:
         # call status api
-        click.echo("Polling status of Launch")
+        LOG.info("Polling status of Launch")
         res, err = client.blueprint.poll_launch(blueprint_uuid, launch_req_id)
         response = res.json()
         pprint(response)
@@ -395,12 +398,11 @@ def launch_blueprint_simple(
 
             click.echo("Successfully launched. App uuid is: {}".format(app_uuid))
 
-            click.echo(
+            LOG.info(
                 "App url: https://{}:{}/console/#page/explore/calm/applications/{}".format(
                     pc_ip, pc_port, app_uuid
                 )
             )
-            LOG.status("Success")
             break
         elif response["status"]["state"] == "failure":
             LOG.error("Failed to launch blueprint. Check API response above.")
@@ -421,5 +423,4 @@ def delete_blueprint(obj, blueprint_names):
         res, err = client.blueprint.delete(blueprint_id)
         if err:
             LOG.exception("[{}] - {}".format(err["code"], err["error"]))
-        click.echo("Blueprint {} deleted".format(blueprint_name))
-        LOG.status("Success")
+        LOG.info("Blueprint {} deleted".format(blueprint_name))

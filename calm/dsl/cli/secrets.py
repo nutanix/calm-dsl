@@ -19,10 +19,9 @@ def create_secret(name, value):
         click.echo("\nSecret {} Already present !!!".format(name))
         return
 
-    click.echo("Creating secret {} ... ".format(name), nl=False)
+    LOG.info("Creating secret {} ... ".format(name))
     Secret.create(name, value)
-    click.echo("[Success]")
-    LOG.info("Secret {} created !!!".format(name))
+    LOG.info("Success")
 
 
 def get_secrets(quiet):
@@ -64,13 +63,12 @@ def delete_secret(name):
 
     secrets = get_secrets_names()
     if name not in secrets:
-        click.echo("\nSecret {} not present !!!".format(name))
+        LOG.error("Secret {} not present !!!".format(name))
         return
 
-    click.echo("Deleting secret {} ... ".format(name), nl=False)
+    LOG.info("Deleting secret {} ... ".format(name))
     Secret.delete(name)
-    click.echo("[Success]")
-    LOG.info("Secret {} deleted !!!".format(name))
+    LOG.info("Success")
 
 
 def update_secret(name, value):
@@ -78,24 +76,23 @@ def update_secret(name, value):
 
     secrets = get_secrets_names()
     if name not in secrets:
-        click.echo("\nSecret {} not present !!!".format(name))
+        LOG.error("Secret {} not present !!!".format(name))
         return
 
-    click.echo("Updating secret {} ... ".format(name), nl=False)
+    LOG.info("Updating secret {} ... ".format(name))
     Secret.update(name, value)
-    click.echo("[Success]")
-    LOG.info("Secret {} updated !!!".format(name))
+    LOG.info("Success")
 
 
 def find_secret(name, pass_phrase=""):
-    """ Gives you the value stored correponding to secret"""
+    """Gives you the value stored correponding to secret"""
 
     secret_val = Secret.find(name, pass_phrase)
     return secret_val
 
 
 def get_secrets_names():
-    """ To find the names stored in db"""
+    """To find the names stored in db"""
 
     secrets = Secret.list()
     secret_names = []
@@ -108,7 +105,6 @@ def get_secrets_names():
 def clear_secrets():
     """Delete all the secrets"""
 
-    click.echo("Clearing the secrets ... ", nl=False)
+    LOG.info("Clearing the secrets ... ")
     Secret.clear()
-    click.echo("[Success]")
-    LOG.info("All secrets deleted !!!")
+    LOG.info("Success")

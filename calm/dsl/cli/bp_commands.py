@@ -176,7 +176,7 @@ def create_blueprint_command(obj, bp_file, name, description):
 
     bp = res.json()
     bp_state = bp["status"]["state"]
-    LOG.status(">> Blueprint state: {}".format(bp_state))
+    LOG.info("Blueprint state: {}".format(bp_state))
     assert bp_state == "ACTIVE"
 
 

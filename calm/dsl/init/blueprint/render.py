@@ -21,6 +21,7 @@ def render_ahv_template(template, service_name):
     project_name = config["PROJECT"].get("name", "default")
     project_uuid = Cache.get_entity_uuid("PROJECT", project_name)
 
+    LOG.info("Fetching the ahv subnets attached to the project {}".format(project_name))
     res, err = client.project.read(project_uuid)
     if err:
         LOG.exception("[{}] - {}".format(err["code"], err["error"]))
@@ -33,6 +34,7 @@ def render_ahv_template(template, service_name):
         LOG.exception("no subnets registered !!!")
 
     default_subnet = subnets[0]["name"]
+    LOG.info("Rendering ahv template")
     text = template.render(service_name=service_name, subnet_name=default_subnet)
 
     return text.strip() + os.linesep
@@ -69,6 +71,7 @@ def create_bp_file(dir_name, service_name, provider_type):
     bp_text = render_blueprint_template(service_name, provider_type)
     bp_path = os.path.join(dir_name, "blueprint.py")
 
+    LOG.info("Writing the bp file to {}".format(bp_path))
     with open(bp_path, "w") as fd:
         fd.write(bp_text)
 
@@ -134,15 +137,17 @@ def init_bp(service_name, dir_name, provider_type):
     bp_dir, local_dir, key_dir, script_dir = make_bp_dirs(dir_name, bp_name)
 
     # sync cache
+    LOG.info("Syncing the cache")
     Cache.sync()
 
-    create_bp_file(bp_dir, service_name, provider_type)
-
     # Creating keys
+    LOG.info("Generating keys for credentials")
     create_cred_keys(key_dir)
 
     # create scripts
     create_scripts(script_dir)
+
+    create_bp_file(bp_dir, service_name, provider_type)
 
 
 def main():

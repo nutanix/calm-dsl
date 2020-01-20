@@ -1,5 +1,4 @@
 from ruamel import yaml
-import logging
 import click
 import json
 

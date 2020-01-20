@@ -66,8 +66,8 @@ def clear_cache(obj):
 def update_cache(obj, entity_type):
     """Update the data for dynamic entities stored in the cache"""
 
-    click.echo(highlight_text("Updating cache ... "), nl=False)
+    LOG.info("Updating the cache")
     Cache.sync(entity_type)
-    click.echo("[Success]")
+    LOG.info("Success")
     show_cache(obj)
     LOG.info("Cache updated at {}".format(datetime.datetime.now()))

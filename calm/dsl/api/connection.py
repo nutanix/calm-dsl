@@ -12,7 +12,6 @@ client = get_connection(pc_ip, pc_port,
 """
 
 import traceback
-import logging
 import json
 import urllib3
 
@@ -21,7 +20,9 @@ from requests.adapters import HTTPAdapter
 
 
 urllib3.disable_warnings()
-log = logging.getLogger(__name__)
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 class REQUEST:
@@ -150,7 +151,7 @@ class Connection:
         self.session.mount("http://", http_adapter)
         self.session.mount("https://", http_adapter)
         self.base_url = build_url(self.host, self.port, scheme=self.scheme)
-        log.info("{} session created".format(self.__class__.__name__))
+        LOG.debug("{} session created".format(self.__class__.__name__))
         return self.session
 
     def close(self):
@@ -188,7 +189,7 @@ class Connection:
             request_params = {}
 
         request_json = request_json or {}
-        log.info(
+        LOG.debug(
             """Server Request- '{method}' at '{endpoint}' with body:
             '{body}'""".format(
                 method=method, endpoint=endpoint, body=request_json
@@ -199,7 +200,7 @@ class Connection:
         try:
             res = None
             url = build_url(self.host, self.port, endpoint=endpoint, scheme=self.scheme)
-            log.info("URL is: {}".format(url))
+            LOG.debug("URL is: {}".format(url))
             base_headers = self.session.headers
 
             if method == REQUEST.METHOD.POST:
@@ -239,13 +240,12 @@ class Connection:
                 )
             res.raise_for_status()
             if not url.endswith("/download"):
-                log.info("Server Response: {}".format(res.json()))
+                LOG.debug("Server Response: {}".format(res.json()))
         except Exception as ex:
-            log.error("Got the traceback\n{}".format(traceback.format_exc()))
+            # Let these exceptions should be handled where api has been called for better traceback
             err_msg = res.text if hasattr(res, "text") else "{}".format(ex)
             status_code = res.status_code if hasattr(res, "status_code") else 500
             err = {"error": err_msg, "code": status_code}
-            log.error("Error Response: {}".format(err))
         return res, err
 
 

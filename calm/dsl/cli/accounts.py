@@ -126,7 +126,7 @@ def delete_account(obj, account_names):
         res, err = client.account.delete(account_id)
         if err:
             LOG.exception("[{}] - {}".format(err["code"], err["error"]))
-        click.echo("account {} deleted".format(account_name))
+        LOG.info("account {} deleted".format(account_name))
 
 
 def describe_showback_data(spec):
@@ -221,7 +221,7 @@ def describe_gcp_account(client, spec, account_id):
         name = image_selfLink_name_map[image["selfLink"]]
         click.echo("\t{}. {}".format(str(index + 1), highlight_text(name)))
 
-    if not regions:  # TODO avoid unnecessary api call
+    if not regions:
         click.echo(highlight_text("No regions provided"))
 
     click.echo("\nGKE Details:\n--------------\n")
