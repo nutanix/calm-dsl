@@ -1,0 +1,19 @@
+resources:
+  account_uuid: 37a45575-e075-4e97-933d-4f9cea03d377
+  associate_public_ip_address: true
+  availability_zone: us-east-1a
+  block_device_map:
+    root_disk:
+      delete_on_termination: true
+      device_name: "/dev/sda1"
+      size_gb: 10
+      volume_type: GP2
+  image_id: ami-0ccec2041ac92b449
+  instance_type: m3.medium
+  key_name: calm-blueprints
+  region: us-east-1
+  security_group_list:
+  - security_group_id: sg-184ead62
+  subnet_id: subnet-c599a5ef
+  vpc_id: vpc-ffd54d98
+type: PROVISION_AWS_VM
