@@ -1,7 +1,53 @@
 import os
 import time
+import uuid
 import pytest
 import json
+
+
+def change_uuids(bp, context):
+    """
+    Helper function to change uuids
+    Args:
+        bp (dict): BP dict
+        context (dict) : context to recursively change uuid references
+    """
+    if isinstance(bp, dict):
+
+        new_name = "Test_" + str(uuid.uuid4())[-10:]
+        if bp.get('spec', None) and bp.get('metadata', None):
+            bp['spec']['name'] = new_name
+            bp['metadata']['name'] = new_name
+        for key, val in bp.items():
+            if key == 'uuid':
+                old_uuid = val
+                if old_uuid in context.keys():
+                    bp[key] = context[old_uuid]
+                else:
+                    new_uuid = str(uuid.uuid4())
+                    context[old_uuid] = new_uuid
+                    bp[key] = new_uuid
+            else:
+                change_uuids(val, context)
+    elif isinstance(bp, list):
+        for item in bp:
+            if isinstance(item, str):
+                try:
+                    uuid.UUID(hex=str(item), version=4)
+                except Exception:
+                    change_uuids(item, context)
+                    continue
+                old_uuid = item
+                if old_uuid in context.keys():
+                    new_uuid = context[old_uuid]
+                    bp[bp.index(item)] = new_uuid
+                else:
+                    new_uuid = str(uuid.uuid4())
+                    context[old_uuid] = new_uuid
+                    bp[bp.index(item)] = new_uuid
+            else:
+                change_uuids(item, context)
+    return bp
 
 
 def upload_runbook(client, rb_name, Runbook):
@@ -89,7 +135,7 @@ def read_test_config(file_name="test_config.json"):
     """
 
     current_path = os.path.dirname(os.path.realpath(__file__))
-    file_path = os.path.dirname(current_path) + "/test_runbooks/%s" % (file_name)
+    file_path = os.path.dirname(current_path) + "/test_runbooks/test_files/%s" % (file_name)
     json_file = open(file_path)
     data = json.load(json_file)
     return data

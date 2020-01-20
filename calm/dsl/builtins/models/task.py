@@ -408,6 +408,7 @@ def set_variable_task_powershell(
 
 def http_task_on_endpoint(
     method,
+    relative_url=None,
     body=None,
     headers=None,
     secret_headers=None,
@@ -442,7 +443,8 @@ def http_task_on_endpoint(
     return http_task(
         method,
         "",  # As url is present is target endpoint
-        body=None,
+        body=body,
+        relative_url=relative_url,
         headers=headers,
         secret_headers=secret_headers,
         content_type=content_type,
@@ -716,6 +718,7 @@ def _header_variables_from_dict(headers, secret=False):
 def http_task(
     method,
     url,
+    relative_url=None,
     body=None,
     headers=None,
     secret_headers=None,
@@ -788,6 +791,9 @@ def http_task(
         },
     }
 
+    if relative_url is not None:
+        kwargs["attrs"]["relative_url"] = relative_url
+
     if body is not None:
         kwargs["attrs"]["request_body"] = body
 
@@ -854,9 +860,6 @@ def http_task(
                     + (name or "")
                     + " should be dictionary of strings"
                 )
-            expected_response.append(
-                {"status": "SUCCESS" if state else "FAILURE", "code": code}
-            )
         kwargs["attrs"]["response_paths"] = response_paths
 
     return _task_create(**kwargs)
