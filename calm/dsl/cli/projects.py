@@ -358,6 +358,7 @@ def update_project(obj, name, payload):
 def poll_creation_status(client, project_uuid):
 
     cnt = 0
+    project_state = "PENDING"
     while True:
         LOG.info("Fetching status of project creation")
         res, err = client.project.read(project_uuid)
@@ -365,14 +366,15 @@ def poll_creation_status(client, project_uuid):
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
         project = res.json()
-        if project["status"]["state"] == "COMPLETE":
-            LOG.info("SUCCESS")
+        project_state = project["status"]["state"]
+        if project_state == "COMPLETE":
+            LOG.info("CREATED")
             return
 
-        elif project["status"]["state"] == "RUNNING":
+        elif project_state == "RUNNING":
             LOG.info("RUNNING")
 
-        elif project["status"]["state"] == "PENDING":
+        elif project_state == "PENDING":
             LOG.info("PENDING")
 
         else:
@@ -385,13 +387,14 @@ def poll_creation_status(client, project_uuid):
         if cnt == 10:
             break
 
-    LOG.debug("Waited for project creation for 20 seconds(polled at 2 sec interval)")
-    LOG.exception("Project creation failed !!!")
+    LOG.debug("Waited for project creation for 20 seconds(polled at 2 sec interval).")
+    LOG.info("Project state: {}". format(project_state))
 
 
 def poll_updation_status(client, project_uuid, old_spec_version):
 
     cnt = 0
+    project_state = "PENDING"
     while True:
         LOG.info("Fetching status of project updation")
         res, err = client.project.read(project_uuid)
@@ -399,20 +402,21 @@ def poll_updation_status(client, project_uuid, old_spec_version):
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
         project = res.json()
+        project_state = project["status"]["state"]
         spec_version = project["metadata"]["spec_version"]
 
         # On updation spec_version should be incremented
         if spec_version == old_spec_version:
             raise Exception("No update operation performed on project !!!")
 
-        elif project["status"]["state"] == "PENDING":
+        elif project_state == "PENDING":
             LOG.info("PENDING")
 
-        elif project["status"]["state"] == "COMPLETE":
-            LOG.info("SUCCESS")
+        elif project_state == "COMPLETE":
+            LOG.info("UPDATED")
             return
 
-        elif project["status"]["state"] == "RUNNING":
+        elif project_state == "RUNNING":
             LOG.info("RUNNING")
 
         else:
@@ -426,26 +430,37 @@ def poll_updation_status(client, project_uuid, old_spec_version):
             break
 
     LOG.debug("Waited for project updation for 20 seconds(polled at 2 sec interval)")
-    LOG.exception("Project updation failed !!!")
+    LOG.info("Project state: {}". format(project_state))
 
 
-def poll_deletion_status(client, name):
+def poll_deletion_status(client, project_uuid):
 
     cnt = 0
+    project_state = "DELETE_IN_PROGRESS"
     while True:
         LOG.info("Fetching status of project deletion")
-        try:
-            get_project(client, name)
-            LOG.info("DELETING")
+        res, err = client.project.read(project_uuid)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        project = res.json()
+        project_state = project["status"]["state"]
 
-        except Exception:
-            LOG.info("Success")
+        if project_state == "DELETE_IN_PROGRESS":
+            LOG.info(project_state)
+        
+        elif project_state == "COMPLETE":
+            LOG.info("DELETED")
             return
+        
+        else:
+            msg = str(project["status"]["message_list"])
+            msg = "Project updation failed !!!\nmessage={}".format(msg)
+            raise Exception(msg)
 
-        time.sleep(2)
-        cnt += 1
+        time.sleep(1)
+        cnt += 2
         if cnt == 10:
             break
 
     LOG.debug("Waited for project deletion for 20 seconds(polled at 2 sec interval)")
-    LOG.exception("Project deletion failed !!!")
+    LOG.info("Project state: {}". format(project_state))

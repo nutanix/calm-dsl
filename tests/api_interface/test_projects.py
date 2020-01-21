@@ -108,6 +108,6 @@ class TestProjects:
         else:
             assert res.ok is True
             res = res.json()
-            poll_deletion_status(client, project_name)
+            poll_deletion_status(client, project_uuid)
             LOG.info("Success")
             LOG.debug("Response: {}".format(res))

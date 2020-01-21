@@ -91,7 +91,7 @@ def get_account(client, account_name):
 
     res, err = client.account.list(params=params)
     if err:
-        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     response = res.json()
     entities = response.get("entities", None)
@@ -109,7 +109,7 @@ def get_account(client, account_name):
     LOG.info("Fetching account details")
     res, err = client.account.read(account_id)
     if err:
-        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     account = res.json()
     return account
