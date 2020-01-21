@@ -1,14 +1,5 @@
 #!/bin/bash
 set -ex
-sudo mkdir -p /var/lib/redis
-sudo yum install -y lvm2
-sudo pvcreate /dev/sdb
-sudo vgcreate redis_vg /dev/sdb
-sleep 3
-sudo lvcreate -l 100%VG -n redis_lvm redis_vg
-sudo mkfs.xfs /dev/redis_vg/redis_lvm
-echo -e "/dev/redis_vg/redis_lvm \t /var/lib/redis \t xfs \t defaults \t 0 0" | sudo tee -a /etc/fstab
-sudo mount -a
 
 sudo yum install epel-release -y
 sudo yum update -y
