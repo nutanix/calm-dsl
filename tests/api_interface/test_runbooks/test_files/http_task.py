@@ -15,6 +15,8 @@ URL = read_local_file("/.tests/runbook_tests/url")
 TEST_URL = read_local_file("/.tests/runbook_tests/url1")
 
 endpoint = CalmEndpoint.HTTP(URL, verify=False, auth=Auth.Basic(AUTH_USERNAME, AUTH_PASSWORD))
+endpoint_with_tls_verify = CalmEndpoint.HTTP(URL, verify=True, auth=Auth.Basic(AUTH_USERNAME, AUTH_PASSWORD))
+endpoint_with_incorrect_auth = CalmEndpoint.HTTP(URL, verify=False)
 endpoint_without_auth = CalmEndpoint.HTTP(TEST_URL)
 endpoint_payload = change_uuids(read_test_config(file_name="endpoint_payload.json"), {})
 
@@ -99,3 +101,128 @@ class HTTPTaskWithoutAuth(RunbookService):
     endpoints = [endpoint_without_auth]
     credentials = []
     default_target = ref(endpoint_without_auth)
+
+
+class HTTPTaskWithIncorrectCode(RunbookService):
+    "Runbook Service example"
+
+    @runbook
+    def main_runbook():
+
+        # Creating an endpoint with POST call
+        CalmTask.HTTP.endpoint(
+            "GET",
+            name="HTTPTask",
+            content_type="text/html",
+            status_mapping={300: True}
+        )
+
+    endpoints = [endpoint_without_auth]
+    credentials = []
+    default_target = ref(endpoint_without_auth)
+
+
+class HTTPTaskWithFailureState(RunbookService):
+    "Runbook Service example"
+
+    @runbook
+    def main_runbook():
+
+        # Creating an endpoint with POST call
+        CalmTask.HTTP.endpoint(
+            "GET",
+            name="HTTPTask",
+            content_type="text/html",
+            status_mapping={200: False}
+        )
+
+    endpoints = [endpoint_without_auth]
+    credentials = []
+    default_target = ref(endpoint_without_auth)
+
+
+class HTTPTaskWithUnsupportedURL(RunbookService):
+    "Runbook Service example"
+
+    @runbook
+    def main_runbook():
+
+        # Creating an endpoint with POST call
+        CalmTask.HTTP.endpoint(
+            "GET",
+            name="HTTPTask",
+            relative_url="unsupported url",
+            headers={"Content-Type": "application/json"},
+            content_type="application/json",
+            status_mapping={200: True}
+        )
+
+    endpoints = [endpoint]
+    credentials = []
+    default_target = ref(endpoint)
+
+
+class HTTPTaskWithUnsupportedPayload(RunbookService):
+    "Runbook Service example"
+
+    @runbook
+    def main_runbook():
+
+        # Creating an endpoint with POST call
+        CalmTask.HTTP.endpoint(
+            "POST",
+            name="HTTPTask",
+            relative_url="/list",
+            body=json.dumps({"payload": "unsupported"}),
+            headers={"Content-Type": "application/json"},
+            content_type="application/json",
+            status_mapping={200: True},
+            target=ref(endpoint)
+        )
+
+    endpoints = [endpoint]
+    credentials = []
+
+
+class HTTPTaskWithIncorrectAuth(RunbookService):
+    "Runbook Service example"
+
+    @runbook
+    def main_runbook():
+
+        # Creating an endpoint with POST call
+        CalmTask.HTTP.endpoint(
+            "POST",
+            name="HTTPTask",
+            relative_url="/list",
+            body=json.dumps({}),
+            headers={"Content-Type": "application/json"},
+            content_type="application/json",
+            status_mapping={200: True},
+            target=ref(endpoint_with_incorrect_auth)
+        )
+
+    endpoints = [endpoint_with_incorrect_auth]
+    credentials = []
+
+
+class HTTPTaskWithTLSVerify(RunbookService):
+    "Runbook Service example"
+
+    @runbook
+    def main_runbook():
+
+        # Creating an endpoint with POST call
+        CalmTask.HTTP.endpoint(
+            "POST",
+            name="HTTPTask",
+            relative_url="/list",
+            body=json.dumps({}),
+            headers={"Content-Type": "application/json"},
+            content_type="application/json",
+            status_mapping={200: True},
+            target=ref(endpoint_with_tls_verify)
+        )
+
+    endpoints = [endpoint_with_tls_verify]
+    credentials = []
