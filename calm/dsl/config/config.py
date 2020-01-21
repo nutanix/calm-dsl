@@ -88,14 +88,14 @@ def init_config(
     config_file = config_file or user_config_file
 
     # Render config template
-    LOG.debug("Rendering configuration template ...")
+    LOG.debug("Rendering configuration template")
     text = _render_config_template(
         ip, port, username, password, project_name, db_location
     )
     LOG.debug("Success")
 
     # Write config
-    LOG.debug("Writing configuration to '{}' ...".format(config_file))
+    LOG.debug("Writing configuration to '{}'".format(config_file))
     with open(config_file, "w") as fd:
         fd.write(text)
     LOG.debug("Success")

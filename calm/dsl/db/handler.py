@@ -47,7 +47,7 @@ class Database:
 
     def __enter__(self):
 
-        LOG.debug("Connecting to local DB ...")
+        LOG.debug("Connecting to local DB")
         if self.db.is_closed():
             self.db.connect()
         LOG.debug("Success")
@@ -56,7 +56,7 @@ class Database:
 
     def __exit__(self, exc_type, exc_value, tb):
 
-        LOG.debug("Closing connection to local DB ...")
+        LOG.debug("Closing connection to local DB")
         if not self.db.is_closed():
             self.db.close()
 

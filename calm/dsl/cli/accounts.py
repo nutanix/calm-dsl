@@ -106,7 +106,7 @@ def get_account(client, account_name):
         raise Exception("No account having name {} found".format(account_name))
 
     account_id = account["metadata"]["uuid"]
-    LOG.info("Fetching account details ...")
+    LOG.info("Fetching account details")
     res, err = client.account.read(account_id)
     if err:
         LOG.exception("[{}] - {}".format(err["code"], err["error"]))

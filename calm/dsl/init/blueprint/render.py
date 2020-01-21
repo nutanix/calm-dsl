@@ -34,7 +34,7 @@ def render_ahv_template(template, service_name):
         raise Exception("no subnets registered !!!")
 
     default_subnet = subnets[0]["name"]
-    LOG.info("Rendering ahv template ...")
+    LOG.info("Rendering ahv template")
     text = template.render(service_name=service_name, subnet_name=default_subnet)
     LOG.info("Success")
 
@@ -52,7 +52,7 @@ def render_blueprint_template(service_name, provider_type):
 
     if provider_type not in template_map:
         print(
-            "Provider {} not supported. Using AHV_VM as provider ...".format(
+            "Provider {} not supported. Using AHV_VM as provider".format(
                 provider_type
             )
         )
@@ -139,12 +139,12 @@ def init_bp(service_name, dir_name, provider_type):
     bp_dir, local_dir, key_dir, script_dir = make_bp_dirs(dir_name, bp_name)
 
     # sync cache
-    LOG.info("Syncing the cache ...")
+    LOG.info("Syncing the cache")
     Cache.sync()
     LOG.info("Success")
 
     # Creating keys
-    LOG.info("Generating keys for credentials ...")
+    LOG.info("Generating keys for credentials")
     create_cred_keys(key_dir)
     LOG.info("Success")
 

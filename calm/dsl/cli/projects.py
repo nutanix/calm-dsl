@@ -89,7 +89,7 @@ def get_project(client, name):
 
     params = {"filter": "name=={}".format(name)}
 
-    LOG.info("Searcing for the project {} ...". format(name))
+    LOG.info("Searcing for the project {}". format(name))
     res, err = client.project.list(params=params)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -107,7 +107,7 @@ def get_project(client, name):
         raise Exception("No project found with name {} found".format(name))
 
     project_id = project["metadata"]["uuid"]
-    LOG.info("Fetching project details ...")
+    LOG.info("Fetching project details")
     res, err = client.project.read(project_id)  # for getting additional fields
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -351,7 +351,7 @@ def update_project(obj, name, payload):
         "spec": payload,
     }
 
-    LOG.info("Updating the project ... ")
+    LOG.info("Updating the project")
     return client.project.update(project_id, payload)
 
 
@@ -370,10 +370,10 @@ def poll_creation_status(client, project_uuid):
             return
 
         elif project["status"]["state"] == "RUNNING":
-            LOG.info("RUNNING ...")
+            LOG.info("RUNNING")
 
         elif project["status"]["state"] == "PENDING":
-            LOG.info("PENDING ...")
+            LOG.info("PENDING")
 
         else:
             msg = str(project["status"]["message_list"])
@@ -406,14 +406,14 @@ def poll_updation_status(client, project_uuid, old_spec_version):
             raise Exception("No update operation performed on project !!!")
 
         elif project["status"]["state"] == "PENDING":
-            LOG.info("PENDING ...")
+            LOG.info("PENDING")
 
         elif project["status"]["state"] == "COMPLETE":
             LOG.info("SUCCESS")
             return
 
         elif project["status"]["state"] == "RUNNING":
-            LOG.info("RUNNING ...")
+            LOG.info("RUNNING")
 
         else:
             msg = str(project["status"]["message_list"])
@@ -436,7 +436,7 @@ def poll_deletion_status(client, name):
         LOG.info("Fetching status of project deletion")
         try:
             get_project(client, name)
-            LOG.info("DELETING ...")
+            LOG.info("DELETING")
 
         except Exception:
             LOG.info("Success")

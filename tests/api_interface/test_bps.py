@@ -46,17 +46,17 @@ class TestBps:
             if len(entities) != 1:
                 pytest.fail("More than one blueprint found - {}".format(entities))
 
-            LOG.info("Bp {} found >>".format(Blueprint))
+            LOG.info("Bp {} found".format(Blueprint))
             bp_uuid = entities[0]["metadata"]["uuid"]
 
             res, err = client.blueprint.delete(bp_uuid)
             if err:
                 pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
-            LOG.info("Bp {} deleted >>".format(Blueprint))
+            LOG.info("Bp {} deleted".format(Blueprint))
 
         else:
-            LOG.info("Bp {} not found >>".format(Blueprint))
+            LOG.info("Bp {} not found".format(Blueprint))
 
         # uploading the blueprint
         LOG.info("Creating blueprint {}".format(bp_name))
@@ -66,7 +66,7 @@ class TestBps:
 
         if not err:
             assert res.ok is True
-            LOG.info("Bp {} uploaded with creds >>".format(bp_name))
+            LOG.info("Bp {} uploaded with creds".format(bp_name))
             LOG.debug("Response: {}".format(res.json()))
 
         else:
@@ -103,7 +103,7 @@ class TestBps:
 
         if not err:
             assert res.ok is True
-            LOG.info("Bp {} uploaded with creds >>".format(bp_name))
+            LOG.info("Bp {} uploaded with creds".format(bp_name))
         else:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 

@@ -112,11 +112,12 @@ class TestBpCommands:
     def test_random_bp_describe(self):
         runner = CliRunner()
         LOG.info("Running 'calm describe bp' command")
-        result = runner.invoke(cli, ["describe", "bp", "MySQL"])
+        bp_name = "MySQL_ {}". format(int(time.time()))
+        result = runner.invoke(cli, ["describe", "bp", bp_name])
         if result.exit_code != 0:
             assert (
                 result.exception.args[0]
-                == "No blueprint found with name MySQL found >>"
+                == "No blueprint found with name {} found". format(bp_name)
             )
         else:
             assert result.exit_code == 0

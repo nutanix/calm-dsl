@@ -43,7 +43,7 @@ class TestApps:
         res, err = client.blueprint.upload_with_secrets(bp_name, bp_desc, bp_resources)
 
         if not err:
-            LOG.info("{} uploaded with creds >>".format(Blueprint))
+            LOG.info("{} uploaded with creds".format(Blueprint))
             LOG.debug("Response: {}".format(res.json()))
             assert res.ok is True
         else:

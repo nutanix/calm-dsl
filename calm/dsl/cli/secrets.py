@@ -19,7 +19,7 @@ def create_secret(name, value):
         click.echo("\nSecret {} Already present !!!".format(name))
         return
 
-    LOG.info("Creating secret {} ... ".format(name))
+    LOG.info("Creating secret {}".format(name))
     Secret.create(name, value)
     LOG.info("Success")
 
@@ -66,7 +66,7 @@ def delete_secret(name):
         LOG.error("Secret {} not present !!!".format(name))
         return
 
-    LOG.info("Deleting secret {} ... ".format(name))
+    LOG.info("Deleting secret {}".format(name))
     Secret.delete(name)
     LOG.info("Success")
 
@@ -79,7 +79,7 @@ def update_secret(name, value):
         LOG.error("Secret {} not present !!!".format(name))
         return
 
-    LOG.info("Updating secret {} ... ".format(name))
+    LOG.info("Updating secret {}".format(name))
     Secret.update(name, value)
     LOG.info("Success")
 
@@ -105,6 +105,6 @@ def get_secrets_names():
 def clear_secrets():
     """Delete all the secrets"""
 
-    LOG.info("Clearing the secrets ... ")
+    LOG.info("Clearing the secrets")
     Secret.clear()
     LOG.info("Success")

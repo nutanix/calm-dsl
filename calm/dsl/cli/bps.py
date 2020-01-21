@@ -286,7 +286,7 @@ def get_blueprint(client, name, all=False):
         LOG.info("{} found ".format(name))
         blueprint = entities[0]
     else:
-        raise Exception("No blueprint found with name {} found >>".format(name))
+        raise Exception("No blueprint found with name {} found".format(name))
     return blueprint
 
 
@@ -373,7 +373,7 @@ def launch_blueprint_simple(
         )
     res, err = client.blueprint.launch(blueprint_uuid, launch_payload)
     if not err:
-        LOG.info("{} queued for launch >>".format(blueprint_name))
+        LOG.info("{} queued for launch".format(blueprint_name))
     else:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
     response = res.json()

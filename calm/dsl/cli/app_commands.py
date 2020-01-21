@@ -69,7 +69,7 @@ def display_with_screen(obj, app_name, action_name, watch):
     def render_actions(screen):
         screen.clear()
         screen.print_at(
-            "Running action {} for app {} ...".format(action_name, app_name), 0, 0
+            "Running action {} for app {}".format(action_name, app_name), 0, 0
         )
         screen.refresh()
         run_actions(screen, obj, app_name, action_name, watch)

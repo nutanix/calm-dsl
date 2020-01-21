@@ -94,7 +94,7 @@ def set_server_details(ip, port, username, password, project_name):
     # Default user config file
     user_config_file = get_default_user_config_file()
 
-    LOG.info("Writing config to {} ... ".format(user_config_file))
+    LOG.info("Writing config to {}".format(user_config_file))
     init_config(host, port, username, password, project_name, db_location)
     LOG.info("Success")
 
@@ -103,13 +103,13 @@ def set_server_details(ip, port, username, password, project_name):
 
 
 def init_db():
-    LOG.info("Creating local database ... ")
+    LOG.info("Creating local database")
     Database()
     LOG.info("Success")
 
 
 def sync_cache():
-    LOG.info("Updating Cache ... ")
+    LOG.info("Updating Cache")
     Cache.sync()
     LOG.info("Success")
 
