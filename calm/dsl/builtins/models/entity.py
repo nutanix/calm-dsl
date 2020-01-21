@@ -262,7 +262,6 @@ class EntityType(EntityTypeBase):
             attrs.pop(k)
         LOG.debug("Success. Updated attributes of {} class :{}". format(mcls, attrs))
 
-
     def get_all_attrs(cls):
         default_attrs = cls.get_default_attrs()
         user_attrs = cls.get_user_attrs()

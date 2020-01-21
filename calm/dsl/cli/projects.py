@@ -1,5 +1,4 @@
 import time
-import warnings
 import click
 import arrow
 from prettytable import PrettyTable

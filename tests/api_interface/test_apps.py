@@ -9,6 +9,9 @@ from calm.dsl.cli.constants import RUNLOG, APPLICATION
 from tests.api_interface.entity_spec.existing_vm_bp import (
     ExistingVMBlueprint as Blueprint,
 )
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 class TestApps:
@@ -17,11 +20,13 @@ class TestApps:
         client = get_api_client()
 
         params = {"length": 20, "offset": 0}
+        LOG.info("Invoking list api call on apps")
         res, err = client.application.list(params=params)
 
         if not err:
-            print("\n>> Application list call successful>>")
             assert res.ok is True
+            LOG.info("Success")
+            LOG.debug("Response: {}".format(res.json()))
         else:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
@@ -31,14 +36,15 @@ class TestApps:
         client = get_api_client()
 
         # uploading the blueprint
-        bp_name = "test_ask_" + str(uuid.uuid4())[-10:]
-        print("\n>>Creating the blueprint {}".format(bp_name))
+        bp_name = "test_bp_" + str(uuid.uuid4())[-10:]
+        LOG.info("Creating blueprint {}".format(bp_name))
         bp_desc = Blueprint.__doc__
         bp_resources = json.loads(Blueprint.json_dumps())
         res, err = client.blueprint.upload_with_secrets(bp_name, bp_desc, bp_resources)
 
         if not err:
-            print(">> {} uploaded with creds >>".format(Blueprint))
+            LOG.info("{} uploaded with creds >>".format(Blueprint))
+            LOG.debug("Response: {}".format(res.json()))
             assert res.ok is True
         else:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
@@ -46,14 +52,13 @@ class TestApps:
         bp = res.json()
         bp_state = bp["status"]["state"]
         bp_uuid = bp["metadata"]["uuid"]
-        print(">> Blueprint state: {}".format(bp_state))
         assert bp_state == "ACTIVE"
         assert bp_name == bp["spec"]["name"]
         assert bp_name == bp["metadata"]["name"]
         assert bp_name == bp["metadata"]["name"]
 
         # launching the blueprint
-        print("\n>>Launching the blueprint")
+        LOG.info("Launching the blueprint {}".format(bp_name))
         app_name = "test_bp_api{}".format(str(uuid.uuid4())[-10:])
 
         try:
@@ -91,17 +96,18 @@ class TestApps:
             res = res.json()
             state = res["status"]["state"]
             if state == APPLICATION.STATES.PROVISIONING:
-                print("app is in provision state")
+                LOG.info("App {} is in provisioning state".format(app_name))
 
             elif state == APPLICATION.STATES.ERROR:
-                raise Exception("app create failed")
+                pytest.fail("App creation failed. App went to error state")
+                break
 
             elif state == APPLICATION.STATES.RUNNING:
-                print("app is in running state")
+                LOG.info("App {} is in running state".format(app_name))
                 break
 
             else:
-                print("application state: {}".format(state))
+                LOG.info("application state: {}".format(state))
                 break
 
             count += poll_interval
@@ -118,17 +124,19 @@ class TestApps:
         actions = ["stop", "start"]
         # soft_delete and delete actions are unable to run using run_action api
 
-        print("\nPerforming actions on the application {}".format(app_name))
+        LOG.info("Performing actions on the application {}".format(app_name))
         for action_name in actions:
             calm_action_name = "action_" + action_name.lower()
-            print("runnning action {} on application {}".format(action_name, app_name))
+            LOG.info(
+                "Running action {} on application {}".format(action_name, app_name)
+            )
             action = next(
                 action
                 for action in app_spec["resources"]["action_list"]
                 if action["name"] == calm_action_name or action["name"] == action_name
             )
             if not action:
-                raise Exception("No action found matching name {}".format(action_name))
+                pytest.fail("No action found matching name {}".format(action_name))
 
             action_id = action["uuid"]
 
@@ -140,7 +148,7 @@ class TestApps:
             }
             res, err = client.application.run_action(app_uuid, action_id, app)
             if err:
-                raise Exception("[{}] - {}".format(err["code"], err["error"]))
+                pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
             response = res.json()
             runlog_uuid = response["status"]["runlog_uuid"]
@@ -169,13 +177,13 @@ class TestApps:
                             pytest.fail("action {} failed".format(action_name))
                             break
                         if state not in RUNLOG.TERMINAL_STATES:
-                            print("\naction {} is in process".format(action_name))
+                            LOG.info("Action {} is in process".format(action_name))
                             break
                         else:
                             wait_over = True
 
                 if wait_over:
-                    print("\naction {} completed".format(action_name))
+                    LOG.info("Action {} completed".format(action_name))
                     break
 
                 count += poll_interval
@@ -186,13 +194,13 @@ class TestApps:
                     "action {} is not completed in 5 minutes".format(action_name)
                 )
 
-        print("\nDeleting application {}".format(app_name))
+        LOG.info("Deleting application {}".format(app_name))
         res, err = client.application.delete(app_uuid)
         if err:
             pytest.fail(err)
 
         # poll for app delete action to be happened correctly
-        print("received delete operation on app")
+        LOG.info("Polling for delete operation on app {}".format(app_name))
         maxWait = 5 * 60
         count = 0
         poll_interval = 10
@@ -205,28 +213,28 @@ class TestApps:
             res = res.json()
             state = res["status"]["state"]
             if state == APPLICATION.STATES.RUNNING:
-                print("app is in runnning state")
+                LOG.info("APP {} is in running state".format(app_name))
 
             elif state == APPLICATION.STATES.DELETING:
-                print("app is in deleting state")
+                LOG.info("APP {} is in deleting state".format(app_name))
 
             elif state == APPLICATION.STATES.ERROR:
-                raise Exception("app create failed")
+                pytest.fail("App {} creation failed".format(app_name))
 
             elif state == APPLICATION.STATES.DELETED:
-                print("app is deleted")
+                LOG.info("App {} is deleted".format(app_name))
                 break
 
             else:
-                print("application state: {}".format(state))
+                LOG.info("Application state: {}".format(state))
 
             count += poll_interval
             time.sleep(poll_interval)
 
-        print("\nDeleting blueprint of the application {}".format(app_name))
+        LOG.info("Deleting blueprint of the application {}".format(app_name))
         res, err = client.blueprint.delete(bp_uuid)
         if err:
             pytest.fail(err)
 
         else:
-            print("blueprint {} deleted".format(bp_name))
+            LOG.info("Blueprint {} deleted".format(bp_name))

@@ -15,6 +15,7 @@ spec_provider_map = {
     "PROVISION_EXISTING_MACHINE": "EXISTING_VM",
     "PROVISION_AWS_VM": "AWS_VM",
     "PROVISION_AZURE_VM": "AZURE_VM",
+    "PROVISION_K8S_POD": "K8S_POD"
 }
 
 

@@ -13,7 +13,7 @@ from calm.dsl.builtins import provider_spec, read_local_file
 
 
 CRED_USERNAME = read_local_file(".tests/username")
-CRED_PASSWORD = read_local_file(".tests/password")
+CRED_PASSWORD = read_local_file(".tests/existing_vm_password")
 
 DefaultCred = basic_cred(
     CRED_USERNAME, CRED_PASSWORD, name="default cred", default=True
@@ -80,7 +80,7 @@ class ExistingVM(Substrate):
     """CentOS VM"""
 
     provider_type = "EXISTING_VM"
-    provider_spec = provider_spec({"address": "10.46.8.98"})
+    provider_spec = provider_spec({"address": "10.46.8.98", "type": "PROVISION_EXISTING_MACHINE"})
     readiness_probe = {
         "disabled": False,
         "delay_secs": "0",

@@ -1,8 +1,7 @@
 from jsonschema import _utils
-from jsonschema import Draft7Validator, validators, exceptions
+from jsonschema import Draft7Validator, validators
 from jsonschema.exceptions import _Error
 from jsonschema._utils import ensure_list, types_msg, unbool
-import pprint
 import textwrap
 from ruamel import yaml
 import json

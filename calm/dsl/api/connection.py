@@ -17,11 +17,9 @@ import urllib3
 
 from requests import Session as NonRetrySession
 from requests.adapters import HTTPAdapter
-
-
-urllib3.disable_warnings()
 from calm.dsl.tools import get_logging_handle
 
+urllib3.disable_warnings()
 LOG = get_logging_handle(__name__)
 
 

@@ -1,5 +1,4 @@
 import os
-import click
 from jinja2 import Environment, PackageLoader
 from Crypto.PublicKey import RSA
 
@@ -24,7 +23,7 @@ def render_ahv_template(template, service_name):
     LOG.info("Fetching the ahv subnets attached to the project {}".format(project_name))
     res, err = client.project.read(project_uuid)
     if err:
-        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
     LOG.info("Success")
 
     res = res.json()
@@ -32,7 +31,7 @@ def render_ahv_template(template, service_name):
         "subnet_reference_list", []
     )
     if not subnets:
-        LOG.exception("no subnets registered !!!")
+        raise Exception("no subnets registered !!!")
 
     default_subnet = subnets[0]["name"]
     LOG.info("Rendering ahv template ...")
