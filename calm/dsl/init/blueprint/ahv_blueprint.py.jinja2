@@ -181,6 +181,7 @@ class DefaultProfile(Profile):
     # Profile Variables
     var1 = Variable.Simple("sample_val1", runtime=True)
     var2 = Variable.Simple("sample_val2", runtime=True)
+    var3 = Variable.Simple.int("2", validate_regex=True, regex=r"^[\d]*$")
 
     # Profile Actions
     @action
@@ -190,7 +191,7 @@ class DefaultProfile(Profile):
         # Step 1: Run a task on a service in the profile
         Task.Exec.ssh(
             name="Task1",
-            script='echo "Profile level action using @@{var1}@@ and @@{var2}@@"',
+            script='echo "Profile level action using @@{var1}@@ and @@{var2}@@ and @@{var3}@@"',
             target=ref({{service_name}}Service),
         )
 

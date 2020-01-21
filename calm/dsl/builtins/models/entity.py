@@ -39,7 +39,8 @@ def _validate(vdict, name, value):
             ("variables" in vdict and isinstance(value, (VariableType,)))
             or ("actions" in vdict and isinstance(type(value), DescriptorType))
         ):
-            raise
+            LOG.debug("Validating object: {}". format(vdict))
+            ValidatorType = None
 
         # Validate and set variable/action
         # get validator for variables/action
@@ -250,6 +251,7 @@ class EntityType(EntityTypeBase):
                     if exception:
                         raise exception
                 else:
+                    continue
                     raise TypeError(
                         "Field {} has value of type {} ".format(key, type(value))
                         + "but it is not handled for this entity"
@@ -260,7 +262,7 @@ class EntityType(EntityTypeBase):
         # Delete attrs
         for k in del_keys:
             attrs.pop(k)
-        LOG.debug("Success. Updated attributes of {} class :{}". format(mcls, attrs))
+        LOG.debug("Success. Updated attributes of {} entity :{}". format(mcls, attrs))
 
     def get_all_attrs(cls):
         default_attrs = cls.get_default_attrs()
@@ -278,9 +280,10 @@ class EntityType(EntityTypeBase):
         cdict = {}
         display_map = getattr(type(cls), "__display_map__")
         for k, v in attrs.items():
-            if getattr(v, "__is_object__", False):
-                cdict.setdefault(display_map[k], v.compile(cls))
-            cdict.setdefault(display_map[k], v)
+            if display_map.get(k, None):
+                if getattr(v, "__is_object__", False):
+                    cdict.setdefault(display_map[k], v.compile(cls))
+                cdict.setdefault(display_map[k], v)
 
         # Add name & description if present
         if "name" in cdict and cdict["name"] == "":

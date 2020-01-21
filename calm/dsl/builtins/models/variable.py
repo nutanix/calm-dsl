@@ -1,3 +1,5 @@
+import re
+
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 
@@ -96,6 +98,11 @@ def simple_variable(
                 + (name or "")
                 + ", got {}".format(type(regex))
             )
+        if validate_regex:
+            regex_result = re.fullmatch(regex, value)
+            if not regex_result:
+                raise ValueError("{} is not valid".format(value))
+
         regex = {"value": regex, "should_validate": validate_regex}
         kwargs["regex"] = regex
     return setvar(name, value, **kwargs)
@@ -126,6 +133,15 @@ def simple_variable_secret(
                 + (name or "")
                 + ", got {}".format(type(regex))
             )
+        if validate_regex:
+            regex_result = re.fullmatch(regex, value)
+            if not regex_result:
+                raise ValueError(
+                    "Value '{}' doesn't match with specified regex '{}'".format(
+                        value, regex
+                    )
+                )
+
         regex = {"value": regex, "should_validate": validate_regex}
         kwargs["regex"] = regex
     return setvar(name, value, type_="SECRET", **kwargs)
@@ -213,6 +229,15 @@ def _advanced_variable(
                     + (name or "")
                     + ", got {}".format(type(choice))
                 )
+            if validate_regex:
+                regex_result = re.fullmatch(regex["value"], choice)
+                if not regex_result:
+                    raise ValueError(
+                        "Option '{}' doesn't match with specified regex '{}'".format(
+                            choice, regex["value"]
+                        )
+                    )
+
             choices.append(choice)
         if isinstance(value, list) and data_type == "LIST":
             for val in value:
@@ -241,6 +266,16 @@ def _advanced_variable(
             )
         options = {"type": "PREDEFINED", "choices": choices}
         kwargs["options"] = options
+    else:
+        # If options are None, just regex validate the value
+        if validate_regex:
+            regex_result = re.fullmatch(regex["value"], value)
+            if not regex_result:
+                raise ValueError(
+                    "Value '{}' doesn't match with specified regex '{}'".format(
+                        value, regex["value"]
+                    )
+                )
     if is_hidden is not None:
         kwargs["is_hidden"] = bool(is_hidden)
     if is_mandatory is not None:
