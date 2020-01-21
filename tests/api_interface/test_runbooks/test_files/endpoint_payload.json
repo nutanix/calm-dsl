@@ -13,7 +13,7 @@
             "attrs": {
               "is_secret_modified": true
             },
-            "value": "Nutanix.123"
+            "value": "Password"
           },
           "type": "basic"
         },

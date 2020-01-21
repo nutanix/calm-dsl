@@ -12,8 +12,10 @@ from utils import read_test_config, change_uuids
 AUTH_USERNAME = read_local_file("/.tests/runbook_tests/auth_username")
 AUTH_PASSWORD = read_local_file("/.tests/runbook_tests/auth_password")
 URL = read_local_file("/.tests/runbook_tests/url")
+TEST_URL = read_local_file("/.tests/runbook_tests/url1")
 
 endpoint = CalmEndpoint.HTTP(URL, verify=False, auth=Auth.Basic(AUTH_USERNAME, AUTH_PASSWORD))
+endpoint_without_auth = CalmEndpoint.HTTP(TEST_URL)
 endpoint_payload = change_uuids(read_test_config(file_name="endpoint_payload.json"), {})
 
 
@@ -61,7 +63,7 @@ class HTTPTask(RunbookService):
     credentials = []
 
 
-class HTTPTaskWithErrors(RunbookService):
+class HTTPTaskWithValidations(RunbookService):
     "Runbook Service example"
 
     @runbook
@@ -70,7 +72,7 @@ class HTTPTaskWithErrors(RunbookService):
         # Creating an endpoint with POST call
         CalmTask.HTTP.endpoint(
             "POST",
-            relatuve_url="/list",
+            relative_url="/list",
             body=json.dumps({}),
             headers={"Content-Type": "application/json"},
             content_type="application/json",
@@ -79,3 +81,21 @@ class HTTPTaskWithErrors(RunbookService):
 
     endpoints = []
     credentials = []
+
+
+class HTTPTaskWithoutAuth(RunbookService):
+    "Runbook Service example"
+
+    @runbook
+    def main_runbook():
+
+        # Creating an endpoint with POST call
+        CalmTask.HTTP.endpoint(
+            "GET",
+            content_type="text/html",
+            status_mapping={200: True}
+        )
+
+    endpoints = [endpoint_without_auth]
+    credentials = []
+    default_target = ref(endpoint_without_auth)
