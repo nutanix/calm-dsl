@@ -6,9 +6,9 @@ from calm.dsl.builtins import runbook, RunbookService
 from calm.dsl.builtins import CalmTask
 from calm.dsl.builtins import CalmEndpoint, Auth, ref
 
-AUTH_USERNAME = read_local_file("/.tests/runbook_tests/auth_username")
-AUTH_PASSWORD = read_local_file("/.tests/runbook_tests/auth_password")
-URL = read_local_file("/.tests/runbook_tests/url")
+AUTH_USERNAME = read_local_file(".tests/runbook_tests/auth_username")
+AUTH_PASSWORD = read_local_file(".tests/runbook_tests/auth_password")
+URL = read_local_file(".tests/runbook_tests/url")
 
 endpoint = CalmEndpoint.HTTP(URL, verify=True, auth=Auth.Basic(AUTH_USERNAME, AUTH_PASSWORD))
 
