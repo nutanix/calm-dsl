@@ -98,10 +98,14 @@ def simple_variable(
                 + (name or "")
                 + ", got {}".format(type(regex))
             )
-        if validate_regex:
+        if validate_regex and regex and value:
             regex_result = re.fullmatch(regex, value)
             if not regex_result:
-                raise ValueError("{} is not valid".format(value))
+                raise ValueError(
+                    "Value '{}' doesn't match with specified regex '{}'".format(
+                        value, regex
+                    )
+                )
 
         regex = {"value": regex, "should_validate": validate_regex}
         kwargs["regex"] = regex
@@ -133,7 +137,7 @@ def simple_variable_secret(
                 + (name or "")
                 + ", got {}".format(type(regex))
             )
-        if validate_regex:
+        if validate_regex and regex and value:
             regex_result = re.fullmatch(regex, value)
             if not regex_result:
                 raise ValueError(
@@ -150,7 +154,7 @@ def simple_variable_secret(
 def _advanced_variable(
     type_,
     name=None,
-    value=None,
+    value="",
     label=None,
     task=None,
     value_type=None,
@@ -191,12 +195,22 @@ def _advanced_variable(
     if value_type is not None:
         value_type = value_type.upper()
         if value_type not in VARIABLE_VALUE_TYPES.values():
-            raise ValueError("Invalid value_type provided for variable " + (name or ""))
+            raise ValueError(
+                "Value type for variable "
+                + (name or "")
+                + ", is not valid, Expected one of"
+                + " {}, got {}".format(list(VARIABLE_VALUE_TYPES.values()), value_type)
+            )
         kwargs["value_type"] = value_type
     if data_type is not None:
         data_type = data_type.upper()
         if data_type not in VARIABLE_DATA_TYPES.values():
-            raise ValueError("Invalid data_type provided for variable " + (name or ""))
+            raise ValueError(
+                "Data type for variable "
+                + (name or "")
+                + ", is not valid, Expected one of"
+                + " {}, got {}".format(list(VARIABLE_DATA_TYPES.values()), data_type)
+            )
         kwargs["data_type"] = data_type
     if regex is not None:
         if not isinstance(regex, str):
@@ -229,7 +243,7 @@ def _advanced_variable(
                     + (name or "")
                     + ", got {}".format(type(choice))
                 )
-            if validate_regex:
+            if validate_regex and regex:
                 regex_result = re.fullmatch(regex["value"], choice)
                 if not regex_result:
                     raise ValueError(
@@ -268,7 +282,7 @@ def _advanced_variable(
         kwargs["options"] = options
     else:
         # If options are None, just regex validate the value
-        if validate_regex:
+        if validate_regex and regex and value:
             regex_result = re.fullmatch(regex["value"], value)
             if not regex_result:
                 raise ValueError(

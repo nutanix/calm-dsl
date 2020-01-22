@@ -73,7 +73,7 @@ def validate_provider_spec(spec_file, provider_type):
         LOG.info("File {} is a valid {} spec.".format(spec_file, provider_type))
     except Exception as ee:
         LOG.info("File {} is invalid {} spec".format(spec_file, provider_type))
-        LOG.exception(ee.message)
+        raise Exception(ee.message)
 
 
 @main.group(cls=DYMGroup)

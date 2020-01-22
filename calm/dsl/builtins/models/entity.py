@@ -40,7 +40,7 @@ def _validate(vdict, name, value):
             or ("actions" in vdict and isinstance(type(value), DescriptorType))
         ):
             LOG.debug("Validating object: {}". format(vdict))
-            ValidatorType = None
+            raise
 
         # Validate and set variable/action
         # get validator for variables/action
@@ -251,7 +251,6 @@ class EntityType(EntityTypeBase):
                     if exception:
                         raise exception
                 else:
-                    continue
                     raise TypeError(
                         "Field {} has value of type {} ".format(key, type(value))
                         + "but it is not handled for this entity"
@@ -280,10 +279,9 @@ class EntityType(EntityTypeBase):
         cdict = {}
         display_map = getattr(type(cls), "__display_map__")
         for k, v in attrs.items():
-            if display_map.get(k, None):
-                if getattr(v, "__is_object__", False):
-                    cdict.setdefault(display_map[k], v.compile(cls))
-                cdict.setdefault(display_map[k], v)
+            if getattr(v, "__is_object__", False):
+                cdict.setdefault(display_map[k], v.compile(cls))
+            cdict.setdefault(display_map[k], v)
 
         # Add name & description if present
         if "name" in cdict and cdict["name"] == "":

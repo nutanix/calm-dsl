@@ -447,11 +447,11 @@ def poll_deletion_status(client, project_uuid):
 
         if project_state == "DELETE_IN_PROGRESS":
             LOG.info(project_state)
-        
+
         elif project_state == "COMPLETE":
             LOG.info("DELETED")
             return
-        
+
         else:
             msg = str(project["status"]["message_list"])
             msg = "Project updation failed !!!\nmessage={}".format(msg)

@@ -47,18 +47,19 @@ class Database:
 
     def __enter__(self):
 
-        LOG.debug("Connecting to local DB")
         if self.db.is_closed():
+            LOG.debug("Connecting to local DB")
             self.db.connect()
-        LOG.debug("Success")
+            LOG.debug("Success")
 
         return self
 
     def __exit__(self, exc_type, exc_value, tb):
 
-        LOG.debug("Closing connection to local DB")
         if not self.db.is_closed():
+            LOG.debug("Closing connection to local DB")
             self.db.close()
+            LOG.debug("Success")
 
         if exc_type:
             # If ValueError is raised, don't print Exception
@@ -68,4 +69,3 @@ class Database:
 
             else:
                 traceback.print_exception(exc_type, exc_value, tb)
-        LOG.debug("Success")

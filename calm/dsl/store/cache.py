@@ -1,8 +1,10 @@
 import peewee
-import warnings
 
 from ..db import Database
 from calm.dsl.api import get_resource_api, get_api_client
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 class Cache:
@@ -57,7 +59,8 @@ class Cache:
         updating_entity_types = []
 
         if entity_type:
-            if entity_type not in list(cls.entity_type_api_map.keys()):
+            if entity_type not in cls.get_entity_types():
+                LOG.debug("Registered entity types: {}".format(cls.get_entity_types()))
                 raise ValueError("Entity type {} not registered".format(entity_type))
 
             updating_entity_types.append(entity_type)
@@ -86,9 +89,7 @@ class Cache:
                         )
                 except Exception:
                     pc_ip = client.connection.host
-                    warnings.warn(
-                        UserWarning("Cannot fetch data from {}".format(pc_ip))
-                    )
+                    LOG.warning("Cannot fetch data from {}".format(pc_ip))
 
     @classmethod
     def clear_entities(cls):
