@@ -44,7 +44,7 @@ def trunc_string(data="", max_length=50):
 
 
 def get_mpis(mpi_name, app_family="All", app_states=[], group_member_count=0):
-    """ 
+    """
         To call groups() api for marketplace items
         if group_member_count is 0, it will not appply the filter at all
     """
@@ -227,8 +227,6 @@ def get_mpi_by_name_n_version(mpi_name, mpi_version=None):
         apps (dict): All bp:uuid dict
     """
 
-    filters = "name==" + mpi_name + ";version==" + mpi_version
-
     client = get_api_client()
     payload = {
         "length": 250,
@@ -325,7 +323,6 @@ def convert_mpi_into_blueprint(mpi_name, project_name, mpi_version=None):
 
     del bp_res["spec"]["environment_uuid"]
     bp_status = bp_res["status"]["state"]
-    bp_uuid = bp_res["metadata"]["uuid"]
     if bp_status != "ACTIVE":
         raise Exception("blueprint went to {} state".format(bp_status))
 
@@ -336,7 +333,6 @@ def launch_mpi(
     mpi_name, version, project, app_name=None, profile_name=None, patch_editables=True,
 ):
 
-    config = get_config()
     client = get_api_client()
 
     bp_payload = convert_mpi_into_blueprint(mpi_name, version, project)

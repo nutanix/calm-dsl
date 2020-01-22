@@ -1,9 +1,5 @@
-import json
 import click
 
-from calm.dsl.api import get_api_client
-
-from .utils import highlight_text
 from .main import get, describe, launch
 from .mpis import get_published_mpis, get_app_family_list, describe_mpi, launch_mpi
 
@@ -40,7 +36,7 @@ def _get_mpis(obj, name, quiet, app_family, display_all):
 
 @describe.command("mpi")
 @click.argument("mpi_name")
-@click.option("version", "-v", default=None, help="Version of MPI")
+@click.option("--version", "-v", default=None, help="Version of MPI")
 @click.pass_obj
 def _describe_mpi(obj, mpi_name, version):
     """Describe a market place item"""
