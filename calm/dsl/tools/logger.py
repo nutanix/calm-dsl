@@ -2,7 +2,6 @@ import logging
 
 from colorlog import ColoredFormatter
 import time
-import click
 import sys
 
 # Used for looking at verbose level
@@ -73,9 +72,6 @@ class CustomLogging:
         # add console to logger
         self._logger.addHandler(self._ch1)
         self._logger.addHandler(self._ch2)
-
-        # set level to log level
-        self._logger.setLevel("INFO")
 
     def get_logger(self):
         self.set_logger_level(VERBOSE_LEVEL)
@@ -218,39 +214,6 @@ def get_logging_handle(name):
     return logging_handle
 
 
-def simple_verbosity_option(logging_mod=None, *names, **kwargs):
-    """A decorator that adds a `--verbose, -v` option to the decorated
-    command.
-    Name can be configured through ``*names``. Keyword arguments are passed to
-    the underlying ``click.option`` decorator.
-    """
-
-    if not names:
-        names = ["--verbose", "-v"]
-
-    if not isinstance(logging_mod, CustomLogging):
-        raise TypeError("Logging object should be instance of CustomLogging.")
-
-    kwargs.setdefault("default", 2)
-    kwargs.setdefault("expose_value", False)
-    kwargs.setdefault("help", "Verboses the output")
-    kwargs.setdefault("is_eager", True)
-    kwargs.setdefault("count", True)
-
-    def decorator(f):
-        def _set_level(ctx, param, value):
-            logging_levels = logging_mod.get_logging_levels()
-            if value < 1 or value > len(logging_levels):
-                raise click.BadParameter(
-                    "Should be atleast 1 and atmost {}".format(len(logging_levels))
-                )
-
-            log_level = logging_levels[value - 1]
-            x = getattr(logging_mod, log_level, None)
-            logging_mod.set_logger_level(x)
-            global VERBOSE_LEVEL
-            VERBOSE_LEVEL = x
-
-        return click.option(*names, callback=_set_level, **kwargs)(f)
-
-    return decorator
+def set_verbose_level(verbose_level):
+    global VERBOSE_LEVEL
+    VERBOSE_LEVEL = verbose_level

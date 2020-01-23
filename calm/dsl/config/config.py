@@ -41,6 +41,7 @@ def _render_config_template(
     password,
     project_name,
     db_location,
+    log_level,
     schema_file="config.ini.jinja2",
 ):
     """renders the config template"""
@@ -55,6 +56,7 @@ def _render_config_template(
         password=password,
         project_name=project_name,
         db_location=db_location,
+        log_level=log_level,
     )
     return text.strip() + os.linesep
 
@@ -69,7 +71,7 @@ def _get_config_file():
     else:
         user_config_file = get_default_user_config_file()
         if not os.path.exists(user_config_file):
-            raise Exception(
+            raise FileNotFoundError(
                 "Config file {} not found. Please run: calm init dsl".format(
                     user_config_file
                 )
@@ -79,7 +81,7 @@ def _get_config_file():
 
 
 def init_config(
-    ip, port, username, password, project_name, db_location, config_file=None
+    ip, port, username, password, project_name, db_location, log_level, config_file=None
 ):
     """Writes the configuration to config file / default config file"""
 
@@ -90,7 +92,7 @@ def init_config(
     # Render config template
     LOG.debug("Rendering configuration template")
     text = _render_config_template(
-        ip, port, username, password, project_name, db_location
+        ip, port, username, password, project_name, db_location, log_level
     )
     LOG.debug("Success")
 
@@ -122,7 +124,9 @@ def get_config():
     return _CONFIG
 
 
-def set_config(host, port, username, password, project_name, db_location, config_file):
+def set_config(
+    host, port, username, password, project_name, db_location, log_level, config_file
+):
     """writes the configuration to config file"""
 
     config = get_config()
@@ -133,6 +137,11 @@ def set_config(host, port, username, password, project_name, db_location, config
     password = password or config["SERVER"]["pc_password"]
     project_name = project_name or config["PROJECT"]["name"]
     db_location = db_location or config["DB"]["location"]
+    log_level = log_level or config["LOG"]["level"]
+
+    logging_levels = LOG.get_logging_levels()
+    if log_level not in logging_levels:
+        raise ValueError("Invalid log level. Select from {}".format(logging_levels))
 
     make_config_file_dir(config_file)
     init_config(
@@ -142,6 +151,7 @@ def set_config(host, port, username, password, project_name, db_location, config
         password,
         project_name,
         db_location,
+        log_level,
         config_file=config_file,
     )
 

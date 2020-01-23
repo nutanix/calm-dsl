@@ -91,11 +91,14 @@ def set_server_details(ip, port, username, password, project_name):
 
     db_location = os.path.join(os.path.expanduser("~"), ".calm", "dsl.db")
 
+    # Default log-level
+    log_level = "INFO"
+
     # Default user config file
     user_config_file = get_default_user_config_file()
 
     LOG.info("Writing config to {}".format(user_config_file))
-    init_config(host, port, username, password, project_name, db_location)
+    init_config(host, port, username, password, project_name, db_location, log_level)
     LOG.info("Success")
 
     # Update client handle with new settings if no exception occurs
@@ -172,8 +175,11 @@ def init_dsl_bp(service, dir_name, provider_type):
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path to local database file",
 )
+@click.option("--log_level", "-l", default=None, help="Default log level")
 @click.argument("config_file", default=get_default_user_config_file())
-def _set_config(host, port, username, password, project_name, db_location, config_file):
+def _set_config(
+    host, port, username, password, project_name, db_location, log_level, config_file
+):
     """writes the configuration to config file"""
 
     set_config(
@@ -183,5 +189,6 @@ def _set_config(host, port, username, password, project_name, db_location, confi
         password,
         project_name,
         db_location,
+        log_level,
         config_file=config_file,
     )
