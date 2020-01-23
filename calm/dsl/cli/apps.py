@@ -118,10 +118,10 @@ def _get_app(client, app_name, all=False):
             if not found:
                 raise Exception("More than one app found - {}".format(entities))
 
-        LOG.info("App {} found >>".format(app_name))
+        LOG.info("App {} found".format(app_name))
         app = entities[0]
     else:
-        raise Exception(">> No app found with name {} found >>".format(app_name))
+        raise Exception("No app found with name {} found".format(app_name))
     app_id = app["metadata"]["uuid"]
 
     # 2. Get app details
