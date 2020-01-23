@@ -112,7 +112,6 @@ def sync_cache():
 
 
 @init.command("bp")
-@click.option("--service", "-s", default="Hello", help="Name for service in blueprint")
 @click.option(
     "--dir_name", "-d", default=os.getcwd(), help="Directory path for the blueprint"
 )
@@ -124,8 +123,9 @@ def sync_cache():
     default="AHV_VM",
     help="Provider type",
 )
-def init_dsl_bp(service, dir_name, provider_type):
+def init_dsl_bp(dir_name, provider_type):
     """Creates a starting directory for blueprint"""
+    service = "Hello"
     init_bp(service, dir_name, provider_type)
 
 
