@@ -20,7 +20,7 @@ def render_ahv_template(template, service_name):
     project_name = config["PROJECT"].get("name", "default")
     project_uuid = Cache.get_entity_uuid("PROJECT", project_name)
 
-    LOG.info("Fetching the ahv subnets attached to the project {}".format(project_name))
+    LOG.info("Fetching ahv subnets attached to the project {}".format(project_name))
     res, err = client.project.read(project_uuid)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -72,7 +72,7 @@ def create_bp_file(dir_name, service_name, provider_type):
     bp_text = render_blueprint_template(service_name, provider_type)
     bp_path = os.path.join(dir_name, "blueprint.py")
 
-    LOG.info("Writing the bp file to {}".format(bp_path))
+    LOG.info("Writing bp file to {}".format(bp_path))
     with open(bp_path, "w") as fd:
         fd.write(bp_text)
     LOG.info("Success")
@@ -139,7 +139,7 @@ def init_bp(service_name, dir_name, provider_type):
     bp_dir, local_dir, key_dir, script_dir = make_bp_dirs(dir_name, bp_name)
 
     # sync cache
-    LOG.info("Syncing the cache")
+    LOG.info("Syncing cache")
     Cache.sync()
     LOG.info("Success")
 

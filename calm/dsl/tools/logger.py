@@ -219,28 +219,34 @@ def get_logging_handle(name):
 
 
 def simple_verbosity_option(logging_mod=None, *names, **kwargs):
-    """A decorator that adds a `--verbosity, -v` option to the decorated
+    """A decorator that adds a `--verbose, -v` option to the decorated
     command.
     Name can be configured through ``*names``. Keyword arguments are passed to
     the underlying ``click.option`` decorator.
     """
 
     if not names:
-        names = ["--verbosity", "-v"]
+        names = ["--verbose", "-v"]
 
     if not isinstance(logging_mod, CustomLogging):
         raise TypeError("Logging object should be instance of CustomLogging.")
 
-    kwargs.setdefault("default", "INFO")
-    kwargs.setdefault("metavar", "LVL")
+    kwargs.setdefault("default", 2)
     kwargs.setdefault("expose_value", False)
-    kwargs.setdefault("type", click.Choice(logging_mod.get_logging_levels()))
     kwargs.setdefault("help", "Verboses the output")
     kwargs.setdefault("is_eager", True)
+    kwargs.setdefault("count", True)
 
     def decorator(f):
         def _set_level(ctx, param, value):
-            x = getattr(logging_mod, value.upper(), None)
+            logging_levels = logging_mod.get_logging_levels()
+            if value < 1 or value > len(logging_levels):
+                raise click.BadParameter(
+                    "Should be atleast 1 and atmost {}".format(len(logging_levels))
+                )
+
+            log_level = logging_levels[value - 1]
+            x = getattr(logging_mod, log_level, None)
             logging_mod.set_logger_level(x)
             global VERBOSE_LEVEL
             VERBOSE_LEVEL = x

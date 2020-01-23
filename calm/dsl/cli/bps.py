@@ -204,7 +204,7 @@ def compile_blueprint(bp_file, no_sync=False):
 
     # Sync only if no_sync flag is not set
     if not no_sync:
-        LOG.info("Syncing the cache")
+        LOG.info("Syncing cache")
         Cache.sync()
 
     user_bp_module = get_blueprint_module_from_file(bp_file)
@@ -373,7 +373,7 @@ def launch_blueprint_simple(
         )
     res, err = client.blueprint.launch(blueprint_uuid, launch_payload)
     if not err:
-        LOG.info("{} queued for launch".format(blueprint_name))
+        LOG.info("Blueprint {} queued for launch".format(blueprint_name))
     else:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
     response = res.json()

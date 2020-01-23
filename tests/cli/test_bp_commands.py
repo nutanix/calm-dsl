@@ -77,7 +77,7 @@ class TestBpCommands:
         try:
             # Compile the BP and to a json file, for using to test json upload
             os.system(
-                "calm -v CRITICAL compile bp --file={} > {}".format(
+                "calm -vvvvv compile bp --file={} > {}".format(
                     DSL_BP_FILEPATH, JSON_BP_FILEPATH
                 )
             )

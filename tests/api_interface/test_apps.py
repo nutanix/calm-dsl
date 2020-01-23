@@ -58,7 +58,7 @@ class TestApps:
         assert bp_name == bp["metadata"]["name"]
 
         # launching the blueprint
-        LOG.info("Launching the blueprint {}".format(bp_name))
+        LOG.info("Launching blueprint {}".format(bp_name))
         app_name = "test_bp_api{}".format(str(uuid.uuid4())[-10:])
 
         try:
@@ -124,7 +124,7 @@ class TestApps:
         actions = ["stop", "start"]
         # soft_delete and delete actions are unable to run using run_action api
 
-        LOG.info("Performing actions on the application {}".format(app_name))
+        LOG.info("Performing actions on application {}".format(app_name))
         for action_name in actions:
             calm_action_name = "action_" + action_name.lower()
             LOG.info(
@@ -231,7 +231,7 @@ class TestApps:
             count += poll_interval
             time.sleep(poll_interval)
 
-        LOG.info("Deleting blueprint of the application {}".format(app_name))
+        LOG.info("Deleting blueprint of application {}".format(app_name))
         res, err = client.blueprint.delete(bp_uuid)
         if err:
             pytest.fail(err)

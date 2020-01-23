@@ -238,9 +238,10 @@ class Connection:
                 )
             res.raise_for_status()
             if not url.endswith("/download"):
-                LOG.debug("Server Response: {}".format(res.json()))
+                if not res.ok:
+                    LOG.debug("Server Response: {}".format(res.json()))
         except Exception as ex:
-            LOG.error("Got the traceback\n{}".format(traceback.format_exc()))
+            LOG.error("Got traceback\n{}".format(traceback.format_exc()))
             err_msg = res.text if hasattr(res, "text") else "{}".format(ex)
             status_code = res.status_code if hasattr(res, "status_code") else 500
             err = {"error": err_msg, "code": status_code}
