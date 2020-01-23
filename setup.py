@@ -33,7 +33,7 @@ setuptools.setup(
     description="Calm DSL for blueprints",
     long_description=read_file("README.md"),
     long_description_content_type="text/markdown",
-    url="https://github.com/ideadevice/calm-dsl",
+    url="https://github.com/nutanix/calm-dsl",
     packages=setuptools.find_namespace_packages(include=["calm.*"]),
     namespace_packages=["calm"],
     install_requires=read_file("requirements.txt"),
