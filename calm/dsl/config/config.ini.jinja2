@@ -1,4 +1,4 @@
-{% macro ConfigTemplate(ip, port, username, password, project_name, db_location) -%}
+{% macro ConfigTemplate(ip, port, username, password, project_name, db_location, log_level) -%}
 
 [SERVER]
 pc_ip = {{ip}}
@@ -12,8 +12,11 @@ name = {{project_name}}
 [DB]
 location = {{db_location}}
 
+[LOG]
+level = {{log_level}}
+
 [CATEGORIES]
 {%- endmacro %}
 
 
-{{ConfigTemplate(ip, port, username, password, project_name, db_location)}}
+{{ConfigTemplate(ip, port, username, password, project_name, db_location, log_level)}}

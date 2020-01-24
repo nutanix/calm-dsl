@@ -4,6 +4,9 @@ import os
 from click.testing import CliRunner
 
 from calm.dsl.cli import main as cli
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 DSL_BP_FILEPATH = "tests/existing_vm_example/test_existing_vm_bp.py"
@@ -34,6 +37,7 @@ class TestBpCommands:
 
     def test_compile_bp(self):
         runner = CliRunner()
+        LOG.info("Compiling Bp file at {}".format(DSL_BP_FILEPATH))
         result = runner.invoke(
             cli, ["compile", "bp", "--file={}".format(DSL_BP_FILEPATH)]
         )
@@ -43,6 +47,7 @@ class TestBpCommands:
     def test_dsl_bp_create(self):
         runner = CliRunner()
         self.created_dsl_bp_name = "Test_Exisisting_VM_DSL_{}".format(int(time.time()))
+        LOG.info("Creating Bp {}".format(self.created_dsl_bp_name))
         result = runner.invoke(
             cli,
             [
@@ -53,8 +58,10 @@ class TestBpCommands:
                 "--description='Test DSL Blueprint; to delete'",
             ],
         )
+
         assert result.exit_code == 0
-        print(result.output)
+        LOG.info("Success")
+        LOG.debug("Response: {}".format(result.output))
         self._test_bp_describe()
 
     def test_json_bp_create(self):
@@ -70,11 +77,11 @@ class TestBpCommands:
         try:
             # Compile the BP and to a json file, for using to test json upload
             os.system(
-                "calm compile bp --file={} > {}".format(
+                "calm -vvvvv compile bp --file={} > {}".format(
                     DSL_BP_FILEPATH, JSON_BP_FILEPATH
                 )
             )
-
+            LOG.info("Creating Bp {}".format(self.created_json_bp_name))
             result = runner.invoke(
                 cli,
                 [
@@ -86,7 +93,8 @@ class TestBpCommands:
                 ],
             )
             assert result.exit_code == 0
-            print(result.output)
+            LOG.info("Success")
+            LOG.debug("Response: {}".format(result.output))
 
         finally:
             # Rewriting old data
@@ -103,25 +111,34 @@ class TestBpCommands:
 
     def test_random_bp_describe(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ["describe", "bp", "MySQL"])
+        LOG.info("Running 'calm describe bp' command")
+        bp_name = "MySQL_ {}". format(int(time.time()))
+        result = runner.invoke(cli, ["describe", "bp", bp_name])
         if result.exit_code != 0:
             assert (
                 result.exception.args[0]
-                == ">> No blueprint found with name MySQL found >>"
+                == "No blueprint found with name {} found". format(bp_name)
             )
         else:
             assert result.exit_code == 0
-        print(result.output)
+        LOG.info("Success")
+        LOG.debug("Command output : {}".format(result.output))
 
     def _test_dsl_bp_delete(self):
         runner = CliRunner()
+        LOG.info("Deleting DSL Bp {} ".format(self.created_dsl_bp_name))
         result = runner.invoke(cli, ["delete", "bp", self.created_dsl_bp_name])
         assert result.exit_code == 0
+        LOG.info("Success")
+        LOG.debug("Response : {}".format(result.output))
 
     def _test_json_bp_delete(self):
         runner = CliRunner()
+        LOG.info("Deleting JSON Bp {} ".format(self.created_json_bp_name))
         result = runner.invoke(cli, ["delete", "bp", self.created_json_bp_name])
         assert result.exit_code == 0
+        LOG.info("Success")
+        LOG.debug("Response : {}".format(result.output))
 
 
 if __name__ == "__main__":

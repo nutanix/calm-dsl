@@ -6,9 +6,10 @@ from types import MappingProxyType
 
 from ruamel.yaml import YAML, resolver, SafeRepresenter
 from calm.dsl.tools import StrictDraft7Validator
-
-
+from calm.dsl.tools import get_logging_handle
 from .schema import get_schema_details
+
+LOG = get_logging_handle(__name__)
 
 
 def _validate(vdict, name, value):
@@ -38,6 +39,7 @@ def _validate(vdict, name, value):
             ("variables" in vdict and isinstance(value, (VariableType,)))
             or ("actions" in vdict and isinstance(type(value), DescriptorType))
         ):
+            LOG.debug("Validating object: {}".format(vdict))
             raise
 
         # Validate and set variable/action

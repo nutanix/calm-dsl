@@ -3,13 +3,16 @@ import os
 import json
 
 from calm.dsl.config import init_config, get_default_user_config_file, set_config
-from calm.dsl.db import Database
+from calm.dsl.db import get_db_handle
 from calm.dsl.api import get_resource_api, update_client_handle, get_client_handle
 from calm.dsl.store import Cache
 from calm.dsl.init import init_bp
 from calm.dsl.providers import get_provider_types
 
 from .main import init, set
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 @init.command("dsl")
@@ -72,7 +75,7 @@ def set_server_details(ip, port, username, password, project_name):
     password = password or click.prompt("Password", default="", hide_input=True)
     project_name = project_name or click.prompt("Project", default="default")
 
-    click.echo("\nChecking if Calm is enabled on Server ... ", nl=False)
+    LOG.info("Checking if Calm is enabled on Server")
     # Get temporary client handle
     client = get_client_handle(host, port, auth=(username, password), temp=True)
     Obj = get_resource_api("services/nucalm/status", client.connection)
@@ -84,31 +87,34 @@ def set_server_details(ip, port, username, password, project_name):
 
     result = json.loads(res.content)
     service_enablement_status = result["service_enablement_status"]
-    click.echo("[{}]".format(service_enablement_status))
+    LOG.info(service_enablement_status)
 
     db_location = os.path.join(os.path.expanduser("~"), ".calm", "dsl.db")
+
+    # Default log-level
+    log_level = "INFO"
 
     # Default user config file
     user_config_file = get_default_user_config_file()
 
-    click.echo("Writing config to {} ... ".format(user_config_file), nl=False)
-    init_config(host, port, username, password, project_name, db_location)
-    click.echo("[Success]")
+    LOG.info("Writing config to {}".format(user_config_file))
+    init_config(host, port, username, password, project_name, db_location, log_level)
+    LOG.info("Success")
 
     # Update client handle with new settings if no exception occurs
     update_client_handle(host, port, auth=(username, password))
 
 
 def init_db():
-    click.echo("Creating local database ... ", nl=False)
-    Database()
-    click.echo("[Success]")
+    LOG.info("Creating local database")
+    get_db_handle()
+    LOG.info("Success")
 
 
 def sync_cache():
-    click.echo("Updating Cache ... ", nl=False)
+    LOG.info("Updating Cache")
     Cache.sync()
-    click.echo("[Success]")
+    LOG.info("Success")
 
 
 @init.command("bp")
@@ -169,11 +175,13 @@ def init_dsl_bp(dir_name, provider_type):
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path to local database file",
 )
+@click.option("--log_level", "-l", default=None, help="Default log level")
 @click.argument("config_file", default=get_default_user_config_file())
-def _set_config(host, port, username, password, project_name, db_location, config_file):
-    """Will write the configuration to config file"""
+def _set_config(
+    host, port, username, password, project_name, db_location, log_level, config_file
+):
+    """writes the configuration to config file"""
 
-    click.echo("Writing config to {} ... ".format(config_file), nl=False)
     set_config(
         host,
         port,
@@ -181,6 +189,6 @@ def _set_config(host, port, username, password, project_name, db_location, confi
         password,
         project_name,
         db_location,
+        log_level,
         config_file=config_file,
     )
-    click.echo("[Success]")

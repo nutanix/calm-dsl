@@ -8,6 +8,9 @@ from calm.dsl.cli.projects import (
     poll_updation_status,
     poll_deletion_status,
 )
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 class TestProjects:
@@ -16,11 +19,14 @@ class TestProjects:
         client = get_api_client()
 
         params = {"length": 20, "offset": 0}
+        LOG.info("Invoking list api call on projects")
         res, err = client.blueprint.list(params=params)
 
         if not err:
-            print("\n>> Projects list call successful >>")
             assert res.ok is True
+            LOG.info("Success")
+            LOG.debug("Response: {}".format(res.json()))
+
         else:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
@@ -39,7 +45,7 @@ class TestProjects:
         project_name = "test_proj" + str(uuid.uuid4())[-10:]
         payload["spec"]["project_detail"]["name"] = project_name
 
-        print("\nCreating project ...")
+        LOG.info("Creating project {}".format(project_name))
         res, err = client.project.create(payload)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
@@ -50,11 +56,10 @@ class TestProjects:
             assert project_name == res["spec"]["project_detail"]["name"]
             project_uuid = res["metadata"]["uuid"]
             poll_creation_status(client, project_uuid)
-            print("\n>> Project created >>")
-            print(">> Project Name: {} >>".format(project_name))
-            print(">> Project uuid: {} >>".format(project_uuid))
+            LOG.info("Success")
+            LOG.debug("Response: {}".format(res))
 
-        print("\nReading project ...")
+        LOG.info("Reading project {}".format(project_name))
         res, err = client.project.read(project_uuid)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
@@ -62,9 +67,10 @@ class TestProjects:
         else:
             assert res.ok is True
             res = res.json()
-            print(">> Get call to project is successful >>")
+            LOG.info("Success")
+            LOG.debug("Response: {}".format(res))
 
-        print("\nUpdating project ...")
+        LOG.info("Updating project {}".format(project_name))
         file_location = "tests/api_interface/entity_spec/sample_project_update.json"
         project_payload = yaml.safe_load(open(file_location, "r").read())
         spec_version = res["metadata"]["spec_version"]
@@ -91,9 +97,10 @@ class TestProjects:
             res = res.json()
             assert project_name == res["spec"]["project_detail"]["name"]
             poll_updation_status(client, project_uuid, spec_version)
-            print(">> Project updated >>")
+            LOG.info("Success")
+            LOG.debug("Response: {}".format(res))
 
-        print("\nDeleting project ...")
+        LOG.info("Deleting project {}".format(project_name))
         res, err = client.project.delete(project_uuid)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
@@ -101,5 +108,6 @@ class TestProjects:
         else:
             assert res.ok is True
             res = res.json()
-            poll_deletion_status(client, project_name)
-            print("\n>> Project deleted >>")
+            poll_deletion_status(client, project_uuid)
+            LOG.info("Success")
+            LOG.debug("Response: {}".format(res))

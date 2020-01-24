@@ -1,5 +1,4 @@
 import time
-import warnings
 import click
 import arrow
 from prettytable import PrettyTable
@@ -9,6 +8,9 @@ from calm.dsl.config import get_config
 
 from .utils import get_name_query, get_states_filter, highlight_text
 from .constants import ACCOUNT
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 def get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_type):
@@ -37,7 +39,7 @@ def get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_
 
     if err:
         pc_ip = config["SERVER"]["pc_ip"]
-        warnings.warn(UserWarning("Cannot fetch accounts from {}".format(pc_ip)))
+        LOG.warning("Cannot fetch accounts from {}".format(pc_ip))
         return
 
     json_rows = res.json()["entities"]
@@ -98,13 +100,13 @@ def get_account(client, account_name):
         if len(entities) != 1:
             raise Exception("More than one account found - {}".format(entities))
 
-        click.echo(">> {} found >>".format(account_name))
+        LOG.info("{} found ".format(account_name))
         account = entities[0]
     else:
         raise Exception("No account having name {} found".format(account_name))
 
     account_id = account["metadata"]["uuid"]
-    click.echo("Fetching account details")
+    LOG.info("Fetching account details")
     res, err = client.account.read(account_id)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -123,7 +125,7 @@ def delete_account(obj, account_names):
         res, err = client.account.delete(account_id)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        click.echo("account {} deleted".format(account_name))
+        LOG.info("Account {} deleted".format(account_name))
 
 
 def describe_showback_data(spec):
@@ -215,10 +217,11 @@ def describe_gcp_account(client, spec, account_id):
         image_selfLink_name_map[selfLink] = name
 
     for index, image in enumerate(images):
-        name = image_selfLink_name_map[image["selfLink"]]
-        click.echo("\t{}. {}".format(str(index + 1), highlight_text(name)))
+        name = image_selfLink_name_map.get(image["selfLink"], None)
+        if name:
+            click.echo("\t{}. {}".format(str(index + 1), highlight_text(name)))
 
-    if not regions:  # TODO avoid unnecessary api call
+    if not regions:
         click.echo(highlight_text("No regions provided"))
 
     click.echo("\nGKE Details:\n--------------\n")
