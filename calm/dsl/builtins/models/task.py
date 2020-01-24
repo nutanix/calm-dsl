@@ -131,7 +131,6 @@ def dag(name=None, child_tasks=None, edges=None, target=None):
         (Task): DAG task
     """
     dag_edges = []
-    LOG.debug("Obtained edges for the dag task: {}".format(edges))
     for edge in edges or []:
         if len(edge) != 2:
             raise ValueError("DAG edges require a tuple of two task references")

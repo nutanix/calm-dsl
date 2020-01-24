@@ -3,7 +3,7 @@ import os
 import json
 
 from calm.dsl.config import init_config, get_default_user_config_file, set_config
-from calm.dsl.db import Database
+from calm.dsl.db import get_db_handle
 from calm.dsl.api import get_resource_api, update_client_handle, get_client_handle
 from calm.dsl.store import Cache
 from calm.dsl.init import init_bp
@@ -107,7 +107,7 @@ def set_server_details(ip, port, username, password, project_name):
 
 def init_db():
     LOG.info("Creating local database")
-    Database()
+    get_db_handle()
     LOG.info("Success")
 
 

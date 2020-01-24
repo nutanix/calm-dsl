@@ -39,7 +39,7 @@ def _validate(vdict, name, value):
             ("variables" in vdict and isinstance(value, (VariableType,)))
             or ("actions" in vdict and isinstance(type(value), DescriptorType))
         ):
-            LOG.debug("Validating object: {}". format(vdict))
+            LOG.debug("Validating object: {}".format(vdict))
             raise
 
         # Validate and set variable/action
@@ -218,7 +218,6 @@ class EntityType(EntityTypeBase):
     @classmethod
     def update_attrs(mcls, attrs):
 
-        LOG.debug("Updating {} attributes". format(mcls))
         if not hasattr(mcls, "__validator_dict__"):
             return
 
@@ -261,7 +260,6 @@ class EntityType(EntityTypeBase):
         # Delete attrs
         for k in del_keys:
             attrs.pop(k)
-        LOG.debug("Success. Updated attributes of {} entity :{}". format(mcls, attrs))
 
     def get_all_attrs(cls):
         default_attrs = cls.get_default_attrs()
