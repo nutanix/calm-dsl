@@ -125,7 +125,7 @@ def delete_account(obj, account_names):
         res, err = client.account.delete(account_id)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        LOG.info("account {} deleted".format(account_name))
+        LOG.info("Account {} deleted".format(account_name))
 
 
 def describe_showback_data(spec):

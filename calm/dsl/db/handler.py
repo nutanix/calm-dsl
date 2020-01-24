@@ -1,10 +1,8 @@
-import traceback
+import atexit
 
 from calm.dsl.config import get_config
-
 from .table_config import dsl_database, SecretTable, DataTable, CacheTable
 from calm.dsl.tools import get_logging_handle
-import atexit
 
 LOG = get_logging_handle(__name__)
 

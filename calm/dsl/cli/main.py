@@ -111,7 +111,7 @@ def server():
 def get_server_status(obj):
     """Get calm server connection status"""
 
-    click.echo("Checking if Calm is enabled on Server ... ", nl=False)
+    LOG.info("Checking if Calm is enabled on Server")
     client = get_api_client()
     Obj = get_resource_api("services/nucalm/status", client.connection)
     res, err = Obj.read()
@@ -123,7 +123,7 @@ def get_server_status(obj):
     result = json.loads(res.content)
     service_enablement_status = result["service_enablement_status"]
 
-    click.echo("[{}]".format(service_enablement_status))
+    LOG.info(service_enablement_status)
     LOG.info("Server URL: {}".format(client.connection.base_url))
     # TODO - Add info about PC and Calm server version
 

@@ -75,7 +75,7 @@ def set_server_details(ip, port, username, password, project_name):
     password = password or click.prompt("Password", default="", hide_input=True)
     project_name = project_name or click.prompt("Project", default="default")
 
-    click.echo("\nChecking if Calm is enabled on Server ... ", nl=False)
+    LOG.info("Checking if Calm is enabled on Server")
     # Get temporary client handle
     client = get_client_handle(host, port, auth=(username, password), temp=True)
     Obj = get_resource_api("services/nucalm/status", client.connection)
@@ -87,7 +87,7 @@ def set_server_details(ip, port, username, password, project_name):
 
     result = json.loads(res.content)
     service_enablement_status = result["service_enablement_status"]
-    click.echo("[{}]".format(service_enablement_status))
+    LOG.info(service_enablement_status)
 
     db_location = os.path.join(os.path.expanduser("~"), ".calm", "dsl.db")
 

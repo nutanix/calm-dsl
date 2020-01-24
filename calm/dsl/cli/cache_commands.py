@@ -17,7 +17,7 @@ def show_cache(obj):
     avl_entities = Cache.list()
 
     if not avl_entities:
-        click.echo(highlight_text("\nCache is empty !!!\n"))
+        click.echo(highlight_text("Cache is empty !!!\n"))
         return
 
     table = PrettyTable()
@@ -51,7 +51,7 @@ def clear_cache(obj):
     """Clear the entities stored in cache"""
 
     Cache.clear_entities()
-    click.echo(highlight_text("\nCache cleared !!!\n"))
+    LOG.info(highlight_text("Cache cleared at {}".format(datetime.datetime.now())))
 
 
 @update.command("cache")
@@ -66,8 +66,8 @@ def clear_cache(obj):
 def update_cache(obj, entity_type):
     """Update the data for dynamic entities stored in the cache"""
 
-    LOG.info("Updating the cache")
+    LOG.debug("Updating cache")
     Cache.sync(entity_type)
-    LOG.info("Success")
+    LOG.debug("Success")
     show_cache(obj)
-    LOG.info("Cache updated at {}".format(datetime.datetime.now()))
+    LOG.info(highlight_text("Cache updated at {}".format(datetime.datetime.now())))

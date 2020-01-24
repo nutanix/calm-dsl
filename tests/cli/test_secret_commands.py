@@ -70,7 +70,6 @@ class TestSecretCommands:
         # Creating same secret again
         result = runner.invoke(cli, command, input=input)
         assert result.exit_code == 0
-        assert "Secret {} Already present !!!".format(secret_name) in result.output
 
         secret_val = "val_{}".format(str(uuid.uuid4())[-10:])
         input = "{}\n{}".format(secret_val, secret_val)

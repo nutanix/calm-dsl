@@ -16,12 +16,13 @@ def create_secret(name, value):
 
     secrets = get_secrets_names()
     if name in secrets:
-        click.echo("\nSecret {} Already present !!!".format(name))
+        LOG.error("Secret {} already present !!!".format(name))
         return
 
-    LOG.info("Creating secret {}".format(name))
+    LOG.debug("Creating secret {}".format(name))
     Secret.create(name, value)
-    LOG.info("Success")
+    LOG.debug("Success")
+    LOG.info(highlight_text("Secret {} created". format(name)))
 
 
 def get_secrets(quiet):
@@ -30,7 +31,7 @@ def get_secrets(quiet):
     avl_secrets = Secret.list()
 
     if not avl_secrets:
-        click.echo("\nNo secrets found !!!")
+        click.echo(highlight_text("No secret found !!!\n"))
         return
 
     if quiet:
