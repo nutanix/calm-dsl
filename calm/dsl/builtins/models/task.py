@@ -6,7 +6,9 @@ from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .ref import RefType
 from .variable import CalmVariable
+from calm.dsl.tools import get_logging_handle
 
+LOG = get_logging_handle(__name__)
 
 # Task
 
@@ -491,6 +493,7 @@ def http_task_delete(
 
 def _header_variables_from_dict(headers, secret=False):
     variables = []
+    LOG.debug("Headers for HTTP task : {}".format(headers))
     if not isinstance(headers, dict):
         raise TypeError(
             "Headers for HTTP task "
@@ -614,6 +617,7 @@ def http_task(
         kwargs["attrs"]["headers"] = header_variables
 
     if status_mapping is not None:
+        LOG.debug("Status mapping for HTTP Task : {}".format(status_mapping))
         if not isinstance(status_mapping, dict):
             raise TypeError(
                 "Status mapping for HTTP task "
@@ -640,6 +644,7 @@ def http_task(
         kwargs["attrs"]["expected_response_params"] = expected_response
 
     if response_paths is not None:
+        LOG.debug("Response paths for HTTP Task : {}".format(response_paths))
         if not isinstance(response_paths, dict):
             raise TypeError(
                 "Response paths for HTTP task "
@@ -673,6 +678,9 @@ def _deployment_scaling_create(target, scaling_type, scaling_count, name=None):
     if not isinstance(target, RefType) and isinstance(target, EntityType):
         target = target.get_ref()
     if not target.kind == "app_blueprint_deployment":
+        LOG.debug(
+            "Target for deployment scaling can be 'app_blueprint_deployment' only"
+        )
         raise ValueError(
             "Target for deployment scaling cannot be {}".format(target.kind)
         )
@@ -729,8 +737,8 @@ def delay_task(delay_seconds=None, name=None, target=None):
     """
     if not isinstance(delay_seconds, int):
         raise TypeError(
-            "delay_seconds is expected to be an integer, got {}".format(
-                type(delay_seconds)
+            "delay_seconds({}) is expected to be an integer, got {}".format(
+                delay_seconds, type(delay_seconds)
             )
         )
     kwargs = {"name": name, "type": "DELAY", "attrs": {"interval_secs": delay_seconds}}

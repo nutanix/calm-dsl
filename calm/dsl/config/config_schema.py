@@ -10,6 +10,7 @@ config_schema_dict = {
     },
     "PROJECT": {"name": And(Use(str))},
     "DB": {"location": And(Use(str))},
+    "LOG": {"level": And(Use(str))},
     "CATEGORIES": {},
 }
 

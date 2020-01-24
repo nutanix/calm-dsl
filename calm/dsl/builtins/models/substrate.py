@@ -143,6 +143,8 @@ class SubstrateType(EntityType):
                 readiness_probe[
                     "address"
                 ] = "@@{platform.networkInterfaces[0].networkIP}@@"
+        else:
+            raise Exception("Un-supported vm type :{}".format(cdict["type"]))
 
         cdict["readiness_probe"] = readiness_probe
 

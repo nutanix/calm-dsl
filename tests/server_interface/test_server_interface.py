@@ -22,7 +22,7 @@ def test_bp_list():
     res, err = client.blueprint.list(params=params)
 
     if not err:
-        print(">> Blueprint List >>")
+        print("Blueprint List")
         print(json.dumps(res.json(), indent=4, separators=(",", ": ")))
         assert res.ok is True
     else:
@@ -46,17 +46,17 @@ def test_next_demo_bp_upload(Blueprint=Blueprint):
         if len(entities) != 1:
             pytest.fail("More than one blueprint found - {}".format(entities))
 
-        print(">> {} found >>".format(Blueprint))
+        print("{} found".format(Blueprint))
         uuid = entities[0]["metadata"]["uuid"]
 
         res, err = client.blueprint.delete(uuid)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
-        print(">> {} deleted >>".format(Blueprint))
+        print("{} deleted".format(Blueprint))
 
     else:
-        print(">> {} not found >>".format(Blueprint))
+        print("{} not found".format(Blueprint))
 
     # upload
     bp_name = Blueprint.__name__
@@ -65,7 +65,7 @@ def test_next_demo_bp_upload(Blueprint=Blueprint):
     res, err = client.blueprint.upload_with_secrets(bp_name, bp_desc, bp_resources)
 
     if not err:
-        print(">> {} uploaded with creds >>".format(Blueprint))
+        print("{} uploaded with creds".format(Blueprint))
         print(json.dumps(res.json(), indent=4, separators=(",", ": ")))
         assert res.ok is True
     else:
@@ -73,7 +73,7 @@ def test_next_demo_bp_upload(Blueprint=Blueprint):
 
     bp = res.json()
     bp_state = bp["status"]["state"]
-    print(">> Blueprint state: {}".format(bp_state))
+    print("Blueprint state: {}".format(bp_state))
     assert bp_state == "ACTIVE"
 
 

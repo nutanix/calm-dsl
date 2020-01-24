@@ -56,7 +56,7 @@ def update_disk_config(
     device_type="DISK", adapter_type="SCSI", image_data={}, bootable=False
 ):
     if not image_data:
-        raise ValueError("Invalid image configuration")
+        raise ValueError("Image data not found")
 
     global ADAPTER_INDEX_MAP
     kwargs = {

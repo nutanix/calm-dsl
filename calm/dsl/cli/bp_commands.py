@@ -14,6 +14,9 @@ from .bps import (
     launch_blueprint_simple,
     delete_blueprint,
 )
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 @get.command("bps")
@@ -164,16 +167,16 @@ def create_blueprint_command(obj, bp_file, name, description):
             client, bp_file, name=name, description=description
         )
     else:
-        click.echo("Unknown file format {}".format(bp_file))
+        LOG.error("Unknown file format {}".format(bp_file))
         return
 
     if err:
-        click.echo(err["error"])
+        LOG.error(err["error"])
         return
 
     bp = res.json()
     bp_state = bp["status"]["state"]
-    click.echo(">> Blueprint state: {}".format(bp_state))
+    LOG.info("Blueprint state: {}".format(bp_state))
     assert bp_state == "ACTIVE"
 
 

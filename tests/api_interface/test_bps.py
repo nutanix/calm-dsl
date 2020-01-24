@@ -7,6 +7,9 @@ from calm.dsl.cli.bps import launch_blueprint_simple
 from tests.api_interface.entity_spec.existing_vm_bp import (
     ExistingVMBlueprint as Blueprint,
 )
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 class TestBps:
@@ -15,11 +18,13 @@ class TestBps:
         client = get_api_client()
 
         params = {"length": 20, "offset": 0}
+        LOG.info("Invoking list api call on bps")
         res, err = client.blueprint.list(params=params)
 
         if not err:
-            print("\n>> Blueprint list call successful>>")
             assert res.ok is True
+            LOG.info("Success")
+            LOG.debug("Response: {}".format(res.json()))
         else:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
@@ -27,7 +32,7 @@ class TestBps:
     def test_upload_and_launch_bp(self):
 
         client = get_api_client()
-        bp_name = "test_ask_" + str(uuid.uuid4())[-10:]
+        bp_name = "test_bp_" + str(uuid.uuid4())[-10:]
 
         params = {"filter": "name=={};state!=DELETED".format(bp_name)}
         res, err = client.blueprint.list(params=params)
@@ -36,46 +41,47 @@ class TestBps:
 
         res = res.json()
         entities = res.get("entities", None)
-        print("\nSearching and deleting existing blueprint having same name")
+        LOG.info("Deleting existing bp with same name if any")
         if entities:
             if len(entities) != 1:
                 pytest.fail("More than one blueprint found - {}".format(entities))
 
-            print(">> {} found >>".format(Blueprint))
+            LOG.info("Bp {} found".format(Blueprint))
             bp_uuid = entities[0]["metadata"]["uuid"]
 
             res, err = client.blueprint.delete(bp_uuid)
             if err:
                 pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
-            print(">> {} deleted >>".format(Blueprint))
+            LOG.info("Bp {} deleted".format(Blueprint))
 
         else:
-            print(">> {} not found >>".format(Blueprint))
+            LOG.info("Bp {} not found".format(Blueprint))
 
         # uploading the blueprint
-        print("\n>>Creating the blueprint {}".format(bp_name))
+        LOG.info("Creating blueprint {}".format(bp_name))
         bp_desc = Blueprint.__doc__
         bp_resources = json.loads(Blueprint.json_dumps())
         res, err = client.blueprint.upload_with_secrets(bp_name, bp_desc, bp_resources)
 
         if not err:
-            print(">> {} uploaded with creds >>".format(Blueprint))
             assert res.ok is True
+            LOG.info("Bp {} uploaded with creds".format(bp_name))
+            LOG.debug("Response: {}".format(res.json()))
+
         else:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
         bp = res.json()
         bp_state = bp["status"]["state"]
         bp_uuid = bp["metadata"]["uuid"]
-        print(">> Blueprint state: {}".format(bp_state))
         assert bp_state == "ACTIVE"
         assert bp_name == bp["spec"]["name"]
         assert bp_name == bp["metadata"]["name"]
         assert bp_name == bp["metadata"]["name"]
 
         # launching the blueprint
-        print("\n>>Launching the blueprint")
+        LOG.info("Launching the blueprint {}".format(bp_name))
         app_name = "test_bp_api{}".format(str(uuid.uuid4())[-10:])
 
         try:
@@ -92,26 +98,25 @@ class TestBps:
         bp_desc = Blueprint.__doc__
         bp_resources = json.loads(Blueprint.json_dumps())
 
-        print("\n>>Uploading blueprint")
+        LOG.info("Uploading blueprint {} ".format(bp_name))
         res, err = client.blueprint.upload_with_secrets(bp_name, bp_desc, bp_resources)
 
         if not err:
-            print(">> {} uploaded with creds >>".format(bp_name))
             assert res.ok is True
+            LOG.info("Bp {} uploaded with creds".format(bp_name))
         else:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
         bp = res.json()
         bp_state = bp["status"]["state"]
         bp_uuid = bp["metadata"]["uuid"]
-        print(">> Blueprint state: {}".format(bp_state))
         assert bp_state == "ACTIVE"
         assert bp_name == bp["spec"]["name"]
         assert bp_name == bp["metadata"]["name"]
         assert bp_name == bp["metadata"]["name"]
 
         # reading the bluprint using get call
-        print("\n>>Reading blueprint")
+        LOG.info("Reading blueprint {}".format(bp_name))
         res, err = client.blueprint.read(bp_uuid)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
@@ -122,10 +127,9 @@ class TestBps:
             assert bp_name == res["spec"]["name"]
             assert bp_name == res["metadata"]["name"]
             assert bp_name == res["metadata"]["name"]
-            print(">> Get call to blueprint is successful >>")
 
         # deleting the blueprint
-        print("\n>>Deleting blueprint")
+        LOG.info("Deleting blueprint {}".format(bp_name))
         res, err = client.blueprint.delete(bp_uuid)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
@@ -133,5 +137,5 @@ class TestBps:
         else:
             assert res.ok is True
             res = res.json()
-            print("API Response: {}".format(res["description"]))
-            print(">> Delete call to blueprint is successful >>")
+            LOG.info("Delete call to blueprint {} is successful".format(bp_name))
+            LOG.debug("Response: {}".format(res["description"]))
