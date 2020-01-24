@@ -10,7 +10,10 @@ from .ref import ref
 from .deployment import deployment
 from .action import action
 from inspect import signature
+from calm.dsl.tools import get_logging_handle
 
+
+LOG = get_logging_handle(__name__)
 # PODDeployment
 
 # Note parent class of PODDeploymentType is DeploymentType
@@ -54,6 +57,7 @@ class PODDeploymentType(DeploymentType):
         if not is_simple_deployment:
             # In simple deployment there will be no explicit contianers
             if len(containers_list) != len(cls.containers):
+                LOG.debug("No. of container services provided in entity {}: {}, while no. of containers provided in deployment spec: {}". format(cls, len(cls.containers), len(containers_list)))
                 raise Exception(
                     "No. of container services does not match k8s deployment spec"
                 )

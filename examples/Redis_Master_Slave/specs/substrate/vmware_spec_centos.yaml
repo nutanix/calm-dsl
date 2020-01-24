@@ -1,0 +1,29 @@
+clone_is_template: false
+cluster: Sabine59-Cluster
+drs_mode: true
+name: vm-@@{calm_array_index}@@-@@{calm_time}@@
+resources:
+  controller_list: []
+  disk_list: []
+  guest_customization:
+    cloud_init: |
+                #cloud-config
+                 users:
+                   - name: centos
+                     ssh-authorized-keys:
+                       - @@{CENTOS.public_key}@@
+                     sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    customization_type: GUEST_OS_LINUX
+  memory_size_mib: 2048
+  nic_list:
+  - net_name: key-vim.host.PortGroup-vlan.112
+    nic_type: e1000
+  num_sockets: 2
+  num_vcpus_per_socket: 1
+  power_state: poweron
+  template_controller_list: []
+  template_disk_list: []
+  template_nic_list: []
+storage_pod: QA
+template: name
+type: PROVISION_VMWARE_VM

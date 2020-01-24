@@ -5,20 +5,26 @@ import configparser
 from jinja2 import Environment, PackageLoader
 
 from .config_schema import validate_config
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 _CONFIG = None
 
 
 def make_config_file_dir(config_file):
+    """creates the config file directory if not present"""
 
     # Create parent directory if not present
     if not os.path.exists(os.path.dirname(os.path.realpath(config_file))):
         try:
+            LOG.debug("Creating directory for file {}".format(config_file))
             os.makedirs(os.path.dirname(os.path.realpath(config_file)))
+            LOG.debug("Success")
         except OSError as exc:
             if exc.errno != errno.EEXIST:
-                raise
+                raise Exception("[{}] - {}".format(exc["code"], exc["error"]))
 
 
 def get_default_user_config_file():
@@ -35,8 +41,10 @@ def _render_config_template(
     password,
     project_name,
     db_location,
+    log_level,
     schema_file="config.ini.jinja2",
 ):
+    """renders the config template"""
 
     loader = PackageLoader(__name__, "")
     env = Environment(loader=loader)
@@ -48,11 +56,13 @@ def _render_config_template(
         password=password,
         project_name=project_name,
         db_location=db_location,
+        log_level=log_level,
     )
     return text.strip() + os.linesep
 
 
 def _get_config_file():
+    """returns the location of config file present in cwd / default config file """
 
     cwd = os.getcwd()
     if "config.ini" in os.listdir(cwd):
@@ -61,7 +71,7 @@ def _get_config_file():
     else:
         user_config_file = get_default_user_config_file()
         if not os.path.exists(user_config_file):
-            raise Exception(
+            raise FileNotFoundError(
                 "Config file {} not found. Please run: calm init dsl".format(
                     user_config_file
                 )
@@ -71,24 +81,30 @@ def _get_config_file():
 
 
 def init_config(
-    ip, port, username, password, project_name, db_location, config_file=None
+    ip, port, username, password, project_name, db_location, log_level, config_file=None
 ):
+    """Writes the configuration to config file / default config file"""
 
     # Default user config file
     user_config_file = get_default_user_config_file()
     config_file = config_file or user_config_file
 
     # Render config template
+    LOG.debug("Rendering configuration template")
     text = _render_config_template(
-        ip, port, username, password, project_name, db_location
+        ip, port, username, password, project_name, db_location, log_level
     )
+    LOG.debug("Success")
 
     # Write config
+    LOG.debug("Writing configuration to '{}'".format(config_file))
     with open(config_file, "w") as fd:
         fd.write(text)
+    LOG.debug("Success")
 
 
 def get_config():
+    """return the config object"""
 
     global _CONFIG
 
@@ -108,8 +124,10 @@ def get_config():
     return _CONFIG
 
 
-def set_config(host, port, username, password, project_name, db_location, config_file):
-    """Will write the configuration to config file"""
+def set_config(
+    host, port, username, password, project_name, db_location, log_level, config_file
+):
+    """writes the configuration to config file"""
 
     config = get_config()
 
@@ -119,6 +137,11 @@ def set_config(host, port, username, password, project_name, db_location, config
     password = password or config["SERVER"]["pc_password"]
     project_name = project_name or config["PROJECT"]["name"]
     db_location = db_location or config["DB"]["location"]
+    log_level = log_level or config["LOG"]["level"]
+
+    logging_levels = LOG.get_logging_levels()
+    if log_level not in logging_levels:
+        raise ValueError("Invalid log level. Select from {}".format(logging_levels))
 
     make_config_file_dir(config_file)
     init_config(
@@ -128,13 +151,16 @@ def set_config(host, port, username, password, project_name, db_location, config
         password,
         project_name,
         db_location,
+        log_level,
         config_file=config_file,
     )
 
 
 def print_config():
+    """prints the configuration"""
 
     config_file = _get_config_file()
-    print(config_file)
+    LOG.debug("Fetching configuration from '{}'".format(config_file))
+    print("")
     with open(config_file) as fd:
         print(fd.read())

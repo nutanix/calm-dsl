@@ -1,7 +1,9 @@
 import pytest
-import json
 
 from calm.dsl.cli.main import get_api_client
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 class TestAccounts:
@@ -9,11 +11,12 @@ class TestAccounts:
 
         client = get_api_client()
         params = {"length": 20, "offset": 0}
+        LOG.info("Invoking list api call on accounts")
         res, err = client.account.list(params=params)
 
         if not err:
-            print("\n>> Account list call successful>>")
-            print(json.dumps(res.json(), indent=4, separators=(",", ": ")))
+            LOG.info("Success")
+            LOG.debug("Response: {}".format(res.json()))
             assert res.ok is True
         else:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
@@ -31,9 +34,11 @@ class TestAccounts:
         entities = res["entities"]
 
         account_id = entities[0]["metadata"]["uuid"]
+        LOG.info("Invoking read api call on account (UUID: {})".format(account_id))
         res, err = client.account.read(account_id)
         if not err:
-            print(">> Account read successful >>")
+            LOG.info("Success")
+            LOG.debug("Response: {}".format(res.json()))
             assert res.ok is True
         else:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))

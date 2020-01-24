@@ -1,10 +1,8 @@
-name: MYSQL_AWS
 resources:
-  account_uuid: eb760d8b-cbbb-c2c7-a5a0-0f08b809aab3
+  account_uuid: 37a45575-e075-4e97-933d-4f9cea03d377
   associate_public_ip_address: true
   availability_zone: us-east-1a
   block_device_map:
-    data_disk_list: []
     root_disk:
       delete_on_termination: true
       device_name: "/dev/sda1"

@@ -45,7 +45,7 @@ class AhvVmProvider(Provider):
             disk_img_type = ahv.IMAGE_TYPES[disk["device_properties"]["device_type"]]
 
             if vm_image_type != disk_img_type:
-                raise ValueError("image type mismatch in disk {}".format(disk_ind))
+                raise TypeError("image type mismatch in disk {}".format(disk_ind))
 
             # Set the reference of this disk
             disk["data_source_reference"] = ref(img_cls).compile()
