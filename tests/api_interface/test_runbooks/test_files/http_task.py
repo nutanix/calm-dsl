@@ -4,7 +4,7 @@ Calm Runbook Sample for running http tasks
 import json
 
 from calm.dsl.builtins import read_local_file
-from calm.dsl.builtins import runbook, RunbookService
+from calm.dsl.builtins import runbook
 from calm.dsl.builtins import CalmTask
 from calm.dsl.builtins import CalmEndpoint, Auth, ref
 from utils import read_test_config, change_uuids
@@ -21,208 +21,150 @@ endpoint_without_auth = CalmEndpoint.HTTP(TEST_URL)
 endpoint_payload = change_uuids(read_test_config(file_name="endpoint_payload.json"), {})
 
 
-class HTTPTask(RunbookService):
-    "Runbook Service example"
+@runbook
+def HTTPTask(endpoints=[endpoint]):
 
-    @runbook
-    def main_runbook():
+    # Creating an endpoint with POST call
+    CalmTask.HTTP.endpoint(
+        "POST",
+        body=json.dumps(endpoint_payload),
+        headers={"Content-Type": "application/json"},
+        content_type="application/json",
+        response_paths={"ep_uuid": "$.metadata.uuid"},
+        status_mapping={200: True},
+        target=ref(endpoint),
+    )
 
-        # Creating an endpoint with POST call
-        CalmTask.HTTP.endpoint(
-            "POST",
-            body=json.dumps(endpoint_payload),
-            headers={"Content-Type": "application/json"},
-            content_type="application/json",
-            response_paths={"ep_uuid": "$.metadata.uuid"},
-            status_mapping={200: True},
-            target=ref(endpoint),
-        )
+    # Check the type of the created endpoint
+    CalmTask.HTTP.endpoint(
+        "GET",
+        relative_url="/" + endpoint_payload['metadata']['uuid'],
+        headers={"Content-Type": "application/json"},
+        content_type="application/json",
+        response_paths={"ep_type": "$.spec.resources.type"},
+        status_mapping={200: True},
+        target=ref(endpoint),
+    )
 
-        # Check the type of the created endpoint
-        CalmTask.HTTP.endpoint(
-            "GET",
-            relative_url="/" + endpoint_payload['metadata']['uuid'],
-            headers={"Content-Type": "application/json"},
-            content_type="application/json",
-            response_paths={"ep_type": "$.spec.resources.type"},
-            status_mapping={200: True},
-            target=ref(endpoint),
-        )
+    # Delete the created endpoint
+    CalmTask.HTTP.endpoint(
+        "DELETE",
+        relative_url="/" + endpoint_payload['metadata']['uuid'],
+        headers={"Content-Type": "application/json"},
+        content_type="application/json",
+        status_mapping={200: True},
+        target=ref(endpoint),
+    )
 
-        # Delete the created endpoint
-        CalmTask.HTTP.endpoint(
-            "DELETE",
-            relative_url="/" + endpoint_payload['metadata']['uuid'],
-            headers={"Content-Type": "application/json"},
-            content_type="application/json",
-            status_mapping={200: True},
-            target=ref(endpoint),
-        )
-
-        CalmTask.Exec.escript(name="ExecTask", script='''print "@@{ep_type}@@"''')
-
-    endpoints = [endpoint]
-    credentials = []
+    CalmTask.Exec.escript(name="ExecTask", script='''print "@@{ep_type}@@"''')
 
 
-class HTTPTaskWithValidations(RunbookService):
-    "Runbook Service example"
+@runbook
+def HTTPTaskWithValidations():
 
-    @runbook
-    def main_runbook():
-
-        # Creating an endpoint with POST call
-        CalmTask.HTTP.endpoint(
-            "POST",
-            relative_url="/list",
-            body=json.dumps({}),
-            headers={"Content-Type": "application/json"},
-            content_type="application/json",
-            response_paths={"ep_uuid": "$.metdata.uuid"},
-        )
-
-    endpoints = []
-    credentials = []
+    # Creating an endpoint with POST call
+    CalmTask.HTTP.endpoint(
+        "POST",
+        relative_url="/list",
+        body=json.dumps({}),
+        headers={"Content-Type": "application/json"},
+        content_type="application/json",
+        response_paths={"ep_uuid": "$.metdata.uuid"},
+    )
 
 
-class HTTPTaskWithoutAuth(RunbookService):
-    "Runbook Service example"
+@runbook
+def HTTPTaskWithoutAuth(endpoints=[endpoint_without_auth], default_target=ref(endpoint_without_auth)):
 
-    @runbook
-    def main_runbook():
-
-        # Creating an endpoint with POST call
-        CalmTask.HTTP.endpoint(
-            "GET",
-            content_type="text/html",
-            status_mapping={200: True}
-        )
-
-    endpoints = [endpoint_without_auth]
-    credentials = []
-    default_target = ref(endpoint_without_auth)
+    # Creating an endpoint with POST call
+    CalmTask.HTTP.endpoint(
+        "GET",
+        content_type="text/html",
+        status_mapping={200: True}
+    )
 
 
-class HTTPTaskWithIncorrectCode(RunbookService):
-    "Runbook Service example"
+@runbook
+def HTTPTaskWithIncorrectCode(endpoints=[endpoint_without_auth], default_target=ref(endpoint_without_auth)):
 
-    @runbook
-    def main_runbook():
-
-        # Creating an endpoint with POST call
-        CalmTask.HTTP.endpoint(
-            "GET",
-            name="HTTPTask",
-            content_type="text/html",
-            status_mapping={300: True}
-        )
-
-    endpoints = [endpoint_without_auth]
-    credentials = []
-    default_target = ref(endpoint_without_auth)
+    # Creating an endpoint with POST call
+    CalmTask.HTTP.endpoint(
+        "GET",
+        name="HTTPTask",
+        content_type="text/html",
+        status_mapping={300: True}
+    )
 
 
-class HTTPTaskWithFailureState(RunbookService):
-    "Runbook Service example"
+@runbook
+def HTTPTaskWithFailureState(endpoints=[endpoint_without_auth], default_target=ref(endpoint_without_auth)):
 
-    @runbook
-    def main_runbook():
-
-        # Creating an endpoint with POST call
-        CalmTask.HTTP.endpoint(
-            "GET",
-            name="HTTPTask",
-            content_type="text/html",
-            status_mapping={200: False}
-        )
-
-    endpoints = [endpoint_without_auth]
-    credentials = []
-    default_target = ref(endpoint_without_auth)
+    # Creating an endpoint with POST call
+    CalmTask.HTTP.endpoint(
+        "GET",
+        name="HTTPTask",
+        content_type="text/html",
+        status_mapping={200: False}
+    )
 
 
-class HTTPTaskWithUnsupportedURL(RunbookService):
-    "Runbook Service example"
+@runbook
+def HTTPTaskWithUnsupportedURL(endpoints=[endpoint], default_target=ref(endpoint)):
 
-    @runbook
-    def main_runbook():
-
-        # Creating an endpoint with POST call
-        CalmTask.HTTP.endpoint(
-            "GET",
-            name="HTTPTask",
-            relative_url="unsupported url",
-            headers={"Content-Type": "application/json"},
-            content_type="application/json",
-            status_mapping={200: True}
-        )
-
-    endpoints = [endpoint]
-    credentials = []
-    default_target = ref(endpoint)
+    # Creating an endpoint with POST call
+    CalmTask.HTTP.endpoint(
+        "GET",
+        name="HTTPTask",
+        relative_url="unsupported url",
+        headers={"Content-Type": "application/json"},
+        content_type="application/json",
+        status_mapping={200: True}
+    )
 
 
-class HTTPTaskWithUnsupportedPayload(RunbookService):
-    "Runbook Service example"
+@runbook
+def HTTPTaskWithUnsupportedPayload(endpoints=[endpoint]):
 
-    @runbook
-    def main_runbook():
-
-        # Creating an endpoint with POST call
-        CalmTask.HTTP.endpoint(
-            "POST",
-            name="HTTPTask",
-            relative_url="/list",
-            body=json.dumps({"payload": "unsupported"}),
-            headers={"Content-Type": "application/json"},
-            content_type="application/json",
-            status_mapping={200: True},
-            target=ref(endpoint)
-        )
-
-    endpoints = [endpoint]
-    credentials = []
+    # Creating an endpoint with POST call
+    CalmTask.HTTP.endpoint(
+        "POST",
+        name="HTTPTask",
+        relative_url="/list",
+        body=json.dumps({"payload": "unsupported"}),
+        headers={"Content-Type": "application/json"},
+        content_type="application/json",
+        status_mapping={200: True},
+        target=ref(endpoint)
+    )
 
 
-class HTTPTaskWithIncorrectAuth(RunbookService):
-    "Runbook Service example"
+@runbook
+def HTTPTaskWithIncorrectAuth(endpoints=[endpoint_with_incorrect_auth]):
 
-    @runbook
-    def main_runbook():
-
-        # Creating an endpoint with POST call
-        CalmTask.HTTP.endpoint(
-            "POST",
-            name="HTTPTask",
-            relative_url="/list",
-            body=json.dumps({}),
-            headers={"Content-Type": "application/json"},
-            content_type="application/json",
-            status_mapping={200: True},
-            target=ref(endpoint_with_incorrect_auth)
-        )
-
-    endpoints = [endpoint_with_incorrect_auth]
-    credentials = []
+    # Creating an endpoint with POST call
+    CalmTask.HTTP.endpoint(
+        "POST",
+        name="HTTPTask",
+        relative_url="/list",
+        body=json.dumps({}),
+        headers={"Content-Type": "application/json"},
+        content_type="application/json",
+        status_mapping={200: True},
+        target=ref(endpoint_with_incorrect_auth)
+    )
 
 
-class HTTPTaskWithTLSVerify(RunbookService):
-    "Runbook Service example"
+@runbook
+def HTTPTaskWithTLSVerify(endpoints=[endpoint_with_tls_verify]):
 
-    @runbook
-    def main_runbook():
-
-        # Creating an endpoint with POST call
-        CalmTask.HTTP.endpoint(
-            "POST",
-            name="HTTPTask",
-            relative_url="/list",
-            body=json.dumps({}),
-            headers={"Content-Type": "application/json"},
-            content_type="application/json",
-            status_mapping={200: True},
-            target=ref(endpoint_with_tls_verify)
-        )
-
-    endpoints = [endpoint_with_tls_verify]
-    credentials = []
+    # Creating an endpoint with POST call
+    CalmTask.HTTP.endpoint(
+        "POST",
+        name="HTTPTask",
+        relative_url="/list",
+        body=json.dumps({}),
+        headers={"Content-Type": "application/json"},
+        content_type="application/json",
+        status_mapping={200: True},
+        target=ref(endpoint_with_tls_verify)
+    )

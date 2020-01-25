@@ -86,8 +86,8 @@ def upload_runbook(client, rb_name, Runbook):
 
     # uploading the runbook
     print("\n>>Creating the runbook {}".format(rb_name))
-    rb_desc = Runbook.__doc__
-    rb_resources = json.loads(Runbook.json_dumps())
+    rb_desc = "Runbook DSL Test automation"
+    rb_resources = json.loads(Runbook.runbook.json_dumps())
     res, err = client.runbook.upload_with_secrets(rb_name, rb_desc, rb_resources)
 
     if not err:
@@ -173,7 +173,7 @@ def update_runbook(client, rb_name, Runbook):
     # updating the runbook
     print("\n>>Updating the runbook {}".format(rb_name))
     rb_desc = Runbook.__doc__
-    rb_resources = json.loads(Runbook.json_dumps())
+    rb_resources = json.loads(Runbook.runbook.json_dumps())
     res, err = client.runbook.update_with_secrets(
         rb_uuid, rb_name, rb_desc, rb_resources, rb_spec_version
     )

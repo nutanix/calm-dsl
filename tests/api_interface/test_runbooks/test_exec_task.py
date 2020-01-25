@@ -10,7 +10,7 @@ from utils import upload_runbook, poll_runlog_status
 
 
 class TestExecTasks:
-    @pytest.mark.slown
+    @pytest.mark.runbook
     @pytest.mark.parametrize('Runbook', [EscriptTask, SetVariableOnEscript, EscriptOnEndpoint])
     def test_script_run(self, Runbook):
         """ test_access_set_variable_in_next_task, test_escript_task,
