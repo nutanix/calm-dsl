@@ -1,3 +1,5 @@
+import uuid
+
 from .action import ActionType, Action
 from .validator import PropertyValidator
 
@@ -27,3 +29,10 @@ def runbook_service(**kwargs):
 
 
 RunbookService = runbook_service()
+
+
+def _runbook_service_create(**kwargs):
+    name = str(uuid.uuid4())[:8] + "_" + getattr(RunbookServiceType, "__schema_name__")
+    name = kwargs.pop("name", kwargs.get("__name__", name))
+    bases = (RunbookService,)
+    return RunbookServiceType(name, bases, kwargs)

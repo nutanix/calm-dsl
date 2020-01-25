@@ -4,6 +4,9 @@ import uuid
 
 from .task import dag
 from .entity import EntityType, Entity
+from .endpoint import EndpointType
+from .credential import CredentialType
+from .ref import RefType
 from .descriptor import DescriptorType
 from .validator import PropertyValidator
 from .node_visitor import GetCallNodes
@@ -55,15 +58,19 @@ class runbook(metaclass=DescriptorType):
         """
 
         # Generate the entity names
-        self.runbook_name = user_func.__name__
-        self.dag_name = "Main"
+        self.action_name = user_func.__name__
+        self.action_description = user_func.__doc__ or ""
+        self.runbook_name = str(uuid.uuid4())[:8] + "_runbook"
+        self.dag_name = "main_dag_" + str(uuid.uuid4())[:8]
         self.user_func = user_func
         self.__parsed__ = False
+        if self.__class__ == runbook:
+            self.__get__()
 
     def __call__(self, name=None):
         pass
 
-    def __get__(self, instance, cls):
+    def __get__(self, instance=None, cls=None):
         """
         Translate the user defined function to an runbook.
         Args:
@@ -72,11 +79,8 @@ class runbook(metaclass=DescriptorType):
         Returns:
             (RunbookType): Generated Runbook class
         """
-        if cls is None:
-            return self
-
         if self.__parsed__:
-            return self.user_runbook
+            return self.runbook
 
         # Get the source code for the user function.
         # Also replace tabs with 4 spaces.
@@ -138,6 +142,49 @@ class runbook(metaclass=DescriptorType):
         self.user_runbook.tasks = [self.user_dag] + tasks
         self.user_runbook.variables = [variable for variable in variables.values()]
 
-        self.__parsed__ = True
+        # Finally create the runbook service, only for runbook class not action
+        if self.__class__ == runbook:
+            args = dict()
+            sig = inspect.signature(self.user_func)
+            for name, param in sig.parameters.items():
+                args[name] = param.default
 
-        return self.user_runbook
+            from .runbook_service import _runbook_service_create
+            self.runbook = _runbook_service_create(
+                **{
+                    "runbook": self.user_runbook
+                }
+            )
+
+            credentials = args.pop("credentials", [])
+            endpoints = args.pop("endpoints", [])
+            default_target = args.pop("default_target", None)
+
+            for arg in args:
+                raise ValueError("{} is an unexpected argument.".format(arg))
+
+            if not isinstance(credentials, list):
+                raise TypeError("{} is not of type {}".format(credentials, list))
+            for cred in credentials:
+                if not isinstance(cred, CredentialType):
+                    raise TypeError("{} is not of type {}".format(cred, EndpointType))
+
+            if not isinstance(endpoints, list):
+                raise TypeError("{} is not of type {}".format(endpoints, list))
+            for ep in endpoints:
+                if not isinstance(ep, EndpointType):
+                    raise TypeError("{} is not of type {}".format(ep, EndpointType))
+
+            if default_target:
+                if not isinstance(default_target, RefType):
+                    raise TypeError("{} is not of type {}".format(default_target, RefType))
+                else:
+                    self.runbook.default_target = default_target
+
+            self.runbook.credentials = credentials
+            self.runbook.endpoints = endpoints
+            self.__parsed__ = True
+            return self.runbook
+
+        else:
+            return self.user_runbook

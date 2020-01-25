@@ -1,6 +1,6 @@
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
-from .runbook_service import RunbookServiceType
+from .runbook import runbook
 
 
 # Runbook Payload
@@ -35,17 +35,17 @@ def create_runbook_payload(UserRunbook):
         err["error"] = "Given runbook is empty."
         return None, err
 
-    if not isinstance(UserRunbook, RunbookServiceType):
+    if not isinstance(UserRunbook, runbook):
         err["error"] = "Given runbook is not of type Runbook"
         return None, err
 
     spec = {
-        "name": UserRunbook.__name__,
-        "description": UserRunbook.__doc__ or "",
-        "resources": UserRunbook,
+        "name": UserRunbook.action_name,
+        "description": UserRunbook.action_description or "",
+        "resources": UserRunbook.runbook,
     }
 
-    metadata = {"spec_version": 1, "kind": "runbook", "name": UserRunbook.__name__}
+    metadata = {"spec_version": 1, "kind": "runbook", "name": UserRunbook.action_name}
 
     UserRunbookPayload = _runbook_payload()
     UserRunbookPayload.metadata = metadata

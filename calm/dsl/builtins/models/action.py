@@ -51,23 +51,6 @@ class action(runbook):
     action descriptor
     """
 
-    def __init__(self, user_func):
-        """
-        A decorator for generating actions from a function definition.
-        Args:
-            user_func (function): User defined function
-        Returns:
-            (Action): Action class
-        """
-
-        # Generate the entity names
-        self.action_name = user_func.__name__
-        self.action_description = user_func.__doc__ or ""
-        self.runbook_name = str(uuid.uuid4())[:8] + "_runbook"
-        self.dag_name = str(uuid.uuid4())[:8] + "_dag"
-        self.user_func = user_func
-        self.__parsed__ = False
-
     def __call__(self, name=None):
         return create_call_rb(self.user_runbook, name=name)
 
@@ -86,8 +69,7 @@ class action(runbook):
         if self.__parsed__:
             return self.user_action
 
-        self.user_runbook = super(action, self).__get__(instance, cls)
-        self.__parsed__ = False
+        super(action, self).__get__(instance, cls)
 
         # System action names
         action_name = self.action_name

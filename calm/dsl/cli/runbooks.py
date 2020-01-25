@@ -6,7 +6,7 @@ import arrow
 import click
 from prettytable import PrettyTable
 
-from calm.dsl.builtins import RunbookService, create_runbook_payload
+from calm.dsl.builtins import runbook, create_runbook_payload
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
 from .utils import get_name_query, highlight_text, get_states_filter
@@ -107,10 +107,8 @@ def get_runbook_class_from_module(user_runbook_module):
     UserRunbook = None
     for item in dir(user_runbook_module):
         obj = getattr(user_runbook_module, item)
-        if isinstance(obj, type(RunbookService)):
-            if obj.__bases__[0] is RunbookService:
-                UserRunbook = obj
-
+        if isinstance(obj, runbook):
+            UserRunbook = obj
     return UserRunbook
 
 
