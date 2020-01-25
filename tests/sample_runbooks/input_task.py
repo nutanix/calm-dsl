@@ -3,7 +3,7 @@ Calm DSL Runbook Sample for input task
 
 """
 
-from calm.dsl.builtins import runbook, RunbookService
+from calm.dsl.builtins import runbook
 from calm.dsl.builtins import CalmTask, TaskInput
 
 
@@ -24,20 +24,15 @@ print "User selected is @@{user}@@"
 '''
 
 
-class DslInputRunbook(RunbookService):
+@runbook
+def DslInputRunbook():
     "Runbook Service example"
-
-    @runbook
-    def main_runbook():
-        CalmTask.Input(name="Input_Task", inputs=inputs)
-        CalmTask.Exec.escript(name="Exec_Task", script=code)
-
-    endpoints = []
-    credentials = []
+    CalmTask.Input(name="Input_Task", inputs=inputs)
+    CalmTask.Exec.escript(name="Exec_Task", script=code)
 
 
 def main():
-    print(DslInputRunbook.json_dumps(pprint=True))
+    print(DslInputRunbook.runbook.json_dumps(pprint=True))
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@ Calm DSL Confirm Task Example
 
 """
 
-from calm.dsl.builtins import runbook, RunbookService
+from calm.dsl.builtins import runbook
 from calm.dsl.builtins import CalmTask
 
 
@@ -11,20 +11,15 @@ code = '''print "Hello"
 print "Bye"'''
 
 
-class DslConfirmRunbook(RunbookService):
+@runbook
+def DslConfirmRunbook():
     "Runbook Service example"
-
-    @runbook
-    def main_runbook():
-        CalmTask.Confirm(name="Confirm_Task")
-        CalmTask.Exec.escript(name="Exec_Task", script=code)
-
-    endpoints = []
-    credentials = []
+    CalmTask.Confirm(name="Confirm_Task")
+    CalmTask.Exec.escript(name="Exec_Task", script=code)
 
 
 def main():
-    print(DslConfirmRunbook.json_dumps(pprint=True))
+    print(DslConfirmRunbook.runbook.json_dumps(pprint=True))
 
 
 if __name__ == "__main__":

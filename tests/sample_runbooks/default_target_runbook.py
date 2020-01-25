@@ -3,7 +3,7 @@ Calm DSL Runbook Sample with default endpoint target
 """
 
 from calm.dsl.builtins import read_local_file
-from calm.dsl.builtins import runbook, RunbookService
+from calm.dsl.builtins import runbook
 from calm.dsl.builtins import basic_cred, CalmTask
 from calm.dsl.builtins import CalmEndpoint, ref
 
@@ -15,20 +15,14 @@ Cred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
 endpoint = CalmEndpoint.Linux.ip([VM_IP], cred=Cred)
 
 
-class DslDefaultEndpoint(RunbookService):
+@runbook
+def DslDefaultEndpoint(endpoints=[endpoint], default_target=ref(endpoint)):
     "Runbook Service example"
-
-    @runbook
-    def main_runbook():
-        CalmTask.Exec.ssh(script='echo "hello"')
-
-    endpoints = [endpoint]
-    credentials = []
-    default_target = ref(endpoint)
+    CalmTask.Exec.ssh(script='echo "hello"')
 
 
 def main():
-    print(DslDefaultEndpoint.json_dumps(pprint=True))
+    print(DslDefaultEndpoint.runbook.json_dumps(pprint=True))
 
 
 if __name__ == "__main__":
