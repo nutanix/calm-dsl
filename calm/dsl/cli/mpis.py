@@ -166,10 +166,10 @@ def describe_mpi(name, version=None):
 
     if not version:
         click.echo("Fetching latest version of MPI {} ...".format(name), nl=False)
-        version = get_mpi_latest_version(name, app_states=["PUBLISHED"])
+        version = get_mpi_latest_version(mpi_name=name, app_states=["PUBLISHED"])
         click.echo("[{}]". format(version))
 
-    bp = get_mpi_by_name_n_version(name, version)
+    bp = get_mpi_by_name_n_version(mpi_name=name, mpi_version=version)
 
     click.echo("\n----MarketPlace Blueprint Summary----\n")
     click.echo(
@@ -218,7 +218,7 @@ def describe_mpi(name, version=None):
         )
 
 
-def get_mpi_by_name_n_version(mpi_name, mpi_version=None):
+def get_mpi_by_name_n_version(mpi_name, mpi_version):
     """
     It will fetch marketplace item with particular version.
     Args:
@@ -259,11 +259,11 @@ def convert_mpi_into_blueprint(mpi_name, project_name, mpi_version=None):
 
     if not mpi_version:
         click.echo("Fetching latest version of MPI {} ...".format(mpi_name), nl=False)
-        mpi_version = get_mpi_latest_version(mpi_name, app_states=["PUBLISHED"])
+        mpi_version = get_mpi_latest_version(mpi_name=mpi_name, app_states=["PUBLISHED"])
         click.echo("[{}]". format(mpi_version))
 
     click.echo("Fetching mpi store item ...", nl=False)
-    mpi_data = get_mpi_by_name_n_version(mpi_name, mpi_version)
+    mpi_data = get_mpi_by_name_n_version(mpi_name=mpi_name, mpi_version=mpi_version)
     click.echo("[Success]")
 
     # Finding the projects associated with mpi
@@ -335,7 +335,7 @@ def launch_mpi(
 
     client = get_api_client()
 
-    bp_payload = convert_mpi_into_blueprint(mpi_name, version, project)
+    bp_payload = convert_mpi_into_blueprint(mpi_name=mpi_name, project_name=project, mpi_version=version)
     bp_name = bp_payload["metadata"].get("name")
 
     click.echo("Launching mpi blueprint {} ...".format(bp_name))
