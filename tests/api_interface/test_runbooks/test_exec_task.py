@@ -23,7 +23,8 @@ class TestExecTasks:
     @pytest.mark.runbook
     @pytest.mark.parametrize('Runbook', [EscriptTask, SetVariableOnEscript, EscriptOnEndpoint,
                              PowershellTask, SetVariableOnPowershell, PowershellWithCredOverwrite,
-                             ShellTask, SetVariableOnShell, ShellWithCredOverwrite])
+                             ShellTask, SetVariableOnShell, ShellWithCredOverwrite,
+                             ShellOnMultipleIPs, PowershellOnMultipleIPs])
     def test_script_run(self, Runbook):
         """ test_access_set_variable_in_next_task, test_escript_task,
             test_script_type_escript_execute_task_on_endpoint_with_multiple_ips,
