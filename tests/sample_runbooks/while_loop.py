@@ -18,7 +18,7 @@ def DslWhileLoopRunbook():
 
 
 def main():
-    print(DslWhileLoopRunbook.endpoint.json_dumps(pprint=True))
+    print(DslWhileLoopRunbook.runbook.json_dumps(pprint=True))
 
 
 if __name__ == "__main__":
