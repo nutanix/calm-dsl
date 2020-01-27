@@ -1,0 +1,39 @@
+{
+  "spec": {
+    "name": "linux_test",
+    "resources": {
+      "type": "Linux",
+      "attrs": {
+        "values": ["1.2.3.4"],
+        "value_type": "IP",
+        "port": 22,
+        "credential_definition_list": [
+            {
+		        "username": "Username",
+            	"uuid": "d96f5c37-323a-43ac-85fc-fcd95b121597",
+                "name": "endpoint_cred",
+                "secret": {
+                    "attrs": {
+                        "is_secret_modified": true
+                    },
+                    "value": "Password"
+                },
+                "type": "PASSWORD",
+                "description": ""
+            }
+        ],
+        "login_credential_reference": {
+            "kind": "app_credential",
+            "name": "endpoint_cred",
+            "uuid": "d96f5c37-323a-43ac-85fc-fcd95b121597"
+        }
+      }
+    }
+  },
+  "api_version": "3.0",
+  "metadata": {
+    "kind": "endpoint",
+    "name": "linux_test",
+    "uuid": "b12c4087-6a65-408a-b9b5-7d573aee2d09"
+  }
+}

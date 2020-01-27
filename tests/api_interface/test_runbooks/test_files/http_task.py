@@ -18,7 +18,7 @@ endpoint = CalmEndpoint.HTTP(URL, verify=False, auth=Auth.Basic(AUTH_USERNAME, A
 endpoint_with_tls_verify = CalmEndpoint.HTTP(URL, verify=True, auth=Auth.Basic(AUTH_USERNAME, AUTH_PASSWORD))
 endpoint_with_incorrect_auth = CalmEndpoint.HTTP(URL, verify=False)
 endpoint_without_auth = CalmEndpoint.HTTP(TEST_URL)
-endpoint_payload = change_uuids(read_test_config(file_name="endpoint_payload.json"), {})
+endpoint_payload = change_uuids(read_test_config(file_name="http_endpoint_payload.json"), {})
 
 
 @runbook
