@@ -5,15 +5,15 @@ from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import ENDPOINT
 from utils import change_uuids, read_test_config
 
-LinuxEndpointPayload = change_uuids(read_test_config(file_name="linux_endpoint_payload.json"), {})
-WindowsEndpointPayload = change_uuids(read_test_config(file_name="windows_endpoint_payload.json"), {})
-HTTPEndpointPayload = change_uuids(read_test_config(file_name="http_endpoint_payload.json"), {})
+LinuxEndpointPayload = read_test_config(file_name="linux_endpoint_payload.json")
+WindowsEndpointPayload = read_test_config(file_name="windows_endpoint_payload.json")
+HTTPEndpointPayload = read_test_config(file_name="http_endpoint_payload.json")
 
 
 class TestExecTasks:
     @pytest.mark.runbook
     @pytest.mark.endpoint
-    @pytest.mark.parametrize('EndpointPayload', [LinuxEndpointPayload])
+    @pytest.mark.parametrize('EndpointPayload', [LinuxEndpointPayload, WindowsEndpointPayload, HTTPEndpointPayload])
     def test_endpoint_crud(self, EndpointPayload):
         """
         test_linux_endpoint_create_with_required_fields, test_linux_endpoint_update, test_linux_endpoint_delete
@@ -22,6 +22,7 @@ class TestExecTasks:
         """
 
         client = get_api_client()
+        EndpointPayload = change_uuids(EndpointPayload, {})
 
         # Endpoint Create
         res, err = client.endpoint.create(EndpointPayload)
@@ -96,6 +97,139 @@ class TestExecTasks:
 
         # delete downloaded file
         os.remove(file_path)
+
+        # delete the endpoint
+        _, err = client.endpoint.delete(ep_uuid)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        else:
+            print("endpoint {} deleted".format(ep_name))
+        res, err = client.endpoint.read(id=ep_uuid)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        ep = res.json()
+        ep_state = ep["status"]["state"]
+        assert ep_state == "DELETED"
+
+    @pytest.mark.runbook
+    @pytest.mark.endpoint
+    @pytest.mark.parametrize('EndpointPayload', [LinuxEndpointPayload, WindowsEndpointPayload])
+    def test_endpoint_validation_and_type_update(self, EndpointPayload):
+        """
+        test_endpoint_update_windows_to_http, test_endpoint_update_linux_to_http
+        test_linux_endpoint_create_without_required_fields, test_windows_endpoint_create_without_required_fields
+        test_http_endpoint_create_without_auth
+        """
+
+        client = get_api_client()
+        EndpointPayload = change_uuids(EndpointPayload, {})
+
+        # set values and credentials to empty
+        EndpointPayload['spec']['resources']['attrs']['values'] = []
+        EndpointPayload['spec']['resources']['attrs']['credential_definition_list'][0]['username'] = ''
+        EndpointPayload['spec']['resources']['attrs']['credential_definition_list'][0]['secret']['value'] = ''
+
+        # Endpoint Create
+        res, err = client.endpoint.create(EndpointPayload)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        ep = res.json()
+        ep_state = ep["status"]["state"]
+        ep_uuid = ep["metadata"]["uuid"]
+        ep_name = ep["spec"]["name"]
+        print(">> Endpoint state: {}".format(ep_state))
+        assert ep_state == "DRAFT"
+
+        # Checking validation errors
+        assert len(ep["status"]["message_list"]) > 0
+        validations = ""
+        for message in ep["status"]["message_list"]:
+            validations += message["message"]
+        assert "Endpoint values cannot be empty" in validations
+        cred = ep["status"]["resources"]["attrs"]['credential_definition_list'][0]
+        assert len(ep["status"]["message_list"]) > 0
+        for message in cred["message_list"]:
+            validations += message["message"]
+        assert "Username is a required field" in validations
+        assert "Secret value for credential is empty" in validations
+
+        # update endpoint type
+        ep["spec"]["resources"]["type"] = ENDPOINT.TYPES.HTTP
+        ep["spec"]["resources"]["attrs"] = {"url": "test_url", "authentication": {"type": "none"}}
+        del ep["status"]
+
+        res, err = client.endpoint.update(ep_uuid, ep)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        ep = res.json()
+        ep_state = ep["status"]["state"]
+        print(">> Endpoint state: {}".format(ep_state))
+        assert ep_state == "ACTIVE"
+        assert ep["spec"]["resources"]["type"] == ENDPOINT.TYPES.HTTP
+
+        # delete the endpoint
+        _, err = client.endpoint.delete(ep_uuid)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        else:
+            print("endpoint {} deleted".format(ep_name))
+        res, err = client.endpoint.read(id=ep_uuid)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        ep = res.json()
+        ep_state = ep["status"]["state"]
+        assert ep_state == "DELETED"
+
+    @pytest.mark.runbook
+    @pytest.mark.endpoint
+    @pytest.mark.parametrize('EndpointPayload', [HTTPEndpointPayload])
+    def test_http_endpoint_validation_and_update(self, EndpointPayload):
+        """
+        test_http_endpoint_create_without_required_fields,
+        test_endpoint_update_http_to_linux
+        """
+
+        client = get_api_client()
+        EndpointPayload = change_uuids(EndpointPayload, {})
+
+        # setting url to empty
+        EndpointPayload['spec']['resources']['attrs']['url'] = ''
+
+        # Endpoint Create
+        res, err = client.endpoint.create(EndpointPayload)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        ep = res.json()
+        ep_state = ep["status"]["state"]
+        ep_uuid = ep["metadata"]["uuid"]
+        ep_name = ep["spec"]["name"]
+        print(">> Endpoint state: {}".format(ep_state))
+        assert ep_state == "DRAFT"
+
+        # Checking validation errors
+        assert len(ep["status"]["message_list"]) > 0
+        validations = ""
+        for message in ep["status"]["message_list"]:
+            validations += message["message"]
+        assert "URL is a required field" in validations
+
+        LinuxAttrs = change_uuids(LinuxEndpointPayload["spec"]["resources"]["attrs"], {})
+
+        # update endpoint type
+        ep["spec"]["resources"]["type"] = ENDPOINT.TYPES.LINUX
+        ep["spec"]["resources"]["attrs"] = LinuxAttrs
+        del ep["status"]
+
+        res, err = client.endpoint.update(ep_uuid, ep)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        ep = res.json()
+        ep_state = ep["status"]["state"]
+        print(">> Endpoint state: {}".format(ep_state))
+        assert ep_state == "ACTIVE"
+        assert ep["spec"]["resources"]["type"] == ENDPOINT.TYPES.LINUX
 
         # delete the endpoint
         _, err = client.endpoint.delete(ep_uuid)
