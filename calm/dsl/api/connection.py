@@ -172,6 +172,7 @@ class Connection:
         request_json=None,
         request_params=None,
         verify=True,
+        files=None,
     ):
         """Private method for making http request to calm
 
@@ -203,14 +204,25 @@ class Connection:
             base_headers = self.session.headers
 
             if method == REQUEST.METHOD.POST:
-                res = self.session.post(
-                    url,
-                    params=request_params,
-                    data=json.dumps(request_json),
-                    verify=verify,
-                    headers=base_headers,
-                    cookies=cookies,
-                )
+                if files:
+                    import pdb;pdb.set_trace()
+                    res = self.session.post(
+                        url,
+                        data=request_json,
+                        verify=verify,
+                        cookies=cookies,
+                        headers={},
+                        files=files,
+                    )
+                else:
+                    res = self.session.post(
+                        url,
+                        params=request_params,
+                        data=json.dumps(request_json),
+                        verify=verify,
+                        headers=base_headers,
+                        cookies=cookies,
+                    )
             elif method == REQUEST.METHOD.PUT:
                 res = self.session.put(
                     url,
