@@ -10,6 +10,7 @@ from utils import upload_runbook, poll_runlog_status
 
 class TestRunbooks:
     @pytest.mark.slow
+    @pytest.mark.runbook
     @pytest.mark.parametrize("Runbook", [DslPausePlayRunbook])
     def test_rb_pause_and_play(self, Runbook):
 

@@ -9,6 +9,7 @@ from utils import upload_runbook, poll_runlog_status
 
 class TestRunbooks:
     @pytest.mark.slow
+    @pytest.mark.runbook
     @pytest.mark.parametrize("Runbook", [DslConfirmRunbook])
     @pytest.mark.parametrize("Helper", [("SUCCESS", [RUNLOG.STATUS.SUCCESS]), ("FAILURE", RUNLOG.FAILURE_STATES)])
     def test_rb_confirm(self, Runbook, Helper):
@@ -61,3 +62,10 @@ class TestRunbooks:
 
         print(">> Runbook Run state: {}\n{}".format(state, reasons))
         assert state in Helper[1]
+
+        # delete the runbook
+        _, err = client.runbook.delete(rb_uuid)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        else:
+            print("runbook {} deleted".format(rb_name))

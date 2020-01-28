@@ -22,6 +22,7 @@ class TestRunbooks:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
     @pytest.mark.slow
+    @pytest.mark.runbook
     @pytest.mark.parametrize("Runbook", [DslPausePlayRunbook])
     def test_upload_and_run_rb(self, Runbook):
 
@@ -60,6 +61,7 @@ class TestRunbooks:
             print("runbook {} deleted".format(rb_name))
 
     @pytest.mark.slow
+    @pytest.mark.runbook
     @pytest.mark.parametrize("Runbook", [DslPausePlayRunbook])
     def test_rb_crud(self, Runbook):
 
@@ -100,6 +102,7 @@ class TestRunbooks:
 
     @pytest.mark.skip(reason="runbook update through DSL is not supported on feat branch")
     @pytest.mark.slow
+    @pytest.mark.runbook
     @pytest.mark.parametrize("Runbook", [DslPausePlayRunbook])
     def test_rb_update(self, Runbook):
 

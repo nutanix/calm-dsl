@@ -9,6 +9,7 @@ from utils import upload_runbook, poll_runlog_status, read_test_config
 
 class TestRunbooks:
     @pytest.mark.slow
+    @pytest.mark.runbbook
     @pytest.mark.parametrize("Runbook", [DslRunbookWithVariables])
     def test_variables_in_runbook(self, Runbook):
 
