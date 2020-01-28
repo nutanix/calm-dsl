@@ -40,7 +40,7 @@ Use:
 Documentation for the Calm DSL will be stored in the [docs](docs/) folder, and will continually be added to. If you're not familiar with Calm Terminology basics, please review the [Calm Terminology](docs/01-Calm-Terminology/) doc page.
 
 ## Video Links
- - Workstation Setup(https://youtu.be/uIZmHQhioZg)
- - Blueprint & App management(https://youtu.be/jb-ZllhaROs)
+ - [Workstation Setup](https://youtu.be/uIZmHQhioZg)
+ - [Blueprint & App management](https://youtu.be/jb-ZllhaROs)
 
 Code formatted by [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
