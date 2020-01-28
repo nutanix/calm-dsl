@@ -3,13 +3,13 @@
 title: AWS Disks
 type: object
 properties:
-  device_name: 
+  device_name:
     type: string
   size_gb:
     type: integer
   volume_type:
     type: string
-    enum: 
+    enum:
     - IO1
     - STANDARD
     - SC1
@@ -74,7 +74,7 @@ properties:
     type: array
     items:
       type: object
-      properties: 
+      properties:
         key:
           type: string
         value:
@@ -88,15 +88,15 @@ properties:
         type: string
       data_disk_list:
         type: array
-        items: 
-          {{ awsDisks() | indent(10) }} 
+        items:
+          {{ awsDisks() | indent(10) }}
 
 {%- endmacro %}
 
 
 {% macro kind_reference() -%}
 
-title: Reference 
+title: Reference
 type: object
 properties:
   kind:
@@ -183,13 +183,8 @@ properties:
 title: AWS CreateSpec
 type: object
 properties:
-  name: 
+  name:
     type: string
-  type:
-    type: string
-    enum: 
-    - PROVISION_AWS_VM
-    default: PROVISION_AWS_VM
   resources:
     {{ awsResource() | indent(4) }}
   availability_zone_reference:          # TODO add enums['availability_zone']

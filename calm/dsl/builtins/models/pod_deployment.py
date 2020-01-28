@@ -131,7 +131,6 @@ class PODDeploymentType(DeploymentType):
             )
 
         sub_provider_spec = cls.deployment_spec["spec"].pop("template", {})
-        sub_provider_spec = {**({"type": "PROVISION_K8S_POD"}), **sub_provider_spec}
         sub = substrate(
             name="{}_{}_{}".format(cls.__name__, container_name, "Substrate"),
             provider_type="K8S_POD",
