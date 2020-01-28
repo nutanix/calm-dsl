@@ -42,8 +42,8 @@ class TestRunbooks:
 
         # getting the input payload from the json
         data = read_test_config()
-        input_payload = data[Runbook.__name__]['input_payload']
-        expected_output = data[Runbook.__name__]['expected_output']
+        input_payload = data[Runbook.action_name]['input_payload']
+        expected_output = data[Runbook.action_name]['expected_output']
 
         # Finding the task_uuid for the input task
         res, err = client.runbook.list_runlogs(runlog_uuid)

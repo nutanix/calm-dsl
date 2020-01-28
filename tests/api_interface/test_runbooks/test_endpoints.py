@@ -1,4 +1,5 @@
 import pytest
+import copy
 import os
 
 from calm.dsl.cli.main import get_api_client
@@ -22,10 +23,10 @@ class TestExecTasks:
         """
 
         client = get_api_client()
-        EndpointPayload = change_uuids(EndpointPayload, {})
+        endpoint = change_uuids(EndpointPayload, {})
 
         # Endpoint Create
-        res, err = client.endpoint.create(EndpointPayload)
+        res, err = client.endpoint.create(endpoint)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
         ep = res.json()
@@ -122,15 +123,15 @@ class TestExecTasks:
         """
 
         client = get_api_client()
-        EndpointPayload = change_uuids(EndpointPayload, {})
+        endpoint = copy.deepcopy(change_uuids(EndpointPayload, {}))
 
         # set values and credentials to empty
-        EndpointPayload['spec']['resources']['attrs']['values'] = []
-        EndpointPayload['spec']['resources']['attrs']['credential_definition_list'][0]['username'] = ''
-        EndpointPayload['spec']['resources']['attrs']['credential_definition_list'][0]['secret']['value'] = ''
+        endpoint['spec']['resources']['attrs']['values'] = []
+        endpoint['spec']['resources']['attrs']['credential_definition_list'][0]['username'] = ''
+        endpoint['spec']['resources']['attrs']['credential_definition_list'][0]['secret']['value'] = ''
 
         # Endpoint Create
-        res, err = client.endpoint.create(EndpointPayload)
+        res, err = client.endpoint.create(endpoint)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
         ep = res.json()
@@ -191,13 +192,13 @@ class TestExecTasks:
         """
 
         client = get_api_client()
-        EndpointPayload = change_uuids(EndpointPayload, {})
+        endpoint = copy.deepcopy(change_uuids(EndpointPayload, {}))
 
         # setting url to empty
-        EndpointPayload['spec']['resources']['attrs']['url'] = ''
+        endpoint['spec']['resources']['attrs']['url'] = ''
 
         # Endpoint Create
-        res, err = client.endpoint.create(EndpointPayload)
+        res, err = client.endpoint.create(endpoint)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
         ep = res.json()
