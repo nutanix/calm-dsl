@@ -368,9 +368,7 @@ def launch_blueprint_simple(
         runtime_editables_json = json.dumps(
             runtime_editables, indent=4, separators=(",", ": ")
         )
-        LOG.info(
-            "Updated blueprint editables are:\n{}".format(runtime_editables_json)
-        )
+        LOG.info("Updated blueprint editables are:\n{}".format(runtime_editables_json))
     res, err = client.blueprint.launch(blueprint_uuid, launch_payload)
     if not err:
         LOG.info("Blueprint {} queued for launch".format(blueprint_name))

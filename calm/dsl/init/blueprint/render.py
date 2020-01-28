@@ -52,9 +52,7 @@ def render_blueprint_template(service_name, provider_type):
 
     if provider_type not in template_map:
         print(
-            "Provider {} not supported. Using AHV_VM as provider".format(
-                provider_type
-            )
+            "Provider {} not supported. Using AHV_VM as provider".format(provider_type)
         )
         provider_type = "AHV_VM"
 

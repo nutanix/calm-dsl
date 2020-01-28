@@ -79,7 +79,9 @@ class PackageType(EntityType):
 
         else:
             ptype = getattr(cls, "type")
-            LOG.debug("Supported Package Types: ['SUBSTRATE_IMAGE', 'CUSTOM', 'K8S_IMAGE']")
+            LOG.debug(
+                "Supported Package Types: ['SUBSTRATE_IMAGE', 'CUSTOM', 'K8S_IMAGE']"
+            )
             raise Exception("Un-supported package type {}".format(ptype))
 
         return cdict

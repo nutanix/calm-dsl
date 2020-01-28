@@ -29,7 +29,9 @@ class AhvVmResourcesType(EntityType):
                 raise TypeError("index {} is not of type integer".format(ind))
 
             if not isinstance(connection_status, bool):
-                raise TypeError("connection status {} is not of type bool".format(connection_status))
+                raise TypeError(
+                    "connection status {} is not of type bool".format(connection_status)
+                )
 
             serial_port_list.append({"index": ind, "is_connected": connection_status})
 

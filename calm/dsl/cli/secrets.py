@@ -22,7 +22,7 @@ def create_secret(name, value):
     LOG.debug("Creating secret {}".format(name))
     Secret.create(name, value)
     LOG.debug("Success")
-    LOG.info(highlight_text("Secret {} created". format(name)))
+    LOG.info(highlight_text("Secret {} created".format(name)))
 
 
 def get_secrets(quiet):

@@ -44,7 +44,7 @@ class TestAppCommands:
     def _create_bp(self):
         runner = CliRunner()
         self.created_dsl_bp_name = "Test_Existing_VM_DSL_{}".format(int(time.time()))
-        LOG.info("Creating Bp {} ". format(self.created_dsl_bp_name))
+        LOG.info("Creating Bp {} ".format(self.created_dsl_bp_name))
         result = runner.invoke(
             cli,
             [
@@ -62,7 +62,7 @@ class TestAppCommands:
         runner = CliRunner()
         self._create_bp()
         self.created_app_name = "TestAppLaunch_{}".format(self.created_dsl_bp_name)
-        LOG.info("Launching Bp {}". format(self.created_dsl_bp_name))
+        LOG.info("Launching Bp {}".format(self.created_dsl_bp_name))
         result = runner.invoke(
             cli,
             [
@@ -87,7 +87,7 @@ class TestAppCommands:
         result = runner.invoke(cli, ["describe", "app", self.created_app_name])
         assert result.exit_code == 0
         LOG.info("Success")
-        LOG.debug("Command output : {}". format(result.output))
+        LOG.debug("Command output : {}".format(result.output))
 
     def _wait_for_non_busy_state(self):
         runner = CliRunner()
@@ -101,7 +101,11 @@ class TestAppCommands:
     def _test_run_custom_action(self):
         runner = CliRunner()
         self._wait_for_non_busy_state()
-        LOG.info("Running {} action on app {}". format(CUSTOM_ACTION_NAME, self.created_app_name))
+        LOG.info(
+            "Running {} action on app {}".format(
+                CUSTOM_ACTION_NAME, self.created_app_name
+            )
+        )
         result = runner.invoke(
             cli,
             [
@@ -113,24 +117,24 @@ class TestAppCommands:
         )
         assert result.exit_code == 0
         LOG.info("Success")
-        LOG.debug("Command output : {}". format(result.output))
+        LOG.debug("Command output : {}".format(result.output))
 
     def _test_app_delete(self):
         runner = CliRunner()
         self._wait_for_non_busy_state()
-        LOG.info("Deleting App {} ". format(self.created_app_name))
+        LOG.info("Deleting App {} ".format(self.created_app_name))
         result = runner.invoke(cli, ["delete", "app", self.created_app_name])
         assert result.exit_code == 0
         LOG.info("Success")
-        LOG.debug("Response : {}". format(result.output))
+        LOG.debug("Response : {}".format(result.output))
 
     def _test_dsl_bp_delete(self):
         runner = CliRunner()
-        LOG.info("Deleting Bp {} ". format(self.created_dsl_bp_name))
+        LOG.info("Deleting Bp {} ".format(self.created_dsl_bp_name))
         result = runner.invoke(cli, ["delete", "bp", self.created_dsl_bp_name])
         assert result.exit_code == 0
         LOG.info("Success")
-        LOG.debug("Response : {}". format(result.output))
+        LOG.debug("Response : {}".format(result.output))
 
 
 if __name__ == "__main__":
