@@ -50,6 +50,34 @@ def change_uuids(bp, context):
     return bp
 
 
+def update_endpoints_name(rb, context):
+    """
+    Helper function to change uuids
+    Args:
+        rb (dict): Runbook dict
+        context (dict) : context to recursively change endpoint's name reference
+    """
+    if isinstance(rb, dict):
+
+        if rb.get("endpoint_definition_list", []):
+
+            for endpoint in rb["endpoint_definition_list"]:
+                old_name = endpoint["name"]
+                endpoint["name"] = old_name + str(uuid.uuid4())[-10:]
+                context[old_name] = endpoint["name"]
+
+        for key, val in rb.items():
+            if key == 'name':
+                if val in context.keys():
+                    rb[key] = context[val]
+            else:
+                update_endpoints_name(val, context)
+    elif isinstance(rb, list):
+        for item in rb:
+            update_endpoints_name(item, context)
+    return rb
+
+
 def upload_runbook(client, rb_name, Runbook):
     """
     This routine uploads the given runbook
@@ -88,6 +116,9 @@ def upload_runbook(client, rb_name, Runbook):
     print("\n>>Creating the runbook {}".format(rb_name))
     rb_desc = "Runbook DSL Test automation"
     rb_resources = json.loads(Runbook.runbook.json_dumps())
+
+    # update endpoint names for testing purporse as endpoints with duplicate names are not allowed
+    rb_resources = update_endpoints_name(rb_resources, {})
     res, err = client.runbook.upload_with_secrets(rb_name, rb_desc, rb_resources)
 
     if not err:
