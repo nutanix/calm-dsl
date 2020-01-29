@@ -12,6 +12,7 @@ class TestRunbooks:
     @pytest.mark.runbbook
     @pytest.mark.parametrize("Runbook", [DslRunbookWithVariables])
     def test_variables_in_runbook(self, Runbook):
+        """ test_runbook_variables """
 
         client = get_api_client()
         rb_name = "test_runbook_" + str(uuid.uuid4())[-10:]

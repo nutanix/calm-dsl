@@ -323,9 +323,9 @@ def get_completion_func(screen):
                 reasons = runlog["status"].get("reason_list", [])
                 outputs = []
                 machine_name = runlog['status'].get("machine_name", None)
-                if machine_name == '-':
-                    continue  # this runlog corresponds to endpoint loop
                 machine = parse_machine_name(runlog_uuid, machine_name)
+                if len(machine) == 1:
+                    continue  # this runlog corresponds to endpoint loop
                 if runlog['status']['type'] == "task_runlog" and not runlog["status"].get("attrs", None):
                     res, err = client.runbook.runlog_output(runlog_uuid, uuid)
                     if err:

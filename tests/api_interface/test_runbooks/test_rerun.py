@@ -13,6 +13,7 @@ class TestRunbooks:
     @pytest.mark.runbook
     @pytest.mark.parametrize("Runbook", [DslConfirmRunbook])
     def test_rb_confirm_and_rerun(self, Runbook):
+        """ test_runbook_rerun """
 
         client = get_api_client()
         rb_name = "test_runbook_" + str(uuid.uuid4())[-10:]
