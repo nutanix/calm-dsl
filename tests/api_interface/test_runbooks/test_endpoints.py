@@ -244,3 +244,18 @@ class TestExecTasks:
         ep = res.json()
         ep_state = ep["status"]["state"]
         assert ep_state == "DELETED"
+
+    @pytest.mark.runbook
+    @pytest.mark.endpoint
+    def test_endpoint_list(self):
+
+        client = get_api_client()
+
+        params = {"length": 20, "offset": 0}
+        res, err = client.endpoint.list(params=params)
+
+        if not err:
+            print("\n>> Endpoint list call successful>>")
+            assert res.ok is True
+        else:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
