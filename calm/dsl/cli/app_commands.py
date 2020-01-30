@@ -13,6 +13,9 @@ from .apps import (
     delete_app,
     download_runlog,
 )
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 @get.command("apps")
@@ -66,7 +69,7 @@ def display_with_screen(obj, app_name, action_name, watch):
     def render_actions(screen):
         screen.clear()
         screen.print_at(
-            "Running action {} for app {} ...".format(action_name, app_name), 0, 0
+            "Running action {} for app {}".format(action_name, app_name), 0, 0
         )
         screen.refresh()
         run_actions(screen, obj, app_name, action_name, watch)
@@ -103,7 +106,7 @@ def _watch_action_runlog(obj, runlog_uuid, app_name, poll_interval):
         screen.wait_for_input(10.0)
 
     Display.wrapper(display_action, watch=True)
-    click.echo("Action run {} completed for app {}".format(runlog_uuid, app_name))
+    LOG.info("Action run {} completed for app {}".format(runlog_uuid, app_name))
 
 
 @watch.command("app")
@@ -126,7 +129,7 @@ def _watch_app(obj, app_name, poll_interval):
         screen.wait_for_input(10.0)
 
     Display.wrapper(display_action, watch=True)
-    click.echo("Action runs completed for app {}".format(app_name))
+    LOG.info("Action runs completed for app {}".format(app_name))
 
 
 @download.command("action_runlog")

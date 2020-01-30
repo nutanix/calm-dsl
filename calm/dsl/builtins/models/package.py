@@ -3,7 +3,10 @@ from .validator import PropertyValidator
 
 from .task import dag
 from .action import runbook_create
+from calm.dsl.tools import get_logging_handle
 
+
+LOG = get_logging_handle(__name__)
 # Package
 
 
@@ -76,6 +79,9 @@ class PackageType(EntityType):
 
         else:
             ptype = getattr(cls, "type")
+            LOG.debug(
+                "Supported Package Types: ['SUBSTRATE_IMAGE', 'CUSTOM', 'K8S_IMAGE']"
+            )
             raise Exception("Un-supported package type {}".format(ptype))
 
         return cdict

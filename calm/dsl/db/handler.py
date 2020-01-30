@@ -1,8 +1,10 @@
-import traceback
+import atexit
 
 from calm.dsl.config import get_config
-
 from .table_config import dsl_database, SecretTable, DataTable, CacheTable
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 class Database:
@@ -25,6 +27,7 @@ class Database:
         if not self.db:
             self.update_db(self.instantiate_db())
 
+        self.connect()
         self.secret_table = self.set_and_verify(SecretTable)
         self.data_table = self.set_and_verify(DataTable)
         self.cache_table = self.set_and_verify(CacheTable)
@@ -34,31 +37,33 @@ class Database:
             If not, then creates one
         """
 
-        if self.db.is_closed():
-            self.db.connect()
         if not self.db.table_exists((table_cls.__name__).lower()):
             self.db.create_tables([table_cls])
 
-        self.db.close()
         return table_cls
 
-    def __enter__(self):
+    def connect(self):
 
-        if self.db.is_closed():
-            self.db.connect()
+        LOG.debug("Connecting to local DB")
+        self.db.connect()
+        atexit.register(self.close)
+        LOG.debug("Success")
 
-        return self
+    def close(self):
 
-    def __exit__(self, exc_type, exc_value, tb):
+        LOG.debug("Closing connection to local DB")
+        self.db.close()
+        LOG.debug("Success")
 
-        if not self.db.is_closed():
-            self.db.close()
 
-        if exc_type:
-            # If ValueError is raised, don't print Exception
-            # forwarding it further for catching
-            if exc_type.__name__ == "ValueError":
-                raise exc_type(exc_value)
+_Database = None
 
-            else:
-                traceback.print_exception(exc_type, exc_value, tb)
+
+def get_db_handle():
+    """Returns the db handle"""
+
+    global _Database
+    if not _Database:
+        _Database = Database()
+
+    return _Database

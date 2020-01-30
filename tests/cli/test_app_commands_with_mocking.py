@@ -6,6 +6,9 @@ from click.testing import CliRunner
 
 from calm.dsl.api.connection import Connection
 from calm.dsl.cli import main as cli
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 class TestAppCommands:
@@ -32,6 +35,7 @@ class TestAppCommands:
     def test_bp_launch(self):
         runner = CliRunner()
         self.created_bp_name = "Test_Existing_VM_{}".format(int(time.time()))
+        LOG.info("Creating Bp {}".format(self.created_bp_name))
         result = runner.invoke(
             cli,
             [
@@ -43,7 +47,9 @@ class TestAppCommands:
             ],
         )
         assert result.exit_code == 0
+        LOG.info("Success")
 
+        LOG.info("Launching Bp {}".format(self.created_bp_name))
         result = runner.invoke(
             cli,
             [
@@ -55,7 +61,8 @@ class TestAppCommands:
             input="\n".join(["1", "DEV"]),
         )
         assert result.exit_code == 0
-        print(result.output)
+        LOG.info("Success")
+        LOG.debug(result.output)
 
     @mock.patch("calm.dsl.api.connection")
     def test_apps_describe(self, mocked_connection):

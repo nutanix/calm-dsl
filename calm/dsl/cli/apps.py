@@ -1,6 +1,4 @@
 import time
-import warnings
-import logging
 import json
 from json import JSONEncoder
 
@@ -14,8 +12,9 @@ from calm.dsl.config import get_config
 
 from .utils import get_name_query, get_states_filter, highlight_text, Display
 from .constants import APPLICATION, RUNLOG, SYSTEM_ACTIONS
+from calm.dsl.tools import get_logging_handle
 
-log = logging.getLogger(__name__)
+LOG = get_logging_handle(__name__)
 
 
 def get_apps(obj, name, filter_by, limit, offset, quiet, all_items):
@@ -40,7 +39,7 @@ def get_apps(obj, name, filter_by, limit, offset, quiet, all_items):
 
     if err:
         pc_ip = config["SERVER"]["pc_ip"]
-        warnings.warn(UserWarning("Cannot fetch applications from {}".format(pc_ip)))
+        LOG.warning("Cannot fetch applications from {}".format(pc_ip))
         return
 
     json_rows = res.json()["entities"]
@@ -119,14 +118,14 @@ def _get_app(client, app_name, all=False):
             if not found:
                 raise Exception("More than one app found - {}".format(entities))
 
-        click.echo(">> App {} found >>".format(app_name))
+        LOG.info("App {} found".format(app_name))
         app = entities[0]
     else:
-        raise Exception(">> No app found with name {} found >>".format(app_name))
+        raise Exception("No app found with name {} found".format(app_name))
     app_id = app["metadata"]["uuid"]
 
     # 2. Get app details
-    click.echo(">> Fetching app details")
+    LOG.info("Fetching app details")
     res, err = client.application.read(app_id)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -506,15 +505,15 @@ def delete_app(obj, app_names, soft=False):
         app = _get_app(client, app_name)
         app_id = app["metadata"]["uuid"]
         action_label = "Soft Delete" if soft else "Delete"
-        click.echo(">> Triggering {}".format(action_label))
+        LOG.info("Triggering {}".format(action_label))
         res, err = client.application.delete(app_id, soft_delete=soft)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-        click.echo("{} action triggered".format(action_label))
+        LOG.info("{} action triggered".format(action_label))
         response = res.json()
         runlog_id = response["status"]["runlog_uuid"]
-        click.echo("Action runlog uuid: {}".format(runlog_id))
+        LOG.info("Action runlog uuid: {}".format(runlog_id))
 
 
 def run_actions(screen, obj, app_name, action_name, watch):
@@ -598,4 +597,4 @@ def download_runlog(obj, runlog_id, app_name, file_name):
         open(file_name, "wb").write(res.content)
         click.echo("Runlogs saved as {}".format(highlight_text(file_name)))
     else:
-        log.error(err)
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))

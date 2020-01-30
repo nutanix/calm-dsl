@@ -3,6 +3,7 @@ from .provider_spec import read_spec
 from .package import PackageType
 from .validator import PropertyValidator
 from .entity import Entity
+from calm.dsl.tools import get_logging_handle
 
 
 # Downloadable Image
@@ -12,6 +13,7 @@ ImageType = "DISK_IMAGE"
 ImageArchitecture = "X86_64"
 ProductVersion = "1.0"
 ConfigSections = ["image", "product", "checksum"]
+LOG = get_logging_handle(__name__)
 
 
 class VmDiskPackageType(PackageType):
@@ -74,7 +76,8 @@ def vm_disk_package(name="", description="", config_file=None, config={}):
         config = read_spec(filename=config_file, depth=2)
 
     if not isinstance(config, dict):
-        raise TypeError("Invalid downloadable image configuration !!!")
+        LOG.debug("Downloadable Image Config: {}".format(config))
+        raise TypeError("Downloadable image configuration is not of type dict")
 
     config["description"] = description or config.get("description", "")
     name = name or config.get("name") or getattr(VmDiskPackageType, "__schema_name__")
@@ -101,6 +104,7 @@ def ahv_vm_disk_package(name="", description="", config_file=None, config_data={
         config_data = read_spec(filename=config_file, depth=2)
 
     if not isinstance(config_data, dict):
-        raise TypeError("Invalid downloadable image configuration !!!")
+        LOG.debug("Downloadable Image Config: {}".format(config_data))
+        raise TypeError("Downloadable image configuration is not of type dict")
 
     return vm_disk_package(name=name, description=description, config=config_data)

@@ -9,7 +9,6 @@ Click==7.0
 click_completion>=0.5.1
 click-didyoumean>=0.0.3
 click-repl>=0.1.6
-click-log>=0.3.2
 colorama==0.4.1
 arrow==0.13.1
 jsonschema>=3.0.1
@@ -19,3 +18,4 @@ peewee==3.10.0
 pycryptodome==3.9.0
 scrypt==0.8.13
 schema==0.7.1
+colorlog>=4.0.2

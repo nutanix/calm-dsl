@@ -350,7 +350,7 @@ def highlight_text(text, **kwargs):
 
 def create_spec(client):
 
-    spec = {"type": "PROVISION_VMWARE_VM"}
+    spec = {}
     Obj = VCenter(client.connection)
 
     # VM Configuration

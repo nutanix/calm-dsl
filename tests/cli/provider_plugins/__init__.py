@@ -6,6 +6,10 @@ import uuid
 import os
 
 from calm.dsl.cli import main as cli
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
+
 
 # Note these paths are reltive to provider test directory
 BP_FILE_PATH_LINUX = "test_bp_creation/_test_bp_linux_os_example.py"
@@ -59,7 +63,11 @@ def run_test(
 
     # Will try for bp creation, if dsl file and provider_spec_file is given
     if not (bp_file_path and provider_spec_file_path):
-        print("\n>>>Blueprint creation test cann't be executed")
+        if not bp_file_path:
+            LOG.error("BP file path not found")
+
+        if not provider_spec_file_path:
+            LOG.error("Provider Spec file path not found")
         return
 
     for filepath in [bp_file_path, provider_spec_file_path]:
@@ -79,20 +87,21 @@ def run_test(
         command = "create bp --file={} --name={}".format(bp_file_path, bp_name)
 
         # Try bp creation
-        print("\n>> Creating bp {}".format(bp_name))
+        LOG.info("Creating bp {}".format(bp_name))
         result = runner.invoke(cli, command)
         command_output = result.output.lower()
         assert command_output.find("error") < 0, "Error occured in bp creation"
-        print("\n>> Blueprint {} creation successful".format(bp_name))
-        print("\n{}".format(result.output))
+        LOG.info("Success")
+        LOG.debug("Response : {}".format(result.output))
 
         # Delete created bp
-        print(">> Deleting bp {}".format(bp_name))
+        LOG.info("Deleting bp {}".format(bp_name))
         command = "delete bp {}".format(bp_name)
         result = runner.invoke(cli, command)
 
         assert result.exit_code == 0
-        print("\n{}".format(result.output))
+        LOG.info("Success")
+        LOG.debug("Response : {}".format(result.output))
 
     finally:
         # Rewriting the old data

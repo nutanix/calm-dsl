@@ -6,42 +6,74 @@ from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
 from calm.dsl.store import Cache
 from calm.dsl.builtins import read_file
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
+
+
+def render_ahv_template(template, service_name):
+
+    # Getting the subnet registered to the project
+    client = get_api_client()
+    config = get_config()
+
+    project_name = config["PROJECT"].get("name", "default")
+    project_uuid = Cache.get_entity_uuid("PROJECT", project_name)
+
+    LOG.info("Fetching ahv subnets attached to the project {}".format(project_name))
+    res, err = client.project.read(project_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    LOG.info("Success")
+
+    res = res.json()
+    subnets = res["status"]["project_status"]["resources"].get(
+        "subnet_reference_list", []
+    )
+    if not subnets:
+        raise Exception("no subnets registered !!!")
+
+    default_subnet = subnets[0]["name"]
+    LOG.info("Rendering ahv template")
+    text = template.render(service_name=service_name, subnet_name=default_subnet)
+    LOG.info("Success")
+
+    return text.strip() + os.linesep
 
 
 template_map = {
-    "AHV_VM": "ahv_blueprint.py.jinja2",
+    "AHV_VM": ("ahv_blueprint.py.jinja2", render_ahv_template),
 }
 
 
-def render_blueprint_template(service_name, subnet_name, provider_type):
+def render_blueprint_template(service_name, provider_type):
 
     service_name = service_name.strip().split()[0].title()
 
     if provider_type not in template_map:
         print(
-            "Provider {} not supported. Using AHV_VM as provider ...".format(
-                provider_type
-            )
+            "Provider {} not supported. Using AHV_VM as provider".format(provider_type)
         )
         provider_type = "AHV_VM"
 
-    schema_file = template_map.get(provider_type)
+    schema_file, temp_render_helper = template_map.get(provider_type)
 
     loader = PackageLoader(__name__, "")
     env = Environment(loader=loader)
     template = env.get_template(schema_file)
-    text = template.render(service_name=service_name, subnet_name=subnet_name)
-    return text.strip() + os.linesep
+
+    return temp_render_helper(template, service_name)
 
 
-def create_bp_file(dir_name, service_name, subnet_name, provider_type):
+def create_bp_file(dir_name, service_name, provider_type):
 
-    bp_text = render_blueprint_template(service_name, subnet_name, provider_type)
-
+    bp_text = render_blueprint_template(service_name, provider_type)
     bp_path = os.path.join(dir_name, "blueprint.py")
 
+    LOG.info("Writing bp file to {}".format(bp_path))
     with open(bp_path, "w") as fd:
         fd.write(bp_text)
+    LOG.info("Success")
 
 
 def create_cred_keys(dir_name):
@@ -105,36 +137,19 @@ def init_bp(service_name, dir_name, provider_type):
     bp_dir, local_dir, key_dir, script_dir = make_bp_dirs(dir_name, bp_name)
 
     # sync cache
+    LOG.info("Syncing cache")
     Cache.sync()
-
-    # Getting the subnet registered to the project
-    client = get_api_client()
-    config = get_config()
-
-    project_name = config["PROJECT"].get("name", "default")
-    project_uuid = Cache.get_entity_uuid("PROJECT", project_name)
-
-    res, err = client.project.read(project_uuid)
-    if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-    res = res.json()
-
-    subnets = res["status"]["project_status"]["resources"].get(
-        "subnet_reference_list", []
-    )
-    if not subnets:
-        raise Exception("no subnets registered !!!")
-
-    default_subnet = subnets[0]["name"]
-
-    create_bp_file(bp_dir, service_name, default_subnet, provider_type)
+    LOG.info("Success")
 
     # Creating keys
+    LOG.info("Generating keys for credentials")
     create_cred_keys(key_dir)
+    LOG.info("Success")
 
     # create scripts
     create_scripts(script_dir)
+
+    create_bp_file(bp_dir, service_name, provider_type)
 
 
 def main():

@@ -6,6 +6,9 @@ from ruamel import yaml
 from jinja2 import Environment, PackageLoader
 import jsonref
 from calm.dsl.tools import StrictDraft7Validator
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 class ProviderBase:
@@ -72,6 +75,7 @@ class Provider(ProviderBase):
 def get_provider(provider_type):
 
     if provider_type not in ProviderBase.providers:
+        LOG.debug("Registered providers: {}".format(ProviderBase.providers))
         raise Exception("provider not registered")
 
     return ProviderBase.providers[provider_type]

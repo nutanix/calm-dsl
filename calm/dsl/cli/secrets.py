@@ -6,6 +6,9 @@ from prettytable import PrettyTable
 from .utils import highlight_text
 
 from calm.dsl.store import Secret
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 def create_secret(name, value):
@@ -13,13 +16,13 @@ def create_secret(name, value):
 
     secrets = get_secrets_names()
     if name in secrets:
-        click.echo(
-            highlight_text("\nSecret Already present !!!\nTry to update secret\n")
-        )
+        LOG.error("Secret {} already present !!!".format(name))
         return
 
+    LOG.debug("Creating secret {}".format(name))
     Secret.create(name, value)
-    click.echo(highlight_text("\nSecret created !!! \n"))
+    LOG.debug("Success")
+    LOG.info(highlight_text("Secret {} created".format(name)))
 
 
 def get_secrets(quiet):
@@ -28,7 +31,7 @@ def get_secrets(quiet):
     avl_secrets = Secret.list()
 
     if not avl_secrets:
-        click.echo(highlight_text("\nNo secrets found !!!\n"))
+        click.echo(highlight_text("No secret found !!!\n"))
         return
 
     if quiet:
@@ -61,11 +64,12 @@ def delete_secret(name):
 
     secrets = get_secrets_names()
     if name not in secrets:
-        click.echo(highlight_text("\nSecret not present !!!\n"))
+        LOG.error("Secret {} not present !!!".format(name))
         return
 
+    LOG.info("Deleting secret {}".format(name))
     Secret.delete(name)
-    click.echo(highlight_text("\nSecret deleted !!!\n"))
+    LOG.info("Success")
 
 
 def update_secret(name, value):
@@ -73,22 +77,23 @@ def update_secret(name, value):
 
     secrets = get_secrets_names()
     if name not in secrets:
-        click.echo(highlight_text("\nSecret not present !!!\n"))
+        LOG.error("Secret {} not present !!!".format(name))
         return
 
+    LOG.info("Updating secret {}".format(name))
     Secret.update(name, value)
-    click.echo(highlight_text("\nSecret updated !!!\n"))
+    LOG.info("Success")
 
 
 def find_secret(name, pass_phrase=""):
-    """ Gives you the value stored correponding to secret"""
+    """Gives you the value stored correponding to secret"""
 
     secret_val = Secret.find(name, pass_phrase)
     return secret_val
 
 
 def get_secrets_names():
-    """ To find the names stored in db"""
+    """To find the names stored in db"""
 
     secrets = Secret.list()
     secret_names = []
@@ -101,4 +106,6 @@ def get_secrets_names():
 def clear_secrets():
     """Delete all the secrets"""
 
+    LOG.info("Clearing the secrets")
     Secret.clear()
+    LOG.info("Success")

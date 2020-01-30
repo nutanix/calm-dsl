@@ -1,5 +1,4 @@
 from ruamel import yaml
-import logging
 import click
 import json
 
@@ -7,22 +6,20 @@ import click_completion
 import click_completion.core
 from click_didyoumean import DYMGroup
 from click_repl import repl
-import click_log
 
 # TODO - move providers to separate file
 from calm.dsl.providers import get_provider, get_provider_types
 from calm.dsl.api import get_api_client, get_resource_api
-
-logger = logging.getLogger(__name__)
-click_log.basic_config(logger)
+from calm.dsl.tools import get_logging_handle, simple_verbosity_option
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
 click_completion.init()
+LOG = get_logging_handle(__name__)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
-@click_log.simple_verbosity_option(logger)
+@simple_verbosity_option(LOG)
 @click.version_option("0.1")
 @click.pass_context
 def main(ctx):
@@ -79,10 +76,11 @@ def validate_provider_spec(spec_file, provider_type):
     try:
         Provider = get_provider(provider_type)
         Provider.validate_spec(spec)
-        click.echo("File {} is a valid {} spec.".format(spec_file, provider_type))
+
+        LOG.info("File {} is a valid {} spec.".format(spec_file, provider_type))
     except Exception as ee:
-        click.echo("File {} is invalid {} spec".format(spec_file, provider_type))
-        raise ee
+        LOG.info("File {} is invalid {} spec".format(spec_file, provider_type))
+        raise Exception(ee.message)
 
 
 @main.group(cls=DYMGroup)
@@ -120,7 +118,7 @@ def server():
 def get_server_status(obj):
     """Get calm server connection status"""
 
-    click.echo("Checking if Calm is enabled on Server ... ", nl=False)
+    LOG.info("Checking if Calm is enabled on Server")
     client = get_api_client()
     Obj = get_resource_api("services/nucalm/status", client.connection)
     res, err = Obj.read()
@@ -132,8 +130,8 @@ def get_server_status(obj):
     result = json.loads(res.content)
     service_enablement_status = result["service_enablement_status"]
 
-    click.echo("[{}]".format(service_enablement_status))
-    click.echo("Server URL: {}".format(client.connection.base_url))
+    LOG.info(service_enablement_status)
+    LOG.info("Server URL: {}".format(client.connection.base_url))
     # TODO - Add info about PC and Calm server version
 
 

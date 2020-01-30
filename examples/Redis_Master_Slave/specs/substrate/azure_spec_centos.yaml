@@ -41,4 +41,3 @@ resources:
       size_in_gb: -1
       storage_type: Standard_LRS
   vm_name: azure-@@{calm_unique_hash}@@-@@{calm_array_index}@@
-type: PROVISION_AZURE_VM

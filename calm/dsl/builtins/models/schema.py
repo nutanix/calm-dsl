@@ -10,8 +10,10 @@ import jsonref
 from bidict import bidict
 
 from .validator import get_property_validators
+from calm.dsl.tools import get_logging_handle
 
 
+LOG = get_logging_handle(__name__)
 _SCHEMAS = None
 
 
@@ -43,6 +45,7 @@ def get_schema(name):
     schemas = _get_all_schemas()
     schema = schemas.get(name, None)
     if not schema:
+        LOG.debug("Schema name can be one of {}".format(list(schema.keys())))
         raise TypeError("Invalid schema name {} given".format(name))
 
     return schema
@@ -57,6 +60,7 @@ def get_schema_props(name):
     elif schema_type == "app_provider_spec":
         schema_props = {}
     elif not schema_props:
+        LOG.debug("Schema properties for schema {} is not available".format(name))
         raise TypeError("Invalid schema name {} given".format(name))
 
     return schema_props
@@ -99,6 +103,7 @@ def get_validator_details(schema_props, name):
         item_props = props.get("items", None)
         item_type = item_props.get("type", None)
         if item_type is None:
+            LOG.debug("Item type not found in schema {}".format(item_props))
             raise Exception("Invalid schema {} given".format(item_props))
 
         ValidatorType, _, _ = get_validator_details(props, "items")
