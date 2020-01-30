@@ -189,3 +189,49 @@ class TestRunbooks:
             res = res.json()
             print("API Response: {}".format(res["description"]))
             print(">> Delete call to runbook is successful >>")
+
+    @pytest.mark.slow
+    @pytest.mark.runbook
+    def test_runbook_abort(self):
+        """ test_runbook_run_abort """
+
+        client = get_api_client()
+        rb_name = "Test_" + str(uuid.uuid4())[-10:]
+
+        # creating the runbook
+        rb = upload_runbook(client, rb_name, DslPausePlayRunbook)
+        rb_state = rb["status"]["state"]
+        rb_uuid = rb["metadata"]["uuid"]
+        print(">> Runbook state: {}".format(rb_state))
+        assert rb_state == "ACTIVE"
+        assert rb_name == rb["spec"]["name"]
+        assert rb_name == rb["metadata"]["name"]
+
+        # run the runbook
+        print("\n>>Running the runbook")
+        res, err = client.runbook.run(rb_uuid, {})
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        response = res.json()
+        runlog_uuid = response["status"]["runlog_uuid"]
+
+        # polling till runbook run starts RUNNING
+        state, reasons = poll_runlog_status(client, runlog_uuid, [RUNLOG.STATUS.RUNNING])
+        _, err = client.runbook.abort(runlog_uuid)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        state, reasons = poll_runlog_status(client, runlog_uuid, RUNLOG.TERMINAL_STATES)
+        print(">> Runbook Run state: {}\n{}".format(state, reasons))
+        assert state == RUNLOG.STATUS.ABORTED
+
+        # deleting runbook
+        print("\n>>Deleting runbook")
+        res, err = client.runbook.delete(rb_uuid)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        else:
+            assert res.ok is True
+            res = res.json()
+            print("API Response: {}".format(res["description"]))
+            print(">> Delete call to runbook is successful >>")
