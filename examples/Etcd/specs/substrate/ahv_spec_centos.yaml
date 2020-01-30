@@ -3,8 +3,6 @@ resources:
   disk_list:
   - data_source_reference:
       kind: image
-      name: AHV_CENTOS_76
-      uuid: a333ba83-07eb-422d-bf2e-e79c7ea93fa3
     disk_size_mib: 0
     device_properties:
       device_type: DISK
@@ -37,12 +35,9 @@ resources:
         #cloud-config
         users:
           - name: centos
+            ssh-authorized-keys:
+              - @@{CENTOS.public_key}@@
             sudo: ['ALL=(ALL) NOPASSWD:ALL']
-        chpasswd:
-          list: |
-            centos:nutanix/4u
-          expire: False
-        ssh_pwauth:   true
   num_vcpus_per_socket: 1
   boot_config:
     boot_device:
@@ -54,4 +49,4 @@ resources:
     network_function_nic_type: INGRESS
     subnet_reference:
       kind: subnet
-      uuid: c37571b5-51d2-4340-8db0-d62c89ce3c9e
+      uuid: be091fc1-47e2-4208-bf92-d8214363795a
