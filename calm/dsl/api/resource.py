@@ -43,7 +43,7 @@ class ResourceAPI:
         current_path = os.path.dirname(os.path.realpath(__file__))
         if passphrase:
             res, err = self.connection._call(
-                self.EXPORT_FILE.format(uuid), verify=False, method=REQUEST.METHOD.POST, request_json={"passphrase": passphrase}
+                self.EXPORT_FILE.format(uuid), verify=False, method=REQUEST.METHOD.POST, request_json={"passphrase": passphrase}, files=[]
             )
         else:
             res, err = self.connection._call(
