@@ -344,6 +344,20 @@ def decision_task_powershell(
     )
 
 
+def decision_task_escript(
+        script=None, filename=None, name=None, target=None, cred=None, depth=2
+):
+    return _decision_create(
+        "static",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        cred=cred,
+        depth=depth
+    )
+
+
 def _set_variable_create(task, variables=None):
     task.type = "SET_VARIABLE"
     eval_variables = []
@@ -1012,6 +1026,7 @@ class CalmTask:
 
         ssh = decision_task_ssh
         powershell = decision_task_powershell
+        escript = decision_task_escript
 
     class HTTP:
         def __new__(
