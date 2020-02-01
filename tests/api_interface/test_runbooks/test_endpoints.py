@@ -20,6 +20,7 @@ class TestExecTasks:
         test_linux_endpoint_create_with_required_fields, test_linux_endpoint_update, test_linux_endpoint_delete
         test_windows_endpoint_create_with_required_fields, test_windows_endpoint_update, test_windows_endpoint_delete
         test_http_endpoint_create_with_auth, test_http_endpoint_update, test_http_endpoint_delete
+        test_http_endpoint_download_upload, test_windows_endpoint_download_upload, test_linux_endpoint_download_upload
         """
 
         client = get_api_client()

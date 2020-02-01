@@ -1,4 +1,5 @@
 import pytest
+import os
 import uuid
 
 from calm.dsl.cli.main import get_api_client
@@ -16,6 +17,7 @@ class TestRunbooks:
     @pytest.mark.slow
     @pytest.mark.runbook
     def test_runbooks_list(self):
+        """ test_runbook_list """
 
         client = get_api_client()
 
@@ -31,6 +33,10 @@ class TestRunbooks:
     @pytest.mark.slow
     @pytest.mark.runbook
     def test_rb_crud(self):
+        """
+        test_runbook_create, test_runbook_update
+        test_runbook_run, test_runbook_delete, test_runbook_download_and_upload
+        """
 
         client = get_api_client()
         runbook = change_uuids(RunbookPayload, {})
@@ -105,6 +111,30 @@ class TestRunbooks:
 
         print(">> Runbook Run state: {}\n{}".format(state, reasons))
         assert state == RUNLOG.STATUS.SUCCESS
+
+        # download the runbook
+        file_path = client.runbook.export_file(rb_uuid, passphrase="test_passphrase")
+
+        # upload the runbook
+        res, err = client.runbook.import_file(file_path, rb_name + "-uploaded",
+                                              rb["metadata"].get("project_reference", {}).get("uuid", ""),
+                                              passphrase="test_passphrase")
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        uploaded_rb = res.json()
+        uploaded_rb_state = uploaded_rb["status"]["state"]
+        uploaded_rb_uuid = uploaded_rb["metadata"]["uuid"]
+        assert uploaded_rb_state == "ACTIVE"
+
+        # delete uploaded runbook
+        _, err = client.runbook.delete(uploaded_rb_uuid)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        else:
+            print("uploaded endpoint deleted")
+
+        # delete downloaded file
+        os.remove(file_path)
 
         # deleting runbook
         print("\n>>Deleting runbook")
