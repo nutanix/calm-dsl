@@ -76,9 +76,8 @@ class TestExecTasks:
         # download the endpoint
         file_path = client.endpoint.export_file(ep_uuid, passphrase="test_passphrase")
 
-        '''
         # upload the endpoint
-        res, err = client.endpoint.import_file(ep_uuid + '.json', ep_name + "-uploaded",
+        res, err = client.endpoint.import_file(file_path, ep_name + "-uploaded",
                                                ep["metadata"].get("project_reference", {}).get("uuid", ""),
                                                passphrase="test_passphrase")
         if err:
@@ -94,7 +93,6 @@ class TestExecTasks:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
         else:
             print("uploaded endpoint deleted")
-        '''
 
         # delete downloaded file
         os.remove(file_path)
