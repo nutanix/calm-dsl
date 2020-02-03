@@ -1086,7 +1086,7 @@ class CalmTask:
 
     class While:
         def __new__(cls, repeat_count, name=None, child_tasks=[],
-                    loop_counter="loop_counter", parallel_factor=1, exit_condition="SUCCESS"):
+                    loop_counter="iteration", parallel_factor=1, exit_condition="SUCCESS"):
             if not isinstance(repeat_count, int):
                 raise ValueError(
                     "Repeat Count must be an integer, got {}".format(repeat_count)
