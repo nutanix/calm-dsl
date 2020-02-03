@@ -8,7 +8,6 @@ from utils import upload_runbook, poll_runlog_status
 
 
 class TestDecisionTasks:
-    @pytest.mark.skip(reason="powershell on decision failing on feat")
     @pytest.mark.runbook
     def test_decision_task(self):
         """ test_desision_task """
