@@ -8,7 +8,7 @@ from calm.dsl.builtins import CalmTask, TaskInput
 
 
 inputs = [
-    TaskInput("name"),
+    TaskInput("my_name"),
     TaskInput("password", input_type="password"),
     TaskInput("date", input_type="date"),
     TaskInput("time", input_type="time"),
@@ -16,7 +16,7 @@ inputs = [
 ]
 
 
-code = '''print "Hello @@{name}@@"
+code = '''print "Hello @@{my_name}@@"
 print "Your Password is @@{password}@@"
 print "Date you selected is @@{date}@@"
 print "Time selected is @@{time}@@"
