@@ -10,7 +10,7 @@ from calm.dsl.cli.mpis import get_app_family_list, get_group_data_value
 class TestMPICommands:
     def test_mpis_list(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ["get", "marketplace_apps"])
+        result = runner.invoke(cli, ["get", "marketplace_bps"])
         assert result.exit_code == 0
         if result.exit_code:
             pytest.fail("MPI list call failed")
@@ -18,7 +18,7 @@ class TestMPICommands:
 
     def test_mpis_list_with_display_all_flag(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ["get", "marketplace_apps", "--display_all"])
+        result = runner.invoke(cli, ["get", "marketplace_bps", "--display_all"])
         assert result.exit_code == 0
         if result.exit_code:
             pytest.fail("MPI list call failed")
@@ -28,7 +28,7 @@ class TestMPICommands:
         runner = CliRunner()
         app_family_list = get_app_family_list()
 
-        input = ["get", "marketplace_apps", "--app_family", ""]
+        input = ["get", "marketplace_bps", "--app_family", ""]
         for app_family in app_family_list:
             input[3] = app_family
             result = runner.invoke(cli, input)
@@ -62,7 +62,7 @@ class TestMPICommands:
 
         mpi_name = get_group_data_value(entity_data, "name")
         runner = CliRunner()
-        result = runner.invoke(cli, ["describe", "marketplace_app", mpi_name])
+        result = runner.invoke(cli, ["describe", "marketplace_bp", mpi_name])
         assert result.exit_code == 0
         if result.exit_code:
             pytest.fail("MPI list call failed")
@@ -100,7 +100,7 @@ class TestMPICommands:
 
         runner = CliRunner()
         result = runner.invoke(
-            cli, ["describe", "marketplace_app", mpi_name, "--version", mpi_version]
+            cli, ["describe", "marketplace_bp", mpi_name, "--version", mpi_version]
         )
         assert result.exit_code == 0
         if result.exit_code:

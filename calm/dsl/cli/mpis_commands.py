@@ -12,7 +12,7 @@ def _get_app_family_list():
     return categories
 
 
-@get.command("marketplace_apps")
+@get.command("marketplace_bps")
 @click.option("--name", "-n", default=None, help="Search for mpis by name")
 @click.option("--quiet", "-q", is_flag=True, default=False, help="Show only mpi names.")
 @click.option(
@@ -34,7 +34,7 @@ def _get_mpis(obj, name, quiet, app_family, display_all):
     get_published_mpis(name, quiet, app_family, display_all)
 
 
-@describe.command("marketplace_app")
+@describe.command("marketplace_bp")
 @click.argument("mpi_name")
 @click.option("--version", "-v", default=None, help="Version of MPI")
 @click.pass_obj
@@ -44,7 +44,7 @@ def _describe_mpi(obj, mpi_name, version):
     describe_mpi(mpi_name, version)
 
 
-@launch.command("marketplace_app")
+@launch.command("marketplace_bp")
 @click.argument("mpi_name")
 @click.option("--version", "-v", default=None, help="Version of MPI")
 @click.option("--project", "-pj", default=None, help="Project for the application")
