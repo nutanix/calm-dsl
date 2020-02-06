@@ -43,7 +43,7 @@ def trunc_string(data="", max_length=50):
         return data[: max_length - 1] + "..."
 
 
-def get_mpis(mpi_name, app_family="All", app_states=[], group_member_count=0):
+def get_mpis(name, app_family="All", app_states=[], group_member_count=0):
     """
         To call groups() api for marketplace items
         if group_member_count is 0, it will not appply the filter at all
@@ -58,8 +58,8 @@ def get_mpis(mpi_name, app_family="All", app_states=[], group_member_count=0):
     if app_family != "All":
         filter += ";category_name==AppFamily;category_value=={}".format(app_family)
 
-    if mpi_name:
-        filter += ";name=={}".format(mpi_name)
+    if name:
+        filter += ";name=={}".format(name)
 
     payload = {
         "group_member_sort_attribute": "version",
@@ -99,7 +99,7 @@ def get_published_mpis(name, quiet, app_family, display_all):
         group_member_count = 1
 
     res = get_mpis(
-        mpi_name=name,
+        name=name,
         app_family=app_family,
         app_states=["PUBLISHED"],
         group_member_count=group_member_count,
@@ -148,13 +148,13 @@ def get_published_mpis(name, quiet, app_family, display_all):
     click.echo(table)
 
 
-def get_mpi_latest_version(mpi_name, app_states=[]):
+def get_mpi_latest_version(name, app_states=[]):
 
-    res = get_mpis(mpi_name=mpi_name, app_states=app_states, group_member_count=1)
+    res = get_mpis(name=name, app_states=app_states, group_member_count=1)
     group_results = res["group_results"]
 
     if not group_results:
-        raise Exception("No MPI found with name {}".format(mpi_name))
+        raise Exception("No MPI found with name {}".format(name))
 
     entity_results = group_results[0]["entity_results"]
     entity_version = get_group_data_value(entity_results[0]["data"], "version")
@@ -166,10 +166,10 @@ def describe_mpi(name, version=None):
 
     if not version:
         click.echo("Fetching latest version of MPI {} ...".format(name), nl=False)
-        version = get_mpi_latest_version(mpi_name=name, app_states=["PUBLISHED"])
-        click.echo("[{}]". format(version))
+        version = get_mpi_latest_version(name=name, app_states=["PUBLISHED"])
+        click.echo("[{}]".format(version))
 
-    bp = get_mpi_by_name_n_version(mpi_name=name, mpi_version=version)
+    bp = get_mpi_by_name_n_version(name=name, version=version)
 
     click.echo("\n----MarketPlace Blueprint Summary----\n")
     click.echo(
@@ -183,9 +183,11 @@ def describe_mpi(name, version=None):
     click.echo("App State: " + highlight_text(bp["status"]["resources"]["app_state"]))
     click.echo("Author: " + highlight_text(bp["status"]["resources"]["author"]))
 
-    project_list = bp["status"]["resources"]["project_reference_list"]
-    click.echo("Projects shared with [{}]: ".format(highlight_text(len(project_list))))
-    for project in project_list:
+    project_name_list = bp["status"]["resources"]["project_reference_list"]
+    click.echo(
+        "Projects shared with [{}]: ".format(highlight_text(len(project_name_list)))
+    )
+    for project in project_name_list:
         click.echo("\t{}".format(highlight_text(project["name"])))
 
     categories = bp["metadata"].get("categories", {})
@@ -218,7 +220,7 @@ def describe_mpi(name, version=None):
         )
 
 
-def get_mpi_by_name_n_version(mpi_name, mpi_version):
+def get_mpi_by_name_n_version(name, version):
     """
     It will fetch marketplace item with particular version.
     Args:
@@ -230,7 +232,7 @@ def get_mpi_by_name_n_version(mpi_name, mpi_version):
     client = get_api_client()
     payload = {
         "length": 250,
-        "filter": "name==" + mpi_name + ";version==" + mpi_version,
+        "filter": "name==" + name + ";version==" + version,
     }
     res, err = client.market_place.list(params=payload)
     if err:
@@ -239,7 +241,7 @@ def get_mpi_by_name_n_version(mpi_name, mpi_version):
     res = res.json()
     if not res["entities"]:
         message = "no mpi found with name {} and version {}.\nRun 'calm get mpis -d' to get detailed list of mpis".format(
-            mpi_name, mpi_version
+            name, version
         )
         raise Exception(message)
 
@@ -252,33 +254,33 @@ def get_mpi_by_name_n_version(mpi_name, mpi_version):
     return res
 
 
-def convert_mpi_into_blueprint(mpi_name, project_name, mpi_version=None):
+def convert_mpi_into_blueprint(name, project_name, version=None):
 
     config = get_config()
     client = get_api_client()
 
-    if not mpi_version:
-        click.echo("Fetching latest version of MPI {} ...".format(mpi_name), nl=False)
-        mpi_version = get_mpi_latest_version(mpi_name=mpi_name, app_states=["PUBLISHED"])
-        click.echo("[{}]". format(mpi_version))
+    if not version:
+        click.echo("Fetching latest version of MPI {} ...".format(name), nl=False)
+        version = get_mpi_latest_version(name=name, app_states=["PUBLISHED"])
+        click.echo("[{}]".format(version))
 
     click.echo("Fetching mpi store item ...", nl=False)
-    mpi_data = get_mpi_by_name_n_version(mpi_name=mpi_name, mpi_version=mpi_version)
+    mpi_data = get_mpi_by_name_n_version(name=name, version=version)
     click.echo("[Success]")
 
     # Finding the projects associated with mpi
     shared_projects = mpi_data["status"]["resources"]["project_reference_list"]
 
-    project = project_name or config["PROJECT"]["name"]
+    project_name = project_name or config["PROJECT"]["name"]
     project_uuid = None
     project_name_list = []
     for project_ref in shared_projects:
         project_name_list.append(project_ref["name"])
-        if project == project_ref["name"]:
+        if project_name == project_ref["name"]:
             project_uuid = project_ref["uuid"]
 
     if not shared_projects:
-        raise Exception("MPI {} is not shared with any project !!!".format(mpi_name))
+        raise Exception("MPI {} is not shared with any project !!!".format(name))
 
     if not project_uuid:
         raise Exception("choose from {} projects".format(project_name_list))
@@ -303,7 +305,7 @@ def convert_mpi_into_blueprint(mpi_name, project_name, mpi_version=None):
     bp_spec["spec"]["environment_uuid"] = env_uuid
 
     bp_spec["spec"]["app_blueprint_name"] = "Mpi-Bp-{}-{}".format(
-        mpi_name, str(uuid.uuid4())[-10:]
+        name, str(uuid.uuid4())[-10:]
     )
 
     bp_spec["metadata"] = {
@@ -330,16 +332,18 @@ def convert_mpi_into_blueprint(mpi_name, project_name, mpi_version=None):
 
 
 def launch_mpi(
-    mpi_name, version, project, app_name=None, profile_name=None, patch_editables=True,
+    name, version, project_name, app_name=None, profile_name=None, patch_editables=True,
 ):
 
     client = get_api_client()
 
-    bp_payload = convert_mpi_into_blueprint(mpi_name=mpi_name, project_name=project, mpi_version=version)
+    bp_payload = convert_mpi_into_blueprint(
+        name=name, project_name=project_name, version=version
+    )
     bp_name = bp_payload["metadata"].get("name")
 
     click.echo("Launching mpi blueprint {} ...".format(bp_name))
-    app_name = app_name or "Mpi-App-{}-{}".format(mpi_name, str(uuid.uuid4())[-10:])
+    app_name = app_name or "Mpi-App-{}-{}".format(name, str(uuid.uuid4())[-10:])
     launch_blueprint_simple(
         client,
         patch_editables=patch_editables,
