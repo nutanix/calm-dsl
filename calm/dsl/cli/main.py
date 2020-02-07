@@ -154,13 +154,25 @@ def launch():
 
 @main.group(cls=DYMGroup)
 def publish():
-    """Publish blueprints to marketplace manager"""
+    """Publish blueprints to marketplace"""
     pass
 
 
 @main.group(cls=DYMGroup)
 def approve():
-    """Approve blueprints to marketplace manager"""
+    """Approve blueprints in marketplace manager"""
+    pass
+
+
+@main.group(cls=DYMGroup)
+def unpublish():
+    """Unpublish blueprints from marketplace"""
+    pass
+
+
+@main.group(cls=DYMGroup)
+def reject():
+    """Reject blueprints from marketplace manager"""
     pass
 
 

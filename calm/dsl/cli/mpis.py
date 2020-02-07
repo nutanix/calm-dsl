@@ -472,7 +472,9 @@ def publish_bp_as_existing_marketplace_bp(
     app_group_uuid = entity_group["group_by_column_value"]
 
     # Search whether given version of marketplace items already exists or not
-    res = get_mpis(app_group_uuid=app_group_uuid, app_states=["PUBLISHED", "PENDING", "ACCEPTED"])
+    res = get_mpis(
+        app_group_uuid=app_group_uuid, app_states=["PUBLISHED", "PENDING", "ACCEPTED"]
+    )
 
     group_results = res["group_results"]
     entity_results = group_results[0]["entity_results"]
@@ -571,6 +573,102 @@ def publish_marketplace_bp(bp_name, version=None, projects=[], category=None):
         raise Exception(
             "To publish to the Marketplace, please provide a project first."
         )
+
+    res, err = client.market_place.update(uuid=bp_uuid, payload=bp_data)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+
+def update_marketplace_bp(name, version, category=None, projects=[], description=None):
+
+    client = get_api_client()
+    mpi_data = get_mpi_by_name_n_version(name=name, version=version)
+    bp_uuid = mpi_data["metadata"]["uuid"]
+
+    res, err = client.market_place.read(bp_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    bp_data = res.json()
+    bp_data.pop("status", None)
+    bp_data["api_version"] = "3.0"
+
+    if category:
+        bp_data["metadata"]["categories"] = {"AppFamily": category}
+
+    if projects:
+        # Clear all stored projects
+        bp_data["spec"]["resources"]["project_reference_list"] = []
+        for project in projects:
+            project_data = get_project(client, project)
+
+            bp_data["spec"]["resources"]["project_reference_list"].append(
+                {
+                    "kind": "project",
+                    "name": project,
+                    "uuid": project_data["metadata"]["uuid"],
+                }
+            )
+
+    if description:
+        bp_data["spec"]["description"] = description
+
+    res, err = client.market_place.update(uuid=bp_uuid, payload=bp_data)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+
+def delete_marketplace_bp(name, version):
+
+    client = get_api_client()
+    mpi_data = get_mpi_by_name_n_version(name=name, version=version)
+    bp_uuid = mpi_data["metadata"]["uuid"]
+
+    res, err = client.market_place.delete(bp_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+
+def reject_marketplace_bp(name, version):
+
+    client = get_api_client()
+    if not version:
+        version = get_mpi_latest_version(name=name, app_states=["ACCEPTED"])
+
+    bp = get_mpi_by_name_n_version(name=name, version=version)
+    bp_uuid = bp["metadata"]["uuid"]
+
+    res, err = client.market_place.read(bp_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    bp_data = res.json()
+    bp_data.pop("status", None)
+    bp_data["api_version"] = "3.0"
+    bp_data["spec"]["resources"]["app_state"] = "REJECTED"
+
+    res, err = client.market_place.update(uuid=bp_uuid, payload=bp_data)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+
+def unpublish_marketplace_bp(name, version):
+
+    client = get_api_client()
+    if not version:
+        version = get_mpi_latest_version(name=name, app_states=["ACCEPTED"])
+
+    bp = get_mpi_by_name_n_version(name=name, version=version)
+    bp_uuid = bp["metadata"]["uuid"]
+
+    res, err = client.market_place.read(bp_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    bp_data = res.json()
+    bp_data.pop("status", None)
+    bp_data["api_version"] = "3.0"
+    bp_data["spec"]["resources"]["app_state"] = "ACCEPTED"
 
     res, err = client.market_place.update(uuid=bp_uuid, payload=bp_data)
     if err:

@@ -1,6 +1,16 @@
 import click
 
-from .main import get, describe, launch, publish, approve
+from .main import (
+    get,
+    describe,
+    launch,
+    publish,
+    approve,
+    update,
+    delete,
+    reject,
+    unpublish,
+)
 from .mpis import (
     get_published_mpis,
     get_app_family_list,
@@ -9,7 +19,11 @@ from .mpis import (
     publish_bp_as_new_marketplace_bp,
     publish_bp_as_existing_marketplace_bp,
     approve_marketplace_bp,
-    publish_marketplace_bp
+    publish_marketplace_bp,
+    update_marketplace_bp,
+    delete_marketplace_bp,
+    reject_marketplace_bp,
+    unpublish_marketplace_bp,
 )
 
 
@@ -129,7 +143,7 @@ def publish_bp(
         )
 
 
-@approve.command("bp")
+@approve.command("marketplace_bp")
 @click.argument("name", nargs=1)
 @click.option("--version", "-v", default=None, help="Version of MPI")
 @click.option("--category", "-c", default=None, help="Category for the MPI")
@@ -148,4 +162,55 @@ def approve_bp(name, version, category, projects=[]):
 @click.option("--project", "-p", "projects", multiple=True)
 def _publish_marketplace_bp(name, version, category, projects=[]):
 
-    publish_marketplace_bp(bp_name=name, version=version, category=category, projects=projects)
+    publish_marketplace_bp(
+        bp_name=name, version=version, category=category, projects=projects
+    )
+
+
+@update.command("marketplace_bp")
+@click.argument("name", nargs=1)
+@click.option(
+    "--version", "-v", required=True, help="Version of MPI"
+)  # Required to provide unwanted update of published mpi
+@click.option("--category", "-c", default=None, help="Category for MPI")
+@click.option("--project", "-p", "projects", multiple=True)
+@click.option("--description", "-d", help="Description for MPI")
+def _update_marketplace_bp(name, version, category, projects, description):
+
+    update_marketplace_bp(
+        name=name,
+        version=version,
+        category=category,
+        projects=projects,
+        description=description,
+    )
+
+
+@delete.command("marketplace_bp")
+@click.argument("name")
+@click.option(
+    "--version", "-v", required=True, help="Version of MPI"
+)  # Required to provide unwanted delete of unknown mpi
+def _delete_marketplace_bp(name, version):
+
+    delete_marketplace_bp(name, version)
+
+
+@reject.command("marketplace_bp")
+@click.argument("name")
+@click.option(
+    "--version", "-v", required=True, help="Version of MPI"
+)  # Required to provide unwanted delete of unknown mpi
+def _reject_marketplace_bp(name, version):
+
+    reject_marketplace_bp(name, version)
+
+
+@unpublish.command("marketplace_bp")
+@click.argument("name")
+@click.option(
+    "--version", "-v", required=True, help="Version of MPI"
+)  # Required to provide unwanted delete of unknown mpi
+def _unpublish_marketplace_bp(name, version):
+
+    unpublish_marketplace_bp(name, version)
