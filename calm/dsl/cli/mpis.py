@@ -5,7 +5,8 @@ from prettytable import PrettyTable
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.config import get_config
 from .utils import highlight_text, get_states_filter
-from .bps import launch_blueprint_simple
+from .bps import launch_blueprint_simple, get_blueprint
+from .projects import get_project
 
 
 def get_app_family_list():
@@ -43,7 +44,14 @@ def trunc_string(data="", max_length=50):
         return data[: max_length - 1] + "..."
 
 
-def get_mpis(name, app_family="All", app_states=[], group_member_count=0):
+def get_mpis(
+    name=None,
+    app_family="All",
+    app_states=[],
+    group_member_count=0,
+    app_source=None,
+    app_group_uuid=None,
+):
     """
         To call groups() api for marketplace items
         if group_member_count is 0, it will not appply the filter at all
@@ -61,11 +69,17 @@ def get_mpis(name, app_family="All", app_states=[], group_member_count=0):
     if name:
         filter += ";name=={}".format(name)
 
+    if app_source:
+        filter += ";app_source=={}".format(app_source)
+
+    if app_group_uuid:
+        filter += ";app_group_uuid=={}".format(app_group_uuid)
+
     payload = {
         "group_member_sort_attribute": "version",
         "group_member_sort_order": "DESCENDING",
         "grouping_attribute": "app_group_uuid",
-        "group_count": 48,
+        "group_count": 64,
         "group_offset": 0,
         "filter_criteria": filter,
         "entity_type": "marketplace_item",
@@ -73,8 +87,18 @@ def get_mpis(name, app_family="All", app_states=[], group_member_count=0):
             {"attribute": "name"},
             {"attribute": "author"},
             {"attribute": "version"},
+            {"attribute": "categories"},
+            {"attribute": "owner_reference"},
+            {"attribute": "owner_username"},
+            {"attribute": "project_names"},
+            {"attribute": "project_uuids"},
             {"attribute": "app_state"},
             {"attribute": "description"},
+            {"attribute": "spec_version"},
+            {"attribute": "app_attribute_list"},
+            {"attribute": "app_group_uuid"},
+            {"attribute": "icon_list"},
+            {"attribute": "change_log"},
             {"attribute": "app_source"},
         ],
     }
@@ -351,3 +375,203 @@ def launch_mpi(
         app_name=app_name,
         blueprint=bp_payload,
     )
+
+
+def publish_bp_to_marketplace_manager(
+    bp_name,
+    marketplace_bp_name,
+    version,
+    description="",
+    with_secrets=False,
+    app_group_uuid=None,
+):
+
+    client = get_api_client()
+    config = get_config()
+    bp = get_blueprint(client, bp_name)
+    bp_uuid = bp.get("metadata", {}).get("uuid", "")
+
+    if with_secrets:
+        bp_data, err = client.blueprint.export_json_with_secrets(bp_uuid)
+
+    else:
+        bp_data, err = client.blueprint.export_json(bp_uuid)
+
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    bp_data = bp_data.json()
+    bp_template = {
+        "spec": {
+            "name": marketplace_bp_name,
+            "description": description,
+            "resources": {
+                "app_attribute_list": ["FEATURED"],
+                "icon_reference_list": [],
+                "author": config["SERVER"]["pc_username"],
+                "version": version,
+                "app_group_uuid": app_group_uuid or str(uuid.uuid4()),
+                "app_blueprint_template": {
+                    "status": bp_data["status"],
+                    "spec": bp_data["spec"],
+                },
+            },
+        },
+        "api_version": "3.0",
+        "metadata": {"kind": "marketplace_item"},
+    }
+
+    res, err = client.market_place.create(bp_template)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+
+def publish_bp_as_new_marketplace_bp(
+    bp_name, marketplace_bp_name, version, description="", with_secrets=False,
+):
+
+    client = get_api_client()
+
+    # Search whether this marketplace item exists or not
+    res = get_mpis(name=marketplace_bp_name, group_member_count=1, app_source="LOCAL")
+    group_count = res["filtered_group_count"]
+
+    if group_count:
+        raise Exception(
+            "A local marketplace item exists with same name ({}) in another app family".format(
+                marketplace_bp_name
+            )
+        )
+
+    publish_bp_to_marketplace_manager(
+        bp_name=bp_name,
+        marketplace_bp_name=marketplace_bp_name,
+        version=version,
+        description=description,
+        with_secrets=with_secrets,
+    )
+
+
+def publish_bp_as_existing_marketplace_bp(
+    bp_name, marketplace_bp_name, version, description="", with_secrets=False
+):
+
+    client = get_api_client()
+    config = get_config()
+
+    res = get_mpis(name=marketplace_bp_name, group_member_count=1, app_source="LOCAL")
+    group_results = res["group_results"]
+    if not group_results:
+        raise Exception(
+            "No local marketplace blueprint exists with name {}".format(
+                marketplace_bp_name
+            )
+        )
+
+    entity_group = group_results[0]
+    app_group_uuid = entity_group["group_by_column_value"]
+
+    # Search whether given version of marketplace items already exists or not
+    res = get_mpis(app_group_uuid=app_group_uuid, app_states=["PUBLISHED", "PENDING", "ACCEPTED"])
+
+    group_results = res["group_results"]
+    entity_results = group_results[0]["entity_results"]
+
+    for entity in entity_results:
+        entity_version = get_group_data_value(entity["data"], "version")
+        entity_app_state = get_group_data_value(entity["data"], "app_state")
+
+        if entity_version == version:
+            raise Exception(
+                "An item exists with same version ({}) and app_state ({}) in the chosen app family.".format(
+                    entity_version, entity_app_state
+                )
+            )
+
+    publish_bp_to_marketplace_manager(
+        bp_name=bp_name,
+        marketplace_bp_name=marketplace_bp_name,
+        version=version,
+        description=description,
+        with_secrets=with_secrets,
+        app_group_uuid=app_group_uuid,
+    )
+
+
+def approve_marketplace_bp(bp_name, version=None, projects=[], category=None):
+
+    client = get_api_client()
+    if not version:
+        version = get_mpi_latest_version(name=bp_name, app_states=["PENDING"])
+
+    bp = get_mpi_by_name_n_version(name=bp_name, version=version)
+    bp_uuid = bp["metadata"]["uuid"]
+
+    res, err = client.market_place.read(bp_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    bp_data = res.json()
+    bp_data.pop("status", None)
+    bp_data["api_version"] = "3.0"
+    bp_data["spec"]["resources"]["app_state"] = "ACCEPTED"
+
+    for project in projects:
+        project_data = get_project(client, project)
+
+        bp_data["spec"]["resources"]["project_reference_list"].append(
+            {
+                "kind": "project",
+                "name": project,
+                "uuid": project_data["metadata"]["uuid"],
+            }
+        )
+
+    res, err = client.market_place.update(uuid=bp_uuid, payload=bp_data)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+
+def publish_marketplace_bp(bp_name, version=None, projects=[], category=None):
+
+    client = get_api_client()
+    if not version:
+        version = get_mpi_latest_version(name=bp_name, app_states=["ACCEPTED"])
+
+    bp = get_mpi_by_name_n_version(name=bp_name, version=version)
+    bp_uuid = bp["metadata"]["uuid"]
+
+    res, err = client.market_place.read(bp_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    bp_data = res.json()
+    bp_data.pop("status", None)
+    bp_data["api_version"] = "3.0"
+    bp_data["spec"]["resources"]["app_state"] = "PUBLISHED"
+
+    if projects:
+        # Clear the stored projects
+        # Right now there is no updation of referenced projects
+        bp_data["spec"]["resources"]["project_reference_list"] = []
+
+    for project in projects:
+        project_data = get_project(client, project)
+
+        bp_data["spec"]["resources"]["project_reference_list"].append(
+            {
+                "kind": "project",
+                "name": project,
+                "uuid": project_data["metadata"]["uuid"],
+            }
+        )
+
+    # Atleast 1 project required for publishing to marketplace
+    if not bp_data["spec"]["resources"]["project_reference_list"]:
+        raise Exception(
+            "To publish to the Marketplace, please provide a project first."
+        )
+
+    res, err = client.market_place.update(uuid=bp_uuid, payload=bp_data)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))

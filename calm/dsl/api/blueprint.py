@@ -13,6 +13,8 @@ class BlueprintAPI(ResourceAPI):
         self.MARKETPLACE_LAUNCH = self.PREFIX + "/marketplace_launch"
         self.LAUNCH_POLL = self.ITEM + "/pending_launches/{}"
         self.BP_EDITABLES = self.ITEM + "/runtime_editables"
+        self.EXPORT_JSON = self.ITEM + "/export_json"
+        self.EXPORT_JSON_WITH_SECRETS = self.ITEM + "/export_json?keep_secrets=true"
 
     def upload(self, payload):
         return self.connection._call(
@@ -312,3 +314,11 @@ class BlueprintAPI(ResourceAPI):
         uuid = bp["metadata"]["uuid"]
 
         return self.update(uuid, update_payload)
+
+    def export_json(self, uuid):
+        url = self.EXPORT_JSON.format(uuid)
+        return self.connection._call(url, verify=False, method=REQUEST.METHOD.GET)
+
+    def export_json_with_secrets(self, uuid):
+        url = self.EXPORT_JSON_WITH_SECRETS.format(uuid)
+        return self.connection._call(url, verify=False, method=REQUEST.METHOD.GET)

@@ -1,7 +1,16 @@
 import click
 
-from .main import get, describe, launch
-from .mpis import get_published_mpis, get_app_family_list, describe_mpi, launch_mpi
+from .main import get, describe, launch, publish, approve
+from .mpis import (
+    get_published_mpis,
+    get_app_family_list,
+    describe_mpi,
+    launch_mpi,
+    publish_bp_as_new_marketplace_bp,
+    publish_bp_as_existing_marketplace_bp,
+    approve_marketplace_bp,
+    publish_marketplace_bp
+)
 
 
 def _get_app_family_list():
@@ -76,3 +85,67 @@ def _launch_mpi(
         profile_name=profile_name,
         patch_editables=not ignore_runtime_variables,
     )
+
+
+@publish.command("bp")
+@click.argument("bp_name")
+@click.option("--version", "-v", required=True, help="Version of MPI")
+@click.option("--name", "-n", default=None, help="Name of Marketplace Blueprint")
+@click.option("--description", "-d", default="", help="Description for the blueprint")
+@click.option(
+    "--with_secrets",
+    "-w",
+    is_flag=True,
+    default=False,
+    help="Preserve secrets while publishing blueprints to marketpalce",
+)
+@click.option(
+    "--existing_markeplace_bp",
+    "-e",
+    is_flag=True,
+    default=False,
+    help="Publish as new version of existing marketplace blueprint",
+)
+def publish_bp(
+    bp_name, name, version, description, with_secrets, existing_markeplace_bp
+):
+
+    if not existing_markeplace_bp:
+        publish_bp_as_new_marketplace_bp(
+            bp_name=bp_name,
+            marketplace_bp_name=name,
+            version=version,
+            description=description,
+            with_secrets=with_secrets,
+        )
+
+    else:
+        publish_bp_as_existing_marketplace_bp(
+            bp_name=bp_name,
+            marketplace_bp_name=name,
+            version=version,
+            description=description,
+            with_secrets=with_secrets,
+        )
+
+
+@approve.command("bp")
+@click.argument("name", nargs=1)
+@click.option("--version", "-v", default=None, help="Version of MPI")
+@click.option("--category", "-c", default=None, help="Category for the MPI")
+@click.argument("projects", nargs=-1)
+def approve_bp(name, version, category, projects=[]):
+
+    approve_marketplace_bp(
+        bp_name=name, version=version, projects=projects, category=category
+    )
+
+
+@publish.command("marketplace_bp")
+@click.argument("name", nargs=1)
+@click.option("--version", "-v", default=None, help="Version of MPI")
+@click.option("--category", "-c", default=None, help="Category for the MPI")
+@click.argument("projects", nargs=-1)
+def _publish_marketplace_bp(name, version, category, projects=[]):
+
+    publish_marketplace_bp(bp_name=name, version=version, category=category, projects=projects)

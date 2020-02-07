@@ -153,6 +153,18 @@ def launch():
 
 
 @main.group(cls=DYMGroup)
+def publish():
+    """Publish blueprints to marketplace manager"""
+    pass
+
+
+@main.group(cls=DYMGroup)
+def approve():
+    """Approve blueprints to marketplace manager"""
+    pass
+
+
+@main.group(cls=DYMGroup)
 def describe():
     """Describe apps, blueprints, projects, accounts"""
     pass
