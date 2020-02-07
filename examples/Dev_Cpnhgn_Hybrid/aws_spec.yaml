@@ -19,4 +19,3 @@ resources:
   - security_group_id: sg-3c6c7173
   subnet_id: subnet-6bf27b0c
   vpc_id: vpc-7a65bf00
-#type: PROVISION_AWS_VM

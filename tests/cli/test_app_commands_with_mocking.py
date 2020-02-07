@@ -35,7 +35,7 @@ class TestAppCommands:
     def test_bp_launch(self):
         runner = CliRunner()
         self.created_bp_name = "Test_Existing_VM_{}".format(int(time.time()))
-        LOG.info("Creating Bp {}". format(self.created_bp_name))
+        LOG.info("Creating Bp {}".format(self.created_bp_name))
         result = runner.invoke(
             cli,
             [
@@ -49,7 +49,7 @@ class TestAppCommands:
         assert result.exit_code == 0
         LOG.info("Success")
 
-        LOG.info("Launching Bp {}". format(self.created_bp_name))
+        LOG.info("Launching Bp {}".format(self.created_bp_name))
         result = runner.invoke(
             cli,
             [

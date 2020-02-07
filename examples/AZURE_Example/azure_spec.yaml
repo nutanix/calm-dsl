@@ -50,5 +50,4 @@ resources:
       name: os-@@{calm_unique_hash}@@-@@{calm_array_index}@@-disk
       size_in_gb: -1
       storage_type: ''
-type: PROVISION_AZURE_VM
 name: ""

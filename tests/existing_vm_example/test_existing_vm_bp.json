@@ -765,8 +765,7 @@
                     "type": "EXISTING_VM",
                     "os_type": "Linux",
                     "create_spec": {
-                        "address": "10.46.34.230",
-                        "type": "PROVISION_EXISTING_MACHINE"
+                        "address": "10.46.34.230"
                     },
                     "variable_list": [],
                     "action_list": [

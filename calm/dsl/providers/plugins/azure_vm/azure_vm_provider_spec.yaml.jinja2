@@ -4,7 +4,7 @@
 title: Azure Vault Certificate
 type: object
 properties:
-  certificate_url: 
+  certificate_url:
     type: string
   certificate_store:
     type: string
@@ -17,7 +17,7 @@ properties:
 title: Azure Secrets
 type: object
 properties:
-  source_vault_id: 
+  source_vault_id:
     type: string
   vault_certificates:
     type: array
@@ -76,7 +76,7 @@ properties:
 title: Azure Windows OS Configuration
 type: object
 properties:
-  winrm_listeners: 
+  winrm_listeners:
     type: array
     items:
       {{ azureWinRMListener() | indent(6) }}
@@ -100,14 +100,14 @@ properties:
 
 title: AZURE OS Profile
 type: object
-properties: 
+properties:
   windows_config:
     {{ azureWindowsOSConfig() | indent(4) }}
   linux_config:
     {{ azureLinuxOSConfig() | indent(4) }}
-  secrets: 
+  secrets:
     type: array
-    items: 
+    items:
       {{ azureSecrets() | indent(6) }}
 
 {%- endmacro %}
@@ -124,7 +124,7 @@ properties:
     type: string
   storage_type:
     type: string
-  caching_type: 
+  caching_type:
     type: string
   create_option:
     type: string
@@ -181,9 +181,9 @@ properties:
     type: boolean
   version:
     type: string
-  
+
 {%- endmacro %}
-  
+
 
 {% macro azureStorageProfile() -%}
 
@@ -271,7 +271,7 @@ properties:
   primary_nic:
     type: integer
     default: -1
-  
+
 {%- endmacro %}
 
 
@@ -297,8 +297,8 @@ properties:
     type: string
   value:
     type: string
-  
-{%- endmacro %} 
+
+{%- endmacro %}
 
 
 {% macro azureResources() -%}
@@ -337,10 +337,6 @@ properties:
 title: AZURE CreateSpec
 type: object
 properties:
-  type:
-    type: string
-    enum: [PROVISION_AZURE_VM]
-    default: PROVISION_AZURE_VM
   name:
     type: string
   resources:

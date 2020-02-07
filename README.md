@@ -17,6 +17,7 @@
 ## Dev Setup
 
 MacOS:
+ - Install [Xcode](https://apps.apple.com/us/app/xcode/id497799835)
  - Install homebrew: `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`.
  - Install python3, git and openssl: `brew install git python3 openssl`.
  - Add path to flags: `export LDFLAGS="-L$(brew --prefix openssl)/lib"` & `export CFLAGS="-I$(brew --prefix openssl)/include"`.
@@ -39,5 +40,8 @@ Use:
 
 Documentation for the Calm DSL will be stored in the [docs](docs/) folder, and will continually be added to. If you're not familiar with Calm Terminology basics, please review the [Calm Terminology](docs/01-Calm-Terminology/) doc page.
 
+## Video Links
+ - [Workstation Setup](https://youtu.be/uIZmHQhioZg)
+ - [Blueprint & App management](https://youtu.be/jb-ZllhaROs)
 
 Code formatted by [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)

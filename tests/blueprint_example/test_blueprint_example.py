@@ -64,7 +64,7 @@ class ExistingVM(Substrate):
     """CentOS VM"""
 
     provider_type = "EXISTING_VM"
-    provider_spec = provider_spec({"address": EXISTING_VM_IP, "type": "PROVISION_EXISTING_MACHINE"})
+    provider_spec = provider_spec({"address": EXISTING_VM_IP})
     readiness_probe = {
         "disabled": False,
         "delay_secs": "10",

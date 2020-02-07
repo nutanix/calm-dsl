@@ -75,7 +75,7 @@ class Provider(ProviderBase):
 def get_provider(provider_type):
 
     if provider_type not in ProviderBase.providers:
-        LOG.debug("Registered providers: {}". format(ProviderBase.providers))
+        LOG.debug("Registered providers: {}".format(ProviderBase.providers))
         raise Exception("provider not registered")
 
     return ProviderBase.providers[provider_type]

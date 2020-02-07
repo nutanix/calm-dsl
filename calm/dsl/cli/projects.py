@@ -89,7 +89,7 @@ def get_project(client, name):
 
     params = {"filter": "name=={}".format(name)}
 
-    LOG.info("Searcing for the project {}". format(name))
+    LOG.info("Searcing for the project {}".format(name))
     res, err = client.project.list(params=params)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -388,7 +388,7 @@ def poll_creation_status(client, project_uuid):
             break
 
     LOG.debug("Waited for project creation for 20 seconds(polled at 2 sec interval).")
-    LOG.info("Project state: {}". format(project_state))
+    LOG.info("Project state: {}".format(project_state))
 
 
 def poll_updation_status(client, project_uuid, old_spec_version):
@@ -430,7 +430,7 @@ def poll_updation_status(client, project_uuid, old_spec_version):
             break
 
     LOG.debug("Waited for project updation for 20 seconds(polled at 2 sec interval)")
-    LOG.info("Project state: {}". format(project_state))
+    LOG.info("Project state: {}".format(project_state))
 
 
 def poll_deletion_status(client, project_uuid):
@@ -463,4 +463,4 @@ def poll_deletion_status(client, project_uuid):
             break
 
     LOG.debug("Waited for project deletion for 20 seconds(polled at 2 sec interval)")
-    LOG.info("Project state: {}". format(project_state))
+    LOG.info("Project state: {}".format(project_state))

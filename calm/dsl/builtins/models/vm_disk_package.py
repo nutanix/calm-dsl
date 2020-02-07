@@ -76,7 +76,7 @@ def vm_disk_package(name="", description="", config_file=None, config={}):
         config = read_spec(filename=config_file, depth=2)
 
     if not isinstance(config, dict):
-        LOG.debug("Downloadable Image Config: {}". format(config))
+        LOG.debug("Downloadable Image Config: {}".format(config))
         raise TypeError("Downloadable image configuration is not of type dict")
 
     config["description"] = description or config.get("description", "")
@@ -104,7 +104,7 @@ def ahv_vm_disk_package(name="", description="", config_file=None, config_data={
         config_data = read_spec(filename=config_file, depth=2)
 
     if not isinstance(config_data, dict):
-        LOG.debug("Downloadable Image Config: {}". format(config_data))
+        LOG.debug("Downloadable Image Config: {}".format(config_data))
         raise TypeError("Downloadable image configuration is not of type dict")
 
     return vm_disk_package(name=name, description=description, config=config_data)

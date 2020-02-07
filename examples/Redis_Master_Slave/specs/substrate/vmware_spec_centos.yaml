@@ -26,4 +26,3 @@ resources:
   template_nic_list: []
 storage_pod: QA
 template: name
-type: PROVISION_VMWARE_VM

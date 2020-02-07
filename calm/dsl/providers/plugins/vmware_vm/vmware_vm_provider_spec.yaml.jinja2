@@ -4,7 +4,7 @@
 title: VCenter NICs
 type: object
 properties:
-  nic_type: 
+  nic_type:
     type: string
   net_name:
     type: string
@@ -19,7 +19,7 @@ type: object
 properties:
   nic_type:
     type: string
-  net_name: 
+  net_name:
     type: string
   is_deleted:
     type: boolean
@@ -39,7 +39,7 @@ properties:
   disk_type:
     type: string
     default: disk
-  adapter_type: 
+  adapter_type:
     type: string
     default: SCSI
   disk_size_mb:
@@ -64,13 +64,13 @@ properties:
 
 {% macro VcenterTemplateDiskInfo() -%}
 
-title: VCenter Template DISK 
+title: VCenter Template DISK
 type: object
 properties:
   disk_type:
     type: string
     default: disk
-  adapter_type: 
+  adapter_type:
     type: string
     default: SCSI
   disk_size_mb:
@@ -106,7 +106,7 @@ type: object
 properties:
   controller_type:
     type: string
-  key: 
+  key:
     type: integer
     default: -1
   bus_sharing:
@@ -117,12 +117,12 @@ properties:
 
 {% macro VcenterTemplateControllerInfo() -%}
 
-title: VCenter Template Controller 
+title: VCenter Template Controller
 type: object
 properties:
   controller_type:
     type: string
-  key: 
+  key:
     type: integer
   bus_sharing:
     type: string
@@ -138,7 +138,7 @@ properties:
 title: Guest Customization Network Settings
 type: object
 properties:
-  name: 
+  name:
     type: string
   subnet_mask:
     type: string
@@ -159,7 +159,7 @@ properties:
 title: Guest Customization Linux data
 type: object
 properties:
-  hostname: 
+  hostname:
     type: string
   domain:
     type: string
@@ -175,11 +175,11 @@ properties:
     type: string
   dns_search_path:
     type: array
-    items: 
+    items:
       type: string
   network_settings:
     type: array
-    items: 
+    items:
       {{ VcenterNetworkSetting() | indent(6) }}
 
 {%- endmacro %}
@@ -220,11 +220,11 @@ properties:
     type: string
   dns_search_path:
     type: array
-    items: 
+    items:
       type: string
   network_settings:
     type: array
-    items: 
+    items:
       {{ VcenterNetworkSetting() | indent(6) }}
   auto_logon:
     type: boolean
@@ -269,7 +269,7 @@ properties:
 title:  VMWARE Guest Customization
 type: object
 properties:
-  customization_type: 
+  customization_type:
     type: string
     enum:
     - GUEST_OS_LINUX
@@ -313,7 +313,7 @@ properties:
       {{ VcenterNicInfo() | indent(6) }}
   disk_list:
     type: array
-    items: 
+    items:
       {{ VcenterVdiskInfo() | indent(6) }}
   controller_list:
     type: array
@@ -332,7 +332,7 @@ properties:
     items:
       {{ VcenterTemplateControllerInfo() | indent(6) }}
   guest_customization:
-    {{ VcenterGuestCustomization() | indent(4) }} 
+    {{ VcenterGuestCustomization() | indent(4) }}
 
 {%- endmacro %}
 
@@ -342,13 +342,8 @@ properties:
 title: VMWare CreateSpec
 type: object
 properties:
-  name: 
+  name:
     type: string
-  type:
-    type: string
-    enum: 
-    - PROVISION_VMWARE_VM
-    default: PROVISION_VMWARE_VM
   drs_mode:
     type: boolean
     default: False

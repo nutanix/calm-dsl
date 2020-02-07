@@ -27,7 +27,7 @@ def highlight_text(text, **kwargs):
 def create_spec():
 
     addr = click.prompt("Enter the address :", default="")
-    spec = {"type": "PROVISION_EXISTING_MACHINE", "address": addr}
+    spec = {"address": addr}
 
     click.secho("\nCreate spec for your Existing Machine VM:\n", underline=True)
     click.echo(highlight_text(yaml.dump(spec, default_flow_style=False)))

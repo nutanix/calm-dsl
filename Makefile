@@ -59,3 +59,6 @@ _init_centos:
 	which docker || { curl -fsSL https://get.docker.com/ | sh; sudo systemctl start docker; sudo systemctl enable docker; sudo usermod -aG docker $(whoami); }
 
 	rpm -q python36 || sudo yum -y install python36 python-pip python3-devel
+
+	# Install virtual env
+	sudo pip install -U virtualenv
