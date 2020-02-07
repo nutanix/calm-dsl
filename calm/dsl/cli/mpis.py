@@ -430,8 +430,6 @@ def publish_bp_as_new_marketplace_bp(
     bp_name, marketplace_bp_name, version, description="", with_secrets=False,
 ):
 
-    client = get_api_client()
-
     # Search whether this marketplace item exists or not
     res = get_mpis(name=marketplace_bp_name, group_member_count=1, app_source="LOCAL")
     group_count = res["filtered_group_count"]
@@ -455,9 +453,6 @@ def publish_bp_as_new_marketplace_bp(
 def publish_bp_as_existing_marketplace_bp(
     bp_name, marketplace_bp_name, version, description="", with_secrets=False
 ):
-
-    client = get_api_client()
-    config = get_config()
 
     res = get_mpis(name=marketplace_bp_name, group_member_count=1, app_source="LOCAL")
     group_results = res["group_results"]
@@ -518,6 +513,13 @@ def approve_marketplace_bp(bp_name, version=None, projects=[], category=None):
     bp_data["api_version"] = "3.0"
     bp_data["spec"]["resources"]["app_state"] = "ACCEPTED"
 
+    if category:
+        app_families = get_app_family_list()
+        if category not in app_families:
+            raise Exception("{} is not a valid App Family category".format(category))
+
+        bp_data["metadata"]["categories"] = {"AppFamily": category}
+
     for project in projects:
         project_data = get_project(client, project)
 
@@ -552,21 +554,26 @@ def publish_marketplace_bp(bp_name, version=None, projects=[], category=None):
     bp_data["api_version"] = "3.0"
     bp_data["spec"]["resources"]["app_state"] = "PUBLISHED"
 
+    if category:
+        app_families = get_app_family_list()
+        if category not in app_families:
+            raise Exception("{} is not a valid App Family category".format(category))
+
+        bp_data["metadata"]["categories"] = {"AppFamily": category}
+
     if projects:
         # Clear the stored projects
-        # Right now there is no updation of referenced projects
         bp_data["spec"]["resources"]["project_reference_list"] = []
+        for project in projects:
+            project_data = get_project(client, project)
 
-    for project in projects:
-        project_data = get_project(client, project)
-
-        bp_data["spec"]["resources"]["project_reference_list"].append(
-            {
-                "kind": "project",
-                "name": project,
-                "uuid": project_data["metadata"]["uuid"],
-            }
-        )
+            bp_data["spec"]["resources"]["project_reference_list"].append(
+                {
+                    "kind": "project",
+                    "name": project,
+                    "uuid": project_data["metadata"]["uuid"],
+                }
+            )
 
     # Atleast 1 project required for publishing to marketplace
     if not bp_data["spec"]["resources"]["project_reference_list"]:
@@ -594,6 +601,10 @@ def update_marketplace_bp(name, version, category=None, projects=[], description
     bp_data["api_version"] = "3.0"
 
     if category:
+        app_families = get_app_family_list()
+        if category not in app_families:
+            raise Exception("{} is not a valid App Family category".format(category))
+
         bp_data["metadata"]["categories"] = {"AppFamily": category}
 
     if projects:
