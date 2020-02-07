@@ -133,7 +133,7 @@ def publish_bp(
 @click.argument("name", nargs=1)
 @click.option("--version", "-v", default=None, help="Version of MPI")
 @click.option("--category", "-c", default=None, help="Category for the MPI")
-@click.argument("projects", nargs=-1)
+@click.option("--project", "-p", "projects", multiple=True)
 def approve_bp(name, version, category, projects=[]):
 
     approve_marketplace_bp(
@@ -145,7 +145,7 @@ def approve_bp(name, version, category, projects=[]):
 @click.argument("name", nargs=1)
 @click.option("--version", "-v", default=None, help="Version of MPI")
 @click.option("--category", "-c", default=None, help="Category for the MPI")
-@click.argument("projects", nargs=-1)
+@click.option("--project", "-p", "projects", multiple=True)
 def _publish_marketplace_bp(name, version, category, projects=[]):
 
     publish_marketplace_bp(bp_name=name, version=version, category=category, projects=projects)
