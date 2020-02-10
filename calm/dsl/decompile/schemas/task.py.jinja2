@@ -1,4 +1,11 @@
-{% macro TaskTemplate(task_class)
-
-
-{% macro %}
+{%set
+calm_exec_ssh = 'CalmTask.Exec.ssh(name="' ~  exec_ssh_obj.name  ~'", script="' ~ exec_ssh_obj.script  ~ '"'
+%}
+{% if exec_ssh_obj.cred is not defined and exec_ssh_obj.target is not defined %}
+{% set calm_exec_ssh = calm_exec_ssh ~ ')' %}
+{% elif exec_ssh_obj.cred is not defined %}
+{% set calm_exec_ssh = calm_exec_ssh ~ ', target="' ~ exec_ssh_obj.target ~ '")' %}
+{% elif exec_ssh_obj.target is not defined %}
+{% set calm_exec_ssh = calm_exec_ssh ~ ', cred="' ~ exec_ssh_obj.cred ~ '")' %}
+{% endif %}
+    {{ calm_exec_ssh }}
