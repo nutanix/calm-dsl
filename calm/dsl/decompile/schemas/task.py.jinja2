@@ -1,5 +1,6 @@
+{% macro exec_ssh_task(exec_ssh_obj) -%}
 {%set
-calm_exec_ssh = 'CalmTask.Exec.ssh(name="' ~  exec_ssh_obj.name  ~'", script="' ~ exec_ssh_obj.script  ~ '"'
+calm_exec_ssh = 'CalmTask.Exec.ssh(name="' ~  exec_ssh_obj.name  ~'", script="' ~ exec_ssh_obj.attrs.script  ~ '"'
 %}
 {% if exec_ssh_obj.cred is not defined and exec_ssh_obj.target is not defined %}
 {% set calm_exec_ssh = calm_exec_ssh ~ ')' %}
@@ -9,3 +10,8 @@ calm_exec_ssh = 'CalmTask.Exec.ssh(name="' ~  exec_ssh_obj.name  ~'", script="' 
 {% set calm_exec_ssh = calm_exec_ssh ~ ', cred="' ~ exec_ssh_obj.cred ~ '")' %}
 {% endif %}
     {{ calm_exec_ssh }}
+{%- endmacro %}
+
+{% macro exec_powershell_task(exec_pshell_obj) -%}
+exec_pshell_obj.name
+{%- endmacro %}

@@ -1,0 +1,12 @@
+{% macro action(obj) -%}
+@action
+def {{obj.name}}():
+    {% if obj.description -%}"""{{obj.description}}"""{% endif %}
+{% if obj.tasks -%}
+{% for task in obj.tasks %}
+    {{task}}
+{% endfor %}
+{% else %}
+    pass
+{% endif %}
+{%- endmacro %}

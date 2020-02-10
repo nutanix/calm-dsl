@@ -4,12 +4,12 @@
 # subclass to already be present in PropertyValidatorBase's context. Moving
 # the import for these below the entities will cause a TypeError.
 
-from .models.ref import Ref, ref
+from .models.ref import Ref, ref, RefType
 from .models.credential import basic_cred, secret_cred
 from .models.variable import Variable, setvar, CalmVariable
-from .models.action import action, parallel
+from .models.action import action, parallel, ActionType
 
-from .models.task import Task, CalmTask
+from .models.task import Task, CalmTask, TaskType
 
 from .models.port import Port, port
 from .models.service import Service, service
