@@ -1,7 +1,8 @@
 from calm.dsl.builtins import BlueprintType, read_spec
 
-spec = read_spec("/Users/abhijeet.kaurav/Desktop/aa.json")
+spec = read_spec("sample.json")
 
 
 bl = BlueprintType.decompile(spec)
-import pdb; pdb.set_trace()
+
+print(bl)

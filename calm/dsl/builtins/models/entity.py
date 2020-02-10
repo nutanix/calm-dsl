@@ -340,10 +340,16 @@ class EntityType(EntityTypeBase):
             
             else:
                 # validation for existing classes(str, dict etc.)
-                if not isinstance(v, entity_type):
-                    raise TypeError("Value {} is not of type {}". format(v, entity_type))
-
-                new_value = entity_type(v)
+                if is_array:
+                    new_value = []
+                    for val in v:
+                        if not isinstance(val, entity_type):
+                            raise TypeError("Value {} is not of type {}". format(val, entity_type))
+                        
+                        new_value.append(entity_type(val))
+                
+                else:
+                    new_value = entity_type(v)
             
             attrs[k] = new_value
 
