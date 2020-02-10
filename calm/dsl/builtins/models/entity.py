@@ -317,7 +317,7 @@ class EntityType(EntityTypeBase):
             if hasattr(validator, "__kind__"):
                 entity_type = validator.__kind__
                 if entity_type.__name__ == "ProviderSpecType":
-                    from .provider_spec import provider_spec
+                    from .provider_spec import provider_spec        # TODO improve it
                     attrs[k] = provider_spec(v)
                     continue
             
@@ -326,12 +326,11 @@ class EntityType(EntityTypeBase):
                 entity_type = validator
 
             new_value = None
-            # As pre-existing class do not have decompile(str, dict)
             if hasattr(entity_type, "decompile"):
                 if is_array:
                     new_value = []
                     if not isinstance(v, list):
-                        raise Exception("Value not of type list")
+                        raise TypeError("Value {} is not of type list". format(v))
 
                     for val in v:
                         new_value.append(entity_type.decompile(val))
@@ -339,7 +338,14 @@ class EntityType(EntityTypeBase):
                 else:
                     new_value = entity_type.decompile(v)
             
-            attrs[k] = new_value if new_value else v
+            else:
+                # validation for existing classes(str, dict etc.)
+                if not isinstance(v, entity_type):
+                    raise TypeError("Value {} is not of type {}". format(v, entity_type))
+
+                new_value = entity_type(v)
+            
+            attrs[k] = new_value
 
         # Create new class based on type
 

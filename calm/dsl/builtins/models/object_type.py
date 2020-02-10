@@ -59,8 +59,6 @@ class ObjectDict(EntityDict):
                 entity_type = validator
             
             new_value = None
-
-            # As pre-existing class do not have decompile(str, dict)
             if hasattr(entity_type, "decompile"):
                 if is_array:
                     new_value = []
@@ -72,10 +70,16 @@ class ObjectDict(EntityDict):
                 
                 else:
                     new_value = entity_type.decompile(v)
-            
-            attrs[k] = new_value if new_value else v
 
-        # Return the dict only not class
+            else:
+                # validation for existing classes(str, dict etc.)
+                if not isinstance(v, entity_type):
+                    raise TypeError("Value {} is not of type {}". format(v, entity_type))
+
+                new_value = entity_type(v)
+            
+            attrs[k] = new_value
+
         return attrs
 
     def _validate_item(self, value):
