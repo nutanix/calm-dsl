@@ -28,7 +28,7 @@ from .models.pod_deployment import PODDeployment, pod_deployment
 
 from .models.profile import Profile, profile
 
-from .models.blueprint import Blueprint, blueprint
+from .models.blueprint import Blueprint, blueprint, BlueprintType
 
 from .models.simple_deployment import SimpleDeployment
 from .models.simple_blueprint import SimpleBlueprint

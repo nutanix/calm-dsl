@@ -305,10 +305,44 @@ class EntityType(EntityTypeBase):
         # Convert attribute names to x-calm-dsl-display-name, if given
         attrs = {}
         display_map = getattr(mcls, "__display_map__")
+        display_map = {v: k for k, v in display_map.items()}
+
         for k, v in cdict.items():
-            attrs.setdefault(display_map.inverse[k], v)
+            attrs.setdefault(display_map[k], v)
+
+        validator_dict = getattr(mcls, "__validator_dict__")
+        for k, v in attrs.items():
+            validator, is_array = validator_dict[k]
+
+            if hasattr(validator, "__kind__"):
+                entity_type = validator.__kind__
+                if entity_type.__name__ == "ProviderSpecType":
+                    from .provider_spec import provider_spec
+                    attrs[k] = provider_spec(v)
+                    continue
+            
+            else:
+                # Object Dict
+                entity_type = validator
+
+            new_value = None
+            # As pre-existing class do not have decompile(str, dict)
+            if hasattr(entity_type, "decompile"):
+                if is_array:
+                    new_value = []
+                    if not isinstance(v, list):
+                        raise Exception("Value not of type list")
+
+                    for val in v:
+                        new_value.append(entity_type.decompile(val))
+                
+                else:
+                    new_value = entity_type.decompile(v)
+            
+            attrs[k] = new_value if new_value else v
 
         # Create new class based on type
+
         cls = mcls(name, (Entity,), attrs)
         cls.__doc__ = description
 

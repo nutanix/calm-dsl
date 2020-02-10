@@ -1,3 +1,5 @@
+import copy
+
 from .validator import PropertyValidator
 from .entity import EntityDict
 
@@ -33,6 +35,48 @@ class ObjectDict(EntityDict):
             else:
                 ret[self.display_map[key]] = value
         return ret
+
+    def decompile(cls, cdict):
+
+        attrs = {}
+        display_map = copy.deepcopy(cls.display_map)
+        display_map = {v: k for k, v in display_map.items()}
+
+        # reversing display map values
+        for k, v in cdict.items():
+            attrs.setdefault(display_map[k], v)
+
+        # recursive decompile
+        validator_dict = cls.validators
+        for k, v in attrs.items():
+            validator, is_array = validator_dict[k]
+
+            if hasattr(validator, "__kind__"):
+                entity_type = validator.__kind__
+            
+            else:
+                # Case for recursive Object Dict
+                entity_type = validator
+            
+            new_value = None
+
+            # As pre-existing class do not have decompile(str, dict)
+            if hasattr(entity_type, "decompile"):
+                if is_array:
+                    new_value = []
+                    if not isinstance(v, list):
+                        raise Exception("Value not of type list")
+
+                    for val in v:
+                        new_value.append(entity_type.decompile(val))
+                
+                else:
+                    new_value = entity_type.decompile(v)
+            
+            attrs[k] = new_value if new_value else v
+
+        # Return the dict only not class
+        return attrs
 
     def _validate_item(self, value):
         if not isinstance(value, dict):
