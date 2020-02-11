@@ -2,6 +2,7 @@ from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.task import render_task_template
 from calm.dsl.builtins import action, CalmTask, ActionType, Service
 
+
 def render_action_template(cls):
 
     if not isinstance(cls, ActionType):
@@ -19,9 +20,9 @@ def render_action_template(cls):
     data = {
         "name": cls.__name__,
         "description": cls.description or "Sample description",
-        "tasks": tasks
+        "tasks": tasks,
     }
-    text = render_template(macro_name="action", obj=data)
+    text = render_template(schema_file="action.py.jinja2", obj=data)
     return text.strip()
 
 
@@ -31,5 +32,6 @@ class SampleService(Service):
         "sample description"
         CalmTask.Exec.ssh(name="Task2", script='echo "Hello"')
         CalmTask.Exec.ssh(name="Task3", script='echo "Hello again"')
+
 
 print(render_action_template(SampleService.test_action))

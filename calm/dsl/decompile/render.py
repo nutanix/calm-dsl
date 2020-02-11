@@ -1,17 +1,17 @@
 from jinja2 import Environment, PackageLoader
 
 
-def get_template():
+def get_template(schema_file):
 
     loader = PackageLoader(__name__, "schemas")
     env = Environment(loader=loader)
-    template = env.get_template("main.py.jinja2")
+    template = env.get_template(schema_file)
     return template
 
 
-def render_template(macro_name, obj):
+def render_template(schema_file, obj):
 
-    template = get_template()
-    text=template.render(macro_name=macro_name, obj=obj)
+    template = get_template(schema_file)
+    text = template.render(obj=obj)
 
     return text.strip()

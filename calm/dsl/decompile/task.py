@@ -1,6 +1,8 @@
 from calm.dsl.decompile.render import render_template
 from calm.dsl.builtins import TaskType, CalmTask
+
 # In service and package helper make sure that targer is erased
+
 
 def render_task_template(cls):
 
@@ -13,18 +15,19 @@ def render_task_template(cls):
     # sample for exec and ssh type task
     if cls.type == "EXEC":
         script_type = cls.attrs["script_type"]
-        cls.attrs["script"] = cls.attrs["script"].replace('"', r'/"')
+        cls.attrs["script"] = cls.attrs["script"].replace("'", r"/'")
         if script_type == "sh":
-            macro_name = "exec_ssh_task"
+            schema_file = "task_exec_ssh.py.jinja2"
 
         elif script_type == "escript":
-            macro_name = "exec_escript_task"
+            schema_file = "task_exec_escript.py.jinja2"
 
         elif script_type == "npsscript":
-            macro_name = "exec_powershell_task"
+            schema_file = "task_exec_powershell.py.jinja2"
 
-    text = render_template(macro_name=macro_name, obj=user_attrs)
+    text = render_template(schema_file=schema_file, obj=user_attrs)
     return text.strip()
+
 
 task1 = CalmTask.Exec.ssh(name="Task1", script="echo @@{foo}@@")
 # print(render_task_template(task1))
