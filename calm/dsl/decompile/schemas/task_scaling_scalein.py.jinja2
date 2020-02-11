@@ -1,0 +1,9 @@
+{% macro scaling_scalein_task(obj) -%}
+{% if obj.target is not defined %}
+CalmTask.Scaling.scale_in(name='{{obj.name}}', '{{obj.scaling_count}}')
+{% else %}
+CalmTask.Scaling.scale_in(name='{{obj.name}}', '{{obj.scaling_count}}', target={{obj.target}})
+{% endif %}
+{%- endmacro %}
+
+{{ scaling_scalein_task(obj) }}
