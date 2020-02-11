@@ -11,7 +11,7 @@ from .models.action import action, parallel, ActionType
 
 from .models.task import Task, CalmTask, TaskType
 
-from .models.port import Port, port
+from .models.port import Port, port, PortType
 from .models.service import Service, service, ServiceType
 from .models.published_service import PublishedService, published_service
 
@@ -23,10 +23,10 @@ from .models.provider_spec import provider_spec, read_provider_spec, read_spec
 from .models.provider_spec import read_ahv_spec, read_vmw_spec
 from .models.substrate import Substrate, substrate, SubstrateType
 
-from .models.deployment import Deployment, deployment
+from .models.deployment import Deployment, deployment, DeploymentType
 from .models.pod_deployment import PODDeployment, pod_deployment
 
-from .models.profile import Profile, profile
+from .models.profile import Profile, profile, ProfileType
 
 from .models.blueprint import Blueprint, blueprint, BlueprintType
 
