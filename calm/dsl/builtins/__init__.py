@@ -6,7 +6,7 @@
 
 from .models.ref import Ref, ref, RefType
 from .models.credential import basic_cred, secret_cred
-from .models.variable import Variable, setvar, CalmVariable
+from .models.variable import Variable, setvar, CalmVariable, VariableType
 from .models.action import action, parallel, ActionType
 
 from .models.task import Task, CalmTask, TaskType
