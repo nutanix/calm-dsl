@@ -3,7 +3,7 @@ import json
 from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.ref import render_ref_template
 from calm.dsl.builtins import TaskType, CalmTask, Service, ref
-from calm.dsl.builtins import basic_cred
+from calm.dsl.builtins import basic_cred, Package, Deployment, Substrate
 
 # In service and package helper make sure that targer is erased
 
@@ -57,6 +57,17 @@ def render_task_template(cls):
         user_attrs["delay_seconds"] = delay_seconds
     elif cls.type == "DELAY":
         schema_file = "task_delay.py.jinja2"
+
+    scaling_count = getattr(cls, "scaling_count", None)
+    if scaling_count:
+        user_attrs["scaling_count"] = scaling_count
+    elif cls.type == "SCALING":
+        scaling_type = cls.attrs["scaling_type"]
+        if scaling_type == "SCALEOUT":
+            schema_file = "task_scaling_scaleout.py.jinja2"
+
+        elif scaling_type == "SCALEIN":
+            schema_file = "task_scaling_scalein.py.jinja2"
     elif cls.type == "HTTP":
         attrs = cls.attrs
 
@@ -105,6 +116,15 @@ def render_task_template(cls):
 class SampleService(Service):
     pass
 
+class SamplePackage(Package):
+    services = [ref(Service)]
+
+class SampleSubstrate(Substrate):
+    pass
+
+class SampleDeployment(Deployment):
+    packages = [ref(SamplePackage)]
+    substrate = ref(SampleSubstrate)
 
 DefaultCred = basic_cred("user", "pass", "default_cre")
 
@@ -176,6 +196,10 @@ task7 = CalmTask.SetVariable.ssh(
     cred=ref(DefaultCred),
 )
 delayTask = CalmTask.Delay(delay_seconds=60, target=ref(SampleService))
+scaleoutTask = CalmTask.Scaling.scale_out(1, target=ref(SampleDeployment), name="Scale out Lamp")
+scaleinTask = CalmTask.Scaling.scale_in(1, target=ref(SampleDeployment), name="Scale in Lamp")
 # print(render_task_template(task7))
 # print(render_task_template(task6))
-print (render_task_template(delayTask))
+#print (render_task_template(delayTask))
+print (render_task_template(scaleoutTask))
+print (render_task_template(scaleinTask))
