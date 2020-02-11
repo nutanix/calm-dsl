@@ -30,7 +30,7 @@ def render_task_template(cls):
         if script_type == "sh":
             schema_file = "task_exec_ssh.py.jinja2"
 
-        elif script_type == "escript":
+        elif script_type == "static":
             schema_file = "task_exec_escript.py.jinja2"
 
         elif script_type == "npsscript":
@@ -79,7 +79,7 @@ task1 = CalmTask.Exec.ssh(name="Task1", script="echo @@{foo}@@" )
 task2 = CalmTask.Exec.ssh(name="Task2", script="echo @@{foo}@@", cred=ref(DefaultCred))
 task3 = CalmTask.Exec.ssh(name="Task3", script="echo @@{foo}@@", target=ref(SampleService))
 task4 = CalmTask.Exec.ssh(name="Task4", script="echo @@{foo}@@", target=ref(SampleService), cred=ref(DefaultCred))
-task5 = CalmTask.HTTP.get(
+task6 = CalmTask.HTTP.get(
     "https://jsonplaceholder.typicode.com/posts/1",
     credential=DefaultCred,
     headers={"Content-Type": "application/json"},
@@ -91,4 +91,5 @@ task5 = CalmTask.HTTP.get(
     name="Test HTTP Task Get",
     target=ref(SampleService),
 )
-print(render_task_template(task5))
+task5 = CalmTask.Exec.escript(name="Task5", script="echo @@{foo}@@")
+print(render_task_template(task6))
