@@ -1,3 +1,5 @@
+import json
+
 from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.ref import render_ref_template
 from calm.dsl.builtins import TaskType, CalmTask, Service, ref
@@ -63,6 +65,15 @@ def render_task_template(cls):
 
         if method == "GET":
             schema_file = "task_http_get.py.jinja2"
+        
+        elif method == "POST":
+            schema_file = "task_http_post.py.jinja2"
+        
+        elif method == "PUT":
+            schema_file = "task_http_put.py.jinja2"
+        
+        elif method == "DELETE":
+            schema_file = "task_http_delete.py.jinja2"
 
     text = render_template(schema_file=schema_file, obj=user_attrs)
     return text.strip()
@@ -79,7 +90,7 @@ task1 = CalmTask.Exec.ssh(name="Task1", script="echo @@{foo}@@" )
 task2 = CalmTask.Exec.ssh(name="Task2", script="echo @@{foo}@@", cred=ref(DefaultCred))
 task3 = CalmTask.Exec.ssh(name="Task3", script="echo @@{foo}@@", target=ref(SampleService))
 task4 = CalmTask.Exec.ssh(name="Task4", script="echo @@{foo}@@", target=ref(SampleService), cred=ref(DefaultCred))
-task6 = CalmTask.HTTP.get(
+task9 = CalmTask.HTTP.get(
     "https://jsonplaceholder.typicode.com/posts/1",
     credential=DefaultCred,
     headers={"Content-Type": "application/json"},
@@ -91,5 +102,37 @@ task6 = CalmTask.HTTP.get(
     name="Test HTTP Task Get",
     target=ref(SampleService),
 )
+task10 = CalmTask.HTTP.post(
+    "https://jsonplaceholder.typicode.com/posts",
+    body=json.dumps({"id": 1, "title": "foo", "body": "bar", "userId": 1}),
+    headers={"Content-Type": "application/json"},
+    content_type="application/json",
+    verify=True,
+    status_mapping={200: True},
+    response_paths={"foo_title": "$.title"},
+    name="Test HTTP Task Post",
+    target=ref(SampleService),
+)
+task11 = CalmTask.HTTP.put(
+    "https://jsonplaceholder.typicode.com/posts/1",
+    body=json.dumps({"id": 1, "title": "foo", "body": "bar", "userId": 1}),
+    headers={"Content-Type": "application/json"},
+    content_type="application/json",
+    verify=True,
+    status_mapping={200: True},
+    response_paths={"foo_title": "$.title"},
+    name="Test HTTP Task Put",
+    target=ref(SampleService),
+)
+task12 = CalmTask.HTTP.delete(
+    "https://jsonplaceholder.typicode.com/posts/1",
+    headers={"Content-Type": "application/json"},
+    content_type="application/json",
+    verify=True,
+    status_mapping={200: True},
+    name="Test HTTP Task Delete",
+    target=ref(SampleService),
+)
+
 task5 = CalmTask.Exec.escript(name="Task5", script="echo @@{foo}@@")
-print(render_task_template(task6))
+print(render_task_template(task12))
