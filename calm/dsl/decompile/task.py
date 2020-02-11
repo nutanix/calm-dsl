@@ -52,7 +52,11 @@ def render_task_template(cls):
 
         elif script_type == "npsscript":
             schema_file = "task_setvariable_powershell.py.jinja2"
-
+    delay_seconds = getattr(cls, "interval_secs", None)
+    if delay_seconds:
+        user_attrs["delay_seconds"] = delay_seconds
+    elif cls.type == "DELAY":
+        schema_file = "task_delay.py.jinja2"
     elif cls.type == "HTTP":
         attrs = cls.attrs
 
@@ -171,5 +175,7 @@ task7 = CalmTask.SetVariable.ssh(
     target=ref(SampleService),
     cred=ref(DefaultCred),
 )
+delayTask = CalmTask.Delay(delay_seconds=60, target=ref(SampleService))
 # print(render_task_template(task7))
 # print(render_task_template(task6))
+print (render_task_template(delayTask))
