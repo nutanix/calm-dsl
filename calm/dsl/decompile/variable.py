@@ -30,9 +30,18 @@ def render_variable_template(cls):
 
     user_attrs["name"] = cls.__name__
 
+    import pdb; pdb.set_trace()
+
     if var_type == "simple":
-        if var_val_type == "STRING":
-            schema_file = "var_simple_string.py.jinja2"
+        is_secret = True if user_attrs["type"] == "SECRET" else False
+
+        if is_secret:
+            if var_val_type == "STRING":
+                schema_file = "var_simple_secret_string.py.jinja2"
+        
+        else:
+            if var_val_type == "STRING":
+                schema_file = "var_simple_string.py.jinja2"
 
     text = render_template(schema_file=schema_file, obj=user_attrs)
     return text.strip()
@@ -85,4 +94,4 @@ var1 = CalmVariable.Simple(
         is_mandatory=True
     )
 
-print(render_variable_template(var33))
+print(render_variable_template(var2))
