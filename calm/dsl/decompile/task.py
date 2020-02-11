@@ -22,6 +22,12 @@ def render_task_template(cls):
     if target:
         user_attrs["target"] = render_ref_template(target)
 
+    cred = cls.attrs.get("login_credential_local_reference", None)
+    if cred:
+        user_attrs["cred"] = render_ref_template(cred)
+    variables = cls.attrs.get("eval_variables", None)
+    if variables:
+        user_attrs["variables"] = (variables)
     if cls.type == "EXEC":
         cred = cls.attrs.get("login_credential_local_reference", None)
         if cred:
@@ -37,6 +43,17 @@ def render_task_template(cls):
 
         elif script_type == "npsscript":
             schema_file = "task_exec_powershell.py.jinja2"
+    elif cls.type == "SET_VARIABLE":
+        script_type = cls.attrs["script_type"]
+        cls.attrs["script"] = cls.attrs["script"].replace("'", r"/'")
+        if script_type == "sh":
+            schema_file = "task_setvariable_ssh.py.jinja2"
+
+        elif script_type == "static":
+            schema_file = "task_setvariable_escript.py.jinja2"
+
+        elif script_type == "npsscript":
+            schema_file = "task_setvariable_powershell.py.jinja2"
     
     elif cls.type == "HTTP":
         attrs = cls.attrs
@@ -135,4 +152,7 @@ task12 = CalmTask.HTTP.delete(
 )
 
 task5 = CalmTask.Exec.escript(name="Task5", script="echo @@{foo}@@")
-print(render_task_template(task12))
+task6 = CalmTask.Exec.powershell(name="Task5", script="echo @@{foo}@@", cred=ref(DefaultCred))
+task7 = CalmTask.SetVariable.ssh(name="Task5", script="print 'var1=test", variables=["var1"], target=ref(SampleService), cred=ref(DefaultCred))
+print(render_task_template(task7))
+print(render_task_template(task6))
