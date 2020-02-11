@@ -58,4 +58,4 @@ data = SampleService.get_dict()
 service_class = ServiceType.decompile(data)
 
 
-print(render_action_template(service_class.actions[0]))
+# print(render_action_template(service_class.actions[0]))

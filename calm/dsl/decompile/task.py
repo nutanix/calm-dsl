@@ -171,5 +171,5 @@ task7 = CalmTask.SetVariable.ssh(
     target=ref(SampleService),
     cred=ref(DefaultCred),
 )
-print(render_task_template(task7))
+# print(render_task_template(task7))
 # print(render_task_template(task6))
