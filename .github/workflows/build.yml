@@ -1,0 +1,24 @@
+name: Setup & build calm-dsl on macos
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: macos
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+    - name: make dev
+      run: |
+        python -m pip install --upgrade pip
+        pip install virtualenv
+        export CFLAGS="-I$(brew --prefix openssl)/include"
+        export LDFLAGS="-L$(brew --prefix openssl)/lib"
+        make dev
+    - name: make dist
+      run: |
+        make dist
