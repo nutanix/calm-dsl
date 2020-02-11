@@ -93,7 +93,7 @@ class PackageType(EntityType):
         cls = super().decompile(cdict)
         options = cls.options
         delattr(cls, "options")
-        
+
         option_data = mcls.__validator_dict__["options"][0].decompile(options)
 
         install_runbook = option_data["install_runbook"]
@@ -107,7 +107,7 @@ class PackageType(EntityType):
                     "name": "action_install",
                     "critical": True,
                     "type": "system",
-                    "runbook": RunbookType.decompile(install_runbook)
+                    "runbook": RunbookType.decompile(install_runbook),
                 }
             )
 
@@ -118,7 +118,7 @@ class PackageType(EntityType):
                     "name": "action_uninstall",
                     "critical": True,
                     "type": "system",
-                    "runbook": RunbookType.decompile(uninstall_runbook)
+                    "runbook": RunbookType.decompile(uninstall_runbook),
                 }
             )
         return cls

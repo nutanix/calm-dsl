@@ -53,11 +53,11 @@ class ObjectDict(EntityDict):
 
             if hasattr(validator, "__kind__"):
                 entity_type = validator.__kind__
-            
+
             else:
                 # Case for recursive Object Dict
                 entity_type = validator
-            
+
             new_value = None
             if hasattr(entity_type, "decompile"):
                 if is_array:
@@ -67,7 +67,7 @@ class ObjectDict(EntityDict):
 
                     for val in v:
                         new_value.append(entity_type.decompile(val))
-                
+
                 else:
                     new_value = entity_type.decompile(v)
 
@@ -78,13 +78,15 @@ class ObjectDict(EntityDict):
                     new_value = []
                     for val in v:
                         if not isinstance(val, entity_type):
-                            raise TypeError("Value {} is not of type {}". format(val, entity_type))
-                        
+                            raise TypeError(
+                                "Value {} is not of type {}".format(val, entity_type)
+                            )
+
                         new_value.append(entity_type(val))
-                
+
                 else:
                     new_value = entity_type(v)
-            
+
             attrs[k] = new_value
 
         return attrs
