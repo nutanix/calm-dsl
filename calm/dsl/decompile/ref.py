@@ -13,8 +13,10 @@ def render_ref_template(cls):
     text = render_template(macro_name=macro_name, obj=user_attrs)
     return text.strip()
 
+
 class SampleService(Service):
     pass
+
 
 ref_cls = ref(SampleService)
 print(render_ref_template(ref_cls))

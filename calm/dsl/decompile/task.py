@@ -1,6 +1,8 @@
 from calm.dsl.decompile.render import render_template
 from calm.dsl.builtins import TaskType, CalmTask
+
 # In service and package helper make sure that targer is erased
+
 
 def render_task_template(cls):
 
@@ -25,6 +27,7 @@ def render_task_template(cls):
 
     text = render_template(macro_name=macro_name, obj=user_attrs)
     return text.strip()
+
 
 task1 = CalmTask.Exec.ssh(name="Task1", script="echo @@{foo}@@")
 # print(render_task_template(task1))

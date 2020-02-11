@@ -12,6 +12,6 @@ def get_template():
 def render_template(macro_name, obj):
 
     template = get_template()
-    text=template.render(macro_name=macro_name, obj=obj)
+    text = template.render(macro_name=macro_name, obj=obj)
 
     return text.strip()
