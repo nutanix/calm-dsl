@@ -27,12 +27,9 @@ def render_task_template(cls):
         user_attrs["cred"] = render_ref_template(cred)
     variables = cls.attrs.get("eval_variables", None)
     if variables:
-        user_attrs["variables"] = (variables)
-    if cls.type == "EXEC":
-        cred = cls.attrs.get("login_credential_local_reference", None)
-        if cred:
-            user_attrs["cred"] = render_ref_template(cred)
+        user_attrs["variables"] = variables
 
+    if cls.type == "EXEC":
         script_type = cls.attrs["script_type"]
         cls.attrs["script"] = cls.attrs["script"].replace("'", r"/'")
         if script_type == "sh":
@@ -54,10 +51,10 @@ def render_task_template(cls):
 
         elif script_type == "npsscript":
             schema_file = "task_setvariable_powershell.py.jinja2"
-    
+
     elif cls.type == "HTTP":
         attrs = cls.attrs
-        
+
         auth_obj = attrs["authentication"]
 
         # TODO modify auth_bj to go to credential class, so setting to None now
@@ -73,22 +70,24 @@ def render_task_template(cls):
 
             elif var.type == "SECRET":
                 user_attrs["secret_headers"][var.name] = var.value
-        
+
         for status in attrs.get("expected_response_params", []):
-            user_attrs["status_mapping"][status["code"]] = True if status["status"] == "SUCCESS" else False
+            user_attrs["status_mapping"][status["code"]] = (
+                True if status["status"] == "SUCCESS" else False
+            )
 
         user_attrs["response_paths"] = attrs.get("response_paths", {})
         method = attrs["method"]
 
         if method == "GET":
             schema_file = "task_http_get.py.jinja2"
-        
+
         elif method == "POST":
             schema_file = "task_http_post.py.jinja2"
-        
+
         elif method == "PUT":
             schema_file = "task_http_put.py.jinja2"
-        
+
         elif method == "DELETE":
             schema_file = "task_http_delete.py.jinja2"
 
@@ -99,14 +98,21 @@ def render_task_template(cls):
 class SampleService(Service):
     pass
 
+
 DefaultCred = basic_cred("user", "pass", "default_cre")
 
 
-
-task1 = CalmTask.Exec.ssh(name="Task1", script="echo @@{foo}@@" )
+task1 = CalmTask.Exec.ssh(name="Task1", script="echo @@{foo}@@")
 task2 = CalmTask.Exec.ssh(name="Task2", script="echo @@{foo}@@", cred=ref(DefaultCred))
-task3 = CalmTask.Exec.ssh(name="Task3", script="echo @@{foo}@@", target=ref(SampleService))
-task4 = CalmTask.Exec.ssh(name="Task4", script="echo @@{foo}@@", target=ref(SampleService), cred=ref(DefaultCred))
+task3 = CalmTask.Exec.ssh(
+    name="Task3", script="echo @@{foo}@@", target=ref(SampleService)
+)
+task4 = CalmTask.Exec.ssh(
+    name="Task4",
+    script="echo @@{foo}@@",
+    target=ref(SampleService),
+    cred=ref(DefaultCred),
+)
 task9 = CalmTask.HTTP.get(
     "https://jsonplaceholder.typicode.com/posts/1",
     credential=DefaultCred,
@@ -152,7 +158,15 @@ task12 = CalmTask.HTTP.delete(
 )
 
 task5 = CalmTask.Exec.escript(name="Task5", script="echo @@{foo}@@")
-task6 = CalmTask.Exec.powershell(name="Task5", script="echo @@{foo}@@", cred=ref(DefaultCred))
-task7 = CalmTask.SetVariable.ssh(name="Task5", script="print 'var1=test", variables=["var1"], target=ref(SampleService), cred=ref(DefaultCred))
+task6 = CalmTask.Exec.powershell(
+    name="Task5", script="echo @@{foo}@@", cred=ref(DefaultCred)
+)
+task7 = CalmTask.SetVariable.ssh(
+    name="Task5",
+    script="print 'var1=test",
+    variables=["var1"],
+    target=ref(SampleService),
+    cred=ref(DefaultCred),
+)
 print(render_task_template(task7))
 print(render_task_template(task6))
