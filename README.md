@@ -47,4 +47,4 @@ Documentation for the Calm DSL will be stored in the [docs](docs/) folder, and w
 ## Video Links
  - [Workstation Setup](https://youtu.be/uIZmHQhioZg)
  - [Blueprint & App management](https://youtu.be/jb-ZllhaROs)
-
+ - [Calm DSL Blueprint Architecture](https://youtu.be/Y-6eq91rtSw)
