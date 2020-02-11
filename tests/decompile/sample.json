@@ -1013,7 +1013,11 @@
                                 },
                                 "attrs": {
                                     "script_type": "sh",
-                                    "script": "echo \"Hello\""
+                                    "script": "echo \"Hello\"",
+                                    "login_credential_local_reference": {
+                                        "kind": "app_credential",
+                                        "name": "default"
+                                    }
                                 },
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": []

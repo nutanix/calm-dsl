@@ -1,5 +1,7 @@
 from calm.dsl.decompile.render import render_template
-from calm.dsl.builtins import TaskType, CalmTask
+from calm.dsl.decompile.ref import render_ref_template
+from calm.dsl.builtins import TaskType, CalmTask, Service, ref
+from calm.dsl.builtins import basic_cred
 
 # In service and package helper make sure that targer is erased
 
@@ -13,6 +15,15 @@ def render_task_template(cls):
     macro_name = ""
 
     # sample for exec and ssh type task
+
+    target = getattr(cls, "target_any_local_reference", None)
+    if target:
+        user_attrs["target"] = render_ref_template(target)
+
+    cred = cls.attrs.get("login_credential_local_reference", None)
+    if cred:
+        user_attrs["cred"] = render_ref_template(cred)
+
     if cls.type == "EXEC":
         script_type = cls.attrs["script_type"]
         cls.attrs["script"] = cls.attrs["script"].replace("'", r"/'")
@@ -29,5 +40,15 @@ def render_task_template(cls):
     return text.strip()
 
 
-task1 = CalmTask.Exec.ssh(name="Task1", script="echo @@{foo}@@")
-# print(render_task_template(task1))
+class SampleService(Service):
+    pass
+
+DefaultCred = basic_cred("user", "pass", "default_cre")
+
+
+
+task1 = CalmTask.Exec.ssh(name="Task1", script="echo @@{foo}@@" )
+task2 = CalmTask.Exec.ssh(name="Task2", script="echo @@{foo}@@", cred=ref(DefaultCred))
+task3 = CalmTask.Exec.ssh(name="Task3", script="echo @@{foo}@@", target=ref(SampleService))
+task4 = CalmTask.Exec.ssh(name="Task4", script="echo @@{foo}@@", target=ref(SampleService), cred=ref(DefaultCred))
+# print(render_task_template(task4))

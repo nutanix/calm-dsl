@@ -19,4 +19,4 @@ class SampleService(Service):
 
 
 ref_cls = ref(SampleService)
-print(render_ref_template(ref_cls))
+# print(render_ref_template(ref_cls))
