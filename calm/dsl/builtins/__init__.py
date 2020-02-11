@@ -15,7 +15,7 @@ from .models.port import Port, port
 from .models.service import Service, service, ServiceType
 from .models.published_service import PublishedService, published_service
 
-from .models.package import Package, package
+from .models.package import Package, package, PackageType
 
 from .models.utils import read_file, read_local_file
 
