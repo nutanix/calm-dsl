@@ -106,7 +106,7 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
     click.echo(table)
 
 
-def describe_bp(obj, blueprint_name):
+def describe_bp(obj, blueprint_name, out):
     client = get_api_client()
     bp = get_blueprint(client, blueprint_name, all=True)
 
@@ -115,6 +115,11 @@ def describe_bp(obj, blueprint_name):
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     bp = res.json()
+
+    if out == "json":
+        bp.pop("status", None)
+        click.echo(json.dumps(bp, indent=4, separators=(",", ": ")))
+        return
 
     click.echo("\n----Blueprint Summary----\n")
     click.echo(

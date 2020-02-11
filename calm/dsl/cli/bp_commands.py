@@ -42,10 +42,18 @@ def _get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
 
 @describe.command("bp")
 @click.argument("bp_name")
+@click.option(
+    "--out",
+    "-o",
+    "out",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="output format [json|yaml].",
+)
 @click.pass_obj
-def _describe_bp(obj, bp_name):
+def _describe_bp(obj, bp_name, out):
     """Describe an app"""
-    describe_bp(obj, bp_name)
+    describe_bp(obj, bp_name, out)
 
 
 @compile.command("bp")
