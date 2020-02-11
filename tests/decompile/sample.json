@@ -988,6 +988,16 @@
                                                 "kind": "app_task",
                                                 "name": "Task6"
                                             }
+                                        },
+                                        {
+                                            "from_task_reference": {
+                                                "kind": "app_task",
+                                                "name": "Task6"
+                                            },
+                                            "to_task_reference": {
+                                                "kind": "app_task",
+                                                "name": "Test HTTP Task Get"
+                                            }
                                         }
                                     ]
                                 },
@@ -999,6 +1009,10 @@
                                     {
                                         "kind": "app_task",
                                         "name": "Task6"
+                                    },
+                                    {
+                                        "name": "Test HTTP Task Get",
+                                        "kind": "app_task"
                                     }
                                 ],
                                 "variable_list": []
@@ -1022,6 +1036,7 @@
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": []
                             },
+                            
                             {
                                 "name": "Task6",
                                 "description": "",
@@ -1034,6 +1049,74 @@
                                     "runbook_reference": {
                                         "kind": "app_runbook",
                                         "name": "06d05e16_runbook"
+                                    }
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": []
+                            },
+                            {
+                                "name": "Test HTTP Task Get",
+                                "description": "",
+                                "type": "HTTP",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "MySQLService"
+                                },
+                                "attrs": {
+                                    "method": "GET",
+                                    "url": "https://jsonplaceholder.typicode.com/posts/1",
+                                    "authentication": {
+                                        "auth_type": "basic",
+                                        "basic_auth": {
+                                            "username": "root",
+                                            "password": {
+                                                "value": "passwd"
+                                            }
+                                        }
+                                    },
+                                    "connection_timeout": 120,
+                                    "tls_verify": true,
+                                    "retry_count": 1,
+                                    "retry_interval": 10,
+                                    "content_type": "application/json",
+                                    "headers": [
+                                        {
+                                            "name": "Content-Type",
+                                            "description": "",
+                                            "type": "LOCAL",
+                                            "label": "",
+                                            "attrs": {},
+                                            "val_type": "STRING",
+                                            "value": "application/json",
+                                            "data_type": "BASE",
+                                            "is_hidden": false,
+                                            "is_mandatory": false
+                                        },
+                                        {
+                                            "name": "secret_header",
+                                            "description": "",
+                                            "type": "SECRET",
+                                            "label": "",
+                                            "attrs": {},
+                                            "val_type": "STRING",
+                                            "value": "secret",
+                                            "data_type": "BASE",
+                                            "is_hidden": false,
+                                            "is_mandatory": false
+                                        }
+                                    ],
+                                    "expected_response_params": [
+                                        {
+                                            "status": "SUCCESS",
+                                            "code": 200
+                                        },
+                                        {
+                                            "status": "SUCCESS",
+                                            "code": 200
+                                        }
+                                    ],
+                                    "response_paths": {
+                                        "foo_title": "$.title"
                                     }
                                 },
                                 "child_tasks_local_reference_list": [],
