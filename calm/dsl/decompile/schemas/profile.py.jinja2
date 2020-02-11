@@ -1,0 +1,13 @@
+{% macro profile(obj) %}
+class {{obj.name}}(Profile):
+
+    {% if obj.deployments %}deployments = [{{obj.deployments}}]{% endif %} 
+{% for variable in obj.variables %}
+    {{variable}}
+{% endfor %}
+{% for action in obj.actions %}
+{{action | indent( width=4, indentfirst=True)}}
+{% endfor %}
+{% endmacro %}
+
+{{ profile(obj) }}

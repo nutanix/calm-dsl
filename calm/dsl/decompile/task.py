@@ -26,9 +26,6 @@ def render_task_template(cls):
     cred = cls.attrs.get("login_credential_local_reference", None)
     if cred:
         user_attrs["cred"] = render_ref_template(cred)
-    variables = cls.attrs.get("eval_variables", None)
-    if variables:
-        user_attrs["variables"] = variables
 
     if cls.type == "EXEC":
         script_type = cls.attrs["script_type"]
@@ -41,7 +38,11 @@ def render_task_template(cls):
 
         elif script_type == "npsscript":
             schema_file = "task_exec_powershell.py.jinja2"
+
     elif cls.type == "SET_VARIABLE":
+        variables = cls.attrs.get("eval_variables", None)
+        if variables:
+            user_attrs["variables"] = variables
         script_type = cls.attrs["script_type"]
         cls.attrs["script"] = cls.attrs["script"].replace("'", r"/'")
         if script_type == "sh":
@@ -52,16 +53,17 @@ def render_task_template(cls):
 
         elif script_type == "npsscript":
             schema_file = "task_setvariable_powershell.py.jinja2"
-    delay_seconds = getattr(cls, "interval_secs", None)
-    if delay_seconds:
-        user_attrs["delay_seconds"] = delay_seconds
+    
     elif cls.type == "DELAY":
+        delay_seconds = getattr(cls, "interval_secs", None)
+        if delay_seconds:
+            user_attrs["delay_seconds"] = delay_seconds
         schema_file = "task_delay.py.jinja2"
-
-    scaling_count = getattr(cls, "scaling_count", None)
-    if scaling_count:
-        user_attrs["scaling_count"] = scaling_count
+    
     elif cls.type == "SCALING":
+        scaling_count = getattr(cls, "scaling_count", None)
+        if scaling_count:
+            user_attrs["scaling_count"] = scaling_count
         scaling_type = cls.attrs["scaling_type"]
         if scaling_type == "SCALEOUT":
             schema_file = "task_scaling_scaleout.py.jinja2"
@@ -106,6 +108,7 @@ def render_task_template(cls):
 
         elif method == "DELETE":
             schema_file = "task_http_delete.py.jinja2"
+
     else:
         raise Exception("Invalid task type")
 
