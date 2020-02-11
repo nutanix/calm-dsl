@@ -14,6 +14,7 @@ def render_task_template(cls):
         raise TypeError("{} is not of type {}".format(cls, TaskType))
 
     user_attrs = cls.get_user_attrs()
+    user_attrs["name"] = cls.__name__
     macro_name = ""
 
     # sample for exec and ssh type task
@@ -90,6 +91,8 @@ def render_task_template(cls):
 
         elif method == "DELETE":
             schema_file = "task_http_delete.py.jinja2"
+    else:
+        raise Exception("Invalid task type")
 
     text = render_template(schema_file=schema_file, obj=user_attrs)
     return text.strip()
@@ -169,4 +172,4 @@ task7 = CalmTask.SetVariable.ssh(
     cred=ref(DefaultCred),
 )
 print(render_task_template(task7))
-print(render_task_template(task6))
+# print(render_task_template(task6))

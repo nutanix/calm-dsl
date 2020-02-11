@@ -147,4 +147,4 @@ var1 = CalmVariable.Simple(
         is_mandatory=True
     )
 
-print(render_variable_template(var31))
+# print(render_variable_template(var31))

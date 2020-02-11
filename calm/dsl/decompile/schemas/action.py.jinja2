@@ -2,13 +2,12 @@
 @action
 def {{obj.name}}():
     {% if obj.description -%}"""{{obj.description}}"""{% endif %}
-{% if obj.tasks -%}
+{% for variable in obj.variables %}
+    {{variable}}
+{% endfor %}
 {% for task in obj.tasks %}
     {{task}}
 {% endfor %}
-{% else %}
-    pass
-{% endif %}
 {%- endmacro %}
 
 {{action(obj)}}

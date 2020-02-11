@@ -12,7 +12,7 @@ from .models.action import action, parallel, ActionType
 from .models.task import Task, CalmTask, TaskType
 
 from .models.port import Port, port
-from .models.service import Service, service
+from .models.service import Service, service, ServiceType
 from .models.published_service import PublishedService, published_service
 
 from .models.package import Package, package
