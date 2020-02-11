@@ -21,7 +21,7 @@ from .models.utils import read_file, read_local_file
 
 from .models.provider_spec import provider_spec, read_provider_spec, read_spec
 from .models.provider_spec import read_ahv_spec, read_vmw_spec
-from .models.substrate import Substrate, substrate
+from .models.substrate import Substrate, substrate, SubstrateType
 
 from .models.deployment import Deployment, deployment
 from .models.pod_deployment import PODDeployment, pod_deployment

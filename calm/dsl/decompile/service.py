@@ -37,7 +37,6 @@ def render_service_template(cls):
     return text.strip()
 
 
-
 bp_dict = NextDslBlueprint.get_dict()
 bp_cls = BlueprintType.decompile(bp_dict)
 
