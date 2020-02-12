@@ -23,6 +23,18 @@ class ObjectDict(EntityDict):
     def __setitem__(self, name, value):
         self.__items_set__ = True
         super().__setitem__(name, value)
+    
+    def get_dict(self):
+        ret = {}
+        if not self.__items_set__:
+            return ret
+        for key, value in self.defaults.items():
+            value = self.get(key, value())
+            if getattr(value, "__is_object__", False):
+                ret[key] = value.get_dict()
+            else:
+                ret[key] = value
+        return ret
 
     def compile(self, cls):
         ret = {}
