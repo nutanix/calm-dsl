@@ -34,7 +34,7 @@ test-verbose: dev
 	venv/bin/py.test -s -vv
 
 dist:
-	venv/bin/python3 setup.py bdist_wheel
+	venv/bin/python3 setup.py sdist bdist_wheel
 
 docker: dist gui
 	[ -S /var/run/docker.sock ] && \
