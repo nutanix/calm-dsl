@@ -2,12 +2,16 @@
 @action
 def {{obj.name}}():
     {% if obj.description -%}"""{{obj.description}}"""{%- endif %}
+{% if obj.variables or obj.actions %}
 {%- for variable in obj.variables %}
 {{variable | indent( width=4, indentfirst=True)}}
 {%- endfor %}
 {%- for task in obj.tasks %}
 {{task | indent( width=4, indentfirst=True)}}
 {%- endfor %}
+{% else %}
+    pass
+{% endif %}
 {%- endmacro %}
 
 {{action(obj)}}
