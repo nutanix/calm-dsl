@@ -237,10 +237,13 @@ def decompile_bp(name):
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
     
-    blueprint = res.json()["spec"]["resources"]
+    res = res.json()
+    blueprint = res["spec"]["resources"]
+    blueprint_name = res["metadata"].get("name", "SampleBlueprint")
     blueprint.pop("default_credential_local_reference", None)
 
     bp_cls = BlueprintType.decompile(blueprint)
+    bp_cls.__name__ = blueprint_name
     create_bp_dir(bp_cls)
 
 

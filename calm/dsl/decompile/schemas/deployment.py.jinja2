@@ -5,7 +5,7 @@ class {{obj.name}}(Deployment):
     max_replicas = '{{obj.max_replicas}}'
     {% if obj.dependencies %}dependencies = [{{obj.dependencies}}]{%- endif %}
     {% if obj.packages %}packages = [{{obj.packages}}]{%- endif %}
-    {% if obj.substrate %}substrate = [{{obj.substrate}}]{%- endif %}
+    {% if obj.substrate %}substrate = {{obj.substrate}}{%- endif %}
 {%- endmacro %}
 
 {{ deployment(obj) }}

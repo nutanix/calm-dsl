@@ -1,4 +1,5 @@
 import os
+from black import format_str, FileMode
 
 from calm.dsl.builtins import read_file
 from tests.decompile.test_decompile import bp_cls as NextBlueprint
@@ -42,11 +43,11 @@ def make_bp_dirs(dir_name, bp_name):
 
 def create_bp_dir(bp_cls = None):
 
-    service_name = "Hello"
+    bp_name = bp_cls.__name__ or "SampleBlueprint"
     dir_name = os.getcwd()
-
-    bp_name = "{}Blueprint".format(service_name,)
 
     bp_dir, local_dir, spec_dir = make_bp_dirs(dir_name, bp_name)
     bp_data = render_bp_file_template(bp_cls, local_dir, spec_dir)
+    bp_data = format_str(bp_data, mode=FileMode())
+
     create_bp_file(bp_dir, bp_data)
