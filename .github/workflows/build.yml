@@ -1,10 +1,16 @@
 name: Setup & build calm-dsl on macos
-on: [push]
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 
 jobs:
   build:
 
-    runs-on: macos
+    runs-on: macos 
 
     steps:
     - uses: actions/checkout@v2
