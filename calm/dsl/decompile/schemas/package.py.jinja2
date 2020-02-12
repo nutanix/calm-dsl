@@ -1,8 +1,8 @@
 {%- macro package(obj) -%}
 class {{obj.name}}(Package):
-    {%- if obj.description -%}"""{{obj.description}}"""{%- endif %}
+    {% if obj.description -%}"""{{obj.description}}"""{%- endif %}
 
-    {%- if obj.services %}services=[{{obj.services}}]{%- endif %}
+    {% if obj.services %}services=[{{obj.services}}]{%- endif %}
 {%- for variable in obj.variables %}
     {{variable}}
 {%- endfor %}
