@@ -10,10 +10,9 @@ def render_action_template(cls):
         raise TypeError("{} is not of type {}".format(cls, action))
 
     runbook = cls.runbook
-    main_task = runbook.main_task_local_reference.__name__
     tasks = []
     for task in runbook.tasks:
-        if main_task != task.__name__:
+        if task.type != "DAG":
             tasks.append(render_task_template(task))
 
     variables = []

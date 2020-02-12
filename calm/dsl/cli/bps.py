@@ -232,8 +232,9 @@ def decompile_bp(name):
     
     client = get_api_client()
     blueprint = get_blueprint(client, name)
+    bp_uuid = blueprint["metadata"]["uuid"]
 
-    res, err = client.blueprint.read(blueprint["metadata"]["uuid"])
+    res, err = client.blueprint.export_json(bp_uuid)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
     
@@ -242,7 +243,23 @@ def decompile_bp(name):
     blueprint_name = res["metadata"].get("name", "SampleBlueprint")
     blueprint.pop("default_credential_local_reference", None)
 
+    res, err = client.blueprint.read(bp_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    bp_read_payload = res.json()["spec"]["resources"]
+
+    # Merging the provider_spec of read_payload
+    for ind, substrate in enumerate(blueprint["substrate_definition_list"]):
+        substrate["create_spec"] = bp_read_payload["substrate_definition_list"][ind]["create_spec"]
+
     bp_cls = BlueprintType.decompile(blueprint)
+    bp_cls.substrates[0].provider_type
+
+    for profile in bp_cls.profiles:
+        for dep in profile.deployments:
+            if not dep.__name__.isidentifier():
+                dep.__name__ = "D{}".format(dep.__name__)
+
     bp_cls.__name__ = blueprint_name
     create_bp_dir(bp_cls)
 

@@ -12,6 +12,7 @@ class BlueprintAPI(ResourceAPI):
         self.FULL_LAUNCH = self.ITEM + "/launch"
         self.LAUNCH_POLL = self.ITEM + "/pending_launches/{}"
         self.BP_EDITABLES = self.ITEM + "/runtime_editables"
+        self.EXPORT_JSON = self.ITEM + "/export_json"
 
     def upload(self, payload):
         return self.connection._call(
@@ -303,3 +304,7 @@ class BlueprintAPI(ResourceAPI):
         uuid = bp["metadata"]["uuid"]
 
         return self.update(uuid, update_payload)
+
+    def export_json(self, uuid):
+        url = self.EXPORT_JSON.format(uuid)
+        return self.connection._call(url, verify=False, method=REQUEST.METHOD.GET)

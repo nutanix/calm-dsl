@@ -14,6 +14,9 @@ def render_substrate_template(cls, spec_dir=None):
     user_attrs["description"] = cls.__doc__
     user_attrs["readiness_probe"] = cls.readiness_probe.get_dict()
 
+    # TODO for now only default cred will be used
+    user_attrs["readiness_probe"].pop("credential", None)
+
     provider_spec = cls.provider_spec
 
     # creating a file for storing provider_spe

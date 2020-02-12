@@ -56,6 +56,9 @@ class ObjectDict(EntityDict):
 
         # reversing display map values
         for k, v in cdict.items():
+            # case for uuid, editables
+            if not display_map.get(k, None):
+                continue
             attrs.setdefault(display_map[k], v)
 
         # recursive decompile
