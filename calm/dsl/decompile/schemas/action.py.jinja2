@@ -1,13 +1,13 @@
-{% macro action(obj) -%}
+{%- macro action(obj) -%}
 @action
 def {{obj.name}}():
-    {% if obj.description -%}"""{{obj.description}}"""{% endif %}
-{% for variable in obj.variables %}
-    {{variable}}
-{% endfor %}
-{% for task in obj.tasks %}
-    {{task}}
-{% endfor %}
+    {% if obj.description -%}"""{{obj.description}}"""{%- endif %}
+{%- for variable in obj.variables %}
+{{variable | indent( width=4, indentfirst=True)}}
+{%- endfor %}
+{%- for task in obj.tasks %}
+{{task | indent( width=4, indentfirst=True)}}
+{%- endfor %}
 {%- endmacro %}
 
 {{action(obj)}}

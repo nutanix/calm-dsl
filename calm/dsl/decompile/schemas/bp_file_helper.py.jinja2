@@ -1,0 +1,38 @@
+{% macro bp_file_helper(obj) %}
+"""
+    Calm Sample Blueprint
+"""
+
+from calm.dsl.builtins import (
+    ref,
+    basic_cred,
+    secret_cred,
+    CalmVariable,
+    CalmTask,
+    action,
+)
+from calm.dsl.builtins import Service, Package, Substrate
+from calm.dsl.builtins import Deployment, Profile, Blueprint
+from calm.dsl.builtins import read_provider_spec, read_local_file
+
+
+{% for service in obj.services %}
+{{service}}
+{% endfor %}
+{% for package in obj.packages %}
+{{package}}
+{% endfor %}
+{% for substrate in obj.substrates %}
+{{substrate}}
+{% endfor %}
+{% for deployment in obj.deployments %}
+{{deployment}}
+{% endfor %}
+{% for profile in obj.profiles %}
+{{profile}}
+{% endfor %}
+{{obj.blueprint}}
+
+{% endmacro %}
+
+{{bp_file_helper(obj)}}

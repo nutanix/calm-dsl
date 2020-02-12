@@ -1,0 +1,12 @@
+{% macro blueprint(obj) %}
+class {{obj.name}}(Blueprint):
+    {% if obj.description -%}"""{{obj.description}}"""{% endif %}
+    {% if obj.services %}services = [{{obj.services}}]{% endif %}
+    {% if obj.packages %}packages = [{{obj.packages}}]{% endif %}
+    {% if obj.services %}substrates = [{{obj.substrates}}]{% endif %}
+    {% if obj.services %}profiles = [{{obj.profiles}}]{% endif %}
+    {% if obj.credentials %}credentials = [{{obj.credentials}}]{% endif %}
+{% endmacro %}
+
+{{ blueprint(obj) }}
+    

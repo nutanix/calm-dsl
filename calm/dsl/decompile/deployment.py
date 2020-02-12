@@ -34,4 +34,4 @@ bp_dict = NextDslBlueprint.get_dict()
 bp_cls = BlueprintType.decompile(bp_dict)
 
 
-print(render_deployment_template(bp_cls.profiles[0].deployments[1]))
+# print(render_deployment_template(bp_cls.profiles[0].deployments[1]))

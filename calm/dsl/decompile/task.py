@@ -61,7 +61,7 @@ def render_task_template(cls):
         schema_file = "task_delay.py.jinja2"
     
     elif cls.type == "SCALING":
-        scaling_count = getattr(cls, "scaling_count", None)
+        scaling_count = cls.attrs.get("scaling_count", 1)
         if scaling_count:
             user_attrs["scaling_count"] = scaling_count
         scaling_type = cls.attrs["scaling_type"]
@@ -109,6 +109,9 @@ def render_task_template(cls):
         elif method == "DELETE":
             schema_file = "task_http_delete.py.jinja2"
 
+    elif cls.type == "CALL_RUNBOOK":
+        raise Exception("Not supported")
+
     else:
         raise Exception("Invalid task type")
 
@@ -120,7 +123,7 @@ class SampleService(Service):
     pass
 
 class SamplePackage(Package):
-    services = [ref(Service)]
+    services = [ref(SampleService)]
 
 class SampleSubstrate(Substrate):
     pass
@@ -129,8 +132,8 @@ class SampleDeployment(Deployment):
     packages = [ref(SamplePackage)]
     substrate = ref(SampleSubstrate)
 
-DefaultCred = basic_cred("user", "pass", "default_cre")
 
+DefaultCred = basic_cred("user", "pass", "default_cre")
 
 task1 = CalmTask.Exec.ssh(name="Task1", script="echo @@{foo}@@")
 task2 = CalmTask.Exec.ssh(name="Task2", script="echo @@{foo}@@", cred=ref(DefaultCred))
@@ -204,5 +207,7 @@ scaleinTask = CalmTask.Scaling.scale_in(1, target=ref(SampleDeployment), name="S
 # print(render_task_template(task7))
 # print(render_task_template(task6))
 #print (render_task_template(delayTask))
-print (render_task_template(scaleoutTask))
-print (render_task_template(scaleinTask))
+
+task_data = task5.get_dict()
+task_cls = TaskType.decompile(task_data)
+# print (render_task_template(task_cls))

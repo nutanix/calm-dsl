@@ -43,5 +43,5 @@ def render_package_template(cls):
 bp_dict = NextDslBlueprint.get_dict()
 bp_cls = BlueprintType.decompile(bp_dict)
 
-print(render_package_template(bp_cls.packages[1]))  
+#print(render_package_template(bp_cls.packages[1]))  
 
