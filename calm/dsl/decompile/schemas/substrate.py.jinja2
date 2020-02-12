@@ -2,9 +2,9 @@
 class {{obj.name}}(Substrate):
     {% if obj.description -%}"""{{obj.description}}"""{%- endif %}
 
-    os_type = {{obj.os_type}}
-    provider_spec = read_provider_spec("obj.spec_file_name")
-    provider_type = {{obj.provider_type}}
+    os_type = '{{obj.os_type}}'
+    provider_type = '{{obj.provider_type}}'
+    provider_spec = read_provider_spec('{{obj.provider_spec}}')
     readiness_probe = {{obj.readiness_probe}}
 {%- endmacro %}
 

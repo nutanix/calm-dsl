@@ -9,7 +9,7 @@ from calm.dsl.builtins import BlueprintType
 from tests.decompile.test_decompile import bp_cls
 
 
-def render_bp_file_template(cls):
+def render_bp_file_template(cls, local_dir=None, spec_dir=None):
 
     if not isinstance(cls, BlueprintType):
         raise TypeError("{} is not of type {}".format(cls, BlueprintType))
@@ -28,7 +28,7 @@ def render_bp_file_template(cls):
     
     substrate_list = []
     for substrate in cls.substrates:
-        substrate_list.append(render_substrate_template(substrate))
+        substrate_list.append(render_substrate_template(substrate, spec_dir))
     
     profile_list = []
     deployments = []
