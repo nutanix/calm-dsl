@@ -1,4 +1,3 @@
-import uuid
 import os
 from ruamel import yaml
 
@@ -23,7 +22,7 @@ def render_substrate_template(cls, spec_dir=None):
     provider_spec = cls.provider_spec
 
     # creating a file for storing provider_spe
-    provider_spec_file_name = "spec_{}".format(str(uuid.uuid4())[-10:])
+    provider_spec_file_name = cls.__name__+ "_provider_spec"
     user_attrs["provider_spec"] = "specs/{}". format(provider_spec_file_name)
 
     if spec_dir:
