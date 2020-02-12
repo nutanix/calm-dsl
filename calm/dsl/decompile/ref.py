@@ -1,5 +1,5 @@
 from calm.dsl.decompile.render import render_template
-from calm.dsl.builtins import RefType, ref, Service
+from calm.dsl.builtins import RefType
 
 
 def render_ref_template(cls):
@@ -13,11 +13,3 @@ def render_ref_template(cls):
 
     text = render_template(schema_file=schema_file, obj=user_attrs)
     return text.strip()
-
-
-class SampleService(Service):
-    pass
-
-
-ref_cls = ref(SampleService)
-# print(render_ref_template(ref_cls))

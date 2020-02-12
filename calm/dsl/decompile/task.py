@@ -53,13 +53,13 @@ def render_task_template(cls):
 
         elif script_type == "npsscript":
             schema_file = "task_setvariable_powershell.py.jinja2"
-    
+
     elif cls.type == "DELAY":
         delay_seconds = getattr(cls, "interval_secs", None)
         if delay_seconds:
             user_attrs["delay_seconds"] = delay_seconds
         schema_file = "task_delay.py.jinja2"
-    
+
     elif cls.type == "SCALING":
         scaling_count = cls.attrs.get("scaling_count", 1)
         if scaling_count:
@@ -122,11 +122,14 @@ def render_task_template(cls):
 class SampleService(Service):
     pass
 
+
 class SamplePackage(Package):
     services = [ref(SampleService)]
 
+
 class SampleSubstrate(Substrate):
     pass
+
 
 class SampleDeployment(Deployment):
     packages = [ref(SamplePackage)]
@@ -202,11 +205,15 @@ task7 = CalmTask.SetVariable.ssh(
     cred=ref(DefaultCred),
 )
 delayTask = CalmTask.Delay(delay_seconds=60, target=ref(SampleService))
-scaleoutTask = CalmTask.Scaling.scale_out(1, target=ref(SampleDeployment), name="Scale out Lamp")
-scaleinTask = CalmTask.Scaling.scale_in(1, target=ref(SampleDeployment), name="Scale in Lamp")
+scaleoutTask = CalmTask.Scaling.scale_out(
+    1, target=ref(SampleDeployment), name="Scale out Lamp"
+)
+scaleinTask = CalmTask.Scaling.scale_in(
+    1, target=ref(SampleDeployment), name="Scale in Lamp"
+)
 # print(render_task_template(task7))
 # print(render_task_template(task6))
-#print (render_task_template(delayTask))
+# print (render_task_template(delayTask))
 
 task_data = task5.get_dict()
 task_cls = TaskType.decompile(task_data)

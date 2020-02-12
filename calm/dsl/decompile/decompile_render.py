@@ -2,9 +2,7 @@ import os
 from black import format_str, FileMode
 
 from calm.dsl.builtins import read_file
-from tests.decompile.test_decompile import bp_cls as NextBlueprint
 from calm.dsl.decompile.bp_file_helper import render_bp_file_template
-
 
 
 def create_bp_file(dir_name, bp_data):
@@ -12,6 +10,7 @@ def create_bp_file(dir_name, bp_data):
     bp_path = os.path.join(dir_name, "blueprint.py")
     with open(bp_path, "w") as fd:
         fd.write(bp_data)
+
 
 def create_scripts(dir_name):
 
@@ -23,6 +22,7 @@ def create_scripts(dir_name):
 
         with open(os.path.join(dir_name, script_file), "w+") as fd:
             fd.write(data)
+
 
 def make_bp_dirs(dir_name, bp_name):
 
@@ -41,7 +41,7 @@ def make_bp_dirs(dir_name, bp_name):
     return (bp_dir, local_dir, spec_dir)
 
 
-def create_bp_dir(bp_cls = None):
+def create_bp_dir(bp_cls=None):
 
     bp_name = bp_cls.__name__ or "SampleBlueprint"
     dir_name = os.getcwd()

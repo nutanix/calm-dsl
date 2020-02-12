@@ -6,14 +6,13 @@ from calm.dsl.decompile.deployment import render_deployment_template
 from calm.dsl.decompile.profile import render_profile_template
 from calm.dsl.decompile.blueprint import render_blueprint_template
 from calm.dsl.builtins import BlueprintType
-from tests.decompile.test_decompile import bp_cls
 
 
 def render_bp_file_template(cls, local_dir=None, spec_dir=None):
 
     if not isinstance(cls, BlueprintType):
         raise TypeError("{} is not of type {}".format(cls, BlueprintType))
-    
+
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__
     user_attrs["description"] = cls.__doc__
@@ -21,21 +20,21 @@ def render_bp_file_template(cls, local_dir=None, spec_dir=None):
     service_list = []
     for service in cls.services:
         service_list.append(render_service_template(service))
-    
+
     package_list = []
     for package in cls.packages:
         package_list.append(render_package_template(package))
-    
+
     substrate_list = []
     for substrate in cls.substrates:
         substrate_list.append(render_substrate_template(substrate, spec_dir))
-    
+
     profile_list = []
     deployments = []
     for profile in cls.profiles:
         profile_list.append(render_profile_template(profile))
         deployments.extend(profile.deployments)
-    
+
     deployment_list = []
     for deployment in deployments:
         deployment_list.append(render_deployment_template(deployment))
@@ -48,12 +47,9 @@ def render_bp_file_template(cls, local_dir=None, spec_dir=None):
             "substrates": substrate_list,
             "profiles": profile_list,
             "deployments": deployment_list,
-            "blueprint": blueprint
+            "blueprint": blueprint,
         }
     )
 
     text = render_template("bp_file_helper.py.jinja2", obj=user_attrs)
     return text.strip()
-
-
-# print(render_bp_file_template(bp_cls))

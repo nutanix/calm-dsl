@@ -37,11 +37,11 @@ def render_variable_template(cls):
         if is_secret:
             if var_val_type == "STRING":
                 schema_file = "var_simple_secret_string.py.jinja2"
-        
+
         else:
             if var_val_type == "STRING":
                 schema_file = "var_simple_string.py.jinja2"
-    
+
     else:
         data_type = cls.data_type
         options = cls.options.get_dict()
@@ -53,13 +53,13 @@ def render_variable_template(cls):
             if data_type == "BASE":
                 if var_val_type == "STRING":
                     schema_file = "var_with_options_predefined.py.jinja2"
-            
+
             else:
                 defaults = cls.value
                 user_attrs["value"] = defaults.split(",")
                 if var_val_type == "STRING":
                     schema_file = "var_with_options_predefined_array.py.jinja2"
-        
+
         else:
             choices = options.pop("choices", None)
             task = TaskType.decompile(options)
@@ -68,11 +68,11 @@ def render_variable_template(cls):
             if data_type == "BASE":
                 if var_val_type == "STRING":
                     schema_file = "var_with_options_fromTask.py.jinja2"
-            
+
             else:
                 if var_val_type == "STRING":
                     schema_file = "var_with_options_fromTask_array.py.jinja2"
-                
+
     text = render_template(schema_file=schema_file, obj=user_attrs)
     return text.strip()
 
@@ -94,55 +94,55 @@ var2 = CalmVariable.Simple.Secret(
     is_mandatory=True,
 )
 var13 = CalmVariable.WithOptions(
-        ["var13_val1", "var13_val2"],
-        default="var13_val1",
-        label="var13_label",
-        regex="^[a-zA-Z0-9_]+$",
-        validate_regex=True,
-        runtime=True,
-    )
+    ["var13_val1", "var13_val2"],
+    default="var13_val1",
+    label="var13_label",
+    regex="^[a-zA-Z0-9_]+$",
+    validate_regex=True,
+    runtime=True,
+)
 var19 = CalmVariable.WithOptions.Predefined.Array(
-        ["var19_val1", "var19_val2"],
-        defaults=["var19_val1", "var19_val2"],
-        label="var19_label",
-        regex="^[a-zA-Z0-9_]+$",
-        validate_regex=True,
-        runtime=True,
-    )
+    ["var19_val1", "var19_val2"],
+    defaults=["var19_val1", "var19_val2"],
+    label="var19_label",
+    regex="^[a-zA-Z0-9_]+$",
+    validate_regex=True,
+    runtime=True,
+)
 var25 = CalmVariable.WithOptions.FromTask(
-        CalmTask.HTTP.get(
-            "https://jsonplaceholder.typicode.com/posts/1",
-            # Headers in HTTP variables are bugged:
-            # https://jira.nutanix.com/browse/CALM-13724
-            # headers={"Content-Type": "application/json"},
-            content_type="application/json",
-            verify=True,
-            status_mapping={200: True},
-            response_paths={"var25": "$.title"},
-        ),
-        label="var25_label",
-    )
+    CalmTask.HTTP.get(
+        "https://jsonplaceholder.typicode.com/posts/1",
+        # Headers in HTTP variables are bugged:
+        # https://jira.nutanix.com/browse/CALM-13724
+        # headers={"Content-Type": "application/json"},
+        content_type="application/json",
+        verify=True,
+        status_mapping={200: True},
+        response_paths={"var25": "$.title"},
+    ),
+    label="var25_label",
+)
 
 var31 = CalmVariable.WithOptions.FromTask.Array(
-        CalmTask.HTTP.get(
-            "https://jsonplaceholder.typicode.com/posts/1",
-            # Headers in HTTP variables are bugged:
-            # https://jira.nutanix.com/browse/CALM-13724
-            # headers={"Content-Type": "application/json"},
-            content_type="application/json",
-            verify=True,
-            status_mapping={200: True},
-            response_paths={"var31": "$.title"},
-        ),
-        label="var31_label",
-    )
+    CalmTask.HTTP.get(
+        "https://jsonplaceholder.typicode.com/posts/1",
+        # Headers in HTTP variables are bugged:
+        # https://jira.nutanix.com/browse/CALM-13724
+        # headers={"Content-Type": "application/json"},
+        content_type="application/json",
+        verify=True,
+        status_mapping={200: True},
+        response_paths={"var31": "$.title"},
+    ),
+    label="var31_label",
+)
 var33 = CalmVariable.Simple("sample")
 
 var1 = CalmVariable.Simple(
-        "var1_val",
-        label="var1_label",
-        regex="^[a-zA-Z0-9_]+$",
-        validate_regex=True,
-        runtime=True,
-        is_mandatory=True
-    )
+    "var1_val",
+    label="var1_label",
+    regex="^[a-zA-Z0-9_]+$",
+    validate_regex=True,
+    runtime=True,
+    is_mandatory=True,
+)
