@@ -1,5 +1,5 @@
 from calm.dsl.decompile.render import render_template
-from calm.dsl.builtins import ProfileType, BlueprintType
+from calm.dsl.builtins import BlueprintType
 from tests.decompile.test_decompile import bp_cls
 from calm.dsl.decompile.ref import render_ref_template
 from calm.dsl.decompile.credential import render_credential_template
@@ -48,4 +48,4 @@ def render_blueprint_template(cls):
     return text.strip()
 
 
-print(render_blueprint_template(bp_cls))
+# print(render_blueprint_template(bp_cls))

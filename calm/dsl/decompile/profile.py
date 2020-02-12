@@ -39,4 +39,4 @@ bp_dict = NextDslBlueprint.get_dict()
 bp_cls = BlueprintType.decompile(bp_dict)
 
 
-print(render_profile_template(bp_cls.profiles[0]))
+# print(render_profile_template(bp_cls.profiles[0]))

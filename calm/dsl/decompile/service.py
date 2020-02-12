@@ -40,4 +40,4 @@ def render_service_template(cls):
 bp_dict = NextDslBlueprint.get_dict()
 bp_cls = BlueprintType.decompile(bp_dict)
 
-print(render_service_template(bp_cls.services[1]))
+# print(render_service_template(bp_cls.services[1]))

@@ -26,4 +26,4 @@ def render_substrate_template(cls):
 bp_dict = NextDslBlueprint.get_dict()
 bp_cls = BlueprintType.decompile(bp_dict)
 
-print(render_substrate_template(bp_cls.substrates[0]))
+# print(render_substrate_template(bp_cls.substrates[0]))

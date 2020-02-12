@@ -210,4 +210,4 @@ scaleinTask = CalmTask.Scaling.scale_in(1, target=ref(SampleDeployment), name="S
 
 task_data = task5.get_dict()
 task_cls = TaskType.decompile(task_data)
-print (render_task_template(task_cls))
+# print (render_task_template(task_cls))

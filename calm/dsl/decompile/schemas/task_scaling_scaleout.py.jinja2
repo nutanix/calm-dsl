@@ -1,9 +1,9 @@
-{%- macro scaling_scaleout_task(obj) -%}
-{%- if obj.target is not defined %}
-CalmTask.Scaling.scale_out(name='{{obj.name}}', '{{obj.scaling_count}}')
-{%- else %}
-CalmTask.Scaling.scale_out(name='{{obj.name}}', '{{obj.scaling_count}}', target={{obj.target}})
-{%- endif %}
+{% macro scaling_scaleout_task(obj) -%}
+{% if obj.target is not defined %}
+CalmTask.Scaling.scale_out('{{obj.scaling_count}}', name='{{obj.name}}')
+{% else %}
+CalmTask.Scaling.scale_out('{{obj.scaling_count}}', name='{{obj.name}}', target={{obj.target}})
+{% endif %}
 {%- endmacro %}
 
 {{ scaling_scaleout_task(obj) }}
