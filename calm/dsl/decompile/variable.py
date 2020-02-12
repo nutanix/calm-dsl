@@ -1,6 +1,6 @@
 from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.task import render_task_template
-from calm.dsl.builtins import VariableType, CalmVariable, CalmTask, TaskType
+from calm.dsl.builtins import VariableType, TaskType
 
 
 def render_variable_template(cls):
@@ -11,6 +11,7 @@ def render_variable_template(cls):
     user_attrs = cls.get_user_attrs()
     var_val_type = getattr(cls, "value_type", "STRING")
     var_type = ""
+    schema_file = None
 
     if not cls.options:
         var_type = "simple"
@@ -61,7 +62,7 @@ def render_variable_template(cls):
                     schema_file = "var_with_options_predefined_array.py.jinja2"
 
         else:
-            choices = options.pop("choices", None)
+            options.pop("choices", None)
             task = TaskType.decompile(options)
             user_attrs["value"] = render_task_template(task)
 
@@ -73,76 +74,8 @@ def render_variable_template(cls):
                 if var_val_type == "STRING":
                     schema_file = "var_with_options_fromTask_array.py.jinja2"
 
+    if not schema_file:
+        raise Exception("Unknown variable type")
+
     text = render_template(schema_file=schema_file, obj=user_attrs)
     return text.strip()
-
-
-var3 = CalmVariable.Simple.int(
-    "42",
-    label="var3_label",
-    validate_regex=True,
-    runtime=True,
-    is_hidden=True,
-    is_mandatory=True,
-)
-var2 = CalmVariable.Simple.Secret(
-    "var2_val",
-    label="var2_label",
-    regex="^[a-zA-Z0-9_]+$",
-    validate_regex=True,
-    is_hidden=True,
-    is_mandatory=True,
-)
-var13 = CalmVariable.WithOptions(
-    ["var13_val1", "var13_val2"],
-    default="var13_val1",
-    label="var13_label",
-    regex="^[a-zA-Z0-9_]+$",
-    validate_regex=True,
-    runtime=True,
-)
-var19 = CalmVariable.WithOptions.Predefined.Array(
-    ["var19_val1", "var19_val2"],
-    defaults=["var19_val1", "var19_val2"],
-    label="var19_label",
-    regex="^[a-zA-Z0-9_]+$",
-    validate_regex=True,
-    runtime=True,
-)
-var25 = CalmVariable.WithOptions.FromTask(
-    CalmTask.HTTP.get(
-        "https://jsonplaceholder.typicode.com/posts/1",
-        # Headers in HTTP variables are bugged:
-        # https://jira.nutanix.com/browse/CALM-13724
-        # headers={"Content-Type": "application/json"},
-        content_type="application/json",
-        verify=True,
-        status_mapping={200: True},
-        response_paths={"var25": "$.title"},
-    ),
-    label="var25_label",
-)
-
-var31 = CalmVariable.WithOptions.FromTask.Array(
-    CalmTask.HTTP.get(
-        "https://jsonplaceholder.typicode.com/posts/1",
-        # Headers in HTTP variables are bugged:
-        # https://jira.nutanix.com/browse/CALM-13724
-        # headers={"Content-Type": "application/json"},
-        content_type="application/json",
-        verify=True,
-        status_mapping={200: True},
-        response_paths={"var31": "$.title"},
-    ),
-    label="var31_label",
-)
-var33 = CalmVariable.Simple("sample")
-
-var1 = CalmVariable.Simple(
-    "var1_val",
-    label="var1_label",
-    regex="^[a-zA-Z0-9_]+$",
-    validate_regex=True,
-    runtime=True,
-    is_mandatory=True,
-)

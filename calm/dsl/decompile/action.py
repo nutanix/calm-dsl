@@ -9,9 +9,7 @@ def render_action_template(cls):
     if not isinstance(cls, ActionType):
         raise TypeError("{} is not of type {}".format(cls, action))
 
-    user_attrs = cls.get_user_attrs()
     runbook = cls.runbook
-
     main_task = runbook.main_task_local_reference.__name__
     tasks = []
     for task in runbook.tasks:
@@ -22,11 +20,11 @@ def render_action_template(cls):
     for variable in runbook.variables:
         variables.append(render_variable_template(variable))
 
-    data = {
+    user_attrs = {
         "name": cls.__name__,
         "description": cls.description or "Sample description",
         "tasks": tasks,
         "variables": variables,
     }
-    text = render_template(schema_file="action.py.jinja2", obj=data)
+    text = render_template(schema_file="action.py.jinja2", obj=user_attrs)
     return text.strip()

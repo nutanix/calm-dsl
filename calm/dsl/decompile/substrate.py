@@ -1,10 +1,7 @@
-import os
 from ruamel import yaml
 
 from calm.dsl.decompile.render import render_template
 from calm.dsl.builtins import SubstrateType
-from calm.dsl.decompile.variable import render_variable_template
-from calm.dsl.decompile.action import render_action_template
 
 
 def render_substrate_template(cls, spec_dir=None):
