@@ -16,7 +16,7 @@ def render_variable_template(cls):
         var_type = "simple"
 
     if cls.regex:
-        regex = cls.regex.compile(cls)
+        regex = cls.regex.get_dict()
         user_attrs["regex"] = regex.get("value", None)
         user_attrs["validate_regex"] = regex.get("should_validate", False)
 
@@ -44,7 +44,7 @@ def render_variable_template(cls):
     
     else:
         data_type = cls.data_type
-        options = cls.options.compile(cls)
+        options = cls.options.get_dict()
         option_type = options.get("type", "PREDEFINED")
 
         if option_type == "PREDEFINED":
@@ -146,5 +146,3 @@ var1 = CalmVariable.Simple(
         runtime=True,
         is_mandatory=True
     )
-
-# print(render_variable_template(var31))
