@@ -98,7 +98,6 @@ class DefaultProfile(Profile):
     def test_profile_action():
         """Sample description for a profile action"""
         CalmTask.Exec.ssh(name="Task5", script='echo "Hello"', target=ref(MySQLService))
-        PHPService.test_action(name="Task6")
         CalmTask.Scaling.scale_out(1, target=ref(PHPDeployment), name="Scale out Lamp")
         CalmTask.Delay(delay_seconds=60, target=ref(MySQLService))
         CalmTask.Scaling.scale_in(1, target=PHPDeployment, name="Scale in Lamp")
@@ -109,8 +108,6 @@ class NextDslBlueprint(Blueprint):
 
     credentials = [
         basic_cred(CRED_USERNAME, CRED_PASSWORD, default=True),
-        secret_cred("root2", secret="admin_pass", name="secret1"),
-        secret_cred("root3", secret="foo", name="secret2"),
     ]
     services = [MySQLService, PHPService]
     packages = [MySQLPackage, PHPPackage]

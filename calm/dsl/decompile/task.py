@@ -207,5 +207,7 @@ scaleinTask = CalmTask.Scaling.scale_in(1, target=ref(SampleDeployment), name="S
 # print(render_task_template(task7))
 # print(render_task_template(task6))
 #print (render_task_template(delayTask))
-print (render_task_template(task7))
-print (render_task_template(scaleinTask))
+
+task_data = task5.get_dict()
+task_cls = TaskType.decompile(task_data)
+print (render_task_template(task_cls))
