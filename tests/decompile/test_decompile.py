@@ -50,6 +50,8 @@ class MySQLDeployment(Deployment):
 class PHPService(Service):
     """Sample PHP service with a custom action"""
 
+    ENV = CalmVariable.Simple("DEV")
+
     # Dependency to indicate PHP service is dependent on SQL service being up
     dependencies = [ref(MySQLService)]
 

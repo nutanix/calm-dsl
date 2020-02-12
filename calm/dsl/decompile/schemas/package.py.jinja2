@@ -5,10 +5,10 @@ class {{obj.name}}(Package):
     {% if obj.services %}services=[{{obj.services}}]{%- endif %}
 {%- for variable in obj.variables %}
     {{variable}}
-{%- endfor %}
-{%- for action in obj.actions %}
+{% endfor -%}
+{% for action in obj.actions %}
 {{action | indent( width=4, indentfirst=True)}}
-{%- endfor %}
+{% endfor %}
 {%- endmacro %}
 
 {{ package(obj) }}
