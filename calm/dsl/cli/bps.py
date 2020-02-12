@@ -8,9 +8,10 @@ import arrow
 import click
 from prettytable import PrettyTable
 
-from calm.dsl.builtins import Blueprint, SimpleBlueprint, create_blueprint_payload
+from calm.dsl.builtins import Blueprint, SimpleBlueprint, create_blueprint_payload, BlueprintType
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
+from calm.dsl.decompile.decompile_render import create_bp_dir
 
 from .utils import get_name_query, get_states_filter, highlight_text
 from .constants import BLUEPRINT
@@ -225,6 +226,22 @@ def compile_blueprint(bp_file, no_sync=False):
         bp_payload = UserBlueprintPayload.get_dict()
 
     return bp_payload
+
+
+def decompile_bp(name):
+    
+    client = get_api_client()
+    blueprint = get_blueprint(client, name)
+
+    res, err = client.blueprint.read(blueprint["metadata"]["uuid"])
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    
+    blueprint = res.json()["spec"]["resources"]
+    blueprint.pop("default_credential_local_reference", None)
+
+    bp_cls = BlueprintType.decompile(blueprint)
+    create_bp_dir(bp_cls)
 
 
 def compile_blueprint_command(bp_file, out, no_sync=False):

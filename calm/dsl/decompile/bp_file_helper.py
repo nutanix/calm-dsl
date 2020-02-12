@@ -57,4 +57,4 @@ def render_bp_file_template(cls, local_dir=None, spec_dir=None):
     return text.strip()
 
 
-print(render_bp_file_template(bp_cls))
+# print(render_bp_file_template(bp_cls))

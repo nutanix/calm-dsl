@@ -18,6 +18,3 @@ def render_credential_template(cls):
     
     text = render_template("cred_passwd_type.py.jinja2", obj = user_attrs)
     return text.strip()
-
-
-print(render_credential_template(bp_cls.credentials[0]))

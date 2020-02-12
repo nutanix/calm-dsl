@@ -308,6 +308,9 @@ class EntityType(EntityTypeBase):
         display_map = {v: k for k, v in display_map.items()}
 
         for k, v in cdict.items():
+            # case for uuid, editables
+            if not display_map.get(k, None):
+                continue
             attrs.setdefault(display_map[k], v)
 
         validator_dict = getattr(mcls, "__validator_dict__")

@@ -18,6 +18,7 @@ def render_substrate_template(cls, spec_dir=None):
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__
     user_attrs["description"] = cls.__doc__
+    # display map check
     user_attrs["readiness_probe"] = cls.readiness_probe.compile(cls)
 
     provider_spec = cls.provider_spec

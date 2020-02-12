@@ -135,6 +135,12 @@ def compile():
 
 
 @main.group(cls=DYMGroup)
+def decompile():
+    """"""
+    pass
+
+
+@main.group(cls=DYMGroup)
 def create():
     """Create entities in CALM (blueprint, project) """
     pass

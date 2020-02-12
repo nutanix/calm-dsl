@@ -5,7 +5,7 @@ from calm.dsl.api import get_api_client
 
 from .secrets import find_secret, create_secret
 from .utils import highlight_text
-from .main import get, compile, describe, create, launch, delete
+from .main import get, compile, describe, create, launch, delete, decompile
 from .bps import (
     get_blueprint_list,
     describe_bp,
@@ -13,6 +13,7 @@ from .bps import (
     compile_blueprint,
     launch_blueprint_simple,
     delete_blueprint,
+    decompile_bp
 )
 from calm.dsl.tools import get_logging_handle
 
@@ -84,6 +85,12 @@ def _compile_blueprint_command(bp_file, out, no_sync):
     """Compiles a DSL (Python) blueprint into JSON or YAML"""
     compile_blueprint_command(bp_file, out, no_sync)
 
+
+@decompile.command("bp")
+@click.argument("name")
+def _decompile_bp(name):
+
+    decompile_bp(name)
 
 def create_blueprint(client, bp_payload, name=None, description=None, categories=None):
 

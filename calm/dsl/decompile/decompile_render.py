@@ -1,7 +1,7 @@
 import os
 
 from calm.dsl.builtins import read_file
-from tests.decompile.test_decompile import bp_cls
+from tests.decompile.test_decompile import bp_cls as NextBlueprint
 from calm.dsl.decompile.bp_file_helper import render_bp_file_template
 
 
@@ -40,7 +40,7 @@ def make_bp_dirs(dir_name, bp_name):
     return (bp_dir, local_dir, spec_dir)
 
 
-def dsl_bp():
+def create_bp_dir(bp_cls = None):
 
     service_name = "Hello"
     dir_name = os.getcwd()
@@ -50,5 +50,3 @@ def dsl_bp():
     bp_dir, local_dir, spec_dir = make_bp_dirs(dir_name, bp_name)
     bp_data = render_bp_file_template(bp_cls, local_dir, spec_dir)
     create_bp_file(bp_dir, bp_data)
-
-dsl_bp()
