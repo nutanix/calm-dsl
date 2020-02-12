@@ -1,14 +1,14 @@
-{% macro package(obj) -%}
+{%- macro package(obj) -%}
 class {{obj.name}}(Package):
-    {% if obj.description -%}"""{{obj.description}}"""{% endif %}
+    {%- if obj.description -%}"""{{obj.description}}"""{%- endif %}
 
-    {% if obj.services %}services=[{{obj.services}}]{% endif %}
-{% for variable in obj.variables %}
+    {%- if obj.services %}services=[{{obj.services}}]{%- endif %}
+{%- for variable in obj.variables %}
     {{variable}}
-{% endfor %}
-{% for action in obj.actions %}
+{%- endfor %}
+{%- for action in obj.actions %}
 {{action | indent( width=4, indentfirst=True)}}
-{% endfor %}
+{%- endfor %}
 {%- endmacro %}
 
 {{ package(obj) }}

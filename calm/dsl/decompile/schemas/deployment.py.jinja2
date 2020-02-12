@@ -1,11 +1,11 @@
-{% macro deployment(obj) %}
+{%- macro deployment(obj) %}
 class {{obj.name}}(Deployment):
 
     min_replicas = '{{obj.min_replicas}}'
     max_replicas = '{{obj.max_replicas}}'
-    {% if obj.dependencies %}dependencies = [{{obj.dependencies}}]{% endif %} 
-    {% if obj.packages %}packages = [{{obj.packages}}]{% endif %}
-    {% if obj.substrate %}substrate = [{{obj.substrate}}]{% endif %}
-{% endmacro %}
+    {%- if obj.dependencies %}dependencies = [{{obj.dependencies}}]{%- endif %}
+    {%- if obj.packages %}packages = [{{obj.packages}}]{%- endif %}
+    {%- if obj.substrate %}substrate = [{{obj.substrate}}]{%- endif %}
+{%- endmacro %}
 
 {{ deployment(obj) }}

@@ -1,15 +1,15 @@
-{% macro setvariable_ssh_task(obj) -%}
-{% if obj.cred is not defined and obj.target and obj.varibales is not defined %}
+{%- macro setvariable_ssh_task(obj) -%}
+{%- if obj.cred is not defined and obj.target and obj.varibales is not defined %}
 CalmTask.SetVariable.ssh(name={{obj.name}}, script='{{obj.attrs.script}}')
-{% elif obj.cred is not defined %}
+{%- elif obj.cred is not defined %}
 CalmTask.SetVariable.ssh(name={{obj.name}}, script='{{obj.attrs.script}}', target={{obj.target}}, variables={{obj.variables}})
-{% elif obj.target is not defined %}
+{%- elif obj.target is not defined %}
 CalmTask.SetVariable.ssh(name={{obj.name}}, script='{{obj.attrs.script}}', cred={{obj.cred}}, variables={{obj.variables}})
-{% elif obj.varibales is not defined %}
+{%- elif obj.varibales is not defined %}
 CalmTask.SetVariable.ssh(name={{obj.name}}, script='{{obj.attrs.script}}', cred={{obj.cred}}, target={{obj.target}})
-{% else %}
+{%- else %}
 CalmTask.SetVariable.ssh(name={{obj.name}}, script='{{obj.attrs.script}}', cred={{obj.cred}}, target={{obj.target}}, variables={{obj.variables}})
-{% endif %}
+{%- endif %}
 {%- endmacro %}
 
 {{ setvariable_ssh_task(obj) }}

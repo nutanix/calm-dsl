@@ -1,10 +1,10 @@
-{% macro substrate(obj) %}
+{%- macro substrate(obj) %}
 class {{obj.name}}(Substrate):
-    {% if obj.description -%}"""{{obj.description}}"""{% endif %}
+    {%- if obj.description -%}"""{{obj.description}}"""{%- endif %}
     os_type = {{obj.os_type}}
     provider_spec = read_provider_spec("obj.spec_file_name")
     provider_type = {{obj.provider_type}}
     readiness_probe = {{obj.readiness_probe}}
-{% endmacro %}
+{%- endmacro %}
 
 {{ substrate(obj) }}
