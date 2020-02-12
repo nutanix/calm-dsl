@@ -49,9 +49,8 @@ def render_task_template(cls):
             schema_file = "task_setvariable_powershell.py.jinja2"
 
     elif cls.type == "DELAY":
-        delay_seconds = getattr(cls, "interval_secs", None)
-        if delay_seconds:
-            user_attrs["delay_seconds"] = delay_seconds
+        if hasattr(cls, "attrs"):
+            user_attrs["delay_seconds"] = cls.attrs.get("interval_secs", 0)
         schema_file = "task_delay.py.jinja2"
 
     elif cls.type == "SCALING":
