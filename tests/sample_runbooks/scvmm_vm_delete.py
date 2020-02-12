@@ -20,7 +20,7 @@ def DslScvmmVMDelete(endpoints=[SCVMMEndpoint], default_target=ref(SCVMMEndpoint
     "Delete vm in scvmm"
     VM_NAME = CalmVariable.Simple.string("", runtime=True)  # noqa
     CalmTask.Exec.powershell(
-        filename="/Users/sarat.kumar/Scripts/hackathon2020/scvmm_vm_delete.ps1"
+        filename="scripts/scvmm_vm_delete.ps1"
     )
 
 

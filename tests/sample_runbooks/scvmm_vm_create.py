@@ -20,7 +20,7 @@ def DslScvmmVMCreate(endpoints=[SCVMMEndpoint], default_target=ref(SCVMMEndpoint
     "Create vm in scvmm"
     VM_NAME = CalmVariable.Simple.string("", runtime=True)  # noqa
     CalmTask.SetVariable.powershell(
-        filename="/Users/sarat.kumar/Scripts/hackathon2020/scvmm_vm_create.ps1",
+        filename="scripts/scvmm_vm_create.ps1",
         variables=["IpAddress"]
     )
     CalmTask.Exec.escript(

@@ -12,7 +12,7 @@ def DslBucketVerify():
     "Bucket verify in objects"
     BUCKET_NAME = CalmVariable.Simple.string("", runtime=True)  # noqa
     CalmTask.Exec.escript(
-        filename="/Users/sarat.kumar/Scripts/hackathon2020/objects_verify_user_pass.py"
+        filename="scripts/objects_verify_user_pass.py"
     )
 
 

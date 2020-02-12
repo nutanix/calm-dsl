@@ -12,7 +12,7 @@ def DslBucketCreate():
     "Bucket create in objects"
     BUCKET_NAME = CalmVariable.Simple.string("", runtime=True)  # noqa
     CalmTask.SetVariable.escript(
-        filename="/Users/sarat.kumar/Scripts/hackathon2020/objects_create_user_pass.py",
+        filename="scripts/objects_create_user_pass.py",
         variables=["UUID"]
     )
     CalmTask.Exec.escript(

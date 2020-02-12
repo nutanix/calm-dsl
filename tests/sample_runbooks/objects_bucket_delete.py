@@ -12,7 +12,7 @@ def DslBucketDelete():
     "Bucket create in objects"
     BUCKET_NAME = CalmVariable.Simple.string("", runtime=True)  # noqa
     CalmTask.Exec.escript(
-        filename="/Users/sarat.kumar/Scripts/hackathon2020/objects_delete_user_pass.py"
+        filename="scripts/objects_delete_user_pass.py"
     )
 
 
