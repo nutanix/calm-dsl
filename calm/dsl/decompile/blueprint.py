@@ -5,7 +5,7 @@ from calm.dsl.decompile.ref import render_ref_template
 from calm.dsl.decompile.credential import render_credential_template
 
 
-def render_blueprint_template(cls):
+def render_blueprint_template(cls, local_dir=None):
 
     if not isinstance(cls, BlueprintType):
         raise TypeError("{} is not of type {}".format(cls, BlueprintType))
@@ -31,8 +31,19 @@ def render_blueprint_template(cls):
         profile_list.append(profile.__name__)
     
     creds = []
+    cred_file_map = {}
     for cred in cls.credentials:
+        file_name = "cred_{}".format(cred.__name__)
+        cred_val = cred.secret.get("value", "")
+        cred_file_map[file_name] = cred_val
+        cred.secret["value"] = "read_local_file('{}')". format(file_name)
         creds.append(render_credential_template(cred))
+    
+    if local_dir:
+        for cred_file, cred_val in cred_file_map.items():
+            file_loc = "{}/{}". format(local_dir, cred_file)
+            with open(file_loc, "w+") as fd:
+                fd.write(cred_val)
     
     user_attrs.update(
         {
@@ -48,4 +59,4 @@ def render_blueprint_template(cls):
     return text.strip()
 
 
-# print(render_blueprint_template(bp_cls))
+#print(render_blueprint_template(bp_cls))

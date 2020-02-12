@@ -1,8 +1,8 @@
 {% macro cred(obj) %}
 {% if obj.default %}
-basic_cred('{{obj.username}}', '{{obj.value}}', name='{{obj.name}}', default=True)
+basic_cred('{{obj.username}}', {{obj.value}}, name='{{obj.name}}', default=True)
 {% else %}
-basic_cred('{{obj.username}}', '{{obj.value}}', name='{{obj.name}}')
+basic_cred('{{obj.username}}', {{obj.value}}, name='{{obj.name}}')
 {% endif %}
 {% endmacro %}
 

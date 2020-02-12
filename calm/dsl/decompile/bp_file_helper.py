@@ -39,9 +39,8 @@ def render_bp_file_template(cls, local_dir=None, spec_dir=None):
     deployment_list = []
     for deployment in deployments:
         deployment_list.append(render_deployment_template(deployment))
-    
-    blueprint = render_blueprint_template(cls)
-    
+
+    blueprint = render_blueprint_template(cls, local_dir)
     user_attrs.update(
         {
             "services": service_list,
