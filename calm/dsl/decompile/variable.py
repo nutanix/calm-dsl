@@ -16,6 +16,11 @@ def render_variable_template(cls):
     if not cls.options:
         var_type = "simple"
 
+    else:
+        options = cls.options.get_dict()
+        if not options.get("choices"):
+            var_type = "simple"
+
     if cls.regex:
         regex = cls.regex.get_dict()
         user_attrs["regex"] = regex.get("value", None)
