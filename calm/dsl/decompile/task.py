@@ -14,6 +14,9 @@ def render_task_template(cls):
 
     target = getattr(cls, "target_any_local_reference", None)
     if target:
+        if not target.__name__.isidentifier():
+            target.__name__ = "D{}".format(target.__name__)
+
         user_attrs["target"] = render_ref_template(target)
 
     cred = cls.attrs.get("login_credential_local_reference", None)

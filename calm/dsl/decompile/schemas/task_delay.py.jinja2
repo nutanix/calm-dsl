@@ -1,8 +1,8 @@
 {%- macro delay_task(obj) -%}
 {%- if obj.target is not defined %}
-CalmTask.Delay(name='{{obj.name}}', delay_seconds='{{obj.delay_seconds}}')
+CalmTask.Delay(name='{{obj.name}}', delay_seconds={{obj.delay_seconds}})
 {%- else %}
-CalmTask.Delay(name='{{obj.name}}', delay_seconds='{{obj.delay_seconds}}', target={{obj.target}})
+CalmTask.Delay(name='{{obj.name}}', delay_seconds={{obj.delay_seconds}}, target={{obj.target}})
 {%- endif %}
 {%- endmacro %}
 
