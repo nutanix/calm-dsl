@@ -1,3 +1,7 @@
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
+
+![Setup & build calm-dsl on macos](https://github.com/nutanix/calm-dsl/workflows/Setup%20&%20build%20calm-dsl%20on%20macos/badge.svg)
+
 # calm-dsl
 
 ## Getting Started
@@ -43,5 +47,4 @@ Documentation for the Calm DSL will be stored in the [docs](docs/) folder, and w
 ## Video Links
  - [Workstation Setup](https://youtu.be/uIZmHQhioZg)
  - [Blueprint & App management](https://youtu.be/jb-ZllhaROs)
-
-Code formatted by [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
+ - [Calm DSL Blueprint Architecture](https://youtu.be/Y-6eq91rtSw)
