@@ -1,4 +1,5 @@
 $VMName = "@@{VM_NAME}@@"
+Write-Output '@@{credential_blob}@@'
 
 Stop-SCVirtualMachine $VMName
 Start-Sleep 10

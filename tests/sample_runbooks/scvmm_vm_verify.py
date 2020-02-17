@@ -1,10 +1,10 @@
 """
-Calm Runbook for scvmm vm create
+Calm Runbook for scvmm vm verify
 """
 
 from calm.dsl.builtins import read_local_file, basic_cred
 from calm.dsl.builtins import runbook
-from calm.dsl.builtins import CalmTask, CalmVariable
+from calm.dsl.builtins import CalmTask
 from calm.dsl.builtins import CalmEndpoint, ref
 
 CRED_USERNAME = read_local_file(".tests/runbook_tests/username")
@@ -17,10 +17,9 @@ SCVMMEndpoint = CalmEndpoint.Windows.ip([VM_IP], cred=Cred)
 
 @runbook
 def DslScvmmVMCreate(endpoints=[SCVMMEndpoint], default_target=ref(SCVMMEndpoint)):
-    "Create vm in scvmm"
-    VM_NAME = CalmVariable.Simple.string("", runtime=True)  # noqa
-    CalmTask.Exec.powershell(
-        filename="scripts/scvmm_vm_create.ps1"
+    "Verify vm in scvmm"
+    CalmTask.Exec.escript(
+        script="print 'Successfully connected to HyperV'"
     )
 
 

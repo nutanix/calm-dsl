@@ -1,6 +1,8 @@
 $JobGroupID1 = [Guid]::NewGuid().ToString()
-$VMName = "@@{VM_NAME}@@"
-
+$resource_blob = '@@{resources_blob}@@'
+$resource_blob_obj = ConvertFrom-Json –InputObject $resource_blob
+$VMName = $resource_blob_obj.vm_name
+Write-Output '@@{credential_blob}@@'
 $Template = Get-SCVMTemplate -VMMServer localhost -ID "9945c039-0a63-4346-83c8-a83cf87e61e6" | where {$_.Name -eq "Windows Server 2019"}
 $HardwareProfile = Get-SCHardwareProfile -VMMServer localhost | where {$_.Name -eq "CustomProviderHP"}
 $GuestOSProfile = Get-SCGuestOSProfile -VMMServer localhost | where {$_.Name -eq "CustomProviderGOP"}

@@ -1,5 +1,5 @@
 """
-Calm Runbook for scvmm vm create
+Calm Runbook for scvmm vm verify
 """
 
 from calm.dsl.builtins import read_local_file, basic_cred
@@ -17,10 +17,10 @@ SCVMMEndpoint = CalmEndpoint.Windows.ip([VM_IP], cred=Cred)
 
 @runbook
 def DslScvmmVMCreate(endpoints=[SCVMMEndpoint], default_target=ref(SCVMMEndpoint)):
-    "Create vm in scvmm"
+    "Verify vm in scvmm"
     VM_NAME = CalmVariable.Simple.string("", runtime=True)  # noqa
-    CalmTask.Exec.powershell(
-        filename="scripts/scvmm_vm_create.ps1"
+    CalmTask.Exec.escript(
+        script="print 'Login Successful'"
     )
 
 

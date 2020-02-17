@@ -14,7 +14,8 @@ pc_ip = "10.135.20.2"
 pc_username = "admin"
 pc_password = "Nutanix@123"
 objectstore_uuid = "72b52b34-98ac-4774-7ed3-3e882b35b85e"
-bucket_name = "@@{BUCKET_NAME}@@"
+resources_blob = @@{resources_blob}@@
+bucket_name = resources_blob["bucket_name"]
 
 ObjectsDeleteurl = "https://{}:9440/oss/api/nutanix/v3/objectstores/{}/buckets/{}".format(pc_ip, objectstore_uuid,bucket_name)
 
