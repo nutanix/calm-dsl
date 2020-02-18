@@ -27,8 +27,8 @@ class TestRunbooks:
 
         # getting the run payload from the json
         data = read_test_config()
-        run_payload = data[Runbook.__name__]['run_payload']
-        expected_output = data[Runbook.__name__]['expected_output']
+        run_payload = data[Runbook.action_name]['run_payload']
+        expected_output = data[Runbook.action_name]['expected_output']
 
         # running the runbook
         print("\n>>Running the runbook")
