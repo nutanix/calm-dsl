@@ -49,4 +49,4 @@ resources:
     network_function_nic_type: INGRESS
     subnet_reference:
       kind: subnet
-      uuid: be091fc1-47e2-4208-bf92-d8214363795a
+      uuid: 5181e6a4-acce-4b16-a1e7-a8a995d20b06

@@ -1,7 +1,7 @@
 clone_is_template: false
 cluster: Sabine59-Cluster
 drs_mode: true
-name: vm-@@{calm_array_index}@@-@@{calm_time}@@
+name: "ETCD-@@{calm_array_index}@@-@@{calm_time}@@"
 resources:
   controller_list: []
   disk_list: []
