@@ -148,6 +148,35 @@ class SubstrateType(EntityType):
 
         cdict["readiness_probe"] = readiness_probe
 
+        editables = {}
+        if "editables" in cdict and cdict["editables"]:
+            editables = cdict["editables"]
+        if cdict["type"] == "AHV_VM":
+            if not editables:
+                editables = {
+                    "create_spec": {
+                        "resources": {
+                            "nic_list": {}, 
+                            "serial_port_list": {}
+                        }
+                    }
+                }
+        elif cdict["type"] == "VMWARE_VM":
+            if not editables:
+                editables = {
+                    "create_spec": {
+                        "resources": {
+                            "nic_list": {},
+                            "controller_list": {},
+                            "template_nic_list": {},
+                            "template_controller_list": {},
+                            "template_disk_list": {}
+                        }
+                    }
+                }
+
+        cdict["editables"] = editables
+
         return cdict
 
     def get_task_target(cls):

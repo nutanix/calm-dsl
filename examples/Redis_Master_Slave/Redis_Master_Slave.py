@@ -97,6 +97,7 @@ class AHVRedisMasterSubstrate(Substrate):
         "connection_port": 22,
         "credential": ref(DefaultCred),
     }
+    create_spec_editables = { "create_spec": { "resources": { "nic_list": {}, "disk_list": True, "num_vcpus_per_socket": True, "num_sockets": True,"memory_size_mib": True, "serial_port_list": {}}}}
 
 class AWSRedisMasterSubstrate(Substrate):
     provider_spec = read_provider_spec("specs/substrate/aws_spec_centos.yaml")
