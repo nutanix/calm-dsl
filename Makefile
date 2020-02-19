@@ -33,18 +33,18 @@ clean:
 test-verbose: dev
 	venv/bin/py.test -s -vv
 
-dist:
+dist: dev
 	venv/bin/python3 setup.py sdist bdist_wheel
 
-docker: dist gui
+docker: dev
 	[ -S /var/run/docker.sock ] && \
-		docker build --rm -t ideadevice/calm-dsl .
+		docker build --rm -t nutanix/calm-dsl .
 
 black:
 	black --exclude '/(\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|venv|_build|buck-out|build|dist|examples)/' .
 
 run:
-	docker run -it -p 8888:8888 ideadevice/calm-dsl
+	docker run -it nutanix/calm-dsl
 
 _init_centos:
 	# Lets get python3 in
