@@ -36,7 +36,7 @@ test-verbose: dev
 dist: dev
 	venv/bin/python3 setup.py sdist bdist_wheel
 
-docker: dev
+docker: dist
 	[ -S /var/run/docker.sock ] && \
 		docker build --rm -t nutanix/calm-dsl .
 
