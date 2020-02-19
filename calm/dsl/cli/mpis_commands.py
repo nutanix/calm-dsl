@@ -242,8 +242,25 @@ def _launch_marketplace_item(
     default=False,
     help="Publish as new version of existing marketplace blueprint",
 )
+@click.option(
+    "--force_publish",
+    "-f",
+    is_flag=True,
+    default=False,
+    help="Publish the blueprint directly to marketplace skipping the steps to approve, etc.",
+)
+@click.option("--project", "-p", "projects", multiple=True)
+@click.option("--category", "-c", default=None, help="Category for the MPI")
 def publish_bp(
-    bp_name, name, version, description, with_secrets, existing_markeplace_bp
+    bp_name,
+    name,
+    version,
+    description,
+    with_secrets,
+    existing_markeplace_bp,
+    force_publish,
+    projects=[],
+    category=None,
 ):
     """Publish a blueprint to marketplace manager(Pending Approval blueprints)"""
 
@@ -258,6 +275,9 @@ def publish_bp(
             version=version,
             description=description,
             with_secrets=with_secrets,
+            force_publish=force_publish,
+            projects=projects,
+            category=category,
         )
 
     else:
@@ -267,6 +287,9 @@ def publish_bp(
             version=version,
             description=description,
             with_secrets=with_secrets,
+            force_publish=force_publish,
+            projects=projects,
+            category=category,
         )
 
 

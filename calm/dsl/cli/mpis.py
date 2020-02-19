@@ -7,6 +7,9 @@ from calm.dsl.config import get_config
 from .utils import highlight_text, get_states_filter
 from .bps import launch_blueprint_simple, get_blueprint
 from .projects import get_project
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 def get_app_family_list():
@@ -339,15 +342,13 @@ def describe_marketplace_bp(name, version=None, app_source=None, app_state=None)
 
     app_states = [app_state] if app_state else []
     if not version:
-        click.echo(
-            "Fetching latest version of Marketplace Blueprint {} ...".format(name),
-            nl=False,
-        )
+        LOG.info("Fetching latest version of Marketplace Blueprint {} ".format(name))
         version = get_mpi_latest_version(
             name=name, app_source=app_source, app_states=app_states
         )
-        click.echo("[{}]".format(version))
+        LOG.info(version)
 
+    LOG.info("Fetching details of Marketplace Blueprint {}".format(name))
     bp = get_mpi_by_name_n_version(
         name=name, version=version, app_states=app_states, app_source=app_source
     )
@@ -419,16 +420,22 @@ def launch_marketplace_bp(
     config = get_config()
 
     if not version:
-        version = get_mpi_latest_version(name=name, app_source=app_source)
+        LOG.info("Fetching latest version of Marketplace Blueprint {} ".format(name))
+        version = get_mpi_latest_version(
+            name=name,
+            app_source=app_source,
+            app_states=["ACCEPTED", "PUBLISHED", "PENDING"],
+        )
+        LOG.info(version)
 
-    bp_payload = create_marketplace_blueprint(
+    LOG.info("Converting MPI to blueprint")
+    bp_payload = convert_mpi_into_blueprint(
         name=name, version=version, project_name=project, app_source=app_source
     )
 
     bp_name = bp_payload["metadata"].get("name")
-
     app_name = app_name or "Mpi-App-{}-{}".format(name, str(uuid.uuid4())[-10:])
-    click.echo("Launching mpi blueprint {} to create app {}".format(bp_name, app_name))
+
     launch_blueprint_simple(
         client,
         patch_editables=patch_editables,
@@ -436,6 +443,7 @@ def launch_marketplace_bp(
         app_name=app_name,
         blueprint=bp_payload,
     )
+    LOG.info("App {} creation is successful".format(app_name))
 
 
 def launch_marketplace_item(
@@ -456,18 +464,20 @@ def launch_marketplace_item(
     config = get_config()
 
     if not version:
+        LOG.info("Fetching latest version of Marketplace Item {} ".format(name))
         version = get_mpi_latest_version(
             name=name, app_source=app_source, app_states=["PUBLISHED"]
         )
+        LOG.info(version)
 
-    bp_payload = create_marketplace_blueprint(
+    LOG.info("Converting MPI to blueprint")
+    bp_payload = convert_mpi_into_blueprint(
         name=name, version=version, project_name=project, app_source=app_source
     )
 
     bp_name = bp_payload["metadata"].get("name")
-
-    click.echo("Launching mpi blueprint {} ...".format(bp_name))
     app_name = app_name or "Mpi-App-{}-{}".format(name, str(uuid.uuid4())[-10:])
+
     launch_blueprint_simple(
         client,
         patch_editables=patch_editables,
@@ -475,9 +485,10 @@ def launch_marketplace_item(
         app_name=app_name,
         blueprint=bp_payload,
     )
+    LOG.info("App {} creation is successful".format(app_name))
 
 
-def create_marketplace_blueprint(name, version, project_name=None, app_source=None):
+def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None):
 
     client = get_api_client()
     config = get_config()
@@ -487,11 +498,10 @@ def create_marketplace_blueprint(name, version, project_name=None, app_source=No
 
     project_uuid = project_data["metadata"]["uuid"]
 
-    click.echo("Fetching environment data ...", nl=False)
+    LOG.info("Fetching details of project {}".format(project_name))
     res, err = client.project.read(project_uuid)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
-    click.echo("[Success]")
 
     res = res.json()
     environments = res["status"]["project_status"]["resources"][
@@ -501,14 +511,31 @@ def create_marketplace_blueprint(name, version, project_name=None, app_source=No
     # For now only single environment exists
     env_uuid = environments[0]["uuid"]
 
-    click.echo("Fetching mpi store item ...", nl=False)
+    LOG.info("Fetching MPI details")
     mpi_data = get_mpi_by_name_n_version(
         name=name,
         version=version,
         app_source=app_source,
         app_states=["PENDING", "ACCEPTED", "PUBLISHED"],
     )
-    click.echo("[Success]")
+
+    # If BP is in published state, provided project should be associated with the bp
+    app_state = mpi_data["status"]["resources"]["app_state"]
+    if app_state == "PUBLISHED":
+        project_ref_list = mpi_data["status"]["resources"].get(
+            "project_reference_list", []
+        )
+        ref_projects = []
+        for project in project_ref_list:
+            ref_projects.append(project["name"])
+
+        if project_name not in ref_projects:
+            LOG.debug("Associated Projects: {}".format())
+            raise Exception(
+                "Project {} is not shared with marketplace item {} with version {}".format(
+                    project_name, name, version
+                )
+            )
 
     bp_spec = {}
     bp_spec["spec"] = mpi_data["spec"]["resources"]["app_blueprint_template"]["spec"]
@@ -526,14 +553,12 @@ def create_marketplace_blueprint(name, version, project_name=None, app_source=No
     }
     bp_spec["api_version"] = "3.0"
 
-    click.echo("Creating mpi blueprint ...", nl=False)
+    LOG.debug("Creating MPI blueprint")
     bp_res, err = client.blueprint.marketplace_launch(bp_spec)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
-    click.echo("[Success]")
 
     bp_res = bp_res.json()
-
     del bp_res["spec"]["environment_uuid"]
     bp_status = bp_res["status"]["state"]
     if bp_status != "ACTIVE":
@@ -556,6 +581,7 @@ def publish_bp_to_marketplace_manager(
     bp = get_blueprint(client, bp_name)
     bp_uuid = bp.get("metadata", {}).get("uuid", "")
 
+    LOG.info("Fetching blueprint details")
     if with_secrets:
         bp_data, err = client.blueprint.export_json_with_secrets(bp_uuid)
 
@@ -590,12 +616,26 @@ def publish_bp_to_marketplace_manager(
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
+    LOG.info("Marketplace Blueprint is published to marketplace manager successfully")
+
 
 def publish_bp_as_new_marketplace_bp(
-    bp_name, marketplace_bp_name, version, description="", with_secrets=False,
+    bp_name,
+    marketplace_bp_name,
+    version,
+    description="",
+    with_secrets=False,
+    force_publish=False,
+    projects=[],
+    category=None,
 ):
 
     # Search whether this marketplace item exists or not
+    LOG.info(
+        "Fetching existing marketplace blueprints with name {}".format(
+            marketplace_bp_name
+        )
+    )
     res = get_mpis_group_call(
         name=marketplace_bp_name, group_member_count=1, app_source="LOCAL"
     )
@@ -616,11 +656,38 @@ def publish_bp_as_new_marketplace_bp(
         with_secrets=with_secrets,
     )
 
+    if force_publish:
+        if not projects:
+            config = get_config()
+            projects = [config["PROJECT"]["name"]]
+
+        approve_marketplace_bp(
+            bp_name=marketplace_bp_name,
+            version=version,
+            projects=projects,
+            category=category,
+        )
+        publish_marketplace_bp(
+            bp_name=marketplace_bp_name, version=version, app_source="LOCAL"
+        )
+
 
 def publish_bp_as_existing_marketplace_bp(
-    bp_name, marketplace_bp_name, version, description="", with_secrets=False
+    bp_name,
+    marketplace_bp_name,
+    version,
+    description="",
+    with_secrets=False,
+    force_publish=False,
+    projects=[],
+    category=None,
 ):
 
+    LOG.info(
+        "Fetching existing marketplace blueprints with name {}".format(
+            marketplace_bp_name
+        )
+    )
     res = get_mpis_group_call(
         name=marketplace_bp_name, group_member_count=1, app_source="LOCAL"
     )
@@ -637,6 +704,9 @@ def publish_bp_as_existing_marketplace_bp(
 
     # Search whether given version of marketplace items already exists or not
     # Rejected MPIs with same name and version can exist
+    LOG.info(
+        "Fetching existing versions of Marketplace Item {}".format(marketplace_bp_name)
+    )
     res = get_mpis_group_call(
         app_group_uuid=app_group_uuid, app_states=["PUBLISHED", "PENDING", "ACCEPTED"]
     )
@@ -664,14 +734,36 @@ def publish_bp_as_existing_marketplace_bp(
         app_group_uuid=app_group_uuid,
     )
 
+    if force_publish:
+        if not projects:
+            config = get_config()
+            projects = [config["PROJECT"]["name"]]
+
+        approve_marketplace_bp(
+            bp_name=marketplace_bp_name,
+            version=version,
+            projects=projects,
+            category=category,
+        )
+        publish_marketplace_bp(
+            bp_name=marketplace_bp_name, version=version, app_source="LOCAL"
+        )
+
 
 def approve_marketplace_bp(bp_name, version=None, projects=[], category=None):
 
     client = get_api_client()
     if not version:
         # Search for pending blueprints, Only those blueprints can be approved
+        LOG.info("Fetching latest version of Marketplace Blueprint {} ".format(bp_name))
         version = get_mpi_latest_version(name=bp_name, app_states=["PENDING"])
+        LOG.info(version)
 
+    LOG.info(
+        "Fetching details of marketplace blueprint {} with version {}".format(
+            bp_name, version
+        )
+    )
     bp = get_mpi_by_name_n_version(
         name=bp_name, version=version, app_source="LOCAL", app_states=["PENDING"]
     )
@@ -708,6 +800,12 @@ def approve_marketplace_bp(bp_name, version=None, projects=[], category=None):
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
+    LOG.info(
+        "Marketplace Blueprint {} with version {} is approved successfully".format(
+            bp_name, version
+        )
+    )
+
 
 def publish_marketplace_bp(
     bp_name, version=None, projects=[], category=None, app_source=None
@@ -716,10 +814,21 @@ def publish_marketplace_bp(
     client = get_api_client()
     if not version:
         # Search for accepted blueprints, only those blueprints can be published
+        LOG.info(
+            "Fetching latest version of Published Marketplace Blueprint {} ".format(
+                bp_name
+            )
+        )
         version = get_mpi_latest_version(
             name=bp_name, app_states=["ACCEPTED"], app_source=app_source
         )
+        LOG.info(version)
 
+    LOG.info(
+        "Fetching details of accepted marketplace blueprint {} with version {}".format(
+            bp_name, version
+        )
+    )
     bp = get_mpi_by_name_n_version(
         name=bp_name, version=version, app_source=app_source, app_states=["ACCEPTED"]
     )
@@ -756,7 +865,7 @@ def publish_marketplace_bp(
             )
 
     # Atleast 1 project required for publishing to marketplace
-    if not bp_data["spec"]["resources"]["project_reference_list"]:
+    if not bp_data["spec"]["resources"].get("project_reference_list", None):
         raise Exception(
             "To publish to the Marketplace, please provide a project first."
         )
@@ -764,6 +873,8 @@ def publish_marketplace_bp(
     res, err = client.market_place.update(uuid=bp_uuid, payload=bp_data)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    LOG.info("Marketplace Blueprint is published to marketplace successfully")
 
 
 def update_marketplace_bp(
@@ -775,6 +886,12 @@ def update_marketplace_bp(
     """
 
     client = get_api_client()
+
+    LOG.info(
+        "Fetching details of marketplace blueprint {} with version {}".format(
+            name, version
+        )
+    )
     mpi_data = get_mpi_by_name_n_version(
         name=name,
         version=version,
@@ -818,6 +935,11 @@ def update_marketplace_bp(
     res, err = client.market_place.update(uuid=bp_uuid, payload=bp_data)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    LOG.info(
+        "Marketplace Blueprint {} with version {} is updated successfully".format(
+            name, version
+        )
+    )
 
 
 def delete_marketplace_bp(name, version, app_source=None, app_state=None):
@@ -825,9 +947,15 @@ def delete_marketplace_bp(name, version, app_source=None, app_state=None):
     client = get_api_client()
 
     if app_state == "PUBLISHED":
-        raise Exception("Unpublish mpi {} first to delete".format(name))
+        raise Exception("Unpublish MPI {} first to delete it".format(name))
 
     app_states = [app_state] if app_state else ["ACCEPTED", "REJECTED", "PENDING"]
+
+    LOG.info(
+        "Fetching details of marketplace blueprint {} with version {}".format(
+            name, version
+        )
+    )
     mpi_data = get_mpi_by_name_n_version(
         name=name, version=version, app_source=app_source, app_states=app_states
     )
@@ -836,6 +964,11 @@ def delete_marketplace_bp(name, version, app_source=None, app_state=None):
     res, err = client.market_place.delete(bp_uuid)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    LOG.info(
+        "Marketplace Blueprint {} with version {} is deleted successfully".format(
+            name, version
+        )
+    )
 
 
 def reject_marketplace_bp(name, version):
@@ -843,9 +976,18 @@ def reject_marketplace_bp(name, version):
     client = get_api_client()
     if not version:
         # Search for pending blueprints, Only those blueprints can be rejected
+        LOG.info(
+            "Fetching latest version of Pending Marketplace Blueprint {} ".format(name)
+        )
         version = get_mpi_latest_version(name=name, app_states=["PENDING"])
+        LOG.info(version)
 
     # Pending BP will always of type LOCAL, so no need to apply that filter
+    LOG.info(
+        "Fetching details of pending marketplace blueprint {} with version {}".format(
+            name, version
+        )
+    )
     bp = get_mpi_by_name_n_version(name=name, version=version, app_states=["PENDING"])
     bp_uuid = bp["metadata"]["uuid"]
 
@@ -861,6 +1003,11 @@ def reject_marketplace_bp(name, version):
     res, err = client.market_place.update(uuid=bp_uuid, payload=bp_data)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    LOG.info(
+        "Marketplace Blueprint {} with version {} is rejected successfully".format(
+            name, version
+        )
+    )
 
 
 def unpublish_marketplace_bp(name, version, app_source=None):
@@ -868,10 +1015,21 @@ def unpublish_marketplace_bp(name, version, app_source=None):
     client = get_api_client()
     if not version:
         # Search for published blueprints, only those can be unpublished
+        LOG.info(
+            "Fetching latest version of Published Marketplace Blueprint {} ".format(
+                name
+            )
+        )
         version = get_mpi_latest_version(
             name=name, app_states=["PUBLISHED"], app_source=app_source
         )
+        LOG.info(version)
 
+    LOG.info(
+        "Fetching details of published marketplace blueprint {} with version {}".format(
+            name, version
+        )
+    )
     bp = get_mpi_by_name_n_version(
         name=name, version=version, app_states=["PUBLISHED"], app_source=app_source
     )
@@ -889,3 +1047,8 @@ def unpublish_marketplace_bp(name, version, app_source=None):
     res, err = client.market_place.update(uuid=bp_uuid, payload=bp_data)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    LOG.info(
+        "Marketplace Blueprint {} with version {} is unpublished successfully".format(
+            name, version
+        )
+    )

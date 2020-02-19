@@ -822,9 +822,7 @@ class TestMPICommands:
         # Delete the blueprint
         LOG.info("Deleting DSL Bp {} ".format(self.created_dsl_bp_name))
         result = runner.invoke(cli, ["delete", "bp", self.created_dsl_bp_name])
-
         assert result.exit_code == 0
-        LOG.info("Success")
 
         # Deleting created apps
         self._test_app_delete(self.pending_mpbp_app_name)
@@ -849,4 +847,4 @@ class TestMPICommands:
         LOG.info("Deleting App {} ".format(app_name))
         result = runner.invoke(cli, ["delete", "app", app_name])
         assert result.exit_code == 0
-        LOG.info("Success")
+        LOG.info("App is deleted successfully")
