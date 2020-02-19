@@ -222,6 +222,7 @@ class TestRunbooks:
 
     @pytest.mark.slow
     @pytest.mark.runbook
+    @pytest.mark.ces
     def test_runbook_abort(self):
         """ test_runbook_run_abort """
 

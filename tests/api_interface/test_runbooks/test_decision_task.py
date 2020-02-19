@@ -9,6 +9,7 @@ from utils import upload_runbook, poll_runlog_status
 
 class TestDecisionTasks:
     @pytest.mark.runbook
+    @pytest.mark.ces
     def test_decision_task(self):
         """ test_desision_task """
 
