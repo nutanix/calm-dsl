@@ -51,21 +51,21 @@ def _get_app_family_list():
 
 
 @get.command("marketplace_items")
-@click.option("--name", "-n", default=None, help="Search for mpis by name")
-@click.option("--quiet", "-q", is_flag=True, default=False, help="Show only mpi names")
+@click.option("--name", "-n", default=None, help="Filter by name of marketplace items")
+@click.option("--quiet", "-q", is_flag=True, default=False, help="Show only marketplace item names")
 @click.option(
     "--app_family",
-    "-a",
+    "-f",
     type=click.Choice(_get_app_family_list()),
     default="All",
-    help="App Family Category for mpi",
+    help="Filter by app family category of marketplace item",
 )
 @click.option(
     "--display_all",
     "-d",
     is_flag=True,
     default=False,
-    help="Show all mpis with any version",
+    help="Show all marketplace blueprints which are published",
 )
 @click.pass_obj
 def _get_marketplace_items(obj, name, quiet, app_family, display_all):
@@ -78,17 +78,17 @@ def _get_marketplace_items(obj, name, quiet, app_family, display_all):
 
 # TODO Add limit and offset
 @get.command("marketplace_bps")
-@click.option("--name", "-n", default=None, help="Search for mpis by name")
-@click.option("--quiet", "-q", is_flag=True, default=False, help="Show only mpi names")
+@click.option("--name", "-n", default=None, help="Filter by name of marketplace blueprints")
+@click.option("--quiet", "-q", is_flag=True, default=False, help="Show only marketplace blueprint names")
 @click.option(
     "--app_family",
     "-f",
     type=click.Choice(_get_app_family_list()),
     default="All",
-    help="App Family Category for mpi",
+    help="Filter by app family category of marketplace blueprints",
 )
 @click.option(
-    "--app_state", "-a", "app_states", type=click.Choice(APP_STATES), multiple=True
+    "--app_state", "-a", "app_states", type=click.Choice(APP_STATES), multiple=True, help="filter by state of marketplace blueprints"
 )
 @click.pass_obj
 def _get_marketplace_bps(obj, name, quiet, app_family, app_states):
@@ -101,13 +101,13 @@ def _get_marketplace_bps(obj, name, quiet, app_family, app_states):
 
 @describe.command("marketplace_item")
 @click.argument("name")
-@click.option("--version", "-v", default=None, help="Version of MPI")
+@click.option("--version", "-v", default=None, help="Version of marketplace item")
 @click.option(
     "--source",
     "-s",
     default=None,
     type=click.Choice(APP_SOURCES),
-    help="App Source for blueprint",
+    help="App Source for marketplace item",
 )
 @click.pass_obj
 def _describe_marketplace_item(obj, name, version, source):
@@ -124,7 +124,7 @@ def _describe_marketplace_item(obj, name, version, source):
     "-s",
     default=None,
     type=click.Choice(APP_SOURCES),
-    help="App Source for blueprint",
+    help="App Source of marketplace blueprint",
 )
 @click.option(
     "--app_state",
@@ -146,7 +146,7 @@ def _describe_marketplace_bp(obj, name, version, source, app_state):
 
 @launch.command("marketplace_bp")
 @click.argument("name")
-@click.option("--version", "-v", default=None, help="Version of MPI")
+@click.option("--version", "-v", default=None, help="Version of marketplace blueprint")
 @click.option("--project", "-pj", default=None, help="Project for the application")
 @click.option("--app_name", "-a", default=None, help="Name of your app")
 @click.option(
@@ -160,14 +160,14 @@ def _describe_marketplace_bp(obj, name, version, source, app_state):
     "-i",
     is_flag=True,
     default=False,
-    help="Ignore runtime variables and use defaults",
+    help="Ignore runtime variables and use defaults for blueprint launch",
 )
 @click.option(
     "--source",
     "-s",
     default=None,
     type=click.Choice(APP_SOURCES),
-    help="App Source for blueprint",
+    help="App Source of marketplace blueprint",
 )
 @click.pass_obj
 def _launch_marketplace_bp(
@@ -195,9 +195,9 @@ def _launch_marketplace_bp(
 
 @launch.command("marketplace_item")
 @click.argument("name")
-@click.option("--version", "-v", default=None, help="Version of MPI")
+@click.option("--version", "-v", default=None, help="Version of marketplace blueprint")
 @click.option("--project", "-pj", default=None, help="Project for the application")
-@click.option("--app_name", "-a", default=None, help="Name of your app")
+@click.option("--app_name", "-a", default=None, help="Name of app")
 @click.option(
     "--profile_name",
     "-p",
@@ -209,14 +209,14 @@ def _launch_marketplace_bp(
     "-i",
     is_flag=True,
     default=False,
-    help="Ignore runtime variables and use defaults",
+    help="Ignore runtime variables and use defaults for blueprint launch",
 )
 @click.option(
     "--source",
     "-s",
     default=None,
     type=click.Choice(APP_SOURCES),
-    help="App Source for blueprint",
+    help="App Source of marketplace blueprint",
 )
 @click.pass_obj
 def _launch_marketplace_item(
@@ -244,9 +244,9 @@ def _launch_marketplace_item(
 
 @publish.command("bp")
 @click.argument("bp_name")
-@click.option("--version", "-v", required=True, help="Version of MPI")
-@click.option("--name", "-n", default=None, help="Name of Marketplace Blueprint")
-@click.option("--description", "-d", default="", help="Description for the blueprint")
+@click.option("--version", "-v", required=True, help="Version of marketplace blueprint")
+@click.option("--name", "-n", default=None, help="Name of marketplace Blueprint")
+@click.option("--description", "-d", default="", help="Description for marketplace blueprint")
 @click.option(
     "--with_secrets",
     "-w",
@@ -280,13 +280,13 @@ def _launch_marketplace_item(
     "-p",
     "projects",
     multiple=True,
-    help="Projects for MPI (used for approving blueprint)",
+    help="Projects for marketplace blueprint (used for approving blueprint)",
 )
 @click.option(
     "--category",
     "-c",
     default=None,
-    help="Category for the MPI (used for approving blueprint)",
+    help="Category for marketplace blueprint (used for approving blueprint)",
 )
 def publish_bp(
     bp_name,
@@ -335,9 +335,9 @@ def publish_bp(
 
 @approve.command("marketplace_bp")
 @click.argument("name", nargs=1)
-@click.option("--version", "-v", default=None, help="Version of MPI")
-@click.option("--category", "-c", default=None, help="Category for the MPI")
-@click.option("--project", "-p", "projects", multiple=True, help="Projects for MPI")
+@click.option("--version", "-v", default=None, help="Version of marketplace blueprint")
+@click.option("--category", "-c", default=None, help="Category for marketplace blueprint")
+@click.option("--project", "-p", "projects", multiple=True, help="Projects for marketplace blueprint")
 def approve_bp(name, version, category, projects=[]):
     """Approves a marketplace manager blueprint"""
 
@@ -348,16 +348,16 @@ def approve_bp(name, version, category, projects=[]):
 
 @publish.command("marketplace_bp")
 @click.argument("name", nargs=1)
-@click.option("--version", "-v", default=None, help="Version of MPI")
-@click.option("--category", "-c", default=None, help="Category for the MPI")
+@click.option("--version", "-v", default=None, help="Version of marketplace blueprint")
+@click.option("--category", "-c", default=None, help="Category for marketplace blueprint")
 @click.option(
     "--source",
     "-s",
     default=None,
     type=click.Choice(APP_SOURCES),
-    help="App Source for blueprint",
+    help="App Source for marketplace blueprint",
 )
-@click.option("--project", "-p", "projects", multiple=True)
+@click.option("--project", "-p", "projects", multiple=True, help="Projects for marketplace blueprint")
 def _publish_marketplace_bp(name, version, category, source, projects=[]):
     """Publish a marketplace blueprint to marketplace store"""
 
@@ -373,17 +373,17 @@ def _publish_marketplace_bp(name, version, category, source, projects=[]):
 @update.command("marketplace_bp")
 @click.argument("name", nargs=1)
 @click.option(
-    "--version", "-v", required=True, help="Version of MPI"
+    "--version", "-v", required=True, help="Version of marketplace blueprint"
 )  # Required to provide unwanted update of published mpi
-@click.option("--category", "-c", default=None, help="Category for MPI")
-@click.option("--project", "-p", "projects", multiple=True)
-@click.option("--description", "-d", help="Description for MPI")
+@click.option("--category", "-c", default=None, help="Category for marketplace blueprint")
+@click.option("--project", "-p", "projects", multiple=True, help="Projects for marketplace blueprint")
+@click.option("--description", "-d", help="Description for marketplace blueprint")
 @click.option(
     "--source",
     "-s",
     default=None,
     type=click.Choice(APP_SOURCES),
-    help="App Source for blueprint",
+    help="App Source for marketplace blueprint",
 )
 def _update_marketplace_bp(name, version, category, projects, description, source):
     """Update a marketplace_manager blueprint"""
@@ -401,14 +401,14 @@ def _update_marketplace_bp(name, version, category, projects, description, sourc
 @delete.command("marketplace_bp")
 @click.argument("name")
 @click.option(
-    "--version", "-v", required=True, help="Version of MPI"
+    "--version", "-v", required=True, help="Version of marketplace blueprint"
 )  # Required to provide unwanted delete of unknown mpi
 @click.option(
     "--source",
     "-s",
     default=None,
     type=click.Choice(APP_SOURCES),
-    help="App Source for blueprint",
+    help="App Source of marketplace blueprint",
 )
 @click.option(
     "--app_state",
@@ -428,7 +428,7 @@ def _delete_marketplace_bp(name, version, source, app_state):
 @reject.command("marketplace_bp")
 @click.argument("name")
 @click.option(
-    "--version", "-v", required=True, help="Version of MPI"
+    "--version", "-v", required=True, help="Version of marketplace blueprint"
 )  # Required to provide unwanted rejection of unknown mpi
 def _reject_marketplace_bp(name, version):
     """Reject marketplace manager blueprint"""
@@ -439,14 +439,14 @@ def _reject_marketplace_bp(name, version):
 @unpublish.command("marketplace_bp")
 @click.argument("name")
 @click.option(
-    "--version", "-v", required=True, help="Version of MPI"
+    "--version", "-v", required=True, help="Version of marketplace blueprint"
 )  # Required to provide unwanted unpublish of unknown mpi
 @click.option(
     "--source",
     "-s",
     default=None,
     type=click.Choice(APP_SOURCES),
-    help="App Source for blueprint",
+    help="App Source of marketplace blueprint",
 )
 def _unpublish_marketplace_bp(name, version, source):
     """Unpublish marketplace blueprint to marketplace manager blueprint"""
