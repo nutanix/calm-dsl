@@ -451,7 +451,7 @@ def poll_deletion_status(client, project_uuid):
         elif project_state == "COMPLETE":
             LOG.info("DELETED")
             return
-        
+
         elif project_state == "DELETE_PENDING":
             LOG.info(project_state)
 

@@ -97,7 +97,7 @@ class MARKETPLACE_BLUEPRINT:
         ACCEPTED = "ACCEPTED"
         REJECTED = "REJECTED"
         PUBLISHED = "PUBLISHED"
-    
+
     class SOURCES:
         GLOBAL = "GLOBAL_STORE"
         LOCAL = "LOCAL"

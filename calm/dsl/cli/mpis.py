@@ -192,8 +192,6 @@ def get_marketplace_items(name, quiet, app_family, display_all):
                 else:
                     available_to = "{} Projects".format(project_count)
 
-            description = get_group_data_value(entity_data, "description")
-
             data_row = [
                 highlight_text(get_group_data_value(entity_data, "name")),
                 highlight_text(
@@ -431,7 +429,6 @@ def launch_marketplace_bp(
     """
 
     client = get_api_client()
-    config = get_config()
 
     if not version:
         LOG.info("Fetching latest version of Marketplace Blueprint {} ".format(name))
@@ -451,9 +448,7 @@ def launch_marketplace_bp(
         name=name, version=version, project_name=project, app_source=app_source
     )
 
-    bp_name = bp_payload["metadata"].get("name")
     app_name = app_name or "Mpi-App-{}-{}".format(name, str(uuid.uuid4())[-10:])
-
     launch_blueprint_simple(
         client,
         patch_editables=patch_editables,
@@ -479,7 +474,6 @@ def launch_marketplace_item(
     """
 
     client = get_api_client()
-    config = get_config()
 
     if not version:
         LOG.info("Fetching latest version of Marketplace Item {} ".format(name))
@@ -495,9 +489,7 @@ def launch_marketplace_item(
         name=name, version=version, project_name=project, app_source=app_source
     )
 
-    bp_name = bp_payload["metadata"].get("name")
     app_name = app_name or "Mpi-App-{}-{}".format(name, str(uuid.uuid4())[-10:])
-
     launch_blueprint_simple(
         client,
         patch_editables=patch_editables,
@@ -935,7 +927,7 @@ def update_marketplace_bp(
 ):
     """
         updates the marketplace bp
-        version is required to prevent unwanted update of another mpi    
+        version is required to prevent unwanted update of another mpi
     """
 
     client = get_api_client()
