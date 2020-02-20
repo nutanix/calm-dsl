@@ -36,6 +36,29 @@ APP_SOURCES = [
 
 @pytest.mark.slow
 class TestMPICommands:
+
+    def setup_method(self):
+        """Method to instantiate to created_bp_list and created_app_list"""
+
+        self.created_bp_list = []
+        self.created_app_list = []
+
+    def teardown_method(self):
+        """Method to delete creates bps and apps during tests"""
+
+        for bp_name in self.created_bp_list:
+            LOG.info("Deleting Blueprint {}". format(bp_name))
+            runner = CliRunner()
+            result = runner.invoke(cli, ["delete", "bp", bp_name])
+            assert result.exit_code == 0
+
+        for app_name in self.created_app_list:
+            LOG.info("Deleting app {}". format(app_name))
+            self._test_app_delete(app_name)
+
+        self.created_app_list = []
+        self.created_bp_list = []
+
     def test_get_marketplace_items(self):
         """Tests 'calm get marketplace_items command'"""
 
@@ -275,8 +298,9 @@ class TestMPICommands:
 
         LOG.info("Success")
 
-    def _create_bp(self):
-        self.created_dsl_bp_name = "Test_Existing_VM_DSL_{}".format(
+    def _create_bp(self, name=None):
+
+        self.created_dsl_bp_name = name or "Test_Existing_VM_DSL_{}".format(
             str(uuid.uuid4())[-10:]
         )
         LOG.info("Creating Bp {}".format(self.created_dsl_bp_name))
@@ -293,9 +317,8 @@ class TestMPICommands:
             ],
         )
 
-        assert result.exit_code == 0
-        LOG.info("Success")
         LOG.debug("Response: {}".format(result.output))
+        assert result.exit_code == 0
 
     def test_mpi_basic_commands(self):
         """
@@ -317,6 +340,7 @@ class TestMPICommands:
         """
 
         self._create_bp()
+        self.created_bp_list.append(self.created_dsl_bp_name)
         self.marketplace_bp_name = "Test_Marketplace_Bp_{}".format(
             str(uuid.uuid4())[-10:]
         )
@@ -615,13 +639,7 @@ class TestMPICommands:
             pytest.fail("Deletion of marketplace blueprint in PENDING state failed")
         LOG.info("Success")
 
-        # Delete the blueprint
-        LOG.info("Deleting DSL Bp {} ".format(self.created_dsl_bp_name))
-        result = runner.invoke(cli, ["delete", "bp", self.created_dsl_bp_name])
-
-        assert result.exit_code == 0
-        LOG.info("Success")
-
+    @pytest.mark.slow
     def test_mpi_launch(self):
         """
             Steps:
@@ -636,6 +654,7 @@ class TestMPICommands:
         """
 
         self._create_bp()
+        self.created_bp_list.append(self.created_dsl_bp_name)
         self.marketplace_bp_name = "Test_Marketplace_Bp_{}".format(
             str(uuid.uuid4())[-10:]
         )
@@ -694,7 +713,7 @@ class TestMPICommands:
         if result.exit_code:
             LOG.error(result.output)
             pytest.fail("Launching of marketplace blueprint in PENDING state failed")
-        LOG.info("Success")
+        self.created_app_list.append(self.pending_mpbp_app_name)
 
         # Approve the blueprint
         LOG.info(
@@ -743,7 +762,7 @@ class TestMPICommands:
         if result.exit_code:
             LOG.error(result.output)
             pytest.fail("Launching of marketplace blueprint in ACCEPTED state failed")
-        LOG.info("Success")
+        self.created_app_list.append(self.accepted_mpbp_app_name)
 
         # Publish blueprint to marketplace
         LOG.info(
@@ -794,7 +813,7 @@ class TestMPICommands:
         if result.exit_code:
             LOG.error(result.output)
             pytest.fail("Launching of marketplace blueprint in PUBLISHED state failed")
-        LOG.info("Success")
+        self.created_app_list.append(self.published_mpbp_app_name)
 
         # Unpublish marketplace blueprint from marketplace
         LOG.info(
@@ -832,19 +851,11 @@ class TestMPICommands:
         assert result.exit_code == 0
         LOG.info("Success")
 
-        # Delete the blueprint
-        LOG.info("Deleting DSL Bp {} ".format(self.created_dsl_bp_name))
-        result = runner.invoke(cli, ["delete", "bp", self.created_dsl_bp_name])
-        assert result.exit_code == 0
-
-        # Deleting created apps
-        self._test_app_delete(self.pending_mpbp_app_name)
-        self._test_app_delete(self.accepted_mpbp_app_name)
-        self._test_app_delete(self.published_mpbp_app_name)
-
     def test_publish_to_marketplace_flag(self):
+        """Test for publish_to_marketplace_flag for publsh command"""
 
         self._create_bp()
+        self.created_bp_list.append(self.created_dsl_bp_name)
         self.marketplace_bp_name = "Test_Marketplace_Bp_{}".format(
             str(uuid.uuid4())[-10:]
         )
@@ -918,14 +929,11 @@ class TestMPICommands:
             LOG.error(result.output)
             pytest.fail("Deletion of marketplace blueprint in ACCEPTED state failed")
 
-        LOG.info("Deleting DSL Bp {} ".format(self.created_dsl_bp_name))
-        result = runner.invoke(cli, ["delete", "bp", self.created_dsl_bp_name])
-
-        assert result.exit_code == 0
-
     def test_auto_approve_flag(self):
+        """Test for auto_approve flag in publish command"""
 
         self._create_bp()
+        self.created_bp_list.append(self.created_dsl_bp_name)
         self.marketplace_bp_name = "Test_Marketplace_Bp_{}".format(
             str(uuid.uuid4())[-10:]
         )
@@ -980,12 +988,6 @@ class TestMPICommands:
         if result.exit_code:
             LOG.error(result.output)
             pytest.fail("Deletion of marketplace blueprint in ACCEPTED state failed")
-
-        LOG.info("Deleting DSL Bp {} ".format(self.created_dsl_bp_name))
-        result = runner.invoke(cli, ["delete", "bp", self.created_dsl_bp_name])
-
-        assert result.exit_code == 0
-        LOG.info("Success")
 
     def _wait_for_non_busy_state(self, app_name):
 
