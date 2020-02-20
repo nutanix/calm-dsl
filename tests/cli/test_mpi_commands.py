@@ -6,7 +6,11 @@ import time
 
 from calm.dsl.cli import main as cli
 from calm.dsl.api import get_api_client, get_resource_api
-from calm.dsl.cli.mpis import get_app_family_list, get_group_data_value
+from calm.dsl.cli.mpis import (
+    get_app_family_list,
+    get_group_data_value,
+    get_mpi_by_name_n_version,
+)
 from calm.dsl.cli.utils import get_states_filter
 from calm.dsl.cli.constants import APPLICATION
 from calm.dsl.tools import get_logging_handle
@@ -331,9 +335,7 @@ class TestMPICommands:
         result = runner.invoke(cli, command)
         if result.exit_code:
             LOG.error(result.output)
-            pytest.fail(
-                "Publishing of marketplace blueprint as new marketplace item failed"
-            )
+            pytest.fail("Publishing of blueprint as new marketplace item failed")
         LOG.info("Success")
 
         LOG.info(
@@ -356,9 +358,7 @@ class TestMPICommands:
         result = runner.invoke(cli, command)
         if result.exit_code:
             LOG.error(result.output)
-            pytest.fail(
-                "Publishing of marketplace blueprint as existing marketplace_item failed"
-            )
+            pytest.fail("Publishing of blueprint as existing marketplace_item failed")
         LOG.info("Success")
 
         LOG.info(
@@ -382,7 +382,7 @@ class TestMPICommands:
         if result.exit_code:
             LOG.error(result.output)
             pytest.fail(
-                "Publishing of marketplace blueprint with secrets as existing marketplace_item failed"
+                "Publishing of blueprint with secrets as existing marketplace_item failed"
             )
         LOG.info("Success")
 
@@ -517,7 +517,7 @@ class TestMPICommands:
         # Unpublish marketplace blueprint from marketplace
         LOG.info(
             "Unpublishing marketplace blueprint {} with version {}".format(
-                self.created_dsl_bp_name, self.marketplace_bp_name
+                self.marketplace_bp_name, self.mpi1_version
             )
         )
         command = [
@@ -535,7 +535,11 @@ class TestMPICommands:
         LOG.info("Success")
 
         # Deleting the Accepted marketplace blueprint
-        LOG.info("Deleting marketplace blueprint in ACCEPTED state")
+        LOG.info(
+            "Deleting marketplace blueprint {} with version {} in ACCEPTED state".format(
+                self.marketplace_bp_name, self.mpi1_version
+            )
+        )
         command = [
             "delete",
             "marketplace_bp",
@@ -828,6 +832,147 @@ class TestMPICommands:
         self._test_app_delete(self.pending_mpbp_app_name)
         self._test_app_delete(self.accepted_mpbp_app_name)
         self._test_app_delete(self.published_mpbp_app_name)
+
+    def test_publish_to_marketplace_flag(self):
+
+        self._create_bp()
+        self.marketplace_bp_name = "Test_Marketplace_Bp_{}".format(
+            str(uuid.uuid4())[-10:]
+        )
+        self.mpi1_version = "1.0.0"
+
+        # Publish Bp directly to marketplace using --publish_to_marketplace flag
+        LOG.info(
+            "Publishing Bp {} as new marketplace blueprint {}".format(
+                self.created_dsl_bp_name, self.marketplace_bp_name
+            )
+        )
+        command = [
+            "publish",
+            "bp",
+            self.created_dsl_bp_name,
+            "--version",
+            self.mpi1_version,
+            "--name",
+            self.marketplace_bp_name,
+            "--publish_to_marketplace",
+        ]
+        runner = CliRunner()
+
+        result = runner.invoke(cli, command)
+        if result.exit_code:
+            LOG.error(result.output)
+            pytest.fail("Publishing Bp using publish_to_marketplace flag failed")
+        LOG.info("Success")
+
+        mpi_data = get_mpi_by_name_n_version(
+            name=self.marketplace_bp_name, version=self.mpi1_version, app_source="LOCAL"
+        )
+        bp_state = mpi_data["status"]["resources"]["app_state"]
+        assert bp_state == "PUBLISHED"
+
+        LOG.info(
+            "Unpublishing marketplace blueprint {} with version {}".format(
+                self.marketplace_bp_name, self.mpi1_version
+            )
+        )
+        command = [
+            "unpublish",
+            "marketplace_bp",
+            self.marketplace_bp_name,
+            "--version",
+            self.mpi1_version,
+        ]
+
+        result = runner.invoke(cli, command)
+        if result.exit_code:
+            LOG.error(result.output)
+            pytest.fail("Unpublishing of marketplace blueprint failed")
+
+        LOG.info(
+            "Deleting marketplace blueprint {} with version {} in ACCEPTED state".format(
+                self.marketplace_bp_name, self.mpi1_version
+            )
+        )
+        command = [
+            "delete",
+            "marketplace_bp",
+            self.marketplace_bp_name,
+            "--version",
+            self.mpi1_version,
+        ]
+
+        result = runner.invoke(cli, command)
+        if result.exit_code:
+            LOG.error(result.output)
+            pytest.fail("Deletion of marketplace blueprint in ACCEPTED state failed")
+
+        LOG.info("Deleting DSL Bp {} ".format(self.created_dsl_bp_name))
+        result = runner.invoke(cli, ["delete", "bp", self.created_dsl_bp_name])
+
+        assert result.exit_code == 0
+
+    def test_auto_approve_flag(self):
+
+        self._create_bp()
+        self.marketplace_bp_name = "Test_Marketplace_Bp_{}".format(
+            str(uuid.uuid4())[-10:]
+        )
+        self.mpi1_version = "1.0.0"
+
+        # Publish Bp directly to marketplace using --publish_to_marketplace flag
+        LOG.info(
+            "Publishing Bp {} as new marketplace blueprint {}".format(
+                self.created_dsl_bp_name, self.marketplace_bp_name
+            )
+        )
+        command = [
+            "publish",
+            "bp",
+            self.created_dsl_bp_name,
+            "--version",
+            self.mpi1_version,
+            "--name",
+            self.marketplace_bp_name,
+            "--auto_approve",
+        ]
+        runner = CliRunner()
+
+        result = runner.invoke(cli, command)
+        if result.exit_code:
+            LOG.error(result.output)
+            pytest.fail("Publishing Bp using auto_approve flag failed")
+        LOG.info("Success")
+
+        mpi_data = get_mpi_by_name_n_version(
+            name=self.marketplace_bp_name, version=self.mpi1_version, app_source="LOCAL"
+        )
+        bp_state = mpi_data["status"]["resources"]["app_state"]
+        assert bp_state == "ACCEPTED"
+
+        LOG.info(
+            "Deleting marketplace blueprint {} with version {} in ACCEPTED state".format(
+                self.marketplace_bp_name, self.mpi1_version
+            )
+        )
+        command = [
+            "delete",
+            "marketplace_bp",
+            self.marketplace_bp_name,
+            "--version",
+            self.mpi1_version,
+        ]
+
+        result = runner.invoke(cli, command)
+        if result.exit_code:
+            LOG.error(result.output)
+            pytest.fail("Deletion of marketplace blueprint in ACCEPTED state failed")
+
+        LOG.info("Deleting DSL Bp {} ".format(self.created_dsl_bp_name))
+        result = runner.invoke(cli, ["delete", "bp", self.created_dsl_bp_name])
+
+        assert result.exit_code == 0
+        LOG.info("Success")
 
     def _wait_for_non_busy_state(self, app_name):
 

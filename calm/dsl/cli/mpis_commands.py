@@ -117,7 +117,6 @@ def _describe_marketplace_item(obj, name, version, source):
 def _describe_marketplace_bp(obj, name, version, source, app_state):
     """
         Describe a market place blueprint
-        Two mpi with same name and version can exists if one of them is in REJECTED state
     """
 
     describe_marketplace_bp(
@@ -243,14 +242,32 @@ def _launch_marketplace_item(
     help="Publish as new version of existing marketplace blueprint",
 )
 @click.option(
-    "--force_publish",
-    "-f",
+    "--publish_to_marketplace",
+    "-pm",
     is_flag=True,
     default=False,
     help="Publish the blueprint directly to marketplace skipping the steps to approve, etc.",
 )
-@click.option("--project", "-p", "projects", multiple=True)
-@click.option("--category", "-c", default=None, help="Category for the MPI")
+@click.option(
+    "--auto_approve",
+    "-aa",
+    is_flag=True,
+    default=False,
+    help="Auto approves the blueprint",
+)
+@click.option(
+    "--project",
+    "-p",
+    "projects",
+    multiple=True,
+    help="Projects for MPI (used for approving blueprint)",
+)
+@click.option(
+    "--category",
+    "-c",
+    default=None,
+    help="Category for the MPI (used for approving blueprint)",
+)
 def publish_bp(
     bp_name,
     name,
@@ -258,11 +275,12 @@ def publish_bp(
     description,
     with_secrets,
     existing_markeplace_bp,
-    force_publish,
+    publish_to_marketplace,
     projects=[],
     category=None,
+    auto_approve=False,
 ):
-    """Publish a blueprint to marketplace manager(Pending Approval blueprints)"""
+    """Publish a blueprint to marketplace manager"""
 
     if not name:
         # Using blueprint name as the marketplace bp name if no name provided
@@ -275,9 +293,10 @@ def publish_bp(
             version=version,
             description=description,
             with_secrets=with_secrets,
-            force_publish=force_publish,
+            publish_to_marketplace=publish_to_marketplace,
             projects=projects,
             category=category,
+            auto_approve=auto_approve,
         )
 
     else:
@@ -287,9 +306,10 @@ def publish_bp(
             version=version,
             description=description,
             with_secrets=with_secrets,
-            force_publish=force_publish,
+            publish_to_marketplace=publish_to_marketplace,
             projects=projects,
             category=category,
+            auto_approve=auto_approve,
         )
 
 
@@ -297,7 +317,7 @@ def publish_bp(
 @click.argument("name", nargs=1)
 @click.option("--version", "-v", default=None, help="Version of MPI")
 @click.option("--category", "-c", default=None, help="Category for the MPI")
-@click.option("--project", "-p", "projects", multiple=True)
+@click.option("--project", "-p", "projects", multiple=True, help="Projects for MPI")
 def approve_bp(name, version, category, projects=[]):
     """Approves a marketplace manager blueprint"""
 
@@ -319,7 +339,7 @@ def approve_bp(name, version, category, projects=[]):
 )
 @click.option("--project", "-p", "projects", multiple=True)
 def _publish_marketplace_bp(name, version, category, source, projects=[]):
-    """Publish a marketplace manager blueprint to marketplace"""
+    """Publish a marketplace blueprint to marketplace store"""
 
     publish_marketplace_bp(
         bp_name=name,

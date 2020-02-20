@@ -625,7 +625,8 @@ def publish_bp_as_new_marketplace_bp(
     version,
     description="",
     with_secrets=False,
-    force_publish=False,
+    publish_to_marketplace=False,
+    auto_approve=False,
     projects=[],
     category=None,
 ):
@@ -656,7 +657,7 @@ def publish_bp_as_new_marketplace_bp(
         with_secrets=with_secrets,
     )
 
-    if force_publish:
+    if publish_to_marketplace or auto_approve:
         if not projects:
             config = get_config()
             projects = [config["PROJECT"]["name"]]
@@ -667,9 +668,11 @@ def publish_bp_as_new_marketplace_bp(
             projects=projects,
             category=category,
         )
-        publish_marketplace_bp(
-            bp_name=marketplace_bp_name, version=version, app_source="LOCAL"
-        )
+
+        if publish_to_marketplace:
+            publish_marketplace_bp(
+                bp_name=marketplace_bp_name, version=version, app_source="LOCAL"
+            )
 
 
 def publish_bp_as_existing_marketplace_bp(
@@ -678,7 +681,8 @@ def publish_bp_as_existing_marketplace_bp(
     version,
     description="",
     with_secrets=False,
-    force_publish=False,
+    publish_to_marketplace=False,
+    auto_approve=False,
     projects=[],
     category=None,
 ):
@@ -734,7 +738,7 @@ def publish_bp_as_existing_marketplace_bp(
         app_group_uuid=app_group_uuid,
     )
 
-    if force_publish:
+    if publish_to_marketplace or auto_approve:
         if not projects:
             config = get_config()
             projects = [config["PROJECT"]["name"]]
@@ -745,9 +749,11 @@ def publish_bp_as_existing_marketplace_bp(
             projects=projects,
             category=category,
         )
-        publish_marketplace_bp(
-            bp_name=marketplace_bp_name, version=version, app_source="LOCAL"
-        )
+
+        if publish_to_marketplace:
+            publish_marketplace_bp(
+                bp_name=marketplace_bp_name, version=version, app_source="LOCAL"
+            )
 
 
 def approve_marketplace_bp(bp_name, version=None, projects=[], category=None):
@@ -760,7 +766,7 @@ def approve_marketplace_bp(bp_name, version=None, projects=[], category=None):
         LOG.info(version)
 
     LOG.info(
-        "Fetching details of marketplace blueprint {} with version {}".format(
+        "Fetching details of pending marketplace blueprint {} with version {}".format(
             bp_name, version
         )
     )
@@ -815,7 +821,7 @@ def publish_marketplace_bp(
     if not version:
         # Search for accepted blueprints, only those blueprints can be published
         LOG.info(
-            "Fetching latest version of Published Marketplace Blueprint {} ".format(
+            "Fetching latest version of accepted Marketplace Blueprint {} ".format(
                 bp_name
             )
         )
@@ -977,7 +983,7 @@ def reject_marketplace_bp(name, version):
     if not version:
         # Search for pending blueprints, Only those blueprints can be rejected
         LOG.info(
-            "Fetching latest version of Pending Marketplace Blueprint {} ".format(name)
+            "Fetching latest version of pending Marketplace Blueprint {} ".format(name)
         )
         version = get_mpi_latest_version(name=name, app_states=["PENDING"])
         LOG.info(version)
@@ -1016,7 +1022,7 @@ def unpublish_marketplace_bp(name, version, app_source=None):
     if not version:
         # Search for published blueprints, only those can be unpublished
         LOG.info(
-            "Fetching latest version of Published Marketplace Blueprint {} ".format(
+            "Fetching latest version of published Marketplace Blueprint {} ".format(
                 name
             )
         )
