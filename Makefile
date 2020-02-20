@@ -26,7 +26,7 @@ clean:
 	[ ! -d dist/ ] || rm -r dist/
 	[ ! -d *.egg-info/ ] || rm -r *.egg-info/
 	[ -S /var/run/docker.sock ] && \
-		docker ps -aq --no-trunc --filter "status=exited" | xargs -r docker rm && \
+		docker ps -aq --no-trunc --filter "status=exited" | xargs -I {} docker rm {} && \
 		docker image prune -f
 	rm -r venv/ && mkdir venv/ && touch venv/.empty
 
