@@ -398,8 +398,9 @@ def poll_launch_status(client, blueprint_uuid, launch_req_id):
         LOG.info("Polling status of Launch")
         res, err = client.blueprint.poll_launch(blueprint_uuid, launch_req_id)
         response = res.json()
+        app_state = response["status"]["state"]
         pprint(response)
-        if response["status"]["state"] == "success":
+        if app_state == "success":
             app_uuid = response["status"]["application_uuid"]
 
             config = get_config()
@@ -414,11 +415,12 @@ def poll_launch_status(client, blueprint_uuid, launch_req_id):
                 )
             )
             break
-        elif response["status"]["state"] == "failure":
+        elif app_state == "failure":
             LOG.error("Failed to launch blueprint. Check API response above.")
             break
         elif err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.info(app_state)
         count += 10
         time.sleep(10)
 

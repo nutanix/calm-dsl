@@ -8,8 +8,19 @@ from .utils import highlight_text, get_states_filter
 from .bps import launch_blueprint_simple, get_blueprint
 from .projects import get_project
 from calm.dsl.tools import get_logging_handle
+from .constants import MARKETPLACE_BLUEPRINT
 
 LOG = get_logging_handle(__name__)
+APP_STATES = [
+    MARKETPLACE_BLUEPRINT.STATES.PENDING,
+    MARKETPLACE_BLUEPRINT.STATES.ACCEPTED,
+    MARKETPLACE_BLUEPRINT.STATES.REJECTED,
+    MARKETPLACE_BLUEPRINT.STATES.PUBLISHED,
+]
+APP_SOURCES = [
+    MARKETPLACE_BLUEPRINT.SOURCES.GLOBAL,
+    MARKETPLACE_BLUEPRINT.SOURCES.LOCAL,
+]
 
 
 def get_app_family_list():
@@ -144,7 +155,7 @@ def get_marketplace_items(name, quiet, app_family, display_all):
     res = get_mpis_group_call(
         name=name,
         app_family=app_family,
-        app_states=["PUBLISHED"],
+        app_states=[MARKETPLACE_BLUEPRINT.STATES.PUBLISHED],
         group_member_count=group_member_count,
     )
     group_results = res["group_results"]
@@ -333,7 +344,10 @@ def describe_marketplace_item(name, version=None, app_source=None):
     """describes the marketplace blueprint related to marketplace item"""
 
     describe_marketplace_bp(
-        name=name, version=version, app_source=app_source, app_state="PUBLISHED"
+        name=name,
+        version=version,
+        app_source=app_source,
+        app_state=MARKETPLACE_BLUEPRINT.STATES.PUBLISHED,
     )
 
 
@@ -424,7 +438,11 @@ def launch_marketplace_bp(
         version = get_mpi_latest_version(
             name=name,
             app_source=app_source,
-            app_states=["ACCEPTED", "PUBLISHED", "PENDING"],
+            app_states=[
+                MARKETPLACE_BLUEPRINT.STATES.ACCEPTED,
+                MARKETPLACE_BLUEPRINT.STATES.PUBLISHED,
+                MARKETPLACE_BLUEPRINT.STATES.PENDING,
+            ],
         )
         LOG.info(version)
 
@@ -466,7 +484,9 @@ def launch_marketplace_item(
     if not version:
         LOG.info("Fetching latest version of Marketplace Item {} ".format(name))
         version = get_mpi_latest_version(
-            name=name, app_source=app_source, app_states=["PUBLISHED"]
+            name=name,
+            app_source=app_source,
+            app_states=[MARKETPLACE_BLUEPRINT.STATES.PUBLISHED],
         )
         LOG.info(version)
 
@@ -516,12 +536,16 @@ def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None
         name=name,
         version=version,
         app_source=app_source,
-        app_states=["PENDING", "ACCEPTED", "PUBLISHED"],
+        app_states=[
+            MARKETPLACE_BLUEPRINT.STATES.ACCEPTED,
+            MARKETPLACE_BLUEPRINT.STATES.PUBLISHED,
+            MARKETPLACE_BLUEPRINT.STATES.PENDING,
+        ],
     )
 
     # If BP is in published state, provided project should be associated with the bp
     app_state = mpi_data["status"]["resources"]["app_state"]
-    if app_state == "PUBLISHED":
+    if app_state == MARKETPLACE_BLUEPRINT.STATES.PUBLISHED:
         project_ref_list = mpi_data["status"]["resources"].get(
             "project_reference_list", []
         )
@@ -638,7 +662,9 @@ def publish_bp_as_new_marketplace_bp(
         )
     )
     res = get_mpis_group_call(
-        name=marketplace_bp_name, group_member_count=1, app_source="LOCAL"
+        name=marketplace_bp_name,
+        group_member_count=1,
+        app_source=MARKETPLACE_BLUEPRINT.SOURCES.LOCAL,
     )
     group_count = res["filtered_group_count"]
 
@@ -671,7 +697,9 @@ def publish_bp_as_new_marketplace_bp(
 
         if publish_to_marketplace:
             publish_marketplace_bp(
-                bp_name=marketplace_bp_name, version=version, app_source="LOCAL"
+                bp_name=marketplace_bp_name,
+                version=version,
+                app_source=MARKETPLACE_BLUEPRINT.SOURCES.LOCAL,
             )
 
 
@@ -693,7 +721,9 @@ def publish_bp_as_existing_marketplace_bp(
         )
     )
     res = get_mpis_group_call(
-        name=marketplace_bp_name, group_member_count=1, app_source="LOCAL"
+        name=marketplace_bp_name,
+        group_member_count=1,
+        app_source=MARKETPLACE_BLUEPRINT.SOURCES.LOCAL,
     )
     group_results = res["group_results"]
     if not group_results:
@@ -712,7 +742,12 @@ def publish_bp_as_existing_marketplace_bp(
         "Fetching existing versions of Marketplace Item {}".format(marketplace_bp_name)
     )
     res = get_mpis_group_call(
-        app_group_uuid=app_group_uuid, app_states=["PUBLISHED", "PENDING", "ACCEPTED"]
+        app_group_uuid=app_group_uuid,
+        app_states=[
+            MARKETPLACE_BLUEPRINT.STATES.ACCEPTED,
+            MARKETPLACE_BLUEPRINT.STATES.PUBLISHED,
+            MARKETPLACE_BLUEPRINT.STATES.PENDING,
+        ],
     )
 
     group_results = res["group_results"]
@@ -752,7 +787,9 @@ def publish_bp_as_existing_marketplace_bp(
 
         if publish_to_marketplace:
             publish_marketplace_bp(
-                bp_name=marketplace_bp_name, version=version, app_source="LOCAL"
+                bp_name=marketplace_bp_name,
+                version=version,
+                app_source=MARKETPLACE_BLUEPRINT.SOURCES.LOCAL,
             )
 
 
@@ -762,7 +799,9 @@ def approve_marketplace_bp(bp_name, version=None, projects=[], category=None):
     if not version:
         # Search for pending blueprints, Only those blueprints can be approved
         LOG.info("Fetching latest version of Marketplace Blueprint {} ".format(bp_name))
-        version = get_mpi_latest_version(name=bp_name, app_states=["PENDING"])
+        version = get_mpi_latest_version(
+            name=bp_name, app_states=[MARKETPLACE_BLUEPRINT.STATES.PENDING]
+        )
         LOG.info(version)
 
     LOG.info(
@@ -771,7 +810,10 @@ def approve_marketplace_bp(bp_name, version=None, projects=[], category=None):
         )
     )
     bp = get_mpi_by_name_n_version(
-        name=bp_name, version=version, app_source="LOCAL", app_states=["PENDING"]
+        name=bp_name,
+        version=version,
+        app_source=MARKETPLACE_BLUEPRINT.SOURCES.LOCAL,
+        app_states=[MARKETPLACE_BLUEPRINT.STATES.PENDING],
     )
     bp_uuid = bp["metadata"]["uuid"]
 
@@ -782,7 +824,7 @@ def approve_marketplace_bp(bp_name, version=None, projects=[], category=None):
     bp_data = res.json()
     bp_data.pop("status", None)
     bp_data["api_version"] = "3.0"
-    bp_data["spec"]["resources"]["app_state"] = "ACCEPTED"
+    bp_data["spec"]["resources"]["app_state"] = MARKETPLACE_BLUEPRINT.STATES.ACCEPTED
 
     if category:
         app_families = get_app_family_list()
@@ -826,7 +868,9 @@ def publish_marketplace_bp(
             )
         )
         version = get_mpi_latest_version(
-            name=bp_name, app_states=["ACCEPTED"], app_source=app_source
+            name=bp_name,
+            app_states=[MARKETPLACE_BLUEPRINT.STATES.ACCEPTED],
+            app_source=app_source,
         )
         LOG.info(version)
 
@@ -836,7 +880,10 @@ def publish_marketplace_bp(
         )
     )
     bp = get_mpi_by_name_n_version(
-        name=bp_name, version=version, app_source=app_source, app_states=["ACCEPTED"]
+        name=bp_name,
+        version=version,
+        app_source=app_source,
+        app_states=[MARKETPLACE_BLUEPRINT.STATES.ACCEPTED],
     )
     bp_uuid = bp["metadata"]["uuid"]
 
@@ -847,7 +894,7 @@ def publish_marketplace_bp(
     bp_data = res.json()
     bp_data.pop("status", None)
     bp_data["api_version"] = "3.0"
-    bp_data["spec"]["resources"]["app_state"] = "PUBLISHED"
+    bp_data["spec"]["resources"]["app_state"] = MARKETPLACE_BLUEPRINT.STATES.PUBLISHED
 
     if category:
         app_families = get_app_family_list()
@@ -902,7 +949,11 @@ def update_marketplace_bp(
         name=name,
         version=version,
         app_source=app_source,
-        app_states=["PENDING", "ACCEPTED", "PUBLISHED"],
+        app_states=[
+            MARKETPLACE_BLUEPRINT.STATES.ACCEPTED,
+            MARKETPLACE_BLUEPRINT.STATES.PUBLISHED,
+            MARKETPLACE_BLUEPRINT.STATES.PENDING,
+        ],
     )
     bp_uuid = mpi_data["metadata"]["uuid"]
 
@@ -952,10 +1003,18 @@ def delete_marketplace_bp(name, version, app_source=None, app_state=None):
 
     client = get_api_client()
 
-    if app_state == "PUBLISHED":
+    if app_state == MARKETPLACE_BLUEPRINT.STATES.PUBLISHED:
         raise Exception("Unpublish MPI {} first to delete it".format(name))
 
-    app_states = [app_state] if app_state else ["ACCEPTED", "REJECTED", "PENDING"]
+    app_states = (
+        [app_state]
+        if app_state
+        else [
+            MARKETPLACE_BLUEPRINT.STATES.ACCEPTED,
+            MARKETPLACE_BLUEPRINT.STATES.REJECTED,
+            MARKETPLACE_BLUEPRINT.STATES.PENDING,
+        ]
+    )
 
     LOG.info(
         "Fetching details of marketplace blueprint {} with version {}".format(
@@ -985,7 +1044,9 @@ def reject_marketplace_bp(name, version):
         LOG.info(
             "Fetching latest version of pending Marketplace Blueprint {} ".format(name)
         )
-        version = get_mpi_latest_version(name=name, app_states=["PENDING"])
+        version = get_mpi_latest_version(
+            name=name, app_states=[MARKETPLACE_BLUEPRINT.STATES.PENDING]
+        )
         LOG.info(version)
 
     # Pending BP will always of type LOCAL, so no need to apply that filter
@@ -994,7 +1055,9 @@ def reject_marketplace_bp(name, version):
             name, version
         )
     )
-    bp = get_mpi_by_name_n_version(name=name, version=version, app_states=["PENDING"])
+    bp = get_mpi_by_name_n_version(
+        name=name, version=version, app_states=[MARKETPLACE_BLUEPRINT.STATES.PENDING]
+    )
     bp_uuid = bp["metadata"]["uuid"]
 
     res, err = client.market_place.read(bp_uuid)
@@ -1004,7 +1067,7 @@ def reject_marketplace_bp(name, version):
     bp_data = res.json()
     bp_data.pop("status", None)
     bp_data["api_version"] = "3.0"
-    bp_data["spec"]["resources"]["app_state"] = "REJECTED"
+    bp_data["spec"]["resources"]["app_state"] = MARKETPLACE_BLUEPRINT.STATES.REJECTED
 
     res, err = client.market_place.update(uuid=bp_uuid, payload=bp_data)
     if err:
@@ -1027,7 +1090,9 @@ def unpublish_marketplace_bp(name, version, app_source=None):
             )
         )
         version = get_mpi_latest_version(
-            name=name, app_states=["PUBLISHED"], app_source=app_source
+            name=name,
+            app_states=[MARKETPLACE_BLUEPRINT.STATES.PUBLISHED],
+            app_source=app_source,
         )
         LOG.info(version)
 
@@ -1037,7 +1102,10 @@ def unpublish_marketplace_bp(name, version, app_source=None):
         )
     )
     bp = get_mpi_by_name_n_version(
-        name=name, version=version, app_states=["PUBLISHED"], app_source=app_source
+        name=name,
+        version=version,
+        app_states=[MARKETPLACE_BLUEPRINT.STATES.PUBLISHED],
+        app_source=app_source,
     )
     bp_uuid = bp["metadata"]["uuid"]
 
@@ -1048,7 +1116,7 @@ def unpublish_marketplace_bp(name, version, app_source=None):
     bp_data = res.json()
     bp_data.pop("status", None)
     bp_data["api_version"] = "3.0"
-    bp_data["spec"]["resources"]["app_state"] = "ACCEPTED"
+    bp_data["spec"]["resources"]["app_state"] = MARKETPLACE_BLUEPRINT.STATES.ACCEPTED
 
     res, err = client.market_place.update(uuid=bp_uuid, payload=bp_data)
     if err:

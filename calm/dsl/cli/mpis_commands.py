@@ -28,6 +28,18 @@ from .mpis import (
     reject_marketplace_bp,
     unpublish_marketplace_bp,
 )
+from .constants import MARKETPLACE_BLUEPRINT
+
+APP_STATES = [
+    MARKETPLACE_BLUEPRINT.STATES.PENDING,
+    MARKETPLACE_BLUEPRINT.STATES.ACCEPTED,
+    MARKETPLACE_BLUEPRINT.STATES.REJECTED,
+    MARKETPLACE_BLUEPRINT.STATES.PUBLISHED,
+]
+APP_SOURCES = [
+    MARKETPLACE_BLUEPRINT.SOURCES.GLOBAL,
+    MARKETPLACE_BLUEPRINT.SOURCES.LOCAL,
+]
 
 
 def _get_app_family_list():
@@ -75,7 +87,9 @@ def _get_marketplace_items(obj, name, quiet, app_family, display_all):
     default="All",
     help="App Family Category for mpi",
 )
-@click.option("--app_state", "-a", "app_states", multiple=True)
+@click.option(
+    "--app_state", "-a", "app_states", type=click.Choice(APP_STATES), multiple=True
+)
 @click.pass_obj
 def _get_marketplace_bps(obj, name, quiet, app_family, app_states):
     """ List the marketplace blueprints in marketplace manager"""
@@ -92,7 +106,7 @@ def _get_marketplace_bps(obj, name, quiet, app_family, app_states):
     "--source",
     "-s",
     default=None,
-    type=click.Choice(["GLOBAL_STORE", "LOCAL"]),
+    type=click.Choice(APP_SOURCES),
     help="App Source for blueprint",
 )
 @click.pass_obj
@@ -109,10 +123,16 @@ def _describe_marketplace_item(obj, name, version, source):
     "--source",
     "-s",
     default=None,
-    type=click.Choice(["GLOBAL_STORE", "LOCAL"]),
+    type=click.Choice(APP_SOURCES),
     help="App Source for blueprint",
 )
-@click.option("--app_state", "-a", default=None, help="State of marketplace blueprint")
+@click.option(
+    "--app_state",
+    "-a",
+    default=None,
+    type=click.Choice(APP_STATES),
+    help="State of marketplace blueprint",
+)
 @click.pass_obj
 def _describe_marketplace_bp(obj, name, version, source, app_state):
     """
@@ -146,7 +166,7 @@ def _describe_marketplace_bp(obj, name, version, source, app_state):
     "--source",
     "-s",
     default=None,
-    type=click.Choice(["GLOBAL_STORE", "LOCAL"]),
+    type=click.Choice(APP_SOURCES),
     help="App Source for blueprint",
 )
 @click.pass_obj
@@ -195,7 +215,7 @@ def _launch_marketplace_bp(
     "--source",
     "-s",
     default=None,
-    type=click.Choice(["GLOBAL_STORE", "LOCAL"]),
+    type=click.Choice(APP_SOURCES),
     help="App Source for blueprint",
 )
 @click.pass_obj
@@ -334,7 +354,7 @@ def approve_bp(name, version, category, projects=[]):
     "--source",
     "-s",
     default=None,
-    type=click.Choice(["GLOBAL_STORE", "LOCAL"]),
+    type=click.Choice(APP_SOURCES),
     help="App Source for blueprint",
 )
 @click.option("--project", "-p", "projects", multiple=True)
@@ -362,7 +382,7 @@ def _publish_marketplace_bp(name, version, category, source, projects=[]):
     "--source",
     "-s",
     default=None,
-    type=click.Choice(["GLOBAL_STORE", "LOCAL"]),
+    type=click.Choice(APP_SOURCES),
     help="App Source for blueprint",
 )
 def _update_marketplace_bp(name, version, category, projects, description, source):
@@ -387,10 +407,16 @@ def _update_marketplace_bp(name, version, category, projects, description, sourc
     "--source",
     "-s",
     default=None,
-    type=click.Choice(["GLOBAL_STORE", "LOCAL"]),
+    type=click.Choice(APP_SOURCES),
     help="App Source for blueprint",
 )
-@click.option("--app_state", "-a", default=None, help="State of marketplace blueprint")
+@click.option(
+    "--app_state",
+    "-a",
+    default=None,
+    type=click.Choice(APP_STATES),
+    help="State of marketplace blueprint",
+)
 def _delete_marketplace_bp(name, version, source, app_state):
     """Delete marketplace manager blueprint"""
 
@@ -419,7 +445,7 @@ def _reject_marketplace_bp(name, version):
     "--source",
     "-s",
     default=None,
-    type=click.Choice(["GLOBAL_STORE", "LOCAL"]),
+    type=click.Choice(APP_SOURCES),
     help="App Source for blueprint",
 )
 def _unpublish_marketplace_bp(name, version, source):

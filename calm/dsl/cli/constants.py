@@ -89,3 +89,15 @@ class SYSTEM_ACTIONS:
     STOP = "stop"
     DELETE = "delete"
     SOFT_DELETE = "soft_delete"
+
+
+class MARKETPLACE_BLUEPRINT:
+    class STATES:
+        PENDING = "PENDING"
+        ACCEPTED = "ACCEPTED"
+        REJECTED = "REJECTED"
+        PUBLISHED = "PUBLISHED"
+    
+    class SOURCES:
+        GLOBAL = "GLOBAL_STORE"
+        LOCAL = "LOCAL"

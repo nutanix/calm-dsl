@@ -12,16 +12,25 @@ from calm.dsl.cli.mpis import (
     get_mpi_by_name_n_version,
 )
 from calm.dsl.cli.utils import get_states_filter
-from calm.dsl.cli.constants import APPLICATION
+from calm.dsl.cli.constants import APPLICATION, MARKETPLACE_BLUEPRINT
 from calm.dsl.tools import get_logging_handle
 
 LOG = get_logging_handle(__name__)
-
 DSL_BP_FILEPATH = "tests/existing_vm_example/test_existing_vm_bp.py"
 NON_BUSY_APP_STATES = [
     APPLICATION.STATES.STOPPED,
     APPLICATION.STATES.RUNNING,
     APPLICATION.STATES.ERROR,
+]
+APP_STATES = [
+    MARKETPLACE_BLUEPRINT.STATES.PENDING,
+    MARKETPLACE_BLUEPRINT.STATES.ACCEPTED,
+    MARKETPLACE_BLUEPRINT.STATES.REJECTED,
+    MARKETPLACE_BLUEPRINT.STATES.PUBLISHED,
+]
+APP_SOURCES = [
+    MARKETPLACE_BLUEPRINT.SOURCES.GLOBAL,
+    MARKETPLACE_BLUEPRINT.SOURCES.LOCAL,
 ]
 
 
@@ -88,7 +97,7 @@ class TestMPICommands:
 
         # Test app states option
         LOG.info("Testing app_state option for  'calm get marketplace_bps' command")
-        app_states = ["REJECTED", "ACCEPTED", "PUBLISHED", "PENDING"]
+        app_states = APP_STATES
         app_states = sum(
             [
                 list(map(list, combinations(app_states, i)))
@@ -213,8 +222,8 @@ class TestMPICommands:
         runner = CliRunner()
 
         # test source option and app state action
-        app_states = ["PENDING", "ACCEPTED", "REJECTED", "PUBLISHED", None]
-        app_sources = ["GLOBAL_STORE", "LOCAL", None]
+        app_states = APP_STATES
+        app_sources = APP_SOURCES
 
         LOG.info("Testing 'calm describe marketplace_bp command'")
         for app_state in app_states:
@@ -866,10 +875,12 @@ class TestMPICommands:
         LOG.info("Success")
 
         mpi_data = get_mpi_by_name_n_version(
-            name=self.marketplace_bp_name, version=self.mpi1_version, app_source="LOCAL"
+            name=self.marketplace_bp_name,
+            version=self.mpi1_version,
+            app_source=MARKETPLACE_BLUEPRINT.SOURCES.LOCAL,
         )
         bp_state = mpi_data["status"]["resources"]["app_state"]
-        assert bp_state == "PUBLISHED"
+        assert bp_state == MARKETPLACE_BLUEPRINT.STATES.PUBLISHED
 
         LOG.info(
             "Unpublishing marketplace blueprint {} with version {}".format(
@@ -945,10 +956,12 @@ class TestMPICommands:
         LOG.info("Success")
 
         mpi_data = get_mpi_by_name_n_version(
-            name=self.marketplace_bp_name, version=self.mpi1_version, app_source="LOCAL"
+            name=self.marketplace_bp_name,
+            version=self.mpi1_version,
+            app_source=MARKETPLACE_BLUEPRINT.SOURCES.LOCAL,
         )
         bp_state = mpi_data["status"]["resources"]["app_state"]
-        assert bp_state == "ACCEPTED"
+        assert bp_state == MARKETPLACE_BLUEPRINT.STATES.ACCEPTED
 
         LOG.info(
             "Deleting marketplace blueprint {} with version {} in ACCEPTED state".format(
