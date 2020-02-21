@@ -22,10 +22,10 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install virtualenv
-        export CFLAGS="-I$(brew --prefix openssl)/include"
-        export LDFLAGS="-L$(brew --prefix openssl)/lib"     
     - name: Install requirements
       run: |
+        export CFLAGS="-I$(brew --prefix openssl)/include"
+        export LDFLAGS="-L$(brew --prefix openssl)/lib"   
         make dev
     - name: Build python package
       run: |
