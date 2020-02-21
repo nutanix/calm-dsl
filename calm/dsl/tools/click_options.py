@@ -1,7 +1,7 @@
 import click
 
 from calm.dsl.config import get_config
-from .logger import CustomLogging, set_verbose_level
+from .logger import CustomLogging, set_verbose_level, set_show_trace
 
 
 def simple_verbosity_option(logging_mod=None, *names, **kwargs):
@@ -55,4 +55,26 @@ def simple_verbosity_option(logging_mod=None, *names, **kwargs):
 
         return click.option(*names, callback=_set_level, **kwargs)(f)
 
+    return decorator
+
+
+def show_trace_option(logging_mod=None, **kwargs):
+    """A decorator that add --show_trace/-st option to decorated command"""
+
+    if not isinstance(logging_mod, CustomLogging):
+        raise TypeError("Logging object should be instance of CustomLogging.")
+
+    names = ["--show_trace", "-st"]
+    kwargs.setdefault("is_flag", True)
+    kwargs.setdefault("default", False)
+    kwargs.setdefault("expose_value", False)
+    kwargs.setdefault("help", "Show the traceback for the exceptions")
+    kwargs.setdefault("is_eager", True)
+
+    def decorator(f):
+        def _set_show_trace(ctx, param, value):
+            if value:
+                set_show_trace()
+
+        return click.option(*names, callback=_set_show_trace, **kwargs)(f)
     return decorator

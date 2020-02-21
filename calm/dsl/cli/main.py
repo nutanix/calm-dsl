@@ -10,7 +10,7 @@ from click_repl import repl
 # TODO - move providers to separate file
 from calm.dsl.providers import get_provider, get_provider_types
 from calm.dsl.api import get_api_client, get_resource_api
-from calm.dsl.tools import get_logging_handle, simple_verbosity_option
+from calm.dsl.tools import get_logging_handle, simple_verbosity_option, show_trace_option
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
@@ -20,6 +20,7 @@ LOG = get_logging_handle(__name__)
 
 @click.group(context_settings=CONTEXT_SETTINGS)
 @simple_verbosity_option(LOG)
+@show_trace_option(LOG)
 @click.version_option("0.1")
 @click.pass_context
 def main(ctx):

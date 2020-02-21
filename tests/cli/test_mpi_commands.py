@@ -3,6 +3,7 @@ from click.testing import CliRunner
 from itertools import combinations
 import uuid
 import time
+import sys
 
 from calm.dsl.cli import main as cli
 from calm.dsl.api import get_api_client, get_resource_api
@@ -173,7 +174,8 @@ class TestMPICommands:
 
         res, err = Obj.create(payload=payload)
         if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+            LOG.error("[{}] - {}".format(err["code"], err["error"]))
+            sys.exit(-1)
 
         res = res.json()
         group = res["group_results"][0]
@@ -212,7 +214,8 @@ class TestMPICommands:
 
         res, err = Obj.create(payload=payload)
         if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+            LOG.error("[{}] - {}".format(err["code"], err["error"]))
+            sys.exit(-1)
 
         res = res.json()
         group = res["group_results"][0]

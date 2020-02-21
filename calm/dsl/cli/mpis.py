@@ -1,5 +1,6 @@
 import uuid
 import click
+import sys
 from prettytable import PrettyTable
 
 from calm.dsl.api import get_api_client, get_resource_api
@@ -31,7 +32,8 @@ def get_app_family_list():
 
     res, err = Obj.list(params={})
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
 
     res = res.json()
     categories = []
@@ -139,7 +141,8 @@ def get_mpis_group_call(
     res, err = Obj.create(payload=payload)
 
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
 
     res = res.json()
     return res
@@ -291,7 +294,8 @@ def get_mpi_latest_version(name, app_source=None, app_states=[]):
     group_results = res["group_results"]
 
     if not group_results:
-        raise Exception("No Marketplace Blueprint found with name {}".format(name))
+        LOG.error("No Marketplace Blueprint found with name {}".format(name))
+        sys.exit(-1)
 
     entity_results = group_results[0]["entity_results"]
     entity_version = get_group_data_value(entity_results[0]["data"], "version")
@@ -320,16 +324,23 @@ def get_mpi_by_name_n_version(name, version, app_states=[], app_source=None):
     }
     res, err = client.market_place.list(params=payload)
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
 
     res = res.json()
     if not res["entities"]:
-        raise Exception("No Marketplace Blueprint found with name {}".format(name))
+        LOG.error(
+            "No Marketplace Blueprint found with name {} and version {}".format(
+                name, version
+            )
+        )
+        sys.exit(-1)
 
     app_uuid = res["entities"][0]["metadata"]["uuid"]
     res, err = client.market_place.read(app_uuid)
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
 
     res = res.json()
     return res
@@ -510,7 +521,8 @@ def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None
     LOG.info("Fetching details of project {}".format(project_name))
     res, err = client.project.read(project_uuid)
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
 
     res = res.json()
     environments = res["status"]["project_status"]["resources"][
@@ -544,11 +556,12 @@ def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None
 
         if project_name not in ref_projects:
             LOG.debug("Associated Projects: {}".format())
-            raise Exception(
+            LOG.error(
                 "Project {} is not shared with marketplace item {} with version {}".format(
                     project_name, name, version
                 )
             )
+            sys.exit(-1)
 
     bp_spec = {}
     bp_spec["spec"] = mpi_data["spec"]["resources"]["app_blueprint_template"]["spec"]
@@ -569,13 +582,15 @@ def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None
     LOG.debug("Creating MPI blueprint")
     bp_res, err = client.blueprint.marketplace_launch(bp_spec)
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
 
     bp_res = bp_res.json()
     del bp_res["spec"]["environment_uuid"]
     bp_status = bp_res["status"]["state"]
     if bp_status != "ACTIVE":
-        raise Exception("blueprint went to {} state".format(bp_status))
+        LOG.error("blueprint went to {} state".format(bp_status))
+        sys.exit(-1)
 
     return bp_res
 
@@ -602,7 +617,8 @@ def publish_bp_to_marketplace_manager(
         bp_data, err = client.blueprint.export_json(bp_uuid)
 
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
 
     bp_data = bp_data.json()
     bp_template = {
@@ -627,7 +643,8 @@ def publish_bp_to_marketplace_manager(
 
     res, err = client.market_place.create(bp_template)
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
 
     LOG.info("Marketplace Blueprint is published to marketplace manager successfully")
 
@@ -658,11 +675,12 @@ def publish_bp_as_new_marketplace_bp(
     group_count = res["filtered_group_count"]
 
     if group_count:
-        raise Exception(
+        LOG.error(
             "A local marketplace item exists with same name ({}) in another app family".format(
                 marketplace_bp_name
             )
         )
+        sys.exit(-1)
 
     publish_bp_to_marketplace_manager(
         bp_name=bp_name,
@@ -716,11 +734,12 @@ def publish_bp_as_existing_marketplace_bp(
     )
     group_results = res["group_results"]
     if not group_results:
-        raise Exception(
+        LOG.error(
             "No local marketplace blueprint exists with name {}".format(
                 marketplace_bp_name
             )
         )
+        sys.exit(-1)
 
     entity_group = group_results[0]
     app_group_uuid = entity_group["group_by_column_value"]
@@ -747,11 +766,12 @@ def publish_bp_as_existing_marketplace_bp(
         entity_app_state = get_group_data_value(entity["data"], "app_state")
 
         if entity_version == version:
-            raise Exception(
+            LOG.error(
                 "An item exists with same version ({}) and app_state ({}) in the chosen app family.".format(
                     entity_version, entity_app_state
                 )
             )
+            sys.exit(-1)
 
     publish_bp_to_marketplace_manager(
         bp_name=bp_name,
@@ -808,7 +828,8 @@ def approve_marketplace_bp(bp_name, version=None, projects=[], category=None):
 
     res, err = client.market_place.read(bp_uuid)
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
 
     bp_data = res.json()
     bp_data.pop("status", None)
@@ -818,7 +839,8 @@ def approve_marketplace_bp(bp_name, version=None, projects=[], category=None):
     if category:
         app_families = get_app_family_list()
         if category not in app_families:
-            raise Exception("{} is not a valid App Family category".format(category))
+            LOG.error("{} is not a valid App Family category".format(category))
+            sys.exit(-1)
 
         bp_data["metadata"]["categories"] = {"AppFamily": category}
 
@@ -835,7 +857,8 @@ def approve_marketplace_bp(bp_name, version=None, projects=[], category=None):
 
     res, err = client.market_place.update(uuid=bp_uuid, payload=bp_data)
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
 
     LOG.info(
         "Marketplace Blueprint {} with version {} is approved successfully".format(
@@ -878,7 +901,8 @@ def publish_marketplace_bp(
 
     res, err = client.market_place.read(bp_uuid)
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
 
     bp_data = res.json()
     bp_data.pop("status", None)
@@ -888,7 +912,8 @@ def publish_marketplace_bp(
     if category:
         app_families = get_app_family_list()
         if category not in app_families:
-            raise Exception("{} is not a valid App Family category".format(category))
+            LOG.error("{} is not a valid App Family category".format(category))
+            sys.exit(-1)
 
         bp_data["metadata"]["categories"] = {"AppFamily": category}
 
@@ -908,13 +933,13 @@ def publish_marketplace_bp(
 
     # Atleast 1 project required for publishing to marketplace
     if not bp_data["spec"]["resources"].get("project_reference_list", None):
-        raise Exception(
-            "To publish to the Marketplace, please provide a project first."
-        )
+        LOG.error("To publish to the Marketplace, please provide a project first.")
+        sys.exit(-1)
 
     res, err = client.market_place.update(uuid=bp_uuid, payload=bp_data)
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
 
     LOG.info("Marketplace Blueprint is published to marketplace successfully")
 
@@ -948,7 +973,8 @@ def update_marketplace_bp(
 
     res, err = client.market_place.read(bp_uuid)
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
 
     bp_data = res.json()
     bp_data.pop("status", None)
@@ -957,7 +983,8 @@ def update_marketplace_bp(
     if category:
         app_families = get_app_family_list()
         if category not in app_families:
-            raise Exception("{} is not a valid App Family category".format(category))
+            LOG.error("{} is not a valid App Family category".format(category))
+            sys.exit(-1)
 
         bp_data["metadata"]["categories"] = {"AppFamily": category}
 
@@ -980,7 +1007,9 @@ def update_marketplace_bp(
 
     res, err = client.market_place.update(uuid=bp_uuid, payload=bp_data)
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
+
     LOG.info(
         "Marketplace Blueprint {} with version {} is updated successfully".format(
             name, version
@@ -993,7 +1022,8 @@ def delete_marketplace_bp(name, version, app_source=None, app_state=None):
     client = get_api_client()
 
     if app_state == MARKETPLACE_BLUEPRINT.STATES.PUBLISHED:
-        raise Exception("Unpublish MPI {} first to delete it".format(name))
+        LOG.error("Unpublish MPI {} first to delete it".format(name))
+        sys.exit(-1)
 
     app_states = (
         [app_state]
@@ -1017,7 +1047,9 @@ def delete_marketplace_bp(name, version, app_source=None, app_state=None):
 
     res, err = client.market_place.delete(bp_uuid)
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
+
     LOG.info(
         "Marketplace Blueprint {} with version {} is deleted successfully".format(
             name, version
@@ -1051,7 +1083,8 @@ def reject_marketplace_bp(name, version):
 
     res, err = client.market_place.read(bp_uuid)
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
 
     bp_data = res.json()
     bp_data.pop("status", None)
@@ -1060,7 +1093,9 @@ def reject_marketplace_bp(name, version):
 
     res, err = client.market_place.update(uuid=bp_uuid, payload=bp_data)
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
+
     LOG.info(
         "Marketplace Blueprint {} with version {} is rejected successfully".format(
             name, version
@@ -1100,7 +1135,8 @@ def unpublish_marketplace_bp(name, version, app_source=None):
 
     res, err = client.market_place.read(bp_uuid)
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
 
     bp_data = res.json()
     bp_data.pop("status", None)
@@ -1109,7 +1145,9 @@ def unpublish_marketplace_bp(name, version, app_source=None):
 
     res, err = client.market_place.update(uuid=bp_uuid, payload=bp_data)
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
+
     LOG.info(
         "Marketplace Blueprint {} with version {} is unpublished successfully".format(
             name, version
