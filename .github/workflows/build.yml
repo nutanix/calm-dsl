@@ -1,4 +1,4 @@
-name: Setup & build calm-dsl on macos
+name: Setup & build calm-dsl
 on:
   push:
     branches:
@@ -10,7 +10,7 @@ on:
 jobs:
   build:
 
-    runs-on: macos 
+    runs-on: [ubuntu-latest]
 
     steps:
     - uses: actions/checkout@v2
@@ -24,8 +24,6 @@ jobs:
         pip install virtualenv
     - name: Install requirements
       run: |
-        export CFLAGS="-I$(brew --prefix openssl)/include"
-        export LDFLAGS="-L$(brew --prefix openssl)/lib"   
         make dev
     - name: Build python package
       run: |
