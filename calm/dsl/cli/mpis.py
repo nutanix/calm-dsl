@@ -291,7 +291,7 @@ def get_mpi_latest_version(name, app_source=None, app_states=[]):
     group_results = res["group_results"]
 
     if not group_results:
-        raise Exception("No MPI found with name {}".format(name))
+        raise Exception("No Marketplace Blueprint found with name {}".format(name))
 
     entity_results = group_results[0]["entity_results"]
     entity_version = get_group_data_value(entity_results[0]["data"], "version")
@@ -324,10 +324,7 @@ def get_mpi_by_name_n_version(name, version, app_states=[], app_source=None):
 
     res = res.json()
     if not res["entities"]:
-        message = "no mpi found with name {} and version {}.\nRun 'calm get mpis -d' to get detailed list of mpis".format(
-            name, version
-        )
-        raise Exception(message)
+        raise Exception("No Marketplace Blueprint found with name {}".format(name))
 
     app_uuid = res["entities"][0]["metadata"]["uuid"]
     res, err = client.market_place.read(app_uuid)
