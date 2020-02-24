@@ -1,3 +1,9 @@
+NAME    := nutanix/calm-dsl
+VERSION := v0.9.0-alpha
+COMMIT  := $(shell git rev-parse --short HEAD)
+TAG     := $(shell git describe --abbrev=0 --tags --exact-match ${COMMIT} 2>/dev/null \
+		|| echo ${VERSION}.commit.${COMMIT})
+
 dev:
 	# Setup our python3 based virtualenv
 	# This step assumes python3 is installed on your dev machine
@@ -37,8 +43,14 @@ dist: dev
 	venv/bin/python3 setup.py sdist bdist_wheel
 
 docker: dist
+
+	# Docker doesn't support semver tags + used for metadata info
+	# https://github.com/docker/distribution/pull/1202
+	# Using commit as pre-release tag
+
 	[ -S /var/run/docker.sock ] && \
-		docker build --rm -t nutanix/calm-dsl .
+		docker build . --rm --file Dockerfile --tag ${NAME}:${TAG} && \
+		docker tag ${NAME}:${TAG} ${NAME}:latest
 
 black:
 	black --exclude '/(\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|venv|_build|buck-out|build|dist|examples)/' .
