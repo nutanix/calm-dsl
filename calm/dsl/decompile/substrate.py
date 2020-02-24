@@ -25,7 +25,7 @@ def render_substrate_template(cls, spec_dir=None):
 
     if spec_dir:
         # TODO Edit for windows
-        spec_dir = "{}/{}".format(spec_dir, provider_spec_file_name)
+        spec_dir = "{}/{}.yaml".format(spec_dir, provider_spec_file_name)
         with open(spec_dir, "w+") as fd:
             fd.write(yaml.dump(provider_spec, default_flow_style=False))
 
