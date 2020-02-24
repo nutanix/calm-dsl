@@ -1,6 +1,9 @@
+import uuid
+
 from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.ref import render_ref_template
 from calm.dsl.decompile.credential import get_cred_var_name
+from calm.dsl.decompile.file_handler import get_scripts_dir
 from calm.dsl.builtins import TaskType
 
 
@@ -27,6 +30,8 @@ def render_task_template(cls):
     if cls.type == "EXEC":
         script_type = cls.attrs["script_type"]
         cls.attrs["script"] = cls.attrs["script"].replace("'", r"/'")
+        cls.attrs["script"] = create_script_file(script_type, cls.attrs["script"])
+        
         if script_type == "sh":
             schema_file = "task_exec_ssh.py.jinja2"
 
@@ -99,6 +104,9 @@ def render_task_template(cls):
             schema_file = "task_http_put.py.jinja2"
 
         elif method == "DELETE":
+            # TODO remove it from here
+            if not cls.attrs["request_body"]:
+                cls.attrs["request_body"] = {}
             schema_file = "task_http_delete.py.jinja2"
 
     elif cls.type == "CALL_RUNBOOK":
@@ -109,3 +117,27 @@ def render_task_template(cls):
 
     text = render_template(schema_file=schema_file, obj=user_attrs)
     return text.strip()
+
+
+def create_script_file(script_type, script=""):
+    """create the script file and return the file location"""
+
+    file_name = "task_file_{}".format(str(uuid.uuid4())[:8])
+    scripts_dir = get_scripts_dir()
+
+    if script_type == "sh":
+        file_name += ".sh"
+    
+    elif script_type == "npsscript":
+        file_name += ".ps1"
+    
+    elif script_type == "static":
+        file_name += ".py"
+    
+    else:
+        raise TypeError("Script Type {} not supported". format(script_type))
+
+    with open("{}/{}".format(scripts_dir, file_name), "w+") as fd:
+        fd.write(script)
+    
+    return "specs/{}".format(file_name)
