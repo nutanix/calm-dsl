@@ -1,5 +1,6 @@
 from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.ref import render_ref_template
+from calm.dsl.decompile.credential import get_cred_var_name
 from calm.dsl.builtins import TaskType
 
 
@@ -21,8 +22,7 @@ def render_task_template(cls):
 
     cred = cls.attrs.get("login_credential_local_reference", None)
     if cred:
-        # TODO construct an map for credentials for global creds
-        pass
+        user_attrs["cred"] = "ref({})".format(get_cred_var_name(cred["name"]))
 
     if cls.type == "EXEC":
         script_type = cls.attrs["script_type"]

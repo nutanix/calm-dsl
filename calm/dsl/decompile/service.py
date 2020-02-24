@@ -25,7 +25,6 @@ def render_service_template(cls):
     action_list = []
     system_actions = {v: k for k, v in ServiceType.ALLOWED_SYSTEM_ACTIONS.items()}
     for entity in user_attrs.get("actions", []):
-        name = entity.__name__
         if entity.__name__ in list(system_actions.keys()):
             entity.__name__ = system_actions[entity.__name__]
         action_list.append(render_action_template(entity))
