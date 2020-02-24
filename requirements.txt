@@ -19,4 +19,5 @@ pycryptodome==3.9.0
 scrypt==0.8.13
 schema==0.7.1
 colorlog>=4.0.2
+pytest-xdist==1.29.0
 pytest-rerunfailures==4.1.0
