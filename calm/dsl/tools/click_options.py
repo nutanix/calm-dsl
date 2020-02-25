@@ -77,4 +77,5 @@ def show_trace_option(logging_mod=None, **kwargs):
                 set_show_trace()
 
         return click.option(*names, callback=_set_show_trace, **kwargs)(f)
+
     return decorator

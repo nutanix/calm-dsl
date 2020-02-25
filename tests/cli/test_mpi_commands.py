@@ -37,7 +37,6 @@ APP_SOURCES = [
 
 @pytest.mark.slow
 class TestMPICommands:
-
     def setup_method(self):
         """Method to instantiate to created_bp_list and created_app_list"""
 
@@ -48,13 +47,13 @@ class TestMPICommands:
         """Method to delete creates bps and apps during tests"""
 
         for bp_name in self.created_bp_list:
-            LOG.info("Deleting Blueprint {}". format(bp_name))
+            LOG.info("Deleting Blueprint {}".format(bp_name))
             runner = CliRunner()
             result = runner.invoke(cli, ["delete", "bp", bp_name])
             assert result.exit_code == 0
 
         for app_name in self.created_app_list:
-            LOG.info("Deleting app {}". format(app_name))
+            LOG.info("Deleting app {}".format(app_name))
             self._test_app_delete(app_name)
 
         self.created_app_list = []

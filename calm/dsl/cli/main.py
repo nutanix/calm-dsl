@@ -10,7 +10,11 @@ from click_repl import repl
 # TODO - move providers to separate file
 from calm.dsl.providers import get_provider, get_provider_types
 from calm.dsl.api import get_api_client, get_resource_api
-from calm.dsl.tools import get_logging_handle, simple_verbosity_option, show_trace_option
+from calm.dsl.tools import (
+    get_logging_handle,
+    simple_verbosity_option,
+    show_trace_option,
+)
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 

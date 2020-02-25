@@ -10,5 +10,5 @@ __all__ = [
     "StrictDraft7Validator",
     "get_logging_handle",
     "simple_verbosity_option",
-    "show_trace_option"
+    "show_trace_option",
 ]
