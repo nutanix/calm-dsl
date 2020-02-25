@@ -3,12 +3,12 @@ from functools import reduce
 from asciimatics.screen import Screen
 
 
-def get_states_filter(STATES_CLASS, state_key="state"):
+def get_states_filter(STATES_CLASS=None, state_key="state", states=[]):
 
-    states = []
-    for field in vars(STATES_CLASS):
-        if not field.startswith("__"):
-            states.append(getattr(STATES_CLASS, field))
+    if not states:
+        for field in vars(STATES_CLASS):
+            if not field.startswith("__"):
+                states.append(getattr(STATES_CLASS, field))
     state_prefix = ",{}==".format(state_key)
     return ";({}=={})".format(state_key, state_prefix.join(states))
 
