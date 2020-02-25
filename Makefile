@@ -1,8 +1,8 @@
 NAME    := nutanix/calm-dsl
-VERSION := v0.9.0-alpha
+VERSION := $(shell git describe --abbrev=0 --tags 2>/dev/null || echo v0.9.0-alpha)
 COMMIT  := $(shell git rev-parse --short HEAD)
 TAG     := $(shell git describe --abbrev=0 --tags --exact-match ${COMMIT} 2>/dev/null \
-		|| echo ${VERSION}.commit.${COMMIT})
+		|| echo ${VERSION}.$(shell date +"%Y.%m.%d").commit.${COMMIT})
 
 dev:
 	# Setup our python3 based virtualenv
