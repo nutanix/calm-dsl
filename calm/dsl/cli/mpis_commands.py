@@ -14,7 +14,6 @@ from .main import (
 from .mpis import (
     get_marketplace_items,
     get_marketplace_bps,
-    get_app_family_list,
     describe_marketplace_item,
     describe_marketplace_bp,
     launch_marketplace_item,
@@ -42,14 +41,6 @@ APP_SOURCES = [
 ]
 
 
-def _get_app_family_list():
-    """adds the 'All' option to categories"""
-
-    categories = get_app_family_list()
-    categories.append("All")
-    return categories
-
-
 @get.command("marketplace_items")
 @click.option("--name", "-n", default=None, help="Filter by name of marketplace items")
 @click.option(
@@ -62,7 +53,6 @@ def _get_app_family_list():
 @click.option(
     "--app_family",
     "-f",
-    type=click.Choice(_get_app_family_list()),
     default="All",
     help="Filter by app family category of marketplace item",
 )
@@ -97,7 +87,6 @@ def _get_marketplace_items(obj, name, quiet, app_family, display_all):
 @click.option(
     "--app_family",
     "-f",
-    type=click.Choice(_get_app_family_list()),
     default="All",
     help="Filter by app family category of marketplace blueprints",
 )
