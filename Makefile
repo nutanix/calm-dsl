@@ -1,4 +1,4 @@
-NAME    := nutanix/calm-dsl
+NAME    := ntnx/calm-dsl
 VERSION := $(shell git describe --abbrev=0 --tags 2>/dev/null || echo v0.9.0-alpha)
 COMMIT  := $(shell git rev-parse --short HEAD)
 TAG     := $(shell git describe --abbrev=0 --tags --exact-match ${COMMIT} 2>/dev/null \
@@ -56,7 +56,7 @@ black:
 	black --exclude '/(\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|venv|_build|buck-out|build|dist|examples)/' .
 
 run:
-	docker run -it nutanix/calm-dsl
+	docker run -it ${NAME}
 
 _init_centos:
 	# Lets get python3 in
