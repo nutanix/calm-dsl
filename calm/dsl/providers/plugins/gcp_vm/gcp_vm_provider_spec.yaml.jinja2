@@ -292,6 +292,10 @@ properties:
 title: GCP Create Spec
 type: object
 properties:
+  type:
+    type: string
+    enum: [PROVISION_GCP_VM]
+    default: PROVISION_GCP_VM
   resources:
     {{ GcpVMResource() | indent(4) }}
 
