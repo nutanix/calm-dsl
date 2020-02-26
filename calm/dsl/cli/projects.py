@@ -107,7 +107,7 @@ def get_project(client, name):
         raise Exception("No project found with name {} found".format(name))
 
     project_id = project["metadata"]["uuid"]
-    LOG.info("Fetching project details")
+    LOG.info("Fetching details of project {}".format(name))
     res, err = client.project.read(project_id)  # for getting additional fields
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -452,7 +452,11 @@ def poll_deletion_status(client, project_uuid):
             LOG.info("DELETED")
             return
 
+        elif project_state == "DELETE_PENDING":
+            LOG.info(project_state)
+
         else:
+            LOG.debug(project_state)
             msg = str(project["status"]["message_list"])
             msg = "Project updation failed !!!\nmessage={}".format(msg)
             raise Exception(msg)

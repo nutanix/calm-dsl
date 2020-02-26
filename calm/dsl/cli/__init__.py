@@ -9,5 +9,6 @@ from .cache_commands import *  # NoQA
 from .completion_commands import *  # NoQA
 from .init_command import *  # NoQA
 from calm.dsl.api import get_api_client
+from .mpis_commands import *  # NoQA
 
 __all__ = [main, get_api_client]

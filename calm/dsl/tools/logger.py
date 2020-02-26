@@ -6,6 +6,7 @@ import sys
 
 # Used for looking at verbose level
 VERBOSE_LEVEL = 20
+SHOW_TRACE = False
 
 
 class StdOutFilter(logging.Filter):
@@ -73,8 +74,12 @@ class CustomLogging:
         self._logger.addHandler(self._ch1)
         self._logger.addHandler(self._ch2)
 
+        # Add show trace option
+        self.show_trace = False
+
     def get_logger(self):
         self.set_logger_level(VERBOSE_LEVEL)
+        self.show_trace = SHOW_TRACE
         return self._logger
 
     def get_logging_levels(self):
@@ -90,7 +95,7 @@ class CustomLogging:
         """sets the logger verbose level"""
         self._logger.setLevel(lvl)
 
-    def info(self, msg):
+    def info(self, msg, *args, **kwargs):
         """
         info log level
 
@@ -101,9 +106,9 @@ class CustomLogging:
             None
         """
         logger = self.get_logger()
-        return logger.info(msg)
+        return logger.info(msg, *args, **kwargs)
 
-    def warning(self, msg):
+    def warning(self, msg, *args, **kwargs):
         """
         warning log level
 
@@ -115,9 +120,9 @@ class CustomLogging:
         """
 
         logger = self.get_logger()
-        return logger.warning(msg)
+        return logger.warning(msg, *args, **kwargs)
 
-    def error(self, msg):
+    def error(self, msg, *args, **kwargs):
         """
         error log level
 
@@ -129,9 +134,11 @@ class CustomLogging:
         """
 
         logger = self.get_logger()
-        return logger.error(msg)
+        if self.show_trace:
+            kwargs["stack_info"] = sys.exc_info()
+        return logger.error(msg, *args, **kwargs)
 
-    def exception(self, msg):
+    def exception(self, msg, *args, **kwargs):
         """
         exception log level
 
@@ -143,9 +150,11 @@ class CustomLogging:
         """
 
         logger = self.get_logger()
-        return logger.exception(msg)
+        if self.show_trace:
+            kwargs["stack_info"] = sys.exc_info()
+        return logger.exception(msg, *args, **kwargs)
 
-    def critical(self, msg):
+    def critical(self, msg, *args, **kwargs):
         """
         critical log level
 
@@ -157,9 +166,11 @@ class CustomLogging:
         """
 
         logger = self.get_logger()
-        return logger.critical(msg)
+        if self.show_trace:
+            kwargs["stack_info"] = sys.exc_info()
+        return logger.critical(msg, *args, **kwargs)
 
-    def debug(self, msg):
+    def debug(self, msg, *args, **kwargs):
         """
         debug log level
 
@@ -171,7 +182,7 @@ class CustomLogging:
         """
 
         logger = self.get_logger()
-        return logger.debug(msg)
+        return logger.debug(msg, *args, **kwargs)
 
     def __addCustomFormatter(self, ch):
         """
@@ -217,3 +228,8 @@ def get_logging_handle(name):
 def set_verbose_level(verbose_level):
     global VERBOSE_LEVEL
     VERBOSE_LEVEL = verbose_level
+
+
+def set_show_trace():
+    global SHOW_TRACE
+    SHOW_TRACE = True
