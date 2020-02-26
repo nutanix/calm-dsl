@@ -52,7 +52,7 @@ def _get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
 )
 @click.pass_obj
 def _describe_bp(obj, bp_name, out):
-    """Describe an app"""
+    """Describe a blueprint"""
     describe_bp(obj, bp_name, out)
 
 

@@ -1,9 +1,15 @@
+NAME    := ntnx/calm-dsl
+VERSION := $(shell git describe --abbrev=0 --tags 2>/dev/null || echo v0.9.0-alpha)
+COMMIT  := $(shell git rev-parse --short HEAD)
+TAG     := $(shell git describe --abbrev=0 --tags --exact-match ${COMMIT} 2>/dev/null \
+		|| echo ${VERSION}.$(shell date +"%Y.%m.%d").commit.${COMMIT})
+
 dev:
 	# Setup our python3 based virtualenv
 	# This step assumes python3 is installed on your dev machine
 	[ -f venv/bin/python3 ] || (virtualenv -p python3 venv && \
 		venv/bin/pip3 install --upgrade pip setuptools)
-	venv/bin/pip3 install -r requirements.txt -r dev-requirements.txt
+	venv/bin/pip3 install --no-cache -r requirements.txt -r dev-requirements.txt
 	venv/bin/python3 setup.py develop
 
 test: dev
@@ -26,7 +32,7 @@ clean:
 	[ ! -d dist/ ] || rm -r dist/
 	[ ! -d *.egg-info/ ] || rm -r *.egg-info/
 	[ -S /var/run/docker.sock ] && \
-		docker ps -aq --no-trunc --filter "status=exited" | xargs -r docker rm && \
+		docker ps -aq --no-trunc --filter "status=exited" | xargs -I {} docker rm {} && \
 		docker image prune -f
 	rm -r venv/ && mkdir venv/ && touch venv/.empty
 
@@ -36,15 +42,21 @@ test-verbose: dev
 dist: dev
 	venv/bin/python3 setup.py sdist bdist_wheel
 
-docker: dev
+docker: dist
+
+	# Docker doesn't support semver tags + used for metadata info
+	# https://github.com/docker/distribution/pull/1202
+	# Using commit as pre-release tag
+
 	[ -S /var/run/docker.sock ] && \
-		docker build --rm -t nutanix/calm-dsl .
+		docker build . --rm --file Dockerfile --tag ${NAME}:${TAG} && \
+		docker tag ${NAME}:${TAG} ${NAME}:latest
 
 black:
 	black --exclude '/(\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|venv|_build|buck-out|build|dist|examples)/' .
 
 run:
-	docker run -it nutanix/calm-dsl
+	docker run -it ${NAME}
 
 _init_centos:
 	# Lets get python3 in
