@@ -35,7 +35,7 @@ jobs:
     - name: Build docker image
       run: |
         make docker
-    - name: Publish docker image
-      run: |
-        docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-        docker push ntnx/calm-dsl
+  #  - name: Publish docker image
+  #    run: |
+  #      docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+  #      docker push ntnx/calm-dsl
