@@ -54,7 +54,7 @@
             "name": "Task2"
           }
         ],
-        "name": "",
+        "name": "runbook",
         "variable_list": [
           {
             "val_type": "STRING",

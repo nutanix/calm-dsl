@@ -1,4 +1,5 @@
 import ast
+import uuid
 
 from .task import meta
 from .entity import EntityType
@@ -6,7 +7,7 @@ from .task import CalmTask, TaskType
 from .variable import CalmVariable, VariableType
 
 
-def handle_meta_create(node, func_globals, meta_name):
+def handle_meta_create(node, func_globals):
     """
     helper for create parsing tasks and creating meta
     """
@@ -26,7 +27,7 @@ def handle_meta_create(node, func_globals, meta_name):
 
     # First create the meta
     user_meta = meta(
-        name=meta_name,
+        name=str(uuid.uuid4())[-10:] + '_meta',
         child_tasks=child_tasks
     )
 
@@ -121,12 +122,12 @@ class GetCallNodes(ast.NodeVisitor):
             for statement in node.body:
                 if isinstance(statement, ast.FunctionDef):
                     if statement.name == "success":
-                        success_path, tasks, variables = handle_meta_create(statement, self._globals, context.name + "-success")
+                        success_path, tasks, variables = handle_meta_create(statement, self._globals)
                         self.all_tasks.extend([success_path] + tasks)
                         self.variables.update(variables)
 
                     elif statement.name == "failure":
-                        failure_path, tasks, variables = handle_meta_create(statement, self._globals, context.name + "-failure")
+                        failure_path, tasks, variables = handle_meta_create(statement, self._globals)
                         self.all_tasks.extend([failure_path] + tasks)
                         self.variables.update(variables)
                     else:
@@ -147,7 +148,7 @@ class GetCallNodes(ast.NodeVisitor):
         elif self.is_runbook and isinstance(context, TaskType) and context.type == "PARALLEL":
             for statement in node.body:
                 if isinstance(statement, ast.FunctionDef):
-                    meta_task, tasks, variables = handle_meta_create(statement, self._globals, context.name + "-" + statement.name)
+                    meta_task, tasks, variables = handle_meta_create(statement, self._globals)
                     self.all_tasks.extend([meta_task] + tasks)
                     self.variables.update(variables)
                     context.child_tasks_local_reference_list.append(meta_task.get_ref())
@@ -187,7 +188,7 @@ class GetCallNodes(ast.NodeVisitor):
                 "Only CalmTasks or repeat_count (int) are supported inside while context."
             )
         whileBody = ast.FunctionDef(body=node.body, col_offset=node.col_offset)
-        meta_task, tasks, variables = handle_meta_create(whileBody, self._globals, while_task.name + "-meta")
+        meta_task, tasks, variables = handle_meta_create(whileBody, self._globals)
         self.all_tasks.extend([meta_task] + tasks)
         self.variables.update(variables)
         while_task.child_tasks_local_reference_list.append(meta_task.get_ref())
