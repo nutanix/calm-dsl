@@ -145,7 +145,7 @@ class TestExecTasks:
         validations = ""
         for message in ep["status"]["message_list"]:
             validations += message["message"]
-        assert "Endpoint values cannot be empty" in validations
+        assert "Endpoint should have atleast one IP" in validations
         cred = ep["status"]["resources"]["attrs"]['credential_definition_list'][0]
         assert len(ep["status"]["message_list"]) > 0
         for message in cred["message_list"]:
