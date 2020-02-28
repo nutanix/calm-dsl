@@ -1,4 +1,4 @@
-name: Setup & build calm-dsl on macos
+name: Setup & build calm-dsl
 on:
   push:
     branches:
@@ -10,7 +10,7 @@ on:
 jobs:
   build:
 
-    runs-on: macos 
+    runs-on: [ubuntu-latest]
 
     steps:
     - uses: actions/checkout@v2
@@ -18,13 +18,24 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: 3.7
-    - name: make dev
+    - name: black
+      uses: lgeiger/black-action@v1.0.1
+      with:
+        args: . --check --exclude '/(\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|venv|_build|buck-out|build|dist|examples)/'
+    - name: Setup env
       run: |
         python -m pip install --upgrade pip
         pip install virtualenv
-        export CFLAGS="-I$(brew --prefix openssl)/include"
-        export LDFLAGS="-L$(brew --prefix openssl)/lib"
+    - name: Install requirements
+      run: |
         make dev
-    - name: make dist
+    - name: Build python package
       run: |
         make dist
+    - name: Build docker image
+      run: |
+        make docker
+    - name: Publish docker image
+      run: |
+        docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+        docker push ntnx/calm-dsl

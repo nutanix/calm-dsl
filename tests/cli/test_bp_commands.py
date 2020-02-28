@@ -46,7 +46,7 @@ class TestBpCommands:
 
     def test_dsl_bp_create(self):
         runner = CliRunner()
-        self.created_dsl_bp_name = "Test_Exisisting_VM_DSL_{}".format(int(time.time()))
+        self.created_dsl_bp_name = "Test_Existing_VM_DSL_{}".format(int(time.time()))
         LOG.info("Creating Bp {}".format(self.created_dsl_bp_name))
         result = runner.invoke(
             cli,

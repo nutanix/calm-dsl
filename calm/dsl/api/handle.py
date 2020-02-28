@@ -7,6 +7,7 @@ from .runbook import RunbookAPI
 from .application import ApplicationAPI
 from .project import ProjectAPI
 from .setting import SettingAPI
+from .marketplace import MarketPlaceAPI
 
 
 class ClientHandle:
@@ -24,6 +25,7 @@ class ClientHandle:
         self.runbook = RunbookAPI(self.connection)
         self.application = ApplicationAPI(self.connection)
         self.account = SettingAPI(self.connection)
+        self.market_place = MarketPlaceAPI(self.connection)
 
 
 _CLIENT_HANDLE = None

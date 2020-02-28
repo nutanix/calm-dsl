@@ -1,6 +1,6 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
-![Setup & build calm-dsl on macos](https://github.com/nutanix/calm-dsl/workflows/Setup%20&%20build%20calm-dsl%20on%20macos/badge.svg)
+![Build](https://github.com/nutanix/calm-dsl/workflows/Setup%20&%20build%20calm-dsl/badge.svg)
 
 # calm-dsl
 
