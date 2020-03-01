@@ -171,6 +171,8 @@ class Connection:
         request_json=None,
         request_params=None,
         verify=True,
+        headers=None,
+        files=None
     ):
         """Private method for making http request to calm
 
@@ -200,16 +202,30 @@ class Connection:
             url = build_url(self.host, self.port, endpoint=endpoint, scheme=self.scheme)
             LOG.debug("URL is: {}".format(url))
             base_headers = self.session.headers
+            if headers:
+                base_headers.update(headers)
 
             if method == REQUEST.METHOD.POST:
-                res = self.session.post(
-                    url,
-                    params=request_params,
-                    data=json.dumps(request_json),
-                    verify=verify,
-                    headers=base_headers,
-                    cookies=cookies,
-                )
+                if files:
+                    res = self.session.post(
+                        url,
+                        params=request_params,
+                        data=request_json,
+                        verify=verify,
+                        headers=base_headers,
+                        cookies=cookies,
+                        files=files,
+                        stream=False
+                    )
+                else:
+                    res = self.session.post(
+                        url,
+                        params=request_params,
+                        data=json.dumps(request_json),
+                        verify=verify,
+                        headers=base_headers,
+                        cookies=cookies,
+                    )
             elif method == REQUEST.METHOD.PUT:
                 res = self.session.put(
                     url,

@@ -141,6 +141,21 @@ def create():
     pass
 
 
+@create.command("app_icon")
+@click.option(
+    "--file",
+    "-f",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    required=True,
+    help="Path of Blueprint file to upload",
+)
+@click.option("--name", "-n", default=None, help="icon name")
+def create_app_icon(file, name):
+
+    client = get_api_client()
+    client.app_icon.upload(name, file)
+
+
 @main.group(cls=DYMGroup)
 def delete():
     """Delete entities"""
