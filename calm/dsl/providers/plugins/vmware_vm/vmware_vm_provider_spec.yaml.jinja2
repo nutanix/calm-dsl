@@ -344,6 +344,11 @@ type: object
 properties:
   name:
     type: string
+  type:
+    type: string
+    enum: 
+    - PROVISION_VMWARE_VM
+    default: PROVISION_VMWARE_VM
   drs_mode:
     type: boolean
     default: False
