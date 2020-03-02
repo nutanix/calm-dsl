@@ -1,0 +1,7 @@
+{%- macro simple_multiline_var(obj) -%}
+{%- if obj %}
+{{obj.name}} = CalmVariable.Simple.multiline('{{obj.value}}', label='{{obj.label}}', runtime={{obj.runtime}})
+{%- endif %}
+{%- endmacro %}
+
+{{ simple_multiline_var(obj) }}

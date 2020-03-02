@@ -1,0 +1,9 @@
+{%- macro simple_datetime_var(obj) -%}
+{%- if obj.regex %}
+{{obj.name}} = CalmVariable.Simple.datetime('{{obj.value}}', label='{{obj.label}}',regex='{{obj.regex}}', validate_regex={{obj.validate_regex}}, runtime={{obj.runtime}})
+{%- else %}
+{{obj.name}} = CalmVariable.Simple.datetime('{{obj.value}}', label='{{obj.label}}', runtime={{obj.runtime}})
+{%- endif %}
+{%- endmacro %}
+
+{{ simple_date_var(obj) }}
