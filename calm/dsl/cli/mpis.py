@@ -603,6 +603,7 @@ def publish_bp_to_marketplace_manager(
     with_secrets=False,
     app_group_uuid=None,
     icon_name=None,
+    icon_file=None,
 ):
 
     client = get_api_client()
@@ -643,6 +644,10 @@ def publish_bp_to_marketplace_manager(
     }
 
     if icon_name:
+        if icon_file:
+            # If file is there, upload first and then use it for marketplace item
+            client.app_icon.upload(icon_name, icon_file)
+
         app_icon_name_uuid_map = client.app_icon.get_name_uuid_map()
         app_icon_uuid = app_icon_name_uuid_map.get(icon_name, None)
         if not app_icon_uuid:
@@ -675,6 +680,7 @@ def publish_bp_as_new_marketplace_bp(
     projects=[],
     category=None,
     icon_name=None,
+    icon_file=None,
 ):
 
     # Search whether this marketplace item exists or not
@@ -705,6 +711,7 @@ def publish_bp_as_new_marketplace_bp(
         description=description,
         with_secrets=with_secrets,
         icon_name=icon_name,
+        icon_file=icon_file,
     )
 
     if publish_to_marketplace or auto_approve:
@@ -738,6 +745,7 @@ def publish_bp_as_existing_marketplace_bp(
     projects=[],
     category=None,
     icon_name=None,
+    icon_file=None,
 ):
 
     LOG.info(
@@ -799,6 +807,7 @@ def publish_bp_as_existing_marketplace_bp(
         with_secrets=with_secrets,
         app_group_uuid=app_group_uuid,
         icon_name=icon_name,
+        icon_file=icon_file,
     )
 
     if publish_to_marketplace or auto_approve:
