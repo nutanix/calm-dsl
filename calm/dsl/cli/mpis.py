@@ -602,7 +602,7 @@ def publish_bp_to_marketplace_manager(
     description="",
     with_secrets=False,
     app_group_uuid=None,
-    icon_name=None
+    icon_name=None,
 ):
 
     client = get_api_client()
@@ -646,16 +646,13 @@ def publish_bp_to_marketplace_manager(
         app_icon_name_uuid_map = client.app_icon.get_name_uuid_map()
         app_icon_uuid = app_icon_name_uuid_map.get(icon_name, None)
         if not app_icon_uuid:
-            LOG.error("App icon: {} not found". format(icon_name))
+            LOG.error("App icon: {} not found".format(icon_name))
             sys.exit(-1)
-        
+
         bp_template["spec"]["resources"]["icon_reference_list"] = [
             {
                 "icon_type": "ICON",
-                "icon_reference": {
-                    "kind": "file_item",
-                    "uuid": app_icon_uuid
-                }
+                "icon_reference": {"kind": "file_item", "uuid": app_icon_uuid},
             }
         ]
 
@@ -677,7 +674,7 @@ def publish_bp_as_new_marketplace_bp(
     auto_approve=False,
     projects=[],
     category=None,
-    icon_name=None
+    icon_name=None,
 ):
 
     # Search whether this marketplace item exists or not
@@ -707,7 +704,7 @@ def publish_bp_as_new_marketplace_bp(
         version=version,
         description=description,
         with_secrets=with_secrets,
-        icon_name=icon_name
+        icon_name=icon_name,
     )
 
     if publish_to_marketplace or auto_approve:
@@ -740,7 +737,7 @@ def publish_bp_as_existing_marketplace_bp(
     auto_approve=False,
     projects=[],
     category=None,
-    icon_name=None
+    icon_name=None,
 ):
 
     LOG.info(
@@ -801,7 +798,7 @@ def publish_bp_as_existing_marketplace_bp(
         description=description,
         with_secrets=with_secrets,
         app_group_uuid=app_group_uuid,
-        icon_name=icon_name
+        icon_name=icon_name,
     )
 
     if publish_to_marketplace or auto_approve:

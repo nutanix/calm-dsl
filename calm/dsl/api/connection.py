@@ -16,6 +16,7 @@ import json
 import urllib3
 
 from requests import Session as NonRetrySession
+from requests_toolbelt import MultipartEncoder
 from requests.adapters import HTTPAdapter
 from calm.dsl.tools import get_logging_handle
 
@@ -172,7 +173,7 @@ class Connection:
         request_params=None,
         verify=True,
         headers=None,
-        files=None
+        files=None,
     ):
         """Private method for making http request to calm
 
@@ -207,15 +208,13 @@ class Connection:
 
             if method == REQUEST.METHOD.POST:
                 if files:
+                    request_json.update(files)
+                    m = MultipartEncoder(fields=request_json)
                     res = self.session.post(
                         url,
-                        params=request_params,
-                        data=request_json,
+                        data=m,
                         verify=verify,
-                        headers=base_headers,
-                        cookies=cookies,
-                        files=files,
-                        stream=False
+                        headers={"Content-Type": m.content_type},
                     )
                 else:
                     res = self.session.post(

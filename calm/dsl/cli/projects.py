@@ -107,7 +107,7 @@ def get_project(client, name):
         raise Exception("No project found with name {} found".format(name))
 
     project_id = project["metadata"]["uuid"]
-    LOG.info("Fetching details of project {}". format(name))
+    LOG.info("Fetching details of project {}".format(name))
     res, err = client.project.read(project_id)  # for getting additional fields
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
