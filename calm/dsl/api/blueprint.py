@@ -10,9 +10,11 @@ class BlueprintAPI(ResourceAPI):
         self.UPLOAD = self.PREFIX + "/import_json"
         self.LAUNCH = self.ITEM + "/simple_launch"
         self.FULL_LAUNCH = self.ITEM + "/launch"
+        self.MARKETPLACE_LAUNCH = self.PREFIX + "/marketplace_launch"
         self.LAUNCH_POLL = self.ITEM + "/pending_launches/{}"
         self.BP_EDITABLES = self.ITEM + "/runtime_editables"
         self.EXPORT_JSON = self.ITEM + "/export_json"
+        self.EXPORT_JSON_WITH_SECRETS = self.ITEM + "/export_json?keep_secrets=true"
 
     def upload(self, payload):
         return self.connection._call(
@@ -30,6 +32,14 @@ class BlueprintAPI(ResourceAPI):
     def full_launch(self, uuid, payload):
         return self.connection._call(
             self.FULL_LAUNCH.format(uuid),
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
+        )
+
+    def marketplace_launch(self, payload):
+        return self.connection._call(
+            self.MARKETPLACE_LAUNCH,
             verify=False,
             request_json=payload,
             method=REQUEST.METHOD.POST,
@@ -307,4 +317,8 @@ class BlueprintAPI(ResourceAPI):
 
     def export_json(self, uuid):
         url = self.EXPORT_JSON.format(uuid)
+        return self.connection._call(url, verify=False, method=REQUEST.METHOD.GET)
+
+    def export_json_with_secrets(self, uuid):
+        url = self.EXPORT_JSON_WITH_SECRETS.format(uuid)
         return self.connection._call(url, verify=False, method=REQUEST.METHOD.GET)

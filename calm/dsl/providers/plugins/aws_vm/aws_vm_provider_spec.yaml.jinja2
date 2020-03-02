@@ -185,6 +185,11 @@ type: object
 properties:
   name:
     type: string
+  type:
+    type: string
+    enum: 
+    - PROVISION_AWS_VM
+    default: PROVISION_AWS_VM
   resources:
     {{ awsResource() | indent(4) }}
   availability_zone_reference:          # TODO add enums['availability_zone']

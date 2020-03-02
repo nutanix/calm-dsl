@@ -360,7 +360,7 @@ def get_field_values(entity_dict, context, path=None):
 
 def launch_blueprint_simple(
     client,
-    blueprint_name,
+    blueprint_name=None,
     app_name=None,
     blueprint=None,
     profile_name=None,
@@ -370,6 +370,7 @@ def launch_blueprint_simple(
         blueprint = get_blueprint(client, blueprint_name)
 
     blueprint_uuid = blueprint.get("metadata", {}).get("uuid", "")
+    blueprint_name = blueprint_name or blueprint.get("metadata", {}).get("name", "")
     LOG.info("Fetching runtime editables in the blueprint")
     profiles = get_blueprint_runtime_editables(client, blueprint)
     profile = None
@@ -386,6 +387,9 @@ def launch_blueprint_simple(
             raise Exception("No profile found with name {}".format(profile_name))
 
     runtime_editables = profile.pop("runtime_editables", [])
+
+    # Popping out substrate list in runtime editables for now.
+    runtime_editables.pop("substrate_list", None)
     launch_payload = {
         "spec": {
             "app_name": app_name
@@ -419,6 +423,10 @@ def launch_blueprint_simple(
     response = res.json()
     launch_req_id = response["status"]["request_id"]
 
+    poll_launch_status(client, blueprint_uuid, launch_req_id)
+
+
+def poll_launch_status(client, blueprint_uuid, launch_req_id):
     # Poll every 10 seconds on the app status, for 5 mins
     maxWait = 5 * 60
     count = 0
@@ -427,8 +435,9 @@ def launch_blueprint_simple(
         LOG.info("Polling status of Launch")
         res, err = client.blueprint.poll_launch(blueprint_uuid, launch_req_id)
         response = res.json()
+        app_state = response["status"]["state"]
         pprint(response)
-        if response["status"]["state"] == "success":
+        if app_state == "success":
             app_uuid = response["status"]["application_uuid"]
 
             config = get_config()
@@ -443,11 +452,12 @@ def launch_blueprint_simple(
                 )
             )
             break
-        elif response["status"]["state"] == "failure":
+        elif app_state == "failure":
             LOG.error("Failed to launch blueprint. Check API response above.")
             break
         elif err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.info(app_state)
         count += 10
         time.sleep(10)
 
