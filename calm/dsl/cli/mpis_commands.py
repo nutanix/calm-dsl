@@ -298,6 +298,17 @@ def _launch_marketplace_item(
     default=None,
     help="Category for marketplace blueprint (used for approving blueprint)",
 )
+@click.option(
+    "--file",
+    "-f",
+    "icon_file",
+    default=None,
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path of app icon image to be uploaded",
+)
+@click.option(
+    "--icon_name", "-i", default=None, help="App icon name for marketpalce blueprint"
+)
 def publish_bp(
     bp_name,
     name,
@@ -309,6 +320,8 @@ def publish_bp(
     projects=[],
     category=None,
     auto_approve=False,
+    icon_name=False,
+    icon_file=None,
 ):
     """Publish a blueprint to marketplace manager"""
 
@@ -327,6 +340,8 @@ def publish_bp(
             projects=projects,
             category=category,
             auto_approve=auto_approve,
+            icon_name=icon_name,
+            icon_file=icon_file,
         )
 
     else:
@@ -340,6 +355,8 @@ def publish_bp(
             projects=projects,
             category=category,
             auto_approve=auto_approve,
+            icon_name=icon_name,
+            icon_file=icon_file,
         )
 
 

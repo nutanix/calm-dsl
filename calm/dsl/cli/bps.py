@@ -1,6 +1,7 @@
 import time
 import json
 import importlib.util
+import sys
 from pprint import pprint
 
 from ruamel import yaml
@@ -338,6 +339,10 @@ def launch_blueprint_simple(
 
     project_ref = blueprint["metadata"].get("project_reference", {})
     project_uuid = project_ref.get("uuid")
+    bp_status = blueprint["status"]["state"]
+    if bp_status != "ACTIVE":
+        LOG.error("Blueprint is in {} state. Unable to launch it".format(bp_status))
+        sys.exit(-1)
 
     LOG.info("Fetching runtime editables in the blueprint")
     profiles = get_blueprint_runtime_editables(client, blueprint)
