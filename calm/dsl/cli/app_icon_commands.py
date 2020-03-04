@@ -44,5 +44,6 @@ def _delete_app_icon(icon_names):
     help="Show whether used for marketplace icon or not",
 )
 def _get_app_icon_list(name, limit, offset, quiet, marketplace_use):
+    """Get the list of app_icons"""
 
     get_app_icon_list(name, limit, offset, quiet, marketplace_use)

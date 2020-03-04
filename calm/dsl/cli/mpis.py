@@ -589,7 +589,7 @@ def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None
     del bp_res["spec"]["environment_uuid"]
     bp_status = bp_res["status"]["state"]
     if bp_status != "ACTIVE":
-        LOG.error("blueprint went to {} state".format(bp_status))
+        LOG.error("Blueprint went to {} state".format(bp_status))
         sys.exit(-1)
 
     return bp_res
@@ -623,6 +623,11 @@ def publish_bp_to_marketplace_manager(
         sys.exit(-1)
 
     bp_data = bp_data.json()
+    bp_status = bp_data["status"]["state"]
+    if bp_status != "ACTIVE":
+        LOG.error("Blueprint is in {} state. Unable to publish it".format(bp_status))
+        sys.exit(-1)
+
     bp_template = {
         "spec": {
             "name": marketplace_bp_name,
@@ -853,6 +858,10 @@ def approve_marketplace_bp(bp_name, version=None, projects=[], category=None):
         app_states=[MARKETPLACE_BLUEPRINT.STATES.PENDING],
     )
     bp_uuid = bp["metadata"]["uuid"]
+    bp_status = bp["status"]["resources"]["app_blueprint_template"]["status"]["state"]
+    if bp_status != "ACTIVE":
+        LOG.error("Blueprint is in {} state. Unable to approve it".format(bp_status))
+        sys.exit(-1)
 
     res, err = client.market_place.read(bp_uuid)
     if err:
@@ -1064,7 +1073,7 @@ def delete_marketplace_bp(name, version, app_source=None, app_state=None):
     )
 
     LOG.info(
-        "Fetching details of marketplace blueprint {} with version {}".format(
+        "Fetching details of unpublished marketplace blueprint {} with version {}".format(
             name, version
         )
     )
