@@ -1,15 +1,18 @@
 import click
 from ruamel import yaml
 import re
+import json
+import sys
 
 from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.providers import get_provider_interface
-from calm.dsl.tools import StrictDraft7Validator
+from calm.dsl.tools import StrictDraft7Validator, get_logging_handle
 from calm.dsl.builtins import ref
+from calm.dsl.store import Cache
 
 from .constants import AHV as ahv
 
-
+LOG = get_logging_handle(__name__)
 Provider = get_provider_interface()
 
 
@@ -49,6 +52,379 @@ class AhvVmProvider(Provider):
 
             # Set the reference of this disk
             disk["data_source_reference"] = ref(img_cls).compile()
+
+    @classmethod
+    def get_runtime_editables(cls, runtime_spec, project_id, substrate_spec):
+        """Fetch runtime editables at runtime"""
+
+        client = get_api_client()
+        Obj = AHV(client.connection)
+
+        sub_create_spec = substrate_spec["create_spec"]
+        vm_os = substrate_spec["os_type"]
+
+        # NAME
+        vm_name = runtime_spec.get("name", None)
+        if vm_name:
+            new_val = input("Name of vm (default value={}):".format(vm_name))
+            if new_val:
+                runtime_spec["name"] = new_val
+
+        # Check for categories
+        if "categories" in runtime_spec.keys():
+            avl_categories = {}
+            if runtime_spec["categories"]:
+                avl_categories = json.loads(runtime_spec["categories"])
+
+        resources = runtime_spec.get("resources", {})
+
+        # NICS
+        nic_list = resources.get("nic_list", {})
+        # Normal Nic for now
+        if nic_list:
+            click.echo("\tNICS data\n")
+            res, err = client.project.read(project_id)
+            if err:
+                raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+            project = res.json()
+            subnets_name_id_map = {}
+            for subnet in project["status"]["project_status"]["resources"][
+                "subnet_reference_list"
+            ]:
+                subnets_name_id_map[subnet["name"]] = subnet["uuid"]
+
+            click.echo("Choose from given subnets:")
+            for ind, name in enumerate(subnets_name_id_map.keys()):
+                click.echo("\t {}. {}".format(str(ind + 1), name))
+
+            click.echo("")
+            for nic_index, nic_data in nic_list.items():
+                # TODO Check for macros
+                click.echo("--Nic {} -- \n".format(nic_index))
+                nic_uuid = nic_data["subnet_reference"].get("uuid")
+                nic_name = Cache.get_entity_name("AHV_SUBNET", nic_uuid)
+
+                new_val = input(
+                    "Subnet name for nic {} (default value={}): ".format(
+                        nic_index, nic_name
+                    )
+                )
+
+                if new_val:
+                    nic_data.update(
+                        {"name": new_val, "uuid": subnets_name_id_map[new_val]}
+                    )
+
+        # DISKS
+        disk_list = resources.get("disk_list", {})
+        bp_disks = sub_create_spec["resources"]["disk_list"]
+        if disk_list:
+            click.echo("\tDISKS data")
+            for disk_ind, disk_data in disk_list.items():
+                click.echo("\n--Data Disk {} --".format(disk_ind))
+                bp_disk_data = bp_disks[int(disk_ind)]
+                data_source_ref = disk_data.get("data_source_reference", {})
+                device_prop = disk_data.get("device_properties", {})
+                disk_size = disk_data.get("disk_size_mib", None)
+
+                if "device_properties" in disk_data.keys():
+                    device_prop = disk_data.get("device_properties", {})
+                    device_type = device_prop.get("device_type", None)
+
+                    if device_type:
+                        click.echo("\nChoose from given Device Types :")
+                        device_types = list(ahv.DEVICE_TYPES.keys())
+                        for ind, dt in enumerate(device_types):
+                            click.echo("\t{}. {}".format(ind + 1, dt))
+
+                        new_val = input(
+                            "Device Type name for data disk {} (default value={}): ".format(
+                                disk_ind, device_type
+                            )
+                        )
+
+                        if new_val:
+                            if new_val not in device_types:
+                                raise Exception("Not a valid device type")
+
+                            device_type = ahv.DEVICE_TYPES[new_val]
+                            # Change the data dict
+                            device_prop["device_type"] = device_type
+
+                    else:
+                        device_type = bp_disk_data["device_properties"]["device_type"]
+
+                    disk_address = device_prop.get("disk_address", {})
+                    device_bus = disk_address.get("adapter_type", None)
+
+                    if device_bus:
+                        device_bus_list = list(ahv.DEVICE_BUS[device_type].keys())
+
+                        if device_bus not in device_bus_list:
+                            device_bus = device_bus_list[0]
+
+                        click.echo("\nChoose from given Device Buses :")
+                        for ind, db in enumerate(device_bus_list):
+                            click.echo("\t{}. {}".format(ind + 1, db))
+
+                        new_val = input(
+                            "Device Bus for data disk {} (default value={}): ".format(
+                                disk_ind, device_bus
+                            )
+                        )
+
+                        if new_val and (new_val not in device_bus_list):
+                            raise Exception(
+                                "Not a valid device bus type {}".format(new_val)
+                            )
+
+                        device_bus = new_val if new_val else device_bus
+                        device_prop["disk_address"]["adapter_type"] = ahv.DEVICE_BUS[
+                            device_type
+                        ][device_bus]
+
+                else:
+                    device_type = bp_disk_data["device_properties"]["device_type"]
+
+                is_data_ref_present = "data_source_reference" in disk_data.keys()
+                is_size_present = "disk_size_mib" in disk_data.keys()
+
+                if is_data_ref_present and is_size_present:
+                    # Check for the operation
+                    operation_list = ahv.OPERATION_TYPES[device_type]
+                    click.echo("\nChoose from given Operation:")
+                    for ind, op in enumerate(operation_list):
+                        click.echo("\t{}. {}".format(ind + 1, op))
+
+                    # TODO choose default operation wisely
+                    op = operation_list[0]
+                    new_val = input(
+                        "Enter the operation (default value = {}): ".format(op)
+                    )
+                    op = new_val if new_val else op
+
+                    if op == "CLONE_FROM_IMAGE":
+                        data_source_ref = disk_data["data_source_reference"]
+
+                        imagesNameUUIDMap = Obj.images(ahv.IMAGE_TYPES[device_type])
+                        images = list(imagesNameUUIDMap.keys())
+
+                        if not images:
+                            LOG.error(
+                                "No images found for device type: {}".format(
+                                    device_type
+                                )
+                            )
+                            sys.exit(-1)
+
+                        img_name = data_source_ref.get("name", images[0])
+                        if img_name not in images:
+                            img_name = images[0]
+
+                        click.echo("\nChoose from given images:")
+                        for ind, name in enumerate(images):
+                            click.echo("\t {}. {}".format(str(ind + 1), name))
+
+                        new_val = input(
+                            "Image for Disk {} (default value={}): ".format(
+                                disk_ind, img_name
+                            )
+                        )
+                        if new_val and (new_val not in images):
+                            LOG.error("Invalid image")
+                            sys.exit(-1)
+
+                        img_name = new_val if new_val else img_name
+                        disk_data["data_source_reference"] = {
+                            "kind": "image",
+                            "name": img_name,
+                            "uuid": imagesNameUUIDMap[img_name],
+                        }
+
+                    elif op == "ALLOCATE_STORAGE_CONTAINER":
+                        size = disk_data.get("disk_size_mib", 0)
+                        new_val = input(
+                            "Size of disk {} (default value = {})".format(disk_ind)
+                        )
+
+                        if new_val:
+                            size = int(new_val)
+
+                        disk_data["disk_size_mib"] = size
+
+                    elif op == "EMPTY_CDROM":
+                        disk_data["data_source_reference"] = None
+                        disk_data["disk_size_mib"] = 0
+
+                elif is_data_ref_present:
+                    data_source_ref = disk_data["data_source_reference"]
+
+                    imagesNameUUIDMap = Obj.images(ahv.IMAGE_TYPES[device_type])
+                    images = list(imagesNameUUIDMap.keys())
+
+                    if not images:
+                        LOG.error(
+                            "No images found for device type: {}".format(device_type)
+                        )
+                        sys.exit(-1)
+
+                    img_name = data_source_ref.get("name", images[0])
+                    if img_name not in images:
+                        img_name = images[0]
+
+                    click.echo("\nChoose from given images: \n")
+                    for ind, name in enumerate(images):
+                        click.echo("\t {}. {}".format(str(ind + 1), name))
+
+                    new_val = input(
+                        "Image for Disk {} (default value={}): ".format(
+                            disk_ind, img_name
+                        )
+                    )
+                    if new_val and (new_val not in images):
+                        LOG.error("Invalid image")
+                        sys.exit(-1)
+
+                    img_name = new_val if new_val else img_name
+
+                    disk_data["data_source_reference"] = {
+                        "kind": "image",
+                        "name": img_name,
+                        "uuid": imagesNameUUIDMap[img_name],
+                    }
+
+                elif is_size_present:
+                    size = disk_data.get("disk_size_mib", 0)
+                    new_val = input(
+                        "Size of disk {} (default value = {})".format(disk_ind)
+                    )
+
+                    if new_val:
+                        size = int(new_val)
+
+                    disk_data["disk_size_mib"] = size
+
+        # num_sockets
+        vCPUs = resources.get("num_sockets", None)
+        if vCPUs:
+            new_val = input("vCPUS for the vm (default value = {})".format(vCPUs))
+
+            if new_val:
+                resources["num_sockets"] = int(new_val)
+
+        # num_vcpu_per_socket
+        cores_per_vcpu = resources.get("num_vcpus_per_socket", None)
+        if cores_per_vcpu:
+            new_val = input(
+                "Cores per vCPU for the vm (default value = {})".format(cores_per_vcpu)
+            )
+
+            if new_val:
+                resources["num_vcpus_per_socket"] = int(new_val)
+
+        # memory
+        memory_size_mib = resources.get("memory_size_mib", None)
+        if memory_size_mib:
+            new_val = input(
+                "Memory(GiB) for the vm (default value = {})".format(
+                    memory_size_mib / 1024
+                )
+            )
+
+            if new_val:
+                resources["memory_size_mib"] = int(new_val * 1024)
+
+        # serial ports
+        serial_ports = resources.get("serial_port_list", {})
+        for ind, port_data in serial_ports.items():
+            is_connected = port_data["is_connected"]
+
+            new_val = input(
+                "Connection status for serial port {} (default value = {}) (Enter y/n)".format(
+                    ind, is_connected
+                )
+            )
+
+            if new_val:
+                if new_val.lower() == "y":
+                    port_data["is_connected"] = True
+
+                elif new_val.lower() == "n":
+                    port_data["is_connected"] = False
+
+        # Guest Customization
+        if "guest_customization" in resources.keys():
+            guest_cus = resources.get("guest_customization", {})
+            if vm_os == ahv.OPERATING_SYSTEM["LINUX"]:
+                cloud_init = guest_cus.get("cloud_init", {})
+                user_data = cloud_init.get("user_data", None)
+
+                new_val = input(
+                    "User data for guest customization for VM (default value={}): ".format(
+                        user_data
+                    )
+                )
+                if new_val:
+                    resources["guest_customization"]["cloud_init"][
+                        "user_data"
+                    ] = json.dumps(new_val)
+
+            else:
+                sysprep = guest_cus.get("sysprep", {})
+                choice = input("Want to sysprep data for guest customization (y/n): ")
+
+                if choice[0] == "y":
+
+                    install_types = ahv.SYS_PREP_INSTALL_TYPES
+                    install_type = sysprep.get("install_type", install_types[0])
+
+                    click.echo("Choose from given install types ")
+                    for index, value in enumerate(install_types):
+                        click.echo("\t {}. {}".format(str(index + 1), value))
+
+                    new_val = input(
+                        "Install type (default value = {})".format(install_type)
+                    )
+                    if new_val:
+                        sysprep["install_type"] = install_type
+
+                    unattend_xml = sysprep.get("unattend_xml", "")
+                    new_val = input(
+                        "Unattend XML (default value = {})".format(unattend_xml)
+                    )
+
+                    if new_val:
+                        sysprep["unattend_xml"] = unattend_xml
+
+                    is_domain = sysprep.get("is_domain", False)
+                    new_val = input("Join a domain (y/n): ")
+                    if new_val:
+                        is_domain = True if new_val[0] == "y" else False
+
+                    sysprep["is_domain"] = is_domain
+
+                    domain = sysprep.get("domain", "")
+                    new_val = input("Domain Name (default value = {}): ".format(domain))
+
+                    if new_val:
+                        sysprep["domain"] = new_val
+
+                    dns_ip = sysprep.get("dns_ip", "")
+                    new_val = input("DNS IP (default value = {}): ".format(dns_ip))
+
+                    if new_val:
+                        sysprep["dns_ip"] = new_val
+
+                    dns_search_path = sysprep.get("dns_search_path", "")
+                    new_val = input(
+                        "DNS Search Path (default value = {}): ".format(dns_search_path)
+                    )
+
+                    if new_val:
+                        sysprep["dns_search_path"] = dns_search_path
+
+                    # TODO add support for credential too
 
 
 class AHV:

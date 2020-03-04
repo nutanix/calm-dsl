@@ -16,6 +16,7 @@ from .utils import get_name_query, get_states_filter, highlight_text
 from .constants import BLUEPRINT
 from calm.dsl.store import Cache
 from calm.dsl.tools import get_logging_handle
+from calm.dsl.providers import get_provider
 
 LOG = get_logging_handle(__name__)
 
@@ -334,6 +335,10 @@ def launch_blueprint_simple(
 
     blueprint_uuid = blueprint.get("metadata", {}).get("uuid", "")
     blueprint_name = blueprint_name or blueprint.get("metadata", {}).get("name", "")
+
+    project_ref = blueprint["metadata"].get("project_reference", {})
+    project_uuid = project_ref.get("uuid")
+
     LOG.info("Fetching runtime editables in the blueprint")
     profiles = get_blueprint_runtime_editables(client, blueprint)
     profile = None
@@ -352,7 +357,36 @@ def launch_blueprint_simple(
     runtime_editables = profile.pop("runtime_editables", [])
 
     # Popping out substrate list in runtime editables for now.
-    runtime_editables.pop("substrate_list", None)
+    substrate_list = runtime_editables.pop("substrate_list", [])
+    if substrate_list:
+        res, err = client.blueprint.read(blueprint_uuid)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        bp_data = res.json()
+        substrate_definition_list = bp_data["status"]["resources"][
+            "substrate_definition_list"
+        ]
+        substrate_name_data_map = {}
+        for substrate in substrate_definition_list:
+            substrate_name_data_map[substrate["name"]] = substrate
+
+        for substrate in substrate_list:
+            click.echo(
+                "Enter the runtime editables data for substrate '{}':".format(
+                    substrate["context"] + "." + substrate["name"]
+                )
+            )
+            provider_type = substrate["type"]
+
+            spec = substrate["value"].get("spec", {})
+            provider_cls = get_provider(provider_type)
+            provider_cls.get_runtime_editables(
+                spec, project_uuid, substrate_name_data_map[substrate["name"]]
+            )
+
+        runtime_editables["substrate_list"] = substrate_list
+
     launch_payload = {
         "spec": {
             "app_name": app_name
