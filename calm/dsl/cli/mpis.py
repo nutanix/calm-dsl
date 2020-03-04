@@ -625,7 +625,11 @@ def publish_bp_to_marketplace_manager(
     bp_data = bp_data.json()
     bp_status = bp_data["status"]["state"]
     if bp_status != "ACTIVE":
-        LOG.error("Blueprint is in {} state. Unable to publish it".format(bp_status))
+        LOG.error(
+            "Blueprint is in {} state. Unable to publish it to marketplace manager".format(
+                bp_status
+            )
+        )
         sys.exit(-1)
 
     bp_template = {
@@ -935,6 +939,14 @@ def publish_marketplace_bp(
         app_states=[MARKETPLACE_BLUEPRINT.STATES.ACCEPTED],
     )
     bp_uuid = bp["metadata"]["uuid"]
+    bp_status = bp["status"]["resources"]["app_blueprint_template"]["status"]["state"]
+    if bp_status != "ACTIVE":
+        LOG.error(
+            "Blueprint is in {} state. Unable to publish it to marketplace".format(
+                bp_status
+            )
+        )
+        sys.exit(-1)
 
     res, err = client.market_place.read(bp_uuid)
     if err:
