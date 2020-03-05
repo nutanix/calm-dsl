@@ -140,7 +140,6 @@ class Connection:
         self.session = NonRetrySession()
         if self.auth and self.auth_type == REQUEST.AUTH_TYPE.BASIC:
             self.session.auth = self.auth
-        self.session.headers.update({"Content-Type": "application/json"})
 
         http_adapter = HTTPAdapter(
             pool_block=bool(self._pool_block),
@@ -203,18 +202,18 @@ class Connection:
             url = build_url(self.host, self.port, endpoint=endpoint, scheme=self.scheme)
             LOG.debug("URL is: {}".format(url))
             base_headers = self.session.headers
-            if headers:
-                base_headers.update(headers)
+            base_headers.update({"Content-Type": "application/json"})
 
             if method == REQUEST.METHOD.POST:
-                if files:
-                    request_json.update(files)
-                    m = MultipartEncoder(fields=request_json)
+                if files is not None:
+                    base_headers.pop("Content-Type", None)
                     res = self.session.post(
                         url,
-                        data=m,
+                        data=request_json,
                         verify=verify,
-                        headers={"Content-Type": m.content_type},
+                        cookies=cookies,
+                        headers={},
+                        files=files,
                     )
                 else:
                     res = self.session.post(
