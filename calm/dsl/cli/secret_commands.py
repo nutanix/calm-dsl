@@ -22,10 +22,7 @@ from .secrets import (
 )
 @click.pass_obj
 def _create_secret(obj, name, value):
-    """Creates the secret
-
-    NAME is the alias for your secret
-    """
+    """Creates a secret"""
 
     create_secret(name, value)
 
