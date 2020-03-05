@@ -7,7 +7,7 @@ TAG     := $(shell git describe --abbrev=0 --tags --exact-match ${COMMIT} 2>/dev
 dev:
 	# Setup our python3 based virtualenv
 	# This step assumes python3 is installed on your dev machine
-	[ -f venv/bin/python3 ] || (python3 -m virtualenv venv && \
+	[ -f venv/bin/python3 ] || (virtualenv -p python3 venv && \
 		venv/bin/pip3 install --upgrade pip setuptools)
 	venv/bin/pip3 install --no-cache -r requirements.txt -r dev-requirements.txt
 	venv/bin/python3 setup.py develop
@@ -73,5 +73,4 @@ _init_centos:
 	rpm -q python36 || sudo yum -y install python36 python-pip python3-devel
 
 	# Install virtual env
-	sudo pip3.6 install -U virtualenv
-	rm -f /usr/local/bin/virtualenv
+	sudo pip install -U virtualenv
