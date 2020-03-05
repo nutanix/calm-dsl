@@ -54,11 +54,25 @@ class AhvVmProvider(Provider):
             disk["data_source_reference"] = ref(img_cls).compile()
 
     @classmethod
-    def get_runtime_editables(cls, runtime_spec, project_id, substrate_spec):
+    def get_runtime_editables(cls, sub_editable_spec, project_id, substrate_spec):
         """Fetch runtime editables at runtime"""
 
         client = get_api_client()
         Obj = AHV(client.connection)
+
+        runtime_spec = sub_editable_spec["value"].get("spec", {})
+        if runtime_spec.get("resources") or runtime_spec.get("categories"):
+            click.secho(
+                "\n-- Substrate '{}' --".format(
+                    highlight_text(
+                        sub_editable_spec["context"] + "." + sub_editable_spec["name"]
+                    )
+                )
+            )
+
+        else:
+            # Nothing to get input
+            return
 
         sub_create_spec = substrate_spec["create_spec"]
         vm_os = substrate_spec["os_type"]
@@ -66,7 +80,7 @@ class AhvVmProvider(Provider):
         # NAME
         vm_name = runtime_spec.get("name", None)
         if vm_name:
-            new_val = input("Name of vm (default value={}):".format(vm_name))
+            new_val = input("\nName of vm (default value={}):".format(vm_name))
             if new_val:
                 runtime_spec["name"] = new_val
 
@@ -82,7 +96,7 @@ class AhvVmProvider(Provider):
         nic_list = resources.get("nic_list", {})
         # Normal Nic for now
         if nic_list:
-            click.echo("\tNICS data\n")
+            click.secho("\n\tNICS data\n", underline=True)
             res, err = client.project.read(project_id)
             if err:
                 raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -98,29 +112,41 @@ class AhvVmProvider(Provider):
             for ind, name in enumerate(subnets_name_id_map.keys()):
                 click.echo("\t {}. {}".format(str(ind + 1), name))
 
-            click.echo("")
             for nic_index, nic_data in nic_list.items():
                 # TODO Check for macros
-                click.echo("--Nic {} -- \n".format(nic_index))
+                click.echo("\n--Nic {} -- ".format(nic_index))
                 nic_uuid = nic_data["subnet_reference"].get("uuid")
                 nic_name = Cache.get_entity_name("AHV_SUBNET", nic_uuid)
 
+                if nic_uuid.startswith("@@") and nic_uuid.endswith("@@"):
+                    # It will be macro
+                    var_name = nic_uuid[3:-8]
+                    nic_name = "@@{" + var_name + "}@@"
+
                 new_val = input(
-                    "Subnet name for nic {} (default value={}): ".format(
-                        nic_index, nic_name
-                    )
+                    "Subnet for nic {} (default value={}): ".format(nic_index, nic_name)
                 )
 
                 if new_val:
-                    nic_data.update(
-                        {"name": new_val, "uuid": subnets_name_id_map[new_val]}
-                    )
+                    if new_val.startswith("@@") and new_val.endswith("@@"):
+                        # Macro case
+                        var_name = new_val[3:-3]
+                        nic_uuid = "@@{" + var_name + ".uuid}@@"
+                        nic_data["subnet_reference"].update(
+                            {"uuid": nic_uuid, "name": ""}
+                        )
+
+                    else:
+                        nic_data["subnet_reference"].update(
+                            {"name": new_val, "uuid": subnets_name_id_map[new_val]}
+                        )
 
         # DISKS
         disk_list = resources.get("disk_list", {})
         bp_disks = sub_create_spec["resources"]["disk_list"]
+        disk_list = []
         if disk_list:
-            click.echo("\tDISKS data")
+            click.secho("\n\tDISKS data", underline=True)
             for disk_ind, disk_data in disk_list.items():
                 click.echo("\n--Data Disk {} --".format(disk_ind))
                 bp_disk_data = bp_disks[int(disk_ind)]
@@ -205,7 +231,11 @@ class AhvVmProvider(Provider):
                     op = new_val if new_val else op
 
                     if op == "CLONE_FROM_IMAGE":
-                        data_source_ref = disk_data["data_source_reference"]
+                        data_source_ref = (
+                            disk_data["data_source_reference"]
+                            if disk_data.get("data_source_reference")
+                            else {}
+                        )
 
                         imagesNameUUIDMap = Obj.images(ahv.IMAGE_TYPES[device_type])
                         images = list(imagesNameUUIDMap.keys())
@@ -245,11 +275,13 @@ class AhvVmProvider(Provider):
                     elif op == "ALLOCATE_STORAGE_CONTAINER":
                         size = disk_data.get("disk_size_mib", 0)
                         new_val = input(
-                            "Size of disk {} (default value = {})".format(disk_ind)
+                            "\nSize of disk {} (default value = {}): ".format(
+                                disk_ind, int(size / 1024)
+                            )
                         )
 
                         if new_val:
-                            size = int(new_val)
+                            size = int(new_val) * 1024
 
                         disk_data["disk_size_mib"] = size
 
@@ -258,7 +290,11 @@ class AhvVmProvider(Provider):
                         disk_data["disk_size_mib"] = 0
 
                 elif is_data_ref_present:
-                    data_source_ref = disk_data["data_source_reference"]
+                    data_source_ref = (
+                        disk_data["data_source_reference"]
+                        if disk_data.get("data_source_reference")
+                        else {}
+                    )
 
                     imagesNameUUIDMap = Obj.images(ahv.IMAGE_TYPES[device_type])
                     images = list(imagesNameUUIDMap.keys())
@@ -273,7 +309,7 @@ class AhvVmProvider(Provider):
                     if img_name not in images:
                         img_name = images[0]
 
-                    click.echo("\nChoose from given images: \n")
+                    click.echo("\nChoose from given images:")
                     for ind, name in enumerate(images):
                         click.echo("\t {}. {}".format(str(ind + 1), name))
 
@@ -297,18 +333,20 @@ class AhvVmProvider(Provider):
                 elif is_size_present:
                     size = disk_data.get("disk_size_mib", 0)
                     new_val = input(
-                        "Size of disk {} (default value = {})".format(disk_ind)
+                        "\nSize of disk {} (default value = {}): ".format(
+                            disk_ind, int(size / 1024)
+                        )
                     )
 
                     if new_val:
-                        size = int(new_val)
+                        size = int(new_val) * 1024
 
                     disk_data["disk_size_mib"] = size
 
         # num_sockets
         vCPUs = resources.get("num_sockets", None)
         if vCPUs:
-            new_val = input("vCPUS for the vm (default value = {})".format(vCPUs))
+            new_val = input("\nvCPUS for the vm (default value = {})".format(vCPUs))
 
             if new_val:
                 resources["num_sockets"] = int(new_val)
@@ -317,7 +355,9 @@ class AhvVmProvider(Provider):
         cores_per_vcpu = resources.get("num_vcpus_per_socket", None)
         if cores_per_vcpu:
             new_val = input(
-                "Cores per vCPU for the vm (default value = {})".format(cores_per_vcpu)
+                "\nCores per vCPU for the vm (default value = {})".format(
+                    cores_per_vcpu
+                )
             )
 
             if new_val:
@@ -327,8 +367,8 @@ class AhvVmProvider(Provider):
         memory_size_mib = resources.get("memory_size_mib", None)
         if memory_size_mib:
             new_val = input(
-                "Memory(GiB) for the vm (default value = {})".format(
-                    memory_size_mib / 1024
+                "\nMemory(GiB) for the vm (default value = {})".format(
+                    int(memory_size_mib / 1024)
                 )
             )
 
@@ -337,11 +377,12 @@ class AhvVmProvider(Provider):
 
         # serial ports
         serial_ports = resources.get("serial_port_list", {})
+        click.secho("\n\tSerial Ports data", underline=True)
         for ind, port_data in serial_ports.items():
             is_connected = port_data["is_connected"]
 
             new_val = input(
-                "Connection status for serial port {} (default value = {}) (Enter y/n)".format(
+                "\nConnection status for serial port {} (default value = {}) (Enter y/n): ".format(
                     ind, is_connected
                 )
             )
@@ -355,13 +396,20 @@ class AhvVmProvider(Provider):
 
         # Guest Customization
         if "guest_customization" in resources.keys():
-            guest_cus = resources.get("guest_customization", {})
+            click.secho("\n\tGuest Customization", underline=True)
+            guest_cus = (
+                resources["guest_customization"]
+                if resources.get("guest_customization")
+                else {}
+            )
             if vm_os == ahv.OPERATING_SYSTEM["LINUX"]:
-                cloud_init = guest_cus.get("cloud_init", {})
+                cloud_init = (
+                    guest_cus["cloud_init"] if guest_cus.get("cloud_init") else {}
+                )
                 user_data = cloud_init.get("user_data", None)
 
                 new_val = input(
-                    "User data for guest customization for VM (default value={}): ".format(
+                    "\nUser data for guest customization for VM (default value={}): ".format(
                         user_data
                     )
                 )
@@ -371,15 +419,15 @@ class AhvVmProvider(Provider):
                     ] = json.dumps(new_val)
 
             else:
-                sysprep = guest_cus.get("sysprep", {})
-                choice = input("Want to sysprep data for guest customization (y/n): ")
+                sysprep = guest_cus["sysprep"] if guest_cus.get("sysprep") else {}
+                choice = input("\nWant to sysprep data for guest customization (y/n): ")
 
                 if choice[0] == "y":
 
                     install_types = ahv.SYS_PREP_INSTALL_TYPES
                     install_type = sysprep.get("install_type", install_types[0])
 
-                    click.echo("Choose from given install types ")
+                    click.echo("\nChoose from given install types ")
                     for index, value in enumerate(install_types):
                         click.echo("\t {}. {}".format(str(index + 1), value))
 
@@ -391,38 +439,45 @@ class AhvVmProvider(Provider):
 
                     unattend_xml = sysprep.get("unattend_xml", "")
                     new_val = input(
-                        "Unattend XML (default value = {})".format(unattend_xml)
+                        "\nUnattend XML (default value = {})".format(unattend_xml)
                     )
 
                     if new_val:
                         sysprep["unattend_xml"] = unattend_xml
 
                     is_domain = sysprep.get("is_domain", False)
-                    new_val = input("Join a domain (y/n): ")
+                    new_val = input("\nJoin a domain (y/n): ")
                     if new_val:
                         is_domain = True if new_val[0] == "y" else False
 
                     sysprep["is_domain"] = is_domain
 
-                    domain = sysprep.get("domain", "")
-                    new_val = input("Domain Name (default value = {}): ".format(domain))
+                    if is_domain:
+                        domain = sysprep.get("domain", "")
+                        new_val = input(
+                            "\nDomain Name (default value = {}): ".format(domain)
+                        )
 
-                    if new_val:
-                        sysprep["domain"] = new_val
+                        if new_val:
+                            sysprep["domain"] = new_val
 
-                    dns_ip = sysprep.get("dns_ip", "")
-                    new_val = input("DNS IP (default value = {}): ".format(dns_ip))
+                        dns_ip = sysprep.get("dns_ip", "")
+                        new_val = input(
+                            "\nDNS IP (default value = {}): ".format(dns_ip)
+                        )
 
-                    if new_val:
-                        sysprep["dns_ip"] = new_val
+                        if new_val:
+                            sysprep["dns_ip"] = new_val
 
-                    dns_search_path = sysprep.get("dns_search_path", "")
-                    new_val = input(
-                        "DNS Search Path (default value = {}): ".format(dns_search_path)
-                    )
+                        dns_search_path = sysprep.get("dns_search_path", "")
+                        new_val = input(
+                            "\nDNS Search Path (default value = {}): ".format(
+                                dns_search_path
+                            )
+                        )
 
-                    if new_val:
-                        sysprep["dns_search_path"] = dns_search_path
+                        if new_val:
+                            sysprep["dns_search_path"] = dns_search_path
 
                     # TODO add support for credential too
 

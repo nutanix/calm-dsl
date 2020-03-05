@@ -314,11 +314,11 @@ def get_field_values(entity_dict, context, path=None):
         if isinstance(value, dict):
             get_field_values(entity_dict[field], context, path=path + "." + field)
         else:
-            new_val = input(
-                "Value for {} in {} (default value={}): ".format(
-                    path + "." + field, context, value
-                )
+            new_val = click.prompt(
+                "\nValue for {} in {}".format(path + "." + field, context),
+                default=highlight_text(value),
             )
+
             if new_val:
                 entity_dict[field] = type(value)(new_val)
 
@@ -361,37 +361,6 @@ def launch_blueprint_simple(
 
     runtime_editables = profile.pop("runtime_editables", [])
 
-    # Popping out substrate list in runtime editables for now.
-    substrate_list = runtime_editables.pop("substrate_list", [])
-    if substrate_list:
-        res, err = client.blueprint.read(blueprint_uuid)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        bp_data = res.json()
-        substrate_definition_list = bp_data["status"]["resources"][
-            "substrate_definition_list"
-        ]
-        substrate_name_data_map = {}
-        for substrate in substrate_definition_list:
-            substrate_name_data_map[substrate["name"]] = substrate
-
-        for substrate in substrate_list:
-            click.echo(
-                "Enter the runtime editables data for substrate '{}':".format(
-                    substrate["context"] + "." + substrate["name"]
-                )
-            )
-            provider_type = substrate["type"]
-
-            spec = substrate["value"].get("spec", {})
-            provider_cls = get_provider(provider_type)
-            provider_cls.get_runtime_editables(
-                spec, project_uuid, substrate_name_data_map[substrate["name"]]
-            )
-
-        runtime_editables["substrate_list"] = substrate_list
-
     launch_payload = {
         "spec": {
             "app_name": app_name
@@ -408,15 +377,45 @@ def launch_blueprint_simple(
             runtime_editables, indent=4, separators=(",", ": ")
         )
         click.echo("Blueprint editables are:\n{}".format(runtime_editables_json))
-        for entity_type, entity_list in runtime_editables.items():
-            for entity in entity_list:
-                context = entity["context"]
-                editables = entity["value"]
-                get_field_values(editables, context, path=entity.get("name", ""))
+
+        substrate_list = runtime_editables.get("substrate_list", [])
+        if substrate_list:
+            click.secho("\n\t\t\tSUBSTRATE LIST DATA", underline=True, bold=True)
+            res, err = client.blueprint.read(blueprint_uuid)
+            if err:
+                raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+            bp_data = res.json()
+            substrate_definition_list = bp_data["status"]["resources"][
+                "substrate_definition_list"
+            ]
+            substrate_name_data_map = {}
+            for substrate in substrate_definition_list:
+                substrate_name_data_map[substrate["name"]] = substrate
+
+            for substrate in substrate_list:
+                provider_type = substrate["type"]
+                provider_cls = get_provider(provider_type)
+                provider_cls.get_runtime_editables(
+                    substrate, project_uuid, substrate_name_data_map[substrate["name"]]
+                )
+
+        variable_list = runtime_editables.get("variable_list", [])
+        if variable_list:
+            click.secho("\n\t\t\VARIABLE LIST DATA", underline=True, bold=True)
+            for variable in variable_list:
+                context = variable["context"]
+                editables = variable["value"]
+                get_field_values(editables, context, path=variable.get("name", ""))
+
         runtime_editables_json = json.dumps(
             runtime_editables, indent=4, separators=(",", ": ")
         )
         LOG.info("Updated blueprint editables are:\n{}".format(runtime_editables_json))
+
+    import pdb
+
+    pdb.set_trace()
     res, err = client.blueprint.launch(blueprint_uuid, launch_payload)
     if not err:
         LOG.info("Blueprint {} queued for launch".format(blueprint_name))
