@@ -315,8 +315,11 @@ def get_field_values(entity_dict, context, path=None):
             get_field_values(entity_dict[field], context, path=path + "." + field)
         else:
             new_val = click.prompt(
-                "\nValue for {} in {}".format(path + "." + field, context),
-                default=highlight_text(value),
+                "\nValue for {} in {} [{}]".format(
+                    path + "." + field, context, highlight_text(value)
+                ),
+                default=value,
+                show_default=False,
             )
 
             if new_val:
@@ -389,20 +392,31 @@ def launch_blueprint_simple(
             substrate_definition_list = bp_data["status"]["resources"][
                 "substrate_definition_list"
             ]
+            package_definition_list = bp_data["status"]["resources"][
+                "package_definition_list"
+            ]
             substrate_name_data_map = {}
             for substrate in substrate_definition_list:
                 substrate_name_data_map[substrate["name"]] = substrate
+
+            vm_img_map = {}
+            for package in package_definition_list:
+                if package["type"] == "SUBSTRATE_IMAGE":
+                    vm_img_map[package["name"]] = package["uuid"]
 
             for substrate in substrate_list:
                 provider_type = substrate["type"]
                 provider_cls = get_provider(provider_type)
                 provider_cls.get_runtime_editables(
-                    substrate, project_uuid, substrate_name_data_map[substrate["name"]]
+                    substrate,
+                    project_uuid,
+                    substrate_name_data_map[substrate["name"]],
+                    vm_img_map,
                 )
 
         variable_list = runtime_editables.get("variable_list", [])
         if variable_list:
-            click.secho("\n\t\t\VARIABLE LIST DATA", underline=True, bold=True)
+            click.secho("\n\t\tVARIABLE LIST DATA", underline=True, bold=True)
             for variable in variable_list:
                 context = variable["context"]
                 editables = variable["value"]
