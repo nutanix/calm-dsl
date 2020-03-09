@@ -64,7 +64,7 @@ class ResourceAPI:
                    'project_uuid': project_uuid}
         if passphrase:
             payload['passphrase'] = passphrase
-        files = {'file': open(file_path, 'rb')}
+        files = {'file': ('file', open(file_path, 'rb'))}
 
         return self.connection._call(
             self.IMPORT_FILE, verify=False, files=files, request_json=payload,
