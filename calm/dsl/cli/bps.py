@@ -383,7 +383,8 @@ def launch_blueprint_simple(
 
         substrate_list = runtime_editables.get("substrate_list", [])
         if substrate_list:
-            click.secho("\n\t\t\tSUBSTRATE LIST DATA", underline=True, bold=True)
+            click.echo("\n\t\t\t", nl=False)
+            click.secho("SUBSTRATE LIST DATA", underline=True, bold=True)
             res, err = client.blueprint.read(blueprint_uuid)
             if err:
                 raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -416,7 +417,8 @@ def launch_blueprint_simple(
 
         variable_list = runtime_editables.get("variable_list", [])
         if variable_list:
-            click.secho("\n\t\tVARIABLE LIST DATA", underline=True, bold=True)
+            click.echo("\n\t\t\t", nl=False)
+            click.secho("VARIABLE LIST DATA", underline=True, bold=True)
             for variable in variable_list:
                 context = variable["context"]
                 editables = variable["value"]

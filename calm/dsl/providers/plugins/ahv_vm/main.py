@@ -65,7 +65,7 @@ class AhvVmProvider(Provider):
         runtime_spec = sub_editable_spec["value"].get("spec", {})
         if runtime_spec.get("resources") or runtime_spec.get("categories"):
             click.secho(
-                "\n-- Substrate '{}' --".format(
+                "\n-- Substrate {} --".format(
                     highlight_text(
                         sub_editable_spec["context"] + "." + sub_editable_spec["name"]
                     )
@@ -96,13 +96,117 @@ class AhvVmProvider(Provider):
             if runtime_spec["categories"]:
                 avl_categories = json.loads(runtime_spec["categories"])
 
-        resources = runtime_spec.get("resources", {})
+            click.echo("\n\t", nl=False)
+            click.secho("Categories\n", underline=True)
 
+            click.echo("Available categories:")
+            for name, value in avl_categories.items():
+                click.echo(
+                    "\t {}:{}".format(highlight_text(name), highlight_text(value))
+                )
+
+            choice = click.prompt(
+                "\nWant to edit categories (y/n) [{}]".format(highlight_text("n")),
+                default="n",
+                show_default=False,
+                type=click.Choice(["y", "n"]),
+                show_choices=False,
+            )
+            if choice == "y":
+                choice = click.prompt(
+                    "Want to delete any category (y/n) [{}]".format(
+                        highlight_text("n")
+                    ),
+                    default="n",
+                    show_default=False,
+                    type=click.Choice(["y", "n"]),
+                    show_choices=False,
+                )
+                while choice == "y":
+                    if not avl_categories:
+                        click.echo("No existing categories available")
+                        break
+
+                    family = click.prompt(
+                        "Enter the family of category (leave empty to skip)",
+                        default="",
+                        show_default=False,
+                    )
+                    if not family:
+                        break
+
+                    if family not in avl_categories.keys():
+                        click.echo("Invalid family")
+
+                    else:
+                        avl_categories.pop(family)
+                    choice = click.prompt(
+                        "\nWant to delete other category (y/n) [{}]".format(
+                            highlight_text("n")
+                        ),
+                        default="n",
+                        show_default=False,
+                        type=click.Choice(["y", "n"]),
+                        show_choices=False,
+                    )
+
+                choice = click.prompt(
+                    "\nWant to add any category (y/n) [{}]".format(highlight_text("n")),
+                    default="n",
+                    show_default=False,
+                    type=click.Choice(["y", "n"]),
+                    show_choices=False,
+                )
+                if choice == "y":
+                    categories = Obj.categories()
+                    click.echo("Choose from given categories:")
+                    for ind, group in enumerate(categories):
+                        category = "{}:{}".format(group["key"], group["value"])
+                        click.echo(
+                            "\t {}. {} ".format(str(ind + 1), highlight_text(category))
+                        )
+
+                while choice == "y":
+                    index = click.prompt(
+                        "Enter the index of category (0 to skip)", default=0
+                    )
+                    if not index:
+                        break
+
+                    if (index > len(categories)) or (index <= 0):
+                        click.echo("Invalid index !!! ")
+                    else:
+                        group = categories[index - 1]
+                        key = group["key"]
+
+                        if avl_categories.get("key"):
+                            click.echo(
+                                "Category corresponding to key {} already exists ".format(
+                                    key
+                                )
+                            )
+                        else:
+                            avl_categories[key] = group["value"]
+
+                    choice = click.prompt(
+                        "\nWant to add other category (y/n) [{}]".format(
+                            highlight_text("n")
+                        ),
+                        default="n",
+                        show_default=False,
+                        type=click.Choice(["y", "n"]),
+                        show_choices=False,
+                    )
+
+            runtime_spec["categories"] = json.dumps(avl_categories)
+
+        resources = runtime_spec.get("resources", {})
         # NICS
         nic_list = resources.get("nic_list", {})
         # Normal Nic for now
         if nic_list:
-            click.secho("\n\tNICS data\n", underline=True)
+            click.echo("\n\t", nl=False)
+            click.secho("NICS data\n", underline=True)
             res, err = client.project.read(project_id)
             if err:
                 raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -150,9 +254,10 @@ class AhvVmProvider(Provider):
         disk_list = resources.get("disk_list", {})
         bp_disks = sub_create_spec["resources"]["disk_list"]
         if disk_list:
-            click.secho("\n\tDISKS data", underline=True)
+            click.echo("\n\t", nl=False)
+            click.secho("DISKS data", underline=True)
             for disk_ind, disk_data in disk_list.items():
-                click.echo("\n--Data Disk {} --".format(disk_ind))
+                click.echo("\n-- Data Disk {} --".format(disk_ind))
                 bp_disk_data = bp_disks[int(disk_ind)]
 
                 if "device_properties" in disk_data.keys():
@@ -222,8 +327,16 @@ class AhvVmProvider(Provider):
                     for ind, op in enumerate(operation_list):
                         click.echo("\t{}. {}".format(ind + 1, op))
 
-                    # TODO choose default operation wisely
-                    op = operation_list[0]
+                    # Choose default operation
+                    op = "CLONE_FROM_IMAGE"
+                    if (disk_data["data_source_reference"] is None) and (
+                        disk_data["disk_size_mib"] == 0
+                    ):
+                        op = "EMPTY_CDROM"
+
+                    elif disk_data["disk_size_mib"]:
+                        op = "ALLOCATE_STORAGE_CONTAINER"
+
                     op = click.prompt(
                         "Enter the operation type for data disk {} [{}]".format(
                             disk_ind, highlight_text(op)
@@ -234,102 +347,16 @@ class AhvVmProvider(Provider):
                         show_default=False,
                     )
 
-                    if op == "CLONE_FROM_IMAGE":
-                        data_source_ref = (
-                            disk_data["data_source_reference"]
-                            if disk_data.get("data_source_reference")
-                            else {}
-                        )
-
-                        imagesNameUUIDMap = Obj.images(ahv.IMAGE_TYPES[device_type])
-                        images = list(imagesNameUUIDMap.keys())
-
-                        if not (images or downloadable_images):
-                            LOG.error(
-                                "No images found for device type: {}".format(
-                                    device_type
-                                )
-                            )
-                            sys.exit(-1)
-
-                        img_name = data_source_ref.get("name", images[0])
-                        if (img_name not in images) and (
-                            img_name not in downloadable_images
-                        ):
-                            img_name = images[0] if images else downloadable_images[0]
-
-                        click.echo("\nChoose from given images:")
-                        if images:
-                            click.secho("Disk Images", bold=True)
-                            for ind, name in enumerate(images):
-                                click.echo("\t {}. {}".format(str(ind + 1), name))
-
-                        if downloadable_images:
-                            click.secho("Downloadable Images", bold=True)
-                            for ind, name in enumerate(downloadable_images):
-                                click.echo("\t {}. {}".format(str(ind + 1), name))
-
-                        all_images = images + downloadable_images
-                        img_name = click.prompt(
-                            "\nImage for data disk {} [{}]".format(
-                                disk_ind, highlight_text(img_name)
-                            ),
-                            default=img_name,
-                            type=click.Choice(all_images),
-                            show_choices=False,
-                            show_default=False,
-                        )
-
-                        is_normal_image = "y"
-                        if (img_name in images) and (img_name in downloadable_images):
-                            is_normal_image = click.prompt(
-                                "Is it Disk Image (y/n) [{}]".format(
-                                    highlight_text("y")
-                                ),
-                                default="y",
-                                show_default=False,
-                                type=click.Choice(["y", "n"]),
-                                show_choices=False,
-                            )
-
-                        elif img_name in images:
-                            is_normal_image = "y"
-
-                        else:
-                            is_normal_image = "n"
-
-                        if is_normal_image == "y":
-                            disk_data["data_source_reference"] = {
-                                "kind": "image",
-                                "name": img_name,
-                                "uuid": imagesNameUUIDMap[img_name],
-                            }
-
-                        else:
-                            disk_data["data_source_reference"] = {
-                                "kind": "app_package",
-                                "name": img_name,
-                                "uuid": vm_img_map[img_name],
-                            }
-
-                    elif op == "ALLOCATE_STORAGE_CONTAINER":
-                        size = disk_data.get("disk_size_mib", 0)
-                        size = size / 1024
-
-                        size = click.prompt(
-                            "\nSize of disk {} (GiB) [{}]".format(
-                                disk_ind, highlight_text(size)
-                            ),
-                            default=size,
-                            show_default=False,
-                        )
-                        disk_data["disk_size_mib"] = size * 1024
-
-                    elif op == "EMPTY_CDROM":
-                        disk_data["data_source_reference"] = None
-                        disk_data["disk_size_mib"] = 0
-
                 elif is_data_ref_present:
+                    op = "CLONE_FROM_IMAGE"
+
+                elif is_size_present:
+                    op = "ALLOCATE_STORAGE_CONTAINER"
+
+                else:
+                    op = None
+
+                if op == "CLONE_FROM_IMAGE":
                     data_source_ref = (
                         disk_data["data_source_reference"]
                         if disk_data.get("data_source_reference")
@@ -403,7 +430,7 @@ class AhvVmProvider(Provider):
                             "uuid": vm_img_map[img_name],
                         }
 
-                elif is_size_present:
+                elif op == "ALLOCATE_STORAGE_CONTAINER":
                     size = disk_data.get("disk_size_mib", 0)
                     size = int(size / 1024)
 
@@ -415,6 +442,10 @@ class AhvVmProvider(Provider):
                         show_default=False,
                     )
                     disk_data["disk_size_mib"] = size * 1024
+
+                elif op == "EMPTY_CDROM":
+                    disk_data["data_source_reference"] = None
+                    disk_data["disk_size_mib"] = 0
 
         # num_sockets
         vCPUs = resources.get("num_sockets", None)
@@ -451,30 +482,33 @@ class AhvVmProvider(Provider):
 
         # serial ports
         serial_ports = resources.get("serial_port_list", {})
-        click.secho("\n\tSerial Ports data", underline=True)
-        for ind, port_data in serial_ports.items():
-            is_connected = port_data["is_connected"]
-            new_val = "y" if is_connected else "n"
+        if serial_ports:
+            click.echo("\n\t", nl=False)
+            click.secho("Serial Ports data", underline=True)
+            for ind, port_data in serial_ports.items():
+                is_connected = port_data["is_connected"]
+                new_val = "y" if is_connected else "n"
 
-            new_val = click.prompt(
-                "\nConnection status for serial port {} (y/n) [{}]".format(
-                    ind, highlight_text(new_val)
-                ),
-                default=new_val,
-                show_default=False,
-                type=click.Choice(["y", "n"]),
-                show_choices=False,
-            )
+                new_val = click.prompt(
+                    "\nConnection status for serial port {} (y/n) [{}]".format(
+                        ind, highlight_text(new_val)
+                    ),
+                    default=new_val,
+                    show_default=False,
+                    type=click.Choice(["y", "n"]),
+                    show_choices=False,
+                )
 
-            if new_val == "y":
-                port_data["is_connected"] = True
+                if new_val == "y":
+                    port_data["is_connected"] = True
 
-            else:
-                port_data["is_connected"] = False
+                else:
+                    port_data["is_connected"] = False
 
         # Guest Customization
         if "guest_customization" in resources.keys():
-            click.secho("\n\tGuest Customization", underline=True)
+            click.echo("\n\t", nl=False)
+            click.secho("Guest Customization", underline=True)
             guest_cus = (
                 resources["guest_customization"]
                 if resources.get("guest_customization")
@@ -503,9 +537,7 @@ class AhvVmProvider(Provider):
                         default=user_data,
                         show_default=False,
                     )
-                    resources["guest_customization"]["cloud_init"][
-                        "user_data"
-                    ] = json.dumps(user_data)
+                    guest_cus.update({"cloud_init": {"user_data": user_data}})
 
                 else:
                     sysprep = guest_cus["sysprep"] if guest_cus.get("sysprep") else {}
@@ -520,7 +552,6 @@ class AhvVmProvider(Provider):
                     )
 
                     if choice[0] == "y":
-
                         install_types = ahv.SYS_PREP_INSTALL_TYPES
                         install_type = sysprep.get("install_type", install_types[0])
 
@@ -532,14 +563,16 @@ class AhvVmProvider(Provider):
                             "Install type [{}]".format(highlight_text(install_type)),
                             default=install_type,
                             show_default=False,
-                            type=click.Choice([install_types]),
+                            type=click.Choice(install_types),
                             show_choices=False,
                         )
                         sysprep["install_type"] = install_type
 
                         unattend_xml = sysprep.get("unattend_xml", "")
                         unattend_xml = click.prompt(
-                            "\nUnattend XML", default=highlight_text(unattend_xml)
+                            "\nUnattend XML [{}]".format(highlight_text(unattend_xml)),
+                            default=unattend_xml,
+                            show_default=False,
                         )
                         sysprep["unattend_xml"] = unattend_xml
 
@@ -582,8 +615,9 @@ class AhvVmProvider(Provider):
                                 show_default=False,
                             )
                             sysprep["dns_search_path"] = dns_search_path
-
-                        # TODO add support for credential too
+                            # TODO add support for credential too
+                        guest_cus["sysprep"] = sysprep
+                resources["guest_customization"] = guest_cus
 
 
 class AHV:
