@@ -308,15 +308,33 @@ def get_blueprint_runtime_editables(client, blueprint):
     return response.get("resources", [])
 
 
-def get_field_values(entity_dict, context, path=None):
+def get_field_values(entity_dict, context, path=None, bp_data=None):
     path = path or ""
     for field, value in entity_dict.items():
         if isinstance(value, dict):
-            get_field_values(entity_dict[field], context, path=path + "." + field)
+            get_field_values(
+                entity_dict[field], context, path=path + "." + field, bp_data=None
+            )
         else:
+            var_data = get_variable_data(
+                bp_data=bp_data,
+                context_data=bp_data,
+                var_context=context,
+                var_name=path,
+            )
+
+            options = var_data.get("options", {})
+            choices = options.get("choices", [])
+
+            click.echo("")
+            if choices:
+                click.echo("Choose from given choices: ")
+                for choice in choices:
+                    click.echo("\t{}".format(highlight_text(repr(choice))))
+
             new_val = click.prompt(
-                "\nValue for {} in {} [{}]".format(
-                    path + "." + field, context, highlight_text(value)
+                "Value for {} in {} [{}]".format(
+                    path + "." + field, context, highlight_text(repr(value))
                 ),
                 default=value,
                 show_default=False,
@@ -324,6 +342,58 @@ def get_field_values(entity_dict, context, path=None):
 
             if new_val:
                 entity_dict[field] = type(value)(new_val)
+
+
+def get_variable_data(bp_data, context_data, var_context, var_name):
+
+    context_map = {
+        "app_profile": "app_profile_list",
+        "deployment": "deployment_create_list",
+        "package": "package_definition_list",
+        "service": "service_definition_list",
+        "substrate": "substrate_definition_list",
+        "action": "action_list",
+        "runbook": "runbook",
+    }
+
+    # Converting to list
+    context_list = var_context.split(".")
+    i = 0
+
+    # Iterate the list
+    while i < len(context_list):
+        entity_type = context_list[i]
+
+        if entity_type in context_map:
+            entity_type_val = context_map[entity_type]
+            if entity_type_val in context_data:
+                context_data = context_data[entity_type_val]
+            else:
+                context_data = bp_data[entity_type_val]
+        elif entity_type == "variable":
+            break
+
+        else:
+            LOG.error("Unknown entity type {}".format(entity_type))
+            sys.exit(-1)
+
+        entity_name = context_list[i + 1]
+        if isinstance(context_data, list):
+            for entity in context_data:
+                if entity["name"] == entity_name:
+                    context_data = entity
+                    break
+
+        # Increment iterator by two positions
+        i = i + 2
+
+    # Checking for the variable data
+    for var in context_data["variable_list"]:
+        if var_name == var["name"]:
+            return var
+
+    LOG.error("No data found with variable name {}".format(var_name))
+    sys.exit(-1)
 
 
 def launch_blueprint_simple(
@@ -381,15 +451,18 @@ def launch_blueprint_simple(
         )
         click.echo("Blueprint editables are:\n{}".format(runtime_editables_json))
 
+        res, err = client.blueprint.read(blueprint_uuid)
+        if err:
+            LOG.error("[{}] - {}".format(err["code"], err["error"]))
+            sys.exit(-1)
+
+        bp_data = res.json()
+
         substrate_list = runtime_editables.get("substrate_list", [])
-        if substrate_list:
+        if substrate_list and False:
             click.echo("\n\t\t\t", nl=False)
             click.secho("SUBSTRATE LIST DATA", underline=True, bold=True)
-            res, err = client.blueprint.read(blueprint_uuid)
-            if err:
-                raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-            bp_data = res.json()
             substrate_definition_list = bp_data["status"]["resources"][
                 "substrate_definition_list"
             ]
@@ -422,16 +495,18 @@ def launch_blueprint_simple(
             for variable in variable_list:
                 context = variable["context"]
                 editables = variable["value"]
-                get_field_values(editables, context, path=variable.get("name", ""))
+                get_field_values(
+                    editables,
+                    context,
+                    path=variable.get("name", ""),
+                    bp_data=bp_data["status"]["resources"],
+                )
 
         runtime_editables_json = json.dumps(
             runtime_editables, indent=4, separators=(",", ": ")
         )
         LOG.info("Updated blueprint editables are:\n{}".format(runtime_editables_json))
 
-    import pdb
-
-    pdb.set_trace()
     res, err = client.blueprint.launch(blueprint_uuid, launch_payload)
     if not err:
         LOG.info("Blueprint {} queued for launch".format(blueprint_name))

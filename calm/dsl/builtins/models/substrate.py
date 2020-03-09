@@ -149,9 +149,8 @@ class SubstrateType(EntityType):
         cdict["readiness_probe"] = readiness_probe
 
         editables = cdict.pop("editables", {})
-        cdict["editables"] = {
-            "create_spec" : editables
-        }
+        if editables:
+            cdict["editables"] = {"create_spec": editables}
 
         return cdict
 
