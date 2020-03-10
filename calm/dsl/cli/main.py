@@ -123,8 +123,7 @@ def server():
 
 
 @server.command("status")
-@click.pass_obj
-def get_server_status(obj):
+def get_server_status():
     """Get calm server connection status"""
 
     LOG.info("Checking if Calm is enabled on Server")
@@ -219,8 +218,7 @@ def watch():
     default="AHV_VM",
     help="Provider type",
 )
-@click.pass_obj
-def create_provider_spec(obj, provider_type):
+def create_provider_spec(provider_type):
     """Creates a provider_spec"""
 
     Provider = get_provider(provider_type)

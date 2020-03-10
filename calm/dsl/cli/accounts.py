@@ -13,7 +13,7 @@ from calm.dsl.tools import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-def get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_type):
+def get_accounts(name, filter_by, limit, offset, quiet, all_items, account_type):
     """ Get the accounts, optionally filtered by a string """
 
     client = get_api_client()
@@ -88,7 +88,6 @@ def get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_
 def get_account(client, account_name):
 
     params = {"filter": "name=={}".format(account_name)}
-
     res, err = client.account.list(params=params)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -115,10 +114,9 @@ def get_account(client, account_name):
     return account
 
 
-def delete_account(obj, account_names):
+def delete_account(account_names):
 
     client = get_api_client()
-
     for account_name in account_names:
         account = get_account(client, account_name)
         account_id = account["metadata"]["uuid"]
@@ -261,7 +259,7 @@ def describe_k8s_account(spec):
     click.echo(highlight_text(auth_type))
 
 
-def describe_account(obj, account_name):
+def describe_account(account_name):
 
     client = get_api_client()
     account = get_account(client, account_name)

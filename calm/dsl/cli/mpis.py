@@ -458,7 +458,6 @@ def launch_marketplace_bp(
 
     app_name = app_name or "Mpi-App-{}-{}".format(name, str(uuid.uuid4())[-10:])
     launch_blueprint_simple(
-        client,
         patch_editables=patch_editables,
         profile_name=profile_name,
         app_name=app_name,
@@ -499,7 +498,6 @@ def launch_marketplace_item(
 
     app_name = app_name or "Mpi-App-{}-{}".format(name, str(uuid.uuid4())[-10:])
     launch_blueprint_simple(
-        client,
         patch_editables=patch_editables,
         profile_name=profile_name,
         app_name=app_name,

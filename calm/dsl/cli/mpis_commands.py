@@ -63,9 +63,8 @@ APP_SOURCES = [
     default=False,
     help="Show all marketplace blueprints which are published",
 )
-@click.pass_obj
-def _get_marketplace_items(obj, name, quiet, app_family, display_all):
-    """ List the marketplace items in marketplace"""
+def _get_marketplace_items(name, quiet, app_family, display_all):
+    """List the marketplace items in marketplace"""
 
     get_marketplace_items(
         name=name, quiet=quiet, app_family=app_family, display_all=display_all
@@ -98,9 +97,8 @@ def _get_marketplace_items(obj, name, quiet, app_family, display_all):
     multiple=True,
     help="filter by state of marketplace blueprints",
 )
-@click.pass_obj
-def _get_marketplace_bps(obj, name, quiet, app_family, app_states):
-    """ List the marketplace blueprints in marketplace manager"""
+def _get_marketplace_bps(name, quiet, app_family, app_states):
+    """List the marketplace blueprints in marketplace manager"""
 
     get_marketplace_bps(
         name=name, quiet=quiet, app_family=app_family, app_states=app_states
@@ -117,8 +115,7 @@ def _get_marketplace_bps(obj, name, quiet, app_family, app_states):
     type=click.Choice(APP_SOURCES),
     help="App Source for marketplace item",
 )
-@click.pass_obj
-def _describe_marketplace_item(obj, name, version, source):
+def _describe_marketplace_item(name, version, source):
     """Describe a market place item"""
 
     describe_marketplace_item(name=name, version=version, app_source=source)
@@ -141,11 +138,8 @@ def _describe_marketplace_item(obj, name, version, source):
     type=click.Choice(APP_STATES),
     help="State of marketplace blueprint",
 )
-@click.pass_obj
-def _describe_marketplace_bp(obj, name, version, source, app_state):
-    """
-        Describe a market place blueprint
-    """
+def _describe_marketplace_bp(name, version, source, app_state):
+    """Describe a market place blueprint"""
 
     describe_marketplace_bp(
         name=name, version=version, app_source=source, app_state=app_state
@@ -177,9 +171,7 @@ def _describe_marketplace_bp(obj, name, version, source, app_state):
     type=click.Choice(APP_SOURCES),
     help="App Source of marketplace blueprint",
 )
-@click.pass_obj
 def _launch_marketplace_bp(
-    obj,
     name,
     version,
     project,
@@ -226,9 +218,7 @@ def _launch_marketplace_bp(
     type=click.Choice(APP_SOURCES),
     help="App Source of marketplace blueprint",
 )
-@click.pass_obj
 def _launch_marketplace_item(
-    obj,
     name,
     version,
     project,

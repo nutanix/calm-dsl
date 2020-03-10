@@ -62,7 +62,7 @@ class TestApps:
         app_name = "test_bp_api{}".format(str(uuid.uuid4())[-10:])
 
         try:
-            launch_blueprint_simple(client, blueprint_name=bp_name, app_name=app_name)
+            launch_blueprint_simple(blueprint_name=bp_name, app_name=app_name)
         except Exception as exp:
             pytest.fail(exp)
 
