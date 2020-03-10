@@ -1,6 +1,7 @@
 import click
 import os
 import json
+import sys
 
 from calm.dsl.config import init_config, get_default_user_config_file, set_config
 from calm.dsl.db import get_db_handle
@@ -118,7 +119,7 @@ def sync_cache():
 
 
 @init.command("bp")
-@click.argument("bp_name", default=None)
+@click.option("--name", "-n", "bp_name", default="Hello", help="Name of blueprint")
 @click.option(
     "--dir_name", "-d", default=os.getcwd(), help="Directory path for the blueprint"
 )
@@ -133,7 +134,10 @@ def sync_cache():
 def init_dsl_bp(bp_name, dir_name, provider_type):
     """Creates a starting directory for blueprint"""
 
-    bp_name = bp_name or "Hello"
+    if not bp_name.isidentifier():
+        LOG.error("Blueprint name '{}' is not a valid identifier".format(bp_name))
+        sys.exit(-1)
+
     init_bp(bp_name, dir_name, provider_type)
 
 
