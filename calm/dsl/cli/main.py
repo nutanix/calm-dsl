@@ -15,6 +15,7 @@ from calm.dsl.tools import (
     simple_verbosity_option,
     show_trace_option,
 )
+from calm.dsl.config import get_config
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
@@ -25,9 +26,17 @@ LOG = get_logging_handle(__name__)
 @click.group(context_settings=CONTEXT_SETTINGS)
 @simple_verbosity_option(LOG)
 @show_trace_option(LOG)
+@click.option(
+    "--config",
+    "-c",
+    "config_file",
+    default=None,
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to config file, defaults to ~/.calm/config.ini",
+)
 @click.version_option("0.1")
 @click.pass_context
-def main(ctx):
+def main(ctx, config_file):
     """Calm CLI
 
 \b
@@ -41,6 +50,8 @@ Commonly used commands:
 """
     ctx.ensure_object(dict)
     ctx.obj["verbose"] = True
+    if config_file:
+        get_config(config_file=config_file)
 
 
 @main.group(cls=DYMGroup)

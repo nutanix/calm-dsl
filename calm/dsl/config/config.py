@@ -11,6 +11,7 @@ LOG = get_logging_handle(__name__)
 
 
 _CONFIG = None
+_CONFIG_FILE = None
 
 
 def make_config_file_dir(config_file):
@@ -62,20 +63,26 @@ def _render_config_template(
 
 
 def _get_config_file():
-    """returns the location of config file present in cwd / default config file """
+    """returns the location of config file present in user location /cwd / default config file """
 
+    global _CONFIG_FILE
     cwd = os.getcwd()
-    if "config.ini" in os.listdir(cwd):
+
+    if _CONFIG_FILE:
+        user_config_file = _CONFIG_FILE
+
+    elif "config.ini" in os.listdir(cwd):
         user_config_file = os.path.join(cwd, "config.ini")
 
     else:
         user_config_file = get_default_user_config_file()
-        if not os.path.exists(user_config_file):
-            raise FileNotFoundError(
-                "Config file {} not found. Please run: calm init dsl".format(
-                    user_config_file
-                )
+
+    if not os.path.exists(user_config_file):
+        raise FileNotFoundError(
+            "Config file {} not found. Please run: calm init dsl".format(
+                user_config_file
             )
+        )
 
     return user_config_file
 
@@ -103,12 +110,15 @@ def init_config(
     LOG.debug("Success")
 
 
-def get_config():
+def get_config(config_file=None):
     """return the config object"""
 
-    global _CONFIG
+    global _CONFIG, _CONFIG_FILE
 
-    if not _CONFIG:
+    if config_file:
+        _CONFIG_FILE = config_file
+
+    if (not _CONFIG) or (config_file):
         # Create config object
         user_config_file = _get_config_file()
         config = configparser.ConfigParser()
