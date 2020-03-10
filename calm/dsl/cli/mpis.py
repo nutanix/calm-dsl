@@ -436,8 +436,6 @@ def launch_marketplace_bp(
         If version not there search in published, pendingm, accepted blueprints
     """
 
-    client = get_api_client()
-
     if not version:
         LOG.info("Fetching latest version of Marketplace Blueprint {} ".format(name))
         version = get_mpi_latest_version(
@@ -479,8 +477,6 @@ def launch_marketplace_item(
         Launch marketplace items
         If version not there search in published blueprints
     """
-
-    client = get_api_client()
 
     if not version:
         LOG.info("Fetching latest version of Marketplace Item {} ".format(name))

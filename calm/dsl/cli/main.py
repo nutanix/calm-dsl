@@ -1,6 +1,9 @@
 from ruamel import yaml
 import click
 import json
+import os
+
+
 
 import click_completion
 import click_completion.core
@@ -23,6 +26,10 @@ click_completion.init()
 LOG = get_logging_handle(__name__)
 
 
+def get_env_vars(ctx, args, incomplete):
+    return [k for k in os.environ.keys() if incomplete in k]
+
+
 @click.group(context_settings=CONTEXT_SETTINGS)
 @simple_verbosity_option(LOG)
 @show_trace_option(LOG)
@@ -35,8 +42,9 @@ LOG = get_logging_handle(__name__)
     help="Path to config file, defaults to ~/.calm/config.ini",
 )
 @click.version_option("0.1")
+@click.argument("envvar", type=click.STRING, autocompletion=get_env_vars)
 @click.pass_context
-def main(ctx, config_file):
+def main(ctx, config_file, envvar):
     """Calm CLI
 
 \b
