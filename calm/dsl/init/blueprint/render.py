@@ -109,7 +109,7 @@ def create_scripts(dir_name):
 
 def make_bp_dirs(dir_name, bp_name):
 
-    bp_dir = "{}Blueprint". format(os.path.join(dir_name, bp_name))
+    bp_dir = "{}Blueprint".format(os.path.join(dir_name, bp_name))
     if not os.path.isdir(bp_dir):
         os.makedirs(bp_dir)
 

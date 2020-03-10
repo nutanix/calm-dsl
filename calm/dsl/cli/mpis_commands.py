@@ -172,13 +172,7 @@ def _describe_marketplace_bp(name, version, source, app_state):
     help="App Source of marketplace blueprint",
 )
 def _launch_marketplace_bp(
-    name,
-    version,
-    project,
-    app_name,
-    profile_name,
-    ignore_runtime_variables,
-    source,
+    name, version, project, app_name, profile_name, ignore_runtime_variables, source,
 ):
     """Launch a marketplace blueprint"""
 
@@ -219,13 +213,7 @@ def _launch_marketplace_bp(
     help="App Source of marketplace blueprint",
 )
 def _launch_marketplace_item(
-    name,
-    version,
-    project,
-    app_name,
-    profile_name,
-    ignore_runtime_variables,
-    source,
+    name, version, project, app_name, profile_name, ignore_runtime_variables, source,
 ):
     """Launch a marketplace item"""
 

@@ -204,11 +204,7 @@ def create_blueprint_command(bp_file, name, description):
     help="Ignore runtime variables and use defaults",
 )
 def launch_blueprint_command(
-    blueprint_name,
-    app_name,
-    ignore_runtime_variables,
-    profile_name,
-    blueprint=None,
+    blueprint_name, app_name, ignore_runtime_variables, profile_name, blueprint=None,
 ):
 
     launch_blueprint_simple(

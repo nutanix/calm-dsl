@@ -4,7 +4,6 @@ import json
 import os
 
 
-
 import click_completion
 import click_completion.core
 from click_didyoumean import DYMGroup
