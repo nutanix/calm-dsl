@@ -19,12 +19,12 @@ def simple_verbosity_option(logging_mod=None, *names, **kwargs):
 
     log_level = "INFO"
     try:
-        # At the time of initializing dsl, config file may not be present
+        # At the time of initializing dsl, config file may be empty
         config = get_config()
         if "LOG" in config:
             log_level = config["LOG"].get("level") or log_level
 
-    except FileNotFoundError:
+    except ValueError:
         pass
 
     logging_levels = logging_mod.get_logging_levels()

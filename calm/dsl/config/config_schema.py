@@ -9,7 +9,6 @@ config_schema_dict = {
         "pc_password": And(Use(str)),
     },
     "PROJECT": {"name": And(Use(str))},
-    "DB": {"location": And(Use(str))},
     "LOG": {"level": And(Use(str))},
     "CATEGORIES": {},
 }

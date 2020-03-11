@@ -3,7 +3,13 @@ import os
 import json
 import sys
 
-from calm.dsl.config import init_config, get_default_user_config_file, set_config
+from calm.dsl.config import (
+    init_config,
+    get_default_config_file,
+    set_config,
+    update_init_config,
+    get_user_config_file,
+)
 from calm.dsl.db import get_db_handle
 from calm.dsl.api import get_resource_api, update_client_handle, get_client_handle
 from calm.dsl.store import Cache
@@ -76,6 +82,20 @@ def set_server_details(ip, port, username, password, project_name):
     password = password or click.prompt("Password", default="", hide_input=True)
     project_name = project_name or click.prompt("Project", default="default")
 
+    # No need to prompt for db location at initializing dsl
+    db_file = os.path.join(os.path.expanduser("~"), ".calm", "dsl.db")
+
+    # Default log-level
+    log_level = "INFO"
+
+    # Default user config file(~/.calm/config.ini)
+    config_file = click.prompt(
+        "Config File location", default=get_default_config_file()
+    )
+
+    # No need to prompt for local dir location  at initializing dsl
+    local_dir = os.path.join(os.path.expanduser("~"), ".calm", ".local")
+
     LOG.info("Checking if Calm is enabled on Server")
     # Get temporary client handle
     client = get_client_handle(host, port, auth=(username, password), temp=True)
@@ -90,16 +110,11 @@ def set_server_details(ip, port, username, password, project_name):
     service_enablement_status = result["service_enablement_status"]
     LOG.info(service_enablement_status)
 
-    db_location = os.path.join(os.path.expanduser("~"), ".calm", "dsl.db")
+    # Upditing init file data
+    update_init_config(config_file, db_file, local_dir)
 
-    # Default log-level
-    log_level = "INFO"
-
-    # Default user config file
-    user_config_file = get_default_user_config_file()
-
-    LOG.info("Writing config to {}".format(user_config_file))
-    init_config(host, port, username, password, project_name, db_location, log_level)
+    LOG.info("Writing config to {}".format(config_file))
+    init_config(host, port, username, password, project_name, log_level)
     LOG.info("Success")
 
     # Update client handle with new settings if no exception occurs
@@ -181,10 +196,26 @@ def init_dsl_bp(bp_name, dir_name, provider_type):
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path to local database file",
 )
+@click.option(
+    "--local_dir",
+    "-ld",
+    envvar="LOCAL_DIR",
+    default=None,
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, readable=True),
+    help="Path to local directory for storing secrets",
+)
 @click.option("--log_level", "-l", default=None, help="Default log level")
-@click.argument("config_file", default=get_default_user_config_file())
+@click.argument("config_file", default=get_user_config_file())
 def _set_config(
-    host, port, username, password, project_name, db_location, log_level, config_file
+    host,
+    port,
+    username,
+    password,
+    project_name,
+    db_location,
+    log_level,
+    config_file,
+    local_dir,
 ):
     """writes the configuration to config file"""
 
@@ -196,5 +227,6 @@ def _set_config(
         project_name,
         db_location,
         log_level,
+        local_dir=local_dir,
         config_file=config_file,
     )
