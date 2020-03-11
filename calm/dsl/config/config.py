@@ -6,7 +6,7 @@ from jinja2 import Environment, PackageLoader
 
 from calm.dsl.tools import get_logging_handle
 
-from .config_schema import validate_config
+from .schema import validate_config, validate_init_config
 
 LOG = get_logging_handle(__name__)
 
@@ -90,7 +90,10 @@ def update_init_obj():
 
     config.read(init_file)
 
-    # TODO validate init object
+    # Validate init config
+    if not validate_init_config(config):
+        raise ValueError("Invalid init config file: {}".format(init_file))
+
     _INIT = config
 
 
@@ -274,9 +277,6 @@ def set_config(
     config_file = config_file or init_obj["CONFIG"]["location"]
 
     # Update init config
-    import pdb
-
-    pdb.set_trace()
     update_init_config(
         config_file=config_file, db_file=db_location, local_dir=local_dir
     )
