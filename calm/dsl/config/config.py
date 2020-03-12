@@ -16,22 +16,26 @@ _CONFIG_FILE = None
 _INIT = None
 
 
-def make_file_dir(config_file):
+def make_file_dir(path, is_dir=False):
     """creates the file directory if not present"""
 
     # Create parent directory if not present
-    if not os.path.exists(os.path.dirname(os.path.realpath(config_file))):
+    if not os.path.exists(os.path.dirname(os.path.realpath(path))):
         try:
-            LOG.debug("Creating directory for file {}".format(config_file))
-            os.makedirs(os.path.dirname(os.path.realpath(config_file)))
+            LOG.debug("Creating directory for file {}".format(path))
+            os.makedirs(os.path.dirname(os.path.realpath(path)))
             LOG.debug("Success")
+
         except OSError as exc:
             if exc.errno != errno.EEXIST:
                 raise Exception("[{}] - {}".format(exc["code"], exc["error"]))
 
+    if is_dir and (not os.path.exists(path)):
+        os.makedirs(path)
 
-def get_init_file_location():
-    """returns the init file location"""
+
+def get_init_file():
+    """Returns the init file location"""
 
     init_file = os.path.join(os.path.expanduser("~"), ".calm", "init.ini")
     make_file_dir(init_file)
@@ -39,7 +43,7 @@ def get_init_file_location():
 
 
 def get_default_config_file():
-    """return default location of config file"""
+    """Returns default location of config file"""
 
     user_config_file = os.path.join(os.path.expanduser("~"), ".calm", "config.ini")
     make_file_dir(user_config_file)
@@ -47,23 +51,38 @@ def get_default_config_file():
 
 
 def get_default_db_file():
-    """return default location of db file"""
+    """Returns default location of db file"""
 
     dsl_db_file = os.path.join(os.path.expanduser("~"), ".calm", "dsl.db")
     make_file_dir(dsl_db_file)
     return dsl_db_file
 
 
+def get_default_local_dir():
+    """Returns the default location for local dir"""
+
+    local_dir = os.path.join(os.path.expanduser("~"), ".calm", ".local")
+    make_file_dir(local_dir, is_dir=True)
+    return local_dir
+
+
 def get_user_config_file():
-    """returns the config file location"""
+    """Returns the config file location"""
 
     global _CONFIG_FILE
+    cwd = os.getcwd()
 
     if not _CONFIG_FILE:
-        init_obj = get_init_data()
+
         config_file = None
-        if "CONFIG" in init_obj:
-            config_file = init_obj["CONFIG"].get("location", None)
+        if "config.ini" in os.listdir(cwd):
+            config_file = os.path.join(cwd, "config.ini")
+
+        elif os.path.exists(get_init_file()):
+            init_obj = get_init_data()
+            config_file = None
+            if "CONFIG" in init_obj:
+                config_file = init_obj["CONFIG"].get("location", None)
 
         _CONFIG_FILE = config_file or get_default_config_file()
 
@@ -86,13 +105,15 @@ def update_init_obj():
     global _INIT
     config = configparser.ConfigParser()
     config.optionxform = str
-    init_file = get_init_file_location()
+    init_file = get_init_file()
 
     config.read(init_file)
 
     # Validate init config
     if not validate_init_config(config):
-        raise ValueError("Invalid init config file: {}".format(init_file))
+        raise ValueError(
+            "Invalid init config file: {}.  Please run: calm init dsl".format(init_file)
+        )
 
     _INIT = config
 
@@ -102,20 +123,18 @@ def update_init_config(config_file, db_file, local_dir):
 
     global _CONFIG_FILE
 
-    init_file = get_init_file_location()
+    # create required directories
+    make_file_dir(config_file)
+    make_file_dir(db_file)
+    make_file_dir(local_dir, is_dir=True)
+
+    init_file = get_init_file()
     LOG.debug("Rendering init template")
     text = _render_init_template(config_file, db_file, local_dir)
     LOG.debug("Success")
 
     # UPDATE global _CONFIG_FILE object
     _CONFIG_FILE = config_file
-
-    init_obj = get_init_data()
-    config_file = config_file or init_obj["CONFIG"]["location"]
-
-    db_file = db_file or init_obj["DB"]["location"]
-
-    local_dir = local_dir or init_obj["LOCAL_DIR"]["location "]
 
     # Write config
     LOG.debug("Writing configuration to '{}'".format(init_file))
@@ -166,34 +185,13 @@ def _render_config_template(
     return text.strip() + os.linesep
 
 
-def _get_config_file():
-    """returns the location of config file present in user location /cwd / default config file """
-
-    global _CONFIG_FILE
-    cwd = os.getcwd()
-
-    if _CONFIG_FILE:
-        user_config_file = _CONFIG_FILE
-
-    elif "config.ini" in os.listdir(cwd):
-        user_config_file = os.path.join(cwd, "config.ini")
-
-    else:
-        user_config_file = get_user_config_file()
-
-    # create a config file
-    make_file_dir(user_config_file)
-
-    return user_config_file
-
-
 def init_config(
     ip, port, username, password, project_name, log_level, config_file=None
 ):
     """Writes the configuration to config file / default config file"""
 
     # Default user config file
-    user_config_file = _get_config_file()
+    user_config_file = get_user_config_file()
     config_file = config_file or user_config_file
 
     # Render config template
@@ -211,7 +209,7 @@ def init_config(
 
 
 def get_config(config_file=None):
-    """return the config object"""
+    """Returns the config object"""
 
     global _CONFIG, _CONFIG_FILE
 
@@ -220,14 +218,24 @@ def get_config(config_file=None):
 
     if (not _CONFIG) or (config_file):
         # Create config object
-        user_config_file = _get_config_file()
+        user_config_file = get_user_config_file()
         config = configparser.ConfigParser()
         config.optionxform = str  # Maintaining case sensitivity for field names
         config.read(user_config_file)
 
-        # Validate config
+        # Check presence of file
+        if not os.path.exists(user_config_file):
+            raise FileNotFoundError(
+                "File {} not found. Please run: calm init dsl".format(user_config_file)
+            )
+
+        # Validate the config file
         if not validate_config(config):
-            raise ValueError("Invalid config file: {}".format(user_config_file))
+            raise ValueError(
+                "Invalid config file: {}.  Please run: calm init dsl".format(
+                    user_config_file
+                )
+            )
 
         _CONFIG = config
 
@@ -285,7 +293,7 @@ def set_config(
 def print_config():
     """prints the configuration"""
 
-    config_file = _get_config_file()
+    config_file = get_user_config_file()
     LOG.debug("Fetching configuration from '{}'".format(config_file))
     print("")
     with open(config_file) as fd:

@@ -9,6 +9,8 @@ from calm.dsl.config import (
     set_config,
     update_init_config,
     get_user_config_file,
+    get_default_db_file,
+    get_default_local_dir,
 )
 from calm.dsl.db import get_db_handle
 from calm.dsl.api import get_resource_api, update_client_handle, get_client_handle
@@ -51,11 +53,41 @@ LOG = get_logging_handle(__name__)
     default=None,
     help="Prism Central password",
 )
+@click.option(
+    "--db_file",
+    "-d",
+    "db_location",
+    envvar="DATABASE_LOCATION",
+    default=None,
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to local database file",
+)
+@click.option(
+    "--local_dir",
+    "-ld",
+    envvar="LOCAL_DIR",
+    default=None,
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, readable=True),
+    help="Path to local directory for storing secrets",
+)
+@click.option(
+    "--config",
+    "-c",
+    "config_file",
+    envvar="CONFIG FILE LOCATION",
+    default=None,
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to config file",
+)
 @click.option("--project", "-pj", "project_name", help="Project name for entity")
-def initialize_engine(ip, port, username, password, project_name):
+def initialize_engine(
+    ip, port, username, password, project_name, db_location, local_dir, config_file
+):
     """Initializes the calm dsl engine"""
 
-    set_server_details(ip, port, username, password, project_name)
+    set_server_details(
+        ip, port, username, password, project_name, db_location, local_dir, config_file
+    )
     init_db()
     sync_cache()
 
@@ -71,7 +103,9 @@ def initialize_engine(ip, port, username, password, project_name):
     click.echo("\nKeep Calm and DSL On!\n")
 
 
-def set_server_details(ip, port, username, password, project_name):
+def set_server_details(
+    ip, port, username, password, project_name, db_location, local_dir, config_file
+):
 
     if not (ip and port and username and password and project_name):
         click.echo("Please provide Calm DSL settings:\n")
@@ -82,19 +116,23 @@ def set_server_details(ip, port, username, password, project_name):
     password = password or click.prompt("Password", default="", hide_input=True)
     project_name = project_name or click.prompt("Project", default="default")
 
-    # No need to prompt for db location at initializing dsl
-    db_file = os.path.join(os.path.expanduser("~"), ".calm", "dsl.db")
-
     # Default log-level
     log_level = "INFO"
 
-    # Default user config file(~/.calm/config.ini)
-    config_file = click.prompt(
+    #  Prompt for config file
+    config_file = config_file or click.prompt(
         "Config File location", default=get_default_config_file()
     )
 
-    # No need to prompt for local dir location  at initializing dsl
-    local_dir = os.path.join(os.path.expanduser("~"), ".calm", ".local")
+    # Prompt for local dir location  at initializing dsl
+    local_dir = local_dir or click.prompt(
+        "Local files directory", default=get_default_local_dir()
+    )
+
+    # Prompt for db location at initializing dsl
+    db_file = db_location or click.prompt(
+        "DSL local store location", default=get_default_db_file()
+    )
 
     LOG.info("Checking if Calm is enabled on Server")
     # Get temporary client handle
@@ -110,8 +148,8 @@ def set_server_details(ip, port, username, password, project_name):
     service_enablement_status = result["service_enablement_status"]
     LOG.info(service_enablement_status)
 
-    # Upditing init file data
-    update_init_config(config_file, db_file, local_dir)
+    # Updating init file data
+    update_init_config(config_file=config_file, db_file=db_file, local_dir=local_dir)
 
     LOG.info("Writing config to {}".format(config_file))
     init_config(host, port, username, password, project_name, log_level)

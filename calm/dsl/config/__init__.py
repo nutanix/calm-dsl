@@ -7,6 +7,8 @@ from .config import (
     set_config,
     get_init_data,
     get_user_config_file,
+    get_default_db_file,
+    get_default_local_dir,
 )
 
 
@@ -19,4 +21,6 @@ __all__ = [
     "update_init_config",
     "get_init_data",
     "get_user_config_file",
+    "get_default_db_file",
+    "get_default_local_dir",
 ]
