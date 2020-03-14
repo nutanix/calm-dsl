@@ -17,7 +17,7 @@ from .models.published_service import PublishedService, published_service
 
 from .models.package import Package, package, PackageType
 
-from .models.utils import read_file, read_local_file
+from .models.utils import read_file, read_local_file, get_valid_identifier
 
 from .models.provider_spec import provider_spec, read_provider_spec, read_spec
 from .models.provider_spec import read_ahv_spec, read_vmw_spec

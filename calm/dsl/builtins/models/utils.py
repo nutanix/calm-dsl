@@ -2,6 +2,7 @@ import os
 import sys
 import inspect
 from ruamel import yaml
+import re
 from calm.dsl.tools import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -49,3 +50,22 @@ def str_presenter(dumper, data):
 
 
 yaml.add_representer(str, str_presenter)
+
+
+def get_valid_identifier(data=None):
+    """returns a valid indentifier out of string"""
+
+    if not data:
+        return data
+
+    if data.isidentifier():
+        return data
+
+    # Will remove all unwanted characters
+    data = re.sub("[^0-9a-zA-Z_]", "", data)
+
+    # Still it is an invalid indentifier, it will append "_" i.e underscore at start
+    if not data.isidentifier():
+        data = "_{}".format(data)
+
+    return data

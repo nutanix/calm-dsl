@@ -8,6 +8,7 @@ from ruamel.yaml import YAML, resolver, SafeRepresenter
 from calm.dsl.tools import StrictDraft7Validator
 from calm.dsl.tools import get_logging_handle
 from .schema import get_schema_details
+from .utils import get_valid_identifier
 
 LOG = get_logging_handle(__name__)
 
@@ -298,7 +299,7 @@ class EntityType(EntityTypeBase):
     def decompile(mcls, cdict):
 
         # Remove extra info
-        name = cdict.pop("name", mcls.__schema_name__)
+        name = get_valid_identifier(cdict.pop("name", mcls.__schema_name__))
         description = cdict.pop("description", None)
         # kind = cdict.pop('__kind__')
 
