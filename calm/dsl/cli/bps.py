@@ -253,7 +253,6 @@ def decompile_bp(name):
         substrate["create_spec"] = bp_read_payload["substrate_definition_list"][ind]["create_spec"]
 
     bp_cls = BlueprintType.decompile(blueprint)
-    bp_cls.substrates[0].provider_type
 
     for profile in bp_cls.profiles:
         for dep in profile.deployments:

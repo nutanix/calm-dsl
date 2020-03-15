@@ -41,7 +41,7 @@ Action = _action()
 
 
 def _action_create(**kwargs):
-    name = str(uuid.uuid4())[:8] + "_" + getattr(ActionType, "__schema_name__")
+    name = getattr(ActionType, "__schema_name__")+ "_" + str(uuid.uuid4())[:8] 
     name = kwargs.get("name", kwargs.get("__name__", name))
     bases = (Action,)
     return ActionType(name, bases, kwargs)
@@ -137,7 +137,7 @@ class action(metaclass=DescriptorType):
     action descriptor
     """
 
-    def __init__(self, user_func):
+    def __init__(self, user_func, runbook_name=None):
         """
         A decorator for generating actions from a function definition.
         Args:
@@ -149,7 +149,7 @@ class action(metaclass=DescriptorType):
         # Generate the entity names
         self.action_name = user_func.__name__
         self.action_description = user_func.__doc__ or ""
-        self.runbook_name = str(uuid.uuid4())[:8] + "_runbook"
+        self.runbook_name = runbook_name or str(uuid.uuid4())[:8] + "_runbook"
         self.dag_name = str(uuid.uuid4())[:8] + "_dag"
         self.user_func = user_func
         self.user_runbook = runbook_create(**{"name": self.runbook_name})

@@ -5,9 +5,10 @@ from calm.dsl.decompile.ref import render_ref_template
 from calm.dsl.decompile.credential import get_cred_var_name
 from calm.dsl.decompile.file_handler import get_scripts_dir
 from calm.dsl.builtins import TaskType
+from calm.dsl.builtins import RefType
 
 
-def render_task_template(cls):
+def render_task_template(cls, RUNBOOK_ACTION_MAP={}):
 
     if not isinstance(cls, TaskType):
         raise TypeError("{} is not of type {}".format(cls, TaskType))
@@ -110,7 +111,16 @@ def render_task_template(cls):
             schema_file = "task_http_delete.py.jinja2"
 
     elif cls.type == "CALL_RUNBOOK":
-        raise Exception("Not supported")
+        # TODO shift this working to explicit method for task decompile
+        runbook = RefType.decompile(cls.attrs["runbook_reference"])
+        runbook_target = cls.target_any_local_reference
+
+        user_attrs = {
+            "name": cls.__name__,
+            "action": RUNBOOK_ACTION_MAP[runbook.__name__],
+            "target": runbook_target.__name__
+        }
+        schema_file="task_call_runbook.py.jinja2"
 
     else:
         raise Exception("Invalid task type")
