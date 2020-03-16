@@ -26,13 +26,15 @@ def render_task_template(cls, RUNBOOK_ACTION_MAP={}):
 
     cred = cls.attrs.get("login_credential_local_reference", None)
     if cred:
-        user_attrs["cred"] = "ref({})".format(get_cred_var_name(cred["name"]))
+        # TODO make it as task decompile functionality
+        cred = RefType.decompile(cred)
+        user_attrs["cred"] = "ref({})".format(get_cred_var_name(cred.__name__))
 
     if cls.type == "EXEC":
         script_type = cls.attrs["script_type"]
         cls.attrs["script"] = cls.attrs["script"].replace("'", r"/'")
         cls.attrs["script"] = create_script_file(script_type, cls.attrs["script"])
-        
+
         if script_type == "sh":
             schema_file = "task_exec_ssh.py.jinja2"
 
@@ -118,9 +120,9 @@ def render_task_template(cls, RUNBOOK_ACTION_MAP={}):
         user_attrs = {
             "name": cls.__name__,
             "action": RUNBOOK_ACTION_MAP[runbook.__name__],
-            "target": runbook_target.__name__
+            "target": runbook_target.__name__,
         }
-        schema_file="task_call_runbook.py.jinja2"
+        schema_file = "task_call_runbook.py.jinja2"
 
     else:
         raise Exception("Invalid task type")
@@ -137,17 +139,17 @@ def create_script_file(script_type, script=""):
 
     if script_type == "sh":
         file_name += ".sh"
-    
+
     elif script_type == "npsscript":
         file_name += ".ps1"
-    
+
     elif script_type == "static":
         file_name += ".py"
-    
+
     else:
-        raise TypeError("Script Type {} not supported". format(script_type))
+        raise TypeError("Script Type {} not supported".format(script_type))
 
     with open("{}/{}".format(scripts_dir, file_name), "w+") as fd:
         fd.write(script)
-    
+
     return "specs/{}".format(file_name)
