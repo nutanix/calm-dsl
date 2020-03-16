@@ -33,18 +33,16 @@ LOG = get_logging_handle(__name__)
 @click.option(
     "--all-items", "-a", is_flag=True, help="Get all items, including deleted ones"
 )
-@click.pass_obj
-def _get_apps(obj, name, filter_by, limit, offset, quiet, all_items):
+def _get_apps(name, filter_by, limit, offset, quiet, all_items):
     """Get Apps, optionally filtered by a string"""
-    get_apps(obj, name, filter_by, limit, offset, quiet, all_items)
+    get_apps(name, filter_by, limit, offset, quiet, all_items)
 
 
 @describe.command("app")
 @click.argument("app_name")
-@click.pass_obj
-def _describe_app(obj, app_name):
+def _describe_app(app_name):
     """Describe an app"""
-    describe_app(obj, app_name)
+    describe_app(app_name)
 
 
 @run.command("action")
@@ -58,21 +56,20 @@ def _describe_app(obj, app_name):
     help="Watch action run in an app",
 )
 @click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
-@click.pass_obj
-def _run_actions(obj, app_name, action_name, watch):
+def _run_actions(app_name, action_name, watch):
     """App lcm actions"""
-    render_actions = display_with_screen(obj, app_name, action_name, watch)
+    render_actions = display_with_screen(app_name, action_name, watch)
     Display.wrapper(render_actions, watch)
 
 
-def display_with_screen(obj, app_name, action_name, watch):
+def display_with_screen(app_name, action_name, watch):
     def render_actions(screen):
         screen.clear()
         screen.print_at(
             "Running action {} for app {}".format(action_name, app_name), 0, 0
         )
         screen.refresh()
-        run_actions(screen, obj, app_name, action_name, watch)
+        run_actions(screen, app_name, action_name, watch)
         screen.wait_for_input(10.0)
 
     return render_actions
@@ -97,8 +94,7 @@ def display_with_screen(obj, app_name, action_name, watch):
     show_default=True,
     help="Give polling interval",
 )
-@click.pass_obj
-def _watch_action_runlog(obj, runlog_uuid, app_name, poll_interval):
+def _watch_action_runlog(runlog_uuid, app_name, poll_interval):
     """Watch an app"""
 
     def display_action(screen):
@@ -120,12 +116,11 @@ def _watch_action_runlog(obj, runlog_uuid, app_name, poll_interval):
     show_default=True,
     help="Give polling interval",
 )
-@click.pass_obj
-def _watch_app(obj, app_name, poll_interval):
+def _watch_app(app_name, poll_interval):
     """Watch an app"""
 
     def display_action(screen):
-        watch_app(obj, app_name, screen)
+        watch_app(app_name, screen)
         screen.wait_for_input(10.0)
 
     Display.wrapper(display_action, watch=True)
@@ -138,20 +133,18 @@ def _watch_app(obj, app_name, poll_interval):
     "--app", "app_name", "-a", required=True, help="App the action belongs to"
 )
 @click.option("--file", "file_name", "-f", help="How to name the downloaded file")
-@click.pass_obj
-def _download_runlog(obj, runlog_uuid, app_name, file_name):
+def _download_runlog(runlog_uuid, app_name, file_name):
     """Download runlogs, given runlog uuid and app name"""
-    download_runlog(obj, runlog_uuid, app_name, file_name)
+    download_runlog(runlog_uuid, app_name, file_name)
 
 
 @delete.command("app")
 @click.argument("app_names", nargs=-1)
 @click.option("--soft", "-s", is_flag=True, default=False, help="Soft delete app")
-@click.pass_obj
-def _delete_app(obj, app_names, soft):
+def _delete_app(app_names, soft):
     """Deletes an application"""
 
-    delete_app(obj, app_names, soft)
+    delete_app(app_names, soft)
 
 
 @main.group()
@@ -175,31 +168,28 @@ def restart():
 @start.command("app")
 @click.argument("app_name")
 @click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
-@click.pass_obj
-def start_app(obj, app_name, watch):
+def start_app(app_name, watch):
     """Starts an application"""
 
-    render_actions = display_with_screen(obj, app_name, "start", watch)
+    render_actions = display_with_screen(app_name, "start", watch)
     Display.wrapper(render_actions, watch)
 
 
 @stop.command("app")
 @click.argument("app_name")
 @click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
-@click.pass_obj
-def stop_app(obj, app_name, watch):
+def stop_app(app_name, watch):
     """Stops an application"""
 
-    render_actions = display_with_screen(obj, app_name, "stop", watch)
+    render_actions = display_with_screen(app_name, "stop", watch)
     Display.wrapper(render_actions, watch)
 
 
 @restart.command("app")
 @click.argument("app_name")
 @click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
-@click.pass_obj
-def restart_app(obj, app_name, watch):
+def restart_app(app_name, watch):
     """Restarts an application"""
 
-    render_actions = display_with_screen(obj, app_name, "restart", watch)
+    render_actions = display_with_screen(app_name, "restart", watch)
     Display.wrapper(render_actions, watch)

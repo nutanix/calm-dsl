@@ -17,7 +17,7 @@ from calm.dsl.tools import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-def get_apps(obj, name, filter_by, limit, offset, quiet, all_items):
+def get_apps(name, filter_by, limit, offset, quiet, all_items):
     client = get_api_client()
     config = get_config()
 
@@ -133,7 +133,7 @@ def _get_app(client, app_name, all=False):
     return app
 
 
-def describe_app(obj, app_name):
+def describe_app(app_name):
     client = get_api_client()
     app = _get_app(client, app_name, all=True)
 
@@ -206,7 +206,7 @@ def describe_app(obj, app_name):
     click.echo("App Runlogs:")
 
     def display_runlogs(screen):
-        watch_app(obj, app_name, screen, app)
+        watch_app(app_name, screen, app)
 
     Display.wrapper(display_runlogs, watch=False)
 
@@ -388,7 +388,7 @@ def watch_action(runlog_uuid, app_name, client, screen, poll_interval=10):
     poll_action(poll_func, get_completion_func(screen), poll_interval)
 
 
-def watch_app(obj, app_name, screen, app=None):
+def watch_app(app_name, screen, app=None):
     """Watch an app"""
 
     client = get_api_client()
@@ -498,7 +498,7 @@ def watch_app(obj, app_name, screen, app=None):
     poll_action(poll_func, is_complete)
 
 
-def delete_app(obj, app_names, soft=False):
+def delete_app(app_names, soft=False):
     client = get_api_client()
 
     for app_name in app_names:
@@ -516,7 +516,7 @@ def delete_app(obj, app_names, soft=False):
         LOG.info("Action runlog uuid: {}".format(runlog_id))
 
 
-def run_actions(screen, obj, app_name, action_name, watch):
+def run_actions(screen, app_name, action_name, watch):
     client = get_api_client()
 
     if action_name.lower() == SYSTEM_ACTIONS.CREATE:
@@ -525,11 +525,11 @@ def run_actions(screen, obj, app_name, action_name, watch):
         )
         return
     if action_name.lower() == SYSTEM_ACTIONS.DELETE:
-        delete_app(obj, [app_name])  # Because Delete requries a differernt API workflow
+        delete_app([app_name])  # Because Delete requries a differernt API workflow
         return
     if action_name.lower() == SYSTEM_ACTIONS.SOFT_DELETE:
         delete_app(
-            obj, [app_name], soft=True
+            [app_name], soft=True
         )  # Because Soft Delete also requries the differernt API workflow
         return
 
@@ -584,7 +584,9 @@ def poll_action(poll_func, completion_func, poll_interval=10):
         time.sleep(poll_interval)
 
 
-def download_runlog(obj, runlog_id, app_name, file_name):
+def download_runlog(runlog_id, app_name, file_name):
+    """Download runlogs, given runlog uuid and app name"""
+
     client = get_api_client()
     app = _get_app(client, app_name)
     app_id = app["metadata"]["uuid"]

@@ -27,25 +27,23 @@ from .main import get, delete, describe
     help="Search for accounts of specific provider",
     type=click.Choice(["aws", "k8s", "vmware", "azure", "gcp", "nutanix"]),
 )
-@click.pass_obj
-def _get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_type):
+def _get_accounts(name, filter_by, limit, offset, quiet, all_items, account_type):
     """Get accounts, optionally filtered by a string"""
-    get_accounts(obj, name, filter_by, limit, offset, quiet, all_items, account_type)
+
+    get_accounts(name, filter_by, limit, offset, quiet, all_items, account_type)
 
 
 @delete.command("account")
 @click.argument("account_names", nargs=-1)
-@click.pass_obj
-def _delete_account(obj, account_names):
+def _delete_account(account_names):
     """Deletes a account from settings"""
 
-    delete_account(obj, account_names)
+    delete_account(account_names)
 
 
 @describe.command("account")
 @click.argument("account_name")
-@click.pass_obj
-def _describe_account(obj, account_name):
+def _describe_account(account_name):
     """Describe a account"""
 
-    describe_account(obj, account_name)
+    describe_account(account_name)

@@ -1,8 +1,17 @@
 import click
 import os
 import json
+import sys
 
-from calm.dsl.config import init_config, get_default_user_config_file, set_config
+from calm.dsl.config import (
+    init_config,
+    get_default_config_file,
+    set_config,
+    update_init_config,
+    get_user_config_file,
+    get_default_db_file,
+    get_default_local_dir,
+)
 from calm.dsl.db import get_db_handle
 from calm.dsl.api import get_resource_api, update_client_handle, get_client_handle
 from calm.dsl.store import Cache
@@ -44,11 +53,64 @@ LOG = get_logging_handle(__name__)
     default=None,
     help="Prism Central password",
 )
+@click.option(
+    "--db_file",
+    "-d",
+    "db_file",
+    envvar="DATABASE_LOCATION",
+    default=None,
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to local database file",
+)
+@click.option(
+    "--local_dir",
+    "-ld",
+    envvar="LOCAL_DIR",
+    default=None,
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, readable=True),
+    help="Path to local directory for storing secrets",
+)
+@click.option(
+    "--config",
+    "-c",
+    "config_file",
+    envvar="CONFIG FILE LOCATION",
+    default=None,
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to config file",
+)
 @click.option("--project", "-pj", "project_name", help="Project name for entity")
-def initialize_engine(ip, port, username, password, project_name):
+@click.option(
+    "--use_custom_defaults",
+    "-u",
+    is_flag=True,
+    default=False,
+    help="Use custom defaults for init configuration",
+)
+def initialize_engine(
+    ip,
+    port,
+    username,
+    password,
+    project_name,
+    db_file,
+    local_dir,
+    config_file,
+    use_custom_defaults,
+):
     """Initializes the calm dsl engine"""
 
-    set_server_details(ip, port, username, password, project_name)
+    set_server_details(
+        ip=ip,
+        port=port,
+        username=username,
+        password=password,
+        project_name=project_name,
+        db_file=db_file,
+        local_dir=local_dir,
+        config_file=config_file,
+        use_custom_defaults=use_custom_defaults,
+    )
     init_db()
     sync_cache()
 
@@ -64,7 +126,17 @@ def initialize_engine(ip, port, username, password, project_name):
     click.echo("\nKeep Calm and DSL On!\n")
 
 
-def set_server_details(ip, port, username, password, project_name):
+def set_server_details(
+    ip,
+    port,
+    username,
+    password,
+    project_name,
+    db_file,
+    local_dir,
+    config_file,
+    use_custom_defaults,
+):
 
     if not (ip and port and username and password and project_name):
         click.echo("Please provide Calm DSL settings:\n")
@@ -74,6 +146,30 @@ def set_server_details(ip, port, username, password, project_name):
     username = username or click.prompt("Username", default="admin")
     password = password or click.prompt("Password", default="", hide_input=True)
     project_name = project_name or click.prompt("Project", default="default")
+
+    # Default log-level
+    log_level = "INFO"
+
+    if not use_custom_defaults:
+        # Prompt for config file
+        config_file = config_file or click.prompt(
+            "Config File location", default=get_default_config_file()
+        )
+
+        # Prompt for local dir location  at initializing dsl
+        local_dir = local_dir or click.prompt(
+            "Local files directory", default=get_default_local_dir()
+        )
+
+        # Prompt for db file location at initializing dsl
+        db_file = db_file or click.prompt(
+            "DSL local store location", default=get_default_db_file()
+        )
+
+    else:
+        config_file = config_file or get_default_config_file()
+        local_dir = local_dir or get_default_local_dir()
+        db_file = db_file or get_default_db_file()
 
     LOG.info("Checking if Calm is enabled on Server")
     # Get temporary client handle
@@ -89,16 +185,11 @@ def set_server_details(ip, port, username, password, project_name):
     service_enablement_status = result["service_enablement_status"]
     LOG.info(service_enablement_status)
 
-    db_location = os.path.join(os.path.expanduser("~"), ".calm", "dsl.db")
+    # Updating init file data
+    update_init_config(config_file=config_file, db_file=db_file, local_dir=local_dir)
 
-    # Default log-level
-    log_level = "INFO"
-
-    # Default user config file
-    user_config_file = get_default_user_config_file()
-
-    LOG.info("Writing config to {}".format(user_config_file))
-    init_config(host, port, username, password, project_name, db_location, log_level)
+    LOG.info("Writing config to {}".format(config_file))
+    init_config(host, port, username, password, project_name, log_level)
     LOG.info("Success")
 
     # Update client handle with new settings if no exception occurs
@@ -118,6 +209,7 @@ def sync_cache():
 
 
 @init.command("bp")
+@click.option("--name", "-n", "bp_name", default="Hello", help="Name of blueprint")
 @click.option(
     "--dir_name", "-d", default=os.getcwd(), help="Directory path for the blueprint"
 )
@@ -129,10 +221,14 @@ def sync_cache():
     default="AHV_VM",
     help="Provider type",
 )
-def init_dsl_bp(dir_name, provider_type):
+def init_dsl_bp(bp_name, dir_name, provider_type):
     """Creates a starting directory for blueprint"""
-    service = "Hello"
-    init_bp(service, dir_name, provider_type)
+
+    if not bp_name.isidentifier():
+        LOG.error("Blueprint name '{}' is not a valid identifier".format(bp_name))
+        sys.exit(-1)
+
+    init_bp(bp_name, dir_name, provider_type)
 
 
 @set.command("config")
@@ -175,10 +271,26 @@ def init_dsl_bp(dir_name, provider_type):
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path to local database file",
 )
+@click.option(
+    "--local_dir",
+    "-ld",
+    envvar="LOCAL_DIR",
+    default=None,
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, readable=True),
+    help="Path to local directory for storing secrets",
+)
 @click.option("--log_level", "-l", default=None, help="Default log level")
-@click.argument("config_file", default=get_default_user_config_file())
+@click.argument("config_file", default=get_user_config_file())
 def _set_config(
-    host, port, username, password, project_name, db_location, log_level, config_file
+    host,
+    port,
+    username,
+    password,
+    project_name,
+    db_location,
+    log_level,
+    config_file,
+    local_dir,
 ):
     """writes the configuration to config file"""
 
@@ -190,5 +302,6 @@ def _set_config(
         project_name,
         db_location,
         log_level,
+        local_dir=local_dir,
         config_file=config_file,
     )
