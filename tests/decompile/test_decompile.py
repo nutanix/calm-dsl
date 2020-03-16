@@ -1,15 +1,12 @@
-from calm.dsl.builtins import BlueprintType, read_spec
-
 from calm.dsl.builtins import (
     ref,
     basic_cred,
-    secret_cred,
     CalmVariable,
     CalmTask,
     action,
 )
 from calm.dsl.builtins import Service, Package, Substrate
-from calm.dsl.builtins import Deployment, Profile, Blueprint
+from calm.dsl.builtins import Deployment, Profile, Blueprint, BlueprintType
 from calm.dsl.builtins import read_provider_spec, read_local_file
 
 CRED_USERNAME = read_local_file(".tests/username")
@@ -119,4 +116,3 @@ class NextDslBlueprint(Blueprint):
 
 spec = NextDslBlueprint.get_dict()
 bp_cls = BlueprintType.decompile(spec)
-

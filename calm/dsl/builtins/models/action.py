@@ -41,7 +41,7 @@ Action = _action()
 
 
 def _action_create(**kwargs):
-    name = getattr(ActionType, "__schema_name__")+ "_" + str(uuid.uuid4())[:8] 
+    name = getattr(ActionType, "__schema_name__") + "_" + str(uuid.uuid4())[:8]
     name = kwargs.get("name", kwargs.get("__name__", name))
     bases = (Action,)
     return ActionType(name, bases, kwargs)

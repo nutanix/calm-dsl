@@ -22,7 +22,7 @@ class TaskType(EntityType):
         if (cdict.get("target_any_local_reference", None) or None) is None:
             cdict.pop("target_any_local_reference", None)
         return cdict
-    
+
     @classmethod
     def decompile(mcls, cdict):
         cls = super().decompile(cdict)

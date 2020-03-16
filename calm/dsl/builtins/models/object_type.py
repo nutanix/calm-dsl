@@ -23,7 +23,7 @@ class ObjectDict(EntityDict):
     def __setitem__(self, name, value):
         self.__items_set__ = True
         super().__setitem__(name, value)
-    
+
     def get_dict(self):
         ret = {}
         if not self.__items_set__:

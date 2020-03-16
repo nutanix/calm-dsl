@@ -8,7 +8,12 @@ import arrow
 import click
 from prettytable import PrettyTable
 
-from calm.dsl.builtins import Blueprint, SimpleBlueprint, create_blueprint_payload, BlueprintType
+from calm.dsl.builtins import (
+    Blueprint,
+    SimpleBlueprint,
+    create_blueprint_payload,
+    BlueprintType,
+)
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
 from calm.dsl.decompile.decompile_render import create_bp_dir
@@ -229,7 +234,7 @@ def compile_blueprint(bp_file, no_sync=False):
 
 
 def decompile_bp(name):
-    
+
     client = get_api_client()
     blueprint = get_blueprint(client, name)
     bp_uuid = blueprint["metadata"]["uuid"]
@@ -237,7 +242,7 @@ def decompile_bp(name):
     res, err = client.blueprint.export_json(bp_uuid)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
-    
+
     res = res.json()
     blueprint = res["spec"]["resources"]
     blueprint_name = res["metadata"].get("name", "SampleBlueprint")
@@ -250,7 +255,9 @@ def decompile_bp(name):
 
     # Merging the provider_spec of read_payload
     for ind, substrate in enumerate(blueprint["substrate_definition_list"]):
-        substrate["create_spec"] = bp_read_payload["substrate_definition_list"][ind]["create_spec"]
+        substrate["create_spec"] = bp_read_payload["substrate_definition_list"][ind][
+            "create_spec"
+        ]
 
     bp_cls = BlueprintType.decompile(blueprint)
 

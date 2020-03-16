@@ -101,7 +101,6 @@ class PackageType(EntityType):
 
         install_tasks = install_runbook["task_definition_list"]
         if len(install_tasks) > 1:
-            action_type = "SYSTEM"
             cls.__install__ = _action_create(
                 **{
                     "name": "action_install",

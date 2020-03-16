@@ -19,7 +19,7 @@ def make_bp_dirs(dir_name, bp_name):
     spec_dir = os.path.join(bp_dir, "specs")
     if not os.path.isdir(spec_dir):
         os.makedirs(spec_dir)
-    
+
     scripts_dir = os.path.join(bp_dir, "scripts")
     if not os.path.isdir(scripts_dir):
         os.makedirs(scripts_dir)

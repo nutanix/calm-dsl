@@ -13,7 +13,7 @@ from .bps import (
     compile_blueprint,
     launch_blueprint_simple,
     delete_blueprint,
-    decompile_bp
+    decompile_bp,
 )
 from calm.dsl.tools import get_logging_handle
 
@@ -91,6 +91,7 @@ def _compile_blueprint_command(bp_file, out, no_sync):
 def _decompile_bp(name):
 
     decompile_bp(name)
+
 
 def create_blueprint(client, bp_payload, name=None, description=None, categories=None):
 
