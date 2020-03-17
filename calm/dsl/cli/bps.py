@@ -260,12 +260,6 @@ def decompile_bp(name):
         ]
 
     bp_cls = BlueprintType.decompile(blueprint)
-
-    for profile in bp_cls.profiles:
-        for dep in profile.deployments:
-            if not dep.__name__.isidentifier():
-                dep.__name__ = "D{}".format(dep.__name__)
-
     bp_cls.__name__ = blueprint_name
     create_bp_dir(bp_cls)
 
