@@ -3,7 +3,7 @@ import uuid
 from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.ref import render_ref_template
 from calm.dsl.decompile.credential import get_cred_var_name
-from calm.dsl.decompile.file_handler import get_scripts_dir
+from calm.dsl.decompile.file_handler import get_scripts_dir, get_scripts_dir_key
 from calm.dsl.builtins import TaskType
 from calm.dsl.builtins import RefType
 
@@ -33,7 +33,7 @@ def render_task_template(cls, RUNBOOK_ACTION_MAP={}):
     if cls.type == "EXEC":
         script_type = cls.attrs["script_type"]
         cls.attrs["script"] = cls.attrs["script"].replace("'", r"/'")
-        cls.attrs["script"] = create_script_file(script_type, cls.attrs["script"])
+        cls.attrs["script_file"] = create_script_file(script_type, cls.attrs["script"])
 
         if script_type == "sh":
             schema_file = "task_exec_ssh.py.jinja2"
@@ -149,7 +149,8 @@ def create_script_file(script_type, script=""):
     else:
         raise TypeError("Script Type {} not supported".format(script_type))
 
-    with open("{}/{}".format(scripts_dir, file_name), "w+") as fd:
+    file_location = "{}/{}".format(scripts_dir, file_name)
+    with open(file_location, "w+") as fd:
         fd.write(script)
 
-    return "specs/{}".format(file_name)
+    return "{}/{}". format(get_scripts_dir_key(), file_name)

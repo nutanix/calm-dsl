@@ -5,6 +5,10 @@ SCRIPTS_DIR = None
 SPECS_DIR = None
 BP_DIR = None
 
+LOCAL_DIR_KEY = ".local"
+SCRIPTS_DIR_KEY = "scripts"
+SPECS_DIR_KEY = "specs"
+
 
 def make_bp_dirs(dir_name, bp_name):
 
@@ -12,15 +16,15 @@ def make_bp_dirs(dir_name, bp_name):
     if not os.path.isdir(bp_dir):
         os.makedirs(bp_dir)
 
-    local_dir = os.path.join(bp_dir, ".local")
+    local_dir = os.path.join(bp_dir, LOCAL_DIR_KEY)
     if not os.path.isdir(local_dir):
         os.makedirs(local_dir)
 
-    spec_dir = os.path.join(bp_dir, "specs")
+    spec_dir = os.path.join(bp_dir, SPECS_DIR_KEY)
     if not os.path.isdir(spec_dir):
         os.makedirs(spec_dir)
 
-    scripts_dir = os.path.join(bp_dir, "scripts")
+    scripts_dir = os.path.join(bp_dir, SCRIPTS_DIR_KEY)
     if not os.path.isdir(scripts_dir):
         os.makedirs(scripts_dir)
 
@@ -49,3 +53,15 @@ def get_specs_dir():
 
 def get_scripts_dir():
     return SCRIPTS_DIR
+
+
+def get_local_dir_key():
+    return LOCAL_DIR_KEY
+
+
+def get_specs_dir_key():
+    return SPECS_DIR_KEY
+
+
+def get_scripts_dir_key():
+    return SCRIPTS_DIR_KEY
