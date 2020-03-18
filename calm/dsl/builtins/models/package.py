@@ -95,31 +95,41 @@ class PackageType(EntityType):
         delattr(cls, "options")
 
         option_data = mcls.__validator_dict__["options"][0].decompile(options)
+        
+        if getattr(cls, "type") == "DEB":
+            install_runbook = option_data["install_runbook"]
+            uninstall_runbook = option_data["uninstall_runbook"]
 
-        install_runbook = option_data["install_runbook"]
-        uninstall_runbook = option_data["uninstall_runbook"]
+            install_tasks = install_runbook["task_definition_list"]
+            if len(install_tasks) > 1:
+                cls.__install__ = _action_create(
+                    **{
+                        "name": "action_install",
+                        "critical": True,
+                        "type": "system",
+                        "runbook": RunbookType.decompile(install_runbook),
+                    }
+                )
 
-        install_tasks = install_runbook["task_definition_list"]
-        if len(install_tasks) > 1:
-            cls.__install__ = _action_create(
-                **{
-                    "name": "action_install",
-                    "critical": True,
-                    "type": "system",
-                    "runbook": RunbookType.decompile(install_runbook),
-                }
-            )
+            uninstall_tasks = uninstall_runbook["task_definition_list"]
+            if len(uninstall_tasks) > 1:
+                cls.__uninstall__ = _action_create(
+                    **{
+                        "name": "action_uninstall",
+                        "critical": True,
+                        "type": "system",
+                        "runbook": RunbookType.decompile(uninstall_runbook),
+                    }
+                )
 
-        uninstall_tasks = uninstall_runbook["task_definition_list"]
-        if len(uninstall_tasks) > 1:
-            cls.__uninstall__ = _action_create(
-                **{
-                    "name": "action_uninstall",
-                    "critical": True,
-                    "type": "system",
-                    "runbook": RunbookType.decompile(uninstall_runbook),
-                }
-            )
+        elif getattr(cls, "type") == "SUBSTRATE_IMAGE":
+            cdict = {
+                "name": cls.__name__,
+                "description": cls.__doc__,
+                "options": option_data
+            }
+            from .vm_disk_package import VmDiskPackageType
+            cls = VmDiskPackageType.decompile(cdict)
         return cls
 
     def get_task_target(cls):

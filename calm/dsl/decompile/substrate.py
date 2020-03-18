@@ -20,6 +20,9 @@ def render_substrate_template(cls):
     cred = user_attrs["readiness_probe"].pop("credential")
     user_attrs["readiness_probe_cred"] = "ref({})". format(get_cred_var_name(cred.__name__))
 
+    # TODO use provider specific methods for reading provider_spec
+    # i.e for ahv : read_ahv_spec()
+
     provider_spec = cls.provider_spec
     # creating a file for storing provider_spe
     provider_spec_file_name = cls.__name__ + "_provider_spec.yaml"

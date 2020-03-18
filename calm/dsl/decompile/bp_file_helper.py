@@ -1,6 +1,7 @@
 from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.service import render_service_template
 from calm.dsl.decompile.package import render_package_template
+from calm.dsl.decompile.vm_disk_package import render_vm_disk_package_template
 from calm.dsl.decompile.substrate import render_substrate_template
 from calm.dsl.decompile.deployment import render_deployment_template
 from calm.dsl.decompile.profile import render_profile_template
@@ -18,6 +19,9 @@ def render_bp_file_template(cls, local_dir=None, spec_dir=None):
     user_attrs["name"] = cls.__name__
     user_attrs["description"] = cls.__doc__
 
+    # Find default cred
+    default_cred = cls.default_cred
+
     credential_list = []
     cred_file_map = {}
     for index, cred in enumerate(cls.credentials):
@@ -25,6 +29,8 @@ def render_bp_file_template(cls, local_dir=None, spec_dir=None):
         cred_val = cred.secret.get("value", "")
         cred_file_map[file_name] = cred_val
         cred.secret["value"] = "read_local_file('{}')".format(file_name)
+        if cred.__name__ == default_cred.__name__:
+            cred.default=True
         credential_list.append(
             render_credential_template(cred, cred_var_name=file_name)
         )
@@ -41,11 +47,15 @@ def render_bp_file_template(cls, local_dir=None, spec_dir=None):
 
     package_list = []
     for package in cls.packages:
-        package_list.append(render_package_template(package))
+        if getattr(package, "__kind__") == "app_package":
+            package_list.append(render_package_template(package))
+        
+        else:
+            package_list.append(render_vm_disk_package_template(package))
 
     substrate_list = []
     for substrate in cls.substrates:
-        substrate_list.append(render_substrate_template(substrate, spec_dir))
+        substrate_list.append(render_substrate_template(substrate))
 
     profile_list = []
     deployments = []
