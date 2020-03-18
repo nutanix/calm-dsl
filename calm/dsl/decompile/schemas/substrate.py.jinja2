@@ -6,6 +6,7 @@ class {{obj.name}}(Substrate):
     provider_type = '{{obj.provider_type}}'
     provider_spec = read_provider_spec('{{obj.provider_spec}}')
     readiness_probe = {{obj.readiness_probe}}
+    readiness_probe["credential"] =  {{obj.readiness_probe_cred}}
 {%- endmacro %}
 
 {{ substrate(obj) }}

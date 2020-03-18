@@ -246,7 +246,6 @@ def decompile_bp(name):
     res = res.json()
     blueprint = res["spec"]["resources"]
     blueprint_name = res["metadata"].get("name", "SampleBlueprint")
-    blueprint.pop("default_credential_local_reference", None)
 
     res, err = client.blueprint.read(bp_uuid)
     if err:

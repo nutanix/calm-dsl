@@ -1,6 +1,7 @@
 from ruamel import yaml
 
 from calm.dsl.decompile.render import render_template
+from calm.dsl.decompile.credential import get_cred_var_name
 from calm.dsl.decompile.file_handler import get_specs_dir, get_specs_dir_key
 from calm.dsl.builtins import SubstrateType
 
@@ -15,11 +16,11 @@ def render_substrate_template(cls):
     user_attrs["description"] = cls.__doc__
     user_attrs["readiness_probe"] = cls.readiness_probe.get_dict()
 
-    # TODO for now only default cred will be used
-    user_attrs["readiness_probe"].pop("credential", None)
+    # TODO fix this mess
+    cred = user_attrs["readiness_probe"].pop("credential")
+    user_attrs["readiness_probe_cred"] = "ref({})". format(get_cred_var_name(cred.__name__))
 
     provider_spec = cls.provider_spec
-
     # creating a file for storing provider_spe
     provider_spec_file_name = cls.__name__ + "_provider_spec.yaml"
     user_attrs["provider_spec"] = "{}/{}".format(get_specs_dir_key(), provider_spec_file_name)
