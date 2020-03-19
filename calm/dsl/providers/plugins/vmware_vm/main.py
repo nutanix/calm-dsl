@@ -23,8 +23,13 @@ class VCenterVmProvider(Provider):
     @classmethod
     def update_vm_image_config(cls, spec, vm_template=None):
         """vm_template is the downloadable class"""
-        if spec.get("template"):
+        if vm_template:
             spec["template"] = vm_template.__name__
+    
+    @classmethod
+    def get_api_obj(cls):
+        client = get_api_client()
+        return VCenter(client.connection)
 
 
 class VCenter:

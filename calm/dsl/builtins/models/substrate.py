@@ -146,6 +146,11 @@ class SubstrateType(EntityType):
         else:
             raise Exception("Un-supported vm type :{}".format(cdict["type"]))
 
+        # Pop cred from readiness_probe when it is None
+        cred = readiness_probe.get("login_credential_local_reference")
+        if not cred:
+            readiness_probe.pop("login_credential_local_reference", None)
+
         cdict["readiness_probe"] = readiness_probe
 
         return cdict

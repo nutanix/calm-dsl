@@ -49,6 +49,11 @@ class AhvVmProvider(Provider):
 
             # Set the reference of this disk
             disk["data_source_reference"] = ref(img_cls).compile()
+    
+    @classmethod
+    def get_api_obj(cls):
+        client = get_api_client()
+        return AHV(client.connection)
 
 
 class AHV:

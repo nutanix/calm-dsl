@@ -254,6 +254,13 @@ def decompile_bp(name):
 
     # Merging the provider_spec of read_payload
     for ind, substrate in enumerate(blueprint["substrate_definition_list"]):
+
+        # TODO: Fix case for template for Vmware provider
+        if substrate["create_spec"]["type"] == "PROVISION_VMWARE_VM":
+            bp_read_payload["substrate_definition_list"][ind]["create_spec"][
+                "template"
+            ] = substrate["create_spec"]["template"]
+
         substrate["create_spec"] = bp_read_payload["substrate_definition_list"][ind][
             "create_spec"
         ]

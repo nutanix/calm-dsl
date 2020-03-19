@@ -43,8 +43,7 @@ properties:
     type: string
     default: SCSI
   disk_size_mb:
-    type: integer
-    default: -1
+    type: ["integer", "null"]
   disk_mode:
     type: string
     default: "persistent"
@@ -54,7 +53,7 @@ properties:
   controller_key:
     type: integer
   device_slot:
-    type: integer
+    type: ["integer", "string"]
   iso_path:
     type: string
     default: ""
@@ -74,8 +73,7 @@ properties:
     type: string
     default: SCSI
   disk_size_mb:
-    type: integer
-    default: -1
+    type: ["integer", "null"]
   disk_mode:
     type: string
   location:
@@ -85,7 +83,7 @@ properties:
     type: integer
     default: -1
   device_slot:
-    type: integer
+    type: ["integer", "string"]
     default: -1
   iso_path:
     type: string

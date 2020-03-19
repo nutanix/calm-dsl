@@ -4,9 +4,10 @@ class {{obj.name}}(Substrate):
 
     os_type = '{{obj.os_type}}'
     provider_type = '{{obj.provider_type}}'
-    provider_spec = read_provider_spec('{{obj.provider_spec}}')
+    provider_spec = {{obj.provider_spec}}
     readiness_probe = {{obj.readiness_probe}}
-    readiness_probe["credential"] =  {{obj.readiness_probe_cred}}
+    {% if obj.readiness_probe_cred -%}readiness_probe["credential"] =  {{obj.readiness_probe_cred}}{%- endif %}
+    
 {%- endmacro %}
 
 {{ substrate(obj) }}
