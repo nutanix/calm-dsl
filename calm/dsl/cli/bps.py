@@ -242,7 +242,7 @@ def decompile_bp(name):
     blueprint = get_blueprint(client, name)
     bp_uuid = blueprint["metadata"]["uuid"]
 
-    res, err = client.blueprint.export_json(bp_uuid)
+    res, err = client.blueprint.export_json_with_secrets(bp_uuid)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 

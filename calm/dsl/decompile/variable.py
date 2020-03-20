@@ -123,7 +123,6 @@ def render_variable_template(cls):
                 elif var_val_type == "DATE_TIME":
                     schema_file = "var_with_options_fromTask_datetime.py.jinja2"
                 elif var_val_type == "MULTILINE_STRING":
-                    user_attrs["value"] = repr(user_attrs["value"])
                     schema_file = "var_with_options_fromTask_multiline.py.jinja2"
             else:
                 if var_val_type == "STRING":

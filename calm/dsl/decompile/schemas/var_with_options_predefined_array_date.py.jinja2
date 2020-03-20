@@ -1,8 +1,8 @@
 {%- macro with_options_predefined_array_date_var(obj) -%}
 {%- if obj.regex %}
-{{obj.name}} = CalmVariable.WithOptions.Predefined.Array.date({{obj.choices}}, label='{{obj.label}}', default={{obj.value}}, regex='{{obj.regex}}', validate_regex={{obj.validate_regex}}, is_mandatory={{obj.is_mandatory}}, is_hidden={{obj.is_hidden}}, runtime={{obj.runtime}})
+{{obj.name}} = CalmVariable.WithOptions.Predefined.Array.date({{obj.choices}}, label='{{obj.label}}', defaults={{obj.value}}, regex='{{obj.regex}}', validate_regex={{obj.validate_regex}}, is_mandatory={{obj.is_mandatory}}, is_hidden={{obj.is_hidden}}, runtime={{obj.runtime}})
 {%- else %}
-{{obj.name}} = CalmVariable.WithOptions.Predefined.Array.date({{obj.choices}}, label='{{obj.label}}', default={{obj.value}}, is_mandatory={{obj.is_mandatory}}, is_hidden={{obj.is_hidden}}, runtime={{obj.runtime}})
+{{obj.name}} = CalmVariable.WithOptions.Predefined.Array.date({{obj.choices}}, label='{{obj.label}}', defaults={{obj.value}}, is_mandatory={{obj.is_mandatory}}, is_hidden={{obj.is_hidden}}, runtime={{obj.runtime}})
 {%- endif %}
 {%- endmacro %}
 
