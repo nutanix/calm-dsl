@@ -2,6 +2,7 @@ from ruamel import yaml
 
 from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.credential import get_cred_var_name
+from calm.dsl.decompile.action import render_action_template
 from calm.dsl.decompile.file_handler import get_specs_dir, get_specs_dir_key
 from calm.dsl.builtins import SubstrateType, get_valid_identifier
 from calm.dsl.providers import get_provider
@@ -40,6 +41,16 @@ def render_substrate_template(cls):
     file_location = "{}/{}".format(spec_dir, provider_spec_file_name)
     with open(file_location, "w+") as fd:
         fd.write(yaml.dump(provider_spec, default_flow_style=False))
+
+    # Actions
+    action_list = []
+    system_actions = {v: k for k, v in SubstrateType.ALLOWED_FRAGMENT_ACTIONS.items()}
+    for action in user_attrs.get("actions", []):
+        if action.__name__ in list(system_actions.keys()):
+            action.__name__ = system_actions[action.__name__]
+        action_list.append(render_action_template(action))
+    
+    user_attrs["actions"] = action_list
 
     text = render_template(schema_file="substrate.py.jinja2", obj=user_attrs)
     return text.strip()

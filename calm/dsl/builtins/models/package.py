@@ -96,7 +96,8 @@ class PackageType(EntityType):
 
         option_data = mcls.__validator_dict__["options"][0].decompile(options)
         
-        if getattr(cls, "type") == "DEB":
+        package_type = getattr(cls, "type")
+        if package_type == "CUSTOM" or package_type == "DEB":
             install_runbook = option_data["install_runbook"]
             uninstall_runbook = option_data["uninstall_runbook"]
 
@@ -122,7 +123,7 @@ class PackageType(EntityType):
                     }
                 )
 
-        elif getattr(cls, "type") == "SUBSTRATE_IMAGE":
+        elif package_type == "SUBSTRATE_IMAGE":
             cdict = {
                 "name": cls.__name__,
                 "description": cls.__doc__,

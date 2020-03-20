@@ -34,9 +34,7 @@ properties:
     x-calm-dsl-display-name: actions
     type: array
     items:
-      additionalProperties: true
-      type: object
-      x-calm-dsl-type: dict
+      $ref: '#/components/schemas/Action'
   readiness_probe:
     type: object
     x-calm-dsl-type: object
