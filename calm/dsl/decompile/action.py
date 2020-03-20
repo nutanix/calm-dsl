@@ -2,7 +2,7 @@ from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.task import render_task_template
 from calm.dsl.decompile.parallel_task import render_parallel_task_template
 from calm.dsl.decompile.variable import render_variable_template
-from calm.dsl.builtins import action, ActionType
+from calm.dsl.builtins import action, ActionType, RefType
 
 
 RUNBOOK_ACTION_MAP = {}
@@ -74,10 +74,10 @@ def get_task_order(task_list):
 
     # store in degree of every task
     for edge in edges:
-        from_task = edge["from_task_reference"]["name"]
-        to_task = edge["to_task_reference"]["name"]
-        task_indegree_count_map[to_task] += 1
-        task_edges_map[from_task].append(to_task)
+        from_task = RefType.decompile(edge["from_task_reference"])
+        to_task = RefType.decompile(edge["to_task_reference"])
+        task_indegree_count_map[to_task.__name__] += 1
+        task_edges_map[from_task.__name__].append(to_task.__name__)
 
     # Queue to store elements having indegree queue
     queue = []

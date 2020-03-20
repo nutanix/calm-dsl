@@ -50,6 +50,8 @@ def render_task_template(cls, RUNBOOK_ACTION_MAP={}):
             user_attrs["variables"] = variables
         script_type = cls.attrs["script_type"]
         cls.attrs["script"] = cls.attrs["script"].replace("'", r"/'")
+        cls.attrs["script_file"] = create_script_file(script_type, cls.attrs["script"])
+
         if script_type == "sh":
             schema_file = "task_setvariable_ssh.py.jinja2"
 
