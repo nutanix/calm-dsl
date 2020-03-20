@@ -49,6 +49,9 @@ Documentation for the Calm DSL will be stored in the [docs](docs/) folder, and w
  - [Blueprint & App management](https://youtu.be/jb-ZllhaROs)
  - [Calm DSL Blueprint Architecture](https://youtu.be/Y-6eq91rtSw)
 
+## Blogs
+ - [Introducing the Nutanix Calm DSL](https://www.nutanix.dev/2020/03/17/introducing-the-nutanix-calm-dsl/)
+
 ## About Calm DSL
 
 Calm DSL describes a simpler Python3 based DSL for writing Calm blueprints. As Calm uses Services, Packages, Substrates, Deployments and Application Profiles as building blocks for a Blueprint, these entities can be defined as python classes. Their attributes can be specified as class attributes and actions on those entities (procedural runbooks) can be defined neatly as class methods. Calm blueprint DSL can also accept appropriate native data formats such as YAML and JSON, allowing the reuse and leveraging that work into the larger application lifecycle context of a Calm blueprint.
