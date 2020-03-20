@@ -19,12 +19,9 @@ def render_credential_template(cls, cred_var_name=None):
     user_attrs["var_name"] = cred_var_name or "CRED_{}".format(str(uuid.uuid4())[:8])
 
     CRED_VAR_NAME_MAP[user_attrs["name"]] = user_attrs["var_name"]
+    user_attrs["value"] = user_attrs["secret"].get("value", "")
 
-    cred_type = cls.type
-    if cred_type == "PASSWORD":
-        user_attrs["value"] = user_attrs["secret"].get("value", "")
-
-    text = render_template("cred_passwd_type.py.jinja2", obj=user_attrs)
+    text = render_template("credential.py.jinja2", obj=user_attrs)
     return text.strip()
 
 

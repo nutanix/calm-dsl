@@ -1,9 +1,0 @@
-{% macro cred(obj) %}
-{% if obj.default %}
-{{obj.var_name}} = basic_cred('{{obj.username}}', {{obj.value}}, name='{{obj.name}}', default=True)
-{% else %}
-{{obj.var_name}} = basic_cred('{{obj.username}}', {{obj.value}}, name='{{obj.name}}')
-{% endif %}
-{% endmacro %}
-
-{{ cred(obj) }}
