@@ -82,7 +82,7 @@ LOG = get_logging_handle(__name__)
 @click.option("--project", "-pj", "project_name", help="Project name for entity")
 @click.option(
     "--use_custom_defaults",
-    "-u",
+    "-cd",
     is_flag=True,
     default=False,
     help="Use custom defaults for init configuration",
@@ -150,7 +150,7 @@ def set_server_details(
     # Default log-level
     log_level = "INFO"
 
-    if not use_custom_defaults:
+    if use_custom_defaults:
         # Prompt for config file
         config_file = config_file or click.prompt(
             "Config File location", default=get_default_config_file()
