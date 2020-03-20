@@ -1,0 +1,9 @@
+{%- macro with_options_predefined_array_date_var(obj) -%}
+{%- if obj.regex %}
+{{obj.name}} = CalmVariable.WithOptions.Predefined.Array.date({{obj.choices}}, default={{obj.value}}, label={{obj.label}}, regex='{{obj.regex}}', validate_regex={{obj.validate_regex}}, runtime={{obj.runtime}})
+{%- else %}
+{{obj.name}} = CalmVariable.WithOptions.Predefined.Array.date({{obj.choices}}, default={{obj.value}}, label={{obj.label}}, runtime={{obj.runtime}})
+{%- endif %}
+{%- endmacro %}
+
+{{ with_options_predefined_array_date_var(obj) }}

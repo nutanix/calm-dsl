@@ -1,0 +1,9 @@
+{%- macro with_options_predefined_array_int_var(obj) -%}
+{%- if obj.regex %}
+{{obj.name}} = CalmVariable.WithOptions.Predefined.Array.int({{obj.choices}}, label='{{obj.label}}', regex='{{obj.regex}}', validate_regex={{obj.validate_regex}}, runtime={{obj.runtime}})
+{%- else %}
+{{obj.name}} = CalmVariable.WithOptions.Predefined.Array.int({{obj.choices}}, label='{{obj.label}}', runtime={{obj.runtime}})
+{%- endif %}
+{%- endmacro %}
+
+{{ with_options_predefined_array_int_var(obj) }}
