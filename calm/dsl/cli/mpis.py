@@ -436,8 +436,6 @@ def launch_marketplace_bp(
         If version not there search in published, pendingm, accepted blueprints
     """
 
-    client = get_api_client()
-
     if not version:
         LOG.info("Fetching latest version of Marketplace Blueprint {} ".format(name))
         version = get_mpi_latest_version(
@@ -458,7 +456,6 @@ def launch_marketplace_bp(
 
     app_name = app_name or "Mpi-App-{}-{}".format(name, str(uuid.uuid4())[-10:])
     launch_blueprint_simple(
-        client,
         patch_editables=patch_editables,
         profile_name=profile_name,
         app_name=app_name,
@@ -481,8 +478,6 @@ def launch_marketplace_item(
         If version not there search in published blueprints
     """
 
-    client = get_api_client()
-
     if not version:
         LOG.info("Fetching latest version of Marketplace Item {} ".format(name))
         version = get_mpi_latest_version(
@@ -499,7 +494,6 @@ def launch_marketplace_item(
 
     app_name = app_name or "Mpi-App-{}-{}".format(name, str(uuid.uuid4())[-10:])
     launch_blueprint_simple(
-        client,
         patch_editables=patch_editables,
         profile_name=profile_name,
         app_name=app_name,
@@ -589,7 +583,7 @@ def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None
     del bp_res["spec"]["environment_uuid"]
     bp_status = bp_res["status"]["state"]
     if bp_status != "ACTIVE":
-        LOG.error("blueprint went to {} state".format(bp_status))
+        LOG.error("Blueprint went to {} state".format(bp_status))
         sys.exit(-1)
 
     return bp_res
@@ -602,6 +596,8 @@ def publish_bp_to_marketplace_manager(
     description="",
     with_secrets=False,
     app_group_uuid=None,
+    icon_name=None,
+    icon_file=None,
 ):
 
     client = get_api_client()
@@ -621,6 +617,15 @@ def publish_bp_to_marketplace_manager(
         sys.exit(-1)
 
     bp_data = bp_data.json()
+    bp_status = bp_data["status"]["state"]
+    if bp_status != "ACTIVE":
+        LOG.error(
+            "Blueprint is in {} state. Unable to publish it to marketplace manager".format(
+                bp_status
+            )
+        )
+        sys.exit(-1)
+
     bp_template = {
         "spec": {
             "name": marketplace_bp_name,
@@ -641,6 +646,24 @@ def publish_bp_to_marketplace_manager(
         "metadata": {"kind": "marketplace_item"},
     }
 
+    if icon_name:
+        if icon_file:
+            # If file is there, upload first and then use it for marketplace item
+            client.app_icon.upload(icon_name, icon_file)
+
+        app_icon_name_uuid_map = client.app_icon.get_name_uuid_map()
+        app_icon_uuid = app_icon_name_uuid_map.get(icon_name, None)
+        if not app_icon_uuid:
+            LOG.error("App icon: {} not found".format(icon_name))
+            sys.exit(-1)
+
+        bp_template["spec"]["resources"]["icon_reference_list"] = [
+            {
+                "icon_type": "ICON",
+                "icon_reference": {"kind": "file_item", "uuid": app_icon_uuid},
+            }
+        ]
+
     res, err = client.market_place.create(bp_template)
     if err:
         LOG.error("[{}] - {}".format(err["code"], err["error"]))
@@ -659,6 +682,8 @@ def publish_bp_as_new_marketplace_bp(
     auto_approve=False,
     projects=[],
     category=None,
+    icon_name=None,
+    icon_file=None,
 ):
 
     # Search whether this marketplace item exists or not
@@ -688,6 +713,8 @@ def publish_bp_as_new_marketplace_bp(
         version=version,
         description=description,
         with_secrets=with_secrets,
+        icon_name=icon_name,
+        icon_file=icon_file,
     )
 
     if publish_to_marketplace or auto_approve:
@@ -720,6 +747,8 @@ def publish_bp_as_existing_marketplace_bp(
     auto_approve=False,
     projects=[],
     category=None,
+    icon_name=None,
+    icon_file=None,
 ):
 
     LOG.info(
@@ -780,6 +809,8 @@ def publish_bp_as_existing_marketplace_bp(
         description=description,
         with_secrets=with_secrets,
         app_group_uuid=app_group_uuid,
+        icon_name=icon_name,
+        icon_file=icon_file,
     )
 
     if publish_to_marketplace or auto_approve:
@@ -825,6 +856,10 @@ def approve_marketplace_bp(bp_name, version=None, projects=[], category=None):
         app_states=[MARKETPLACE_BLUEPRINT.STATES.PENDING],
     )
     bp_uuid = bp["metadata"]["uuid"]
+    bp_status = bp["status"]["resources"]["app_blueprint_template"]["status"]["state"]
+    if bp_status != "ACTIVE":
+        LOG.error("Blueprint is in {} state. Unable to approve it".format(bp_status))
+        sys.exit(-1)
 
     res, err = client.market_place.read(bp_uuid)
     if err:
@@ -898,6 +933,14 @@ def publish_marketplace_bp(
         app_states=[MARKETPLACE_BLUEPRINT.STATES.ACCEPTED],
     )
     bp_uuid = bp["metadata"]["uuid"]
+    bp_status = bp["status"]["resources"]["app_blueprint_template"]["status"]["state"]
+    if bp_status != "ACTIVE":
+        LOG.error(
+            "Blueprint is in {} state. Unable to publish it to marketplace".format(
+                bp_status
+            )
+        )
+        sys.exit(-1)
 
     res, err = client.market_place.read(bp_uuid)
     if err:
@@ -1036,7 +1079,7 @@ def delete_marketplace_bp(name, version, app_source=None, app_state=None):
     )
 
     LOG.info(
-        "Fetching details of marketplace blueprint {} with version {}".format(
+        "Fetching details of unpublished marketplace blueprint {} with version {}".format(
             name, version
         )
     )

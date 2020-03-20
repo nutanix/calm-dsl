@@ -1,6 +1,6 @@
 import atexit
 
-from calm.dsl.config import get_config
+from calm.dsl.config import get_init_data
 from .table_config import dsl_database, SecretTable, DataTable, CacheTable
 from calm.dsl.tools import get_logging_handle
 
@@ -18,8 +18,8 @@ class Database:
 
     @staticmethod
     def instantiate_db():
-        config = get_config()
-        db_location = config["DB"].get("location")
+        init_obj = get_init_data()
+        db_location = init_obj["DB"].get("location")
         dsl_database.init(db_location)
         return dsl_database
 

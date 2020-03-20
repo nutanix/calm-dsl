@@ -12,7 +12,7 @@ from calm.dsl.tools import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-def show_cache(obj):
+def show_cache():
 
     avl_entities = Cache.list()
 
@@ -40,14 +40,14 @@ def show_cache(obj):
 
 
 @show.command("cache")
-@click.pass_obj
-def show_cache_command(obj):
-    show_cache(obj)
+def show_cache_command():
+    """Display the cache data"""
+
+    show_cache()
 
 
 @clear.command("cache")
-@click.pass_obj
-def clear_cache(obj):
+def clear_cache():
     """Clear the entities stored in cache"""
 
     Cache.clear_entities()
@@ -62,12 +62,11 @@ def clear_cache(obj):
     type=click.Choice(Cache.get_entity_types()),
     help="Cache entity type",
 )
-@click.pass_obj
-def update_cache(obj, entity_type):
+def update_cache(entity_type):
     """Update the data for dynamic entities stored in the cache"""
 
     LOG.debug("Updating cache")
     Cache.sync(entity_type)
     LOG.debug("Success")
-    show_cache(obj)
+    show_cache()
     LOG.info(highlight_text("Cache updated at {}".format(datetime.datetime.now())))

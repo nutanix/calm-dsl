@@ -4,6 +4,7 @@ import inspect
 from ruamel import yaml
 import re
 from calm.dsl.tools import get_logging_handle
+from calm.dsl.config import get_init_data
 
 LOG = get_logging_handle(__name__)
 
@@ -36,7 +37,8 @@ def read_local_file(filename):
 
     # If not exists read from home directory
     if not os.path.exists(abs_file_path):
-        file_path = os.path.join(os.path.expanduser("~"), ".calm", ".local", filename)
+        init_obj = get_init_data()
+        file_path = os.path.join(init_obj["LOCAL_DIR"].get("location"), filename)
         return read_file(file_path, 0).rstrip()  # To remove \n, use rstrip
 
     return read_file(file_path, depth=2)

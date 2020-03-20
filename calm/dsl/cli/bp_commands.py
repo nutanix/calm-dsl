@@ -35,10 +35,10 @@ LOG = get_logging_handle(__name__)
 @click.option(
     "--all-items", "-a", is_flag=True, help="Get all items, including deleted ones"
 )
-@click.pass_obj
-def _get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
+def _get_blueprint_list(name, filter_by, limit, offset, quiet, all_items):
     """Get the blueprints, optionally filtered by a string"""
-    get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items)
+
+    get_blueprint_list(name, filter_by, limit, offset, quiet, all_items)
 
 
 @describe.command("bp")
@@ -51,10 +51,10 @@ def _get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
     default="text",
     help="output format [json|yaml].",
 )
-@click.pass_obj
-def _describe_bp(obj, bp_name, out):
+def _describe_bp(bp_name, out):
     """Describe a blueprint"""
-    describe_bp(obj, bp_name, out)
+
+    describe_bp(bp_name, out)
 
 
 @compile.command("bp")
@@ -168,8 +168,7 @@ def create_blueprint_from_dsl(client, bp_file, name=None, description=None):
 @click.option(
     "--description", "-d", default=None, help="Blueprint description (Optional)"
 )
-@click.pass_obj
-def create_blueprint_command(obj, bp_file, name, description):
+def create_blueprint_command(bp_file, name, description):
     """Creates a blueprint"""
 
     client = get_api_client()
@@ -212,20 +211,11 @@ def create_blueprint_command(obj, bp_file, name, description):
     default=False,
     help="Ignore runtime variables and use defaults",
 )
-@click.pass_obj
 def launch_blueprint_command(
-    obj,
-    blueprint_name,
-    app_name,
-    ignore_runtime_variables,
-    profile_name,
-    blueprint=None,
+    blueprint_name, app_name, ignore_runtime_variables, profile_name, blueprint=None,
 ):
 
-    client = get_api_client()
-
     launch_blueprint_simple(
-        client,
         blueprint_name,
         app_name,
         blueprint=blueprint,
@@ -236,8 +226,7 @@ def launch_blueprint_command(
 
 @delete.command("bp")
 @click.argument("blueprint_names", nargs=-1)
-@click.pass_obj
-def _delete_blueprint(obj, blueprint_names):
+def _delete_blueprint(blueprint_names):
     """Deletes a blueprint"""
 
-    delete_blueprint(obj, blueprint_names)
+    delete_blueprint(blueprint_names)

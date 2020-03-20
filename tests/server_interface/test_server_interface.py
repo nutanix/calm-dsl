@@ -80,8 +80,7 @@ def test_next_demo_bp_upload(Blueprint=Blueprint):
 @pytest.mark.slow
 def test_next_demo_bp_launch(Blueprint=Blueprint):
 
-    client = get_api_client()
-    launch_blueprint_simple(client, str(Blueprint), patch_editables=False)
+    launch_blueprint_simple(str(Blueprint), patch_editables=False)
 
 
 def test_session_close():

@@ -26,19 +26,19 @@ LOG = get_logging_handle(__name__)
 @click.option(
     "--quiet", "-q", is_flag=True, default=False, help="Show only project names"
 )
-@click.pass_obj
-def _get_projects(obj, name, filter_by, limit, offset, quiet):
+def _get_projects(name, filter_by, limit, offset, quiet):
     """Get projects, optionally filtered by a string"""
-    get_projects(obj, name, filter_by, limit, offset, quiet)
+
+    get_projects(name, filter_by, limit, offset, quiet)
 
 
-def create_project_from_file(obj, file_location, project_name):
+def create_project_from_file(file_location, project_name):
 
     project_payload = yaml.safe_load(open(file_location, "r").read())
     if project_name:
         project_payload["project_detail"]["name"] = project_name
 
-    return create_project(obj, project_payload)
+    return create_project(project_payload)
 
 
 @create.command("project")
@@ -53,12 +53,11 @@ def create_project_from_file(obj, file_location, project_name):
 @click.option(
     "--name", "-n", "project_name", type=str, default="", help="Project name(optional)"
 )
-@click.pass_obj
-def _create_project(obj, project_file, project_name):
+def _create_project(project_file, project_name):
     """Creates a project"""
 
     if project_file.endswith(".json") or project_file.endswith(".yaml"):
-        res, err = create_project_from_file(obj, project_file, project_name)
+        res, err = create_project_from_file(project_file, project_name)
     else:
         LOG.error("Unknown file format")
         return
@@ -74,20 +73,18 @@ def _create_project(obj, project_file, project_name):
 
 @delete.command("project")
 @click.argument("project_names", nargs=-1)
-@click.pass_obj
-def _delete_project(obj, project_names):
+def _delete_project(project_names):
     """Deletes a project"""
 
-    delete_project(obj, project_names)
+    delete_project(project_names)
 
 
 @describe.command("project")
 @click.argument("project_name")
-@click.pass_obj
-def _describe_project(obj, project_name):
+def _describe_project(project_name):
     """Describe a project"""
 
-    describe_project(obj, project_name)
+    describe_project(project_name)
 
 
 @update.command("project")
@@ -100,12 +97,12 @@ def _describe_project(obj, project_name):
     help="Path of Project file to upload",
     required=True,
 )
-@click.pass_obj
-def _update_project(obj, project_name, project_file):
+def _update_project(project_name, project_file):
+    """Updates a project"""
 
     if project_file.endswith(".json") or project_file.endswith(".yaml"):
         payload = yaml.safe_load(open(project_file, "r").read())
-        res, err = update_project(obj, project_name, payload)
+        res, err = update_project(project_name, payload)
     else:
         LOG.error("Unknown file format")
         return

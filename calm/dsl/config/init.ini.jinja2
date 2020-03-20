@@ -1,0 +1,13 @@
+{% macro InitTemplate(config_file, db_file, local_dir) -%}
+
+[CONFIG]
+location = {{config_file}}
+
+[DB]
+location = {{db_file}}
+
+[LOCAL_DIR]
+location = {{local_dir}}
+{%- endmacro %}
+
+{{InitTemplate(config_file, db_file, local_dir)}}

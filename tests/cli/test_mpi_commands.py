@@ -17,6 +17,7 @@ from calm.dsl.cli.constants import APPLICATION, MARKETPLACE_BLUEPRINT
 from calm.dsl.tools import get_logging_handle
 
 LOG = get_logging_handle(__name__)
+APP_ICON_IMAGE_PATH = "tests/cli/images/test_app_icon.jpg"
 DSL_BP_FILEPATH = "tests/existing_vm_example/test_existing_vm_bp.py"
 NON_BUSY_APP_STATES = [
     APPLICATION.STATES.STOPPED,
@@ -990,6 +991,67 @@ class TestMPICommands:
         if result.exit_code:
             LOG.error(result.output)
             pytest.fail("Deletion of marketplace blueprint in ACCEPTED state failed")
+
+    def test_publish_bp_with_icon(self):
+        self._create_bp()
+        self.created_bp_list.append(self.created_dsl_bp_name)
+
+        self.marketplace_bp_name = "Test_Marketplace_Bp_{}".format(
+            str(uuid.uuid4())[-10:]
+        )
+        self.mpi_version = "1.0.0"
+        self.icon_name = "test_icon{}".format(str(uuid.uuid4())[:10])
+
+        LOG.info("Publishing the blueprint to marketplace manager")
+        command = [
+            "publish",
+            "bp",
+            self.created_dsl_bp_name,
+            "--version",
+            self.mpi_version,
+            "--name",
+            self.marketplace_bp_name,
+            "-f",
+            APP_ICON_IMAGE_PATH,
+            "-i",
+            self.icon_name,
+        ]
+        runner = CliRunner()
+
+        result = runner.invoke(cli, command)
+        if result.exit_code:
+            LOG.error(result.output)
+            pytest.fail("Publishing of blueprint as new marketplace item failed")
+        LOG.info("Success")
+
+        client = get_api_client()
+        app_icon_name_uuid_map = client.app_icon.get_name_uuid_map()
+        app_icon_uuid = app_icon_name_uuid_map.get(self.icon_name)
+
+        bp_data = get_mpi_by_name_n_version(
+            name=self.marketplace_bp_name, version=self.mpi_version
+        )
+        icon_reference = bp_data["status"]["resources"]["icon_reference_list"][0][
+            "icon_reference"
+        ]
+        assert icon_reference["uuid"] == app_icon_uuid, "App icon not used for the bp"
+
+        LOG.info(
+            "Deleting the marketplace blueprint {}".format(self.marketplace_bp_name)
+        )
+        result = runner.invoke(
+            cli,
+            [
+                "delete",
+                "marketplace_bp",
+                self.marketplace_bp_name,
+                "--version",
+                self.mpi_version,
+            ],
+        )
+        if result.exit_code:
+            LOG.error(result.output)
+            pytest.fail("Deleting of marketplace blueprint failed")
 
     def _wait_for_non_busy_state(self, app_name):
 

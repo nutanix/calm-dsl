@@ -14,8 +14,10 @@ client = get_connection(pc_ip, pc_port,
 import traceback
 import json
 import urllib3
+import sys
 
 from requests import Session as NonRetrySession
+from requests_toolbelt import MultipartEncoder
 from requests.adapters import HTTPAdapter
 from calm.dsl.tools import get_logging_handle
 
@@ -171,6 +173,8 @@ class Connection:
         request_json=None,
         request_params=None,
         verify=True,
+        headers=None,
+        files=None,
     ):
         """Private method for making http request to calm
 
@@ -200,16 +204,28 @@ class Connection:
             url = build_url(self.host, self.port, endpoint=endpoint, scheme=self.scheme)
             LOG.debug("URL is: {}".format(url))
             base_headers = self.session.headers
+            if headers:
+                base_headers.update(headers)
 
             if method == REQUEST.METHOD.POST:
-                res = self.session.post(
-                    url,
-                    params=request_params,
-                    data=json.dumps(request_json),
-                    verify=verify,
-                    headers=base_headers,
-                    cookies=cookies,
-                )
+                if files:
+                    request_json.update(files)
+                    m = MultipartEncoder(fields=request_json)
+                    res = self.session.post(
+                        url,
+                        data=m,
+                        verify=verify,
+                        headers={"Content-Type": m.content_type},
+                    )
+                else:
+                    res = self.session.post(
+                        url,
+                        params=request_params,
+                        data=json.dumps(request_json),
+                        verify=verify,
+                        headers=base_headers,
+                        cookies=cookies,
+                    )
             elif method == REQUEST.METHOD.PUT:
                 res = self.session.put(
                     url,
@@ -241,11 +257,12 @@ class Connection:
                 if not res.ok:
                     LOG.debug("Server Response: {}".format(res.json()))
         except Exception as ex:
-            LOG.error("Got traceback\n{}".format(traceback.format_exc()))
+            LOG.debug("Got traceback\n{}".format(traceback.format_exc()))
             err_msg = res.text if hasattr(res, "text") else "{}".format(ex)
             status_code = res.status_code if hasattr(res, "status_code") else 500
             err = {"error": err_msg, "code": status_code}
             LOG.error("Error Response: {}".format(err))
+            sys.exit(-1)
         return res, err
 
 

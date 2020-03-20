@@ -1,6 +1,7 @@
 import time
 import json
 import importlib.util
+import sys
 from pprint import pprint
 
 from ruamel import yaml
@@ -26,7 +27,7 @@ from calm.dsl.tools import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
+def get_blueprint_list(name, filter_by, limit, offset, quiet, all_items):
     """Get the blueprints, optionally filtered by a string"""
 
     client = get_api_client()
@@ -112,7 +113,9 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
     click.echo(table)
 
 
-def describe_bp(obj, blueprint_name, out):
+def describe_bp(blueprint_name, out):
+    """Displays blueprint data"""
+
     client = get_api_client()
     bp = get_blueprint(client, blueprint_name, all=True)
 
@@ -365,18 +368,24 @@ def get_field_values(entity_dict, context, path=None):
 
 
 def launch_blueprint_simple(
-    client,
     blueprint_name=None,
     app_name=None,
     blueprint=None,
     profile_name=None,
     patch_editables=True,
 ):
+    client = get_api_client()
     if not blueprint:
         blueprint = get_blueprint(client, blueprint_name)
 
     blueprint_uuid = blueprint.get("metadata", {}).get("uuid", "")
     blueprint_name = blueprint_name or blueprint.get("metadata", {}).get("name", "")
+
+    bp_status = blueprint["status"]["state"]
+    if bp_status != "ACTIVE":
+        LOG.error("Blueprint is in {} state. Unable to launch it".format(bp_status))
+        sys.exit(-1)
+
     LOG.info("Fetching runtime editables in the blueprint")
     profiles = get_blueprint_runtime_editables(client, blueprint)
     profile = None
@@ -468,7 +477,7 @@ def poll_launch_status(client, blueprint_uuid, launch_req_id):
         time.sleep(10)
 
 
-def delete_blueprint(obj, blueprint_names):
+def delete_blueprint(blueprint_names):
 
     client = get_api_client()
 
