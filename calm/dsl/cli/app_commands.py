@@ -40,9 +40,17 @@ def _get_apps(name, filter_by, limit, offset, quiet, all_items):
 
 @describe.command("app")
 @click.argument("app_name")
-def _describe_app(app_name):
+@click.option(
+    "--out",
+    "-o",
+    "out",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="output format [json|yaml].",
+)
+def _describe_app(app_name, out):
     """Describe an app"""
-    describe_app(app_name)
+    describe_app(app_name, out)
 
 
 @run.command("action")

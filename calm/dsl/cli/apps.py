@@ -133,9 +133,13 @@ def _get_app(client, app_name, all=False):
     return app
 
 
-def describe_app(app_name):
+def describe_app(app_name, out):
     client = get_api_client()
     app = _get_app(client, app_name, all=True)
+
+    if out == "json":
+        click.echo(json.dumps(app, indent=4, separators=(",", ": ")))
+        return
 
     click.echo("\n----Application Summary----\n")
     app_name = app["metadata"]["name"]
