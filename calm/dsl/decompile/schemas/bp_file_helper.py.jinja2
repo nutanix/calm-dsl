@@ -23,20 +23,11 @@ from calm.dsl.builtins import read_ahv_spec, read_vmw_spec
 {%- for cred in obj.credentials %}
 {{cred}}
 {%- endfor %}
-{% for service in obj.services %}
-{{service}}
+{% for vm_image in obj.vm_images %}
+{{vm_image}}
 {% endfor %}
-{% for package in obj.packages %}
-{{package}}
-{% endfor %}
-{% for substrate in obj.substrates %}
-{{substrate}}
-{% endfor %}
-{% for deployment in obj.deployments %}
-{{deployment}}
-{% endfor %}
-{% for profile in obj.profiles %}
-{{profile}}
+{% for entity in obj.dependent_entities %}
+{{entity}}
 {% endfor %}
 {{obj.blueprint}}
 

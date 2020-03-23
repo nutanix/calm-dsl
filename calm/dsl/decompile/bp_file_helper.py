@@ -30,7 +30,7 @@ def render_bp_file_template(cls, local_dir=None, spec_dir=None):
         cred_file_map[file_name] = cred_val
         cred.secret["value"] = "read_local_file('{}')".format(file_name)
         if cred.__name__ == default_cred.__name__:
-            cred.default=True
+            cred.default = True
         credential_list.append(
             render_credential_template(cred, cred_var_name=file_name)
         )
@@ -41,44 +41,131 @@ def render_bp_file_template(cls, local_dir=None, spec_dir=None):
             with open(file_loc, "w+") as fd:
                 fd.write(cred_val)
 
-    service_list = []
-    for service in cls.services:
-        service_list.append(render_service_template(service))
+    # Map to store the [Name: Rendered template for entity]
+    entity_name_text_map = {}
 
-    package_list = []
+    # Edges map to store the edges (dependencies) between entities
+    entity_edges = {}
+
+    for service in cls.services:
+        entity_name_text_map[service.__name__] = render_service_template(service)
+
+        # Edge from services to other entities
+        for dep in service.dependencies:
+            add_edges(entity_edges, dep.__name__, service.__name__)
+
+    downloadable_img_list = []
     for package in cls.packages:
         if getattr(package, "__kind__") == "app_package":
-            package_list.append(render_package_template(package))
-        
+            entity_name_text_map[package.__name__] = render_package_template(package)
+
+            # Edge from package to service
+            for dep in package.services:
+                add_edges(entity_edges, dep.__name__, package.__name__)
+
         else:
-            package_list.append(render_vm_disk_package_template(package))
+            downloadable_img_list.append(render_vm_disk_package_template(package))
+            # Printing all the downloadable images at the top, so ignore its edges
 
-    substrate_list = []
     for substrate in cls.substrates:
-        substrate_list.append(render_substrate_template(substrate))
+        entity_name_text_map[substrate.__name__] = render_substrate_template(substrate)
 
-    profile_list = []
     deployments = []
     for profile in cls.profiles:
-        profile_list.append(render_profile_template(profile))
-        deployments.extend(profile.deployments)
+        entity_name_text_map[profile.__name__] = render_profile_template(profile)
 
-    deployment_list = []
+        # Deployments
+        deployments.extend(profile.deployments)
+        for dep in deployments:
+            add_edges(entity_edges, dep.__name__, profile.__name__)
+
     for deployment in deployments:
-        deployment_list.append(render_deployment_template(deployment))
+        entity_name_text_map[deployment.__name__] = render_deployment_template(
+            deployment
+        )
+
+        # Edges from deployment to package
+        for dep in deployment.packages:
+            add_edges(entity_edges, dep.__name__, deployment.__name__)
+
+        # Edges from deployment to substrate
+        add_edges(entity_edges, deployment.substrate.__name__, deployment.__name__)
+
+        # Other dependencies
+        for dep in deployment.dependencies:
+            add_edges(entity_edges, dep.__name__, deployment.__name__)
+
+    dependepent_entities = []
+    dependepent_entities = get_ordered_entities(entity_name_text_map, entity_edges)
 
     blueprint = render_blueprint_template(cls)
     user_attrs.update(
         {
             "credentials": credential_list,
-            "services": service_list,
-            "packages": package_list,
-            "substrates": substrate_list,
-            "profiles": profile_list,
-            "deployments": deployment_list,
+            "vm_images": downloadable_img_list,
+            "dependent_entities": dependepent_entities,
             "blueprint": blueprint,
         }
     )
 
     text = render_template("bp_file_helper.py.jinja2", obj=user_attrs)
     return text.strip()
+
+
+def get_ordered_entities(entity_name_text_map, entity_edges):
+    """Returns the list in which all rendered templates are ordered according to depedencies"""
+
+    res_entity_list = []
+    entity_indegree_count = {}
+
+    # Initializing indegree to each entity by 0
+    for entity_name in list(entity_name_text_map.keys()):
+        entity_indegree_count[entity_name] = 0
+
+    # Iterate over edges and update indegree count for each entity
+    for entity_name, to_entity_list in entity_edges.items():
+        for entity in to_entity_list:
+            entity_indegree_count[entity] += 1
+
+    # Queue to store entities having indegree 0
+    queue = []
+
+    # Push entities having indegree count 0
+    for entity_name, indegree in entity_indegree_count.items():
+        if indegree == 0:
+            queue.append(entity_name)
+
+    # Topological sort
+    while queue:
+
+        ql = len(queue)
+
+        # Inserting entities in result
+        for entity in queue:
+            res_entity_list.append(entity_name_text_map[entity])
+
+        while ql:
+            # Popping the top element
+
+            cur_entity = queue.pop(0)
+
+            # Iterating its edges, and decrease the indegree of dependent entity by 1
+            for to_entity in entity_edges.get(cur_entity, []):
+                entity_indegree_count[to_entity] -= 1
+
+                # If indegree is zero push to queue
+                if entity_indegree_count[to_entity] == 0:
+                    queue.append(to_entity)
+
+            ql -= 1
+
+    return res_entity_list
+
+
+def add_edges(edges, from_entity, to_entity):
+    """Add edges in map edges"""
+
+    if not edges.get(from_entity):
+        edges[from_entity] = []
+
+    edges[from_entity].append(to_entity)

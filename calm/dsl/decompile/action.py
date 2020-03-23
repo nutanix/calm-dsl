@@ -83,7 +83,7 @@ def get_task_order(task_list):
         task_indegree_count_map[to_task.__name__] += 1
         task_edges_map[from_task.__name__].append(to_task.__name__)
 
-    # Queue to store elements having indegree queue
+    # Queue to store elements having indegree 0
     queue = []
 
     # Push elements having indegree = 0
