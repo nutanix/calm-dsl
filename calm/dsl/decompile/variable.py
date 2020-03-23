@@ -1,6 +1,10 @@
+import uuid
+import os
+
 from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.task import render_task_template
 from calm.dsl.builtins import VariableType, TaskType
+from calm.dsl.decompile.file_handler import get_local_dir
 
 
 def render_variable_template(cls):
@@ -36,6 +40,7 @@ def render_variable_template(cls):
         is_secret = True if user_attrs["type"] == "SECRET" else False
 
         if is_secret:
+            user_attrs["value"] = get_secret_var_val()
             if var_val_type == "STRING":
                 schema_file = "var_simple_secret_string.py.jinja2"
             elif var_val_type == "INT":
@@ -47,7 +52,6 @@ def render_variable_template(cls):
             elif var_val_type == "DATE_TIME":
                 schema_file = "var_simple_secret_datetime.py.jinja2"
             elif var_val_type == "MULTILINE_STRING":
-                user_attrs["value"] = repr(user_attrs["value"])
                 schema_file = "var_simple_secret_multiline.py.jinja2"
 
         else:
@@ -143,3 +147,15 @@ def render_variable_template(cls):
 
     text = render_template(schema_file=schema_file, obj=user_attrs)
     return text.strip()
+
+
+def get_secret_var_val():
+
+    file_name = "secret_var_{}". format(str(uuid.uuid4())[:10])
+    file_location = os.path.join(get_local_dir(), file_name)
+
+    with open(file_location, "w+") as fd:
+        fd.write("")
+    
+    # Replace read_local_file by a constant
+    return 'read_local_file("{}")'. format(file_name)
