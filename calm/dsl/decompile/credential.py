@@ -1,13 +1,15 @@
 import uuid
+import os
 
 from calm.dsl.decompile.render import render_template
 from calm.dsl.builtins import CredentialType
+from calm.dsl.decompile.file_handler import get_local_dir
 
 
 CRED_VAR_NAME_MAP = {}
 
 
-def render_credential_template(cls, cred_var_name=None):
+def render_credential_template(cls):
 
     global CRED_VAR_NAME_MAP
     if not isinstance(cls, CredentialType):
@@ -16,10 +18,19 @@ def render_credential_template(cls, cred_var_name=None):
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__
     user_attrs["description"] = cls.__doc__
-    user_attrs["var_name"] = cred_var_name or "CRED_{}".format(str(uuid.uuid4())[:8])
 
+    file_name = "BP_cred_{}".format(len(CRED_VAR_NAME_MAP))
+    file_loc = os.path.join(get_local_dir(), file_name)
+
+    # Storing cred value in the file
+    cred_val = cls.secret.get("value", "")
+    with open(file_loc, "w+") as fd:
+        fd.write(cred_val)
+
+    user_attrs["var_name"] = file_name
+    user_attrs["value"] = "read_local_file('{}')".format(file_name)
+    # update the map
     CRED_VAR_NAME_MAP[user_attrs["name"]] = user_attrs["var_name"]
-    user_attrs["value"] = user_attrs["secret"].get("value", "")
 
     text = render_template("credential.py.jinja2", obj=user_attrs)
     return text.strip()

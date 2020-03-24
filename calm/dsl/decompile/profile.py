@@ -4,10 +4,13 @@ from calm.dsl.decompile.action import render_action_template
 from calm.dsl.decompile.variable import render_variable_template
 
 
-def render_profile_template(cls):
+def render_profile_template(cls, entity_context=""):
 
     if not isinstance(cls, ProfileType):
         raise TypeError("{} is not of type {}".format(cls, ProfileType))
+
+    # Updating entity context
+    entity_context = entity_context + "_profile_" + cls.__name__
 
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__
@@ -15,7 +18,7 @@ def render_profile_template(cls):
 
     action_list = []
     for action in user_attrs.get("actions", []):
-        action_list.append(render_action_template(action))
+        action_list.append(render_action_template(action, entity_context))
 
     deployment_list = []
     for deployment in user_attrs.get("deployments", []):
@@ -23,7 +26,7 @@ def render_profile_template(cls):
 
     variable_list = []
     for entity in user_attrs.get("variables", []):
-        variable_list.append(render_variable_template(entity))
+        variable_list.append(render_variable_template(entity, entity_context))
 
     user_attrs["variables"] = variable_list
     user_attrs["deployments"] = ", ".join(deployment_list)

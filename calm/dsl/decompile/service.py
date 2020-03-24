@@ -5,10 +5,13 @@ from calm.dsl.decompile.variable import render_variable_template
 from calm.dsl.decompile.action import render_action_template
 
 
-def render_service_template(cls):
+def render_service_template(cls, entity_context=""):
 
     if not isinstance(cls, ServiceType):
         raise TypeError("{} is not of type {}".format(cls, ServiceType))
+    
+    # Updating entity context
+    entity_context = entity_context + "_service_" + cls.__name__
 
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__
@@ -20,14 +23,14 @@ def render_service_template(cls):
 
     variable_list = []
     for entity in user_attrs.get("variables", []):
-        variable_list.append(render_variable_template(entity))
+        variable_list.append(render_variable_template(entity, entity_context))
 
     action_list = []
     system_actions = {v: k for k, v in ServiceType.ALLOWED_SYSTEM_ACTIONS.items()}
     for entity in user_attrs.get("actions", []):
         if entity.__name__ in list(system_actions.keys()):
             entity.__name__ = system_actions[entity.__name__]
-        action_list.append(render_action_template(entity))
+        action_list.append(render_action_template(entity, entity_context))
 
     user_attrs["dependencies"] = ",".join(depends_on_list)
     user_attrs["variables"] = variable_list

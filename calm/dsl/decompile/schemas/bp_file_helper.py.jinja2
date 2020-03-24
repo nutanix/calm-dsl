@@ -20,6 +20,10 @@ from calm.dsl.builtins import read_provider_spec, read_local_file, read_file, vm
 from calm.dsl.builtins import read_ahv_spec, read_vmw_spec
 
 
+{%- for var_file in obj.secret_var_files %}
+{{var_file}} = read_local_file('{{var_file}}')
+{%- endfor %}
+
 {%- for cred in obj.credentials %}
 {{cred}}
 {%- endfor %}

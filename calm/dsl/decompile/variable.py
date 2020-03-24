@@ -7,10 +7,16 @@ from calm.dsl.builtins import VariableType, TaskType
 from calm.dsl.decompile.file_handler import get_local_dir
 
 
-def render_variable_template(cls):
+SECRET_VAR_FILES = []
+
+
+def render_variable_template(cls, entity_context):
 
     if not isinstance(cls, VariableType):
         raise TypeError("{} is not of type {}".format(cls, VariableType))
+    
+    # Updating the context of variables
+    entity_context = entity_context + "_variable_" + cls.__name__
 
     user_attrs = cls.get_user_attrs()
     var_val_type = getattr(cls, "value_type", "STRING")
@@ -40,7 +46,7 @@ def render_variable_template(cls):
         is_secret = True if user_attrs["type"] == "SECRET" else False
 
         if is_secret:
-            user_attrs["value"] = get_secret_var_val()
+            user_attrs["value"] = get_secret_var_val(entity_context)
             if var_val_type == "STRING":
                 schema_file = "var_simple_secret_string.py.jinja2"
             elif var_val_type == "INT":
@@ -149,13 +155,21 @@ def render_variable_template(cls):
     return text.strip()
 
 
-def get_secret_var_val():
+def get_secret_var_val(entity_context):
 
-    file_name = "secret_var_{}". format(str(uuid.uuid4())[:10])
-    file_location = os.path.join(get_local_dir(), file_name)
+    global SECRET_VAR_FILES
+
+    SECRET_VAR_FILES.append(entity_context)
+    file_location = os.path.join(get_local_dir(), entity_context)
 
     with open(file_location, "w+") as fd:
         fd.write("")
     
     # Replace read_local_file by a constant
-    return 'read_local_file("{}")'. format(file_name)
+    return entity_context
+
+
+def get_secret_variable_files():
+    """return the global local files used for secret variables"""
+
+    return SECRET_VAR_FILES

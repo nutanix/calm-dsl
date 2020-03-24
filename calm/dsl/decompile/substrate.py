@@ -8,10 +8,13 @@ from calm.dsl.builtins import SubstrateType, get_valid_identifier
 from calm.dsl.providers import get_provider
 
 
-def render_substrate_template(cls):
+def render_substrate_template(cls, entity_context=""):
 
     if not isinstance(cls, SubstrateType):
         raise TypeError("{} is not of type {}".format(cls, SubstrateType))
+
+    # Update entity context
+    entity_context = entity_context + "_substrate_" + cls.__name__
 
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__
@@ -48,7 +51,7 @@ def render_substrate_template(cls):
     for action in user_attrs.get("actions", []):
         if action.__name__ in list(system_actions.keys()):
             action.__name__ = system_actions[action.__name__]
-        action_list.append(render_action_template(action))
+        action_list.append(render_action_template(action, entity_context))
     
     user_attrs["actions"] = action_list
 

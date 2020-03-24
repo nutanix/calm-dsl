@@ -7,6 +7,7 @@ from calm.dsl.decompile.deployment import render_deployment_template
 from calm.dsl.decompile.profile import render_profile_template
 from calm.dsl.decompile.credential import render_credential_template
 from calm.dsl.decompile.blueprint import render_blueprint_template
+from calm.dsl.decompile.variable import get_secret_variable_files
 from calm.dsl.builtins import BlueprintType
 
 
@@ -22,24 +23,15 @@ def render_bp_file_template(cls, local_dir=None, spec_dir=None):
     # Find default cred
     default_cred = cls.default_cred
 
+    # Context for namespace (initialised by blueprint name)
+    entity_context = "BP_{}".format(cls.__name__)
+
     credential_list = []
     cred_file_map = {}
     for index, cred in enumerate(cls.credentials):
-        file_name = "Bp_cred_{}".format(index)
-        cred_val = cred.secret.get("value", "")
-        cred_file_map[file_name] = cred_val
-        cred.secret["value"] = "read_local_file('{}')".format(file_name)
         if cred.__name__ == default_cred.__name__:
             cred.default = True
-        credential_list.append(
-            render_credential_template(cred, cred_var_name=file_name)
-        )
-
-    if local_dir:
-        for cred_file, cred_val in cred_file_map.items():
-            file_loc = "{}/{}".format(local_dir, cred_file)
-            with open(file_loc, "w+") as fd:
-                fd.write(cred_val)
+        credential_list.append(render_credential_template(cred))
 
     # Map to store the [Name: Rendered template for entity]
     entity_name_text_map = {}
@@ -48,7 +40,9 @@ def render_bp_file_template(cls, local_dir=None, spec_dir=None):
     entity_edges = {}
 
     for service in cls.services:
-        entity_name_text_map[service.__name__] = render_service_template(service)
+        entity_name_text_map[service.__name__] = render_service_template(
+            service, entity_context
+        )
 
         # Edge from services to other entities
         for dep in service.dependencies:
@@ -57,7 +51,9 @@ def render_bp_file_template(cls, local_dir=None, spec_dir=None):
     downloadable_img_list = []
     for package in cls.packages:
         if getattr(package, "__kind__") == "app_package":
-            entity_name_text_map[package.__name__] = render_package_template(package)
+            entity_name_text_map[package.__name__] = render_package_template(
+                package, entity_context
+            )
 
             # Edge from package to service
             for dep in package.services:
@@ -68,11 +64,15 @@ def render_bp_file_template(cls, local_dir=None, spec_dir=None):
             # Printing all the downloadable images at the top, so ignore its edges
 
     for substrate in cls.substrates:
-        entity_name_text_map[substrate.__name__] = render_substrate_template(substrate)
+        entity_name_text_map[substrate.__name__] = render_substrate_template(
+            substrate, entity_context
+        )
 
     deployments = []
     for profile in cls.profiles:
-        entity_name_text_map[profile.__name__] = render_profile_template(profile)
+        entity_name_text_map[profile.__name__] = render_profile_template(
+            profile, entity_context
+        )
 
         # Deployments
         deployments.extend(profile.deployments)
@@ -81,7 +81,7 @@ def render_bp_file_template(cls, local_dir=None, spec_dir=None):
 
     for deployment in deployments:
         entity_name_text_map[deployment.__name__] = render_deployment_template(
-            deployment
+            deployment, entity_context
         )
 
         # Edges from deployment to package
@@ -95,12 +95,16 @@ def render_bp_file_template(cls, local_dir=None, spec_dir=None):
         for dep in deployment.dependencies:
             add_edges(entity_edges, dep.__name__, deployment.__name__)
 
+    # Getting the local files used for secrets
+    var_files = get_secret_variable_files()
+
     dependepent_entities = []
     dependepent_entities = get_ordered_entities(entity_name_text_map, entity_edges)
 
     blueprint = render_blueprint_template(cls)
     user_attrs.update(
         {
+            "secret_var_files": var_files,
             "credentials": credential_list,
             "vm_images": downloadable_img_list,
             "dependent_entities": dependepent_entities,

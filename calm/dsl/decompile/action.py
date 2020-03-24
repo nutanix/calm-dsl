@@ -8,11 +8,15 @@ from calm.dsl.builtins import action, ActionType, RefType
 RUNBOOK_ACTION_MAP = {}
 
 
-def render_action_template(cls):
+def render_action_template(cls, entity_context=""):
 
     global RUNBOOK_REF_MAP
     if not isinstance(cls, ActionType):
         raise TypeError("{} is not of type {}".format(cls, action))
+
+    # Update entity context
+    # TODO for now, not adding runbook to context as current mapping -is 1:1
+    entity_context = entity_context + "_action_" + cls.__name__
 
     runbook = cls.runbook
     RUNBOOK_ACTION_MAP[runbook.__name__] = cls.__name__
@@ -27,7 +31,7 @@ def render_action_template(cls):
 
     variables = []
     for variable in runbook.variables:
-        variables.append(render_variable_template(variable))
+        variables.append(render_variable_template(variable, entity_context))
 
     # No need to print action having no tasks/variables
     if not (variables or tasks):
