@@ -236,7 +236,7 @@ def compile_blueprint(bp_file, no_sync=False):
     return bp_payload
 
 
-def decompile_bp(name):
+def decompile_bp(name, with_secrets=False):
 
     client = get_api_client()
     blueprint = get_blueprint(client, name)
@@ -270,7 +270,7 @@ def decompile_bp(name):
 
     bp_cls = BlueprintType.decompile(blueprint)
     bp_cls.__name__ = blueprint_name
-    create_bp_dir(bp_cls)
+    create_bp_dir(bp_cls, with_secrets)
 
 
 def compile_blueprint_command(bp_file, out, no_sync=False):

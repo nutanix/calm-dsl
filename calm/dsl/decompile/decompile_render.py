@@ -12,13 +12,13 @@ def create_bp_file(dir_name, bp_data):
         fd.write(bp_data)
 
 
-def create_bp_dir(bp_cls=None):
+def create_bp_dir(bp_cls=None, with_secrets=False):
 
     bp_name = bp_cls.__name__ or "SampleBlueprint"
     dir_name = os.getcwd()
 
-    bp_dir, local_dir, spec_dir, scripts_dir = init_bp_dir(dir_name, bp_name)
-    bp_data = render_bp_file_template(bp_cls, local_dir, spec_dir)
+    bp_dir, _, _, _ = init_bp_dir(dir_name, bp_name)
+    bp_data = render_bp_file_template(bp_cls, with_secrets)
     bp_data = format_str(bp_data, mode=FileMode())
 
     create_bp_file(bp_dir, bp_data)

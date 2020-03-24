@@ -43,3 +43,10 @@ def get_cred_var_name(cred_name):
         raise ValueError("{} not found".format(cred_name))
 
     return CRED_VAR_NAME_MAP[cred_name]
+
+
+def get_cred_files():
+    """Returns the cred files created for credential"""
+
+    global CRED_VAR_NAME_MAP
+    return list(CRED_VAR_NAME_MAP.values())

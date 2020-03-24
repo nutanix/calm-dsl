@@ -1,17 +1,23 @@
+import click
+import os
+
 from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.service import render_service_template
 from calm.dsl.decompile.package import render_package_template
 from calm.dsl.decompile.vm_disk_package import render_vm_disk_package_template
+
 from calm.dsl.decompile.substrate import render_substrate_template
 from calm.dsl.decompile.deployment import render_deployment_template
 from calm.dsl.decompile.profile import render_profile_template
-from calm.dsl.decompile.credential import render_credential_template
+from calm.dsl.decompile.credential import render_credential_template, get_cred_files
+
 from calm.dsl.decompile.blueprint import render_blueprint_template
 from calm.dsl.decompile.variable import get_secret_variable_files
+from calm.dsl.decompile.file_handler import get_local_dir
 from calm.dsl.builtins import BlueprintType
 
 
-def render_bp_file_template(cls, local_dir=None, spec_dir=None):
+def render_bp_file_template(cls, with_secrets=False):
 
     if not isinstance(cls, BlueprintType):
         raise TypeError("{} is not of type {}".format(cls, BlueprintType))
@@ -97,6 +103,18 @@ def render_bp_file_template(cls, local_dir=None, spec_dir=None):
 
     # Getting the local files used for secrets
     var_files = get_secret_variable_files()
+    secret_files = get_cred_files()
+    secret_files.extend(var_files)
+
+    if with_secrets:
+        # Fill the secret if flag is set
+        if secret_files:
+            click.secho("Enter the value to be used in secret files")
+        for file_name in secret_files:
+            secret_val = click.prompt("\nValue for {}".format(file_name), default="", show_default=False)
+            file_loc = os.path.join(get_local_dir(), file_name)
+            with open(file_loc, "w+") as fd:
+                fd.write(secret_val)
 
     dependepent_entities = []
     dependepent_entities = get_ordered_entities(entity_name_text_map, entity_edges)

@@ -88,9 +88,16 @@ def _compile_blueprint_command(bp_file, out, no_sync):
 
 @decompile.command("bp")
 @click.argument("name")
-def _decompile_bp(name):
+@click.option(
+    "--with_secrets",
+    "-w",
+    is_flag=True,
+    default=False,
+    help="Interactive Mode to provide the value for secrets",
+)
+def _decompile_bp(name, with_secrets):
 
-    decompile_bp(name)
+    decompile_bp(name, with_secrets)
 
 
 def create_blueprint(client, bp_payload, name=None, description=None, categories=None):
