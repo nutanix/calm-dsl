@@ -398,6 +398,8 @@ def create_spec(client):
     for entity in res["entities"]:
         vmware_accounts.append(entity["metadata"]["uuid"])
 
+    account_id = "b817eafd-274f-ed67-163e-25254d92b406"
+    '''
     account_id = ""
     for account in accounts:
         if account["uuid"] in vmware_accounts:
@@ -410,6 +412,7 @@ def create_spec(client):
         )
         click.echo("Please add one !!!")
         return
+    '''
 
     click.echo("\nChoose from given Operating System types:")
     os_types = list(vmw.OperatingSystem.keys())

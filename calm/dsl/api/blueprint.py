@@ -247,11 +247,24 @@ class BlueprintAPI(ResourceAPI):
                             "secret_reference": None,
                         }
 
+        account_id_map = {}
+        def strip_account_details(substrate_ind, substrate_data):
+
+            if substrate_data["type"] in ["AWS_VM", "AZURE_VM", "GCP_VM", "VMWARE_VM", "AHV_VM"]:
+                account_id_map[substrate_ind] = substrate_data["create_spec"]["resources"]["account_uuid"]
+        
+        def fill_account_details(substrate_ind, substrate_data):
+
+            if substrate_data["type"] in ["AWS_VM", "AZURE_VM", "GCP_VM", "VMWARE_VM", "AHV_VM"]:
+                substrate_data["create_spec"]["resources"]["account_uuid"] = account_id_map[substrate_ind]
+
         for obj_index, obj in enumerate(
-            bp_resources.get("substrate_definition_list", []) or []
+            bp_resources.get("substrate_definition_list", [])
         ):
             if (obj["type"] == "VMWARE_VM") and (obj["os_type"] == "Windows"):
                 strip_vmware_secrets(["substrate_definition_list", obj_index], obj)
+            
+            strip_account_details(obj_index, obj)
 
         upload_payload = self._make_blueprint_payload(bp_name, bp_desc, bp_resources)
 
@@ -308,6 +321,11 @@ class BlueprintAPI(ResourceAPI):
             config_categories.update(categories)
 
         bp["metadata"]["categories"] = config_categories
+
+        for obj_index, obj in enumerate(
+            bp["spec"]["resources"].get("substrate_definition_list", []) or []
+        ):
+            fill_account_details(obj_index, obj)
 
         # Update blueprint
         update_payload = bp

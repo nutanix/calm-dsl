@@ -69,13 +69,14 @@ def get_projects(name, filter_by, limit, offset, quiet):
 
         creation_time = arrow.get(metadata["creation_time"]).timestamp
         last_update_time = arrow.get(metadata["last_update_time"])
+        owner_ref = metadata.get("owner_reference", {})
 
         table.add_row(
             [
                 highlight_text(row["name"]),
                 highlight_text(row["description"]),
                 highlight_text(row["state"]),
-                highlight_text(metadata["owner_reference"]["name"]),
+                highlight_text(owner_ref.get("name", "")),
                 highlight_text(len(row["resources"]["user_reference_list"])),
                 highlight_text(time.ctime(creation_time)),
                 "{}".format(last_update_time.humanize()),
@@ -238,12 +239,12 @@ def describe_project(project_name):
     accounts = project["status"]["project_status"]["resources"][
         "account_reference_list"
     ]
-    account_name_uuid_map = client.account.get_name_uuid_map()
+    account_name_uuid_map = client.account.get_name_uuid_map({"length": 99})
     account_uuid_name_map = {
         v: k for k, v in account_name_uuid_map.items()
     }  # TODO check it
 
-    res, err = client.account.list()
+    res, err = client.account.list({"length": 99})
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 

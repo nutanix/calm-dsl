@@ -1,0 +1,52 @@
+name: vm-@@{calm_array_index}@@-@@{calm_time}@@
+storage_pod: ''
+drs_mode: false
+cluster: ''
+host: b47c5dd2-376c-5bc1-a902-c074f7af599d
+clone_is_template: false
+template: 9c9d9134-eca1-5121-8a4b-e006dab07ad0
+datastore: "/tmp/govcsim-DC10-LocalDS_1-017719752"
+type: PROVISION_VMWARE_VM
+resources:
+  nic_list:
+  - nic_type: e1000
+    net_name: key-vim.host.PortGroup-VM Network
+  template_nic_list:
+  - nic_type: e1000
+    is_deleted: true
+    net_name: key-vim.host.PortGroup-VM Network
+    key: 4000
+  template_controller_list:
+  - controller_type: ParaVirtualSCSIController
+    bus_sharing: noSharing
+    is_deleted: false
+    key: 202
+  num_vcpus_per_socket: 1
+  num_sockets: 1
+  controller_list: []
+  memory_size_mib: 32
+  power_state: poweron
+  guest_customization:
+    customization_type: GUEST_OS_LINUX
+  template_disk_list:
+  - disk_size_mb: -1
+    is_deleted: false
+    disk_mode: persistent
+    device_slot: 0
+    adapter_type: SCSI
+    iso_path: ''
+    location: ''
+    key: 203
+    controller_key: 202
+    disk_type: cdrom
+  - disk_size_mb: 1
+    is_deleted: false
+    disk_mode: persistent
+    device_slot: 0
+    adapter_type: SCSI
+    iso_path: ''
+    location: "/tmp/govcsim-DC10-LocalDS_0-630299341"
+    key: 204
+    controller_key: 202
+    disk_type: disk
+  account_uuid: b817eafd-274f-ed67-163e-25254d92b406
