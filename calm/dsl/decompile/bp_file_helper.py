@@ -29,9 +29,6 @@ def render_bp_file_template(cls, with_secrets=False):
     # Find default cred
     default_cred = cls.default_cred
 
-    # Context for namespace (initialised by blueprint name)
-    entity_context = "BP_{}".format(cls.__name__)
-
     credential_list = []
     cred_file_map = {}
     for index, cred in enumerate(cls.credentials):
@@ -47,7 +44,7 @@ def render_bp_file_template(cls, with_secrets=False):
 
     for service in cls.services:
         entity_name_text_map[service.__name__] = render_service_template(
-            service, entity_context
+            service
         )
 
         # Edge from services to other entities
@@ -58,7 +55,7 @@ def render_bp_file_template(cls, with_secrets=False):
     for package in cls.packages:
         if getattr(package, "__kind__") == "app_package":
             entity_name_text_map[package.__name__] = render_package_template(
-                package, entity_context
+                package
             )
 
             # Edge from package to service
@@ -71,13 +68,13 @@ def render_bp_file_template(cls, with_secrets=False):
 
     for substrate in cls.substrates:
         entity_name_text_map[substrate.__name__] = render_substrate_template(
-            substrate, entity_context
+            substrate
         )
 
     deployments = []
     for profile in cls.profiles:
         entity_name_text_map[profile.__name__] = render_profile_template(
-            profile, entity_context
+            profile
         )
 
         # Deployments
@@ -87,7 +84,7 @@ def render_bp_file_template(cls, with_secrets=False):
 
     for deployment in deployments:
         entity_name_text_map[deployment.__name__] = render_deployment_template(
-            deployment, entity_context
+            deployment
         )
 
         # Edges from deployment to package
@@ -102,9 +99,8 @@ def render_bp_file_template(cls, with_secrets=False):
             add_edges(entity_edges, dep.__name__, deployment.__name__)
 
     # Getting the local files used for secrets
-    var_files = get_secret_variable_files()
-    secret_files = get_cred_files()
-    secret_files.extend(var_files)
+    secret_files = get_secret_variable_files()
+    secret_files.extend(get_cred_files())
 
     if with_secrets:
         # Fill the secret if flag is set
@@ -122,7 +118,7 @@ def render_bp_file_template(cls, with_secrets=False):
     blueprint = render_blueprint_template(cls)
     user_attrs.update(
         {
-            "secret_var_files": var_files,
+            "secret_files": secret_files,
             "credentials": credential_list,
             "vm_images": downloadable_img_list,
             "dependent_entities": dependepent_entities,

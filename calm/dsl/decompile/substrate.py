@@ -8,13 +8,13 @@ from calm.dsl.builtins import SubstrateType, get_valid_identifier
 from calm.dsl.providers import get_provider
 
 
-def render_substrate_template(cls, entity_context=""):
+def render_substrate_template(cls):
 
     if not isinstance(cls, SubstrateType):
         raise TypeError("{} is not of type {}".format(cls, SubstrateType))
 
-    # Update entity context
-    entity_context = entity_context + "_substrate_" + cls.__name__
+    # Entity context
+    entity_context = "Substrate_" + cls.__name__
 
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__

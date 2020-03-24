@@ -3,13 +3,13 @@ from calm.dsl.builtins import DeploymentType
 from calm.dsl.decompile.ref import render_ref_template
 
 
-def render_deployment_template(cls, entity_context=""):
+def render_deployment_template(cls):
 
     if not isinstance(cls, DeploymentType):
         raise TypeError("{} is not of type {}".format(cls, DeploymentType))
 
-    # Updating entity context
-    entity_context = entity_context + "_deployment_" + cls.__name__
+    # Entity context
+    entity_context = "Deployment_" + cls.__name__
 
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__

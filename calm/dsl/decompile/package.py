@@ -5,13 +5,13 @@ from calm.dsl.decompile.variable import render_variable_template
 from calm.dsl.decompile.action import render_action_template
 
 
-def render_package_template(cls, entity_context=""):
+def render_package_template(cls):
 
     if not isinstance(cls, PackageType):
         raise TypeError("{} is not of type {}".format(cls, PackageType))
     
-    # Updating entity context
-    entity_context = entity_context + "_package_" + cls.__name__
+    # Entity context
+    entity_context = "Package_" + cls.__name__
 
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__

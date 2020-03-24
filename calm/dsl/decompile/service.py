@@ -5,13 +5,13 @@ from calm.dsl.decompile.variable import render_variable_template
 from calm.dsl.decompile.action import render_action_template
 
 
-def render_service_template(cls, entity_context=""):
+def render_service_template(cls):
 
     if not isinstance(cls, ServiceType):
         raise TypeError("{} is not of type {}".format(cls, ServiceType))
     
-    # Updating entity context
-    entity_context = entity_context + "_service_" + cls.__name__
+    # Entity context
+    entity_context = "Service_" + cls.__name__
 
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__

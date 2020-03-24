@@ -4,13 +4,13 @@ from calm.dsl.decompile.action import render_action_template
 from calm.dsl.decompile.variable import render_variable_template
 
 
-def render_profile_template(cls, entity_context=""):
+def render_profile_template(cls):
 
     if not isinstance(cls, ProfileType):
         raise TypeError("{} is not of type {}".format(cls, ProfileType))
 
-    # Updating entity context
-    entity_context = entity_context + "_profile_" + cls.__name__
+    # Entity context
+    entity_context = "Profile_" + cls.__name__
 
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__
