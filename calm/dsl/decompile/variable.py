@@ -14,7 +14,7 @@ def render_variable_template(cls, entity_context):
 
     if not isinstance(cls, VariableType):
         raise TypeError("{} is not of type {}".format(cls, VariableType))
-    
+
     # Updating the context of variables
     entity_context = entity_context + "_variable_" + cls.__name__
 
@@ -25,6 +25,14 @@ def render_variable_template(cls, entity_context):
 
     if not cls.options:
         var_type = "simple"
+
+    else:
+        options = cls.options.get_dict()
+        choices = options.get("choices", [])
+        option_type = options.get("type", "")
+
+        if (not choices) and (option_type == "PREDEFINED"):
+            var_type = "simple"
 
     if cls.regex:
         regex = cls.regex.get_dict()
@@ -74,7 +82,6 @@ def render_variable_template(cls, entity_context):
             elif var_val_type == "MULTILINE_STRING":
                 user_attrs["value"] = repr(user_attrs["value"])
                 schema_file = "var_simple_multiline.py.jinja2"
-          
 
     else:
         data_type = cls.data_type
@@ -114,7 +121,9 @@ def render_variable_template(cls, entity_context):
                     schema_file = "var_with_options_predefined_array_datetime.py.jinja2"
                 elif var_val_type == "MULTILINE_STRING":
                     user_attrs["value"] = repr(user_attrs["value"])
-                    schema_file = "var_with_options_predefined_array_multiline.py.jinja2"
+                    schema_file = (
+                        "var_with_options_predefined_array_multiline.py.jinja2"
+                    )
 
         else:
             options.pop("choices", None)
@@ -164,7 +173,7 @@ def get_secret_var_val(entity_context):
 
     with open(file_location, "w+") as fd:
         fd.write("")
-    
+
     # Replace read_local_file by a constant
     return entity_context
 
