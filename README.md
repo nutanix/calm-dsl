@@ -17,7 +17,8 @@
  - List apps: `calm get apps`.
  - Describe app: `calm describe app <app_name>`. It will print a summary of the application and the current application state.
  - Delete app: `calm delete app <app_name>`. Hint: You can delete multiple apps using: `calm get apps -q | xargs -I {} calm delete app {}`.
-
+- Decompile blueprint: `calm decompile bp <blueprint_name>`. This command will decompile blueprint on server to generate DSL python file along with some task and local files.
+  WIP: Support for POD Deployments, Simple Blueprint.
 ## Dev Setup
 
 MacOS:
