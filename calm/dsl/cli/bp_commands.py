@@ -5,10 +5,11 @@ from calm.dsl.api import get_api_client
 
 from .secrets import find_secret, create_secret
 from .utils import highlight_text
-from .main import get, compile, describe, create, launch, delete
+from .main import get, compile, describe, create, launch, delete, format
 from .bps import (
     get_blueprint_list,
     describe_bp,
+    format_blueprint_command,
     compile_blueprint_command,
     compile_blueprint,
     launch_blueprint_simple,
@@ -54,6 +55,19 @@ def _describe_bp(bp_name, out):
     """Describe a blueprint"""
 
     describe_bp(bp_name, out)
+
+
+@format.command("bp")
+@click.option(
+    "--file",
+    "-f",
+    "bp_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    required=True,
+    help="Path of Blueprint file to format",
+)
+def _format_blueprint_command(bp_file):
+    format_blueprint_command(bp_file)
 
 
 @compile.command("bp")
