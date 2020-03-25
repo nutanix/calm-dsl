@@ -3,11 +3,13 @@ import json
 import importlib.util
 import sys
 from pprint import pprint
+import pathlib
 
 from ruamel import yaml
 import arrow
 import click
 from prettytable import PrettyTable
+from black import format_file_in_place, WriteBack, FileMode
 
 from calm.dsl.builtins import (
     Blueprint,
@@ -314,6 +316,21 @@ def compile_blueprint_command(bp_file, out, no_sync=False):
         click.echo(yaml.dump(bp_payload, default_flow_style=False))
     else:
         LOG.error("Unknown output format {} given".format(out))
+
+
+def format_blueprint_command(bp_file):
+    path = pathlib.Path(bp_file)
+    LOG.debug("Formatting blueprint {} using black".format(path))
+    if format_file_in_place(
+        path, fast=False, mode=FileMode(), write_back=WriteBack.DIFF
+    ):
+        LOG.info("Patching above diff to blueprint - {}".format(path))
+        format_file_in_place(
+            path, fast=False, mode=FileMode(), write_back=WriteBack.YES
+        )
+        LOG.info("All done!")
+    else:
+        LOG.info("Blueprint {} left unchanged.".format(path))
 
 
 def get_blueprint(client, name, all=False):
