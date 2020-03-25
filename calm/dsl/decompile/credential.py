@@ -21,7 +21,7 @@ def render_credential_template(cls):
     user_attrs["description"] = cls.__doc__
 
     var_name = "BP_CRED_{}".format(len(CRED_VAR_NAME_MAP))
-    file_name = "{}_PASSWORD". format(var_name)
+    file_name = "{}_{}". format(var_name, user_attrs["type"])
     file_loc = os.path.join(get_local_dir(), file_name)
 
     # Storing empty value in the file
