@@ -155,4 +155,4 @@ def create_script_file(script_type, script=""):
     with open(file_location, "w+") as fd:
         fd.write(script)
 
-    return "{}/{}". format(get_scripts_dir_key(), file_name)
+    return "{}/{}".format(get_scripts_dir_key(), file_name)

@@ -43,9 +43,7 @@ def render_bp_file_template(cls, with_secrets=False):
     entity_edges = {}
 
     for service in cls.services:
-        entity_name_text_map[service.__name__] = render_service_template(
-            service
-        )
+        entity_name_text_map[service.__name__] = render_service_template(service)
 
         # Edge from services to other entities
         for dep in service.dependencies:
@@ -54,9 +52,7 @@ def render_bp_file_template(cls, with_secrets=False):
     downloadable_img_list = []
     for package in cls.packages:
         if getattr(package, "__kind__") == "app_package":
-            entity_name_text_map[package.__name__] = render_package_template(
-                package
-            )
+            entity_name_text_map[package.__name__] = render_package_template(package)
 
             # Edge from package to service
             for dep in package.services:
@@ -67,15 +63,11 @@ def render_bp_file_template(cls, with_secrets=False):
             # Printing all the downloadable images at the top, so ignore its edges
 
     for substrate in cls.substrates:
-        entity_name_text_map[substrate.__name__] = render_substrate_template(
-            substrate
-        )
+        entity_name_text_map[substrate.__name__] = render_substrate_template(substrate)
 
     deployments = []
     for profile in cls.profiles:
-        entity_name_text_map[profile.__name__] = render_profile_template(
-            profile
-        )
+        entity_name_text_map[profile.__name__] = render_profile_template(profile)
 
         # Deployments
         deployments.extend(profile.deployments)
@@ -107,7 +99,9 @@ def render_bp_file_template(cls, with_secrets=False):
         if secret_files:
             click.secho("Enter the value to be used in secret files")
         for file_name in secret_files:
-            secret_val = click.prompt("\nValue for {}".format(file_name), default="", show_default=False)
+            secret_val = click.prompt(
+                "\nValue for {}".format(file_name), default="", show_default=False
+            )
             file_loc = os.path.join(get_local_dir(), file_name)
             with open(file_loc, "w+") as fd:
                 fd.write(secret_val)

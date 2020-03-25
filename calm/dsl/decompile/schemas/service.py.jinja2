@@ -1,6 +1,7 @@
 {% macro service(obj) -%}
 class {{obj.name}}(Service):
     {% if obj.description %}"""{{obj.description}}"""{% endif %}
+{% if obj.dependencies or obj.variables or obj.actions %}
     {% if obj.dependencies %}dependencies=[{{obj.dependencies}}]{% endif %}
 {% for variable in obj.variables %}
 {{variable | indent( width=4, indentfirst=True)}}
@@ -8,6 +9,9 @@ class {{obj.name}}(Service):
 {% for action in obj.actions %}
 {{action | indent( width=4, indentfirst=True)}}
 {% endfor %}
+{% else %}
+    pass
+{% endif %}
 {%- endmacro %}
 
 {{ service(obj) }}

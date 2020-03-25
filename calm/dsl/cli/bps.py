@@ -248,7 +248,8 @@ def decompile_bp(name, with_secrets=False):
 
     res = res.json()
     blueprint = res["spec"]["resources"]
-    blueprint_name = res["metadata"].get("name", "SampleBlueprint")
+    blueprint_name = res["spec"].get("name", "SampleBlueprint")
+    blueprint_description = res["spec"].get("description", "")
 
     res, err = client.blueprint.read(bp_uuid)
     if err:
@@ -270,6 +271,7 @@ def decompile_bp(name, with_secrets=False):
 
     bp_cls = BlueprintType.decompile(blueprint)
     bp_cls.__name__ = blueprint_name
+    bp_cls.__doc__ = blueprint_description
     create_bp_dir(bp_cls, with_secrets)
 
 

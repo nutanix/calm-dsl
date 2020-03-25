@@ -18,13 +18,17 @@ def render_substrate_template(cls):
 
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__
-    user_attrs["description"] = cls.__doc__
+    user_attrs["description"] = cls.__doc__ or "{} Substrate description".format(
+        cls.__name__
+    )
     user_attrs["readiness_probe"] = cls.readiness_probe.get_dict()
 
     # TODO fix this mess
     cred = user_attrs["readiness_probe"].pop("credential")
     if cred:
-        user_attrs["readiness_probe_cred"] = "ref({})". format(get_cred_var_name(cred.__name__))
+        user_attrs["readiness_probe_cred"] = "ref({})".format(
+            get_cred_var_name(cred.__name__)
+        )
 
     # TODO use provider specific methods for reading provider_spec
     # i.e for ahv : read_ahv_spec()
@@ -36,7 +40,7 @@ def render_substrate_template(cls):
     user_attrs["provider_spec"] = get_provider_spec_string(
         spec=provider_spec,
         filename="{}/{}".format(get_specs_dir_key(), provider_spec_file_name),
-        provider_type=provider_type
+        provider_type=provider_type,
     )
 
     spec_dir = get_specs_dir()
@@ -52,14 +56,14 @@ def render_substrate_template(cls):
         if action.__name__ in list(system_actions.keys()):
             action.__name__ = system_actions[action.__name__]
         action_list.append(render_action_template(action, entity_context))
-    
+
     user_attrs["actions"] = action_list
 
     text = render_template(schema_file="substrate.py.jinja2", obj=user_attrs)
     return text.strip()
 
 
-def get_provider_spec_string(spec, filename,  provider_type):
+def get_provider_spec_string(spec, filename, provider_type):
 
     Provider = get_provider(provider_type)
 
@@ -71,17 +75,21 @@ def get_provider_spec_string(spec, filename,  provider_type):
             data_source_ref = disk.get("data_source_reference", {})
             if data_source_ref:
                 if data_source_ref.get("kind") == "app_package":
-                    disk_ind_img_map[ind+1] = get_valid_identifier(data_source_ref.get("name"))
-        
+                    disk_ind_img_map[ind + 1] = get_valid_identifier(
+                        data_source_ref.get("name")
+                    )
+
         disk_pkg_string = ""
         for k, v in disk_ind_img_map.items():
-            disk_pkg_string += ",{}: {}". format(k, v)
+            disk_pkg_string += ",{}: {}".format(k, v)
         if disk_pkg_string.startswith(","):
             disk_pkg_string = disk_pkg_string[1:]
         disk_pkg_string = "{" + disk_pkg_string + "}"
 
-        res = "read_ahv_spec('{}', disk_packages = {})". format(filename, disk_pkg_string)
-    
+        res = "read_ahv_spec('{}', disk_packages = {})".format(
+            filename, disk_pkg_string
+        )
+
     elif provider_type == "VMWARE_VM":
         account_uuid = spec["resources"]["account_uuid"]
         spec_template = spec["template"]
@@ -89,14 +97,14 @@ def get_provider_spec_string(spec, filename,  provider_type):
         templates = Obj.templates(account_uuid)
 
         if spec_template in templates.values():
-            res = "read_vmw_spec('{}')". format(filename)
-        
+            res = "read_vmw_spec('{}')".format(filename)
+
         else:
             spec_template = get_valid_identifier(spec_template)
             spec["template"] = ""
-            res = "read_vmw_spec('{}', vm_template={})". format(filename, spec_template)
-    
+            res = "read_vmw_spec('{}', vm_template={})".format(filename, spec_template)
+
     else:
-        res = "read_provider_spec('{}')". format(filename)
-    
+        res = "read_provider_spec('{}')".format(filename)
+
     return res

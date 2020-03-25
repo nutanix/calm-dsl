@@ -1,5 +1,6 @@
 {%- macro deployment(obj) %}
 class {{obj.name}}(Deployment):
+    {% if obj.description %}"""{{obj.description}}"""{% endif %}
 
     min_replicas = '{{obj.min_replicas}}'
     max_replicas = '{{obj.max_replicas}}'

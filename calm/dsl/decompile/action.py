@@ -33,6 +33,9 @@ def render_action_template(cls, entity_context=""):
     for variable in runbook.variables:
         variables.append(render_variable_template(variable, entity_context))
 
+    if not (variables or tasks):
+        return ""
+
     user_attrs = {
         "name": cls.__name__,
         "description": cls.__doc__ or "Sample description",

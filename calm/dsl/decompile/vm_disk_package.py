@@ -11,7 +11,7 @@ def render_vm_disk_package_template(cls):
     user_attrs = {
         "name": disk_data.pop("name"),
         "description": disk_data.pop("description"),
-        "config": disk_data
+        "config": disk_data,
     }
 
     text = render_template("vm_disk_package.py.jinja2", obj=user_attrs)

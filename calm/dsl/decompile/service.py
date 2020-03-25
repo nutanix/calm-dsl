@@ -9,13 +9,15 @@ def render_service_template(cls):
 
     if not isinstance(cls, ServiceType):
         raise TypeError("{} is not of type {}".format(cls, ServiceType))
-    
+
     # Entity context
     entity_context = "Service_" + cls.__name__
 
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__
-    user_attrs["description"] = cls.__doc__
+    user_attrs["description"] = cls.__doc__ or "{} Service description".format(
+        cls.__name__
+    )
 
     depends_on_list = []
     for entity in user_attrs.get("dependencies", []):
@@ -30,7 +32,9 @@ def render_service_template(cls):
     for entity in user_attrs.get("actions", []):
         if entity.__name__ in list(system_actions.keys()):
             entity.__name__ = system_actions[entity.__name__]
-        action_list.append(render_action_template(entity, entity_context))
+        rendered_txt = render_action_template(entity, entity_context)
+        if rendered_txt:
+            action_list.append(rendered_txt)
 
     user_attrs["dependencies"] = ",".join(depends_on_list)
     user_attrs["variables"] = variable_list
