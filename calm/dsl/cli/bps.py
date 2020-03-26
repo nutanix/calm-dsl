@@ -14,6 +14,7 @@ from calm.dsl.builtins import (
     SimpleBlueprint,
     create_blueprint_payload,
     BlueprintType,
+    get_valid_identifier,
 )
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
@@ -270,7 +271,7 @@ def decompile_bp(name, with_secrets=False):
         ]
 
     bp_cls = BlueprintType.decompile(blueprint)
-    bp_cls.__name__ = blueprint_name
+    bp_cls.__name__ = get_valid_identifier(blueprint_name)
     bp_cls.__doc__ = blueprint_description
     create_bp_dir(bp_cls, with_secrets)
 
