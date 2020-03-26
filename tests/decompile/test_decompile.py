@@ -112,7 +112,3 @@ class NextDslBlueprint(Blueprint):
     packages = [MySQLPackage, PHPPackage]
     substrates = [AHVVMforMySQL, AHVVMforPHP]
     profiles = [DefaultProfile]
-
-
-spec = NextDslBlueprint.get_dict()
-bp_cls = BlueprintType.decompile(spec)

@@ -8,6 +8,8 @@ properties:
     type: string
   certificate_store:
     type: string
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -18,6 +20,8 @@ title: Azure Secrets
 type: object
 properties:
   source_vault_id:
+    type: string
+  type:
     type: string
   vault_certificates:
     type: array
@@ -41,6 +45,8 @@ properties:
     type: array
     items:
       type: string
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -54,6 +60,8 @@ properties:
     type: string
   certificate_url:
     type: string
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -66,6 +74,8 @@ properties:
   setting_name:
     type: string
   xml_content:
+    type: string
+  type:
     type: string
 
 {%- endmacro %}
@@ -92,6 +102,8 @@ properties:
   auto_updates:
     type: boolean
     default: False
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -109,6 +121,8 @@ properties:
     type: array
     items:
       {{ azureSecrets() | indent(6) }}
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -135,6 +149,8 @@ properties:
   lun:
     type: integer
     minimum: 0
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -160,6 +176,8 @@ properties:
   lun:
     type: integer
     default: -1
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -181,6 +199,8 @@ properties:
     type: boolean
   version:
     type: string
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -196,6 +216,8 @@ properties:
     type: array
     items:
       {{ azureDisk() | indent(6) }}
+  type:
+    type: string
   os_disk_details:
     {{ azureOSDisk() | indent(4) }}
   image_details:
@@ -213,6 +235,8 @@ properties:
     type: string
   ip_address:
     type: string
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -227,6 +251,8 @@ properties:
   ip_name:
     type: string
   dns_label:
+    type: string
+  type:
     type: string
 
 {%- endmacro %}
@@ -255,6 +281,8 @@ properties:
     {{ azurePrivateIpInfo() | indent(4) }}
   public_ip_info:
     {{ azurePublicIpInfo() | indent(4) }}
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -268,6 +296,8 @@ properties:
     type: array
     items:
       {{ azureNIC() | indent(6)}}
+  type:
+    type: string
   primary_nic:
     type: integer
     default: -1
@@ -284,6 +314,8 @@ properties:
     type: string
   max_data_disk_count:
     type: integer
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -296,6 +328,8 @@ properties:
   key:
     type: string
   value:
+    type: string
+  type:
     type: string
 
 {%- endmacro %}
@@ -313,6 +347,8 @@ properties:
   availability_set_id:
     type: string
   account_uuid:
+    type: string
+  type:
     type: string
   location:
     type: string
