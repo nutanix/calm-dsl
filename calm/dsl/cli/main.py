@@ -145,6 +145,12 @@ def get_server_status():
 
 
 @main.group(cls=DYMGroup)
+def format():
+    """Format blueprint using black"""
+    pass
+
+
+@main.group(cls=DYMGroup)
 def compile():
     """Compile blueprint to json / yaml"""
     pass
