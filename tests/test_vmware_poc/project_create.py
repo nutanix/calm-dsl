@@ -1,3 +1,8 @@
+import os
+import inspect
+import sys
+import json
+import click
 from calm.dsl.cli import get_api_client
 
 
@@ -15,33 +20,38 @@ vmware_accounts = [
     "vm_m8",
     "vm_m9",
     "vm_m10",
-    "vm_s2",
-    "vm_s3",
-    "vm_s4",
-    "vm_s5",
-    "vm_s6",
-    "vm_s7",
-    "vm_s8",
-    "vm_s9",
-    "vm_s10",
-    "vmware_account",
-    "vmware_n_1",
-    "vmware_n_2",
-    "vmware_n_3",
-    "vmware_n_4",
-    "vmware_n_5",
-    "vmware_n_6",
-    "vmware_n_7",
-    "vmware_n_8",
-    "vmware_n_9",
-    "vmware_n_10",
+    "vm_m11",
+    "vm_m12",
+    "vm_m13",
+    "vm_m14",
+    "vm_m15",
+    "vm_m16",
+    "vm_m17",
+    "vm_m18",
+    "vm_m19",
+    "vm_m20",
+    "vm_n11",
+    "vm_n12",
+    "vm_n13",
+    "vm_n14",
+    "vm_n15",
+    "vm_n16",
+    "vm_n17",
+    "vm_n18",
+    "vm_n19",
+    "vm_n20",
 ]
 
+
+click.echo("verifying accounts")
 account_references = []
 for account in vmware_accounts:
     account_references.append(
         {"kind": "account", "name": account, "uuid": name_uuid_map[account]}
     )
+    client.account.verify(name_uuid_map[account])
+click.echo("accounts verified")
+
 
 project_name = "Try_Vmware_POC"
 
@@ -55,4 +65,5 @@ project_payload = {
     "access_control_policy_list": [],
 }
 
-print(project_payload)
+with open('/Users/abhijeet.kaurav/ocalm-dsl/tests/test_vmware_poc/specs/project_spec.json', "w+") as fd:
+    fd.write(json.dumps(project_payload, indent=4, separators=(",", ": ")))

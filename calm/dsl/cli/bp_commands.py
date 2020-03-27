@@ -15,6 +15,7 @@ from .bps import (
     delete_blueprint,
 )
 from calm.dsl.tools import get_logging_handle
+from calm.dsl.providers import get_provider
 
 LOG = get_logging_handle(__name__)
 
@@ -85,6 +86,34 @@ def _compile_blueprint_command(bp_file, out, no_sync):
     compile_blueprint_command(bp_file, out, no_sync)
 
 
+def update_temp_vmw_changes(bp_resources):
+
+    substrates = bp_resources["substrate_definition_list"]
+
+    for substrate in substrates:
+        stype = substrate["type"]
+        if stype == "VMWARE_VM":
+            create_spec = substrate["create_spec"]
+            account_id = create_spec["resources"]["account_uuid"]
+
+            host = create_spec["host"]
+            datastore = create_spec["datastore"]
+            template = create_spec["template"]
+
+            obj = get_provider("VMWARE_VM").get_api_handle()
+
+            hosts = obj.hosts(account_id)
+            create_spec["host"] = list(hosts.values())[2]
+            
+            datastores = obj.datastores(account_id, host_id=create_spec["host"])
+            create_spec["datastore"] = list(datastores.values())[1]
+            
+            templates = obj.templates(account_id)
+            if not templates:
+                import pdb; pdb.set_trace()
+            create_spec["template"] = list(templates.values())[0]
+
+
 def create_blueprint(client, bp_payload, name=None, description=None, categories=None):
 
     bp_payload.pop("status", None)
@@ -122,6 +151,8 @@ def create_blueprint(client, bp_payload, name=None, description=None, categories
     bp_resources = bp_payload["spec"]["resources"]
     bp_name = bp_payload["spec"]["name"]
     bp_desc = bp_payload["spec"]["description"]
+
+    update_temp_vmw_changes(bp_resources)
 
     categories = bp_payload["metadata"].get("categories", None)
 

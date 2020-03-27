@@ -112,8 +112,8 @@ class SubstrateType(EntityType):
                     "connection_protocol": "",
                     "connection_port": 22,
                     "address": "@@{platform.ipAddressList[0]}@@",
-                    "delay_secs": "60",
-                    "disable_readiness_probe": False,
+                    "delay_secs": "0",
+                    "disable_readiness_probe": True,
                 }
 
                 if "os_type" in cdict and cdict["os_type"] == "Windows":

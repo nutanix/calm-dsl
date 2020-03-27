@@ -13,11 +13,14 @@ from calm.dsl.builtins import (
 )
 from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
-from calm.dsl.builtins import read_provider_spec, read_local_file
+from calm.dsl.builtins import read_provider_spec, read_local_file, read_spec
 
 CRED_USERNAME = read_local_file(".tests/username")
 CRED_PASSWORD = read_local_file(".tests/password")
 DNS_SERVER = read_local_file(".tests/dns_server")
+
+project_spec = read_spec("specs/project_spec.json")
+accounts = project_spec["project_detail"]["resources"]["account_reference_list"]
 
 
 class Service1(Service):
@@ -37,7 +40,7 @@ class Substrate1(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "b817eafd-274f-ed67-163e-25254d92b406"
+    ] = accounts[0]["uuid"]
 
 
 class Deployment1(Deployment):
@@ -65,7 +68,7 @@ class Substrate2(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "64484c9c-d210-467a-ee99-1914a2e51609"
+    ] = accounts[1]["uuid"]
 
 
 class Deployment2(Deployment):
@@ -92,7 +95,7 @@ class Substrate3(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "dd27bbf0-125b-980c-05d9-658369feb1db"
+    ] = accounts[2]["uuid"]
 
 
 class Deployment3(Deployment):
@@ -119,7 +122,7 @@ class Substrate4(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "c148b537-0db9-8003-bdba-105a83a9405b"
+    ] = accounts[3]["uuid"]
 
 
 class Deployment4(Deployment):
@@ -146,7 +149,7 @@ class Substrate5(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "8f58c850-0335-01ef-d1e3-80c8721afbed"
+    ] = accounts[4]["uuid"]
 
 
 class Deployment5(Deployment):
@@ -173,7 +176,7 @@ class Substrate6(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "d1c269b4-b3b9-e894-d4ce-9d61f029f3e3"
+    ] = accounts[5]["uuid"]
 
 
 class Deployment6(Deployment):
@@ -200,7 +203,7 @@ class Substrate7(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "8e2cd42d-56d3-20ef-1ba5-c5d6c94ce419"
+    ] = accounts[6]["uuid"]
 
 
 class Deployment7(Deployment):
@@ -227,7 +230,7 @@ class Substrate8(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "65a40a83-f95a-ec5b-060e-2bec31428e8a"
+    ] = accounts[7]["uuid"]
 
 
 class Deployment8(Deployment):
@@ -254,7 +257,7 @@ class Substrate9(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "8baf8921-1dea-edbe-284d-e67a0aeee17e"
+    ] = accounts[8]["uuid"]
 
 
 class Deployment9(Deployment):
@@ -281,7 +284,7 @@ class Substrate10(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "9011c9ea-5772-9254-e33d-3cf7d64ae9bd"
+    ] = accounts[9]["uuid"]
 
 
 class Deployment10(Deployment):
@@ -308,7 +311,7 @@ class Substrate11(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "fc6824a6-da5b-bc45-a27a-2bcdc3885d3c"
+    ] = accounts[10]["uuid"]
 
 
 class Deployment11(Deployment):
@@ -335,7 +338,7 @@ class Substrate12(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "70693c18-1753-d541-35f3-3e359571ed26"
+    ] = accounts[11]["uuid"]
 
 
 class Deployment12(Deployment):
@@ -362,7 +365,7 @@ class Substrate13(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "ca0cc214-1ef4-e34c-d41d-9a5471edefe8"
+    ] = accounts[12]["uuid"]
 
 
 class Deployment13(Deployment):
@@ -389,7 +392,7 @@ class Substrate14(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "94096b6d-235c-a170-cd78-e2153d89d97c"
+    ] = accounts[13]["uuid"]
 
 
 class Deployment14(Deployment):
@@ -416,7 +419,7 @@ class Substrate15(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "866aeec7-78d2-0a3c-5bae-5e15da2051d6"
+    ] = accounts[14]["uuid"]
 
 
 class Deployment15(Deployment):
@@ -443,7 +446,7 @@ class Substrate16(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "617c5d80-d528-733c-7e92-21c3bf97b36d"
+    ] = accounts[15]["uuid"]
 
 
 class Deployment16(Deployment):
@@ -470,7 +473,7 @@ class Substrate17(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "cb72fe11-8ba5-5c18-c8aa-32a1ddec9f83"
+    ] = accounts[16]["uuid"]
 
 
 class Deployment17(Deployment):
@@ -497,7 +500,7 @@ class Substrate18(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "5aa280a6-c0c3-ab48-8eb9-da28874f41a9"
+    ] = accounts[17]["uuid"]
 
 
 class Deployment18(Deployment):
@@ -524,7 +527,7 @@ class Substrate19(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "e4dd2bfe-f6c5-1063-f86c-70160841d393"
+    ] = accounts[18]["uuid"]
 
 
 class Deployment19(Deployment):
@@ -551,7 +554,7 @@ class Substrate20(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "ac5b86c3-3097-f896-a114-c49a35d951d9"
+    ] = accounts[19]["uuid"]
 
 
 class Deployment20(Deployment):
@@ -578,7 +581,7 @@ class Substrate21(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "d262a20d-9950-b618-8088-d8bb6cb73fb0"
+    ] = accounts[20]["uuid"]
 
 
 class Deployment21(Deployment):
@@ -605,7 +608,7 @@ class Substrate22(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "08e0ee08-0ec9-76c9-d60a-79e9556258ba"
+    ] = accounts[21]["uuid"]
 
 
 class Deployment22(Deployment):
@@ -632,7 +635,7 @@ class Substrate23(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "3b202c8a-9549-f968-e754-cc646110fbcd"
+    ] = accounts[22]["uuid"]
 
 
 class Deployment23(Deployment):
@@ -659,7 +662,7 @@ class Substrate24(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "07bb798f-02c2-3fbd-4863-c2ac6bb2e921"
+    ] = accounts[23]["uuid"]
 
 
 class Deployment24(Deployment):
@@ -686,7 +689,7 @@ class Substrate25(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "ce98a7a9-af4c-d32c-2472-7ac2742f6480"
+    ] = accounts[24]["uuid"]
 
 
 class Deployment25(Deployment):
@@ -713,7 +716,7 @@ class Substrate26(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "f6e29e49-77b2-c543-1464-70fffd04ec2a"
+    ] = accounts[25]["uuid"]
 
 
 class Deployment26(Deployment):
@@ -740,7 +743,7 @@ class Substrate27(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "22e85995-560f-cc51-1bb2-c89f411f1965"
+    ] = accounts[26]["uuid"]
 
 
 class Deployment27(Deployment):
@@ -767,7 +770,7 @@ class Substrate28(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "af40cd40-67d1-952e-8a93-26729217585c"
+    ] = accounts[27]["uuid"]
 
 
 class Deployment28(Deployment):
@@ -794,7 +797,7 @@ class Substrate29(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "3af9f3fc-3776-c426-409b-8569c862be42"
+    ] = accounts[28]["uuid"]
 
 
 class Deployment29(Deployment):
@@ -821,7 +824,7 @@ class Substrate30(Substrate):
     provider_spec = read_provider_spec("specs/provider_spec.yaml")
     provider_spec.spec["resources"][
         "account_uuid"
-    ] = "486cf689-78f1-aced-09ae-e1a05b04a38f"
+    ] = accounts[29]["uuid"]
 
 
 class Deployment30(Deployment):
@@ -972,3 +975,30 @@ class Blueprint1(Blueprint):
     ]
 
     profiles = [DefaultProfile]
+
+n = 25
+
+# update blueprint deployments
+Blueprint1.profiles[0].deployments = Blueprint1.profiles[0].deployments[:n]
+
+# update services, packages, substrates
+Blueprint1.services = Blueprint1.services[:n]
+Blueprint1.packages = Blueprint1.packages[:n]
+Blueprint1.substrates = Blueprint1.substrates[:n]
+
+
+"""
+def get_updated_blueprint():
+
+    n = 25
+
+    # update blueprint deployments
+    Blueprint1.profiles[0].deployments = Blueprint1.profiles[0].deployments[:n]
+
+    # update services, packages, substrates
+    Blueprint1.services = Blueprint1.services[:n]
+    Blueprint1.packages = Blueprint1.packages[:n]
+    Blueprint1.substrates = Blueprint1.substrates[:n]
+
+    return Blueprint1
+"""

@@ -8,9 +8,6 @@ template: 9c9d9134-eca1-5121-8a4b-e006dab07ad0
 datastore: "/tmp/govcsim-DC10-LocalDS_1-017719752"
 type: PROVISION_VMWARE_VM
 resources:
-  nic_list:
-  - nic_type: e1000
-    net_name: key-vim.host.PortGroup-VM Network
   template_nic_list:
   - nic_type: e1000
     is_deleted: true
