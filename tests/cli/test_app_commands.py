@@ -14,6 +14,9 @@ NON_BUSY_APP_STATES = [
 ]
 
 DSL_BP_FILEPATH = "tests/blueprint_example/test_blueprint_example.py"
+DSL_LAUNCH_PARAM_FILEPATH = (
+    "tests/blueprint_example/test_blueprint_example_launch_params.py"
+)
 CUSTOM_ACTION_NAME = "sample_profile_action"
 
 
@@ -81,6 +84,29 @@ class TestAppCommands:
         self._test_dsl_bp_delete()
         self._test_app_delete()
 
+    def test_app_create_noninteractive_input(self):
+        runner = CliRunner()
+        self._create_bp()
+        self.created_app_name = "TestAppLaunch_{}".format(self.created_dsl_bp_name)
+        LOG.info("Launching Bp {}".format(self.created_dsl_bp_name))
+        result = runner.invoke(
+            cli,
+            [
+                "launch",
+                "bp",
+                self.created_dsl_bp_name,
+                "--app_name={}".format(self.created_app_name),
+                "--launch_params={}".format(DSL_LAUNCH_PARAM_FILEPATH),
+            ],
+        )
+        assert result.exit_code == 0
+        LOG.info("Success")
+
+        self._test_describe_app()
+        self._test_run_custom_action()
+        self._test_dsl_bp_delete()
+        self._test_app_delete()
+
     def _test_describe_app(self):
         runner = CliRunner()
         LOG.info("Running 'calm describe app' command")
@@ -139,4 +165,3 @@ class TestAppCommands:
 
 if __name__ == "__main__":
     tester = TestAppCommands()
-    tester.test_app_create_describe_actions()
