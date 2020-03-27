@@ -436,8 +436,6 @@ def launch_marketplace_bp(
         If version not there search in published, pendingm, accepted blueprints
     """
 
-    client = get_api_client()
-
     if not version:
         LOG.info("Fetching latest version of Marketplace Blueprint {} ".format(name))
         version = get_mpi_latest_version(
@@ -458,7 +456,6 @@ def launch_marketplace_bp(
 
     app_name = app_name or "Mpi-App-{}-{}".format(name, str(uuid.uuid4())[-10:])
     launch_blueprint_simple(
-        client,
         patch_editables=patch_editables,
         profile_name=profile_name,
         app_name=app_name,
@@ -481,8 +478,6 @@ def launch_marketplace_item(
         If version not there search in published blueprints
     """
 
-    client = get_api_client()
-
     if not version:
         LOG.info("Fetching latest version of Marketplace Item {} ".format(name))
         version = get_mpi_latest_version(
@@ -499,7 +494,6 @@ def launch_marketplace_item(
 
     app_name = app_name or "Mpi-App-{}-{}".format(name, str(uuid.uuid4())[-10:])
     launch_blueprint_simple(
-        client,
         patch_editables=patch_editables,
         profile_name=profile_name,
         app_name=app_name,

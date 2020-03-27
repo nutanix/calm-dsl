@@ -13,7 +13,7 @@ from calm.dsl.tools import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-def get_projects(obj, name, filter_by, limit, offset, quiet):
+def get_projects(name, filter_by, limit, offset, quiet):
     """ Get the projects, optionally filtered by a string """
 
     client = get_api_client()
@@ -116,7 +116,7 @@ def get_project(client, name):
     return project
 
 
-def delete_project(obj, project_names):
+def delete_project(project_names):
 
     client = get_api_client()
 
@@ -129,7 +129,7 @@ def delete_project(obj, project_names):
         LOG.info("Project {} deleted".format(project_name))
 
 
-def create_project(obj, payload):
+def create_project(payload):
 
     name = payload["project_detail"]["name"]
     client = get_api_client()
@@ -162,7 +162,7 @@ def create_project(obj, payload):
     return client.project.create(payload)
 
 
-def describe_project(obj, project_name):
+def describe_project(project_name):
 
     client = get_api_client()
     project = get_project(client, project_name)
@@ -318,7 +318,7 @@ def describe_project(obj, project_name):
     click.echo("\n")
 
 
-def update_project(obj, name, payload):
+def update_project(name, payload):
 
     client = get_api_client()
     LOG.info("Searching for project")

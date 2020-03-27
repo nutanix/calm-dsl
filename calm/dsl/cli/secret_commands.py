@@ -20,8 +20,7 @@ from .secrets import (
     confirmation_prompt=True,
     help="Value for secret",
 )
-@click.pass_obj
-def _create_secret(obj, name, value):
+def _create_secret(name, value):
     """Creates a secret"""
 
     create_secret(name, value)
@@ -31,8 +30,7 @@ def _create_secret(obj, name, value):
 @click.option(
     "--quiet", "-q", is_flag=True, default=False, help="Show only sceret names."
 )
-@click.pass_obj
-def _get_secrets(obj, quiet):
+def _get_secrets(quiet):
     """List the secrets """
 
     get_secrets(quiet)
@@ -40,8 +38,7 @@ def _get_secrets(obj, quiet):
 
 @delete.command("secret")
 @click.argument("name", nargs=1)
-@click.pass_obj
-def _delete_secret(obj, name):
+def _delete_secret(name):
     """Delete a secret"""
 
     delete_secret(name)
@@ -50,8 +47,7 @@ def _delete_secret(obj, name):
 @update.command("secret")
 @click.argument("name", nargs=1)
 @click.option("--value", "-v", prompt=True, hide_input=True, confirmation_prompt=True)
-@click.pass_obj
-def _update_secret(obj, name, value):
+def _update_secret(name, value):
     """Update the secret
 
     NAME is the alias for your secret
@@ -61,8 +57,7 @@ def _update_secret(obj, name, value):
 
 
 @clear.command("secrets")
-@click.pass_obj
-def _clear_secrets(obj):
+def _clear_secrets():
     """Delete alll the secrets stored in the local db"""
 
     clear_secrets()

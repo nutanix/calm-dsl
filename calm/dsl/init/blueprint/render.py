@@ -11,7 +11,7 @@ from calm.dsl.tools import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-def render_ahv_template(template, service_name):
+def render_ahv_template(template, bp_name):
 
     # Getting the subnet registered to the project
     client = get_api_client()
@@ -35,7 +35,7 @@ def render_ahv_template(template, service_name):
 
     default_subnet = subnets[0]["name"]
     LOG.info("Rendering ahv template")
-    text = template.render(service_name=service_name, subnet_name=default_subnet)
+    text = template.render(bp_name=bp_name, subnet_name=default_subnet)
     LOG.info("Success")
 
     return text.strip() + os.linesep
@@ -46,9 +46,7 @@ template_map = {
 }
 
 
-def render_blueprint_template(service_name, provider_type):
-
-    service_name = service_name.strip().split()[0].title()
+def render_blueprint_template(bp_name, provider_type):
 
     if provider_type not in template_map:
         print(
@@ -62,12 +60,12 @@ def render_blueprint_template(service_name, provider_type):
     env = Environment(loader=loader)
     template = env.get_template(schema_file)
 
-    return temp_render_helper(template, service_name)
+    return temp_render_helper(template, bp_name)
 
 
-def create_bp_file(dir_name, service_name, provider_type):
+def create_bp_file(dir_name, bp_name, provider_type):
 
-    bp_text = render_blueprint_template(service_name, provider_type)
+    bp_text = render_blueprint_template(bp_name, provider_type)
     bp_path = os.path.join(dir_name, "blueprint.py")
 
     LOG.info("Writing bp file to {}".format(bp_path))
@@ -111,7 +109,7 @@ def create_scripts(dir_name):
 
 def make_bp_dirs(dir_name, bp_name):
 
-    bp_dir = os.path.join(dir_name, bp_name)
+    bp_dir = "{}Blueprint".format(os.path.join(dir_name, bp_name))
     if not os.path.isdir(bp_dir):
         os.makedirs(bp_dir)
 
@@ -130,10 +128,9 @@ def make_bp_dirs(dir_name, bp_name):
     return (bp_dir, local_dir, key_dir, script_dir)
 
 
-def init_bp(service_name, dir_name, provider_type):
+def init_bp(bp_name, dir_name, provider_type):
 
-    bp_name = "{}Blueprint".format(service_name,)
-
+    bp_name = bp_name.strip().split()[0].title()
     bp_dir, local_dir, key_dir, script_dir = make_bp_dirs(dir_name, bp_name)
 
     # sync cache
@@ -149,14 +146,4 @@ def init_bp(service_name, dir_name, provider_type):
     # create scripts
     create_scripts(script_dir)
 
-    create_bp_file(bp_dir, service_name, provider_type)
-
-
-def main():
-    service_name = "Hello"
-    dir_name = os.getcwd()
-    init_bp(service_name, dir_name)
-
-
-if __name__ == "__main__":
-    main()
+    create_bp_file(bp_dir, bp_name, provider_type)

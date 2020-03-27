@@ -14,6 +14,7 @@ client = get_connection(pc_ip, pc_port,
 import traceback
 import json
 import urllib3
+import sys
 
 from requests import Session as NonRetrySession
 from requests_toolbelt import MultipartEncoder
@@ -256,11 +257,12 @@ class Connection:
                 if not res.ok:
                     LOG.debug("Server Response: {}".format(res.json()))
         except Exception as ex:
-            LOG.error("Got traceback\n{}".format(traceback.format_exc()))
+            LOG.debug("Got traceback\n{}".format(traceback.format_exc()))
             err_msg = res.text if hasattr(res, "text") else "{}".format(ex)
             status_code = res.status_code if hasattr(res, "status_code") else 500
             err = {"error": err_msg, "code": status_code}
             LOG.error("Error Response: {}".format(err))
+            sys.exit(-1)
         return res, err
 
 

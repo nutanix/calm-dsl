@@ -3,11 +3,13 @@ import json
 import importlib.util
 import sys
 from pprint import pprint
+import pathlib
 
 from ruamel import yaml
 import arrow
 import click
 from prettytable import PrettyTable
+from black import format_file_in_place, WriteBack, FileMode
 
 from calm.dsl.builtins import Blueprint, SimpleBlueprint, create_blueprint_payload
 from calm.dsl.config import get_config
@@ -21,7 +23,7 @@ from calm.dsl.tools import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
+def get_blueprint_list(name, filter_by, limit, offset, quiet, all_items):
     """Get the blueprints, optionally filtered by a string"""
 
     client = get_api_client()
@@ -107,7 +109,9 @@ def get_blueprint_list(obj, name, filter_by, limit, offset, quiet, all_items):
     click.echo(table)
 
 
-def describe_bp(obj, blueprint_name, out):
+def describe_bp(blueprint_name, out):
+    """Displays blueprint data"""
+
     client = get_api_client()
     bp = get_blueprint(client, blueprint_name, all=True)
 
@@ -271,6 +275,21 @@ def compile_blueprint_command(bp_file, out, no_sync=False):
         LOG.error("Unknown output format {} given".format(out))
 
 
+def format_blueprint_command(bp_file):
+    path = pathlib.Path(bp_file)
+    LOG.debug("Formatting blueprint {} using black".format(path))
+    if format_file_in_place(
+        path, fast=False, mode=FileMode(), write_back=WriteBack.DIFF
+    ):
+        LOG.info("Patching above diff to blueprint - {}".format(path))
+        format_file_in_place(
+            path, fast=False, mode=FileMode(), write_back=WriteBack.YES
+        )
+        LOG.info("All done!")
+    else:
+        LOG.info("Blueprint {} left unchanged.".format(path))
+
+
 def get_blueprint(client, name, all=False):
 
     # find bp
@@ -323,13 +342,13 @@ def get_field_values(entity_dict, context, path=None):
 
 
 def launch_blueprint_simple(
-    client,
     blueprint_name=None,
     app_name=None,
     blueprint=None,
     profile_name=None,
     patch_editables=True,
 ):
+    client = get_api_client()
     if not blueprint:
         blueprint = get_blueprint(client, blueprint_name)
 
@@ -432,7 +451,7 @@ def poll_launch_status(client, blueprint_uuid, launch_req_id):
         time.sleep(10)
 
 
-def delete_blueprint(obj, blueprint_names):
+def delete_blueprint(blueprint_names):
 
     client = get_api_client()
 

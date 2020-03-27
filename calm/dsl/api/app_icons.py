@@ -13,7 +13,11 @@ class AppIconAPI(ResourceAPI):
         files = {"image": (icon_name, open(file_path, "rb"), "image/jpeg")}
 
         return self.connection._call(
-            self.UPLOAD, request_json=data, files=files, method=REQUEST.METHOD.POST,
+            self.UPLOAD,
+            request_json=data,
+            files=files,
+            method=REQUEST.METHOD.POST,
+            verify=False,
         )
 
     def is_marketplace_icon(self, uuid):
