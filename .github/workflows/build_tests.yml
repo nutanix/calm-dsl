@@ -25,9 +25,15 @@ jobs:
     - name: Install requirements
       run: |
         make dev
-    - name: Init DSL 
+    - name: Init DSL
+      env:
+        IP: ${{ secrets.CALM_IP }}
+        PORT: ${{ secrets.CALM_PORT }}
+        USER: ${{ secrets.CALM_USERNAME }}
+        PASSWORD: ${{ secrets.CALM_PASSWORD }}
+        PROJECT: ${{ secrets.CALM_PROJECT }}
       run: |
-        venv/bin/calm init dsl -i ${{ secrets.CALM_IP }} -P ${{ secrets.CALM_PORT }} -p ${{ secrets.CALM_PASSWORD }} -u ${{ secrets.CALM_USERNAME }} -pj ${{ secrets.CALM_PROJECT }}
+        venv/bin/calm init dsl -i "$IP" -P "$PORT" -p "$PASSWORD" -u "$USER" -pj "$PROJECT"
     - name: Download test files
       run: |
         cd ~/.calm/.local
