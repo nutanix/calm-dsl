@@ -181,7 +181,7 @@ def update_runbook_from_dsl(client, runbook_file, name=None, description=None):
     help="Path of Runbook file to upload",
 )
 @click.option(
-    "--name", "-n", default=None, help="Runbook name (Optional)"
+    "--name", "-n", default=None, required=True, help="Runbook name"
 )
 @click.option("--description", default=None, help="Runbook description (Optional)")
 @click.pass_obj

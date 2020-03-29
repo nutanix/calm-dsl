@@ -139,11 +139,11 @@ class RunbookAPI(ResourceAPI):
         if err:
             return res, err
 
-        # Add secrets and update bp
+        # Add secrets and update runbook
         runbook = res.json()
         del runbook["status"]
 
-        # Update blueprint
+        # Update runbook
         patch_secrets(runbook['spec']['resources'], secret_map, secret_variables)
         for endpoint in runbook['spec']['resources'].get('endpoint_definition_list', []):
             endpoint_name = endpoint.get("name")
@@ -232,11 +232,11 @@ class RunbookAPI(ResourceAPI):
         if err:
             return res, err
 
-        # Add secrets and update bp
+        # Add secrets and update runbook
         runbook = res.json()
         del runbook["status"]
 
-        # Update blueprint
+        # Update runbook
         patch_secrets(runbook['spec']['resources'], secret_map, secret_variables)
         for endpoint in runbook['spec']['resources'].get('endpoint_definition_list', []):
             endpoint_name = endpoint.get("name")

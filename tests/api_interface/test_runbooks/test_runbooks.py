@@ -8,6 +8,7 @@ from calm.dsl.builtins import create_endpoint_payload
 from tests.sample_runbooks import DslPausePlayRunbook
 from utils import upload_runbook, update_runbook, poll_runlog_status, read_test_config, change_uuids
 from test_files.exec_task import linux_endpoint
+from test_files.updated_runbook import DslUpdatedRunbook
 
 RunbookPayload = read_test_config(file_name="runbook_payload.json")
 RunbookUpdatePayload = read_test_config(file_name="runbook_payload2.json")
@@ -152,22 +153,18 @@ class TestRunbooks:
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
-    @pytest.mark.skip(reason="runbook update through DSL is not supported on feat branch")
-    @pytest.mark.slow
     @pytest.mark.runbook
     @pytest.mark.parametrize("Runbook", [DslPausePlayRunbook])
     def test_rb_update(self, Runbook):
 
         client = get_api_client()
-        rb_name = "test_ask_" + str(uuid.uuid4())[-10:]
+        rb_name = "test_rb_" + str(uuid.uuid4())[-10:]
 
         rb = upload_runbook(client, rb_name, Runbook)
         rb_state = rb["status"]["state"]
         rb_uuid = rb["metadata"]["uuid"]
         print(">> Runbook state: {}".format(rb_state))
         assert rb_state == "ACTIVE"
-        assert rb_name == rb["spec"]["name"]
-        assert rb_name == rb["metadata"]["name"]
 
         # reading the runbook using get call
         print("\n>>Reading Runbook")
@@ -185,8 +182,7 @@ class TestRunbooks:
             print(">> Get call to runbook is successful >>")
 
         # updating the runbook
-        # TODO have to update this with updated runbook
-        rb = update_runbook(client, rb_name, DslPausePlayRunbook)
+        rb = update_runbook(client, rb_name, DslUpdatedRunbook)
         rb_state = rb["status"]["state"]
         rb_uuid = rb["metadata"]["uuid"]
         print(">> Runbook state: {}".format(rb_state))
@@ -203,7 +199,9 @@ class TestRunbooks:
             assert res.ok is True
             res = res.json()
             task_list = res["spec"]["resources"]["runbook"]["task_definition_list"]
+            cred_list = res["spec"]["resources"]["credential_definition_list"]
             assert len(task_list) == 5
+            assert len(cred_list) == 1
             assert rb_name == res["spec"]["name"]
             assert rb_name == res["metadata"]["name"]
             assert rb_name == res["metadata"]["name"]
