@@ -10,6 +10,7 @@ from .main import (
     delete,
     reject,
     unpublish,
+    decompile,
 )
 from .mpis import (
     get_marketplace_items,
@@ -26,6 +27,7 @@ from .mpis import (
     delete_marketplace_bp,
     reject_marketplace_bp,
     unpublish_marketplace_bp,
+    decompile_marketplace_bp,
 )
 from .constants import MARKETPLACE_BLUEPRINT
 
@@ -184,6 +186,38 @@ def _launch_marketplace_bp(
         profile_name=profile_name,
         patch_editables=not ignore_runtime_variables,
         app_source=source,
+    )
+
+
+@decompile.command("marketplace_bp")
+@click.argument("mpi_name")
+@click.option("--name", "-n", default=None, help="Name of blueprint")
+@click.option("--version", "-v", default=None, help="Version of marketplace blueprint")
+@click.option("--project", "-p", default=None, help="Project for the blueprint")
+@click.option(
+    "--source",
+    "-s",
+    default=None,
+    type=click.Choice(APP_SOURCES),
+    help="App Source of marketplace blueprint",
+)
+@click.option(
+    "--with_secrets",
+    "-w",
+    is_flag=True,
+    default=False,
+    help="Interactive Mode to provide the value for secrets",
+)
+def _decompile_marketplace_bp(mpi_name, version, project, name, source, with_secrets):
+    """Decompile a marketplace blueprint"""
+
+    decompile_marketplace_bp(
+        name=mpi_name,
+        version=version,
+        project=project,
+        bp_name=name,
+        app_source=None,
+        with_secrets=with_secrets,
     )
 
 

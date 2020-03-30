@@ -34,7 +34,7 @@ properties:
 {% macro azureLinuxOSConfig() -%}
 
 title: Azure Linux OS Configuration
-type: object
+type: [object, "null"]
 properties:
   custom_data:
     type: string
@@ -84,7 +84,7 @@ properties:
 {% macro azureWindowsOSConfig() -%}
 
 title: Azure Windows OS Configuration
-type: object
+type: [object, "null"]
 properties:
   winrm_listeners:
     type: array

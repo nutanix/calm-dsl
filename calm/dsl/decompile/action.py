@@ -38,7 +38,7 @@ def render_action_template(cls, entity_context=""):
 
     user_attrs = {
         "name": cls.__name__,
-        "description": cls.__doc__ or "Sample description",
+        "description": cls.__doc__ or "{} Action description".format(cls.__name__),
         "tasks": tasks,
         "variables": variables,
     }

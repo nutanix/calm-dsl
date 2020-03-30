@@ -78,6 +78,7 @@ def get_provider_spec_string(spec, filename, provider_type):
                     disk_ind_img_map[ind + 1] = get_valid_identifier(
                         data_source_ref.get("name")
                     )
+                    data_source_ref.pop("uuid", None)
 
         disk_pkg_string = ""
         for k, v in disk_ind_img_map.items():

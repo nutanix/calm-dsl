@@ -3,6 +3,8 @@ import click
 import sys
 from prettytable import PrettyTable
 
+from calm.dsl.builtins import BlueprintType, get_valid_identifier
+from calm.dsl.decompile.decompile_render import create_bp_dir
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.config import get_config
 from .utils import highlight_text, get_states_filter
@@ -464,6 +466,41 @@ def launch_marketplace_bp(
     LOG.info("App {} creation is successful".format(app_name))
 
 
+def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_secrets):
+    """decompiles marketplace blueprint"""
+
+    if not version:
+        LOG.info("Fetching latest version of Marketplace Blueprint {} ".format(name))
+        version = get_mpi_latest_version(name=name, app_source=app_source,)
+        LOG.info(version)
+
+    bp_payload = convert_mpi_into_blueprint(
+        name=name, version=version, project_name=project, app_source=app_source
+    )
+    del bp_payload["status"]
+
+    blueprint = bp_payload["spec"]["resources"]
+    blueprint_name = bp_payload["spec"].get("name", "CALM-DSL Blueprint")
+    blueprint_description = bp_payload["spec"].get("description", "")
+
+    # Vmware template
+    vm_img_uuid_name_map = {}
+    for pkg in blueprint["package_definition_list"]:
+        if pkg["type"] == "SUBSTRATE_IMAGE":
+            vm_img_uuid_name_map[pkg["uuid"]] = get_valid_identifier(pkg["name"])
+
+    for substrate in blueprint["substrate_definition_list"]:
+        if substrate["type"] == "VMWARE_VM":
+            template_id = substrate["create_spec"]["template"]
+            if template_id in list(vm_img_uuid_name_map.keys()):
+                substrate["create_spec"]["template"] = vm_img_uuid_name_map[template_id]
+
+    bp_cls = BlueprintType.decompile(blueprint)
+    bp_cls.__name__ = get_valid_identifier(bp_name or blueprint_name)
+    bp_cls.__doc__ = blueprint_description
+    create_bp_dir(bp_cls, with_secrets)
+
+
 def launch_marketplace_item(
     name,
     version,
@@ -549,7 +586,7 @@ def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None
             ref_projects.append(project["name"])
 
         if project_name not in ref_projects:
-            LOG.debug("Associated Projects: {}".format())
+            LOG.debug("Associated Projects: {}".format(ref_projects))
             LOG.error(
                 "Project {} is not shared with marketplace item {} with version {}".format(
                     project_name, name, version

@@ -99,11 +99,13 @@ class VmDiskPackageType(PackageType):
                 "source": resources["source_uri"],
                 "architecture": resources["architecture"],
             },
-            "product": {
-                "name": resources["version"]["product_name"],
-                "version": resources["version"]["product_version"],
-            }
         }
+
+        if resources.get("version", None):
+            config["product"] = {
+                "name": resources["version"].get("product_name", ""),
+                "version": resources["version"].get("product_version", ""),
+            }
 
         if img_type == "ISO_IMAGE" and resources.get("checksum", None):
             config["checksum"] = {
