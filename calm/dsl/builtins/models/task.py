@@ -1085,16 +1085,16 @@ class CalmTask:
             return parallel_task(name=name, child_tasks=child_tasks, attrs=attrs)
 
     class While:
-        def __new__(cls, repeat_count, name=None, child_tasks=[],
-                    loop_counter="iteration", parallel_factor=1, exit_condition="SUCCESS"):
-            if not isinstance(repeat_count, int):
+        def __new__(cls, iterations, name=None, child_tasks=[],
+                    loop_variable="iteration", parallel_factor=1, exit_condition="SUCCESS"):
+            if not isinstance(iterations, int):
                 raise ValueError(
-                    "Repeat Count must be an integer, got {}".format(repeat_count)
+                    "Repeat Count must be an integer, got {}".format(iterations)
                 )
             attrs = {
                 "apf": str(parallel_factor),
-                "repeat_count": str(repeat_count),
-                "loop_counter": loop_counter
+                "iterations": str(iterations),
+                "loop_variable": loop_variable
             }
             exit_code = EXIT_CONDITION_MAP.get(exit_condition, None)
             if exit_code:

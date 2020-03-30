@@ -185,7 +185,7 @@ class GetCallNodes(ast.NodeVisitor):
             while_task = CalmTask.While(node.test.n)
         else:
             raise ValueError(
-                "Only CalmTasks or repeat_count (int) are supported inside while context."
+                "Only CalmTasks or iterations (int) are supported inside while context."
             )
         whileBody = ast.FunctionDef(body=node.body, col_offset=node.col_offset)
         meta_task, tasks, variables = handle_meta_create(whileBody, self._globals)
