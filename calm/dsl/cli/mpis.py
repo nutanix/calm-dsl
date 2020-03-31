@@ -324,6 +324,8 @@ def get_mpi_by_name_n_version(name, version, app_states=[], app_source=None):
         "length": 250,
         "filter": filter,
     }
+
+    LOG.debug("Calling list api on marketplace_items")
     res, err = client.market_place.list(params=payload)
     if err:
         LOG.error("[{}] - {}".format(err["code"], err["error"]))
@@ -339,6 +341,7 @@ def get_mpi_by_name_n_version(name, version, app_states=[], app_source=None):
         sys.exit(-1)
 
     app_uuid = res["entities"][0]["metadata"]["uuid"]
+    LOG.debug("Reading marketplace_item with uuid {}". format(app_uuid))
     res, err = client.market_place.read(app_uuid)
     if err:
         LOG.error("[{}] - {}".format(err["code"], err["error"]))
@@ -474,6 +477,7 @@ def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_s
         version = get_mpi_latest_version(name=name, app_source=app_source,)
         LOG.info(version)
 
+    LOG.info("Converting MPI into blueprint")
     bp_payload = convert_mpi_into_blueprint(
         name=name, version=version, project_name=project, app_source=app_source
     )
@@ -485,6 +489,7 @@ def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_s
 
     # Vmware template
     vm_img_uuid_name_map = {}
+    LOG.debug("Decompiling vmware downloadable image templates")
     for pkg in blueprint["package_definition_list"]:
         if pkg["type"] == "SUBSTRATE_IMAGE":
             vm_img_uuid_name_map[pkg["uuid"]] = get_valid_identifier(pkg["name"])

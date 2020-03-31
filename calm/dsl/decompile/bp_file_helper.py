@@ -50,6 +50,7 @@ def render_bp_file_template(cls, with_secrets=False):
             add_edges(entity_edges, dep.__name__, service.__name__)
 
     downloadable_img_list = []
+    vm_images = []
     for package in cls.packages:
         if getattr(package, "__kind__") == "app_package":
             entity_name_text_map[package.__name__] = render_package_template(package)
@@ -60,10 +61,11 @@ def render_bp_file_template(cls, with_secrets=False):
 
         else:
             downloadable_img_list.append(render_vm_disk_package_template(package))
+            vm_images.append(package.__name__)
             # Printing all the downloadable images at the top, so ignore its edges
 
     for substrate in cls.substrates:
-        entity_name_text_map[substrate.__name__] = render_substrate_template(substrate)
+        entity_name_text_map[substrate.__name__] = render_substrate_template(substrate, vm_images)
 
     deployments = []
     for profile in cls.profiles:

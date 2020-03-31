@@ -254,24 +254,6 @@ def decompile_bp(name, with_secrets=False):
     blueprint_name = res["spec"].get("name", "SampleBlueprint")
     blueprint_description = res["spec"].get("description", "")
 
-    res, err = client.blueprint.read(bp_uuid)
-    if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-    bp_read_payload = res.json()["spec"]["resources"]
-
-    # Merging the provider_spec of read_payload
-    for ind, substrate in enumerate(blueprint["substrate_definition_list"]):
-
-        # TODO: Fix case for template for Vmware provider
-        if substrate["create_spec"]["type"] == "PROVISION_VMWARE_VM":
-            bp_read_payload["substrate_definition_list"][ind]["create_spec"][
-                "template"
-            ] = substrate["create_spec"]["template"]
-
-        substrate["create_spec"] = bp_read_payload["substrate_definition_list"][ind][
-            "create_spec"
-        ]
-
     bp_cls = BlueprintType.decompile(blueprint)
     bp_cls.__name__ = get_valid_identifier(blueprint_name)
     bp_cls.__doc__ = blueprint_description

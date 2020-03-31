@@ -8,7 +8,7 @@ from calm.dsl.builtins import SubstrateType, get_valid_identifier
 from calm.dsl.providers import get_provider
 
 
-def render_substrate_template(cls):
+def render_substrate_template(cls, vm_images=[]) :
 
     if not isinstance(cls, SubstrateType):
         raise TypeError("{} is not of type {}".format(cls, SubstrateType))
@@ -41,6 +41,7 @@ def render_substrate_template(cls):
         spec=provider_spec,
         filename="{}/{}".format(get_specs_dir_key(), provider_spec_file_name),
         provider_type=provider_type,
+        vm_images=vm_images,
     )
 
     spec_dir = get_specs_dir()
@@ -63,7 +64,7 @@ def render_substrate_template(cls):
     return text.strip()
 
 
-def get_provider_spec_string(spec, filename, provider_type):
+def get_provider_spec_string(spec, filename, provider_type, vm_images):
 
     Provider = get_provider(provider_type)
 
@@ -93,17 +94,14 @@ def get_provider_spec_string(spec, filename, provider_type):
 
     elif provider_type == "VMWARE_VM":
         account_uuid = spec["resources"]["account_uuid"]
-        spec_template = spec["template"]
-        Obj = Provider.get_api_obj()
-        templates = Obj.templates(account_uuid)
+        spec_template = get_valid_identifier(spec["template"])
 
-        if spec_template in templates.values():
-            res = "read_vmw_spec('{}')".format(filename)
-
-        else:
-            spec_template = get_valid_identifier(spec_template)
+        if spec_template in vm_images:
             spec["template"] = ""
             res = "read_vmw_spec('{}', vm_template={})".format(filename, spec_template)
+        
+        else:
+            res = "read_vmw_spec('{}')".format(filename)
 
     else:
         res = "read_provider_spec('{}')".format(filename)
