@@ -6,10 +6,14 @@ from calm.dsl.decompile.action import render_action_template
 from calm.dsl.decompile.file_handler import get_specs_dir, get_specs_dir_key
 from calm.dsl.builtins import SubstrateType, get_valid_identifier
 from calm.dsl.providers import get_provider
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
-def render_substrate_template(cls, vm_images=[]) :
+def render_substrate_template(cls, vm_images=[]):
 
+    LOG.debug("Rendering {} substrate template".format(cls.__name__))
     if not isinstance(cls, SubstrateType):
         raise TypeError("{} is not of type {}".format(cls, SubstrateType))
 
@@ -99,7 +103,7 @@ def get_provider_spec_string(spec, filename, provider_type, vm_images):
         if spec_template in vm_images:
             spec["template"] = ""
             res = "read_vmw_spec('{}', vm_template={})".format(filename, spec_template)
-        
+
         else:
             res = "read_vmw_spec('{}')".format(filename)
 

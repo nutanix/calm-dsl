@@ -21,6 +21,7 @@ from calm.dsl.builtins import (
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
 from calm.dsl.decompile.decompile_render import create_bp_dir
+from calm.dsl.decompile.file_handler import get_bp_dir
 
 from .utils import get_name_query, get_states_filter, highlight_text
 from .constants import BLUEPRINT
@@ -254,10 +255,13 @@ def decompile_bp(name, with_secrets=False):
     blueprint_name = res["spec"].get("name", "SampleBlueprint")
     blueprint_description = res["spec"].get("description", "")
 
+    LOG.info("Decompiling blueprint {}".format(blueprint_name))
     bp_cls = BlueprintType.decompile(blueprint)
     bp_cls.__name__ = get_valid_identifier(blueprint_name)
     bp_cls.__doc__ = blueprint_description
+
     create_bp_dir(bp_cls, with_secrets)
+    click.echo("\nSuccessfully decompiled. Directory location: {}".format(get_bp_dir()))
 
 
 def compile_blueprint_command(bp_file, out, no_sync=False):

@@ -4,8 +4,9 @@ import os
 from calm.dsl.decompile.render import render_template
 from calm.dsl.builtins import CredentialType
 from calm.dsl.decompile.file_handler import get_local_dir
+from calm.dsl.tools import get_logging_handle
 
-
+LOG = get_logging_handle(__name__)
 CRED_VAR_NAME_MAP = {}
 CRED_FILES = []
 
@@ -13,6 +14,7 @@ CRED_FILES = []
 def render_credential_template(cls):
 
     global CRED_VAR_NAME_MAP, CRED_FILES
+    LOG.debug("Rendering {} credential template".format(cls.__name__))
     if not isinstance(cls, CredentialType):
         raise TypeError("{} is not of type {}".format(cls, CredentialType))
 

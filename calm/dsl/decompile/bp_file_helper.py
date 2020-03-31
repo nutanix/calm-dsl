@@ -65,7 +65,9 @@ def render_bp_file_template(cls, with_secrets=False):
             # Printing all the downloadable images at the top, so ignore its edges
 
     for substrate in cls.substrates:
-        entity_name_text_map[substrate.__name__] = render_substrate_template(substrate, vm_images)
+        entity_name_text_map[substrate.__name__] = render_substrate_template(
+            substrate, vm_images
+        )
 
     deployments = []
     for profile in cls.profiles:

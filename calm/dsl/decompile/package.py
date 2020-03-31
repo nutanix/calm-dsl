@@ -3,10 +3,14 @@ from calm.dsl.builtins import PackageType
 from calm.dsl.decompile.ref import render_ref_template
 from calm.dsl.decompile.variable import render_variable_template
 from calm.dsl.decompile.action import render_action_template
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 def render_package_template(cls):
 
+    LOG.debug("Rendering {} package template".format(cls.__name__))
     if not isinstance(cls, PackageType):
         raise TypeError("{} is not of type {}".format(cls, PackageType))
 

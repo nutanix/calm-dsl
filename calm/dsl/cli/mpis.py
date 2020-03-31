@@ -5,8 +5,10 @@ from prettytable import PrettyTable
 
 from calm.dsl.builtins import BlueprintType, get_valid_identifier
 from calm.dsl.decompile.decompile_render import create_bp_dir
+from calm.dsl.decompile.file_handler import get_bp_dir
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.config import get_config
+
 from .utils import highlight_text, get_states_filter
 from .bps import launch_blueprint_simple, get_blueprint
 from .projects import get_project
@@ -484,7 +486,7 @@ def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_s
     del bp_payload["status"]
 
     blueprint = bp_payload["spec"]["resources"]
-    blueprint_name = bp_payload["spec"].get("name", "CALM-DSL Blueprint")
+    blueprint_name = bp_name or bp_payload["spec"].get("name", "CALM-DSL Blueprint")
     blueprint_description = bp_payload["spec"].get("description", "")
 
     # Vmware template
@@ -500,10 +502,13 @@ def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_s
             if template_id in list(vm_img_uuid_name_map.keys()):
                 substrate["create_spec"]["template"] = vm_img_uuid_name_map[template_id]
 
+    LOG.info("Decompiling blueprint {}". format(blueprint_name))
     bp_cls = BlueprintType.decompile(blueprint)
-    bp_cls.__name__ = get_valid_identifier(bp_name or blueprint_name)
+    bp_cls.__name__ = get_valid_identifier(blueprint_name)
     bp_cls.__doc__ = blueprint_description
+
     create_bp_dir(bp_cls, with_secrets)
+    click.echo("\nSuccessfully decompiled. Directory location: {}". format(get_bp_dir()))
 
 
 def launch_marketplace_item(

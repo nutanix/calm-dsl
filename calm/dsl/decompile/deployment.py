@@ -1,10 +1,14 @@
 from calm.dsl.decompile.render import render_template
 from calm.dsl.builtins import DeploymentType
 from calm.dsl.decompile.ref import render_ref_template
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 def render_deployment_template(cls):
 
+    LOG.debug("Rendering {} deployment template".format(cls.__name__))
     if not isinstance(cls, DeploymentType):
         raise TypeError("{} is not of type {}".format(cls, DeploymentType))
 

@@ -3,14 +3,16 @@ from calm.dsl.decompile.task import render_task_template
 from calm.dsl.decompile.parallel_task import render_parallel_task_template
 from calm.dsl.decompile.variable import render_variable_template
 from calm.dsl.builtins import action, ActionType, RefType
+from calm.dsl.tools import get_logging_handle
 
-
+LOG = get_logging_handle(__name__)
 RUNBOOK_ACTION_MAP = {}
 
 
 def render_action_template(cls, entity_context=""):
 
     global RUNBOOK_REF_MAP
+    LOG.debug("Rendering {} action template".format(cls.__name__))
     if not isinstance(cls, ActionType):
         raise TypeError("{} is not of type {}".format(cls, action))
 

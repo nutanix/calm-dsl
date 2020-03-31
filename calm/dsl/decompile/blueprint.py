@@ -1,10 +1,14 @@
 from calm.dsl.decompile.render import render_template
 from calm.dsl.builtins import BlueprintType
 from calm.dsl.decompile.credential import get_cred_var_name
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 def render_blueprint_template(cls):
 
+    LOG.debug("Rendering {} blueprint template".format(cls.__name__))
     if not isinstance(cls, BlueprintType):
         raise TypeError("{} is not of type {}".format(cls, BlueprintType))
 
