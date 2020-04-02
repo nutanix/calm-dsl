@@ -486,7 +486,8 @@ def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_s
     del bp_payload["status"]
 
     blueprint = bp_payload["spec"]["resources"]
-    blueprint_dir = bp_name or "Mpi_Bp_{}_v{}".format(name, version)
+    blueprint_name = get_valid_identifier(bp_name or name)
+    blueprint_dir = bp_name or "Mpi_Bp_{}_v{}".format(blueprint_name, version)
     blueprint_description = bp_payload["spec"].get("description", "")
 
     # Vmware template
@@ -504,7 +505,7 @@ def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_s
 
     LOG.info("Decompiling marketplace blueprint {}".format(name))
     bp_cls = BlueprintType.decompile(blueprint)
-    bp_cls.__name__ = get_valid_identifier(blueprint_dir)
+    bp_cls.__name__ = blueprint_name
     bp_cls.__doc__ = blueprint_description
 
     create_bp_dir(bp_cls, blueprint_dir, with_secrets)
