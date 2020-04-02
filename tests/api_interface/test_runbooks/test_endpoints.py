@@ -4,6 +4,7 @@ import os
 
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import ENDPOINT
+from calm.dsl.config import get_config
 from utils import change_uuids, read_test_config
 
 LinuxEndpointPayload = read_test_config(file_name="linux_endpoint_payload.json")
@@ -11,7 +12,7 @@ WindowsEndpointPayload = read_test_config(file_name="windows_endpoint_payload.js
 HTTPEndpointPayload = read_test_config(file_name="http_endpoint_payload.json")
 
 
-class TestExecTasks:
+class TestEndpoints:
     @pytest.mark.runbook
     @pytest.mark.endpoint
     @pytest.mark.parametrize('EndpointPayload', [LinuxEndpointPayload, WindowsEndpointPayload, HTTPEndpointPayload])
@@ -251,6 +252,34 @@ class TestExecTasks:
         client = get_api_client()
 
         params = {"length": 20, "offset": 0}
+        res, err = client.endpoint.list(params=params)
+
+        if not err:
+            print("\n>> Endpoint list call successful>>")
+            assert res.ok is True
+        else:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+    @pytest.mark.runbook
+    @pytest.mark.endpoint
+    def test_endpoint_list_with_project_reference(self):
+        config = get_config()
+        client = get_api_client()
+
+        project_name = config["PROJECT"]["name"]
+        # Fetch project details
+        project_params = {"filter": "name=={}".format(project_name)}
+        res, err = client.project.list(params=project_params)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        response = res.json()
+        entities = response.get("entities", None)
+        if not entities:
+            raise Exception("No project with name {} exists".format(project_name))
+
+        project_id = entities[0]["metadata"]["uuid"]
+        params = {"length": 20, "offset": 0, "filter": "project_reference=={}".format(project_id)}
         res, err = client.endpoint.list(params=params)
 
         if not err:
