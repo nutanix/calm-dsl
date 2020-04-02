@@ -36,7 +36,6 @@ def render_task_template(cls, RUNBOOK_ACTION_MAP={}):
 
     if cls.type == "EXEC":
         script_type = cls.attrs["script_type"]
-        cls.attrs["script"] = cls.attrs["script"].replace("'", r"/'")
         cls.attrs["script_file"] = create_script_file(script_type, cls.attrs["script"])
 
         if script_type == "sh":
@@ -53,7 +52,6 @@ def render_task_template(cls, RUNBOOK_ACTION_MAP={}):
         if variables:
             user_attrs["variables"] = variables
         script_type = cls.attrs["script_type"]
-        cls.attrs["script"] = cls.attrs["script"].replace("'", r"/'")
         cls.attrs["script_file"] = create_script_file(script_type, cls.attrs["script"])
 
         if script_type == "sh":
