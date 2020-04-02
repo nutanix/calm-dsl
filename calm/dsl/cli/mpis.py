@@ -487,7 +487,7 @@ def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_s
 
     blueprint = bp_payload["spec"]["resources"]
     blueprint_name = get_valid_identifier(bp_name or name)
-    blueprint_dir = bp_name or "Mpi_Bp_{}_v{}".format(blueprint_name, version)
+    blueprint_dir = bp_name or "mpi_bp_{}_v{}".format(blueprint_name, version)
     blueprint_description = bp_payload["spec"].get("description", "")
 
     # Vmware template
