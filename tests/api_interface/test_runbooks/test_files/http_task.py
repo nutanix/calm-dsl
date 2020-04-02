@@ -7,12 +7,15 @@ from calm.dsl.builtins import read_local_file
 from calm.dsl.builtins import runbook
 from calm.dsl.builtins import CalmTask
 from calm.dsl.builtins import CalmEndpoint, Auth, ref
+from calm.dsl.config import get_config
 from utils import read_test_config, change_uuids
 
 AUTH_USERNAME = read_local_file(".tests/runbook_tests/auth_username")
 AUTH_PASSWORD = read_local_file(".tests/runbook_tests/auth_password")
 URL = read_local_file(".tests/runbook_tests/url")
-TEST_URL = read_local_file(".tests/runbook_tests/url1")
+
+config = get_config()
+TEST_URL = "https://{}:9440/".format(config["SERVER"]["pc_ip"])
 
 endpoint = CalmEndpoint.HTTP(URL, verify=False, auth=Auth.Basic(AUTH_USERNAME, AUTH_PASSWORD))
 endpoint_with_tls_verify = CalmEndpoint.HTTP(URL, verify=True, auth=Auth.Basic(AUTH_USERNAME, AUTH_PASSWORD))
