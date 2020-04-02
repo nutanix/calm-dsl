@@ -260,7 +260,7 @@ def decompile_bp(name, with_secrets=False):
     bp_cls.__name__ = get_valid_identifier(blueprint_name)
     bp_cls.__doc__ = blueprint_description
 
-    create_bp_dir(bp_cls, with_secrets)
+    create_bp_dir(bp_cls=bp_cls, with_secrets=with_secrets)
     click.echo("\nSuccessfully decompiled. Directory location: {}".format(get_bp_dir()))
 
 
