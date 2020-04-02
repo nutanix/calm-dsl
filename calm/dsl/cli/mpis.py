@@ -343,7 +343,7 @@ def get_mpi_by_name_n_version(name, version, app_states=[], app_source=None):
         sys.exit(-1)
 
     app_uuid = res["entities"][0]["metadata"]["uuid"]
-    LOG.debug("Reading marketplace_item with uuid {}". format(app_uuid))
+    LOG.debug("Reading marketplace_item with uuid {}".format(app_uuid))
     res, err = client.market_place.read(app_uuid)
     if err:
         LOG.error("[{}] - {}".format(err["code"], err["error"]))
@@ -486,7 +486,7 @@ def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_s
     del bp_payload["status"]
 
     blueprint = bp_payload["spec"]["resources"]
-    blueprint_name = bp_name or bp_payload["spec"].get("name", "CALM-DSL Blueprint")
+    blueprint_dir = bp_name or "Mpi_Bp_{}_v{}".format(name, version)
     blueprint_description = bp_payload["spec"].get("description", "")
 
     # Vmware template
@@ -502,13 +502,13 @@ def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_s
             if template_id in list(vm_img_uuid_name_map.keys()):
                 substrate["create_spec"]["template"] = vm_img_uuid_name_map[template_id]
 
-    LOG.info("Decompiling blueprint {}". format(blueprint_name))
+    LOG.info("Decompiling marketplace blueprint {}".format(name))
     bp_cls = BlueprintType.decompile(blueprint)
-    bp_cls.__name__ = get_valid_identifier(blueprint_name)
+    bp_cls.__name__ = get_valid_identifier(blueprint_dir)
     bp_cls.__doc__ = blueprint_description
 
-    create_bp_dir(bp_cls, with_secrets)
-    click.echo("\nSuccessfully decompiled. Directory location: {}". format(get_bp_dir()))
+    create_bp_dir(bp_cls, blueprint_dir, with_secrets)
+    click.echo("\nSuccessfully decompiled. Directory location: {}".format(get_bp_dir()))
 
 
 def launch_marketplace_item(

@@ -59,9 +59,11 @@ class CustomLogging:
         # create console and file handler
         self._ch1 = logging.StreamHandler(sys.stdout)
         self._ch1.addFilter(StdOutFilter())
+        self._ch1.terminator = ""
 
         self._ch2 = logging.StreamHandler()
         self._ch2.addFilter(StdErrFilter())
+        self._ch2.terminator = ""
 
         # add custom formatter to console handler
         self.__addCustomFormatter(self._ch1)
