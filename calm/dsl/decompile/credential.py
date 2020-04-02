@@ -22,7 +22,7 @@ def render_credential_template(cls):
     user_attrs["name"] = cls.__name__
     user_attrs["description"] = cls.__doc__
 
-    var_name = "BP_CRED_{}".format(len(CRED_VAR_NAME_MAP))
+    var_name = "BP_CRED_{}".format(cls.__name__)
     file_name = "{}_{}".format(var_name, user_attrs["type"])
     file_loc = os.path.join(get_local_dir(), file_name)
 

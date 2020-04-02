@@ -11,12 +11,15 @@ from calm.dsl.tools import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-def render_task_template(cls, RUNBOOK_ACTION_MAP={}):
+def render_task_template(cls, entity_context="", RUNBOOK_ACTION_MAP={}):
 
     LOG.debug("Rendering {} task template".format(cls.__name__))
     if not isinstance(cls, TaskType):
         raise TypeError("{} is not of type {}".format(cls, TaskType))
 
+    # update entity_context
+    entity_context = entity_context + "_Task_" + cls.__name__
+    
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__
     # sample for exec and ssh type task
@@ -36,7 +39,7 @@ def render_task_template(cls, RUNBOOK_ACTION_MAP={}):
 
     if cls.type == "EXEC":
         script_type = cls.attrs["script_type"]
-        cls.attrs["script_file"] = create_script_file(script_type, cls.attrs["script"])
+        cls.attrs["script_file"] = create_script_file(script_type, cls.attrs["script"], entity_context)
 
         if script_type == "sh":
             schema_file = "task_exec_ssh.py.jinja2"
@@ -52,7 +55,7 @@ def render_task_template(cls, RUNBOOK_ACTION_MAP={}):
         if variables:
             user_attrs["variables"] = variables
         script_type = cls.attrs["script_type"]
-        cls.attrs["script_file"] = create_script_file(script_type, cls.attrs["script"])
+        cls.attrs["script_file"] = create_script_file(script_type, cls.attrs["script"], entity_context)
 
         if script_type == "sh":
             schema_file = "task_setvariable_ssh.py.jinja2"
@@ -135,10 +138,11 @@ def render_task_template(cls, RUNBOOK_ACTION_MAP={}):
     return text.strip()
 
 
-def create_script_file(script_type, script=""):
+def create_script_file(script_type, script="", entity_context=""):
     """create the script file and return the file location"""
 
-    file_name = "task_file_{}".format(str(uuid.uuid4())[:8])
+    # Use task context for unique names
+    file_name = entity_context
     scripts_dir = get_scripts_dir()
 
     if script_type == "sh":

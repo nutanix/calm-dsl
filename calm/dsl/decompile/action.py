@@ -18,7 +18,7 @@ def render_action_template(cls, entity_context=""):
 
     # Update entity context
     # TODO for now, not adding runbook to context as current mapping -is 1:1
-    entity_context = entity_context + "_action_" + cls.__name__
+    entity_context = entity_context + "_Action_" + cls.__name__
 
     runbook = cls.runbook
     RUNBOOK_ACTION_MAP[runbook.__name__] = cls.__name__
@@ -27,9 +27,9 @@ def render_action_template(cls, entity_context=""):
     tasks = []
     for task_list in levelled_tasks:
         if len(task_list) != 1:
-            tasks.append(render_parallel_task_template(task_list, RUNBOOK_ACTION_MAP))
+            tasks.append(render_parallel_task_template(task_list, entity_context, RUNBOOK_ACTION_MAP))
         else:
-            tasks.append(render_task_template(task_list[0], RUNBOOK_ACTION_MAP))
+            tasks.append(render_task_template(task_list[0], entity_context, RUNBOOK_ACTION_MAP))
 
     variables = []
     for variable in runbook.variables:
