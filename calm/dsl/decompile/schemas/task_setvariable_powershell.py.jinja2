@@ -5,7 +5,7 @@ CalmTask.SetVariable.powershell(name='{{obj.name}}', filename='{{obj.attrs.scrip
 CalmTask.SetVariable.powershell(name='{{obj.name}}', filename='{{obj.attrs.script_file}}', target={{obj.target}}, variables={{obj.variables}})
 {%- elif obj.target is not defined %}
 CalmTask.SetVariable.powershell(name='{{obj.name}}', filename='{{obj.attrs.script_file}}', cred={{obj.cred}}, variables={{obj.variables}})
-{%- elif obj.varibales is not defined %}
+{%- elif obj.variables is not defined %}
 CalmTask.SetVariable.powershell(name='{{obj.name}}', filename='{{obj.attrs.script_file}}', cred={{obj.cred}}, target={{obj.target}})
 {%- else %}
 CalmTask.SetVariable.powershell(name='{{obj.name}}', filename='{{obj.attrs.script_file}}', cred={{obj.cred}}, target={{obj.target}}, variables={{obj.variables}})

@@ -5,7 +5,7 @@ CalmTask.SetVariable.escript(name='{{obj.name}}', filename='{{obj.attrs.script_f
 CalmTask.SetVariable.escript(name='{{obj.name}}', filename='{{obj.attrs.script_file}}', target={{obj.target}}, variables={{obj.variables}})
 {%- elif obj.target is not defined %}
 CalmTask.SetVariable.escript(name='{{obj.name}}', filename='{{obj.attrs.script_file}}', cred={{obj.cred}}, variables={{obj.variables}})
-{%- elif obj.varibales is not defined %}
+{%- elif obj.variables is not defined %}
 CalmTask.SetVariable.escript(name='{{obj.name}}', filename='{{obj.attrs.script_file}}', cred={{obj.cred}}, target={{obj.target}})
 {%- else %}
 CalmTask.SetVariable.escript(name='{{obj.name}}', filename='{{obj.attrs.script_file}}', cred={{obj.cred}}, target={{obj.target}}, variables={{obj.variables}})
