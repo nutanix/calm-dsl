@@ -9,13 +9,6 @@ VERBOSE_LEVEL = 20
 SHOW_TRACE = False
 
 
-class StdOutFilter(logging.Filter):
-    """Filter for Stdout stream handler"""
-
-    def filter(self, rec):
-        return rec.levelno < logging.DEBUG
-
-
 class StdErrFilter(logging.Filter):
     """Filter for Stderr stream handler"""
 
@@ -56,23 +49,17 @@ class CustomLogging:
            None
         """
 
-        # create console and file handler
-        self._ch1 = logging.StreamHandler(sys.stdout)
-        self._ch1.addFilter(StdOutFilter())
-
-        self._ch2 = logging.StreamHandler()
-        self._ch2.addFilter(StdErrFilter())
+        self._ch1 = logging.StreamHandler()
+        self._ch1.addFilter(StdErrFilter())
 
         # add custom formatter to console handler
         self.__addCustomFormatter(self._ch1)
-        self.__addCustomFormatter(self._ch2)
 
         # create custom logger
         self._logger = logging.getLogger(name)
 
         # add console to logger
         self._logger.addHandler(self._ch1)
-        self._logger.addHandler(self._ch2)
 
         # Add show trace option
         self.show_trace = False
