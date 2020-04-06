@@ -52,5 +52,5 @@ class Version:
         res, err = client.version.get_pc_version()
         if not err:
             res = res.json()
-            pc_version = res["version"]
+            pc_version = res["resources"]["version"]
             cls.create("PC", pc_version)
