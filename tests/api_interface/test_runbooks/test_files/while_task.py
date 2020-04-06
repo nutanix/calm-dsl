@@ -84,3 +84,22 @@ def WhileTask(endpoints=[linux_endpoint, windows_endpoint, http_endpoint]):
         CalmTask.Exec.ssh(script="echo 'test'", name="Task12", target=ref(linux_endpoint))
         CalmTask.Exec.powershell(script="echo 'test'", name="Task13", target=ref(windows_endpoint))
         CalmTask.Exec.powershell(script="echo 'test'", name="Task14", target=ref(windows_endpoint))
+
+
+@runbook
+def WhileTaskLoopVariable(endpoints=[linux_endpoint, windows_endpoint, http_endpoint]):
+    "Runbook Service example"
+    while(CalmTask.While(10, name="Task1", loop_variable="iteration")):
+        CalmTask.SetVariable.escript(name="SetVariableTask",
+                                     script='''print "iteration=random"''', variables=["iteration"])
+        while(CalmTask.While(10, name="Task2", loop_variable="iteration")):
+            CalmTask.HTTP.endpoint(
+                "POST",
+                relative_url="/list",
+                body=json.dumps({}),
+                headers={"Content-Type": "application/json"},
+                content_type="application/json",
+                response_paths={"iteration": "$"},
+                status_mapping={200: True},
+                target=ref(http_endpoint),
+            )
