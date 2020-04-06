@@ -12,7 +12,7 @@ def validate_version():
     # At initializing dsl, version might not found in cache
     calm_version = Version.get_version("CALM")
     if calm_version:
-        if LV(calm_version) <  LV(LATEST_VERIFIED_VERSION):
+        if LV(calm_version) < LV(LATEST_VERIFIED_VERSION):
             LOG.warning(
                 "Host CALM version({}) is less than verified({}).".format(
                     calm_version, LATEST_VERIFIED_VERSION
