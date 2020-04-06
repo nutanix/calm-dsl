@@ -15,7 +15,5 @@ class VersionAPI:
 
     def get_pc_version(self):
         return self.connection._call(
-            self.PC_VERSION,
-            verify=False,
-            method=REQUEST.METHOD.GET,
+            self.PC_VERSION, verify=False, method=REQUEST.METHOD.GET,
         )
