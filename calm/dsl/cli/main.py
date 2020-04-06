@@ -54,7 +54,7 @@ Commonly used commands:
     ctx.obj["verbose"] = True
     try:
         validate_version()
-    except Exception as e:
+    except Exception:
         LOG.debug("Could not validate version")
         pass
     if config_file:
