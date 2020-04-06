@@ -163,12 +163,8 @@ class AWSProfile(Profile):
     WP_DB_PASSWORD = CalmVariable.Simple.Secret(
         WP_PASSWD, is_mandatory=False, runtime=True
     )
-    AWS_ACCESS_KEY_ID = CalmVariable.Simple.Secret(
-        AWS_PROVIDER_ACCESS_KEY_ID
-    )
-    AWS_SECRET_ACCESS_KEY = CalmVariable.Simple.Secret(
-        AWS_PROVIDER_SECRET_ACCESS_KEY
-    )
+    AWS_ACCESS_KEY_ID = CalmVariable.Simple.Secret(AWS_PROVIDER_ACCESS_KEY_ID)
+    AWS_SECRET_ACCESS_KEY = CalmVariable.Simple.Secret(AWS_PROVIDER_SECRET_ACCESS_KEY)
 
     @action
     def ScaleOut():

@@ -52,7 +52,11 @@ Commonly used commands:
 """
     ctx.ensure_object(dict)
     ctx.obj["verbose"] = True
-    validate_version()
+    try:
+        validate_version()
+    except Exception:
+        LOG.debug("Could not validate version")
+        pass
     if config_file:
         get_config(config_file=config_file)
 
@@ -146,7 +150,7 @@ def get_server_status():
 
     LOG.info(service_enablement_status)
     LOG.info("Server URL: {}".format(client.connection.base_url))
-    LOG.info("CALM Version: {}".format(calm_version))
+    LOG.info("Calm Version: {}".format(calm_version))
 
     res, err = client.version.get_pc_version()
     if not err:
@@ -175,7 +179,7 @@ def decompile():
 
 @main.group(cls=DYMGroup)
 def create():
-    """Create entities in CALM (blueprint, project) """
+    """Create entities in Calm (blueprint, project) """
     pass
 
 

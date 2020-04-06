@@ -46,7 +46,7 @@ class Version:
         # Update calm version
         res, err = client.version.get_calm_version()
         calm_version = res.content.decode("utf-8")
-        cls.create("CALM", calm_version)
+        cls.create("Calm", calm_version)
 
         # Update pc_version of PC(if host exist)
         res, err = client.version.get_pc_version()
