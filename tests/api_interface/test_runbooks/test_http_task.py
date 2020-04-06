@@ -12,7 +12,8 @@ from tests.api_interface.test_runbooks.test_files.http_task import (HTTPTask,
                                                                     HTTPTaskWithUnsupportedPayload,
                                                                     HTTPTaskWithTLSVerify,
                                                                     HTTPTaskWithIncorrectAuth,
-                                                                    HTTPHeadersWithMacro)
+                                                                    HTTPHeadersWithMacro,
+                                                                    HTTPRelativeURLWithMacro)
 from utils import upload_runbook, poll_runlog_status
 
 
@@ -87,7 +88,8 @@ class TestHTTPTasks:
     @pytest.mark.runbook
     @pytest.mark.regression
     def test_http_validations(self):
-        """test_response_field_blank_http, test_http_without_any_target"""
+        """test_response_field_blank_http, test_http_without_any_target,
+        test_http_task_with_json_content_type"""
 
         client = get_api_client()
         rb_name = "test_httptask_" + str(uuid.uuid4())[-10:]
@@ -120,7 +122,8 @@ class TestHTTPTasks:
     @pytest.mark.runbook
     @pytest.mark.regression
     def test_http_without_auth(self):
-        """ test_http_get_task_no_auth, test_http_default_target """
+        """ test_http_get_task_no_auth, test_http_default_target,
+        test_http_task_with_html_content_type """
 
         client = get_api_client()
         rb_name = "test_httptask_" + str(uuid.uuid4())[-10:]
@@ -310,13 +313,14 @@ class TestHTTPTasks:
                 pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
     @pytest.mark.regression
-    def test_macros_in_http_header(self):
-        """ test_macros_in_http_header """
+    @pytest.mark.parametrize("Runbook", [HTTPHeadersWithMacro, HTTPRelativeURLWithMacro])
+    def test_macros_in_http_header(self, Runbook):
+        """ test_macros_in_http_header, test_variable_in_relative_url """
 
         client = get_api_client()
         rb_name = "test_httptask_" + str(uuid.uuid4())[-10:]
 
-        rb = upload_runbook(client, rb_name, HTTPHeadersWithMacro)
+        rb = upload_runbook(client, rb_name, Runbook)
         rb_state = rb["status"]["state"]
         rb_uuid = rb["metadata"]["uuid"]
         print(">> Runbook state: {}".format(rb_state))
