@@ -102,3 +102,18 @@ def PowershellTaskWithoutTarget():
 @runbook
 def ShellTaskWithoutTarget():
     CalmTask.Exec.ssh(name="ExecTask", script='''echo "Task is Successful"''')
+
+
+@runbook
+def MacroOnShell(endpoints=[linux_endpoint], default_target=ref(linux_endpoint)):
+    CalmTask.Exec.ssh(name="ExecTask", script='''echo "@@{calm_runbook_name}@@, @@{calm_runbook_uuid}@@ @@{calm_project_name}@@ @@{calm_jwt}@@ @@{calm_date}@@"''')
+
+
+@runbook
+def MacroOnPowershell(endpoints=[windows_endpoint], default_target=ref(windows_endpoint)):
+    CalmTask.Exec.powershell(name="ExecTask", script='''echo "@@{calm_runbook_name}@@, @@{calm_runbook_uuid}@@ @@{calm_project_name}@@ @@{calm_jwt}@@ @@{calm_date}@@"''')
+
+
+@runbook
+def MacroOnEscript():
+    CalmTask.Exec.escript(name="ExecTask", script='''print "@@{calm_runbook_name}@@, @@{calm_runbook_uuid}@@ @@{calm_project_name}@@ @@{calm_jwt}@@ @@{calm_date}@@"''')
