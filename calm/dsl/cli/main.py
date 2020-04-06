@@ -151,7 +151,7 @@ def get_server_status():
     res, err = client.version.get_pc_version()
     if not err:
         res = res.json()
-        pc_version = res["resources"]["version"]
+        pc_version = res["version"]
         LOG.info("PC Version: {}".format(pc_version))
 
 

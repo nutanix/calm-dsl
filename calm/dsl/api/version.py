@@ -2,12 +2,12 @@ from .resource import ResourceAPI
 from .connection import REQUEST
 
 
-class VersionAPI(ResourceAPI):
+class VersionAPI:
     def __init__(self, connection):
-        super().__init__(connection, resource_type="")
+        self.connection = connection
 
         self.CALM_VERSION = "apps/version"
-        self.PC_VERSION = self.ROOT + "/prism_central"
+        self.PC_VERSION = "PrismGateway/services/rest/v1/cluster/version"
 
     def get_calm_version(self):
         return self.connection._call(
