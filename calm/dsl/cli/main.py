@@ -52,7 +52,11 @@ Commonly used commands:
 """
     ctx.ensure_object(dict)
     ctx.obj["verbose"] = True
-    validate_version()
+    try:
+        validate_version()
+    except:
+        LOG.debug("Could not validate version")
+        pass
     if config_file:
         get_config(config_file=config_file)
 
