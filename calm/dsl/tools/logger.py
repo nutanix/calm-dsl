@@ -13,14 +13,14 @@ class StdOutFilter(logging.Filter):
     """Filter for Stdout stream handler"""
 
     def filter(self, rec):
-        return rec.levelno <= logging.WARNING
+        return rec.levelno < logging.DEBUG
 
 
 class StdErrFilter(logging.Filter):
     """Filter for Stderr stream handler"""
 
     def filter(self, rec):
-        return rec.levelno > logging.WARNING
+        return rec.levelno >= logging.DEBUG
 
 
 class CustomLogging:
@@ -59,9 +59,11 @@ class CustomLogging:
         # create console and file handler
         self._ch1 = logging.StreamHandler(sys.stdout)
         self._ch1.addFilter(StdOutFilter())
+        self._ch1.terminator = ""
 
         self._ch2 = logging.StreamHandler()
         self._ch2.addFilter(StdErrFilter())
+        self._ch1.terminator = ""
 
         # add custom formatter to console handler
         self.__addCustomFormatter(self._ch1)
