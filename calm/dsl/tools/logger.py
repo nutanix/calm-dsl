@@ -13,14 +13,14 @@ class StdOutFilter(logging.Filter):
     """Filter for Stdout stream handler"""
 
     def filter(self, rec):
-        return rec.levelno <= logging.WARNING
+        return rec.levelno < logging.DEBUG
 
 
 class StdErrFilter(logging.Filter):
     """Filter for Stderr stream handler"""
 
     def filter(self, rec):
-        return rec.levelno > logging.WARNING
+        return rec.levelno >= logging.DEBUG
 
 
 class CustomLogging:

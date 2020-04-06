@@ -1,7 +1,7 @@
 import atexit
 
 from calm.dsl.config import get_init_data
-from .table_config import dsl_database, SecretTable, DataTable, CacheTable
+from .table_config import dsl_database, SecretTable, DataTable, CacheTable, VersionTable
 from calm.dsl.tools import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -31,6 +31,7 @@ class Database:
         self.secret_table = self.set_and_verify(SecretTable)
         self.data_table = self.set_and_verify(DataTable)
         self.cache_table = self.set_and_verify(CacheTable)
+        self.version_table = self.set_and_verify(VersionTable)
 
     def set_and_verify(self, table_cls):
         """ Verify whether this class exists in db

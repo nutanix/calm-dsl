@@ -63,3 +63,15 @@ class CacheTable(BaseModel):
     class Meta:
         database = dsl_database
         primary_key = CompositeKey("entity_type", "entity_name")
+
+
+class VersionTable(BaseModel):
+    name = CharField()
+    version = CharField()
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self):
+        return {
+            "name": self.name,
+            "version": self.version,
+        }
