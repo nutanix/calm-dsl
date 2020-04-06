@@ -266,3 +266,92 @@ class TestRunbooks:
             res = res.json()
             print("API Response: {}".format(res["description"]))
             print(">> Delete call to runbook is successful >>")
+
+    @pytest.mark.runbook
+    @pytest.mark.regression
+    def test_rb_execute_with_deleted_ep(self):
+        """
+        test_runbook_run with deleted ep
+        """
+
+        client = get_api_client()
+        runbook = change_uuids(RunbookPayload, {})
+
+        # Runbook Create
+        res, err = client.runbook.create(runbook)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        rb = res.json()
+        rb_state = rb["status"]["state"]
+        rb_uuid = rb["metadata"]["uuid"]
+        rb_name = rb["spec"]["name"]
+        print(">> Runbook state: {}".format(rb_state))
+        assert rb_state == "ACTIVE"
+
+        # reading the runbook using get call
+        print("\n>>Reading Runbook")
+        res, err = client.runbook.read(rb_uuid)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        else:
+            assert res.ok is True
+            res = res.json()
+            assert rb_name == res["spec"]["name"]
+            assert rb_name == res["metadata"]["name"]
+            assert rb_name == res["metadata"]["name"]
+            print(">> Get call to runbook is successful >>")
+
+        # creating an endpoint
+        EndpointPayload, _ = create_endpoint_payload(linux_endpoint)
+        ep_payload = EndpointPayload.get_dict()
+        res, err = client.endpoint.upload_with_secrets("endpoint_" + str(uuid.uuid4())[-10:], "", ep_payload["spec"]["resources"])
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        endpoint = res.json()
+        endpoint_state = endpoint["status"]["state"]
+        endpoint_name = endpoint["status"]["name"]
+        endpoint_uuid = endpoint["metadata"]["uuid"]
+        assert endpoint_state == "ACTIVE"
+
+        # updating the runbook
+        del rb["status"]
+        rb["spec"]["resources"]["default_target_reference"] = {
+            "uuid": endpoint_uuid,
+            "name": endpoint_name,
+            "kind": "app_endpoint"
+        }
+        res, err = client.runbook.update(rb_uuid, rb)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        rb = res.json()
+        assert rb["status"]["state"] == "ACTIVE"
+
+        # deleting endpoint
+        _, err = client.endpoint.delete(endpoint_uuid)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        # run the runbook
+        print("\n>>Running the runbook")
+        res, err = client.runbook.run(rb_uuid, {})
+        if err['code'] != 400:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        errors = ""
+        for message in res.get('message_list', []):
+            errors += message['message']
+
+        assert 'Default target is not in active state' in errors
+
+        # deleting runbook
+        print("\n>>Deleting runbook")
+        res, err = client.runbook.delete(rb_uuid)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        else:
+            assert res.ok is True
+            res = res.json()
+            print("API Response: {}".format(res["description"]))
+            print(">> Delete call to runbook is successful >>")
