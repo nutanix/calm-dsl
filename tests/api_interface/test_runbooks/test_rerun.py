@@ -9,9 +9,9 @@ from utils import upload_runbook, poll_runlog_status
 
 
 class TestRunbooks:
-    @pytest.mark.slow
     @pytest.mark.runbook
     @pytest.mark.ces
+    @pytest.mark.regression
     @pytest.mark.parametrize("Runbook", [DslConfirmRunbook])
     def test_rb_confirm_and_rerun(self, Runbook):
         """ test_runbook_rerun """

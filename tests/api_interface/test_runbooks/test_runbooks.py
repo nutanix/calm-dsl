@@ -15,8 +15,8 @@ RunbookUpdatePayload = read_test_config(file_name="runbook_payload2.json")
 
 
 class TestRunbooks:
-    @pytest.mark.slow
     @pytest.mark.runbook
+    @pytest.mark.regression
     def test_runbooks_list(self):
         """ test_runbook_list """
 
@@ -31,8 +31,8 @@ class TestRunbooks:
         else:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
-    @pytest.mark.slow
     @pytest.mark.runbook
+    @pytest.mark.regression
     def test_rb_crud(self):
         """
         test_runbook_create, test_runbook_update
@@ -154,6 +154,7 @@ class TestRunbooks:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
     @pytest.mark.runbook
+    @pytest.mark.regression
     @pytest.mark.parametrize("Runbook", [DslPausePlayRunbook])
     def test_rb_update(self, Runbook):
 
@@ -218,9 +219,9 @@ class TestRunbooks:
             print("API Response: {}".format(res["description"]))
             print(">> Delete call to runbook is successful >>")
 
-    @pytest.mark.slow
     @pytest.mark.runbook
     @pytest.mark.ces
+    @pytest.mark.regression
     def test_runbook_abort(self):
         """ test_runbook_run_abort """
 

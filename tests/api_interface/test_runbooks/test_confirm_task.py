@@ -8,9 +8,9 @@ from utils import upload_runbook, poll_runlog_status
 
 
 class TestRunbooks:
-    @pytest.mark.slow
     @pytest.mark.runbook
     @pytest.mark.epsilon
+    @pytest.mark.regression
     @pytest.mark.parametrize("Runbook", [DslConfirmRunbook])
     @pytest.mark.parametrize("Helper", [("SUCCESS", [RUNLOG.STATUS.SUCCESS]), ("FAILURE", RUNLOG.FAILURE_STATES)])
     def test_rb_confirm(self, Runbook, Helper):

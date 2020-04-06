@@ -17,6 +17,7 @@ from utils import upload_runbook, poll_runlog_status
 
 class TestHTTPTasks:
     @pytest.mark.runbook
+    @pytest.mark.regression
     def test_http_task(self):
         """ test_http_task, test_http_task_outputin_set_variable,
             test_relative_url_http, test_http_task_without_tls_verify"""
@@ -83,6 +84,7 @@ class TestHTTPTasks:
                 pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
     @pytest.mark.runbook
+    @pytest.mark.regression
     def test_http_validations(self):
         """test_response_field_blank_http, test_http_without_any_target"""
 
@@ -115,6 +117,7 @@ class TestHTTPTasks:
             print("runbook {} deleted".format(rb_name))
 
     @pytest.mark.runbook
+    @pytest.mark.regression
     def test_http_without_auth(self):
         """ test_http_get_task_no_auth, test_http_default_target """
 
@@ -162,6 +165,7 @@ class TestHTTPTasks:
                 pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
     @pytest.mark.runbook
+    @pytest.mark.regression
     def test_http_incorrect_response_code(self):
         """ test_expected_response_check_with_different_val_than_expected_val_http """
 
@@ -227,6 +231,7 @@ class TestHTTPTasks:
                 pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
     @pytest.mark.runbook
+    @pytest.mark.regression
     @pytest.mark.parametrize("Helper", [(HTTPTaskWithFailureState, "Status code 200 matched with expected response. Result: FAILURE\nFAILED!"),
                              (HTTPTaskWithUnsupportedPayload, "'payload' was unexpected"),
                              (HTTPTaskWithUnsupportedURL, "The requested URL was not found on the server."),

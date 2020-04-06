@@ -9,6 +9,7 @@ from utils import upload_runbook, poll_runlog_status
 
 class TestParallelTasks:
     @pytest.mark.runbook
+    @pytest.mark.regression
     def test_parallel_task(self):
         """ test_parallel_tasks """
 

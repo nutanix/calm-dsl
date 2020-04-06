@@ -15,6 +15,7 @@ HTTPEndpointPayload = read_test_config(file_name="http_endpoint_payload.json")
 class TestEndpoints:
     @pytest.mark.runbook
     @pytest.mark.endpoint
+    @pytest.mark.regression
     @pytest.mark.parametrize('EndpointPayload', [LinuxEndpointPayload, WindowsEndpointPayload, HTTPEndpointPayload])
     def test_endpoint_crud(self, EndpointPayload):
         """
@@ -114,6 +115,7 @@ class TestEndpoints:
 
     @pytest.mark.runbook
     @pytest.mark.endpoint
+    @pytest.mark.regression
     @pytest.mark.parametrize('EndpointPayload', [LinuxEndpointPayload, WindowsEndpointPayload])
     def test_endpoint_validation_and_type_update(self, EndpointPayload):
         """
@@ -184,6 +186,7 @@ class TestEndpoints:
 
     @pytest.mark.runbook
     @pytest.mark.endpoint
+    @pytest.mark.regression
     @pytest.mark.parametrize('EndpointPayload', [HTTPEndpointPayload])
     def test_http_endpoint_validation_and_update(self, EndpointPayload):
         """
@@ -247,6 +250,7 @@ class TestEndpoints:
 
     @pytest.mark.runbook
     @pytest.mark.endpoint
+    @pytest.mark.regression
     def test_endpoint_list(self):
 
         client = get_api_client()
@@ -262,6 +266,7 @@ class TestEndpoints:
 
     @pytest.mark.runbook
     @pytest.mark.endpoint
+    @pytest.mark.regression
     def test_endpoint_list_with_project_reference(self):
         config = get_config()
         client = get_api_client()

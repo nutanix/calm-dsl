@@ -21,6 +21,7 @@ from utils import upload_runbook, poll_runlog_status
 
 class TestExecTasks:
     @pytest.mark.runbook
+    @pytest.mark.regression
     @pytest.mark.parametrize('Runbook', [EscriptTask, SetVariableOnEscript, EscriptOnEndpoint,
                              PowershellTask, SetVariableOnPowershell, PowershellWithCredOverwrite,
                              ShellTask, SetVariableOnShell, ShellWithCredOverwrite,
@@ -104,6 +105,7 @@ class TestExecTasks:
                 pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
     @pytest.mark.runbook
+    @pytest.mark.regression
     @pytest.mark.parametrize('Runbook', [PowershellTaskWithoutTarget, ShellTaskWithoutTarget])
     def test_exec_validations(self, Runbook):
         """

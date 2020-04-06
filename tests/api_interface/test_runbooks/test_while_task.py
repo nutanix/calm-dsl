@@ -9,6 +9,7 @@ from utils import upload_runbook, poll_runlog_status
 
 class TestWhileTasks:
     @pytest.mark.runbook
+    @pytest.mark.regression
     def test_while_task_order(self):
         """ test_while_loop_tasks_order """
 
