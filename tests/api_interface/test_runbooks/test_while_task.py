@@ -98,7 +98,6 @@ class TestWhileTasks:
         # checking validation errors
         task_list = rb["status"]["resources"]["runbook"]["task_definition_list"]
         for task in task_list:
-            import ipdb; ipdb.set_trace()
             if task["type"] == 'SET_VARIABLE' or task['type'] == 'HTTP':
                 validation_errors = ""
                 for message in task["message_list"]:
