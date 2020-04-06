@@ -171,3 +171,19 @@ def HTTPTaskWithTLSVerify(endpoints=[endpoint_with_tls_verify]):
         status_mapping={200: True},
         target=ref(endpoint_with_tls_verify)
     )
+
+
+@runbook
+def HTTPHeadersWithMacro(endpoints=[endpoint_with_incorrect_auth]):
+
+    # Creating an endpoint with POST call
+    CalmTask.HTTP.endpoint(
+        "POST",
+        name="HTTPTask",
+        relative_url="/list",
+        body=json.dumps({}),
+        headers={"Authorization": "Bearer @@{calm_jwt}@@"},
+        content_type="application/json",
+        status_mapping={200: True},
+        target=ref(endpoint_with_incorrect_auth)
+    )
