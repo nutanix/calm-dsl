@@ -35,7 +35,7 @@ class TestRunbooks:
     @pytest.mark.regression
     def test_rb_crud(self):
         """
-        test_runbook_create, test_runbook_update
+        test_runbook_create, test_runbook_update, test_runbook_unicode_description
         test_runbook_run, test_runbook_delete, test_runbook_download_and_upload
         """
 
@@ -90,6 +90,7 @@ class TestRunbooks:
             "name": endpoint_name,
             "kind": "app_endpoint"
         }
+        rb["spec"]["description"] = "user-\u018e-name-\xf1"
         res, err = client.runbook.update(rb_uuid, rb)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
