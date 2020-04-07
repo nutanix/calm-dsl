@@ -1,6 +1,8 @@
 {% macro service(obj) -%}
 class {{obj.name}}(Service):
     {% if obj.description %}"""{{obj.description}}"""{% endif %}
+
+    {% if obj.gui_display_name %}name="{{obj.gui_display_name}}"{% endif %}
 {% if obj.dependencies or obj.variables or obj.actions %}
     {% if obj.dependencies %}dependencies=[{{obj.dependencies}}]{% endif %}
 {% for variable in obj.variables %}

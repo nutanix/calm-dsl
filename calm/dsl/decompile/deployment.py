@@ -23,11 +23,14 @@ def render_deployment_template(cls):
         cls.__name__
     )
 
-    # Update package name map
+    # Update deployment name map and gui name
     gui_display_name = getattr(cls, "name", "")
     if not gui_display_name:
         gui_display_name = cls.__name__
-    
+
+    elif gui_display_name != cls.__name__:
+        user_attrs["gui_display_name"] = gui_display_name
+
     DEPLOYMENT_NAME_MAP[gui_display_name] = cls.__name__
 
     depends_on_list = []

@@ -85,7 +85,9 @@ def render_bp_file_template(cls, with_secrets=False):
             add_edges(entity_edges, dep.get_ref().name, deployment.get_ref().name)
 
         # Edges from deployment to substrate
-        add_edges(entity_edges, deployment.substrate.get_ref().name, deployment.get_ref().name)
+        add_edges(
+            entity_edges, deployment.substrate.get_ref().name, deployment.get_ref().name
+        )
 
         # Other dependencies
         for dep in deployment.dependencies:
@@ -114,16 +116,16 @@ def render_bp_file_template(cls, with_secrets=False):
     for k, v in enumerate(dependepent_entities):
         if isinstance(v, ServiceType):
             dependepent_entities[k] = render_service_template(v)
-        
+
         elif isinstance(v, PackageType):
             dependepent_entities[k] = render_package_template(v)
-        
+
         elif isinstance(v, ProfileType):
             dependepent_entities[k] = render_profile_template(v)
-        
+
         elif isinstance(v, DeploymentType):
             dependepent_entities[k] = render_deployment_template(v)
-        
+
         elif isinstance(v, SubstrateType):
             dependepent_entities[k] = render_substrate_template(v)
 

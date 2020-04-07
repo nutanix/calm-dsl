@@ -24,10 +24,13 @@ def render_profile_template(cls):
         cls.__name__
     )
 
-    # Update package name map
+    # Update profile name map and gui name
     gui_display_name = getattr(cls, "name", "")
     if not gui_display_name:
         gui_display_name = cls.__name__
+
+    elif gui_display_name != cls.__name__:
+        user_attrs["gui_display_name"] = gui_display_name
 
     PROFILE_NAME_MAP[gui_display_name] = cls.__name__
 

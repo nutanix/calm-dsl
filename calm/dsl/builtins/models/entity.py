@@ -288,10 +288,12 @@ class EntityType(EntityTypeBase):
 
         if "description" in cdict and cdict["description"] == "":
             cdict["description"] = cls.__doc__ if cls.__doc__ else ""
-        
+
         # Send cls name if it is different from cdict["name"] for round trip
-        if "description" in cdict and cdict["name"]!=str(cls):
-            cdict["description"] = '{{"dsl_class_name":"{}"}}\n{}'. format(str(cls), cdict["description"])
+        if "description" in cdict and cdict["name"] != str(cls):
+            cdict["description"] = '{{"dsl_class_name":"{}"}}\n{}'.format(
+                str(cls), cdict["description"]
+            )
 
         # Add extra info for roundtrip
         # TODO - remove during serialization before sending to server
@@ -303,11 +305,10 @@ class EntityType(EntityTypeBase):
     def decompile(mcls, cdict):
 
         # Remove extra info
-        name = (cdict.get("name", mcls.__schema_name__))
+        name = cdict.get("name", mcls.__schema_name__)
         description = cdict.pop("description", None)
         # kind = cdict.pop('__kind__')
 
-        
         dsl_class_name = name
         if description is not None:
             if description.find("\n") != -1:

@@ -2,6 +2,7 @@
 class {{obj.name}}(Package):
     {% if obj.description -%}"""{{obj.description}}"""{%- endif %}
 
+    {% if obj.gui_display_name %}name="{{obj.gui_display_name}}"{% endif %}
     {% if obj.services %}services=[{{obj.services}}]{%- endif %}
 {%- for variable in obj.variables %}
     {{variable}}

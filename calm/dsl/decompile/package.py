@@ -29,7 +29,10 @@ def render_package_template(cls):
     gui_display_name = getattr(cls, "name", "")
     if not gui_display_name:
         gui_display_name = cls.__name__
-    
+
+    elif gui_display_name != cls.__name__:
+        user_attrs["gui_display_name"] = gui_display_name
+
     PACKAGE_NAME_MAP[gui_display_name] = cls.__name__
 
     service_list = []

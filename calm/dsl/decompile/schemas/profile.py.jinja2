@@ -2,6 +2,7 @@
 class {{obj.name}}(Profile):
     {% if obj.description %}"""{{obj.description}}"""{% endif %}
 
+    {% if obj.gui_display_name %}name="{{obj.gui_display_name}}"{% endif %}
     {% if obj.deployments %}deployments = [{{obj.deployments}}]{%- endif %}
 {% for variable in obj.variables %}
 {{variable | indent( width=4, indentfirst=True)}}
