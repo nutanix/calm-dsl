@@ -5,10 +5,12 @@ from calm.dsl.decompile.variable import render_variable_template
 from calm.dsl.tools import get_logging_handle
 
 LOG = get_logging_handle(__name__)
+PROFILE_NAME_MAP = {}
 
 
 def render_profile_template(cls):
 
+    global PROFILE_NAME_MAP
     LOG.debug("Rendering {} profile template".format(cls.__name__))
     if not isinstance(cls, ProfileType):
         raise TypeError("{} is not of type {}".format(cls, ProfileType))
@@ -21,6 +23,13 @@ def render_profile_template(cls):
     user_attrs["description"] = cls.__doc__ or "{} Profile description".format(
         cls.__name__
     )
+
+    # Update package name map
+    gui_display_name = getattr(cls, "name", "")
+    if not gui_display_name:
+        gui_display_name = cls.__name__
+
+    PROFILE_NAME_MAP[gui_display_name] = cls.__name__
 
     action_list = []
     for action in user_attrs.get("actions", []):
@@ -40,3 +49,10 @@ def render_profile_template(cls):
 
     text = render_template("profile.py.jinja2", obj=user_attrs)
     return text.strip()
+
+
+def get_profile_display_name(name):
+    """returns the class name used for entity ref"""
+
+    global PROFILE_NAME_MAP
+    return PROFILE_NAME_MAP.get(name, None)

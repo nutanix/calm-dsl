@@ -9,10 +9,12 @@ from calm.dsl.providers import get_provider
 from calm.dsl.tools import get_logging_handle
 
 LOG = get_logging_handle(__name__)
+SUBSTRATE_NAME_MAP = {}
 
 
 def render_substrate_template(cls, vm_images=[]):
 
+    global SUBSTRATE_NAME_MAP
     LOG.debug("Rendering {} substrate template".format(cls.__name__))
     if not isinstance(cls, SubstrateType):
         raise TypeError("{} is not of type {}".format(cls, SubstrateType))
@@ -26,6 +28,13 @@ def render_substrate_template(cls, vm_images=[]):
         cls.__name__
     )
     user_attrs["readiness_probe"] = cls.readiness_probe.get_dict()
+
+    # Update package name map
+    gui_display_name = getattr(cls, "name", "")
+    if not gui_display_name:
+        gui_display_name = cls.__name__
+
+    SUBSTRATE_NAME_MAP[gui_display_name] = cls.__name__
 
     # TODO fix this mess
     cred = user_attrs["readiness_probe"].pop("credential")
@@ -111,3 +120,10 @@ def get_provider_spec_string(spec, filename, provider_type, vm_images):
         res = "read_provider_spec('{}')".format(filename)
 
     return res
+
+
+def get_substrate_display_name(name):
+    """returns the class name used for entity ref"""
+
+    global SUBSTRATE_NAME_MAP
+    return SUBSTRATE_NAME_MAP.get(name, None)

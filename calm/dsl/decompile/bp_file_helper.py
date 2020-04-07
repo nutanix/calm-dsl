@@ -14,7 +14,8 @@ from calm.dsl.decompile.credential import render_credential_template, get_cred_f
 from calm.dsl.decompile.blueprint import render_blueprint_template
 from calm.dsl.decompile.variable import get_secret_variable_files
 from calm.dsl.decompile.file_handler import get_local_dir
-from calm.dsl.builtins import BlueprintType
+from calm.dsl.builtins import BlueprintType, ServiceType, PackageType
+from calm.dsl.builtins import DeploymentType, ProfileType, SubstrateType
 
 
 def render_bp_file_template(cls, with_secrets=False):
@@ -43,56 +44,52 @@ def render_bp_file_template(cls, with_secrets=False):
     entity_edges = {}
 
     for service in cls.services:
-        entity_name_text_map[service.__name__] = render_service_template(service)
+        entity_name_text_map[service.get_ref().name] = service
 
         # Edge from services to other entities
         for dep in service.dependencies:
-            add_edges(entity_edges, dep.__name__, service.__name__)
+            add_edges(entity_edges, dep.get_ref().name, service.get_ref().name)
 
     downloadable_img_list = []
     vm_images = []
     for package in cls.packages:
         if getattr(package, "__kind__") == "app_package":
-            entity_name_text_map[package.__name__] = render_package_template(package)
+            entity_name_text_map[package.get_ref().name] = package
 
             # Edge from package to service
             for dep in package.services:
-                add_edges(entity_edges, dep.__name__, package.__name__)
+                add_edges(entity_edges, dep.get_ref().name, package.get_ref().name)
 
         else:
             downloadable_img_list.append(render_vm_disk_package_template(package))
-            vm_images.append(package.__name__)
+            vm_images.append(package.get_ref().name)
             # Printing all the downloadable images at the top, so ignore its edges
 
     for substrate in cls.substrates:
-        entity_name_text_map[substrate.__name__] = render_substrate_template(
-            substrate, vm_images
-        )
+        entity_name_text_map[substrate.get_ref().name] = substrate
 
     deployments = []
     for profile in cls.profiles:
-        entity_name_text_map[profile.__name__] = render_profile_template(profile)
+        entity_name_text_map[profile.get_ref().name] = profile
 
         # Deployments
         deployments.extend(profile.deployments)
         for dep in deployments:
-            add_edges(entity_edges, dep.__name__, profile.__name__)
+            add_edges(entity_edges, dep.get_ref().name, profile.get_ref().name)
 
     for deployment in deployments:
-        entity_name_text_map[deployment.__name__] = render_deployment_template(
-            deployment
-        )
+        entity_name_text_map[deployment.get_ref().name] = deployment
 
         # Edges from deployment to package
         for dep in deployment.packages:
-            add_edges(entity_edges, dep.__name__, deployment.__name__)
+            add_edges(entity_edges, dep.get_ref().name, deployment.get_ref().name)
 
         # Edges from deployment to substrate
-        add_edges(entity_edges, deployment.substrate.__name__, deployment.__name__)
+        add_edges(entity_edges, deployment.substrate.get_ref().name, deployment.get_ref().name)
 
         # Other dependencies
         for dep in deployment.dependencies:
-            add_edges(entity_edges, dep.__name__, deployment.__name__)
+            add_edges(entity_edges, dep.get_ref().name, deployment.get_ref().name)
 
     # Getting the local files used for secrets
     secret_files = get_secret_variable_files()
@@ -112,6 +109,23 @@ def render_bp_file_template(cls, with_secrets=False):
 
     dependepent_entities = []
     dependepent_entities = get_ordered_entities(entity_name_text_map, entity_edges)
+
+    # Rendering templates
+    for k, v in enumerate(dependepent_entities):
+        if isinstance(v, ServiceType):
+            dependepent_entities[k] = render_service_template(v)
+        
+        elif isinstance(v, PackageType):
+            dependepent_entities[k] = render_package_template(v)
+        
+        elif isinstance(v, ProfileType):
+            dependepent_entities[k] = render_profile_template(v)
+        
+        elif isinstance(v, DeploymentType):
+            dependepent_entities[k] = render_deployment_template(v)
+        
+        elif isinstance(v, SubstrateType):
+            dependepent_entities[k] = render_substrate_template(v)
 
     blueprint = render_blueprint_template(cls)
     user_attrs.update(
