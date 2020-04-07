@@ -19,7 +19,7 @@ def render_task_template(cls, entity_context="", RUNBOOK_ACTION_MAP={}):
 
     # update entity_context
     entity_context = entity_context + "_Task_" + cls.__name__
-    
+
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__
     # sample for exec and ssh type task
@@ -36,7 +36,9 @@ def render_task_template(cls, entity_context="", RUNBOOK_ACTION_MAP={}):
 
     if cls.type == "EXEC":
         script_type = cls.attrs["script_type"]
-        cls.attrs["script_file"] = create_script_file(script_type, cls.attrs["script"], entity_context)
+        cls.attrs["script_file"] = create_script_file(
+            script_type, cls.attrs["script"], entity_context
+        )
 
         if script_type == "sh":
             schema_file = "task_exec_ssh.py.jinja2"
@@ -52,7 +54,9 @@ def render_task_template(cls, entity_context="", RUNBOOK_ACTION_MAP={}):
         if variables:
             user_attrs["variables"] = variables
         script_type = cls.attrs["script_type"]
-        cls.attrs["script_file"] = create_script_file(script_type, cls.attrs["script"], entity_context)
+        cls.attrs["script_file"] = create_script_file(
+            script_type, cls.attrs["script"], entity_context
+        )
 
         if script_type == "sh":
             schema_file = "task_setvariable_ssh.py.jinja2"

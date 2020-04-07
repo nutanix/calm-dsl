@@ -20,30 +20,35 @@ def render_ref_template(cls):
     kind = cls.kind
     if kind == "app_service":
         from calm.dsl.decompile.service import get_service_display_name
+
         cls_name = get_service_display_name(user_attrs["name"])
         if cls_name:
             user_attrs["name"] = cls_name
     elif kind == "app_package":
         from calm.dsl.decompile.package import get_package_display_name
+
         cls_name = get_package_display_name(user_attrs["name"])
         if cls_name:
             user_attrs["name"] = cls_name
     elif kind == "app_substrate":
         from calm.dsl.decompile.substrate import get_substrate_display_name
-        cls_name =get_substrate_display_name(user_attrs["name"])
+
+        cls_name = get_substrate_display_name(user_attrs["name"])
         if cls_name:
             user_attrs["name"] = cls_name
     elif kind == "app_deployment":
         from calm.dsl.decompile.deployment import get_deployment_display_name
-        cls_name =get_deployment_display_name(user_attrs["name"])
+
+        cls_name = get_deployment_display_name(user_attrs["name"])
         if cls_name:
             user_attrs["name"] = cls_name
     elif kind == "app_profile":
         from calm.dsl.decompile.profile import get_profile_display_name
-        cls_name =get_profile_display_name(user_attrs["name"])
+
+        cls_name = get_profile_display_name(user_attrs["name"])
         if cls_name:
             user_attrs["name"] = cls_name
-    
+
     # Updating name attribute of class
     cls.name = user_attrs["name"]
 

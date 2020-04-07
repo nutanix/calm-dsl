@@ -95,7 +95,7 @@ class PackageType(EntityType):
         delattr(cls, "options")
 
         option_data = mcls.__validator_dict__["options"][0].decompile(options)
-        
+
         package_type = getattr(cls, "type")
         if package_type == "CUSTOM" or package_type == "DEB":
             install_runbook = option_data["install_runbook"]
@@ -127,9 +127,10 @@ class PackageType(EntityType):
             cdict = {
                 "name": cls.__name__,
                 "description": cls.__doc__,
-                "options": option_data
+                "options": option_data,
             }
             from .vm_disk_package import VmDiskPackageType
+
             cls = VmDiskPackageType.decompile(cdict)
         return cls
 

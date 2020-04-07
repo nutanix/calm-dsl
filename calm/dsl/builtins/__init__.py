@@ -35,7 +35,11 @@ from .models.simple_blueprint import SimpleBlueprint
 
 from .models.blueprint_payload import create_blueprint_payload
 from .models.project import Project as ProjectValidator
-from .models.vm_disk_package import vm_disk_package, ahv_vm_disk_package, VmDiskPackageType
+from .models.vm_disk_package import (
+    vm_disk_package,
+    ahv_vm_disk_package,
+    VmDiskPackageType,
+)
 
 from .models.ahv_vm_nic import ahv_vm_nic, AhvVmNic
 from .models.ahv_vm_disk import ahv_vm_disk, AhvVmDisk
