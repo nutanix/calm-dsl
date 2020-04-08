@@ -318,7 +318,10 @@ class EntityType(EntityTypeBase):
                     dsl_class_name = get_valid_identifier(dsl_dict["dsl_class_name"])
                     description = "\n".join(data[1:])
                 except Exception:
-                    dsl_class_name = name
+                    pass
+
+        # Impose validation for valid identifier
+        dsl_class_name = get_valid_identifier(dsl_class_name)
 
         # Convert attribute names to x-calm-dsl-display-name, if given
         attrs = {}
@@ -426,7 +429,13 @@ class EntityType(EntityTypeBase):
         bases = (Entity,)
         if ref:
             attrs = {}
-            attrs["name"] = getattr(cls, "name")
+            if isinstance(cls, ref):
+                # As ref objects do not have display_name attribute
+                attrs["name"] = getattr(cls, "name", "")
+            else:
+                # Service, Packages etc. classes have display_name attribute
+                attrs["name"] = getattr(cls, "display_name", "")
+
             if not attrs["name"]:
                 attrs["name"] = str(cls)
             attrs["kind"] = kind or getattr(cls, "__kind__")

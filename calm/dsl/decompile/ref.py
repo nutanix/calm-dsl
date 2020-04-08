@@ -33,7 +33,7 @@ def render_ref_template(cls):
         cls_name = get_substrate_name(user_attrs["name"])
         if cls_name:
             user_attrs["name"] = cls_name
-    elif kind == "app_deployment":
+    elif kind == "app_blueprint_deployment":
         cls_name = get_deployment_name(user_attrs["name"])
         if cls_name:
             user_attrs["name"] = cls_name

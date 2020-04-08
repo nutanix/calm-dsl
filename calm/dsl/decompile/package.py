@@ -25,7 +25,7 @@ def render_package_template(cls):
     )
 
     # Update package name map
-    gui_display_name = getattr(cls, "name", "")
+    gui_display_name = getattr(cls, "display_name", "")
     if not gui_display_name:
         gui_display_name = cls.__name__
 

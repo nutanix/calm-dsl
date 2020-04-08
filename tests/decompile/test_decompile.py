@@ -17,14 +17,14 @@ DNS_SERVER = read_local_file(".tests/dns_server")
 class MySQLService(Service):
     """Sample mysql service"""
 
-    name = "my sql service"
+    display_name = "my sql service"
     ENV = CalmVariable.Simple("DEV")
 
 
 class MySQLPackage(Package):
     """Example package with variables, install tasks and link to service"""
 
-    name = "my sql package"
+    display_name = "my sql package"
     foo = CalmVariable.Simple("bar")
     services = [ref(MySQLService)]
 
@@ -36,14 +36,14 @@ class MySQLPackage(Package):
 class AHVVMforMySQL(Substrate):
     """AHV VM config given by reading a spec file"""
 
-    name = "ahv vm for sql"
+    display_name = "ahv vm for sql"
     provider_spec = read_provider_spec("specs/ahv_provider_spec.yaml")
 
 
 class MySQLDeployment(Deployment):
     """Sample deployment pulling in service and substrate references"""
 
-    name = "my sql deployment"
+    display_name = "my sql deployment"
     packages = [ref(MySQLPackage)]
     substrate = ref(AHVVMforMySQL)
 
@@ -51,7 +51,7 @@ class MySQLDeployment(Deployment):
 class PHPService(Service):
     """Sample PHP service with a custom action"""
 
-    name = "php service"
+    display_name = "php service"
     # Dependency to indicate PHP service is dependent on SQL service being up
     dependencies = [ref(MySQLService)]
 
@@ -66,7 +66,7 @@ class PHPService(Service):
 class PHPPackage(Package):
     """Example PHP package with custom install task"""
 
-    name = "php package"
+    display_name = "php package"
 
     foo = CalmVariable.Simple("baz")
     services = [ref(PHPService)]
@@ -79,7 +79,7 @@ class PHPPackage(Package):
 class AHVVMforPHP(Substrate):
     """AHV VM config given by reading a spec file"""
 
-    name = "ahv vm for php substrate"
+    display_name = "ahv vm for php substrate"
 
     provider_spec = read_provider_spec("specs/ahv_provider_spec.yaml")
 
@@ -87,7 +87,7 @@ class AHVVMforPHP(Substrate):
 class PHPDeployment(Deployment):
     """Sample deployment pulling in service and substrate references"""
 
-    name = "php deplyment"
+    display_name = "php deplyment"
 
     packages = [ref(PHPPackage)]
     substrate = ref(AHVVMforPHP)
@@ -96,7 +96,7 @@ class PHPDeployment(Deployment):
 class DefaultProfile(Profile):
     """Sample application profile with variables"""
 
-    name = "default profile"
+    display_name = "default profile"
 
     nameserver = CalmVariable.Simple(DNS_SERVER, label="Local DNS resolver")
     foo1 = CalmVariable.Simple("bar1", runtime=True)

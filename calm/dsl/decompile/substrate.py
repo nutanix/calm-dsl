@@ -29,7 +29,7 @@ def render_substrate_template(cls, vm_images=[]):
     user_attrs["readiness_probe"] = cls.readiness_probe.get_dict()
 
     # Update substrate name map and gui name
-    gui_display_name = getattr(cls, "name", "")
+    gui_display_name = getattr(cls, "display_name", "")
     if not gui_display_name:
         gui_display_name = cls.__name__
 

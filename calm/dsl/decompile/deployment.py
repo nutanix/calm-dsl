@@ -23,7 +23,7 @@ def render_deployment_template(cls):
     )
 
     # Update deployment name map and gui name
-    gui_display_name = getattr(cls, "name", "")
+    gui_display_name = getattr(cls, "display_name", "")
     if not gui_display_name:
         gui_display_name = cls.__name__
 

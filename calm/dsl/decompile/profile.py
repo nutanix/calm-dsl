@@ -24,7 +24,7 @@ def render_profile_template(cls):
     )
 
     # Update profile name map and gui name
-    gui_display_name = getattr(cls, "name", "")
+    gui_display_name = getattr(cls, "display_name", "")
     if not gui_display_name:
         gui_display_name = cls.__name__
 
