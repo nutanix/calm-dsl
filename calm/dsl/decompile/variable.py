@@ -130,8 +130,10 @@ def render_variable_template(cls, entity_context):
         else:
             options.pop("choices", None)
             task = TaskType.decompile(options)
-            task.__name__= "SampleTask"
-            user_attrs["value"] = render_task_template(task, entity_context=entity_context)
+            task.__name__ = "SampleTask"
+            user_attrs["value"] = render_task_template(
+                task, entity_context=entity_context
+            )
 
             if data_type == "BASE":
                 if var_val_type == "STRING":

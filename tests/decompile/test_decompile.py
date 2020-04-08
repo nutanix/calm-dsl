@@ -6,7 +6,7 @@ from calm.dsl.builtins import (
     action,
 )
 from calm.dsl.builtins import Service, Package, Substrate
-from calm.dsl.builtins import Deployment, Profile, Blueprint, BlueprintType
+from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import read_provider_spec, read_local_file
 
 CRED_USERNAME = read_local_file(".tests/username")
@@ -17,12 +17,14 @@ DNS_SERVER = read_local_file(".tests/dns_server")
 class MySQLService(Service):
     """Sample mysql service"""
 
+    display_name = "my sql service"
     ENV = CalmVariable.Simple("DEV")
 
 
 class MySQLPackage(Package):
     """Example package with variables, install tasks and link to service"""
 
+    display_name = "my sql package"
     foo = CalmVariable.Simple("bar")
     services = [ref(MySQLService)]
 
@@ -34,12 +36,14 @@ class MySQLPackage(Package):
 class AHVVMforMySQL(Substrate):
     """AHV VM config given by reading a spec file"""
 
+    display_name = "ahv vm for sql"
     provider_spec = read_provider_spec("specs/ahv_provider_spec.yaml")
 
 
 class MySQLDeployment(Deployment):
     """Sample deployment pulling in service and substrate references"""
 
+    display_name = "my sql deployment"
     packages = [ref(MySQLPackage)]
     substrate = ref(AHVVMforMySQL)
 
@@ -47,8 +51,7 @@ class MySQLDeployment(Deployment):
 class PHPService(Service):
     """Sample PHP service with a custom action"""
 
-    ENV = CalmVariable.Simple("DEV")
-
+    display_name = "php service"
     # Dependency to indicate PHP service is dependent on SQL service being up
     dependencies = [ref(MySQLService)]
 
@@ -63,6 +66,8 @@ class PHPService(Service):
 class PHPPackage(Package):
     """Example PHP package with custom install task"""
 
+    display_name = "php package"
+
     foo = CalmVariable.Simple("baz")
     services = [ref(PHPService)]
 
@@ -74,11 +79,15 @@ class PHPPackage(Package):
 class AHVVMforPHP(Substrate):
     """AHV VM config given by reading a spec file"""
 
+    display_name = "ahv vm for php substrate"
+
     provider_spec = read_provider_spec("specs/ahv_provider_spec.yaml")
 
 
 class PHPDeployment(Deployment):
     """Sample deployment pulling in service and substrate references"""
+
+    display_name = "php deplyment"
 
     packages = [ref(PHPPackage)]
     substrate = ref(AHVVMforPHP)
@@ -86,6 +95,8 @@ class PHPDeployment(Deployment):
 
 class DefaultProfile(Profile):
     """Sample application profile with variables"""
+
+    display_name = "default profile"
 
     nameserver = CalmVariable.Simple(DNS_SERVER, label="Local DNS resolver")
     foo1 = CalmVariable.Simple("bar1", runtime=True)
@@ -97,9 +108,7 @@ class DefaultProfile(Profile):
     def test_profile_action():
         """Sample description for a profile action"""
         CalmTask.Exec.ssh(name="Task5", script='echo "Hello"', target=ref(MySQLService))
-        CalmTask.Scaling.scale_out(1, target=ref(PHPDeployment), name="Scale out Lamp")
-        CalmTask.Delay(delay_seconds=60, target=ref(MySQLService))
-        CalmTask.Scaling.scale_in(1, target=PHPDeployment, name="Scale in Lamp")
+        PHPService.test_action(name="Task6")
 
 
 class NextDslBlueprint(Blueprint):

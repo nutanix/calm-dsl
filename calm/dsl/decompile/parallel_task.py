@@ -7,7 +7,9 @@ def render_parallel_task_template(task_list, entity_context, RUNBOOK_ACTION_MAP)
 
     rendered_tasks = []
     for task in task_list:
-        rendered_tasks.append(render_task_template(task, entity_context, RUNBOOK_ACTION_MAP))
+        rendered_tasks.append(
+            render_task_template(task, entity_context, RUNBOOK_ACTION_MAP)
+        )
 
     user_attrs = {"tasks": rendered_tasks}
 

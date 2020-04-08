@@ -5,6 +5,7 @@ from calm.dsl.decompile.render import render_template
 from calm.dsl.builtins import CredentialType
 from calm.dsl.decompile.file_handler import get_local_dir
 from calm.dsl.tools import get_logging_handle
+from calm.dsl.builtins import get_valid_identifier
 
 LOG = get_logging_handle(__name__)
 CRED_VAR_NAME_MAP = {}
@@ -22,7 +23,7 @@ def render_credential_template(cls):
     user_attrs["name"] = cls.__name__
     user_attrs["description"] = cls.__doc__
 
-    var_name = "BP_CRED_{}".format(cls.__name__)
+    var_name = "BP_CRED_{}".format(get_valid_identifier(cls.__name__))
     file_name = "{}_{}".format(var_name, user_attrs["type"])
     file_loc = os.path.join(get_local_dir(), file_name)
 

@@ -25,7 +25,7 @@ class VCenterVmProvider(Provider):
         """vm_template is the downloadable class"""
         if vm_template:
             spec["template"] = vm_template.__name__
-    
+
     @classmethod
     def get_api_obj(cls):
         client = get_api_client()

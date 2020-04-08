@@ -289,6 +289,12 @@ class EntityType(EntityTypeBase):
         if "description" in cdict and cdict["description"] == "":
             cdict["description"] = cls.__doc__ if cls.__doc__ else ""
 
+        # Send cls name if it is different from cdict["name"] for round trip
+        if "description" in cdict and cdict["name"] != str(cls):
+            cdict["description"] = '{{"dsl_class_name":"{}"}}\n{}'.format(
+                str(cls), cdict["description"]
+            )
+
         # Add extra info for roundtrip
         # TODO - remove during serialization before sending to server
         # cdict['__kind__'] = cls.__kind__
@@ -299,9 +305,23 @@ class EntityType(EntityTypeBase):
     def decompile(mcls, cdict):
 
         # Remove extra info
-        name = get_valid_identifier(cdict.get("name", mcls.__schema_name__))
+        name = cdict.get("name", mcls.__schema_name__)
         description = cdict.pop("description", None)
         # kind = cdict.pop('__kind__')
+
+        dsl_class_name = name
+        if description is not None:
+            if description.find("\n") != -1:
+                data = description.split("\n")
+                try:
+                    dsl_dict = json.loads(data[0])
+                    dsl_class_name = get_valid_identifier(dsl_dict["dsl_class_name"])
+                    description = "\n".join(data[1:])
+                except Exception:
+                    pass
+
+        # Impose validation for valid identifier
+        dsl_class_name = get_valid_identifier(dsl_class_name)
 
         # Convert attribute names to x-calm-dsl-display-name, if given
         attrs = {}
@@ -362,7 +382,7 @@ class EntityType(EntityTypeBase):
 
         # Create new class based on type
 
-        cls = mcls(name, (Entity,), attrs)
+        cls = mcls(dsl_class_name, (Entity,), attrs)
         cls.__doc__ = description
 
         return cls
@@ -409,7 +429,15 @@ class EntityType(EntityTypeBase):
         bases = (Entity,)
         if ref:
             attrs = {}
-            attrs["name"] = str(cls)
+            if isinstance(cls, ref):
+                # As ref objects do not have display_name attribute
+                attrs["name"] = getattr(cls, "name", "")
+            else:
+                # Service, Packages etc. classes have display_name attribute
+                attrs["name"] = getattr(cls, "display_name", "")
+
+            if not attrs["name"]:
+                attrs["name"] = str(cls)
             attrs["kind"] = kind or getattr(cls, "__kind__")
         return ref(name, bases, attrs)
 

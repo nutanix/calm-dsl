@@ -27,9 +27,15 @@ def render_action_template(cls, entity_context=""):
     tasks = []
     for task_list in levelled_tasks:
         if len(task_list) != 1:
-            tasks.append(render_parallel_task_template(task_list, entity_context, RUNBOOK_ACTION_MAP))
+            tasks.append(
+                render_parallel_task_template(
+                    task_list, entity_context, RUNBOOK_ACTION_MAP
+                )
+            )
         else:
-            tasks.append(render_task_template(task_list[0], entity_context, RUNBOOK_ACTION_MAP))
+            tasks.append(
+                render_task_template(task_list[0], entity_context, RUNBOOK_ACTION_MAP)
+            )
 
     variables = []
     for variable in runbook.variables:

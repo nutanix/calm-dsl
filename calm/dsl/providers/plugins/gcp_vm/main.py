@@ -19,7 +19,7 @@ class GcpVmProvider(Provider):
     def create_spec(cls):
         client = get_api_client()
         create_spec(client)
-    
+
     @classmethod
     def get_api_obj(cls):
         client = get_api_client()

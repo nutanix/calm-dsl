@@ -1,6 +1,7 @@
 from calm.dsl.decompile.render import render_template
 from calm.dsl.builtins import DeploymentType
 from calm.dsl.decompile.ref import render_ref_template
+from calm.dsl.decompile.ref_dependency import update_deployment_name
 from calm.dsl.tools import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -20,6 +21,17 @@ def render_deployment_template(cls):
     user_attrs["description"] = cls.__doc__ or "{} Deployment description".format(
         cls.__name__
     )
+
+    # Update deployment name map and gui name
+    gui_display_name = getattr(cls, "display_name", "")
+    if not gui_display_name:
+        gui_display_name = cls.__name__
+
+    elif gui_display_name != cls.__name__:
+        user_attrs["gui_display_name"] = gui_display_name
+
+    # updating ui and dsl name mapping
+    update_deployment_name(gui_display_name, cls.__name__)
 
     depends_on_list = []
     for entity in user_attrs.get("dependencies", []):
