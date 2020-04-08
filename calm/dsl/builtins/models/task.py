@@ -664,9 +664,6 @@ def http_task(
                     + (name or "")
                     + " should be dictionary of strings"
                 )
-            expected_response.append(
-                {"status": "SUCCESS" if state else "FAILURE", "code": code}
-            )
         kwargs["attrs"]["response_paths"] = response_paths
 
     return _task_create(**kwargs)
