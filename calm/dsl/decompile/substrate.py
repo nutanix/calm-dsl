@@ -6,15 +6,14 @@ from calm.dsl.decompile.action import render_action_template
 from calm.dsl.decompile.file_handler import get_specs_dir, get_specs_dir_key
 from calm.dsl.builtins import SubstrateType, get_valid_identifier
 from calm.dsl.providers import get_provider
+from calm.dsl.decompile.ref_dependency import update_substrate_name
 from calm.dsl.tools import get_logging_handle
 
 LOG = get_logging_handle(__name__)
-SUBSTRATE_NAME_MAP = {}
 
 
 def render_substrate_template(cls, vm_images=[]):
 
-    global SUBSTRATE_NAME_MAP
     LOG.debug("Rendering {} substrate template".format(cls.__name__))
     if not isinstance(cls, SubstrateType):
         raise TypeError("{} is not of type {}".format(cls, SubstrateType))
@@ -37,7 +36,8 @@ def render_substrate_template(cls, vm_images=[]):
     elif gui_display_name != cls.__name__:
         user_attrs["gui_display_name"] = gui_display_name
 
-    SUBSTRATE_NAME_MAP[gui_display_name] = cls.__name__
+    # updating ui and dsl name mapping
+    update_substrate_name(gui_display_name, cls.__name__)
 
     # TODO fix this mess
     cred = user_attrs["readiness_probe"].pop("credential")
@@ -123,10 +123,3 @@ def get_provider_spec_string(spec, filename, provider_type, vm_images):
         res = "read_provider_spec('{}')".format(filename)
 
     return res
-
-
-def get_substrate_display_name(name):
-    """returns the class name used for entity ref"""
-
-    global SUBSTRATE_NAME_MAP
-    return SUBSTRATE_NAME_MAP.get(name, None)

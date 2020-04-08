@@ -2,15 +2,14 @@ from calm.dsl.decompile.render import render_template
 from calm.dsl.builtins import ProfileType
 from calm.dsl.decompile.action import render_action_template
 from calm.dsl.decompile.variable import render_variable_template
+from calm.dsl.decompile.ref_dependency import update_profile_name
 from calm.dsl.tools import get_logging_handle
 
 LOG = get_logging_handle(__name__)
-PROFILE_NAME_MAP = {}
 
 
 def render_profile_template(cls):
 
-    global PROFILE_NAME_MAP
     LOG.debug("Rendering {} profile template".format(cls.__name__))
     if not isinstance(cls, ProfileType):
         raise TypeError("{} is not of type {}".format(cls, ProfileType))
@@ -32,7 +31,8 @@ def render_profile_template(cls):
     elif gui_display_name != cls.__name__:
         user_attrs["gui_display_name"] = gui_display_name
 
-    PROFILE_NAME_MAP[gui_display_name] = cls.__name__
+    # updating ui and dsl name mapping
+    update_profile_name(gui_display_name, cls.__name__)
 
     action_list = []
     for action in user_attrs.get("actions", []):
@@ -52,10 +52,3 @@ def render_profile_template(cls):
 
     text = render_template("profile.py.jinja2", obj=user_attrs)
     return text.strip()
-
-
-def get_profile_display_name(name):
-    """returns the class name used for entity ref"""
-
-    global PROFILE_NAME_MAP
-    return PROFILE_NAME_MAP.get(name, None)

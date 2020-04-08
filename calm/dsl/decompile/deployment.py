@@ -1,15 +1,14 @@
 from calm.dsl.decompile.render import render_template
 from calm.dsl.builtins import DeploymentType
 from calm.dsl.decompile.ref import render_ref_template
+from calm.dsl.decompile.ref_dependency import update_deployment_name
 from calm.dsl.tools import get_logging_handle
 
 LOG = get_logging_handle(__name__)
-DEPLOYMENT_NAME_MAP = {}
 
 
 def render_deployment_template(cls):
 
-    global DEPLOYMENT_NAME_MAP
     LOG.debug("Rendering {} deployment template".format(cls.__name__))
     if not isinstance(cls, DeploymentType):
         raise TypeError("{} is not of type {}".format(cls, DeploymentType))
@@ -31,7 +30,8 @@ def render_deployment_template(cls):
     elif gui_display_name != cls.__name__:
         user_attrs["gui_display_name"] = gui_display_name
 
-    DEPLOYMENT_NAME_MAP[gui_display_name] = cls.__name__
+    # updating ui and dsl name mapping
+    update_deployment_name(gui_display_name, cls.__name__)
 
     depends_on_list = []
     for entity in user_attrs.get("dependencies", []):
@@ -49,10 +49,3 @@ def render_deployment_template(cls):
 
     text = render_template("deployment.py.jinja2", obj=user_attrs)
     return text.strip()
-
-
-def get_deployment_display_name(name):
-    """returns the class name used for entity ref"""
-
-    global DEPLOYMENT_NAME_MAP
-    return DEPLOYMENT_NAME_MAP.get(name, None)
