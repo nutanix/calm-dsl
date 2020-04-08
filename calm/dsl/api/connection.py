@@ -266,7 +266,7 @@ class Connection:
                     LOG.debug("Server Response: {}".format(res.json()))
         except ConnectTimeout as cte:
             LOG.error(
-                "Could not establish connection to server at {}:{}.".format(
+                "Could not establish connection to server at https://{}:{}.".format(
                     self.host, self.port
                 )
             )
