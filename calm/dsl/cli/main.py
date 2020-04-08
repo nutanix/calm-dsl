@@ -283,7 +283,24 @@ def completion():
 
 @main.command("prompt")
 def calmrepl():
-    """Enable an interactive prompt shell"""
+    """Enable an interactive prompt shell
+
+    > :help
+
+    REPL help:
+
+    External Commands:
+
+      prefix external commands with "!"
+
+    Internal Commands:
+
+      prefix internal commands with ":"
+
+      :exit, :q, :quit  exits the repl
+
+      :?, :h, :help     displays general help information
+"""
     repl(click.get_current_context())
 
 
