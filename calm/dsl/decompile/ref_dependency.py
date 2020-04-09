@@ -14,7 +14,7 @@ def get_service_name(name):
 
 def update_service_name(ui_name, dsl_name):
     """updates the ui and dsl name mapping"""
-    
+
     global SERVICE_NAME_MAP
     SERVICE_NAME_MAP[ui_name] = dsl_name
 
@@ -27,7 +27,7 @@ def get_profile_name(name):
 
 
 def update_profile_name(ui_name, dsl_name):
-    
+
     global PROFILE_NAME_MAP
     PROFILE_NAME_MAP[ui_name] = dsl_name
 
@@ -40,7 +40,7 @@ def get_substrate_name(name):
 
 
 def update_substrate_name(ui_name, dsl_name):
-    
+
     global SUBSTRATE_NAME_MAP
     SUBSTRATE_NAME_MAP[ui_name] = dsl_name
 
@@ -53,7 +53,7 @@ def get_package_name(name):
 
 
 def update_package_name(ui_name, dsl_name):
-    
+
     global PACKAGE_NAME_MAP
     PACKAGE_NAME_MAP[ui_name] = dsl_name
 
@@ -66,7 +66,6 @@ def get_deployment_name(name):
 
 
 def update_deployment_name(ui_name, dsl_name):
-    
+
     global DEPLOYMENT_NAME_MAP
     DEPLOYMENT_NAME_MAP[ui_name] = dsl_name
-

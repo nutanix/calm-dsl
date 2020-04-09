@@ -101,7 +101,14 @@ def _compile_blueprint_command(bp_file, out, no_sync):
 
 
 @decompile.command("bp")
-@click.argument("name")
+@click.argument("name", required=False)
+@click.option(
+    "--file",
+    "-f",
+    "bp_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to Blueprint file",
+)
 @click.option(
     "--with_secrets",
     "-w",
@@ -109,9 +116,9 @@ def _compile_blueprint_command(bp_file, out, no_sync):
     default=False,
     help="Interactive Mode to provide the value for secrets",
 )
-def _decompile_bp(name, with_secrets):
+def _decompile_bp(name, bp_file, with_secrets):
 
-    decompile_bp(name, with_secrets)
+    decompile_bp(name, bp_file, with_secrets)
 
 
 def create_blueprint(client, bp_payload, name=None, description=None, categories=None):

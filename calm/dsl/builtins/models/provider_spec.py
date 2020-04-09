@@ -6,6 +6,9 @@ from calm.dsl.providers import get_provider
 
 from .entity import EntityType
 from .validator import PropertyValidator
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 class ProviderSpecType(EntityType):
@@ -43,6 +46,10 @@ def read_spec(filename, depth=1):
     file_path = os.path.join(
         os.path.dirname(inspect.getfile(sys._getframe(depth))), filename
     )
+
+    if not os.path.exists(file_path):
+        LOG.debug("file {} not found at location {}".format(filename, file_path))
+        raise ValueError("file {} not found".format(filename))
 
     with open(file_path, "r") as f:
         spec = yaml.safe_load(f.read())

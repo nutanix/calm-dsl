@@ -27,6 +27,7 @@ from .utils import get_name_query, get_states_filter, highlight_text
 from .constants import BLUEPRINT
 from calm.dsl.store import Cache
 from calm.dsl.tools import get_logging_handle
+from calm.dsl.builtins import read_spec
 
 LOG = get_logging_handle(__name__)
 
@@ -240,7 +241,26 @@ def compile_blueprint(bp_file, no_sync=False):
     return bp_payload
 
 
-def decompile_bp(name, with_secrets=False):
+def decompile_bp(name, bp_file, with_secrets=False):
+    """helper to decompile blueprint"""
+
+    if name and bp_file:
+        LOG.error("Pls provide either blueprint file location or server blueprint name")
+        sys.exit(-1)
+
+    if name:
+        decompile_bp_from_server(name=name, with_secrets=with_secrets)
+
+    elif bp_file:
+        decompile_bp_from_file(filename=bp_file, with_secrets=with_secrets)
+
+    else:
+        LOG.error("Pls provide either blueprint file location or server blueprint name")
+        sys.exit(-1)
+
+
+def decompile_bp_from_server(name, with_secrets=False):
+    """decompiles the blueprint by fetching it from server"""
 
     client = get_api_client()
     blueprint = get_blueprint(client, name)
@@ -251,9 +271,22 @@ def decompile_bp(name, with_secrets=False):
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     res = res.json()
-    blueprint = res["spec"]["resources"]
-    blueprint_name = res["spec"].get("name", "SampleBlueprint")
-    blueprint_description = res["spec"].get("description", "")
+    _decompile_bp(bp_payload=res, with_secrets=with_secrets)
+
+
+def decompile_bp_from_file(filename, with_secrets=False):
+    """decompile blueprint from local blueprint file"""
+
+    bp_payload = read_spec(filename)
+    _decompile_bp(bp_payload=bp_payload, with_secrets=with_secrets)
+
+
+def _decompile_bp(bp_payload, with_secrets=False):
+    """decompiles the blueprint from payload"""
+
+    blueprint = bp_payload["spec"]["resources"]
+    blueprint_name = bp_payload["spec"].get("name", "DslBlueprint")
+    blueprint_description = bp_payload["spec"].get("description", "")
 
     LOG.info("Decompiling blueprint {}".format(blueprint_name))
     bp_cls = BlueprintType.decompile(blueprint)
