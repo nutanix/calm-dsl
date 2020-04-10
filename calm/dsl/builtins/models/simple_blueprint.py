@@ -55,7 +55,7 @@ class SimpleBlueprintType(EntityType):
         credential_definition_list = cdict["credentials"]
 
         # Init Profile
-        pro = profile(name=cls.__name__ + "Profile")
+        pro = profile(display_name=cls.__name__ + "Profile")
         app_profile = pro.get_dict()
         app_profile["variable_list"] = cdict["variables"]
         app_profile["action_list"] = cdict["action_list"]
@@ -69,7 +69,7 @@ class SimpleBlueprintType(EntityType):
         for sd in cdict["deployments"]:
 
             # Init service dict
-            s = service(name=sd["name"] + "Service", description=sd["description"])
+            s = service(display_name=sd["name"] + "Service", description=sd["description"])
             sdict = s.get_dict()
             sdict["variable_list"] = sd["variable_list"]
 
@@ -93,7 +93,7 @@ class SimpleBlueprintType(EntityType):
                     sdict["action_list"].append(action)
 
             # Init package dict
-            p = package(name=sd["name"] + "Package")
+            p = package(display_name=sd["name"] + "Package")
             p.services = [ref(s)]
             pdict = p.get_dict()
             for action in sd["action_list"]:
@@ -104,7 +104,7 @@ class SimpleBlueprintType(EntityType):
 
             # Init Substrate dict
             sub = substrate(
-                name=sd["name"] + "Substrate",
+                display_name=sd["name"] + "Substrate",
                 provider_type=sd["provider_type"],
                 provider_spec=ProviderSpec(sd["provider_spec"]),
                 readiness_probe=sd["readiness_probe"],
@@ -141,7 +141,7 @@ class SimpleBlueprintType(EntityType):
 
             # Init deployment dict
             d = deployment(
-                name=sd["name"],
+                display_name=sd["name"],
                 min_replicas=sd["min_replicas"],
                 max_replicas=sd["max_replicas"],
             )

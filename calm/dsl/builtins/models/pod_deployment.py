@@ -47,7 +47,7 @@ class PODDeploymentType(DeploymentType):
         ps_options = {"type": "PROVISION_K8S_SERVICE"}
         ps_options = {**ps_options, **cls.service_spec}
 
-        ps = published_service(name=pub_service_name, options=ps_options)
+        ps = published_service(display_name=pub_service_name, options=ps_options)
         published_service_definition_list.append(ps)
 
         containers_list = cls.deployment_spec["spec"]["template"]["spec"].pop(
@@ -98,7 +98,7 @@ class PODDeploymentType(DeploymentType):
 
             else:
                 s = service(
-                    name="{}_{}_{}".format(cls.__name__, container_name, "Service"),
+                    display_name="{}_{}_{}".format(cls.__name__, container_name, "Service"),
                     container_spec=container,
                 )
 
@@ -115,7 +115,7 @@ class PODDeploymentType(DeploymentType):
                 image_spec = {"image": img}
 
             p = package(
-                name="{}_{}_{}".format(cls.__name__, container_name, "Package"),
+                display_name="{}_{}_{}".format(cls.__name__, container_name, "Package"),
                 image_spec=image_spec,
                 type="K8S_IMAGE",
             )
@@ -136,7 +136,7 @@ class PODDeploymentType(DeploymentType):
 
         sub_provider_spec = cls.deployment_spec["spec"].pop("template", {})
         sub = substrate(
-            name="{}_{}_{}".format(cls.__name__, container_name, "Substrate"),
+            display_name="{}_{}_{}".format(cls.__name__, container_name, "Substrate"),
             provider_type="K8S_POD",
             provider_spec=ProviderSpec(sub_provider_spec),
         )
@@ -150,7 +150,7 @@ class PODDeploymentType(DeploymentType):
             del cls.deployment_spec["kind"]
         dep_options = {**dep_options, **(cls.deployment_spec)}
         d = deployment(
-            name=cls.__name__,  # Dependecies depends on this name
+            display_name=cls.__name__,  # Dependecies depends on this name
             options=dep_options,
             type="K8S_DEPLOYMENT",
             max_replicas="100",
