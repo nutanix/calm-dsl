@@ -290,10 +290,15 @@ class EntityType(EntityTypeBase):
             cdict["description"] = cls.__doc__ if cls.__doc__ else ""
 
         # Send cls name if it is different from cdict["name"] for round trip
-        if "description" in cdict and cdict["name"] != str(cls):
-            cdict["description"] = '{{"dsl_class_name":"{}"}}\n{}'.format(
-                str(cls), cdict["description"]
-            )
+        types = EntityTypeBase.get_entity_types()
+        VariableType = types.get("Variable")
+        ActionType = types.get("Action")
+
+        if not isinstance(cls, (VariableType, ActionType)):
+            if "description" in cdict and cdict["name"] != str(cls):
+                cdict["description"] = '{{"dsl_class_name":"{}"}}\n{}'.format(
+                    str(cls), cdict["description"]
+                )
 
         # Add extra info for roundtrip
         # TODO - remove during serialization before sending to server

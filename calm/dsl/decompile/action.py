@@ -11,7 +11,7 @@ RUNBOOK_ACTION_MAP = {}
 
 def render_action_template(cls, entity_context=""):
 
-    global RUNBOOK_REF_MAP
+    global RUNBOOK_ACTION_MAP
     LOG.debug("Rendering {} action template".format(cls.__name__))
     if not isinstance(cls, ActionType):
         raise TypeError("{} is not of type {}".format(cls, action))
@@ -23,6 +23,8 @@ def render_action_template(cls, entity_context=""):
     runbook = cls.runbook
     RUNBOOK_ACTION_MAP[runbook.__name__] = cls.__name__
 
+    # NOTE Not using main_task_local_reference for now,
+    # bcz type of main task is "DAG"
     levelled_tasks = get_task_order(runbook.tasks)
     tasks = []
     for task_list in levelled_tasks:
@@ -82,7 +84,7 @@ def get_task_order(task_list):
     # create task map with name
     task_name_data_map = {}
     for task in task_list:
-        task_name = task.__name__
+        task_name = task.name
         task_name_data_map[task_name] = task
         task_indegree_count_map[task_name] = 0
         task_edges_map[task_name] = []
@@ -91,8 +93,8 @@ def get_task_order(task_list):
     for edge in edges:
         from_task = RefType.decompile(edge["from_task_reference"])
         to_task = RefType.decompile(edge["to_task_reference"])
-        task_indegree_count_map[to_task.__name__] += 1
-        task_edges_map[from_task.__name__].append(to_task.__name__)
+        task_indegree_count_map[to_task.name] += 1
+        task_edges_map[from_task.name].append(to_task.name)
 
     # Queue to store elements having indegree 0
     queue = []

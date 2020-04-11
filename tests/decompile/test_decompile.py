@@ -4,6 +4,7 @@ from calm.dsl.builtins import (
     CalmVariable,
     CalmTask,
     action,
+    parallel,
 )
 from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
@@ -108,10 +109,20 @@ class DefaultProfile(Profile):
     def test_profile_action():
         """Sample description for a profile action"""
         CalmTask.Exec.ssh(name="Task5", script='echo "Hello"', target=ref(MySQLService))
-        PHPService.test_action(name="Task6")
+        PHPService.test_action(name="Call Runbook Task")
+        with parallel:
+            CalmTask.Exec.escript(
+                "print 'Hello World!'", name="Test Escript", target=ref(MySQLService)
+            )
+            CalmTask.SetVariable.escript(
+                script="print 'var1=test'",
+                name="Test Setvar Escript",
+                variables=["var1"],
+                target=ref(MySQLService),
+            )
 
 
-class NextDslBlueprint(Blueprint):
+class TestDecompile(Blueprint):
     """Calm DSL .NEXT demo"""
 
     credentials = [

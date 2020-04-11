@@ -13,7 +13,7 @@ LOG = get_logging_handle(__name__)
 
 def render_task_template(cls, entity_context="", RUNBOOK_ACTION_MAP={}):
 
-    LOG.debug("Rendering {} task template".format(cls.__name__))
+    LOG.debug("Rendering {} task template".format(cls.name))
     if not isinstance(cls, TaskType):
         raise TypeError("{} is not of type {}".format(cls, TaskType))
 
@@ -21,8 +21,7 @@ def render_task_template(cls, entity_context="", RUNBOOK_ACTION_MAP={}):
     entity_context = entity_context + "_Task_" + cls.__name__
 
     user_attrs = cls.get_user_attrs()
-    user_attrs["name"] = cls.__name__
-    # sample for exec and ssh type task
+    user_attrs["name"] = cls.name
 
     target = getattr(cls, "target_any_local_reference", None)
     if target:
@@ -126,7 +125,7 @@ def render_task_template(cls, entity_context="", RUNBOOK_ACTION_MAP={}):
         render_ref_template(target)
 
         user_attrs = {
-            "name": cls.__name__,
+            "name": cls.name,
             "action": RUNBOOK_ACTION_MAP[runbook.__name__],
             "target": target.name,
         }
