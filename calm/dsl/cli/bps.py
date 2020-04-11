@@ -229,6 +229,13 @@ def compile_blueprint(bp_file, no_sync=False):
         UserBlueprintPayload, _ = create_blueprint_payload(UserBlueprint)
         bp_payload = UserBlueprintPayload.get_dict()
 
+        # Note - Install/Uninstall runbooks are not actions in Packages.
+        # Remove package actions after compiling.
+        cdict = bp_payload["spec"]["resources"]
+        for package in cdict["package_definition_list"]:
+            if "action_list" in package:
+                del package["action_list"]
+
     return bp_payload
 
 

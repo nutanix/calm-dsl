@@ -149,14 +149,13 @@ class action(metaclass=DescriptorType):
         # Generate the entity names
         self.action_name = user_func.__name__
         self.action_description = user_func.__doc__ or ""
-        self.runbook_name = str(uuid.uuid4())[:8] + "_runbook"
-        self.dag_name = str(uuid.uuid4())[:8] + "_dag"
         self.user_func = user_func
-        self.user_runbook = runbook_create(**{"name": self.runbook_name})
+        self.user_runbook = None
         self.__parsed__ = False
 
     def __call__(self, name=None):
-        return create_call_rb(self.user_runbook, name=name)
+        if self.user_runbook:
+            return create_call_rb(self.user_runbook, name=name)
 
     def __get__(self, instance, cls):
         """
@@ -210,14 +209,19 @@ class action(metaclass=DescriptorType):
                     edges.append((from_task.get_ref(), to_task.get_ref()))
 
         # First create the dag
+        dag_name = str(uuid.uuid4())[:8] + "_dag" + "_" + cls.__name__
         self.user_dag = dag(
-            name=self.dag_name,
+            name=dag_name,
             child_tasks=tasks,
             edges=edges,
             target=cls.get_task_target()
             if getattr(cls, "__has_dag_target__", True)
             else None,
         )
+
+        # Create runbook
+        runbook_name = str(uuid.uuid4())[:8] + "_runbook" + "_" + cls.__name__
+        self.user_runbook = runbook_create(**{"name": runbook_name})
 
         # Modify the user runbook
         self.user_runbook.main_task_local_reference = self.user_dag.get_ref()
@@ -249,7 +253,10 @@ class action(metaclass=DescriptorType):
             }
         )
 
-        self.__parsed__ = True
+        # Note - Server checks for name uniqueness in runbooks across actions.
+        # Until server relaxes this constraint, parse everytime to generate new runbook name.
+        # Also, target references have to be updated each time for inheritance.
+        # self.__parsed__ = True
 
         return self.user_action
 

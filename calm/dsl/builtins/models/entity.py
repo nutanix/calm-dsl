@@ -262,11 +262,17 @@ class EntityType(EntityTypeBase):
             attrs.pop(k)
 
     def get_all_attrs(cls):
-        default_attrs = cls.get_default_attrs()
-        user_attrs = cls.get_user_attrs()
 
-        # Merge both attrs. Overwrite user attrs on default attrs
-        return {**default_attrs, **user_attrs}
+        ncls_ns = cls.get_default_attrs()
+        for klass in reversed(cls.mro()):
+            if hasattr(klass, "get_user_attrs") and callable(
+                getattr(klass, "get_user_attrs")
+            ):
+                ncls_ns = {**ncls_ns, **klass.__dict__}
+
+        ncls = type(cls)(cls.__name__, cls.__bases__, ncls_ns)
+
+        return ncls.get_user_attrs()
 
     def compile(cls):
 
