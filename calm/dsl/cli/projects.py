@@ -238,7 +238,8 @@ def describe_project(project_name):
     accounts = project["status"]["project_status"]["resources"][
         "account_reference_list"
     ]
-    account_name_uuid_map = client.account.get_name_uuid_map()
+    payload = {"length": 200, "offset": 0, "filter": "state!=DELETED;type!=nutanix"}
+    account_name_uuid_map = client.account.get_name_uuid_map(payload)
     account_uuid_name_map = {
         v: k for k, v in account_name_uuid_map.items()
     }  # TODO check it

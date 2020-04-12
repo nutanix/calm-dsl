@@ -10,7 +10,7 @@ properties:
     type: string
     enum:
       - {{kind}}
-  uuid:                 # TODO Dynamic: need to call API
+  uuid:
     type: string
 
 {%- endmacro %}
@@ -25,7 +25,7 @@ properties:
     type: string
     enum:
       - {{kind}}
-  uuid:                 # TODO Dynamic: need to call API
+  uuid:
     type: string
 
 {%- endmacro %}
@@ -45,6 +45,10 @@ properties:
     items:
       {{ References_With_Name('user_group') | indent(6) }}
   subnet_reference_list:
+    type: array
+    items:
+      {{ References_With_Name('subnet') | indent(6) }}
+  external_network_list:
     type: array
     items:
       {{ References_With_Name('subnet') | indent(6) }}

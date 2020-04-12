@@ -30,6 +30,13 @@ def render_ahv_template(template, bp_name):
     subnets = res["status"]["project_status"]["resources"].get(
         "subnet_reference_list", []
     )
+
+    # Fetching external subnets
+    external_networks = res["status"]["project_status"]["resources"].get(
+        "external_network_list", []
+    )
+    subnets.extend(external_networks)
+
     if not subnets:
         raise Exception("no subnets registered !!!")
 

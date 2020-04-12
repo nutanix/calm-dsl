@@ -55,9 +55,14 @@ class AHV:
     def __init__(self, connection):
         self.connection = connection
 
-    def images(self, image_type="DISK_IMAGE"):
+    def images(self, account_uuid, image_type="DISK_IMAGE"):
         Obj = get_resource_api(ahv.IMAGES, self.connection)
-        res, err = Obj.list()
+        payload = {
+            "length": 1000,
+            "offset": 0,
+            "filter": "account_uuid=={}".format(account_uuid),
+        }
+        res, err = Obj.list(payload)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -90,13 +95,15 @@ class AHV:
         if not payload:
             raise Exception("no payload")
 
-        return Obj.create(payload)
+        return Obj.list(payload)
 
-    def categories(self):
+    def categories(self, account_uuid):
 
         payload = {
             "entity_type": "category",
-            "filter_criteria": "name!=CalmApplication;name!=CalmDeployment;name!=CalmService;name!=CalmPackage",
+            "filter_criteria": "name!=CalmApplication;name!=CalmDeployment;name!=CalmService;name!=CalmPackage;name!=CalmProject;name!=CalmUser;name!=CalmVmUniqueIdentifier;name!=CalmClusterUuid;account_uuid=={}".format(
+                account_uuid
+            ),
             "grouping_attribute": "abac_category_key",
             "group_sort_attribute": "name",
             "group_count": 60,
@@ -175,7 +182,44 @@ def create_spec(client):
     for subnet in project["status"]["project_status"]["resources"][
         "subnet_reference_list"
     ]:
-        subnets_list.append(subnet["name"])
+        subnets_list.append(subnet["uuid"])
+
+    # Extending external subnet's list from remote account
+    for subnet in project["status"]["project_status"]["resources"][
+        "external_network_list"
+    ]:
+        subnets_list.append(subnet["uuid"])
+
+    accounts = project["status"]["project_status"]["resources"][
+        "account_reference_list"
+    ]
+
+    reg_accounts = []
+    for account in accounts:
+        reg_accounts.append(account["uuid"])
+
+    # Fetching account id from project
+    payload = {"filter": "type==nutanix_pc"}
+    res, err = client.account.list(payload)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    res = res.json()
+    account_uuid = ""
+
+    for entity in res["entities"]:
+        entity_name = entity["metadata"]["name"]
+        entity_id = entity["metadata"]["uuid"]
+        if entity_id in reg_accounts:
+            account_uuid = entity_id
+            break
+
+    if not account_uuid:
+        click.echo(
+            highlight_text("No ahv account found registered in this project !!!")
+        )
+        click.echo("Please add one !!!")
+        return
 
     click.echo("")
     path.append("name")
@@ -190,7 +234,7 @@ def create_spec(client):
         "\n{}(y/n)".format(highlight_text("Want to add some categories")), default="n"
     )
     if choice[0] == "y":
-        categories = Obj.categories()
+        categories = Obj.categories(account_uuid=account_uuid)
 
         if not categories:
             click.echo("\n{}\n".format(highlight_text("No Category present")))
@@ -267,7 +311,7 @@ def create_spec(client):
         get_field(schema, path, option, default=1, msg="Enter Memory(GiB)") * 1024
     )
 
-    click.secho("\nAdd some disks:\n", fg="blue", bold=True)
+    click.secho("\nAdd some disks:", fg="blue", bold=True)
 
     spec["resources"]["disk_list"] = []
     spec["resources"]["boot_config"] = {}
@@ -316,7 +360,9 @@ def create_spec(client):
                 break
 
         # Add image details
-        imagesNameUUIDMap = Obj.images(ahv.IMAGE_TYPES[image["device_type"]])
+        imagesNameUUIDMap = Obj.images(
+            account_uuid=account_uuid, image_type=ahv.IMAGE_TYPES[image["device_type"]]
+        )
         images = list(imagesNameUUIDMap.keys())
 
         while True:
@@ -481,24 +527,37 @@ def create_spec(client):
         "\n{}(y/n)".format(highlight_text("Want any network adapters")), default="n"
     )
     if choice[0] == "y":
-
+        nics = []
         if subnets_list:
-            payload = {"filter": "(name=={})".format(",name==".join(subnets_list))}
-        else:
-            payload = {}
+            payload = {
+                "filter": "(_entity_id_=={})".format(
+                    ",_entity_id_==".join(subnets_list)
+                )
+            }
+            payload["filter"] = payload["filter"] + ";account_uuid=={}".format(
+                account_uuid
+            )
+            nics = Obj.subnets(payload)
+            nics = nics["entities"]
 
-        nics = Obj.subnets(payload)
-        nics = nics["entities"]
-
-        if not nics:
-            click.echo("\n{}".format(highlight_text("No network adapter present")))
+        if not (nics and subnets_list):
+            if not subnets_list:
+                click.echo(
+                    "\n{}".format(
+                        highlight_text("No subnets found registered with the project")
+                    )
+                )
+            else:
+                click.echo("\n{}".format(highlight_text("No network adapter present")))
 
         else:
             click.echo("\nChoose from given subnets:")
             for ind, nic in enumerate(nics):
                 click.echo(
-                    "\t {}. {}".format(
-                        str(ind + 1), highlight_text(nic["status"]["name"])
+                    "\t {}. {} ({})".format(
+                        str(ind + 1),
+                        highlight_text(nic["status"]["name"]),
+                        highlight_text(nic["status"]["cluster_reference"]["name"]),
                     )
                 )
 

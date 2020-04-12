@@ -29,6 +29,8 @@ def get_accounts(name, filter_by, limit, offset, quiet, all_items, account_type)
         filter_query += ";(type=={})".format(",type==".join(account_type))
     if all_items:
         filter_query += get_states_filter(ACCOUNT.STATES)
+    # Remove PE accounts
+    filter_query += ";type!=nutanix"
     if filter_query.startswith(";"):
         filter_query = filter_query[1:]
 
@@ -140,13 +142,37 @@ def describe_showback_data(spec):
                 click.echo(highlight_text(str(value)))
 
 
-def describe_ahv_account(spec):
+def describe_nutanix_pe_account(spec):
 
     cluster_id = spec["cluster_uuid"]
     cluster_name = spec["cluster_name"]
 
     click.echo("Cluster Id: {}".format(highlight_text(cluster_id)))
     click.echo("Cluster Name: {}".format(highlight_text(cluster_name)))
+
+
+def describe_nutanix_pc_account(provider_data):
+
+    config = get_config()
+    pc_port = provider_data["port"]
+    host_pc = provider_data["host_pc"]
+    pc_uuid = provider_data["pc_uuid"]
+    pc_ip = provider_data["server"] if not host_pc else config["SERVER"]["pc_ip"]
+
+    cluster_list = provider_data["cluster_account_reference_list"]
+
+    click.echo("Is Host PC: {}".format(highlight_text(host_pc)))
+    click.echo("PC IP: {}".format(highlight_text(pc_ip)))
+    click.echo("PC Port: {}".format(highlight_text(pc_port)))
+    click.echo("Cluster Accounts:")
+    for index, cluster in enumerate(cluster_list):
+        click.echo(
+            "\t{}. {}({})".format(
+                str(index + 1),
+                highlight_text(cluster["name"]),
+                highlight_text(cluster["uuid"]),
+            )
+        )
 
 
 def describe_aws_account(spec):
@@ -296,7 +322,10 @@ def describe_account(account_name):
     click.secho("PROVIDER SPECIFIC DETAILS\n", bold=True, underline=True)
 
     if account_type == "nutanix":
-        describe_ahv_account(provider_data)
+        describe_nutanix_pe_account(provider_data)
+
+    if account_type == "nutanix_pc":
+        describe_nutanix_pc_account(provider_data)
 
     elif account_type == "aws":
         describe_aws_account(provider_data)
