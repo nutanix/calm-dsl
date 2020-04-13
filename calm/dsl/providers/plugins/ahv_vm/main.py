@@ -50,12 +50,19 @@ class AhvVmProvider(Provider):
             # Set the reference of this disk
             disk["data_source_reference"] = ref(img_cls).compile()
 
+    @classmethod
+    def get_api_obj(cls):
+        """returns object to call ahv provider specific apis"""
+
+        client = get_api_client()
+        return AHV(client.connection)
+
 
 class AHV:
     def __init__(self, connection):
         self.connection = connection
 
-    def images(self, account_uuid, image_type="DISK_IMAGE"):
+    def images(self, account_uuid, image_type=None):
         Obj = get_resource_api(ahv.IMAGES, self.connection)
         payload = {
             "length": 1000,
@@ -76,8 +83,12 @@ class AHV:
             if not img_type:
                 continue
 
-            if img_type == image_type:
-                img_name_uuid_map[image["status"]["name"]] = image["metadata"]["uuid"]
+            if image_type:
+                if img_type != image_type:
+                    # If image type is not as required
+                    continue
+
+            img_name_uuid_map[image["status"]["name"]] = image["metadata"]["uuid"]
 
         return img_name_uuid_map
 
@@ -530,9 +541,10 @@ def create_spec(client):
         nics = []
         if subnets_list:
             payload = {
+                "length": 1000,
                 "filter": "(_entity_id_=={})".format(
                     ",_entity_id_==".join(subnets_list)
-                )
+                ),
             }
             payload["filter"] = payload["filter"] + ";account_uuid=={}".format(
                 account_uuid
