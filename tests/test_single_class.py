@@ -1,4 +1,4 @@
-from calm.dsl.builtins import Service
+from calm.dsl.builtins import Service, Package
 
 import pytest
 
@@ -42,6 +42,16 @@ def test_service_valid_setattr():
         pass
 
     MySQLService.tier = "db"
+
+
+def test_service_multiple_inheritance():
+
+    with pytest.raises(TypeError):
+
+        class Invalid(Service, Package):
+            pass
+
+        pytest.fail("Multiple inheritance allowed for different entity types")
 
 
 if __name__ == "__main__":
