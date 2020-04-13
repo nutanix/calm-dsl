@@ -55,18 +55,11 @@ def clear_cache():
 
 
 @update.command("cache")
-@click.option(
-    "--entity_type",
-    "-e",
-    default=None,
-    type=click.Choice(Cache.get_entity_types()),
-    help="Cache entity type",
-)
-def update_cache(entity_type):
+def update_cache():
     """Update the data for dynamic entities stored in the cache"""
 
     LOG.debug("Updating cache")
-    Cache.sync(entity_type)
+    Cache.sync()
     LOG.debug("Success")
     show_cache()
     LOG.info(highlight_text("Cache updated at {}".format(datetime.datetime.now())))

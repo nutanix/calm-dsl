@@ -1,8 +1,12 @@
 import peewee
+import sys
 
 from ..db import get_db_handle
 from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.tools import get_logging_handle
+from calm.dsl.config import get_config
+from calm.dsl.api import get_api_client
+from calm.dsl.providers import get_provider
 
 LOG = get_logging_handle(__name__)
 
@@ -19,20 +23,12 @@ class Cache:
     }
 
     @classmethod
-    def get_entity_types(cls):
-        """Entity types used in the cache"""
-        return list(cls.entity_type_api_map.keys())
-
-    @classmethod
     def create(cls, entity_type="", entity_name="", entity_uuid=""):
         """Store the uuid of entity in cache"""
 
         db = get_db_handle()
         db.cache_table.create(
-            entity_type=entity_type,
-            entity_name=entity_name,
-            entity_uuid=entity_uuid,
-            entity_list_api_suffix=cls.entity_type_api_map[entity_type],
+            entity_type=entity_type, entity_name=entity_name, entity_uuid=entity_uuid,
         )
 
     @classmethod
@@ -52,42 +48,99 @@ class Cache:
             return None
 
     @classmethod
-    def sync(cls, entity_type=None):
+    def sync(cls):
 
-        updating_entity_types = []
-
-        if entity_type:
-            if entity_type not in cls.get_entity_types():
-                LOG.debug("Registered entity types: {}".format(cls.get_entity_types()))
-                raise ValueError("Entity type {} not registered".format(entity_type))
-
-            updating_entity_types.append(entity_type)
-
-        else:
-            updating_entity_types.extend(list(cls.entity_type_api_map.keys()))
-
-        db = get_db_handle()
-
-        for entity_type in updating_entity_types:
-            query = db.cache_table.delete().where(
-                db.cache_table.entity_type == entity_type
-            )
-            query.execute()
-
+        config = get_config()
         client = get_api_client()
 
-        for entity_type in updating_entity_types:
-            api_suffix = cls.entity_type_api_map[entity_type]
-            Obj = get_resource_api(api_suffix, client.connection)
-            try:
-                res = Obj.get_name_uuid_map()
-                for name, uuid in res.items():
-                    cls.create(
-                        entity_type=entity_type, entity_name=name, entity_uuid=uuid
-                    )
-            except Exception:
-                pc_ip = client.connection.host
-                LOG.warning("Cannot fetch data from {}".format(pc_ip))
+        project_name = config["PROJECT"]["name"]
+        params = {"length": 1000, "filter": "name=={}".format(project_name)}
+        project_name_uuid_map = client.project.get_name_uuid_map(params)
+
+        if not project_name_uuid_map:
+            LOG.error("Invalid project {} in config".format(project_name))
+            sys.exit(-1)
+
+        project_id = project_name_uuid_map[project_name]
+        res, err = client.project.read(project_id)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        project = res.json()
+        subnets_list = []
+        for subnet in project["status"]["project_status"]["resources"][
+            "subnet_reference_list"
+        ]:
+            subnets_list.append(subnet["uuid"])
+
+        # Extending external subnet's list from remote account
+        for subnet in project["status"]["project_status"]["resources"][
+            "external_network_list"
+        ]:
+            subnets_list.append(subnet["uuid"])
+
+        accounts = project["status"]["project_status"]["resources"][
+            "account_reference_list"
+        ]
+
+        reg_accounts = []
+        for account in accounts:
+            reg_accounts.append(account["uuid"])
+
+        # Fetching account id from project
+        payload = {"filter": "type==nutanix_pc"}
+        res, err = client.account.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        account_uuid = ""
+
+        for entity in res["entities"]:
+            entity_name = entity["metadata"]["name"]
+            entity_id = entity["metadata"]["uuid"]
+            if entity_id in reg_accounts:
+                account_uuid = entity_id
+                break
+
+        # Clearing existing data in cache
+        cls.clear_entities()
+
+        if account_uuid:
+            # Fetch the subnets and images from ahv account registered and store in cache
+            Ahv = get_provider("AHV_VM")
+            Obj = Ahv.get_api_obj()
+
+            # Store images
+            images_name_uuid_map = Obj.images(account_uuid)
+            for name, uuid in images_name_uuid_map.items():
+                cls.create(
+                    entity_type="AHV_DISK_IMAGE", entity_name=name, entity_uuid=uuid
+                )
+
+            # Store Subnets
+            payload = {
+                "length": 1000,
+                "filter": "(_entity_id_=={})".format(
+                    ",_entity_id_==".join(subnets_list)
+                ),
+            }
+            payload["filter"] = payload["filter"] + ";account_uuid=={}".format(
+                account_uuid
+            )
+            nics = Obj.subnets(payload)
+            nics = nics["entities"]
+            for nic in nics:
+                cls.create(
+                    entity_type="AHV_SUBNET",
+                    entity_name=nic["status"]["name"],
+                    entity_uuid=nic["metadata"]["uuid"],
+                )
+
+        # Store projects in cache
+        project_name_uuid_map = client.project.get_name_uuid_map({"length": 1000})
+        for name, uuid in project_name_uuid_map.items():
+            cls.create(entity_type="PROJECT", entity_name=name, entity_uuid=uuid)
 
     @classmethod
     def clear_entities(cls):
