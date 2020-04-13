@@ -1,4 +1,6 @@
 from calm.dsl.builtins import Service, Package
+from calm.dsl.builtins import CalmVariable as Var
+from calm.dsl.builtins import action
 
 import pytest
 
@@ -44,7 +46,7 @@ def test_service_valid_setattr():
     MySQLService.tier = "db"
 
 
-def test_service_multiple_inheritance():
+def test_service_invalid_multiple_inheritance():
 
     with pytest.raises(TypeError):
 
@@ -52,6 +54,30 @@ def test_service_multiple_inheritance():
             pass
 
         pytest.fail("Multiple inheritance allowed for different entity types")
+
+
+def test_service_valid_multiple_inheritance():
+
+    class Loyal(Service):
+
+        lfoo = Var("lbar")
+
+        @action
+        def loyal_action():
+            pass
+
+    class Animal(Service):
+
+        afoo = Var("abar")
+
+        @action
+        def animal_action():
+            pass
+
+    class Dog(Animal, Loyal):
+        pass
+
+    Dog.compile()
 
 
 if __name__ == "__main__":
