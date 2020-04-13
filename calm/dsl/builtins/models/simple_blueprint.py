@@ -4,7 +4,7 @@ from .validator import PropertyValidator
 from .profile import profile
 from .deployment import deployment
 from .simple_pod_deployment import simple_pod_deployment
-from .provider_spec import ProviderSpec
+from .provider_spec import provider_spec as get_provider_spec
 from .substrate import substrate
 from .service import service
 from .package import package
@@ -106,7 +106,7 @@ class SimpleBlueprintType(EntityType):
             sub = substrate(
                 name=sd["name"] + "Substrate",
                 provider_type=sd["provider_type"],
-                provider_spec=ProviderSpec(sd["provider_spec"]),
+                provider_spec=get_provider_spec(sd["provider_spec"]),
                 readiness_probe=sd["readiness_probe"],
                 os_type=sd["os_type"],
             )
@@ -231,7 +231,7 @@ class SimpleBlueprintValidator(PropertyValidator, openapi_type="app_simple_bluep
 
 
 def simple_blueprint(**kwargs):
-    name = getattr(SimpleBlueprintType, "__schema_name__")
+    name = "_" + getattr(SimpleBlueprintType, "__schema_name__")
     bases = (Entity,)
     return SimpleBlueprintType(name, bases, kwargs)
 

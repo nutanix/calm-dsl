@@ -18,7 +18,7 @@ class RunbookValidator(PropertyValidator, openapi_type="app_runbook"):
 
 
 def _runbook(**kwargs):
-    name = getattr(RunbookType, "__schema_name__")
+    name = "_" + getattr(RunbookType, "__schema_name__")
     bases = (Entity,)
     return RunbookType(name, bases, kwargs)
 

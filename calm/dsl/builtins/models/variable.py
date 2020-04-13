@@ -53,7 +53,7 @@ class VariableValidator(PropertyValidator, openapi_type="app_variable"):
 
 
 def _var(**kwargs):
-    name = getattr(VariableType, "__schema_name__")
+    name = "_" + getattr(VariableType, "__schema_name__")
     bases = (Entity,)
     return VariableType(name, bases, kwargs)
 
@@ -64,7 +64,7 @@ Variable = _var()
 def setvar(name, value, type_="LOCAL", **kwargs):
 
     if name is None:
-        name = getattr(VariableType, "__schema_name__")
+        name = "_" + getattr(VariableType, "__schema_name__")
     kwargs["name"] = name
     if value is not None:
         kwargs["value"] = value
@@ -85,7 +85,7 @@ def simple_variable(
 ):
     kwargs = {"is_hidden": is_hidden, "is_mandatory": is_mandatory}
     editables = {}
-    name = name or getattr(VariableType, "__schema_name__")
+    name = name
     if runtime:
         editables = {"value": True}
         kwargs["editables"] = editables
@@ -124,7 +124,7 @@ def simple_variable_secret(
 ):
     kwargs = {"is_hidden": is_hidden, "is_mandatory": is_mandatory}
     editables = {}
-    name = name or getattr(VariableType, "__schema_name__")
+    name = name
     if runtime:
         editables = {"value": True}
         kwargs["editables"] = editables

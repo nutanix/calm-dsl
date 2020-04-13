@@ -16,7 +16,7 @@ class RefValidator(PropertyValidator, openapi_type="app_ref"):
 
 
 def _ref(**kwargs):
-    name = getattr(RefType, "__schema_name__")
+    name = "_" + getattr(RefType, "__schema_name__")
     bases = (Entity,)
     return RefType(name, bases, kwargs)
 

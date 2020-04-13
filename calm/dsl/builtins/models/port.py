@@ -16,7 +16,7 @@ class PortValidator(PropertyValidator, openapi_type="app_port"):
 
 
 def port(**kwargs):
-    name = getattr(PortType, "__schema_name__")
+    name = "_" + getattr(PortType, "__schema_name__")
     bases = (Entity,)
     return PortType(name, bases, kwargs)
 

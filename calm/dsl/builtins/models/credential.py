@@ -17,7 +17,7 @@ class CredentialValidator(PropertyValidator, openapi_type="app_credential"):
 
 
 def _credential(**kwargs):
-    name = getattr(CredentialType, "__schema_name__")
+    name = "_" + getattr(CredentialType, "__schema_name__")
     name = kwargs.get("name", name)
     bases = (Entity,)
     return CredentialType(name, bases, kwargs)

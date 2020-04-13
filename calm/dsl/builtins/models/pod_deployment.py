@@ -1,6 +1,6 @@
 from .entity import Entity
 from .validator import PropertyValidator
-from .provider_spec import ProviderSpec
+from .provider_spec import provider_spec as get_provider_spec
 from .deployment import DeploymentType
 from .published_service import published_service
 from .service import service
@@ -138,7 +138,7 @@ class PODDeploymentType(DeploymentType):
         sub = substrate(
             name="{}_{}_{}".format(cls.__name__, container_name, "Substrate"),
             provider_type="K8S_POD",
-            provider_spec=ProviderSpec(sub_provider_spec),
+            provider_spec=get_provider_spec(sub_provider_spec),
         )
 
         substrate_definition_list.append(sub)
@@ -178,7 +178,8 @@ class PODDeploymentValidator(PropertyValidator, openapi_type="app_pod_deployment
 
 
 def pod_deployment(**kwargs):
-    name = kwargs.get("name") or getattr(PODDeploymentType, "__schema_name__")
+    name = "_" + getattr(PODDeploymentType, "__schema_name__")
+    name = kwargs.get("name", name)
     bases = (Entity,)
     return PODDeploymentType(name, bases, kwargs)
 

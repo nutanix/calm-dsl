@@ -80,6 +80,18 @@ def test_service_valid_multiple_inheritance():
     Dog.compile()
 
 
+def test_service_invalid_name():
+
+    with pytest.raises(TypeError):
+
+        from calm.dsl.builtins import Service
+
+        class Service(Service):
+            pass
+
+        pytest.fail("Internal name allowed")
+
+
 if __name__ == "__main__":
     test_service_invalid()
     test_service_invalid_setattr()

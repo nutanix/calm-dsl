@@ -52,7 +52,7 @@ class BlueprintValidator(PropertyValidator, openapi_type="app_blueprint"):
 
 
 def blueprint(**kwargs):
-    name = getattr(BlueprintType, "__schema_name__")
+    name = "_" + getattr(BlueprintType, "__schema_name__")
     bases = (Entity,)
     return BlueprintType(name, bases, kwargs)
 

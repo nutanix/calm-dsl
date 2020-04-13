@@ -32,7 +32,7 @@ class ActionValidator(PropertyValidator, openapi_type="app_action"):
 
 
 def _action(**kwargs):
-    name = getattr(ActionType, "__schema_name__")
+    name = "_" + getattr(ActionType, "__schema_name__")
     bases = (Entity,)
     return ActionType(name, bases, kwargs)
 

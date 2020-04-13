@@ -153,6 +153,9 @@ class EntityType(EntityTypeBase):
         else:
             entitydict = kwargs
 
+        if name == getattr(mcls, "__schema_name__"):
+            raise TypeError("{} is a reserved name for this entity".format(name))
+
         cls = super().__new__(mcls, name, bases, entitydict)
 
         openapi_type = getattr(mcls, "__openapi_type__")
@@ -358,7 +361,7 @@ class EntityType(EntityTypeBase):
         ref = types.get("Ref")
         if not ref:
             return
-        name = getattr(ref, "__schema_name__")
+        name = "_" + getattr(ref, "__schema_name__")
         bases = (Entity,)
         if ref:
             attrs = {}
