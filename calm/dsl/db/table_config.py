@@ -49,7 +49,6 @@ class CacheTable(BaseModel):
     entity_type = CharField()
     entity_name = CharField()
     entity_uuid = CharField()
-    entity_list_api_suffix = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
     def get_detail_dict(self):
