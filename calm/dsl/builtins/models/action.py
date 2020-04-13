@@ -151,7 +151,6 @@ class action(metaclass=DescriptorType):
         self.action_description = user_func.__doc__ or ""
         self.user_func = user_func
         self.user_runbook = None
-        self.__parsed__ = False
 
     def __call__(self, name=None):
         if self.user_runbook:
@@ -160,6 +159,7 @@ class action(metaclass=DescriptorType):
     def __get__(self, instance, cls):
         """
         Translate the user defined function to an action.
+        This method is called during compilation, when getattr() is called on the owner entity.
         Args:
             instance (object): Instance of cls
             cls (Entity): Entity that this action is defined on
@@ -168,9 +168,6 @@ class action(metaclass=DescriptorType):
         """
         if cls is None:
             return self
-
-        if self.__parsed__:
-            return self.user_action
 
         # Get the source code for the user function.
         # Also replace tabs with 4 spaces.
@@ -208,8 +205,13 @@ class action(metaclass=DescriptorType):
                 for to_task in to_tasks:
                     edges.append((from_task.get_ref(), to_task.get_ref()))
 
+        # Note - Server checks for name uniqueness in runbooks across actions
+        # Generate unique names using class name and func name.
+        prefix = cls.__name__ + "_" + self.user_func.__name__
+        runbook_name = prefix + "_runbook"
+        dag_name = prefix + "_dag"
+
         # First create the dag
-        dag_name = str(uuid.uuid4())[:8] + "_dag" + "_" + cls.__name__
         self.user_dag = dag(
             name=dag_name,
             child_tasks=tasks,
@@ -220,7 +222,6 @@ class action(metaclass=DescriptorType):
         )
 
         # Create runbook
-        runbook_name = str(uuid.uuid4())[:8] + "_runbook" + "_" + cls.__name__
         self.user_runbook = runbook_create(**{"name": runbook_name})
 
         # Modify the user runbook
@@ -252,11 +253,6 @@ class action(metaclass=DescriptorType):
                 "runbook": self.user_runbook,
             }
         )
-
-        # Note - Server checks for name uniqueness in runbooks across actions.
-        # Until server relaxes this constraint, parse everytime to generate new runbook name.
-        # Also, target references have to be updated each time for inheritance.
-        # self.__parsed__ = True
 
         return self.user_action
 

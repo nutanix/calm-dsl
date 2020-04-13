@@ -228,6 +228,13 @@ class Default(Profile):
     # Deployments under this profile
     deployments = [AnimalDeployment, DogDeployment, HuskyDeployment, CatDeployment]
 
+    @action
+    def get_all_sounds():
+        AnimalService.get_sound(name="S1")
+        DogService.get_sound(name="S2")
+        HuskyService.get_sound(name="S3")
+        CatService.get_sound(name="S4")
+
 
 class TestInheritance(Blueprint):
     """Example blueprint to test inheritance"""
