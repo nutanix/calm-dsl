@@ -5,7 +5,6 @@ from calm.dsl.decompile.credential import get_cred_var_name
 from calm.dsl.decompile.action import render_action_template
 from calm.dsl.decompile.file_handler import get_specs_dir, get_specs_dir_key
 from calm.dsl.builtins import SubstrateType, get_valid_identifier
-from calm.dsl.providers import get_provider
 from calm.dsl.decompile.ref_dependency import update_substrate_name
 from calm.dsl.tools import get_logging_handle
 
@@ -83,8 +82,6 @@ def render_substrate_template(cls, vm_images=[]):
 
 def get_provider_spec_string(spec, filename, provider_type, vm_images):
 
-    Provider = get_provider(provider_type)
-
     if provider_type == "AHV_VM":
         disk_list = spec["resources"]["disk_list"]
 
@@ -110,7 +107,6 @@ def get_provider_spec_string(spec, filename, provider_type, vm_images):
         )
 
     elif provider_type == "VMWARE_VM":
-        account_uuid = spec["resources"]["account_uuid"]
         spec_template = get_valid_identifier(spec["template"])
 
         if spec_template in vm_images:

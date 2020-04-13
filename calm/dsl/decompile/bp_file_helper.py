@@ -31,7 +31,6 @@ def render_bp_file_template(cls, with_secrets=False):
     default_cred = cls.default_cred
 
     credential_list = []
-    cred_file_map = {}
     for index, cred in enumerate(cls.credentials):
         if cred.__name__ == default_cred.__name__:
             cred.default = True

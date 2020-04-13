@@ -720,6 +720,7 @@
     "app_profile_list": [
         {
             "name": "NxProfile",
+            "description": "Sample application profile with variables",
             "deployment_create_list": [
                 {
                     "published_service_local_reference_list": [],
@@ -738,7 +739,8 @@
                     "max_replicas": "1",
                     "type": "GREENFIELD",
                     "name": "MySQLDeployment",
-                    "options": {}
+                    "options": {},
+                    "description": "Sample deployment pulling in service and substrate references"
                 },
                 {
                     "published_service_local_reference_list": [],
@@ -757,7 +759,8 @@
                     "max_replicas": "1",
                     "type": "GREENFIELD",
                     "name": "PHPDeployment",
-                    "options": {}
+                    "options": {},
+                    "description": "Sample deployment pulling in service and substrate references"
                 }
             ],
             "variable_list": [
@@ -789,5 +792,6 @@
             "action_list": []
         }
     ],
-    "client_attrs": {}
+    "client_attrs": {},
+    "default_credential_local_reference": null
 }

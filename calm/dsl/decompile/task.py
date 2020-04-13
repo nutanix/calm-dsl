@@ -1,5 +1,3 @@
-import uuid
-
 from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.ref import render_ref_template
 from calm.dsl.decompile.credential import get_cred_var_name

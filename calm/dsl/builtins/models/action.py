@@ -160,10 +160,10 @@ class action(metaclass=DescriptorType):
         sig = signature(user_func)
         display_name = sig.parameters.get("display_name", None)
 
-        if display_name and display_name.default!=self.action_name:
+        if display_name and display_name.default != self.action_name:
             self.action_description = '{{"dsl_entity_name":"{}"}}\n{}'.format(
-                    str(self.action_name), self.action_description
-                )
+                str(self.action_name), self.action_description
+            )
             self.action_name = display_name.default
 
     def __call__(self, name=None):

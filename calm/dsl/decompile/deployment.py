@@ -14,7 +14,7 @@ def render_deployment_template(cls):
         raise TypeError("{} is not of type {}".format(cls, DeploymentType))
 
     # Entity context
-    entity_context = "Deployment_" + cls.__name__
+    entity_context = "Deployment_" + cls.__name__   # NoQa 
 
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__

@@ -2,6 +2,7 @@ app_profile_list:
 - action_list: []
   deployment_create_list:
   - depends_on_list: []
+    description: Sample deployment pulling in service and substrate references
     max_replicas: '1'
     min_replicas: '1'
     name: MySQLDeployment
@@ -15,6 +16,7 @@ app_profile_list:
       name: AHVMedVM
     type: GREENFIELD
   - depends_on_list: []
+    description: Sample deployment pulling in service and substrate references
     max_replicas: '1'
     min_replicas: '1'
     name: PHPDeployment
@@ -27,6 +29,7 @@ app_profile_list:
       kind: app_substrate
       name: AHVMedVMForPHP
     type: GREENFIELD
+  description: Sample application profile with variables
   name: NxProfile
   variable_list:
   - attrs: {}
@@ -60,6 +63,7 @@ credential_definition_list:
     value: passwd
   type: PASSWORD
   username: root
+default_credential_local_reference: null
 package_definition_list:
 - description: Example package with variables and link to service
   name: MySQLPackage
