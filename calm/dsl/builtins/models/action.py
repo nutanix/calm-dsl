@@ -1,6 +1,7 @@
 import ast
 import inspect
 import uuid
+from inspect import signature
 
 from .entity import EntityType, Entity
 from .descriptor import DescriptorType
@@ -155,6 +156,16 @@ class action(metaclass=DescriptorType):
         self.user_runbook = runbook_create(**{"name": self.runbook_name})
         self.__parsed__ = False
 
+        # Parse the parameters of function
+        sig = signature(user_func)
+        display_name = sig.parameters.get("display_name", None)
+
+        if display_name and display_name.default!=self.action_name:
+            self.action_description = '{{"dsl_entity_name":"{}"}}\n{}'.format(
+                    str(self.action_name), self.action_description
+                )
+            self.action_name = display_name.default
+
     def __call__(self, name=None):
         return create_call_rb(self.user_runbook, name=name)
 
@@ -228,6 +239,7 @@ class action(metaclass=DescriptorType):
         action_name = self.action_name
         ACTION_TYPE = "user"
         func_name = self.user_func.__name__.lower()
+        # Note: Display name parameter will not work on system actions
         if func_name.startswith("__") and func_name.endswith("__"):
             SYSTEM = getattr(cls, "ALLOWED_SYSTEM_ACTIONS", {})
             FRAGMENT = getattr(cls, "ALLOWED_FRAGMENT_ACTIONS", {})

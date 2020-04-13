@@ -47,6 +47,7 @@ def render_service_template(cls):
     system_actions = {v: k for k, v in ServiceType.ALLOWED_SYSTEM_ACTIONS.items()}
     for entity in user_attrs.get("actions", []):
         if entity.__name__ in list(system_actions.keys()):
+            entity.name = system_actions[entity.__name__]
             entity.__name__ = system_actions[entity.__name__]
         rendered_txt = render_action_template(entity, entity_context)
         if rendered_txt:

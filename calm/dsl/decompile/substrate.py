@@ -71,6 +71,7 @@ def render_substrate_template(cls, vm_images=[]):
     system_actions = {v: k for k, v in SubstrateType.ALLOWED_FRAGMENT_ACTIONS.items()}
     for action in user_attrs.get("actions", []):
         if action.__name__ in list(system_actions.keys()):
+            action.name = system_actions[action.__name__]
             action.__name__ = system_actions[action.__name__]
         action_list.append(render_action_template(action, entity_context))
 

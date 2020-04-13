@@ -77,7 +77,7 @@ class VmDiskPackageType(PackageType):
                 "checksum_value": config["checksum"].get("value", ""),
             }
 
-        pkg = package(name=pkg_name, description=pkg_doc, **kwargs)
+        pkg = package(display_name=pkg_name, description=pkg_doc, **kwargs)
         # return the compile version of package
         return pkg.compile()
 

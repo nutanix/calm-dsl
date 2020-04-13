@@ -21,6 +21,11 @@ class MySQLService(Service):
     display_name = "my sql service"
     ENV = CalmVariable.Simple("DEV")
 
+    @action
+    def __create__():
+        # Step 1
+        CalmTask.Exec.ssh(name="Task1", script="echo 'Service create in ENV=@@{ENV}@@'")
+
 
 class MySQLPackage(Package):
     """Example package with variables, install tasks and link to service"""
@@ -106,7 +111,7 @@ class DefaultProfile(Profile):
     deployments = [MySQLDeployment, PHPDeployment]
 
     @action
-    def test_profile_action():
+    def test_profile_action(display_name="test profile action"):
         """Sample description for a profile action"""
         CalmTask.Exec.ssh(name="Task5", script='echo "Hello"', target=ref(MySQLService))
         PHPService.test_action(name="Call Runbook Task")

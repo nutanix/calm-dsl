@@ -46,10 +46,12 @@ def render_package_template(cls):
     action_list = []
     if hasattr(cls, "__install__"):
         cls.__install__.__name__ = "__install__"
+        cls.__install__.name = "__install__"
         action_list.append(render_action_template(cls.__install__, entity_context))
 
     if hasattr(cls, "__uninstall__"):
         cls.__uninstall__.__name__ = "__uninstall__"
+        cls.__uninstall__.name = "__uninstall__"
         action_list.append(render_action_template(cls.__uninstall__, entity_context))
 
     user_attrs["services"] = ",".join(service_list)

@@ -52,6 +52,10 @@ def render_action_template(cls, entity_context=""):
         "tasks": tasks,
         "variables": variables,
     }
+
+    if cls.__name__ != cls.name:
+        user_attrs["display_name"] = cls.name
+
     text = render_template(schema_file="action.py.jinja2", obj=user_attrs)
     return text.strip()
 

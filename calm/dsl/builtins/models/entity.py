@@ -296,7 +296,7 @@ class EntityType(EntityTypeBase):
 
         if not isinstance(cls, (VariableType, ActionType)):
             if "description" in cdict and cdict["name"] != str(cls):
-                cdict["description"] = '{{"dsl_class_name":"{}"}}\n{}'.format(
+                cdict["description"] = '{{"dsl_entity_name":"{}"}}\n{}'.format(
                     str(cls), cdict["description"]
                 )
 
@@ -320,7 +320,7 @@ class EntityType(EntityTypeBase):
                 data = description.split("\n")
                 try:
                     dsl_dict = json.loads(data[0])
-                    dsl_class_name = get_valid_identifier(dsl_dict["dsl_class_name"])
+                    dsl_class_name = get_valid_identifier(dsl_dict["dsl_entity_name"])
                     description = "\n".join(data[1:])
                 except Exception:
                     pass
