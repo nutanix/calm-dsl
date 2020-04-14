@@ -57,7 +57,6 @@ def test_service_invalid_multiple_inheritance():
 
 
 def test_service_valid_multiple_inheritance():
-
     class Loyal(Service):
 
         lfoo = Var("lbar")
