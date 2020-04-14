@@ -19,7 +19,7 @@ class AhvGCValidator(PropertyValidator, openapi_type="vm_ahv_gc"):
 
 
 def ahv_vm_guest_customization(**kwargs):
-    name = "_" + getattr(AhvGCType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return AhvGCType(name, bases, kwargs)
 

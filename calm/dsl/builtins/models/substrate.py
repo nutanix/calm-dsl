@@ -160,8 +160,7 @@ class SubstrateValidator(PropertyValidator, openapi_type="app_substrate"):
 
 
 def substrate(**kwargs):
-    name = "_" + getattr(SubstrateType, "__schema_name__")
-    name = kwargs.get("name", name)
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return SubstrateType(name, bases, kwargs)
 

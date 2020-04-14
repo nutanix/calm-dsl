@@ -231,7 +231,7 @@ class SimpleBlueprintValidator(PropertyValidator, openapi_type="app_simple_bluep
 
 
 def simple_blueprint(**kwargs):
-    name = "_" + getattr(SimpleBlueprintType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return SimpleBlueprintType(name, bases, kwargs)
 

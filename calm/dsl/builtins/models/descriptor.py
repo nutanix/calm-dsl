@@ -13,7 +13,7 @@ class DescriptorValidator(PropertyValidator, openapi_type="app_descriptor"):
 
 
 def _descriptor(**kwargs):
-    name = "_" + getattr(DescriptorType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return DescriptorType(name, bases, kwargs)
 

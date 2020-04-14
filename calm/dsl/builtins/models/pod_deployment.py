@@ -178,8 +178,7 @@ class PODDeploymentValidator(PropertyValidator, openapi_type="app_pod_deployment
 
 
 def pod_deployment(**kwargs):
-    name = "_" + getattr(PODDeploymentType, "__schema_name__")
-    name = kwargs.get("name", name)
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return PODDeploymentType(name, bases, kwargs)
 

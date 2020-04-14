@@ -1,6 +1,5 @@
 import ast
 import inspect
-import uuid
 
 from .entity import EntityType, Entity
 from .descriptor import DescriptorType
@@ -32,7 +31,7 @@ class ActionValidator(PropertyValidator, openapi_type="app_action"):
 
 
 def _action(**kwargs):
-    name = "_" + getattr(ActionType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return ActionType(name, bases, kwargs)
 
@@ -41,8 +40,7 @@ Action = _action()
 
 
 def _action_create(**kwargs):
-    name = str(uuid.uuid4())[:8] + "_" + getattr(ActionType, "__schema_name__")
-    name = kwargs.get("name", kwargs.get("__name__", name))
+    name = kwargs.get("name", kwargs.get("__name__", None))
     bases = (Action,)
     return ActionType(name, bases, kwargs)
 

@@ -3,6 +3,7 @@ import json
 from json import JSONEncoder, JSONDecoder
 import sys
 from types import MappingProxyType
+import uuid
 
 from ruamel.yaml import YAML, resolver, SafeRepresenter
 from calm.dsl.tools import StrictDraft7Validator
@@ -153,8 +154,14 @@ class EntityType(EntityTypeBase):
         else:
             entitydict = kwargs
 
-        if name == getattr(mcls, "__schema_name__"):
-            raise TypeError("{} is a reserved name for this entity".format(name))
+        schema_name = getattr(mcls, "__schema_name__")
+
+        if not name:
+            # Generate unique name
+            name = "_" + schema_name + str(uuid.uuid4())[:8]
+        else:
+            if name == schema_name:
+                raise TypeError("{} is a reserved name for this entity".format(name))
 
         cls = super().__new__(mcls, name, bases, entitydict)
 
@@ -361,7 +368,7 @@ class EntityType(EntityTypeBase):
         ref = types.get("Ref")
         if not ref:
             return
-        name = "_" + getattr(ref, "__schema_name__")
+        name = None
         bases = (Entity,)
         if ref:
             attrs = {}

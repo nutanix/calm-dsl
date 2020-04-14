@@ -20,7 +20,7 @@ class BlueprintPayloadValidator(
 
 
 def _blueprint_payload(**kwargs):
-    name = "_" + getattr(BlueprintPayloadType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return BlueprintPayloadType(name, bases, kwargs)
 

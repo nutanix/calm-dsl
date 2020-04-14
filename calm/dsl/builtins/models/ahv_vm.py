@@ -46,7 +46,7 @@ class AhvVmResourcesValidator(PropertyValidator, openapi_type="vm_ahv_resources"
 
 
 def ahv_vm_resources(**kwargs):
-    name = "_" + getattr(AhvVmResourcesType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return AhvVmResourcesType(name, bases, kwargs)
 
@@ -68,7 +68,7 @@ class AhvVmValidator(PropertyValidator, openapi_type="vm_ahv"):
 
 
 def ahv_vm(**kwargs):
-    name = "_" + getattr(AhvVmType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return AhvVmType(name, bases, kwargs)
 

@@ -31,7 +31,7 @@ class SimpleDeploymentValidator(
 
 
 def simple_deployment(**kwargs):
-    name = "_" + getattr(SimpleDeploymentType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return SimpleDeploymentType(name, bases, kwargs)
 

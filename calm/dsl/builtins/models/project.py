@@ -10,7 +10,7 @@ class ProjectType(EntityType):
 
 
 def project(**kwargs):
-    name = "_" + getattr(ProjectType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = ()
     return ProjectType(name, bases, kwargs)
 

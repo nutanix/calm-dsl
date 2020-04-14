@@ -17,7 +17,7 @@ class AhvNicValidator(PropertyValidator, openapi_type="vm_ahv_nic"):
 
 
 def ahv_vm_nic(**kwargs):
-    name = "_" + getattr(AhvNicType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return AhvNicType(name, bases, kwargs)
 

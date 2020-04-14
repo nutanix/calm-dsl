@@ -23,7 +23,7 @@ class AhvDiskValidator(PropertyValidator, openapi_type="vm_ahv_disk"):
 
 
 def ahv_vm_disk(**kwargs):
-    name = "_" + getattr(AhvDiskType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return AhvDiskType(name, bases, kwargs)
 

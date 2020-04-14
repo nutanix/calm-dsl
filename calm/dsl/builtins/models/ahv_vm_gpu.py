@@ -16,7 +16,7 @@ class AhvGpuValidator(PropertyValidator, openapi_type="vm_ahv_gpu"):
 
 
 def ahv_vm_gpu(**kwargs):
-    name = "_" + getattr(AhvGpuType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return AhvGpuType(name, bases, kwargs)
 

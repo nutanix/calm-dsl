@@ -1,5 +1,3 @@
-import uuid
-
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 
@@ -18,7 +16,7 @@ class RunbookValidator(PropertyValidator, openapi_type="app_runbook"):
 
 
 def _runbook(**kwargs):
-    name = "_" + getattr(RunbookType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return RunbookType(name, bases, kwargs)
 
@@ -27,9 +25,6 @@ Runbook = _runbook()
 
 
 def runbook_create(**kwargs):
-
-    # This follows UI naming convention for runbooks
-    name = str(uuid.uuid4())[:8] + "_" + getattr(RunbookType, "__schema_name__")
-    name = kwargs.get("name", kwargs.get("__name__", name))
-    bases = (Runbook,)
+    name = kwargs.get("name", kwargs.get("__name__", None))
+    bases = (Entity,)
     return RunbookType(name, bases, kwargs)

@@ -53,7 +53,7 @@ class VariableValidator(PropertyValidator, openapi_type="app_variable"):
 
 
 def _var(**kwargs):
-    name = "_" + getattr(VariableType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return VariableType(name, bases, kwargs)
 
@@ -63,8 +63,6 @@ Variable = _var()
 
 def setvar(name, value, type_="LOCAL", **kwargs):
 
-    if name is None:
-        name = "_" + getattr(VariableType, "__schema_name__")
     kwargs["name"] = name
     if value is not None:
         kwargs["value"] = value
