@@ -245,7 +245,7 @@ def decompile_bp(name, bp_file, with_secrets=False):
     """helper to decompile blueprint"""
 
     if name and bp_file:
-        LOG.error("Pls provide either blueprint file location or server blueprint name")
+        LOG.error("Please provide either blueprint file location or server blueprint name")
         sys.exit(-1)
 
     if name:
@@ -255,7 +255,7 @@ def decompile_bp(name, bp_file, with_secrets=False):
         decompile_bp_from_file(filename=bp_file, with_secrets=with_secrets)
 
     else:
-        LOG.error("Pls provide either blueprint file location or server blueprint name")
+        LOG.error("Please provide either blueprint file location or server blueprint name")
         sys.exit(-1)
 
 
