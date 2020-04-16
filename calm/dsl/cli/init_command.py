@@ -14,7 +14,7 @@ from calm.dsl.config import (
 )
 from calm.dsl.db import get_db_handle
 from calm.dsl.api import get_resource_api, update_client_handle, get_client_handle
-from calm.dsl.store import Cache
+from calm.dsl.store import Cache, Version
 from calm.dsl.init import init_bp
 from calm.dsl.providers import get_provider_types
 
@@ -205,6 +205,7 @@ def init_db():
 def sync_cache():
     LOG.info("Updating Cache")
     Cache.sync()
+    Version.sync()
     LOG.info("Success")
 
 

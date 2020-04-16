@@ -17,6 +17,7 @@ from calm.dsl.tools import (
     show_trace_option,
 )
 from calm.dsl.config import get_config
+from .version_validator import validate_version
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
@@ -51,6 +52,11 @@ Commonly used commands:
 """
     ctx.ensure_object(dict)
     ctx.obj["verbose"] = True
+    try:
+        validate_version()
+    except Exception:
+        LOG.debug("Could not validate version")
+        pass
     if config_file:
         get_config(config_file=config_file)
 
@@ -139,9 +145,18 @@ def get_server_status():
     result = json.loads(res.content)
     service_enablement_status = result["service_enablement_status"]
 
+    res, err = client.version.get_calm_version()
+    calm_version = res.content.decode("utf-8")
+
     LOG.info(service_enablement_status)
     LOG.info("Server URL: {}".format(client.connection.base_url))
-    # TODO - Add info about PC and Calm server version
+    LOG.info("Calm Version: {}".format(calm_version))
+
+    res, err = client.version.get_pc_version()
+    if not err:
+        res = res.json()
+        pc_version = res["version"]
+        LOG.info("PC Version: {}".format(pc_version))
 
 
 @main.group(cls=DYMGroup)
@@ -158,7 +173,7 @@ def compile():
 
 @main.group(cls=DYMGroup)
 def create():
-    """Create entities in CALM (blueprint, project) """
+    """Create entities in Calm (blueprint, project) """
     pass
 
 
@@ -262,7 +277,24 @@ def completion():
 
 @main.command("prompt")
 def calmrepl():
-    """Enable an interactive prompt shell"""
+    """Enable an interactive prompt shell
+
+    > :help
+
+    REPL help:
+
+    External Commands:
+
+      prefix external commands with "!"
+
+    Internal Commands:
+
+      prefix internal commands with ":"
+
+      :exit, :q, :quit  exits the repl
+
+      :?, :h, :help     displays general help information
+"""
     repl(click.get_current_context())
 
 

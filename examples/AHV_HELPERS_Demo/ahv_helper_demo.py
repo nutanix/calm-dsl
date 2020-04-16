@@ -12,9 +12,15 @@ CENTOS_PASSWORD = read_local_file("password")
 CENTOS_KEY = read_local_file("private_key")
 
 DefaultCred = basic_cred("centos", CENTOS_PASSWORD, name="CENTOS")
-CentosKeyCred = basic_cred("centos", CENTOS_KEY, name="CENTOS_KEY", type="KEY", default=True)
-Era_Disk = vm_disk_package(name="era_disk", config=read_spec("image_configs/era_disk.yaml"))
-Virtio_CdRom = vm_disk_package(name="virtio_cdrom", config_file="image_configs/virtio_cdrom.yaml")
+CentosKeyCred = basic_cred(
+    "centos", CENTOS_KEY, name="CENTOS_KEY", type="KEY", default=True
+)
+Era_Disk = vm_disk_package(
+    name="era_disk", config=read_spec("image_configs/era_disk.yaml")
+)
+Virtio_CdRom = vm_disk_package(
+    name="virtio_cdrom", config_file="image_configs/virtio_cdrom.yaml"
+)
 
 
 class MySQLService(Service):
@@ -49,12 +55,9 @@ class MyAhvVmResources(AhvVmResources):
         AhvVmDisk.CdRom.Sata.emptyCdRom(),
         AhvVmDisk.CdRom.Ide.emptyCdRom(),
         AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(Era_Disk),
-        AhvVmDisk.CdRom.Sata.cloneFromVMDiskPackage(Virtio_CdRom)
+        AhvVmDisk.CdRom.Sata.cloneFromVMDiskPackage(Virtio_CdRom),
     ]
-    nics = [
-        AhvVmNic("vlan.0"),
-        AhvVmNic.DirectNic.egress("vlan.0")
-    ]
+    nics = [AhvVmNic("vlan.0"), AhvVmNic.DirectNic.egress("vlan.0")]
 
     guest_customization = AhvVmGC.CloudInit(filename="scripts/guest_cus.yaml")
 

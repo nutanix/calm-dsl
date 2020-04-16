@@ -509,6 +509,7 @@
                     "is_mandatory": false
                 }
             ],
+            "action_list": [],
             "version": ""
         },
         {
@@ -574,6 +575,7 @@
                 }
             ],
             "variable_list": [],
+            "action_list": [],
             "version": ""
         }
     ],

@@ -4,6 +4,7 @@ import datetime
 from prettytable import PrettyTable
 
 from calm.dsl.store import Cache
+from calm.dsl.store import Version
 
 from .main import show, update, clear
 from .utils import highlight_text
@@ -59,7 +60,10 @@ def update_cache():
     """Update the data for dynamic entities stored in the cache"""
 
     LOG.debug("Updating cache")
+    # Update api cache
     Cache.sync()
+    # Update version cache
+    Version.sync()
     LOG.debug("Success")
     show_cache()
     LOG.info(highlight_text("Cache updated at {}".format(datetime.datetime.now())))
