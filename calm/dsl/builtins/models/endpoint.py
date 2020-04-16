@@ -46,7 +46,7 @@ def _http_endpoint(
         "name": name,
         "type": "HTTP",
         "attrs": {
-            "url": url,
+            "urls": [url],
             "retry_count": retries + 1,
             "retry_interval": retry_interval,
             "connection_timeout": timeout,

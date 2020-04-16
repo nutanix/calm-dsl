@@ -53,7 +53,7 @@ class TestEndpoints:
         ep_type = ep["spec"]["resources"]["type"]
         del ep["status"]
         if ep_type == ENDPOINT.TYPES.HTTP:
-            ep["spec"]["resources"]["attrs"]["url"] = "new_updated_url"
+            ep["spec"]["resources"]["attrs"]["urls"][0] = "new_updated_url"
         elif ep_type == ENDPOINT.TYPES.LINUX or ep_type == ENDPOINT.TYPES.WINDOWS:
             ep["spec"]["resources"]["attrs"]["values"] = ["1.1.1.1", "2.2.2.2"]
         else:
@@ -68,7 +68,7 @@ class TestEndpoints:
         print(">> Endpoint state: {}".format(ep_state))
         assert ep_state == "ACTIVE"
         if ep_type == ENDPOINT.TYPES.HTTP:
-            assert ep["spec"]["resources"]["attrs"]["url"] == "new_updated_url"
+            assert ep["spec"]["resources"]["attrs"]["urls"][0] == "new_updated_url"
         elif ep_type == ENDPOINT.TYPES.LINUX or ep_type == ENDPOINT.TYPES.WINDOWS:
             assert "1.1.1.1" in ep["spec"]["resources"]["attrs"]["values"]
             assert "2.2.2.2" in ep["spec"]["resources"]["attrs"]["values"]
@@ -158,7 +158,7 @@ class TestEndpoints:
 
         # update endpoint type
         ep["spec"]["resources"]["type"] = ENDPOINT.TYPES.HTTP
-        ep["spec"]["resources"]["attrs"] = {"url": "test_url", "authentication": {"type": "none"}}
+        ep["spec"]["resources"]["attrs"] = {"urls": ["test_url"], "authentication": {"type": "none"}}
         del ep["status"]
 
         res, err = client.endpoint.update(ep_uuid, ep)
@@ -198,7 +198,7 @@ class TestEndpoints:
         endpoint = copy.deepcopy(change_uuids(EndpointPayload, {}))
 
         # setting url to empty
-        endpoint['spec']['resources']['attrs']['url'] = ''
+        endpoint['spec']['resources']['attrs']['urls'][0] = ''
 
         # Endpoint Create
         res, err = client.endpoint.create(endpoint)
