@@ -18,7 +18,7 @@ def parse_machine_name(runlog_id, machine_name):
     if not machine_name:
         return None
     machine_info = machine_name.split('-{} - '.format(runlog_id))
-    return '{} ({})'.format(machine_info[1], machine_info[0])
+    return machine_info
 
 
 class InputFrame(Frame):
@@ -325,7 +325,10 @@ def get_completion_func(screen):
                 machine_name = runlog['status'].get("machine_name", None)
                 machine = parse_machine_name(runlog_uuid, machine_name)
                 if machine and len(machine) == 1:
+                    runlog['status']['machine_name'] = '-'
                     continue  # this runlog corresponds to endpoint loop
+                elif machine:
+                    machine = '{} ({})'.format(machine[1], machine[0])
                 if runlog['status']['type'] == "task_runlog" and not runlog["status"].get("attrs", None):
                     res, err = client.runbook.runlog_output(runlog_uuid, uuid)
                     if err:
