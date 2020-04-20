@@ -1,5 +1,6 @@
 import json
 import click
+import sys
 
 from calm.dsl.api import get_api_client
 
@@ -196,9 +197,30 @@ def create_blueprint_command(bp_file, name, description):
         return
 
     bp = res.json()
-    bp_state = bp["status"]["state"]
-    LOG.info("Blueprint state: {}".format(bp_state))
-    assert bp_state == "ACTIVE"
+    bp_status = bp.get("status", {})
+    bp_name = bp_status.get("name")
+    bp_state = bp_status.get("state", "DRAFT")
+    LOG.debug("Blueprint {} has state: {}".format(bp_name, bp_state))
+
+    if bp_state != "ACTIVE":
+        msg_list = bp_status.get("message_list", [])
+        if not msg_list:
+            LOG.error("Blueprint {} created with errors.".format(bp_name))
+            LOG.debug(json.dumps(bp_status))
+            sys.exit(-1)
+
+        msgs = []
+        for msg_dict in msg_list:
+            msgs.append(msg_dict.get("message", ""))
+
+        LOG.error(
+            "Blueprint {} created with {} error(s): {}".format(
+                bp_name, len(msg_list), msgs
+            )
+        )
+        sys.exit(-1)
+
+    LOG.info("Blueprint {} created successfully.".format(bp_name))
 
 
 @launch.command("bp")
