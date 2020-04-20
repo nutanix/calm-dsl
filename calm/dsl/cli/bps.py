@@ -333,17 +333,19 @@ def get_blueprint_runtime_editables(client, blueprint):
     return response.get("resources", [])
 
 
-def get_field_values(entity_dict, context, path=None):
+def get_field_values(entity_dict, context, path=None, hide_input=False):
     path = path or ""
     for field, value in entity_dict.items():
         if isinstance(value, dict):
-            get_field_values(entity_dict[field], context, path=path + "." + field)
-        else:
-            new_val = input(
-                "Value for {} in {} (default value={}): ".format(
-                    path + "." + field, context, value
-                )
+            get_field_values(
+                entity_dict[field],
+                context,
+                path=path + "." + field,
+                hide_input=hide_input,
             )
+        else:
+            prompt_str = "{} -> {}".format(highlight_text(context), path + "." + field)
+            new_val = click.prompt(prompt_str, default=value, hide_input=hide_input)
             if new_val:
                 entity_dict[field] = type(value)(new_val)
 
@@ -406,7 +408,13 @@ def launch_blueprint_simple(
             for entity in entity_list:
                 context = entity["context"]
                 editables = entity["value"]
-                get_field_values(editables, context, path=entity.get("name", ""))
+                hide_input = entity.get("type") == "SECRET"
+                get_field_values(
+                    editables,
+                    context,
+                    path=entity.get("name", ""),
+                    hide_input=hide_input,
+                )
         runtime_editables_json = json.dumps(
             runtime_editables, indent=4, separators=(",", ": ")
         )
