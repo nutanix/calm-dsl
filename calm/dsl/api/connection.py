@@ -274,10 +274,23 @@ class Connection:
             sys.exit(-1)
         except Exception as ex:
             LOG.debug("Got traceback\n{}".format(traceback.format_exc()))
-            err_msg = res.text if hasattr(res, "text") else "{}".format(ex)
+            if hasattr(res, "json") and callable(getattr(res, "json")):
+                try:
+                    err_msg = res.json()
+                except Exception:
+                    err_msg = ""
+                    pass
+            elif hasattr(res, "text"):
+                err_msg = res.text
+            else:
+                err_msg = ""
             status_code = res.status_code if hasattr(res, "status_code") else 500
             err = {"error": err_msg, "code": status_code}
-            LOG.error("Error Response: {}".format(err))
+            LOG.error(
+                "Oops! Something went wrong.\n{}".format(
+                    json.dumps(err, indent=4, separators=(",", ": "))
+                )
+            )
             sys.exit(-1)
         return res, err
 
