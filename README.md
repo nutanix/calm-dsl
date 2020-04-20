@@ -26,6 +26,10 @@ Language design is black art, and building upon a well-established language is d
  - Describe app: `calm describe app <app_name>`. It will print a summary of the application and the current application state.
  - Delete app: `calm delete app <app_name>`. Hint: You can delete multiple apps using: `calm get apps -q | xargs -I {} calm delete app {}`.
 
+## Docker
+ - Latest image: `docker pull ntnx/calm-dsl`
+ - Run: `docker run -it ntnx/calm-dsl`
+
 ## Dev Setup
 
 MacOS:
