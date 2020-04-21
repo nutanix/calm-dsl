@@ -278,12 +278,12 @@ class Connection:
                 try:
                     err_msg = res.json()
                 except Exception:
-                    err_msg = ""
+                    err_msg = "{}".format(ex)
                     pass
             elif hasattr(res, "text"):
                 err_msg = res.text
             else:
-                err_msg = ""
+                err_msg = "{}".format(ex)
             status_code = res.status_code if hasattr(res, "status_code") else 500
             err = {"error": err_msg, "code": status_code}
             LOG.error(
