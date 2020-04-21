@@ -7,10 +7,10 @@ TAG     := $(shell git describe --abbrev=0 --tags --exact-match ${COMMIT} 2>/dev
 dev:
 	# Setup our python3 based virtualenv
 	# This step assumes python3 is installed on your dev machine
-	[ -f venv/bin/python3 ] || (virtualenv -p python3 venv && \
-		venv/bin/pip3 install --upgrade pip setuptools)
-	venv/bin/pip3 install --no-cache -r requirements.txt -r dev-requirements.txt
-	venv/bin/python3 setup.py develop
+	[ -f /bin/python3 ] || (python3 -m venv venv && \
+		/bin/pip3 install --upgrade pip setuptools)
+	/bin/pip3 install --no-cache -r requirements.txt -r dev-requirements.txt
+	/bin/python3 setup.py develop
 
 test: dev
 	venv/bin/calm update cache
@@ -40,7 +40,7 @@ test-verbose: dev
 	venv/bin/py.test -s -vv
 
 dist: dev
-	venv/bin/python3 setup.py sdist bdist_wheel
+    /bin/python3 setup.py sdist bdist_wheel
 
 docker: dist
 
