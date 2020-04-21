@@ -40,7 +40,7 @@ test-verbose: dev
 	venv/bin/py.test -s -vv
 
 dist: dev
-    /bin/python3 setup.py sdist bdist_wheel
+	/bin/python3 setup.py sdist bdist_wheel
 
 docker: dist
 
