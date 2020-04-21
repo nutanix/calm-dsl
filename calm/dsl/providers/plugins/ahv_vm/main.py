@@ -107,7 +107,12 @@ class AhvBase:
         "query_name": "prism:CategoriesQueryModel",
     }
 
-    api_handlers = {}
+    api_handlers = OrderedDict()
+    __api_version__ = None
+
+    @classmethod
+    def get_version(cls):
+        return getattr(cls, "__api_version__")
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -140,7 +145,7 @@ class AhvBase:
         if not payload:
             raise Exception("no payload")
 
-        return Obj.list(payload)
+        return Obj.create(payload)
 
     def categories(self, payload):
         response, err = self.groups(payload)
@@ -172,6 +177,14 @@ class AhvNew(AhvBase):
     def __init__(self, connection):
         self.connection = connection
 
+    def groups(self, payload):
+        Obj = get_resource_api(self.GROUPS, self.connection)
+
+        if not payload:
+            raise Exception("no payload")
+
+        return Obj.list(payload)
+
 
 class Ahv(AhvBase):
     """ahv api object used before calm 2.9.0"""
@@ -195,20 +208,20 @@ def create_spec(client):
 
     spec = {}
     Obj = AhvVmProvider.get_api_obj()
+
     schema = AhvVmProvider.get_provider_spec()
     path = []  # Path to the key
     option = []  # Any option occured during finding key
 
     # VM Configuration
-
-    projects = client.project.get_name_uuid_map()
+    projects = client.project.get_name_uuid_map({"length": 1000, "offset": 0})
     project_list = list(projects.keys())
 
     if not project_list:
         LOG.error("No projects found! Please add one.")
         sys.exit(-1)
 
-    click.echo("\nChoose from given projects:")
+    click.echo("Choose from given projects:")
     for ind, name in enumerate(project_list):
         click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
@@ -237,9 +250,9 @@ def create_spec(client):
         subnets_list.append(subnet["uuid"])
 
     # Extending external subnet's list from remote account
-    for subnet in project["status"]["project_status"]["resources"][
-        "external_network_list"
-    ]:
+    for subnet in project["status"]["project_status"]["resources"].get(
+        "external_network_list", []
+    ):
         subnets_list.append(subnet["uuid"])
 
     accounts = project["status"]["project_status"]["resources"][
@@ -250,29 +263,29 @@ def create_spec(client):
     for account in accounts:
         reg_accounts.append(account["uuid"])
 
-    # Fetching account id from project
-    payload = {"filter": "type==nutanix_pc"}
-    res, err = client.account.list(payload)
-    if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-    res = res.json()
+    # Fetching ahv account id from project in case of multipc(calm version>=2.9.0)
     account_uuid = ""
+    if isinstance(Obj, AhvNew):
+        payload = {"length": 250, "filter": "type==nutanix_pc"}
+        res, err = client.account.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-    for entity in res["entities"]:
-        entity_name = entity["metadata"]["name"]
-        entity_id = entity["metadata"]["uuid"]
-        if entity_id in reg_accounts:
-            account_uuid = entity_id
-            break
+        res = res.json()
+        for entity in res["entities"]:
+            entity_name = entity["metadata"]["name"]
+            entity_id = entity["metadata"]["uuid"]
+            if entity_id in reg_accounts:
+                account_uuid = entity_id
+                break
 
-    if not account_uuid:
-        LOG.error(
-            "No Ahv account found! Please register one to project {}.".format(
-                project_name
+        if not account_uuid:
+            LOG.error(
+                "No Ahv account found! Please register one to project {}.".format(
+                    project_name
+                )
             )
-        )
-        sys.exit(-1)
+            sys.exit(-1)
 
     click.echo("")
     path.append("name")
@@ -288,9 +301,13 @@ def create_spec(client):
     )
     if choice[0] == "y":
         payload = Obj.CATEGORIES_PAYLOAD
-        payload["filter_criteria"] += ";account_uuid=={}".format(account_uuid)
-        categories = Obj.categories(payload)
 
+        # Add ahv account id from project in case of multipc(calm version>=2.9.0)
+        # TODO Check for its call during host nutanix pc account
+        if isinstance(Obj, AhvNew):
+            payload["filter_criteria"] += ";account_uuid=={}".format(account_uuid)
+
+        categories = Obj.categories(payload)
         if not categories:
             click.echo("\n{}\n".format(highlight_text("No Category present")))
 
@@ -418,8 +435,11 @@ def create_spec(client):
         payload = {
             "length": 1000,
             "offset": 0,
-            "filter": "account_uuid=={}".format(account_uuid),
         }
+        # Add ahv account id from project in case of multipc(calm version>=2.9.0)
+        if isinstance(Obj, AhvNew):
+            payload["filter"] = "account_uuid=={}".format(account_uuid)
+
         res = Obj.images(payload)
         img_name_uuid_map = {}
         for entity in res.get("entities", []):
@@ -439,7 +459,7 @@ def create_spec(client):
                 image["name"] = ""
                 break
 
-            click.echo("\nChoose from given images: \n")
+            click.echo("\nChoose from given images:")
             for ind, name in enumerate(images):
                 click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
@@ -603,9 +623,11 @@ def create_spec(client):
                     ",_entity_id_==".join(subnets_list)
                 ),
             }
-            payload["filter"] = payload["filter"] + ";account_uuid=={}".format(
-                account_uuid
-            )
+            # Add ahv account id from project in case of multipc(calm version>=2.9.0)
+            if isinstance(Obj, AhvNew):
+                payload["filter"] = payload["filter"] + ";account_uuid=={}".format(
+                    account_uuid
+                )
             nics = Obj.subnets(payload)
             nics = nics["entities"]
 

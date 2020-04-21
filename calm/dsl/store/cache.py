@@ -1,10 +1,13 @@
 import peewee
 import sys
+from collections import OrderedDict
+from distutils.version import LooseVersion as LV
 
 from ..db import get_db_handle
 from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.tools import get_logging_handle
 from calm.dsl.config import get_config
+
 from calm.dsl.api import get_api_client
 from calm.dsl.providers import get_provider
 
@@ -106,41 +109,56 @@ class Cache:
         # Clearing existing data in cache
         cls.clear_entities()
 
-        if account_uuid:
-            # Fetch the subnets and images from ahv account registered and store in cache
-            Ahv = get_provider("AHV_VM")
-            Obj = Ahv.get_api_obj()
+        # Fetch the subnets and images from ahv account registered and store in cache
+        Ahv = get_provider("AHV_VM")
+        Obj = Ahv.get_api_obj()
 
-            # Store images
-            payload = {
-                "length": 1000,
-                "offset": 0,
-                "filter": "account_uuid=={}".format(account_uuid),
-            }
+        # Fetch ahv images
+        payload = {
+            "length": 1000,
+            "offset": 0,
+        }
+        ahv_images = {}
+        if LV(Obj.get_version()) >= LV("2.9.0"):
+            if account_uuid:
+                payload["filter"] = "account_uuid=={}".format(account_uuid)
+                ahv_images = Obj.images(payload)
+
+        else:
             ahv_images = Obj.images(payload)
-            for entity in ahv_images.get("entities", []):
-                cls.create(
-                    entity_type="AHV_DISK_IMAGE", entity_name=entity["status"]["name"], entity_uuid=entity["metadata"]["uuid"]
-                )
 
-            # Store Subnets
-            payload = {
-                "length": 1000,
-                "filter": "(_entity_id_=={})".format(
-                    ",_entity_id_==".join(subnets_list)
-                ),
-            }
-            payload["filter"] = payload["filter"] + ";account_uuid=={}".format(
-                account_uuid
+        # Store the ahv images
+        for entity in ahv_images.get("entities", []):
+            cls.create(
+                entity_type="AHV_DISK_IMAGE",
+                entity_name=entity["status"]["name"],
+                entity_uuid=entity["metadata"]["uuid"],
             )
-            nics = Obj.subnets(payload)
-            nics = nics["entities"]
-            for nic in nics:
-                cls.create(
-                    entity_type="AHV_SUBNET",
-                    entity_name=nic["status"]["name"],
-                    entity_uuid=nic["metadata"]["uuid"],
+
+        # Fetch the subnets
+        payload = {
+            "length": 1000,
+            "offset": 0,
+            "filter": "(_entity_id_=={})".format(",_entity_id_==".join(subnets_list)),
+        }
+        ahv_subnets = {}
+        if LV(Obj.get_version()) >= LV("2.9.0"):
+            if account_uuid:
+                payload["filter"] = payload["filter"] + ";account_uuid=={}".format(
+                    account_uuid
                 )
+                ahv_subnets = Obj.subnets(payload)
+
+        else:
+            ahv_subnets = Obj.subnets(payload)
+
+        # Store the subnets
+        for entity in ahv_subnets.get("entities", []):
+            cls.create(
+                entity_type="AHV_SUBNET",
+                entity_name=entity["status"]["name"],
+                entity_uuid=entity["metadata"]["uuid"],
+            )
 
         # Store projects in cache
         project_name_uuid_map = client.project.get_name_uuid_map({"length": 1000})
