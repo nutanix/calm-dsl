@@ -34,8 +34,6 @@ class ResourceAPI:
         )
 
     def list(self, params={}):
-        if not params.get("length"):
-            params["length"] = 250
         return self.connection._call(
             self.LIST, verify=False, request_json=params, method=REQUEST.METHOD.POST
         )

@@ -112,10 +112,15 @@ class Cache:
             Obj = Ahv.get_api_obj()
 
             # Store images
-            images_name_uuid_map = Obj.images(account_uuid)
-            for name, uuid in images_name_uuid_map.items():
+            payload = {
+                "length": 1000,
+                "offset": 0,
+                "filter": "account_uuid=={}".format(account_uuid),
+            }
+            ahv_images = Obj.images(payload)
+            for entity in ahv_images.get("entities", []):
                 cls.create(
-                    entity_type="AHV_DISK_IMAGE", entity_name=name, entity_uuid=uuid
+                    entity_type="AHV_DISK_IMAGE", entity_name=entity["status"]["name"], entity_uuid=entity["metadata"]["uuid"]
                 )
 
             # Store Subnets
