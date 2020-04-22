@@ -177,13 +177,36 @@ class AhvNew(AhvBase):
     def __init__(self, connection):
         self.connection = connection
 
-    def groups(self, payload):
-        Obj = get_resource_api(self.GROUPS, self.connection)
+    # TODO Fix after Bug CALM-17213 is resolved
+    # Remove dependecy for host_pc after bug is resolved
+    def groups(self, payload, host_pc=False):
+        
+        api_suffix = self.GROUPS if not host_pc else "groups"
+        Obj = get_resource_api(api_suffix, self.connection)
 
         if not payload:
             raise Exception("no payload")
 
-        return Obj.list(payload)
+        if host_pc:
+            return Obj.create(payload)
+        else:
+            return Obj.list(payload)
+    
+    def categories(self, payload, host_pc=False):
+        response, err = self.groups(payload = payload, host_pc=host_pc)
+        categories = []
+
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        response = response.json()
+        for group in response["group_results"]:
+            key = group["group_summaries"]["sum:name"]["values"][0]["values"][0]
+            for entity in group["entity_results"]:
+                value = entity["data"][0]["values"][0]["values"][0]
+                categories.append({"key": key, "value": value})
+
+        return categories
 
 
 class Ahv(AhvBase):
@@ -286,6 +309,17 @@ def create_spec(client):
                 )
             )
             sys.exit(-1)
+        
+        # Check whether ahv account is host pc or not
+        # https://jira.nutanix.com/browse/CALM-17213
+        payload = {"length": 250, "filter":"_entity_id_=={}".format(account_uuid)}
+        res, err = client.account.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        provider_data = res["entities"][0]["status"]["resources"]["data"]
+        is_host_pc = provider_data["host_pc"]
 
     click.echo("")
     path.append("name")
@@ -303,11 +337,12 @@ def create_spec(client):
         payload = Obj.CATEGORIES_PAYLOAD
 
         # Add ahv account id from project in case of multipc(calm version>=2.9.0)
-        # TODO Check for its call during host nutanix pc account
-        if isinstance(Obj, AhvNew):
+        # TODO Bug CALM-17213 for using /groups/list for host pc. 
+        # Remove dependecy for host_pc after bug is resolved
+        if isinstance(Obj, AhvNew) and not is_host_pc:
             payload["filter_criteria"] += ";account_uuid=={}".format(account_uuid)
 
-        categories = Obj.categories(payload)
+        categories = Obj.categories(payload, host_pc=is_host_pc)
         if not categories:
             click.echo("\n{}\n".format(highlight_text("No Category present")))
 
