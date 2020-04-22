@@ -102,7 +102,9 @@ def _compile_blueprint_command(bp_file, out, no_sync):
     compile_blueprint_command(bp_file, out, no_sync)
 
 
-def create_blueprint(client, bp_payload, name=None, description=None, categories=None):
+def create_blueprint(
+    client, bp_payload, name=None, description=None, categories=None, force_create=False
+):
 
     bp_payload.pop("status", None)
 
@@ -143,17 +145,31 @@ def create_blueprint(client, bp_payload, name=None, description=None, categories
     categories = bp_payload["metadata"].get("categories", None)
 
     return client.blueprint.upload_with_secrets(
-        bp_name, bp_desc, bp_resources, categories=categories
+        bp_name,
+        bp_desc,
+        bp_resources,
+        categories=categories,
+        force_create=force_create,
     )
 
 
-def create_blueprint_from_json(client, path_to_json, name=None, description=None):
+def create_blueprint_from_json(
+    client, path_to_json, name=None, description=None, force_create=False
+):
 
     bp_payload = json.loads(open(path_to_json, "r").read())
-    return create_blueprint(client, bp_payload, name=name, description=description)
+    return create_blueprint(
+        client,
+        bp_payload,
+        name=name,
+        description=description,
+        force_create=force_create,
+    )
 
 
-def create_blueprint_from_dsl(client, bp_file, name=None, description=None):
+def create_blueprint_from_dsl(
+    client, bp_file, name=None, description=None, force_create=False
+):
 
     bp_payload = compile_blueprint(bp_file)
     if bp_payload is None:
@@ -161,7 +177,13 @@ def create_blueprint_from_dsl(client, bp_file, name=None, description=None):
         err = {"error": err_msg, "code": -1}
         return None, err
 
-    return create_blueprint(client, bp_payload, name=name, description=description)
+    return create_blueprint(
+        client,
+        bp_payload,
+        name=name,
+        description=description,
+        force_create=force_create,
+    )
 
 
 @create.command("bp")
@@ -177,18 +199,25 @@ def create_blueprint_from_dsl(client, bp_file, name=None, description=None):
 @click.option(
     "--description", "-d", default=None, help="Blueprint description (Optional)"
 )
-def create_blueprint_command(bp_file, name, description):
+@click.option(
+    "--force",
+    "-f",
+    is_flag=True,
+    default=False,
+    help="Deletes existing blueprint with the same name before create.",
+)
+def create_blueprint_command(bp_file, name, description, force):
     """Creates a blueprint"""
 
     client = get_api_client()
 
     if bp_file.endswith(".json"):
         res, err = create_blueprint_from_json(
-            client, bp_file, name=name, description=description
+            client, bp_file, name=name, description=description, force_create=force
         )
     elif bp_file.endswith(".py"):
         res, err = create_blueprint_from_dsl(
-            client, bp_file, name=name, description=description
+            client, bp_file, name=name, description=description, force_create=force
         )
     else:
         LOG.error("Unknown file format {}".format(bp_file))

@@ -75,7 +75,9 @@ class BlueprintAPI(ResourceAPI):
 
         return bp_payload
 
-    def upload_with_secrets(self, bp_name, bp_desc, bp_resources, categories=None):
+    def upload_with_secrets(
+        self, bp_name, bp_desc, bp_resources, categories=None, force_create=False
+    ):
 
         # check if bp with the given name already exists
         params = {"filter": "name=={};state!=DELETED".format(bp_name)}
@@ -87,10 +89,19 @@ class BlueprintAPI(ResourceAPI):
         entities = response.get("entities", None)
         if entities:
             if len(entities) > 0:
-                err_msg = "Blueprint with name {} already exists.".format(bp_name)
-                # ToDo: Add command to edit Blueprints
-                err = {"error": err_msg, "code": -1}
-                return None, err
+                if not force_create:
+                    err_msg = "Blueprint {} already exists. Use --force to overwrite.".format(
+                        bp_name
+                    )
+                    # ToDo: Add command to edit Blueprints
+                    err = {"error": err_msg, "code": -1}
+                    return None, err
+
+                # --force option used in create. Delete existing blueprint with same name.
+                bp_uuid = entities[0]["metadata"]["uuid"]
+                _, err = self.delete(bp_uuid)
+                if err:
+                    return None, err
 
         # Remove creds before upload
         creds = bp_resources.get("credential_definition_list", []) or []
