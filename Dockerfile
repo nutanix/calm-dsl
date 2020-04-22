@@ -37,4 +37,7 @@ RUN apk add --no-cache bash bash-completion
 COPY .bashrc /root/.bashrc
 COPY .bash_completion /root/.bash_completion
 
+ARG tag
+ENV CALM_DSL_TAG=$tag
+
 CMD ["bash"]
