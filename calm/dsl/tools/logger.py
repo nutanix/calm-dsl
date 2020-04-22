@@ -1,4 +1,5 @@
 import logging
+import inspect
 
 from colorlog import ColoredFormatter
 import time
@@ -64,6 +65,16 @@ class CustomLogging:
         # Add show trace option
         self.show_trace = False
 
+    @staticmethod
+    def __add_caller_info(msg):
+        stack = inspect.stack()
+
+        # filename = stack[2][1]
+        # func = stack[2][3]
+        ln = stack[2][2]
+
+        return ":{}] {}".format(ln, msg)
+
     def get_logger(self):
         self.set_logger_level(VERBOSE_LEVEL)
         self.show_trace = SHOW_TRACE
@@ -93,7 +104,8 @@ class CustomLogging:
             None
         """
         logger = self.get_logger()
-        return logger.info(msg, *args, **kwargs)
+
+        return logger.info(self.__add_caller_info(msg), *args, **kwargs)
 
     def warning(self, msg, *args, **kwargs):
         """
@@ -107,7 +119,7 @@ class CustomLogging:
         """
 
         logger = self.get_logger()
-        return logger.warning(msg, *args, **kwargs)
+        return logger.warning(self.__add_caller_info(msg), *args, **kwargs)
 
     def error(self, msg, *args, **kwargs):
         """
@@ -123,7 +135,7 @@ class CustomLogging:
         logger = self.get_logger()
         if self.show_trace:
             kwargs["stack_info"] = sys.exc_info()
-        return logger.error(msg, *args, **kwargs)
+        return logger.error(self.__add_caller_info(msg), *args, **kwargs)
 
     def exception(self, msg, *args, **kwargs):
         """
@@ -139,7 +151,7 @@ class CustomLogging:
         logger = self.get_logger()
         if self.show_trace:
             kwargs["stack_info"] = sys.exc_info()
-        return logger.exception(msg, *args, **kwargs)
+        return logger.exception(self.__add_caller_info(msg), *args, **kwargs)
 
     def critical(self, msg, *args, **kwargs):
         """
@@ -155,7 +167,7 @@ class CustomLogging:
         logger = self.get_logger()
         if self.show_trace:
             kwargs["stack_info"] = sys.exc_info()
-        return logger.critical(msg, *args, **kwargs)
+        return logger.critical(self.__add_caller_info(msg), *args, **kwargs)
 
     def debug(self, msg, *args, **kwargs):
         """
@@ -169,7 +181,7 @@ class CustomLogging:
         """
 
         logger = self.get_logger()
-        return logger.debug(msg, *args, **kwargs)
+        return logger.debug(self.__add_caller_info(msg), *args, **kwargs)
 
     def __addCustomFormatter(self, ch):
         """
@@ -183,8 +195,9 @@ class CustomLogging:
         """
 
         fmt = (
-            "[%(asctime)s] %(name)s "
-            "[%(log_color)s%(levelname)s%(reset)s] %(message)s"
+            "[%(asctime)s] "
+            "[%(log_color)s%(levelname)s%(reset)s] "
+            "[%(name)s%(message)s"
         )
 
         formatter = ColoredFormatter(

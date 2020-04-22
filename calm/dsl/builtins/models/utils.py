@@ -15,6 +15,8 @@ def read_file(filename, depth=1):
     if not filename:
         raise ValueError("filename not supplied")
 
+    # Expanding filename
+    filename = os.path.expanduser(filename)
     file_path = os.path.join(
         os.path.dirname(inspect.getfile(sys._getframe(depth))), filename
     )

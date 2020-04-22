@@ -80,7 +80,7 @@ class Cache:
             api_suffix = cls.entity_type_api_map[entity_type]
             Obj = get_resource_api(api_suffix, client.connection)
             try:
-                res = Obj.get_name_uuid_map()
+                res = Obj.get_name_uuid_map({"length": 100})
                 for name, uuid in res.items():
                     cls.create(
                         entity_type=entity_type, entity_name=name, entity_uuid=uuid

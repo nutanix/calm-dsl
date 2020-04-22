@@ -16,7 +16,7 @@ class ProviderSpecType(EntityType):
     __openapi_type__ = "app_provider_spec"
 
 
-class ProviderSpec(metaclass=ProviderSpecType):
+class _ProviderSpec(metaclass=ProviderSpecType):
     def __init__(self, spec):
 
         self.spec = spec
@@ -39,7 +39,7 @@ class ProviderSpecValidator(PropertyValidator, openapi_type="app_provider_spec")
 
 
 def provider_spec(spec):
-    return ProviderSpec(spec)
+    return _ProviderSpec(spec)
 
 
 def read_spec(filename, depth=1):

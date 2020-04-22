@@ -36,7 +36,7 @@ class TaskValidator(PropertyValidator, openapi_type="app_task"):
 
 
 def _task(**kwargs):
-    name = getattr(TaskType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return TaskType(name, bases, kwargs)
 
@@ -59,12 +59,13 @@ def _get_target_ref(target):
 
 
 def _task_create(**kwargs):
+
     name = kwargs.get("name", kwargs.pop("__name__", None))
     if name is None:
-        name = getattr(TaskType, "__schema_name__") + "_" + str(uuid.uuid4())[:8]
+        name = "_" + getattr(TaskType, "__schema_name__") + str(uuid.uuid4())[:8]
         kwargs["name"] = name
-    bases = (Task,)
-    return TaskType(name, bases, kwargs)
+
+    return _task(**kwargs)
 
 
 def create_call_rb(runbook, target=None, name=None):
@@ -670,9 +671,6 @@ def http_task(
                     + (name or "")
                     + " should be dictionary of strings"
                 )
-            expected_response.append(
-                {"status": "SUCCESS" if state else "FAILURE", "code": code}
-            )
         kwargs["attrs"]["response_paths"] = response_paths
 
     return _task_create(**kwargs)

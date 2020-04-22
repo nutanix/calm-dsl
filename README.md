@@ -25,8 +25,11 @@ Language design is black art, and building upon a well-established language is d
  - List apps: `calm get apps`.
  - Describe app: `calm describe app <app_name>`. It will print a summary of the application and the current application state.
  - Delete app: `calm delete app <app_name>`. Hint: You can delete multiple apps using: `calm get apps -q | xargs -I {} calm delete app {}`.
-- Decompile blueprint: `calm decompile bp <blueprint_name>`. This command will decompile blueprint on server to generate DSL python file along with some task and local files.
-  WIP: Support for POD Deployments, Simple Blueprint.
+
+## Docker
+ - Latest image: `docker pull ntnx/calm-dsl`
+ - Run: `docker run -it ntnx/calm-dsl`
+
 ## Dev Setup
 
 MacOS:
@@ -62,3 +65,7 @@ Documentation for the Calm DSL will be stored in the [docs](docs/) folder, and w
  - [Introducing the Nutanix Calm DSL](https://www.nutanix.dev/2020/03/17/introducing-the-nutanix-calm-dsl/)
  - [Creating Custom Blueprint](https://www.nutanix.dev/2020/03/30/nutanix-calm-dsl-creating-custom-blueprint/)
  - [Generating VM Specs](https://www.nutanix.dev/2020/04/06/nutanix-calm-dsl-generating-vm-specs/)
+ - [Run Custom Actions](https://www.nutanix.dev/2020/04/17/nutanix-calm-dsl-run-custom-actions/)
+
+## Demos
+ - [Zero-touch CI/CD - VDI Template Creation with Nutanix Calm DSL](https://youtu.be/5k_K7idGxsI)
