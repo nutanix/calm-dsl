@@ -17,7 +17,7 @@ from .models.published_service import PublishedService, published_service
 
 from .models.package import Package, package
 
-from .models.utils import read_file, read_local_file
+from .models.utils import read_file, read_local_file, read_env
 
 from .models.provider_spec import provider_spec, read_provider_spec, read_spec
 from .models.provider_spec import read_ahv_spec, read_vmw_spec
@@ -66,6 +66,7 @@ __all__ = [
     "package",
     "read_file",
     "read_local_file",
+    "read_env",
     "vm_disk_package",
     "ahv_vm_disk_package",
     "provider_spec",

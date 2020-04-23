@@ -1,7 +1,10 @@
 import os
 import sys
 import inspect
+import json
+
 from ruamel import yaml
+
 from calm.dsl.tools import get_logging_handle
 from calm.dsl.config import get_init_data
 
@@ -26,6 +29,78 @@ def read_file(filename, depth=1):
 
     with open(file_path, "r") as data:
         return data.read()
+
+
+def _get_caller_filepath(filename, depth=2):
+
+    return os.path.abspath(
+        os.path.join(os.path.dirname(inspect.getfile(sys._getframe(depth))), filename)
+    )
+
+
+def read_env(relpath=".env"):
+    """
+    read_env() reads from env file present in blueprint directory.
+    If it does not exist, it returns os env present in os.environ.
+    Custom env file location can also be given with relpath param.
+    relpath will look for file relative to blueprint top-level directory.
+    Example: relpath=".env2", relpath="env/dev", etc.
+
+    :param relpath: Blueprint env path starting from blueprint dir. (default: "$BP_DIR/.env")
+    :type relpath: str
+    :return: env dict containing local & os env
+    :rtype: dict
+    """
+
+    # Init env
+    os_env = dict(os.environ)
+
+    # Get filepath
+    filepath = _get_caller_filepath(relpath)
+
+    LOG.debug("Reading env from file: {}".format(filepath))
+
+    # Check if file path exists
+    if not os.path.exists(filepath):
+        LOG.warning("env file {} not found.".format(filepath))
+        return os_env
+
+    # Read env
+    with open(filepath, "r") as f:
+        content = f.readlines()
+
+    local_env_list = []
+    for line in content:
+        if "=" in line:
+            # Remove any whitespace characters
+            line = line.strip()
+
+            # Get env name & value
+            name, value = line.split("=", 1)
+
+            # Remove any extra whitespaces
+            name = name.strip()
+            value = value.strip()
+
+            # Remove any comments given after value
+            value = value.split("#")[0].strip()
+
+            # Remove any quotes in value, if present.
+            value = value.strip('"').strip("'")
+
+            local_env_list.append((name, value))
+
+    local_env = dict(local_env_list)
+    LOG.debug(
+        "Got local env:\n{}".format(
+            json.dumps(local_env, indent=4, separators=(",", ": "))
+        )
+    )
+
+    # Give priority to local env over OS env
+    env = {**os_env, **local_env}
+
+    return env
 
 
 def read_local_file(filename):
