@@ -1,4 +1,4 @@
-# Calm DSL for Kafka on AHV
+# Calm DSL for Kafka (2.5.0) on AHV
 
 import os
 
@@ -22,11 +22,8 @@ CentosPackage = vm_disk_package(
 class Kafka(Service):
     @action
     def __start__():
-        """System action for starting an application"""
 
-        CalmTask.Exec.ssh(
-            name="Start kafka", filename="scripts/Startkafka.sh", target=ref(Kafka),
-        )
+        CalmTask.Exec.ssh(name="Start kafka", filename="scripts/Startkafka.sh")
 
 
 class KafkaAhvVmResources(AhvVmResources):
@@ -69,19 +66,12 @@ class KafkaPackage(Package):
     @action
     def __install__():
 
-        CalmTask.Exec.ssh(
-            name="Install Java", filename="scripts/InstallJava.sh",
-        )
-        CalmTask.Exec.ssh(
-            name="Install Kafka", filename="scripts/InstallKafka.sh",
-        )
-        CalmTask.Exec.ssh(
-            name="Configure Kafka", filename="scripts/ConfigureKafka.sh",
-        )
+        CalmTask.Exec.ssh(name="Install Java", filename="scripts/InstallJava.sh")
+        CalmTask.Exec.ssh(name="Install Kafka", filename="scripts/InstallKafka.sh")
+        CalmTask.Exec.ssh(name="Configure Kafka", filename="scripts/ConfigureKafka.sh")
 
 
 class KafkaAhvDeployment(Deployment):
-    """_15f245d6_deployment Deployment description"""
 
     min_replicas = "3"
     max_replicas = "6"
@@ -91,12 +81,11 @@ class KafkaAhvDeployment(Deployment):
 
 
 class Ahv(Profile):
-    """Nutanix Profile description"""
 
     deployments = [KafkaAhvDeployment]
 
     KAFKA_URL = CalmVariable.Simple(
-        "http://www-us.apache.org/dist/kafka/2.1.1/kafka_2.11-2.1.1.tgz",
+        "http://www-us.apache.org/dist/kafka/2.5.0/kafka_2.12-2.5.0.tgz",
         label="",
         is_mandatory=False,
         is_hidden=False,
