@@ -71,7 +71,7 @@ def read_env(relpath=".env"):
 
     local_env_list = []
     for line in content:
-        if "=" in line:
+        if not line.startswith("#") and "=" in line:
             # Remove any whitespace characters
             line = line.strip()
 
