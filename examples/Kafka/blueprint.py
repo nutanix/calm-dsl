@@ -19,15 +19,18 @@ from calm.dsl.builtins import *  # no_qa
 ENV = read_env()
 
 CENTOS_USER = ENV.get("CENTOS_USER", "centos")
-CENTOS_IMAGE_SOURCE = ENV.get("CENTOS_IMAGE_SOURCE",
-                              "http://download.nutanix.com/calm/CentOS-7-x86_64-1810.qcow2")
+CENTOS_IMAGE_SOURCE = ENV.get(
+    "CENTOS_IMAGE_SOURCE", "http://download.nutanix.com/calm/CentOS-7-x86_64-1810.qcow2"
+)
 CENTOS_SSH_PRIVATE_KEY_NAME = ENV.get("CENTOS_SSH_PRIVATE_KEY_NAME", "centos")
 CENTOS_SSH_PUBLIC_KEY_NAME = ENV.get("CENTOS_SSH_PUBLIC_KEY_NAME", "centos_pub")
 
 AHV_NIC_NAME = ENV.get("AHV_NIC_NAME", "vlan.0")
 AHV_MEM = ENV.get("AHV_MEM", "4")
 
-KAFKA_URL = ENV.get("KAFKA_URL", "http://www-us.apache.org/dist/kafka/2.5.0/kafka_2.12-2.5.0.tgz")
+KAFKA_URL = ENV.get(
+    "KAFKA_URL", "http://www-us.apache.org/dist/kafka/2.5.0/kafka_2.12-2.5.0.tgz"
+)
 ZOOKEEPER_DATA_DIR = ENV.get("ZOOKEEPER_DATA_DIR", "/home/centos/zookeepeer/data/")
 KAFKA_LOG_DIRS = ENV.get("KAFKA_LOG_DIRS", "/var/log/kafka-logs")
 NUMBER_OF_PARTITION = ENV.get("NUMBER_OF_PARTITION", "2")
