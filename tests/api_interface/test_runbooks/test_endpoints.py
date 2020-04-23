@@ -1,6 +1,7 @@
 import pytest
 import copy
 import os
+import uuid
 
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import ENDPOINT
@@ -292,3 +293,49 @@ class TestEndpoints:
             assert res.ok is True
         else:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+    @pytest.mark.runbook
+    @pytest.mark.endpoint
+    @pytest.mark.regression
+    @pytest.mark.parametrize('EndpointPayload', [LinuxEndpointPayload])
+    def test_endpoint_validation_and_type_update(self, EndpointPayload):
+        """
+        test_endpoint_name_validations
+        """
+
+        client = get_api_client()
+        endpoint = copy.deepcopy(change_uuids(EndpointPayload, {}))
+
+        # set values and credentials to empty
+        endpoint['spec']['name'] = "ep-\u018e-name-\xf1"
+
+        # Endpoint Create
+        res, err = client.endpoint.create(endpoint)
+        if not err:
+            pytest.fail("Endpoint created successfully with unsupported name formats")
+        assert err.get('code', 0) == 422
+        assert "Name can contain only alphanumeric, underscores, hyphens and spaces" in err['error']
+
+        endpoint['spec']['name'] = "endpoint_" + str(uuid.uuid4())[-10:]
+        res, err = client.endpoint.create(endpoint)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        ep = res.json()
+        ep_uuid = ep["metadata"]["uuid"]
+        ep_name = ep["spec"]["name"]
+        print(">> Endpoint created: {}".format(ep_name))
+
+        del ep['status']
+        ep['spec']['name'] = '-test_ep_name'
+        res, err = client.endpoint.update(ep_uuid, ep)
+        if not err:
+            pytest.fail("Endpoint updated successfully with unsupported name formats")
+        assert err.get('code', 0) == 422
+        assert "Names can only start with alphanumeric characters or underscore (_)" in err['error']
+
+        # delete the endpoint
+        _, err = client.endpoint.delete(ep_uuid)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        else:
+            print("endpoint {} deleted".format(ep_name))
