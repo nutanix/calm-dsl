@@ -3,6 +3,7 @@ import json
 from json import JSONEncoder, JSONDecoder
 import sys
 from types import MappingProxyType
+import uuid
 
 from ruamel.yaml import YAML, resolver, SafeRepresenter
 from calm.dsl.tools import StrictDraft7Validator
@@ -153,6 +154,15 @@ class EntityType(EntityTypeBase):
         else:
             entitydict = kwargs
 
+        schema_name = getattr(mcls, "__schema_name__")
+
+        if not name:
+            # Generate unique name
+            name = "_" + schema_name + str(uuid.uuid4())[:8]
+        else:
+            if name == schema_name:
+                raise TypeError("{} is a reserved name for this entity".format(name))
+
         cls = super().__new__(mcls, name, bases, entitydict)
 
         openapi_type = getattr(mcls, "__openapi_type__")
@@ -262,11 +272,17 @@ class EntityType(EntityTypeBase):
             attrs.pop(k)
 
     def get_all_attrs(cls):
-        default_attrs = cls.get_default_attrs()
-        user_attrs = cls.get_user_attrs()
 
-        # Merge both attrs. Overwrite user attrs on default attrs
-        return {**default_attrs, **user_attrs}
+        ncls_ns = cls.get_default_attrs()
+        for klass in reversed(cls.mro()):
+            if hasattr(klass, "get_user_attrs") and callable(
+                getattr(klass, "get_user_attrs")
+            ):
+                ncls_ns = {**ncls_ns, **klass.__dict__}
+
+        ncls = type(cls)(cls.__name__, cls.__bases__, ncls_ns)
+
+        return ncls.get_user_attrs()
 
     def compile(cls):
 
@@ -352,7 +368,7 @@ class EntityType(EntityTypeBase):
         ref = types.get("Ref")
         if not ref:
             return
-        name = getattr(ref, "__schema_name__")
+        name = None
         bases = (Entity,)
         if ref:
             attrs = {}

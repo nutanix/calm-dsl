@@ -1,5 +1,5 @@
 """
-CALM DSL Kubernetes Blueprint
+Calm DSL Kubernetes Blueprint
 
 """
 

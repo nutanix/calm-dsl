@@ -230,6 +230,13 @@ def compile_blueprint(bp_file, no_sync=False):
         UserBlueprintPayload, _ = create_blueprint_payload(UserBlueprint)
         bp_payload = UserBlueprintPayload.get_dict()
 
+        # Note - Install/Uninstall runbooks are not actions in Packages.
+        # Remove package actions after compiling.
+        cdict = bp_payload["spec"]["resources"]
+        for package in cdict["package_definition_list"]:
+            if "action_list" in package:
+                del package["action_list"]
+
     return bp_payload
 
 
@@ -327,12 +334,16 @@ def get_blueprint_runtime_editables(client, blueprint):
     return response.get("resources", [])
 
 
-def get_field_values(entity_dict, context, path=None, bp_data=None):
+def get_field_values(entity_dict, context, path=None, bp_data=None, hide_input=False):
     path = path or ""
     for field, value in entity_dict.items():
         if isinstance(value, dict):
             get_field_values(
-                entity_dict[field], context, path=path + "." + field, bp_data=None
+                entity_dict[field],
+                context,
+                path=path + "." + field,
+                bp_data=bp_data,
+                hide_input=hide_input,
             )
         else:
             var_data = get_variable_data(
@@ -357,6 +368,7 @@ def get_field_values(entity_dict, context, path=None, bp_data=None):
                 ),
                 default=value,
                 show_default=False,
+                hide_input=hide_input,
             )
 
             if new_val:
@@ -514,11 +526,13 @@ def launch_blueprint_simple(
             for variable in variable_list:
                 context = variable["context"]
                 editables = variable["value"]
+                hide_input = variable.get("type") == "SECRET"
                 get_field_values(
                     editables,
                     context,
                     path=variable.get("name", ""),
                     bp_data=bp_data["status"]["resources"],
+                    hide_input=hide_input,
                 )
 
         runtime_editables_json = json.dumps(

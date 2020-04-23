@@ -26,6 +26,10 @@ Language design is black art, and building upon a well-established language is d
  - Describe app: `calm describe app <app_name>`. It will print a summary of the application and the current application state.
  - Delete app: `calm delete app <app_name>`. Hint: You can delete multiple apps using: `calm get apps -q | xargs -I {} calm delete app {}`.
 
+## Docker
+ - Latest image: `docker pull ntnx/calm-dsl`
+ - Run: `docker run -it ntnx/calm-dsl`
+
 ## Dev Setup
 
 MacOS:
@@ -60,3 +64,5 @@ Documentation for the Calm DSL will be stored in the [docs](docs/) folder, and w
 ## Blogs
  - [Introducing the Nutanix Calm DSL](https://www.nutanix.dev/2020/03/17/introducing-the-nutanix-calm-dsl/)
  - [Creating Custom Blueprint](https://www.nutanix.dev/2020/03/30/nutanix-calm-dsl-creating-custom-blueprint/)
+ - [Generating VM Specs](https://www.nutanix.dev/2020/04/06/nutanix-calm-dsl-generating-vm-specs/)
+ - [Run Custom Actions](https://www.nutanix.dev/2020/04/17/nutanix-calm-dsl-run-custom-actions/)

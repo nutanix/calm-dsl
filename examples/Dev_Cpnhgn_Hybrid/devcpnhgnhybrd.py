@@ -11,7 +11,12 @@ from calm.dsl.builtins import CalmTask
 from calm.dsl.builtins import CalmVariable
 from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint, PODDeployment
-from calm.dsl.builtins import provider_spec, read_provider_spec, read_spec, read_local_file
+from calm.dsl.builtins import (
+    provider_spec,
+    read_provider_spec,
+    read_spec,
+    read_local_file,
+)
 
 
 ERA_KEY = read_local_file("era_key")
@@ -21,7 +26,9 @@ DB_PASSWD = read_local_file("db_passwd")
 
 
 EraCreds = basic_cred("admin", ERA_KEY, name="era_creds")
-CentOsCreds = basic_cred("centos", CENTOS_KEY, name="centos_creds", type="KEY", default=True)
+CentOsCreds = basic_cred(
+    "centos", CENTOS_KEY, name="centos_creds", type="KEY", default=True
+)
 KarbonCreds = basic_cred("admin", KARBON_KEY, name="karbon")
 
 

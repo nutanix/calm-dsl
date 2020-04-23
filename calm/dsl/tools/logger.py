@@ -1,4 +1,5 @@
 import logging
+import inspect
 
 from colorlog import ColoredFormatter
 import time
@@ -9,18 +10,11 @@ VERBOSE_LEVEL = 20
 SHOW_TRACE = False
 
 
-class StdOutFilter(logging.Filter):
-    """Filter for Stdout stream handler"""
-
-    def filter(self, rec):
-        return rec.levelno <= logging.WARNING
-
-
 class StdErrFilter(logging.Filter):
     """Filter for Stderr stream handler"""
 
     def filter(self, rec):
-        return rec.levelno > logging.WARNING
+        return rec.levelno >= logging.DEBUG
 
 
 class CustomLogging:
@@ -56,26 +50,30 @@ class CustomLogging:
            None
         """
 
-        # create console and file handler
-        self._ch1 = logging.StreamHandler(sys.stdout)
-        self._ch1.addFilter(StdOutFilter())
-
-        self._ch2 = logging.StreamHandler()
-        self._ch2.addFilter(StdErrFilter())
+        self._ch1 = logging.StreamHandler()
+        self._ch1.addFilter(StdErrFilter())
 
         # add custom formatter to console handler
         self.__addCustomFormatter(self._ch1)
-        self.__addCustomFormatter(self._ch2)
 
         # create custom logger
         self._logger = logging.getLogger(name)
 
         # add console to logger
         self._logger.addHandler(self._ch1)
-        self._logger.addHandler(self._ch2)
 
         # Add show trace option
         self.show_trace = False
+
+    @staticmethod
+    def __add_caller_info(msg):
+        stack = inspect.stack()
+
+        # filename = stack[2][1]
+        # func = stack[2][3]
+        ln = stack[2][2]
+
+        return ":{}] {}".format(ln, msg)
 
     def get_logger(self):
         self.set_logger_level(VERBOSE_LEVEL)
@@ -106,7 +104,8 @@ class CustomLogging:
             None
         """
         logger = self.get_logger()
-        return logger.info(msg, *args, **kwargs)
+
+        return logger.info(self.__add_caller_info(msg), *args, **kwargs)
 
     def warning(self, msg, *args, **kwargs):
         """
@@ -120,7 +119,7 @@ class CustomLogging:
         """
 
         logger = self.get_logger()
-        return logger.warning(msg, *args, **kwargs)
+        return logger.warning(self.__add_caller_info(msg), *args, **kwargs)
 
     def error(self, msg, *args, **kwargs):
         """
@@ -136,7 +135,7 @@ class CustomLogging:
         logger = self.get_logger()
         if self.show_trace:
             kwargs["stack_info"] = sys.exc_info()
-        return logger.error(msg, *args, **kwargs)
+        return logger.error(self.__add_caller_info(msg), *args, **kwargs)
 
     def exception(self, msg, *args, **kwargs):
         """
@@ -152,7 +151,7 @@ class CustomLogging:
         logger = self.get_logger()
         if self.show_trace:
             kwargs["stack_info"] = sys.exc_info()
-        return logger.exception(msg, *args, **kwargs)
+        return logger.exception(self.__add_caller_info(msg), *args, **kwargs)
 
     def critical(self, msg, *args, **kwargs):
         """
@@ -168,7 +167,7 @@ class CustomLogging:
         logger = self.get_logger()
         if self.show_trace:
             kwargs["stack_info"] = sys.exc_info()
-        return logger.critical(msg, *args, **kwargs)
+        return logger.critical(self.__add_caller_info(msg), *args, **kwargs)
 
     def debug(self, msg, *args, **kwargs):
         """
@@ -182,7 +181,7 @@ class CustomLogging:
         """
 
         logger = self.get_logger()
-        return logger.debug(msg, *args, **kwargs)
+        return logger.debug(self.__add_caller_info(msg), *args, **kwargs)
 
     def __addCustomFormatter(self, ch):
         """
@@ -196,8 +195,9 @@ class CustomLogging:
         """
 
         fmt = (
-            "\n[%(asctime)s %(name)s "
-            "[%(log_color)s%(levelname)s%(reset)s] %(message)s"
+            "[%(asctime)s] "
+            "[%(log_color)s%(levelname)s%(reset)s] "
+            "[%(name)s%(message)s"
         )
 
         formatter = ColoredFormatter(

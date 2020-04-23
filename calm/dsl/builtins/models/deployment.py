@@ -19,7 +19,7 @@ class DeploymentValidator(PropertyValidator, openapi_type="app_blueprint_deploym
 
 
 def deployment(**kwargs):
-    name = kwargs.get("name") or getattr(DeploymentType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return DeploymentType(name, bases, kwargs)
 
