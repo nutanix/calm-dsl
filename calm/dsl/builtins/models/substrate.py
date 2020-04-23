@@ -148,10 +148,6 @@ class SubstrateType(EntityType):
 
         cdict["readiness_probe"] = readiness_probe
 
-        editables = cdict.pop("editables", {})
-        if editables:
-            cdict["editables"] = {"create_spec": editables}
-
         return cdict
 
     def get_task_target(cls):

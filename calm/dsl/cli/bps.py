@@ -490,7 +490,7 @@ def launch_blueprint_simple(
         bp_data = res.json()
 
         substrate_list = runtime_editables.get("substrate_list", [])
-        if substrate_list and False:
+        if substrate_list:
             click.echo("\n\t\t\t", nl=False)
             click.secho("SUBSTRATE LIST DATA", underline=True, bold=True)
 

@@ -108,7 +108,18 @@ class AHVRedisMasterSubstrate(Substrate):
         "connection_port": 22,
         "credential": ref(DefaultCred),
     }
-    provider_spec_editables = { "resources": { "nic_list": {}, "disk_list": True, "num_vcpus_per_socket": True, "num_sockets": True,"memory_size_mib": True, "serial_port_list": {}}}
+    editables = {
+        "create_spec": {
+            "resources": {
+                "nic_list": {},
+                "disk_list": True,
+                "num_vcpus_per_socket": True,
+                "num_sockets": True,
+                "memory_size_mib": True,
+                "serial_port_list": {},
+            }
+        }
+    }
 
 
 class AWSRedisMasterSubstrate(Substrate):
