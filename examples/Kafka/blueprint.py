@@ -20,15 +20,12 @@ CentosPackage = vm_disk_package(
 
 
 class Kafka(Service):
-
     @action
     def __start__():
         """System action for starting an application"""
 
         CalmTask.Exec.ssh(
-            name="Start kafka",
-            filename="scripts/Startkafka.sh",
-            target=ref(Kafka),
+            name="Start kafka", filename="scripts/Startkafka.sh", target=ref(Kafka),
         )
 
 
@@ -73,16 +70,13 @@ class KafkaPackage(Package):
     def __install__():
 
         CalmTask.Exec.ssh(
-            name="Install Java",
-            filename="scripts/InstallJava.sh",
+            name="Install Java", filename="scripts/InstallJava.sh",
         )
         CalmTask.Exec.ssh(
-            name="Install Kafka",
-            filename="scripts/InstallKafka.sh",
+            name="Install Kafka", filename="scripts/InstallKafka.sh",
         )
         CalmTask.Exec.ssh(
-            name="Configure Kafka",
-            filename="scripts/ConfigureKafka.sh",
+            name="Configure Kafka", filename="scripts/ConfigureKafka.sh",
         )
 
 
