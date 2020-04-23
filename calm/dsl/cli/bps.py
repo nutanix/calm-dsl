@@ -288,7 +288,9 @@ def decompile_bp_from_server(name, with_secrets=False):
 def decompile_bp_from_file(filename, with_secrets=False):
     """decompile blueprint from local blueprint file"""
 
-    bp_payload = read_spec(filename)
+    # ToDo - Fix this
+    bp_payload = json.loads(open(filename).read())
+    # bp_payload = read_spec(filename)
     _decompile_bp(bp_payload=bp_payload, with_secrets=with_secrets)
 
 
