@@ -301,7 +301,6 @@ def _decompile_bp(bp_payload, with_secrets=False):
     blueprint_name = bp_payload["spec"].get("name", "DslBlueprint")
     blueprint_description = bp_payload["spec"].get("description", "")
 
-    blueprint["name"] = blueprint_name
     LOG.info("Decompiling blueprint {}".format(blueprint_name))
     bp_cls = BlueprintType.decompile(blueprint)
     bp_cls.__name__ = get_valid_identifier(blueprint_name)

@@ -326,7 +326,7 @@ class EntityType(EntityTypeBase):
     def decompile(mcls, cdict):
 
         # Remove extra info
-        name = cdict.get("name", mcls.__schema_name__)
+        name = cdict.get("name", None)
         description = cdict.pop("description", None)
         # kind = cdict.pop('__kind__')
 
