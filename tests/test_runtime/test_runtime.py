@@ -15,24 +15,24 @@ CRED_PASSWORD = read_local_file(".tests/password")
 DNS_SERVER = read_local_file(".tests/dns_server")
 
 
-class MySQLService(Service):
+class AhvService(Service):
     """Sample mysql service"""
 
     ENV = CalmVariable.Simple("DEV")
 
 
-class MySQLPackage(Package):
+class AhvPackage(Package):
     """Example package with variables, install tasks and link to service"""
 
     foo = CalmVariable.Simple("bar")
-    services = [ref(MySQLService)]
+    services = [ref(AhvService)]
 
     @action
     def __install__():
         CalmTask.Exec.ssh(name="Task1", script="echo @@{foo}@@")
 
 
-class AHVVMforMySQL(Substrate):
+class AhvSubstrate(Substrate):
     """AHV VM config given by reading a spec file"""
 
     provider_spec = read_provider_spec("specs/ahv_provider_spec.yaml")
@@ -50,60 +50,18 @@ class AHVVMforMySQL(Substrate):
                 "num_vcpus_per_socket": True,
                 "boot_config": True,
                 "disk_list": {
-                    "0": {
-                        "data_source_reference": True,
-                        "disk_size_mib": True
-                    }
-                }
-            }
-        }
+                    "0": {"data_source_reference": True, "disk_size_mib": True}
+                },
+            },
+        },
     }
 
 
-
-class MySQLDeployment(Deployment):
+class AhvDeployment(Deployment):
     """Sample deployment pulling in service and substrate references"""
 
-    packages = [ref(MySQLPackage)]
-    substrate = ref(AHVVMforMySQL)
-
-
-class PHPService(Service):
-    """Sample PHP service with a custom action"""
-
-    # Dependency to indicate PHP service is dependent on SQL service being up
-    dependencies = [ref(MySQLService)]
-
-    @action
-    def test_action():
-
-        blah = CalmVariable.Simple("2")  # noqa
-        CalmTask.Exec.ssh(name="Task2", script='echo "Hello"')
-        CalmTask.Exec.ssh(name="Task3", script='echo "Hello again"')
-
-
-class PHPPackage(Package):
-    """Example PHP package with custom install task"""
-
-    foo = CalmVariable.Simple("baz", runtime=True)
-    services = [ref(PHPService)]
-
-    @action
-    def __install__():
-        CalmTask.Exec.ssh(name="Task4", script="echo @@{foo}@@")
-
-
-class AHVVMforPHP(Substrate):
-    """AHV VM config given by reading a spec file"""
-
-    provider_spec = read_provider_spec("specs/ahv_provider_spec.yaml")
-
-
-class PHPDeployment(Deployment):
-    """Sample deployment pulling in service and substrate references"""
-
-    packages = [ref(PHPPackage)]
-    substrate = ref(AHVVMforPHP)
+    packages = [ref(AhvPackage)]
+    substrate = ref(AhvSubstrate)
 
 
 class DefaultProfile(Profile):
@@ -113,13 +71,12 @@ class DefaultProfile(Profile):
     foo1 = CalmVariable.Simple("bar1", runtime=True)
     foo2 = CalmVariable.Simple("bar2", runtime=True)
 
-    deployments = [MySQLDeployment, PHPDeployment]
+    deployments = [AhvDeployment]
 
     @action
     def test_profile_action():
         """Sample description for a profile action"""
-        CalmTask.Exec.ssh(name="Task5", script='echo "Hello"', target=ref(MySQLService))
-        PHPService.test_action(name="Task6")
+        CalmTask.Exec.ssh(name="Task5", script='echo "Hello"', target=ref(AhvService))
 
 
 class TestRuntime(Blueprint):
@@ -129,7 +86,7 @@ class TestRuntime(Blueprint):
         secret_cred("root2", secret="admin_pass", name="secret1"),
         secret_cred("root3", secret="foo", name="secret2"),
     ]
-    services = [MySQLService, PHPService]
-    packages = [MySQLPackage, PHPPackage]
-    substrates = [AHVVMforMySQL, AHVVMforPHP]
+    services = [AhvService]
+    packages = [AhvPackage]
+    substrates = [AhvSubstrate]
     profiles = [DefaultProfile]

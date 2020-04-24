@@ -61,8 +61,7 @@ credential_definition_list:
   type: PASSWORD
   username: root
 package_definition_list:
-- action_list: []
-  description: Example package with variables and link to service
+- description: Example package with variables and link to service
   name: MySQLPackage
   options:
     install_runbook:
@@ -117,8 +116,7 @@ package_definition_list:
     val_type: STRING
     value: DEV
   version: ''
-- action_list: []
-  description: Example PHP package using Package as parent class
+- description: Example PHP package using Package as parent class
   name: PHPPackage
   options:
     install_runbook:
@@ -503,6 +501,7 @@ substrate_definition_list:
       num_vcpus_per_socket: 1
       power_state: ON
   description: Medium size AHV VM config given by reading a spec file
+  editables: {}
   name: AHVMedVM
   os_type: Linux
   readiness_probe:
@@ -546,6 +545,7 @@ substrate_definition_list:
       num_vcpus_per_socket: 1
       power_state: ON
   description: Medium size AHV VM config given by reading a spec file
+  editables: {}
   name: AHVMedVMForPHP
   os_type: Linux
   readiness_probe:

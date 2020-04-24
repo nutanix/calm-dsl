@@ -509,7 +509,6 @@
                     "is_mandatory": false
                 }
             ],
-            "action_list": [],
             "version": ""
         },
         {
@@ -575,7 +574,6 @@
                 }
             ],
             "variable_list": [],
-            "action_list": [],
             "version": ""
         }
     ],
@@ -631,6 +629,7 @@
                     ]
                 }
             },
+            "editables": {},
             "variable_list": [],
             "action_list": [],
             "readiness_probe": {
@@ -692,6 +691,7 @@
                     ]
                 }
             },
+            "editables": {},
             "variable_list": [],
             "action_list": [],
             "readiness_probe": {

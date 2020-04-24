@@ -4,8 +4,8 @@ input:
 - "1"  # OS = Linux
 - "n"  # Enable DRS mode
 - "1"  # Host = 10.46.33.228
-- "1"  # Datastore = Test-Container
-- "8"  # Template = DND_CENTOS_MUL_DISKS
+- "2"  # Datastore = Test-Container
+- "28"  # Template = DND_CENTOS_MUL_DISKS
 - "vm-@@{calm_array_index}@@-@@{calm_time}@@"  # Instance name
 - "1"  # no. of VCPU
 - "1"  # cores per VCPU
@@ -20,7 +20,7 @@ input:
 - "1"  # Disk Type = DISK
 - "1"  # Adapter Type = SCSI
 - "12"  # Size of disk
-- "1"  # Location(Datastore) = Test-Container
+- "2"  # Location(Datastore) = Test-Container
 - "1"  # Controller = SCSI Controller 0
 - "1"  # Device Slot = 2
 - "1"  # Device Mode = Independent - Persistent
@@ -28,13 +28,13 @@ input:
 - "2"  # Disk Type = CD-ROM
 - "1"  # Adapter Type = IDE
 - "y"  # Add datastore
-- "1"  # Datastore = Test-Container
-- "1"  # File Path = [Test-Container] v-0-190424-052646-cloud-init.iso
+- "2"  # Datastore = Test-Container
+- "7"  # File Path = [Test-Container] Nagios-0-200329-011703/Nagios-0-200329-011703-cloud-init.iso
 - "y"  # Add more disks
 - "2"  # Disk Type = CD-ROM
 - "1"  # Adapter Type = IDE
 - "n"  # Add datastore
-- "1"  # File Path = [Test-Container] v-0-190424-052646-cloud-init.iso
+- "7"  # File Path = [Test-Container] Nagios-0-200329-011703/Nagios-0-200329-011703-cloud-init.iso
 - "n"  # Add more disks
 - "n"  # Add nics
 - "n"  # Enable Guest Customization
@@ -43,6 +43,6 @@ cli_assertions:
 - "Create spec for your VMW VM:"
 
 spec_assertions:
-- "[Test-Container] v-0-190424-052646-cloud-init.iso"  # Check for ISO path of 2nd disk
+- "[Test-Container] Nagios-0-200329-011703/Nagios-0-200329-011703-cloud-init.iso"  # Check for ISO path of 2nd disk
 - "ds:///vmfs/volumes/6a3745a8-ed215600/" # Check for datastore
 - "12288" # Check for size of first disk
