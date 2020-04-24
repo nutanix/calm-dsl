@@ -120,7 +120,7 @@ def initialize_engine(
         "2. Create and validate the blueprint: calm create bp --file HelloBlueprint/blueprint.py"
     )
     click.echo(
-        "3. Start an application using the blueprint: calm launch bp HelloBlueprint --app_name HelloApp01 -i"
+        "3. Start an application using the blueprint: calm launch bp Hello --app_name HelloApp01 -i"
     )
 
     click.echo("\nKeep Calm and DSL On!\n")

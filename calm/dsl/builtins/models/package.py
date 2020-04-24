@@ -69,6 +69,8 @@ class PackageType(EntityType):
                 "install_runbook": install_runbook,
                 "uninstall_runbook": uninstall_runbook,
             }
+            # No actions are allowed other than __install__ and __uninstall__
+            cdict.pop("action_list", None)
 
         elif getattr(cls, "type") == "SUBSTRATE_IMAGE":
             cdict = super().compile()
