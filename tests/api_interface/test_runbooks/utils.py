@@ -216,3 +216,30 @@ def update_runbook(client, rb_name, Runbook):
         pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
     return res.json()
+
+
+def poll_run_script_output(client, runbook_uuid, trl_id, request_id, expected_states, poll_interval=10, maxWait=150):
+    """
+    This routine polls for 5mins till the run script gets into the expected state
+    Args:
+        client (obj): client object
+        runbook_uuid (str): runbook id
+        trl_id (str): trl id
+        rquest_id (str): request id
+        expected_states (list): list of expected states
+    Returns:
+        (str, list): returns final state of the runlog and reasons list
+    """
+    count = 0
+    while count < maxWait:
+        res, err = client.runbook.run_script_output(runbook_uuid, trl_id, request_id)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        response = res.json()
+        state = response["state"]
+        if state in expected_states:
+            break
+        count += poll_interval
+        time.sleep(poll_interval)
+
+    return state

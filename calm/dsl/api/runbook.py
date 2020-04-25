@@ -20,6 +20,8 @@ class RunbookAPI(ResourceAPI):
         self.RUNLOG_OUTPUT = self.PREFIX + "/runlogs/{}/children/{}/output"
         self.RUNLOG_RESUME = self.PREFIX + "/runlogs/{}/children/{}/resume"
         self.RUNLOG_ABORT = self.PREFIX + "/runlogs/{}/abort"
+        self.RUN_SCRIPT = self.PREFIX + "/{}/run_script"
+        self.RUN_SCRIPT_OUTPUT = self.PREFIX + "/{}/run_script/output/{}/{}"
 
     def upload(self, payload):
         return self.connection._call(
@@ -161,6 +163,16 @@ class RunbookAPI(ResourceAPI):
     def run(self, uuid, payload):
         return self.connection._call(
             self.RUN.format(uuid), verify=False, request_json=payload, method=REQUEST.METHOD.POST
+        )
+
+    def run_script(self, uuid, payload):
+        return self.connection._call(
+            self.RUN_SCRIPT.format(uuid), verify=False, request_json=payload, method=REQUEST.METHOD.POST
+        )
+
+    def run_script_output(self, uuid, trl_id, request_id):
+        return self.connection._call(
+            self.RUN_SCRIPT_OUTPUT.format(uuid, trl_id, request_id), verify=False, method=REQUEST.METHOD.GET
         )
 
     def list_runlogs(self, uuid):
