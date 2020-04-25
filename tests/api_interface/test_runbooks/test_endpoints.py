@@ -307,7 +307,7 @@ class TestEndpoints:
         endpoint = copy.deepcopy(change_uuids(EndpointPayload, {}))
 
         # set values and credentials to empty
-        endpoint['spec']['name'] = "ep-\u018e-name-\xf1"
+        endpoint['spec']['name'] = "ep-\u018e-name-\xf1" + str(uuid.uuid4())[-10:]
 
         # Endpoint Create
         res, err = client.endpoint.create(endpoint)
@@ -326,7 +326,7 @@ class TestEndpoints:
         print(">> Endpoint created: {}".format(ep_name))
 
         del ep['status']
-        ep['spec']['name'] = '-test_ep_name'
+        ep['spec']['name'] = '-test_ep_name_' + str(uuid.uuid4())[-10:]
         res, err = client.endpoint.update(ep_uuid, ep)
         if not err:
             pytest.fail("Endpoint updated successfully with unsupported name formats")
