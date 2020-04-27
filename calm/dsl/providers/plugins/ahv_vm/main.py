@@ -62,6 +62,18 @@ class AhvVmProvider(Provider):
         client = get_api_client()
         Obj = AHV(client.connection)
 
+        # Getting the readiness probe details
+        runtime_readiness_probe = sub_editable_spec["value"].get("readiness_probe", {})
+        for k, v in runtime_readiness_probe.items():
+            new_val = click.prompt(
+                "Value for {} [{}]".format(
+                    k , highlight_text(v)
+                ),
+                default=v,
+                show_default=False,
+            )
+            runtime_readiness_probe[k] = new_val
+
         runtime_spec = sub_editable_spec["value"].get("spec", {})
         if runtime_spec.get("resources") or runtime_spec.get("categories"):
             click.secho(

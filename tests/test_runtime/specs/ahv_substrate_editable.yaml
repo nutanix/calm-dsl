@@ -1,0 +1,14 @@
+readiness_probe:
+  connection_type: true
+  retries: true
+  delay_secs: true
+  connection_port: true
+create_spec:
+  name: true
+  resources:
+    num_vcpus_per_socket: true
+    boot_config: true
+    disk_list:
+      '0':
+        data_source_reference: true
+        disk_size_mib: true

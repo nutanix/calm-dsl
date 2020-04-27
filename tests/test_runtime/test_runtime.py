@@ -8,7 +8,7 @@ from calm.dsl.builtins import (
 )
 from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
-from calm.dsl.builtins import read_provider_spec, read_local_file
+from calm.dsl.builtins import read_provider_spec, read_local_file, read_spec
 
 CRED_USERNAME = read_local_file(".tests/username")
 CRED_PASSWORD = read_local_file(".tests/password")
@@ -36,25 +36,7 @@ class AhvSubstrate(Substrate):
     """AHV VM config given by reading a spec file"""
 
     provider_spec = read_provider_spec("specs/ahv_provider_spec.yaml")
-
-    editables = {
-        "readiness_probe": {
-            "connection_type": True,
-            "retries": True,
-            "delay_secs": True,
-            "connection_port": True,
-        },
-        "create_spec": {
-            "name": True,
-            "resources": {
-                "num_vcpus_per_socket": True,
-                "boot_config": True,
-                "disk_list": {
-                    "0": {"data_source_reference": True, "disk_size_mib": True}
-                },
-            },
-        },
-    }
+    editables = read_spec("specs/ahv_substrate_editable.yaml")
 
 
 class AhvDeployment(Deployment):
@@ -82,9 +64,7 @@ class DefaultProfile(Profile):
 class TestRuntime(Blueprint):
 
     credentials = [
-        basic_cred(CRED_USERNAME, CRED_PASSWORD, default=True),
-        secret_cred("root2", secret="admin_pass", name="secret1"),
-        secret_cred("root3", secret="foo", name="secret2"),
+        basic_cred(CRED_USERNAME, CRED_PASSWORD, default=True)
     ]
     services = [AhvService]
     packages = [AhvPackage]
