@@ -63,9 +63,7 @@ class DefaultProfile(Profile):
 
 class TestRuntime(Blueprint):
 
-    credentials = [
-        basic_cred(CRED_USERNAME, CRED_PASSWORD, default=True)
-    ]
+    credentials = [basic_cred(CRED_USERNAME, CRED_PASSWORD, default=True)]
     services = [AhvService]
     packages = [AhvPackage]
     substrates = [AhvSubstrate]

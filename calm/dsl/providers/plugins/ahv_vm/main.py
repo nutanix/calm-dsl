@@ -66,9 +66,7 @@ class AhvVmProvider(Provider):
         runtime_readiness_probe = sub_editable_spec["value"].get("readiness_probe", {})
         for k, v in runtime_readiness_probe.items():
             new_val = click.prompt(
-                "Value for {} [{}]".format(
-                    k , highlight_text(v)
-                ),
+                "Value for {} [{}]".format(k, highlight_text(v)),
                 default=v,
                 show_default=False,
             )
