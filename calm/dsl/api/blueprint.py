@@ -21,7 +21,11 @@ class BlueprintAPI(ResourceAPI):
     # So setting read timeout to 300 seconds
     def upload(self, payload):
         return self.connection._call(
-            self.UPLOAD, verify=False, request_json=payload, method=REQUEST.METHOD.POST, timeout=(5, 300)
+            self.UPLOAD,
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
+            timeout=(5, 300),
         )
 
     def launch(self, uuid, payload):
