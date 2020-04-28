@@ -23,7 +23,7 @@ def read_file(filename, depth=1):
         os.path.dirname(inspect.getfile(sys._getframe(depth))), filename
     )
 
-    if not os.path.exists(file_path):
+    if not file_exists:
         LOG.debug("file {} not found at location {}".format(filename, file_path))
         raise ValueError("file {} not found".format(filename))
 
@@ -103,6 +103,10 @@ def read_env(relpath=".env"):
     return env
 
 
+def file_exists(file_path):
+    return os.path.exists(file_path)
+
+
 def read_local_file(filename):
     file_path = os.path.join(".local", filename)
 
@@ -112,7 +116,7 @@ def read_local_file(filename):
     )
 
     # If not exists read from home directory
-    if not os.path.exists(abs_file_path):
+    if not file_exists(abs_file_path):
         init_obj = get_init_data()
         file_path = os.path.join(init_obj["LOCAL_DIR"].get("location"), filename)
         return read_file(file_path, 0).rstrip()  # To remove \n, use rstrip
