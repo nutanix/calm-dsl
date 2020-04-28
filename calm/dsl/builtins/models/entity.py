@@ -119,6 +119,7 @@ class EntityType(EntityTypeBase):
     __schema_name__ = None
     __openapi_type__ = None
 
+    @classmethod
     def validate_dict(cls, entity_dict):
         schema = {"type": "object", "properties": cls.__schema_props__}
         validator = StrictDraft7Validator(schema)

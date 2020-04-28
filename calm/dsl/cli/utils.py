@@ -46,7 +46,7 @@ def import_var_from_file(file, var, default_value=None):
     try:
         module = get_module_from_file(var, file)
         return getattr(module, var)
-    except:     # NoQA
+    except:  # NoQA
         return default_value
 
 
