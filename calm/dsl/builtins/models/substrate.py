@@ -149,9 +149,12 @@ class SubstrateType(EntityType):
         else:
             raise Exception("Un-supported vm type :{}".format(cdict["type"]))
 
-        
+        # Modifying the editable object
+        editables = cdict.pop("editables", {})
+        cdict["editables"] = {"create_spec": editables}
+
         # Popping out the editables from readiness_probe
-        readiness_probe_editables = readiness_probe.pop("editables_list",[])
+        readiness_probe_editables = readiness_probe.pop("editables_list", [])
         cdict["editables"]["readiness_probe"] = {
             k: True for k in readiness_probe_editables
         }

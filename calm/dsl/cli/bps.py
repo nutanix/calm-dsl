@@ -340,7 +340,12 @@ def get_blueprint_runtime_editables(client, blueprint):
 
 
 def get_field_values(
-    entity_dict, context, path=None, hide_input=False, launch_runtime_vars=None, bp_data=None,
+    entity_dict,
+    context,
+    path=None,
+    hide_input=False,
+    launch_runtime_vars=None,
+    bp_data=None,
 ):
     path = path or ""
     for field, value in entity_dict.items():
@@ -439,6 +444,8 @@ def get_variable_data(bp_data, context_data, var_context, var_name):
 
     LOG.error("No data found with variable name {}".format(var_name))
     sys.exit(-1)
+
+
 def get_val_launch_runtime_vars(launch_runtime_vars, field, path, context):
     filtered_launch_runtime_vars = list(
         filter(

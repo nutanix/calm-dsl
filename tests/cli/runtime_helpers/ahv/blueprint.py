@@ -37,9 +37,11 @@ class AhvSubstrate(Substrate):
     """AHV VM config given by reading a spec file"""
 
     provider_spec = read_provider_spec("specs/ahv_provider_spec.yaml")
-    editables = read_spec("specs/ahv_substrate_editable.yaml")
+    provider_spec_editables = read_spec("specs/ahv_substrate_editable.yaml")
 
-    readiness_probe = readiness_probe(connection_protocol="SSH", editables_list=["connection_port", "retries"])
+    readiness_probe = readiness_probe(
+        connection_protocol="SSH", editables_list=["connection_port", "retries"]
+    )
 
 
 class AhvDeployment(Deployment):
