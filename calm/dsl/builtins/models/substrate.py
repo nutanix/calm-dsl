@@ -21,6 +21,9 @@ class SubstrateType(EntityType):
         readiness_probe = {}
         if "readiness_probe" in cdict and cdict["readiness_probe"]:
             readiness_probe = cdict["readiness_probe"]
+            if hasattr(readiness_probe, "compile"):
+                readiness_probe = readiness_probe.compile()
+
         if cdict["type"] == "AHV_VM":
             if not readiness_probe:
                 readiness_probe = {
@@ -146,8 +149,14 @@ class SubstrateType(EntityType):
         else:
             raise Exception("Un-supported vm type :{}".format(cdict["type"]))
 
-        cdict["readiness_probe"] = readiness_probe
+        
+        # Popping out the editables from readiness_probe
+        readiness_probe_editables = readiness_probe.pop("editables_list",[])
+        cdict["editables"]["readiness_probe"] = {
+            k: True for k in readiness_probe_editables
+        }
 
+        cdict["readiness_probe"] = readiness_probe
         return cdict
 
     def get_task_target(cls):

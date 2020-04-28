@@ -9,6 +9,7 @@ from calm.dsl.builtins import (
 from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import read_provider_spec, read_local_file, read_spec
+from calm.dsl.builtins import readiness_probe
 
 CRED_USERNAME = read_local_file(".tests/username")
 CRED_PASSWORD = read_local_file(".tests/password")
@@ -37,6 +38,8 @@ class AhvSubstrate(Substrate):
 
     provider_spec = read_provider_spec("specs/ahv_provider_spec.yaml")
     editables = read_spec("specs/ahv_substrate_editable.yaml")
+
+    readiness_probe = readiness_probe(connection_protocol="SSH", editables_list=["connection_port", "retries"])
 
 
 class AhvDeployment(Deployment):

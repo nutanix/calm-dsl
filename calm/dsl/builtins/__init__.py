@@ -21,7 +21,7 @@ from .models.utils import read_file, read_local_file, read_env, file_exists
 
 from .models.provider_spec import provider_spec, read_provider_spec, read_spec
 from .models.provider_spec import read_ahv_spec, read_vmw_spec
-from .models.readiness_probe import ReadinessProbe
+from .models.readiness_probe import ReadinessProbe, readiness_probe
 from .models.substrate import Substrate, substrate
 
 from .models.deployment import Deployment, deployment
@@ -91,6 +91,7 @@ __all__ = [
     "SimpleDeployment",
     "SimpleBlueprint",
     "ReadinessProbe",
+    "readiness_probe",
     "ahv_vm_nic",
     "AhvVmNic",
     "ahv_vm_disk",

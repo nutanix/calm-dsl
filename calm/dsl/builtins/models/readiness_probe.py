@@ -26,12 +26,23 @@ class ReadinessProbeValidator(PropertyValidator, openapi_type="app_readiness_pro
             entity_type.validate_dict(value)
         else:
             raise TypeError("{} is not a valid readiness probe".format(value))
+    
+    def compile(cls):
+
+        cdict = super().compile()
+        cred = cdict.pop("login_credential_local_reference", None)
+        # If cred is not None, reset it again
+        if cred:
+            cdict["login_credential_local_reference"] = cred
+        
+        return cdict
 
 
-def _readiness_probe(**kwargs):
+
+def readiness_probe(**kwargs):
     name = kwargs.pop("name", None)
     bases = (Entity,)
     return ReadinessProbeType(name, bases, kwargs)
 
 
-ReadinessProbe = _readiness_probe()
+ReadinessProbe = readiness_probe()
