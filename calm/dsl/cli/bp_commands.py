@@ -283,16 +283,31 @@ def create_blueprint_command(bp_file, name, description, force):
     default=False,
     help="Ignore runtime variables and use defaults",
 )
+@click.option(
+    "--launch_params",
+    "-l",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to python file containing 'runtime_vars' parameter",
+)
 def launch_blueprint_command(
-    blueprint_name, app_name, ignore_runtime_variables, profile_name, blueprint=None,
+    blueprint_name,
+    app_name,
+    ignore_runtime_variables,
+    profile_name,
+    launch_params,
+    blueprint=None,
 ):
-
+    """Launches a blueprint.
+    All runtime variables will be prompted by default. When passing the 'ignore_runtime_editable' flag, no variables will be prompted and all default values will be used.
+    The blueprint default values can be overridden by passing a Python file via 'launch_params'. Any variable not defined in the Python file will keep the default value defined in the blueprint. When passing a Python file, no variables will be prompted.
+    """
     launch_blueprint_simple(
         blueprint_name,
         app_name,
         blueprint=blueprint,
         profile_name=profile_name,
         patch_editables=not ignore_runtime_variables,
+        launch_params=launch_params,
     )
 
 

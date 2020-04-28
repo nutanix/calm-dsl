@@ -1,4 +1,5 @@
 import click
+import importlib.util
 from functools import reduce
 from asciimatics.screen import Screen
 
@@ -29,6 +30,24 @@ def get_name_query(names):
 def highlight_text(text, **kwargs):
     """Highlight text in our standard format"""
     return click.style("{}".format(text), fg="blue", bold=False, **kwargs)
+
+
+def get_module_from_file(module_name, file):
+    """Returns a module given a user python file (.py)"""
+
+    spec = importlib.util.spec_from_file_location(module_name, file)
+    user_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(user_module)
+
+    return user_module
+
+
+def import_var_from_file(file, var, default_value=None):
+    try:
+        module = get_module_from_file(var, file)
+        return getattr(module, var)
+    except:     # NoQA
+        return default_value
 
 
 class Display:

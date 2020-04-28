@@ -1,6 +1,5 @@
 import time
 import json
-import importlib.util
 import sys
 from pprint import pprint
 import pathlib
@@ -11,11 +10,22 @@ import click
 from prettytable import PrettyTable
 from black import format_file_in_place, WriteBack, FileMode
 
-from calm.dsl.builtins import Blueprint, SimpleBlueprint, create_blueprint_payload
+from calm.dsl.builtins import (
+    Blueprint,
+    SimpleBlueprint,
+    create_blueprint_payload,
+    file_exists,
+)
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
 
-from .utils import get_name_query, get_states_filter, highlight_text
+from .utils import (
+    get_name_query,
+    get_states_filter,
+    highlight_text,
+    get_module_from_file,
+    import_var_from_file,
+)
 from .constants import BLUEPRINT
 from calm.dsl.store import Cache
 from calm.dsl.tools import get_logging_handle
@@ -190,12 +200,7 @@ def describe_bp(blueprint_name, out):
 
 def get_blueprint_module_from_file(bp_file):
     """Returns Blueprint module given a user blueprint dsl file (.py)"""
-
-    spec = importlib.util.spec_from_file_location("calm.dsl.user_bp", bp_file)
-    user_bp_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(user_bp_module)
-
-    return user_bp_module
+    return get_module_from_file("calm.dsl.user_bp", bp_file)
 
 
 def get_blueprint_class_from_module(user_bp_module):
@@ -334,7 +339,9 @@ def get_blueprint_runtime_editables(client, blueprint):
     return response.get("resources", [])
 
 
-def get_field_values(entity_dict, context, path=None, bp_data=None, hide_input=False):
+def get_field_values(
+    entity_dict, context, path=None, hide_input=False, launch_runtime_vars=None, bp_data=None,
+):
     path = path or ""
     for field, value in entity_dict.items():
         if isinstance(value, dict):
@@ -344,6 +351,7 @@ def get_field_values(entity_dict, context, path=None, bp_data=None, hide_input=F
                 path=path + "." + field,
                 bp_data=bp_data,
                 hide_input=hide_input,
+                launch_runtime_vars=launch_runtime_vars,
             )
         else:
             var_data = get_variable_data(
@@ -356,20 +364,26 @@ def get_field_values(entity_dict, context, path=None, bp_data=None, hide_input=F
             options = var_data.get("options", {})
             choices = options.get("choices", [])
 
-            click.echo("")
-            if choices:
-                click.echo("Choose from given choices: ")
-                for choice in choices:
-                    click.echo("\t{}".format(highlight_text(repr(choice))))
+            new_val = None
+            if launch_runtime_vars:
+                new_val = get_val_launch_runtime_vars(
+                    launch_runtime_vars, field, path, context
+                )
+            else:
+                click.echo("")
+                if choices:
+                    click.echo("Choose from given choices: ")
+                    for choice in choices:
+                        click.echo("\t{}".format(highlight_text(repr(choice))))
 
-            new_val = click.prompt(
-                "Value for {} in {} [{}]".format(
-                    path + "." + field, context, highlight_text(repr(value))
-                ),
-                default=value,
-                show_default=False,
-                hide_input=hide_input,
-            )
+                new_val = click.prompt(
+                    "Value for {} in {} [{}]".format(
+                        path + "." + field, context, highlight_text(repr(value))
+                    ),
+                    default=value,
+                    show_default=False,
+                    hide_input=hide_input,
+                )
 
             if new_val:
                 entity_dict[field] = type(value)(new_val)
@@ -425,6 +439,58 @@ def get_variable_data(bp_data, context_data, var_context, var_name):
 
     LOG.error("No data found with variable name {}".format(var_name))
     sys.exit(-1)
+def get_val_launch_runtime_vars(launch_runtime_vars, field, path, context):
+    filtered_launch_runtime_vars = list(
+        filter(
+            lambda e: is_launch_runtime_vars_context_matching(e["context"], context)
+            and e["name"] == path,
+            launch_runtime_vars,
+        )
+    )
+    if len(filtered_launch_runtime_vars) > 1:
+        LOG.error(
+            "Unable to populate runtime editables: Multiple matches for name {} and context {}".format(
+                path, context
+            )
+        )
+        sys.exit(-1)
+    if len(filtered_launch_runtime_vars) == 1:
+        return filtered_launch_runtime_vars[0].get("value", {}).get(field, None)
+    return None
+
+
+def is_launch_runtime_vars_context_matching(launch_runtime_var_context, context):
+    context_list = context.split(".")
+    if len(context_list) > 1 and context_list[-1] == "variable":
+        return context_list[-2] == launch_runtime_var_context or (
+            is_launch_runtime_var_action_match(launch_runtime_var_context, context_list)
+        )
+    return False
+
+
+def is_launch_runtime_var_action_match(launch_runtime_var_context, context_list):
+    launch_runtime_var_context_list = launch_runtime_var_context.split(".")
+
+    # Note: As variables under profile level actions can be marked as runtime_editable only
+    # Context ex: app_profile.<profile_name>.action.<action_name>.runbook.<runbook_name>.variable
+    if len(launch_runtime_var_context_list) == 2 and len(context_list) >= 4:
+        if (
+            context_list[1] == launch_runtime_var_context_list[0]
+            and context_list[3] == launch_runtime_var_context_list[1]
+        ):
+            return True
+    return False
+
+
+def parse_launch_runtime_vars(launch_params):
+    if launch_params:
+        if file_exists(launch_params) and launch_params.endswith(".py"):
+            return import_var_from_file(launch_params, "runtime_vars", [])
+        else:
+            LOG.warning(
+                "Invalid launch_params passed! Must be a valid and existing.py file! Ignoring..."
+            )
+    return []
 
 
 def launch_blueprint_simple(
@@ -433,6 +499,7 @@ def launch_blueprint_simple(
     blueprint=None,
     profile_name=None,
     patch_editables=True,
+    launch_params=None,
 ):
     client = get_api_client()
     if not blueprint:
@@ -481,6 +548,9 @@ def launch_blueprint_simple(
             runtime_editables, indent=4, separators=(",", ": ")
         )
         click.echo("Blueprint editables are:\n{}".format(runtime_editables_json))
+
+        # Check user input
+        launch_runtime_vars = parse_launch_runtime_vars(launch_params)
 
         res, err = client.blueprint.read(blueprint_uuid)
         if err:
@@ -533,6 +603,7 @@ def launch_blueprint_simple(
                     path=variable.get("name", ""),
                     bp_data=bp_data["status"]["resources"],
                     hide_input=hide_input,
+                    launch_runtime_vars=launch_runtime_vars,
                 )
 
         runtime_editables_json = json.dumps(
