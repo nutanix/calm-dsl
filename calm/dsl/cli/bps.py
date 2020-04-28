@@ -397,6 +397,9 @@ def is_launch_runtime_vars_context_matching(launch_runtime_var_context, context)
 
 def is_launch_runtime_var_action_match(launch_runtime_var_context, context_list):
     launch_runtime_var_context_list = launch_runtime_var_context.split(".")
+
+    # Note: As variables under profile level actions can be marked as runtime_editable only
+    # Context ex: app_profile.<profile_name>.action.<action_name>.runbook.<runbook_name>.variable
     if len(launch_runtime_var_context_list) == 2 and len(context_list) >= 4:
         if (
             context_list[1] == launch_runtime_var_context_list[0]
