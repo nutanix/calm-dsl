@@ -9,6 +9,7 @@ from calm.dsl.tools import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 BP_FILE_PATH = "tests/cli/runtime_helpers/ahv/blueprint.py"
+LAUNCH_PARAMS = "tests/cli/runtime_helpers/ahv/editable_params.py"
 NON_BUSY_APP_STATES = [
     APPLICATION.STATES.STOPPED,
     APPLICATION.STATES.RUNNING,
@@ -16,7 +17,8 @@ NON_BUSY_APP_STATES = [
 ]
 
 
-def test_ahv_substrate_editables():
+def test_ahv_substrate_editables_interactive_mode():
+    """Tests interactive mode for getting runtime values under ahv substrate"""
 
     runner = CliRunner()
     command = "launch bp --file {}".format(BP_FILE_PATH)
@@ -73,7 +75,44 @@ def test_ahv_substrate_editables():
 
     input = "\n".join(input)
     result = runner.invoke(cli, command, input=input)
+
+    try:
+        delete_app(APP_NAME)
+    except Exception:
+        pass
+
+    try:
+        delete_bp(BP_NAME)
+    except Exception:
+        pass
+
+    if result.exit_code:
+        pytest.fail("App creation failed")
+
+
+def test_ahv_substrate_editables_non_interactive_mode():
+    """Tests non-interactive mode for getting runtime values under ahv substrate"""
+
+    runner = CliRunner()
+    command = "launch bp --file {}".format(BP_FILE_PATH)
+    result = runner.invoke(cli, command)
+
+    # create blueprint
+    BP_NAME = "Test_Runtime_Bp_{}".format(int(time.time()))
+    command = "create bp --file={} --name={}".format(BP_FILE_PATH, BP_NAME)
+
+    LOG.info("Creating Bp {}".format(BP_NAME))
+    result = runner.invoke(cli, command)
+
     LOG.debug(result.output)
+    if result.exit_code:
+        delete_bp(BP_NAME)
+        pytest.fail("Error occured in bp creation")
+
+    APP_NAME = "Test_Runtime_App_{}".format(int(time.time()))
+    command = "launch bp {} -a {} -l {}".format(BP_NAME, APP_NAME, LAUNCH_PARAMS)
+
+    result = runner.invoke(cli, command)
 
     try:
         delete_app(APP_NAME)

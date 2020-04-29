@@ -447,6 +447,8 @@ def get_variable_data(bp_data, context_data, var_context, var_name):
 
 
 def get_val_launch_runtime_vars(launch_runtime_vars, field, path, context):
+    """Returns value of variable from launch_runtime_vars(Non-interactive)"""
+
     filtered_launch_runtime_vars = list(
         filter(
             lambda e: is_launch_runtime_vars_context_matching(e["context"], context)
@@ -466,7 +468,27 @@ def get_val_launch_runtime_vars(launch_runtime_vars, field, path, context):
     return None
 
 
+def get_val_launch_runtime_substrates(launch_runtime_substrates, path, context):
+    """Returns value of substrate from launch_runtime_substrates(Non-interactive)"""
+
+    filtered_launch_runtime_substrates = list(
+        filter(lambda e: e["name"] == path, launch_runtime_substrates,)
+    )
+    if len(filtered_launch_runtime_substrates) > 1:
+        LOG.error(
+            "Unable to populate runtime editables: Multiple matches for name {} and context {}".format(
+                path, context
+            )
+        )
+        sys.exit(-1)
+    if len(filtered_launch_runtime_substrates) == 1:
+        return filtered_launch_runtime_substrates[0].get("value", {})
+    return None
+
+
 def is_launch_runtime_vars_context_matching(launch_runtime_var_context, context):
+    """Used for matching context of variables"""
+
     context_list = context.split(".")
     if len(context_list) > 1 and context_list[-1] == "variable":
         return context_list[-2] == launch_runtime_var_context or (
@@ -476,6 +498,8 @@ def is_launch_runtime_vars_context_matching(launch_runtime_var_context, context)
 
 
 def is_launch_runtime_var_action_match(launch_runtime_var_context, context_list):
+    """Used for matching context of variable under action"""
+
     launch_runtime_var_context_list = launch_runtime_var_context.split(".")
 
     # Note: As variables under profile level actions can be marked as runtime_editable only
@@ -490,9 +514,24 @@ def is_launch_runtime_var_action_match(launch_runtime_var_context, context_list)
 
 
 def parse_launch_runtime_vars(launch_params):
+    """Returns runtime_vars object from launch_params file"""
+
     if launch_params:
         if file_exists(launch_params) and launch_params.endswith(".py"):
             return import_var_from_file(launch_params, "runtime_vars", [])
+        else:
+            LOG.warning(
+                "Invalid launch_params passed! Must be a valid and existing.py file! Ignoring..."
+            )
+    return []
+
+
+def parse_launch_runtime_substrates(launch_params):
+    """Returns runtime_substrates object from launch_params file"""
+
+    if launch_params:
+        if file_exists(launch_params) and launch_params.endswith(".py"):
+            return import_var_from_file(launch_params, "runtime_substrates", [])
         else:
             LOG.warning(
                 "Invalid launch_params passed! Must be a valid and existing.py file! Ignoring..."
@@ -558,6 +597,7 @@ def launch_blueprint_simple(
 
         # Check user input
         launch_runtime_vars = parse_launch_runtime_vars(launch_params)
+        launch_runtime_substrates = parse_launch_runtime_substrates(launch_params)
 
         res, err = client.blueprint.read(blueprint_uuid)
         if err:
@@ -568,8 +608,9 @@ def launch_blueprint_simple(
 
         substrate_list = runtime_editables.get("substrate_list", [])
         if substrate_list:
-            click.echo("\n\t\t\t", nl=False)
-            click.secho("SUBSTRATE LIST DATA", underline=True, bold=True)
+            if not launch_params:
+                click.echo("\n\t\t\t", nl=False)
+                click.secho("SUBSTRATE LIST DATA", underline=True, bold=True)
 
             substrate_definition_list = bp_data["status"]["resources"][
                 "substrate_definition_list"
@@ -587,19 +628,30 @@ def launch_blueprint_simple(
                     vm_img_map[package["name"]] = package["uuid"]
 
             for substrate in substrate_list:
-                provider_type = substrate["type"]
-                provider_cls = get_provider(provider_type)
-                provider_cls.get_runtime_editables(
-                    substrate,
-                    project_uuid,
-                    substrate_name_data_map[substrate["name"]],
-                    vm_img_map,
-                )
+                if launch_params:
+                    new_val = get_val_launch_runtime_substrates(
+                        launch_runtime_substrates=launch_runtime_substrates,
+                        path=substrate.get("name"),
+                        context=substrate.get("context"),
+                    )
+                    if new_val:
+                        substrate["value"] = new_val
+
+                else:
+                    provider_type = substrate["type"]
+                    provider_cls = get_provider(provider_type)
+                    provider_cls.get_runtime_editables(
+                        substrate,
+                        project_uuid,
+                        substrate_name_data_map[substrate["name"]],
+                        vm_img_map,
+                    )
 
         variable_list = runtime_editables.get("variable_list", [])
         if variable_list:
-            click.echo("\n\t\t\t", nl=False)
-            click.secho("VARIABLE LIST DATA", underline=True, bold=True)
+            if not launch_runtime_vars:
+                click.echo("\n\t\t\t", nl=False)
+                click.secho("VARIABLE LIST DATA", underline=True, bold=True)
             for variable in variable_list:
                 context = variable["context"]
                 editables = variable["value"]
