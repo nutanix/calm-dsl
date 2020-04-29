@@ -356,9 +356,7 @@ def get_completion_func(screen):
                         screen.print_at("{}{}".format(pre, linestr), 0, line)
                     else:
                         screen.print_at(
-                            "{}{}".format(fill, linestr.replace("\\t", "")),
-                            0,
-                            line,
+                            "{}{}".format(fill, linestr.replace("\\t", "")), 0, line,
                         )
                     line += 1
             screen.refresh()
@@ -476,9 +474,7 @@ def watch_app(app_name, screen, app=None):
                         screen.print_at("{}{}".format(pre, linestr), 0, line)
                     else:
                         screen.print_at(
-                            "{}{}".format(fill, linestr.replace("\\t", "")),
-                            0,
-                            line,
+                            "{}{}".format(fill, linestr.replace("\\t", "")), 0, line,
                         )
                     line += 1
             screen.refresh()
