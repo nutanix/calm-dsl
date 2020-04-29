@@ -92,7 +92,7 @@ def get_apps(name, filter_by, limit, offset, quiet, all_items):
     click.echo(table)
 
 
-def _get_app(client, app_name, all=False):
+def _get_app(client, app_name, screen=Display(), all=False):
     # 1. Get app_uuid from list api
     params = {"filter": "name=={}".format(app_name)}
     if all:
@@ -118,14 +118,18 @@ def _get_app(client, app_name, all=False):
             if not found:
                 raise Exception("More than one app found - {}".format(entities))
 
+        screen.clear()
         LOG.info("App {} found".format(app_name))
+        screen.refresh()
         app = entities[0]
     else:
         raise Exception("No app found with name {} found".format(app_name))
     app_id = app["metadata"]["uuid"]
 
     # 2. Get app details
+    screen.clear()
     LOG.info("Fetching app details")
+    screen.refresh()
     res, err = client.application.read(app_id)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -344,7 +348,7 @@ def get_completion_func(screen):
 
             # Render Tree on next line
             line = 1
-            for pre, _, node in RenderTree(root):
+            for pre, fill, node in RenderTree(root):
                 lines = json.dumps(node, cls=RunlogJSONEncoder).split("\\n")
                 for linestr in lines:
                     tabcount = linestr.count("\\t")
@@ -352,9 +356,7 @@ def get_completion_func(screen):
                         screen.print_at("{}{}".format(pre, linestr), 0, line)
                     else:
                         screen.print_at(
-                            "{}{}".format("", linestr.replace("\\t", "")),
-                            len(pre) + 2 + tabcount * 2,
-                            line,
+                            "{}{}".format(fill, linestr.replace("\\t", "")), 0, line,
                         )
                     line += 1
             screen.refresh()
@@ -380,7 +382,7 @@ def get_completion_func(screen):
 
 
 def watch_action(runlog_uuid, app_name, client, screen, poll_interval=10):
-    app = _get_app(client, app_name)
+    app = _get_app(client, app_name, screen=screen)
     app_uuid = app["metadata"]["uuid"]
 
     url = client.application.ITEM.format(app_uuid) + "/app_runlogs/list"
@@ -399,7 +401,7 @@ def watch_app(app_name, screen, app=None):
     is_app_describe = False
 
     if not app:
-        app = _get_app(client, app_name)
+        app = _get_app(client, app_name, screen=screen)
     else:
         is_app_describe = True
     app_id = app["metadata"]["uuid"]
@@ -464,7 +466,7 @@ def watch_app(app_name, screen, app=None):
 
             # Render Tree on next line
             line = 1
-            for pre, _, node in RenderTree(root):
+            for pre, fill, node in RenderTree(root):
                 lines = json.dumps(node, cls=RunlogJSONEncoder).split("\\n")
                 for linestr in lines:
                     tabcount = linestr.count("\\t")
@@ -472,9 +474,7 @@ def watch_app(app_name, screen, app=None):
                         screen.print_at("{}{}".format(pre, linestr), 0, line)
                     else:
                         screen.print_at(
-                            "{}{}".format("", linestr.replace("\\t", "")),
-                            len(pre) + 2 + tabcount * 2,
-                            line,
+                            "{}{}".format(fill, linestr.replace("\\t", "")), 0, line,
                         )
                     line += 1
             screen.refresh()
@@ -537,7 +537,7 @@ def run_actions(screen, app_name, action_name, watch):
         )  # Because Soft Delete also requries the differernt API workflow
         return
 
-    app = _get_app(client, app_name)
+    app = _get_app(client, app_name, screen=screen)
     app_spec = app["spec"]
     app_id = app["metadata"]["uuid"]
 
