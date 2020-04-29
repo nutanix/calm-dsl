@@ -403,7 +403,7 @@ def watch_app(app_name, screen, app=None):
     is_app_describe = False
 
     if not app:
-        app = _get_app(client, app_name)
+        app = _get_app(client, app_name, screen=screen)
     else:
         is_app_describe = True
     app_id = app["metadata"]["uuid"]
@@ -468,7 +468,7 @@ def watch_app(app_name, screen, app=None):
 
             # Render Tree on next line
             line = 1
-            for pre, _, node in RenderTree(root):
+            for pre, fill, node in RenderTree(root):
                 lines = json.dumps(node, cls=RunlogJSONEncoder).split("\\n")
                 for linestr in lines:
                     tabcount = linestr.count("\\t")
@@ -476,8 +476,8 @@ def watch_app(app_name, screen, app=None):
                         screen.print_at("{}{}".format(pre, linestr), 0, line)
                     else:
                         screen.print_at(
-                            "{}{}".format("", linestr.replace("\\t", "")),
-                            len(pre) + 2 + tabcount * 2,
+                            "{}{}".format(fill, linestr.replace("\\t", "")),
+                            0,
                             line,
                         )
                     line += 1
