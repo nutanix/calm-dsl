@@ -201,7 +201,7 @@ def create_blueprint_from_dsl(
 )
 @click.option(
     "--force",
-    "-f",
+    "-fc",
     is_flag=True,
     default=False,
     help="Deletes existing blueprint with the same name before create.",
