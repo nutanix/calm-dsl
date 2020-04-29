@@ -150,20 +150,38 @@ class SubstrateType(EntityType):
             raise Exception("Un-supported vm type :{}".format(cdict["type"]))
 
         # Modifying the editable object
-        editables = cdict.pop("editables", {})
-        cdict["editables"] = {"create_spec": editables}
+        provider_spec_editables = cdict.pop("editables", {})
+        cdict["editables"] = {}
+
+        if provider_spec_editables:
+            cdict["editables"]["create_spec"] = provider_spec_editables
 
         # Popping out the editables from readiness_probe
         readiness_probe_editables = readiness_probe.pop("editables_list", [])
-        cdict["editables"]["readiness_probe"] = {
-            k: True for k in readiness_probe_editables
-        }
+        if readiness_probe_editables:
+            cdict["editables"]["readiness_probe"] = {
+                k: True for k in readiness_probe_editables
+            }
 
         cdict["readiness_probe"] = readiness_probe
         return cdict
 
     def get_task_target(cls):
         return cls.get_ref()
+
+    @classmethod
+    def pre_set_hook(cls, key, val):
+        """Add changes for readiness_probe"""
+
+        if key == "readiness_probe":
+            if isinstance(val, dict):
+                vdict = cls.__validator_dict__
+                rp_val, is_array = vdict[key]
+                rp_cls_type = rp_val.__kind__
+
+                return rp_cls_type(None, (Entity,), val)
+
+        return val
 
 
 class SubstrateValidator(PropertyValidator, openapi_type="app_substrate"):

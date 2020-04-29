@@ -23,19 +23,6 @@ class ReadinessProbeValidator(PropertyValidator, openapi_type="app_readiness_pro
     __default__ = None
     __kind__ = ReadinessProbeType
 
-    @classmethod
-    def validate(cls, value, is_array):
-        entity_type = cls.__kind__
-
-        if value is None:
-            return
-        elif isinstance(value, entity_type):
-            pass
-        elif isinstance(value, dict):
-            entity_type.validate_dict(value)
-        else:
-            raise TypeError("{} is not a valid readiness probe".format(value))
-
 
 def readiness_probe(**kwargs):
     name = kwargs.pop("name", None)

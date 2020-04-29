@@ -60,14 +60,17 @@ def _validate(vdict, name, value):
 
 
 class EntityDict(OrderedDict):
-    def __init__(self, validators):
+    def __init__(self, validators, pre_set_hook=None):
         self.validators = validators
+        self.pre_set_hook = pre_set_hook
 
     def _validate(self, name, value):
         vdict = self.validators
         return _validate(vdict, name, value)
 
     def __setitem__(self, name, value):
+        if self.pre_set_hook:
+            value = self.pre_set_hook(name, value)
         value = self._validate(name, value)
         super().__setitem__(name, value)
 
@@ -144,7 +147,12 @@ class EntityType(EntityTypeBase):
         # Class creation would happen using EntityDict() instead of dict().
         # This is done to add validations to class attrs during class creation.
         # Look at __setitem__ in EntityDict
-        return EntityDict(validators)
+        return EntityDict(validators, mcls.pre_set_hook)
+
+    @classmethod
+    def pre_set_hook(mcls, key, value):
+        """changes required to value before setting to namespace"""
+        return value
 
     def __new__(mcls, name, bases, kwargs):
 

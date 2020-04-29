@@ -1,7 +1,6 @@
 from calm.dsl.builtins import (
     ref,
     basic_cred,
-    secret_cred,
     CalmVariable,
     CalmTask,
     action,
@@ -14,6 +13,10 @@ from calm.dsl.builtins import readiness_probe
 CRED_USERNAME = read_local_file(".tests/username")
 CRED_PASSWORD = read_local_file(".tests/password")
 DNS_SERVER = read_local_file(".tests/dns_server")
+
+DefaultCred = basic_cred(
+    CRED_USERNAME, CRED_PASSWORD, name="default cred", default=True
+)
 
 
 class AhvService(Service):
@@ -40,7 +43,9 @@ class AhvSubstrate(Substrate):
     provider_spec_editables = read_spec("specs/ahv_substrate_editable.yaml")
 
     readiness_probe = readiness_probe(
-        connection_protocol="SSH", editables_list=["connection_port", "retries"]
+        connection_type="SSH",
+        credential=ref(DefaultCred),
+        editables_list=["connection_port", "retries"],
     )
 
 
@@ -68,7 +73,7 @@ class DefaultProfile(Profile):
 
 class TestRuntime(Blueprint):
 
-    credentials = [basic_cred(CRED_USERNAME, CRED_PASSWORD, default=True)]
+    credentials = [DefaultCred]
     services = [AhvService]
     packages = [AhvPackage]
     substrates = [AhvSubstrate]
