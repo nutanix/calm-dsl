@@ -23,8 +23,8 @@ Language design is black art, and building upon a well-established language is d
  - Describe blueprint: `calm describe bp <blueprint_name>`. It will print a summary of the blueprint.
  - Launch blueprint to create Application: `calm launch bp <blueprint_name> --app_name <app_name> -i`
  - List apps: `calm get apps`.
- - Describe app: `calm describe app <app_name>`. It will print a summary of the application and the current application state.
- - Delete app: `calm delete app <app_name>`. Hint: You can delete multiple apps using: `calm get apps -q | xargs -I {} calm delete app {}`.
+ - Describe app: `calm describe app <app_name>`. It will print a summary of the application and the current application state. Use `calm describe app <name> 2>/dev/null --out json | jq '.["status"]'` to get fields from the app json. More info on how to use `jq` [here](https://stedolan.github.io/jq/tutorial/).
+ - Delete app: `calm delete app <app_name>`. You can delete multiple apps using: `calm get apps -q | xargs -I {} calm delete app {}`.
 
 ## Docker
  - Latest image: `docker pull ntnx/calm-dsl`
