@@ -14,19 +14,17 @@ LOG = get_logging_handle(__name__)
 
 
 class EntityDict(OrderedDict):
-    def __init__(self, validators={}):
-        self.validators = validators
-
     @staticmethod
-    def _pre_validate(vdict, name, value):
-        """hook to change values before validation"""
+    def pre_validate(vdict, name, value):
+        """hook to change values before validation, typecast, etc
+        """
         return value
 
     @classmethod
-    def _validate(cls, vdict, name, value):
+    def _validate_attr(cls, vdict, name, value):
         """validates  name-value pair via __validator_dict__ of entity"""
 
-        value = cls._pre_validate(vdict, name, value)
+        value = cls.pre_validate(vdict, name, value)
 
         if name.startswith("__") and name.endswith("__"):
             return value
@@ -69,9 +67,21 @@ class EntityDict(OrderedDict):
             ValidatorType.validate(value, is_array)
         return value
 
-    def __setitem__(self, name, value):
+    def __init__(self, validators=dict()):
+        self.validators = validators
+
+    def _validate(self, name, value):
         vdict = self.validators
-        value = self._validate(vdict, name, value)
+        if vdict:
+            return self._validate_attr(vdict, name, value)
+        return value
+
+    def __setitem__(self, name, value):
+
+        # Validate attribute
+        value = self._validate(name, value)
+
+        # Set attribute
         super().__setitem__(name, value)
 
 
@@ -186,7 +196,8 @@ class EntityType(EntityTypeBase):
 
         if hasattr(mcls, "__validator_dict__"):
             vdict = mcls.__validator_dict__
-            return mcls.__prepare_dict__._validate(vdict, name, value)
+            entity_dict = mcls.__prepare_dict__
+            return entity_dict._validate_attr(vdict, name, value)
 
         return value
 
