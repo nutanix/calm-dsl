@@ -13,63 +13,60 @@ from .schema import get_schema_details
 LOG = get_logging_handle(__name__)
 
 
-def _validate(vdict, name, value):
-
-    if name.startswith("__") and name.endswith("__"):
-        return value
-
-    try:
-
-        if name not in vdict:
-            raise TypeError("Unknown attribute {} given".format(name))
-        ValidatorType, is_array = vdict[name]
-        if getattr(ValidatorType, "__is_object__", False):
-            return ValidatorType.validate(value, is_array)
-
-    except TypeError:
-
-        # Check if value is a variable/action
-        types = EntityTypeBase.get_entity_types()
-        VariableType = types.get("Variable", None)
-        if not VariableType:
-            raise TypeError("Variable type not defined")
-        DescriptorType = types.get("Descriptor", None)
-        if not DescriptorType:
-            raise TypeError("Descriptor type not defined")
-        if not (
-            ("variables" in vdict and isinstance(value, (VariableType,)))
-            or ("actions" in vdict and isinstance(type(value), DescriptorType))
-        ):
-            LOG.debug("Validating object: {}".format(vdict))
-            raise
-
-        # Validate and set variable/action
-        # get validator for variables/action
-        if isinstance(value, VariableType):
-            ValidatorType, _ = vdict["variables"]
-            # Set name attribute in variable
-            setattr(value, "name", name)
-
-        elif isinstance(type(value), DescriptorType):
-            ValidatorType = None
-        is_array = False
-
-    if ValidatorType is not None:
-        ValidatorType.validate(value, is_array)
-    return value
-
-
 class EntityDict(OrderedDict):
     def __init__(self, validators={}):
         self.validators = validators
 
     def _pre_validate(self, name, value):
+        """hook to change values before validation"""
         return value
 
     def _validate(self, name, value):
-        vdict = self.validators
+        """validates  name-value pair via __validator_dict__ of entity"""
+
+        # Preprocess the value using hook(_pre_validate)
         value = self._pre_validate(name, value)
-        return _validate(vdict, name, value)
+        vdict = self.validators
+        if name.startswith("__") and name.endswith("__"):
+            return value
+
+        try:
+            if name not in vdict:
+                raise TypeError("Unknown attribute {} given".format(name))
+            ValidatorType, is_array = vdict[name]
+            if getattr(ValidatorType, "__is_object__", False):
+                return ValidatorType.validate(value, is_array)
+
+        except TypeError:
+            # Check if value is a variable/action
+            types = EntityTypeBase.get_entity_types()
+            VariableType = types.get("Variable", None)
+            if not VariableType:
+                raise TypeError("Variable type not defined")
+            DescriptorType = types.get("Descriptor", None)
+            if not DescriptorType:
+                raise TypeError("Descriptor type not defined")
+            if not (
+                ("variables" in vdict and isinstance(value, (VariableType,)))
+                or ("actions" in vdict and isinstance(type(value), DescriptorType))
+            ):
+                LOG.debug("Validating object: {}".format(vdict))
+                raise
+
+            # Validate and set variable/action
+            # get validator for variables/action
+            if isinstance(value, VariableType):
+                ValidatorType, _ = vdict["variables"]
+                # Set name attribute in variable
+                setattr(value, "name", name)
+
+            elif isinstance(type(value), DescriptorType):
+                ValidatorType = None
+            is_array = False
+
+        if ValidatorType is not None:
+            ValidatorType.validate(value, is_array)
+        return value
 
     def __setitem__(self, name, value):
         value = self._validate(name, value)
@@ -185,7 +182,7 @@ class EntityType(EntityTypeBase):
 
     @classmethod
     def validate(mcls, name, value):
-        if mcls.__object_namespace__:
+        if mcls.__object_namespace__ is not None:
             return mcls.__object_namespace__._validate(name, value)
 
         return value
