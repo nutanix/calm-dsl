@@ -60,11 +60,15 @@ def _validate(vdict, name, value):
 
 
 class EntityDict(OrderedDict):
-    def __init__(self, validators):
+    def __init__(self, validators={}):
         self.validators = validators
+
+    def _pre_validate(self, name, value):
+        return value
 
     def _validate(self, name, value):
         vdict = self.validators
+        value = self._pre_validate(name, value)
         return _validate(vdict, name, value)
 
     def __setitem__(self, name, value):
@@ -118,6 +122,8 @@ class EntityType(EntityTypeBase):
 
     __schema_name__ = None
     __openapi_type__ = None
+    __prepare_dict__ = EntityDict
+    __object_namespace__ = None
 
     def validate_dict(cls, entity_dict):
         schema = {"type": "object", "properties": cls.__schema_props__}
@@ -136,18 +142,19 @@ class EntityType(EntityTypeBase):
 
         # Handle base case (Entity)
         if not schema_name:
-            return dict()
+            return mcls.__prepare_dict__()
 
         validators = getattr(mcls, "__validator_dict__")
 
         # Class creation would happen using EntityDict() instead of dict().
         # This is done to add validations to class attrs during class creation.
         # Look at __setitem__ in EntityDict
-        return EntityDict(validators)
+        mcls.__object_namespace__ = mcls.__prepare_dict__(validators)
+        return mcls.__object_namespace__
 
     def __new__(mcls, name, bases, kwargs):
 
-        if not isinstance(kwargs, EntityDict):
+        if not isinstance(kwargs, mcls.__prepare_dict__):
             entitydict = mcls.__prepare__(name, bases)
             for k, v in kwargs.items():
                 entitydict[k] = v
@@ -178,9 +185,10 @@ class EntityType(EntityTypeBase):
 
     @classmethod
     def validate(mcls, name, value):
-        if hasattr(mcls, "__validator_dict__"):
-            vdict = mcls.__validator_dict__
-            return _validate(vdict, name, value)
+        if mcls.__object_namespace__:
+            return mcls.__object_namespace__._validate(name, value)
+
+        return value
 
     def __setattr__(cls, name, value):
 
