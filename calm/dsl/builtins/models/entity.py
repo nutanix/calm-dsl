@@ -22,9 +22,11 @@ class EntityDict(OrderedDict):
         """hook to change values before validation"""
         return value
 
-    @staticmethod
-    def _validate(vdict, name, value):
+    @classmethod
+    def _validate(cls, vdict, name, value):
         """validates  name-value pair via __validator_dict__ of entity"""
+
+        value = cls._pre_validate(vdict, name, value)
 
         if name.startswith("__") and name.endswith("__"):
             return value
@@ -69,7 +71,6 @@ class EntityDict(OrderedDict):
 
     def __setitem__(self, name, value):
         vdict = self.validators
-        value = self._pre_validate(vdict, name, value)
         value = self._validate(vdict, name, value)
         super().__setitem__(name, value)
 
@@ -185,7 +186,6 @@ class EntityType(EntityTypeBase):
 
         if hasattr(mcls, "__validator_dict__"):
             vdict = mcls.__validator_dict__
-            value = mcls.__prepare_dict__._pre_validate(vdict, name, value)
             return mcls.__prepare_dict__._validate(vdict, name, value)
 
         return value
