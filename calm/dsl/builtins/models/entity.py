@@ -17,16 +17,15 @@ class EntityDict(OrderedDict):
     def __init__(self, validators={}):
         self.validators = validators
 
-    def _pre_validate(self, name, value):
+    @staticmethod
+    def _pre_validate(vdict, name, value):
         """hook to change values before validation"""
         return value
 
-    def _validate(self, name, value):
+    @staticmethod
+    def _validate(vdict, name, value):
         """validates  name-value pair via __validator_dict__ of entity"""
 
-        # Preprocess the value using hook(_pre_validate)
-        value = self._pre_validate(name, value)
-        vdict = self.validators
         if name.startswith("__") and name.endswith("__"):
             return value
 
@@ -69,7 +68,9 @@ class EntityDict(OrderedDict):
         return value
 
     def __setitem__(self, name, value):
-        value = self._validate(name, value)
+        vdict = self.validators
+        value = self._pre_validate(vdict, name, value)
+        value = self._validate(vdict, name, value)
         super().__setitem__(name, value)
 
 
@@ -120,8 +121,8 @@ class EntityType(EntityTypeBase):
     __schema_name__ = None
     __openapi_type__ = None
     __prepare_dict__ = EntityDict
-    __object_namespace__ = None
 
+    @classmethod
     def validate_dict(cls, entity_dict):
         schema = {"type": "object", "properties": cls.__schema_props__}
         validator = StrictDraft7Validator(schema)
@@ -146,8 +147,7 @@ class EntityType(EntityTypeBase):
         # Class creation would happen using EntityDict() instead of dict().
         # This is done to add validations to class attrs during class creation.
         # Look at __setitem__ in EntityDict
-        mcls.__object_namespace__ = mcls.__prepare_dict__(validators)
-        return mcls.__object_namespace__
+        return mcls.__prepare_dict__(validators)
 
     def __new__(mcls, name, bases, kwargs):
 
@@ -182,8 +182,11 @@ class EntityType(EntityTypeBase):
 
     @classmethod
     def validate(mcls, name, value):
-        if mcls.__object_namespace__ is not None:
-            return mcls.__object_namespace__._validate(name, value)
+
+        if hasattr(mcls, "__validator_dict__"):
+            vdict = mcls.__validator_dict__
+            value = mcls.__prepare_dict__._pre_validate(vdict, name, value)
+            return mcls.__prepare_dict__._validate(vdict, name, value)
 
         return value
 
