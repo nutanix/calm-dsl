@@ -708,6 +708,7 @@ def poll_launch_status(client, blueprint_uuid, launch_req_id):
             )
             break
         elif app_state == "failure":
+            LOG.debug("API response: {}".format(response))
             LOG.error("Failed to launch blueprint. Check API response above.")
             break
         elif err:

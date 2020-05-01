@@ -41,9 +41,7 @@ def test_ahv_substrate_editables_interactive_mode():
     command = "launch bp {} -a {}".format(BP_NAME, APP_NAME)
 
     input = [
-        "SSH",
         "5",
-        "0",
         "22",
         "@@{calm_application_name}@@-@@{calm_array_index}@@",
         "y",  # Edit categories

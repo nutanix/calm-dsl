@@ -1,13 +1,26 @@
-from .entity import EntityType, Entity
+from .entity import EntityType, Entity, EntityDict
 from .validator import PropertyValidator
 
 
 # Substrate
 
 
+class SubstrateDict(EntityDict):
+    @staticmethod
+    def pre_validate(vdict, name, value):
+        if name == "readiness_probe":
+            if isinstance(value, dict):
+                rp_validator, is_array = vdict[name]
+                rp_cls_type = rp_validator.get_kind()
+                return rp_cls_type(None, (Entity,), value)
+
+        return value
+
+
 class SubstrateType(EntityType):
     __schema_name__ = "Substrate"
     __openapi_type__ = "app_substrate"
+    __prepare_dict__ = SubstrateDict
 
     ALLOWED_FRAGMENT_ACTIONS = {
         "__pre_create__": "pre_action_create",
@@ -168,20 +181,6 @@ class SubstrateType(EntityType):
 
     def get_task_target(cls):
         return cls.get_ref()
-
-    @classmethod
-    def pre_set_hook(cls, key, val):
-        """Add changes for readiness_probe"""
-
-        if key == "readiness_probe":
-            if isinstance(val, dict):
-                vdict = cls.__validator_dict__
-                rp_val, is_array = vdict[key]
-                rp_cls_type = rp_val.__kind__
-
-                return rp_cls_type(None, (Entity,), val)
-
-        return val
 
 
 class SubstrateValidator(PropertyValidator, openapi_type="app_substrate"):
