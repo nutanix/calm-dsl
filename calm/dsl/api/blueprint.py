@@ -97,7 +97,7 @@ class BlueprintAPI(ResourceAPI):
         if entities:
             if len(entities) > 0:
                 if not force_create:
-                    err_msg = "Blueprint {} already exists. Use --force to overwrite.".format(
+                    err_msg = "Blueprint {} already exists. Use --force to first delete existing blueprint before create.".format(
                         bp_name
                     )
                     # ToDo: Add command to edit Blueprints
