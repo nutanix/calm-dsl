@@ -665,6 +665,7 @@ def publish_bp_to_marketplace_manager(
         ]
 
     res, err = client.market_place.create(bp_template)
+    LOG.debug("Api response: {}". format(res.json()))
     if err:
         LOG.error("[{}] - {}".format(err["code"], err["error"]))
         sys.exit(-1)
@@ -1089,6 +1090,7 @@ def delete_marketplace_bp(name, version, app_source=None, app_state=None):
     bp_uuid = mpi_data["metadata"]["uuid"]
 
     res, err = client.market_place.delete(bp_uuid)
+    LOG.debug("Api response: {}". format(res.json()))
     if err:
         LOG.error("[{}] - {}".format(err["code"], err["error"]))
         sys.exit(-1)

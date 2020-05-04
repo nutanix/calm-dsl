@@ -334,6 +334,9 @@ def get_blueprint_runtime_editables(client, blueprint):
         LOG.debug("Blueprint UUID not present in metadata")
         raise Exception("Invalid blueprint provided {} ".format(blueprint))
     res, err = client.blueprint._get_editables(bp_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
     response = res.json()
     return response.get("resources", [])
 

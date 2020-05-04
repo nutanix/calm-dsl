@@ -131,7 +131,7 @@ def make_bp_dirs(dir_name, bp_name):
 def init_bp(bp_name, dir_name, provider_type):
 
     bp_name = bp_name.strip().split()[0].title()
-    bp_dir, local_dir, key_dir, script_dir = make_bp_dirs(dir_name, bp_name)
+    bp_dir, _, key_dir, script_dir = make_bp_dirs(dir_name, bp_name)
 
     # sync cache
     LOG.info("Syncing cache")
