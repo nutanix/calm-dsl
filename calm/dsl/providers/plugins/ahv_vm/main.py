@@ -228,14 +228,17 @@ class AhvVmProvider(Provider):
             ]:
                 subnets_name_id_map[subnet["name"]] = subnet["uuid"]
 
+            subnet_id_name_map = {v: k for k, v in subnets_name_id_map.items()}
+
             click.echo("Choose from given subnets:")
             for ind, name in enumerate(subnets_name_id_map.keys()):
                 click.echo("\t {}. {}".format(str(ind + 1), name))
 
+            # TODO add the cluster information too.
             for nic_index, nic_data in nic_list.items():
                 click.echo("\n--Nic {} -- ".format(nic_index))
                 nic_uuid = nic_data["subnet_reference"].get("uuid")
-                nic_name = Cache.get_entity_name("AHV_SUBNET", nic_uuid)
+                nic_name = subnet_id_name_map.get(nic_uuid, "")
 
                 if nic_uuid.startswith("@@") and nic_uuid.endswith("@@"):
                     # It will be macro

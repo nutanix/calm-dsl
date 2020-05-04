@@ -145,7 +145,10 @@ def _wait_for_non_busy_state(name):
     runner = CliRunner()
     result = runner.invoke(cli, ["describe", "app", name, "--out=json"])
     app_data = json.loads(result.output)
+    LOG.info("App State: {}".format(app_data["status"]["state"]))
+    LOG.debug("App Terminal states: {}".format(NON_BUSY_APP_STATES))
     while app_data["status"]["state"] not in NON_BUSY_APP_STATES:
         time.sleep(5)
         result = runner.invoke(cli, ["describe", "app", name, "--out=json"])
         app_data = json.loads(result.output)
+        LOG.info("App State: {}".format(app_data["status"]["state"]))

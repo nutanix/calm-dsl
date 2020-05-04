@@ -52,22 +52,6 @@ class Cache:
             return None
 
     @classmethod
-    def get_entity_name(cls, entity_type, entity_uuid):
-        """Returns the name of entity present"""
-
-        db = get_db_handle()
-        try:
-            entity = db.cache_table.get(
-                db.cache_table.entity_type == entity_type
-                and db.cache_table.entity_uuid == entity_uuid
-            )
-
-            return entity.entity_name
-
-        except peewee.DoesNotExist:
-            return None
-
-    @classmethod
     def sync(cls, entity_type=None):
 
         updating_entity_types = []
