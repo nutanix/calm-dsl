@@ -1,9 +1,9 @@
-runtime_vars = [
+variable_list = [
     {"value": {"value": "foo1_new_val"}, "context": "DefaultProfile", "name": "foo1"},
     {"value": {"value": "foo2_new_val"}, "context": "DefaultProfile", "name": "foo2"},
 ]
 
-runtime_substrates = [
+substrate_list = [
     {
         "value": {
             "readiness_probe": {"retries": "7", "connection_port": 22},

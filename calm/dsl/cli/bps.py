@@ -518,7 +518,7 @@ def parse_launch_runtime_vars(launch_params):
 
     if launch_params:
         if file_exists(launch_params) and launch_params.endswith(".py"):
-            return import_var_from_file(launch_params, "runtime_vars", [])
+            return import_var_from_file(launch_params, "variable_list", [])
         else:
             LOG.warning(
                 "Invalid launch_params passed! Must be a valid and existing.py file! Ignoring..."
@@ -531,7 +531,7 @@ def parse_launch_runtime_substrates(launch_params):
 
     if launch_params:
         if file_exists(launch_params) and launch_params.endswith(".py"):
-            return import_var_from_file(launch_params, "runtime_substrates", [])
+            return import_var_from_file(launch_params, "substrate_list", [])
         else:
             LOG.warning(
                 "Invalid launch_params passed! Must be a valid and existing.py file! Ignoring..."
