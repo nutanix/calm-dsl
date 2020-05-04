@@ -176,7 +176,7 @@ class TestApps:
                         if state in RUNLOG.FAILURE_STATES:
                             pytest.fail("action {} failed".format(action_name))
                             break
-                        if state not in RUNLOG.TERMINAL_STATES:
+                        elif state not in RUNLOG.TERMINAL_STATES:
                             LOG.info("Action {} is in process".format(action_name))
                             break
                         else:

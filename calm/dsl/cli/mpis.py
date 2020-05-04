@@ -549,7 +549,7 @@ def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None
             ref_projects.append(project["name"])
 
         if project_name not in ref_projects:
-            LOG.debug("Associated Projects: {}".format())
+            LOG.debug("Associated Projects: {}".format(ref_projects))
             LOG.error(
                 "Project {} is not shared with marketplace item {} with version {}".format(
                     project_name, name, version

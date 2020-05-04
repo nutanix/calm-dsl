@@ -1,3 +1,3 @@
 from .crypto import Crypto
 
-__all__ = [Crypto]
+__all__ = ["Crypto"]
