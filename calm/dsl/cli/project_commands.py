@@ -1,5 +1,4 @@
 import click
-from ruamel import yaml
 
 from .projects import (
     get_projects,

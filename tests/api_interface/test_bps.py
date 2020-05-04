@@ -4,10 +4,10 @@ import uuid
 
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.bps import launch_blueprint_simple
+from calm.dsl.tools import get_logging_handle
 from tests.api_interface.entity_spec.existing_vm_bp import (
     ExistingVMBlueprint as Blueprint,
 )
-from calm.dsl.tools import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 

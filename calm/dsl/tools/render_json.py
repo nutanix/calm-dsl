@@ -8,7 +8,7 @@ except ImportError:
 import json
 
 
-class RenderJSON(object):
+class RenderJSON:
     def __init__(self, json_data):
         if isinstance(json_data, dict):
             self.json_str = json.dumps(json_data)

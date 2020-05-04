@@ -13,7 +13,11 @@ class ObjectDict(EntityDict):
         super().__init__(validators)
 
     def get_default(self, is_array):
-        return self.__class__(self.validators, self.defaults, self.display_map) if not is_array else list
+        return (
+            self.__class__(self.validators, self.defaults, self.display_map)
+            if not is_array
+            else list
+        )
 
     def __call__(self):
         return self.__class__(self.validators, self.defaults, self.display_map)
