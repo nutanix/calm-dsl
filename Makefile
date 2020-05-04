@@ -73,4 +73,4 @@ _init_centos:
 	rpm -q python36 || sudo yum -y install python36 python-pip python3-devel
 
 	# Install virtual env
-	sudo pip install -U virtualenv==20.0.18
+	pip install -U virtualenv==20.0.18
