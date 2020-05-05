@@ -1,4 +1,5 @@
 import peewee
+import click
 
 from ..db import get_db_handle
 from calm.dsl.api import get_resource_api, get_api_client
@@ -10,13 +11,7 @@ LOG = get_logging_handle(__name__)
 class Cache:
     """Cache class Implementation"""
 
-    # TODO move this mapping to constants(api may change)
-    entity_type_api_map = {
-        "AHV_DISK_IMAGE": "images",
-        "AHV_SUBNET": "subnets",
-        "AHV_NETWORK_FUNCTION_CHAIN": "network_function_chains",
-        "PROJECT": "projects",
-    }
+    cache_types = ["ahv_subnet", "ahv_disk_image"]
 
     @classmethod
     def get_entity_types(cls):
@@ -24,86 +19,71 @@ class Cache:
         return list(cls.entity_type_api_map.keys())
 
     @classmethod
-    def create(cls, entity_type="", entity_name="", entity_uuid=""):
-        """Store the uuid of entity in cache"""
+    def create(*args, **kwargs):
 
         db = get_db_handle()
-        db.cache_table.create(
-            entity_type=entity_type,
-            entity_name=entity_name,
-            entity_uuid=entity_uuid,
-            entity_list_api_suffix=cls.entity_type_api_map[entity_type],
-        )
+        entity_type = kwargs.pop("entity_type", None)
+        if not entity_type:
+            raise Exception("No entity type supplied")
 
-    @classmethod
-    def get_entity_uuid(cls, entity_type, entity_name):
-        """Returns the uuid of entity present"""
-
-        db = get_db_handle()
-        try:
-            entity = db.cache_table.get(
-                db.cache_table.entity_type == entity_type
-                and db.cache_table.entity_name == entity_name
-            )
-
-            return entity.entity_uuid
-
-        except peewee.DoesNotExist:
-            return None
-
-    @classmethod
-    def sync(cls, entity_type=None):
-
-        updating_entity_types = []
-
-        if entity_type:
-            if entity_type not in cls.get_entity_types():
-                LOG.debug("Registered entity types: {}".format(cls.get_entity_types()))
-                raise ValueError("Entity type {} not registered".format(entity_type))
-
-            updating_entity_types.append(entity_type)
+        # TODO validate by proper cache table
+        if hasattr(db, entity_type):
+            db_cls = getattr(db, entity_type)
 
         else:
-            updating_entity_types.extend(list(cls.entity_type_api_map.keys()))
+            raise Exception("Unknown entity type")
+
+        db_cls.create(**kwargs)
+
+    @classmethod
+    def get_entity_uuid(*args, **kwargs):
 
         db = get_db_handle()
+        entity_type = kwargs.pop("entity_type", None)
+        if not entity_type:
+            raise Exception("No entity type supplied")
 
-        for entity_type in updating_entity_types:
-            query = db.cache_table.delete().where(
-                db.cache_table.entity_type == entity_type
-            )
-            query.execute()
+        # TODO validate by proper cache table
+        if hasattr(db, entity_type):
+            db_cls = getattr(db, entity_type)
 
-        client = get_api_client()
+        else:
+            raise Exception("Unknown entity type")
 
-        for entity_type in updating_entity_types:
-            api_suffix = cls.entity_type_api_map[entity_type]
-            Obj = get_resource_api(api_suffix, client.connection)
-            try:
-                res = Obj.get_name_uuid_map({"length": 100})
-                for name, uuid in res.items():
-                    cls.create(
-                        entity_type=entity_type, entity_name=name, entity_uuid=uuid
-                    )
-            except Exception:
-                pc_ip = client.connection.host
-                LOG.warning("Cannot fetch data from {}".format(pc_ip))
+        return db_cls.get_entity_uuid(**kwargs)
+
+    @classmethod
+    def sync(cls):
+        """Update the cache by latest data"""
+
+        db = get_db_handle()
+        db_tables = db.registered_tables
+
+        # Find cache tables and sync data
+        for table in db_tables:
+            if hasattr(table, "__cache_type__"):
+                table.sync()
 
     @classmethod
     def clear_entities(cls):
         """Deletes all the data present in the cache"""
 
         db = get_db_handle()
-        for db_entity in db.cache_table.select():
-            db_entity.delete_instance()
+        db_tables = db.registered_tables
+
+        # Find cache tables and clear data
+        for table in db_tables:
+            if hasattr(table, "__cache_type__"):
+                table.clear()
 
     @classmethod
-    def list(cls):
-        """return the list of entities stored in db"""
-
+    def show_data(cls):
         db = get_db_handle()
-        cache_data = []
-        for entity in db.cache_table.select():
-            cache_data.append(entity.get_detail_dict())
+        db_tables = db.registered_tables
 
-        return cache_data
+        # Find cache tables and clear data
+        for table in db_tables:
+            if hasattr(table, "__cache_type__"):
+                cache_type = table.__cache_type__
+                click.echo("\n{}".format(cache_type.upper()))
+                table.show_data()
