@@ -94,7 +94,7 @@ def clone_from_image_service(
     if not image_name:
         raise ValueError("image_name not provided !!!")
 
-    image_uuid = Cache.get_entity_uuid("AHV_DISK_IMAGE", image_name)
+    image_uuid = Cache.get_entity_uuid(entity_type="ahv_disk_image", name=image_name)
     if not image_uuid:
         raise Exception(
             "Ahv Disk Image {} not found. Please run: calm update cache".format(

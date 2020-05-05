@@ -79,33 +79,30 @@ class AhvSubnetsCache(CacheTableBase):
     __cache_type__ = "ahv_subnet"
     name = CharField()
     uuid = CharField()
-    cluster_name = CharField()
+    cluster = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
     def get_detail_dict(self):
         return {
             "name": self.name,
             "uuid": self.uuid,
-            "cluster_name": self.cluster_name,
+            "cluster": self.cluster,
             "last_update_time": self.last_update_time,
         }
 
     @classmethod
     def create(cls, **kwargs):
         super().create(
-            name=kwargs["name"],
-            uuid=kwargs["uuid"],
-            cluster_name=kwargs["cluster_name"],
+            name=kwargs["name"], uuid=kwargs["uuid"], cluster=kwargs["cluster"],
         )
 
     @classmethod
     def get_entity_uuid(cls, **kwargs):
 
         try:
-            if kwargs.get("cluster_name"):
+            if kwargs.get("cluster"):
                 entity = super().get(
-                    cls.name == kwargs["name"],
-                    cls.cluster_name == kwargs["cluster_name"],
+                    cls.name == kwargs["name"], cls.cluster == kwargs["cluster"],
                 )
 
             else:
@@ -128,7 +125,7 @@ class AhvSubnetsCache(CacheTableBase):
                 [
                     highlight_text(entity_data["name"]),
                     highlight_text(entity_data["uuid"]),
-                    highlight_text(entity_data["cluster_name"]),
+                    highlight_text(entity_data["cluster"]),
                     highlight_text(last_update_time),
                 ]
             )
@@ -152,10 +149,9 @@ class AhvSubnetsCache(CacheTableBase):
             name = entity["status"]["name"]
             uuid = entity["metadata"]["uuid"]
             cluster_ref = entity["status"]["cluster_reference"]
-
             cluster_name = cluster_ref.get("name", "")
 
-            cls.create(name=name, uuid=uuid, cluster_name=cluster_name)
+            cls.create(name=name, uuid=uuid, cluster=cluster_name)
 
     class Meta:
         database = dsl_database

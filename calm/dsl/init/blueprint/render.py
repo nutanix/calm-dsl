@@ -18,7 +18,7 @@ def render_ahv_template(template, bp_name):
     config = get_config()
 
     project_name = config["PROJECT"].get("name", "default")
-    project_uuid = Cache.get_entity_uuid("PROJECT", project_name)
+    project_uuid = Cache.get_entity_uuid(entity_type="project", name=project_name)
 
     LOG.info("Fetching ahv subnets attached to the project {}".format(project_name))
     res, err = client.project.read(project_uuid)
