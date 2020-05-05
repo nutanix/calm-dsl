@@ -34,8 +34,13 @@ class MyAhvVm(AhvVm):
         AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(Era),
     ]
     nics = [
-        AhvVmNic(subnet="vlan.0"),
-        AhvVmNic.DirectNic.egress(subnet="vlan.0"),
+        AhvVmNic(subnet="vlan.0", cluster="calmdev1"),
+        AhvVmNic.DirectNic.egress(subnet="vlan.0", cluster="calmdev1"),
+        AhvVmNic.DirectNic.ingress(subnet="vlan.0", cluster="calmdev1"),
+        AhvVmNic.DirectNic.tap(subnet="vlan.0"),
+        AhvVmNic.NormalNic.egress(subnet="vlan.0", cluster="calmdev1"),
+        AhvVmNic.NormalNic.ingress(subnet="vlan.0"),
+        AhvVmNic.NormalNic.tap(subnet="vlan.0"),
         AhvVmNic.NetworkFunctionNic.tap(),
         AhvVmNic.NetworkFunctionNic(),
     ]
