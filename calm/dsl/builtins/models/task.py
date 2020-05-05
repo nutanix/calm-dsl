@@ -579,7 +579,10 @@ def http_task(
             "auth_type": "basic",
             "basic_auth": {
                 "username": credential.username,
-                "password": {"value": credential.secret.get("value")},
+                "password": {
+                    "value": credential.secret.get("value"),
+                    "attrs": {"is_secret_modified": True},
+                },
             },
         }
 
