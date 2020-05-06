@@ -9,6 +9,7 @@ from .package import PackageType
 
 
 ADAPTER_INDEX_MAP = {"SCSI": 0, "PCI": 0, "IDE": 0, "SATA": 0}
+IMAGE_TYPE_MAP = {"DISK": "DISK_IMAGE", "CDROM": "ISO_IMAGE"}
 BOOT_CONFIG = {}
 
 
@@ -94,7 +95,11 @@ def clone_from_image_service(
     if not image_name:
         raise ValueError("image_name not provided !!!")
 
-    image_uuid = Cache.get_entity_uuid(entity_type="ahv_disk_image", name=image_name)
+    image_uuid = Cache.get_entity_uuid(
+        entity_type="ahv_disk_image",
+        name=image_name,
+        image_type=IMAGE_TYPE_MAP[device_type],
+    )
     if not image_uuid:
         raise Exception(
             "Ahv Disk Image {} not found. Please run: calm update cache".format(

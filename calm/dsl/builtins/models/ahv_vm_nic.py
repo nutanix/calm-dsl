@@ -46,9 +46,8 @@ def create_ahv_nic(
         kwargs["subnet_reference"] = {"name": subnet, "uuid": subnet_uuid}
 
     if network_function_chain:
-        # TODO update cache call for network function chains
         nfc_uuid = Cache.get_entity_uuid(
-            "AHV_NETWORK_FUNCTION_CHAIN", network_function_chain
+            entity_type="ahv_network_function_chain", name=network_function_chain
         )
 
         if not nfc_uuid:

@@ -1,7 +1,4 @@
-import click
-import arrow
 import datetime
-from prettytable import PrettyTable
 
 from calm.dsl.store import Cache
 from calm.dsl.store import Version

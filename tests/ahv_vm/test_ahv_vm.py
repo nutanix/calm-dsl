@@ -25,8 +25,8 @@ class MyAhvVm(AhvVm):
     cores_per_vCPU = 1
     disks = [
         AhvVmDisk(image_name="Centos7", bootable=True),
-        AhvVmDisk.CdRom(image_name="Centos7"),
-        AhvVmDisk.CdRom.Sata(image_name="Centos7"),
+        AhvVmDisk.CdRom(image_name="SQLServer2014SP2"),
+        AhvVmDisk.CdRom.Sata(image_name="SQLServer2014SP2"),
         AhvVmDisk.Disk.Scsi.cloneFromImageService(image_name="AHV_CENTOS_76"),
         AhvVmDisk.Disk.Pci.allocateOnStorageContainer(size=12),
         AhvVmDisk.CdRom.Sata.emptyCdRom(),

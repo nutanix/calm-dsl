@@ -11,7 +11,6 @@ from peewee import (
 import datetime
 import click
 import arrow
-import datetime
 from prettytable import PrettyTable
 
 from calm.dsl.api import get_resource_api, get_api_client
@@ -114,6 +113,12 @@ class AhvSubnetsCache(CacheTableBase):
 
     @classmethod
     def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
         table = PrettyTable()
         table.field_names = ["NAME", "UUID", "CLUSTER_NAME", "LAST UPDATED"]
         for entity in cls.select():
@@ -161,6 +166,7 @@ class AhvSubnetsCache(CacheTableBase):
 class AhvImagesCache(CacheTableBase):
     __cache_type__ = "ahv_disk_image"
     name = CharField()
+    image_type = CharField()
     uuid = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
@@ -168,20 +174,23 @@ class AhvImagesCache(CacheTableBase):
         return {
             "name": self.name,
             "uuid": self.uuid,
+            "image_type": self.image_type,
             "last_update_time": self.last_update_time,
         }
 
     @classmethod
     def create(cls, **kwargs):
         super().create(
-            name=kwargs["name"], uuid=kwargs["uuid"],
+            name=kwargs["name"], uuid=kwargs["uuid"], image_type=kwargs["image_type"]
         )
 
     @classmethod
     def get_entity_uuid(cls, **kwargs):
 
         try:
-            entity = super().get(cls.name == kwargs["name"])
+            entity = super().get(
+                cls.name == kwargs["name"], cls.image_type == kwargs["image_type"]
+            )
             return entity.uuid
 
         except DoesNotExist:
@@ -204,13 +213,20 @@ class AhvImagesCache(CacheTableBase):
         for entity in res["entities"]:
             name = entity["status"]["name"]
             uuid = entity["metadata"]["uuid"]
-            cls.create(name=name, uuid=uuid)
+            image_type = entity["status"]["resources"]["image_type"]
+            cls.create(name=name, uuid=uuid, image_type=image_type)
 
     @classmethod
     def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
         table = PrettyTable()
-        table.field_names = ["NAME", "UUID", "LAST UPDATED"]
-        for entity in cls.select():
+        table.field_names = ["NAME", "UUID", "IMAGE_TYPE", "LAST UPDATED"]
+        for entity in cls.select().order_by(cls.image_type):
             entity_data = entity.get_detail_dict()
             last_update_time = arrow.get(
                 entity_data["last_update_time"].astimezone(datetime.timezone.utc)
@@ -219,6 +235,7 @@ class AhvImagesCache(CacheTableBase):
                 [
                     highlight_text(entity_data["name"]),
                     highlight_text(entity_data["uuid"]),
+                    highlight_text(entity_data["image_type"]),
                     highlight_text(last_update_time),
                 ]
             )
@@ -279,6 +296,89 @@ class ProjectCache(CacheTableBase):
 
     @classmethod
     def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = ["NAME", "UUID", "LAST UPDATED"]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("name", "uuid")
+
+
+class AhvNetworkFunctionChain(CacheTableBase):
+    __cache_type__ = "ahv_network_function_chain"
+    name = CharField()
+    uuid = CharField()
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self):
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "last_update_time": self.last_update_time,
+        }
+
+    @classmethod
+    def create(cls, **kwargs):
+        super().create(
+            name=kwargs["name"], uuid=kwargs["uuid"],
+        )
+
+    @classmethod
+    def get_entity_uuid(cls, **kwargs):
+
+        try:
+            entity = super().get(cls.name == kwargs["name"])
+            return entity.uuid
+
+        except DoesNotExist:
+            return None
+
+    @classmethod
+    def sync(cls):
+
+        # clear old data
+        cls.clear()
+
+        # update by latest data
+        client = get_api_client()
+        Obj = get_resource_api("network_function_chains", client.connection)
+        res, err = Obj.list({"length": 1000})
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        for entity in res["entities"]:
+            name = entity["status"]["name"]
+            uuid = entity["metadata"]["uuid"]
+            cls.create(name=name, uuid=uuid)
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
         table = PrettyTable()
         table.field_names = ["NAME", "UUID", "LAST UPDATED"]
         for entity in cls.select():
