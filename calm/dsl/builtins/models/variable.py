@@ -83,7 +83,6 @@ def simple_variable(
 ):
     kwargs = {"is_hidden": is_hidden, "is_mandatory": is_mandatory}
     editables = {}
-    name = name
     if runtime:
         editables = {"value": True}
         kwargs["editables"] = editables
@@ -122,7 +121,6 @@ def simple_variable_secret(
 ):
     kwargs = {"is_hidden": is_hidden, "is_mandatory": is_mandatory}
     editables = {}
-    name = name
     if runtime:
         editables = {"value": True}
         kwargs["editables"] = editables

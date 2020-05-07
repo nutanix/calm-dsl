@@ -12,4 +12,4 @@ from calm.dsl.api import get_api_client
 from .mpis_commands import *  # NoQA
 from .app_icon_commands import *  # NoQA
 
-__all__ = [main, get_api_client]
+__all__ = ["main", "get_api_client"]

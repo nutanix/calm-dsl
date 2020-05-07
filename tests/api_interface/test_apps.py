@@ -5,11 +5,11 @@ import time
 
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.bps import launch_blueprint_simple
+from calm.dsl.tools import get_logging_handle
 from calm.dsl.cli.constants import RUNLOG, APPLICATION
 from tests.api_interface.entity_spec.existing_vm_bp import (
     ExistingVMBlueprint as Blueprint,
 )
-from calm.dsl.tools import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -176,7 +176,7 @@ class TestApps:
                         if state in RUNLOG.FAILURE_STATES:
                             pytest.fail("action {} failed".format(action_name))
                             break
-                        if state not in RUNLOG.TERMINAL_STATES:
+                        elif state not in RUNLOG.TERMINAL_STATES:
                             LOG.info("Action {} is in process".format(action_name))
                             break
                         else:

@@ -642,7 +642,6 @@ class TestMPICommands:
             pytest.fail("Deletion of marketplace blueprint in PENDING state failed")
         LOG.info("Success")
 
-    @pytest.mark.slow
     def test_mpi_launch(self):
         """
             Steps:

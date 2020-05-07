@@ -21,9 +21,6 @@ init_schema_dict = {
 }
 
 
-config_schema = Schema(config_schema_dict)
-
-
 def validate_config(config):
     """validates the config schema"""
 
