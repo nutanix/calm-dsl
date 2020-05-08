@@ -156,7 +156,6 @@ def describe_nutanix_pc_account(provider_data):
     config = get_config()
     pc_port = provider_data["port"]
     host_pc = provider_data["host_pc"]
-    pc_uuid = provider_data["pc_uuid"]
     pc_ip = provider_data["server"] if not host_pc else config["SERVER"]["pc_ip"]
 
     cluster_list = provider_data["cluster_account_reference_list"]

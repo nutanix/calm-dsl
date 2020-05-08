@@ -12,6 +12,8 @@ from calm.dsl.tools import StrictDraft7Validator, get_logging_handle
 from calm.dsl.builtins import ref
 from calm.dsl.store import Version
 
+from .constants import AHV as AhvConstants
+
 LOG = get_logging_handle(__name__)
 Provider = get_provider_interface()
 
@@ -45,7 +47,7 @@ class AhvVmProvider(Provider):
 
             pkg = img_cls.compile()
             vm_image_type = pkg["options"]["resources"]["image_type"]
-            disk_img_type = AhvBase.IMAGE_TYPES[
+            disk_img_type = AhvConstants.IMAGE_TYPES[
                 disk["device_properties"]["device_type"]
             ]
 
@@ -77,20 +79,37 @@ class AhvVmProvider(Provider):
 class AhvBase:
     """Base class for ahv provider specific apis"""
 
-    # constants used for api calls
-    DEVICE_TYPES = {"CD_ROM": "CDROM", "DISK": "DISK"}
+    api_handlers = OrderedDict()
+    __api_version__ = None
 
-    DEVICE_BUS = {"SATA": "SATA", "IDE": "IDE"}
-    DEVICE_BUS = {
-        "CDROM": {"SATA": "SATA", "IDE": "IDE"},
-        "DISK": {"SCSI": "SCSI", "PCI": "PCI"},
-    }
-    IMAGE_TYPES = {"DISK": "DISK_IMAGE", "CDROM": "ISO_IMAGE"}
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
 
-    GUEST_CUSTOMIZATION_SCRIPT_TYPES = ["cloud_init", "sysprep"]
+        version = getattr(cls, "__api_version__")
+        if version:
+            cls.api_handlers[version] = cls
 
-    SYS_PREP_INSTALL_TYPES = ["FRESH", "PREPARED"]
-    BOOT_TYPES = {"Legacy BIOS": "LEGACY", "UEFI": "UEFI"}
+    @classmethod
+    def get_version(cls):
+        return getattr(cls, "__api_version__")
+
+    def images(self, *args, **kwargs):
+        raise NotImplementedError("images call not implemented")
+
+    def subnets(self, *args, **kwargs):
+        raise NotImplementedError("subnets call not implemented")
+
+    def categories(self, *args, **kwargs):
+        raise NotImplementedError("categories call not implemented")
+
+
+class AhvNew(AhvBase):
+    """ahv api object for calm_version >= 2.9.0"""
+
+    __api_version__ = "2.9.0"
+    SUBNETS = "nutanix/v1/subnets"
+    IMAGES = "nutanix/v1/images"
+    GROUPS = "nutanix/v1/groups"
     CATEGORIES_PAYLOAD = {
         "entity_type": "category",
         "filter_criteria": "name!=CalmApplication;name!=CalmDeployment;name!=CalmService;name!=CalmPackage;name!=CalmProject;name!=CalmUser;name!=CalmVmUniqueIdentifier;name!=CalmClusterUuid",
@@ -107,100 +126,77 @@ class AhvBase:
         "query_name": "prism:CategoriesQueryModel",
     }
 
-    api_handlers = OrderedDict()
-    __api_version__ = None
+    def __init__(self, connection):
+        self.connection = connection
 
-    @classmethod
-    def get_version(cls):
-        return getattr(cls, "__api_version__")
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-
-        version = getattr(cls, "__api_version__")
-        if version:
-            cls.api_handlers[version] = cls
-
-    def images(self, payload):
+    def images(self, *args, **kwargs):
         Obj = get_resource_api(self.IMAGES, self.connection)
-        res, err = Obj.list(payload)
+        limit = kwargs.get("length", 250)
+        offset = kwargs.get("offset", 0)
+        filter_query = kwargs.get("filter_query", "")
+
+        account_uuid = kwargs.get("account_uuid", None)
+        if account_uuid:
+            filter_query = filter_query + ";account_uuid=={}".format(account_uuid)
+
+        if filter_query.startswith(";"):
+            filter_query = filter_query[1:]
+
+        params = {"length": limit, "offset": offset, "filter": filter_query}
+        res, err = Obj.list(params)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
         res = res.json()
         return res
 
-    def subnets(self, payload):
+    def subnets(self, *args, **kwargs):
         Obj = get_resource_api(self.SUBNETS, self.connection)
-        res, err = Obj.list(payload)
+        limit = kwargs.get("length", 250)
+        offset = kwargs.get("offset", 0)
+        filter_query = kwargs.get("filter_query", "")
+
+        account_uuid = kwargs.get("account_uuid", None)
+        if account_uuid:
+            filter_query = filter_query + ";account_uuid=={}".format(account_uuid)
+
+        if filter_query.startswith(";"):
+            filter_query = filter_query[1:]
+
+        params = {"length": limit, "offset": offset, "filter": filter_query}
+        res, err = Obj.list(params)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-        return res.json()
+        res = res.json()
         return res
 
-    def groups(self, payload):
-        Obj = get_resource_api(self.GROUPS, self.connection)
+    def categories(self, *args, **kwargs):
+        payload = self.CATEGORIES_PAYLOAD
+        host_pc = kwargs.get("host_pc", False)
 
-        if not payload:
-            raise Exception("no payload")
-
-        return Obj.create(payload)
-
-    def categories(self, payload):
-        response, err = self.groups(payload)
-        categories = []
-
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        response = response.json()
-        for group in response["group_results"]:
-
-            key = group["group_summaries"]["sum:name"]["values"][0]["values"][0]
-
-            for entity in group["entity_results"]:
-                value = entity["data"][0]["values"][0]["values"][0]
-                categories.append({"key": key, "value": value})
-
-        return categories
-
-
-class AhvNew(AhvBase):
-    """supports api for multipc support"""
-
-    __api_version__ = "2.9.0"
-    SUBNETS = "nutanix/v1/subnets"
-    IMAGES = "nutanix/v1/images"
-    GROUPS = "nutanix/v1/groups"
-
-    def __init__(self, connection):
-        self.connection = connection
-
-    # TODO Fix after Bug CALM-17213 is resolved
-    # Remove dependecy for host_pc after bug is resolved
-    def groups(self, payload, host_pc=False):
-        
-        api_suffix = self.GROUPS if not host_pc else "groups"
-        Obj = get_resource_api(api_suffix, self.connection)
-
-        if not payload:
-            raise Exception("no payload")
-
+        # Note: Api response is bugged due to CALM-17213
+        # TODO: Remove dependecy for host_pc after bug is resolved
         if host_pc:
-            return Obj.create(payload)
+            Obj = get_resource_api("groups", self.connection)
+            res, err = Obj.create(payload)
+
         else:
-            return Obj.list(payload)
-    
-    def categories(self, payload, host_pc=False):
-        response, err = self.groups(payload = payload, host_pc=host_pc)
-        categories = []
+            Obj = get_resource_api(self.GROUPS, self.connection)
+            account_uuid = kwargs.get("account_uuid", None)
+            if account_uuid:
+                payload["filter_criteria"] = payload[
+                    "filter_criteria"
+                ] + ";account_uuid=={}".format(account_uuid)
+
+            res, err = Obj.list(payload)
 
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-        response = response.json()
-        for group in response["group_results"]:
+        res = res.json()
+        categories = []
+        for group in res["group_results"]:
             key = group["group_summaries"]["sum:name"]["values"][0]["values"][0]
             for entity in group["entity_results"]:
                 value = entity["data"][0]["values"][0]["values"][0]
@@ -210,16 +206,77 @@ class AhvNew(AhvBase):
 
 
 class Ahv(AhvBase):
-    """ahv api object used before calm 2.9.0"""
+    """ahv api object for calm_version < 2.9.0"""
 
-    # TODO Replce with proper api version
+    # TODO Replace with proper api version
     __api_version__ = "0"
     SUBNETS = "subnets"
     IMAGES = "images"
     GROUPS = "groups"
+    CATEGORIES_PAYLOAD = {
+        "entity_type": "category",
+        "filter_criteria": "name!=CalmApplication;name!=CalmDeployment;name!=CalmService;name!=CalmPackage;name!=CalmProject;name!=CalmUser;name!=CalmVmUniqueIdentifier;name!=CalmClusterUuid",
+        "grouping_attribute": "abac_category_key",
+        "group_sort_attribute": "name",
+        "group_count": 60,
+        "group_attributes": [
+            {"attribute": "name", "ancestor_entity_type": "abac_category_key"}
+        ],
+        "group_member_count": 1000,
+        "group_member_offset": 0,
+        "group_member_sort_attribute": "value",
+        "group_member_attributes": [{"attribute": "value"}],
+        "query_name": "prism:CategoriesQueryModel",
+    }
 
     def __init__(self, connection):
         self.connection = connection
+
+    def images(self, *args, **kwargs):
+        Obj = get_resource_api(self.IMAGES, self.connection)
+        limit = kwargs.get("length", 250)
+        offset = kwargs.get("offset", 0)
+        filter_query = kwargs.get("filter_query", "")
+
+        params = {"length": limit, "offset": offset, "filter": filter_query}
+        res, err = Obj.list(params)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        return res
+
+    def subnets(self, *args, **kwargs):
+        Obj = get_resource_api(self.SUBNETS, self.connection)
+        limit = kwargs.get("length", 250)
+        offset = kwargs.get("offset", 0)
+        filter_query = kwargs.get("filter_query", "")
+
+        params = {"length": limit, "offset": offset, "filter": filter_query}
+        res, err = Obj.list(params)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        return res
+
+    def categories(self, *args, **kwargs):
+        Obj = get_resource_api(self.GROUPS, self.connection)
+        payload = self.CATEGORIES_PAYLOAD
+
+        res, err = Obj.create(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        categories = []
+        for group in res["group_results"]:
+            key = group["group_summaries"]["sum:name"]["values"][0]["values"][0]
+            for entity in group["entity_results"]:
+                value = entity["data"][0]["values"][0]["values"][0]
+                categories.append({"key": key, "value": value})
+
+        return categories
 
 
 def highlight_text(text, **kwargs):
@@ -230,7 +287,7 @@ def highlight_text(text, **kwargs):
 def create_spec(client):
 
     spec = {}
-    Obj = AhvVmProvider.get_api_obj()
+    AhvObj = AhvVmProvider.get_api_obj()
 
     schema = AhvVmProvider.get_provider_spec()
     path = []  # Path to the key
@@ -258,7 +315,7 @@ def create_spec(client):
         else:
             project_name = project_list[ind - 1]
             project_id = projects[project_list[ind - 1]]
-            click.echo("{} selected".format(highlight_text(project_list[ind - 1])))
+            click.echo("{} selected".format(highlight_text(project_name)))
             break
 
     res, err = client.project.read(project_id)
@@ -286,33 +343,24 @@ def create_spec(client):
     for account in accounts:
         reg_accounts.append(account["uuid"])
 
-    # Fetching ahv account id from project in case of multipc(calm version>=2.9.0)
+    # As account_uuid is required for versions>2.9.0
     account_uuid = ""
-    if isinstance(Obj, AhvNew):
-        payload = {"length": 250, "filter": "type==nutanix_pc"}
-        res, err = client.account.list(payload)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    is_host_pc = True
+    payload = {"length": 250, "filter": "type==nutanix_pc"}
+    res, err = client.account.list(payload)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-        res = res.json()
-        for entity in res["entities"]:
-            entity_name = entity["metadata"]["name"]
-            entity_id = entity["metadata"]["uuid"]
-            if entity_id in reg_accounts:
-                account_uuid = entity_id
-                break
+    res = res.json()
+    for entity in res["entities"]:
+        entity_id = entity["metadata"]["uuid"]
+        if entity_id in reg_accounts:
+            account_uuid = entity_id
+            break
 
-        if not account_uuid:
-            LOG.error(
-                "No Ahv account found! Please register one to project {}.".format(
-                    project_name
-                )
-            )
-            sys.exit(-1)
-        
-        # Check whether ahv account is host pc or not
-        # https://jira.nutanix.com/browse/CALM-17213
-        payload = {"length": 250, "filter":"_entity_id_=={}".format(account_uuid)}
+    # TODO Host PC dependency for categories call due to bug https://jira.nutanix.com/browse/CALM-17213
+    if account_uuid:
+        payload = {"length": 250, "filter": "_entity_id_=={}".format(account_uuid)}
         res, err = client.account.list(payload)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -334,15 +382,8 @@ def create_spec(client):
         "\n{}(y/n)".format(highlight_text("Want to add some categories")), default="n"
     )
     if choice[0] == "y":
-        payload = Obj.CATEGORIES_PAYLOAD
-
-        # Add ahv account id from project in case of multipc(calm version>=2.9.0)
-        # TODO Bug CALM-17213 for using /groups/list for host pc. 
-        # Remove dependecy for host_pc after bug is resolved
-        if isinstance(Obj, AhvNew) and not is_host_pc:
-            payload["filter_criteria"] += ";account_uuid=={}".format(account_uuid)
-
-        categories = Obj.categories(payload, host_pc=is_host_pc)
+        # TODO Remove dependecy for host_pc after bug CALM-17213 is resolved
+        categories = AhvObj.categories(host_pc=is_host_pc, account_uuid=account_uuid)
         if not categories:
             click.echo("\n{}\n".format(highlight_text("No Category present")))
 
@@ -435,7 +476,7 @@ def create_spec(client):
         )
 
         click.echo("\nChoose from given Device Types :")
-        device_types = list(Obj.DEVICE_TYPES.keys())
+        device_types = list(AhvConstants.DEVICE_TYPES.keys())
         for index, device_type in enumerate(device_types):
             click.echo("\t{}. {}".format(index + 1, highlight_text(device_type)))
 
@@ -445,12 +486,12 @@ def create_spec(client):
                 click.echo("Invalid index !!! ")
 
             else:
-                image["device_type"] = Obj.DEVICE_TYPES[device_types[res - 1]]
+                image["device_type"] = AhvConstants.DEVICE_TYPES[device_types[res - 1]]
                 click.echo("{} selected".format(highlight_text(image["device_type"])))
                 break
 
         click.echo("\nChoose from given Device Bus :")
-        device_bus_list = list(Obj.DEVICE_BUS[image["device_type"]].keys())
+        device_bus_list = list(AhvConstants.DEVICE_BUS[image["device_type"]].keys())
         for index, device_bus in enumerate(device_bus_list):
             click.echo("\t{}. {}".format(index + 1, highlight_text(device_bus)))
 
@@ -460,22 +501,14 @@ def create_spec(client):
                 click.echo("Invalid index !!! ")
 
             else:
-                image["adapter_type"] = Obj.DEVICE_BUS[image["device_type"]][
+                image["adapter_type"] = AhvConstants.DEVICE_BUS[image["device_type"]][
                     device_bus_list[res - 1]
                 ]
                 click.echo("{} selected".format(highlight_text(image["adapter_type"])))
                 break
 
         # Add image details
-        payload = {
-            "length": 1000,
-            "offset": 0,
-        }
-        # Add ahv account id from project in case of multipc(calm version>=2.9.0)
-        if isinstance(Obj, AhvNew):
-            payload["filter"] = "account_uuid=={}".format(account_uuid)
-
-        res = Obj.images(payload)
+        res = AhvObj.images(account_uuid=account_uuid)
         img_name_uuid_map = {}
         for entity in res.get("entities", []):
             img_type = entity["status"]["resources"].get("image_type", None)
@@ -484,7 +517,7 @@ def create_spec(client):
             if not img_type:
                 continue
 
-            if img_type == Obj.IMAGE_TYPES[image["device_type"]]:
+            if img_type == AhvConstants.IMAGE_TYPES[image["device_type"]]:
                 img_name_uuid_map[entity["status"]["name"]] = entity["metadata"]["uuid"]
 
         images = list(img_name_uuid_map.keys())
@@ -551,7 +584,7 @@ def create_spec(client):
             break
 
     click.echo("\nChoose from given Boot Type :")
-    boot_types = list(Obj.BOOT_TYPES.keys())
+    boot_types = list(AhvConstants.BOOT_TYPES.keys())
     for index, boot_type in enumerate(boot_types):
         click.echo("\t{}. {}".format(index + 1, highlight_text(boot_type)))
 
@@ -561,8 +594,8 @@ def create_spec(client):
             click.echo("Invalid index !!! ")
 
         else:
-            boot_type = Obj.BOOT_TYPES[boot_types[res - 1]]
-            if boot_type == Obj.BOOT_TYPES["UEFI"]:
+            boot_type = AhvConstants.BOOT_TYPES[boot_types[res - 1]]
+            if boot_type == AhvConstants.BOOT_TYPES["UEFI"]:
                 spec["resources"]["boot_config"]["boot_type"] = boot_type
             click.echo("{} selected".format(highlight_text(boot_type)))
             break
@@ -577,7 +610,7 @@ def create_spec(client):
             vdisk = {}
 
             click.echo("\nChoose from given Device Types: ")
-            device_types = list(Obj.DEVICE_TYPES.keys())
+            device_types = list(AhvConstants.DEVICE_TYPES.keys())
             for index, device_type in enumerate(device_types):
                 click.echo("\t{}. {}".format(index + 1, highlight_text(device_type)))
 
@@ -587,14 +620,16 @@ def create_spec(client):
                     click.echo("Invalid index !!! ")
 
                 else:
-                    vdisk["device_type"] = Obj.DEVICE_TYPES[device_types[res - 1]]
+                    vdisk["device_type"] = AhvConstants.DEVICE_TYPES[
+                        device_types[res - 1]
+                    ]
                     click.echo(
                         "{} selected".format(highlight_text(vdisk["device_type"]))
                     )
                     break
 
             click.echo("\nChoose from given Device Bus :")
-            device_bus_list = list(Obj.DEVICE_BUS[vdisk["device_type"]].keys())
+            device_bus_list = list(AhvConstants.DEVICE_BUS[vdisk["device_type"]].keys())
             for index, device_bus in enumerate(device_bus_list):
                 click.echo("\t{}. {}".format(index + 1, highlight_text(device_bus)))
 
@@ -604,9 +639,9 @@ def create_spec(client):
                     click.echo("Invalid index !!! ")
 
                 else:
-                    vdisk["adapter_type"] = Obj.DEVICE_BUS[vdisk["device_type"]][
-                        device_bus_list[res - 1]
-                    ]
+                    vdisk["adapter_type"] = AhvConstants.DEVICE_BUS[
+                        vdisk["device_type"]
+                    ][device_bus_list[res - 1]]
                     click.echo(
                         "{} selected".format(highlight_text(vdisk["adapter_type"]))
                     )
@@ -614,7 +649,7 @@ def create_spec(client):
 
             path.append("disk_size_mib")
 
-            if vdisk["device_type"] == Obj.DEVICE_TYPES["DISK"]:
+            if vdisk["device_type"] == AhvConstants.DEVICE_TYPES["DISK"]:
                 click.echo("")
                 msg = "Enter disk size(GB)"
                 vdisk["size"] = get_field(schema, path, option, default=8, msg=msg)
@@ -652,18 +687,10 @@ def create_spec(client):
     if choice[0] == "y":
         nics = []
         if subnets_list:
-            payload = {
-                "length": 1000,
-                "filter": "(_entity_id_=={})".format(
-                    ",_entity_id_==".join(subnets_list)
-                ),
-            }
-            # Add ahv account id from project in case of multipc(calm version>=2.9.0)
-            if isinstance(Obj, AhvNew):
-                payload["filter"] = payload["filter"] + ";account_uuid=={}".format(
-                    account_uuid
-                )
-            nics = Obj.subnets(payload)
+            filter_query = "(_entity_id_=={})".format(
+                ",_entity_id_==".join(subnets_list),
+            )
+            nics = AhvObj.subnets(account_uuid=account_uuid, filter_query=filter_query)
             nics = nics["entities"]
 
         if not (nics and subnets_list):
@@ -743,7 +770,7 @@ def create_spec(client):
     )
     if choice[0] == "y":
         path.append("guest_customization")
-        script_types = Obj.GUEST_CUSTOMIZATION_SCRIPT_TYPES
+        script_types = AhvConstants.GUEST_CUSTOMIZATION_SCRIPT_TYPES
 
         click.echo("\nChoose from given script types ")
         for index, scriptType in enumerate(script_types):
@@ -773,7 +800,7 @@ def create_spec(client):
             path.append("sysprep")
             script = {}
 
-            install_types = Obj.SYS_PREP_INSTALL_TYPES
+            install_types = AhvConstants.SYS_PREP_INSTALL_TYPES
             click.echo("\nChoose from given install types ")
             for index, value in enumerate(install_types):
                 click.echo("\t {}. {}".format(str(index + 1), highlight_text(value)))

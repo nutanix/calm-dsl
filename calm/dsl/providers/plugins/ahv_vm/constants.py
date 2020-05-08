@@ -1,8 +1,4 @@
 class AHV:
-    VERSION = "nutanix/v1"
-    SUBNETS = "{}/subnets". format(VERSION)
-    IMAGES = "{}/images". format(VERSION)
-    GROUPS = "{}/groups". format(VERSION)
     DEVICE_TYPES = {"CD_ROM": "CDROM", "DISK": "DISK"}
 
     DEVICE_BUS = {"SATA": "SATA", "IDE": "IDE"}

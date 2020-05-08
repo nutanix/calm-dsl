@@ -70,7 +70,7 @@ class Provider(ProviderBase):
     @classmethod
     def create_spec(cls):
         raise NotImplementedError("Create spec not implemented")
-    
+
     @classmethod
     def get_api_obj(cls):
         """returns object to call provider specific apis"""
