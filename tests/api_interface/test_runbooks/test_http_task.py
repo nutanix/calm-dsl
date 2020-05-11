@@ -3,7 +3,7 @@ import uuid
 
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import RUNLOG
-from tests.api_interface.test_runbooks.test_files.http_task import (HTTPTask,
+from tests.api_interface.test_runbooks.test_files.http_task import (get_http_task_runbook,
                                                                     HTTPTaskWithValidations,
                                                                     HTTPTaskWithoutAuth,
                                                                     HTTPTaskWithIncorrectCode,
@@ -20,6 +20,7 @@ from utils import upload_runbook, poll_runlog_status
 class TestHTTPTasks:
     @pytest.mark.runbook
     @pytest.mark.regression
+    @pytest.mark.now
     def test_http_task(self):
         """ test_http_task, test_http_task_outputin_set_variable,
             test_relative_url_http, test_http_task_without_tls_verify"""
@@ -27,6 +28,7 @@ class TestHTTPTasks:
         client = get_api_client()
         rb_name = "test_httptask_" + str(uuid.uuid4())[-10:]
 
+        HTTPTask = get_http_task_runbook()
         rb = upload_runbook(client, rb_name, HTTPTask)
         rb_state = rb["status"]["state"]
         rb_uuid = rb["metadata"]["uuid"]

@@ -21,45 +21,52 @@ endpoint = CalmEndpoint.HTTP(URL, verify=False, auth=Auth.Basic(AUTH_USERNAME, A
 endpoint_with_tls_verify = CalmEndpoint.HTTP(URL, verify=True, auth=Auth.Basic(AUTH_USERNAME, AUTH_PASSWORD))
 endpoint_with_incorrect_auth = CalmEndpoint.HTTP(URL, verify=False)
 endpoint_without_auth = CalmEndpoint.HTTP(TEST_URL)
-endpoint_payload = change_uuids(read_test_config(file_name="http_endpoint_payload.json"), {})
 
 
-@runbook
-def HTTPTask(endpoints=[endpoint]):
+def get_http_task_runbook():
+    '''returns the runbook for http task'''
 
-    # Creating an endpoint with POST call
-    CalmTask.HTTP.endpoint(
-        "POST",
-        body=json.dumps(endpoint_payload),
-        headers={"Content-Type": "application/json"},
-        content_type="application/json",
-        response_paths={"ep_uuid": "$.metadata.uuid"},
-        status_mapping={200: True},
-        target=ref(endpoint),
-    )
+    global endpoint_payload
+    endpoint_payload = change_uuids(read_test_config(file_name="http_endpoint_payload.json"), {})
 
-    # Check the type of the created endpoint
-    CalmTask.HTTP.endpoint(
-        "GET",
-        relative_url="/" + endpoint_payload['metadata']['uuid'],
-        headers={"Content-Type": "application/json"},
-        content_type="application/json",
-        response_paths={"ep_type": "$.spec.resources.type"},
-        status_mapping={200: True},
-        target=ref(endpoint),
-    )
+    @runbook
+    def HTTPTask(endpoints=[endpoint]):
 
-    # Delete the created endpoint
-    CalmTask.HTTP.endpoint(
-        "DELETE",
-        relative_url="/" + endpoint_payload['metadata']['uuid'],
-        headers={"Content-Type": "application/json"},
-        content_type="application/json",
-        status_mapping={200: True},
-        target=ref(endpoint),
-    )
+        # Creating an endpoint with POST call
+        CalmTask.HTTP.endpoint(
+            "POST",
+            body=json.dumps(endpoint_payload),
+            headers={"Content-Type": "application/json"},
+            content_type="application/json",
+            response_paths={"ep_uuid": "$.metadata.uuid"},
+            status_mapping={200: True},
+            target=ref(endpoint),
+        )
 
-    CalmTask.Exec.escript(name="ExecTask", script='''print "@@{ep_type}@@"''')
+        # Check the type of the created endpoint
+        CalmTask.HTTP.endpoint(
+            "GET",
+            relative_url="/" + endpoint_payload['metadata']['uuid'],
+            headers={"Content-Type": "application/json"},
+            content_type="application/json",
+            response_paths={"ep_type": "$.spec.resources.type"},
+            status_mapping={200: True},
+            target=ref(endpoint),
+        )
+
+        # Delete the created endpoint
+        CalmTask.HTTP.endpoint(
+            "DELETE",
+            relative_url="/" + endpoint_payload['metadata']['uuid'],
+            headers={"Content-Type": "application/json"},
+            content_type="application/json",
+            status_mapping={200: True},
+            target=ref(endpoint),
+        )
+
+        CalmTask.Exec.escript(name="ExecTask", script='''print "@@{ep_type}@@"''')
+
+    return HTTPTask
 
 
 @runbook

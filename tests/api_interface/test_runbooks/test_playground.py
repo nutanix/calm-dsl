@@ -9,7 +9,6 @@ from utils import upload_runbook, poll_run_script_output
 
 class TestPlayground:
     @pytest.mark.runbook
-    @pytest.mark.now
     @pytest.mark.regression
     def test_http_playground(self):
         """ test_http_playground """
