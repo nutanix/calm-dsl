@@ -6,7 +6,6 @@ import click
 from calm.dsl.api import get_api_client
 from calm.dsl.config import get_config
 from calm.dsl.tools import get_logging_handle
-from calm.dsl.builtins import read_spec
 
 from .secrets import find_secret, create_secret
 from .utils import highlight_text
@@ -158,7 +157,8 @@ def create_blueprint_from_json(
     client, path_to_json, name=None, description=None, force_create=False
 ):
 
-    bp_payload = read_spec(path_to_json)
+    with open(path_to_json, "r") as f:
+        bp_payload = json.loads(f.read())
     return create_blueprint(
         client,
         bp_payload,
