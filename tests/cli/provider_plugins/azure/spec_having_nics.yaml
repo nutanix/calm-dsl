@@ -11,8 +11,8 @@ input:
 - "n"   # Want secrets
 - "echo 'Sample azure cloud init script'"   # Cloud Init Script
 - "n"   # Use custom image
-- "127"   # Publisher = Canonical
-- "13"    # Image Offer = UbuntuServer
+- "137"   # Publisher = Canonical
+- "19"    # Image Offer = UbuntuServer
 - "18"    # Image Sku = 18.04-LTS
 - "27"    # Image Version = 18.04.201903121
 - "os-@@{calm_unique_hash}@@-@@{calm_array_index}@@-disk"   # OS Disk Name
@@ -22,7 +22,7 @@ input:
 - "n"   # Want to add data disks
 - "y"   # Want to add nics
 - "nic-@@{calm_unique_hash}@@-@@{calm_array_index}@@-0"   # nic name
-- "3"   # Security Groups = DND-CENTOS-IMAGE-nsg
+- "4"   # Security Groups = DND-CENTOS-IMAGE-nsg
 - "1"   # Virtual network = calm-virtual-network-eastus2
 - "1"   # Subnet = default
 - "public-ip-@@{calm_unique_hash}@@-@@{calm_array_index}@@-0"   # Public ip name
@@ -31,7 +31,7 @@ input:
 - "1"   # Private Ip Allocation method = Dynamic
 - "y"   # Want more nics
 - "nic-@@{calm_unique_hash}@@-@@{calm_array_index}@@-1"   # nic name
-- "3"   # Security Groups = DND-CENTOS-IMAGE-nsg
+- "4"   # Security Groups = DND-CENTOS-IMAGE-nsg
 - "1"   # Virtual network = calm-virtual-network-eastus2
 - "2"   # Subnet = subnet1
 - "public-ip-@@{calm_unique_hash}@@-@@{calm_array_index}@@-1"   # Public ip name

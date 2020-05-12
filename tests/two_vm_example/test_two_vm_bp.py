@@ -2,6 +2,7 @@
 Sample single vm example to convert python dsl to calm v3 api spec
 
 """
+import sys
 
 from calm.dsl.builtins import port, ref, setvar, basic_cred
 from calm.dsl.builtins import Port, Service, Package, Substrate
@@ -12,6 +13,8 @@ CRED_USERNAME = read_local_file(".tests/username")
 CRED_PASSWORD = read_local_file(".tests/password")
 DNS_SERVER = read_local_file(".tests/dns_server_two_vm_example")
 MYSQL_PORT = read_local_file(".tests/mysql_port")
+# Setting the recursion limit to max for
+sys.setrecursionlimit(100000)
 
 
 class MySQLService(Service):
