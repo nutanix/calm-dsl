@@ -38,6 +38,13 @@ def strip_secrets(resources, secret_map, secret_variables, object_lists=[], obje
             "name": default_creds[0]["name"] if default_creds else cred[0]["name"],
         }
 
+    # Remove creds from HTTP endpoints resources
+    auth = resources.get("authentication", {}) or {}
+    if auth.get("type", None) == "basic":
+        name = auth["username"]
+        secret_map[name] = auth.pop("password", {})
+        auth["password"] = {'attrs': {'is_secret_modified': False, 'value': None}}
+
     # Strip secret variable values
     # TODO: Refactor and/or clean this up later
 
@@ -181,6 +188,12 @@ def patch_secrets(resources, secret_map, secret_variables):
     for cred in creds:
         name = cred["name"]
         cred["secret"] = secret_map[name]
+
+    # Add creds back for HTTP endpoint
+    auth = resources.get("authentication", {})
+    username = auth.get("username")
+    if username:
+        auth["password"] = secret_map[username]
 
     for path, secret in secret_variables:
         variable = resources
