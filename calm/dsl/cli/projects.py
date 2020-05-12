@@ -240,9 +240,14 @@ def describe_project(project_name):
     ]
     payload = {"length": 200, "offset": 0, "filter": "state!=DELETED;type!=nutanix"}
     account_name_uuid_map = client.account.get_name_uuid_map(payload)
-    account_uuid_name_map = {
-        v: k for k, v in account_name_uuid_map.items()
-    }  # TODO check it
+    account_uuid_name_map = {}
+    # BUG: Same type of account have multiple uuids (Nutanix clusters)
+    for k, v in account_name_uuid_map.items():
+        if isinstance(v, list):
+            for i in v:
+                account_uuid_name_map[i] = k
+        else:
+            account_uuid_name_map[v] = k
 
     res, err = client.account.list()
     if err:

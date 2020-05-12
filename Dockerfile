@@ -32,4 +32,12 @@ RUN apk del $BUILD_PACKAGES
 COPY dist/calm.dsl*.whl .
 RUN pip3 install --no-cache-dir calm.dsl*.whl --user && rm calm.dsl*.whl
 
-CMD ["sh"]
+# Install bash and auto-completion for calm commands
+RUN apk add --no-cache bash bash-completion
+COPY .bashrc /root/.bashrc
+COPY .bash_completion /root/.bash_completion
+
+ARG tag
+ENV CALM_DSL_TAG=$tag
+
+CMD ["bash"]

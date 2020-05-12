@@ -13,62 +13,75 @@ from .schema import get_schema_details
 LOG = get_logging_handle(__name__)
 
 
-def _validate(vdict, name, value):
-
-    if name.startswith("__") and name.endswith("__"):
+class EntityDict(OrderedDict):
+    @staticmethod
+    def pre_validate(vdict, name, value):
+        """hook to change values before validation, typecast, etc
+        """
         return value
 
-    try:
+    @classmethod
+    def _validate_attr(cls, vdict, name, value):
+        """validates  name-value pair via __validator_dict__ of entity"""
 
-        if name not in vdict:
-            raise TypeError("Unknown attribute {} given".format(name))
-        ValidatorType, is_array = vdict[name]
-        if getattr(ValidatorType, "__is_object__", False):
-            return ValidatorType.validate(value, is_array)
+        value = cls.pre_validate(vdict, name, value)
 
-    except TypeError:
+        if name.startswith("__") and name.endswith("__"):
+            return value
 
-        # Check if value is a variable/action
-        types = EntityTypeBase.get_entity_types()
-        VariableType = types.get("Variable", None)
-        if not VariableType:
-            raise TypeError("Variable type not defined")
-        DescriptorType = types.get("Descriptor", None)
-        if not DescriptorType:
-            raise TypeError("Descriptor type not defined")
-        if not (
-            ("variables" in vdict and isinstance(value, (VariableType,)))
-            or ("actions" in vdict and isinstance(type(value), DescriptorType))
-        ):
-            LOG.debug("Validating object: {}".format(vdict))
-            raise
+        try:
+            if name not in vdict:
+                raise TypeError("Unknown attribute {} given".format(name))
+            ValidatorType, is_array = vdict[name]
+            if getattr(ValidatorType, "__is_object__", False):
+                return ValidatorType.validate(value, is_array)
 
-        # Validate and set variable/action
-        # get validator for variables/action
-        if isinstance(value, VariableType):
-            ValidatorType, _ = vdict["variables"]
-            # Set name attribute in variable
-            setattr(value, "name", name)
+        except TypeError:
+            # Check if value is a variable/action
+            types = EntityTypeBase.get_entity_types()
+            VariableType = types.get("Variable", None)
+            if not VariableType:
+                raise TypeError("Variable type not defined")
+            DescriptorType = types.get("Descriptor", None)
+            if not DescriptorType:
+                raise TypeError("Descriptor type not defined")
+            if not (
+                ("variables" in vdict and isinstance(value, (VariableType,)))
+                or ("actions" in vdict and isinstance(type(value), DescriptorType))
+            ):
+                LOG.debug("Validating object: {}".format(vdict))
+                raise
 
-        elif isinstance(type(value), DescriptorType):
-            ValidatorType = None
-        is_array = False
+            # Validate and set variable/action
+            # get validator for variables/action
+            if isinstance(value, VariableType):
+                ValidatorType, _ = vdict["variables"]
+                # Set name attribute in variable
+                setattr(value, "name", name)
 
-    if ValidatorType is not None:
-        ValidatorType.validate(value, is_array)
-    return value
+            elif isinstance(type(value), DescriptorType):
+                ValidatorType = None
+            is_array = False
 
+        if ValidatorType is not None:
+            ValidatorType.validate(value, is_array)
+        return value
 
-class EntityDict(OrderedDict):
-    def __init__(self, validators):
+    def __init__(self, validators=dict()):
         self.validators = validators
 
     def _validate(self, name, value):
         vdict = self.validators
-        return _validate(vdict, name, value)
+        if vdict:
+            return self._validate_attr(vdict, name, value)
+        return value
 
     def __setitem__(self, name, value):
+
+        # Validate attribute
         value = self._validate(name, value)
+
+        # Set attribute
         super().__setitem__(name, value)
 
 
@@ -118,7 +131,9 @@ class EntityType(EntityTypeBase):
 
     __schema_name__ = None
     __openapi_type__ = None
+    __prepare_dict__ = EntityDict
 
+    @classmethod
     def validate_dict(cls, entity_dict):
         schema = {"type": "object", "properties": cls.__schema_props__}
         validator = StrictDraft7Validator(schema)
@@ -136,18 +151,18 @@ class EntityType(EntityTypeBase):
 
         # Handle base case (Entity)
         if not schema_name:
-            return dict()
+            return mcls.__prepare_dict__()
 
         validators = getattr(mcls, "__validator_dict__")
 
         # Class creation would happen using EntityDict() instead of dict().
         # This is done to add validations to class attrs during class creation.
         # Look at __setitem__ in EntityDict
-        return EntityDict(validators)
+        return mcls.__prepare_dict__(validators)
 
     def __new__(mcls, name, bases, kwargs):
 
-        if not isinstance(kwargs, EntityDict):
+        if not isinstance(kwargs, mcls.__prepare_dict__):
             entitydict = mcls.__prepare__(name, bases)
             for k, v in kwargs.items():
                 entitydict[k] = v
@@ -178,9 +193,13 @@ class EntityType(EntityTypeBase):
 
     @classmethod
     def validate(mcls, name, value):
+
         if hasattr(mcls, "__validator_dict__"):
             vdict = mcls.__validator_dict__
-            return _validate(vdict, name, value)
+            entity_dict = mcls.__prepare_dict__
+            return entity_dict._validate_attr(vdict, name, value)
+
+        return value
 
     def __setattr__(cls, name, value):
 

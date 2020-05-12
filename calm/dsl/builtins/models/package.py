@@ -69,6 +69,8 @@ class PackageType(EntityType):
                 "install_runbook": install_runbook,
                 "uninstall_runbook": uninstall_runbook,
             }
+            # No actions are allowed other than __install__ and __uninstall__
+            cdict.pop("action_list", None)
 
         elif getattr(cls, "type") == "SUBSTRATE_IMAGE":
             cdict = super().compile()
@@ -94,6 +96,7 @@ class PackageType(EntityType):
         services = getattr(cls, "services", [])
         if services:
             return services[0]
+        raise ValueError("package do not have any service referenced")
 
 
 class PackageValidator(PropertyValidator, openapi_type="app_package"):
