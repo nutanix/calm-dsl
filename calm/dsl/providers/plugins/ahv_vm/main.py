@@ -8,7 +8,6 @@ from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.providers import get_provider_interface
 from calm.dsl.tools import StrictDraft7Validator, get_logging_handle
 from calm.dsl.builtins import ref
-from calm.dsl.store import Cache
 
 from .constants import AHV as ahv
 

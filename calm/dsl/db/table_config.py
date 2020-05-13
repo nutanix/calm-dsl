@@ -68,10 +68,28 @@ class CacheTableBase(BaseModel):
         return cls.tables
 
     @classmethod
-    def clear(cls):
+    def clear(cls, *args, **kwargs):
         """removes entire data from table"""
-        for db_entity in cls.select():
-            db_entity.delete_instance()
+        raise NotImplementedError("clear helper not implemented")
+
+    def get_detail_dict(self, *args, **kwargs):
+        raise NotImplementedError("get_detail_dict helper not implemented")
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        raise NotImplementedError("create_entry helper not implemented")
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        raise NotImplementedError("get_entity_data helper not implemented")
+
+    @classmethod
+    def show_data(cls, *args, **kwargs):
+        raise NotImplementedError("show_data helper not implemented")
+
+    @classmethod
+    def sync(cls, *args, **kwargs):
+        raise NotImplementedError("sync helper not implemented")
 
 
 class AhvSubnetsCache(CacheTableBase):
@@ -81,7 +99,7 @@ class AhvSubnetsCache(CacheTableBase):
     cluster = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
-    def get_detail_dict(self):
+    def get_detail_dict(self, *args, **kwargs):
         return {
             "name": self.name,
             "uuid": self.uuid,
@@ -90,29 +108,39 @@ class AhvSubnetsCache(CacheTableBase):
         }
 
     @classmethod
-    def create(cls, **kwargs):
+    def clear(cls, *args, **kwargs):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        cluster_name = kwargs.get("cluster", None)
+        if not cluster_name:
+            raise ValueError("cluster not supplied for subnet {}".format(name))
+
+        # store data in table
         super().create(
-            name=kwargs["name"], uuid=kwargs["uuid"], cluster=kwargs["cluster"],
+            name=name, uuid=uuid, cluster=cluster_name,
         )
 
     @classmethod
-    def get_entity_uuid(cls, **kwargs):
-
+    def get_entity_data(cls, name, **kwargs):
+        cluster_name = kwargs.get("cluster", "")
         try:
-            if kwargs.get("cluster"):
-                entity = super().get(
-                    cls.name == kwargs["name"], cls.cluster == kwargs["cluster"],
-                )
-
+            if cluster_name:
+                entity = super().get(cls.name == name, cls.cluster == cluster_name,)
             else:
-                entity = super().get(cls.name == kwargs["name"])
-            return entity.uuid
+                # The get() method is shorthand for selecting with a limit of 1
+                # If more than one row is found, the first row returned by the database cursor
+                entity = super().get(cls.name == name)
+            return entity.get_detail_dict()
 
         except DoesNotExist:
             return None
 
     @classmethod
-    def show_data(cls):
+    def show_data(cls, *args, **kwargs):
         """display stored data in table"""
 
         if not len(cls.select()):
@@ -137,8 +165,8 @@ class AhvSubnetsCache(CacheTableBase):
         click.echo(table)
 
     @classmethod
-    def sync(cls):
-
+    def sync(cls, *args, **kwargs):
+        """sync the table data from server"""
         # clear old data
         cls.clear()
 
@@ -156,7 +184,7 @@ class AhvSubnetsCache(CacheTableBase):
             cluster_ref = entity["status"]["cluster_reference"]
             cluster_name = cluster_ref.get("name", "")
 
-            cls.create(name=name, uuid=uuid, cluster=cluster_name)
+            cls.create_entry(name=name, uuid=uuid, cluster=cluster_name)
 
     class Meta:
         database = dsl_database
@@ -170,7 +198,7 @@ class AhvImagesCache(CacheTableBase):
     uuid = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
-    def get_detail_dict(self):
+    def get_detail_dict(self, *args, **kwargs):
         return {
             "name": self.name,
             "uuid": self.uuid,
@@ -179,26 +207,36 @@ class AhvImagesCache(CacheTableBase):
         }
 
     @classmethod
-    def create(cls, **kwargs):
-        super().create(
-            name=kwargs["name"], uuid=kwargs["uuid"], image_type=kwargs["image_type"]
-        )
+    def clear(cls, *args, **kwargs):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
 
     @classmethod
-    def get_entity_uuid(cls, **kwargs):
+    def create_entry(cls, name, uuid, **kwargs):
+        image_type = kwargs.get("image_type", None)
+        if not image_type:
+            raise ValueError("image_type not provided for image {}".format(name))
+
+        # Store data in table
+        super().create(name=name, uuid=uuid, image_type=image_type)
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        image_type = kwargs.get("image_type", None)
+        if not image_type:
+            raise ValueError("image_type not provided for image {}".format(name))
 
         try:
-            entity = super().get(
-                cls.name == kwargs["name"], cls.image_type == kwargs["image_type"]
-            )
-            return entity.uuid
+            entity = super().get(cls.name == name, cls.image_type == image_type)
+            return entity.get_detail_dict()
 
         except DoesNotExist:
             return None
 
     @classmethod
-    def sync(cls):
-
+    def sync(cls, *args, **kwargs):
+        """sync the table data from server"""
         # clear old data
         cls.clear()
 
@@ -214,10 +252,10 @@ class AhvImagesCache(CacheTableBase):
             name = entity["status"]["name"]
             uuid = entity["metadata"]["uuid"]
             image_type = entity["status"]["resources"]["image_type"]
-            cls.create(name=name, uuid=uuid, image_type=image_type)
+            cls.create_entry(name=name, uuid=uuid, image_type=image_type)
 
     @classmethod
-    def show_data(cls):
+    def show_data(cls, *args, **kwargs):
         """display stored data in table"""
 
         if not len(cls.select()):
@@ -252,7 +290,7 @@ class ProjectCache(CacheTableBase):
     uuid = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
-    def get_detail_dict(self):
+    def get_detail_dict(self, *args, **kwargs):
         return {
             "name": self.name,
             "uuid": self.uuid,
@@ -260,24 +298,29 @@ class ProjectCache(CacheTableBase):
         }
 
     @classmethod
-    def create(cls, **kwargs):
+    def clear(cls, *args, **kwargs):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
         super().create(
-            name=kwargs["name"], uuid=kwargs["uuid"],
+            name=name, uuid=uuid,
         )
 
     @classmethod
-    def get_entity_uuid(cls, **kwargs):
-
+    def get_entity_data(cls, name, **kwargs):
         try:
-            entity = super().get(cls.name == kwargs["name"])
-            return entity.uuid
+            entity = super().get(cls.name == name)
+            return entity.get_detail_dict()
 
         except DoesNotExist:
             return None
 
     @classmethod
-    def sync(cls):
-
+    def sync(cls, *args, **kwargs):
+        """sync the table data from server"""
         # clear old data
         cls.clear()
 
@@ -292,12 +335,11 @@ class ProjectCache(CacheTableBase):
         for entity in res["entities"]:
             name = entity["status"]["name"]
             uuid = entity["metadata"]["uuid"]
-            cls.create(name=name, uuid=uuid)
+            cls.create_entry(name=name, uuid=uuid)
 
     @classmethod
-    def show_data(cls):
+    def show_data(cls, *args, **kwargs):
         """display stored data in table"""
-
         if not len(cls.select()):
             click.echo(highlight_text("No entry found !!!"))
             return
@@ -329,7 +371,7 @@ class AhvNetworkFunctionChain(CacheTableBase):
     uuid = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
-    def get_detail_dict(self):
+    def get_detail_dict(self, *args, **kwargs):
         return {
             "name": self.name,
             "uuid": self.uuid,
@@ -337,24 +379,28 @@ class AhvNetworkFunctionChain(CacheTableBase):
         }
 
     @classmethod
-    def create(cls, **kwargs):
+    def clear(cls, *args, **kwargs):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
         super().create(
-            name=kwargs["name"], uuid=kwargs["uuid"],
+            name=name, uuid=uuid,
         )
 
     @classmethod
-    def get_entity_uuid(cls, **kwargs):
-
+    def get_entity_data(cls, name, **kwargs):
         try:
-            entity = super().get(cls.name == kwargs["name"])
-            return entity.uuid
+            entity = super().get(cls.name == name)
+            return entity.get_detail_dict()
 
         except DoesNotExist:
             return None
 
     @classmethod
-    def sync(cls):
-
+    def sync(cls, *args, **kwargs):
         # clear old data
         cls.clear()
 
@@ -369,10 +415,10 @@ class AhvNetworkFunctionChain(CacheTableBase):
         for entity in res["entities"]:
             name = entity["status"]["name"]
             uuid = entity["metadata"]["uuid"]
-            cls.create(name=name, uuid=uuid)
+            cls.create_entry(name=name, uuid=uuid)
 
     @classmethod
-    def show_data(cls):
+    def show_data(cls, *args, **kwargs):
         """display stored data in table"""
 
         if not len(cls.select()):

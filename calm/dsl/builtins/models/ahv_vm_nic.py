@@ -34,29 +34,31 @@ def create_ahv_nic(
 
     kwargs = {}
     if subnet:
-        subnet_uuid = Cache.get_entity_uuid(
+        subnet_cache_data = Cache.get_entity_data(
             entity_type="ahv_subnet", name=subnet, cluster=cluster
         )
 
-        if not subnet_uuid:
+        if not subnet_cache_data:
             raise Exception(
                 "AHV Subnet {} not found. Please run: calm update cache".format(subnet)
             )
 
+        subnet_uuid = subnet_cache_data.get("uuid", "")
         kwargs["subnet_reference"] = {"name": subnet, "uuid": subnet_uuid}
 
     if network_function_chain:
-        nfc_uuid = Cache.get_entity_uuid(
+        nfc_cache_data = Cache.get_entity_data(
             entity_type="ahv_network_function_chain", name=network_function_chain
         )
 
-        if not nfc_uuid:
+        if not nfc_cache_data:
             raise Exception(
                 "AHV Network Function Chain {} not found. Please run: calm update cache".format(
                     network_function_chain
                 )
             )
 
+        nfc_uuid = nfc_cache_data.get("uuid", "")
         kwargs["network_function_chain_reference"] = {
             "name": network_function_chain,
             "uuid": nfc_uuid,

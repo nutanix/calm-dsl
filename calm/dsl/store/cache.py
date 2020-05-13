@@ -24,11 +24,10 @@ class Cache:
         return cache_tables
 
     @classmethod
-    def create(cls, *args, **kwargs):
-        """creates a entry in cache table"""
+    def get_entity_data(cls, entity_type, name, **kwargs):
+        """returns entity data corresponding to supplied entry"""
 
         cache_tables = cls.get_cache_tables()
-        entity_type = kwargs.pop("entity_type", None)
         if not entity_type:
             LOG.error("No entity type for cache supplied")
             sys.exit(-1)
@@ -38,24 +37,7 @@ class Cache:
             LOG.error("Unknown entity type ({}) supplied".format(entity_type))
             sys.exit(-1)
 
-        db_cls.create(**kwargs)
-
-    @classmethod
-    def get_entity_uuid(cls, *args, **kwargs):
-        """returns entity uuid corresponding to supplied entry"""
-
-        cache_tables = cls.get_cache_tables()
-        entity_type = kwargs.pop("entity_type", None)
-        if not entity_type:
-            LOG.error("No entity type for cache supplied")
-            sys.exit(-1)
-
-        db_cls = cache_tables.get(entity_type, None)
-        if not db_cls:
-            LOG.error("Unknown entity type ({}) supplied".format(entity_type))
-            sys.exit(-1)
-
-        return db_cls.get_entity_uuid(**kwargs)
+        return db_cls.get_entity_data(name=name, **kwargs)
 
     @classmethod
     def sync(cls):
