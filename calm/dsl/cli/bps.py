@@ -255,13 +255,14 @@ def compile_blueprint_command(bp_file, out, no_sync=False):
     config = get_config()
 
     project_name = config["PROJECT"].get("name", "default")
-    project_uuid = Cache.get_entity_uuid("PROJECT", project_name)
+    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
 
-    if not project_uuid:
+    if not project_cache_data:
         LOG.error(
             "Project {} not found. Please run: calm update cache".format(project_name)
         )
 
+    project_uuid = project_cache_data.get("uuid", "")
     bp_payload["metadata"]["project_reference"] = {
         "type": "project",
         "uuid": project_uuid,

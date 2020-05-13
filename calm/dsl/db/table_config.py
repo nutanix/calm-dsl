@@ -6,8 +6,14 @@ from peewee import (
     DateTimeField,
     ForeignKeyField,
     CompositeKey,
+    DoesNotExist,
 )
 import datetime
+import click
+import arrow
+from prettytable import PrettyTable
+
+from calm.dsl.api import get_resource_api, get_api_client
 
 # Proxy database
 dsl_database = SqliteDatabase(None)
@@ -45,24 +51,399 @@ class DataTable(BaseModel):
         return (self.kdf_salt, self.ciphertext, self.iv, self.auth_tag)
 
 
-class CacheTable(BaseModel):
-    entity_type = CharField()
-    entity_name = CharField()
-    entity_uuid = CharField()
-    entity_list_api_suffix = CharField()
+class CacheTableBase(BaseModel):
+    tables = {}
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+
+        if not hasattr(cls, "__cache_type__"):
+            raise TypeError("Base table does not have a cache type attribute")
+
+        cache_type = cls.__cache_type__
+        cls.tables[cache_type] = cls
+
+    @classmethod
+    def get_cache_tables(cls):
+        return cls.tables
+
+    @classmethod
+    def clear(cls, *args, **kwargs):
+        """removes entire data from table"""
+        raise NotImplementedError("clear helper not implemented")
+
+    def get_detail_dict(self, *args, **kwargs):
+        raise NotImplementedError("get_detail_dict helper not implemented")
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        raise NotImplementedError("create_entry helper not implemented")
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        raise NotImplementedError("get_entity_data helper not implemented")
+
+    @classmethod
+    def show_data(cls, *args, **kwargs):
+        raise NotImplementedError("show_data helper not implemented")
+
+    @classmethod
+    def sync(cls, *args, **kwargs):
+        raise NotImplementedError("sync helper not implemented")
+
+
+class AhvSubnetsCache(CacheTableBase):
+    __cache_type__ = "ahv_subnet"
+    name = CharField()
+    uuid = CharField()
+    cluster = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
-    def get_detail_dict(self):
+    def get_detail_dict(self, *args, **kwargs):
         return {
-            "type": self.entity_type,
-            "name": self.entity_name,
-            "uuid": self.entity_uuid,
+            "name": self.name,
+            "uuid": self.uuid,
+            "cluster": self.cluster,
             "last_update_time": self.last_update_time,
         }
 
+    @classmethod
+    def clear(cls, *args, **kwargs):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        cluster_name = kwargs.get("cluster", None)
+        if not cluster_name:
+            raise ValueError("cluster not supplied for subnet {}".format(name))
+
+        # store data in table
+        super().create(
+            name=name, uuid=uuid, cluster=cluster_name,
+        )
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        cluster_name = kwargs.get("cluster", "")
+        try:
+            if cluster_name:
+                entity = super().get(cls.name == name, cls.cluster == cluster_name,)
+            else:
+                # The get() method is shorthand for selecting with a limit of 1
+                # If more than one row is found, the first row returned by the database cursor
+                entity = super().get(cls.name == name)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return None
+
+    @classmethod
+    def show_data(cls, *args, **kwargs):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = ["NAME", "UUID", "CLUSTER_NAME", "LAST UPDATED"]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(entity_data["cluster"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def sync(cls, *args, **kwargs):
+        """sync the table data from server"""
+        # clear old data
+        cls.clear()
+
+        # update by latest data
+        client = get_api_client()
+        Obj = get_resource_api("subnets", client.connection)
+        res, err = Obj.list({"length": 1000})
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        for entity in res["entities"]:
+            name = entity["status"]["name"]
+            uuid = entity["metadata"]["uuid"]
+            cluster_ref = entity["status"]["cluster_reference"]
+            cluster_name = cluster_ref.get("name", "")
+
+            cls.create_entry(name=name, uuid=uuid, cluster=cluster_name)
+
     class Meta:
         database = dsl_database
-        primary_key = CompositeKey("entity_type", "entity_name")
+        primary_key = CompositeKey("name", "uuid")
+
+
+class AhvImagesCache(CacheTableBase):
+    __cache_type__ = "ahv_disk_image"
+    name = CharField()
+    image_type = CharField()
+    uuid = CharField()
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self, *args, **kwargs):
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "image_type": self.image_type,
+            "last_update_time": self.last_update_time,
+        }
+
+    @classmethod
+    def clear(cls, *args, **kwargs):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        image_type = kwargs.get("image_type", None)
+        if not image_type:
+            raise ValueError("image_type not provided for image {}".format(name))
+
+        # Store data in table
+        super().create(name=name, uuid=uuid, image_type=image_type)
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        image_type = kwargs.get("image_type", None)
+        if not image_type:
+            raise ValueError("image_type not provided for image {}".format(name))
+
+        try:
+            entity = super().get(cls.name == name, cls.image_type == image_type)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return None
+
+    @classmethod
+    def sync(cls, *args, **kwargs):
+        """sync the table data from server"""
+        # clear old data
+        cls.clear()
+
+        # update by latest data
+        client = get_api_client()
+        Obj = get_resource_api("images", client.connection)
+        res, err = Obj.list({"length": 1000})
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        for entity in res["entities"]:
+            name = entity["status"]["name"]
+            uuid = entity["metadata"]["uuid"]
+            image_type = entity["status"]["resources"]["image_type"]
+            cls.create_entry(name=name, uuid=uuid, image_type=image_type)
+
+    @classmethod
+    def show_data(cls, *args, **kwargs):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = ["NAME", "UUID", "IMAGE_TYPE", "LAST UPDATED"]
+        for entity in cls.select().order_by(cls.image_type):
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(entity_data["image_type"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("name", "uuid")
+
+
+class ProjectCache(CacheTableBase):
+    __cache_type__ = "project"
+    name = CharField()
+    uuid = CharField()
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self, *args, **kwargs):
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "last_update_time": self.last_update_time,
+        }
+
+    @classmethod
+    def clear(cls, *args, **kwargs):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        super().create(
+            name=name, uuid=uuid,
+        )
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        try:
+            entity = super().get(cls.name == name)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return None
+
+    @classmethod
+    def sync(cls, *args, **kwargs):
+        """sync the table data from server"""
+        # clear old data
+        cls.clear()
+
+        # update by latest data
+        client = get_api_client()
+        Obj = get_resource_api("projects", client.connection)
+        res, err = Obj.list({"length": 1000})
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        for entity in res["entities"]:
+            name = entity["status"]["name"]
+            uuid = entity["metadata"]["uuid"]
+            cls.create_entry(name=name, uuid=uuid)
+
+    @classmethod
+    def show_data(cls, *args, **kwargs):
+        """display stored data in table"""
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = ["NAME", "UUID", "LAST UPDATED"]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("name", "uuid")
+
+
+class AhvNetworkFunctionChain(CacheTableBase):
+    __cache_type__ = "ahv_network_function_chain"
+    name = CharField()
+    uuid = CharField()
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self, *args, **kwargs):
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "last_update_time": self.last_update_time,
+        }
+
+    @classmethod
+    def clear(cls, *args, **kwargs):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        super().create(
+            name=name, uuid=uuid,
+        )
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        try:
+            entity = super().get(cls.name == name)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return None
+
+    @classmethod
+    def sync(cls, *args, **kwargs):
+        # clear old data
+        cls.clear()
+
+        # update by latest data
+        client = get_api_client()
+        Obj = get_resource_api("network_function_chains", client.connection)
+        res, err = Obj.list({"length": 1000})
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        for entity in res["entities"]:
+            name = entity["status"]["name"]
+            uuid = entity["metadata"]["uuid"]
+            cls.create_entry(name=name, uuid=uuid)
+
+    @classmethod
+    def show_data(cls, *args, **kwargs):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = ["NAME", "UUID", "LAST UPDATED"]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("name", "uuid")
 
 
 class VersionTable(BaseModel):
@@ -75,3 +456,8 @@ class VersionTable(BaseModel):
             "name": self.name,
             "version": self.version,
         }
+
+
+def highlight_text(text, **kwargs):
+    """Highlight text in our standard format"""
+    return click.style("{}".format(text), fg="blue", bold=False, **kwargs)
