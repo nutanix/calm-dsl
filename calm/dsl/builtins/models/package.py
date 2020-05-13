@@ -96,6 +96,7 @@ class PackageType(EntityType):
         services = getattr(cls, "services", [])
         if services:
             return services[0]
+        raise ValueError("package do not have any service referenced")
 
 
 class PackageValidator(PropertyValidator, openapi_type="app_package"):

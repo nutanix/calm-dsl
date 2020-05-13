@@ -4,8 +4,8 @@ input:
 - "1"  # OS = Linux
 - "n"  # Enable DRS mode
 - "1"  # Host = 10.46.33.228
-- "1"  # Datastore = Test-Container
-- "8"  # Template = DND_CENTOS_MUL_DISKS
+- "2"  # Datastore = Test-Container
+- "28"  # Template = DND_CENTOS_MUL_DISKS
 - "vm-@@{calm_array_index}@@-@@{calm_time}@@"  # Instance name
 - "1"  # no. of VCPU
 - "1"  # cores per VCPU
@@ -19,10 +19,10 @@ input:
 - "n"  # Add disks
 - "y"  # Add nics
 - "1"  # Adapter Type = e1000
-- "1"  # Network Type = vlan.112
+- "2"  # Network Type = vlan.112
 - "y"  # Add more nics
 - "2"  # Adapter Type = e1000e
-- "2"  # Network Type = VM Network
+- "3"  # Network Type = VM Network
 - "n"  # Add more nics
 - "n"  # Enable Guest Customization
 

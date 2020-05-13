@@ -23,7 +23,7 @@ def read_file(filename, depth=1):
         os.path.dirname(inspect.getfile(sys._getframe(depth))), filename
     )
 
-    if not file_exists:
+    if not file_exists(file_path):
         LOG.debug("file {} not found at location {}".format(filename, file_path))
         raise ValueError("file {} not found".format(filename))
 

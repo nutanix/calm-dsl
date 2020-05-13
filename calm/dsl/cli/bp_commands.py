@@ -157,7 +157,8 @@ def create_blueprint_from_json(
     client, path_to_json, name=None, description=None, force_create=False
 ):
 
-    bp_payload = json.loads(open(path_to_json, "r").read())
+    with open(path_to_json, "r") as f:
+        bp_payload = json.loads(f.read())
     return create_blueprint(
         client,
         bp_payload,

@@ -600,7 +600,8 @@ def download_runlog(runlog_id, app_name, file_name):
 
     res, err = client.application.download_runlog(app_id, runlog_id)
     if not err:
-        open(file_name, "wb").write(res.content)
+        with open(file_name, "wb") as fw:
+            fw.write(res.content)
         click.echo("Runlogs saved as {}".format(highlight_text(file_name)))
     else:
         LOG.error("[{}] - {}".format(err["code"], err["error"]))

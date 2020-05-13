@@ -71,6 +71,13 @@ class Provider(ProviderBase):
     def create_spec(cls):
         raise NotImplementedError("Create spec not implemented")
 
+    @classmethod
+    def get_runtime_editables(
+        cls, runtime_spec, project_id, substrate_spec, vm_img_map={}
+    ):
+        # Not implemented right now
+        pass
+
 
 def get_provider(provider_type):
 
