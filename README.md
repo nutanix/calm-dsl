@@ -54,7 +54,9 @@ Use:
 
 ## Documentation
 
-Documentation for the Calm DSL will be stored in the [docs](docs/) folder, and will continually be added to. If you're not familiar with Calm Terminology basics, please review the [Calm Terminology](docs/01-Calm-Terminology/) doc page.
+ - [Calm Terminology](docs/01-Calm-Terminology/)
+ - [DSL Blueprint Architecture](docs/02-DSL-Blueprint-Architecture/)
+ - [DSL Lab](docs/03-Quickstart/)
 
 ## Video Links
  - [Workstation Setup](https://youtu.be/uIZmHQhioZg)

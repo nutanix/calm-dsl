@@ -501,6 +501,7 @@ substrate_definition_list:
       num_vcpus_per_socket: 1
       power_state: ON
   description: Medium size AHV VM config given by reading a spec file
+  editables: {}
   name: AHVMedVM
   os_type: Linux
   readiness_probe:
@@ -544,6 +545,7 @@ substrate_definition_list:
       num_vcpus_per_socket: 1
       power_state: ON
   description: Medium size AHV VM config given by reading a spec file
+  editables: {}
   name: AHVMedVMForPHP
   os_type: Linux
   readiness_probe:

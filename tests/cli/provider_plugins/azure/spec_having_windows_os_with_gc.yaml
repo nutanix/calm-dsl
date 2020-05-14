@@ -43,8 +43,8 @@ input:
 - "1"   # Certificate URL = vault1-cert1
 - "n"   # Want to add more win rm listeners
 - "n"   # Use custom image
-- "127"   # Publisher = Canonical
-- "13"    # Image Offer = UbuntuServer
+- "137"   # Publisher = Canonical
+- "19"    # Image Offer = UbuntuServer
 - "18"    # Image Sku = 18.04-LTS
 - "27"    # Image Version = 18.04.201903121
 - "os-@@{calm_unique_hash}@@-@@{calm_array_index}@@-disk"   # OS Disk Name

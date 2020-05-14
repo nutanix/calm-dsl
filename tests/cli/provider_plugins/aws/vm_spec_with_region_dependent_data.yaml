@@ -11,16 +11,16 @@ input:
 - "y"  # Want availability zone
 - "1"  # Availability Zone = us-east-1a
 - "y"  # Want machine image
-- "22"  # Machine Image = CALM_1.8.2
+- "21"  # Machine Image = CALM_1.8.2
 - "y"  # Want IAM Role
 - "1"  # IAM Role = aws-ec2-spot-fleet-role
 - "y"  # Want Key Pair
-- "5"  # Key-Pair = calm-qa
+- "6"  # Key-Pair = calm-qa
 - "y"  # Want VPC
 - "1"  # VPC = 172.31.0.0/16 | vpc-dcd149bb
 - "y"  # Want Security Group
 - "n"  # Include Classic Security Group
-- "45"  # Security Group = sg-963925ed | default
+- "51"  # Security Group = sg-963925ed | default
 - "n"  # Want more security Groups
 - "y"  # Want Subnets
 - "1"  # Subnet = subnet-9a9ea2b0 | vpc-dcd149bb
