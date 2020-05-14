@@ -214,10 +214,7 @@ class AhvImagesCache(CacheTableBase):
 
     @classmethod
     def create_entry(cls, name, uuid, **kwargs):
-        image_type = kwargs.get("image_type", None)
-        if not image_type:
-            raise ValueError("image_type not provided for image {}".format(name))
-
+        image_type = kwargs.get("image_type", "")
         # Store data in table
         super().create(name=name, uuid=uuid, image_type=image_type)
 
@@ -251,7 +248,8 @@ class AhvImagesCache(CacheTableBase):
         for entity in res["entities"]:
             name = entity["status"]["name"]
             uuid = entity["metadata"]["uuid"]
-            image_type = entity["status"]["resources"]["image_type"]
+            # TODO add proper validation for karbon images
+            image_type = entity["status"]["resources"].get("image_type", "")
             cls.create_entry(name=name, uuid=uuid, image_type=image_type)
 
     @classmethod
