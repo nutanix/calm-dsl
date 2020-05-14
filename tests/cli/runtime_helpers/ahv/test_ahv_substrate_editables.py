@@ -17,6 +17,7 @@ NON_BUSY_APP_STATES = [
 ]
 
 
+@pytest.mark.slow
 def test_ahv_substrate_editables_interactive_mode():
     """Tests interactive mode for getting runtime values under ahv substrate"""
 
@@ -88,6 +89,7 @@ def test_ahv_substrate_editables_interactive_mode():
         pytest.fail("App creation failed")
 
 
+@pytest.mark.slow
 def test_ahv_substrate_editables_non_interactive_mode():
     """Tests non-interactive mode for getting runtime values under ahv substrate"""
 
