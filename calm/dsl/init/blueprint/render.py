@@ -1,4 +1,5 @@
 import os
+import sys
 from jinja2 import Environment, PackageLoader
 from Crypto.PublicKey import RSA
 
@@ -18,7 +19,13 @@ def render_ahv_template(template, bp_name):
     config = get_config()
 
     project_name = config["PROJECT"].get("name", "default")
-    project_uuid = Cache.get_entity_uuid("PROJECT", project_name)
+    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
+    if not project_cache_data:
+        LOG.error(
+            "Project {} not found. Please run: calm update cache".format(project_name)
+        )
+        sys.exit(-1)
+    project_uuid = project_cache_data.get("uuid", "")
 
     LOG.info("Fetching ahv subnets attached to the project {}".format(project_name))
     res, err = client.project.read(project_uuid)
@@ -34,8 +41,20 @@ def render_ahv_template(template, bp_name):
         raise Exception("no subnets registered !!!")
 
     default_subnet = subnets[0]["name"]
+    subnet_cache_data = Cache.get_entity_data(
+        entity_type="ahv_subnet", name=default_subnet
+    )
+    if not subnet_cache_data:
+        LOG.error(
+            "Subnet {} not found. Please run: calm update cache".format(default_subnet)
+        )
+        sys.exit(-1)
+    cluster_name = subnet_cache_data.get("cluster", "")
+
     LOG.info("Rendering ahv template")
-    text = template.render(bp_name=bp_name, subnet_name=default_subnet)
+    text = template.render(
+        bp_name=bp_name, subnet_name=default_subnet, cluster_name=cluster_name
+    )
     LOG.info("Success")
 
     return text.strip() + os.linesep
@@ -125,13 +144,13 @@ def make_bp_dirs(dir_name, bp_name):
     if not os.path.isdir(script_dir):
         os.makedirs(script_dir)
 
-    return (bp_dir, local_dir, key_dir, script_dir)
+    return (bp_dir, key_dir, script_dir)
 
 
 def init_bp(bp_name, dir_name, provider_type):
 
     bp_name = bp_name.strip().split()[0].title()
-    bp_dir, local_dir, key_dir, script_dir = make_bp_dirs(dir_name, bp_name)
+    bp_dir, key_dir, script_dir = make_bp_dirs(dir_name, bp_name)
 
     # sync cache
     LOG.info("Syncing cache")

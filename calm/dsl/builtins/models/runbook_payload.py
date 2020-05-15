@@ -19,7 +19,7 @@ class RunbookPayloadValidator(
 
 
 def _runbook_payload(**kwargs):
-    name = getattr(RunbookPayloadType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return RunbookPayloadType(name, bases, kwargs)
 

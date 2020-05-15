@@ -18,6 +18,8 @@ import urllib3
 from requests import Session as NonRetrySession
 from requests_toolbelt import MultipartEncoder
 from requests.adapters import HTTPAdapter
+from requests.exceptions import ConnectTimeout
+
 from calm.dsl.tools import get_logging_handle
 
 urllib3.disable_warnings()
@@ -174,6 +176,9 @@ class Connection:
         verify=True,
         headers=None,
         files=None,
+        timeout=(5, 30),  # (connection timeout, read timeout)
+        ignore_error=False,
+        warning_msg="",
     ):
         """Private method for making http request to calm
 
@@ -215,6 +220,7 @@ class Connection:
                         data=m,
                         verify=verify,
                         headers={"Content-Type": m.content_type},
+                        timeout=timeout,
                     )
                 else:
                     res = self.session.post(
@@ -224,6 +230,7 @@ class Connection:
                         verify=verify,
                         headers=base_headers,
                         cookies=cookies,
+                        timeout=timeout,
                     )
             elif method == REQUEST.METHOD.PUT:
                 res = self.session.put(
@@ -233,6 +240,7 @@ class Connection:
                     verify=verify,
                     headers=base_headers,
                     cookies=cookies,
+                    timeout=timeout,
                 )
             elif method == REQUEST.METHOD.GET:
                 res = self.session.get(
@@ -241,6 +249,7 @@ class Connection:
                     verify=verify,
                     headers=base_headers,
                     cookies=cookies,
+                    timeout=timeout,
                 )
             elif method == REQUEST.METHOD.DELETE:
                 res = self.session.delete(
@@ -250,17 +259,45 @@ class Connection:
                     verify=verify,
                     headers=base_headers,
                     cookies=cookies,
+                    timeout=timeout,
                 )
             res.raise_for_status()
             if not url.endswith("/download"):
                 if not res.ok:
                     LOG.debug("Server Response: {}".format(res.json()))
+        except ConnectTimeout as cte:
+            LOG.error(
+                "Could not establish connection to server at https://{}:{}.".format(
+                    self.host, self.port
+                )
+            )
+            LOG.debug("Error Response: {}".format(cte))
+            sys.exit(-1)
         except Exception as ex:
-            LOG.error("Got traceback\n{}".format(traceback.format_exc()))
-            err_msg = res.text if hasattr(res, "text") else "{}".format(ex)
+            LOG.debug("Got traceback\n{}".format(traceback.format_exc()))
+            if hasattr(res, "json") and callable(getattr(res, "json")):
+                try:
+                    err_msg = res.json()
+                except Exception:
+                    err_msg = "{}".format(ex)
+                    pass
+            elif hasattr(res, "text"):
+                err_msg = res.text
+            else:
+                err_msg = "{}".format(ex)
             status_code = res.status_code if hasattr(res, "status_code") else 500
             err = {"error": err_msg, "code": status_code}
-            LOG.error("Error Response: {}".format(err))
+
+            if ignore_error:
+                LOG.warning(warning_msg)
+                return None, err
+
+            LOG.error(
+                "Oops! Something went wrong.\n{}".format(
+                    json.dumps(err, indent=4, separators=(",", ": "))
+                )
+            )
+            sys.exit(-1)
         return res, err
 
 

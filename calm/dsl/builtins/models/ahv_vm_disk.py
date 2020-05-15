@@ -9,6 +9,7 @@ from .package import PackageType
 
 
 ADAPTER_INDEX_MAP = {"SCSI": 0, "PCI": 0, "IDE": 0, "SATA": 0}
+IMAGE_TYPE_MAP = {"DISK": "DISK_IMAGE", "CDROM": "ISO_IMAGE"}
 BOOT_CONFIG = {}
 
 
@@ -23,7 +24,7 @@ class AhvDiskValidator(PropertyValidator, openapi_type="vm_ahv_disk"):
 
 
 def ahv_vm_disk(**kwargs):
-    name = getattr(AhvDiskType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return AhvDiskType(name, bases, kwargs)
 
@@ -94,14 +95,19 @@ def clone_from_image_service(
     if not image_name:
         raise ValueError("image_name not provided !!!")
 
-    image_uuid = Cache.get_entity_uuid("AHV_DISK_IMAGE", image_name)
-    if not image_uuid:
+    image_cache_data = Cache.get_entity_data(
+        entity_type="ahv_disk_image",
+        name=image_name,
+        image_type=IMAGE_TYPE_MAP[device_type],
+    )
+    if not image_cache_data:
         raise Exception(
             "Ahv Disk Image {} not found. Please run: calm update cache".format(
                 image_name
             )
         )
 
+    image_uuid = image_cache_data.get("uuid", "")
     image_data = {"kind": "image", "name": image_name, "uuid": image_uuid}
 
     return update_disk_config(device_type, adapter_type, image_data, bootable)

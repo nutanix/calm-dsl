@@ -14,7 +14,7 @@ from calm.dsl.config import (
 )
 from calm.dsl.db import get_db_handle
 from calm.dsl.api import get_resource_api, update_client_handle, get_client_handle
-from calm.dsl.store import Cache
+from calm.dsl.store import Cache, Version
 from calm.dsl.init import init_bp
 from calm.dsl.providers import get_provider_types
 
@@ -120,7 +120,7 @@ def initialize_engine(
         "2. Create and validate the blueprint: calm create bp --file HelloBlueprint/blueprint.py"
     )
     click.echo(
-        "3. Start an application using the blueprint: calm launch bp HelloBlueprint --app_name HelloApp01 -i"
+        "3. Start an application using the blueprint: calm launch bp Hello --app_name HelloApp01 -i"
     )
 
     click.echo("\nKeep Calm and DSL On!\n")
@@ -205,6 +205,7 @@ def init_db():
 def sync_cache():
     LOG.info("Updating Cache")
     Cache.sync()
+    Version.sync()
     LOG.info("Success")
 
 

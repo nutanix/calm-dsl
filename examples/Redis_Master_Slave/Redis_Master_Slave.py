@@ -11,8 +11,10 @@ CENTOS_KEY = read_local_file("secrets/private_key")
 
 DefaultCred = basic_cred("centos", CENTOS_KEY, name="CENTOS", type="KEY", default=True)
 
+
 class RedisMaster(Service):
     """Redis Master Service"""
+
 
 class AHVMasterPackage(Package):
     """AHV Redis MasterPackage"""
@@ -27,6 +29,7 @@ class AHVMasterPackage(Package):
             cred=ref(DefaultCred),
         )
 
+
 class AWSMasterPackage(Package):
     """AWS Redis MasterPackage"""
 
@@ -39,6 +42,7 @@ class AWSMasterPackage(Package):
             filename="scripts/Master_Package.sh",
             cred=ref(DefaultCred),
         )
+
 
 class VMwareMasterPackage(Package):
     """VMware Redis MasterPackage"""
@@ -53,18 +57,20 @@ class VMwareMasterPackage(Package):
             cred=ref(DefaultCred),
         )
 
-class AzureMasterPackage(Package):
-   """"Azure Redis MasterPackage"""
 
-   services = [ref(RedisMaster)]
-   
-   @action
-   def __install__():
-       CalmTask.Exec.ssh(
-           name="PackageInstallTask",
-           filename="scripts/Master_Package.sh",
-           cred=ref(DefaultCred),
-       )
+class AzureMasterPackage(Package):
+    """"Azure Redis MasterPackage"""
+
+    services = [ref(RedisMaster)]
+
+    @action
+    def __install__():
+        CalmTask.Exec.ssh(
+            name="PackageInstallTask",
+            filename="scripts/Master_Package.sh",
+            cred=ref(DefaultCred),
+        )
+
 
 class GCPMasterPackage(Package):
     """GCP Redis MasterPackage"""
@@ -79,9 +85,14 @@ class GCPMasterPackage(Package):
             cred=ref(DefaultCred),
         )
 
-#Downloadable images for AHV and VMware
-AHV_CENTOS_76 = vm_disk_package(name="AHV_CENTOS_76", config_file="specs/image_config/ahv_centos.yaml")
-ESX_CENTOS_76 = vm_disk_package(name="ESX_CENTOS_76", config_file="specs/image_config/vmware_centos.yaml")
+
+# Downloadable images for AHV and VMware
+AHV_CENTOS_76 = vm_disk_package(
+    name="AHV_CENTOS_76", config_file="specs/image_config/ahv_centos.yaml"
+)
+ESX_CENTOS_76 = vm_disk_package(
+    name="ESX_CENTOS_76", config_file="specs/image_config/vmware_centos.yaml"
+)
 
 
 class AHVRedisMasterSubstrate(Substrate):
@@ -97,6 +108,19 @@ class AHVRedisMasterSubstrate(Substrate):
         "connection_port": 22,
         "credential": ref(DefaultCred),
     }
+    editables = {
+        "create_spec": {
+            "resources": {
+                "nic_list": {},
+                "disk_list": True,
+                "num_vcpus_per_socket": True,
+                "num_sockets": True,
+                "memory_size_mib": True,
+                "serial_port_list": {},
+            }
+        }
+    }
+
 
 class AWSRedisMasterSubstrate(Substrate):
     provider_spec = read_provider_spec("specs/substrate/aws_spec_centos.yaml")
@@ -111,8 +135,11 @@ class AWSRedisMasterSubstrate(Substrate):
         "credential": ref(DefaultCred),
     }
 
+
 class VMwareRedisMasterSubstrate(Substrate):
-    provider_spec = read_vmw_spec( "specs/substrate/vmware_spec_centos.yaml", vm_template=ESX_CENTOS_76)
+    provider_spec = read_vmw_spec(
+        "specs/substrate/vmware_spec_centos.yaml", vm_template=ESX_CENTOS_76
+    )
     provider_spec.spec["name"] = "Redis_Master-@@{calm_array_index}@@-@@{calm_random}@@"
     provider_type = "VMWARE_VM"
     os_type = "Linux"
@@ -124,8 +151,9 @@ class VMwareRedisMasterSubstrate(Substrate):
         "credential": ref(DefaultCred),
     }
 
+
 class AzureRedisMasterSubstrate(Substrate):
-    provider_spec = read_provider_spec( "specs/substrate/azure_spec_centos.yaml")
+    provider_spec = read_provider_spec("specs/substrate/azure_spec_centos.yaml")
     provider_spec.spec["name"] = "Redis_Master-@@{calm_array_index}@@-@@{calm_random}@@"
     provider_type = "AZURE_VM"
     os_type = "Linux"
@@ -137,8 +165,9 @@ class AzureRedisMasterSubstrate(Substrate):
         "credential": ref(DefaultCred),
     }
 
+
 class GCPRedisMasterSubstrate(Substrate):
-    provider_spec = read_provider_spec( "specs/substrate/gcp_spec_centos.yaml")
+    provider_spec = read_provider_spec("specs/substrate/gcp_spec_centos.yaml")
     provider_spec.spec["resources"]["sshKeys"] = [read_local_file("secrets/public_key")]
     os_type = "Linux"
     provider_type = "GCP_VM"
@@ -151,11 +180,13 @@ class GCPRedisMasterSubstrate(Substrate):
         "credential": ref(DefaultCred),
     }
 
+
 class AHVRedisMasterDeployment(Deployment):
     packages = [ref(AHVMasterPackage)]
     substrate = ref(AHVRedisMasterSubstrate)
     min_replicas = "1"
     max_replicas = "1"
+
 
 class AWSRedisMasterDeployment(Deployment):
     packages = [ref(AWSMasterPackage)]
@@ -163,11 +194,13 @@ class AWSRedisMasterDeployment(Deployment):
     min_replicas = "1"
     max_replicas = "1"
 
+
 class VMwareRedisMasterDeployment(Deployment):
     packages = [ref(VMwareMasterPackage)]
     substrate = ref(VMwareRedisMasterSubstrate)
     min_replicas = "1"
     max_replicas = "1"
+
 
 class AzureRedisMasterDeployment(Deployment):
     packages = [ref(AzureMasterPackage)]
@@ -175,16 +208,25 @@ class AzureRedisMasterDeployment(Deployment):
     min_replicas = "1"
     max_replicas = "1"
 
+
 class GCPRedisMasterDeployment(Deployment):
     packages = [ref(GCPMasterPackage)]
     substrate = ref(GCPRedisMasterSubstrate)
     min_replicas = "1"
     max_replicas = "1"
 
+
 class RedisSlave(Service):
     """Redis Slave Service"""
 
-    dependencies = [ref(AHVRedisMasterDeployment), ref(AWSRedisMasterDeployment), ref(VMwareRedisMasterDeployment), ref(AzureRedisMasterSubstrate), ref(GCPRedisMasterSubstrate)]
+    dependencies = [
+        ref(AHVRedisMasterDeployment),
+        ref(AWSRedisMasterDeployment),
+        ref(VMwareRedisMasterDeployment),
+        ref(AzureRedisMasterSubstrate),
+        ref(GCPRedisMasterSubstrate),
+    ]
+
 
 class AHVSlavePackage(Package):
     """AHV Redis SlavePackage"""
@@ -213,6 +255,7 @@ class AWSSlavePackage(Package):
             cred=ref(DefaultCred),
         )
 
+
 class VMwareSlavePackage(Package):
     """VMware Redis SlavePackage"""
 
@@ -225,6 +268,7 @@ class VMwareSlavePackage(Package):
             filename="scripts/Slave_Package.sh",
             cred=ref(DefaultCred),
         )
+
 
 class AzureSlavePackage(Package):
     """Azure Redis SlavePackage"""
@@ -239,6 +283,7 @@ class AzureSlavePackage(Package):
             cred=ref(DefaultCred),
         )
 
+
 class GCPSlavePackage(Package):
     """GCP Redis SlavePackage"""
 
@@ -252,9 +297,12 @@ class GCPSlavePackage(Package):
             cred=ref(DefaultCred),
         )
 
+
 class AHVRedisSlaveSubstrate(Substrate):
     os_type = "Linux"
-    provider_spec = read_ahv_spec("specs/substrate/ahv_spec_centos.yaml", disk_packages={1: AHV_CENTOS_76})
+    provider_spec = read_ahv_spec(
+        "specs/substrate/ahv_spec_centos.yaml", disk_packages={1: AHV_CENTOS_76}
+    )
     provider_spec.spec["name"] = "Redis_Slave-@@{calm_array_index}@@-@@{calm_random}@@"
     readiness_probe = {
         "disabled": False,
@@ -267,7 +315,7 @@ class AHVRedisSlaveSubstrate(Substrate):
 
 class AWSRedisSlaveSubstrate(Substrate):
     os_type = "Linux"
-    provider_type="AWS_VM"
+    provider_type = "AWS_VM"
     provider_spec = read_provider_spec("specs/substrate/aws_spec_centos.yaml")
     provider_spec.spec["name"] = "Redis_Slave-@@{calm_array_index}@@-@@{calm_random}@@"
     readiness_probe = {
@@ -278,10 +326,13 @@ class AWSRedisSlaveSubstrate(Substrate):
         "credential": ref(DefaultCred),
     }
 
+
 class VMwareRedisSlaveSubstrate(Substrate):
     os_type = "Linux"
-    provider_type="VMWARE_VM"
-    provider_spec = read_vmw_spec( "specs/substrate/vmware_spec_centos.yaml", vm_template=ESX_CENTOS_76)
+    provider_type = "VMWARE_VM"
+    provider_spec = read_vmw_spec(
+        "specs/substrate/vmware_spec_centos.yaml", vm_template=ESX_CENTOS_76
+    )
     provider_spec.spec["name"] = "Redis_Slave-@@{calm_array_index}@@-@@{calm_random}@@"
     readiness_probe = {
         "disabled": False,
@@ -290,11 +341,12 @@ class VMwareRedisSlaveSubstrate(Substrate):
         "connection_port": 22,
         "credential": ref(DefaultCred),
     }
+
 
 class AzureRedisSlaveSubstrate(Substrate):
     os_type = "Linux"
-    provider_type="AZURE_VM"
-    provider_spec = read_provider_spec( "specs/substrate/azure_spec_centos.yaml")
+    provider_type = "AZURE_VM"
+    provider_spec = read_provider_spec("specs/substrate/azure_spec_centos.yaml")
     provider_spec.spec["name"] = "Redis_Slave-@@{calm_array_index}@@-@@{calm_random}@@"
     readiness_probe = {
         "disabled": False,
@@ -304,10 +356,11 @@ class AzureRedisSlaveSubstrate(Substrate):
         "credential": ref(DefaultCred),
     }
 
+
 class GCPRedisSlaveSubstrate(Substrate):
     os_type = "Linux"
-    provider_type="GCP_VM"
-    provider_spec = read_provider_spec( "specs/substrate/gcp_spec_centos.yaml")
+    provider_type = "GCP_VM"
+    provider_spec = read_provider_spec("specs/substrate/gcp_spec_centos.yaml")
     provider_spec.spec["resources"]["sshKeys"] = [read_local_file("secrets/public_key")]
     readiness_probe = {
         "disabled": False,
@@ -317,6 +370,7 @@ class GCPRedisSlaveSubstrate(Substrate):
         "connection_port": 22,
         "credential": ref(DefaultCred),
     }
+
 
 class AHVRedisSlaveDeployment(Deployment):
     packages = [ref(AHVSlavePackage)]
@@ -331,11 +385,13 @@ class AWSRedisSlaveDeployment(Deployment):
     min_replicas = "2"
     max_replicas = "4"
 
+
 class VMwareRedisSlaveDeployment(Deployment):
     packages = [ref(VMwareSlavePackage)]
     substrate = ref(VMwareRedisSlaveSubstrate)
     min_replicas = "2"
     max_replicas = "4"
+
 
 class AzureRedisSlaveDeployment(Deployment):
     packages = [ref(AzureSlavePackage)]
@@ -343,11 +399,13 @@ class AzureRedisSlaveDeployment(Deployment):
     min_replicas = "2"
     max_replicas = "4"
 
+
 class GCPRedisSlaveDeployment(Deployment):
     packages = [ref(GCPSlavePackage)]
     substrate = ref(GCPRedisSlaveSubstrate)
     min_replicas = "2"
     max_replicas = "4"
+
 
 class Nutanix(Profile):
     """Redis master slave deployment in Nutanix provider"""
@@ -364,9 +422,11 @@ class Nutanix(Profile):
     @action
     def ScaleOut():
         """This action will scale out Redis slaves by given scale out count"""
-        Scaleout = CalmVariable.Simple.int("1", is_mandatory=True, runtime=True) 
+        Scaleout = CalmVariable.Simple.int("1", is_mandatory=True, runtime=True)
         CalmTask.Scaling.scale_out(
-            "@@{Scaleout}@@", target=ref(AHVRedisSlaveDeployment), name="Scale out Slave"
+            "@@{Scaleout}@@",
+            target=ref(AHVRedisSlaveDeployment),
+            name="Scale out Slave",
         )
 
     @action
@@ -376,6 +436,7 @@ class Nutanix(Profile):
         CalmTask.Scaling.scale_in(
             "@@{ScaleIn}@@", target=ref(AHVRedisSlaveDeployment), name="Scale in Slave"
         )
+
 
 class AWS(Profile):
     """Redis master slave deployment in AWS provider"""
@@ -388,19 +449,21 @@ class AWS(Profile):
     )
 
     deployments = [AWSRedisMasterDeployment, AWSRedisSlaveDeployment]
-    
+
     @action
     def ScaleOut():
         """This action will scale out Redis slaves by given scale out count"""
-        Scaleout = CalmVariable.Simple.int("1", is_mandatory=True, runtime=True)  
+        Scaleout = CalmVariable.Simple.int("1", is_mandatory=True, runtime=True)
         CalmTask.Scaling.scale_out(
-            "@@{Scaleout}@@", target=ref(AWSRedisSlaveDeployment), name="Scale out Slave"
+            "@@{Scaleout}@@",
+            target=ref(AWSRedisSlaveDeployment),
+            name="Scale out Slave",
         )
 
     @action
     def ScaleIn():
         """This action will scale in Redis slaves by given scale in count"""
-        ScaleIn = CalmVariable.Simple.int("1", is_mandatory=True, runtime=True)  
+        ScaleIn = CalmVariable.Simple.int("1", is_mandatory=True, runtime=True)
         CalmTask.Scaling.scale_in(
             "@@{ScaleIn}@@", target=ref(AWSRedisSlaveDeployment), name="Scale in Slave"
         )
@@ -421,18 +484,23 @@ class VMware(Profile):
     @action
     def ScaleOut():
         """This action will scale out Redis slaves by given scale out count"""
-        Scaleout = CalmVariable.Simple.int("1", is_mandatory=True, runtime=True) 
+        Scaleout = CalmVariable.Simple.int("1", is_mandatory=True, runtime=True)
         CalmTask.Scaling.scale_out(
-            "@@{Scaleout}@@", target=ref(VMwareRedisSlaveDeployment), name="Scale out Slave"
+            "@@{Scaleout}@@",
+            target=ref(VMwareRedisSlaveDeployment),
+            name="Scale out Slave",
         )
 
     @action
     def ScaleIn():
         """This action will scale in Redis slaves by given scale in count"""
-        ScaleIn = CalmVariable.Simple.int("1", is_mandatory=True, runtime=True)  
+        ScaleIn = CalmVariable.Simple.int("1", is_mandatory=True, runtime=True)
         CalmTask.Scaling.scale_in(
-            "@@{ScaleIn}@@", target=ref(VMwareRedisSlaveDeployment), name="Scale in Slave"
+            "@@{ScaleIn}@@",
+            target=ref(VMwareRedisSlaveDeployment),
+            name="Scale in Slave",
         )
+
 
 class Azure(Profile):
     """Redis master slave deployment in Azure provider"""
@@ -449,18 +517,23 @@ class Azure(Profile):
     @action
     def ScaleOut():
         """This action will scale out Redis slaves by given scale out count"""
-        Scaleout = CalmVariable.Simple.int("1", is_mandatory=True, runtime=True)  
+        Scaleout = CalmVariable.Simple.int("1", is_mandatory=True, runtime=True)
         CalmTask.Scaling.scale_out(
-            "@@{Scaleout}@@", target=ref(AzureRedisSlaveDeployment), name="Scale out Slave"
+            "@@{Scaleout}@@",
+            target=ref(AzureRedisSlaveDeployment),
+            name="Scale out Slave",
         )
 
     @action
     def ScaleIn():
         """This action will scale in Redis slaves by given scale in count"""
-        ScaleIn = CalmVariable.Simple.int("1", is_mandatory=True, runtime=True)  
+        ScaleIn = CalmVariable.Simple.int("1", is_mandatory=True, runtime=True)
         CalmTask.Scaling.scale_in(
-            "@@{ScaleIn}@@", target=ref(AzureRedisSlaveDeployment), name="Scale in Slave"
+            "@@{ScaleIn}@@",
+            target=ref(AzureRedisSlaveDeployment),
+            name="Scale in Slave",
         )
+
 
 class GCP(Profile):
     """Redis master slave deployment in Azure provider"""
@@ -477,18 +550,21 @@ class GCP(Profile):
     @action
     def ScaleOut():
         """This action will scale out Redis slaves by given scale out count"""
-        Scaleout = CalmVariable.Simple.int("1", is_mandatory=True, runtime=True)  
+        Scaleout = CalmVariable.Simple.int("1", is_mandatory=True, runtime=True)
         CalmTask.Scaling.scale_out(
-            "@@{Scaleout}@@", target=ref(GCPRedisSlaveDeployment), name="Scale out Slave"
+            "@@{Scaleout}@@",
+            target=ref(GCPRedisSlaveDeployment),
+            name="Scale out Slave",
         )
 
     @action
     def ScaleIn():
         """This action will scale in Redis slaves by given scale in count"""
-        ScaleIn = CalmVariable.Simple.int("1", is_mandatory=True, runtime=True)  
+        ScaleIn = CalmVariable.Simple.int("1", is_mandatory=True, runtime=True)
         CalmTask.Scaling.scale_in(
             "@@{ScaleIn}@@", target=ref(GCPRedisSlaveDeployment), name="Scale in Slave"
         )
+
 
 class RedisBlueprint(Blueprint):
     """Accessibility:
@@ -506,7 +582,7 @@ class RedisBlueprint(Blueprint):
         AzureRedisMasterSubstrate,
         AzureRedisSlaveSubstrate,
         GCPRedisMasterSubstrate,
-        GCPRedisSlaveSubstrate
+        GCPRedisSlaveSubstrate,
     ]
     packages = [
         AHVMasterPackage,
@@ -520,7 +596,7 @@ class RedisBlueprint(Blueprint):
         AzureMasterPackage,
         AzureSlavePackage,
         GCPMasterPackage,
-        GCPSlavePackage
+        GCPSlavePackage,
     ]
     credentials = [DefaultCred]
 

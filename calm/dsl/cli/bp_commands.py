@@ -1,7 +1,11 @@
 import json
+import sys
+
 import click
 
 from calm.dsl.api import get_api_client
+from calm.dsl.config import get_config
+from calm.dsl.tools import get_logging_handle
 
 from .secrets import find_secret, create_secret
 from .utils import highlight_text
@@ -15,7 +19,6 @@ from .bps import (
     launch_blueprint_simple,
     delete_blueprint,
 )
-from calm.dsl.tools import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -99,7 +102,9 @@ def _compile_blueprint_command(bp_file, out, no_sync):
     compile_blueprint_command(bp_file, out, no_sync)
 
 
-def create_blueprint(client, bp_payload, name=None, description=None, categories=None):
+def create_blueprint(
+    client, bp_payload, name=None, description=None, categories=None, force_create=False
+):
 
     bp_payload.pop("status", None)
 
@@ -140,17 +145,32 @@ def create_blueprint(client, bp_payload, name=None, description=None, categories
     categories = bp_payload["metadata"].get("categories", None)
 
     return client.blueprint.upload_with_secrets(
-        bp_name, bp_desc, bp_resources, categories=categories
+        bp_name,
+        bp_desc,
+        bp_resources,
+        categories=categories,
+        force_create=force_create,
     )
 
 
-def create_blueprint_from_json(client, path_to_json, name=None, description=None):
+def create_blueprint_from_json(
+    client, path_to_json, name=None, description=None, force_create=False
+):
 
-    bp_payload = json.loads(open(path_to_json, "r").read())
-    return create_blueprint(client, bp_payload, name=name, description=description)
+    with open(path_to_json, "r") as f:
+        bp_payload = json.loads(f.read())
+    return create_blueprint(
+        client,
+        bp_payload,
+        name=name,
+        description=description,
+        force_create=force_create,
+    )
 
 
-def create_blueprint_from_dsl(client, bp_file, name=None, description=None):
+def create_blueprint_from_dsl(
+    client, bp_file, name=None, description=None, force_create=False
+):
 
     bp_payload = compile_blueprint(bp_file)
     if bp_payload is None:
@@ -158,7 +178,13 @@ def create_blueprint_from_dsl(client, bp_file, name=None, description=None):
         err = {"error": err_msg, "code": -1}
         return None, err
 
-    return create_blueprint(client, bp_payload, name=name, description=description)
+    return create_blueprint(
+        client,
+        bp_payload,
+        name=name,
+        description=description,
+        force_create=force_create,
+    )
 
 
 @create.command("bp")
@@ -174,18 +200,25 @@ def create_blueprint_from_dsl(client, bp_file, name=None, description=None):
 @click.option(
     "--description", "-d", default=None, help="Blueprint description (Optional)"
 )
-def create_blueprint_command(bp_file, name, description):
+@click.option(
+    "--force",
+    "-fc",
+    is_flag=True,
+    default=False,
+    help="Deletes existing blueprint with the same name before create.",
+)
+def create_blueprint_command(bp_file, name, description, force):
     """Creates a blueprint"""
 
     client = get_api_client()
 
     if bp_file.endswith(".json"):
         res, err = create_blueprint_from_json(
-            client, bp_file, name=name, description=description
+            client, bp_file, name=name, description=description, force_create=force
         )
     elif bp_file.endswith(".py"):
         res, err = create_blueprint_from_dsl(
-            client, bp_file, name=name, description=description
+            client, bp_file, name=name, description=description, force_create=force
         )
     else:
         LOG.error("Unknown file format {}".format(bp_file))
@@ -196,9 +229,43 @@ def create_blueprint_command(bp_file, name, description):
         return
 
     bp = res.json()
-    bp_state = bp["status"]["state"]
-    LOG.info("Blueprint state: {}".format(bp_state))
-    assert bp_state == "ACTIVE"
+    bp_uuid = bp["metadata"]["uuid"]
+    bp_name = bp["metadata"]["name"]
+    bp_status = bp.get("status", {})
+    bp_state = bp_status.get("state", "DRAFT")
+    LOG.debug("Blueprint {} has state: {}".format(bp_name, bp_state))
+
+    if bp_state != "ACTIVE":
+        msg_list = bp_status.get("message_list", [])
+        if not msg_list:
+            LOG.error("Blueprint {} created with errors.".format(bp_name))
+            LOG.debug(json.dumps(bp_status))
+            sys.exit(-1)
+
+        msgs = []
+        for msg_dict in msg_list:
+            msgs.append(msg_dict.get("message", ""))
+
+        LOG.error(
+            "Blueprint {} created with {} error(s): {}".format(
+                bp_name, len(msg_list), msgs
+            )
+        )
+        sys.exit(-1)
+
+    LOG.info("Blueprint {} created successfully.".format(bp_name))
+    config = get_config()
+    pc_ip = config["SERVER"]["pc_ip"]
+    pc_port = config["SERVER"]["pc_port"]
+    link = "https://{}:{}/console/#page/explore/calm/blueprints/{}".format(
+        pc_ip, pc_port, bp_uuid
+    )
+    stdout_dict = {
+        "name": bp_name,
+        "link": link,
+        "state": bp_state,
+    }
+    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
 
 @launch.command("bp")
@@ -217,16 +284,31 @@ def create_blueprint_command(bp_file, name, description):
     default=False,
     help="Ignore runtime variables and use defaults",
 )
+@click.option(
+    "--launch_params",
+    "-l",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to python file containing 'runtime_vars' parameter",
+)
 def launch_blueprint_command(
-    blueprint_name, app_name, ignore_runtime_variables, profile_name, blueprint=None,
+    blueprint_name,
+    app_name,
+    ignore_runtime_variables,
+    profile_name,
+    launch_params,
+    blueprint=None,
 ):
-
+    """Launches a blueprint.
+    All runtime variables will be prompted by default. When passing the 'ignore_runtime_editable' flag, no variables will be prompted and all default values will be used.
+    The blueprint default values can be overridden by passing a Python file via 'launch_params'. Any variable not defined in the Python file will keep the default value defined in the blueprint. When passing a Python file, no variables will be prompted.
+    """
     launch_blueprint_simple(
         blueprint_name,
         app_name,
         blueprint=blueprint,
         profile_name=profile_name,
         patch_editables=not ignore_runtime_variables,
+        launch_params=launch_params,
     )
 
 

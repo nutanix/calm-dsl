@@ -5,7 +5,7 @@ input:
 - "y"  # Enable DRS mode
 - "1"  # Cluster = Sabine59-Cluster
 - "1"  # Storage Pod = QA
-- "8"  # Template = DND_CENTOS_MUL_DISKS
+- "28"  # Template = DND_CENTOS_MUL_DISKS
 - "vm-@@{calm_array_index}@@-@@{calm_time}@@"  # Instance name
 - "1"  # no. of VCPU
 - "1"  # cores per VCPU

@@ -48,16 +48,17 @@ class PackageType(EntityType):
             install_runbook = (
                 getattr(getattr(cls, "__install__", None), "runbook", None) or None
             )
-            if install_runbook:
-                delattr(cls, "__install__")
-            else:
+
+            # delattr(cls, "__install__")
+            if not install_runbook:
                 install_runbook = make_empty_runbook("action_install")
+
             uninstall_runbook = (
                 getattr(getattr(cls, "__uninstall__", None), "runbook", None) or None
             )
-            if uninstall_runbook:
-                delattr(cls, "__uninstall__")
-            else:
+
+            # delattr(cls, "__uninstall__")
+            if not uninstall_runbook:
                 uninstall_runbook = make_empty_runbook("action_uninstall")
 
             cdict = super().compile()
@@ -68,6 +69,8 @@ class PackageType(EntityType):
                 "install_runbook": install_runbook,
                 "uninstall_runbook": uninstall_runbook,
             }
+            # No actions are allowed other than __install__ and __uninstall__
+            cdict.pop("action_list", None)
 
         elif getattr(cls, "type") == "SUBSTRATE_IMAGE":
             cdict = super().compile()
@@ -93,6 +96,7 @@ class PackageType(EntityType):
         services = getattr(cls, "services", [])
         if services:
             return services[0]
+        raise ValueError("package do not have any service referenced")
 
 
 class PackageValidator(PropertyValidator, openapi_type="app_package"):
@@ -101,7 +105,7 @@ class PackageValidator(PropertyValidator, openapi_type="app_package"):
 
 
 def package(**kwargs):
-    name = kwargs.get("name") or getattr(PackageType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return PackageType(name, bases, kwargs)
 

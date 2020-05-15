@@ -1,6 +1,5 @@
 import ast
 import inspect
-import uuid
 
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
@@ -31,7 +30,7 @@ class ActionValidator(PropertyValidator, openapi_type="app_action"):
 
 
 def _action(**kwargs):
-    name = getattr(ActionType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return ActionType(name, bases, kwargs)
 
@@ -40,8 +39,7 @@ Action = _action()
 
 
 def _action_create(**kwargs):
-    name = str(uuid.uuid4())[:8] + "_" + getattr(ActionType, "__schema_name__")
-    name = kwargs.get("name", kwargs.get("__name__", name))
+    name = kwargs.get("name", kwargs.get("__name__", None))
     bases = (Action,)
     return ActionType(name, bases, kwargs)
 
@@ -52,11 +50,13 @@ class action(runbook):
     """
 
     def __call__(self, name=None):
-        return create_call_rb(self.user_runbook, name=name)
+        if self.user_runbook:
+            return create_call_rb(self.user_runbook, name=name)
 
     def __get__(self, instance, cls):
         """
         Translate the user defined function to an action.
+        This method is called during compilation, when getattr() is called on the owner entity.
         Args:
             instance (object): Instance of cls
             cls (Entity): Entity that this action is defined on
@@ -95,8 +95,6 @@ class action(runbook):
                 "runbook": self.user_runbook,
             }
         )
-
-        self.__parsed__ = True
 
         return self.user_action
 

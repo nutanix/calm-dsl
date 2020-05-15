@@ -21,7 +21,7 @@ class EndpointValidator(PropertyValidator, openapi_type="app_endpoint"):
 
 
 def _endpoint(**kwargs):
-    name = kwargs.get("name") or getattr(EndpointType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return EndpointType(name, bases, kwargs)
 
@@ -30,7 +30,7 @@ Endpoint = _endpoint()
 
 
 def _endpoint_create(**kwargs):
-    name = kwargs.get("name", kwargs.pop("__name__", None))
+    name = kwargs.get("name", kwargs.get("__name__", None))
     if name is None:
         name = getattr(EndpointType, "__schema_name__") + "_" + str(uuid.uuid4())[:8]
         kwargs["name"] = name

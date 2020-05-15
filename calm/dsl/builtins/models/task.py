@@ -37,7 +37,7 @@ class TaskValidator(PropertyValidator, openapi_type="app_task"):
 
 
 def _task(**kwargs):
-    name = getattr(TaskType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return TaskType(name, bases, kwargs)
 
@@ -60,12 +60,13 @@ def _get_target_ref(target):
 
 
 def _task_create(**kwargs):
+
     name = kwargs.get("name", kwargs.pop("__name__", None))
     if name is None:
-        name = getattr(TaskType, "__schema_name__") + "_" + str(uuid.uuid4())[:8]
+        name = "_" + getattr(TaskType, "__schema_name__") + str(uuid.uuid4())[:8]
         kwargs["name"] = name
-    bases = (Task,)
-    return TaskType(name, bases, kwargs)
+
+    return _task(**kwargs)
 
 
 def create_call_rb(runbook, target=None, name=None):
@@ -790,7 +791,10 @@ def http_task(
             "type": "basic",
             "basic_auth": {
                 "username": credential.username,
-                "password": {"value": credential.secret.get("value")},
+                "password": {
+                    "value": credential.secret.get("value"),
+                    "attrs": {"is_secret_modified": True},
+                },
             },
         }
 

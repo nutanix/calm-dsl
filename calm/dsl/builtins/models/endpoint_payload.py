@@ -19,7 +19,7 @@ class EndpointPayloadValidator(
 
 
 def _endpoint_payload(**kwargs):
-    name = getattr(EndpointPayloadType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return EndpointPayloadType(name, bases, kwargs)
 

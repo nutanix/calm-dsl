@@ -1,7 +1,8 @@
 import atexit
 
 from calm.dsl.config import get_init_data
-from .table_config import dsl_database, SecretTable, DataTable, CacheTable
+from .table_config import dsl_database, SecretTable, DataTable, VersionTable
+from .table_config import CacheTableBase
 from calm.dsl.tools import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -11,6 +12,7 @@ class Database:
     """DSL database connection"""
 
     db = None
+    registered_tables = []
 
     @classmethod
     def update_db(cls, db_instance):
@@ -30,7 +32,10 @@ class Database:
         self.connect()
         self.secret_table = self.set_and_verify(SecretTable)
         self.data_table = self.set_and_verify(DataTable)
-        self.cache_table = self.set_and_verify(CacheTable)
+        self.version_table = self.set_and_verify(VersionTable)
+
+        for table_type, table in CacheTableBase.tables.items():
+            setattr(self, table_type, self.set_and_verify(table))
 
     def set_and_verify(self, table_cls):
         """ Verify whether this class exists in db
@@ -39,6 +44,10 @@ class Database:
 
         if not self.db.table_exists((table_cls.__name__).lower()):
             self.db.create_tables([table_cls])
+
+        # Register table to class
+        if table_cls not in self.registered_tables:
+            self.registered_tables.append(table_cls)
 
         return table_cls
 

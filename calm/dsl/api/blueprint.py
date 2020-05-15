@@ -17,9 +17,16 @@ class BlueprintAPI(ResourceAPI):
         self.EXPORT_JSON = self.ITEM + "/export_json"
         self.EXPORT_JSON_WITH_SECRETS = self.ITEM + "/export_json?keep_secrets=true"
 
+    # TODO https://jira.nutanix.com/browse/CALM-17178
+    # Blueprint creation timeout is dependent on payload.
+    # So setting read timeout to 300 seconds
     def upload(self, payload):
         return self.connection._call(
-            self.UPLOAD, verify=False, request_json=payload, method=REQUEST.METHOD.POST
+            self.UPLOAD,
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
+            timeout=(5, 300),
         )
 
     def launch(self, uuid, payload):
@@ -76,7 +83,9 @@ class BlueprintAPI(ResourceAPI):
 
         return bp_payload
 
-    def upload_with_secrets(self, bp_name, bp_desc, bp_resources, categories=None):
+    def upload_with_secrets(
+        self, bp_name, bp_desc, bp_resources, categories=None, force_create=False
+    ):
 
         # check if bp with the given name already exists
         params = {"filter": "name=={};state!=DELETED".format(bp_name)}
@@ -88,10 +97,19 @@ class BlueprintAPI(ResourceAPI):
         entities = response.get("entities", None)
         if entities:
             if len(entities) > 0:
-                err_msg = "Blueprint with name {} already exists.".format(bp_name)
-                # ToDo: Add command to edit Blueprints
-                err = {"error": err_msg, "code": -1}
-                return None, err
+                if not force_create:
+                    err_msg = "Blueprint {} already exists. Use --force to first delete existing blueprint before create.".format(
+                        bp_name
+                    )
+                    # ToDo: Add command to edit Blueprints
+                    err = {"error": err_msg, "code": -1}
+                    return None, err
+
+                # --force option used in create. Delete existing blueprint with same name.
+                bp_uuid = entities[0]["metadata"]["uuid"]
+                _, err = self.delete(bp_uuid)
+                if err:
+                    return None, err
 
         secret_map = {}
         secret_variables = []

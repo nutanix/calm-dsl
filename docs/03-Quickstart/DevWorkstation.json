@@ -1,0 +1,735 @@
+{
+  "status": {},
+  "contains_secrets": false,
+  "product_version": "2.9.7.1",
+  "spec": {
+    "description": "- Developer CentOS Workstation with Calm DSL\n- Set user and pass at launch under credential tab\n- SSH to @@{DSL.address}@@ with @@{local.username}@@\n- Once logged in run \"source venv/bin/activate\" from the calm-dsl directory and DSL on!\n",
+    "resources": {
+      "client_attrs": { "1e5a053e_deployment": { "y": -694.5, "x": 693 } },
+      "service_definition_list": [
+        {
+          "singleton": false,
+          "action_list": [
+            {
+              "description": "System action for creating an application",
+              "type": "system",
+              "critical": false,
+              "runbook": {
+                "task_definition_list": [
+                  {
+                    "target_any_local_reference": {
+                      "kind": "app_service",
+                      "name": "DSL"
+                    },
+                    "retries": "0",
+                    "description": "",
+                    "child_tasks_local_reference_list": [],
+                    "name": "c2c7bfb4_dag",
+                    "attrs": { "edges": [], "type": "" },
+                    "timeout_secs": "0",
+                    "type": "DAG",
+                    "variable_list": []
+                  }
+                ],
+                "description": "",
+                "name": "04a88769_runbook",
+                "main_task_local_reference": {
+                  "kind": "app_task",
+                  "name": "c2c7bfb4_dag"
+                },
+                "variable_list": []
+              },
+              "name": "action_create"
+            },
+            {
+              "description": "System action for deleting an application. Deletes created VMs as well",
+              "type": "system",
+              "critical": false,
+              "runbook": {
+                "task_definition_list": [
+                  {
+                    "target_any_local_reference": {
+                      "kind": "app_service",
+                      "name": "DSL"
+                    },
+                    "retries": "0",
+                    "description": "",
+                    "child_tasks_local_reference_list": [],
+                    "name": "b18773dc_dag",
+                    "attrs": { "edges": [], "type": "" },
+                    "timeout_secs": "0",
+                    "type": "DAG",
+                    "variable_list": []
+                  }
+                ],
+                "description": "",
+                "name": "2e2671c5_runbook",
+                "main_task_local_reference": {
+                  "kind": "app_task",
+                  "name": "b18773dc_dag"
+                },
+                "variable_list": []
+              },
+              "name": "action_delete"
+            },
+            {
+              "description": "System action for starting an application",
+              "type": "system",
+              "critical": false,
+              "runbook": {
+                "task_definition_list": [
+                  {
+                    "target_any_local_reference": {
+                      "kind": "app_service",
+                      "name": "DSL"
+                    },
+                    "retries": "0",
+                    "description": "",
+                    "child_tasks_local_reference_list": [],
+                    "name": "2a27ad52_dag",
+                    "attrs": { "edges": [], "type": "" },
+                    "timeout_secs": "0",
+                    "type": "DAG",
+                    "variable_list": []
+                  }
+                ],
+                "description": "",
+                "name": "04c4cde8_runbook",
+                "main_task_local_reference": {
+                  "kind": "app_task",
+                  "name": "2a27ad52_dag"
+                },
+                "variable_list": []
+              },
+              "name": "action_start"
+            },
+            {
+              "description": "System action for stopping an application",
+              "type": "system",
+              "critical": false,
+              "runbook": {
+                "task_definition_list": [
+                  {
+                    "target_any_local_reference": {
+                      "kind": "app_service",
+                      "name": "DSL"
+                    },
+                    "retries": "0",
+                    "description": "",
+                    "child_tasks_local_reference_list": [],
+                    "name": "d054deb3_dag",
+                    "attrs": { "edges": [], "type": "" },
+                    "timeout_secs": "0",
+                    "type": "DAG",
+                    "variable_list": []
+                  }
+                ],
+                "description": "",
+                "name": "b483a0ac_runbook",
+                "main_task_local_reference": {
+                  "kind": "app_task",
+                  "name": "d054deb3_dag"
+                },
+                "variable_list": []
+              },
+              "name": "action_stop"
+            },
+            {
+              "description": "System action for restarting an application",
+              "type": "system",
+              "critical": false,
+              "runbook": {
+                "task_definition_list": [
+                  {
+                    "target_any_local_reference": {
+                      "kind": "app_service",
+                      "name": "DSL"
+                    },
+                    "retries": "0",
+                    "description": "",
+                    "child_tasks_local_reference_list": [],
+                    "name": "d864e3ee_dag",
+                    "attrs": { "edges": [], "type": "" },
+                    "timeout_secs": "0",
+                    "type": "DAG",
+                    "variable_list": []
+                  }
+                ],
+                "description": "",
+                "name": "993446c0_runbook",
+                "main_task_local_reference": {
+                  "kind": "app_task",
+                  "name": "d864e3ee_dag"
+                },
+                "variable_list": []
+              },
+              "name": "action_restart"
+            }
+          ],
+          "depends_on_list": [],
+          "name": "DSL",
+          "port_list": [],
+          "tier": "",
+          "variable_list": [],
+          "description": ""
+        }
+      ],
+      "substrate_definition_list": [
+        {
+          "description": "",
+          "action_list": [
+            {
+              "description": "",
+              "type": "fragment",
+              "critical": false,
+              "runbook": {
+                "task_definition_list": [
+                  {
+                    "target_any_local_reference": {
+                      "kind": "app_substrate",
+                      "name": "VM1"
+                    },
+                    "retries": "0",
+                    "description": "",
+                    "child_tasks_local_reference_list": [],
+                    "name": "ca15697b_dag",
+                    "attrs": { "edges": [], "type": "" },
+                    "timeout_secs": "0",
+                    "type": "DAG",
+                    "variable_list": []
+                  }
+                ],
+                "description": "",
+                "name": "f4270222_runbook",
+                "main_task_local_reference": {
+                  "kind": "app_task",
+                  "name": "ca15697b_dag"
+                },
+                "variable_list": []
+              },
+              "name": "pre_action_create"
+            },
+            {
+              "description": "",
+              "type": "fragment",
+              "critical": false,
+              "runbook": {
+                "task_definition_list": [
+                  {
+                    "target_any_local_reference": {
+                      "kind": "app_substrate",
+                      "name": "VM1"
+                    },
+                    "retries": "0",
+                    "description": "",
+                    "child_tasks_local_reference_list": [],
+                    "name": "6b34ea08_dag",
+                    "attrs": { "edges": [], "type": "" },
+                    "timeout_secs": "0",
+                    "type": "DAG",
+                    "variable_list": []
+                  }
+                ],
+                "description": "",
+                "name": "fae6aa32_runbook",
+                "main_task_local_reference": {
+                  "kind": "app_task",
+                  "name": "6b34ea08_dag"
+                },
+                "variable_list": []
+              },
+              "name": "post_action_delete"
+            }
+          ],
+          "type": "AHV_VM",
+          "name": "VM1",
+          "readiness_probe": {
+            "connection_type": "SSH",
+            "retries": "5",
+            "connection_protocol": "",
+            "connection_port": 22,
+            "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
+            "delay_secs": "60",
+            "disable_readiness_probe": false,
+            "login_credential_local_reference": {
+              "kind": "app_credential",
+              "name": "local"
+            }
+          },
+          "editables": {
+            "create_spec": {
+              "resources": { "nic_list": {}, "serial_port_list": {} }
+            }
+          },
+          "os_type": "Linux",
+          "create_spec": {
+            "name": "DevWorkstation-@@{calm_unique}@@",
+            "resources": {
+              "nic_list": [
+                {
+                  "nic_type": "NORMAL_NIC",
+                  "ip_endpoint_list": [],
+                  "network_function_chain_reference": null,
+                  "network_function_nic_type": "INGRESS",
+                  "mac_address": "",
+                  "subnet_reference": {
+                    "kind": "subnet",
+                    "type": "",
+                    "name": "",
+                    "uuid": "0f4ece03-7d4f-4303-b36d-80493150847d"
+                  },
+                  "type": ""
+                }
+              ],
+              "serial_port_list": [],
+              "guest_tools": null,
+              "num_vcpus_per_socket": 1,
+              "num_sockets": 2,
+              "gpu_list": [],
+              "memory_size_mib": 4096,
+              "parent_reference": null,
+              "hardware_clock_timezone": "",
+              "guest_customization": {
+                "cloud_init": {
+                  "meta_data": "",
+                  "type": "",
+                  "user_data": "#cloud-config\n\nhostname: DevWorkstation-@@{calm_unique}@@\nfqdn: \nmanage_etc_hosts: true\n\n\nssh_pwauth: True\nusers:\n  - name: \"@@{local.username}@@\"\n    groups: sudo\n    shell: /bin/bash\n    lock_passwd: false\n    passwd: \"@@{local.secret}@@\"\n    sudo: ['ALL=(ALL) NOPASSWD:ALL']\n    \nchpasswd:\n list: |\n   @@{local.username}@@:@@{local.secret}@@\n expire: False"
+                },
+                "type": "",
+                "sysprep": null
+              },
+              "power_state": "ON",
+              "type": "",
+              "account_uuid": "94c9278c-e759-420d-8eb8-152366ffec35",
+              "boot_config": {
+                "boot_device": {
+                  "type": "",
+                  "disk_address": {
+                    "type": "",
+                    "device_index": 0,
+                    "adapter_type": "SCSI"
+                  }
+                },
+                "type": "",
+                "boot_type": "",
+                "mac_address": ""
+              },
+              "disk_list": [
+                {
+                  "data_source_reference": {
+                    "kind": "app_package",
+                    "type": "",
+                    "name": "CentOS_7_Cloud",
+                    "uuid": "9fd0a28f-908b-41a6-a5f7-ce4130d7d662"
+                  },
+                  "type": "",
+                  "disk_size_mib": 0,
+                  "volume_group_reference": null,
+                  "device_properties": {
+                    "type": "",
+                    "disk_address": {
+                      "type": "",
+                      "device_index": 0,
+                      "adapter_type": "SCSI"
+                    },
+                    "device_type": "DISK"
+                  }
+                }
+              ]
+            },
+            "availability_zone_reference": null,
+            "backup_policy": null,
+            "type": "",
+            "cluster_reference": null,
+            "categories": ""
+          },
+          "variable_list": []
+        }
+      ],
+      "credential_definition_list": [
+        {
+          "username": "admin",
+          "description": "",
+          "type": "PASSWORD",
+          "secret": {
+            "attrs": { "is_secret_modified": false, "secret_reference": {} }
+          },
+          "name": "local",
+          "editables": { "username": true, "secret": true }
+        }
+      ],
+      "package_definition_list": [
+        {
+          "description": "",
+          "action_list": [],
+          "type": "DEB",
+          "service_local_reference_list": [
+            { "kind": "app_service", "name": "DSL" }
+          ],
+          "name": "Package1",
+          "version": "",
+          "options": {
+            "install_runbook": {
+              "task_definition_list": [
+                {
+                  "target_any_local_reference": {
+                    "kind": "app_package",
+                    "name": "Package1"
+                  },
+                  "retries": "0",
+                  "description": "",
+                  "message_list": [],
+                  "child_tasks_local_reference_list": [
+                    { "kind": "app_task", "name": "installutils" },
+                    { "kind": "app_task", "name": "prereqs" },
+                    { "kind": "app_task", "name": "makdev" },
+                    { "kind": "app_task", "name": "setup_pc_connection" }
+                  ],
+                  "name": "b112b5dc_dag",
+                  "state": "ACTIVE",
+                  "attrs": {
+                    "edges": [
+                      {
+                        "from_task_reference": {
+                          "kind": "app_task",
+                          "name": "installutils"
+                        },
+                        "edge_type": "user_defined",
+                        "type": "",
+                        "to_task_reference": {
+                          "kind": "app_task",
+                          "name": "prereqs"
+                        }
+                      },
+                      {
+                        "from_task_reference": {
+                          "kind": "app_task",
+                          "name": "prereqs"
+                        },
+                        "edge_type": "user_defined",
+                        "type": "",
+                        "to_task_reference": {
+                          "kind": "app_task",
+                          "name": "makdev"
+                        }
+                      },
+                      {
+                        "from_task_reference": {
+                          "kind": "app_task",
+                          "name": "makdev"
+                        },
+                        "edge_type": "user_defined",
+                        "type": "",
+                        "to_task_reference": {
+                          "kind": "app_task",
+                          "name": "setup_pc_connection"
+                        }
+                      }
+                    ],
+                    "type": ""
+                  },
+                  "timeout_secs": "0",
+                  "type": "DAG",
+                  "variable_list": []
+                },
+                {
+                  "target_any_local_reference": {
+                    "kind": "app_service",
+                    "name": "DSL"
+                  },
+                  "retries": "0",
+                  "description": "",
+                  "message_list": [],
+                  "child_tasks_local_reference_list": [],
+                  "name": "installutils",
+                  "state": "ACTIVE",
+                  "attrs": {
+                    "exit_status": [],
+                    "script": "sudo yum install epel-release -y\nsudo yum -y install jq\nsudo yum -y install git\nsudo yum -y install gcc\nsudo yum -y install openssl-devel\ngit clone https://github.com/nutanix/calm-dsl.git",
+                    "script_type": "sh",
+                    "type": "",
+                    "command_line_args": "",
+                    "login_credential_local_reference": {
+                      "kind": "app_credential",
+                      "name": "local"
+                    }
+                  },
+                  "timeout_secs": "0",
+                  "type": "EXEC",
+                  "variable_list": []
+                },
+                {
+                  "target_any_local_reference": {
+                    "kind": "app_service",
+                    "name": "DSL"
+                  },
+                  "retries": "0",
+                  "description": "",
+                  "message_list": [],
+                  "child_tasks_local_reference_list": [],
+                  "name": "prereqs",
+                  "state": "ACTIVE",
+                  "attrs": {
+                    "exit_status": [],
+                    "script": "rpm -q epel-release || sudo yum -y install epel-release\nwhich docker || { curl -fsSL https://get.docker.com/ | sh; sudo systemctl start docker; sudo systemctl enable docker; sudo usermod -aG docker $(whoami); }\nrpm -q python36 || sudo yum -y install python36 python-pip python3-devel\nsudo pip install -U virtualenv",
+                    "script_type": "sh",
+                    "type": "",
+                    "command_line_args": "",
+                    "login_credential_local_reference": {
+                      "kind": "app_credential",
+                      "name": "local"
+                    }
+                  },
+                  "timeout_secs": "0",
+                  "type": "EXEC",
+                  "variable_list": []
+                },
+                {
+                  "target_any_local_reference": {
+                    "kind": "app_service",
+                    "name": "DSL"
+                  },
+                  "retries": "0",
+                  "description": "",
+                  "message_list": [],
+                  "child_tasks_local_reference_list": [],
+                  "name": "makdev",
+                  "state": "ACTIVE",
+                  "attrs": {
+                    "exit_status": [],
+                    "script": "cd calm-dsl\nsudo -H pip3 install virtualenv\nmake dev",
+                    "script_type": "sh",
+                    "type": "",
+                    "command_line_args": "",
+                    "login_credential_local_reference": {
+                      "kind": "app_credential",
+                      "name": "local"
+                    }
+                  },
+                  "timeout_secs": "0",
+                  "type": "EXEC",
+                  "variable_list": []
+                },
+                {
+                  "target_any_local_reference": {
+                    "kind": "app_service",
+                    "name": "DSL"
+                  },
+                  "retries": "0",
+                  "description": "",
+                  "message_list": [],
+                  "child_tasks_local_reference_list": [],
+                  "name": "setup_pc_connection",
+                  "state": "NOT_VALIDATED",
+                  "attrs": {
+                    "exit_status": [],
+                    "script": "cd calm-dsl\nsource venv/bin/activate\ncalm init dsl -i @@{PrismCentral_IP}@@ -P @@{PrismCentral_Port}@@ -u @@{PrismCentral_User}@@ -p @@{PrismCentral_Password}@@ -pj @@{CalmProject}@@\ncalm init bp",
+                    "script_type": "sh",
+                    "type": "",
+                    "command_line_args": "",
+                    "login_credential_local_reference": {
+                      "kind": "app_credential",
+                      "name": "local"
+                    }
+                  },
+                  "timeout_secs": "0",
+                  "type": "EXEC",
+                  "variable_list": []
+                }
+              ],
+              "description": "",
+              "name": "d1765cd4_runbook",
+              "state": "ACTIVE",
+              "main_task_local_reference": {
+                "kind": "app_task",
+                "name": "b112b5dc_dag"
+              },
+              "message_list": [],
+              "variable_list": []
+            },
+            "type": "",
+            "uninstall_runbook": {
+              "task_definition_list": [
+                {
+                  "target_any_local_reference": {
+                    "kind": "app_package",
+                    "name": "Package1"
+                  },
+                  "retries": "0",
+                  "description": "",
+                  "message_list": [],
+                  "child_tasks_local_reference_list": [],
+                  "name": "b49b2ad9_dag",
+                  "state": "ACTIVE",
+                  "attrs": { "edges": [], "type": "" },
+                  "timeout_secs": "0",
+                  "type": "DAG",
+                  "variable_list": []
+                }
+              ],
+              "description": "",
+              "name": "64ef9630_runbook",
+              "state": "ACTIVE",
+              "main_task_local_reference": {
+                "kind": "app_task",
+                "name": "b49b2ad9_dag"
+              },
+              "message_list": [],
+              "variable_list": []
+            }
+          },
+          "variable_list": []
+        },
+        {
+          "description": "CentOS 7 Cloud Image",
+          "action_list": [],
+          "type": "SUBSTRATE_IMAGE",
+          "service_local_reference_list": [],
+          "name": "CentOS_7_Cloud",
+          "version": "",
+          "options": {
+            "type": "",
+            "name": "CentOS_7_Cloud",
+            "resources": {
+              "image_type": "DISK_IMAGE",
+              "checksum": {
+                "checksum_algorithm": "",
+                "type": "",
+                "checksum_value": ""
+              },
+              "source_uri": "http://download.nutanix.com/calm/CentOS-7-x86_64-GenericCloud.qcow2",
+              "version": {
+                "product_version": "7",
+                "type": "",
+                "product_name": "CentOS"
+              },
+              "architecture": "X86_64",
+              "type": ""
+            },
+            "description": ""
+          },
+          "variable_list": []
+        }
+      ],
+      "app_profile_list": [
+        {
+          "deployment_create_list": [
+            {
+              "type": "GREENFIELD",
+              "action_list": [],
+              "name": "1e5a053e_deployment",
+              "min_replicas": "1",
+              "default_replicas": "1",
+              "depends_on_list": [],
+              "published_service_local_reference_list": [],
+              "max_replicas": "1",
+              "package_local_reference_list": [
+                { "kind": "app_package", "name": "Package1" }
+              ],
+              "substrate_local_reference": {
+                "kind": "app_substrate",
+                "name": "VM1"
+              },
+              "variable_list": [],
+              "description": ""
+            }
+          ],
+          "description": "",
+          "action_list": [],
+          "name": "Default",
+          "variable_list": [
+            {
+              "val_type": "STRING",
+              "is_mandatory": true,
+              "description": "",
+              "data_type": "BASE",
+              "type": "LOCAL",
+              "name": "CalmProject",
+              "value": "default",
+              "label": "Calm Project",
+              "attrs": { "type": "" },
+              "editables": { "value": true },
+              "is_hidden": false,
+              "options": { "type": "PREDEFINED", "choices": [] }
+            },
+            {
+              "val_type": "STRING",
+              "is_mandatory": true,
+              "description": "",
+              "data_type": "BASE",
+              "type": "SECRET",
+              "name": "PrismCentral_Password",
+              "value": "",
+              "label": "Prism Central Password",
+              "attrs": {
+                "is_secret_modified": false,
+                "secret_reference": {},
+                "type": "SECRET"
+              },
+              "editables": { "value": true },
+              "is_hidden": false,
+              "options": { "type": "PREDEFINED", "choices": [] }
+            },
+            {
+              "val_type": "STRING",
+              "is_mandatory": true,
+              "description": "",
+              "data_type": "BASE",
+              "type": "LOCAL",
+              "name": "PrismCentral_User",
+              "value": "admin",
+              "label": "Prism Central User",
+              "attrs": { "type": "" },
+              "editables": { "value": true },
+              "is_hidden": false,
+              "options": { "type": "PREDEFINED", "choices": [] }
+            },
+            {
+              "val_type": "STRING",
+              "is_mandatory": true,
+              "description": "",
+              "data_type": "BASE",
+              "type": "LOCAL",
+              "name": "PrismCentral_Port",
+              "value": "9440",
+              "label": "Prism Central Port",
+              "attrs": { "type": "" },
+              "editables": { "value": true },
+              "is_hidden": false,
+              "options": { "type": "PREDEFINED", "choices": [] }
+            },
+            {
+              "val_type": "STRING",
+              "is_mandatory": true,
+              "description": "",
+              "data_type": "BASE",
+              "type": "LOCAL",
+              "name": "PrismCentral_IP",
+              "value": "",
+              "label": "Prism Central IP",
+              "attrs": { "type": "" },
+              "editables": { "value": true },
+              "is_hidden": false,
+              "options": { "type": "PREDEFINED", "choices": [] }
+            }
+          ]
+        }
+      ],
+      "published_service_definition_list": [],
+      "default_credential_local_reference": {
+        "kind": "app_credential",
+        "name": "local"
+      },
+      "type": "USER"
+    },
+    "name": "DevWorkstation-v2"
+  },
+  "api_version": "3.0",
+  "metadata": {
+    "last_update_time": "1588958829879336",
+    "kind": "blueprint",
+    "spec_version": 5,
+    "creation_time": "1588955620648263",
+    "name": "DevWorkstation-v2"
+  }
+}

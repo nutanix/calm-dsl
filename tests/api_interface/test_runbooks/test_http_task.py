@@ -20,7 +20,6 @@ from utils import upload_runbook, poll_runlog_status
 class TestHTTPTasks:
     @pytest.mark.runbook
     @pytest.mark.regression
-    @pytest.mark.now
     def test_http_task(self):
         """ test_http_task, test_http_task_outputin_set_variable,
             test_relative_url_http, test_http_task_without_tls_verify"""

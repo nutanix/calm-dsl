@@ -4,8 +4,8 @@ input:
 - "2"  # OS = Windows
 - "n"  # Enable DRS mode
 - "1"  # Host = 10.46.33.228
-- "1"  # Datastore = Test-Container
-- "8"  # Template = DND_CENTOS_MUL_DISKS
+- "2"  # Datastore = Test-Container
+- "28"  # Template = DND_CENTOS_MUL_DISKS
 - "vm-@@{calm_array_index}@@-@@{calm_time}@@"  # Instance name
 - "1"  # no. of VCPU
 - "1"  # cores per VCPU

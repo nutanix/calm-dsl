@@ -49,7 +49,7 @@ docker: dist
 	# Using commit as pre-release tag
 
 	[ -S /var/run/docker.sock ] && \
-		docker build . --rm --file Dockerfile --tag ${NAME}:${TAG} && \
+		docker build . --rm --file Dockerfile --tag ${NAME}:${TAG} --build-arg tag=${TAG} && \
 		docker tag ${NAME}:${TAG} ${NAME}:latest
 
 black:
@@ -60,7 +60,7 @@ run:
 
 _init_centos:
 	# Lets get python3 in
-	rpm -q epel-release || sudo yum -y install epel-release
+	rpm -q epel-release || sudo yum -y install epel-release openssl-devel
 	# Not needed: This has a modern git
 	# rpm -q wandisco-git-release || sudo yum install -y http://opensource.wandisco.com/centos/7/git/x86_64/wandisco-git-release-7-2.noarch.rpm || :
 	#sudo yum update -y git || :

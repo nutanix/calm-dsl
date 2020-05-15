@@ -381,9 +381,7 @@ class Default(Profile):
         "oscar_django", is_mandatory=True, runtime=True
     )
 
-    db_password = CalmVariable.Simple.Secret(
-        DB_PASSWD, is_mandatory=True, runtime=True
-    )
+    db_password = CalmVariable.Simple.Secret(DB_PASSWD, is_mandatory=True, runtime=True)
 
     db_public_key = CalmVariable.Simple(
         "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDUm18acWv344TgOXBuOnozuSXytDuqKFVE0+x7CK/dZ6Y331lBF+f8AE/Ng3tzxvCDUeth3pa7XO/Y95zc+hTLGROBmWdgidfykBi2FeQ6hZOcsUDslPUL3Ig8UpPzbOva276YP3266+1BGjLi14neBSJvpSV2DvXQovMb57mhAWs9BlVj3UIviHBMQYXc9RUiyoTBYphqQi5THsQafEFEA+3EJ/NLhqF4CTRZoxMk+VDZbQCCYk0SNEDvDnhEUCIQW1KDg8HDaHrCcRE8DKwi1dgDjASwcUeDuaFto0WrUaj8FdOvaIwjLKYC9DUgsPel+FOLNkg0cPi0vuXb1CGZ era@domain.com",

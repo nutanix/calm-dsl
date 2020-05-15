@@ -9,6 +9,7 @@ from .project import ProjectAPI
 from .setting import SettingAPI
 from .marketplace import MarketPlaceAPI
 from .app_icons import AppIconAPI
+from .version import VersionAPI
 
 
 class ClientHandle:
@@ -28,6 +29,7 @@ class ClientHandle:
         self.account = SettingAPI(self.connection)
         self.market_place = MarketPlaceAPI(self.connection)
         self.app_icon = AppIconAPI(self.connection)
+        self.version = VersionAPI(self.connection)
 
 
 _CLIENT_HANDLE = None
