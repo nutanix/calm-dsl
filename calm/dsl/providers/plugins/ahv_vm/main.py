@@ -2,6 +2,7 @@ import click
 import re
 import sys
 import json
+import copy
 
 from ruamel import yaml
 from distutils.version import LooseVersion as LV
@@ -284,7 +285,7 @@ class AhvVmProvider(Provider):
 
                     if device_type:
                         click.echo("\nChoose from given Device Types :")
-                        device_types = list(ahv.DEVICE_TYPES.keys())
+                        device_types = list(AhvConstants.DEVICE_TYPES.keys())
                         for ind, dt in enumerate(device_types):
                             click.echo("\t{}. {}".format(ind + 1, dt))
 
@@ -298,7 +299,7 @@ class AhvVmProvider(Provider):
                             show_default=False,
                         )
 
-                        device_type = ahv.DEVICE_TYPES[new_val]
+                        device_type = AhvConstants.DEVICE_TYPES[new_val]
                         # Change the data dict
                         device_prop["device_type"] = device_type
 
@@ -309,7 +310,9 @@ class AhvVmProvider(Provider):
                     device_bus = disk_address.get("adapter_type", None)
 
                     if device_bus:
-                        device_bus_list = list(ahv.DEVICE_BUS[device_type].keys())
+                        device_bus_list = list(
+                            AhvConstants.DEVICE_BUS[device_type].keys()
+                        )
                         if device_bus not in device_bus_list:
                             device_bus = device_bus_list[0]
 
@@ -328,9 +331,9 @@ class AhvVmProvider(Provider):
                         )
 
                         device_bus = new_val if new_val else device_bus
-                        device_prop["disk_address"]["adapter_type"] = ahv.DEVICE_BUS[
-                            device_type
-                        ][device_bus]
+                        device_prop["disk_address"][
+                            "adapter_type"
+                        ] = AhvConstants.DEVICE_BUS[device_type][device_bus]
 
                 else:
                     device_type = bp_disk_data["device_properties"]["device_type"]
@@ -340,7 +343,7 @@ class AhvVmProvider(Provider):
 
                 if is_data_ref_present and is_size_present:
                     # Check for the operation
-                    operation_list = ahv.OPERATION_TYPES[device_type]
+                    operation_list = AhvConstants.OPERATION_TYPES[device_type]
                     click.echo("\nChoose from given Operation:")
                     for ind, op in enumerate(operation_list):
                         click.echo("\t{}. {}".format(ind + 1, op))
@@ -381,7 +384,9 @@ class AhvVmProvider(Provider):
                         else {}
                     )
 
-                    imagesNameUUIDMap = Obj.images(ahv.IMAGE_TYPES[device_type])
+                    imagesNameUUIDMap = Obj.images(
+                        AhvConstants.IMAGE_TYPES[device_type]
+                    )
                     images = list(imagesNameUUIDMap.keys())
 
                     if not (images or downloadable_images):
@@ -542,7 +547,7 @@ class AhvVmProvider(Provider):
             )
 
             if choice == "y":
-                if vm_os == ahv.OPERATING_SYSTEM["LINUX"]:
+                if vm_os == AhvConstants.OPERATING_SYSTEM["LINUX"]:
                     cloud_init = (
                         guest_cus["cloud_init"] if guest_cus.get("cloud_init") else {}
                     )
@@ -570,7 +575,7 @@ class AhvVmProvider(Provider):
                     )
 
                     if choice[0] == "y":
-                        install_types = ahv.SYS_PREP_INSTALL_TYPES
+                        install_types = AhvConstants.SYS_PREP_INSTALL_TYPES
                         install_type = sysprep.get("install_type", install_types[0])
 
                         click.echo("\nChoose from given install types ")
@@ -752,7 +757,7 @@ class AhvNew(AhvBase):
         return res
 
     def categories(self, *args, **kwargs):
-        payload = self.CATEGORIES_PAYLOAD
+        payload = copy.deepcopy(self.CATEGORIES_PAYLOAD)
         host_pc = kwargs.get("host_pc", False)
 
         # Note: Api response is bugged due to CALM-17213

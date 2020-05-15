@@ -208,7 +208,7 @@ class AhvSubnetsCache(CacheTableBase):
         accounts = project["status"]["project_status"]["resources"][
             "account_reference_list"
         ]
-        
+
         reg_accounts = []
         for account in accounts:
             reg_accounts.append(account["uuid"])
@@ -226,13 +226,11 @@ class AhvSubnetsCache(CacheTableBase):
             if entity_id in reg_accounts:
                 account_uuid = entity_id
                 break
-        
+
         AhvVmProvider = get_provider("AHV_VM")
         AhvObj = AhvVmProvider.get_api_obj()
 
-        filter_query = "(_entity_id_=={})".format(
-            ",_entity_id_==".join(subnets_list),
-        )
+        filter_query = "(_entity_id_=={})".format(",_entity_id_==".join(subnets_list),)
         res = AhvObj.subnets(account_uuid=account_uuid, filter_query=filter_query)
         for entity in res["entities"]:
             name = entity["status"]["name"]
@@ -314,7 +312,7 @@ class AhvImagesCache(CacheTableBase):
         accounts = project["status"]["project_status"]["resources"][
             "account_reference_list"
         ]
-        
+
         reg_accounts = []
         for account in accounts:
             reg_accounts.append(account["uuid"])
@@ -332,7 +330,7 @@ class AhvImagesCache(CacheTableBase):
             if entity_id in reg_accounts:
                 account_uuid = entity_id
                 break
-        
+
         AhvVmProvider = get_provider("AHV_VM")
         AhvObj = AhvVmProvider.get_api_obj()
         res = AhvObj.images(account_uuid=account_uuid)

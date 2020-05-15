@@ -1,13 +1,8 @@
-import peewee
 import click
 import sys
 
 from ..db import get_db_handle
 from calm.dsl.tools import get_logging_handle
-from calm.dsl.config import get_config
-
-from calm.dsl.api import get_api_client
-from calm.dsl.providers import get_provider
 
 LOG = get_logging_handle(__name__)
 
