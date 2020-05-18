@@ -75,7 +75,7 @@ class Provider(ProviderBase):
     def get_api_obj(cls):
         """returns object to call provider specific apis"""
 
-        raise NotImplementedError("Api object not implementeds")
+        raise NotImplementedError("Api object not implemented")
 
     @classmethod
     def get_runtime_editables(
