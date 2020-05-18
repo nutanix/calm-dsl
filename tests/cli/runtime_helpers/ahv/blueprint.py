@@ -45,6 +45,7 @@ class AhvSubstrate(Substrate):
     readiness_probe = readiness_probe(
         connection_type="SSH",
         credential=ref(DefaultCred),
+        disabled=True,
         editables_list=["connection_port", "retries"],
     )
 

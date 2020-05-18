@@ -121,18 +121,15 @@ class AhvVmProvider(Provider):
 
         # Getting the readiness probe details
         runtime_readiness_probe = sub_editable_spec["value"].get("readiness_probe", {})
-        for k, v in runtime_readiness_probe.items():
-            new_val = click.prompt(
-                "Value for {} [{}]".format(k, highlight_text(v)),
-                default=v,
-                show_default=False,
-            )
-            runtime_readiness_probe[k] = new_val
-
         runtime_spec = sub_editable_spec["value"].get("spec", {})
-        if runtime_spec.get("resources") or runtime_spec.get("categories"):
+
+        if (
+            runtime_spec.get("resources")
+            or runtime_spec.get("categories")
+            or runtime_readiness_probe
+        ):
             click.secho(
-                "\n-- Substrate {} --".format(
+                "\n-- Substrate {} --\n".format(
                     highlight_text(
                         sub_editable_spec["context"] + "." + sub_editable_spec["name"]
                     )
@@ -142,6 +139,14 @@ class AhvVmProvider(Provider):
         else:
             # Nothing to get input
             return
+
+        for k, v in runtime_readiness_probe.items():
+            new_val = click.prompt(
+                "Value for {} [{}]".format(k, highlight_text(v)),
+                default=v,
+                show_default=False,
+            )
+            runtime_readiness_probe[k] = new_val
 
         sub_create_spec = substrate_spec["create_spec"]
         downloadable_images = list(vm_img_map.keys())
@@ -276,29 +281,30 @@ class AhvVmProvider(Provider):
         if nic_list:
             click.echo("\n\t", nl=False)
             click.secho("NICS data\n", underline=True)
-            res, err = client.project.read(project_id)
-            if err:
-                raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-            project = res.json()
-            subnets_name_id_map = {}
-            for subnet in project["status"]["project_status"]["resources"][
-                "subnet_reference_list"
-            ]:
-                subnets_name_id_map[subnet["name"]] = subnet["uuid"]
+            filter_query = "(_entity_id_=={})".format(
+                ",_entity_id_==".join(subnets_list),
+            )
+            nics = Obj.subnets(account_uuid=account_uuid, filter_query=filter_query)
+            nics = nics["entities"]
 
-            for subnet in project["status"]["project_status"]["resources"].get(
-                "external_network_list"
-            ):
-                subnets_name_id_map[subnet["name"]] = subnet["uuid"]
+            nic_cluster_data = {}
+            subnet_id_name_map = {}
+            for nic in nics:
+                nic_name = nic["status"]["name"]
+                cluster_name = nic["status"]["cluster_reference"]["name"]
+                nic_uuid = nic["metadata"]["uuid"]
+                subnet_id_name_map[nic_uuid] = nic_name
 
-            subnet_id_name_map = {v: k for k, v in subnets_name_id_map.items()}
+                if nic_cluster_data.get(nic_name):
+                    nic_cluster_data[nic_name].append((cluster_name, nic_uuid))
+                else:
+                    nic_cluster_data[nic_name] = [(cluster_name, nic_uuid)]
 
             click.echo("Choose from given subnets:")
-            for ind, name in enumerate(subnets_name_id_map.keys()):
+            for ind, name in enumerate(nic_cluster_data.keys()):
                 click.echo("\t {}. {}".format(str(ind + 1), name))
 
-            # TODO add the cluster information too.
             for nic_index, nic_data in nic_list.items():
                 click.echo("\n--Nic {} -- ".format(nic_index))
                 nic_uuid = nic_data["subnet_reference"].get("uuid")
@@ -323,9 +329,34 @@ class AhvVmProvider(Provider):
                     nic_data["subnet_reference"].update({"uuid": nic_uuid, "name": ""})
 
                 else:
-                    nic_data["subnet_reference"].update(
-                        {"name": new_val, "uuid": subnets_name_id_map[new_val]}
-                    )
+                    if not nic_cluster_data.get(new_val):
+                        LOG.erro("Invalid nic name")
+                        sys.exit(-1)
+
+                    nc_list = nic_cluster_data[new_val]
+                    if len(nc_list) == 1:
+                        nic_data["subnet_reference"].update(
+                            {"name": new_val, "uuid": nc_list[0][1]}
+                        )
+
+                    else:
+                        # Getting the cluster for supplied nic
+                        click.echo(
+                            "Multiple nic with same name exists. Select from given clusters:"
+                        )
+                        for nc_ind, cluster_data in enumerate(nc_list):
+                            click.echo(
+                                "\t {}. {}".format(str(nc_ind + 1), cluster_data[0])
+                            )
+
+                        ind = click.prompt(
+                            "Enter index for cluster",
+                            type=click.IntRange(1, len(nc_list)),
+                            default=1,
+                        )
+                        nic_data["subnet_reference"].update(
+                            {"name": new_val, "uuid": nc_list[ind - 1][1]}
+                        )
 
         # DISKS
         disk_list = resources.get("disk_list", {})
@@ -1338,25 +1369,20 @@ def create_spec(client):
         "\n{}(y/n)".format(highlight_text("Want any network adapters")), default="n"
     )
     if choice[0] == "y":
-        nics = []
-        if subnets_list:
+        if not subnets_list:
+            click.echo(
+                "\n{}".format(
+                    highlight_text("No subnets found registered with the project")
+                )
+            )
+
+        else:
+            nics = []
             filter_query = "(_entity_id_=={})".format(
                 ",_entity_id_==".join(subnets_list),
             )
             nics = AhvObj.subnets(account_uuid=account_uuid, filter_query=filter_query)
             nics = nics["entities"]
-
-        if not (nics and subnets_list):
-            if not subnets_list:
-                click.echo(
-                    "\n{}".format(
-                        highlight_text("No subnets found registered with the project")
-                    )
-                )
-            else:
-                click.echo("\n{}".format(highlight_text("No network adapter present")))
-
-        else:
             click.echo("\nChoose from given subnets:")
             for ind, nic in enumerate(nics):
                 click.echo(
