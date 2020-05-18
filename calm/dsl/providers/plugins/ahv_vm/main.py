@@ -68,6 +68,57 @@ class AhvVmProvider(Provider):
         client = get_api_client()
         Obj = cls.get_api_obj()
 
+        res, err = client.project.read(project_id)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        project = res.json()
+        subnets_list = []
+        for subnet in project["status"]["project_status"]["resources"][
+            "subnet_reference_list"
+        ]:
+            subnets_list.append(subnet["uuid"])
+
+        # Extending external subnet's list from remote account
+        for subnet in project["status"]["project_status"]["resources"].get(
+            "external_network_list"
+        ):
+            subnets_list.append(subnet["uuid"])
+
+        accounts = project["status"]["project_status"]["resources"][
+            "account_reference_list"
+        ]
+
+        reg_accounts = []
+        for account in accounts:
+            reg_accounts.append(account["uuid"])
+
+        # As account_uuid is required for versions>2.9.0
+        account_uuid = ""
+        is_host_pc = True
+        payload = {"length": 250, "filter": "type==nutanix_pc"}
+        res, err = client.account.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        for entity in res["entities"]:
+            entity_id = entity["metadata"]["uuid"]
+            if entity_id in reg_accounts:
+                account_uuid = entity_id
+                break
+
+        # TODO Host PC dependency for categories call due to bug https://jira.nutanix.com/browse/CALM-17213
+        if account_uuid:
+            payload = {"length": 250, "filter": "_entity_id_=={}".format(account_uuid)}
+            res, err = client.account.list(payload)
+            if err:
+                raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+            res = res.json()
+            provider_data = res["entities"][0]["status"]["resources"]["data"]
+            is_host_pc = provider_data["host_pc"]
+
         # Getting the readiness probe details
         runtime_readiness_probe = sub_editable_spec["value"].get("readiness_probe", {})
         for k, v in runtime_readiness_probe.items():
@@ -174,7 +225,9 @@ class AhvVmProvider(Provider):
                     show_choices=False,
                 )
                 if choice == "y":
-                    categories = Obj.categories()
+                    categories = Obj.categories(
+                        host_pc=is_host_pc, account_uuid=account_uuid
+                    )
                     click.echo("Choose from given categories:")
                     for ind, group in enumerate(categories):
                         category = "{}:{}".format(group["key"], group["value"])
@@ -232,6 +285,11 @@ class AhvVmProvider(Provider):
             for subnet in project["status"]["project_status"]["resources"][
                 "subnet_reference_list"
             ]:
+                subnets_name_id_map[subnet["name"]] = subnet["uuid"]
+
+            for subnet in project["status"]["project_status"]["resources"].get(
+                "external_network_list"
+            ):
                 subnets_name_id_map[subnet["name"]] = subnet["uuid"]
 
             subnet_id_name_map = {v: k for k, v in subnets_name_id_map.items()}
@@ -384,11 +442,21 @@ class AhvVmProvider(Provider):
                         else {}
                     )
 
-                    imagesNameUUIDMap = Obj.images(
-                        AhvConstants.IMAGE_TYPES[device_type]
-                    )
-                    images = list(imagesNameUUIDMap.keys())
+                    res = Obj.images(account_uuid=account_uuid)
+                    imagesNameUUIDMap = {}
+                    for entity in res.get("entities", []):
+                        img_type = entity["status"]["resources"].get("image_type", None)
 
+                        # Ignoring images, if they don't have any image type(Ex: Karbon Image)
+                        if not img_type:
+                            continue
+
+                        if img_type == AhvConstants.IMAGE_TYPES[device_type]:
+                            imagesNameUUIDMap[entity["status"]["name"]] = entity[
+                                "metadata"
+                            ]["uuid"]
+
+                    images = list(imagesNameUUIDMap.keys())
                     if not (images or downloadable_images):
                         LOG.error(
                             "No images found for device type: {}".format(device_type)
