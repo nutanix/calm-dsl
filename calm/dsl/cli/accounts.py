@@ -2,12 +2,14 @@ import time
 import click
 import arrow
 from prettytable import PrettyTable
+from distutils.version import LooseVersion as LV
 
 from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.config import get_config
 
 from .utils import get_name_query, get_states_filter, highlight_text
 from .constants import ACCOUNT
+from calm.dsl.store import Version
 from calm.dsl.tools import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -18,6 +20,7 @@ def get_accounts(name, filter_by, limit, offset, quiet, all_items, account_type)
 
     client = get_api_client()
     config = get_config()
+    calm_version = Version.get_version("Calm")
 
     params = {"length": limit, "offset": offset}
     filter_query = ""
@@ -29,8 +32,11 @@ def get_accounts(name, filter_by, limit, offset, quiet, all_items, account_type)
         filter_query += ";(type=={})".format(",type==".join(account_type))
     if all_items:
         filter_query += get_states_filter(ACCOUNT.STATES)
-    # Remove PE accounts
-    filter_query += ";type!=nutanix"
+
+    # Remove PE accounts for versions >= 2.9.0 (TODO move to constants)
+    if (LV(calm_version) >= LV("2.9.0")):
+        filter_query += ";type!=nutanix"
+
     if filter_query.startswith(";"):
         filter_query = filter_query[1:]
 
@@ -151,6 +157,7 @@ def describe_nutanix_pe_account(spec):
     click.echo("Cluster Name: {}".format(highlight_text(cluster_name)))
 
 
+# TODO add showback data
 def describe_nutanix_pc_account(provider_data):
 
     config = get_config()
