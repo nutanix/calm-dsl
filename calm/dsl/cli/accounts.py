@@ -1,6 +1,7 @@
 import time
 import click
 import arrow
+import sys
 from prettytable import PrettyTable
 from distutils.version import LooseVersion as LV
 
@@ -34,7 +35,7 @@ def get_accounts(name, filter_by, limit, offset, quiet, all_items, account_type)
         filter_query += get_states_filter(ACCOUNT.STATES)
 
     # Remove PE accounts for versions >= 2.9.0 (TODO move to constants)
-    if (LV(calm_version) >= LV("2.9.0")):
+    if LV(calm_version) >= LV("2.9.0"):
         filter_query += ";type!=nutanix"
 
     if filter_query.startswith(";"):
@@ -144,7 +145,7 @@ def describe_showback_data(spec):
             for item in cost_list:
                 name = item["name"]
                 value = item["value"]
-                click.echo("{}: ".format(name.upper()), nl=False)
+                click.echo("\t{}: ".format(name.upper()), nl=False)
                 click.echo(highlight_text(str(value)))
 
 
@@ -157,28 +158,47 @@ def describe_nutanix_pe_account(spec):
     click.echo("Cluster Name: {}".format(highlight_text(cluster_name)))
 
 
-# TODO add showback data
 def describe_nutanix_pc_account(provider_data):
 
     config = get_config()
+    client = get_api_client()
     pc_port = provider_data["port"]
     host_pc = provider_data["host_pc"]
     pc_ip = provider_data["server"] if not host_pc else config["SERVER"]["pc_ip"]
 
-    cluster_list = provider_data["cluster_account_reference_list"]
-
     click.echo("Is Host PC: {}".format(highlight_text(host_pc)))
     click.echo("PC IP: {}".format(highlight_text(pc_ip)))
     click.echo("PC Port: {}".format(highlight_text(pc_port)))
-    click.echo("Cluster Accounts:")
+
+    cluster_list = provider_data["cluster_account_reference_list"]
+    if cluster_list:
+        click.echo("\nCluster Accounts:\n-----------------")
+
     for index, cluster in enumerate(cluster_list):
+        cluster_data = cluster["resources"]["data"]
         click.echo(
-            "\t{}. {}({})".format(
+            "\n{}. {} (uuid: {})\tPE Account UUID: {}".format(
                 str(index + 1),
-                highlight_text(cluster["name"]),
+                highlight_text(cluster_data["cluster_name"]),
+                highlight_text(cluster_data["cluster_uuid"]),
                 highlight_text(cluster["uuid"]),
             )
         )
+
+        res, err = client.showback.status()
+        if err:
+            LOG.error("[{}] - {}".format(err["code"], err["error"]))
+            sys.exit(-1)
+
+        res = res.json()
+        showback_status = res["current_status"] == "enabled"
+        if not showback_status:
+            click.echo("Showback Status: {}".format(highlight_text("Not Enabled")))
+        else:
+            click.echo("Showback Status: {}".format(highlight_text("Enabled")))
+            price_items = cluster["resources"].get("price_items", [])
+            click.echo("Resource Usage Costs:\n----------------------")
+            describe_showback_data(price_items)
 
 
 def describe_aws_account(spec):
@@ -352,12 +372,19 @@ def describe_account(account_name):
         click.echo("Provider details not present")
 
     if account_type in ["nutanix", "vmware"]:
-        price_items = account["status"]["resources"]["price_items"]
-        if not price_items:
+        res, err = client.showback.status()
+        if err:
+            LOG.error("[{}] - {}".format(err["code"], err["error"]))
+            sys.exit(-1)
+
+        res = res.json()
+        showback_status = res["current_status"] == "enabled"
+        if not showback_status:
             click.echo("Showback Status: {}".format(highlight_text("Not Enabled")))
         else:
+            price_items = account["status"]["resources"]["price_items"]
             click.echo("Showback Status: {}".format(highlight_text("Enabled")))
-            click.echo("\nResource Usage Costs:\n----------------------\n")
+            click.echo("Resource Usage Costs:\n----------------------")
             describe_showback_data(price_items)
 
     click.echo("")
