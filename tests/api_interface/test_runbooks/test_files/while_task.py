@@ -5,7 +5,7 @@ Calm DSL While Task Example
 import json
 
 from calm.dsl.builtins import runbook
-from calm.dsl.builtins import CalmTask, Auth
+from calm.dsl.builtins import CalmTask, Auth, CalmVariable
 from calm.dsl.builtins import CalmEndpoint, ref
 from calm.dsl.builtins import read_local_file, basic_cred
 
@@ -103,3 +103,11 @@ def WhileTaskLoopVariable(endpoints=[linux_endpoint, windows_endpoint, http_endp
                 status_mapping={200: True},
                 target=ref(http_endpoint),
             )
+
+
+@runbook
+def WhileTaskMacro():
+    "Runbook Service example"
+    var = CalmVariable.Simple("3")  # noqa
+    while(CalmTask.While("@@{var}@@", name="WhileTask", loop_variable="iteration")):
+        CalmTask.Exec.escript(name="Exec", script='''print "test"''')

@@ -1091,10 +1091,6 @@ class CalmTask:
     class While:
         def __new__(cls, iterations, name=None, child_tasks=[],
                     loop_variable="iteration", parallel_factor=1, exit_condition="SUCCESS"):
-            if not isinstance(iterations, int):
-                raise ValueError(
-                    "Repeat Count must be an integer, got {}".format(iterations)
-                )
             attrs = {
                 "apf": str(parallel_factor),
                 "iterations": str(iterations),
