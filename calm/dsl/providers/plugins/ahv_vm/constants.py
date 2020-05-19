@@ -1,8 +1,5 @@
 class AHV:
-    SUBNETS = "subnets"
-    IMAGES = "images"
-    GROUPS = "groups"
-    DEVICE_TYPES = {"CD-ROM": "CDROM", "DISK": "DISK"}
+    DEVICE_TYPES = {"CD_ROM": "CDROM", "DISK": "DISK"}
 
     DEVICE_BUS = {
         "CDROM": {"SATA": "SATA", "IDE": "IDE"},

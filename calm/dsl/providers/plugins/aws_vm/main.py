@@ -21,6 +21,13 @@ class AwsVmProvider(Provider):
         client = get_api_client()
         create_spec(client)
 
+    @classmethod
+    def get_api_obj(cls):
+        """returns object to call ahv provider specific apis"""
+
+        client = get_api_client()
+        return AWS(client.connection)
+
 
 class AWS:
     def __init__(self, connection):

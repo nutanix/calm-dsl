@@ -26,6 +26,13 @@ class VCenterVmProvider(Provider):
         if spec.get("template"):
             spec["template"] = vm_template.__name__
 
+    @classmethod
+    def get_api_obj(cls):
+        """returns object to call vmware provider specific apis"""
+
+        client = get_api_client()
+        return VCenter(client.connection)
+
 
 class VCenter:
     def __init__(self, connection):
