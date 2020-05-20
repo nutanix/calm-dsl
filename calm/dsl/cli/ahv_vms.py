@@ -62,7 +62,6 @@ def get_ahv_vm_list(limit, offset, quiet):
         if "owner_reference" in metadata:
             owner = metadata["owner_reference"]["name"]
 
-
         # Status section
         status = row["status"]
 
@@ -88,10 +87,9 @@ def get_ahv_vm_list(limit, offset, quiet):
         memory_capacity = None
         if "memory_size_mib" in resources:
             try:
-                memory_capacity = int(resources["memory_size_mib"])//1024
+                memory_capacity = int(resources["memory_size_mib"]) // 1024
             except:
                 pass
-
 
         ip_address = None
         if "nic_list" in resources:
