@@ -112,6 +112,12 @@ def list():
 
 
 @main.group(cls=DYMGroup)
+def ls():
+    """List items: Example - `ls vm`"""
+    pass
+
+
+@main.group(cls=DYMGroup)
 def show():
     """Shows the cached data(Dynamic data) etc."""
     pass
