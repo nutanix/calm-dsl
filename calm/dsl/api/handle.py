@@ -9,6 +9,7 @@ from .marketplace import MarketPlaceAPI
 from .app_icons import AppIconAPI
 from .version import VersionAPI
 from .showback import ShowbackAPI
+from .ahv_vm import AhvVmAPI
 
 
 class ClientHandle:
@@ -28,6 +29,7 @@ class ClientHandle:
         self.app_icon = AppIconAPI(self.connection)
         self.version = VersionAPI(self.connection)
         self.showback = ShowbackAPI(self.connection)
+        self.ahv_vm = AhvVmAPI(self.connection)
 
 
 _CLIENT_HANDLE = None
