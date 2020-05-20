@@ -41,7 +41,9 @@ setuptools.setup(
     cmdclass={"test": PyTest},
     zip_safe=False,
     include_package_data=True,
-    entry_points={"console_scripts": ["calm=calm.dsl.cli:main"]},
+    entry_points={
+        "console_scripts": ["calm=calm.dsl.cli:main", "nc=calm.dsl.cli:main"]
+    },
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Environment :: Console",
