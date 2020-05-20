@@ -14,6 +14,7 @@ client = get_connection(pc_ip, pc_port,
 import traceback
 import json
 import urllib3
+import sys
 
 from requests import Session as NonRetrySession
 from requests_toolbelt import MultipartEncoder

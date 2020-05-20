@@ -14,10 +14,10 @@ dev:
 
 test: dev
 	venv/bin/calm update cache
-	venv/bin/py.test -v --durations 10 -m "not slow" --ignore=examples/
+	venv/bin/py.test -v -rsx --durations 10 -m "not slow" --ignore=examples/
 
 test-all: test
-	venv/bin/py.test -v -m "slow"
+	venv/bin/py.test -v -rsx -m "slow"
 
 gui: dev
 	# Setup Jupyter

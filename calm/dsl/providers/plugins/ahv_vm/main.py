@@ -1,15 +1,20 @@
 import click
-from ruamel import yaml
 import re
-import json
 import sys
+import json
+import copy
+
+from ruamel import yaml
+from distutils.version import LooseVersion as LV
+from collections import OrderedDict
 
 from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.providers import get_provider_interface
 from calm.dsl.tools import StrictDraft7Validator, get_logging_handle
 from calm.dsl.builtins import ref
+from calm.dsl.store import Version
 
-from .constants import AHV as ahv
+from .constants import AHV as AhvConstants
 
 LOG = get_logging_handle(__name__)
 Provider = get_provider_interface()
@@ -44,7 +49,9 @@ class AhvVmProvider(Provider):
 
             pkg = img_cls.compile()
             vm_image_type = pkg["options"]["resources"]["image_type"]
-            disk_img_type = ahv.IMAGE_TYPES[disk["device_properties"]["device_type"]]
+            disk_img_type = AhvConstants.IMAGE_TYPES[
+                disk["device_properties"]["device_type"]
+            ]
 
             if vm_image_type != disk_img_type:
                 raise TypeError("image type mismatch in disk {}".format(disk_ind))
@@ -59,22 +66,70 @@ class AhvVmProvider(Provider):
         """Fetch runtime editables at runtime"""
 
         client = get_api_client()
-        Obj = AHV(client.connection)
+        Obj = cls.get_api_obj()
+
+        res, err = client.project.read(project_id)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        project = res.json()
+        subnets_list = []
+        for subnet in project["status"]["project_status"]["resources"][
+            "subnet_reference_list"
+        ]:
+            subnets_list.append(subnet["uuid"])
+
+        # Extending external subnet's list from remote account
+        for subnet in project["status"]["project_status"]["resources"].get(
+            "external_network_list"
+        ):
+            subnets_list.append(subnet["uuid"])
+
+        accounts = project["status"]["project_status"]["resources"][
+            "account_reference_list"
+        ]
+
+        reg_accounts = []
+        for account in accounts:
+            reg_accounts.append(account["uuid"])
+
+        # As account_uuid is required for versions>2.9.0
+        account_uuid = ""
+        is_host_pc = True
+        payload = {"length": 250, "filter": "type==nutanix_pc"}
+        res, err = client.account.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        for entity in res["entities"]:
+            entity_id = entity["metadata"]["uuid"]
+            if entity_id in reg_accounts:
+                account_uuid = entity_id
+                break
+
+        # TODO Host PC dependency for categories call due to bug https://jira.nutanix.com/browse/CALM-17213
+        if account_uuid:
+            payload = {"length": 250, "filter": "_entity_id_=={}".format(account_uuid)}
+            res, err = client.account.list(payload)
+            if err:
+                raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+            res = res.json()
+            provider_data = res["entities"][0]["status"]["resources"]["data"]
+            is_host_pc = provider_data["host_pc"]
 
         # Getting the readiness probe details
         runtime_readiness_probe = sub_editable_spec["value"].get("readiness_probe", {})
-        for k, v in runtime_readiness_probe.items():
-            new_val = click.prompt(
-                "Value for {} [{}]".format(k, highlight_text(v)),
-                default=v,
-                show_default=False,
-            )
-            runtime_readiness_probe[k] = new_val
-
         runtime_spec = sub_editable_spec["value"].get("spec", {})
-        if runtime_spec.get("resources") or runtime_spec.get("categories"):
+
+        if (
+            runtime_spec.get("resources")
+            or runtime_spec.get("categories")
+            or runtime_readiness_probe
+        ):
             click.secho(
-                "\n-- Substrate {} --".format(
+                "\n-- Substrate {} --\n".format(
                     highlight_text(
                         sub_editable_spec["context"] + "." + sub_editable_spec["name"]
                     )
@@ -84,6 +139,14 @@ class AhvVmProvider(Provider):
         else:
             # Nothing to get input
             return
+
+        for k, v in runtime_readiness_probe.items():
+            new_val = click.prompt(
+                "Value for {} [{}]".format(k, highlight_text(v)),
+                default=v,
+                show_default=False,
+            )
+            runtime_readiness_probe[k] = new_val
 
         sub_create_spec = substrate_spec["create_spec"]
         downloadable_images = list(vm_img_map.keys())
@@ -167,7 +230,9 @@ class AhvVmProvider(Provider):
                     show_choices=False,
                 )
                 if choice == "y":
-                    categories = Obj.categories()
+                    categories = Obj.categories(
+                        host_pc=is_host_pc, account_uuid=account_uuid
+                    )
                     click.echo("Choose from given categories:")
                     for ind, group in enumerate(categories):
                         category = "{}:{}".format(group["key"], group["value"])
@@ -216,24 +281,30 @@ class AhvVmProvider(Provider):
         if nic_list:
             click.echo("\n\t", nl=False)
             click.secho("NICS data\n", underline=True)
-            res, err = client.project.read(project_id)
-            if err:
-                raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-            project = res.json()
-            subnets_name_id_map = {}
-            for subnet in project["status"]["project_status"]["resources"][
-                "subnet_reference_list"
-            ]:
-                subnets_name_id_map[subnet["name"]] = subnet["uuid"]
+            filter_query = "(_entity_id_=={})".format(
+                ",_entity_id_==".join(subnets_list),
+            )
+            nics = Obj.subnets(account_uuid=account_uuid, filter_query=filter_query)
+            nics = nics["entities"]
 
-            subnet_id_name_map = {v: k for k, v in subnets_name_id_map.items()}
+            nic_cluster_data = {}
+            subnet_id_name_map = {}
+            for nic in nics:
+                nic_name = nic["status"]["name"]
+                cluster_name = nic["status"]["cluster_reference"]["name"]
+                nic_uuid = nic["metadata"]["uuid"]
+                subnet_id_name_map[nic_uuid] = nic_name
+
+                if nic_cluster_data.get(nic_name):
+                    nic_cluster_data[nic_name].append((cluster_name, nic_uuid))
+                else:
+                    nic_cluster_data[nic_name] = [(cluster_name, nic_uuid)]
 
             click.echo("Choose from given subnets:")
-            for ind, name in enumerate(subnets_name_id_map.keys()):
+            for ind, name in enumerate(nic_cluster_data.keys()):
                 click.echo("\t {}. {}".format(str(ind + 1), name))
 
-            # TODO add the cluster information too.
             for nic_index, nic_data in nic_list.items():
                 click.echo("\n--Nic {} -- ".format(nic_index))
                 nic_uuid = nic_data["subnet_reference"].get("uuid")
@@ -258,9 +329,34 @@ class AhvVmProvider(Provider):
                     nic_data["subnet_reference"].update({"uuid": nic_uuid, "name": ""})
 
                 else:
-                    nic_data["subnet_reference"].update(
-                        {"name": new_val, "uuid": subnets_name_id_map[new_val]}
-                    )
+                    if not nic_cluster_data.get(new_val):
+                        LOG.erro("Invalid nic name")
+                        sys.exit(-1)
+
+                    nc_list = nic_cluster_data[new_val]
+                    if len(nc_list) == 1:
+                        nic_data["subnet_reference"].update(
+                            {"name": new_val, "uuid": nc_list[0][1]}
+                        )
+
+                    else:
+                        # Getting the cluster for supplied nic
+                        click.echo(
+                            "Multiple nic with same name exists. Select from given clusters:"
+                        )
+                        for nc_ind, cluster_data in enumerate(nc_list):
+                            click.echo(
+                                "\t {}. {}".format(str(nc_ind + 1), cluster_data[0])
+                            )
+
+                        ind = click.prompt(
+                            "Enter index for cluster",
+                            type=click.IntRange(1, len(nc_list)),
+                            default=1,
+                        )
+                        nic_data["subnet_reference"].update(
+                            {"name": new_val, "uuid": nc_list[ind - 1][1]}
+                        )
 
         # DISKS
         disk_list = resources.get("disk_list", {})
@@ -278,7 +374,7 @@ class AhvVmProvider(Provider):
 
                     if device_type:
                         click.echo("\nChoose from given Device Types :")
-                        device_types = list(ahv.DEVICE_TYPES.keys())
+                        device_types = list(AhvConstants.DEVICE_TYPES.keys())
                         for ind, dt in enumerate(device_types):
                             click.echo("\t{}. {}".format(ind + 1, dt))
 
@@ -292,7 +388,7 @@ class AhvVmProvider(Provider):
                             show_default=False,
                         )
 
-                        device_type = ahv.DEVICE_TYPES[new_val]
+                        device_type = AhvConstants.DEVICE_TYPES[new_val]
                         # Change the data dict
                         device_prop["device_type"] = device_type
 
@@ -303,7 +399,9 @@ class AhvVmProvider(Provider):
                     device_bus = disk_address.get("adapter_type", None)
 
                     if device_bus:
-                        device_bus_list = list(ahv.DEVICE_BUS[device_type].keys())
+                        device_bus_list = list(
+                            AhvConstants.DEVICE_BUS[device_type].keys()
+                        )
                         if device_bus not in device_bus_list:
                             device_bus = device_bus_list[0]
 
@@ -322,9 +420,9 @@ class AhvVmProvider(Provider):
                         )
 
                         device_bus = new_val if new_val else device_bus
-                        device_prop["disk_address"]["adapter_type"] = ahv.DEVICE_BUS[
-                            device_type
-                        ][device_bus]
+                        device_prop["disk_address"][
+                            "adapter_type"
+                        ] = AhvConstants.DEVICE_BUS[device_type][device_bus]
 
                 else:
                     device_type = bp_disk_data["device_properties"]["device_type"]
@@ -334,7 +432,7 @@ class AhvVmProvider(Provider):
 
                 if is_data_ref_present and is_size_present:
                     # Check for the operation
-                    operation_list = ahv.OPERATION_TYPES[device_type]
+                    operation_list = AhvConstants.OPERATION_TYPES[device_type]
                     click.echo("\nChoose from given Operation:")
                     for ind, op in enumerate(operation_list):
                         click.echo("\t{}. {}".format(ind + 1, op))
@@ -375,9 +473,21 @@ class AhvVmProvider(Provider):
                         else {}
                     )
 
-                    imagesNameUUIDMap = Obj.images(ahv.IMAGE_TYPES[device_type])
-                    images = list(imagesNameUUIDMap.keys())
+                    res = Obj.images(account_uuid=account_uuid)
+                    imagesNameUUIDMap = {}
+                    for entity in res.get("entities", []):
+                        img_type = entity["status"]["resources"].get("image_type", None)
 
+                        # Ignoring images, if they don't have any image type(Ex: Karbon Image)
+                        if not img_type:
+                            continue
+
+                        if img_type == AhvConstants.IMAGE_TYPES[device_type]:
+                            imagesNameUUIDMap[entity["status"]["name"]] = entity[
+                                "metadata"
+                            ]["uuid"]
+
+                    images = list(imagesNameUUIDMap.keys())
                     if not (images or downloadable_images):
                         LOG.error(
                             "No images found for device type: {}".format(device_type)
@@ -536,7 +646,7 @@ class AhvVmProvider(Provider):
             )
 
             if choice == "y":
-                if vm_os == ahv.OPERATING_SYSTEM["LINUX"]:
+                if vm_os == AhvConstants.OPERATING_SYSTEM["LINUX"]:
                     cloud_init = (
                         guest_cus["cloud_init"] if guest_cus.get("cloud_init") else {}
                     )
@@ -564,7 +674,7 @@ class AhvVmProvider(Provider):
                     )
 
                     if choice[0] == "y":
-                        install_types = ahv.SYS_PREP_INSTALL_TYPES
+                        install_types = AhvConstants.SYS_PREP_INSTALL_TYPES
                         install_type = sysprep.get("install_type", install_types[0])
 
                         click.echo("\nChoose from given install types ")
@@ -631,77 +741,221 @@ class AhvVmProvider(Provider):
                         guest_cus["sysprep"] = sysprep
                 resources["guest_customization"] = guest_cus
 
+    @classmethod
+    def get_api_obj(cls):
+        """returns object to call ahv provider specific apis"""
 
-class AHV:
+        client = get_api_client()
+        calm_version = Version.get_version("Calm")
+        api_handlers = AhvBase.api_handlers
+
+        # Return min version that is greater or equal to user calm version
+        supported_versions = []
+        for k in api_handlers.keys():
+            if LV(k) <= LV(calm_version):
+                supported_versions.append(k)
+
+        latest_version = max(supported_versions, key=lambda x: LV(x))
+        api_handler = api_handlers[latest_version]
+        return api_handler(client.connection)
+
+
+class AhvBase:
+    """Base class for ahv provider specific apis"""
+
+    api_handlers = OrderedDict()
+    __api_version__ = None
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+
+        version = getattr(cls, "__api_version__")
+        if version:
+            cls.api_handlers[version] = cls
+
+    @classmethod
+    def get_version(cls):
+        return getattr(cls, "__api_version__")
+
+    def images(self, *args, **kwargs):
+        raise NotImplementedError("images call not implemented")
+
+    def subnets(self, *args, **kwargs):
+        raise NotImplementedError("subnets call not implemented")
+
+    def categories(self, *args, **kwargs):
+        raise NotImplementedError("categories call not implemented")
+
+
+class AhvNew(AhvBase):
+    """ahv api object for calm_version >= 2.9.0"""
+
+    __api_version__ = "2.9.0"
+    SUBNETS = "nutanix/v1/subnets"
+    IMAGES = "nutanix/v1/images"
+    GROUPS = "nutanix/v1/groups"
+    CATEGORIES_PAYLOAD = {
+        "entity_type": "category",
+        "filter_criteria": "name!=CalmApplication;name!=CalmDeployment;name!=CalmService;name!=CalmPackage;name!=CalmProject;name!=CalmUser;name!=CalmVmUniqueIdentifier;name!=CalmClusterUuid",
+        "grouping_attribute": "abac_category_key",
+        "group_sort_attribute": "name",
+        "group_count": 60,
+        "group_attributes": [
+            {"attribute": "name", "ancestor_entity_type": "abac_category_key"}
+        ],
+        "group_member_count": 1000,
+        "group_member_offset": 0,
+        "group_member_sort_attribute": "value",
+        "group_member_attributes": [{"attribute": "value"}],
+        "query_name": "prism:CategoriesQueryModel",
+    }
+
     def __init__(self, connection):
         self.connection = connection
 
-    def images(self, image_type="DISK_IMAGE"):
-        Obj = get_resource_api(ahv.IMAGES, self.connection)
-        res, err = Obj.list()
+    def images(self, *args, **kwargs):
+        Obj = get_resource_api(self.IMAGES, self.connection)
+        limit = kwargs.get("length", 250)
+        offset = kwargs.get("offset", 0)
+        filter_query = kwargs.get("filter_query", "")
+
+        account_uuid = kwargs.get("account_uuid", None)
+        if account_uuid:
+            filter_query = filter_query + ";account_uuid=={}".format(account_uuid)
+
+        if filter_query.startswith(";"):
+            filter_query = filter_query[1:]
+
+        params = {"length": limit, "offset": offset, "filter": filter_query}
+        res, err = Obj.list(params)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
         res = res.json()
-        img_name_uuid_map = {}
+        return res
 
-        for image in res["entities"]:
-            img_type = image["status"]["resources"].get("image_type", None)
+    def subnets(self, *args, **kwargs):
+        Obj = get_resource_api(self.SUBNETS, self.connection)
+        limit = kwargs.get("length", 250)
+        offset = kwargs.get("offset", 0)
+        filter_query = kwargs.get("filter_query", "")
 
-            # Ignoring images, if they don't have any image type(Ex: Karbon Image)
-            if not img_type:
-                continue
+        account_uuid = kwargs.get("account_uuid", None)
+        if account_uuid:
+            filter_query = filter_query + ";account_uuid=={}".format(account_uuid)
 
-            if img_type == image_type:
-                img_name_uuid_map[image["status"]["name"]] = image["metadata"]["uuid"]
+        if filter_query.startswith(";"):
+            filter_query = filter_query[1:]
 
-        return img_name_uuid_map
-
-    def subnets(self, payload):
-        Obj = get_resource_api(ahv.SUBNETS, self.connection)
-        res, err = Obj.list(payload)
+        params = {"length": limit, "offset": offset, "filter": filter_query}
+        res, err = Obj.list(params)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-        return res.json()
+        res = res.json()
+        return res
 
-    def groups(self, payload):
-        Obj = get_resource_api(ahv.GROUPS, self.connection)
+    def categories(self, *args, **kwargs):
+        payload = copy.deepcopy(self.CATEGORIES_PAYLOAD)
+        host_pc = kwargs.get("host_pc", False)
 
-        if not payload:
-            raise Exception("no payload")
+        # Note: Api response is bugged due to CALM-17213
+        # TODO: Remove dependecy for host_pc after bug is resolved
+        if host_pc:
+            Obj = get_resource_api("groups", self.connection)
+            res, err = Obj.create(payload)
 
-        return Obj.create(payload)
+        else:
+            Obj = get_resource_api(self.GROUPS, self.connection)
+            account_uuid = kwargs.get("account_uuid", None)
+            if account_uuid:
+                payload["filter_criteria"] = payload[
+                    "filter_criteria"
+                ] + ";account_uuid=={}".format(account_uuid)
 
-    def categories(self):
+            res, err = Obj.list(payload)
 
-        payload = {
-            "entity_type": "category",
-            "filter_criteria": "name!=CalmApplication;name!=CalmDeployment;name!=CalmService;name!=CalmPackage",
-            "grouping_attribute": "abac_category_key",
-            "group_sort_attribute": "name",
-            "group_count": 60,
-            "group_attributes": [
-                {"attribute": "name", "ancestor_entity_type": "abac_category_key"}
-            ],
-            "group_member_count": 1000,
-            "group_member_offset": 0,
-            "group_member_sort_attribute": "value",
-            "group_member_attributes": [{"attribute": "value"}],
-            "query_name": "prism:CategoriesQueryModel",
-        }
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-        response, err = self.groups(payload)
+        res = res.json()
         categories = []
+        for group in res["group_results"]:
+            key = group["group_summaries"]["sum:name"]["values"][0]["values"][0]
+            for entity in group["entity_results"]:
+                value = entity["data"][0]["values"][0]["values"][0]
+                categories.append({"key": key, "value": value})
 
+        return categories
+
+
+class Ahv(AhvBase):
+    """ahv api object for calm_version < 2.9.0"""
+
+    # TODO Replace with proper api version
+    __api_version__ = "0"
+    SUBNETS = "subnets"
+    IMAGES = "images"
+    GROUPS = "groups"
+    CATEGORIES_PAYLOAD = {
+        "entity_type": "category",
+        "filter_criteria": "name!=CalmApplication;name!=CalmDeployment;name!=CalmService;name!=CalmPackage;name!=CalmProject;name!=CalmUser;name!=CalmVmUniqueIdentifier;name!=CalmClusterUuid",
+        "grouping_attribute": "abac_category_key",
+        "group_sort_attribute": "name",
+        "group_count": 60,
+        "group_attributes": [
+            {"attribute": "name", "ancestor_entity_type": "abac_category_key"}
+        ],
+        "group_member_count": 1000,
+        "group_member_offset": 0,
+        "group_member_sort_attribute": "value",
+        "group_member_attributes": [{"attribute": "value"}],
+        "query_name": "prism:CategoriesQueryModel",
+    }
+
+    def __init__(self, connection):
+        self.connection = connection
+
+    def images(self, *args, **kwargs):
+        Obj = get_resource_api(self.IMAGES, self.connection)
+        limit = kwargs.get("length", 250)
+        offset = kwargs.get("offset", 0)
+        filter_query = kwargs.get("filter_query", "")
+
+        params = {"length": limit, "offset": offset, "filter": filter_query}
+        res, err = Obj.list(params)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-        response = response.json()
-        for group in response["group_results"]:
+        res = res.json()
+        return res
 
+    def subnets(self, *args, **kwargs):
+        Obj = get_resource_api(self.SUBNETS, self.connection)
+        limit = kwargs.get("length", 250)
+        offset = kwargs.get("offset", 0)
+        filter_query = kwargs.get("filter_query", "")
+
+        params = {"length": limit, "offset": offset, "filter": filter_query}
+        res, err = Obj.list(params)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        return res
+
+    def categories(self, *args, **kwargs):
+        Obj = get_resource_api(self.GROUPS, self.connection)
+        payload = self.CATEGORIES_PAYLOAD
+
+        res, err = Obj.create(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        categories = []
+        for group in res["group_results"]:
             key = group["group_summaries"]["sum:name"]["values"][0]["values"][0]
-
             for entity in group["entity_results"]:
                 value = entity["data"][0]["values"][0]["values"][0]
                 categories.append({"key": key, "value": value})
@@ -717,25 +971,25 @@ def highlight_text(text, **kwargs):
 def create_spec(client):
 
     spec = {}
-    Obj = AHV(client.connection)
+    AhvObj = AhvVmProvider.get_api_obj()
+
     schema = AhvVmProvider.get_provider_spec()
     path = []  # Path to the key
     option = []  # Any option occured during finding key
 
     # VM Configuration
-
-    projects = client.project.get_name_uuid_map()
+    projects = client.project.get_name_uuid_map({"length": 1000, "offset": 0})
     project_list = list(projects.keys())
 
     if not project_list:
-        click.echo(highlight_text("No projects found!!!"))
-        click.echo(highlight_text("Please add first"))
-        return
+        LOG.error("No projects found! Please add one.")
+        sys.exit(-1)
 
-    click.echo("\nChoose from given projects:")
+    click.echo("Choose from given projects:")
     for ind, name in enumerate(project_list):
         click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
+    project_name = ""
     project_id = ""
     while True:
         ind = click.prompt("\nEnter the index of project", default=1)
@@ -743,8 +997,9 @@ def create_spec(client):
             click.echo("Invalid index !!! ")
 
         else:
+            project_name = project_list[ind - 1]
             project_id = projects[project_list[ind - 1]]
-            click.echo("{} selected".format(highlight_text(project_list[ind - 1])))
+            click.echo("{} selected".format(highlight_text(project_name)))
             break
 
     res, err = client.project.read(project_id)
@@ -756,7 +1011,47 @@ def create_spec(client):
     for subnet in project["status"]["project_status"]["resources"][
         "subnet_reference_list"
     ]:
-        subnets_list.append(subnet["name"])
+        subnets_list.append(subnet["uuid"])
+
+    # Extending external subnet's list from remote account
+    for subnet in project["status"]["project_status"]["resources"].get(
+        "external_network_list", []
+    ):
+        subnets_list.append(subnet["uuid"])
+
+    accounts = project["status"]["project_status"]["resources"][
+        "account_reference_list"
+    ]
+
+    reg_accounts = []
+    for account in accounts:
+        reg_accounts.append(account["uuid"])
+
+    # As account_uuid is required for versions>2.9.0
+    account_uuid = ""
+    is_host_pc = True
+    payload = {"length": 250, "filter": "type==nutanix_pc"}
+    res, err = client.account.list(payload)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    res = res.json()
+    for entity in res["entities"]:
+        entity_id = entity["metadata"]["uuid"]
+        if entity_id in reg_accounts:
+            account_uuid = entity_id
+            break
+
+    # TODO Host PC dependency for categories call due to bug https://jira.nutanix.com/browse/CALM-17213
+    if account_uuid:
+        payload = {"length": 250, "filter": "_entity_id_=={}".format(account_uuid)}
+        res, err = client.account.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        provider_data = res["entities"][0]["status"]["resources"]["data"]
+        is_host_pc = provider_data["host_pc"]
 
     click.echo("")
     path.append("name")
@@ -771,8 +1066,8 @@ def create_spec(client):
         "\n{}(y/n)".format(highlight_text("Want to add some categories")), default="n"
     )
     if choice[0] == "y":
-        categories = Obj.categories()
-
+        # TODO Remove dependecy for host_pc after bug CALM-17213 is resolved
+        categories = AhvObj.categories(host_pc=is_host_pc, account_uuid=account_uuid)
         if not categories:
             click.echo("\n{}\n".format(highlight_text("No Category present")))
 
@@ -848,14 +1143,14 @@ def create_spec(client):
         get_field(schema, path, option, default=1, msg="Enter Memory(GiB)") * 1024
     )
 
-    click.secho("\nAdd some disks:\n", fg="blue", bold=True)
+    click.secho("\nAdd some disks:", fg="blue", bold=True)
 
     spec["resources"]["disk_list"] = []
     spec["resources"]["boot_config"] = {}
     path[-1] = "disk_list"
     option.append("AHV Disk")
 
-    adapterNameIndexMap = {}
+    adapter_name_index_map = {}
     image_index = 0
     while True:
         image = {}
@@ -865,7 +1160,7 @@ def create_spec(client):
         )
 
         click.echo("\nChoose from given Device Types :")
-        device_types = list(ahv.DEVICE_TYPES.keys())
+        device_types = list(AhvConstants.DEVICE_TYPES.keys())
         for index, device_type in enumerate(device_types):
             click.echo("\t{}. {}".format(index + 1, highlight_text(device_type)))
 
@@ -875,12 +1170,12 @@ def create_spec(client):
                 click.echo("Invalid index !!! ")
 
             else:
-                image["device_type"] = ahv.DEVICE_TYPES[device_types[res - 1]]
+                image["device_type"] = AhvConstants.DEVICE_TYPES[device_types[res - 1]]
                 click.echo("{} selected".format(highlight_text(image["device_type"])))
                 break
 
         click.echo("\nChoose from given Device Bus :")
-        device_bus_list = list(ahv.DEVICE_BUS[image["device_type"]].keys())
+        device_bus_list = list(AhvConstants.DEVICE_BUS[image["device_type"]].keys())
         for index, device_bus in enumerate(device_bus_list):
             click.echo("\t{}. {}".format(index + 1, highlight_text(device_bus)))
 
@@ -890,23 +1185,33 @@ def create_spec(client):
                 click.echo("Invalid index !!! ")
 
             else:
-                image["adapter_type"] = ahv.DEVICE_BUS[image["device_type"]][
+                image["adapter_type"] = AhvConstants.DEVICE_BUS[image["device_type"]][
                     device_bus_list[res - 1]
                 ]
                 click.echo("{} selected".format(highlight_text(image["adapter_type"])))
                 break
 
         # Add image details
-        imagesNameUUIDMap = Obj.images(ahv.IMAGE_TYPES[image["device_type"]])
-        images = list(imagesNameUUIDMap.keys())
+        res = AhvObj.images(account_uuid=account_uuid)
+        img_name_uuid_map = {}
+        for entity in res.get("entities", []):
+            img_type = entity["status"]["resources"].get("image_type", None)
 
+            # Ignoring images, if they don't have any image type(Ex: Karbon Image)
+            if not img_type:
+                continue
+
+            if img_type == AhvConstants.IMAGE_TYPES[image["device_type"]]:
+                img_name_uuid_map[entity["status"]["name"]] = entity["metadata"]["uuid"]
+
+        images = list(img_name_uuid_map.keys())
         while True:
             if not images:
                 click.echo("\n{}".format(highlight_text("No image present")))
                 image["name"] = ""
                 break
 
-            click.echo("\nChoose from given images: \n")
+            click.echo("\nChoose from given images:")
             for ind, name in enumerate(images):
                 click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
@@ -921,15 +1226,15 @@ def create_spec(client):
 
         image["bootable"] = click.prompt("\nIs it bootable(y/n)", default="y")
 
-        if not adapterNameIndexMap.get(image["adapter_type"]):
-            adapterNameIndexMap[image["adapter_type"]] = 0
+        if not adapter_name_index_map.get(image["adapter_type"]):
+            adapter_name_index_map[image["adapter_type"]] = 0
 
         disk = {
             "data_source_reference": {},
             "device_properties": {
                 "device_type": image["device_type"],
                 "disk_address": {
-                    "device_index": adapterNameIndexMap[image["adapter_type"]],
+                    "device_index": adapter_name_index_map[image["adapter_type"]],
                     "adapter_type": image["adapter_type"],
                 },
             },
@@ -940,20 +1245,20 @@ def create_spec(client):
             disk["data_source_reference"] = {
                 "name": image["name"],
                 "kind": "image",
-                "uuid": imagesNameUUIDMap.get(image["name"], ""),
+                "uuid": img_name_uuid_map.get(image["name"], ""),
             }
 
         if image["bootable"]:
             spec["resources"]["boot_config"] = {
                 "boot_device": {
                     "disk_address": {
-                        "device_index": adapterNameIndexMap[image["adapter_type"]],
+                        "device_index": adapter_name_index_map[image["adapter_type"]],
                         "adapter_type": image["adapter_type"],
                     }
                 }
             }
 
-        adapterNameIndexMap[image["adapter_type"]] += 1
+        adapter_name_index_map[image["adapter_type"]] += 1
         spec["resources"]["disk_list"].append(disk)
 
         choice = click.prompt(
@@ -963,7 +1268,7 @@ def create_spec(client):
             break
 
     click.echo("\nChoose from given Boot Type :")
-    boot_types = list(ahv.BOOT_TYPES.keys())
+    boot_types = list(AhvConstants.BOOT_TYPES.keys())
     for index, boot_type in enumerate(boot_types):
         click.echo("\t{}. {}".format(index + 1, highlight_text(boot_type)))
 
@@ -973,8 +1278,8 @@ def create_spec(client):
             click.echo("Invalid index !!! ")
 
         else:
-            boot_type = ahv.BOOT_TYPES[boot_types[res - 1]]
-            if boot_type == ahv.BOOT_TYPES["UEFI"]:
+            boot_type = AhvConstants.BOOT_TYPES[boot_types[res - 1]]
+            if boot_type == AhvConstants.BOOT_TYPES["UEFI"]:
                 spec["resources"]["boot_config"]["boot_type"] = boot_type
             click.echo("{} selected".format(highlight_text(boot_type)))
             break
@@ -989,7 +1294,7 @@ def create_spec(client):
             vdisk = {}
 
             click.echo("\nChoose from given Device Types: ")
-            device_types = list(ahv.DEVICE_TYPES.keys())
+            device_types = list(AhvConstants.DEVICE_TYPES.keys())
             for index, device_type in enumerate(device_types):
                 click.echo("\t{}. {}".format(index + 1, highlight_text(device_type)))
 
@@ -999,14 +1304,16 @@ def create_spec(client):
                     click.echo("Invalid index !!! ")
 
                 else:
-                    vdisk["device_type"] = ahv.DEVICE_TYPES[device_types[res - 1]]
+                    vdisk["device_type"] = AhvConstants.DEVICE_TYPES[
+                        device_types[res - 1]
+                    ]
                     click.echo(
                         "{} selected".format(highlight_text(vdisk["device_type"]))
                     )
                     break
 
             click.echo("\nChoose from given Device Bus :")
-            device_bus_list = list(ahv.DEVICE_BUS[vdisk["device_type"]].keys())
+            device_bus_list = list(AhvConstants.DEVICE_BUS[vdisk["device_type"]].keys())
             for index, device_bus in enumerate(device_bus_list):
                 click.echo("\t{}. {}".format(index + 1, highlight_text(device_bus)))
 
@@ -1016,9 +1323,9 @@ def create_spec(client):
                     click.echo("Invalid index !!! ")
 
                 else:
-                    vdisk["adapter_type"] = ahv.DEVICE_BUS[vdisk["device_type"]][
-                        device_bus_list[res - 1]
-                    ]
+                    vdisk["adapter_type"] = AhvConstants.DEVICE_BUS[
+                        vdisk["device_type"]
+                    ][device_bus_list[res - 1]]
                     click.echo(
                         "{} selected".format(highlight_text(vdisk["adapter_type"]))
                     )
@@ -1026,7 +1333,7 @@ def create_spec(client):
 
             path.append("disk_size_mib")
 
-            if vdisk["device_type"] == ahv.DEVICE_TYPES["DISK"]:
+            if vdisk["device_type"] == AhvConstants.DEVICE_TYPES["DISK"]:
                 click.echo("")
                 msg = "Enter disk size(GB)"
                 vdisk["size"] = get_field(schema, path, option, default=8, msg=msg)
@@ -1034,14 +1341,14 @@ def create_spec(client):
             else:
                 vdisk["size"] = 0
 
-            if not adapterNameIndexMap.get(vdisk["adapter_type"]):
-                adapterNameIndexMap[vdisk["adapter_type"]] = 0
+            if not adapter_name_index_map.get(vdisk["adapter_type"]):
+                adapter_name_index_map[vdisk["adapter_type"]] = 0
 
             disk = {
                 "device_properties": {
                     "device_type": vdisk["device_type"],
                     "disk_address": {
-                        "device_index": adapterNameIndexMap[vdisk["adapter_type"]],
+                        "device_index": adapter_name_index_map[vdisk["adapter_type"]],
                         "adapter_type": vdisk["adapter_type"],
                     },
                 },
@@ -1062,24 +1369,27 @@ def create_spec(client):
         "\n{}(y/n)".format(highlight_text("Want any network adapters")), default="n"
     )
     if choice[0] == "y":
-
-        if subnets_list:
-            payload = {"filter": "(name=={})".format(",name==".join(subnets_list))}
-        else:
-            payload = {}
-
-        nics = Obj.subnets(payload)
-        nics = nics["entities"]
-
-        if not nics:
-            click.echo("\n{}".format(highlight_text("No network adapter present")))
+        if not subnets_list:
+            click.echo(
+                "\n{}".format(
+                    highlight_text("No subnets found registered with the project")
+                )
+            )
 
         else:
+            nics = []
+            filter_query = "(_entity_id_=={})".format(
+                ",_entity_id_==".join(subnets_list),
+            )
+            nics = AhvObj.subnets(account_uuid=account_uuid, filter_query=filter_query)
+            nics = nics["entities"]
             click.echo("\nChoose from given subnets:")
             for ind, nic in enumerate(nics):
                 click.echo(
-                    "\t {}. {}".format(
-                        str(ind + 1), highlight_text(nic["status"]["name"])
+                    "\t {}. {} ({})".format(
+                        str(ind + 1),
+                        highlight_text(nic["status"]["name"]),
+                        highlight_text(nic["status"]["cluster_reference"]["name"]),
                     )
                 )
 
@@ -1139,7 +1449,7 @@ def create_spec(client):
     )
     if choice[0] == "y":
         path.append("guest_customization")
-        script_types = ahv.GUEST_CUSTOMIZATION_SCRIPT_TYPES
+        script_types = AhvConstants.GUEST_CUSTOMIZATION_SCRIPT_TYPES
 
         click.echo("\nChoose from given script types ")
         for index, scriptType in enumerate(script_types):
@@ -1169,7 +1479,7 @@ def create_spec(client):
             path.append("sysprep")
             script = {}
 
-            install_types = ahv.SYS_PREP_INSTALL_TYPES
+            install_types = AhvConstants.SYS_PREP_INSTALL_TYPES
             click.echo("\nChoose from given install types ")
             for index, value in enumerate(install_types):
                 click.echo("\t {}. {}".format(str(index + 1), highlight_text(value)))

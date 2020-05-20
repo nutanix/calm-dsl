@@ -10,6 +10,7 @@ from .setting import SettingAPI
 from .marketplace import MarketPlaceAPI
 from .app_icons import AppIconAPI
 from .version import VersionAPI
+from .showback import ShowbackAPI
 
 
 class ClientHandle:
@@ -30,6 +31,7 @@ class ClientHandle:
         self.market_place = MarketPlaceAPI(self.connection)
         self.app_icon = AppIconAPI(self.connection)
         self.version = VersionAPI(self.connection)
+        self.showback = ShowbackAPI(self.connection)
 
 
 _CLIENT_HANDLE = None

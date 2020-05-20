@@ -11,10 +11,15 @@ from peewee import (
 import datetime
 import click
 import arrow
+import sys
 from prettytable import PrettyTable
 
 from calm.dsl.api import get_resource_api, get_api_client
+from calm.dsl.config import get_config
+from calm.dsl.tools import get_logging_handle
+from calm.dsl.providers import get_provider
 
+LOG = get_logging_handle(__name__)
 # Proxy database
 dsl_database = SqliteDatabase(None)
 
@@ -171,13 +176,62 @@ class AhvSubnetsCache(CacheTableBase):
         cls.clear()
 
         # update by latest data
+        config = get_config()
         client = get_api_client()
-        Obj = get_resource_api("subnets", client.connection)
-        res, err = Obj.list({"length": 1000})
+
+        project_name = config["PROJECT"]["name"]
+        params = {"length": 1000, "filter": "name=={}".format(project_name)}
+        project_name_uuid_map = client.project.get_name_uuid_map(params)
+
+        if not project_name_uuid_map:
+            LOG.error("Invalid project {} in config".format(project_name))
+            sys.exit(-1)
+
+        project_id = project_name_uuid_map[project_name]
+        res, err = client.project.read(project_id)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        project = res.json()
+        subnets_list = []
+        for subnet in project["status"]["project_status"]["resources"][
+            "subnet_reference_list"
+        ]:
+            subnets_list.append(subnet["uuid"])
+
+        # Extending external subnet's list from remote account
+        for subnet in project["status"]["project_status"]["resources"][
+            "external_network_list"
+        ]:
+            subnets_list.append(subnet["uuid"])
+
+        accounts = project["status"]["project_status"]["resources"][
+            "account_reference_list"
+        ]
+
+        reg_accounts = []
+        for account in accounts:
+            reg_accounts.append(account["uuid"])
+
+        # As account_uuid is required for versions>2.9.0
+        account_uuid = ""
+        payload = {"length": 250, "filter": "type==nutanix_pc"}
+        res, err = client.account.list(payload)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
         res = res.json()
+        for entity in res["entities"]:
+            entity_id = entity["metadata"]["uuid"]
+            if entity_id in reg_accounts:
+                account_uuid = entity_id
+                break
+
+        AhvVmProvider = get_provider("AHV_VM")
+        AhvObj = AhvVmProvider.get_api_obj()
+
+        filter_query = "(_entity_id_=={})".format(",_entity_id_==".join(subnets_list),)
+        res = AhvObj.subnets(account_uuid=account_uuid, filter_query=filter_query)
         for entity in res["entities"]:
             name = entity["status"]["name"]
             uuid = entity["metadata"]["uuid"]
@@ -238,13 +292,49 @@ class AhvImagesCache(CacheTableBase):
         cls.clear()
 
         # update by latest data
+        config = get_config()
         client = get_api_client()
-        Obj = get_resource_api("images", client.connection)
-        res, err = Obj.list({"length": 1000})
+
+        project_name = config["PROJECT"]["name"]
+        params = {"length": 1000, "filter": "name=={}".format(project_name)}
+        project_name_uuid_map = client.project.get_name_uuid_map(params)
+
+        if not project_name_uuid_map:
+            LOG.error("Invalid project {} in config".format(project_name))
+            sys.exit(-1)
+
+        project_id = project_name_uuid_map[project_name]
+        res, err = client.project.read(project_id)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        project = res.json()
+        accounts = project["status"]["project_status"]["resources"][
+            "account_reference_list"
+        ]
+
+        reg_accounts = []
+        for account in accounts:
+            reg_accounts.append(account["uuid"])
+
+        # As account_uuid is required for versions>2.9.0
+        account_uuid = ""
+        payload = {"length": 250, "filter": "type==nutanix_pc"}
+        res, err = client.account.list(payload)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
         res = res.json()
+        for entity in res["entities"]:
+            entity_id = entity["metadata"]["uuid"]
+            if entity_id in reg_accounts:
+                account_uuid = entity_id
+                break
+
+        AhvVmProvider = get_provider("AHV_VM")
+        AhvObj = AhvVmProvider.get_api_obj()
+        res = AhvObj.images(account_uuid=account_uuid)
+
         for entity in res["entities"]:
             name = entity["status"]["name"]
             uuid = entity["metadata"]["uuid"]
