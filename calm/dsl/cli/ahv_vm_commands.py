@@ -5,8 +5,8 @@ import click
 
 from calm.dsl.tools import get_logging_handle
 
-from .main import get, list, ls, compile
-from .ahv_vms import get_ahv_vm_list, compile_ahv_vm_command
+from .main import get, list, ls, compile, create
+from .ahv_vms import get_ahv_vm_list, compile_ahv_vm_command, create_ahv_vm_command
 
 LOG = get_logging_handle(__name__)
 
@@ -78,5 +78,20 @@ def _get_ahv_vm_list(limit, offset, quiet):
     help="Doesn't sync the cache on compilation",
 )
 def _compile_ahv_vm_command(vm_file, out, no_sync):
-    """Compiles a DSL (Python) blueprint into JSON or YAML"""
+    """Compiles a DSL (Python) VM file to JSON or YAML"""
     compile_ahv_vm_command(vm_file, out, no_sync)
+
+
+@create.command("vm")
+@click.option(
+    "--file",
+    "-f",
+    "vm_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    required=True,
+    help="Path to VM file",
+)
+@click.option("--name", "-n", default=None, help="VM name (Optional)")
+def _create_ahv_vm_command(vm_file, name):
+    """Creates a AHV VM"""
+    create_ahv_vm_command(vm_file, name)

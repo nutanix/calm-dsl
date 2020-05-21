@@ -1,40 +1,38 @@
-from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC, AhvVmGpu, AhvVmResources
+import os
+
+from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC, AhvVmResources
+from calm.dsl.builtins import read_local_file
+
+
+# SSH Credentials
+CENTOS_USER = "centos"
+CENTOS_KEY = read_local_file(os.path.join("keys", "centos"))
+CENTOS_PUBLIC_KEY = read_local_file(os.path.join("keys", "centos_pub"))
 
 
 class MyAhvVm(AhvVmResources):
     """Example VM DSL"""
 
-    memory = 2
+    memory = 4
     vCPUs = 2
     cores_per_vCPU = 1
     disks = [
         AhvVmDisk(image_name="Centos7", bootable=True),
-        AhvVmDisk.CdRom(image_name="SQLServer2014SP2"),
-        AhvVmDisk.CdRom.Sata(image_name="SQLServer2014SP2"),
-        AhvVmDisk.Disk.Scsi.cloneFromImageService(image_name="AHV_CENTOS_76"),
-        AhvVmDisk.Disk.Pci.allocateOnStorageContainer(size=12),
-        AhvVmDisk.CdRom.Sata.emptyCdRom(),
-        AhvVmDisk.CdRom.Ide.emptyCdRom(),
     ]
     nics = [
-        AhvVmNic(subnet="vlan.0", cluster="calmdev1"),
-        AhvVmNic.DirectNic.egress(subnet="vlan.0", cluster="calmdev1"),
         AhvVmNic.DirectNic.ingress(subnet="vlan.0", cluster="calmdev1"),
-        AhvVmNic.DirectNic.tap(subnet="vlan.0"),
-        AhvVmNic.NormalNic.egress(subnet="vlan.0", cluster="calmdev1"),
-        AhvVmNic.NormalNic.ingress(subnet="vlan.0"),
-        AhvVmNic.NormalNic.tap(subnet="vlan.0"),
-        AhvVmNic.NetworkFunctionNic.tap(),
-        AhvVmNic.NetworkFunctionNic(),
     ]
-    boot_type = "UEFI"
-
-    serial_ports = {0: False, 1: False, 2: True, 3: True}
-
-    gpus = [
-        AhvVmGpu.Amd.passThroughCompute(device_id=111),
-        AhvVmGpu.Nvidia.virtual(device_id=212),
-    ]
+    guest_customization = AhvVmGC.CloudInit(
+        config={
+            "users": [
+                {
+                    "name": CENTOS_USER,
+                    "ssh-authorized-keys": [CENTOS_PUBLIC_KEY],
+                    "sudo": ["ALL=(ALL) NOPASSWD:ALL"],
+                }
+            ]
+        }
+    )
 
 
 def test_json():

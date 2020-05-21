@@ -1,3 +1,4 @@
+import sys
 import json
 
 from ruamel import yaml
@@ -162,7 +163,7 @@ def create_ahv_vm_payload(UserAhvVm, categories=None):
     project_uuid = project_cache_data.get("uuid", "")
 
     metadata["project_reference"] = {
-        "type": "project",
+        "kind": "project",
         "uuid": project_uuid,
         "name": project_name,
     }
@@ -214,3 +215,16 @@ def compile_ahv_vm_command(vm_file, out, no_sync=False):
         click.echo(yaml.dump(ahv_vm_payload, default_flow_style=False))
     else:
         LOG.error("Unknown output format {} given".format(out))
+
+
+def create_ahv_vm_command(vm_file, name):
+
+    ahv_vm_payload = compile_ahv_vm(vm_file)
+
+    client = get_api_client()
+
+    res, err = client.ahv_vm.create(ahv_vm_payload)
+
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
