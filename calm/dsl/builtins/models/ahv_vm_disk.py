@@ -21,7 +21,10 @@ class AhvDiskType(EntityType):
         cdict = super().compile()
         if "disk_size_mib" in cdict and cdict["disk_size_mib"] == 0:
             cdict.pop("disk_size_mib")
-        
+
+        if "data_source_reference" in cdict and cdict["data_source_reference"] == None:
+            cdict.pop("data_source_reference")
+
         return cdict
 
 

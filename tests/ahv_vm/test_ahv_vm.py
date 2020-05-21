@@ -18,11 +18,17 @@ class MyAhvVm(AhvVmResources):
     cores_per_vCPU = 1
     disks = [
         AhvVmDisk(image_name="Centos7", bootable=True),
+        AhvVmDisk.CdRom(image_name="SQLServer2014SP2"),
+        AhvVmDisk.Disk.Pci.allocateOnStorageContainer(size=12),
+        AhvVmDisk.CdRom.Ide.emptyCdRom(),
+        AhvVmDisk.CdRom.Ide.emptyCdRom(),
     ]
     nics = [
         AhvVmNic.DirectNic.ingress(
             subnet="vlan.0", cluster="calmdev1"
         ),
+        AhvVmNic.NormalNic.egress(subnet="vlan.0", cluster="calmdev1"),
+        AhvVmNic.DirectNic.tap(subnet="vlan.0"),
     ]
     guest_customization = AhvVmGC.CloudInit(
         config={

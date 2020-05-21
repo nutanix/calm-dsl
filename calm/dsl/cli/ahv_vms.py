@@ -54,6 +54,7 @@ def get_ahv_vm_list(limit, offset, quiet):
         "IP ADDRESSES",
         "POWER STATE",
         "CLUSTER",
+        "UUID"
     ]
 
     for row in json_rows:
@@ -110,6 +111,10 @@ def get_ahv_vm_list(limit, offset, quiet):
         power_state = None
         if "power_state" in resources:
             power_state = resources["power_state"]
+        
+        vm_uuid=None
+        if "uuid" in metadata:
+            vm_uuid = metadata["uuid"]
 
         table.add_row(
             [
@@ -122,6 +127,7 @@ def get_ahv_vm_list(limit, offset, quiet):
                 highlight_text(ip_address),
                 highlight_text(power_state),
                 highlight_text(cluster),
+                highlight_text(vm_uuid)
             ]
         )
 
