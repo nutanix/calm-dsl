@@ -21,7 +21,7 @@ class MyAhvVm(AhvVmResources):
     ]
     nics = [
         AhvVmNic.DirectNic.ingress(
-            subnet="vlan.0", cluster="calmdev1", mac_address="50:6b:8d:69:5e:b5"
+            subnet="vlan.0", cluster="calmdev1"
         ),
     ]
     guest_customization = AhvVmGC.CloudInit(

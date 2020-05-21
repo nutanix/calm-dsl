@@ -10,6 +10,13 @@ class AhvNicType(EntityType):
     __schema_name__ = "AhvNic"
     __openapi_type__ = "vm_ahv_nic"
 
+    def compile(cls):
+        cdict = super().compile()
+        if "mac_address" in cdict and cdict["mac_address"] == "":
+            cdict.pop("mac_address")
+        
+        return cdict
+
 
 class AhvNicValidator(PropertyValidator, openapi_type="vm_ahv_nic"):
     __default__ = None
