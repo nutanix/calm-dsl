@@ -314,7 +314,7 @@ class TestEndpoints:
         if not err:
             pytest.fail("Endpoint created successfully with unsupported name formats")
         assert err.get('code', 0) == 422
-        assert "Name can contain only alphanumeric, underscores, hyphens and spaces" in err['error']
+        assert "Name can contain only alphanumeric, underscores, hyphens and spaces" in res.text
 
         endpoint['spec']['name'] = "endpoint_" + str(uuid.uuid4())[-10:]
         res, err = client.endpoint.create(endpoint)
@@ -331,7 +331,7 @@ class TestEndpoints:
         if not err:
             pytest.fail("Endpoint updated successfully with unsupported name formats")
         assert err.get('code', 0) == 422
-        assert "Names can only start with alphanumeric characters or underscore (_)" in err['error']
+        assert "Names can only start with alphanumeric characters or underscore (_)" in res.text
 
         # delete the endpoint
         _, err = client.endpoint.delete(ep_uuid)

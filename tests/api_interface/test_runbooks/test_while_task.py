@@ -80,7 +80,6 @@ class TestWhileTasks:
             if err:
                 pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
-    @pytest.mark.now
     @pytest.mark.runbook
     @pytest.mark.regression
     def test_while_task_loop_variable(self):
@@ -128,7 +127,6 @@ class TestWhileTasks:
 
     @pytest.mark.runbook
     @pytest.mark.regression
-    @pytest.mark.now
     def test_macro_in_while_iteration(self):
         """ test_while_macro_in_iteration_count"""
 

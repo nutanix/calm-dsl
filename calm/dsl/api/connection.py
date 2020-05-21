@@ -298,7 +298,6 @@ class Connection:
                     json.dumps(err, indent=4, separators=(",", ": "))
                 )
             )
-            sys.exit(-1)
         return res, err
 
 
