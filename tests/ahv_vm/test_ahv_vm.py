@@ -1,24 +1,8 @@
-from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC, AhvVmGpu
-from calm.dsl.builtins import basic_cred, ahv_vm_resources
-from calm.dsl.builtins import vm_disk_package, read_local_file
+from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC, AhvVmGpu, AhvVmResources
 
 
-AhvVm = ahv_vm_resources()
-
-CENTOS_USERNAME = read_local_file(".tests/centos_username")
-CENTOS_PASSWORD = read_local_file(".tests/centos_password")
-CENTOS_SSH_USERNAME = read_local_file(".tests/centos_ssh_username")
-CENTOS_SSH_KEY = read_local_file(".tests/centos_ssh_key")
-
-
-DefaultCred = basic_cred(CENTOS_USERNAME, CENTOS_PASSWORD, name="CENTOS", default=True)
-DefaultKeyCred = basic_cred(
-    CENTOS_SSH_USERNAME, CENTOS_SSH_KEY, name="CENTOS_KEY", type="key"
-)
-Era = vm_disk_package(name="era", config_file="specs/era_image_config.yaml")
-
-
-class MyAhvVm(AhvVm):
+class MyAhvVm(AhvVmResources):
+    """Example VM DSL"""
 
     memory = 2
     vCPUs = 2
@@ -31,7 +15,6 @@ class MyAhvVm(AhvVm):
         AhvVmDisk.Disk.Pci.allocateOnStorageContainer(size=12),
         AhvVmDisk.CdRom.Sata.emptyCdRom(),
         AhvVmDisk.CdRom.Ide.emptyCdRom(),
-        AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(Era),
     ]
     nics = [
         AhvVmNic(subnet="vlan.0", cluster="calmdev1"),
@@ -45,16 +28,6 @@ class MyAhvVm(AhvVm):
         AhvVmNic.NetworkFunctionNic(),
     ]
     boot_type = "UEFI"
-
-    """
-    guest_customization = AhvVmGC.Sysprep.PreparedScript.withDomain(
-        filename="guest_cus.xml",
-        domain="1.1.1.1",
-        dns_ip="1.1.1.1",
-        credential=ref(DefaultCred),
-    )
-    """
-    guest_customization = AhvVmGC.CloudInit(filename="specs/guest_cust_cloud_init.yaml")
 
     serial_ports = {0: False, 1: False, 2: True, 3: True}
 
