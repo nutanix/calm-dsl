@@ -238,3 +238,5 @@ def create_ahv_vm_command(vm_file, name):
     if err:
         LOG.error(err)
         sys.exit(-1)
+
+    LOG.debug(json.dumps(res.json(), indent=4, separators=(",", ": ")))
