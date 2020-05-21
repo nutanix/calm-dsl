@@ -69,7 +69,7 @@ def update_disk_config(
                 "device_index": ADAPTER_INDEX_MAP[adapter_type],
             },
         },
-        "disk_size_mib": 0,
+        "disk_size_mib": 1,
     }
 
     if bootable:
@@ -146,7 +146,7 @@ def empty_cd_rom(adapter_type="IDE"):
                 "device_index": ADAPTER_INDEX_MAP[adapter_type],
             },
         },
-        "disk_size_mib": 0,
+        "disk_size_mib": 1,
     }
 
     ADAPTER_INDEX_MAP[adapter_type] += 1

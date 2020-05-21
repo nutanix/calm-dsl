@@ -20,7 +20,9 @@ class MyAhvVm(AhvVmResources):
         AhvVmDisk(image_name="Centos7", bootable=True),
     ]
     nics = [
-        AhvVmNic.DirectNic.ingress(subnet="vlan.0", cluster="calmdev1"),
+        AhvVmNic.DirectNic.ingress(
+            subnet="vlan.0", cluster="calmdev1", mac_address="50:6b:8d:69:5e:b5"
+        ),
     ]
     guest_customization = AhvVmGC.CloudInit(
         config={
