@@ -17,6 +17,13 @@ class AhvDiskType(EntityType):
     __schema_name__ = "AhvDisk"
     __openapi_type__ = "vm_ahv_disk"
 
+    def compile(cls):
+        cdict = super().compile()
+        if "disk_size_mib" in cdict and cdict["disk_size_mib"] == 0:
+            cdict.pop("disk_size_mib")
+        
+        return cdict
+
 
 class AhvDiskValidator(PropertyValidator, openapi_type="vm_ahv_disk"):
     __default__ = None
@@ -69,7 +76,6 @@ def update_disk_config(
                 "device_index": ADAPTER_INDEX_MAP[adapter_type],
             },
         },
-        "disk_size_mib": 1,
     }
 
     if bootable:
@@ -146,7 +152,6 @@ def empty_cd_rom(adapter_type="IDE"):
                 "device_index": ADAPTER_INDEX_MAP[adapter_type],
             },
         },
-        "disk_size_mib": 1,
     }
 
     ADAPTER_INDEX_MAP[adapter_type] += 1
