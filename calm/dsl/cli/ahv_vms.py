@@ -1,5 +1,6 @@
 import sys
 import json
+import time
 
 from ruamel import yaml
 import click
@@ -230,6 +231,8 @@ def compile_ahv_vm_command(vm_file, out, no_sync=False):
 def create_ahv_vm_command(vm_file, name):
 
     ahv_vm_payload = compile_ahv_vm(vm_file)
+    if name:
+        ahv_vm_payload["spec"]["name"] = name
 
     client = get_api_client()
 
@@ -238,5 +241,45 @@ def create_ahv_vm_command(vm_file, name):
     if err:
         LOG.error(err)
         sys.exit(-1)
+    
+    res = res.json()
+    LOG.debug(json.dumps(res, indent=4, separators=(",", ": ")))
 
-    LOG.debug(json.dumps(res.json(), indent=4, separators=(",", ": ")))
+    execution_context = res["status"]["execution_context"]
+    task_uuid = execution_context.get("task_uuid", "")
+
+    poll_ahv_vm_task(task_uuid)
+
+
+def poll_ahv_vm_task(task_uuid, poll_interval=10):
+
+    client = get_api_client()
+    maxWait = 5 * 60
+    count = 0
+    while count < maxWait:
+        LOG.info("Fetching status of ahv vm task")
+        # call status api
+        res, err =  client.ahv_vm.get_task(task_uuid)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        res = res.json()
+        LOG.debug(json.dumps(res, indent=4, separators=(",", ": ")))
+        status = res["status"]
+
+        if status == "FAILED":
+            LOG.info("FAILED")
+            break
+        
+        elif status == "SUCCEEDED":
+            LOG.info("SUCCEEDED")
+            break
+        
+        elif status == "ABORTED":
+            LOG.info("ABORTED")
+            break
+        
+        else:
+            LOG.info(status)
+
+        count += poll_interval
+        time.sleep(poll_interval)

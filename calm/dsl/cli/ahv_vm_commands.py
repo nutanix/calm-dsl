@@ -5,8 +5,8 @@ import click
 
 from calm.dsl.tools import get_logging_handle
 
-from .main import get, list, ls, compile, create
-from .ahv_vms import get_ahv_vm_list, compile_ahv_vm_command, create_ahv_vm_command
+from .main import get, list, ls, compile, create, watch
+from .ahv_vms import get_ahv_vm_list, compile_ahv_vm_command, create_ahv_vm_command, poll_ahv_vm_task
 
 LOG = get_logging_handle(__name__)
 
@@ -95,3 +95,14 @@ def _compile_ahv_vm_command(vm_file, out, no_sync):
 def _create_ahv_vm_command(vm_file, name):
     """Creates a AHV VM"""
     create_ahv_vm_command(vm_file, name)
+
+@watch.command("ahv_vm_task")
+@click.option(
+    "--task_uuid",
+    "-t",
+    required=True,
+    help="Polling the task"
+)
+def _poll_ahv_vm_task(task_uuid):
+
+    poll_ahv_vm_task(task_uuid)
