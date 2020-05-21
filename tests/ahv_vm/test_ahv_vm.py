@@ -24,9 +24,7 @@ class MyAhvVm(AhvVmResources):
         AhvVmDisk.CdRom.Ide.emptyCdRom(),
     ]
     nics = [
-        AhvVmNic.DirectNic.ingress(
-            subnet="vlan.0", cluster="calmdev1"
-        ),
+        AhvVmNic.DirectNic.ingress(subnet="vlan.0", cluster="calmdev1"),
         AhvVmNic.NormalNic.egress(subnet="vlan.0", cluster="calmdev1"),
         AhvVmNic.DirectNic.tap(subnet="vlan.0"),
     ]

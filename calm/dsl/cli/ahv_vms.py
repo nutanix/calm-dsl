@@ -52,7 +52,7 @@ def get_ahv_vm_list(limit, offset, quiet):
         "IP ADDRESSES",
         "POWER STATE",
         "CLUSTER",
-        "UUID"
+        "UUID",
     ]
 
     for row in json_rows:
@@ -110,7 +110,7 @@ def get_ahv_vm_list(limit, offset, quiet):
         if "power_state" in resources:
             power_state = resources["power_state"]
 
-        vm_uuid=None
+        vm_uuid = None
         if "uuid" in metadata:
             vm_uuid = metadata["uuid"]
 
@@ -125,7 +125,7 @@ def get_ahv_vm_list(limit, offset, quiet):
                 highlight_text(ip_address),
                 highlight_text(power_state),
                 highlight_text(cluster),
-                highlight_text(vm_uuid)
+                highlight_text(vm_uuid),
             ]
         )
 
@@ -256,7 +256,7 @@ def poll_ahv_vm_task(task_uuid, poll_interval=10):
     while count < maxWait:
         LOG.info("Fetching status of ahv vm task")
         # call status api
-        res, err =  client.ahv_vm.get_task(task_uuid)
+        res, err = client.ahv_vm.get_task(task_uuid)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
         res = res.json()

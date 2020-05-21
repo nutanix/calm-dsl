@@ -12,7 +12,6 @@ class AhvGCType(EntityType):
     __schema_name__ = "AhvGuestCustomization"
     __openapi_type__ = "vm_ahv_gc"
 
-
     def compile(cls):
         cdict = super().compile()
 
@@ -30,6 +29,7 @@ class AhvGCType(EntityType):
                     cdict["cloud_init"]["user_data"] = user_data.encode("UTF-8")
 
         return cdict
+
 
 class AhvGCValidator(PropertyValidator, openapi_type="vm_ahv_gc"):
     __default__ = None

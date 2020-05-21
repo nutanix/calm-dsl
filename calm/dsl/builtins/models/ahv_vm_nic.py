@@ -14,7 +14,7 @@ class AhvNicType(EntityType):
         cdict = super().compile()
         if "mac_address" in cdict and cdict["mac_address"] == "":
             cdict.pop("mac_address")
-        
+
         return cdict
 
 
