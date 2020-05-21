@@ -175,6 +175,16 @@ def create_ahv_vm_payload(UserAhvVm, categories=None):
         "resources": UserAhvVm.get_dict(),
     }
 
+    # Check Guest customization and use one-of cloud init/sys-prep
+    if "guest_customization" in spec["resources"]:
+        gc = spec["resources"]["guest_customization"]
+
+        if "sysprep" in gc and gc["sysprep"] == None:
+            gc.pop("sysprep")
+
+        if "cloud_init" in gc and gc["cloud_init"] == None:
+            gc.pop("cloud_init")
+
     # Create v3 api payload
     ahv_vm_payload = {
         "metadata": metadata,
