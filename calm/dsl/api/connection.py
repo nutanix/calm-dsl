@@ -15,6 +15,7 @@ import traceback
 import json
 import urllib3
 import sys
+import ujson
 
 from requests import Session as NonRetrySession
 from requests_toolbelt import MultipartEncoder
@@ -227,7 +228,7 @@ class Connection:
                     res = self.session.post(
                         url,
                         params=request_params,
-                        data=json.dumps(request_json),
+                        data=ujson.dumps(request_json),
                         verify=verify,
                         headers=base_headers,
                         cookies=cookies,

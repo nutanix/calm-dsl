@@ -1,6 +1,8 @@
 import sys
 import json
 import time
+import base64
+import ujson
 
 from ruamel import yaml
 import click
@@ -185,6 +187,13 @@ def create_ahv_vm_payload(UserAhvVm, categories=None):
 
         if "cloud_init" in gc and gc["cloud_init"] == None:
             gc.pop("cloud_init")
+        
+        # encode user_data
+        # TODO take care for decoding while compiling or showing output
+        if "cloud_init" in gc:
+            user_data = gc["cloud_init"].get("user_data", None)
+            if user_data:
+                gc["cloud_init"]["user_data"] = base64.b64encode(gc["cloud_init"]["user_data"].encode("UTF-8"))
 
     # Create v3 api payload
     ahv_vm_payload = {
@@ -221,7 +230,7 @@ def compile_ahv_vm_command(vm_file, out, no_sync=False):
         return
 
     if out == "json":
-        click.echo(json.dumps(ahv_vm_payload, indent=4, separators=(",", ": ")))
+        click.echo(ujson.dumps(ahv_vm_payload, indent=4))
     elif out == "yaml":
         click.echo(yaml.dump(ahv_vm_payload, default_flow_style=False))
     else:
@@ -233,6 +242,7 @@ def create_ahv_vm_command(vm_file, name):
     ahv_vm_payload = compile_ahv_vm(vm_file)
     if name:
         ahv_vm_payload["spec"]["name"] = name
+        ahv_vm_payload["metadata"]["name"] = name
 
     client = get_api_client()
 
