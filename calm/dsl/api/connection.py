@@ -177,7 +177,7 @@ class Connection:
         verify=True,
         headers=None,
         files=None,
-        timeout=(5, 30),  # (connection timeout, read timeout)
+        timeout=(5, 300),  # (connection timeout, read timeout)
         ignore_error=False,
         warning_msg="",
     ):

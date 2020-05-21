@@ -95,6 +95,7 @@ class action(runbook):
                 "runbook": self.user_runbook,
             }
         )
+        self.__parsed__ = True
 
         return self.user_action
 
