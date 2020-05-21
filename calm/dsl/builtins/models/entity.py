@@ -4,6 +4,7 @@ from json import JSONEncoder, JSONDecoder
 import sys
 from types import MappingProxyType
 import uuid
+from base64 import b64encode
 
 from ruamel.yaml import YAML, resolver, SafeRepresenter
 from calm.dsl.tools import StrictDraft7Validator
@@ -407,6 +408,9 @@ class EntityJSONEncoder(JSONEncoder):
     def default(self, cls):
 
         if not hasattr(cls, "__kind__"):
+
+            if isinstance(cls, bytes):
+                return b64encode(cls).decode()
             return super().default(cls)
 
         return cls.compile()

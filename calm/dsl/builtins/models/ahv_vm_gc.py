@@ -1,9 +1,9 @@
+import re
+import base64
+
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .utils import read_file, yaml
-
-import re
-
 
 # AHV Guest Customization
 
@@ -12,6 +12,24 @@ class AhvGCType(EntityType):
     __schema_name__ = "AhvGuestCustomization"
     __openapi_type__ = "vm_ahv_gc"
 
+
+    def compile(cls):
+        cdict = super().compile()
+
+        # Use one-of cloud init/sys-prep
+        if "sysprep" in cdict and cdict["sysprep"] == None:
+            cdict.pop("sysprep")
+
+        if "cloud_init" in cdict:
+            if not cdict["cloud_init"]:
+                cdict.pop("cloud_init")
+            else:
+                # TODO take care for decoding while compiling or showing output
+                user_data = cdict["cloud_init"].get("user_data", None)
+                if user_data:
+                    cdict["cloud_init"]["user_data"] = user_data.encode("UTF-8")
+
+        return cdict
 
 class AhvGCValidator(PropertyValidator, openapi_type="vm_ahv_gc"):
     __default__ = None

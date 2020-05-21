@@ -1,8 +1,6 @@
 import sys
 import json
 import time
-import base64
-import ujson
 
 from ruamel import yaml
 import click
@@ -111,7 +109,7 @@ def get_ahv_vm_list(limit, offset, quiet):
         power_state = None
         if "power_state" in resources:
             power_state = resources["power_state"]
-        
+
         vm_uuid=None
         if "uuid" in metadata:
             vm_uuid = metadata["uuid"]
@@ -184,23 +182,6 @@ def create_ahv_vm_payload(UserAhvVm, categories=None):
         "resources": UserAhvVm.get_dict(),
     }
 
-    # Check Guest customization and use one-of cloud init/sys-prep
-    if "guest_customization" in spec["resources"]:
-        gc = spec["resources"]["guest_customization"]
-
-        if "sysprep" in gc and gc["sysprep"] == None:
-            gc.pop("sysprep")
-
-        if "cloud_init" in gc and gc["cloud_init"] == None:
-            gc.pop("cloud_init")
-        
-        # encode user_data
-        # TODO take care for decoding while compiling or showing output
-        if "cloud_init" in gc:
-            user_data = gc["cloud_init"].get("user_data", None)
-            if user_data:
-                gc["cloud_init"]["user_data"] = base64.b64encode(gc["cloud_init"]["user_data"].encode("UTF-8"))
-
     # Create v3 api payload
     ahv_vm_payload = {
         "metadata": metadata,
@@ -236,7 +217,7 @@ def compile_ahv_vm_command(vm_file, out, no_sync=False):
         return
 
     if out == "json":
-        click.echo(ujson.dumps(ahv_vm_payload, indent=4))
+        click.echo(json.dumps(ahv_vm_payload, indent=4, separators=(",", ": ")))
     elif out == "yaml":
         click.echo(yaml.dump(ahv_vm_payload, default_flow_style=False))
     else:
@@ -257,7 +238,7 @@ def create_ahv_vm_command(vm_file, name):
     if err:
         LOG.error(err)
         sys.exit(-1)
-    
+
     res = res.json()
     LOG.debug(json.dumps(res, indent=4, separators=(",", ": ")))
 
@@ -285,15 +266,15 @@ def poll_ahv_vm_task(task_uuid, poll_interval=10):
         if status == "FAILED":
             LOG.info("FAILED")
             break
-        
+
         elif status == "SUCCEEDED":
             LOG.info("SUCCEEDED")
             break
-        
+
         elif status == "ABORTED":
             LOG.info("ABORTED")
             break
-        
+
         else:
             LOG.info(status)
 
