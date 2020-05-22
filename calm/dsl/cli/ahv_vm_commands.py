@@ -108,11 +108,7 @@ def _create_ahv_vm_command(vm_file, name):
 @delete.command("vm")
 @click.argument("vm_uuid", required=False)
 @click.option(
-    "--name",
-    "-id",
-    "vm_name",
-    default=None,
-    help="VM name",
+    "--name", "-id", "vm_name", default=None, help="VM name",
 )
 def _delete_ahv_vm_command(vm_name, vm_uuid):
 
@@ -122,11 +118,7 @@ def _delete_ahv_vm_command(vm_name, vm_uuid):
 @update.command("vm")
 @click.argument("vm_uuid", required=False)
 @click.option(
-    "--name",
-    "-n",
-    "vm_name",
-    default=None,
-    help="VM name",
+    "--name", "-n", "vm_name", default=None, help="VM name",
 )
 @click.option(
     "--file",

@@ -19,41 +19,22 @@ class MyAhvVm(AhvVmResources):
     vCPUs = 1
     cores_per_vCPU = 1
     disks = [
-        AhvVmDisk(
-            image_name="Centos7",
-            bootable=True,
-            uuid=ENV.get("DISK1_UUID"),
-        ),
-        AhvVmDisk.CdRom(
-            image_name="SQLServer2014SP2",
-            uuid=ENV.get("DISK2_UUID"),
-        ),
+        AhvVmDisk(image_name="Centos7", bootable=True, uuid=ENV.get("DISK1_UUID"),),
+        AhvVmDisk.CdRom(image_name="SQLServer2014SP2", uuid=ENV.get("DISK2_UUID"),),
         AhvVmDisk.Disk.Pci.allocateOnStorageContainer(
-            size=12,
-            uuid=ENV.get("DISK3_UUID"),
+            size=12, uuid=ENV.get("DISK3_UUID"),
         ),
-        AhvVmDisk.CdRom.Ide.emptyCdRom(
-            uuid=ENV.get("DISK4_UUID"),
-        ),
-        AhvVmDisk.CdRom.Ide.emptyCdRom(
-            uuid=ENV.get("DISK5_UUID"),
-        ),
+        AhvVmDisk.CdRom.Ide.emptyCdRom(uuid=ENV.get("DISK4_UUID"),),
+        AhvVmDisk.CdRom.Ide.emptyCdRom(uuid=ENV.get("DISK5_UUID"),),
     ]
     nics = [
         AhvVmNic.DirectNic.ingress(
-            subnet="vlan.0",
-            cluster="calmdev1",
-            uuid=ENV.get("NIC1_UUID"),
+            subnet="vlan.0", cluster="calmdev1", uuid=ENV.get("NIC1_UUID"),
         ),
         AhvVmNic.NormalNic.egress(
-            subnet="vlan.0",
-            cluster="calmdev1",
-            uuid=ENV.get("NIC2_UUID"),
+            subnet="vlan.0", cluster="calmdev1", uuid=ENV.get("NIC2_UUID"),
         ),
-        AhvVmNic.DirectNic.tap(
-            subnet="vlan.0",
-            uuid=ENV.get("NIC3_UUID"),
-        ),
+        AhvVmNic.DirectNic.tap(subnet="vlan.0", uuid=ENV.get("NIC3_UUID"),),
     ]
     power_state = "ON"
     guest_customization = AhvVmGC.CloudInit(
