@@ -5,13 +5,14 @@ import click
 
 from calm.dsl.tools import get_logging_handle
 
-from .main import get, list, ls, compile, create, watch, delete
+from .main import get, list, ls, compile, create, watch, delete, update
 from .ahv_vms import (
     get_ahv_vm_list,
     compile_ahv_vm_command,
     create_ahv_vm_command,
     poll_ahv_vm_task,
-    delete_ahv_vm_command
+    delete_ahv_vm_command,
+    update_ahv_vm_command,
 )
 
 LOG = get_logging_handle(__name__)
@@ -103,21 +104,39 @@ def _create_ahv_vm_command(vm_file, name):
     create_ahv_vm_command(vm_file, name)
 
 
-# TODO add support for multiple vm deletion 
+# TODO add support for multiple vm deletion
 @delete.command("ahv_vm")
-@click.argument(
-    "vm_name",
-    required=False
-)
+@click.argument("vm_name", required=False)
 @click.option(
     "--vm_uuid",
     "-id",
     default=None,
-    help="Vm uuid (in case if multiple vm with same name exists)"
+    help="Vm uuid (in case if multiple vm with same name exists)",
 )
 def _delete_ahv_vm_command(vm_name, vm_uuid):
 
     delete_ahv_vm_command(name=vm_name, vm_uuid=vm_uuid)
+
+
+@update.command("ahv_vm")
+@click.argument("vm_name", required=False)
+@click.option(
+    "--vm_uuid",
+    "-id",
+    default=None,
+    help="Vm uuid (in case if multiple vm with same name exists)",
+)
+@click.option(
+    "--file",
+    "-f",
+    "vm_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    required=True,
+    help="Path to VM file",
+)
+def _update_ahv_vm_command(vm_name, vm_uuid, vm_file):
+    """updates a AHV VM"""
+    update_ahv_vm_command(vm_file=vm_file, vm_name=vm_name, vm_uuid=vm_uuid)
 
 
 @watch.command("ahv_vm_task")
