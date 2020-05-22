@@ -1,13 +1,15 @@
 import os
 
 from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC, AhvVmResources
-from calm.dsl.builtins import read_local_file
+from calm.dsl.builtins import read_local_file, read_env
 
 
 # SSH Credentials
 CENTOS_USER = "centos"
 CENTOS_KEY = read_local_file(os.path.join("keys", "centos"))
 CENTOS_PUBLIC_KEY = read_local_file(os.path.join("keys", "centos_pub"))
+
+ENV = read_env()
 
 
 class MyAhvVm(AhvVmResources):
@@ -20,33 +22,40 @@ class MyAhvVm(AhvVmResources):
         AhvVmDisk(
             image_name="Centos7",
             bootable=True,
-            uuid="635f4dd0-6693-4900-97f6-ab2a086f7f39",
+            uuid=ENV.get("DISK1_UUID"),
         ),
         AhvVmDisk.CdRom(
-            image_name="SQLServer2014SP2", uuid="4e128a84-4fe5-415f-9b9e-daa77263180a"
+            image_name="SQLServer2014SP2",
+            uuid=ENV.get("DISK2_UUID"),
         ),
         AhvVmDisk.Disk.Pci.allocateOnStorageContainer(
-            size=12, uuid="0df7ab31-16cb-4a01-9843-fd73fdee18bc"
+            size=12,
+            uuid=ENV.get("DISK3_UUID"),
         ),
-        AhvVmDisk.CdRom.Ide.emptyCdRom(uuid="aa210234-00ec-4a6d-a6b3-c3813a7be399"),
-        AhvVmDisk.CdRom.Ide.emptyCdRom(uuid="1f1f1a70-848e-43ef-939b-a7cbab3d8da9"),
+        AhvVmDisk.CdRom.Ide.emptyCdRom(
+            uuid=ENV.get("DISK4_UUID"),
+        ),
+        AhvVmDisk.CdRom.Ide.emptyCdRom(
+            uuid=ENV.get("DISK5_UUID"),
+        ),
     ]
     nics = [
         AhvVmNic.DirectNic.ingress(
             subnet="vlan.0",
             cluster="calmdev1",
-            uuid="4518d3f8-1675-4946-8db9-fbe804cc5a66",
+            uuid=ENV.get("NIC1_UUID"),
         ),
         AhvVmNic.NormalNic.egress(
             subnet="vlan.0",
             cluster="calmdev1",
-            uuid="008f92ff-b57e-4905-b40f-a1d7feed7c7a",
+            uuid=ENV.get("NIC2_UUID"),
         ),
         AhvVmNic.DirectNic.tap(
-            subnet="vlan.0", uuid="3846f3c1-e1ff-4b98-9385-e7ea95eca90c"
+            subnet="vlan.0",
+            uuid=ENV.get("NIC3_UUID"),
         ),
     ]
-    power_state = "OFF"
+    power_state = "ON"
     guest_customization = AhvVmGC.CloudInit(
         config={
             "users": [
