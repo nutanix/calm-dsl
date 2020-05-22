@@ -15,6 +15,9 @@ class AhvNicType(EntityType):
         if "mac_address" in cdict and cdict["mac_address"] == "":
             cdict.pop("mac_address")
 
+        if "uuid" in cdict and cdict["uuid"] == "":
+            cdict.pop("uuid")
+
         return cdict
 
 
@@ -37,6 +40,7 @@ def create_ahv_nic(
     mac_address="",
     ip_endpoints=[],
     cluster=None,
+    uuid="",
 ):
 
     kwargs = {}
@@ -84,13 +88,14 @@ def create_ahv_nic(
             "network_function_nic_type": network_function_nic_type,
             "nic_type": nic_type,
             "mac_address": mac_address,
+            "uuid": uuid,
         }
     )
 
     return ahv_vm_nic(**kwargs)
 
 
-def normal_ingress_nic(subnet, mac_address="", ip_endpoints=[], cluster=None):
+def normal_ingress_nic(subnet, mac_address="", ip_endpoints=[], cluster=None, uuid=""):
     return create_ahv_nic(
         subnet=subnet,
         network_function_nic_type="INGRESS",
@@ -98,10 +103,11 @@ def normal_ingress_nic(subnet, mac_address="", ip_endpoints=[], cluster=None):
         mac_address=mac_address,
         ip_endpoints=ip_endpoints,
         cluster=cluster,
+        uuid=uuid,
     )
 
 
-def normal_egress_nic(subnet, mac_address="", ip_endpoints=[], cluster=None):
+def normal_egress_nic(subnet, mac_address="", ip_endpoints=[], cluster=None, uuid=""):
     return create_ahv_nic(
         subnet=subnet,
         network_function_nic_type="EGRESS",
@@ -109,10 +115,11 @@ def normal_egress_nic(subnet, mac_address="", ip_endpoints=[], cluster=None):
         mac_address=mac_address,
         ip_endpoints=ip_endpoints,
         cluster=cluster,
+        uuid=uuid,
     )
 
 
-def normal_tap_nic(subnet, mac_address="", ip_endpoints=[], cluster=None):
+def normal_tap_nic(subnet, mac_address="", ip_endpoints=[], cluster=None, uuid=""):
     return create_ahv_nic(
         subnet=subnet,
         network_function_nic_type="TAP",
@@ -120,10 +127,11 @@ def normal_tap_nic(subnet, mac_address="", ip_endpoints=[], cluster=None):
         mac_address=mac_address,
         ip_endpoints=ip_endpoints,
         cluster=cluster,
+        uuid=uuid,
     )
 
 
-def direct_ingress_nic(subnet, mac_address="", ip_endpoints=[], cluster=None):
+def direct_ingress_nic(subnet, mac_address="", ip_endpoints=[], cluster=None, uuid=""):
     return create_ahv_nic(
         subnet=subnet,
         network_function_nic_type="INGRESS",
@@ -131,10 +139,11 @@ def direct_ingress_nic(subnet, mac_address="", ip_endpoints=[], cluster=None):
         mac_address=mac_address,
         ip_endpoints=ip_endpoints,
         cluster=cluster,
+        uuid=uuid,
     )
 
 
-def direct_egress_nic(subnet, mac_address="", ip_endpoints=[], cluster=None):
+def direct_egress_nic(subnet, mac_address="", ip_endpoints=[], cluster=None, uuid=""):
     return create_ahv_nic(
         subnet=subnet,
         network_function_nic_type="EGRESS",
@@ -142,10 +151,11 @@ def direct_egress_nic(subnet, mac_address="", ip_endpoints=[], cluster=None):
         mac_address=mac_address,
         ip_endpoints=ip_endpoints,
         cluster=cluster,
+        uuid=uuid,
     )
 
 
-def direct_tap_nic(subnet, mac_address="", ip_endpoints=[], cluster=None):
+def direct_tap_nic(subnet, mac_address="", ip_endpoints=[], cluster=None, uuid=""):
     return create_ahv_nic(
         subnet=subnet,
         network_function_nic_type="TAP",
@@ -153,52 +163,60 @@ def direct_tap_nic(subnet, mac_address="", ip_endpoints=[], cluster=None):
         mac_address=mac_address,
         ip_endpoints=ip_endpoints,
         cluster=cluster,
+        uuid=uuid,
     )
 
 
-def network_function_ingress_nic(mac_address="", network_function_chain=None):
+def network_function_ingress_nic(mac_address="", network_function_chain=None, uuid=""):
     return create_ahv_nic(
         network_function_nic_type="INGRESS",
         nic_type="NETWORK_FUNCTION_NIC",
         mac_address=mac_address,
         network_function_chain=network_function_chain,
+        uuid=uuid,
     )
 
 
-def network_function_egress_nic(mac_address="", network_function_chain=None):
+def network_function_egress_nic(mac_address="", network_function_chain=None, uuid=""):
     return create_ahv_nic(
         network_function_nic_type="EGRESS",
         nic_type="NETWORK_FUNCTION_NIC",
         mac_address=mac_address,
         network_function_chain=network_function_chain,
+        uuid=uuid,
     )
 
 
-def network_function_tap_nic(mac_address="", network_function_chain=None):
+def network_function_tap_nic(mac_address="", network_function_chain=None, uuid=""):
     return create_ahv_nic(
         network_function_nic_type="TAP",
         nic_type="NETWORK_FUNCTION_NIC",
         mac_address=mac_address,
         network_function_chain=network_function_chain,
+        uuid=uuid,
     )
 
 
 class AhvVmNic:
-    def __new__(cls, subnet, mac_address="", ip_endpoints=[], cluster=None):
+    def __new__(cls, subnet, mac_address="", ip_endpoints=[], cluster=None, uuid=""):
         return normal_ingress_nic(
             subnet=subnet,
             mac_address=mac_address,
             ip_endpoints=ip_endpoints,
             cluster=cluster,
+            uuid=uuid,
         )
 
     class NormalNic:
-        def __new__(cls, subnet, mac_address="", ip_endpoints=[], cluster=None):
+        def __new__(
+            cls, subnet, mac_address="", ip_endpoints=[], cluster=None, uuid=""
+        ):
             return normal_ingress_nic(
                 subnet=subnet,
                 mac_address=mac_address,
                 ip_endpoints=ip_endpoints,
                 cluster=cluster,
+                uuid=uuid,
             )
 
         ingress = normal_ingress_nic
@@ -206,12 +224,15 @@ class AhvVmNic:
         tap = normal_tap_nic
 
     class DirectNic:
-        def __new__(cls, subnet, mac_address="", ip_endpoints=[], cluster=None):
+        def __new__(
+            cls, subnet, mac_address="", ip_endpoints=[], cluster=None, uuid=""
+        ):
             return direct_ingress_nic(
                 subnet=subnet,
                 mac_address=mac_address,
                 ip_endpoints=ip_endpoints,
                 cluster=cluster,
+                uuid=uuid,
             )
 
         ingress = direct_ingress_nic
@@ -219,9 +240,11 @@ class AhvVmNic:
         tap = direct_tap_nic
 
     class NetworkFunctionNic:
-        def __new__(cls, mac_address="", network_function_chain=None):
+        def __new__(cls, mac_address="", network_function_chain=None, uuid=""):
             return network_function_ingress_nic(
-                mac_address=mac_address, network_function_chain=network_function_chain
+                mac_address=mac_address,
+                network_function_chain=network_function_chain,
+                uuid=uuid,
             )
 
         ingress = network_function_ingress_nic

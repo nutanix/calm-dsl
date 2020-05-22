@@ -13,6 +13,8 @@ properties:
   nic_type:
     type: string
     default: NORMAL_NIC
+  uuid:
+    type: string
   subnet_reference:
     type: object
     x-calm-dsl-type: object
@@ -80,6 +82,8 @@ properties:
             default: SCSI
   disk_size_mib:
     type: integer
+  uuid:
+    type: string
 
 {%- endmacro %}
 
@@ -180,6 +184,9 @@ properties:
     type: string
     enum: [LEGACY, UEFI]
     default: LEGACY
+  hardware_clock_timezone:
+    type: string
+    default: "UTC"
   guest_customization:
     $ref : '#/components/schemas/AhvGuestCustomization'
   serial_port_list:

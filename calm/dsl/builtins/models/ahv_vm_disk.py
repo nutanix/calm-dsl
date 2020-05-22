@@ -25,6 +25,9 @@ class AhvDiskType(EntityType):
         if "data_source_reference" in cdict and cdict["data_source_reference"] == None:
             cdict.pop("data_source_reference")
 
+        if ("uuid" in cdict) and cdict["uuid"] == "":
+            cdict.pop("uuid")
+
         return cdict
 
 
@@ -46,7 +49,7 @@ def get_boot_config():
     return BOOT_CONFIG
 
 
-def allocate_on_storage_container(adapter_type="SCSI", size=8):
+def allocate_on_storage_container(adapter_type="SCSI", size=8, uuid=""):
     global ADAPTER_INDEX_MAP
     kwargs = {
         "device_properties": {
@@ -57,6 +60,7 @@ def allocate_on_storage_container(adapter_type="SCSI", size=8):
             },
         },
         "disk_size_mib": size * 1024,
+        "uuid": uuid,
     }
 
     ADAPTER_INDEX_MAP[adapter_type] += 1
@@ -64,7 +68,7 @@ def allocate_on_storage_container(adapter_type="SCSI", size=8):
 
 
 def update_disk_config(
-    device_type="DISK", adapter_type="SCSI", image_data={}, bootable=False
+    device_type="DISK", adapter_type="SCSI", image_data={}, bootable=False, uuid=""
 ):
     if not image_data:
         raise ValueError("Image data not found")
@@ -79,6 +83,7 @@ def update_disk_config(
                 "device_index": ADAPTER_INDEX_MAP[adapter_type],
             },
         },
+        "uuid": uuid,
     }
 
     if bootable:
@@ -99,7 +104,7 @@ def update_disk_config(
 
 
 def clone_from_image_service(
-    device_type="DISK", adapter_type="SCSI", image_name="", bootable=False
+    device_type="DISK", adapter_type="SCSI", image_name="", bootable=False, uuid=""
 ):
     if not image_name:
         raise ValueError("image_name not provided !!!")
@@ -119,11 +124,17 @@ def clone_from_image_service(
     image_uuid = image_cache_data.get("uuid", "")
     image_data = {"kind": "image", "name": image_name, "uuid": image_uuid}
 
-    return update_disk_config(device_type, adapter_type, image_data, bootable)
+    return update_disk_config(
+        device_type, adapter_type, image_data, bootable, uuid=uuid
+    )
 
 
 def clone_from_vm_image_service(
-    device_type="DISK", adapter_type="SCSI", bootable=False, vm_disk_package=None
+    device_type="DISK",
+    adapter_type="SCSI",
+    bootable=False,
+    vm_disk_package=None,
+    uuid="",
 ):
     global ADAPTER_INDEX_MAP
 
@@ -142,10 +153,12 @@ def clone_from_vm_image_service(
 
     image_data = ref(vm_disk_package).compile()
 
-    return update_disk_config(device_type, adapter_type, image_data, bootable)
+    return update_disk_config(
+        device_type, adapter_type, image_data, bootable, uuid=uuid
+    )
 
 
-def empty_cd_rom(adapter_type="IDE"):
+def empty_cd_rom(adapter_type="IDE", uuid=""):
     global ADAPTER_INDEX_MAP
     kwargs = {
         "device_properties": {
@@ -155,109 +168,125 @@ def empty_cd_rom(adapter_type="IDE"):
                 "device_index": ADAPTER_INDEX_MAP[adapter_type],
             },
         },
+        "uuid": uuid,
     }
 
     ADAPTER_INDEX_MAP[adapter_type] += 1
     return ahv_vm_disk(**kwargs)
 
 
-def disk_scsi_clone_from_image(image_name=None, bootable=False):
+def disk_scsi_clone_from_image(image_name=None, bootable=False, uuid=""):
     return clone_from_image_service(
         device_type="DISK",
         adapter_type="SCSI",
         image_name=image_name,
         bootable=bootable,
+        uuid=uuid,
     )
 
 
-def disk_pci_clone_from_image(image_name=None, bootable=False):
+def disk_pci_clone_from_image(image_name=None, bootable=False, uuid=""):
     return clone_from_image_service(
-        device_type="DISK", adapter_type="PCI", image_name=image_name, bootable=bootable
+        device_type="DISK",
+        adapter_type="PCI",
+        image_name=image_name,
+        bootable=bootable,
+        uuid=uuid,
     )
 
 
-def cd_rom_ide_clone_from_image(image_name=None, bootable=False):
+def cd_rom_ide_clone_from_image(image_name=None, bootable=False, uuid=""):
     return clone_from_image_service(
         device_type="CDROM",
         adapter_type="IDE",
         image_name=image_name,
         bootable=bootable,
+        uuid=uuid,
     )
 
 
-def cd_rom_sata_clone_from_image(image_name=None, bootable=False):
+def cd_rom_sata_clone_from_image(image_name=None, bootable=False, uuid=""):
     return clone_from_image_service(
         device_type="CDROM",
         adapter_type="SATA",
         image_name=image_name,
         bootable=bootable,
+        uuid=uuid,
     )
 
 
-def disk_scsi_clone_from_pkg_image(vm_disk_package=None, bootable=False):
+def disk_scsi_clone_from_pkg_image(vm_disk_package=None, bootable=False, uuid=""):
     return clone_from_vm_image_service(
         device_type="DISK",
         adapter_type="SCSI",
         vm_disk_package=vm_disk_package,
         bootable=bootable,
+        uuid=uuid,
     )
 
 
-def disk_pci_clone_from_pkg_image(vm_disk_package=None, bootable=False):
+def disk_pci_clone_from_pkg_image(vm_disk_package=None, bootable=False, uuid=""):
     return clone_from_vm_image_service(
         device_type="DISK",
         adapter_type="PCI",
         vm_disk_package=vm_disk_package,
         bootable=bootable,
+        uuid=uuid,
     )
 
 
-def cd_rom_ide_clone_from_pkg_image(vm_disk_package=None, bootable=False):
+def cd_rom_ide_clone_from_pkg_image(vm_disk_package=None, bootable=False, uuid=""):
     return clone_from_vm_image_service(
         device_type="CDROM",
         adapter_type="IDE",
         vm_disk_package=vm_disk_package,
         bootable=bootable,
+        uuid=uuid,
     )
 
 
-def cd_rom_sata_clone_from_pkg_image(vm_disk_package=None, bootable=False):
+def cd_rom_sata_clone_from_pkg_image(vm_disk_package=None, bootable=False, uuid=""):
     return clone_from_vm_image_service(
         device_type="CDROM",
         adapter_type="SATA",
         vm_disk_package=vm_disk_package,
         bootable=bootable,
+        uuid=uuid,
     )
 
 
-def disk_scsi_allocate_on_container(size=8):
-    return allocate_on_storage_container(adapter_type="SCSI", size=size)
+def disk_scsi_allocate_on_container(size=8, uuid=""):
+    return allocate_on_storage_container(adapter_type="SCSI", size=size, uuid=uuid)
 
 
-def disk_pci_allocate_on_container(size=8):
-    return allocate_on_storage_container(adapter_type="PCI", size=size)
+def disk_pci_allocate_on_container(size=8, uuid=""):
+    return allocate_on_storage_container(adapter_type="PCI", size=size, uuid=uuid)
 
 
-def cd_rom_ide_use_empty_cd_rom():
-    return empty_cd_rom(adapter_type="IDE")
+def cd_rom_ide_use_empty_cd_rom(uuid=""):
+    return empty_cd_rom(adapter_type="IDE", uuid=uuid)
 
 
-def cd_rom_sata_use_empty_cd_rom():
-    return empty_cd_rom(adapter_type="SATA")
+def cd_rom_sata_use_empty_cd_rom(uuid=""):
+    return empty_cd_rom(adapter_type="SATA", uuid=uuid)
 
 
 class AhvVmDisk:
-    def __new__(cls, image_name=None, bootable=False):
-        return disk_scsi_clone_from_image(image_name=image_name, bootable=bootable)
+    def __new__(cls, image_name=None, bootable=False, uuid=""):
+        return disk_scsi_clone_from_image(
+            image_name=image_name, bootable=bootable, uuid=uuid
+        )
 
     class Disk:
-        def __new__(cls, image_name=None, bootable=False):
-            return disk_scsi_clone_from_image(image_name=image_name, bootable=bootable)
+        def __new__(cls, image_name=None, bootable=False, uuid=""):
+            return disk_scsi_clone_from_image(
+                image_name=image_name, bootable=bootable, uuid=uuid
+            )
 
         class Scsi:
-            def __new__(cls, image_name=None, bootable=False):
+            def __new__(cls, image_name=None, bootable=False, uuid=""):
                 return disk_scsi_clone_from_image(
-                    image_name=image_name, bootable=bootable
+                    image_name=image_name, bootable=bootable, uuid=uuid
                 )
 
             cloneFromImageService = disk_scsi_clone_from_image
@@ -265,9 +294,9 @@ class AhvVmDisk:
             cloneFromVMDiskPackage = disk_scsi_clone_from_pkg_image
 
         class Pci:
-            def __new__(cls, image_name=None, bootable=False):
+            def __new__(cls, image_name=None, bootable=False, uuid=""):
                 return disk_pci_clone_from_image(
-                    image_name=image_name, bootable=bootable
+                    image_name=image_name, bootable=bootable, uuid=uuid
                 )
 
             cloneFromImageService = disk_pci_clone_from_image
@@ -275,13 +304,15 @@ class AhvVmDisk:
             cloneFromVMDiskPackage = disk_pci_clone_from_pkg_image
 
     class CdRom:
-        def __new__(cls, image_name=None, bootable=False):
-            return cd_rom_ide_clone_from_image(image_name=image_name, bootable=bootable)
+        def __new__(cls, image_name=None, bootable=False, uuid=""):
+            return cd_rom_ide_clone_from_image(
+                image_name=image_name, bootable=bootable, uuid=uuid
+            )
 
         class Ide:
-            def __new__(cls, image_name=None, bootable=False):
+            def __new__(cls, image_name=None, bootable=False, uuid=""):
                 return cd_rom_ide_clone_from_image(
-                    image_name=image_name, bootable=bootable
+                    image_name=image_name, bootable=bootable, uuid=uuid
                 )
 
             cloneFromImageService = cd_rom_ide_clone_from_image
@@ -289,9 +320,9 @@ class AhvVmDisk:
             cloneFromVMDiskPackage = cd_rom_ide_clone_from_pkg_image
 
         class Sata:
-            def __new__(cls, image_name=None, bootable=False):
+            def __new__(cls, image_name=None, bootable=False, uuid=""):
                 return cd_rom_sata_clone_from_image(
-                    image_name=image_name, bootable=bootable
+                    image_name=image_name, bootable=bootable, uuid=uuid
                 )
 
             cloneFromImageService = cd_rom_sata_clone_from_image
