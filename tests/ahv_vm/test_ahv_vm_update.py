@@ -13,8 +13,8 @@ CENTOS_PUBLIC_KEY = read_local_file(os.path.join("keys", "centos_pub"))
 class MyAhvVm(AhvVmResources):
     """Example VM DSL"""
 
-    memory = 4
-    vCPUs = 2
+    memory = 1
+    vCPUs = 1
     cores_per_vCPU = 1
     disks = [
         AhvVmDisk(
