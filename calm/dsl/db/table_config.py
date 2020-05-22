@@ -4,6 +4,7 @@ from peewee import (
     CharField,
     BlobField,
     DateTimeField,
+    DecimalField,
     ForeignKeyField,
     CompositeKey,
     DoesNotExist,
@@ -12,6 +13,7 @@ import datetime
 import click
 import arrow
 import sys
+from decimal import ROUND_UP
 from prettytable import PrettyTable
 
 from calm.dsl.api import get_resource_api, get_api_client
@@ -248,6 +250,9 @@ class AhvSubnetsCache(CacheTableBase):
 class AhvImagesCache(CacheTableBase):
     __cache_type__ = "ahv_disk_image"
     name = CharField()
+    image_size = DecimalField(
+        max_digits=50, decimal_places=0, auto_round=True, rounding=ROUND_UP
+    )
     image_type = CharField()
     uuid = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
@@ -257,6 +262,7 @@ class AhvImagesCache(CacheTableBase):
             "name": self.name,
             "uuid": self.uuid,
             "image_type": self.image_type,
+            "image_size": self.image_size,
             "last_update_time": self.last_update_time,
         }
 
@@ -269,8 +275,11 @@ class AhvImagesCache(CacheTableBase):
     @classmethod
     def create_entry(cls, name, uuid, **kwargs):
         image_type = kwargs.get("image_type", "")
+        image_size = kwargs.get("image_size", 0)
         # Store data in table
-        super().create(name=name, uuid=uuid, image_type=image_type)
+        super().create(
+            name=name, uuid=uuid, image_type=image_type, image_size=image_size
+        )
 
     @classmethod
     def get_entity_data(cls, name, **kwargs):
@@ -338,9 +347,13 @@ class AhvImagesCache(CacheTableBase):
         for entity in res["entities"]:
             name = entity["status"]["name"]
             uuid = entity["metadata"]["uuid"]
+            size_bytes = entity["status"]["resources"].get("size_bytes", 0)
+            image_size = size_bytes / 1048576
             # TODO add proper validation for karbon images
             image_type = entity["status"]["resources"].get("image_type", "")
-            cls.create_entry(name=name, uuid=uuid, image_type=image_type)
+            cls.create_entry(
+                name=name, uuid=uuid, image_type=image_type, image_size=image_size
+            )
 
     @classmethod
     def show_data(cls, *args, **kwargs):
@@ -351,7 +364,7 @@ class AhvImagesCache(CacheTableBase):
             return
 
         table = PrettyTable()
-        table.field_names = ["NAME", "UUID", "IMAGE_TYPE", "LAST UPDATED"]
+        table.field_names = ["NAME", "UUID", "IMAGE_TYPE", "IMAGE_SIZE", "LAST UPDATED"]
         for entity in cls.select().order_by(cls.image_type):
             entity_data = entity.get_detail_dict()
             last_update_time = arrow.get(
@@ -362,6 +375,7 @@ class AhvImagesCache(CacheTableBase):
                     highlight_text(entity_data["name"]),
                     highlight_text(entity_data["uuid"]),
                     highlight_text(entity_data["image_type"]),
+                    highlight_text(entity_data["image_size"]),
                     highlight_text(last_update_time),
                 ]
             )

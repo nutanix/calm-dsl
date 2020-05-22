@@ -68,7 +68,12 @@ def allocate_on_storage_container(adapter_type="SCSI", size=8, uuid=""):
 
 
 def update_disk_config(
-    device_type="DISK", adapter_type="SCSI", image_data={}, bootable=False, uuid=""
+    device_type="DISK",
+    adapter_type="SCSI",
+    image_data={},
+    bootable=False,
+    uuid="",
+    image_size=0,
 ):
     if not image_data:
         raise ValueError("Image data not found")
@@ -84,6 +89,7 @@ def update_disk_config(
             },
         },
         "uuid": uuid,
+        "disk_size_mib": image_size,
     }
 
     if bootable:
@@ -122,10 +128,16 @@ def clone_from_image_service(
         )
 
     image_uuid = image_cache_data.get("uuid", "")
+    image_size = int(image_cache_data.get("image_size", 0))
     image_data = {"kind": "image", "name": image_name, "uuid": image_uuid}
 
     return update_disk_config(
-        device_type, adapter_type, image_data, bootable, uuid=uuid
+        device_type,
+        adapter_type,
+        image_data,
+        bootable,
+        uuid=uuid,
+        image_size=image_size,
     )
 
 
