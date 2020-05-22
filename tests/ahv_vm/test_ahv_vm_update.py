@@ -12,7 +12,7 @@ CENTOS_PUBLIC_KEY = read_local_file(os.path.join("keys", "centos_pub"))
 ENV = read_env()
 
 
-class MyAhvVm(AhvVmResources):
+class MyAhvVmDslTest(AhvVmResources):
     """Example VM DSL"""
 
     memory = 1
