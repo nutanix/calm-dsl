@@ -20,33 +20,33 @@ class MyAhvVm(AhvVmResources):
         AhvVmDisk(
             image_name="Centos7",
             bootable=True,
-            uuid="edfca6da-8d48-4cf7-aad9-3f3a63910c5b",
+            uuid="635f4dd0-6693-4900-97f6-ab2a086f7f39",
         ),
         AhvVmDisk.CdRom(
-            image_name="SQLServer2014SP2", uuid="ae8b075e-c18a-4a80-9690-0cfac71ef771"
+            image_name="SQLServer2014SP2", uuid="4e128a84-4fe5-415f-9b9e-daa77263180a"
         ),
         AhvVmDisk.Disk.Pci.allocateOnStorageContainer(
-            size=12, uuid="027d2bfe-1538-4e9a-a48a-2d39a2797707"
+            size=12, uuid="0df7ab31-16cb-4a01-9843-fd73fdee18bc"
         ),
-        AhvVmDisk.CdRom.Ide.emptyCdRom(uuid="3a3330cb-ceae-4248-aa42-b513cf81852d"),
-        AhvVmDisk.CdRom.Ide.emptyCdRom(uuid="18ba76a4-b069-4595-a6bb-a16fc0adc5e4"),
+        AhvVmDisk.CdRom.Ide.emptyCdRom(uuid="aa210234-00ec-4a6d-a6b3-c3813a7be399"),
+        AhvVmDisk.CdRom.Ide.emptyCdRom(uuid="1f1f1a70-848e-43ef-939b-a7cbab3d8da9"),
     ]
     nics = [
         AhvVmNic.DirectNic.ingress(
             subnet="vlan.0",
             cluster="calmdev1",
-            uuid="a181f7d8-1ab3-40f5-a2ac-4040c2682d3a",
+            uuid="4518d3f8-1675-4946-8db9-fbe804cc5a66",
         ),
         AhvVmNic.NormalNic.egress(
             subnet="vlan.0",
             cluster="calmdev1",
-            uuid="3f464f27-7588-4d62-b98b-e7ecb1a0c1b9",
+            uuid="008f92ff-b57e-4905-b40f-a1d7feed7c7a",
         ),
         AhvVmNic.DirectNic.tap(
-            subnet="vlan.0", uuid="5fa71c6e-2bd2-4655-ac4e-9e92fb8a29bd"
+            subnet="vlan.0", uuid="3846f3c1-e1ff-4b98-9385-e7ea95eca90c"
         ),
     ]
-
+    power_state = "OFF"
     guest_customization = AhvVmGC.CloudInit(
         config={
             "users": [

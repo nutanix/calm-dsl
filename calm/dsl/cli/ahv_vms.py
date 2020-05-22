@@ -243,6 +243,14 @@ def create_ahv_vm_command(vm_file, name):
     execution_context = res["status"]["execution_context"]
     task_uuid = execution_context.get("task_uuid", "")
 
+    LOG.info("Submitted task to create vm")
+    stdout_dict = {
+        "vm_name": res["metadata"]["name"],
+        "vm_uuid": res["metadata"]["uuid"],
+        "execution_context": execution_context,
+    }
+    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+
     poll_ahv_vm_task(task_uuid)
 
 
@@ -291,9 +299,10 @@ def get_ahv_vm(vm_name=None, vm_uuid=None):
 def delete_ahv_vm_command(name, vm_uuid=None):
 
     client = get_api_client()
-    if not vm_uuid:
-        vm_data = get_ahv_vm(vm_name=name)
-        vm_uuid = vm_data["metadata"]["uuid"]
+
+    vm_data = get_ahv_vm(vm_name=name, vm_uuid=vm_uuid)
+    name = vm_data["metadata"]["name"]
+    vm_uuid = vm_data["metadata"]["uuid"]
 
     LOG.info("Deleting Ahv vm with UUID ({})".format(vm_uuid))
     res, err = client.ahv_vm.delete(vm_uuid)
@@ -306,6 +315,14 @@ def delete_ahv_vm_command(name, vm_uuid=None):
 
     execution_context = res["status"]["execution_context"]
     task_uuid = execution_context.get("task_uuid", "")
+
+    LOG.info("Submitted task to delete vm")
+    stdout_dict = {
+        "vm_name": name,
+        "vm_uuid": vm_uuid,
+        "execution_context": execution_context,
+    }
+    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
     poll_ahv_vm_task(task_uuid)
 
@@ -334,6 +351,14 @@ def update_ahv_vm_command(vm_file, vm_name=None, vm_uuid=""):
     execution_context = res["status"]["execution_context"]
     task_uuid = execution_context.get("task_uuid", "")
 
+    LOG.info("Submitted task to update vm")
+    stdout_dict = {
+        "vm_name": res["metadata"]["name"],
+        "vm_uuid": res["metadata"]["uuid"],
+        "execution_context": execution_context,
+    }
+    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+
     poll_ahv_vm_task(task_uuid)
 
 
@@ -354,6 +379,9 @@ def poll_ahv_vm_task(task_uuid, poll_interval=10):
 
         if status == "FAILED":
             LOG.info("FAILED")
+            error_detail = res.get("error_detail", "")
+            if error_detail:
+                LOG.error(error_detail)
             break
 
         elif status == "SUCCEEDED":
