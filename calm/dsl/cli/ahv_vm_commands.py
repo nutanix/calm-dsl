@@ -105,26 +105,28 @@ def _create_ahv_vm_command(vm_file, name):
 
 
 # TODO add support for multiple vm deletion
-@delete.command("ahv_vm")
-@click.argument("vm_name", required=False)
+@delete.command("vm")
+@click.argument("vm_uuid", required=False)
 @click.option(
-    "--vm_uuid",
+    "--name",
     "-id",
+    "vm_name",
     default=None,
-    help="Vm uuid (in case if multiple vm with same name exists)",
+    help="VM name",
 )
 def _delete_ahv_vm_command(vm_name, vm_uuid):
 
     delete_ahv_vm_command(name=vm_name, vm_uuid=vm_uuid)
 
 
-@update.command("ahv_vm")
-@click.argument("vm_name", required=False)
+@update.command("vm")
+@click.argument("vm_uuid", required=False)
 @click.option(
-    "--vm_uuid",
-    "-id",
+    "--name",
+    "-n",
+    "vm_name",
     default=None,
-    help="Vm uuid (in case if multiple vm with same name exists)",
+    help="VM name",
 )
 @click.option(
     "--file",
