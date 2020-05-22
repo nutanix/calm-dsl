@@ -5,12 +5,13 @@ import click
 
 from calm.dsl.tools import get_logging_handle
 
-from .main import get, list, ls, compile, create, watch
+from .main import get, list, ls, compile, create, watch, delete
 from .ahv_vms import (
     get_ahv_vm_list,
     compile_ahv_vm_command,
     create_ahv_vm_command,
     poll_ahv_vm_task,
+    delete_ahv_vm_command
 )
 
 LOG = get_logging_handle(__name__)
@@ -100,6 +101,23 @@ def _compile_ahv_vm_command(vm_file, out, no_sync):
 def _create_ahv_vm_command(vm_file, name):
     """Creates a AHV VM"""
     create_ahv_vm_command(vm_file, name)
+
+
+# TODO add support for multiple vm deletion 
+@delete.command("ahv_vm")
+@click.argument(
+    "vm_name",
+    required=False
+)
+@click.option(
+    "--vm_uuid",
+    "-id",
+    default=None,
+    help="Vm uuid (in case if multiple vm with same name exists)"
+)
+def _delete_ahv_vm_command(vm_name, vm_uuid):
+
+    delete_ahv_vm_command(name=vm_name, vm_uuid=vm_uuid)
 
 
 @watch.command("ahv_vm_task")

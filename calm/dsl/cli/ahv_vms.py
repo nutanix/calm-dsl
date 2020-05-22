@@ -232,13 +232,69 @@ def create_ahv_vm_command(vm_file, name):
         ahv_vm_payload["metadata"]["name"] = name
 
     client = get_api_client()
-
     res, err = client.ahv_vm.create(ahv_vm_payload)
-
     if err:
         LOG.error(err)
         sys.exit(-1)
 
+    res = res.json()
+    LOG.debug(json.dumps(res, indent=4, separators=(",", ": ")))
+
+    execution_context = res["status"]["execution_context"]
+    task_uuid = execution_context.get("task_uuid", "")
+
+    poll_ahv_vm_task(task_uuid)
+
+
+def get_ahv_vm(vm_name=None, vm_uuid=None):
+
+    if not(vm_name or vm_uuid):
+        LOG.error("Either vm_name or vm_uuid must be given")
+        sys.exit(-1)
+    
+    client = get_api_client()
+    if not vm_uuid:
+        LOG.info("Searching for vm {}". format(vm_name))
+        vm_name_uuids_map = client.ahv_vm.get_name_uuid_map({"length": 250})
+
+        vm_uuids = vm_name_uuids_map.get(vm_name, [])
+        if not isinstance(vm_uuids, list):
+            vm_uuids = [vm_uuids]
+
+        if vm_uuids:
+            if len(vm_uuids) != 1:
+                LOG.error("More than one ahv vm with name ({}) found. VM UUIDs: {}".format(vm_name, vm_uuids))
+                sys.exit(-1)
+
+            LOG.info("Ahv VM {} found ".format(vm_name))
+            vm_uuid = vm_uuids[0]
+        
+        else:
+            LOG.error("No Ahv vm with name {} found". format(vm_name))
+            sys.exit(-1)
+    
+    res, err = client.ahv_vm.read(vm_uuid)
+    if err:
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
+    
+    vm_data = res.json()
+    return vm_data
+
+
+def delete_ahv_vm_command(name, vm_uuid=None):
+
+    client = get_api_client()
+    if not vm_uuid:
+        vm_data = get_ahv_vm(vm_name=name)
+        vm_uuid = vm_data["metadata"]["uuid"]
+
+    LOG.info("Deleting Ahv vm with UUID ({})". format(vm_uuid))
+    res, err = client.ahv_vm.delete(vm_uuid)
+    if err:
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
+    
     res = res.json()
     LOG.debug(json.dumps(res, indent=4, separators=(",", ": ")))
 
@@ -280,3 +336,6 @@ def poll_ahv_vm_task(task_uuid, poll_interval=10):
 
         count += poll_interval
         time.sleep(poll_interval)
+
+    if count >= maxWait:
+        LOG.info("Task not reached to terminal state in {}s". format(maxWait))
