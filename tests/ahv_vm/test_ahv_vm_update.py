@@ -51,7 +51,7 @@ class MyAhvVmDslTest(AhvVmResources):
 
 
 def test_json():
-    print(MyAhvVm.json_dumps(pprint=True))
+    print(MyAhvVmDslTest.json_dumps(pprint=True))
 
 
 if __name__ == "__main__":
