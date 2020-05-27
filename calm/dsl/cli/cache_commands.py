@@ -30,10 +30,6 @@ def update_cache():
     """Update the data for dynamic entities stored in the cache"""
 
     LOG.debug("Updating cache")
-    # NOTE order for version and cache sync should be maintained
-    # Update version cache
-    Version.sync()
-    # Update api cache
     Cache.sync()
     LOG.debug("Success")
     Cache.show_data()

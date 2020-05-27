@@ -204,8 +204,6 @@ def init_db():
 
 def sync_cache():
     LOG.info("Updating Cache")
-    # NOTE order for version and cache sync should be maintained
-    Version.sync()
     Cache.sync()
     LOG.info("Success")
 
