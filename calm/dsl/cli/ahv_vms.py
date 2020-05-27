@@ -1,6 +1,7 @@
 import sys
 import json
 import time
+from base64 import b64encode
 
 from ruamel import yaml
 import click
@@ -194,7 +195,9 @@ def create_ahv_vm_payload(UserAhvVm, categories=None):
         if "cloud_init" in gc:
             user_data = gc["cloud_init"].get("user_data", None)
             if user_data:
-                gc["cloud_init"]["user_data"] = user_data.encode("UTF-8")
+                gc["cloud_init"]["user_data"] = b64encode(
+                    user_data.encode("UTF-8")
+                ).decode()
 
     return ahv_vm_payload
 
