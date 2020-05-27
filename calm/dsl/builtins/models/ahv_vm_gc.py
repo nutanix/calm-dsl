@@ -19,14 +19,8 @@ class AhvGCType(EntityType):
         if "sysprep" in cdict and cdict["sysprep"] == None:
             cdict.pop("sysprep")
 
-        if "cloud_init" in cdict:
-            if not cdict["cloud_init"]:
-                cdict.pop("cloud_init")
-            else:
-                # TODO take care for decoding while compiling or showing output
-                user_data = cdict["cloud_init"].get("user_data", None)
-                if user_data:
-                    cdict["cloud_init"]["user_data"] = user_data.encode("UTF-8")
+        if "cloud_init" in cdict and cdict["cloud_init"] == None:
+            cdict.pop("cloud_init")
 
         return cdict
 

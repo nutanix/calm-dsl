@@ -188,6 +188,14 @@ def create_ahv_vm_payload(UserAhvVm, categories=None):
         "spec": spec,
     }
 
+    # Customization for ahv gc
+    if "guest_customization" in spec["resources"]:
+        gc = spec["resources"]["guest_customization"]
+        if "cloud_init" in gc:
+            user_data = gc["cloud_init"].get("user_data", None)
+            if user_data:
+                gc["cloud_init"]["user_data"] = user_data.encode("UTF-8")
+
     return ahv_vm_payload
 
 
