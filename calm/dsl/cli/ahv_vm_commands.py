@@ -111,6 +111,12 @@ def _create_ahv_vm_command(vm_file, name):
     "--name", "-id", "vm_name", default=None, help="VM name",
 )
 def _delete_ahv_vm_command(vm_name, vm_uuid):
+    """Deletes a ahv vm.
+
+\b
+Note:
+    If vm uuid is provided, name parameter will be ignored
+    """
 
     delete_ahv_vm_command(name=vm_name, vm_uuid=vm_uuid)
 
@@ -129,7 +135,14 @@ def _delete_ahv_vm_command(vm_name, vm_uuid):
     help="Path to VM file",
 )
 def _update_ahv_vm_command(vm_name, vm_uuid, vm_file):
-    """updates a AHV VM"""
+    """Updates a ahv vm
+
+\b
+Note:
+    If name is not given, class name will be used as vm name
+    If uuid is not provided, it will search for vms via name field
+    """
+
     update_ahv_vm_command(vm_file=vm_file, vm_name=vm_name, vm_uuid=vm_uuid)
 
 

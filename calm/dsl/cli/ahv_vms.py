@@ -329,14 +329,17 @@ def delete_ahv_vm_command(name, vm_uuid=None):
 
 def update_ahv_vm_command(vm_file, vm_name=None, vm_uuid=""):
 
-    if not (vm_name or vm_uuid):
-        LOG.error("Either vm_name or vm_uuid must be given")
-        sys.exit(-1)
+    # Compiling vm spec file
+    ahv_vm_payload = compile_ahv_vm(vm_file)
+
+    vm_name = vm_name or ahv_vm_payload["spec"]["name"]
+    ahv_vm_payload["spec"]["name"] = vm_name
+    ahv_vm_payload["metadata"]["name"] = vm_name
 
     vm_data = get_ahv_vm(vm_name=vm_name, vm_uuid=vm_uuid)
     vm_uuid = vm_data["metadata"]["uuid"]
 
-    ahv_vm_payload = compile_ahv_vm(vm_file)
+    # Update spec version by vm data obtained from GET call
     ahv_vm_payload["metadata"]["spec_version"] = vm_data["metadata"]["spec_version"]
 
     client = get_api_client()
