@@ -216,12 +216,7 @@ def get_blueprint_class_from_module(user_bp_module):
     return UserBlueprint
 
 
-def compile_blueprint(bp_file, no_sync=False):
-
-    # Sync only if no_sync flag is not set
-    if not no_sync:
-        LOG.info("Updating cache")
-        Cache.sync()
+def compile_blueprint(bp_file):
 
     user_bp_module = get_blueprint_module_from_file(bp_file)
     UserBlueprint = get_blueprint_class_from_module(user_bp_module)
@@ -245,9 +240,9 @@ def compile_blueprint(bp_file, no_sync=False):
     return bp_payload
 
 
-def compile_blueprint_command(bp_file, out, no_sync=False):
+def compile_blueprint_command(bp_file, out):
 
-    bp_payload = compile_blueprint(bp_file, no_sync)
+    bp_payload = compile_blueprint(bp_file)
     if bp_payload is None:
         LOG.error("User blueprint not found in {}".format(bp_file))
         return

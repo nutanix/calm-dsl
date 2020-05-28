@@ -156,9 +156,6 @@ def init_bp(bp_name, dir_name, provider_type):
     bp_name = bp_name.strip().split()[0].title()
     bp_dir, key_dir, script_dir = make_bp_dirs(dir_name, bp_name)
 
-    # sync cache
-    Cache.sync()
-
     # Creating keys
     LOG.info("Generating keys for credentials")
     create_cred_keys(key_dir)

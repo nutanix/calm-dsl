@@ -17,6 +17,8 @@ from calm.dsl.tools import (
     show_trace_option,
 )
 from calm.dsl.config import get_config
+from calm.dsl.store import Cache
+
 from .version_validator import validate_version
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
@@ -36,9 +38,17 @@ LOG = get_logging_handle(__name__)
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path to config file, defaults to ~/.calm/config.ini",
 )
+@click.option(
+    "--sync",
+    "-s",
+    "sync",
+    is_flag=True,
+    default=False,
+    help="Update cache before running command",
+)
 @click.version_option("0.1")
 @click.pass_context
-def main(ctx, config_file):
+def main(ctx, config_file, sync):
     """Calm CLI
 
 \b
@@ -59,6 +69,8 @@ Commonly used commands:
         pass
     if config_file:
         get_config(config_file=config_file)
+    if sync:
+        Cache.sync()
 
 
 @main.group(cls=DYMGroup)
