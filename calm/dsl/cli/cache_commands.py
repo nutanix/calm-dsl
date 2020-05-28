@@ -28,8 +28,6 @@ def clear_cache():
 def update_cache():
     """Update the data for dynamic entities stored in the cache"""
 
-    LOG.info("Updating cache")
     Cache.sync()
-    LOG.info("Success")
     Cache.show_data()
     LOG.info(highlight_text("Cache updated at {}".format(datetime.datetime.now())))
