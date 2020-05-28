@@ -7,6 +7,7 @@ import click_completion
 import click_completion.core
 from click_didyoumean import DYMGroup
 from click_repl import repl
+from distutils.version import LooseVersion as LV
 
 # TODO - move providers to separate file
 from calm.dsl.providers import get_provider, get_provider_types
@@ -17,12 +18,34 @@ from calm.dsl.tools import (
     show_trace_option,
 )
 from calm.dsl.config import get_config
+from calm.dsl.store import Version
 from .version_validator import validate_version
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
 click_completion.init()
 LOG = get_logging_handle(__name__)
+
+
+class FeatureFlagCommand(DYMGroup):
+
+    def command(self, *args, feature_min_version=None, **kwargs):
+        """Behaves the same as `click.Group.command()` except added an
+        `feature_min_version` flag which can be used to warn users if command
+        is not supported setup calm version.
+        """
+        calm_version = Version.get_version("Calm")
+        if (not feature_min_version) or (not calm_version) or (LV(calm_version) >= LV(feature_min_version)):
+            return super(FeatureFlagCommand, self).command(*args, **kwargs)
+        else:
+            # `import pdb; pdb.set_trace()
+            LOG.warning("command not supported in given version. Pls update to latest")
+            return lambda f: f
+    
+    def get_command(self, ctx, cmd_name):
+        
+
+        return super(FeatureFlagCommand, self).get_command(self, ctx, cmd_name)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
@@ -177,7 +200,7 @@ def create():
     pass
 
 
-@main.group(cls=DYMGroup)
+@main.group(cls=FeatureFlagCommand)
 def delete():
     """Delete entities"""
     pass

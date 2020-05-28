@@ -70,7 +70,7 @@ def _create_project(project_file, project_name):
     LOG.info("Project state: {}".format(state))
 
 
-@delete.command("project")
+@delete.command("project", feature_min_version="2.9.7")
 @click.argument("project_names", nargs=-1)
 def _delete_project(project_names):
     """Deletes a project"""
