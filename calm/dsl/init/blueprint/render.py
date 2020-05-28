@@ -160,7 +160,7 @@ def init_bp(bp_name, dir_name, provider_type):
     bp_dir, key_dir, script_dir = make_bp_dirs(dir_name, bp_name)
 
     # sync cache
-    LOG.info("Syncing cache")
+    LOG.info("Updating cache")
     Cache.sync()
     LOG.info("Success")
 

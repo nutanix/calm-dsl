@@ -220,7 +220,7 @@ def compile_blueprint(bp_file, no_sync=False):
 
     # Sync only if no_sync flag is not set
     if not no_sync:
-        LOG.info("Syncing cache")
+        LOG.info("Updating cache")
         Cache.sync()
 
     user_bp_module = get_blueprint_module_from_file(bp_file)

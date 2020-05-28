@@ -1,7 +1,6 @@
 import datetime
 
 from calm.dsl.store import Cache
-from calm.dsl.store import Version
 
 from .main import show, update, clear
 from .utils import highlight_text
@@ -29,8 +28,8 @@ def clear_cache():
 def update_cache():
     """Update the data for dynamic entities stored in the cache"""
 
-    LOG.debug("Updating cache")
+    LOG.info("Updating cache")
     Cache.sync()
-    LOG.debug("Success")
+    LOG.info("Success")
     Cache.show_data()
     LOG.info(highlight_text("Cache updated at {}".format(datetime.datetime.now())))
