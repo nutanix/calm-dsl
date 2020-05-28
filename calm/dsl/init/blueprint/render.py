@@ -31,7 +31,6 @@ def render_ahv_template(template, bp_name):
     res, err = client.project.read(project_uuid)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
-    LOG.info("Success")
 
     res = res.json()
     subnets = res["status"]["project_status"]["resources"].get(
@@ -62,7 +61,6 @@ def render_ahv_template(template, bp_name):
     text = template.render(
         bp_name=bp_name, subnet_name=default_subnet, cluster_name=cluster_name
     )
-    LOG.info("Success")
 
     return text.strip() + os.linesep
 
@@ -97,7 +95,6 @@ def create_bp_file(dir_name, bp_name, provider_type):
     LOG.info("Writing bp file to {}".format(bp_path))
     with open(bp_path, "w") as fd:
         fd.write(bp_text)
-    LOG.info("Success")
 
 
 def create_cred_keys(dir_name):
@@ -165,7 +162,6 @@ def init_bp(bp_name, dir_name, provider_type):
     # Creating keys
     LOG.info("Generating keys for credentials")
     create_cred_keys(key_dir)
-    LOG.info("Success")
 
     # create scripts
     create_scripts(script_dir)

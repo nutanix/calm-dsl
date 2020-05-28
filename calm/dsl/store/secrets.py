@@ -20,7 +20,7 @@ class Secret:
         pass_phrase = pass_phrase.encode()
         LOG.debug("Encryting data")
         encrypted_msg = Crypto.encrypt_AES_GCM(value, pass_phrase)
-        LOG.debug("Success")
+
         (kdf_salt, ciphertext, iv, auth_tag) = encrypted_msg
 
         secret = db.secret_table.create(name=name, uuid=str(uuid.uuid4()))
@@ -65,7 +65,7 @@ class Secret:
 
         LOG.debug("Encrypting new data")
         encrypted_msg = Crypto.encrypt_AES_GCM(value, pass_phrase)
-        LOG.debug("Success")
+
         (kdf_salt, ciphertext, iv, auth_tag) = encrypted_msg
 
         query = db.data_table.update(
@@ -111,7 +111,6 @@ class Secret:
         enc_msg = secret_data.generate_enc_msg()
         LOG.debug("Decrypting data")
         secret_val = Crypto.decrypt_AES_GCM(enc_msg, pass_phrase)
-        LOG.debug("Success")
 
         return secret_val
 

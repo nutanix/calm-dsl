@@ -190,7 +190,6 @@ def set_server_details(
 
     LOG.info("Writing config to {}".format(config_file))
     init_config(host, port, username, password, project_name, log_level)
-    LOG.info("Success")
 
     # Update client handle with new settings if no exception occurs
     update_client_handle(host, port, auth=(username, password))
@@ -199,13 +198,11 @@ def set_server_details(
 def init_db():
     LOG.info("Creating local database")
     get_db_handle()
-    LOG.info("Success")
 
 
 def sync_cache():
     LOG.info("Updating Cache")
     Cache.sync()
-    LOG.info("Success")
 
 
 @init.command("bp")
