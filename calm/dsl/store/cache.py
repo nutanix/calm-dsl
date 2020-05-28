@@ -44,7 +44,7 @@ class Cache:
     def sync(cls):
         """Sync cache by latest data"""
 
-        LOG.info("Updating cache")
+        LOG.info("Updating cache", nl=False)
 
         # Updating version details first
         Version.sync()
@@ -56,8 +56,7 @@ class Cache:
             table.sync()
             click.echo(".", nl=False, err=True)
 
-        click.echo("", err=True)
-        LOG.info("Success")
+        click.echo(" [Done]", err=True)
 
     @classmethod
     def clear_entities(cls):
