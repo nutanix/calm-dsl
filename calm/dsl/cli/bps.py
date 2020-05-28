@@ -220,7 +220,7 @@ def compile_blueprint(bp_file, no_sync=False):
 
     # Sync only if no_sync flag is not set
     if not no_sync:
-        LOG.info("Syncing cache")
+        LOG.info("Updating cache")
         Cache.sync()
 
     user_bp_module = get_blueprint_module_from_file(bp_file)
@@ -552,6 +552,25 @@ def launch_blueprint_simple(
     launch_params=None,
 ):
     client = get_api_client()
+
+    if app_name:
+        LOG.info("Searching for existing applications with name {}".format(app_name))
+
+        res, err = client.application.list(
+            params={"filter": "name=={}".format(app_name)}
+        )
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        total_matches = res["metadata"]["total_matches"]
+        if total_matches:
+            LOG.debug(res)
+            LOG.error("Application Name ({}) is already used.".format(app_name))
+            sys.exit(-1)
+
+        LOG.info("No existing application found with name {}".format(app_name))
+
     if not blueprint:
         blueprint = get_blueprint(client, blueprint_name)
 

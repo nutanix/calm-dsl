@@ -37,6 +37,13 @@ def render_ahv_template(template, bp_name):
     subnets = res["status"]["project_status"]["resources"].get(
         "subnet_reference_list", []
     )
+
+    # Fetching external subnets
+    external_networks = res["status"]["project_status"]["resources"].get(
+        "external_network_list", []
+    )
+    subnets.extend(external_networks)
+
     if not subnets:
         raise Exception("no subnets registered !!!")
 
@@ -153,7 +160,7 @@ def init_bp(bp_name, dir_name, provider_type):
     bp_dir, key_dir, script_dir = make_bp_dirs(dir_name, bp_name)
 
     # sync cache
-    LOG.info("Syncing cache")
+    LOG.info("Updating cache")
     Cache.sync()
     LOG.info("Success")
 

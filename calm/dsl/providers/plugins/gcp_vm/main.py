@@ -20,6 +20,13 @@ class GcpVmProvider(Provider):
         client = get_api_client()
         create_spec(client)
 
+    @classmethod
+    def get_api_obj(cls):
+        """returns object to call gcpprovider specific apis"""
+
+        client = get_api_client()
+        return GCP(client.connection)
+
 
 class GCP:
     def __init__(self, connection):

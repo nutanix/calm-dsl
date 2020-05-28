@@ -2,6 +2,7 @@ import click
 import sys
 
 from ..db import get_db_handle
+from .version import Version
 from calm.dsl.tools import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -43,9 +44,16 @@ class Cache:
     def sync(cls):
         """Sync cache by latest data"""
 
+        # Updating version details first
+        Version.sync()
+        click.echo(".", nl=False)
+
+        # Updating cache tables
         cache_tables = cls.get_cache_tables()
         for table in list(cache_tables.values()):
             table.sync()
+            click.echo(".", nl=False)
+        click.echo("Updated successfully")
 
     @classmethod
     def clear_entities(cls):
