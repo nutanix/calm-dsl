@@ -272,9 +272,11 @@ def describe_project(project_name):
         "external_network_list", []
     ):
         subnets_list.append(subnet["uuid"])
-    
+
     # default subnet
-    default_subnet_ref = project["status"]["project_status"]["resources"].get("default_subnet_reference", {})
+    default_subnet_ref = project["status"]["project_status"]["resources"].get(
+        "default_subnet_reference", {}
+    )
     default_subnet_uuid = default_subnet_ref.get("uuid", "")
 
     ntnx_pc_account_uuid = ""
@@ -332,7 +334,7 @@ def describe_project(project_name):
                     highlight_text(nic_uuid),
                     highlight_text(vlan_id),
                     highlight_text(cluster_name),
-                    highlight_text(bool(nic_uuid==default_subnet_uuid))
+                    highlight_text(bool(nic_uuid == default_subnet_uuid)),
                 )
             )
 

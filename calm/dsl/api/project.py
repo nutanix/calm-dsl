@@ -37,12 +37,14 @@ class ProjectAPI(ResourceAPI):
         return self.connection._call(
             self.USAGE.format(id), verify=False, method=REQUEST.METHOD.POST
         )
-    
+
     def delete(self, uuid):
         return self.connection._call(
-            self.CALM_PROJECTS_PREFIX_ITEM.format(uuid), verify=False, method=REQUEST.METHOD.DELETE
+            self.CALM_PROJECTS_PREFIX_ITEM.format(uuid),
+            verify=False,
+            method=REQUEST.METHOD.DELETE,
         )
-    
+
     def poll_task(self, project_uuid, task_uuid):
         return self.connection._call(
             self.TASK_POLL.format(project_uuid, task_uuid),

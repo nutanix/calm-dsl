@@ -1,7 +1,7 @@
 from ruamel import yaml
 import click
 import json
-
+import sys
 
 import click_completion
 import click_completion.core
@@ -29,23 +29,48 @@ LOG = get_logging_handle(__name__)
 
 class FeatureFlagCommand(DYMGroup):
 
+    # map to store min version for any command
+    feature_version_map = {}
+
     def command(self, *args, feature_min_version=None, **kwargs):
         """Behaves the same as `click.Group.command()` except added an
         `feature_min_version` flag which can be used to warn users if command
         is not supported setup calm version.
         """
-        calm_version = Version.get_version("Calm")
-        if (not feature_min_version) or (not calm_version) or (LV(calm_version) >= LV(feature_min_version)):
-            return super(FeatureFlagCommand, self).command(*args, **kwargs)
-        else:
-            # `import pdb; pdb.set_trace()
-            LOG.warning("command not supported in given version. Pls update to latest")
-            return lambda f: f
-    
-    def get_command(self, ctx, cmd_name):
-        
 
-        return super(FeatureFlagCommand, self).get_command(self, ctx, cmd_name)
+        # Note: As we supports single command per context
+        if feature_min_version:
+            for arg_name in args:
+                self.feature_version_map[arg_name] = feature_min_version
+
+        return super(FeatureFlagCommand, self).command(*args, **kwargs)
+
+    def invoke(self, ctx):
+
+        command_args = ctx.protected_args
+
+        # Note: As we supports single command per context
+        cmd_name = command_args[0]
+        feature_min_version = self.feature_version_map.get(cmd_name, "")
+        if feature_min_version:
+            calm_version = Version.get_version("Calm")
+            if not calm_version:
+                LOG.error("Calm version not found. Please update cache")
+                sys.exit(-1)
+
+            if LV(calm_version) >= LV(feature_min_version):
+                return super(FeatureFlagCommand, self).invoke(ctx)
+
+            else:
+                LOG.warning(
+                    "Command not supported in given calm version ({}). Please update to version (>={}) for using this command.".format(
+                        calm_version, feature_min_version
+                    )
+                )
+                return None
+
+        else:
+            return super(FeatureFlagCommand, self).invoke(ctx)
 
 
 @click.group(context_settings=CONTEXT_SETTINGS)
