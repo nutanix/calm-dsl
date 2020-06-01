@@ -83,10 +83,10 @@ class Display:
 display = Display()
 
 
-class FeatureFlagMixin(click.Group):
-
-    # map to store min version for any command
-    feature_version_map = {}
+class FeatureFlagMixin:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.feature_version_map=dict()
 
     def command(self, *args, **kwargs):
         """Behaves the same as `click.Group.command()` except added an
@@ -129,7 +129,7 @@ class FeatureFlagMixin(click.Group):
             return super().invoke(ctx)
 
 
-class FeatureFlagGroup(DYMMixin, FeatureFlagMixin):
+class FeatureFlagGroup(FeatureFlagMixin, DYMMixin, click.Group):
     """click Group that have *did-you-mean* functionality and adds *feature_min_version* paramter to each subcommand
     which can be used to set minimum calm version for command"""
 
