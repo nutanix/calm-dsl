@@ -57,17 +57,10 @@ def _create_project(project_file, project_name):
     """Creates a project"""
 
     if project_file.endswith(".json") or project_file.endswith(".yaml"):
-        res, err = create_project_from_file(project_file, project_name)
+        create_project_from_file(project_file, project_name)
     else:
         LOG.error("Unknown file format")
         return
-
-    if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-    project = res.json()
-    state = project["status"]["state"]
-    LOG.info("Project state: {}".format(state))
 
 
 @delete.command("project", feature_min_version="2.9.0")
@@ -101,14 +94,7 @@ def _update_project(project_name, project_file):
 
     if project_file.endswith(".json") or project_file.endswith(".yaml"):
         payload = read_spec(project_file)
-        res, err = update_project(project_name, payload)
+        update_project(project_name, payload)
     else:
         LOG.error("Unknown file format")
         return
-
-    if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-    project = res.json()
-    state = project["status"]["state"]
-    LOG.info("Project state: {}".format(state))

@@ -1,6 +1,8 @@
 import time
 import click
 import arrow
+import json
+import sys
 from prettytable import PrettyTable
 
 from calm.dsl.builtins import ProjectValidator
@@ -90,7 +92,7 @@ def get_project(client, name):
 
     params = {"filter": "name=={}".format(name)}
 
-    LOG.info("Searcing for the project {}".format(name))
+    LOG.info("Searching for project '{}'".format(name))
     res, err = client.project.list(params=params)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -124,10 +126,19 @@ def delete_project(project_names):
     for project_name in project_names:
         project = get_project(client, project_name)
         project_id = project["metadata"]["uuid"]
+        LOG.info("Triggering Delete action on project '{}'".format(project_name))
         res, err = client.project.delete(project_id)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        LOG.info("Project {} deleted".format(project_name))
+        res = res.json()
+        LOG.info("Project state: {}".format(res["status"]["state"]))
+
+        stdout_dict = {
+            "project_name": project_name,
+            "project_uuid": res["metadata"]["uuid"],
+            "execution_context": res["status"]["execution_context"],
+        }
+        click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
 
 def create_project(payload):
@@ -136,7 +147,7 @@ def create_project(payload):
     client = get_api_client()
 
     # check if project having same name exists
-    LOG.info("Searching for projects having same name ")
+    LOG.info("Searching for projects having name '{}'".format(name))
     params = {"filter": "name=={}".format(name)}
     res, err = client.project.list(params=params)
     if err:
@@ -146,21 +157,33 @@ def create_project(payload):
     entities = response.get("entities", None)
     if entities:
         if len(entities) > 0:
-            err_msg = "Project with name {} already exists".format(name)
+            err_msg = "Project with name '{}' already exists".format(name)
             err = {"error": err_msg, "code": -1}
             return None, err
 
-    LOG.info("Creating the project {}".format(name))
-
     # validating the payload
     ProjectValidator.validate_dict(payload)
+
+    LOG.info("Creating project '{}'".format(name))
     payload = {
         "api_version": "3.0",  # TODO Remove by a constant
         "metadata": {"kind": "project"},
         "spec": payload,
     }
 
-    return client.project.create(payload)
+    res, err = client.project.create(payload)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    res = res.json()
+    LOG.info("Project state: {}".format(res["status"]["state"]))
+
+    stdout_dict = {
+        "project_name": name,
+        "project_uuid": res["metadata"]["uuid"],
+        "execution_context": res["status"]["execution_context"],
+    }
+    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
 
 def describe_project(project_name):
@@ -364,13 +387,16 @@ def describe_project(project_name):
 def update_project(name, payload):
 
     client = get_api_client()
-    LOG.info("Searching for project")
     project = get_project(client, name)
 
     new_name = payload["project_detail"]["name"]
     if name != new_name:
         # Search whether any other project exists with new name
-        LOG.info("\nSearching project with name {}".format(new_name))
+        LOG.info(
+            "Checking whether project having '{}'(project new name) exists".format(
+                new_name
+            )
+        )
         try:
             get_project(client, new_name)
             err_msg = "Another project exists with name {}".format(new_name)
@@ -384,6 +410,7 @@ def update_project(name, payload):
     spec_version = project["metadata"]["spec_version"]
     ProjectValidator.validate_dict(payload)
 
+    LOG.info("Updating project '{}'".format(name))
     payload = {
         "api_version": "3.0",  # TODO Remove by a constant
         "metadata": {
@@ -394,120 +421,55 @@ def update_project(name, payload):
         "spec": payload,
     }
 
-    LOG.info("Updating the project")
-    return client.project.update(project_id, payload)
+    res, err = client.project.update(project_id, payload)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    res = res.json()
+    LOG.info("Project state: {}".format(res["status"]["state"]))
+
+    stdout_dict = {
+        "project_name": new_name or name,
+        "project_uuid": res["metadata"]["uuid"],
+        "execution_context": res["status"]["execution_context"],
+    }
+    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
 
-def poll_creation_status(client, project_uuid):
+def poll_calm_projects_task(project_uuid, task_uuid, poll_interval=10):
 
-    cnt = 0
-    project_state = "PENDING"
-    while True:
-        LOG.info("Fetching status of project creation")
-        res, err = client.project.read(project_uuid)
+    client = get_api_client()
+    maxWait = 5 * 60
+    count = 0
+    while count < maxWait:
+        LOG.info("Fetching status of task")
+        # call status api
+        res, err = client.project.poll_task(
+            project_uuid=project_uuid, task_uuid=task_uuid
+        )
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        res = res.json()
+        LOG.debug(json.dumps(res, indent=4, separators=(",", ": ")))
+        status_dict = res["status"]
+        task_state = status_dict["state"]
 
-        project = res.json()
-        project_state = project["status"]["state"]
-        if project_state == "COMPLETE":
-            LOG.info("CREATED")
-            return
-
-        elif project_state == "RUNNING":
-            LOG.info("RUNNING")
-
-        elif project_state == "PENDING":
-            LOG.info("PENDING")
-
-        else:
-            msg = str(project["status"]["message_list"])
-            msg = "Project creation unsuccessful !!!\nmessage={}".format(msg)
-            raise Exception(msg)
-
-        time.sleep(2)
-        cnt += 1
-        if cnt == 10:
+        if task_state == "failed":
+            LOG.info("FAILED")
+            msg_list = status_dict.get("message_list", [])
+            LOG.error(msg_list)
+            sys.exit(-1)
             break
 
-    LOG.debug("Waited for project creation for 20 seconds(polled at 2 sec interval).")
-    LOG.info("Project state: {}".format(project_state))
-
-
-def poll_updation_status(client, project_uuid, old_spec_version):
-
-    cnt = 0
-    project_state = "PENDING"
-    while True:
-        LOG.info("Fetching status of project updation")
-        res, err = client.project.read(project_uuid)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        project = res.json()
-        project_state = project["status"]["state"]
-        spec_version = project["metadata"]["spec_version"]
-
-        # On updation spec_version should be incremented
-        if spec_version == old_spec_version:
-            raise Exception("No update operation performed on project !!!")
-
-        elif project_state == "PENDING":
-            LOG.info("PENDING")
-
-        elif project_state == "COMPLETE":
-            LOG.info("UPDATED")
-            return
-
-        elif project_state == "RUNNING":
-            LOG.info("RUNNING")
-
-        else:
-            msg = str(project["status"]["message_list"])
-            msg = "Project updation failed !!!\nmessage={}".format(msg)
-            raise Exception(msg)
-
-        time.sleep(2)
-        cnt += 1
-        if cnt == 10:
+        elif task_state == "success":
+            LOG.info("SUCCESS")
             break
 
-    LOG.debug("Waited for project updation for 20 seconds(polled at 2 sec interval)")
-    LOG.info("Project state: {}".format(project_state))
-
-
-def poll_deletion_status(client, project_uuid):
-
-    cnt = 0
-    project_state = "DELETE_IN_PROGRESS"
-    while True:
-        LOG.info("Fetching status of project deletion")
-        res, err = client.project.read(project_uuid)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        project = res.json()
-        project_state = project["status"]["state"]
-
-        if project_state == "DELETE_IN_PROGRESS":
-            LOG.info(project_state)
-
-        elif project_state == "COMPLETE":
-            LOG.info("DELETED")
-            return
-
-        elif project_state == "DELETE_PENDING":
-            LOG.info(project_state)
-
         else:
-            LOG.debug(project_state)
-            msg = str(project["status"]["message_list"])
-            msg = "Project updation failed !!!\nmessage={}".format(msg)
-            raise Exception(msg)
+            LOG.info(task_state.upper())
 
-        time.sleep(1)
-        cnt += 2
-        if cnt == 10:
-            break
+        count += poll_interval
+        time.sleep(poll_interval)
 
-    LOG.debug("Waited for project deletion for 20 seconds(polled at 2 sec interval)")
-    LOG.info("Project state: {}".format(project_state))
+    if count >= maxWait:
+        LOG.info("Task not reached to terminal state in {}s".format(maxWait))

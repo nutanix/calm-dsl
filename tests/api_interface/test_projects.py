@@ -3,11 +3,7 @@ from ruamel import yaml
 import uuid
 
 from calm.dsl.cli.main import get_api_client
-from calm.dsl.cli.projects import (
-    poll_creation_status,
-    poll_updation_status,
-    poll_deletion_status,
-)
+from calm.dsl.cli.projects import poll_calm_projects_task
 from calm.dsl.tools import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -53,11 +49,11 @@ class TestProjects:
         else:
             assert res.ok is True
             res = res.json()
+            LOG.debug("Response: {}".format(res))
             assert project_name == res["spec"]["project_detail"]["name"]
             project_uuid = res["metadata"]["uuid"]
-            poll_creation_status(client, project_uuid)
-            LOG.info("Success")
-            LOG.debug("Response: {}".format(res))
+            task_uuid = res["status"]["execution_context"]["task_uuid"]
+            poll_calm_projects_task(project_uuid=project_uuid, task_uuid=task_uuid)
 
         LOG.info("Reading project {}".format(project_name))
         res, err = client.project.read(project_uuid)
@@ -95,10 +91,10 @@ class TestProjects:
         else:
             assert res.ok is True
             res = res.json()
-            assert project_name == res["spec"]["project_detail"]["name"]
-            poll_updation_status(client, project_uuid, spec_version)
-            LOG.info("Success")
             LOG.debug("Response: {}".format(res))
+            assert project_name == res["spec"]["project_detail"]["name"]
+            task_uuid = res["status"]["execution_context"]["task_uuid"]
+            poll_calm_projects_task(project_uuid=project_uuid, task_uuid=task_uuid)
 
         LOG.info("Deleting project {}".format(project_name))
         res, err = client.project.delete(project_uuid)
@@ -108,6 +104,6 @@ class TestProjects:
         else:
             assert res.ok is True
             res = res.json()
-            poll_deletion_status(client, project_uuid)
-            LOG.info("Success")
             LOG.debug("Response: {}".format(res))
+            task_uuid = res["status"]["execution_context"]["task_uuid"]
+            poll_calm_projects_task(project_uuid=project_uuid, task_uuid=task_uuid)
