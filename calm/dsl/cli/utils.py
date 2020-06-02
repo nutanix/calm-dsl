@@ -1,5 +1,6 @@
 import click
 import sys
+import copy
 import importlib.util
 from functools import reduce
 from asciimatics.screen import Screen
@@ -303,25 +304,47 @@ class FeatureFlagMixin:
         
     def format_all_commands(self, ctx, formatter):
         
-        commands = []
+        # Use ctx.command_path to display from root to given command
+        
+        commands_queue = []
+        commands_res_list = []
+
         for subcommand in self.list_commands(ctx):
             cmd = self.get_command(ctx, subcommand)
-            # What is this, the tool lied about a command.  Ignore it
-            if cmd is None:
-                continue
-            if cmd.hidden:
-                continue
 
-            commands.append((subcommand, cmd))
+            if isinstance(cmd, FeatureFlagGroup):
+                commands_queue.append([subcommand, cmd])
+            else:
+                commands_res_list.append([subcommand])
 
-        # allow for 3 times the default spacing
-        if len(commands):
-            limit = formatter.width - 6 - max(len(cmd[0]) for cmd in commands)
+        while commands_queue:
+            ele = commands_queue.pop(0)
+            grp = ele.pop(len(ele) -1)
+
+            for subcommand in grp.list_commands(ctx):
+                cmd = grp.get_command(ctx, subcommand)
+
+                if isinstance(cmd, FeatureFlagGroup):
+                    ele_temp = copy.deepcopy(ele)
+                    ele_temp.extend([subcommand, cmd])
+                    commands_queue.append(ele_temp)
+                else:
+                    ele_temp = copy.deepcopy(ele)
+                    ele_temp.append(subcommand)
+                    commands_res_list.append(ele_temp)
+        
+        
+        cmd_list = []
+        for subcommand in commands_res_list:
+            cmd_str = " ".join(subcommand)
+            cmd_list.append(cmd_str)
+        
+        if len(cmd_list):
+            limit = formatter.width - 6 - max(len(cmd) for cmd in cmd_list)
 
             rows = []
-            for subcommand, cmd in commands:
-                help = cmd.get_short_help_str(limit)
-                rows.append((subcommand, help, "1a2"))
+            for cmd_str in cmd_list:
+                rows.append((cmd_str, ""))
 
             if rows:
                 with formatter.section('Commands'):
@@ -330,7 +353,6 @@ class FeatureFlagMixin:
     def parse_args(self, ctx, args):
 
         if args:
-            import pdb; pdb.set_trace()
             feature_help_names = self.get_show_all_commands_help_names(ctx)
             if args[0] in feature_help_names:
                 param_order = [self.get_show_all_commands_help_option(ctx)]
