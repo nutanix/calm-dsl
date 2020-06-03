@@ -1,7 +1,7 @@
 from ruamel import yaml
 import click
 import json
-import sys
+import copy
 
 import click_completion
 import click_completion.core
@@ -17,7 +17,7 @@ from calm.dsl.tools import (
 )
 from calm.dsl.config import get_config
 from .version_validator import validate_version
-from .utils import FeatureFlagGroup
+from .utils import FeatureFlagGroup, highlight_text
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
@@ -106,9 +106,54 @@ def get():
 
 
 @main.group(cls=FeatureFlagGroup)
-def show():
+@click.pass_context
+def show(ctx):
     """Shows the cached data(Dynamic data) etc."""
     pass
+
+
+@show.command("commands")
+@click.pass_context
+def show_all_commands(ctx):
+
+    ctx_root = ctx.find_root()
+    root_cmd = ctx_root.command
+
+    commands_queue = []
+    commands_res_list = []
+
+    for subcommand in root_cmd.list_commands(ctx):
+        cmd = root_cmd.get_command(ctx, subcommand)
+
+        if isinstance(cmd, FeatureFlagGroup):
+            commands_queue.append([subcommand, cmd])
+        else:
+            commands_res_list.append([subcommand])
+
+    while commands_queue:
+        ele = commands_queue.pop(0)
+        grp = ele.pop(len(ele) - 1)
+
+        for subcommand in grp.list_commands(ctx):
+            cmd = grp.get_command(ctx, subcommand)
+
+            if isinstance(cmd, FeatureFlagGroup):
+                ele_temp = copy.deepcopy(ele)
+                ele_temp.extend([subcommand, cmd])
+                commands_queue.append(ele_temp)
+            else:
+                ele_temp = copy.deepcopy(ele)
+                ele_temp.append(subcommand)
+                commands_res_list.append(ele_temp)
+
+    cmd_list = []
+    for subcommand in commands_res_list:
+        cmd_str = "{} {}".format(ctx_root.command_path, " ".join(subcommand))
+        cmd_list.append(cmd_str)
+
+    click.echo(highlight_text("Calm DSL Commands:"))
+    for cmd in cmd_list:
+        click.echo(cmd)
 
 
 @main.group(cls=FeatureFlagGroup)
