@@ -6,6 +6,7 @@ import copy
 import click_completion
 import click_completion.core
 from click_repl import repl
+from prettytable import PrettyTable
 
 # TODO - move providers to separate file
 from calm.dsl.providers import get_provider, get_provider_types
@@ -128,7 +129,9 @@ def show_all_commands(ctx):
         if isinstance(cmd, FeatureFlagGroup):
             commands_queue.append([subcommand, cmd])
         else:
-            commands_res_list.append([subcommand])
+            commands_res_list.append(
+                (subcommand, root_cmd.feature_version_map.get(subcommand, "-"))
+            )
 
     while commands_queue:
         ele = commands_queue.pop(0)
@@ -144,16 +147,23 @@ def show_all_commands(ctx):
             else:
                 ele_temp = copy.deepcopy(ele)
                 ele_temp.append(subcommand)
-                commands_res_list.append(ele_temp)
+                commands_res_list.append(
+                    (" ".join(ele_temp), grp.feature_version_map.get(subcommand, "-"))
+                )
+
+    table = PrettyTable()
+    table.field_names = ["COMMAND", "MIN COMMAND VERSION"]
 
     cmd_list = []
     for subcommand in commands_res_list:
         cmd_str = "{} {}".format(ctx_root.command_path, " ".join(subcommand))
         cmd_list.append(cmd_str)
 
-    click.echo(highlight_text("Calm DSL Commands:"))
-    for cmd in cmd_list:
-        click.echo(cmd)
+    for cmd_tuple in commands_res_list:
+        cmd_str = "{} {}".format(ctx_root.command_path, cmd_tuple[0])
+        table.add_row([highlight_text(cmd_str), highlight_text(cmd_tuple[1])])
+
+    click.echo(table)
 
 
 @main.group(cls=FeatureFlagGroup)
