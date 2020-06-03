@@ -83,7 +83,7 @@ class TestExecTasks:
         for entity in entities:
             if entity["status"]["type"] == "task_runlog" and\
                     entity["status"]["task_reference"]["name"] == "ExecTask" and\
-                    entity["status"].get("machine_name", "") != "-":
+                    runlog_uuid in entity["status"].get("machine_name", ""):
                 exec_tasks.append(entity["metadata"]["uuid"])
 
         # Now checking the output of exec task

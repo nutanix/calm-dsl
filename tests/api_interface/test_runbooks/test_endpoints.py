@@ -199,7 +199,7 @@ class TestEndpoints:
         endpoint = copy.deepcopy(change_uuids(EndpointPayload, {}))
 
         # setting url to empty
-        endpoint['spec']['resources']['attrs']['urls'][0] = ''
+        endpoint['spec']['resources']['attrs']['urls'] = []
 
         # Endpoint Create
         res, err = client.endpoint.create(endpoint)

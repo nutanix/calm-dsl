@@ -20,7 +20,6 @@ from utils import upload_runbook, poll_runlog_status
 class TestHTTPTasks:
     @pytest.mark.runbook
     @pytest.mark.regression
-    @pytest.mark.now
     def test_http_task(self):
         """ test_http_task, test_http_task_outputin_set_variable,
             test_relative_url_http, test_http_task_without_tls_verify"""
@@ -212,7 +211,9 @@ class TestHTTPTasks:
         response = res.json()
         entities = response["entities"]
         for entity in entities:
-            if entity["status"]["type"] == "task_runlog" and entity["status"]["task_reference"]["name"] == "HTTPTask":
+            if entity["status"]["type"] == "task_runlog" and\
+                    entity["status"]["task_reference"]["name"] == "HTTPTask" and\
+                    runlog_uuid in entity["status"].get("machine_name", ""):
                 http_task = entity["metadata"]["uuid"]
 
         # Now checking the output of exec task
