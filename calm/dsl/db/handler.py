@@ -56,13 +56,11 @@ class Database:
         LOG.debug("Connecting to local DB")
         self.db.connect()
         atexit.register(self.close)
-        LOG.debug("Success")
 
     def close(self):
 
         LOG.debug("Closing connection to local DB")
         self.db.close()
-        LOG.debug("Success")
 
 
 _Database = None

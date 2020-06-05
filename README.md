@@ -63,7 +63,7 @@ Use:
  - [Blueprint & App management](https://youtu.be/jb-ZllhaROs)
  - [Calm DSL Blueprint Architecture](https://youtu.be/Y-6eq91rtSw)
 
-## Blogs
+## [Blogs](https://www.nutanix.dev/calm-dsl/)
  - [Introducing the Nutanix Calm DSL](https://www.nutanix.dev/2020/03/17/introducing-the-nutanix-calm-dsl/)
  - [Creating Custom Blueprint](https://www.nutanix.dev/2020/03/30/nutanix-calm-dsl-creating-custom-blueprint/)
  - [Generating VM Specs](https://www.nutanix.dev/2020/04/06/nutanix-calm-dsl-generating-vm-specs/)

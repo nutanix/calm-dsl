@@ -93,19 +93,28 @@ class CustomLogging:
         """sets the logger verbose level"""
         self._logger.setLevel(lvl)
 
-    def info(self, msg, *args, **kwargs):
+    def info(self, msg, nl=True, **kwargs):
         """
         info log level
 
         Args:
             msg (str): message to log
+            nl (bool): Add newline (default: True)
 
         Returns:
             None
         """
         logger = self.get_logger()
 
-        return logger.info(self.__add_caller_info(msg), *args, **kwargs)
+        if not nl:
+            for handler in logger.handlers:
+                handler.terminator = " "
+
+        logger.info(self.__add_caller_info(msg), **kwargs)
+
+        if not nl:
+            for handler in logger.handlers:
+                handler.terminator = "\n"
 
     def warning(self, msg, *args, **kwargs):
         """

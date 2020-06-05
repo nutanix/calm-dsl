@@ -90,16 +90,9 @@ def _format_blueprint_command(bp_file):
     default="json",
     help="output format [json|yaml].",
 )
-@click.option(
-    "--no-sync",
-    "-n",
-    is_flag=True,
-    default=False,
-    help="Doesn't sync the cache on compilation",
-)
-def _compile_blueprint_command(bp_file, out, no_sync):
+def _compile_blueprint_command(bp_file, out):
     """Compiles a DSL (Python) blueprint into JSON or YAML"""
-    compile_blueprint_command(bp_file, out, no_sync)
+    compile_blueprint_command(bp_file, out)
 
 
 def create_blueprint(
