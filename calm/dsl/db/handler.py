@@ -93,7 +93,7 @@ def init_db_handle():
     if not _Database.is_closed():
         # Unregister close() method from atexit handler
         atexit.unregister(_Database.close)
-        
+
         # Close the connection
         _Database.close()
 

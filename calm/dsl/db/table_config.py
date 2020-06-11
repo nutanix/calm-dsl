@@ -102,6 +102,7 @@ class AhvSubnetsCache(CacheTableBase):
     name = CharField()
     uuid = CharField()
     cluster = CharField()
+    account_uuid = CharField(default="")
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
     def get_detail_dict(self, *args, **kwargs):
@@ -109,6 +110,7 @@ class AhvSubnetsCache(CacheTableBase):
             "name": self.name,
             "uuid": self.uuid,
             "cluster": self.cluster,
+            "account_uuid": self.account_uuid,
             "last_update_time": self.last_update_time,
         }
 
@@ -119,26 +121,30 @@ class AhvSubnetsCache(CacheTableBase):
             db_entity.delete_instance()
 
     @classmethod
-    def create_entry(cls, name, uuid, **kwargs):
+    def create_entry(cls, name, uuid, account_uuid, **kwargs):
         cluster_name = kwargs.get("cluster", None)
         if not cluster_name:
             raise ValueError("cluster not supplied for subnet {}".format(name))
 
         # store data in table
         super().create(
-            name=name, uuid=uuid, cluster=cluster_name,
+            name=name, uuid=uuid, cluster=cluster_name, account_uuid=account_uuid
         )
 
     @classmethod
-    def get_entity_data(cls, name, **kwargs):
+    def get_entity_data(cls, name, account_uuid, **kwargs):
         cluster_name = kwargs.get("cluster", "")
         try:
             if cluster_name:
-                entity = super().get(cls.name == name, cls.cluster == cluster_name,)
+                entity = super().get(
+                    cls.name == name,
+                    cls.cluster == cluster_name,
+                    cls.account_uuid == account_uuid,
+                )
             else:
                 # The get() method is shorthand for selecting with a limit of 1
                 # If more than one row is found, the first row returned by the database cursor
-                entity = super().get(cls.name == name)
+                entity = super().get(cls.name == name, cls.account_uuid == account_uuid)
             return entity.get_detail_dict()
 
         except DoesNotExist:
@@ -153,7 +159,13 @@ class AhvSubnetsCache(CacheTableBase):
             return
 
         table = PrettyTable()
-        table.field_names = ["NAME", "UUID", "CLUSTER_NAME", "LAST UPDATED"]
+        table.field_names = [
+            "NAME",
+            "UUID",
+            "CLUSTER_NAME",
+            "ACCOUNT_UUID",
+            "LAST UPDATED",
+        ]
         for entity in cls.select():
             entity_data = entity.get_detail_dict()
             last_update_time = arrow.get(
@@ -164,6 +176,7 @@ class AhvSubnetsCache(CacheTableBase):
                     highlight_text(entity_data["name"]),
                     highlight_text(entity_data["uuid"]),
                     highlight_text(entity_data["cluster"]),
+                    highlight_text(entity_data["account_uuid"]),
                     highlight_text(last_update_time),
                 ]
             )
@@ -171,7 +184,8 @@ class AhvSubnetsCache(CacheTableBase):
 
     @classmethod
     def sync(cls, *args, **kwargs):
-        """sync the table data from server"""
+        """sync the table from server"""
+
         # clear old data
         cls.clear()
 
@@ -179,66 +193,27 @@ class AhvSubnetsCache(CacheTableBase):
         config = get_config()
         client = get_api_client()
 
-        project_name = config["PROJECT"]["name"]
-        params = {"length": 1000, "filter": "name=={}".format(project_name)}
-        project_name_uuid_map = client.project.get_name_uuid_map(params)
-
-        if not project_name_uuid_map:
-            LOG.error("Invalid project {} in config".format(project_name))
-            sys.exit(-1)
-
-        project_id = project_name_uuid_map[project_name]
-        res, err = client.project.read(project_id)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        project = res.json()
-        subnets_list = []
-        for subnet in project["status"]["project_status"]["resources"][
-            "subnet_reference_list"
-        ]:
-            subnets_list.append(subnet["uuid"])
-
-        # Extending external subnet's list from remote account
-        for subnet in project["status"]["project_status"]["resources"][
-            "external_network_list"
-        ]:
-            subnets_list.append(subnet["uuid"])
-
-        accounts = project["status"]["project_status"]["resources"][
-            "account_reference_list"
-        ]
-
-        reg_accounts = []
-        for account in accounts:
-            reg_accounts.append(account["uuid"])
-
-        # As account_uuid is required for versions>2.9.0
-        account_uuid = ""
         payload = {"length": 250, "filter": "type==nutanix_pc"}
-        res, err = client.account.list(payload)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        res = res.json()
-        for entity in res["entities"]:
-            entity_id = entity["metadata"]["uuid"]
-            if entity_id in reg_accounts:
-                account_uuid = entity_id
-                break
+        account_name_uuid_map = client.account.get_name_uuid_map(payload)
 
         AhvVmProvider = get_provider("AHV_VM")
         AhvObj = AhvVmProvider.get_api_obj()
 
-        filter_query = "(_entity_id_=={})".format(",_entity_id_==".join(subnets_list),)
-        res = AhvObj.subnets(account_uuid=account_uuid, filter_query=filter_query)
-        for entity in res["entities"]:
-            name = entity["status"]["name"]
-            uuid = entity["metadata"]["uuid"]
-            cluster_ref = entity["status"]["cluster_reference"]
-            cluster_name = cluster_ref.get("name", "")
+        for e_name, e_uuid in account_name_uuid_map.items():
+            res = AhvObj.subnets(account_uuid=e_uuid)
 
-            cls.create_entry(name=name, uuid=uuid, cluster=cluster_name)
+            for entity in res["entities"]:
+                name = entity["status"]["name"]
+                uuid = entity["metadata"]["uuid"]
+                cluster_ref = entity["status"]["cluster_reference"]
+                cluster_name = cluster_ref.get("name", "")
+
+                cls.create_entry(
+                    name=name, uuid=uuid, cluster=cluster_name, account_uuid=e_uuid
+                )
+
+        # For older version < 2.9.0
+        # Add working for older versions too
 
     class Meta:
         database = dsl_database
@@ -250,6 +225,7 @@ class AhvImagesCache(CacheTableBase):
     name = CharField()
     image_type = CharField()
     uuid = CharField()
+    account_uuid = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
     def get_detail_dict(self, *args, **kwargs):
@@ -257,6 +233,7 @@ class AhvImagesCache(CacheTableBase):
             "name": self.name,
             "uuid": self.uuid,
             "image_type": self.image_type,
+            "account_uuid": self.account_uuid,
             "last_update_time": self.last_update_time,
         }
 
@@ -267,19 +244,25 @@ class AhvImagesCache(CacheTableBase):
             db_entity.delete_instance()
 
     @classmethod
-    def create_entry(cls, name, uuid, **kwargs):
+    def create_entry(cls, name, uuid, account_uuid, **kwargs):
         image_type = kwargs.get("image_type", "")
-        # Store data in table
-        super().create(name=name, uuid=uuid, image_type=image_type)
+        # store data in table
+        super().create(
+            name=name, uuid=uuid, image_type=image_type, account_uuid=account_uuid
+        )
 
     @classmethod
-    def get_entity_data(cls, name, **kwargs):
+    def get_entity_data(cls, name, account_uuid, **kwargs):
         image_type = kwargs.get("image_type", None)
         if not image_type:
             raise ValueError("image_type not provided for image {}".format(name))
 
         try:
-            entity = super().get(cls.name == name, cls.image_type == image_type)
+            entity = super().get(
+                cls.name == name,
+                cls.image_type == image_type,
+                cls.account_uuid == account_uuid,
+            )
             return entity.get_detail_dict()
 
         except DoesNotExist:
@@ -295,52 +278,22 @@ class AhvImagesCache(CacheTableBase):
         config = get_config()
         client = get_api_client()
 
-        project_name = config["PROJECT"]["name"]
-        params = {"length": 1000, "filter": "name=={}".format(project_name)}
-        project_name_uuid_map = client.project.get_name_uuid_map(params)
-
-        if not project_name_uuid_map:
-            LOG.error("Invalid project {} in config".format(project_name))
-            sys.exit(-1)
-
-        project_id = project_name_uuid_map[project_name]
-        res, err = client.project.read(project_id)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        project = res.json()
-        accounts = project["status"]["project_status"]["resources"][
-            "account_reference_list"
-        ]
-
-        reg_accounts = []
-        for account in accounts:
-            reg_accounts.append(account["uuid"])
-
-        # As account_uuid is required for versions>2.9.0
-        account_uuid = ""
         payload = {"length": 250, "filter": "type==nutanix_pc"}
-        res, err = client.account.list(payload)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        res = res.json()
-        for entity in res["entities"]:
-            entity_id = entity["metadata"]["uuid"]
-            if entity_id in reg_accounts:
-                account_uuid = entity_id
-                break
+        account_name_uuid_map = client.account.get_name_uuid_map(payload)
 
         AhvVmProvider = get_provider("AHV_VM")
         AhvObj = AhvVmProvider.get_api_obj()
-        res = AhvObj.images(account_uuid=account_uuid)
 
-        for entity in res["entities"]:
-            name = entity["status"]["name"]
-            uuid = entity["metadata"]["uuid"]
-            # TODO add proper validation for karbon images
-            image_type = entity["status"]["resources"].get("image_type", "")
-            cls.create_entry(name=name, uuid=uuid, image_type=image_type)
+        for e_name, e_uuid in account_name_uuid_map.items():
+            res = AhvObj.images(account_uuid=e_uuid)
+            for entity in res["entities"]:
+                name = entity["status"]["name"]
+                uuid = entity["metadata"]["uuid"]
+                # TODO add proper validation for karbon images
+                image_type = entity["status"]["resources"].get("image_type", "")
+                cls.create_entry(
+                    name=name, uuid=uuid, image_type=image_type, account_uuid=e_uuid
+                )
 
     @classmethod
     def show_data(cls, *args, **kwargs):
@@ -351,7 +304,13 @@ class AhvImagesCache(CacheTableBase):
             return
 
         table = PrettyTable()
-        table.field_names = ["NAME", "UUID", "IMAGE_TYPE", "LAST UPDATED"]
+        table.field_names = [
+            "NAME",
+            "UUID",
+            "IMAGE_TYPE",
+            "ACCOUNT_UUID",
+            "LAST UPDATED",
+        ]
         for entity in cls.select().order_by(cls.image_type):
             entity_data = entity.get_detail_dict()
             last_update_time = arrow.get(
@@ -362,6 +321,7 @@ class AhvImagesCache(CacheTableBase):
                     highlight_text(entity_data["name"]),
                     highlight_text(entity_data["uuid"]),
                     highlight_text(entity_data["image_type"]),
+                    highlight_text(entity_data["account_uuid"]),
                     highlight_text(last_update_time),
                 ]
             )
