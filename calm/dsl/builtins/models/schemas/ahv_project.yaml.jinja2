@@ -1,0 +1,63 @@
+{% import "ref.yaml.jinja2" as ref %}
+
+
+{% macro Project_Resources_Spec() -%}
+
+title: Project Resources Spec
+type: object
+properties:
+  user_reference_list:
+    x-calm-dsl-display-name: users
+    type: array
+    items:
+      $ref: '#/components/schemas/Ref'
+  external_user_group_reference_list:
+    x-calm-dsl-display-name: external_user_groups
+    type: array
+    items:
+      $ref: '#/components/schemas/Ref'
+  subnet_reference_list:
+    x-calm-dsl-display-name: subnets
+    type: array
+    items:
+      $ref: '#/components/schemas/Ref'
+  external_network_list:
+    x-calm-dsl-display-name: external_networks
+    type: array
+    items:
+      $ref: '#/components/schemas/Ref'
+  account_reference_list:
+    x-calm-dsl-display-name: accounts
+    type: array
+    items:
+      $ref: '#/components/schemas/Ref'
+  environment_reference_list:
+    x-calm-dsl-display-name: environments
+    type: array
+    items:
+      $ref: '#/components/schemas/Ref'
+  resource_domain:
+    type: object
+    properties:
+      resources:
+        type: array
+        items:
+          type: object
+          properties:
+            limit:
+              type: integer
+            resource_type:
+              type: string
+  default_subnet_reference:
+    x-calm-dsl-display-name: default_subnet
+    $ref: '#/components/schemas/Ref'
+
+{%- endmacro %}
+
+
+{% macro AhvProjectSchema() -%}
+
+AhvProject:
+  {{ Project_Resources_Spec() | indent(2) }}
+
+{%- endmacro %}
