@@ -12,6 +12,7 @@ import datetime
 import click
 import arrow
 import sys
+import json
 from prettytable import PrettyTable
 
 from calm.dsl.api import get_resource_api, get_api_client
@@ -336,12 +337,16 @@ class ProjectCache(CacheTableBase):
     __cache_type__ = "project"
     name = CharField()
     uuid = CharField()
+    accounts_data = CharField()
+    whitelisted_subnets = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
     def get_detail_dict(self, *args, **kwargs):
         return {
             "name": self.name,
             "uuid": self.uuid,
+            "accounts_data": json.loads(self.accounts_data),
+            "whitelisted_subnets": json.loads(self.whitelisted_subnets),
             "last_update_time": self.last_update_time,
         }
 
@@ -353,8 +358,13 @@ class ProjectCache(CacheTableBase):
 
     @classmethod
     def create_entry(cls, name, uuid, **kwargs):
+        accounts_data = kwargs.get("accounts_data", "{}")
+        whitelisted_subnets = kwargs.get("whitelisted_subnets", "[]")
         super().create(
-            name=name, uuid=uuid,
+            name=name,
+            uuid=uuid,
+            accounts_data=accounts_data,
+            whitelisted_subnets=whitelisted_subnets,
         )
 
     @classmethod
@@ -374,6 +384,20 @@ class ProjectCache(CacheTableBase):
 
         # update by latest data
         client = get_api_client()
+
+        payload = {"length": 200, "offset": 0, "filter": "state!=DELETED;type!=nutanix"}
+        res, err = client.account.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        # Single account per provider_type can be added to project
+        account_uuid_type_map = {}
+        for entity in res["entities"]:
+            a_uuid = entity["metadata"]["uuid"]
+            a_type = entity["status"]["resources"]["type"]
+            account_uuid_type_map[a_uuid] = a_type
+
         Obj = get_resource_api("projects", client.connection)
         res, err = Obj.list({"length": 1000})
         if err:
@@ -383,7 +407,36 @@ class ProjectCache(CacheTableBase):
         for entity in res["entities"]:
             name = entity["status"]["name"]
             uuid = entity["metadata"]["uuid"]
-            cls.create_entry(name=name, uuid=uuid)
+
+            account_list = entity["status"]["resources"]["account_reference_list"]
+            account_map = {}
+            for account in account_list:
+                account_uuid = account["uuid"]
+                account_type = account_uuid_type_map[account_uuid]
+
+                # For now only single provider account per provider is allowed
+                account_map[account_type] = account_uuid
+
+            accounts_data = json.dumps(account_map)
+
+            subnets_ref_list = entity["status"]["resources"]["subnet_reference_list"]
+            subnets_uuid_list = []
+            for subnet in subnets_ref_list:
+                subnets_uuid_list.append(subnet["uuid"])
+
+            external_network_ref_list = entity["status"]["resources"].get(
+                "external_network_list", []
+            )
+            for subnet in external_network_ref_list:
+                subnets_uuid_list.append(subnet["uuid"])
+
+            subnets_uuid_list = json.dumps(subnets_uuid_list)
+            cls.create_entry(
+                name=name,
+                uuid=uuid,
+                accounts_data=accounts_data,
+                whitelisted_subnets=subnets_uuid_list,
+            )
 
     @classmethod
     def show_data(cls, *args, **kwargs):
