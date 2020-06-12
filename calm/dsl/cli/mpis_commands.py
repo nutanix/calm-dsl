@@ -107,6 +107,14 @@ def _get_marketplace_bps(name, quiet, app_family, app_states):
 
 @describe.command("marketplace_item")
 @click.argument("name")
+@click.option(
+    "--out",
+    "-o",
+    "out",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="output format",
+)
 @click.option("--version", "-v", default=None, help="Version of marketplace item")
 @click.option(
     "--source",
@@ -115,14 +123,22 @@ def _get_marketplace_bps(name, quiet, app_family, app_states):
     type=click.Choice(APP_SOURCES),
     help="App Source for marketplace item",
 )
-def _describe_marketplace_item(name, version, source):
+def _describe_marketplace_item(name, out, version, source):
     """Describe a market place item"""
 
-    describe_marketplace_item(name=name, version=version, app_source=source)
+    describe_marketplace_item(name=name, out=out, version=version, app_source=source)
 
 
 @describe.command("marketplace_bp")
 @click.argument("name")
+@click.option(
+    "--out",
+    "-o",
+    "out",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="output format.",
+)
 @click.option("--version", "-v", default=None, help="Version of marketplace blueprint")
 @click.option(
     "--source",
@@ -138,11 +154,11 @@ def _describe_marketplace_item(name, version, source):
     type=click.Choice(APP_STATES),
     help="State of marketplace blueprint",
 )
-def _describe_marketplace_bp(name, version, source, app_state):
+def _describe_marketplace_bp(name, out, version, source, app_state):
     """Describe a market place blueprint"""
 
     describe_marketplace_bp(
-        name=name, version=version, app_source=source, app_state=app_state
+        name=name, out=out, version=version, app_source=source, app_state=app_state
     )
 
 

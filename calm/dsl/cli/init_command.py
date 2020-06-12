@@ -14,7 +14,7 @@ from calm.dsl.config import (
 )
 from calm.dsl.db import get_db_handle
 from calm.dsl.api import get_resource_api, update_client_handle, get_client_handle
-from calm.dsl.store import Cache, Version
+from calm.dsl.store import Cache
 from calm.dsl.init import init_bp
 from calm.dsl.providers import get_provider_types
 
@@ -190,7 +190,6 @@ def set_server_details(
 
     LOG.info("Writing config to {}".format(config_file))
     init_config(host, port, username, password, project_name, log_level)
-    LOG.info("Success")
 
     # Update client handle with new settings if no exception occurs
     update_client_handle(host, port, auth=(username, password))
@@ -199,15 +198,11 @@ def set_server_details(
 def init_db():
     LOG.info("Creating local database")
     get_db_handle()
-    LOG.info("Success")
 
 
 def sync_cache():
     LOG.info("Updating Cache")
-    # NOTE order for version and cache sync should be maintained
-    Version.sync()
     Cache.sync()
-    LOG.info("Success")
 
 
 @init.command("bp")

@@ -1,6 +1,7 @@
 import uuid
 import click
 import sys
+import json
 from prettytable import PrettyTable
 
 from calm.dsl.api import get_api_client, get_resource_api
@@ -346,18 +347,19 @@ def get_mpi_by_name_n_version(name, version, app_states=[], app_source=None):
     return res
 
 
-def describe_marketplace_item(name, version=None, app_source=None):
+def describe_marketplace_item(name, out, version=None, app_source=None):
     """describes the marketplace blueprint related to marketplace item"""
 
     describe_marketplace_bp(
         name=name,
+        out=out,
         version=version,
         app_source=app_source,
         app_state=MARKETPLACE_BLUEPRINT.STATES.PUBLISHED,
     )
 
 
-def describe_marketplace_bp(name, version=None, app_source=None, app_state=None):
+def describe_marketplace_bp(name, out, version=None, app_source=None, app_state=None):
     """describes the marketplace blueprint"""
 
     app_states = [app_state] if app_state else []
@@ -372,6 +374,12 @@ def describe_marketplace_bp(name, version=None, app_source=None, app_state=None)
     bp = get_mpi_by_name_n_version(
         name=name, version=version, app_states=app_states, app_source=app_source
     )
+
+    if out == "json":
+        blueprint = bp["status"]["resources"]["app_blueprint_template"]
+        blueprint.pop("status", None)
+        click.echo(json.dumps(blueprint, indent=4, separators=(",", ": ")))
+        return
 
     click.echo("\n----MarketPlace Blueprint Summary----\n")
     click.echo(
