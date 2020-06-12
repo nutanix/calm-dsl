@@ -424,7 +424,7 @@ class ProjectCache(CacheTableBase):
             for subnet in subnets_ref_list:
                 subnets_uuid_list.append(subnet["uuid"])
 
-            external_network_ref_list = entity["status"]["resources"].get(
+            external_network_ref_list = entity["spec"]["resources"].get(
                 "external_network_list", []
             )
             for subnet in external_network_ref_list:
