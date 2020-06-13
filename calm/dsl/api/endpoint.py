@@ -16,7 +16,9 @@ class EndpointAPI(ResourceAPI):
         )
 
     @staticmethod
-    def _make_endpoint_payload(endpoint_name, endpoint_desc, endpoint_resources, spec_version=None):
+    def _make_endpoint_payload(
+        endpoint_name, endpoint_desc, endpoint_resources, spec_version=None
+    ):
 
         endpoint_payload = {
             "spec": {
@@ -29,7 +31,7 @@ class EndpointAPI(ResourceAPI):
                 "name": endpoint_name,
                 "kind": "endpoint",
             },
-            "api_version": "3.0"
+            "api_version": "3.0",
         }
 
         return endpoint_payload
@@ -55,7 +57,9 @@ class EndpointAPI(ResourceAPI):
 
         strip_secrets(endpoint_resources["attrs"], secret_map, secret_variables)
         endpoint_resources["attrs"].pop("default_credential_local_reference", None)
-        upload_payload = self._make_endpoint_payload(endpoint_name, endpoint_desc, endpoint_resources)
+        upload_payload = self._make_endpoint_payload(
+            endpoint_name, endpoint_desc, endpoint_resources
+        )
 
         config = get_config()
         project_name = config["PROJECT"]["name"]
@@ -91,7 +95,9 @@ class EndpointAPI(ResourceAPI):
         del endpoint["status"]
 
         # Update endpoint
-        patch_secrets(endpoint['spec']['resources']['attrs'], secret_map, secret_variables)
+        patch_secrets(
+            endpoint["spec"]["resources"]["attrs"], secret_map, secret_variables
+        )
 
         # TODO - insert categories during update as /import_json fails if categories are given!
         # Populating the categories at runtime

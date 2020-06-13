@@ -98,9 +98,11 @@ class runbook(metaclass=DescriptorType):
         # ast.Call nodes. ast.Assign nodes become variables.
         node = ast.parse(new_src)
         func_globals = self.user_func.__globals__.copy()
-        node_visitor = GetCallNodes(func_globals,
-                                    target=cls.get_task_target() if hasattr(cls, 'get_task_target') else None,
-                                    is_runbook=True if self.__class__ == runbook else False)
+        node_visitor = GetCallNodes(
+            func_globals,
+            target=cls.get_task_target() if hasattr(cls, "get_task_target") else None,
+            is_runbook=True if self.__class__ == runbook else False,
+        )
         try:
             node_visitor.visit(node)
         except Exception as ex:
@@ -129,7 +131,8 @@ class runbook(metaclass=DescriptorType):
             child_tasks=child_tasks,
             edges=edges,
             target=cls.get_task_target()
-            if getattr(cls, "__has_dag_target__", True) and hasattr(cls, 'get_task_target')
+            if getattr(cls, "__has_dag_target__", True)
+            and hasattr(cls, "get_task_target")
             else None,
         )
 
@@ -147,11 +150,8 @@ class runbook(metaclass=DescriptorType):
                 args[name] = param.default
 
             from .runbook_service import _runbook_service_create
-            self.runbook = _runbook_service_create(
-                **{
-                    "runbook": self.user_runbook
-                }
-            )
+
+            self.runbook = _runbook_service_create(**{"runbook": self.user_runbook})
 
             credentials = args.pop("credentials", [])
             endpoints = args.pop("endpoints", [])
@@ -174,7 +174,9 @@ class runbook(metaclass=DescriptorType):
 
             if default_target:
                 if not isinstance(default_target, RefType):
-                    raise TypeError("{} is not of type {}".format(default_target, RefType))
+                    raise TypeError(
+                        "{} is not of type {}".format(default_target, RefType)
+                    )
                 else:
                     self.runbook.default_target = default_target
 

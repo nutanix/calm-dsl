@@ -19,17 +19,12 @@ endpoint = CalmEndpoint.Linux.ip([VM_IP], cred=Cred)
 def DslSetVariableTask(endpoints=[endpoint]):
     "Runbook Service example"
     CalmTask.SetVariable.escript(
-        script="print 'var1=test'",
-        variables=["var1"],
+        script="print 'var1=test'", variables=["var1"],
     )
     CalmTask.SetVariable.ssh(
-        filename="scripts/sample_script.sh",
-        variables=["var2"],
-        target=ref(endpoint),
+        filename="scripts/sample_script.sh", variables=["var2"], target=ref(endpoint),
     )
-    CalmTask.Exec.escript(
-        script="print '@@{var1}@@ @@{var2}@@'"
-    )
+    CalmTask.Exec.escript(script="print '@@{var1}@@ @@{var2}@@'")
 
 
 def main():

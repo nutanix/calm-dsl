@@ -25,50 +25,55 @@ windows_endpoint = CalmEndpoint.Windows.ip([windows_ip], cred=WindowsCred)
 def DecisionTask(endpoints=[linux_endpoint, windows_endpoint]):
     "Runbook Service example"
     with CalmTask.Decision.ssh(script="exit 0", target=ref(linux_endpoint)):
+
         def success():  # noqa
-            CalmTask.Exec.ssh(name="SUCCESS1",
-                              script="echo 'SUCCESS'",
-                              target=ref(linux_endpoint))
+            CalmTask.Exec.ssh(
+                name="SUCCESS1", script="echo 'SUCCESS'", target=ref(linux_endpoint)
+            )
 
         def failure():  # noqa
-            CalmTask.Exec.ssh(name="FAILURE1",
-                              script="echo 'FAILURE'",
-                              target=ref(linux_endpoint))
+            CalmTask.Exec.ssh(
+                name="FAILURE1", script="echo 'FAILURE'", target=ref(linux_endpoint)
+            )
 
     with CalmTask.Decision.ssh(script="exit 1", target=ref(linux_endpoint)):
+
         def success():  # noqa
-            CalmTask.Exec.ssh(name="SUCCESS2",
-                              script="echo 'SUCCESS'",
-                              target=ref(linux_endpoint))
+            CalmTask.Exec.ssh(
+                name="SUCCESS2", script="echo 'SUCCESS'", target=ref(linux_endpoint)
+            )
 
         def failure():  # noqa
-            CalmTask.Exec.ssh(name="FAILURE2",
-                              script="echo 'FAILURE'",
-                              target=ref(linux_endpoint))
+            CalmTask.Exec.ssh(
+                name="FAILURE2", script="echo 'FAILURE'", target=ref(linux_endpoint)
+            )
 
     with CalmTask.Decision.powershell(script="exit 0", target=ref(windows_endpoint)):
+
         def success():  # noqa
-            CalmTask.Exec.powershell(name="SUCCESS3",
-                                     script="echo 'SUCCESS'",
-                                     target=ref(windows_endpoint))
+            CalmTask.Exec.powershell(
+                name="SUCCESS3", script="echo 'SUCCESS'", target=ref(windows_endpoint)
+            )
 
         def failure():  # noqa
-            CalmTask.Exec.powershell(name="FAILURE3",
-                                     script="echo 'FAILURE'",
-                                     target=ref(windows_endpoint))
+            CalmTask.Exec.powershell(
+                name="FAILURE3", script="echo 'FAILURE'", target=ref(windows_endpoint)
+            )
 
     with CalmTask.Decision.powershell(script="exit 1", target=ref(windows_endpoint)):
+
         def success():  # noqa
-            CalmTask.Exec.powershell(name="SUCCESS4",
-                                     script="echo 'SUCCESS'",
-                                     target=ref(windows_endpoint))
+            CalmTask.Exec.powershell(
+                name="SUCCESS4", script="echo 'SUCCESS'", target=ref(windows_endpoint)
+            )
 
         def failure():  # noqa
-            CalmTask.Exec.powershell(name="FAILURE4",
-                                     script="echo 'FAILURE'",
-                                     target=ref(windows_endpoint))
+            CalmTask.Exec.powershell(
+                name="FAILURE4", script="echo 'FAILURE'", target=ref(windows_endpoint)
+            )
 
     with CalmTask.Decision.escript(script="exit(0)"):
+
         def success():  # noqa
             CalmTask.Exec.escript(name="SUCCESS5", script="print 'SUCCESS'")
 
@@ -76,6 +81,7 @@ def DecisionTask(endpoints=[linux_endpoint, windows_endpoint]):
             CalmTask.Exec.escript(name="FAILURE5", script="print 'FAILURE'")
 
     with CalmTask.Decision.escript(script="exit(1)"):
+
         def success():  # noqa
             CalmTask.Exec.escript(name="SUCCESS6", script="print 'SUCCESS'")
 

@@ -26,10 +26,7 @@ def handle_meta_create(node, func_globals):
         child_tasks.extend(child_task)
 
     # First create the meta
-    user_meta = meta(
-        name=str(uuid.uuid4())[-10:] + '_meta',
-        child_tasks=child_tasks
-    )
+    user_meta = meta(name=str(uuid.uuid4())[-10:] + "_meta", child_tasks=child_tasks)
 
     return user_meta, tasks, variables
 
@@ -105,7 +102,7 @@ class GetCallNodes(ast.NodeVisitor):
             compile(ast.Expression(node.items[0].context_expr), "", "eval"),
             self._globals,
         )
-        if hasattr(context, '__calm_type__') and context.__calm_type__ == "parallel":
+        if hasattr(context, "__calm_type__") and context.__calm_type__ == "parallel":
             for statement in node.body:
                 if not isinstance(statement.value, ast.Call):
                     raise ValueError(
@@ -118,37 +115,51 @@ class GetCallNodes(ast.NodeVisitor):
             self.task_list.append(parallel_tasks)
 
         # for decision tasks
-        elif self.is_runbook and isinstance(context, TaskType) and context.type == "DECISION":
+        elif (
+            self.is_runbook
+            and isinstance(context, TaskType)
+            and context.type == "DECISION"
+        ):
             for statement in node.body:
                 if isinstance(statement, ast.FunctionDef):
                     if statement.name == "success":
-                        success_path, tasks, variables = handle_meta_create(statement, self._globals)
+                        success_path, tasks, variables = handle_meta_create(
+                            statement, self._globals
+                        )
                         self.all_tasks.extend([success_path] + tasks)
                         self.variables.update(variables)
 
                     elif statement.name == "failure":
-                        failure_path, tasks, variables = handle_meta_create(statement, self._globals)
+                        failure_path, tasks, variables = handle_meta_create(
+                            statement, self._globals
+                        )
                         self.all_tasks.extend([failure_path] + tasks)
                         self.variables.update(variables)
                     else:
                         raise ValueError(
-                            "Only \"success\" and \"failure\" flows are supported inside decision context"
+                            'Only "success" and "failure" flows are supported inside decision context'
                         )
                 else:
                     raise ValueError(
                         "Only calls to 'FunctionDef' methods supported inside decision context."
                     )
 
-            context.attrs['success_child_reference'] = success_path.get_ref()
-            context.attrs['failure_child_reference'] = failure_path.get_ref()
+            context.attrs["success_child_reference"] = success_path.get_ref()
+            context.attrs["failure_child_reference"] = failure_path.get_ref()
             self.all_tasks.append(context)
             self.task_list.append(context)
 
         # for parallel tasks
-        elif self.is_runbook and isinstance(context, TaskType) and context.type == "PARALLEL":
+        elif (
+            self.is_runbook
+            and isinstance(context, TaskType)
+            and context.type == "PARALLEL"
+        ):
             for statement in node.body:
                 if isinstance(statement, ast.FunctionDef):
-                    meta_task, tasks, variables = handle_meta_create(statement, self._globals)
+                    meta_task, tasks, variables = handle_meta_create(
+                        statement, self._globals
+                    )
                     self.all_tasks.extend([meta_task] + tasks)
                     self.variables.update(variables)
                     context.child_tasks_local_reference_list.append(meta_task.get_ref())
@@ -171,13 +182,11 @@ class GetCallNodes(ast.NodeVisitor):
 
     def visit_While(self, node):
         if not self.is_runbook:
-            raise ValueError(
-                "Unsupported 'while' usage inside the action."
-            )
+            raise ValueError("Unsupported 'while' usage inside the action.")
 
         if isinstance(node.test, ast.Call):
             while_task = self.visit_Call(node.test, return_task=True)
-            if not isinstance(while_task, TaskType) or while_task.type != 'WHILE_LOOP':
+            if not isinstance(while_task, TaskType) or while_task.type != "WHILE_LOOP":
                 raise ValueError(
                     "Only WhileLoop Tasks are supported inside while context."
                 )

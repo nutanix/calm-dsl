@@ -43,7 +43,11 @@ class ResourceAPI:
         current_path = os.path.dirname(os.path.realpath(__file__))
         if passphrase:
             res, err = self.connection._call(
-                self.EXPORT_FILE.format(uuid), verify=False, method=REQUEST.METHOD.POST, request_json={"passphrase": passphrase}, files=[]
+                self.EXPORT_FILE.format(uuid),
+                verify=False,
+                method=REQUEST.METHOD.POST,
+                request_json={"passphrase": passphrase},
+                files=[],
             )
         else:
             res, err = self.connection._call(
@@ -60,15 +64,17 @@ class ResourceAPI:
 
     def import_file(self, file_path, name, project_uuid, passphrase=None):
 
-        payload = {'name': name,
-                   'project_uuid': project_uuid}
+        payload = {"name": name, "project_uuid": project_uuid}
         if passphrase:
-            payload['passphrase'] = passphrase
-        files = {'file': ('file', open(file_path, 'rb'))}
+            payload["passphrase"] = passphrase
+        files = {"file": ("file", open(file_path, "rb"))}
 
         return self.connection._call(
-            self.IMPORT_FILE, verify=False, files=files, request_json=payload,
-            method=REQUEST.METHOD.POST
+            self.IMPORT_FILE,
+            verify=False,
+            files=files,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
         )
 
     def list(self, params={}):

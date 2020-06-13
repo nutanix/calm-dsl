@@ -6,15 +6,13 @@ from .endpoints import (
     get_endpoint_list,
     compile_endpoint,
     delete_endpoint,
-    describe_endpoint
+    describe_endpoint,
 )
 from calm.dsl.api import get_api_client
 
 
 @get.command("endpoints")
-@click.option(
-    "--name", "-n", default=None, help="Endpoint name (Optional)"
-)
+@click.option("--name", "-n", default=None, help="Endpoint name (Optional)")
 @click.option(
     "--filter", "filter_by", default=None, help="Filter endpoints by this string"
 )
@@ -78,9 +76,7 @@ def create_endpoint_from_dsl(client, endpoint_file, name=None, description=None)
     required=True,
     help="Path of Endpoint file to upload",
 )
-@click.option(
-    "--name", "-n", default=None, help="Endpoint name (Optional)"
-)
+@click.option("--name", "-n", default=None, help="Endpoint name (Optional)")
 @click.option("--description", default=None, help="Endpoint description (Optional)")
 @click.pass_obj
 def create_endpoint_command(obj, endpoint_file, name, description):

@@ -12,7 +12,7 @@ from calm.dsl.tools import get_logging_handle
 EXIT_CONDITION_MAP = {
     "SUCCESS": "on_success",
     "FAILURE": "on_failure",
-    "DONT_CARE": "dont_care"
+    "DONT_CARE": "dont_care",
 }
 
 LOG = get_logging_handle(__name__)
@@ -90,8 +90,7 @@ def create_call_rb(runbook, target=None, name=None):
 
 
 def _exec_create(
-    script_type, script=None, filename=None, name=None,
-    target=None, cred=None, depth=2
+    script_type, script=None, filename=None, name=None, target=None, cred=None, depth=2
 ):
     if script is not None and filename is not None:
         raise ValueError(
@@ -126,8 +125,7 @@ def _exec_create(
 
 
 def _decision_create(
-    script_type, script=None, filename=None, name=None,
-    target=None, cred=None, depth=2
+    script_type, script=None, filename=None, name=None, target=None, cred=None, depth=2
 ):
     if script is not None and filename is not None:
         raise ValueError(
@@ -304,7 +302,7 @@ def exec_task_escript(script=None, filename=None, name=None, target=None, depth=
 
 
 def exec_task_powershell(
-        script=None, filename=None, name=None, target=None, cred=None, depth=2
+    script=None, filename=None, name=None, target=None, cred=None, depth=2
 ):
     return _exec_create(
         "npsscript",
@@ -313,7 +311,7 @@ def exec_task_powershell(
         name=name,
         target=target,
         cred=cred,
-        depth=depth
+        depth=depth,
     )
 
 
@@ -332,7 +330,7 @@ def decision_task_ssh(
 
 
 def decision_task_powershell(
-        script=None, filename=None, name=None, target=None, cred=None, depth=2
+    script=None, filename=None, name=None, target=None, cred=None, depth=2
 ):
     return _decision_create(
         "npsscript",
@@ -341,12 +339,12 @@ def decision_task_powershell(
         name=name,
         target=target,
         cred=cred,
-        depth=depth
+        depth=depth,
     )
 
 
 def decision_task_escript(
-        script=None, filename=None, name=None, target=None, cred=None, depth=2
+    script=None, filename=None, name=None, target=None, cred=None, depth=2
 ):
     return _decision_create(
         "static",
@@ -355,7 +353,7 @@ def decision_task_escript(
         name=name,
         target=target,
         cred=cred,
-        depth=depth
+        depth=depth,
     )
 
 
@@ -975,11 +973,13 @@ def input_task(timeout=None, name=None, inputs=[]):
     """
     if not isinstance(timeout, int):
         raise TypeError(
-            "timeout is expected to be an integer, got {}".format(
-                type(timeout)
-            )
+            "timeout is expected to be an integer, got {}".format(type(timeout))
         )
-    kwargs = {"name": name, "type": "INPUT", "attrs": {"task_timeout": timeout, "inputs": []}}
+    kwargs = {
+        "name": name,
+        "type": "INPUT",
+        "attrs": {"task_timeout": timeout, "inputs": []},
+    }
     for task_input in inputs:
         if not isinstance(task_input, TaskInputType):
             raise TypeError(
@@ -987,9 +987,13 @@ def input_task(timeout=None, name=None, inputs=[]):
                     type(task_input)
                 )
             )
-        kwargs["attrs"]["inputs"].append({
-            "name": task_input.name, "input_type": task_input.input_type, "options": task_input.options
-        })
+        kwargs["attrs"]["inputs"].append(
+            {
+                "name": task_input.name,
+                "input_type": task_input.input_type,
+                "options": task_input.options,
+            }
+        )
     return _task_create(**kwargs)
 
 
@@ -1004,9 +1008,7 @@ def confirm_task(timeout=None, name=None):
     """
     if not isinstance(timeout, int):
         raise TypeError(
-            "timeout is expected to be an integer, got {}".format(
-                type(timeout)
-            )
+            "timeout is expected to be an integer, got {}".format(type(timeout))
         )
     kwargs = {"name": name, "type": "CONFIRM", "attrs": {"task_timeout": timeout}}
     return _task_create(**kwargs)
@@ -1089,19 +1091,28 @@ class CalmTask:
             return parallel_task(name=name, child_tasks=child_tasks, attrs=attrs)
 
     class While:
-        def __new__(cls, iterations, name=None, child_tasks=[],
-                    loop_variable="iteration", parallel_factor=1, exit_condition="SUCCESS"):
+        def __new__(
+            cls,
+            iterations,
+            name=None,
+            child_tasks=[],
+            loop_variable="iteration",
+            parallel_factor=1,
+            exit_condition="SUCCESS",
+        ):
             attrs = {
                 "apf": str(parallel_factor),
                 "iterations": str(iterations),
-                "loop_variable": loop_variable
+                "loop_variable": loop_variable,
             }
             exit_code = EXIT_CONDITION_MAP.get(exit_condition, None)
             if exit_code:
                 attrs["exit_condition_type"] = exit_code
             else:
                 raise ValueError(
-                    "Valid Exit Conditions for while loop are {}".format(EXIT_CONDITION_MAP.keys())
+                    "Valid Exit Conditions for while loop are {}".format(
+                        EXIT_CONDITION_MAP.keys()
+                    )
                 )
             return while_loop(name=name, child_tasks=child_tasks, attrs=attrs)
 

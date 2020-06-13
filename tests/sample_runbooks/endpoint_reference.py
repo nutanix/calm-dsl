@@ -10,7 +10,9 @@ from calm.dsl.builtins import CalmEndpoint, ref
 @runbook
 def DslEndpointReference():
     "Runbook Service example"
-    CalmTask.Exec.ssh(name="Task1", script='echo "hello"', target=ref(CalmEndpoint('DslEndpoint')))
+    CalmTask.Exec.ssh(
+        name="Task1", script='echo "hello"', target=ref(CalmEndpoint("DslEndpoint"))
+    )
 
 
 def main():

@@ -12,7 +12,10 @@ class TestRunbooks:
     @pytest.mark.epsilon
     @pytest.mark.regression
     @pytest.mark.parametrize("Runbook", [DslConfirmRunbook])
-    @pytest.mark.parametrize("Helper", [("SUCCESS", [RUNLOG.STATUS.SUCCESS]), ("FAILURE", RUNLOG.FAILURE_STATES)])
+    @pytest.mark.parametrize(
+        "Helper",
+        [("SUCCESS", [RUNLOG.STATUS.SUCCESS]), ("FAILURE", RUNLOG.FAILURE_STATES)],
+    )
     def test_rb_confirm(self, Runbook, Helper):
         """ test_confirm_task """
 
@@ -38,7 +41,9 @@ class TestRunbooks:
         runlog_uuid = response["status"]["runlog_uuid"]
 
         # polling till runbook run gets to confirm state
-        state, reasons = poll_runlog_status(client, runlog_uuid, [RUNLOG.STATUS.CONFIRM])
+        state, reasons = poll_runlog_status(
+            client, runlog_uuid, [RUNLOG.STATUS.CONFIRM]
+        )
 
         print(">> Runbook Run state: {}\n{}".format(state, reasons))
         assert state == RUNLOG.STATUS.CONFIRM
@@ -50,12 +55,17 @@ class TestRunbooks:
         response = res.json()
         entities = response["entities"]
         for entity in entities:
-            if entity["status"]["type"] == "task_runlog" and entity["status"]["state"] == RUNLOG.STATUS.CONFIRM:
+            if (
+                entity["status"]["type"] == "task_runlog"
+                and entity["status"]["state"] == RUNLOG.STATUS.CONFIRM
+            ):
                 task_uuid = entity["metadata"]["uuid"]
                 break
 
         # calling resume on the confirm task with failure state
-        res, err = client.runbook.resume(runlog_uuid, task_uuid, {"confirm_answer": Helper[0]})
+        res, err = client.runbook.resume(
+            runlog_uuid, task_uuid, {"confirm_answer": Helper[0]}
+        )
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 

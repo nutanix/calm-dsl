@@ -11,9 +11,7 @@ class RunbookPayloadType(EntityType):
     __openapi_type__ = "runbook_payload"
 
 
-class RunbookPayloadValidator(
-    PropertyValidator, openapi_type="runbook_payload"
-):
+class RunbookPayloadValidator(PropertyValidator, openapi_type="runbook_payload"):
     __default__ = None
     __kind__ = RunbookPayloadType
 

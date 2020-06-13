@@ -1,4 +1,3 @@
-
 def strip_secrets(resources, secret_map, secret_variables, object_lists=[], objects=[]):
     """
     Strips secrets from the resources
@@ -43,7 +42,7 @@ def strip_secrets(resources, secret_map, secret_variables, object_lists=[], obje
     if auth.get("type", None) == "basic":
         name = auth["username"]
         secret_map[name] = auth.pop("password", {})
-        auth["password"] = {'attrs': {'is_secret_modified': False, 'value': None}}
+        auth["password"] = {"attrs": {"is_secret_modified": False, "value": None}}
 
     # Strip secret variable values
     # TODO: Refactor and/or clean this up later
@@ -118,15 +117,20 @@ def strip_secrets(resources, secret_map, secret_variables, object_lists=[], obje
             if task.get("type", None) != "HTTP":
                 continue
             auth = (task.get("attrs", {}) or {}).get("authentication", {}) or {}
-            path_list = path_list + ["runbook", "task_definition_list", task_idx, "attrs", ]
-            strip_authentication_secret_variables(path_list, task.get("attrs", {}) or {})
+            path_list = path_list + [
+                "runbook",
+                "task_definition_list",
+                task_idx,
+                "attrs",
+            ]
+            strip_authentication_secret_variables(
+                path_list, task.get("attrs", {}) or {}
+            )
             if auth.get("auth_type", None) == "basic":
                 if not (task.get("attrs", {}) or {}).get("headers", []) or []:
                     continue
                 strip_entity_secret_variables(
-                    path_list,
-                    task["attrs"],
-                    field_name="headers",
+                    path_list, task["attrs"], field_name="headers",
                 )
 
     def strip_authentication_secret_variables(path_list, obj):
@@ -134,20 +138,11 @@ def strip_secrets(resources, secret_map, secret_variables, object_lists=[], obje
         if auth.get("auth_type", None) == "basic":
             secret_variables.append(
                 (
-                    path_list
-                    + [
-                        "authentication",
-                        "basic_auth",
-                        "password",
-                    ],
+                    path_list + ["authentication", "basic_auth", "password",],
                     auth["password"].pop("value"),
                 )
             )
-            auth["password"] = {
-                "attrs": {
-                    "is_secret_modified": False,
-                }
-            }
+            auth["password"] = {"attrs": {"is_secret_modified": False,}}
 
     def strip_all_secret_variables(path_list, obj):
         strip_entity_secret_variables(path_list, obj)

@@ -16,12 +16,12 @@ inputs = [
 ]
 
 
-code = '''print "Hello @@{my_name}@@"
+code = """print "Hello @@{my_name}@@"
 print "Your Password is @@{password}@@"
 print "Date you selected is @@{date}@@"
 print "Time selected is @@{time}@@"
 print "User selected is @@{user}@@"
-'''
+"""
 
 
 @runbook

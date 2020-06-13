@@ -167,12 +167,11 @@ def describe_endpoint(obj, endpoint_name):
     click.echo("Description: " + highlight_text(endpoint["status"]["description"]))
     click.echo("Status: " + highlight_text(endpoint["status"]["state"]))
     click.echo(
-        "Owner: " + highlight_text(endpoint["metadata"]["owner_reference"]["name"]), nl=False
+        "Owner: " + highlight_text(endpoint["metadata"]["owner_reference"]["name"]),
+        nl=False,
     )
     project = endpoint["metadata"].get("project_reference", {})
-    click.echo(
-        " Project: " + highlight_text(project.get("name", ""))
-    )
+    click.echo(" Project: " + highlight_text(project.get("name", "")))
 
     created_on = int(endpoint["metadata"]["creation_time"]) // 1000000
     past = arrow.get(created_on).humanize()

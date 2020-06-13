@@ -52,15 +52,26 @@ class TestParallelTasks:
                 task_name = entity["status"]["task_reference"]["name"]
                 if timestamps.get(task_name, None) is not None:
                     timestamps[task_name]["start"] = entity["metadata"]["creation_time"]
-                    timestamps[task_name]["end"] = entity["metadata"]["last_update_time"]
+                    timestamps[task_name]["end"] = entity["metadata"][
+                        "last_update_time"
+                    ]
 
-        if (timestamps["Delay1"]["start"] > timestamps["Delay2"]["end"] or timestamps["Delay1"]["start"] > timestamps["Delay3"]["end"]):
+        if (
+            timestamps["Delay1"]["start"] > timestamps["Delay2"]["end"]
+            or timestamps["Delay1"]["start"] > timestamps["Delay3"]["end"]
+        ):
             pytest.fail("Delay1 task started for Delay2 and Delay3 execution")
 
-        if (timestamps["Delay2"]["start"] > timestamps["Delay3"]["end"] or timestamps["Delay2"]["start"] > timestamps["Delay1"]["end"]):
+        if (
+            timestamps["Delay2"]["start"] > timestamps["Delay3"]["end"]
+            or timestamps["Delay2"]["start"] > timestamps["Delay1"]["end"]
+        ):
             pytest.fail("Delay2 task started for Delay3 and Delay1 execution")
 
-        if (timestamps["Delay3"]["start"] > timestamps["Delay1"]["end"] or timestamps["Delay3"]["start"] > timestamps["Delay2"]["end"]):
+        if (
+            timestamps["Delay3"]["start"] > timestamps["Delay1"]["end"]
+            or timestamps["Delay3"]["start"] > timestamps["Delay2"]["end"]
+        ):
             pytest.fail("Delay3 task started for Delay1 and Delay2 execution")
 
         # delete the runbook

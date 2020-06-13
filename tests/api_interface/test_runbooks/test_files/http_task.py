@@ -17,17 +17,23 @@ URL = read_local_file(".tests/runbook_tests/url")
 config = get_config()
 TEST_URL = "https://{}:9440/".format(config["SERVER"]["pc_ip"])
 
-endpoint = CalmEndpoint.HTTP(URL, verify=False, auth=Auth.Basic(AUTH_USERNAME, AUTH_PASSWORD))
-endpoint_with_tls_verify = CalmEndpoint.HTTP(URL, verify=True, auth=Auth.Basic(AUTH_USERNAME, AUTH_PASSWORD))
+endpoint = CalmEndpoint.HTTP(
+    URL, verify=False, auth=Auth.Basic(AUTH_USERNAME, AUTH_PASSWORD)
+)
+endpoint_with_tls_verify = CalmEndpoint.HTTP(
+    URL, verify=True, auth=Auth.Basic(AUTH_USERNAME, AUTH_PASSWORD)
+)
 endpoint_with_incorrect_auth = CalmEndpoint.HTTP(URL, verify=False)
 endpoint_without_auth = CalmEndpoint.HTTP(TEST_URL)
 
 
 def get_http_task_runbook():
-    '''returns the runbook for http task'''
+    """returns the runbook for http task"""
 
     global endpoint_payload
-    endpoint_payload = change_uuids(read_test_config(file_name="http_endpoint_payload.json"), {})
+    endpoint_payload = change_uuids(
+        read_test_config(file_name="http_endpoint_payload.json"), {}
+    )
 
     @runbook
     def HTTPTask(endpoints=[endpoint]):
@@ -46,7 +52,7 @@ def get_http_task_runbook():
         # Check the type of the created endpoint
         CalmTask.HTTP.endpoint(
             "GET",
-            relative_url="/" + endpoint_payload['metadata']['uuid'],
+            relative_url="/" + endpoint_payload["metadata"]["uuid"],
             headers={"Content-Type": "application/json"},
             content_type="application/json",
             response_paths={"ep_type": "$.spec.resources.type"},
@@ -57,7 +63,7 @@ def get_http_task_runbook():
         # Delete the created endpoint
         CalmTask.HTTP.endpoint(
             "DELETE",
-            relative_url="/" + endpoint_payload['metadata']['uuid'],
+            relative_url="/" + endpoint_payload["metadata"]["uuid"],
             headers={"Content-Type": "application/json"},
             content_type="application/json",
             status_mapping={200: True},
@@ -84,37 +90,33 @@ def HTTPTaskWithValidations():
 
 
 @runbook
-def HTTPTaskWithoutAuth(endpoints=[endpoint_without_auth], default_target=ref(endpoint_without_auth)):
+def HTTPTaskWithoutAuth(
+    endpoints=[endpoint_without_auth], default_target=ref(endpoint_without_auth)
+):
+
+    # Creating an endpoint with POST call
+    CalmTask.HTTP.endpoint("GET", content_type="text/html", status_mapping={200: True})
+
+
+@runbook
+def HTTPTaskWithIncorrectCode(
+    endpoints=[endpoint_without_auth], default_target=ref(endpoint_without_auth)
+):
 
     # Creating an endpoint with POST call
     CalmTask.HTTP.endpoint(
-        "GET",
-        content_type="text/html",
-        status_mapping={200: True}
+        "GET", name="HTTPTask", content_type="text/html", status_mapping={300: True}
     )
 
 
 @runbook
-def HTTPTaskWithIncorrectCode(endpoints=[endpoint_without_auth], default_target=ref(endpoint_without_auth)):
+def HTTPTaskWithFailureState(
+    endpoints=[endpoint_without_auth], default_target=ref(endpoint_without_auth)
+):
 
     # Creating an endpoint with POST call
     CalmTask.HTTP.endpoint(
-        "GET",
-        name="HTTPTask",
-        content_type="text/html",
-        status_mapping={300: True}
-    )
-
-
-@runbook
-def HTTPTaskWithFailureState(endpoints=[endpoint_without_auth], default_target=ref(endpoint_without_auth)):
-
-    # Creating an endpoint with POST call
-    CalmTask.HTTP.endpoint(
-        "GET",
-        name="HTTPTask",
-        content_type="text/html",
-        status_mapping={200: False}
+        "GET", name="HTTPTask", content_type="text/html", status_mapping={200: False}
     )
 
 
@@ -128,7 +130,7 @@ def HTTPTaskWithUnsupportedURL(endpoints=[endpoint], default_target=ref(endpoint
         relative_url="unsupported url",
         headers={"Content-Type": "application/json"},
         content_type="application/json",
-        status_mapping={200: True}
+        status_mapping={200: True},
     )
 
 
@@ -144,7 +146,7 @@ def HTTPTaskWithUnsupportedPayload(endpoints=[endpoint]):
         headers={"Content-Type": "application/json"},
         content_type="application/json",
         status_mapping={200: True},
-        target=ref(endpoint)
+        target=ref(endpoint),
     )
 
 
@@ -160,7 +162,7 @@ def HTTPTaskWithIncorrectAuth(endpoints=[endpoint_with_incorrect_auth]):
         headers={"Content-Type": "application/json"},
         content_type="application/json",
         status_mapping={200: True},
-        target=ref(endpoint_with_incorrect_auth)
+        target=ref(endpoint_with_incorrect_auth),
     )
 
 
@@ -176,7 +178,7 @@ def HTTPTaskWithTLSVerify(endpoints=[endpoint_with_tls_verify]):
         headers={"Content-Type": "application/json"},
         content_type="application/json",
         status_mapping={200: True},
-        target=ref(endpoint_with_tls_verify)
+        target=ref(endpoint_with_tls_verify),
     )
 
 
@@ -192,7 +194,7 @@ def HTTPHeadersWithMacro(endpoints=[endpoint_with_incorrect_auth]):
         headers={"Authorization": "Bearer @@{calm_jwt}@@"},
         content_type="application/json",
         status_mapping={200: True},
-        target=ref(endpoint_with_incorrect_auth)
+        target=ref(endpoint_with_incorrect_auth),
     )
 
 
@@ -208,5 +210,5 @@ def HTTPRelativeURLWithMacro(endpoints=[endpoint]):
         body=json.dumps({}),
         content_type="application/json",
         status_mapping={200: True},
-        target=ref(endpoint)
+        target=ref(endpoint),
     )

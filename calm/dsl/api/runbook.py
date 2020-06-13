@@ -30,36 +30,56 @@ class RunbookAPI(ResourceAPI):
 
     def resume(self, arlid, trlid, payload):
         return self.connection._call(
-            self.RUNLOG_RESUME.format(arlid, trlid), verify=False, request_json=payload, method=REQUEST.METHOD.POST
+            self.RUNLOG_RESUME.format(arlid, trlid),
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
         )
 
     def pause(self, uuid):
         return self.connection._call(
-            self.PAUSE.format(uuid), verify=False, request_json={}, method=REQUEST.METHOD.POST
+            self.PAUSE.format(uuid),
+            verify=False,
+            request_json={},
+            method=REQUEST.METHOD.POST,
         )
 
     def play(self, uuid):
         return self.connection._call(
-            self.PLAY.format(uuid), verify=False, request_json={}, method=REQUEST.METHOD.POST
+            self.PLAY.format(uuid),
+            verify=False,
+            request_json={},
+            method=REQUEST.METHOD.POST,
         )
 
     def rerun(self, uuid):
         return self.connection._call(
-            self.RERUN.format(uuid), verify=False, request_json={}, method=REQUEST.METHOD.POST
+            self.RERUN.format(uuid),
+            verify=False,
+            request_json={},
+            method=REQUEST.METHOD.POST,
         )
 
     def abort(self, uuid):
         return self.connection._call(
-            self.RUNLOG_ABORT.format(uuid), verify=False, request_json={}, method=REQUEST.METHOD.POST
+            self.RUNLOG_ABORT.format(uuid),
+            verify=False,
+            request_json={},
+            method=REQUEST.METHOD.POST,
         )
 
     def update2(self, uuid, payload):
         return self.connection._call(
-            self.UPDATE2.format(uuid), verify=False, request_json=payload, method=REQUEST.METHOD.PUT
+            self.UPDATE2.format(uuid),
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.PUT,
         )
 
     @staticmethod
-    def _make_runbook_payload(runbook_name, runbook_desc, runbook_resources, spec_version=None):
+    def _make_runbook_payload(
+        runbook_name, runbook_desc, runbook_resources, spec_version=None
+    ):
 
         runbook_payload = {
             "spec": {
@@ -72,7 +92,7 @@ class RunbookAPI(ResourceAPI):
                 "name": runbook_name,
                 "kind": "runbook",
             },
-            "api_version": "3.0"
+            "api_version": "3.0",
         }
 
         return runbook_payload
@@ -98,7 +118,13 @@ class RunbookAPI(ResourceAPI):
         object_lists = []
         objects = ["runbook"]
 
-        strip_secrets(runbook_resources, secret_map, secret_variables, object_lists=object_lists, objects=objects)
+        strip_secrets(
+            runbook_resources,
+            secret_map,
+            secret_variables,
+            object_lists=object_lists,
+            objects=objects,
+        )
 
         endpoint_secret_map = {}
         endpoint_secret_variables = {}
@@ -107,10 +133,16 @@ class RunbookAPI(ResourceAPI):
             endpoint_name = endpoint.get("name")
             endpoint_secret_map[endpoint_name] = {}
             endpoint_secret_variables[endpoint_name] = []
-            strip_secrets(endpoint["attrs"], endpoint_secret_map[endpoint_name], endpoint_secret_variables[endpoint_name])
+            strip_secrets(
+                endpoint["attrs"],
+                endpoint_secret_map[endpoint_name],
+                endpoint_secret_variables[endpoint_name],
+            )
             endpoint["attrs"].pop("default_credential_local_reference", None)
 
-        upload_payload = self._make_runbook_payload(runbook_name, runbook_desc, runbook_resources)
+        upload_payload = self._make_runbook_payload(
+            runbook_name, runbook_desc, runbook_resources
+        )
 
         config = get_config()
         project_name = config["PROJECT"]["name"]
@@ -146,10 +178,16 @@ class RunbookAPI(ResourceAPI):
         del runbook["status"]
 
         # Update runbook
-        patch_secrets(runbook['spec']['resources'], secret_map, secret_variables)
-        for endpoint in runbook['spec']['resources'].get('endpoint_definition_list', []):
+        patch_secrets(runbook["spec"]["resources"], secret_map, secret_variables)
+        for endpoint in runbook["spec"]["resources"].get(
+            "endpoint_definition_list", []
+        ):
             endpoint_name = endpoint.get("name")
-            patch_secrets(endpoint["attrs"], endpoint_secret_map[endpoint_name], endpoint_secret_variables[endpoint_name])
+            patch_secrets(
+                endpoint["attrs"],
+                endpoint_secret_map[endpoint_name],
+                endpoint_secret_variables[endpoint_name],
+            )
 
         uuid = runbook["metadata"]["uuid"]
 
@@ -157,52 +195,79 @@ class RunbookAPI(ResourceAPI):
 
     def list_previous_runs(self, params=None):
         return self.connection._call(
-            self.PREVIOUS_RUNS, verify=False, request_json=params, method=REQUEST.METHOD.POST
+            self.PREVIOUS_RUNS,
+            verify=False,
+            request_json=params,
+            method=REQUEST.METHOD.POST,
         )
 
     def run(self, uuid, payload):
         return self.connection._call(
-            self.RUN.format(uuid), verify=False, request_json=payload, method=REQUEST.METHOD.POST
+            self.RUN.format(uuid),
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
         )
 
     def run_script(self, uuid, payload):
         return self.connection._call(
-            self.RUN_SCRIPT.format(uuid), verify=False, request_json=payload, method=REQUEST.METHOD.POST
+            self.RUN_SCRIPT.format(uuid),
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
         )
 
     def run_script_output(self, uuid, trl_id, request_id):
         return self.connection._call(
-            self.RUN_SCRIPT_OUTPUT.format(uuid, trl_id, request_id), verify=False, method=REQUEST.METHOD.GET
+            self.RUN_SCRIPT_OUTPUT.format(uuid, trl_id, request_id),
+            verify=False,
+            method=REQUEST.METHOD.GET,
         )
 
     def list_runlogs(self, uuid):
         return self.connection._call(
-            self.RUNLOG_LIST.format(uuid), verify=False, request_json={}, method=REQUEST.METHOD.POST
+            self.RUNLOG_LIST.format(uuid),
+            verify=False,
+            request_json={},
+            method=REQUEST.METHOD.POST,
         )
 
     def runlog_output(self, arl_id, trl_id):
         return self.connection._call(
-            self.RUNLOG_OUTPUT.format(arl_id, trl_id), verify=False, method=REQUEST.METHOD.GET
+            self.RUNLOG_OUTPUT.format(arl_id, trl_id),
+            verify=False,
+            method=REQUEST.METHOD.GET,
         )
 
     def poll_action_run(self, uuid, payload=None):
         if payload:
             return self.connection._call(
-                self.POLL_RUN.format(uuid), request_json=payload, verify=False, method=REQUEST.METHOD.POST
+                self.POLL_RUN.format(uuid),
+                request_json=payload,
+                verify=False,
+                method=REQUEST.METHOD.POST,
             )
         else:
             return self.connection._call(
                 self.POLL_RUN.format(uuid), verify=False, method=REQUEST.METHOD.GET
             )
 
-    def update_with_secrets(self, uuid, runbook_name, runbook_desc, runbook_resources, spec_version):
+    def update_with_secrets(
+        self, uuid, runbook_name, runbook_desc, runbook_resources, spec_version
+    ):
 
         secret_map = {}
         secret_variables = []
         object_lists = []
         objects = ["runbook"]
 
-        strip_secrets(runbook_resources, secret_map, secret_variables, object_lists=object_lists, objects=objects)
+        strip_secrets(
+            runbook_resources,
+            secret_map,
+            secret_variables,
+            object_lists=object_lists,
+            objects=objects,
+        )
 
         endpoint_secret_map = {}
         endpoint_secret_variables = {}
@@ -211,10 +276,16 @@ class RunbookAPI(ResourceAPI):
             endpoint_name = endpoint.get("name")
             endpoint_secret_map[endpoint_name] = {}
             endpoint_secret_variables[endpoint_name] = []
-            strip_secrets(endpoint["attrs"], endpoint_secret_map[endpoint_name], endpoint_secret_variables[endpoint_name])
+            strip_secrets(
+                endpoint["attrs"],
+                endpoint_secret_map[endpoint_name],
+                endpoint_secret_variables[endpoint_name],
+            )
             endpoint["attrs"].pop("default_credential_local_reference", None)
 
-        update_payload = self._make_runbook_payload(runbook_name, runbook_desc, runbook_resources, spec_version=spec_version)
+        update_payload = self._make_runbook_payload(
+            runbook_name, runbook_desc, runbook_resources, spec_version=spec_version
+        )
 
         config = get_config()
         project_name = config["PROJECT"]["name"]
@@ -249,10 +320,16 @@ class RunbookAPI(ResourceAPI):
         del runbook["status"]
 
         # Update runbook
-        patch_secrets(runbook['spec']['resources'], secret_map, secret_variables)
-        for endpoint in runbook['spec']['resources'].get('endpoint_definition_list', []):
+        patch_secrets(runbook["spec"]["resources"], secret_map, secret_variables)
+        for endpoint in runbook["spec"]["resources"].get(
+            "endpoint_definition_list", []
+        ):
             endpoint_name = endpoint.get("name")
-            patch_secrets(endpoint["attrs"], endpoint_secret_map[endpoint_name], endpoint_secret_variables[endpoint_name])
+            patch_secrets(
+                endpoint["attrs"],
+                endpoint_secret_map[endpoint_name],
+                endpoint_secret_variables[endpoint_name],
+            )
 
         uuid = runbook["metadata"]["uuid"]
 

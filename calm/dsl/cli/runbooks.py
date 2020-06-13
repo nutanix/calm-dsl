@@ -81,7 +81,7 @@ def get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
                 highlight_text(row["description"]),
                 highlight_text(project),
                 highlight_text(row["state"]),
-                highlight_text(total_runs if total_runs else '-'),
+                highlight_text(total_runs if total_runs else "-"),
                 highlight_text(created_by),
                 "{}".format(arrow.get(last_update_time).humanize()),
                 "{}".format(arrow.get(last_run).humanize()) if last_run else "-",
@@ -188,7 +188,9 @@ def get_previous_runs(obj, name, filter_by, limit, offset):
             [
                 highlight_text(row["action_reference"]["name"]),
                 highlight_text(time.ctime(started_at)),
-                "{}".format(arrow.get(last_update_time).humanize()) if state in RUNLOG.TERMINAL_STATES else "-",
+                "{}".format(arrow.get(last_update_time).humanize())
+                if state in RUNLOG.TERMINAL_STATES
+                else "-",
                 highlight_text(timetaken),
                 highlight_text(row["userdata_reference"]["name"]),
                 highlight_text(metadata["uuid"]),
@@ -235,12 +237,23 @@ def patch_runbook_runtime_editables(client, runbook):
                 )
             )
             if new_val:
-                args.append({"name": variable.get("name"), "value": type(variable.get("value"))(new_val)})
+                args.append(
+                    {
+                        "name": variable.get("name"),
+                        "value": type(variable.get("value"))(new_val),
+                    }
+                )
 
     payload = {"spec": {"args": args}}
-    default_target = runbook["spec"]["resources"].get("default_target_reference", {}).get("name", None)
+    default_target = (
+        runbook["spec"]["resources"]
+        .get("default_target_reference", {})
+        .get("name", None)
+    )
     target = input(
-        "Endpoint target for the Runbook Run (default target={}): ".format(default_target)
+        "Endpoint target for the Runbook Run (default target={}): ".format(
+            default_target
+        )
     )
     if target:
         endpoint = get_endpoint(client, target)
@@ -248,19 +261,12 @@ def patch_runbook_runtime_editables(client, runbook):
         payload["spec"]["default_target_reference"] = {
             "kind": "app_endpoint",
             "uuid": endpoint_id,
-            "name": target
+            "name": target,
         }
     return payload
 
 
-def run_runbook(
-    screen,
-    client,
-    runbook_uuid,
-    watch,
-    input_data={},
-    payload={}
-):
+def run_runbook(screen, client, runbook_uuid, watch, input_data={}, payload={}):
 
     res, err = client.runbook.run(runbook_uuid, payload)
     if not err:
@@ -273,6 +279,7 @@ def run_runbook(
 
     def poll_runlog_status():
         return client.runbook.poll_action_run(runlog_uuid)
+
     screen.refresh()
     should_continue = poll_action(poll_runlog_status, get_runlog_status(screen))
     if not should_continue:
@@ -281,7 +288,7 @@ def run_runbook(
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
     response = res.json()
-    runbook = response['status']['runbook_json']['resources']['runbook']
+    runbook = response["status"]["runbook_json"]["resources"]["runbook"]
 
     if watch:
         screen.refresh()
@@ -290,7 +297,9 @@ def run_runbook(
     config = get_config()
     pc_ip = config["SERVER"]["pc_ip"]
     pc_port = config["SERVER"]["pc_port"]
-    run_url = "https://{}:{}/console/#page/explore/calm/runs/{}?runbookId={}".format(pc_ip, pc_port, runlog_uuid, runbook_uuid)
+    run_url = "https://{}:{}/console/#page/explore/calm/runs/{}?runbookId={}".format(
+        pc_ip, pc_port, runlog_uuid, runbook_uuid
+    )
     if not watch:
         screen.print_at("Runbook run url: {}".format(highlight_text(run_url)), 0, 0)
     screen.refresh()
@@ -304,19 +313,27 @@ def watch_runbook(runlog_uuid, runbook, screen, poll_interval=10, input_data={})
         return client.runbook.list_runlogs(runlog_uuid)
 
     # following code block gets list of metaTask uuids and list of top level tasks uuid of runbook
-    tasks = runbook['task_definition_list']
-    main_task_reference = runbook['main_task_local_reference']['uuid']
+    tasks = runbook["task_definition_list"]
+    main_task_reference = runbook["main_task_local_reference"]["uuid"]
     metatasks = []
     top_level_tasks = []
     for task in tasks:
-        if task.get('type', '') == 'META':
-            metatasks.append(task.get('uuid'))
-        if task.get('uuid') == main_task_reference:
-            task_list = task.get('child_tasks_local_reference_list', [])
+        if task.get("type", "") == "META":
+            metatasks.append(task.get("uuid"))
+        if task.get("uuid") == main_task_reference:
+            task_list = task.get("child_tasks_local_reference_list", [])
             for t in task_list:
-                top_level_tasks.append(t.get('uuid', ''))
+                top_level_tasks.append(t.get("uuid", ""))
 
-    poll_action(poll_func, get_completion_func(screen), poll_interval=poll_interval, metatasks=metatasks, top_level_tasks=top_level_tasks, input_data=input_data, runlog_uuid=runlog_uuid)
+    poll_action(
+        poll_func,
+        get_completion_func(screen),
+        poll_interval=poll_interval,
+        metatasks=metatasks,
+        top_level_tasks=top_level_tasks,
+        input_data=input_data,
+        runlog_uuid=runlog_uuid,
+    )
 
 
 def describe_runbook(obj, runbook_name):
@@ -340,12 +357,11 @@ def describe_runbook(obj, runbook_name):
     click.echo("Description: " + highlight_text(runbook["status"]["description"]))
     click.echo("Status: " + highlight_text(runbook["status"]["state"]))
     click.echo(
-        "Owner: " + highlight_text(runbook["metadata"]["owner_reference"]["name"]), nl=False
+        "Owner: " + highlight_text(runbook["metadata"]["owner_reference"]["name"]),
+        nl=False,
     )
     project = runbook["metadata"].get("project_reference", {})
-    click.echo(
-        " Project: " + highlight_text(project.get("name", ""))
-    )
+    click.echo(" Project: " + highlight_text(project.get("name", "")))
 
     created_on = int(runbook["metadata"]["creation_time"]) // 1000000
     past = arrow.get(created_on).humanize()
@@ -393,7 +409,9 @@ def describe_runbook(obj, runbook_name):
     click.echo("Credentials [{}]:".format(highlight_text(len(credential_types))))
     click.echo("\t{}\n".format(highlight_text(", ".join(credential_types))))
 
-    default_target = runbook_resources.get("default_target_reference", {}).get("name", "-")
+    default_target = runbook_resources.get("default_target_reference", {}).get(
+        "name", "-"
+    )
     click.echo("Default Endpoint Target: {}\n".format(highlight_text(default_target)))
 
 
@@ -448,17 +466,23 @@ def addTaskNodes(task_uuid, task_map, parent=None):
     if task_type == "DAG":
         node = TaskNode("ROOT")
     elif task_type != "META":
-        node = TaskNode(task_name, task_type=task_type, target=task_target, parent=parent)
+        node = TaskNode(
+            task_name, task_type=task_type, target=task_target, parent=parent
+        )
     else:
         node = parent
 
     if task_type == "DECISION":
         success_node = TaskNode("SUCCESS", parent=node)
         failure_node = TaskNode("FAILURE", parent=node)
-        success_task = task.get("attrs", {}).get("success_child_reference", {}).get("uuid", "")
+        success_task = (
+            task.get("attrs", {}).get("success_child_reference", {}).get("uuid", "")
+        )
         if success_task:
             addTaskNodes(success_task, task_map, success_node)
-        failure_task = task.get("attrs", {}).get("failure_child_reference", {}).get("uuid", "")
+        failure_task = (
+            task.get("attrs", {}).get("failure_child_reference", {}).get("uuid", "")
+        )
         if failure_task:
             addTaskNodes(failure_task, task_map, failure_node)
         return node
@@ -471,8 +495,19 @@ def addTaskNodes(task_uuid, task_map, parent=None):
 
 def displayTaskNode(node, pre):
     if node.type and node.target:
-        click.echo("\t{}{} (Type: {}, Target: {})".format(pre, highlight_text(node.name), highlight_text(node.type), highlight_text(node.target)))
+        click.echo(
+            "\t{}{} (Type: {}, Target: {})".format(
+                pre,
+                highlight_text(node.name),
+                highlight_text(node.type),
+                highlight_text(node.target),
+            )
+        )
     elif node.type:
-        click.echo("\t{}{} (Type: {})".format(pre, highlight_text(node.name), highlight_text(node.type)))
+        click.echo(
+            "\t{}{} (Type: {})".format(
+                pre, highlight_text(node.name), highlight_text(node.type)
+            )
+        )
     else:
         click.echo("\t{}{}".format(pre, highlight_text(node.name)))

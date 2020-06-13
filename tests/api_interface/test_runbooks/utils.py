@@ -15,11 +15,11 @@ def change_uuids(bp, context):
     if isinstance(bp, dict):
 
         new_name = "Test_" + str(uuid.uuid4())[-10:]
-        if bp.get('spec', None) and bp.get('metadata', None):
-            bp['spec']['name'] = new_name
-            bp['metadata']['name'] = new_name
+        if bp.get("spec", None) and bp.get("metadata", None):
+            bp["spec"]["name"] = new_name
+            bp["metadata"]["name"] = new_name
         for key, val in bp.items():
-            if key == 'uuid':
+            if key == "uuid":
                 old_uuid = val
                 if old_uuid in context.keys():
                     bp[key] = context[old_uuid]
@@ -67,7 +67,7 @@ def update_endpoints_name(rb, context):
                 context[old_name] = endpoint["name"]
 
         for key, val in rb.items():
-            if key == 'name':
+            if key == "name":
                 if val in context.keys():
                     rb[key] = context[val]
             else:
@@ -130,7 +130,9 @@ def upload_runbook(client, rb_name, Runbook):
     return res.json()
 
 
-def poll_runlog_status(client, runlog_uuid, expected_states, poll_interval=10, maxWait=300):
+def poll_runlog_status(
+    client, runlog_uuid, expected_states, poll_interval=10, maxWait=300
+):
     """
     This routine polls for 5mins till the runlog gets into the expected state
     Args:
@@ -166,7 +168,9 @@ def read_test_config(file_name="test_config.json"):
     """
 
     current_path = os.path.dirname(os.path.realpath(__file__))
-    file_path = os.path.dirname(current_path) + "/test_runbooks/test_files/%s" % (file_name)
+    file_path = os.path.dirname(current_path) + "/test_runbooks/test_files/%s" % (
+        file_name
+    )
     json_file = open(file_path)
     data = json.load(json_file)
     return data
@@ -218,7 +222,15 @@ def update_runbook(client, rb_name, Runbook):
     return res.json()
 
 
-def poll_run_script_output(client, runbook_uuid, trl_id, request_id, expected_states, poll_interval=10, maxWait=150):
+def poll_run_script_output(
+    client,
+    runbook_uuid,
+    trl_id,
+    request_id,
+    expected_states,
+    poll_interval=10,
+    maxWait=150,
+):
     """
     This routine polls for 5mins till the run script gets into the expected state
     Args:

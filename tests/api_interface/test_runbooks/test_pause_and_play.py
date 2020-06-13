@@ -38,7 +38,9 @@ class TestRunbooks:
         runlog_uuid = response["status"]["runlog_uuid"]
 
         # polling till runbook run gets to running state
-        state, reasons = poll_runlog_status(client, runlog_uuid, [RUNLOG.STATUS.RUNNING])
+        state, reasons = poll_runlog_status(
+            client, runlog_uuid, [RUNLOG.STATUS.RUNNING]
+        )
 
         print(">> Runbook Run state: {}\n{}".format(state, reasons))
         assert state == RUNLOG.STATUS.RUNNING

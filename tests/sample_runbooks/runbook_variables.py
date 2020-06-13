@@ -7,8 +7,8 @@ from calm.dsl.builtins import runbook
 from calm.dsl.builtins import CalmTask, CalmVariable
 
 
-code = '''print "Hello @@{firstname}@@ @@{lastname}@@"
-'''
+code = """print "Hello @@{firstname}@@ @@{lastname}@@"
+"""
 
 
 @runbook

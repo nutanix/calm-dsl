@@ -18,9 +18,7 @@ from .runbooks import (
 
 
 @get.command("runbooks")
-@click.option(
-    "--name", "-n", default=None, help="Runbook name (Optional)"
-)
+@click.option("--name", "-n", default=None, help="Runbook name (Optional)")
 @click.option(
     "--filter", "filter_by", default=None, help="Filter runbooks by this string"
 )
@@ -40,9 +38,17 @@ def _get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
 
 @get.command("run_history")
 @click.option(
-    "--name", "-n", default=None, help="Search for previous runbook runs by name of runbook (Optional)"
+    "--name",
+    "-n",
+    default=None,
+    help="Search for previous runbook runs by name of runbook (Optional)",
 )
-@click.option("--filter", "filter_by", default=None, help="Filter previous runbook runs by this string")
+@click.option(
+    "--filter",
+    "filter_by",
+    default=None,
+    help="Filter previous runbook runs by this string",
+)
 @click.option("--limit", default=20, help="Number of results to return")
 @click.option("--offset", default=0, help="Offset results by the specified amount")
 @click.pass_obj
@@ -97,9 +103,7 @@ def create_runbook_from_dsl(client, runbook_file, name=None, description=None):
     required=True,
     help="Path of Runbook file to upload",
 )
-@click.option(
-    "--name", "-n", default=None, help="Runbook name (Optional)"
-)
+@click.option("--name", "-n", default=None, help="Runbook name (Optional)")
 @click.option("--description", default=None, help="Runbook description (Optional)")
 @click.pass_obj
 def create_runbook_command(obj, runbook_file, name, description):
@@ -146,8 +150,8 @@ def update_runbook(client, runbook_payload, name=None, description=None):
     runbook_desc = runbook_payload["spec"]["description"]
 
     runbook = get_runbook(client, runbook_payload["spec"]["name"])
-    uuid = runbook['metadata']['uuid']
-    spec_version = runbook['metadata']['spec_version']
+    uuid = runbook["metadata"]["uuid"]
+    spec_version = runbook["metadata"]["spec_version"]
 
     return client.runbook.update_with_secrets(
         uuid, runbook_name, runbook_desc, runbook_resources, spec_version
@@ -180,9 +184,7 @@ def update_runbook_from_dsl(client, runbook_file, name=None, description=None):
     required=True,
     help="Path of Runbook file to upload",
 )
-@click.option(
-    "--name", "-n", default=None, required=True, help="Runbook name"
-)
+@click.option("--name", "-n", default=None, required=True, help="Runbook name")
 @click.option("--description", default=None, help="Runbook description (Optional)")
 @click.pass_obj
 def update_runbook_command(obj, runbook_file, name, description):
@@ -239,7 +241,7 @@ def _describe_runbook(obj, runbook_name):
     "runbook_file",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     required=False,
-    help="Path of Runbook file to directly run runbook"
+    help="Path of Runbook file to directly run runbook",
 )
 @click.option(
     "--ignore_runtime_variables",
@@ -253,14 +255,23 @@ def _describe_runbook(obj, runbook_name):
     "input_file",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     required=False,
-    help="Path of input file to get the inputs for runbook"
+    help="Path of input file to get the inputs for runbook",
 )
 @click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
 @click.pass_obj
-def run_runbook_command(obj, runbook_name, watch, ignore_runtime_variables, runbook_file=None, input_file=None):
+def run_runbook_command(
+    obj,
+    runbook_name,
+    watch,
+    ignore_runtime_variables,
+    runbook_file=None,
+    input_file=None,
+):
 
     if runbook_file is None and runbook_name is None:
-        click.echo("One of either Runbook Name or Runbook File is required to run runbook.")
+        click.echo(
+            "One of either Runbook Name or Runbook File is required to run runbook."
+        )
         return
 
     client = get_api_client()
@@ -270,13 +281,9 @@ def run_runbook_command(obj, runbook_name, watch, ignore_runtime_variables, runb
         click.echo(">> Uploading runbook: {}".format(runbook_file))
         name = "runbook" + "_" + str(uuid.uuid4())[:8]
         if runbook_file.endswith(".json"):
-            res, err = create_runbook_from_json(
-                client, runbook_file, name=name
-            )
+            res, err = create_runbook_from_json(client, runbook_file, name=name)
         elif runbook_file.endswith(".py"):
-            res, err = create_runbook_from_dsl(
-                client, runbook_file, name=name
-            )
+            res, err = create_runbook_from_dsl(client, runbook_file, name=name)
         else:
             click.echo("Unknown file format {}".format(runbook_file))
             return
@@ -289,7 +296,7 @@ def run_runbook_command(obj, runbook_name, watch, ignore_runtime_variables, runb
         runbook = res.json()
         runbook_id = runbook["metadata"]["uuid"]
     else:
-        runbook_id = get_runbook(client, runbook_name)['metadata']['uuid']
+        runbook_id = get_runbook(client, runbook_name)["metadata"]["uuid"]
         res, err = client.runbook.read(runbook_id)
         if err:
             click.echo(err["error"])
@@ -310,7 +317,9 @@ def run_runbook_command(obj, runbook_name, watch, ignore_runtime_variables, runb
     def render_runbook(screen):
         screen.clear()
         screen.refresh()
-        run_runbook(screen, client, runbook_id, watch, input_data=input_data, payload=payload)
+        run_runbook(
+            screen, client, runbook_id, watch, input_data=input_data, payload=payload
+        )
         if runbook_file:
             res, err = client.runbook.delete(runbook_id)
             if err:

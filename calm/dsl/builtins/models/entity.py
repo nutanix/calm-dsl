@@ -253,7 +253,11 @@ class EntityType(EntityTypeBase):
             return
 
         vdict = getattr(mcls, "__validator_dict__")
-        if "variables" not in vdict and "actions" not in vdict and "runbook" not in vdict:
+        if (
+            "variables" not in vdict
+            and "actions" not in vdict
+            and "runbook" not in vdict
+        ):
             return
 
         # Variables and actions have [] as defaults.

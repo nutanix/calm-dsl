@@ -44,8 +44,8 @@ class TestRunbooks:
 
         # getting the input payload from the json
         data = read_test_config()
-        input_payload = data[Runbook.action_name]['input_payload']
-        expected_output = data[Runbook.action_name]['expected_output']
+        input_payload = data[Runbook.action_name]["input_payload"]
+        expected_output = data[Runbook.action_name]["expected_output"]
 
         # Finding the task_uuid for the input task
         res, err = client.runbook.list_runlogs(runlog_uuid)
@@ -54,11 +54,16 @@ class TestRunbooks:
         response = res.json()
         entities = response["entities"]
         for entity in entities:
-            if entity["status"]["type"] == "task_runlog" and entity["status"]["task_reference"]["name"] == "Input_Task":
+            if (
+                entity["status"]["type"] == "task_runlog"
+                and entity["status"]["task_reference"]["name"] == "Input_Task"
+            ):
                 input_task = entity["metadata"]["uuid"]
 
         # calling resume on the input_data on the input task
-        res, err = client.runbook.resume(runlog_uuid, input_task, {"properties": input_payload})
+        res, err = client.runbook.resume(
+            runlog_uuid, input_task, {"properties": input_payload}
+        )
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
@@ -72,7 +77,10 @@ class TestRunbooks:
         response = res.json()
         entities = response["entities"]
         for entity in entities:
-            if entity["status"]["type"] == "task_runlog" and entity["status"]["task_reference"]["name"] == "Exec_Task":
+            if (
+                entity["status"]["type"] == "task_runlog"
+                and entity["status"]["task_reference"]["name"] == "Exec_Task"
+            ):
                 exec_task = entity["metadata"]["uuid"]
 
         print(">> Runbook Run state: {}\n{}".format(state, reasons))
@@ -84,8 +92,8 @@ class TestRunbooks:
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
         runlog_output = res.json()
-        output_list = runlog_output['status']['output_list']
-        assert output_list[0]['output'] == expected_output
+        output_list = runlog_output["status"]["output_list"]
+        assert output_list[0]["output"] == expected_output
 
         # delete the runbook
         res, err = client.runbook.delete(rb_uuid)

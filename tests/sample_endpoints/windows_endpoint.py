@@ -11,7 +11,9 @@ CRED_PASSWORD = read_local_file(".tests/runbook_tests/password")
 VM_IP = read_local_file(".tests/runbook_tests/vm_ip")
 
 Cred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
-DslWindowsEndpoint = CalmEndpoint.Windows.ip([VM_IP], connection_protocol="HTTPS", cred=Cred)
+DslWindowsEndpoint = CalmEndpoint.Windows.ip(
+    [VM_IP], connection_protocol="HTTPS", cred=Cred
+)
 
 
 def main():

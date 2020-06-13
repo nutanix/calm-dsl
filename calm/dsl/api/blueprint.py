@@ -119,7 +119,9 @@ class BlueprintAPI(ResourceAPI):
             "substrate_definition_list",
             "app_profile_list",
         ]
-        strip_secrets(bp_resources, secret_map, secret_variables, object_lists=object_lists)
+        strip_secrets(
+            bp_resources, secret_map, secret_variables, object_lists=object_lists
+        )
 
         # Handling vmware secrets
         def strip_vmware_secrets(path_list, obj):
@@ -186,6 +188,9 @@ class BlueprintAPI(ResourceAPI):
             "name": project_name,
         }
 
+        import pdb
+
+        pdb.set_trace()
         res, err = self.upload(upload_payload)
 
         if err:
@@ -195,7 +200,7 @@ class BlueprintAPI(ResourceAPI):
         bp = res.json()
         del bp["status"]
 
-        patch_secrets(bp['spec']['resources'], secret_map, secret_variables)
+        patch_secrets(bp["spec"]["resources"], secret_map, secret_variables)
 
         # TODO - insert categories during update as /import_json fails if categories are given!
         # Populating the categories at runtime

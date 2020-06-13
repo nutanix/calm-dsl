@@ -11,9 +11,7 @@ class EndpointPayloadType(EntityType):
     __openapi_type__ = "endpoint_payload"
 
 
-class EndpointPayloadValidator(
-    PropertyValidator, openapi_type="endpoint_payload"
-):
+class EndpointPayloadValidator(PropertyValidator, openapi_type="endpoint_payload"):
     __default__ = None
     __kind__ = EndpointPayloadType
 
