@@ -592,12 +592,12 @@ def get_runlog_status(screen):
     def check_runlog_status(response, client=None, **kwargs):
 
         if response["status"]["state"] == "PENDING":
-            msg = ">> Runlog run is in PENDING state"
+            msg = "Runlog run is in PENDING state"
             screen.clear()
             screen.print_at(msg, 0, 0)
             screen.refresh()
         elif response["status"]["state"] in RUNLOG.FAILURE_STATES:
-            msg = ">> Runlog run is in {} state.".format(response["status"]["state"])
+            msg = "Runlog run is in {} state.".format(response["status"]["state"])
             msg += " {}".format("\n".join(response["status"]["reason_list"]))
             screen.clear()
             screen.print_at(msg, 0, 0)
