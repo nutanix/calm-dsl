@@ -28,4 +28,5 @@ def ref(cls):
 
     if isinstance(cls, RefType):
         return cls
+
     return cls.get_ref()
