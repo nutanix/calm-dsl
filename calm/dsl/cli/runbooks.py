@@ -1,6 +1,5 @@
+import json
 import time
-import warnings
-import importlib.util
 
 import arrow
 import click
@@ -9,15 +8,18 @@ from prettytable import PrettyTable
 from calm.dsl.builtins import runbook, create_runbook_payload
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
-from .utils import get_name_query, highlight_text, get_states_filter
+from calm.dsl.tools import get_logging_handle
+from .utils import (get_name_query, highlight_text, get_states_filter, get_module_from_file)
 from .constants import RUNBOOK, RUNLOG
 from .runlog import get_completion_func, get_runlog_status
 from .endpoints import get_endpoint
 
 from anytree import NodeMixin, RenderTree
 
+LOG = get_logging_handle(__name__)
 
-def get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
+
+def get_runbook_list(name, filter_by, limit, offset, quiet, all_items):
     """Get the runbooks, optionally filtered by a string"""
 
     client = get_api_client()
@@ -28,7 +30,7 @@ def get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
     if name:
         filter_query = get_name_query([name])
     if filter_by:
-        filter_query = filter_query + ";" + filter_by if name else filter_by
+        filter_query = filter_query + ";(" + filter_by + ")"
 
     if all_items:
         filter_query += get_states_filter(RUNBOOK.STATES)
@@ -42,10 +44,13 @@ def get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
 
     if err:
         pc_ip = config["SERVER"]["pc_ip"]
-        warnings.warn(UserWarning("Cannot fetch runbooks from {}".format(pc_ip)))
+        LOG.warning("Cannot fetch runbooks from {}".format(pc_ip))
         return
 
     json_rows = res.json()["entities"]
+    if not json_rows:
+        click.echo(highlight_text("No runbook found !!!\n"))
+        return
 
     if quiet:
         for _row in json_rows:
@@ -93,12 +98,7 @@ def get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
 
 def get_runbook_module_from_file(runbook_file):
     """Return Runbook module given a user runbook dsl file (.py)"""
-
-    spec = importlib.util.spec_from_file_location("calm.dsl.user_bp", runbook_file)
-    user_runbook_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(user_runbook_module)
-
-    return user_runbook_module
+    return get_module_from_file("calm.dsl.user_bp", runbook_file)
 
 
 def get_runbook_class_from_module(user_runbook_module):
@@ -126,7 +126,7 @@ def compile_runbook(runbook_file):
     return runbook_payload
 
 
-def get_previous_runs(obj, name, filter_by, limit, offset):
+def get_execution_history(name, filter_by, limit, offset):
     client = get_api_client()
     config = get_config()
 
@@ -137,7 +137,7 @@ def get_previous_runs(obj, name, filter_by, limit, offset):
         runbook_uuid = runbook["metadata"]["uuid"]
         filter_query = filter_query + ";action_reference=={}".format(runbook_uuid)
     if filter_by:
-        filter_query = filter_query + ";" + filter_by if name else filter_by
+        filter_query = filter_query + ";(" + filter_by + ")"
     if filter_query.startswith(";"):
         filter_query = filter_query[1:]
 
@@ -148,10 +148,13 @@ def get_previous_runs(obj, name, filter_by, limit, offset):
 
     if err:
         pc_ip = config["SERVER"]["pc_ip"]
-        warnings.warn(UserWarning("Cannot fetch previous runs from {}".format(pc_ip)))
+        LOG.warning("Cannot fetch previous runs from {}".format(pc_ip))
         return
 
     json_rows = res.json()["entities"]
+    if not json_rows:
+        click.echo(highlight_text("No runbook execution found !!!\n"))
+        return
 
     table = PrettyTable()
     table.field_names = [
@@ -218,10 +221,10 @@ def get_runbook(client, name, all=False):
         if len(entities) != 1:
             raise Exception("More than one runbook found - {}".format(entities))
 
-        click.echo(">> Runbook {} found >>".format(name))
+        LOG.info("{} found ".format(name))
         runbook = entities[0]
     else:
-        raise Exception(">> No runbook found with name {} found >>".format(name))
+        raise Exception("No runbook found with name {} found".format(name))
     return runbook
 
 
@@ -271,7 +274,7 @@ def run_runbook(screen, client, runbook_uuid, watch, input_data={}, payload={}):
     res, err = client.runbook.run(runbook_uuid, payload)
     if not err:
         screen.clear()
-        screen.print_at(">> Runbook queued for run", 0, 0)
+        screen.print_at("Runbook queued for run", 0, 0)
     else:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
     response = res.json()
@@ -297,11 +300,11 @@ def run_runbook(screen, client, runbook_uuid, watch, input_data={}, payload={}):
     config = get_config()
     pc_ip = config["SERVER"]["pc_ip"]
     pc_port = config["SERVER"]["pc_port"]
-    run_url = "https://{}:{}/console/#page/explore/calm/runs/{}?runbookId={}".format(
-        pc_ip, pc_port, runlog_uuid, runbook_uuid
+    run_url = "https://{}:{}/console/#page/explore/calm/runbooks/runlogs{}".format(
+        pc_ip, pc_port, runlog_uuid
     )
     if not watch:
-        screen.print_at("Runbook run url: {}".format(highlight_text(run_url)), 0, 0)
+        screen.print_at("Runbook execution url: {}".format(highlight_text(run_url)), 0, 0)
     screen.refresh()
 
 
@@ -336,7 +339,9 @@ def watch_runbook(runlog_uuid, runbook, screen, poll_interval=10, input_data={})
     )
 
 
-def describe_runbook(obj, runbook_name):
+def describe_runbook(runbook_name, out):
+    """Displays runbook data"""
+
     client = get_api_client()
     runbook = get_runbook(client, runbook_name, all=True)
 
@@ -345,6 +350,11 @@ def describe_runbook(obj, runbook_name):
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     runbook = res.json()
+
+    if out == "json":
+        runbook.pop("status", None)
+        click.echo(json.dumps(runbook, indent=4, separators=(",", ": ")))
+        return
 
     click.echo("\n----Runbook Summary----\n")
     click.echo(
@@ -415,7 +425,7 @@ def describe_runbook(obj, runbook_name):
     click.echo("Default Endpoint Target: {}\n".format(highlight_text(default_target)))
 
 
-def delete_runbook(obj, runbook_names):
+def delete_runbook(runbook_names):
 
     client = get_api_client()
 
@@ -425,7 +435,7 @@ def delete_runbook(obj, runbook_names):
         res, err = client.runbook.delete(runbook_id)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        click.echo("Runbook {} deleted".format(runbook_name))
+        LOG.info("Runbook {} deleted".format(runbook_name))
 
 
 def poll_action(poll_func, completion_func, poll_interval=10, **kwargs):
