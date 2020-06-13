@@ -1,3 +1,5 @@
+import os
+
 from .resource import ResourceAPI
 from .connection import REQUEST
 from .util import strip_secrets, patch_secrets
@@ -22,6 +24,8 @@ class RunbookAPI(ResourceAPI):
         self.RUNLOG_ABORT = self.PREFIX + "/runlogs/{}/abort"
         self.RUN_SCRIPT = self.PREFIX + "/{}/run_script"
         self.RUN_SCRIPT_OUTPUT = self.PREFIX + "/{}/run_script/output/{}/{}"
+        self.EXPORT_FILE = self.ITEM + "/export_file"
+        self.IMPORT_FILE = self.PREFIX + "/import_file"
 
     def upload(self, payload):
         return self.connection._call(
@@ -334,3 +338,41 @@ class RunbookAPI(ResourceAPI):
         uuid = runbook["metadata"]["uuid"]
 
         return self.update(uuid, runbook)
+
+    def export_file(self, uuid, passphrase=None):
+        current_path = os.path.dirname(os.path.realpath(__file__))
+        if passphrase:
+            res, err = self.connection._call(
+                self.EXPORT_FILE.format(uuid),
+                verify=False,
+                method=REQUEST.METHOD.POST,
+                request_json={"passphrase": passphrase},
+                files=[],
+            )
+        else:
+            res, err = self.connection._call(
+                self.EXPORT_FILE.format(uuid), verify=False, method=REQUEST.METHOD.GET
+            )
+
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        with open(current_path + "/" + uuid + ".json", "wb") as downloaded_file:
+            for chunk in res.iter_content(chunk_size=2048):
+                downloaded_file.write(chunk)
+
+        return current_path + "/" + uuid + ".json"
+
+    def import_file(self, file_path, name, project_uuid, passphrase=None):
+
+        payload = {"name": name, "project_uuid": project_uuid}
+        if passphrase:
+            payload["passphrase"] = passphrase
+        files = {"file": ("file", open(file_path, "rb"))}
+
+        return self.connection._call(
+            self.IMPORT_FILE,
+            verify=False,
+            files=files,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
+        )
