@@ -61,6 +61,7 @@ Commonly used commands:
   calm describe app Fancy-App-1   -> Describe an existing app
   calm app Fancy-App-1 -w my_action   -> Run an action on an app
   calm get runbooks  -> Get list of runbooks
+  calm describe runbook MyFancyRunbook   -> Describe an existing runbook
   calm create runbook -f sample_rb.py --name Sample-RB  -> Upload a new runbook from a python DSL file
   calm run runbook MyFancyRunbook -> Runs the existing runbook MyFancyRunbook
   calm run runbook -f sample_rb.py -> Runs the runbook from a python DSL file

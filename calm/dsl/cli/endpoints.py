@@ -1,6 +1,5 @@
+import json
 import time
-import warnings
-import importlib.util
 
 import arrow
 import click
@@ -10,11 +9,15 @@ from calm.dsl.builtins import Endpoint, create_endpoint_payload
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
 
-from .utils import get_name_query, highlight_text, get_states_filter
+from calm.dsl.tools import get_logging_handle
+
+from .utils import (get_name_query, highlight_text, get_states_filter, get_module_from_file)
 from .constants import ENDPOINT
 
+LOG = get_logging_handle(__name__)
 
-def get_endpoint_list(obj, name, filter_by, limit, offset, quiet, all_items):
+
+def get_endpoint_list(name, filter_by, limit, offset, quiet, all_items):
     """Get the endpoints, optionally filtered by a string"""
 
     client = get_api_client()
@@ -25,7 +28,7 @@ def get_endpoint_list(obj, name, filter_by, limit, offset, quiet, all_items):
     if name:
         filter_query = get_name_query([name])
     if filter_by:
-        filter_query = filter_query + ";" + filter_by if name else filter_by
+        filter_query = filter_query + ";(" + filter_by + ")"
 
     if all_items:
         filter_query += get_states_filter(ENDPOINT.STATES, state_key="_state")
@@ -39,10 +42,13 @@ def get_endpoint_list(obj, name, filter_by, limit, offset, quiet, all_items):
 
     if err:
         pc_ip = config["SERVER"]["pc_ip"]
-        warnings.warn(UserWarning("Cannot fetch endpoints from {}".format(pc_ip)))
+        LOG.warning(UserWarning("Cannot fetch endpoints from {}".format(pc_ip)))
         return
 
     json_rows = res.json()["entities"]
+    if not json_rows:
+        click.echo(highlight_text("No endpoint found !!!\n"))
+        return
 
     if quiet:
         for _row in json_rows:
@@ -67,7 +73,11 @@ def get_endpoint_list(obj, name, filter_by, limit, offset, quiet, all_items):
 
         created_by = metadata.get("owner_reference", {}).get("name", "")
         last_update_time = int(metadata["last_update_time"]) // 1000000
-        project = metadata.get("project_reference", {}).get("name", "")
+        project = (
+            metadata["project_reference"]["name"]
+            if "project_reference" in metadata
+            else None
+        )
 
         table.add_row(
             [
@@ -86,12 +96,7 @@ def get_endpoint_list(obj, name, filter_by, limit, offset, quiet, all_items):
 
 def get_endpoint_module_from_file(endpoint_file):
     """Return Endpoint module given a user endpoint dsl file (.py)"""
-
-    spec = importlib.util.spec_from_file_location("calm.dsl.user_bp", endpoint_file)
-    user_endpoint_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(user_endpoint_module)
-
-    return user_endpoint_module
+    return get_module_from_file("calm.dsl.user_bp", endpoint_file)
 
 
 def get_endpoint_class_from_module(user_endpoint_module):
@@ -139,14 +144,16 @@ def get_endpoint(client, name, all=False):
         if len(entities) != 1:
             raise Exception("More than one endpoint found - {}".format(entities))
 
-        click.echo(">> Endpoint {} found >>".format(name))
+        LOG.info("{} found ".format(name))
         endpoint = entities[0]
     else:
-        raise Exception(">> No endpoint found with name {} found >>".format(name))
+        raise Exception("No endpoint found with name {} found".format(name))
     return endpoint
 
 
-def describe_endpoint(obj, endpoint_name):
+def describe_endpoint(endpoint_name, out):
+    """Displays endpoint data"""
+
     client = get_api_client()
     endpoint = get_endpoint(client, endpoint_name, all=True)
 
@@ -155,6 +162,11 @@ def describe_endpoint(obj, endpoint_name):
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     endpoint = res.json()
+
+    if out == "json":
+        endpoint.pop("status", None)
+        click.echo(json.dumps(endpoint, indent=4, separators=(",", ": ")))
+        return
 
     click.echo("\n----Endpoint Summary----\n")
     click.echo(
@@ -204,7 +216,7 @@ def describe_endpoint(obj, endpoint_name):
         click.echo("{}: {}\n".format(value_type, highlight_text(values)))
 
 
-def delete_endpoint(obj, endpoint_names):
+def delete_endpoint(endpoint_names):
 
     client = get_api_client()
 
@@ -214,4 +226,4 @@ def delete_endpoint(obj, endpoint_names):
         res, err = client.endpoint.delete(endpoint_id)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        click.echo("Endpoint {} deleted".format(endpoint_name))
+        LOG.info("Endpoint {} deleted".format(endpoint_name))
