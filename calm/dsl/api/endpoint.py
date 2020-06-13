@@ -13,6 +13,8 @@ class EndpointAPI(ResourceAPI):
         self.UPLOAD = self.PREFIX + "/import_json"
         self.EXPORT_FILE = self.ITEM + "/export_file"
         self.IMPORT_FILE = self.PREFIX + "/import_file"
+        self.EXPORT_JSON = self.ITEM + "/export_json"
+        self.EXPORT_JSON_WITH_SECRETS = self.ITEM + "/export_json?keep_secrets=true"
 
     def upload(self, payload):
         return self.connection._call(
@@ -40,7 +42,9 @@ class EndpointAPI(ResourceAPI):
 
         return endpoint_payload
 
-    def upload_with_secrets(self, endpoint_name, endpoint_desc, endpoint_resources):
+    def upload_with_secrets(
+        self, endpoint_name, endpoint_desc, endpoint_resources, force_create=False
+    ):
 
         # check if endpoint with the given name already exists
         params = {"filter": "name=={};deleted==FALSE".format(endpoint_name)}
@@ -52,9 +56,18 @@ class EndpointAPI(ResourceAPI):
         entities = response.get("entities", None)
         if entities:
             if len(entities) > 0:
-                err_msg = "Endpoint with name {} already exists.".format(endpoint_name)
-                err = {"error": err_msg, "code": -1}
-                return None, err
+                if not force_create:
+                    err_msg = "Endpoint {} already exists. Use --force to first delete existing blueprint before create.".format(
+                        endpoint_name
+                    )
+                    err = {"error": err_msg, "code": -1}
+                    return None, err
+
+                # --force option used in create. Delete existing endpoint with same name.
+                ep_uuid = entities[0]["metadata"]["uuid"]
+                _, err = self.delete(ep_uuid)
+                if err:
+                    return None, err
 
         secret_map = {}
         secret_variables = []
@@ -94,19 +107,15 @@ class EndpointAPI(ResourceAPI):
         if err:
             return res, err
 
-        # Add secrets and update endpoint
         endpoint = res.json()
         del endpoint["status"]
 
-        # Update endpoint
+        # Add secrets and update endpoint
         patch_secrets(
             endpoint["spec"]["resources"]["attrs"], secret_map, secret_variables
         )
 
-        # TODO - insert categories during update as /import_json fails if categories are given!
-        # Populating the categories at runtime
-        config_categories = dict(config.items("CATEGORIES"))
-        endpoint["metadata"]["categories"] = config_categories
+        # Update endpoint
         uuid = endpoint["metadata"]["uuid"]
 
         return self.update(uuid, endpoint)
@@ -148,3 +157,11 @@ class EndpointAPI(ResourceAPI):
             request_json=payload,
             method=REQUEST.METHOD.POST,
         )
+
+    def export_json(self, uuid):
+        url = self.EXPORT_JSON.format(uuid)
+        return self.connection._call(url, verify=False, method=REQUEST.METHOD.GET)
+
+    def export_json_with_secrets(self, uuid):
+        url = self.EXPORT_JSON_WITH_SECRETS.format(uuid)
+        return self.connection._call(url, verify=False, method=REQUEST.METHOD.GET)

@@ -26,6 +26,8 @@ class RunbookAPI(ResourceAPI):
         self.RUN_SCRIPT_OUTPUT = self.PREFIX + "/{}/run_script/output/{}/{}"
         self.EXPORT_FILE = self.ITEM + "/export_file"
         self.IMPORT_FILE = self.PREFIX + "/import_file"
+        self.EXPORT_JSON = self.ITEM + "/export_json"
+        self.EXPORT_JSON_WITH_SECRETS = self.ITEM + "/export_json?keep_secrets=true"
 
     def upload(self, payload):
         return self.connection._call(
@@ -101,7 +103,9 @@ class RunbookAPI(ResourceAPI):
 
         return runbook_payload
 
-    def upload_with_secrets(self, runbook_name, runbook_desc, runbook_resources):
+    def upload_with_secrets(
+        self, runbook_name, runbook_desc, runbook_resources, force_create=False
+    ):
 
         # check if runbook with the given name already exists
         params = {"filter": "name=={};deleted==FALSE".format(runbook_name)}
@@ -113,9 +117,18 @@ class RunbookAPI(ResourceAPI):
         entities = response.get("entities", None)
         if entities:
             if len(entities) > 0:
-                err_msg = "Runbook with name {} already exists.".format(runbook_name)
-                err = {"error": err_msg, "code": -1}
-                return None, err
+                if not force_create:
+                    err_msg = "Runbook {} already exists. Use --force to first delete existing runbook before create.".format(
+                        runbook_name
+                    )
+                    err = {"error": err_msg, "code": -1}
+                    return None, err
+
+                # --force option used in create. Delete existing runbook with same name.
+                rb_uuid = entities[0]["metadata"]["uuid"]
+                _, err = self.delete(rb_uuid)
+                if err:
+                    return None, err
 
         secret_map = {}
         secret_variables = []
@@ -177,11 +190,10 @@ class RunbookAPI(ResourceAPI):
         if err:
             return res, err
 
-        # Add secrets and update runbook
         runbook = res.json()
         del runbook["status"]
 
-        # Update runbook
+        # Add secrets and update runbook
         patch_secrets(runbook["spec"]["resources"], secret_map, secret_variables)
         for endpoint in runbook["spec"]["resources"].get(
             "endpoint_definition_list", []
@@ -195,6 +207,7 @@ class RunbookAPI(ResourceAPI):
 
         uuid = runbook["metadata"]["uuid"]
 
+        # Update runbook
         return self.update(uuid, runbook)
 
     def list_previous_runs(self, params=None):
@@ -376,3 +389,11 @@ class RunbookAPI(ResourceAPI):
             request_json=payload,
             method=REQUEST.METHOD.POST,
         )
+
+    def export_json(self, uuid):
+        url = self.EXPORT_JSON.format(uuid)
+        return self.connection._call(url, verify=False, method=REQUEST.METHOD.GET)
+
+    def export_json_with_secrets(self, uuid):
+        url = self.EXPORT_JSON_WITH_SECRETS.format(uuid)
+        return self.connection._call(url, verify=False, method=REQUEST.METHOD.GET)

@@ -188,9 +188,6 @@ class BlueprintAPI(ResourceAPI):
             "name": project_name,
         }
 
-        import pdb
-
-        pdb.set_trace()
         res, err = self.upload(upload_payload)
 
         if err:

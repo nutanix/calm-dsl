@@ -186,7 +186,7 @@ def patch_secrets(resources, secret_map, secret_variables):
 
     # Add creds back for HTTP endpoint
     auth = resources.get("authentication", {})
-    username = auth.get("username")
+    username = auth.get("username", "")
     if username:
         auth["password"] = secret_map[username]
 
