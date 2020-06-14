@@ -1,9 +1,11 @@
 import json
 import time
+import pathlib
 
 import arrow
 import click
 from prettytable import PrettyTable
+from black import format_file_in_place, WriteBack, FileMode
 
 from calm.dsl.builtins import runbook, create_runbook_payload
 from calm.dsl.config import get_config
@@ -429,6 +431,21 @@ def describe_runbook(runbook_name, out):
         "name", "-"
     )
     click.echo("Default Endpoint Target: {}\n".format(highlight_text(default_target)))
+
+
+def format_runbook_command(runbook_file):
+    path = pathlib.Path(runbook_file)
+    LOG.debug("Formatting runbook {} using black".format(path))
+    if format_file_in_place(
+        path, fast=False, mode=FileMode(), write_back=WriteBack.DIFF
+    ):
+        LOG.info("Patching above diff to runbook - {}".format(path))
+        format_file_in_place(
+            path, fast=False, mode=FileMode(), write_back=WriteBack.YES
+        )
+        LOG.info("All done!")
+    else:
+        LOG.info("Runbook {} left unchanged.".format(path))
 
 
 def delete_runbook(runbook_names):

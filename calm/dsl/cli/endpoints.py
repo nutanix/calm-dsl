@@ -1,9 +1,11 @@
 import json
 import time
+import pathlib
 
 import arrow
 import click
 from prettytable import PrettyTable
+from black import format_file_in_place, WriteBack, FileMode
 
 from calm.dsl.builtins import Endpoint, create_endpoint_payload
 from calm.dsl.config import get_config
@@ -232,3 +234,18 @@ def delete_endpoint(endpoint_names):
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
         LOG.info("Endpoint {} deleted".format(endpoint_name))
+
+
+def format_endpoint_command(endpoint_file):
+    path = pathlib.Path(endpoint_file)
+    LOG.debug("Formatting endpoint {} using black".format(path))
+    if format_file_in_place(
+        path, fast=False, mode=FileMode(), write_back=WriteBack.DIFF
+    ):
+        LOG.info("Patching above diff to endpoint - {}".format(path))
+        format_file_in_place(
+            path, fast=False, mode=FileMode(), write_back=WriteBack.YES
+        )
+        LOG.info("All done!")
+    else:
+        LOG.info("Endpoint {} left unchanged.".format(path))

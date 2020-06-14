@@ -6,12 +6,13 @@ from calm.dsl.api import get_api_client
 from calm.dsl.config import get_config
 from calm.dsl.tools import get_logging_handle
 
-from .main import get, describe, delete, create
+from .main import get, describe, delete, create, format
 from .endpoints import (
     get_endpoint_list,
     compile_endpoint,
     delete_endpoint,
     describe_endpoint,
+    format_endpoint_command,
 )
 
 LOG = get_logging_handle(__name__)
@@ -203,3 +204,16 @@ def _describe_endpoint(endpoint_name, out):
     """Describe a endpoint"""
 
     describe_endpoint(endpoint_name, out)
+
+
+@format.command("endpoint", feature_min_version="3.0.0")
+@click.option(
+    "--file",
+    "-f",
+    "endpoint_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    required=True,
+    help="Path of Endpoint file to format",
+)
+def _format_endpoint_command(endpoint_file):
+    format_endpoint_command(endpoint_file)

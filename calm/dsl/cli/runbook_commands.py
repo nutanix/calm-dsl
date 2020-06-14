@@ -8,7 +8,7 @@ from calm.dsl.api import get_api_client
 from calm.dsl.config import get_config
 from calm.dsl.tools import get_logging_handle
 
-from .main import get, describe, delete, run, create, update
+from .main import get, describe, delete, run, create, update, format
 from .utils import Display
 from .runbooks import (
     get_runbook,
@@ -19,6 +19,7 @@ from .runbooks import (
     describe_runbook,
     delete_runbook,
     patch_runbook_runtime_editables,
+    format_runbook_command,
 )
 
 LOG = get_logging_handle(__name__)
@@ -338,6 +339,19 @@ def _describe_runbook(runbook_name, out):
     """Describe a runbook"""
 
     describe_runbook(runbook_name, out)
+
+
+@format.command("runbook", feature_min_version="3.0.0")
+@click.option(
+    "--file",
+    "-f",
+    "runbook_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    required=True,
+    help="Path of Runbook file to format",
+)
+def _format_runbook_command(runbook_file):
+    format_runbook_command(runbook_file)
 
 
 @run.command("runbook", feature_min_version="3.0.0")
