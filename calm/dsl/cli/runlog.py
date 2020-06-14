@@ -340,7 +340,7 @@ def displayRunLog(screen, obj, pre, fill, line):
 def get_completion_func(screen):
     def is_action_complete(
         response,
-        metatasks=[],
+        task_type_map=[],
         top_level_tasks=[],
         input_data={},
         runlog_uuid=None,
@@ -394,18 +394,23 @@ def get_completion_func(screen):
                     continue  # this runlog corresponds to endpoint loop
                 elif machine:
                     machine = "{} ({})".format(machine[1], machine[0])
-                if runlog["status"]["type"] == "task_runlog" and not runlog[
-                    "status"
-                ].get("attrs", None):
-                    res, err = client.runbook.runlog_output(runlog_uuid, uuid)
-                    if err:
-                        raise Exception("\n[{}] - {}".format(err["code"], err["error"]))
-                    runlog_output = res.json()
-                    output_list = runlog_output["status"]["output_list"]
-                    if len(output_list) > 0:
-                        outputs.append(output_list[0]["output"])
-                    if runlog["status"]["task_reference"]["uuid"] in metatasks:
+
+                if runlog["status"]["type"] == "task_runlog":
+
+                    task_id = runlog["status"]["task_reference"]["uuid"]
+                    if task_type_map[task_id] == "META":
                         continue  # don't add metatask's trl in runlogTree
+
+                    # Output is not valid for input, confirm and while_loop tasks
+                    if task_type_map[task_id] not in ["INPUT", "CONFIRM", "WHILE_LOOP"]:
+                        res, err = client.runbook.runlog_output(runlog_uuid, uuid)
+                        if err:
+                            raise Exception("\n[{}] - {}".format(err["code"], err["error"]))
+                        runlog_output = res.json()
+                        output_list = runlog_output["status"]["output_list"]
+                        if len(output_list) > 0:
+                            outputs.append(output_list[0]["output"])
+
                 nodes[str(uuid)] = RunlogNode(
                     runlog,
                     parent=root,
@@ -424,7 +429,7 @@ def get_completion_func(screen):
                 parent_type = parent_runlog["status"]["type"]
                 while (
                     parent_type == "task_runlog"
-                    and parent_runlog["status"]["task_reference"]["uuid"] in metatasks
+                    and task_type_map[parent_runlog["status"]["task_reference"]["uuid"]] == "META"
                 ) or parent_runlog["status"].get("machine_name", None) == "-":
                     parent_uuid = parent_runlog["status"]["parent_reference"]["uuid"]
                     parent_runlog = runlog_map[str(parent_uuid)]

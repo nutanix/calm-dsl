@@ -318,11 +318,10 @@ def watch_runbook(runlog_uuid, runbook, screen, poll_interval=10, input_data={})
     # following code block gets list of metaTask uuids and list of top level tasks uuid of runbook
     tasks = runbook["task_definition_list"]
     main_task_reference = runbook["main_task_local_reference"]["uuid"]
-    metatasks = []
+    task_type_map = {}
     top_level_tasks = []
     for task in tasks:
-        if task.get("type", "") == "META":
-            metatasks.append(task.get("uuid"))
+        task_type_map[task.get('uuid')] = task.get("type", "")
         if task.get("uuid") == main_task_reference:
             task_list = task.get("child_tasks_local_reference_list", [])
             for t in task_list:
@@ -332,7 +331,7 @@ def watch_runbook(runlog_uuid, runbook, screen, poll_interval=10, input_data={})
         poll_func,
         get_completion_func(screen),
         poll_interval=poll_interval,
-        metatasks=metatasks,
+        task_type_map=task_type_map,
         top_level_tasks=top_level_tasks,
         input_data=input_data,
         runlog_uuid=runlog_uuid,
