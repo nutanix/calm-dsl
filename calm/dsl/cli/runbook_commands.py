@@ -30,7 +30,9 @@ LOG = get_logging_handle(__name__)
     "--filter", "filter_by", "-f", default=None, help="Filter runbooks by this string"
 )
 @click.option("--limit", "-l", default=20, help="Number of results to return")
-@click.option("--offset", "-o", default=0, help="Offset results by the specified amount")
+@click.option(
+    "--offset", "-o", default=0, help="Offset results by the specified amount"
+)
 @click.option(
     "--quiet", "-q", is_flag=True, default=False, help="Show only runbook names."
 )
@@ -58,14 +60,18 @@ def _get_runbook_list(name, filter_by, limit, offset, quiet, all_items):
     help="Filter previous runbook executions by this string",
 )
 @click.option("--limit", "-l", default=20, help="Number of results to return")
-@click.option("--offset", "-o", default=0, help="Offset results by the specified amount")
+@click.option(
+    "--offset", "-o", default=0, help="Offset results by the specified amount"
+)
 def _get_execution_history(name, filter_by, limit, offset):
     """Get previous runbook executions, optionally filtered by a string"""
 
     get_execution_history(name, filter_by, limit, offset)
 
 
-def create_runbook(client, runbook_payload, name=None, description=None, force_create=False):
+def create_runbook(
+    client, runbook_payload, name=None, description=None, force_create=False
+):
 
     runbook_payload.pop("status", None)
 
@@ -85,13 +91,23 @@ def create_runbook(client, runbook_payload, name=None, description=None, force_c
     )
 
 
-def create_runbook_from_json(client, path_to_json, name=None, description=None, force_create=False):
+def create_runbook_from_json(
+    client, path_to_json, name=None, description=None, force_create=False
+):
 
     runbook_payload = json.loads(open(path_to_json, "r").read())
-    return create_runbook(client, runbook_payload, name=name, description=description, force_create=force_create)
+    return create_runbook(
+        client,
+        runbook_payload,
+        name=name,
+        description=description,
+        force_create=force_create,
+    )
 
 
-def create_runbook_from_dsl(client, runbook_file, name=None, description=None, force_create=False):
+def create_runbook_from_dsl(
+    client, runbook_file, name=None, description=None, force_create=False
+):
 
     runbook_payload = compile_runbook(runbook_file)
     if runbook_payload is None:
@@ -99,7 +115,13 @@ def create_runbook_from_dsl(client, runbook_file, name=None, description=None, f
         err = {"error": err_msg, "code": -1}
         return None, err
 
-    return create_runbook(client, runbook_payload, name=name, description=description, force_create=force_create)
+    return create_runbook(
+        client,
+        runbook_payload,
+        name=name,
+        description=description,
+        force_create=force_create,
+    )
 
 
 @create.command("runbook", feature_min_version="3.0.0")
@@ -159,14 +181,20 @@ def create_runbook_command(runbook_file, name, description, force):
         for msg_dict in msg_list:
             msgs.append(msg_dict.get("message", ""))
 
-        LOG.error("Runbook {} created with {} error(s): {}".format(runbook_name, len(msg_list), msgs))
+        LOG.error(
+            "Runbook {} created with {} error(s): {}".format(
+                runbook_name, len(msg_list), msgs
+            )
+        )
         sys.exit(-1)
 
     LOG.info("Runbook {} created successfully.".format(runbook_name))
     config = get_config()
     pc_ip = config["SERVER"]["pc_ip"]
     pc_port = config["SERVER"]["pc_port"]
-    link = "https://{}:{}/console/#page/explore/calm/runbooks/{}".format(pc_ip, pc_port, runbook_uuid)
+    link = "https://{}:{}/console/#page/explore/calm/runbooks/{}".format(
+        pc_ip, pc_port, runbook_uuid
+    )
     stdout_dict = {
         "name": runbook_name,
         "link": link,
@@ -266,14 +294,20 @@ def update_runbook_command(runbook_file, name, description):
         for msg_dict in msg_list:
             msgs.append(msg_dict.get("message", ""))
 
-        LOG.error("Runbook {} updated with {} error(s): {}".format(runbook_name, len(msg_list), msgs))
+        LOG.error(
+            "Runbook {} updated with {} error(s): {}".format(
+                runbook_name, len(msg_list), msgs
+            )
+        )
         sys.exit(-1)
 
     LOG.info("Runbook {} updated successfully.".format(runbook_name))
     config = get_config()
     pc_ip = config["SERVER"]["pc_ip"]
     pc_port = config["SERVER"]["pc_port"]
-    link = "https://{}:{}/console/#page/explore/calm/runbooks/{}".format(pc_ip, pc_port, runbook_uuid)
+    link = "https://{}:{}/console/#page/explore/calm/runbooks/{}".format(
+        pc_ip, pc_port, runbook_uuid
+    )
     stdout_dict = {
         "name": runbook_name,
         "link": link,
@@ -332,11 +366,7 @@ def _describe_runbook(runbook_name, out):
 )
 @click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
 def run_runbook_command(
-    runbook_name,
-    watch,
-    ignore_runtime_variables,
-    runbook_file=None,
-    input_file=None,
+    runbook_name, watch, ignore_runtime_variables, runbook_file=None, input_file=None,
 ):
 
     if runbook_file is None and runbook_name is None:

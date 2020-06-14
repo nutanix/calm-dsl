@@ -407,7 +407,9 @@ def get_completion_func(screen):
                     if task_type_map[task_id] not in ["INPUT", "CONFIRM", "WHILE_LOOP"]:
                         res, err = client.runbook.runlog_output(runlog_uuid, uuid)
                         if err:
-                            raise Exception("\n[{}] - {}".format(err["code"], err["error"]))
+                            raise Exception(
+                                "\n[{}] - {}".format(err["code"], err["error"])
+                            )
                         runlog_output = res.json()
                         output_list = runlog_output["status"]["output_list"]
                         if len(output_list) > 0:
@@ -431,7 +433,8 @@ def get_completion_func(screen):
                 parent_type = parent_runlog["status"]["type"]
                 while (
                     parent_type == "task_runlog"
-                    and task_type_map[parent_runlog["status"]["task_reference"]["uuid"]] == "META"
+                    and task_type_map[parent_runlog["status"]["task_reference"]["uuid"]]
+                    == "META"
                 ) or parent_runlog["status"].get("machine_name", None) == "-":
                     parent_uuid = parent_runlog["status"]["parent_reference"]["uuid"]
                     parent_runlog = runlog_map[str(parent_uuid)]
@@ -533,7 +536,11 @@ def get_completion_func(screen):
                     screen, root, completed_tasks, total_tasks, msg=msg
                 )
 
-            if interrupt and hasattr(interrupt, "key_code") and interrupt.key_code in (3, 4):
+            if (
+                interrupt
+                and hasattr(interrupt, "key_code")
+                and interrupt.key_code in (3, 4)
+            ):
                 # exit interrupt
                 screen.close()
                 sys.exit(-1)
@@ -545,7 +552,11 @@ def get_completion_func(screen):
                 # on space pause/play runbook based on current state
                 runlog_state = root.children[0].runlog["status"]["state"]
 
-                if runlog_state in [RUNLOG.STATUS.RUNNING, RUNLOG.STATUS.INPUT, RUNLOG.STATUS.CONFIRM]:
+                if runlog_state in [
+                    RUNLOG.STATUS.RUNNING,
+                    RUNLOG.STATUS.INPUT,
+                    RUNLOG.STATUS.CONFIRM,
+                ]:
                     client.runbook.pause(runlog_uuid)
                     msg = "Triggered pause on the runnning Runbook Execution"
                 elif runlog_state in [RUNLOG.STATUS.PAUSED]:
@@ -594,7 +605,11 @@ def get_runlog_status(screen):
         if hasattr(screen, "get_event"):
             interrupt = screen.get_event()
 
-        if interrupt and hasattr(interrupt, "key_code") and interrupt.key_code in (3, 4):
+        if (
+            interrupt
+            and hasattr(interrupt, "key_code")
+            and interrupt.key_code in (3, 4)
+        ):
             # exit interrupt
             screen.close()
             sys.exit(-1)

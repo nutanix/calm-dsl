@@ -11,7 +11,12 @@ from calm.dsl.api import get_api_client
 
 from calm.dsl.tools import get_logging_handle
 
-from .utils import (get_name_query, highlight_text, get_states_filter, get_module_from_file)
+from .utils import (
+    get_name_query,
+    highlight_text,
+    get_states_filter,
+    get_module_from_file,
+)
 from .constants import ENDPOINT
 
 LOG = get_logging_handle(__name__)

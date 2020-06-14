@@ -23,7 +23,9 @@ LOG = get_logging_handle(__name__)
     "--filter", "filter_by", "-f", default=None, help="Filter endpoints by this string"
 )
 @click.option("--limit", "-l", default=20, help="Number of results to return")
-@click.option("--offset", "-o", default=0, help="Offset results by the specified amount")
+@click.option(
+    "--offset", "-o", default=0, help="Offset results by the specified amount"
+)
 @click.option(
     "--quiet", "-q", is_flag=True, default=False, help="Show only endpoint names"
 )
@@ -36,7 +38,9 @@ def _get_endpoint_list(name, filter_by, limit, offset, quiet, all_items):
     get_endpoint_list(name, filter_by, limit, offset, quiet, all_items)
 
 
-def create_endpoint(client, endpoint_payload, name=None, description=None, force_create=False):
+def create_endpoint(
+    client, endpoint_payload, name=None, description=None, force_create=False
+):
 
     endpoint_payload.pop("status", None)
 
@@ -56,13 +60,23 @@ def create_endpoint(client, endpoint_payload, name=None, description=None, force
     )
 
 
-def create_endpoint_from_json(client, path_to_json, name=None, description=None, force_create=False):
+def create_endpoint_from_json(
+    client, path_to_json, name=None, description=None, force_create=False
+):
 
     endpoint_payload = json.loads(open(path_to_json, "r").read())
-    return create_endpoint(client, endpoint_payload, name=name, description=description, force_create=force_create)
+    return create_endpoint(
+        client,
+        endpoint_payload,
+        name=name,
+        description=description,
+        force_create=force_create,
+    )
 
 
-def create_endpoint_from_dsl(client, endpoint_file, name=None, description=None, force_create=False):
+def create_endpoint_from_dsl(
+    client, endpoint_file, name=None, description=None, force_create=False
+):
 
     endpoint_payload = compile_endpoint(endpoint_file)
     if endpoint_payload is None:
@@ -70,7 +84,13 @@ def create_endpoint_from_dsl(client, endpoint_file, name=None, description=None,
         err = {"error": err_msg, "code": -1}
         return None, err
 
-    return create_endpoint(client, endpoint_payload, name=name, description=description, force_create=force_create)
+    return create_endpoint(
+        client,
+        endpoint_payload,
+        name=name,
+        description=description,
+        force_create=force_create,
+    )
 
 
 @create.command("endpoint", feature_min_version="3.0.0")
@@ -98,11 +118,19 @@ def create_endpoint_command(endpoint_file, name, description, force):
 
     if endpoint_file.endswith(".json"):
         res, err = create_endpoint_from_json(
-            client, endpoint_file, name=name, description=description, force_create=force
+            client,
+            endpoint_file,
+            name=name,
+            description=description,
+            force_create=force,
         )
     elif endpoint_file.endswith(".py"):
         res, err = create_endpoint_from_dsl(
-            client, endpoint_file, name=name, description=description, force_create=force
+            client,
+            endpoint_file,
+            name=name,
+            description=description,
+            force_create=force,
         )
     else:
         LOG.error("Unknown file format {}".format(endpoint_file))
@@ -130,14 +158,20 @@ def create_endpoint_command(endpoint_file, name, description, force):
         for msg_dict in msg_list:
             msgs.append(msg_dict.get("message", ""))
 
-        LOG.error("Endpoint {} created with {} error(s): {}.".format(endpoint_name, len(msg_list), msgs))
+        LOG.error(
+            "Endpoint {} created with {} error(s): {}.".format(
+                endpoint_name, len(msg_list), msgs
+            )
+        )
         sys.exit(-1)
 
     LOG.info("Endpoint {} created successfully.".format(endpoint_name))
     config = get_config()
     pc_ip = config["SERVER"]["pc_ip"]
     pc_port = config["SERVER"]["pc_port"]
-    link = "https://{}:{}/console/#page/explore/calm/endpoints/{}".format(pc_ip, pc_port, endpoint_uuid)
+    link = "https://{}:{}/console/#page/explore/calm/endpoints/{}".format(
+        pc_ip, pc_port, endpoint_uuid
+    )
 
     stdout_dict = {
         "name": endpoint_name,

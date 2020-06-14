@@ -9,7 +9,12 @@ from calm.dsl.builtins import runbook, create_runbook_payload
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
 from calm.dsl.tools import get_logging_handle
-from .utils import (get_name_query, highlight_text, get_states_filter, get_module_from_file)
+from .utils import (
+    get_name_query,
+    highlight_text,
+    get_states_filter,
+    get_module_from_file,
+)
 from .constants import RUNBOOK, RUNLOG
 from .runlog import get_completion_func, get_runlog_status
 from .endpoints import get_endpoint
@@ -304,7 +309,9 @@ def run_runbook(screen, client, runbook_uuid, watch, input_data={}, payload={}):
         pc_ip, pc_port, runlog_uuid
     )
     if not watch:
-        screen.print_at("Runbook execution url: {}".format(highlight_text(run_url)), 0, 0)
+        screen.print_at(
+            "Runbook execution url: {}".format(highlight_text(run_url)), 0, 0
+        )
     screen.refresh()
 
 
@@ -321,7 +328,7 @@ def watch_runbook(runlog_uuid, runbook, screen, poll_interval=10, input_data={})
     task_type_map = {}
     top_level_tasks = []
     for task in tasks:
-        task_type_map[task.get('uuid')] = task.get("type", "")
+        task_type_map[task.get("uuid")] = task.get("type", "")
         if task.get("uuid") == main_task_reference:
             task_list = task.get("child_tasks_local_reference_list", [])
             for t in task_list:

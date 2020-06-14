@@ -15,7 +15,7 @@ def DslWhileLoopRunbook():
             name="Task1", script="print 'Inside loop1 @@{iteration}@@'"
         )
 
-    while(10):
+    while 10:
         CalmTask.Exec.escript(
             name="Task2", script="print 'Inside loop2 @@{iteration}@@'"
         )
