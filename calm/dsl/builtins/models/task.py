@@ -1097,11 +1097,9 @@ class CalmTask:
             name=None,
             child_tasks=[],
             loop_variable="iteration",
-            parallel_factor=1,
             exit_condition="SUCCESS",
         ):
             attrs = {
-                "apf": str(parallel_factor),
                 "iterations": str(iterations),
                 "loop_variable": loop_variable,
             }
