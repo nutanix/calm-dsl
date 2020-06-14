@@ -1,3 +1,5 @@
+import sys
+
 from asciimatics.widgets import (
     Frame,
     Layout,
@@ -531,33 +533,24 @@ def get_completion_func(screen):
                     screen, root, completed_tasks, total_tasks, msg=msg
                 )
 
-            if interrupt and hasattr(interrupt, "key_code") and interrupt.key_code == 4:
-                client.runbook.pause(runlog_uuid)
-
-                # exit inerrupt
+            if interrupt and hasattr(interrupt, "key_code") and interrupt.key_code in (3, 4):
+                # exit interrupt
                 screen.close()
-                exit()
+                sys.exit(-1)
             elif (
                 interrupt
                 and hasattr(interrupt, "key_code")
-                and interrupt.key_code == 83
+                and interrupt.key_code == 32
             ):
-                client.runbook.pause(runlog_uuid)
+                # on space pause/play runbook based on current state
+                runlog_state = root.children[0].runlog["status"]["state"]
 
-                # 'KeyS' KeyboardEvent.code, pause/stop the runlog
-                msg = "Triggered pause/stop for the Runbook Runlog"
-                line = displayRunLogTree(
-                    screen, root, completed_tasks, total_tasks, msg=msg
-                )
-            elif (
-                interrupt
-                and hasattr(interrupt, "key_code")
-                and interrupt.key_code == 82
-            ):
-                client.runbook.play(runlog_uuid)
-
-                # 'KeyR' KeyboardEvent.code, play/resume the runlog
-                msg = "Triggered play/resume for the Runbook Runlog"
+                if runlog_state in [RUNLOG.STATUS.RUNNING, RUNLOG.STATUS.INPUT, RUNLOG.STATUS.CONFIRM]:
+                    client.runbook.pause(runlog_uuid)
+                    msg = "Triggered pause on the runnning Runbook Execution"
+                elif runlog_state in [RUNLOG.STATUS.PAUSED]:
+                    client.runbook.play(runlog_uuid)
+                    msg = "Triggered play on the paused Runbook Execution"
                 line = displayRunLogTree(
                     screen, root, completed_tasks, total_tasks, msg=msg
                 )
@@ -595,6 +588,16 @@ def get_completion_func(screen):
 
 def get_runlog_status(screen):
     def check_runlog_status(response, client=None, **kwargs):
+
+        # catching interrupt for exit
+        interrupt = None
+        if hasattr(screen, "get_event"):
+            interrupt = screen.get_event()
+
+        if interrupt and hasattr(interrupt, "key_code") and interrupt.key_code in (3, 4):
+            # exit interrupt
+            screen.close()
+            sys.exit(-1)
 
         if response["status"]["state"] == "PENDING":
             msg = "Runlog run is in PENDING state"

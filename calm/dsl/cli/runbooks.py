@@ -300,7 +300,7 @@ def run_runbook(screen, client, runbook_uuid, watch, input_data={}, payload={}):
     config = get_config()
     pc_ip = config["SERVER"]["pc_ip"]
     pc_port = config["SERVER"]["pc_port"]
-    run_url = "https://{}:{}/console/#page/explore/calm/runbooks/runlogs{}".format(
+    run_url = "https://{}:{}/console/#page/explore/calm/runbooks/runlogs/{}".format(
         pc_ip, pc_port, runlog_uuid
     )
     if not watch:
@@ -438,7 +438,7 @@ def delete_runbook(runbook_names):
 
 
 def poll_action(poll_func, completion_func, poll_interval=10, **kwargs):
-    # Poll every 10 seconds on the app status, for 5 mins
+    # Poll every 10 seconds on the runlog status, for 10 mins
     maxWait = 10 * 60
     count = 0
     while count < maxWait:
