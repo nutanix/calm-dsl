@@ -11,12 +11,10 @@ from peewee import (
 import datetime
 import click
 import arrow
-import sys
 import json
 from prettytable import PrettyTable
 
 from calm.dsl.api import get_resource_api, get_api_client
-from calm.dsl.config import get_config
 from calm.dsl.tools import get_logging_handle
 from calm.dsl.providers import get_provider
 
@@ -190,10 +188,7 @@ class AhvSubnetsCache(CacheTableBase):
         # clear old data
         cls.clear()
 
-        # update by latest data
-        config = get_config()
         client = get_api_client()
-
         payload = {"length": 250, "filter": "type==nutanix_pc"}
         account_name_uuid_map = client.account.get_name_uuid_map(payload)
 
@@ -275,10 +270,7 @@ class AhvImagesCache(CacheTableBase):
         # clear old data
         cls.clear()
 
-        # update by latest data
-        config = get_config()
         client = get_api_client()
-
         payload = {"length": 250, "filter": "type==nutanix_pc"}
         account_name_uuid_map = client.account.get_name_uuid_map(payload)
 
