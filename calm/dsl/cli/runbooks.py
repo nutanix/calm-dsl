@@ -185,7 +185,7 @@ def get_execution_history(name, filter_by, limit, offset):
     if filter_query:
         params["filter"] = filter_query
 
-    res, err = client.runbook.list_previous_runs(params=params)
+    res, err = client.runbook.list_runbook_runlogs(params=params)
 
     if err:
         pc_ip = config["SERVER"]["pc_ip"]

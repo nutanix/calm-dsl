@@ -51,7 +51,7 @@ def get_endpoint_list(name, filter_by, limit, offset, quiet, all_items):
 
     if err:
         pc_ip = config["SERVER"]["pc_ip"]
-        LOG.warning(UserWarning("Cannot fetch endpoints from {}".format(pc_ip)))
+        LOG.warning("Cannot fetch endpoints from {}".format(pc_ip))
         return
 
     json_rows = res.json()["entities"]

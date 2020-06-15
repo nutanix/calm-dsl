@@ -11,8 +11,8 @@ class RunbookAPI(ResourceAPI):
     def __init__(self, connection):
         super().__init__(connection, resource_type="runbooks")
         self.UPLOAD = self.PREFIX + "/import_json"
-        self.UPDATE2 = self.PREFIX + "/{}/update"
-        self.PREVIOUS_RUNS = self.PREFIX + "/runlogs/list"
+        self.UPDATE_USING_NAMES = self.PREFIX + "/{}/update"
+        self.RUNBOOK_RUNLOGS_LIST = self.PREFIX + "/runlogs/list"
         self.RUN = self.PREFIX + "/{}/run"
         self.POLL_RUN = self.PREFIX + "/runlogs/{}"
         self.PAUSE = self.PREFIX + "/runlogs/{}/pause"
@@ -34,9 +34,9 @@ class RunbookAPI(ResourceAPI):
             self.UPLOAD, verify=False, request_json=payload, method=REQUEST.METHOD.POST
         )
 
-    def resume(self, arlid, trlid, payload):
+    def resume(self, action_runlog_id, task_runlog_id, payload):
         return self.connection._call(
-            self.RUNLOG_RESUME.format(arlid, trlid),
+            self.RUNLOG_RESUME.format(action_runlog_id, task_runlog_id),
             verify=False,
             request_json=payload,
             method=REQUEST.METHOD.POST,
@@ -74,9 +74,9 @@ class RunbookAPI(ResourceAPI):
             method=REQUEST.METHOD.POST,
         )
 
-    def update2(self, uuid, payload):
+    def update_using_name_reference(self, uuid, payload):
         return self.connection._call(
-            self.UPDATE2.format(uuid),
+            self.UPDATE_USING_NAMES.format(uuid),
             verify=False,
             request_json=payload,
             method=REQUEST.METHOD.PUT,
@@ -210,9 +210,9 @@ class RunbookAPI(ResourceAPI):
         # Update runbook
         return self.update(uuid, runbook)
 
-    def list_previous_runs(self, params=None):
+    def list_runbook_runlogs(self, params=None):
         return self.connection._call(
-            self.PREVIOUS_RUNS,
+            self.RUNBOOK_RUNLOGS_LIST,
             verify=False,
             request_json=params,
             method=REQUEST.METHOD.POST,
@@ -249,9 +249,9 @@ class RunbookAPI(ResourceAPI):
             method=REQUEST.METHOD.POST,
         )
 
-    def runlog_output(self, arl_id, trl_id):
+    def runlog_output(self, action_runlog_id, task_runlog_id):
         return self.connection._call(
-            self.RUNLOG_OUTPUT.format(arl_id, trl_id),
+            self.RUNLOG_OUTPUT.format(action_runlog_id, task_runlog_id),
             verify=False,
             method=REQUEST.METHOD.GET,
         )
@@ -328,7 +328,7 @@ class RunbookAPI(ResourceAPI):
             "name": project_name,
         }
 
-        res, err = self.update2(uuid, update_payload)
+        res, err = self.update_using_name_reference(uuid, update_payload)
         if err:
             return res, err
 

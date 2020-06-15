@@ -65,7 +65,7 @@ Commonly used commands:
   calm create runbook -f sample_rb.py --name Sample-RB  -> Upload a new runbook from a python DSL file
   calm run runbook MyFancyRunbook -> Runs the existing runbook MyFancyRunbook
   calm run runbook -f sample_rb.py -> Runs the runbook from a python DSL file
-  calm get previous_runs  -> Get list of previous runbook runs
+  calm get execution_history  -> Get list of runbook executions
   calm get endpoints -> Get list of endpoints
   calm create endpoint -f sample_ep.py --name Sample-Endpoint -> Upload a new endpoint from a python DSL file
 """
@@ -250,7 +250,7 @@ def compile():
 
 @main.group(cls=FeatureFlagGroup)
 def create():
-    """Create entities in CALM (blueprint, project, endpoint, runbook) """
+    """Create entities in Calm (blueprint, project, endpoint, runbook) """
     pass
 
 
