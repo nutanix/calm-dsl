@@ -73,10 +73,10 @@ def get_runbook_list(name, filter_by, limit, offset, quiet, all_items):
         "DESCRIPTION",
         "PROJECT",
         "STATE",
-        "RUN COUNT",
+        "EXECUTION HISTORY",
         "CREATED BY",
+        "LAST EXECUTED AT",
         "LAST UPDATED",
-        "LAST RUN",
         "UUID",
     ]
     for _row in json_rows:
@@ -97,8 +97,8 @@ def get_runbook_list(name, filter_by, limit, offset, quiet, all_items):
                 highlight_text(row["state"]),
                 highlight_text(total_runs if total_runs else "-"),
                 highlight_text(created_by),
-                "{}".format(arrow.get(last_update_time).humanize()),
                 "{}".format(arrow.get(last_run).humanize()) if last_run else "-",
+                "{}".format(arrow.get(last_update_time).humanize()),
                 highlight_text(row["uuid"]),
             ]
         )
@@ -203,7 +203,7 @@ def get_execution_history(name, filter_by, limit, offset):
         "STARTED AT",
         "ENDED AT",
         "COMPLETED IN",
-        "RUN BY",
+        "EXECUTED BY",
         "UUID",
         "STATE",
     ]
