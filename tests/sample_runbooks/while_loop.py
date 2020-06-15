@@ -10,12 +10,12 @@ from calm.dsl.builtins import CalmTask
 @runbook
 def DslWhileLoopRunbook():
     "Runbook Service example"
-    while CalmTask.While(5, name="WhileTask", exit_condition="DONT_CARE"):
+    while CalmTask.While(2, name="WhileTask", exit_condition="SUCCESS"):
         CalmTask.Exec.escript(
             name="Task1", script="print 'Inside loop1 @@{iteration}@@'"
         )
 
-    while 10:
+    while 2:
         CalmTask.Exec.escript(
             name="Task2", script="print 'Inside loop2 @@{iteration}@@'"
         )

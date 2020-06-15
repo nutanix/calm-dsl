@@ -1097,7 +1097,7 @@ class CalmTask:
             name=None,
             child_tasks=[],
             loop_variable="iteration",
-            exit_condition="SUCCESS",
+            exit_condition="DONT_CARE",
         ):
             attrs = {
                 "iterations": str(iterations),
