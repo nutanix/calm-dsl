@@ -1,6 +1,5 @@
 import ast
 import inspect
-import uuid
 
 from .task import dag
 from .entity import EntityType, Entity
@@ -57,9 +56,8 @@ class runbook(metaclass=DescriptorType):
         # Generate the entity names
         self.action_name = user_func.__name__
         self.action_description = user_func.__doc__ or ""
-        self.runbook_name = str(uuid.uuid4())[:8] + "_runbook"
-        self.dag_name = "main_dag_" + str(uuid.uuid4())[:8]
         self.user_func = user_func
+        self.user_runbook = None
         self.__parsed__ = False
         if self.__class__ == runbook:
             self.__get__()
@@ -125,9 +123,15 @@ class runbook(metaclass=DescriptorType):
                 child_task = [child_task]
             child_tasks.extend(child_task)
 
+        # Note - Server checks for name uniqueness in runbooks across actions
+        # Generate unique names using class name and func name.
+        prefix = cls.__name__ + '_' if hasattr(cls, "__name__") else '' + self.user_func.__name__
+        runbook_name = prefix + "_runbook"
+        dag_name = prefix + "_dag"
+
         # First create the dag
         self.user_dag = dag(
-            name=self.dag_name,
+            name=dag_name,
             child_tasks=child_tasks,
             edges=edges,
             target=cls.get_task_target()
@@ -137,7 +141,7 @@ class runbook(metaclass=DescriptorType):
         )
 
         # Modify the user runbook
-        self.user_runbook = runbook_create(**{"name": self.runbook_name})
+        self.user_runbook = runbook_create(**{"name": runbook_name})
         self.user_runbook.main_task_local_reference = self.user_dag.get_ref()
         self.user_runbook.tasks = [self.user_dag] + tasks
         self.user_runbook.variables = [variable for variable in variables.values()]
