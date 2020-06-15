@@ -1,8 +1,9 @@
 import datetime
 
 from calm.dsl.store import Cache
+from calm.dsl.db import delete_db_handle
 
-from .main import show, update, clear
+from .main import show, update, clear, delete
 from .utils import highlight_text
 from calm.dsl.tools import get_logging_handle
 
@@ -31,3 +32,10 @@ def update_cache():
     Cache.sync()
     Cache.show_data()
     LOG.info(highlight_text("Cache updated at {}".format(datetime.datetime.now())))
+
+
+@delete.command("cache")
+def delete_cache():
+
+    delete_db_handle()
+    LOG.info("Deleted the older cache successfully")

@@ -89,6 +89,18 @@ def init_db_handle():
 
     global _Database
 
+    # Deleting existing db handle
+    delete_db_handle()
+
+    # Initialize new database object
+    _Database = Database()
+
+
+def delete_db_handle():
+    """deletes existing db handle"""
+
+    global _Database
+
     # Closing existing connection if exists
     if not _Database.is_closed():
         # Unregister close() method from atexit handler
@@ -103,5 +115,4 @@ def init_db_handle():
     if os.path.exists(db_location):
         os.remove(db_location)
 
-    # Initialize new database object
-    _Database = Database()
+    _Database = None

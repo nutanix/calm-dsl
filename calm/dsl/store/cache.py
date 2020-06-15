@@ -1,5 +1,7 @@
 import click
 import sys
+import traceback
+from peewee import OperationalError, IntegrityError
 
 from ..db import get_db_handle
 from .version import Version
@@ -38,7 +40,17 @@ class Cache:
             LOG.error("Unknown entity type ({}) supplied".format(entity_type))
             sys.exit(-1)
 
-        return db_cls.get_entity_data(name=name, **kwargs)
+        try:
+            res = db_cls.get_entity_data(name=name, **kwargs)
+        except OperationalError:
+            formatted_exc = traceback.format_exc()
+            LOG.debug("Exception Traceback:\n{}".format(formatted_exc))
+            LOG.error(
+                "Cache error occurred. Please delete existing cache using 'calm delete cache' command"
+            )
+            sys.exit(-1)
+
+        return res
 
     @classmethod
     def sync(cls):
@@ -51,10 +63,19 @@ class Cache:
         click.echo(".", nl=False, err=True)
 
         # Updating cache tables
-        cache_tables = cls.get_cache_tables()
-        for table in list(cache_tables.values()):
-            table.sync()
-            click.echo(".", nl=False, err=True)
+        try:
+            cache_tables = cls.get_cache_tables()
+            for table in list(cache_tables.values()):
+                table.sync()
+                click.echo(".", nl=False, err=True)
+        except (OperationalError, IntegrityError):
+            formatted_exc = traceback.format_exc()
+            click.echo(" [Fail]")
+            LOG.debug("Exception Traceback:\n{}".format(formatted_exc))
+            LOG.error(
+                "Cache error occurred. Please delete existing cache using 'calm delete cache' command"
+            )
+            sys.exit(-1)
 
         click.echo(" [Done]", err=True)
 
@@ -62,9 +83,17 @@ class Cache:
     def clear_entities(cls):
         """Clear data present in the cache tables"""
 
-        cache_tables = cls.get_cache_tables()
-        for table in list(cache_tables.values()):
-            table.clear()
+        try:
+            cache_tables = cls.get_cache_tables()
+            for table in list(cache_tables.values()):
+                table.clear()
+        except OperationalError:
+            formatted_exc = traceback.format_exc()
+            LOG.debug("Exception Traceback:\n{}".format(formatted_exc))
+            LOG.error(
+                "Cache error occurred. Please delete existing cache using 'calm delete cache' command"
+            )
+            sys.exit(-1)
 
     @classmethod
     def show_data(cls):
@@ -73,4 +102,12 @@ class Cache:
         cache_tables = cls.get_cache_tables()
         for cache_type, table in cache_tables.items():
             click.echo("\n{}".format(cache_type.upper()))
-            table.show_data()
+            try:
+                table.show_data()
+            except OperationalError:
+                formatted_exc = traceback.format_exc()
+                LOG.debug("Exception Traceback:\n{}".format(formatted_exc))
+                LOG.error(
+                    "Cache error occurred. Please delete existing cache using 'calm delete cache' command"
+                )
+                sys.exit(-1)

@@ -101,9 +101,15 @@ def clone_from_image_service(
     # Get project details
     config = get_config()
     project_name = config["PROJECT"]["name"]
-    project_data = Cache.get_entity_data(entity_type="project", name=project_name)
+    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
 
-    project_accounts = project_data["accounts_data"]
+    if not project_cache_data:
+        LOG.error(
+            "Project {} not found. Please run: calm update cache".format(project_name)
+        )
+        sys.exit(-1)
+
+    project_accounts = project_cache_data["accounts_data"]
     # Fetch Nutanix_PC account registered
     account_uuid = project_accounts.get("nutanix_pc", "")
 
