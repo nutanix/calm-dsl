@@ -2,6 +2,7 @@ import json
 import time
 import pathlib
 
+from ruamel import yaml
 import arrow
 import click
 from prettytable import PrettyTable
@@ -20,6 +21,7 @@ from .utils import (
     get_module_from_file,
 )
 from .constants import ENDPOINT
+from calm.dsl.store import Cache
 
 LOG = get_logging_handle(__name__)
 
@@ -131,6 +133,38 @@ def compile_endpoint(endpoint_file):
     endpoint_payload = UserEndpointPayload.get_dict()
 
     return endpoint_payload
+
+
+def compile_endpoint_command(endpoint_file, out):
+
+    endpoint_payload = compile_endpoint(endpoint_file)
+    if endpoint_payload is None:
+        LOG.error("User endpoint not found in {}".format(endpoint_file))
+        return
+
+    config = get_config()
+
+    project_name = config["PROJECT"].get("name", "default")
+    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
+
+    if not project_cache_data:
+        LOG.error(
+            "Project {} not found. Please run: calm update cache".format(project_name)
+        )
+
+    project_uuid = project_cache_data.get("uuid", "")
+    endpoint_payload["metadata"]["project_reference"] = {
+        "type": "project",
+        "uuid": project_uuid,
+        "name": project_name,
+    }
+
+    if out == "json":
+        click.echo(json.dumps(endpoint_payload, indent=4, separators=(",", ": ")))
+    elif out == "yaml":
+        click.echo(yaml.dump(endpoint_payload, default_flow_style=False))
+    else:
+        LOG.error("Unknown output format {} given".format(out))
 
 
 def get_endpoint(client, name, all=False):

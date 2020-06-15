@@ -8,7 +8,7 @@ from calm.dsl.api import get_api_client
 from calm.dsl.config import get_config
 from calm.dsl.tools import get_logging_handle
 
-from .main import get, describe, delete, run, create, update, format
+from .main import compile, get, describe, delete, run, create, update, format
 from .utils import Display
 from .runbooks import (
     get_runbook,
@@ -20,6 +20,7 @@ from .runbooks import (
     delete_runbook,
     patch_runbook_runtime_editables,
     format_runbook_command,
+    compile_runbook_command,
 )
 
 LOG = get_logging_handle(__name__)
@@ -352,6 +353,28 @@ def _describe_runbook(runbook_name, out):
 )
 def _format_runbook_command(runbook_file):
     format_runbook_command(runbook_file)
+
+
+@compile.command("runbook", feature_min_version="3.0.0")
+@click.option(
+    "--file",
+    "-f",
+    "runbook_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    required=True,
+    help="Path of Runbook file to upload",
+)
+@click.option(
+    "--out",
+    "-o",
+    "out",
+    type=click.Choice(["json", "yaml"]),
+    default="json",
+    help="output format [json|yaml].",
+)
+def _compile_runbook_command(runbook_file, out):
+    """Compiles a DSL (Python) runbook into JSON or YAML"""
+    compile_runbook_command(runbook_file, out)
 
 
 @run.command("runbook", feature_min_version="3.0.0")

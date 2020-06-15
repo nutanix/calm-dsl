@@ -2,6 +2,7 @@ import json
 import time
 import pathlib
 
+from ruamel import yaml
 import arrow
 import click
 from prettytable import PrettyTable
@@ -11,6 +12,7 @@ from calm.dsl.builtins import runbook, create_runbook_payload
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
 from calm.dsl.tools import get_logging_handle
+from calm.dsl.store import Cache
 from .utils import (
     get_name_query,
     highlight_text,
@@ -131,6 +133,38 @@ def compile_runbook(runbook_file):
     runbook_payload = UserRunbookPayload.get_dict()
 
     return runbook_payload
+
+
+def compile_runbook_command(runbook_file, out):
+
+    rb_payload = compile_runbook(runbook_file)
+    if rb_payload is None:
+        LOG.error("User runbook not found in {}".format(runbook_file))
+        return
+
+    config = get_config()
+
+    project_name = config["PROJECT"].get("name", "default")
+    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
+
+    if not project_cache_data:
+        LOG.error(
+            "Project {} not found. Please run: calm update cache".format(project_name)
+        )
+
+    project_uuid = project_cache_data.get("uuid", "")
+    rb_payload["metadata"]["project_reference"] = {
+        "type": "project",
+        "uuid": project_uuid,
+        "name": project_name,
+    }
+
+    if out == "json":
+        click.echo(json.dumps(rb_payload, indent=4, separators=(",", ": ")))
+    elif out == "yaml":
+        click.echo(yaml.dump(rb_payload, default_flow_style=False))
+    else:
+        LOG.error("Unknown output format {} given".format(out))
 
 
 def get_execution_history(name, filter_by, limit, offset):

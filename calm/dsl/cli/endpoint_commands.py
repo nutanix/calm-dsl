@@ -6,13 +6,14 @@ from calm.dsl.api import get_api_client
 from calm.dsl.config import get_config
 from calm.dsl.tools import get_logging_handle
 
-from .main import get, describe, delete, create, format
+from .main import compile, get, describe, delete, create, format
 from .endpoints import (
     get_endpoint_list,
     compile_endpoint,
     delete_endpoint,
     describe_endpoint,
     format_endpoint_command,
+    compile_endpoint_command,
 )
 
 LOG = get_logging_handle(__name__)
@@ -217,3 +218,25 @@ def _describe_endpoint(endpoint_name, out):
 )
 def _format_endpoint_command(endpoint_file):
     format_endpoint_command(endpoint_file)
+
+
+@compile.command("endpoint", feature_min_version="3.0.0")
+@click.option(
+    "--file",
+    "-f",
+    "endpoint_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    required=True,
+    help="Path of Endpoint file to upload",
+)
+@click.option(
+    "--out",
+    "-o",
+    "out",
+    type=click.Choice(["json", "yaml"]),
+    default="json",
+    help="output format [json|yaml].",
+)
+def _compile_endpoint_command(endpoint_file, out):
+    """Compiles a DSL (Python) endpoint into JSON or YAML"""
+    compile_endpoint_command(endpoint_file, out)
