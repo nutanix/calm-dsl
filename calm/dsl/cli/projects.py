@@ -250,7 +250,7 @@ def describe_project(project_name):
         else:
             account_uuid_name_map[v] = k
 
-    res, err = client.account.list()
+    res, err = client.account.list(payload)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
