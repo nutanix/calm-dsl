@@ -102,7 +102,11 @@ class GetCallNodes(ast.NodeVisitor):
             compile(ast.Expression(node.items[0].context_expr), "", "eval"),
             self._globals,
         )
-        if hasattr(context, "__calm_type__") and context.__calm_type__ == "parallel":
+        if (
+            not self.is_runbook
+            and hasattr(context, "__calm_type__")
+            and context.__calm_type__ == "parallel"
+        ):
             for statement in node.body:
                 if not isinstance(statement.value, ast.Call):
                     raise ValueError(
@@ -113,6 +117,18 @@ class GetCallNodes(ast.NodeVisitor):
                     parallel_tasks.append(task)
                     self.all_tasks.append(task)
             self.task_list.append(parallel_tasks)
+
+        # for running tasks serially
+        elif (
+            self.is_runbook
+            and hasattr(context, "__calm_type__")
+            and context.__calm_type__ == "serial"
+        ):
+            serialBody = ast.FunctionDef(body=node.body, col_offset=node.col_offset)
+            meta_task, tasks, variables = handle_meta_create(serialBody, self._globals)
+            self.all_tasks.extend([meta_task] + tasks)
+            self.variables.update(variables)
+            self.task_list.append(meta_task)
 
         # for decision tasks
         elif (
@@ -181,23 +197,18 @@ class GetCallNodes(ast.NodeVisitor):
             and isinstance(context, TaskType)
             and context.type == "PARALLEL"
         ):
-            for statement in node.body:
-                if isinstance(statement, ast.FunctionDef):
-                    meta_task, tasks, variables = handle_meta_create(
-                        statement, self._globals
-                    )
-                    self.all_tasks.extend([meta_task] + tasks)
-                    self.variables.update(variables)
-                    context.child_tasks_local_reference_list.append(meta_task.get_ref())
-                elif isinstance(statement.value, ast.Call):
-                    task = self.visit_Call(statement.value, return_task=True)
-                    if task:
-                        self.all_tasks.append(task)
-                        context.child_tasks_local_reference_list.append(task.get_ref())
-                else:
-                    raise ValueError(
-                        "Only calls to 'CalmTask' or 'FunctionDef' methods supported inside parallel context."
-                    )
+            parallelBody = ast.FunctionDef(body=node.body, col_offset=node.col_offset)
+            _node_visitor = GetCallNodes(self._globals, is_runbook=True)
+            try:
+                _node_visitor.visit(parallelBody)
+            except Exception as ex:
+                raise ex
+            tasks, variables, task_list = _node_visitor.get_objects()
+            self.all_tasks.extend(tasks)
+            self.variables.update(variables)
+
+            for task in task_list:
+                context.child_tasks_local_reference_list.append(task.get_ref())
 
             self.all_tasks.append(context)
             self.task_list.append(context)

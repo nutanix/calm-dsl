@@ -195,3 +195,7 @@ class runbook(metaclass=DescriptorType):
 
         else:
             return self.user_runbook
+
+
+class serial:
+    __calm_type__ = "serial"

@@ -10,7 +10,7 @@ from .models.variable import Variable, setvar, CalmVariable
 from .models.action import action, parallel
 
 from .models.task import Task, CalmTask
-from .models.runbook import Runbook, runbook
+from .models.runbook import Runbook, runbook, serial
 
 from .models.port import Port, port
 from .models.service import Service, service
@@ -66,6 +66,7 @@ __all__ = [
     "parallel",
     "Runbook",
     "runbook",
+    "serial",
     "Port",
     "port",
     "Service",
