@@ -1,5 +1,7 @@
 import json
 import time
+import sys
+import uuid
 import pathlib
 
 from ruamel import yaml
@@ -14,6 +16,7 @@ from calm.dsl.api import get_api_client
 from calm.dsl.tools import get_logging_handle
 from calm.dsl.store import Cache
 from .utils import (
+    Display,
     get_name_query,
     highlight_text,
     get_states_filter,
@@ -167,6 +170,224 @@ def compile_runbook_command(runbook_file, out):
         LOG.error("Unknown output format {} given".format(out))
 
 
+def create_runbook(
+    client, runbook_payload, name=None, description=None, force_create=False
+):
+
+    runbook_payload.pop("status", None)
+
+    if name:
+        runbook_payload["spec"]["name"] = name
+        runbook_payload["metadata"]["name"] = name
+
+    if description:
+        runbook_payload["spec"]["description"] = description
+
+    runbook_resources = runbook_payload["spec"]["resources"]
+    runbook_name = runbook_payload["spec"]["name"]
+    runbook_desc = runbook_payload["spec"]["description"]
+
+    return client.runbook.upload_with_secrets(
+        runbook_name, runbook_desc, runbook_resources, force_create=force_create
+    )
+
+
+def create_runbook_from_json(
+    client, path_to_json, name=None, description=None, force_create=False
+):
+
+    runbook_payload = json.loads(open(path_to_json, "r").read())
+    return create_runbook(
+        client,
+        runbook_payload,
+        name=name,
+        description=description,
+        force_create=force_create,
+    )
+
+
+def create_runbook_from_dsl(
+    client, runbook_file, name=None, description=None, force_create=False
+):
+
+    runbook_payload = compile_runbook(runbook_file)
+    if runbook_payload is None:
+        err_msg = "User runbook not found in {}".format(runbook_file)
+        err = {"error": err_msg, "code": -1}
+        return None, err
+
+    return create_runbook(
+        client,
+        runbook_payload,
+        name=name,
+        description=description,
+        force_create=force_create,
+    )
+
+
+def create_runbook_command(runbook_file, name, description, force):
+    """Creates a runbook"""
+
+    client = get_api_client()
+
+    if runbook_file.endswith(".json"):
+        res, err = create_runbook_from_json(
+            client, runbook_file, name=name, description=description, force_create=force
+        )
+    elif runbook_file.endswith(".py"):
+        res, err = create_runbook_from_dsl(
+            client, runbook_file, name=name, description=description, force_create=force
+        )
+    else:
+        LOG.error("Unknown file format {}".format(runbook_file))
+        return
+
+    if err:
+        LOG.error(err["error"])
+        return
+
+    runbook = res.json()
+    runbook_uuid = runbook["metadata"]["uuid"]
+    runbook_name = runbook["metadata"]["name"]
+    runbook_status = runbook.get("status", {})
+    runbook_state = runbook_status.get("state", "DRAFT")
+    LOG.debug("Runbook {} has state: {}".format(runbook_name, runbook_state))
+
+    if runbook_state != "ACTIVE":
+        msg_list = runbook_status.get("message_list", [])
+        if not msg_list:
+            LOG.error("Runbook {} created with errors.".format(runbook_name))
+            LOG.debug(json.dumps(runbook_status))
+            sys.exit(-1)
+
+        msgs = []
+        for msg_dict in msg_list:
+            msgs.append(msg_dict.get("message", ""))
+
+        LOG.error(
+            "Runbook {} created with {} error(s): {}".format(
+                runbook_name, len(msg_list), msgs
+            )
+        )
+        sys.exit(-1)
+
+    LOG.info("Runbook {} created successfully.".format(runbook_name))
+    config = get_config()
+    pc_ip = config["SERVER"]["pc_ip"]
+    pc_port = config["SERVER"]["pc_port"]
+    link = "https://{}:{}/console/#page/explore/calm/runbooks/{}".format(
+        pc_ip, pc_port, runbook_uuid
+    )
+    stdout_dict = {
+        "name": runbook_name,
+        "link": link,
+        "state": runbook_state,
+    }
+    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+
+
+def update_runbook(client, runbook_payload, name=None, description=None):
+
+    runbook_payload.pop("status", None)
+
+    if name:
+        runbook_payload["spec"]["name"] = name
+        runbook_payload["metadata"]["name"] = name
+
+    if description:
+        runbook_payload["spec"]["description"] = description
+
+    runbook_resources = runbook_payload["spec"]["resources"]
+    runbook_name = runbook_payload["spec"]["name"]
+    runbook_desc = runbook_payload["spec"]["description"]
+
+    runbook = get_runbook(client, runbook_payload["spec"]["name"])
+    uuid = runbook["metadata"]["uuid"]
+    spec_version = runbook["metadata"]["spec_version"]
+
+    return client.runbook.update_with_secrets(
+        uuid, runbook_name, runbook_desc, runbook_resources, spec_version
+    )
+
+
+def update_runbook_from_json(client, path_to_json, name=None, description=None):
+
+    runbook_payload = json.loads(open(path_to_json, "r").read())
+    return update_runbook(client, runbook_payload, name=name, description=description)
+
+
+def update_runbook_from_dsl(client, runbook_file, name=None, description=None):
+
+    runbook_payload = compile_runbook(runbook_file)
+    if runbook_payload is None:
+        err_msg = "User runbook not found in {}".format(runbook_file)
+        err = {"error": err_msg, "code": -1}
+        return None, err
+
+    return update_runbook(client, runbook_payload, name=name, description=description)
+
+
+def update_runbook_command(runbook_file, name, description):
+    """Updates a runbook"""
+
+    client = get_api_client()
+
+    if runbook_file.endswith(".json"):
+        res, err = update_runbook_from_json(
+            client, runbook_file, name=name, description=description
+        )
+    elif runbook_file.endswith(".py"):
+        res, err = update_runbook_from_dsl(
+            client, runbook_file, name=name, description=description
+        )
+    else:
+        LOG.error("Unknown file format {}".format(runbook_file))
+        return
+
+    if err:
+        LOG.error(err["error"])
+        return
+
+    runbook = res.json()
+    runbook_uuid = runbook["metadata"]["uuid"]
+    runbook_name = runbook["metadata"]["name"]
+    runbook_status = runbook.get("status", {})
+    runbook_state = runbook_status.get("state", "DRAFT")
+    LOG.debug("Runbook {} has state: {}".format(runbook_name, runbook_state))
+
+    if runbook_state != "ACTIVE":
+        msg_list = runbook_status.get("message_list", [])
+        if not msg_list:
+            LOG.error("Runbook {} updated with errors.".format(runbook_name))
+            LOG.debug(json.dumps(runbook_status))
+            sys.exit(-1)
+
+        msgs = []
+        for msg_dict in msg_list:
+            msgs.append(msg_dict.get("message", ""))
+
+        LOG.error(
+            "Runbook {} updated with {} error(s): {}".format(
+                runbook_name, len(msg_list), msgs
+            )
+        )
+        sys.exit(-1)
+
+    LOG.info("Runbook {} updated successfully.".format(runbook_name))
+    config = get_config()
+    pc_ip = config["SERVER"]["pc_ip"]
+    pc_port = config["SERVER"]["pc_port"]
+    link = "https://{}:{}/console/#page/explore/calm/runbooks/{}".format(
+        pc_ip, pc_port, runbook_uuid
+    )
+    stdout_dict = {
+        "name": runbook_name,
+        "link": link,
+        "state": runbook_state,
+    }
+    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+
+
 def get_execution_history(name, filter_by, limit, offset):
     client = get_api_client()
     config = get_config()
@@ -308,6 +529,71 @@ def patch_runbook_runtime_editables(client, runbook):
             "name": target,
         }
     return payload
+
+
+def run_runbook_command(
+    runbook_name, watch, ignore_runtime_variables, runbook_file=None, input_file=None,
+):
+
+    if runbook_file is None and runbook_name is None:
+        LOG.error(
+            "One of either Runbook Name or Runbook File is required to run runbook."
+        )
+        return
+
+    client = get_api_client()
+    runbook = None
+
+    if runbook_file:
+        LOG.info("Uploading runbook: {}".format(runbook_file))
+        name = "runbook" + "_" + str(uuid.uuid4())[:8]
+        if runbook_file.endswith(".json"):
+            res, err = create_runbook_from_json(client, runbook_file, name=name)
+        elif runbook_file.endswith(".py"):
+            res, err = create_runbook_from_dsl(client, runbook_file, name=name)
+        else:
+            LOG.error("Unknown file format {}".format(runbook_file))
+            return
+
+        if err:
+            LOG.error(err["error"])
+            return
+
+        LOG.info("Uploaded runbook: {}".format(runbook_file))
+        runbook = res.json()
+        runbook_id = runbook["metadata"]["uuid"]
+    else:
+        runbook_id = get_runbook(client, runbook_name)["metadata"]["uuid"]
+        res, err = client.runbook.read(runbook_id)
+        if err:
+            LOG.error(err["error"])
+            return
+        runbook = res.json()
+
+    input_data = {}
+    if input_file is not None and input_file.endswith(".json"):
+        input_data = json.loads(open(input_file, "r").read())
+    elif input_file is not None:
+        LOG.error("Unknown input file format {}".format(input_file))
+        return
+
+    payload = {}
+    if not ignore_runtime_variables:
+        payload = patch_runbook_runtime_editables(client, runbook)
+
+    def render_runbook(screen):
+        screen.clear()
+        screen.refresh()
+        run_runbook(
+            screen, client, runbook_id, watch, input_data=input_data, payload=payload
+        )
+        if runbook_file:
+            res, err = client.runbook.delete(runbook_id)
+            if err:
+                raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        screen.wait_for_input(10.0)
+
+    Display.wrapper(render_runbook, watch)
 
 
 def run_runbook(screen, client, runbook_uuid, watch, input_data={}, payload={}):
