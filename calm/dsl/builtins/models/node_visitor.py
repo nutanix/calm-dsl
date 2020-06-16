@@ -121,19 +121,25 @@ class GetCallNodes(ast.NodeVisitor):
             and context.type == "DECISION"
         ):
             if not node.items[0].optional_vars:
-                raise ValueError("Decision task must be used in the format `with CalmTask.Decision() as val`")
+                raise ValueError(
+                    "Decision task must be used in the format `with CalmTask.Decision() as val`"
+                )
             var = node.items[0].optional_vars.id
             success_path = None
             failure_path = None
             for statement in node.body:
-                if (isinstance(statement, ast.If) and statement.test.value.id == var):
+                if isinstance(statement, ast.If) and statement.test.value.id == var:
 
                     if statement.orelse:
-                        raise ValueError("elif or else are not supported in decision context")
+                        raise ValueError(
+                            "elif or else are not supported in decision context"
+                        )
 
                     if statement.test.attr.lower() == "true":
                         if success_path:
-                            raise ValueError("'True' flow is defined more than once in decision task.")
+                            raise ValueError(
+                                "'True' flow is defined more than once in decision task."
+                            )
                         success_path, tasks, variables = handle_meta_create(
                             statement, self._globals
                         )
@@ -142,7 +148,9 @@ class GetCallNodes(ast.NodeVisitor):
 
                     elif statement.test.attr.lower() == "false":
                         if failure_path:
-                            raise ValueError("'False' flow is defined more than once in decision task.")
+                            raise ValueError(
+                                "'False' flow is defined more than once in decision task."
+                            )
                         failure_path, tasks, variables = handle_meta_create(
                             statement, self._globals
                         )
@@ -158,7 +166,9 @@ class GetCallNodes(ast.NodeVisitor):
                     )
 
             if not success_path or not failure_path:
-                raise ValueError("Both 'True' and 'False' flows are required for decision task.")
+                raise ValueError(
+                    "Both 'True' and 'False' flows are required for decision task."
+                )
 
             context.attrs["success_child_reference"] = success_path.get_ref()
             context.attrs["failure_child_reference"] = failure_path.get_ref()

@@ -48,7 +48,9 @@ def DecisionTask(endpoints=[linux_endpoint, windows_endpoint]):
                 name="FAILURE2", script="echo 'FAILURE'", target=ref(linux_endpoint)
             )
 
-    with CalmTask.Decision.powershell(script="exit 0", target=ref(windows_endpoint)) as val:
+    with CalmTask.Decision.powershell(
+        script="exit 0", target=ref(windows_endpoint)
+    ) as val:
 
         if val.true:
             CalmTask.Exec.powershell(
@@ -60,7 +62,9 @@ def DecisionTask(endpoints=[linux_endpoint, windows_endpoint]):
                 name="FAILURE3", script="echo 'FAILURE'", target=ref(windows_endpoint)
             )
 
-    with CalmTask.Decision.powershell(script="exit 1", target=ref(windows_endpoint)) as val:
+    with CalmTask.Decision.powershell(
+        script="exit 1", target=ref(windows_endpoint)
+    ) as val:
 
         if val.true:
             CalmTask.Exec.powershell(
