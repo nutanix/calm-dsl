@@ -70,7 +70,7 @@ class Cache:
         try:
             LOG.info("Updating cache", nl=False)
             sync_tables(tables)
-        
+
         except (OperationalError, IntegrityError):
             click.echo(" [Fail]")
             # init db handle once (recreating db if some schema changes are there)

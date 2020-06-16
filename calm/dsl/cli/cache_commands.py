@@ -2,7 +2,7 @@ import datetime
 
 from calm.dsl.store import Cache
 
-from .main import show, update, clear, delete
+from .main import show, update, clear
 from .utils import highlight_text
 from calm.dsl.tools import get_logging_handle
 
