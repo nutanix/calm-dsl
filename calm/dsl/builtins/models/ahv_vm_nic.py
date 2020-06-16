@@ -1,7 +1,12 @@
+import sys
+
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from calm.dsl.store import Cache
+from calm.dsl.config import get_config
+from calm.dsl.tools import get_logging_handle
 
+LOG = get_logging_handle(__name__)
 
 # AHV Nic
 
@@ -33,9 +38,33 @@ def create_ahv_nic(
 ):
 
     kwargs = {}
+
+    # Get project details
+    config = get_config()
+    project_name = config["PROJECT"]["name"]
+    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
+
+    if not project_cache_data:
+        LOG.error(
+            "Project {} not found. Please run: calm update cache".format(project_name)
+        )
+        sys.exit(-1)
+
+    project_accounts = project_cache_data["accounts_data"]
+    project_subnets = project_cache_data["whitelisted_subnets"]
+    # Fetch Nutanix_PC account registered
+    account_uuid = project_accounts.get("nutanix_pc", "")
+
+    if not account_uuid:
+        LOG.error("No nutanix account registered to project {}".format(project_name))
+        sys.exit(-1)
+
     if subnet:
         subnet_cache_data = Cache.get_entity_data(
-            entity_type="ahv_subnet", name=subnet, cluster=cluster
+            entity_type="ahv_subnet",
+            name=subnet,
+            cluster=cluster,
+            account_uuid=account_uuid,
         )
 
         if not subnet_cache_data:
@@ -44,6 +73,14 @@ def create_ahv_nic(
             )
 
         subnet_uuid = subnet_cache_data.get("uuid", "")
+        if subnet_uuid not in project_subnets:
+            LOG.error(
+                "Subnet {} is not whitelisted in project {}".format(
+                    subnet, project_name
+                )
+            )
+            sys.exit(-1)
+
         kwargs["subnet_reference"] = {"name": subnet, "uuid": subnet_uuid}
 
     if network_function_chain:

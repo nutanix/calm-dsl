@@ -1,7 +1,9 @@
 import click
 import sys
+import traceback
+from peewee import OperationalError, IntegrityError
 
-from ..db import get_db_handle
+from ..db import get_db_handle, init_db_handle
 from .version import Version
 from calm.dsl.tools import get_logging_handle
 
@@ -38,33 +40,52 @@ class Cache:
             LOG.error("Unknown entity type ({}) supplied".format(entity_type))
             sys.exit(-1)
 
-        return db_cls.get_entity_data(name=name, **kwargs)
+        try:
+            res = db_cls.get_entity_data(name=name, **kwargs)
+        except OperationalError:
+            formatted_exc = traceback.format_exc()
+            LOG.debug("Exception Traceback:\n{}".format(formatted_exc))
+            LOG.error(
+                "Cache error occurred. Please update cache using 'calm update cache' command"
+            )
+            sys.exit(-1)
+
+        return res
 
     @classmethod
     def sync(cls):
         """Sync cache by latest data"""
 
-        LOG.info("Updating cache", nl=False)
+        def sync_tables(tables):
+            for table in tables:
+                table.sync()
+                click.echo(".", nl=False, err=True)
 
-        # Updating version details first
-        Version.sync()
-        click.echo(".", nl=False, err=True)
+        cache_table_map = cls.get_cache_tables()
+        tables = list(cache_table_map.values())
 
-        # Updating cache tables
-        cache_tables = cls.get_cache_tables()
-        for table in list(cache_tables.values()):
-            table.sync()
-            click.echo(".", nl=False, err=True)
+        # Inserting version table at start
+        tables.insert(0, Version)
 
-        click.echo(" [Done]", err=True)
+        try:
+            LOG.info("Updating cache", nl=False)
+            sync_tables(tables)
+
+        except (OperationalError, IntegrityError):
+            click.echo(" [Fail]")
+            # init db handle once (recreating db if some schema changes are there)
+            LOG.info("Removing existing db and updating cache again")
+            init_db_handle()
+            LOG.info("Updating cache", nl=False)
+            sync_tables(tables)
+            click.echo(" [Done]", err=True)
 
     @classmethod
     def clear_entities(cls):
         """Clear data present in the cache tables"""
 
-        cache_tables = cls.get_cache_tables()
-        for table in list(cache_tables.values()):
-            table.clear()
+        # For now clearing means erasing all data. So reinitialising whole database
+        init_db_handle()
 
     @classmethod
     def show_data(cls):
@@ -73,4 +94,12 @@ class Cache:
         cache_tables = cls.get_cache_tables()
         for cache_type, table in cache_tables.items():
             click.echo("\n{}".format(cache_type.upper()))
-            table.show_data()
+            try:
+                table.show_data()
+            except OperationalError:
+                formatted_exc = traceback.format_exc()
+                LOG.debug("Exception Traceback:\n{}".format(formatted_exc))
+                LOG.error(
+                    "Cache error occurred. Please update cache using 'calm update cache' command"
+                )
+                sys.exit(-1)

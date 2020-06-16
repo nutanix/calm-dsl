@@ -26,6 +26,9 @@ def render_ahv_template(template, bp_name):
         )
         sys.exit(-1)
     project_uuid = project_cache_data.get("uuid", "")
+    project_accounts = project_cache_data["accounts_data"]
+    # Fetch Nutanix_PC account registered
+    account_uuid = project_accounts.get("nutanix_pc", "")
 
     LOG.info("Fetching ahv subnets attached to the project {}".format(project_name))
     res, err = client.project.read(project_uuid)
@@ -44,11 +47,12 @@ def render_ahv_template(template, bp_name):
     subnets.extend(external_networks)
 
     if not subnets:
-        raise Exception("no subnets registered !!!")
+        LOG.error("No registered subnets found in project {}".format(project_name))
+        sys.exit(-1)
 
     default_subnet = subnets[0]["name"]
     subnet_cache_data = Cache.get_entity_data(
-        entity_type="ahv_subnet", name=default_subnet
+        entity_type="ahv_subnet", name=default_subnet, account_uuid=account_uuid
     )
     if not subnet_cache_data:
         LOG.error(

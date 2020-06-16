@@ -11,11 +11,10 @@ from peewee import (
 import datetime
 import click
 import arrow
-import sys
+import json
 from prettytable import PrettyTable
 
 from calm.dsl.api import get_resource_api, get_api_client
-from calm.dsl.config import get_config
 from calm.dsl.tools import get_logging_handle
 from calm.dsl.providers import get_provider
 
@@ -102,6 +101,7 @@ class AhvSubnetsCache(CacheTableBase):
     name = CharField()
     uuid = CharField()
     cluster = CharField()
+    account_uuid = CharField(default="")
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
     def get_detail_dict(self, *args, **kwargs):
@@ -109,6 +109,7 @@ class AhvSubnetsCache(CacheTableBase):
             "name": self.name,
             "uuid": self.uuid,
             "cluster": self.cluster,
+            "account_uuid": self.account_uuid,
             "last_update_time": self.last_update_time,
         }
 
@@ -119,26 +120,30 @@ class AhvSubnetsCache(CacheTableBase):
             db_entity.delete_instance()
 
     @classmethod
-    def create_entry(cls, name, uuid, **kwargs):
+    def create_entry(cls, name, uuid, account_uuid, **kwargs):
         cluster_name = kwargs.get("cluster", None)
         if not cluster_name:
             raise ValueError("cluster not supplied for subnet {}".format(name))
 
         # store data in table
         super().create(
-            name=name, uuid=uuid, cluster=cluster_name,
+            name=name, uuid=uuid, cluster=cluster_name, account_uuid=account_uuid
         )
 
     @classmethod
-    def get_entity_data(cls, name, **kwargs):
+    def get_entity_data(cls, name, account_uuid, **kwargs):
         cluster_name = kwargs.get("cluster", "")
         try:
             if cluster_name:
-                entity = super().get(cls.name == name, cls.cluster == cluster_name,)
+                entity = super().get(
+                    cls.name == name,
+                    cls.cluster == cluster_name,
+                    cls.account_uuid == account_uuid,
+                )
             else:
                 # The get() method is shorthand for selecting with a limit of 1
                 # If more than one row is found, the first row returned by the database cursor
-                entity = super().get(cls.name == name)
+                entity = super().get(cls.name == name, cls.account_uuid == account_uuid)
             return entity.get_detail_dict()
 
         except DoesNotExist:
@@ -153,7 +158,13 @@ class AhvSubnetsCache(CacheTableBase):
             return
 
         table = PrettyTable()
-        table.field_names = ["NAME", "UUID", "CLUSTER_NAME", "LAST UPDATED"]
+        table.field_names = [
+            "NAME",
+            "UUID",
+            "CLUSTER_NAME",
+            "ACCOUNT_UUID",
+            "LAST UPDATED",
+        ]
         for entity in cls.select():
             entity_data = entity.get_detail_dict()
             last_update_time = arrow.get(
@@ -164,6 +175,7 @@ class AhvSubnetsCache(CacheTableBase):
                     highlight_text(entity_data["name"]),
                     highlight_text(entity_data["uuid"]),
                     highlight_text(entity_data["cluster"]),
+                    highlight_text(entity_data["account_uuid"]),
                     highlight_text(last_update_time),
                 ]
             )
@@ -171,74 +183,33 @@ class AhvSubnetsCache(CacheTableBase):
 
     @classmethod
     def sync(cls, *args, **kwargs):
-        """sync the table data from server"""
+        """sync the table from server"""
+
         # clear old data
         cls.clear()
 
-        # update by latest data
-        config = get_config()
         client = get_api_client()
-
-        project_name = config["PROJECT"]["name"]
-        params = {"length": 1000, "filter": "name=={}".format(project_name)}
-        project_name_uuid_map = client.project.get_name_uuid_map(params)
-
-        if not project_name_uuid_map:
-            LOG.error("Invalid project {} in config".format(project_name))
-            sys.exit(-1)
-
-        project_id = project_name_uuid_map[project_name]
-        res, err = client.project.read(project_id)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        project = res.json()
-        subnets_list = []
-        for subnet in project["status"]["project_status"]["resources"][
-            "subnet_reference_list"
-        ]:
-            subnets_list.append(subnet["uuid"])
-
-        # Extending external subnet's list from remote account
-        for subnet in project["status"]["project_status"]["resources"][
-            "external_network_list"
-        ]:
-            subnets_list.append(subnet["uuid"])
-
-        accounts = project["status"]["project_status"]["resources"][
-            "account_reference_list"
-        ]
-
-        reg_accounts = []
-        for account in accounts:
-            reg_accounts.append(account["uuid"])
-
-        # As account_uuid is required for versions>2.9.0
-        account_uuid = ""
         payload = {"length": 250, "filter": "type==nutanix_pc"}
-        res, err = client.account.list(payload)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        res = res.json()
-        for entity in res["entities"]:
-            entity_id = entity["metadata"]["uuid"]
-            if entity_id in reg_accounts:
-                account_uuid = entity_id
-                break
+        account_name_uuid_map = client.account.get_name_uuid_map(payload)
 
         AhvVmProvider = get_provider("AHV_VM")
         AhvObj = AhvVmProvider.get_api_obj()
 
-        filter_query = "(_entity_id_=={})".format(",_entity_id_==".join(subnets_list),)
-        res = AhvObj.subnets(account_uuid=account_uuid, filter_query=filter_query)
-        for entity in res["entities"]:
-            name = entity["status"]["name"]
-            uuid = entity["metadata"]["uuid"]
-            cluster_ref = entity["status"]["cluster_reference"]
-            cluster_name = cluster_ref.get("name", "")
+        for e_name, e_uuid in account_name_uuid_map.items():
+            res = AhvObj.subnets(account_uuid=e_uuid)
 
-            cls.create_entry(name=name, uuid=uuid, cluster=cluster_name)
+            for entity in res["entities"]:
+                name = entity["status"]["name"]
+                uuid = entity["metadata"]["uuid"]
+                cluster_ref = entity["status"]["cluster_reference"]
+                cluster_name = cluster_ref.get("name", "")
+
+                cls.create_entry(
+                    name=name, uuid=uuid, cluster=cluster_name, account_uuid=e_uuid
+                )
+
+        # For older version < 2.9.0
+        # Add working for older versions too
 
     class Meta:
         database = dsl_database
@@ -250,6 +221,7 @@ class AhvImagesCache(CacheTableBase):
     name = CharField()
     image_type = CharField()
     uuid = CharField()
+    account_uuid = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
     def get_detail_dict(self, *args, **kwargs):
@@ -257,6 +229,7 @@ class AhvImagesCache(CacheTableBase):
             "name": self.name,
             "uuid": self.uuid,
             "image_type": self.image_type,
+            "account_uuid": self.account_uuid,
             "last_update_time": self.last_update_time,
         }
 
@@ -267,19 +240,25 @@ class AhvImagesCache(CacheTableBase):
             db_entity.delete_instance()
 
     @classmethod
-    def create_entry(cls, name, uuid, **kwargs):
+    def create_entry(cls, name, uuid, account_uuid, **kwargs):
         image_type = kwargs.get("image_type", "")
-        # Store data in table
-        super().create(name=name, uuid=uuid, image_type=image_type)
+        # store data in table
+        super().create(
+            name=name, uuid=uuid, image_type=image_type, account_uuid=account_uuid
+        )
 
     @classmethod
-    def get_entity_data(cls, name, **kwargs):
+    def get_entity_data(cls, name, account_uuid, **kwargs):
         image_type = kwargs.get("image_type", None)
         if not image_type:
             raise ValueError("image_type not provided for image {}".format(name))
 
         try:
-            entity = super().get(cls.name == name, cls.image_type == image_type)
+            entity = super().get(
+                cls.name == name,
+                cls.image_type == image_type,
+                cls.account_uuid == account_uuid,
+            )
             return entity.get_detail_dict()
 
         except DoesNotExist:
@@ -291,56 +270,23 @@ class AhvImagesCache(CacheTableBase):
         # clear old data
         cls.clear()
 
-        # update by latest data
-        config = get_config()
         client = get_api_client()
-
-        project_name = config["PROJECT"]["name"]
-        params = {"length": 1000, "filter": "name=={}".format(project_name)}
-        project_name_uuid_map = client.project.get_name_uuid_map(params)
-
-        if not project_name_uuid_map:
-            LOG.error("Invalid project {} in config".format(project_name))
-            sys.exit(-1)
-
-        project_id = project_name_uuid_map[project_name]
-        res, err = client.project.read(project_id)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        project = res.json()
-        accounts = project["status"]["project_status"]["resources"][
-            "account_reference_list"
-        ]
-
-        reg_accounts = []
-        for account in accounts:
-            reg_accounts.append(account["uuid"])
-
-        # As account_uuid is required for versions>2.9.0
-        account_uuid = ""
         payload = {"length": 250, "filter": "type==nutanix_pc"}
-        res, err = client.account.list(payload)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        res = res.json()
-        for entity in res["entities"]:
-            entity_id = entity["metadata"]["uuid"]
-            if entity_id in reg_accounts:
-                account_uuid = entity_id
-                break
+        account_name_uuid_map = client.account.get_name_uuid_map(payload)
 
         AhvVmProvider = get_provider("AHV_VM")
         AhvObj = AhvVmProvider.get_api_obj()
-        res = AhvObj.images(account_uuid=account_uuid)
 
-        for entity in res["entities"]:
-            name = entity["status"]["name"]
-            uuid = entity["metadata"]["uuid"]
-            # TODO add proper validation for karbon images
-            image_type = entity["status"]["resources"].get("image_type", "")
-            cls.create_entry(name=name, uuid=uuid, image_type=image_type)
+        for e_name, e_uuid in account_name_uuid_map.items():
+            res = AhvObj.images(account_uuid=e_uuid)
+            for entity in res["entities"]:
+                name = entity["status"]["name"]
+                uuid = entity["metadata"]["uuid"]
+                # TODO add proper validation for karbon images
+                image_type = entity["status"]["resources"].get("image_type", "")
+                cls.create_entry(
+                    name=name, uuid=uuid, image_type=image_type, account_uuid=e_uuid
+                )
 
     @classmethod
     def show_data(cls, *args, **kwargs):
@@ -351,7 +297,13 @@ class AhvImagesCache(CacheTableBase):
             return
 
         table = PrettyTable()
-        table.field_names = ["NAME", "UUID", "IMAGE_TYPE", "LAST UPDATED"]
+        table.field_names = [
+            "NAME",
+            "UUID",
+            "IMAGE_TYPE",
+            "ACCOUNT_UUID",
+            "LAST UPDATED",
+        ]
         for entity in cls.select().order_by(cls.image_type):
             entity_data = entity.get_detail_dict()
             last_update_time = arrow.get(
@@ -362,6 +314,7 @@ class AhvImagesCache(CacheTableBase):
                     highlight_text(entity_data["name"]),
                     highlight_text(entity_data["uuid"]),
                     highlight_text(entity_data["image_type"]),
+                    highlight_text(entity_data["account_uuid"]),
                     highlight_text(last_update_time),
                 ]
             )
@@ -376,12 +329,16 @@ class ProjectCache(CacheTableBase):
     __cache_type__ = "project"
     name = CharField()
     uuid = CharField()
+    accounts_data = CharField()
+    whitelisted_subnets = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
     def get_detail_dict(self, *args, **kwargs):
         return {
             "name": self.name,
             "uuid": self.uuid,
+            "accounts_data": json.loads(self.accounts_data),
+            "whitelisted_subnets": json.loads(self.whitelisted_subnets),
             "last_update_time": self.last_update_time,
         }
 
@@ -393,8 +350,13 @@ class ProjectCache(CacheTableBase):
 
     @classmethod
     def create_entry(cls, name, uuid, **kwargs):
+        accounts_data = kwargs.get("accounts_data", "{}")
+        whitelisted_subnets = kwargs.get("whitelisted_subnets", "[]")
         super().create(
-            name=name, uuid=uuid,
+            name=name,
+            uuid=uuid,
+            accounts_data=accounts_data,
+            whitelisted_subnets=whitelisted_subnets,
         )
 
     @classmethod
@@ -414,6 +376,20 @@ class ProjectCache(CacheTableBase):
 
         # update by latest data
         client = get_api_client()
+
+        payload = {"length": 200, "offset": 0, "filter": "state!=DELETED;type!=nutanix"}
+        res, err = client.account.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        # Single account per provider_type can be added to project
+        account_uuid_type_map = {}
+        for entity in res["entities"]:
+            a_uuid = entity["metadata"]["uuid"]
+            a_type = entity["status"]["resources"]["type"]
+            account_uuid_type_map[a_uuid] = a_type
+
         Obj = get_resource_api("projects", client.connection)
         res, err = Obj.list({"length": 1000})
         if err:
@@ -423,7 +399,36 @@ class ProjectCache(CacheTableBase):
         for entity in res["entities"]:
             name = entity["status"]["name"]
             uuid = entity["metadata"]["uuid"]
-            cls.create_entry(name=name, uuid=uuid)
+
+            account_list = entity["status"]["resources"]["account_reference_list"]
+            account_map = {}
+            for account in account_list:
+                account_uuid = account["uuid"]
+                account_type = account_uuid_type_map[account_uuid]
+
+                # For now only single provider account per provider is allowed
+                account_map[account_type] = account_uuid
+
+            accounts_data = json.dumps(account_map)
+
+            subnets_ref_list = entity["status"]["resources"]["subnet_reference_list"]
+            subnets_uuid_list = []
+            for subnet in subnets_ref_list:
+                subnets_uuid_list.append(subnet["uuid"])
+
+            external_network_ref_list = entity["spec"]["resources"].get(
+                "external_network_list", []
+            )
+            for subnet in external_network_ref_list:
+                subnets_uuid_list.append(subnet["uuid"])
+
+            subnets_uuid_list = json.dumps(subnets_uuid_list)
+            cls.create_entry(
+                name=name,
+                uuid=uuid,
+                accounts_data=accounts_data,
+                whitelisted_subnets=subnets_uuid_list,
+            )
 
     @classmethod
     def show_data(cls, *args, **kwargs):
