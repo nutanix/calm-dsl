@@ -1093,14 +1093,12 @@ class CalmTask:
     class While:
         def __new__(
             cls,
-            iterations=None,
+            iterations,
             name=None,
             child_tasks=[],
             loop_variable="iteration",
             exit_condition="DONT_CARE",
         ):
-            if not iterations:
-                raise ValueError("iterations is required for while loop")
             attrs = {
                 "iterations": str(iterations),
                 "loop_variable": loop_variable,
