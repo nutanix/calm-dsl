@@ -31,7 +31,7 @@ http_endpoint = CalmEndpoint.HTTP(
 @runbook
 def WhileTask(endpoints=[linux_endpoint, windows_endpoint, http_endpoint]):
     "Runbook Service example"
-    while 10:
+    with CalmTask.While(10, exit_condition="SUCCESS"):
         with CalmTask.Decision.ssh(
             name="Task1", script="exit 0", target=ref(linux_endpoint)
         ) as val:
@@ -82,9 +82,9 @@ def WhileTask(endpoints=[linux_endpoint, windows_endpoint, http_endpoint]):
             status_mapping={200: True},
             target=ref(http_endpoint),
         )
-        with CalmTask.While(10, name="Task7", loop_variable="iteration1"):
+        with CalmTask.While(10, name="Task7", loop_variable="iteration1", exit_condition="SUCCESS"):
             CalmTask.Exec.escript(script="print 'test'")
-        with CalmTask.While(10, name="Task8", loop_variable="iteration2"):
+        with CalmTask.While(10, name="Task8", loop_variable="iteration2", exit_condition="SUCCESS"):
             CalmTask.Exec.escript(script="print 'test'")
         CalmTask.Exec.escript(script="print 'test'", name="Task9")
         CalmTask.Exec.escript(script="print 'test'", name="Task10")
