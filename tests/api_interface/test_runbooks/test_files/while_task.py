@@ -5,7 +5,7 @@ Calm DSL While Task Example
 import json
 
 from calm.dsl.builtins import runbook
-from calm.dsl.builtins import CalmTask, Auth, CalmVariable
+from calm.dsl.builtins import CalmTask, Auth
 from calm.dsl.builtins import CalmEndpoint, ref
 from calm.dsl.builtins import read_local_file, basic_cred
 
@@ -82,9 +82,9 @@ def WhileTask(endpoints=[linux_endpoint, windows_endpoint, http_endpoint]):
             status_mapping={200: True},
             target=ref(http_endpoint),
         )
-        while CalmTask.While(10, name="Task7", loop_variable="iteration1"):
+        with CalmTask.While(10, name="Task7", loop_variable="iteration1"):
             CalmTask.Exec.escript(script="print 'test'")
-        while CalmTask.While(10, name="Task8", loop_variable="iteration2"):
+        with CalmTask.While(10, name="Task8", loop_variable="iteration2"):
             CalmTask.Exec.escript(script="print 'test'")
         CalmTask.Exec.escript(script="print 'test'", name="Task9")
         CalmTask.Exec.escript(script="print 'test'", name="Task10")
@@ -105,13 +105,13 @@ def WhileTask(endpoints=[linux_endpoint, windows_endpoint, http_endpoint]):
 @runbook
 def WhileTaskLoopVariable(endpoints=[linux_endpoint, windows_endpoint, http_endpoint]):
     "Runbook Service example"
-    while CalmTask.While(10, name="Task1", loop_variable="iteration"):
+    with CalmTask.While(10, name="Task1", loop_variable="iteration"):
         CalmTask.SetVariable.escript(
             name="SetVariableTask",
             script='''print "iteration=random"''',
             variables=["iteration"],
         )
-        while CalmTask.While(10, name="Task2", loop_variable="iteration"):
+        with CalmTask.While(10, name="Task2", loop_variable="iteration"):
             CalmTask.HTTP.endpoint(
                 "POST",
                 relative_url="/list",

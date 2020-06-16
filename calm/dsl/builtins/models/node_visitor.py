@@ -175,31 +175,21 @@ class GetCallNodes(ast.NodeVisitor):
 
             self.all_tasks.append(context)
             self.task_list.append(context)
+
+        # for while tasks
+        elif (
+            self.is_runbook
+            and isinstance(context, TaskType)
+            and context.type == "WHILE_LOOP"
+        ):
+            whileBody = ast.FunctionDef(body=node.body, col_offset=node.col_offset)
+            meta_task, tasks, variables = handle_meta_create(whileBody, self._globals)
+            self.all_tasks.extend([meta_task] + tasks)
+            self.variables.update(variables)
+            context.child_tasks_local_reference_list.append(meta_task.get_ref())
+            self.all_tasks.append(context)
+            self.task_list.append(context)
         else:
             raise ValueError(
                 "Unsupported context used in 'with' statement inside the action."
             )
-
-    def visit_While(self, node):
-        if not self.is_runbook:
-            raise ValueError("Unsupported 'while' usage inside the action.")
-
-        if isinstance(node.test, ast.Call):
-            while_task = self.visit_Call(node.test, return_task=True)
-            if not isinstance(while_task, TaskType) or while_task.type != "WHILE_LOOP":
-                raise ValueError(
-                    "Only WhileLoop Tasks are supported inside while context."
-                )
-        elif isinstance(node.test, ast.Num):
-            while_task = CalmTask.While(node.test.n)
-        else:
-            raise ValueError(
-                "Only CalmTasks or iterations (int) are supported inside while context."
-            )
-        whileBody = ast.FunctionDef(body=node.body, col_offset=node.col_offset)
-        meta_task, tasks, variables = handle_meta_create(whileBody, self._globals)
-        self.all_tasks.extend([meta_task] + tasks)
-        self.variables.update(variables)
-        while_task.child_tasks_local_reference_list.append(meta_task.get_ref())
-        self.all_tasks.append(while_task)
-        self.task_list.append(while_task)
