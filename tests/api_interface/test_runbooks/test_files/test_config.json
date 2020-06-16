@@ -1,7 +1,7 @@
 {
     "DslInputRunbook": {
         "input_payload": {
-            "my_name": {
+            "user_name": {
                 "secret": false,
                 "value": "User"
             },

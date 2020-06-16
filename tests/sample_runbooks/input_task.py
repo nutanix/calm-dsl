@@ -7,7 +7,7 @@ from calm.dsl.builtins import runbook
 from calm.dsl.builtins import CalmTask, CalmVariable
 
 
-code = """print "Hello @@{name}@@"
+code = """print "Hello @@{user_name}@@"
 print "Your Password is @@{password}@@"
 print "Date you selected is @@{date}@@"
 print "Time selected is @@{time}@@"
