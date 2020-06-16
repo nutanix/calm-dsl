@@ -13,14 +13,14 @@ def DslDecisionRunbook():
     "Runbook Service example"
     with CalmTask.Decision.ssh(
         name="DecisionTask", script="cat hell", target=ref(CalmEndpoint("DslEndpoint"))
-    ):
+    ) as val:
 
-        def success():
+        if val.true:
             CalmTask.Exec.escript(
                 name="Task1", script="print 'Decision Task is Successful'"
             )
 
-        def failure():
+        if val.false:
             CalmTask.Exec.escript(name="Task2", script="print 'Decision Task Failed'")
 
 

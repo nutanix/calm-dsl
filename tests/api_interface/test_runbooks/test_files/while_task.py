@@ -34,28 +34,28 @@ def WhileTask(endpoints=[linux_endpoint, windows_endpoint, http_endpoint]):
     while 10:
         with CalmTask.Decision.ssh(
             name="Task1", script="exit 0", target=ref(linux_endpoint)
-        ):
+        ) as val:
 
-            def success():  # noqa
+            if val.true:
                 CalmTask.Exec.ssh(
                     name="SUCCESS1", script="echo 'SUCCESS'", target=ref(linux_endpoint)
                 )
 
-            def failure():  # noqa
+            if val.false:
                 CalmTask.Exec.ssh(
                     name="FAILURE1", script="echo 'FAILURE'", target=ref(linux_endpoint)
                 )
 
         with CalmTask.Decision.ssh(
             name="Task2", script="exit 1", target=ref(linux_endpoint)
-        ):
+        ) as val:
 
-            def success():  # noqa
+            if val.true:
                 CalmTask.Exec.ssh(
                     name="SUCCESS2", script="echo 'SUCCESS'", target=ref(linux_endpoint)
                 )
 
-            def failure():  # noqa
+            if val.false:
                 CalmTask.Exec.ssh(
                     name="FAILURE2", script="echo 'FAILURE'", target=ref(linux_endpoint)
                 )

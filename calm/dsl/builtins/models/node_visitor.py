@@ -120,16 +120,29 @@ class GetCallNodes(ast.NodeVisitor):
             and isinstance(context, TaskType)
             and context.type == "DECISION"
         ):
+            if not node.items[0].optional_vars:
+                raise ValueError("Decision task must be used in the format `with CalmTask.Decision() as val`")
+            var = node.items[0].optional_vars.id
+            success_path = None
+            failure_path = None
             for statement in node.body:
-                if isinstance(statement, ast.FunctionDef):
-                    if statement.name == "success":
+                if (isinstance(statement, ast.If) and statement.test.value.id == var):
+
+                    if statement.orelse:
+                        raise ValueError("elif or else are not supported in decision context")
+
+                    if statement.test.attr.lower() == "true":
+                        if success_path:
+                            raise ValueError("'True' flow is defined more than once in decision task.")
                         success_path, tasks, variables = handle_meta_create(
                             statement, self._globals
                         )
                         self.all_tasks.extend([success_path] + tasks)
                         self.variables.update(variables)
 
-                    elif statement.name == "failure":
+                    elif statement.test.attr.lower() == "false":
+                        if failure_path:
+                            raise ValueError("'False' flow is defined more than once in decision task.")
                         failure_path, tasks, variables = handle_meta_create(
                             statement, self._globals
                         )
@@ -137,12 +150,15 @@ class GetCallNodes(ast.NodeVisitor):
                         self.variables.update(variables)
                     else:
                         raise ValueError(
-                            'Only "success" and "failure" flows are supported inside decision context'
+                            "Only 'True' and 'False' flows are supported inside decision context."
                         )
                 else:
                     raise ValueError(
-                        "Only calls to 'FunctionDef' methods supported inside decision context."
+                        "Only calls to 'If' methods on decision variable are supported inside decision context."
                     )
+
+            if not success_path or not failure_path:
+                raise ValueError("Both 'True' and 'False' flows are required for decision task.")
 
             context.attrs["success_child_reference"] = success_path.get_ref()
             context.attrs["failure_child_reference"] = failure_path.get_ref()
