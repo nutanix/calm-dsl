@@ -4,19 +4,10 @@ Calm DSL Runbook Sample for input task
 """
 
 from calm.dsl.builtins import runbook
-from calm.dsl.builtins import CalmTask, TaskInput
+from calm.dsl.builtins import CalmTask, CalmVariable
 
 
-inputs = [
-    TaskInput("my_name"),
-    TaskInput("password", input_type="password"),
-    TaskInput("date", input_type="date"),
-    TaskInput("time", input_type="time"),
-    TaskInput("user", input_type="select", options=["user1", "user2", "user3"]),
-]
-
-
-code = """print "Hello @@{my_name}@@"
+code = """print "Hello @@{name}@@"
 print "Your Password is @@{password}@@"
 print "Date you selected is @@{date}@@"
 print "Time selected is @@{time}@@"
@@ -27,7 +18,18 @@ print "User selected is @@{user}@@"
 @runbook
 def DslInputRunbook():
     "Runbook Service example"
-    CalmTask.Input(name="Input_Task", inputs=inputs)
+    CalmTask.Input(
+        name="Input_Task",
+        inputs=[
+            CalmVariable.TaskInput("user_name"),
+            CalmVariable.TaskInput("password", input_type="password"),
+            CalmVariable.TaskInput("date", input_type="date"),
+            CalmVariable.TaskInput("time", input_type="time"),
+            CalmVariable.TaskInput(
+                "user", input_type="select", options=["user1", "user2", "user3"]
+            ),
+        ],
+    )
     CalmTask.Exec.escript(name="Exec_Task", script=code)
 
 

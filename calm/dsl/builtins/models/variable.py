@@ -2,6 +2,7 @@ import re
 
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
+from .task_input import _task_input
 
 
 # Variable
@@ -1451,3 +1452,7 @@ class CalmVariable:
                 time = variable_time_with_options_from_task_array
                 datetime = variable_datetime_with_options_from_task_array
                 multiline = variable_multiline_with_options_from_task_array
+
+    class TaskInput:
+        def __new__(cls, *args, **kwargs):
+            return _task_input(*args, **kwargs)

@@ -47,8 +47,3 @@ def _task_input(*args, **kwargs):
             )
     bases = (Entity,)
     return TaskInputType(name, bases, kwargs)
-
-
-class TaskInput:
-    def __new__(cls, *args, **kwargs):
-        return _task_input(*args, **kwargs)

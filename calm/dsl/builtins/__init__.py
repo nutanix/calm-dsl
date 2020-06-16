@@ -5,7 +5,6 @@
 # the import for these below the entities will cause a TypeError.
 
 from .models.ref import Ref, ref
-from .models.task_input import TaskInput
 from .models.credential import basic_cred, secret_cred
 from .models.variable import Variable, setvar, CalmVariable
 from .models.action import action, parallel
@@ -56,7 +55,6 @@ from .models.ahv_vm import ahv_vm_resources, AhvVmResources, ahv_vm, AhvVm
 __all__ = [
     "Ref",
     "ref",
-    "TaskInput",
     "basic_cred",
     "secret_cred",
     "Variable",

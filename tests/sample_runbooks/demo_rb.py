@@ -7,7 +7,6 @@ from calm.dsl.builtins import read_local_file, basic_cred
 from calm.dsl.builtins import runbook
 from calm.dsl.builtins import CalmTask, CalmVariable
 from calm.dsl.builtins import CalmEndpoint, ref
-from calm.dsl.builtins import TaskInput
 
 CRED_USERNAME = read_local_file(".tests/runbook_tests/username")
 CRED_PASSWORD = read_local_file(".tests/runbook_tests/password")
@@ -21,7 +20,7 @@ DslLinuxEndpoint = CalmEndpoint.Linux.ip([VM_IP], cred=Cred)
 def DslDemoRunbook(endpoints=[DslLinuxEndpoint], default_target=ref(DslLinuxEndpoint)):
     "Runbook Service example"
     size_limit = CalmVariable.Simple.int("102400", runtime=True)  # noqa
-    CalmTask.Input(name="InputTask", inputs=[TaskInput("log_path")])
+    CalmTask.Input(name="InputTask", inputs=[CalmVariable.TaskInput("log_path")])
     with CalmTask.Decision.ssh(name="DecisionTask", script="cd @@{log_path}@@") as val:
 
         if val.true:
