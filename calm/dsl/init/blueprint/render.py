@@ -5,7 +5,6 @@ from jinja2 import Environment, PackageLoader
 from Crypto.PublicKey import RSA
 
 from calm.dsl.config import get_config
-from calm.dsl.api import get_api_client
 from calm.dsl.store import Cache
 from calm.dsl.builtins import read_file
 from calm.dsl.tools import get_logging_handle

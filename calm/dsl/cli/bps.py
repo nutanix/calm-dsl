@@ -256,6 +256,7 @@ def compile_blueprint_command(bp_file, out):
         LOG.error(
             "Project {} not found. Please run: calm update cache".format(project_name)
         )
+        sys.exit(-1)
 
     project_uuid = project_cache_data.get("uuid", "")
     bp_payload["metadata"]["project_reference"] = {

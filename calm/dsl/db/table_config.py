@@ -68,17 +68,25 @@ class CacheTableBase(BaseModel):
         cache_type = cls.__cache_type__
         cls.tables[cache_type] = cls
 
+    def get_detail_dict(self):
+        raise NotImplementedError("get_detail_dict helper not implemented")
+
     @classmethod
     def get_cache_tables(cls):
         return cls.tables
 
     @classmethod
-    def clear(cls, *args, **kwargs):
+    def clear(cls):
         """removes entire data from table"""
         raise NotImplementedError("clear helper not implemented")
 
-    def get_detail_dict(self, *args, **kwargs):
-        raise NotImplementedError("get_detail_dict helper not implemented")
+    @classmethod
+    def show_data(cls):
+        raise NotImplementedError("show_data helper not implemented")
+
+    @classmethod
+    def sync(cls):
+        raise NotImplementedError("sync helper not implemented")
 
     @classmethod
     def create_entry(cls, name, uuid, **kwargs):
@@ -91,14 +99,6 @@ class CacheTableBase(BaseModel):
     @classmethod
     def get_entity_data_using_uuid(cls, uuid, **kwargs):
         raise NotImplementedError("get_entity_data_using_uuid helper not implemented")
-
-    @classmethod
-    def show_data(cls, *args, **kwargs):
-        raise NotImplementedError("show_data helper not implemented")
-
-    @classmethod
-    def sync(cls, *args, **kwargs):
-        raise NotImplementedError("sync helper not implemented")
 
 
 class AhvSubnetsCache(CacheTableBase):
@@ -119,68 +119,13 @@ class AhvSubnetsCache(CacheTableBase):
         }
 
     @classmethod
-    def clear(cls, *args, **kwargs):
+    def clear(cls):
         """removes entire data from table"""
         for db_entity in cls.select():
             db_entity.delete_instance()
 
     @classmethod
-    def create_entry(cls, name, uuid, **kwargs):
-        account_uuid = kwargs.get("account_uuid", "")
-        if not account_uuid:
-            LOG.error("Account UUID not supplied for subnet {}".format(name))
-            sys.exit(-1)
-
-        cluster_name = kwargs.get("cluster", None)
-        if not cluster_name:
-            LOG.error("cluster not supplied for subnet {}".format(name))
-            sys.exit(-1)
-
-        # store data in table
-        super().create(
-            name=name, uuid=uuid, cluster=cluster_name, account_uuid=account_uuid
-        )
-
-    @classmethod
-    def get_entity_data(cls, name, **kwargs):
-        account_uuid = kwargs.get("account_uuid", "")
-        if not account_uuid:
-            LOG.error("Account UUID not supplied for fetching subnet {}". format(name))
-            sys.exit(-1)
-
-        cluster_name = kwargs.get("cluster", "")
-        try:
-            if cluster_name:
-                entity = super().get(
-                    cls.name == name,
-                    cls.cluster == cluster_name,
-                    cls.account_uuid == account_uuid,
-                )
-            else:
-                # The get() method is shorthand for selecting with a limit of 1
-                # If more than one row is found, the first row returned by the database cursor
-                entity = super().get(cls.name == name, cls.account_uuid == account_uuid)
-            return entity.get_detail_dict()
-
-        except DoesNotExist:
-            return None
-
-    @classmethod
-    def get_entity_data_using_uuid(cls, uuid, *args, **kwargs):
-        account_uuid = kwargs.get("account_uuid", "")
-        if not account_uuid:
-            LOG.error("Account UUID not supplied for fetching subnet with uuid {}". format(uuid))
-            sys.exit(-1)
-
-        try:
-            entity = super().get(cls.uuid == uuid, cls.account_uuid == account_uuid)
-            return entity.get_detail_dict()
-
-        except DoesNotExist:
-            return None
-
-    @classmethod
-    def show_data(cls, *args, **kwargs):
+    def show_data(cls):
         """display stored data in table"""
 
         if not len(cls.select()):
@@ -212,7 +157,7 @@ class AhvSubnetsCache(CacheTableBase):
         click.echo(table)
 
     @classmethod
-    def sync(cls, *args, **kwargs):
+    def sync(cls):
         """sync the table from server"""
 
         # clear old data
@@ -241,6 +186,65 @@ class AhvSubnetsCache(CacheTableBase):
         # For older version < 2.9.0
         # Add working for older versions too
 
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        account_uuid = kwargs.get("account_uuid", "")
+        if not account_uuid:
+            LOG.error("Account UUID not supplied for subnet {}".format(name))
+            sys.exit(-1)
+
+        cluster_name = kwargs.get("cluster", None)
+        if not cluster_name:
+            LOG.error("cluster not supplied for subnet {}".format(name))
+            sys.exit(-1)
+
+        # store data in table
+        super().create(
+            name=name, uuid=uuid, cluster=cluster_name, account_uuid=account_uuid
+        )
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        account_uuid = kwargs.get("account_uuid", "")
+        if not account_uuid:
+            LOG.error("Account UUID not supplied for fetching subnet {}".format(name))
+            sys.exit(-1)
+
+        cluster_name = kwargs.get("cluster", "")
+        try:
+            if cluster_name:
+                entity = super().get(
+                    cls.name == name,
+                    cls.cluster == cluster_name,
+                    cls.account_uuid == account_uuid,
+                )
+            else:
+                # The get() method is shorthand for selecting with a limit of 1
+                # If more than one row is found, the first row returned by the database cursor
+                entity = super().get(cls.name == name, cls.account_uuid == account_uuid)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return None
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
+        account_uuid = kwargs.get("account_uuid", "")
+        if not account_uuid:
+            LOG.error(
+                "Account UUID not supplied for fetching subnet with uuid {}".format(
+                    uuid
+                )
+            )
+            sys.exit(-1)
+
+        try:
+            entity = super().get(cls.uuid == uuid, cls.account_uuid == account_uuid)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return None
+
     class Meta:
         database = dsl_database
         primary_key = CompositeKey("name", "uuid")
@@ -254,7 +258,7 @@ class AhvImagesCache(CacheTableBase):
     account_uuid = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
-    def get_detail_dict(self, *args, **kwargs):
+    def get_detail_dict(self):
         return {
             "name": self.name,
             "uuid": self.uuid,
@@ -264,10 +268,66 @@ class AhvImagesCache(CacheTableBase):
         }
 
     @classmethod
-    def clear(cls, *args, **kwargs):
+    def clear(cls):
         """removes entire data from table"""
         for db_entity in cls.select():
             db_entity.delete_instance()
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = [
+            "NAME",
+            "UUID",
+            "IMAGE_TYPE",
+            "ACCOUNT_UUID",
+            "LAST UPDATED",
+        ]
+        for entity in cls.select().order_by(cls.image_type):
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(entity_data["image_type"]),
+                    highlight_text(entity_data["account_uuid"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def sync(cls):
+        """sync the table data from server"""
+        # clear old data
+        cls.clear()
+
+        client = get_api_client()
+        payload = {"length": 250, "filter": "type==nutanix_pc"}
+        account_name_uuid_map = client.account.get_name_uuid_map(payload)
+
+        AhvVmProvider = get_provider("AHV_VM")
+        AhvObj = AhvVmProvider.get_api_obj()
+
+        for e_name, e_uuid in account_name_uuid_map.items():
+            res = AhvObj.images(account_uuid=e_uuid)
+            for entity in res["entities"]:
+                name = entity["status"]["name"]
+                uuid = entity["metadata"]["uuid"]
+                # TODO add proper validation for karbon images
+                image_type = entity["status"]["resources"].get("image_type", "")
+                cls.create_entry(
+                    name=name, uuid=uuid, image_type=image_type, account_uuid=e_uuid
+                )
 
     @classmethod
     def create_entry(cls, name, uuid, **kwargs):
@@ -306,12 +366,14 @@ class AhvImagesCache(CacheTableBase):
             return None
 
     @classmethod
-    def get_entity_data_using_uuid(cls, uuid, *args, **kwargs):
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
         account_uuid = kwargs.get("account_uuid", "")
         if not account_uuid:
             # For now we can attach multiple nutanix_pc account pointing to same pc
             # https://jira.nutanix.com/browse/CALM-19273, So make account_uuid as necessary
-            LOG.error("Account UUID not supplied for fetching image with uuid {}".format(uuid))
+            LOG.error(
+                "Account UUID not supplied for fetching image with uuid {}".format(uuid)
+            )
             sys.exit(-1)
 
         try:
@@ -320,62 +382,6 @@ class AhvImagesCache(CacheTableBase):
 
         except DoesNotExist:
             return None
-
-    @classmethod
-    def sync(cls, *args, **kwargs):
-        """sync the table data from server"""
-        # clear old data
-        cls.clear()
-
-        client = get_api_client()
-        payload = {"length": 250, "filter": "type==nutanix_pc"}
-        account_name_uuid_map = client.account.get_name_uuid_map(payload)
-
-        AhvVmProvider = get_provider("AHV_VM")
-        AhvObj = AhvVmProvider.get_api_obj()
-
-        for e_name, e_uuid in account_name_uuid_map.items():
-            res = AhvObj.images(account_uuid=e_uuid)
-            for entity in res["entities"]:
-                name = entity["status"]["name"]
-                uuid = entity["metadata"]["uuid"]
-                # TODO add proper validation for karbon images
-                image_type = entity["status"]["resources"].get("image_type", "")
-                cls.create_entry(
-                    name=name, uuid=uuid, image_type=image_type, account_uuid=e_uuid
-                )
-
-    @classmethod
-    def show_data(cls, *args, **kwargs):
-        """display stored data in table"""
-
-        if not len(cls.select()):
-            click.echo(highlight_text("No entry found !!!"))
-            return
-
-        table = PrettyTable()
-        table.field_names = [
-            "NAME",
-            "UUID",
-            "IMAGE_TYPE",
-            "ACCOUNT_UUID",
-            "LAST UPDATED",
-        ]
-        for entity in cls.select().order_by(cls.image_type):
-            entity_data = entity.get_detail_dict()
-            last_update_time = arrow.get(
-                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
-            ).humanize()
-            table.add_row(
-                [
-                    highlight_text(entity_data["name"]),
-                    highlight_text(entity_data["uuid"]),
-                    highlight_text(entity_data["image_type"]),
-                    highlight_text(entity_data["account_uuid"]),
-                    highlight_text(last_update_time),
-                ]
-            )
-        click.echo(table)
 
     class Meta:
         database = dsl_database
@@ -400,42 +406,36 @@ class ProjectCache(CacheTableBase):
         }
 
     @classmethod
-    def clear(cls, *args, **kwargs):
+    def clear(cls):
         """removes entire data from table"""
         for db_entity in cls.select():
             db_entity.delete_instance()
 
     @classmethod
-    def create_entry(cls, name, uuid, **kwargs):
-        accounts_data = kwargs.get("accounts_data", "{}")
-        whitelisted_subnets = kwargs.get("whitelisted_subnets", "[]")
-        super().create(
-            name=name,
-            uuid=uuid,
-            accounts_data=accounts_data,
-            whitelisted_subnets=whitelisted_subnets,
-        )
+    def show_data(cls):
+        """display stored data in table"""
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = ["NAME", "UUID", "LAST UPDATED"]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
 
     @classmethod
-    def get_entity_data(cls, name, **kwargs):
-        try:
-            entity = super().get(cls.name == name)
-            return entity.get_detail_dict()
-
-        except DoesNotExist:
-            return None
-
-    @classmethod
-    def get_entity_data_using_uuid(cls, uuid, *args, **kwargs):
-        try:
-            entity = super().get(cls.uuid == uuid)
-            return entity.get_detail_dict()
-
-        except DoesNotExist:
-            return None
-
-    @classmethod
-    def sync(cls, *args, **kwargs):
+    def sync(cls):
         """sync the table data from server"""
         # clear old data
         cls.clear()
@@ -497,27 +497,33 @@ class ProjectCache(CacheTableBase):
             )
 
     @classmethod
-    def show_data(cls, *args, **kwargs):
-        """display stored data in table"""
-        if not len(cls.select()):
-            click.echo(highlight_text("No entry found !!!"))
-            return
+    def create_entry(cls, name, uuid, **kwargs):
+        accounts_data = kwargs.get("accounts_data", "{}")
+        whitelisted_subnets = kwargs.get("whitelisted_subnets", "[]")
+        super().create(
+            name=name,
+            uuid=uuid,
+            accounts_data=accounts_data,
+            whitelisted_subnets=whitelisted_subnets,
+        )
 
-        table = PrettyTable()
-        table.field_names = ["NAME", "UUID", "LAST UPDATED"]
-        for entity in cls.select():
-            entity_data = entity.get_detail_dict()
-            last_update_time = arrow.get(
-                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
-            ).humanize()
-            table.add_row(
-                [
-                    highlight_text(entity_data["name"]),
-                    highlight_text(entity_data["uuid"]),
-                    highlight_text(last_update_time),
-                ]
-            )
-        click.echo(table)
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        try:
+            entity = super().get(cls.name == name)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return None
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
+        try:
+            entity = super().get(cls.uuid == uuid)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return None
 
     class Meta:
         database = dsl_database
@@ -538,46 +544,13 @@ class AhvNetworkFunctionChain(CacheTableBase):
         }
 
     @classmethod
-    def clear(cls, *args, **kwargs):
+    def clear(cls):
         """removes entire data from table"""
         for db_entity in cls.select():
             db_entity.delete_instance()
 
     @classmethod
-    def create_entry(cls, name, uuid, **kwargs):
-        super().create(
-            name=name, uuid=uuid,
-        )
-
-    @classmethod
-    def get_entity_data(cls, name, **kwargs):
-        try:
-            entity = super().get(cls.name == name)
-            return entity.get_detail_dict()
-
-        except DoesNotExist:
-            return None
-
-    @classmethod
-    def sync(cls, *args, **kwargs):
-        # clear old data
-        cls.clear()
-
-        # update by latest data
-        client = get_api_client()
-        Obj = get_resource_api("network_function_chains", client.connection)
-        res, err = Obj.list({"length": 1000})
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        res = res.json()
-        for entity in res["entities"]:
-            name = entity["status"]["name"]
-            uuid = entity["metadata"]["uuid"]
-            cls.create_entry(name=name, uuid=uuid)
-
-    @classmethod
-    def show_data(cls, *args, **kwargs):
+    def show_data(cls):
         """display stored data in table"""
 
         if not len(cls.select()):
@@ -599,6 +572,39 @@ class AhvNetworkFunctionChain(CacheTableBase):
                 ]
             )
         click.echo(table)
+
+    @classmethod
+    def sync(cls):
+        # clear old data
+        cls.clear()
+
+        # update by latest data
+        client = get_api_client()
+        Obj = get_resource_api("network_function_chains", client.connection)
+        res, err = Obj.list({"length": 1000})
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        for entity in res["entities"]:
+            name = entity["status"]["name"]
+            uuid = entity["metadata"]["uuid"]
+            cls.create_entry(name=name, uuid=uuid)
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        super().create(
+            name=name, uuid=uuid,
+        )
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        try:
+            entity = super().get(cls.name == name)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return None
 
     class Meta:
         database = dsl_database
