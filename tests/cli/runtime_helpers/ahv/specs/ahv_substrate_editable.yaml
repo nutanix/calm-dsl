@@ -1,0 +1,27 @@
+resources:
+  num_vcpus_per_socket: true
+  num_sockets: true
+  memory_size_mib: true
+  boot_config: true
+  guest_customization: true
+  disk_list:
+    '0':
+      data_source_reference: true
+      disk_size_mib: true
+    '1':
+      data_source_reference: true
+      device_properties:
+        device_type: true
+        disk_address:
+          adapter_type: true
+      disk_size_mib: true
+  nic_list:
+    '0':
+      subnet_reference: true
+  serial_port_list:
+    '0':
+      is_connected: true
+    '1':
+      is_connected: true
+name: true
+categories: true

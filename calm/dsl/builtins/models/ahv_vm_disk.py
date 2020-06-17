@@ -1,14 +1,21 @@
+import sys
+
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
-from calm.dsl.store import Cache
 from .ref import ref
-from .package import PackageType
 
+from calm.dsl.store import Cache
+from .package import PackageType
+from calm.dsl.config import get_config
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 # AHV VM Disk
 
 
 ADAPTER_INDEX_MAP = {"SCSI": 0, "PCI": 0, "IDE": 0, "SATA": 0}
+IMAGE_TYPE_MAP = {"DISK": "DISK_IMAGE", "CDROM": "ISO_IMAGE"}
 BOOT_CONFIG = {}
 
 
@@ -91,17 +98,49 @@ def update_disk_config(
 def clone_from_image_service(
     device_type="DISK", adapter_type="SCSI", image_name="", bootable=False
 ):
-    if not image_name:
-        raise ValueError("image_name not provided !!!")
+    # Get project details
+    config = get_config()
+    project_name = config["PROJECT"]["name"]
+    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
 
-    image_uuid = Cache.get_entity_uuid("AHV_DISK_IMAGE", image_name)
-    if not image_uuid:
-        raise Exception(
+    if not project_cache_data:
+        LOG.error(
+            "Project {} not found. Please run: calm update cache".format(project_name)
+        )
+        sys.exit(-1)
+
+    project_accounts = project_cache_data["accounts_data"]
+    # Fetch Nutanix_PC account registered
+    account_uuid = project_accounts.get("nutanix_pc", "")
+
+    if not account_uuid:
+        LOG.error("No nutanix account registered to project {}".format(project_name))
+        sys.exit(-1)
+
+    if not image_name:
+        LOG.error("image_name not provided")
+        sys.exit(-1)
+
+    image_cache_data = Cache.get_entity_data(
+        entity_type="ahv_disk_image",
+        name=image_name,
+        image_type=IMAGE_TYPE_MAP[device_type],
+        account_uuid=account_uuid,
+    )
+    if not image_cache_data:
+        LOG.debug(
+            "Ahv Disk Image (name = '{}') not found in registered nutanix_pc account (uuid = '{}') in project (name = '{}')".format(
+                image_name, account_uuid, project_name
+            )
+        )
+        LOG.error(
             "Ahv Disk Image {} not found. Please run: calm update cache".format(
                 image_name
             )
         )
+        sys.exit(-1)
 
+    image_uuid = image_cache_data.get("uuid", "")
     image_data = {"kind": "image", "name": image_name, "uuid": image_uuid}
 
     return update_disk_config(device_type, adapter_type, image_data, bootable)

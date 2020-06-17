@@ -16,9 +16,16 @@ class BlueprintAPI(ResourceAPI):
         self.EXPORT_JSON = self.ITEM + "/export_json"
         self.EXPORT_JSON_WITH_SECRETS = self.ITEM + "/export_json?keep_secrets=true"
 
+    # TODO https://jira.nutanix.com/browse/CALM-17178
+    # Blueprint creation timeout is dependent on payload.
+    # So setting read timeout to 300 seconds
     def upload(self, payload):
         return self.connection._call(
-            self.UPLOAD, verify=False, request_json=payload, method=REQUEST.METHOD.POST
+            self.UPLOAD,
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
+            timeout=(5, 300),
         )
 
     def launch(self, uuid, payload):
@@ -90,7 +97,7 @@ class BlueprintAPI(ResourceAPI):
         if entities:
             if len(entities) > 0:
                 if not force_create:
-                    err_msg = "Blueprint {} already exists. Use --force to overwrite.".format(
+                    err_msg = "Blueprint {} already exists. Use --force to first delete existing blueprint before create.".format(
                         bp_name
                     )
                     # ToDo: Add command to edit Blueprints

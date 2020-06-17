@@ -17,10 +17,11 @@ from .models.published_service import PublishedService, published_service
 
 from .models.package import Package, package, PackageType
 
-from .models.utils import read_file, read_local_file, get_valid_identifier
+from .models.utils import read_file, read_local_file, read_env, file_exists, get_valid_identifier
 
 from .models.provider_spec import provider_spec, read_provider_spec, read_spec
 from .models.provider_spec import read_ahv_spec, read_vmw_spec
+from .models.readiness_probe import ReadinessProbe, readiness_probe
 from .models.substrate import Substrate, substrate, SubstrateType
 
 from .models.deployment import Deployment, deployment, DeploymentType
@@ -77,7 +78,9 @@ __all__ = [
     "package",
     "PackageType",
     "read_file",
+    "file_exists",
     "read_local_file",
+    "read_env",
     "vm_disk_package",
     "VmDiskPackageType",
     "ahv_vm_disk_package",
@@ -105,6 +108,8 @@ __all__ = [
     "SimpleDeployment",
     "SimpleBlueprint",
     "get_valid_identifier",
+    "ReadinessProbe",
+    "readiness_probe",
     "ahv_vm_nic",
     "AhvVmNic",
     "ahv_vm_disk",

@@ -21,7 +21,6 @@ def create_secret(name, value):
 
     LOG.debug("Creating secret {}".format(name))
     Secret.create(name, value)
-    LOG.debug("Success")
     LOG.info(highlight_text("Secret {} created".format(name)))
 
 
@@ -69,7 +68,6 @@ def delete_secret(name):
 
     LOG.info("Deleting secret {}".format(name))
     Secret.delete(name)
-    LOG.info("Success")
 
 
 def update_secret(name, value):
@@ -82,7 +80,6 @@ def update_secret(name, value):
 
     LOG.info("Updating secret {}".format(name))
     Secret.update(name, value)
-    LOG.info("Success")
 
 
 def find_secret(name, pass_phrase=""):
@@ -108,4 +105,3 @@ def clear_secrets():
 
     LOG.info("Clearing the secrets")
     Secret.clear()
-    LOG.info("Success")

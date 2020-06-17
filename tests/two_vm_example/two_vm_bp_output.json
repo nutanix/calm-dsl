@@ -509,7 +509,6 @@
                     "is_mandatory": false
                 }
             ],
-            "action_list": [],
             "version": ""
         },
         {
@@ -575,7 +574,6 @@
                 }
             ],
             "variable_list": [],
-            "action_list": [],
             "version": ""
         }
     ],
@@ -640,7 +638,8 @@
                 "connection_type": "SSH",
                 "connection_port": 22,
                 "connection_protocol": ""
-            }
+            },
+            "editables": {}
         },
         {
             "name": "AHVMedVMForPHP",
@@ -701,7 +700,8 @@
                 "connection_type": "SSH",
                 "connection_port": 22,
                 "connection_protocol": ""
-            }
+            },
+            "editables": {}
         }
     ],
     "credential_definition_list": [

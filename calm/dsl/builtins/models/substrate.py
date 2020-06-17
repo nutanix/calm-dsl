@@ -1,13 +1,26 @@
-from .entity import EntityType, Entity
+from .entity import EntityType, Entity, EntityDict
 from .validator import PropertyValidator
 
 
 # Substrate
 
 
+class SubstrateDict(EntityDict):
+    @staticmethod
+    def pre_validate(vdict, name, value):
+        if name == "readiness_probe":
+            if isinstance(value, dict):
+                rp_validator, is_array = vdict[name]
+                rp_cls_type = rp_validator.get_kind()
+                return rp_cls_type(None, (Entity,), value)
+
+        return value
+
+
 class SubstrateType(EntityType):
     __schema_name__ = "Substrate"
     __openapi_type__ = "app_substrate"
+    __prepare_dict__ = SubstrateDict
 
     ALLOWED_FRAGMENT_ACTIONS = {
         "__pre_create__": "pre_action_create",
@@ -21,6 +34,9 @@ class SubstrateType(EntityType):
         readiness_probe = {}
         if "readiness_probe" in cdict and cdict["readiness_probe"]:
             readiness_probe = cdict["readiness_probe"]
+            if hasattr(readiness_probe, "compile"):
+                readiness_probe = readiness_probe.compile()
+
         if cdict["type"] == "AHV_VM":
             if not readiness_probe:
                 readiness_probe = {
@@ -146,13 +162,21 @@ class SubstrateType(EntityType):
         else:
             raise Exception("Un-supported vm type :{}".format(cdict["type"]))
 
-        # Pop cred from readiness_probe when it is None
-        cred = readiness_probe.get("login_credential_local_reference")
-        if not cred:
-            readiness_probe.pop("login_credential_local_reference", None)
+        # Modifying the editable object
+        provider_spec_editables = cdict.pop("editables", {})
+        cdict["editables"] = {}
+
+        if provider_spec_editables:
+            cdict["editables"]["create_spec"] = provider_spec_editables
+
+        # Popping out the editables from readiness_probe
+        readiness_probe_editables = readiness_probe.pop("editables_list", [])
+        if readiness_probe_editables:
+            cdict["editables"]["readiness_probe"] = {
+                k: True for k in readiness_probe_editables
+            }
 
         cdict["readiness_probe"] = readiness_probe
-
         return cdict
 
     def get_task_target(cls):

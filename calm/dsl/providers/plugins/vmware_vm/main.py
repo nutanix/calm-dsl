@@ -28,6 +28,8 @@ class VCenterVmProvider(Provider):
 
     @classmethod
     def get_api_obj(cls):
+        """returns object to call vmware provider specific apis"""
+
         client = get_api_client()
         return VCenter(client.connection)
 
@@ -648,7 +650,7 @@ def create_spec(client):
     if tempSATAContrlr:
         click.secho("\nSATA Controllers", bold=True, underline=True)
 
-        for cntlr in tempSATAContrlr:
+        for index, cntlr in enumerate(tempSATAContrlr):
             click.echo("\n\t\t", nl=False)
             click.secho("SATA CONTROLLER {}\n".format(index + 1), underline=True)
 

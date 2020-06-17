@@ -4,6 +4,9 @@ from click.testing import CliRunner
 from functools import wraps
 import uuid
 import os
+import pytest
+import json
+import traceback
 
 from calm.dsl.cli import main as cli
 from calm.dsl.tools import get_logging_handle
@@ -36,7 +39,17 @@ def run_test(
 
     result = runner.invoke(cli, command, input=input)
 
-    assert result.exit_code == 0
+    if result.exit_code:
+        cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+        LOG.debug(
+            "Cli Response: {}".format(
+                json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+            )
+        )
+        LOG.debug(
+            "Traceback: \n{}".format("".join(traceback.format_tb(result.exc_info[2])))
+        )
+        pytest.fail("Create provider_spec command failed")
     output = str(result.output)
 
     # Spec separator
