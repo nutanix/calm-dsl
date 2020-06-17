@@ -28,7 +28,7 @@ class Cache:
 
     @classmethod
     def get_entity_data(cls, entity_type, name, **kwargs):
-        """returns entity data corresponding to supplied entry"""
+        """returns entity data corresponding to supplied entry using entity name"""
 
         cache_tables = cls.get_cache_tables()
         if not entity_type:
@@ -42,6 +42,32 @@ class Cache:
 
         try:
             res = db_cls.get_entity_data(name=name, **kwargs)
+        except OperationalError:
+            formatted_exc = traceback.format_exc()
+            LOG.debug("Exception Traceback:\n{}".format(formatted_exc))
+            LOG.error(
+                "Cache error occurred. Please update cache using 'calm update cache' command"
+            )
+            sys.exit(-1)
+
+        return res
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, entity_type, uuid, *args, **kwargs):
+        """returns entity data corresponding to supplied entry using entity uuid"""
+
+        cache_tables = cls.get_cache_tables()
+        if not entity_type:
+            LOG.error("No entity type for cache supplied")
+            sys.exit(-1)
+
+        db_cls = cache_tables.get(entity_type, None)
+        if not db_cls:
+            LOG.error("Unknown entity type ({}) supplied".format(entity_type))
+            sys.exit(-1)
+
+        try:
+            res = db_cls.get_entity_data_using_uuid(uuid=uuid, **kwargs)
         except OperationalError:
             formatted_exc = traceback.format_exc()
             LOG.debug("Exception Traceback:\n{}".format(formatted_exc))

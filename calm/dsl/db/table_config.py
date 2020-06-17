@@ -12,6 +12,7 @@ import datetime
 import click
 import arrow
 import json
+import sys
 from prettytable import PrettyTable
 
 from calm.dsl.api import get_resource_api, get_api_client
@@ -88,6 +89,10 @@ class CacheTableBase(BaseModel):
         raise NotImplementedError("get_entity_data helper not implemented")
 
     @classmethod
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
+        raise NotImplementedError("get_entity_data_using_uuid helper not implemented")
+
+    @classmethod
     def show_data(cls, *args, **kwargs):
         raise NotImplementedError("show_data helper not implemented")
 
@@ -120,10 +125,16 @@ class AhvSubnetsCache(CacheTableBase):
             db_entity.delete_instance()
 
     @classmethod
-    def create_entry(cls, name, uuid, account_uuid, **kwargs):
+    def create_entry(cls, name, uuid, **kwargs):
+        account_uuid = kwargs.get("account_uuid", "")
+        if not account_uuid:
+            LOG.error("Account UUID not supplied for subnet {}".format(name))
+            sys.exit(-1)
+
         cluster_name = kwargs.get("cluster", None)
         if not cluster_name:
-            raise ValueError("cluster not supplied for subnet {}".format(name))
+            LOG.error("cluster not supplied for subnet {}".format(name))
+            sys.exit(-1)
 
         # store data in table
         super().create(
@@ -131,7 +142,12 @@ class AhvSubnetsCache(CacheTableBase):
         )
 
     @classmethod
-    def get_entity_data(cls, name, account_uuid, **kwargs):
+    def get_entity_data(cls, name, **kwargs):
+        account_uuid = kwargs.get("account_uuid", "")
+        if not account_uuid:
+            LOG.error("Account UUID not supplied for fetching subnet {}". format(name))
+            sys.exit(-1)
+
         cluster_name = kwargs.get("cluster", "")
         try:
             if cluster_name:
@@ -144,6 +160,20 @@ class AhvSubnetsCache(CacheTableBase):
                 # The get() method is shorthand for selecting with a limit of 1
                 # If more than one row is found, the first row returned by the database cursor
                 entity = super().get(cls.name == name, cls.account_uuid == account_uuid)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return None
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, *args, **kwargs):
+        account_uuid = kwargs.get("account_uuid", "")
+        if not account_uuid:
+            LOG.error("Account UUID not supplied for fetching subnet with uuid {}". format(uuid))
+            sys.exit(-1)
+
+        try:
+            entity = super().get(cls.uuid == uuid, cls.account_uuid == account_uuid)
             return entity.get_detail_dict()
 
         except DoesNotExist:
@@ -240,7 +270,12 @@ class AhvImagesCache(CacheTableBase):
             db_entity.delete_instance()
 
     @classmethod
-    def create_entry(cls, name, uuid, account_uuid, **kwargs):
+    def create_entry(cls, name, uuid, **kwargs):
+        account_uuid = kwargs.get("account_uuid", "")
+        if not account_uuid:
+            LOG.error("Account UUID not supplied for image {}".format(name))
+            sys.exit(-1)
+
         image_type = kwargs.get("image_type", "")
         # store data in table
         super().create(
@@ -248,10 +283,16 @@ class AhvImagesCache(CacheTableBase):
         )
 
     @classmethod
-    def get_entity_data(cls, name, account_uuid, **kwargs):
+    def get_entity_data(cls, name, **kwargs):
+        account_uuid = kwargs.get("account_uuid", "")
+        if not account_uuid:
+            LOG.error("Account UUID not supplied for fetching image {}".format(name))
+            sys.exit(-1)
+
         image_type = kwargs.get("image_type", None)
         if not image_type:
-            raise ValueError("image_type not provided for image {}".format(name))
+            LOG.error("image_type not provided for image {}".format(name))
+            sys.exit(-1)
 
         try:
             entity = super().get(
@@ -259,6 +300,22 @@ class AhvImagesCache(CacheTableBase):
                 cls.image_type == image_type,
                 cls.account_uuid == account_uuid,
             )
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return None
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, *args, **kwargs):
+        account_uuid = kwargs.get("account_uuid", "")
+        if not account_uuid:
+            # For now we can attach multiple nutanix_pc account pointing to same pc
+            # https://jira.nutanix.com/browse/CALM-19273, So make account_uuid as necessary
+            LOG.error("Account UUID not supplied for fetching image with uuid {}".format(uuid))
+            sys.exit(-1)
+
+        try:
+            entity = super().get(cls.uuid == uuid, cls.account_uuid == account_uuid)
             return entity.get_detail_dict()
 
         except DoesNotExist:
@@ -363,6 +420,15 @@ class ProjectCache(CacheTableBase):
     def get_entity_data(cls, name, **kwargs):
         try:
             entity = super().get(cls.name == name)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return None
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, *args, **kwargs):
+        try:
+            entity = super().get(cls.uuid == uuid)
             return entity.get_detail_dict()
 
         except DoesNotExist:

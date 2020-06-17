@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 from jinja2 import Environment, PackageLoader
 from Crypto.PublicKey import RSA
 
@@ -14,8 +15,6 @@ LOG = get_logging_handle(__name__)
 
 def render_ahv_template(template, bp_name):
 
-    # Getting the subnet registered to the project
-    client = get_api_client()
     config = get_config()
 
     project_name = config["PROJECT"].get("name", "default")
@@ -25,41 +24,42 @@ def render_ahv_template(template, bp_name):
             "Project {} not found. Please run: calm update cache".format(project_name)
         )
         sys.exit(-1)
-    project_uuid = project_cache_data.get("uuid", "")
-    project_accounts = project_cache_data["accounts_data"]
+
     # Fetch Nutanix_PC account registered
+    project_accounts = project_cache_data["accounts_data"]
     account_uuid = project_accounts.get("nutanix_pc", "")
+    if not account_uuid:
+        LOG.error("No nutanix_pc account registered to project {}".format(project_name))
 
-    LOG.info("Fetching ahv subnets attached to the project {}".format(project_name))
-    res, err = client.project.read(project_uuid)
-    if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-    res = res.json()
-    subnets = res["status"]["project_status"]["resources"].get(
-        "subnet_reference_list", []
-    )
-
-    # Fetching external subnets
-    external_networks = res["status"]["project_status"]["resources"].get(
-        "external_network_list", []
-    )
-    subnets.extend(external_networks)
-
-    if not subnets:
-        LOG.error("No registered subnets found in project {}".format(project_name))
+    # Fetch whitelisted subnets
+    project_subnets = project_cache_data["whitelisted_subnets"]
+    if not project_subnets:
+        LOG.error("No subnets registered to project {}".format(project_name))
         sys.exit(-1)
 
-    default_subnet = subnets[0]["name"]
-    subnet_cache_data = Cache.get_entity_data(
-        entity_type="ahv_subnet", name=default_subnet, account_uuid=account_uuid
+    # Fetch data for first subnet
+    subnet_cache_data = Cache.get_entity_data_using_uuid(
+        entity_type="ahv_subnet", uuid=project_subnets[0], account_uuid=account_uuid
     )
     if not subnet_cache_data:
+        # Case when project have a subnet that is not available in subnets from registered account
+        context_data = {
+            "Project Whitelisted Subnets": project_subnets,
+            "Account UUID": account_uuid,
+            "Project Name": project_name,
+        }
+        LOG.debug(
+            "Context data: {}".format(
+                json.dumps(context_data, indent=4, separators=(",", ": "))
+            )
+        )
         LOG.error(
-            "Subnet {} not found. Please run: calm update cache".format(default_subnet)
+            "Subnet configuration mismatch in registered account's subnets and whitelisted subnets in project"
         )
         sys.exit(-1)
-    cluster_name = subnet_cache_data.get("cluster", "")
+
+    cluster_name = subnet_cache_data["cluster"]
+    default_subnet = subnet_cache_data["name"]
 
     LOG.info("Rendering ahv template")
     text = template.render(
