@@ -21,7 +21,7 @@ from .models.utils import read_file, read_local_file, read_env, file_exists, get
 
 from .models.provider_spec import provider_spec, read_provider_spec, read_spec
 from .models.provider_spec import read_ahv_spec, read_vmw_spec
-from .models.readiness_probe import ReadinessProbe, readiness_probe
+from .models.readiness_probe import ReadinessProbe, readiness_probe, ReadinessProbeType
 from .models.substrate import Substrate, substrate, SubstrateType
 
 from .models.deployment import Deployment, deployment, DeploymentType
@@ -110,6 +110,7 @@ __all__ = [
     "get_valid_identifier",
     "ReadinessProbe",
     "readiness_probe",
+    "ReadinessProbeType",
     "ahv_vm_nic",
     "AhvVmNic",
     "ahv_vm_disk",

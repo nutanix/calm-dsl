@@ -3,6 +3,7 @@ from ruamel import yaml
 from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.credential import get_cred_var_name
 from calm.dsl.decompile.action import render_action_template
+from calm.dsl.decompile.readiness_probe import render_readiness_probe_template
 from calm.dsl.decompile.file_handler import get_specs_dir, get_specs_dir_key
 from calm.dsl.builtins import SubstrateType, get_valid_identifier
 from calm.dsl.decompile.ref_dependency import update_substrate_name
@@ -25,7 +26,6 @@ def render_substrate_template(cls, vm_images=[]):
     user_attrs["description"] = cls.__doc__ or "{} Substrate description".format(
         cls.__name__
     )
-    user_attrs["readiness_probe"] = cls.readiness_probe.get_dict()
 
     # Update substrate name map and gui name
     gui_display_name = getattr(cls, "display_name", "")
@@ -38,12 +38,8 @@ def render_substrate_template(cls, vm_images=[]):
     # updating ui and dsl name mapping
     update_substrate_name(gui_display_name, cls.__name__)
 
-    # TODO fix this mess
-    cred = user_attrs["readiness_probe"].pop("credential")
-    if cred:
-        user_attrs["readiness_probe_cred"] = "ref({})".format(
-            get_cred_var_name(cred.__name__)
-        )
+    # Handle readiness_probe
+    user_attrs["readiness_probe"] = render_readiness_probe_template(user_attrs["readiness_probe"])
 
     # TODO use provider specific methods for reading provider_spec
     # i.e for ahv : read_ahv_spec()
