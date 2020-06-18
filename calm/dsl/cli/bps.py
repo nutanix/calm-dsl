@@ -34,7 +34,7 @@ from calm.dsl.providers import get_provider
 LOG = get_logging_handle(__name__)
 
 
-def get_blueprint_list(name, filter_by, limit, offset, quiet, all_items):
+def get_blueprint_list(name, filter_by, limit, offset, quiet, all_items, out):
     """Get the blueprints, optionally filtered by a string"""
 
     client = get_api_client()
@@ -59,6 +59,10 @@ def get_blueprint_list(name, filter_by, limit, offset, quiet, all_items):
     if err:
         pc_ip = config["SERVER"]["pc_ip"]
         LOG.warning("Cannot fetch blueprints from {}".format(pc_ip))
+        return
+
+    if out == "json":
+        click.echo(json.dumps(res.json(), indent=4, separators=(",", ": ")))
         return
 
     json_rows = res.json()["entities"]
