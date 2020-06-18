@@ -1,3 +1,5 @@
+import os
+
 from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.ref import render_ref_template
 from calm.dsl.decompile.credential import get_cred_var_name
@@ -155,8 +157,8 @@ def create_script_file(script_type, script="", entity_context=""):
     else:
         raise TypeError("Script Type {} not supported".format(script_type))
 
-    file_location = "{}/{}".format(scripts_dir, file_name)
+    file_location = os.path.join(scripts_dir, file_name)
     with open(file_location, "w+") as fd:
         fd.write(script)
 
-    return "{}/{}".format(get_scripts_dir_key(), file_name)
+    return os.path.join(get_scripts_dir_key(), file_name)

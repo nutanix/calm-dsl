@@ -48,11 +48,13 @@ def render_substrate_template(cls, vm_images=[]):
     for k, v in readiness_probe_editables.items():
         if v:
             rp_editable_list.append(k)
-    
+
     # Appending readiness_probe editables to readiness_probe object
     readiness_probe = user_attrs["readiness_probe"]
     readiness_probe.editables_list = rp_editable_list
-    user_attrs["readiness_probe"] = render_readiness_probe_template(user_attrs["readiness_probe"])
+    user_attrs["readiness_probe"] = render_readiness_probe_template(
+        user_attrs["readiness_probe"]
+    )
 
     spec_dir = get_specs_dir()
 
@@ -60,7 +62,9 @@ def render_substrate_template(cls, vm_images=[]):
     if create_spec_editables:
         create_spec_editable_file_name = cls.__name__ + "_create_spec_editables.yaml"
         file_location = os.path.join(spec_dir, create_spec_editable_file_name)
-        user_attrs["provider_spec_editables"] = "read_spec('{}')". format(os.path.join(get_specs_dir_key(), create_spec_editable_file_name))
+        user_attrs["provider_spec_editables"] = "read_spec('{}')".format(
+            os.path.join(get_specs_dir_key(), create_spec_editable_file_name)
+        )
 
         # Write editable spec to separate file
         with open(file_location, "w+") as fd:
