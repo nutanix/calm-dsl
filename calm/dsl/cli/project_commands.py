@@ -32,7 +32,7 @@ LOG = get_logging_handle(__name__)
     "out",
     type=click.Choice(["text", "json"]),
     default="text",
-    help="output format [json|yaml].",
+    help="output format",
 )
 def _get_projects(name, filter_by, limit, offset, quiet, out):
     """Get projects, optionally filtered by a string"""

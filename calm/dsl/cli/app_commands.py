@@ -39,7 +39,7 @@ LOG = get_logging_handle(__name__)
     "out",
     type=click.Choice(["text", "json"]),
     default="text",
-    help="output format [json|yaml].",
+    help="output format",
 )
 def _get_apps(name, filter_by, limit, offset, quiet, all_items, out):
     """Get Apps, optionally filtered by a string"""
@@ -54,7 +54,7 @@ def _get_apps(name, filter_by, limit, offset, quiet, all_items, out):
     "out",
     type=click.Choice(["text", "json"]),
     default="text",
-    help="output format [json|yaml].",
+    help="output format",
 )
 def _describe_app(app_name, out):
     """Describe an app"""

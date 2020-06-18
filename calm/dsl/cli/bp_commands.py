@@ -44,7 +44,7 @@ LOG = get_logging_handle(__name__)
     "out",
     type=click.Choice(["text", "json"]),
     default="text",
-    help="output format [json|yaml].",
+    help="output format",
 )
 def _get_blueprint_list(name, filter_by, limit, offset, quiet, all_items, out):
     """Get the blueprints, optionally filtered by a string"""
@@ -60,7 +60,7 @@ def _get_blueprint_list(name, filter_by, limit, offset, quiet, all_items, out):
     "out",
     type=click.Choice(["text", "json"]),
     default="text",
-    help="output format [json|yaml].",
+    help="output format",
 )
 def _describe_bp(bp_name, out):
     """Describe a blueprint"""
@@ -96,7 +96,7 @@ def _format_blueprint_command(bp_file):
     "out",
     type=click.Choice(["json", "yaml"]),
     default="json",
-    help="output format [json|yaml].",
+    help="output format",
 )
 def _compile_blueprint_command(bp_file, out):
     """Compiles a DSL (Python) blueprint into JSON or YAML"""
