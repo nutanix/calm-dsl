@@ -22,6 +22,8 @@ class AzureVmProvider(Provider):
 
     @classmethod
     def get_api_obj(cls):
+        """returns object to call azure provider specific apis"""
+
         client = get_api_client()
         return Azure(client.connection)
 

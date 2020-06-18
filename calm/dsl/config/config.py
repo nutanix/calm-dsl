@@ -24,7 +24,6 @@ def make_file_dir(path, is_dir=False):
         try:
             LOG.debug("Creating directory for file {}".format(path))
             os.makedirs(os.path.dirname(os.path.realpath(path)))
-            LOG.debug("Success")
 
         except OSError as exc:
             if exc.errno != errno.EEXIST:
@@ -131,7 +130,6 @@ def update_init_config(config_file, db_file, local_dir):
     init_file = get_init_file()
     LOG.debug("Rendering init template")
     text = _render_init_template(config_file, db_file, local_dir)
-    LOG.debug("Success")
 
     # UPDATE global _CONFIG_FILE object
     _CONFIG_FILE = config_file
@@ -140,7 +138,6 @@ def update_init_config(config_file, db_file, local_dir):
     LOG.debug("Writing configuration to '{}'".format(init_file))
     with open(init_file, "w") as fd:
         fd.write(text)
-    LOG.debug("Success")
 
     # Update existing init object
     update_init_obj()
@@ -199,13 +196,11 @@ def init_config(
     text = _render_config_template(
         ip, port, username, password, project_name, log_level
     )
-    LOG.debug("Success")
 
     # Write config
     LOG.debug("Writing configuration to '{}'".format(config_file))
     with open(config_file, "w") as fd:
         fd.write(text)
-    LOG.debug("Success")
 
 
 def get_config(config_file=None):

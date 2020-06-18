@@ -22,6 +22,8 @@ class GcpVmProvider(Provider):
 
     @classmethod
     def get_api_obj(cls):
+        """returns object to call gcpprovider specific apis"""
+
         client = get_api_client()
         return GCP(client.connection)
 

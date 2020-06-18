@@ -1,6 +1,8 @@
 import pytest
 import time
 import os
+import json
+import traceback
 from click.testing import CliRunner
 
 from calm.dsl.cli import main as cli
@@ -18,22 +20,56 @@ class TestBpCommands:
     def test_bps_list(self):
         runner = CliRunner()
         result = runner.invoke(cli, ["get", "bps"])
-        assert result.exit_code == 0
         if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("BP Get failed")
-        print(result.output)
+        LOG.info("Success")
 
     def test_bps_list_with_limit_offset(self):
         runner = CliRunner()
         result = runner.invoke(cli, ["get", "bps", "--limit=15", "--offset=5"])
-        assert result.exit_code == 0
-        print(result.output)
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("BP list with limit call failed")
+        LOG.info("Success")
 
     def test_bps_list_with_name(self):
         runner = CliRunner()
         result = runner.invoke(cli, ["get", "bps", "--name=MSSQL"])
-        assert result.exit_code == 0
-        print(result.output)
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("BP list with name call failed")
+        LOG.info("Success")
 
     def test_compile_bp(self):
         runner = CliRunner()
@@ -42,7 +78,20 @@ class TestBpCommands:
             cli, ["compile", "bp", "--file={}".format(DSL_BP_FILEPATH)]
         )
 
-        assert result.exit_code == 0
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("BP compile command failed")
+        LOG.info("Success")
 
     def test_dsl_bp_create(self):
         runner = CliRunner()
@@ -58,10 +107,20 @@ class TestBpCommands:
                 "--description='Test DSL Blueprint; to delete'",
             ],
         )
-
-        assert result.exit_code == 0
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("BP creation from python file failed")
         LOG.info("Success")
-        LOG.debug("Response: {}".format(result.output))
         self._test_bp_describe()
 
     def test_json_bp_create(self):
@@ -91,10 +150,25 @@ class TestBpCommands:
                     "--name={}".format(self.created_json_bp_name),
                     "--description='Test JSON Blueprint; to delete'",
                 ],
+                catch_exceptions=True,
             )
-            assert result.exit_code == 0
+            if result.exit_code:
+                cli_res_dict = {
+                    "Output": result.output,
+                    "Exception": str(result.exception),
+                }
+                LOG.debug(
+                    "Cli Response: {}".format(
+                        json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                    )
+                )
+                LOG.debug(
+                    "Traceback: \n{}".format(
+                        "".join(traceback.format_tb(result.exc_info[2]))
+                    )
+                )
+                pytest.fail("BP creation from python file failed")
             LOG.info("Success")
-            LOG.debug("Response: {}".format(result.output))
 
         finally:
             # Rewriting old data
@@ -106,7 +180,18 @@ class TestBpCommands:
     def _test_bp_describe(self):
         runner = CliRunner()
         result = runner.invoke(cli, ["describe", "bp", self.created_dsl_bp_name])
-        assert result.exit_code == 0
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
         self._test_dsl_bp_delete()
 
     def test_random_bp_describe(self):
@@ -114,6 +199,7 @@ class TestBpCommands:
         LOG.info("Running 'calm describe bp' command")
         bp_name = "MySQL_ {}".format(int(time.time()))
         result = runner.invoke(cli, ["describe", "bp", bp_name])
+        LOG.debug("Command output : {}".format(result.output))
         if result.exit_code != 0:
             assert result.exception.args[
                 0
@@ -121,23 +207,42 @@ class TestBpCommands:
         else:
             assert result.exit_code == 0
         LOG.info("Success")
-        LOG.debug("Command output : {}".format(result.output))
 
     def _test_dsl_bp_delete(self):
         runner = CliRunner()
         LOG.info("Deleting DSL Bp {} ".format(self.created_dsl_bp_name))
         result = runner.invoke(cli, ["delete", "bp", self.created_dsl_bp_name])
-        assert result.exit_code == 0
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
         LOG.info("Success")
-        LOG.debug("Response : {}".format(result.output))
 
     def _test_json_bp_delete(self):
         runner = CliRunner()
         LOG.info("Deleting JSON Bp {} ".format(self.created_json_bp_name))
         result = runner.invoke(cli, ["delete", "bp", self.created_json_bp_name])
-        assert result.exit_code == 0
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
         LOG.info("Success")
-        LOG.debug("Response : {}".format(result.output))
 
 
 if __name__ == "__main__":

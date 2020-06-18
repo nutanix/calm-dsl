@@ -178,7 +178,11 @@ class TestMPICommands:
             sys.exit(-1)
 
         res = res.json()
-        group = res["group_results"][0]
+        group_results = res["group_results"]
+        if not group_results:
+            pytest.skip("No marketplace item found.")
+
+        group = group_results[0]
         entity_data = group["entity_results"][0]["data"]
 
         mpi_name = get_group_data_value(entity_data, "name")
@@ -218,7 +222,11 @@ class TestMPICommands:
             sys.exit(-1)
 
         res = res.json()
-        group = res["group_results"][0]
+        group_results = res["group_results"]
+        if not group_results:
+            pytest.skip("No marketplace item found.")
+
+        group = group_results[0]
         entity_data = group["entity_results"][0]["data"]
 
         mpi_name = get_group_data_value(entity_data, "name")
@@ -642,7 +650,6 @@ class TestMPICommands:
             pytest.fail("Deletion of marketplace blueprint in PENDING state failed")
         LOG.info("Success")
 
-    @pytest.mark.slow
     def test_mpi_launch(self):
         """
             Steps:

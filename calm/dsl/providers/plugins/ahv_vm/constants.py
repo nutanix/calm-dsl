@@ -1,10 +1,6 @@
 class AHV:
-    SUBNETS = "subnets"
-    IMAGES = "images"
-    GROUPS = "groups"
     DEVICE_TYPES = {"CD_ROM": "CDROM", "DISK": "DISK"}
 
-    DEVICE_BUS = {"SATA": "SATA", "IDE": "IDE"}
     DEVICE_BUS = {
         "CDROM": {"SATA": "SATA", "IDE": "IDE"},
         "DISK": {"SCSI": "SCSI", "PCI": "PCI"},
@@ -15,3 +11,8 @@ class AHV:
 
     SYS_PREP_INSTALL_TYPES = ["FRESH", "PREPARED"]
     BOOT_TYPES = {"Legacy BIOS": "LEGACY", "UEFI": "UEFI"}
+    OPERATION_TYPES = {
+        "DISK": ["CLONE_FROM_IMAGE", "ALLOCATE_STORAGE_CONTAINER"],
+        "CDROM": ["CLONE_FROM_IMAGE", "EMPTY_CDROM"],
+    }
+    OPERATING_SYSTEM = {"LINUX": "Linux", "WINODWS": "Windows"}

@@ -116,6 +116,7 @@ class DefaultProfile(Profile):
         regex="^[a-zA-Z0-9_]+$",
         validate_regex=True,
         runtime=True,
+        description="var1 description",
     )
     var2 = CalmVariable.Simple.Secret(
         "var2_val",
@@ -124,6 +125,7 @@ class DefaultProfile(Profile):
         validate_regex=True,
         is_hidden=True,
         is_mandatory=True,
+        description="var2 description",
     )
     var3 = CalmVariable.Simple.int(
         "42",
@@ -132,28 +134,56 @@ class DefaultProfile(Profile):
         runtime=True,
         is_hidden=True,
         is_mandatory=True,
+        description="var3 description",
     )
     var4 = CalmVariable.Simple.date(
-        "30/02/2019", label="var4_label", validate_regex=True, runtime=True
+        "30/02/2019",
+        label="var4_label",
+        validate_regex=True,
+        runtime=True,
+        description="var4 description",
     )
     var5 = CalmVariable.Simple.time(
-        "22:35:00", label="var5_label", validate_regex=True, runtime=True
+        "22:35:00",
+        label="var5_label",
+        validate_regex=True,
+        runtime=True,
+        description="var5 description",
     )
     var6 = CalmVariable.Simple.datetime(
-        "30/02/2019 - 22:35:00", label="var6_label", validate_regex=True, runtime=True
+        "30/02/2019 - 22:35:00",
+        label="var6_label",
+        validate_regex=True,
+        runtime=True,
+        description="var6 description",
     )
-    var7 = CalmVariable.Simple.multiline("x\ny", label="var7_label", runtime=True)
-    var8 = CalmVariable.Simple.Secret.int("42", label="var8_label", validate_regex=True)
+    var7 = CalmVariable.Simple.multiline(
+        "x\ny", label="var7_label", runtime=True, description="var7 description"
+    )
+    var8 = CalmVariable.Simple.Secret.int(
+        "42", label="var8_label", validate_regex=True, description="var8 description"
+    )
     var9 = CalmVariable.Simple.Secret.date(
-        "30/02/2019", label="var9_label", validate_regex=True
+        "30/02/2019",
+        label="var9_label",
+        validate_regex=True,
+        description="var9 description",
     )
     var10 = CalmVariable.Simple.Secret.time(
-        "22:35:00", label="var10_label", validate_regex=True
+        "22:35:00",
+        label="var10_label",
+        validate_regex=True,
+        description="var10 description",
     )
     var11 = CalmVariable.Simple.Secret.datetime(
-        "30/02/2019 - 22:35:00", label="var11_label", validate_regex=True
+        "30/02/2019 - 22:35:00",
+        label="var11_label",
+        validate_regex=True,
+        description="var11 description",
     )
-    var12 = CalmVariable.Simple.Secret.multiline("x\ny", label="var12_label")
+    var12 = CalmVariable.Simple.Secret.multiline(
+        "x\ny", label="var12_label", description="var12 description"
+    )
     var13 = CalmVariable.WithOptions(
         ["var13_val1", "var13_val2"],
         default="var13_val1",
@@ -161,6 +191,7 @@ class DefaultProfile(Profile):
         regex="^[a-zA-Z0-9_]+$",
         validate_regex=True,
         runtime=True,
+        description="var13 description",
     )
     var14 = CalmVariable.WithOptions.Predefined.int(
         ["0", "1"],
@@ -168,6 +199,7 @@ class DefaultProfile(Profile):
         regex="^[0-9]+$",
         validate_regex=True,
         runtime=True,
+        description="var14 description",
     )
     var15 = CalmVariable.WithOptions.Predefined.date(
         ["30/02/2019", "31/06/2019"],
@@ -175,6 +207,7 @@ class DefaultProfile(Profile):
         label="var15_label",
         validate_regex=True,
         runtime=True,
+        description="var15 description",
     )
     var16 = CalmVariable.WithOptions.Predefined.time(
         ["22:35:00", "10:35:00"],
@@ -182,6 +215,7 @@ class DefaultProfile(Profile):
         label="var16_label",
         validate_regex=True,
         runtime=True,
+        description="var16 description",
     )
     var17 = CalmVariable.WithOptions.Predefined.datetime(
         ["30/02/2019 - 22:35:00", "31/06/2019 - 10:35:00"],
@@ -189,6 +223,7 @@ class DefaultProfile(Profile):
         label="var17_label",
         validate_regex=True,
         runtime=True,
+        description="var17 description",
     )
     var18 = CalmVariable.WithOptions.Predefined.multiline(
         ["x\ny", "a\nb"],
@@ -196,6 +231,7 @@ class DefaultProfile(Profile):
         label="var18_label",
         validate_regex=True,
         runtime=True,
+        description="var18 description",
     )
     var19 = CalmVariable.WithOptions.Predefined.Array(
         ["var19_val1", "var19_val2"],
@@ -204,6 +240,7 @@ class DefaultProfile(Profile):
         regex="^[a-zA-Z0-9_]+$",
         validate_regex=True,
         runtime=True,
+        description="var19 description",
     )
     var20 = CalmVariable.WithOptions.Predefined.Array.int(
         ["0", "1"],
@@ -211,6 +248,7 @@ class DefaultProfile(Profile):
         regex="^[0-9]+$",
         validate_regex=True,
         runtime=True,
+        description="var20 description",
     )
     var21 = CalmVariable.WithOptions.Predefined.Array.date(
         ["30/02/2019", "31/06/2019"],
@@ -218,6 +256,7 @@ class DefaultProfile(Profile):
         label="var21_label",
         validate_regex=True,
         runtime=True,
+        description="var21 description",
     )
     var22 = CalmVariable.WithOptions.Predefined.Array.time(
         ["22:35:00", "10:35:00"],
@@ -225,6 +264,7 @@ class DefaultProfile(Profile):
         label="var22_label",
         validate_regex=True,
         runtime=True,
+        description="var22 description",
     )
     var23 = CalmVariable.WithOptions.Predefined.Array.datetime(
         ["30/02/2019 - 22:35:00", "31/06/2019 - 10:35:00"],
@@ -232,6 +272,7 @@ class DefaultProfile(Profile):
         label="var23_label",
         validate_regex=True,
         runtime=True,
+        description="var23 description",
     )
     var24 = CalmVariable.WithOptions.Predefined.Array.multiline(
         ["x\ny", "a\nb"],
@@ -239,6 +280,7 @@ class DefaultProfile(Profile):
         label="var24_label",
         validate_regex=True,
         runtime=True,
+        description="var24 description",
     )
     var25 = CalmVariable.WithOptions.FromTask(
         CalmTask.HTTP.get(
@@ -252,29 +294,36 @@ class DefaultProfile(Profile):
             response_paths={"var25": "$.title"},
         ),
         label="var25_label",
+        description="var25 description",
     )
     var26 = CalmVariable.WithOptions.FromTask.int(
         CalmTask.Exec.escript(script="print '0'"),
         label="var26_label",
         validate_regex=True,
+        description="var26 description",
     )
     var27 = CalmVariable.WithOptions.FromTask.date(
         CalmTask.Exec.escript(script="print '30/02/2019'"),
         label="var27_label",
         validate_regex=True,
+        description="var27 description",
     )
     var28 = CalmVariable.WithOptions.FromTask.time(
         CalmTask.Exec.escript(script="print '22:35:00'"),
         label="var28_label",
         validate_regex=True,
+        description="var28 description",
     )
     var29 = CalmVariable.WithOptions.FromTask.datetime(
         CalmTask.Exec.escript(script="print '30/02/2019 - 22:35:00'"),
         label="var29_label",
         validate_regex=True,
+        description="var29 description",
     )
     var30 = CalmVariable.WithOptions.FromTask.multiline(
-        CalmTask.Exec.escript(script="print 'x\ny'"), label="var30_label"
+        CalmTask.Exec.escript(script="print 'x\ny'"),
+        label="var30_label",
+        description="var30 description",
     )
     var31 = CalmVariable.WithOptions.FromTask.Array(
         CalmTask.HTTP.get(
@@ -288,21 +337,25 @@ class DefaultProfile(Profile):
             response_paths={"var31": "$.title"},
         ),
         label="var31_label",
+        description="var31 description",
     )
     var32 = CalmVariable.WithOptions.FromTask.Array.int(
         CalmTask.Exec.escript(script="print '0,1'"),
         label="var32_label",
         validate_regex=True,
+        description="var32 description",
     )
     var33 = CalmVariable.WithOptions.FromTask.Array.date(
         CalmTask.Exec.escript(script="print '30/02/2019,31/06/2019'"),
         label="var33_label",
         validate_regex=True,
+        description="var33 description",
     )
     var34 = CalmVariable.WithOptions.FromTask.Array.time(
         CalmTask.Exec.escript(script="print '22:35:00,10:35:00'"),
         label="var28_label",
         validate_regex=True,
+        description="var34 description",
     )
     var35 = CalmVariable.WithOptions.FromTask.Array.datetime(
         CalmTask.Exec.escript(
@@ -310,9 +363,12 @@ class DefaultProfile(Profile):
         ),
         label="var35_label",
         validate_regex=True,
+        description="var35 description",
     )
     var36 = CalmVariable.WithOptions.FromTask.Array.multiline(
-        CalmTask.Exec.escript(script="print 'var36=x\ny,a\nb'"), label="var36_label"
+        CalmTask.Exec.escript(script="print 'var36=x\ny,a\nb'"),
+        label="var36_label",
+        description="var36 description",
     )
 
     @action

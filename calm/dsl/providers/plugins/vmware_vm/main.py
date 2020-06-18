@@ -28,6 +28,8 @@ class VCenterVmProvider(Provider):
 
     @classmethod
     def get_api_obj(cls):
+        """returns object to call vmware provider specific apis"""
+
         client = get_api_client()
         return VCenter(client.connection)
 
@@ -264,9 +266,9 @@ class VCenter:
             entity_config = entity["status"]["resources"]["config"]
             entity_id = entity_config["instanceUuid"]
             if entity_id == template_id:
-                controllers = entity_config["hardware"]["device"]["controller"]
-                disks = entity_config["hardware"]["device"]["disk"]
-                networks = entity_config["hardware"]["device"]["network"]
+                controllers = entity_config["hardware"]["device"]["controller"] or []
+                disks = entity_config["hardware"]["device"]["disk"] or []
+                networks = entity_config["hardware"]["device"]["network"] or []
                 break
 
         for controller in controllers:
@@ -648,7 +650,7 @@ def create_spec(client):
     if tempSATAContrlr:
         click.secho("\nSATA Controllers", bold=True, underline=True)
 
-        for cntlr in tempSATAContrlr:
+        for index, cntlr in enumerate(tempSATAContrlr):
             click.echo("\n\t\t", nl=False)
             click.secho("SATA CONTROLLER {}\n".format(index + 1), underline=True)
 

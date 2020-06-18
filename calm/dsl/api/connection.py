@@ -178,6 +178,8 @@ class Connection:
         headers=None,
         files=None,
         timeout=(5, 30),  # (connection timeout, read timeout)
+        ignore_error=False,
+        warning_msg="",
     ):
         """Private method for making http request to calm
 
@@ -286,6 +288,11 @@ class Connection:
                 err_msg = "{}".format(ex)
             status_code = res.status_code if hasattr(res, "status_code") else 500
             err = {"error": err_msg, "code": status_code}
+
+            if ignore_error:
+                LOG.warning(warning_msg)
+                return None, err
+
             LOG.error(
                 "Oops! Something went wrong.\n{}".format(
                     json.dumps(err, indent=4, separators=(",", ": "))

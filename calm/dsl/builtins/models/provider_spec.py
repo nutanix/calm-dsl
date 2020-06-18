@@ -3,10 +3,14 @@ import sys
 import inspect
 from ruamel import yaml
 from calm.dsl.providers import get_provider
+from calm.dsl.builtins import file_exists
+from calm.dsl.tools import get_logging_handle
 
 from .entity import EntityType
 from .validator import PropertyValidator
 from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 LOG = get_logging_handle(__name__)
 
@@ -47,7 +51,7 @@ def read_spec(filename, depth=1):
         os.path.dirname(inspect.getfile(sys._getframe(depth))), filename
     )
 
-    if not os.path.exists(file_path):
+    if not file_exists(file_path):
         LOG.debug("file {} not found at location {}".format(filename, file_path))
         raise ValueError("file {} not found".format(filename))
 

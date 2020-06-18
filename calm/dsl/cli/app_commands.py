@@ -3,7 +3,7 @@ import click
 from calm.dsl.api import get_api_client
 
 from .main import main, get, describe, delete, run, watch, download
-from .utils import Display
+from .utils import Display, FeatureFlagGroup
 from .apps import (
     get_apps,
     describe_app,
@@ -155,19 +155,19 @@ def _delete_app(app_names, soft):
     delete_app(app_names, soft)
 
 
-@main.group()
+@main.group(cls=FeatureFlagGroup)
 def start():
     """Start entities"""
     pass
 
 
-@main.group()
+@main.group(cls=FeatureFlagGroup)
 def stop():
     """Stop entities"""
     pass
 
 
-@main.group()
+@main.group(cls=FeatureFlagGroup)
 def restart():
     """Restart entities"""
     pass

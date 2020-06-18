@@ -91,16 +91,9 @@ def _format_blueprint_command(bp_file):
     default="json",
     help="output format [json|yaml].",
 )
-@click.option(
-    "--no-sync",
-    "-n",
-    is_flag=True,
-    default=False,
-    help="Doesn't sync the cache on compilation",
-)
-def _compile_blueprint_command(bp_file, out, no_sync):
+def _compile_blueprint_command(bp_file, out):
     """Compiles a DSL (Python) blueprint into JSON or YAML"""
-    compile_blueprint_command(bp_file, out, no_sync)
+    compile_blueprint_command(bp_file, out)
 
 
 @decompile.command("bp")
@@ -179,7 +172,8 @@ def create_blueprint_from_json(
     client, path_to_json, name=None, description=None, force_create=False
 ):
 
-    bp_payload = json.loads(open(path_to_json, "r").read())
+    with open(path_to_json, "r") as f:
+        bp_payload = json.loads(f.read())
     return create_blueprint(
         client,
         bp_payload,
@@ -223,7 +217,7 @@ def create_blueprint_from_dsl(
 )
 @click.option(
     "--force",
-    "-f",
+    "-fc",
     is_flag=True,
     default=False,
     help="Deletes existing blueprint with the same name before create.",
@@ -305,16 +299,31 @@ def create_blueprint_command(bp_file, name, description, force):
     default=False,
     help="Ignore runtime variables and use defaults",
 )
+@click.option(
+    "--launch_params",
+    "-l",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to python file containing 'runtime_vars' parameter",
+)
 def launch_blueprint_command(
-    blueprint_name, app_name, ignore_runtime_variables, profile_name, blueprint=None,
+    blueprint_name,
+    app_name,
+    ignore_runtime_variables,
+    profile_name,
+    launch_params,
+    blueprint=None,
 ):
-
+    """Launches a blueprint.
+    All runtime variables will be prompted by default. When passing the 'ignore_runtime_editable' flag, no variables will be prompted and all default values will be used.
+    The blueprint default values can be overridden by passing a Python file via 'launch_params'. Any variable not defined in the Python file will keep the default value defined in the blueprint. When passing a Python file, no variables will be prompted.
+    """
     launch_blueprint_simple(
         blueprint_name,
         app_name,
         blueprint=blueprint,
         profile_name=profile_name,
         patch_editables=not ignore_runtime_variables,
+        launch_params=launch_params,
     )
 
 
