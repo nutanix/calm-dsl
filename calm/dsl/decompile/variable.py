@@ -20,6 +20,7 @@ def render_variable_template(cls, entity_context):
     entity_context = entity_context + "_variable_" + cls.__name__
 
     user_attrs = cls.get_user_attrs()
+    user_attrs["description"] = cls.__doc__ or ""
     var_val_type = getattr(cls, "value_type", "STRING")
     var_type = ""
     schema_file = None
