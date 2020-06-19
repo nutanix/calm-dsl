@@ -32,6 +32,7 @@ def render_ahv_vm_disk(cls):
             operation_type = "cloneFromVMDiskPackage"
 
         elif data_source_ref["kind"] == "image":
+            # TODO vmdisk name matching from nap-display map here
             operation_type = "cloneFromImageService"
 
         else:
@@ -88,15 +89,16 @@ def render_ahv_vm_disk(cls):
             sys.exit(-1)
 
     else:  # CD-ROM
+        return ""
         if adapter_type == "SATA":
             if operation_type == "cloneFromImageService":
-                schema_file = "ahv_vm_cdrom_sata_clone_from_image.py.jinja2"
+                schema_file = "ahv_vm_disk_sata_clone_from_image.py.jinja2"
 
             elif operation_type == "cloneFromVMDiskPackage":
-                schema_file = "ahv_vm_cdrom_sata_clone_from_pkg.py.jinja2"
+                schema_file = "ahv_vm_disk_sata_clone_from_pkg.py.jinja2"
 
             elif operation_type == "emptyCdRom":
-                schema_file = "ahv_vm_cdrom_sata_empty_cdrom.py.jinja2"
+                schema_file = "ahv_vm_disk_pci_empty_cdrom.py.jinja2"
 
             else:
                 LOG.error("Unknown operation type {}".format(operation_type))
@@ -104,13 +106,13 @@ def render_ahv_vm_disk(cls):
 
         elif adapter_type == "IDE":
             if operation_type == "cloneFromImageService":
-                schema_file = "ahv_vm_cdrom_ide_clone_from_image.py.jinja2"
+                schema_file = "ahv_vm_disk_ide_clone_from_image.py.jinja2"
 
             elif operation_type == "cloneFromVMDiskPackage":
-                schema_file = "ahv_vm_cdrom_ide_clone_from_pkg.py.jinja2"
+                schema_file = "ahv_vm_disk_ide_clone_from_pkg.py.jinja2"
 
             elif operation_type == "emptyCdRom":
-                schema_file = "ahv_vm_cdrom_ide_empty_cdrom.py.jinja2"
+                schema_file = "ahv_vm_disk_ide_empty_cdrom.py.jinja2"
 
             else:
                 LOG.error("Unknown operation type {}".format(operation_type))

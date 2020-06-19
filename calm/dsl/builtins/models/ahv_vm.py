@@ -46,7 +46,7 @@ class AhvVmResourcesType(EntityType):
         serial_port_dict = {}
         for sp in serial_port_list:
             serial_port_dict[sp["index"]] = sp["is_connected"]
-        
+
         cdict["serial_port_list"] = serial_port_dict
 
         return super().decompile(cdict)
