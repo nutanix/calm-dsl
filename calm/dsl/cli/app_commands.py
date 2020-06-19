@@ -33,9 +33,17 @@ LOG = get_logging_handle(__name__)
 @click.option(
     "--all-items", "-a", is_flag=True, help="Get all items, including deleted ones"
 )
-def _get_apps(name, filter_by, limit, offset, quiet, all_items):
+@click.option(
+    "--out",
+    "-o",
+    "out",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="output format",
+)
+def _get_apps(name, filter_by, limit, offset, quiet, all_items, out):
     """Get Apps, optionally filtered by a string"""
-    get_apps(name, filter_by, limit, offset, quiet, all_items)
+    get_apps(name, filter_by, limit, offset, quiet, all_items, out)
 
 
 @describe.command("app")
@@ -46,7 +54,7 @@ def _get_apps(name, filter_by, limit, offset, quiet, all_items):
     "out",
     type=click.Choice(["text", "json"]),
     default="text",
-    help="output format [json|yaml].",
+    help="output format",
 )
 def _describe_app(app_name, out):
     """Describe an app"""

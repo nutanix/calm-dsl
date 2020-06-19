@@ -17,7 +17,7 @@ from calm.dsl.tools import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-def get_apps(name, filter_by, limit, offset, quiet, all_items):
+def get_apps(name, filter_by, limit, offset, quiet, all_items, out):
     client = get_api_client()
     config = get_config()
 
@@ -40,6 +40,10 @@ def get_apps(name, filter_by, limit, offset, quiet, all_items):
     if err:
         pc_ip = config["SERVER"]["pc_ip"]
         LOG.warning("Cannot fetch applications from {}".format(pc_ip))
+        return
+
+    if out == "json":
+        click.echo(json.dumps(res.json(), indent=4, separators=(",", ": ")))
         return
 
     json_rows = res.json()["entities"]

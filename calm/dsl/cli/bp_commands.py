@@ -39,10 +39,18 @@ LOG = get_logging_handle(__name__)
 @click.option(
     "--all-items", "-a", is_flag=True, help="Get all items, including deleted ones"
 )
-def _get_blueprint_list(name, filter_by, limit, offset, quiet, all_items):
+@click.option(
+    "--out",
+    "-o",
+    "out",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="output format",
+)
+def _get_blueprint_list(name, filter_by, limit, offset, quiet, all_items, out):
     """Get the blueprints, optionally filtered by a string"""
 
-    get_blueprint_list(name, filter_by, limit, offset, quiet, all_items)
+    get_blueprint_list(name, filter_by, limit, offset, quiet, all_items, out)
 
 
 @describe.command("bp")
@@ -53,7 +61,7 @@ def _get_blueprint_list(name, filter_by, limit, offset, quiet, all_items):
     "out",
     type=click.Choice(["text", "json"]),
     default="text",
-    help="output format [json|yaml].",
+    help="output format",
 )
 def _describe_bp(bp_name, out):
     """Describe a blueprint"""
@@ -89,7 +97,7 @@ def _format_blueprint_command(bp_file):
     "out",
     type=click.Choice(["json", "yaml"]),
     default="json",
-    help="output format [json|yaml].",
+    help="output format",
 )
 def _compile_blueprint_command(bp_file, out):
     """Compiles a DSL (Python) blueprint into JSON or YAML"""
