@@ -104,6 +104,9 @@ def render_substrate_template(cls, vm_images=[]):
 def get_provider_spec_string(spec, filename, provider_type, vm_images):
 
     if provider_type == "AHV_VM":
+        import pdb; pdb.set_trace()
+        from calm.dsl.builtins import AhvVmType, AhvVmResourcesType
+        AhvVmType.decompile(spec)
         disk_list = spec["resources"]["disk_list"]
 
         disk_ind_img_map = {}
