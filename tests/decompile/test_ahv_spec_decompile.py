@@ -1,7 +1,8 @@
-from calm.dsl.builtins import AhvVmType, AhvVmResourcesType
+from calm.dsl.builtins import AhvVmType
 from calm.dsl.builtins import read_spec
 from calm.dsl.decompile.ahv_vm_disk import render_ahv_vm_disk
 from calm.dsl.decompile.ahv_vm_nic import render_ahv_vm_nic
+from calm.dsl.decompile.ahv_vm_gc import render_ahv_vm_gc
 
 
 def test_decompile():
@@ -17,6 +18,10 @@ def test_decompile():
     
     for nic in vm_resources.nics:
         print(render_ahv_vm_nic(nic))
+    
+    # TODO take care of generating file
+    guest_customization_str = render_ahv_vm_gc(vm_resources.guest_customization, vm_name_prefix="vm_test")
+    print(guest_customization_str)
 
     import pdb
 

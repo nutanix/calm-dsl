@@ -61,13 +61,17 @@
         "parent_reference": null,
         "hardware_clock_timezone": "",
         "guest_customization": {
-            "cloud_init": {
-                "meta_data": "",
-                "type": "",
-                "user_data": "#cloud-config\nusers:\n- name: centos\n  ssh-authorized-keys:\n  - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDN58B138h7FqAKU0EXuL+vbzDluVlkYu1Qr1Y6XBfeRt01DgxssXIIUbGEKAP9P4RrAHqRcCjaMS4wqUUYxOLvT1UCxIGulb3Cfu2L9i+V1NWN/4j3j20elQwhlvYD0sqm5iCHsVhiHlLroapEScBDjo4MUUQ1tTwE/p2gHAhu45Vy28x6N8GC7sh9AvTVIO7HcsQNU/71YSjUmQTmYBIomV0+DCMzYekHWvGjHLiWlP6MIhuiunXTS8PjNj4h9hD36YlCTxWGuX9niX9XeyUAcD7n92ZFiR95WZ7OxX+JruCMMAMo8DiXhhssXZvxzqBmALGPk2ssdDMi2qzBSlRj\n  sudo:\n  - ALL=(ALL) NOPASSWD:ALL\n"
-            },
+            "cloud_init": null,
             "type": "",
-            "sysprep": null
+            "sysprep": {
+                "is_domain": true,
+                "install_type": "PREPARED",
+                "domain": "Abhijeet",
+                "dns_ip": "dfv",
+                "dns_search_path": "SIngh",
+                "unattend_xml": "efvdfbvf",
+                "type": ""
+            }
         },
         "power_state": "ON",
         "type": "",
