@@ -56,7 +56,17 @@
         "guest_tools": null,
         "num_vcpus_per_socket": 1,
         "num_sockets": 2,
-        "gpu_list": [],
+        "gpu_list": [
+            {
+                "vendor": "NVIDIA",
+                "mode": "PASSTHROUGH_GRAPHICS"
+            },
+            {
+                "vendor": "AMD",
+                "mode": "VIRTUAL",
+                "device_id": 5072
+            }
+        ],
         "memory_size_mib": 4096,
         "parent_reference": null,
         "hardware_clock_timezone": "",
