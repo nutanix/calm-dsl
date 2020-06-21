@@ -136,7 +136,7 @@ __all__ = [
     "AhvVmResources",
     "ahv_vm",
     "AhvVm",
-    "AhNicType",
+    "AhvNicType",
     "AhvDiskType",
     "AhvGpuType",
     "AhvGCType",
