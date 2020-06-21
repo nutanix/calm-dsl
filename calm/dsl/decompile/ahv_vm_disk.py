@@ -7,7 +7,7 @@ from calm.dsl.tools import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-def render_ahv_vm_disk(cls):
+def render_ahv_vm_disk(cls, boot_config):
 
     data_source_ref = cls.data_source_reference or {}
     if data_source_ref:
@@ -20,9 +20,17 @@ def render_ahv_vm_disk(cls):
     # find device type
     device_type = device_properties["device_type"]
     adapter_type = device_properties["disk_address"]["adapter_type"]
+    adapter_index = device_properties["disk_address"]["device_index"]
 
     schema_file = ""
     user_attrs = {}
+
+    # Atleast one disk should be bootable
+    if (
+        adapter_type == boot_config["boot_device"]["disk_address"]["adapter_type"]
+        and adapter_index == boot_config["boot_device"]["disk_address"]["device_index"]
+    ):
+        user_attrs["bootable"] = True
 
     # find operation_type
     if data_source_ref:
@@ -34,7 +42,7 @@ def render_ahv_vm_disk(cls):
             operation_type = "cloneFromImageService"
             img_uuid = data_source_ref.get("uuid")
             disk_cache_data = Cache.get_entity_data_using_uuid(
-                entity_type="ahv_image", uuid=img_uuid
+                entity_type="ahv_disk_image", uuid=img_uuid
             )
             if not disk_cache_data:
                 LOG.error("Image with uuid '{}' not found".format(img_uuid))

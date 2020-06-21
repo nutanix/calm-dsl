@@ -10,7 +10,7 @@ from calm.dsl.tools import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-def render_ahv_vm_resources(cls, vm_name_prefix=""):
+def render_ahv_vm_resources(cls, boot_config, vm_name_prefix=""):
 
     LOG.debug("Rendering {} ahv_vm_resources template".format(cls.__name__))
     if not isinstance(cls, AhvVmResourcesType):
@@ -21,7 +21,7 @@ def render_ahv_vm_resources(cls, vm_name_prefix=""):
 
     disk_list = []
     for disk in cls.disks:
-        disk_list.append(render_ahv_vm_disk(disk))
+        disk_list.append(render_ahv_vm_disk(disk, boot_config))
 
     nic_list = []
     for nic in cls.nics:

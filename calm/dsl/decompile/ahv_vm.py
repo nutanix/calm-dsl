@@ -7,7 +7,7 @@ from calm.dsl.tools import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-def render_ahv_vm(cls):
+def render_ahv_vm(cls, boot_config):
 
     LOG.debug("Rendering {} ahv_vm template".format(cls.__name__))
     if not isinstance(cls, AhvVmType):
@@ -20,7 +20,7 @@ def render_ahv_vm(cls):
     user_attrs["resources_cls_name"] = "{}_Resources".format(vm_name)
     cls.resources.__name__ = user_attrs["resources_cls_name"]
     user_attrs["resources"] = render_ahv_vm_resources(
-        cls.resources, vm_name_prefix=vm_name
+        cls.resources, boot_config=boot_config, vm_name_prefix=vm_name
     )
 
     text = render_template(schema_file="ahv_vm.py.jinja2", obj=user_attrs)
