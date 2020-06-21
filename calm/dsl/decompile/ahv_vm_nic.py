@@ -6,6 +6,7 @@ from calm.dsl.tools import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
+
 def render_ahv_vm_nic(cls):
 
     nic_data = cls.get_dict()
@@ -33,7 +34,11 @@ def render_ahv_vm_nic(cls):
             schema_file = "ahv_normal_tap_nic.py.jinja2"
 
         else:
-            LOG.error("Unknown network function nic type '{}'". format(network_function_nic_type))
+            LOG.error(
+                "Unknown network function nic type '{}'".format(
+                    network_function_nic_type
+                )
+            )
             sys.exit(-1)
 
     elif nic_type == "DIRECT_NIC":
@@ -47,11 +52,15 @@ def render_ahv_vm_nic(cls):
             schema_file = "ahv_direct_tap_nic.py.jinja2"
 
         else:
-            LOG.error("Unknown network function nic type '{}'". format(network_function_nic_type))
+            LOG.error(
+                "Unknown network function nic type '{}'".format(
+                    network_function_nic_type
+                )
+            )
             sys.exit(-1)
-    
+
     else:
-        LOG.error("Unknown nic type '{}'". format(nic_type))
+        LOG.error("Unknown nic type '{}'".format(nic_type))
         sys.exit(-1)
 
     text = render_template(schema_file=schema_file, obj=user_attrs)

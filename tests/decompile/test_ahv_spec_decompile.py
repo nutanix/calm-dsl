@@ -4,6 +4,7 @@ from calm.dsl.decompile.ahv_vm_disk import render_ahv_vm_disk
 from calm.dsl.decompile.ahv_vm_nic import render_ahv_vm_nic
 from calm.dsl.decompile.ahv_vm_gc import render_ahv_vm_gc
 from calm.dsl.decompile.ahv_vm_gpu import render_ahv_vm_gpu
+from calm.dsl.decompile.ahv_vm_resources import render_ahv_vm_resources
 
 
 def test_decompile():
@@ -13,15 +14,23 @@ def test_decompile():
 
     vm_resources = vm_cls.resources
 
+    print(render_ahv_vm_resources(vm_resources))
+
+    import pdb
+
+    pdb.set_trace()
+
     # Get rendered disks
     for disk in vm_resources.disks:
         print(render_ahv_vm_disk(disk))
-    
+
     for nic in vm_resources.nics:
         print(render_ahv_vm_nic(nic))
-    
+
     # TODO take care of generating file
-    guest_customization_str = render_ahv_vm_gc(vm_resources.guest_customization, vm_name_prefix="vm_test")
+    guest_customization_str = render_ahv_vm_gc(
+        vm_resources.guest_customization, vm_name_prefix="vm_test"
+    )
     print(guest_customization_str)
 
     for gpu in vm_resources.gpus:

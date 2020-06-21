@@ -11,7 +11,7 @@ from calm.dsl.tools import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-def render_ahv_vm_gc(cls, vm_name_prefix = ""):
+def render_ahv_vm_gc(cls, vm_name_prefix=""):
 
     schema_file = ""
     user_attrs = {}
@@ -25,7 +25,7 @@ def render_ahv_vm_gc(cls, vm_name_prefix = ""):
     spec_dir = "/Users/abhijeet.kaurav/calm-dsl"
     if cloud_init:
         schema_file = "ahv_vm_cloud_init.py.jinja2"
-        file_name = "{}_cloud_init_data.yaml". format(vm_name_prefix)
+        file_name = "{}_cloud_init_data.yaml".format(vm_name_prefix)
         user_attrs["filename"] = os.path.join(get_specs_dir_key(), file_name)
         cloud_init_user_data = cloud_init.get("user_data", "")
         with open(os.path.join(spec_dir, file_name), "w+") as fd:
@@ -33,7 +33,7 @@ def render_ahv_vm_gc(cls, vm_name_prefix = ""):
             fd.write(yaml.dump(cloud_init_user_data, default_flow_style=False))
 
     elif sys_prep:
-        file_name = "{}_sysprep_unattend_xml.xml". format(vm_name_prefix)
+        file_name = "{}_sysprep_unattend_xml.xml".format(vm_name_prefix)
         user_attrs["filename"] = os.path.join(get_specs_dir_key(), file_name)
         sysprep_unattend_xml = sys_prep.get("unattend_xml", "")
         with open(os.path.join(spec_dir, file_name), "w+") as fd:
@@ -44,24 +44,30 @@ def render_ahv_vm_gc(cls, vm_name_prefix = ""):
 
         if is_domain and sys_prep.get("domain_credential_reference"):
             cred = RefType.decompile(sys_prep["domain_credential_reference"])
-            user_attrs["credential"] = "ref({})".format(get_cred_var_name(cred.__name__))
+            user_attrs["credential"] = "ref({})".format(
+                get_cred_var_name(cred.__name__)
+            )
 
         if install_type == "FRESH":
             if is_domain:
                 schema_file = "ahv_vm_fresh_sysprep_with_domain.py.jinja2"
             else:
                 schema_file = "ahv_vm_fresh_sysprep_without_domain.py.jinja2"
-        
+
         elif install_type == "PREPARED":
             if is_domain:
                 schema_file = "ahv_vm_prepared_sysprep_with_domain.py.jinja2"
             else:
                 schema_file = "ahv_vm_prepared_sysprep_without_domain.py.jinja2"
-        
+
         else:
-            LOG.error("Unknown install type '{}' for sysprep guest customization". format(install_type))
+            LOG.error(
+                "Unknown install type '{}' for sysprep guest customization".format(
+                    install_type
+                )
+            )
             sys.exit(-1)
-    
+
     else:
         return None
 
