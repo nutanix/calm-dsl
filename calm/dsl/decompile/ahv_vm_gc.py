@@ -22,7 +22,6 @@ def render_ahv_vm_gc(cls, vm_name_prefix=""):
 
     file_name = ""
     spec_dir = get_specs_dir()
-    spec_dir = "/Users/abhijeet.kaurav/calm-dsl"
     if cloud_init:
         schema_file = "ahv_vm_cloud_init.py.jinja2"
         file_name = "{}_cloud_init_data.yaml".format(vm_name_prefix)

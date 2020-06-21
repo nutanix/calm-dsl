@@ -26,13 +26,20 @@ def render_ahv_vm_disk(cls):
 
     # find operation_type
     if data_source_ref:
-        # TODO fetch from sever using uuid
-        user_attrs["name"] = data_source_ref.get("name")
         if data_source_ref["kind"] == "app_package":
+            user_attrs["name"] = data_source_ref.get("name")
             operation_type = "cloneFromVMDiskPackage"
 
         elif data_source_ref["kind"] == "image":
             operation_type = "cloneFromImageService"
+            img_uuid = data_source_ref.get("uuid")
+            disk_cache_data = Cache.get_entity_data_using_uuid(
+                entity_type="ahv_image", uuid=img_uuid
+            )
+            if not disk_cache_data:
+                LOG.error("Image with uuid '{}' not found".format(img_uuid))
+                sys.exit(-1)
+            user_attrs["name"] = disk_cache_data["name"]
 
         else:
             LOG.error(

@@ -14,11 +14,16 @@ def render_ahv_vm_nic(cls):
     subnet_ref = nic_data["subnet_reference"]
     nic_type = nic_data["nic_type"]
     network_function_nic_type = nic_data["network_function_nic_type"]
+    subnet_uuid = subnet_ref["uuid"]
     subnet_cache_data = Cache.get_entity_data_using_uuid(
-        entity_type="ahv_subnet", uuid=subnet_ref["uuid"]
+        entity_type="ahv_subnet", uuid=subnet_uuid
     )
 
     user_attrs = {}
+    if not subnet_cache_data:
+        LOG.error("Subnet with uuid '{}' not found".format(subnet_uuid))
+        sys.exit(-1)
+
     user_attrs["subnet_name"] = subnet_cache_data["name"]
     user_attrs["cluster_name"] = subnet_cache_data["cluster"]
     schema_file = ""

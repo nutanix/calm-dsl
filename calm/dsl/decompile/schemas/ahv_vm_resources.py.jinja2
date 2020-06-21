@@ -7,7 +7,7 @@ class {{obj.name}}(AhvVmResources):
     {% if obj.disks %}disks = [{{obj.disks}}]{% endif %}
     {% if obj.nics %}nics = [{{obj.nics}}]{% endif %}
     {% if obj.gpus %}gpus = [{{obj.gpus}}]{% endif %}
-    {% if obj.guest_customization %}guest_customization = [{{obj.guest_customization}}]{% endif %}
+    {% if obj.guest_customization %}guest_customization = {{obj.guest_customization}}{% endif %}
     {% if obj.serial_ports %}serial_ports = {{obj.serial_ports}}{% endif %}
 {% endmacro %}
 
