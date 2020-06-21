@@ -131,29 +131,37 @@ def MacroOnEscript():
 
 @runbook
 def EndpointMacroOnShell(endpoints=[linux_endpoint], default_target=ref(linux_endpoint)):
-    CalmTask.Exec.ssh(name="ExecTask", script='''echo "@@{endpoint.name}@@, @@{endpoint.type}@@ @@{endpoint.address}@@
-                      @@{endpoint.port}@@ @@{endpoint.credential.username}@@"''')
+    CalmTask.Exec.ssh(
+        name="ExecTask",
+        script='''echo "@@{endpoint.name}@@, @@{endpoint.type}@@ @@{endpoint.address}@@ @@{endpoint.port}@@ @@{endpoint.credential.username}@@"''')
 
 
 @runbook
 def EndpointMacroOnPowershell(endpoints=[windows_endpoint], default_target=ref(windows_endpoint)):
-    CalmTask.Exec.powershell(name="ExecTask", script='''echo "@@{endpoint.name}@@, @@{endpoint.type}@@ @@{endpoint.address}@@
-                      @@{endpoint.port}@@  @@{endpoint.connection_protocol}@@ @@{endpoint.credential.username}@@"''')
+    CalmTask.Exec.powershell(
+        name="ExecTask",
+        script='''echo "@@{endpoint.name}@@, @@{endpoint.type}@@ @@{endpoint.address}@@ @@{endpoint.port}@@  @@{endpoint.connection_protocol}@@ @@{endpoint.credential.username}@@"''')
 
 
 @runbook
-def WindowsEndpointMacroOnEscript(endpoints=[windows_endpoint], default_target=ref(windows_endpoint)):
-    CalmTask.Exec.escript(name="ExecTask", script='''print "@@{endpoint.name}@@, @@{endpoint.type}@@ @@{endpoint.address}@@
-                      @@{endpoint.port}@@  @@{endpoint.connection_protocol}@@ @@{endpoint.credential.username}@@"''')
+def WindowsEndpointMacroOnEscript(endpoints=[windows_endpoint]):
+    CalmTask.Exec.escript(
+        name="ExecTask",
+        target=ref(windows_endpoint),
+        script='''print "@@{endpoint.name}@@, @@{endpoint.type}@@ @@{endpoint.address}@@ @@{endpoint.port}@@  @@{endpoint.connection_protocol}@@ @@{endpoint.credential.username}@@"''')
 
 
 @runbook
-def LinuxEndpointMacroOnEscript(endpoints=[linux_endpoint], default_target=ref(linux_endpoint)):
-    CalmTask.Exec.escript(name="ExecTask", script='''print "@@{endpoint.name}@@, @@{endpoint.type}@@ @@{endpoint.address}@@
-                      @@{endpoint.port}@@  @@{endpoint.credential.username}@@"''')
+def LinuxEndpointMacroOnEscript(endpoints=[linux_endpoint]):
+    CalmTask.Exec.escript(
+        name="ExecTask",
+        target=ref(linux_endpoint),
+        script='''print "@@{endpoint.name}@@, @@{endpoint.type}@@ @@{endpoint.address}@@ @@{endpoint.port}@@  @@{endpoint.credential.username}@@"''')
 
 
 @runbook
-def HttpEndpointMacroOnEscript(endpoints=[http_endpoint], default_target=ref(http_endpoint)):
-    CalmTask.Exec.escript(name="ExecTask", script='''print "@@{endpoint.name}@@, @@{endpoint.type}@@
-                          @@{endpoint.base_url}@@ @@{endpoint.retry_count}@@ @@{endpoint.retry_interval}@@"''')
+def HttpEndpointMacroOnEscript(endpoints=[http_endpoint]):
+    CalmTask.Exec.escript(
+        name="ExecTask",
+        target=ref(http_endpoint),
+        script='''print "@@{endpoint.name}@@, @@{endpoint.type}@@ @@{endpoint.base_url}@@ @@{endpoint.retry_count}@@ @@{endpoint.retry_interval}@@"''')
