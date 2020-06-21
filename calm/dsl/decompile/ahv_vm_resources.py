@@ -17,7 +17,7 @@ def render_ahv_vm_resources(cls, vm_name_prefix=""):
         raise TypeError("{} is not of type {}".format(cls, AhvVmResourcesType))
 
     user_attrs = cls.get_user_attrs()
-    user_attrs["name"] = "{}_Resources".format(vm_name_prefix)
+    user_attrs["name"] = cls.__name__
 
     disk_list = []
     for disk in cls.disks:
@@ -40,7 +40,7 @@ def render_ahv_vm_resources(cls, vm_name_prefix=""):
     )
     if hasattr(cls, "guest_customization"):
         user_attrs["guest_customization"] = render_ahv_vm_gc(
-            cls.guest_customization, vm_name_prefix=""
+            cls.guest_customization, vm_name_prefix=vm_name_prefix
         )
 
     text = render_template(schema_file="ahv_vm_resources.py.jinja2", obj=user_attrs)

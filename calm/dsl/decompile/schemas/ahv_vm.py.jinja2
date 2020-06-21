@@ -1,0 +1,11 @@
+{% macro ahv_vm(obj) %}
+{{obj.resources}}
+
+
+class {{obj.name}}(AhvVm):
+
+    resources = {{obj.resources_cls_name}}
+    {% if obj.categories %}categories = {{obj.categories}}{% endif %}
+{% endmacro %}
+
+{{ ahv_vm(obj) }}
