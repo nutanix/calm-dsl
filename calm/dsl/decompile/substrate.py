@@ -82,7 +82,7 @@ def render_substrate_template(cls, vm_images=[]):
             )
             sys.exit(-1)
         vm_cls = AhvVmType.decompile(provider_spec)
-        user_attrs["provider_spec"] = vm_cls.name or vm_cls.__name__
+        user_attrs["provider_spec"] = vm_cls.__name__
         ahv_vm_str = render_ahv_vm(vm_cls, boot_config)
 
     else:

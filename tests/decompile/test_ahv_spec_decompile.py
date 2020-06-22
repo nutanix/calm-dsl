@@ -11,15 +11,16 @@ from calm.dsl.decompile.ahv_vm import render_ahv_vm
 def test_decompile():
 
     spec = read_spec("ahv_spec.json")
+    boot_config = spec["resources"].get("boot_config", {})
     vm_cls = AhvVmType.decompile(spec)
-    print(render_ahv_vm(vm_cls))
+    print(render_ahv_vm(vm_cls, boot_config))
 
     vm_resources = vm_cls.resources
-    print(render_ahv_vm_resources(vm_resources))
+    print(render_ahv_vm_resources(vm_resources, boot_config=boot_config))
 
     # Get rendered disks
     for disk in vm_resources.disks:
-        print(render_ahv_vm_disk(disk))
+        print(render_ahv_vm_disk(disk, boot_config))
 
     for nic in vm_resources.nics:
         print(render_ahv_vm_nic(nic))

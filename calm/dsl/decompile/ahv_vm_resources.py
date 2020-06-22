@@ -38,7 +38,7 @@ def render_ahv_vm_resources(cls, boot_config, vm_name_prefix=""):
             "gpus": ", ".join(gpu_list),
         }
     )
-    if hasattr(cls, "guest_customization"):
+    if getattr(cls, "guest_customization", None):
         user_attrs["guest_customization"] = render_ahv_vm_gc(
             cls.guest_customization, vm_name_prefix=vm_name_prefix
         )

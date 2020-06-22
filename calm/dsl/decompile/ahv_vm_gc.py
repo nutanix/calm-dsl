@@ -27,6 +27,9 @@ def render_ahv_vm_gc(cls, vm_name_prefix=""):
         file_name = "{}_cloud_init_data.yaml".format(vm_name_prefix)
         user_attrs["filename"] = os.path.join(get_specs_dir_key(), file_name)
         cloud_init_user_data = cloud_init.get("user_data", "")
+        if not cloud_init_user_data:
+            return
+
         with open(os.path.join(spec_dir, file_name), "w+") as fd:
             # TODO take care of macro case
             fd.write(yaml.dump(cloud_init_user_data, default_flow_style=False))

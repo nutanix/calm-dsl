@@ -14,7 +14,13 @@ def render_ahv_vm(cls, boot_config):
         raise TypeError("{} is not of type {}".format(cls, AhvVmType))
 
     user_attrs = cls.get_user_attrs()
-    vm_name = user_attrs["name"]
+    vm_name = cls.__name__
+    user_attrs["name"] = vm_name
+
+    # Update service name map and gui name
+    gui_display_name = getattr(cls, "display_name", "")
+    if gui_display_name and gui_display_name != vm_name:
+        user_attrs["gui_display_name"] = gui_display_name
 
     # render resources template
     user_attrs["resources_cls_name"] = "{}_Resources".format(vm_name)

@@ -71,16 +71,11 @@
         "parent_reference": null,
         "hardware_clock_timezone": "",
         "guest_customization": {
-            "cloud_init": null,
+            "cloud_init": {
+                "user_data": ""
+            },
             "type": "",
             "sysprep": {
-                "is_domain": true,
-                "install_type": "PREPARED",
-                "domain": "Abhijeet",
-                "dns_ip": "dfv",
-                "dns_search_path": "SIngh",
-                "unattend_xml": "efvdfbvf",
-                "type": ""
             }
         },
         "power_state": "ON",
