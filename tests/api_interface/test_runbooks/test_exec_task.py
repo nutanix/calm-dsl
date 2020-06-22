@@ -147,6 +147,7 @@ class TestExecTasks:
         else:
             print("runbook {} deleted".format(rb_name))
 
+    @pytest.mark.runbook
     @pytest.mark.regression
     @pytest.mark.parametrize('Runbook', [MacroOnShell, MacroOnPowershell, MacroOnEscript])
     def test_macro_in_script(self, Runbook):
@@ -221,6 +222,7 @@ class TestExecTasks:
             if err:
                 pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
+    @pytest.mark.runbook
     @pytest.mark.regression
     @pytest.mark.parametrize('Runbook', [EndpointMacroOnShell,
                                          EndpointMacroOnPowershell,
