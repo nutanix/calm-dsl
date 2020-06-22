@@ -201,6 +201,8 @@ properties:
     type: string
   type:
     type: string
+  source_image_type:
+    type: string
 
 {%- endmacro %}
 
@@ -344,6 +346,10 @@ properties:
     type: string
   resource_group:
     type: string
+  rg_details:
+    {{ azureRgDetails() | indent(4) }}
+  rg_operation:
+    type: string
   availability_set_id:
     type: string
   account_uuid:
@@ -382,6 +388,21 @@ properties:
   resources:
     {{ azureResources() | indent(4) }}
 
+{%- endmacro %}
+
+{% macro azureRgDetails() -%}
+
+title: AZURE Resource group details
+type: object
+properties:
+  delete_rg_if_empty:
+    type: boolean
+  rg_location:
+    type: string
+  rg_tag_list:
+    type: array
+  type:
+    type: string
 {%- endmacro %}
 
 
