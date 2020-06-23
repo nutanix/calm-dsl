@@ -23,7 +23,7 @@ def render_ahv_vm(cls, boot_config):
         user_attrs["gui_display_name"] = gui_display_name
 
     # render resources template
-    user_attrs["resources_cls_name"] = "{}_Resources".format(vm_name)
+    user_attrs["resources_cls_name"] = "{}Resources".format(vm_name)
     cls.resources.__name__ = user_attrs["resources_cls_name"]
     user_attrs["resources"] = render_ahv_vm_resources(
         cls.resources, boot_config=boot_config, vm_name_prefix=vm_name
