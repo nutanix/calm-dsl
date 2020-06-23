@@ -266,9 +266,9 @@ class VCenter:
             entity_config = entity["status"]["resources"]["config"]
             entity_id = entity_config["instanceUuid"]
             if entity_id == template_id:
-                controllers = entity_config["hardware"]["device"]["controller"]
-                disks = entity_config["hardware"]["device"]["disk"]
-                networks = entity_config["hardware"]["device"]["network"]
+                controllers = entity_config["hardware"]["device"]["controller"] or []
+                disks = entity_config["hardware"]["device"]["disk"] or []
+                networks = entity_config["hardware"]["device"]["network"] or []
                 break
 
         for controller in controllers:

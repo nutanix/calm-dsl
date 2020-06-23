@@ -12,7 +12,7 @@ from calm.dsl.config import (
     get_default_db_file,
     get_default_local_dir,
 )
-from calm.dsl.db import get_db_handle
+from calm.dsl.db import init_db_handle
 from calm.dsl.api import get_resource_api, update_client_handle, get_client_handle
 from calm.dsl.store import Cache
 from calm.dsl.init import init_bp
@@ -197,11 +197,10 @@ def set_server_details(
 
 def init_db():
     LOG.info("Creating local database")
-    get_db_handle()
+    init_db_handle()
 
 
 def sync_cache():
-    LOG.info("Updating Cache")
     Cache.sync()
 
 
