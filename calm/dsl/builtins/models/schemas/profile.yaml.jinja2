@@ -7,8 +7,7 @@ properties:
   name:
     type: string
     x-calm-dsl-display-name: display_name
-  description:
-    type: string
+  # description attribute in profile gives bp launch error: https://jira.nutanix.com/browse/CALM-19380
   deployment_create_list:
     x-calm-dsl-display-name: deployments
     type: array
