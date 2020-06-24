@@ -19,6 +19,9 @@ def render_ahv_vm_resources(cls, boot_config, vm_name_prefix=""):
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__
 
+    # Memory to GiB
+    user_attrs["memory"] = int(user_attrs["memory"])//1024
+
     disk_list = []
     for disk in cls.disks:
         disk_list.append(render_ahv_vm_disk(disk, boot_config))
