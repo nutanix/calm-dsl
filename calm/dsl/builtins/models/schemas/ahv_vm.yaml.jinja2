@@ -111,6 +111,7 @@ properties:
         type: string
       install_type:
         type: string
+        default: PREPARED
       is_domain:
         type: boolean
         default: False
@@ -210,6 +211,7 @@ type: object
 x-calm-dsl-type: vm_ahv
 properties:
   name:
+    x-calm-dsl-display-name: display_name
     type: string
   categories:
     type: object

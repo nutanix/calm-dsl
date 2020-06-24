@@ -1,5 +1,5 @@
 from calm.dsl.decompile.render import render_template
-from calm.dsl.builtins import RefType, ReadinessProbeType
+from calm.dsl.builtins import ReadinessProbeType
 from calm.dsl.decompile.credential import get_cred_var_name
 from calm.dsl.tools import get_logging_handle
 

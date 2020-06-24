@@ -1,0 +1,293 @@
+{
+    "name": "MyAhvVm",
+    "resources": {
+        "nic_list": [
+            {
+                "nic_type": "NORMAL_NIC",
+                "ip_endpoint_list": [],
+                "network_function_chain_reference": null,
+                "network_function_nic_type": "INGRESS",
+                "mac_address": "",
+                "subnet_reference": {
+                    "kind": "subnet",
+                    "type": "",
+                    "name": "vlan.0",
+                    "uuid": "c37571b5-51d2-4340-8db0-d62c89ce3c9e"
+                },
+                "type": ""
+            },
+            {
+                "nic_type": "DIRECT_NIC",
+                "ip_endpoint_list": [],
+                "network_function_chain_reference": null,
+                "network_function_nic_type": "EGRESS",
+                "mac_address": "",
+                "subnet_reference": {
+                    "kind": "subnet",
+                    "type": "",
+                    "name": "vlan.0",
+                    "uuid": "c37571b5-51d2-4340-8db0-d62c89ce3c9e"
+                },
+                "type": ""
+            }
+        ],
+        "serial_port_list": [
+            {
+                "index": 0,
+                "type": "",
+                "is_connected": false
+            },
+            {
+                "index": 1,
+                "type": "",
+                "is_connected": false
+            },
+            {
+                "index": 2,
+                "type": "",
+                "is_connected": true
+            },
+            {
+                "index": 3,
+                "type": "",
+                "is_connected": true
+            }
+        ],
+        "guest_tools": null,
+        "num_vcpus_per_socket": 1,
+        "num_sockets": 2,
+        "gpu_list": [
+            {
+                "vendor": "NVIDIA",
+                "mode": "PASSTHROUGH_GRAPHICS"
+            },
+            {
+                "vendor": "AMD",
+                "mode": "VIRTUAL",
+                "device_id": 5072
+            }
+        ],
+        "memory_size_mib": 4096,
+        "parent_reference": null,
+        "hardware_clock_timezone": "",
+        "guest_customization": {
+            "cloud_init": {
+                "user_data": ""
+            },
+            "type": "",
+            "sysprep": {
+            }
+        },
+        "power_state": "ON",
+        "type": "",
+        "account_uuid": "249dc016-2f12-4766-91a0-51cc1ed30ba1",
+        "boot_config": {
+            "boot_device": {
+                "type": "",
+                "disk_address": {
+                    "type": "",
+                    "device_index": 2,
+                    "adapter_type": "SCSI"
+                }
+            },
+            "type": "",
+            "boot_type": "",
+            "mac_address": ""
+        },
+        "disk_list": [
+            {
+                "data_source_reference": {
+                    "kind": "image",
+                    "type": "",
+                    "name": "Centos7",
+                    "uuid": "294fa133-be65-4393-aae8-e3b10a0b4293"
+                },
+                "type": "",
+                "disk_size_mib": 0,
+                "volume_group_reference": null,
+                "device_properties": {
+                    "type": "",
+                    "disk_address": {
+                        "type": "",
+                        "device_index": 0,
+                        "adapter_type": "SCSI"
+                    },
+                    "device_type": "DISK"
+                }
+            },
+            {
+                "data_source_reference": {
+                    "kind": "image",
+                    "type": "",
+                    "name": "SQLServer2014SP2-FullSlipstream-x64",
+                    "uuid": "67377d29-e394-43f7-a2e0-c561ce373bb1"
+                },
+                "type": "",
+                "disk_size_mib": 0,
+                "volume_group_reference": null,
+                "device_properties": {
+                    "type": "",
+                    "disk_address": {
+                        "type": "",
+                        "device_index": 0,
+                        "adapter_type": "IDE"
+                    },
+                    "device_type": "CDROM"
+                }
+            },
+            {
+                "data_source_reference": {
+                    "kind": "image",
+                    "type": "",
+                    "name": "SQLServer2014SP2-FullSlipstream-x64",
+                    "uuid": "67377d29-e394-43f7-a2e0-c561ce373bb1"
+                },
+                "type": "",
+                "disk_size_mib": 0,
+                "volume_group_reference": null,
+                "device_properties": {
+                    "type": "",
+                    "disk_address": {
+                        "type": "",
+                        "device_index": 0,
+                        "adapter_type": "SATA"
+                    },
+                    "device_type": "CDROM"
+                }
+            },
+            {
+                "data_source_reference": {
+                    "kind": "image",
+                    "type": "",
+                    "name": "SQLServer2014SP2-FullSlipstream-x64",
+                    "uuid": "67377d29-e394-43f7-a2e0-c561ce373bb1"
+                },
+                "type": "",
+                "disk_size_mib": 0,
+                "volume_group_reference": null,
+                "device_properties": {
+                    "type": "",
+                    "disk_address": {
+                        "type": "",
+                        "device_index": 1,
+                        "adapter_type": "IDE"
+                    },
+                    "device_type": "CDROM"
+                }
+            },
+            {
+                "data_source_reference": {
+                    "kind": "image",
+                    "type": "",
+                    "name": "AHV_CENTOS_76",
+                    "uuid": "a333ba83-07eb-422d-bf2e-e79c7ea93fa3"
+                },
+                "type": "",
+                "disk_size_mib": 0,
+                "volume_group_reference": null,
+                "device_properties": {
+                    "type": "",
+                    "disk_address": {
+                        "type": "",
+                        "device_index": 1,
+                        "adapter_type": "SCSI"
+                    },
+                    "device_type": "DISK"
+                }
+            },
+            {
+                "data_source_reference": null,
+                "type": "",
+                "disk_size_mib": 12288,
+                "volume_group_reference": null,
+                "device_properties": {
+                    "type": "",
+                    "disk_address": {
+                        "type": "",
+                        "device_index": 0,
+                        "adapter_type": "PCI"
+                    },
+                    "device_type": "DISK"
+                }
+            },
+            {
+                "data_source_reference": null,
+                "type": "",
+                "disk_size_mib": 0,
+                "volume_group_reference": null,
+                "device_properties": {
+                    "type": "",
+                    "disk_address": {
+                        "type": "",
+                        "device_index": 1,
+                        "adapter_type": "SATA"
+                    },
+                    "device_type": "CDROM"
+                }
+            },
+            {
+                "data_source_reference": null,
+                "type": "",
+                "disk_size_mib": 0,
+                "volume_group_reference": null,
+                "device_properties": {
+                    "type": "",
+                    "disk_address": {
+                        "type": "",
+                        "device_index": 2,
+                        "adapter_type": "IDE"
+                    },
+                    "device_type": "CDROM"
+                }
+            },
+            {
+                "data_source_reference": {
+                    "kind": "app_package",
+                    "type": "",
+                    "name": "era_disk",
+                    "uuid": "ea247dcf-3ef0-4a12-8388-90d71131dc13"
+                },
+                "type": "",
+                "disk_size_mib": 0,
+                "volume_group_reference": null,
+                "device_properties": {
+                    "type": "",
+                    "disk_address": {
+                        "type": "",
+                        "device_index": 2,
+                        "adapter_type": "SCSI"
+                    },
+                    "device_type": "DISK"
+                }
+            },
+            {
+                "data_source_reference": {
+                    "kind": "app_package",
+                    "type": "",
+                    "name": "virtio_cdrom",
+                    "uuid": "4bbaddae-1ad9-43a9-b67e-9325eb312c4c"
+                },
+                "type": "",
+                "disk_size_mib": 0,
+                "volume_group_reference": null,
+                "device_properties": {
+                    "type": "",
+                    "disk_address": {
+                        "type": "",
+                        "device_index": 2,
+                        "adapter_type": "SATA"
+                    },
+                    "device_type": "CDROM"
+                }
+            }
+        ]
+    },
+    "availability_zone_reference": null,
+    "backup_policy": null,
+    "type": "",
+    "cluster_reference": null,
+    "categories": {
+        "AppFamily": "Backup",
+        "AppType": "Default"
+    }
+}

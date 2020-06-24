@@ -230,16 +230,12 @@ class AhvSubnetsCache(CacheTableBase):
     @classmethod
     def get_entity_data_using_uuid(cls, uuid, **kwargs):
         account_uuid = kwargs.get("account_uuid", "")
-        if not account_uuid:
-            LOG.error(
-                "Account UUID not supplied for fetching subnet with uuid {}".format(
-                    uuid
-                )
-            )
-            sys.exit(-1)
 
         try:
-            entity = super().get(cls.uuid == uuid, cls.account_uuid == account_uuid)
+            if account_uuid:
+                entity = super().get(cls.uuid == uuid, cls.account_uuid == account_uuid)
+            else:
+                entity = super().get(cls.uuid == uuid)
             return entity.get_detail_dict()
 
         except DoesNotExist:
@@ -368,16 +364,12 @@ class AhvImagesCache(CacheTableBase):
     @classmethod
     def get_entity_data_using_uuid(cls, uuid, **kwargs):
         account_uuid = kwargs.get("account_uuid", "")
-        if not account_uuid:
-            # For now we can attach multiple nutanix_pc account pointing to same pc
-            # https://jira.nutanix.com/browse/CALM-19273, So make account_uuid as necessary
-            LOG.error(
-                "Account UUID not supplied for fetching image with uuid {}".format(uuid)
-            )
-            sys.exit(-1)
 
         try:
-            entity = super().get(cls.uuid == uuid, cls.account_uuid == account_uuid)
+            if account_uuid:
+                entity = super().get(cls.uuid == uuid, cls.account_uuid == account_uuid)
+            else:
+                entity = super().get(cls.uuid == uuid)
             return entity.get_detail_dict()
 
         except DoesNotExist:

@@ -33,7 +33,6 @@ from .utils import (
 from .constants import BLUEPRINT
 from calm.dsl.store import Cache
 from calm.dsl.tools import get_logging_handle
-from calm.dsl.builtins import read_spec
 from calm.dsl.providers import get_provider
 
 LOG = get_logging_handle(__name__)

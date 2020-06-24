@@ -48,11 +48,18 @@ from .models.vm_disk_package import (
     VmDiskPackageType,
 )
 
-from .models.ahv_vm_nic import ahv_vm_nic, AhvVmNic
-from .models.ahv_vm_disk import ahv_vm_disk, AhvVmDisk
-from .models.ahv_vm_gpu import ahv_vm_gpu, AhvVmGpu
-from .models.ahv_vm_gc import ahv_vm_guest_customization, AhvVmGC
-from .models.ahv_vm import ahv_vm_resources, AhvVmResources, ahv_vm, AhvVm
+from .models.ahv_vm_nic import ahv_vm_nic, AhvVmNic, AhvNicType
+from .models.ahv_vm_disk import ahv_vm_disk, AhvVmDisk, AhvDiskType
+from .models.ahv_vm_gpu import ahv_vm_gpu, AhvVmGpu, AhvGpuType
+from .models.ahv_vm_gc import ahv_vm_guest_customization, AhvVmGC, AhvGCType
+from .models.ahv_vm import (
+    ahv_vm_resources,
+    AhvVmResources,
+    ahv_vm,
+    AhvVm,
+    AhvVmType,
+    AhvVmResourcesType,
+)
 
 
 __all__ = [
@@ -129,4 +136,10 @@ __all__ = [
     "AhvVmResources",
     "ahv_vm",
     "AhvVm",
+    "AhvNicType",
+    "AhvDiskType",
+    "AhvGpuType",
+    "AhvGCType",
+    "AhvVmResourcesType",
+    "AhvVmType",
 ]

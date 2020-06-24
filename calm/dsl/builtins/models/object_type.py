@@ -54,6 +54,8 @@ class ObjectDict(EntityDict):
 
     def decompile(cls, cdict):
 
+        if not cdict:
+            return cdict
         attrs = {}
         display_map = copy.deepcopy(cls.display_map)
         display_map = {v: k for k, v in display_map.items()}

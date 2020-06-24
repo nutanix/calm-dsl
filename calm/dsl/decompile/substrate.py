@@ -1,12 +1,14 @@
 from ruamel import yaml
 import os
+import sys
 
+from calm.dsl.builtins import AhvVmType
 from calm.dsl.decompile.render import render_template
-from calm.dsl.decompile.credential import get_cred_var_name
 from calm.dsl.decompile.action import render_action_template
 from calm.dsl.decompile.readiness_probe import render_readiness_probe_template
 from calm.dsl.decompile.file_handler import get_specs_dir, get_specs_dir_key
 from calm.dsl.builtins import SubstrateType, get_valid_identifier
+from calm.dsl.decompile.ahv_vm import render_ahv_vm
 from calm.dsl.decompile.ref_dependency import update_substrate_name
 from calm.dsl.tools import get_logging_handle
 
@@ -72,19 +74,31 @@ def render_substrate_template(cls, vm_images=[]):
 
     # Handle provider_spec for substrate
     provider_spec = cls.provider_spec
-    # creating a file for storing provider_spec
-    provider_spec_file_name = cls.__name__ + "_provider_spec.yaml"
-    user_attrs["provider_spec"] = get_provider_spec_string(
-        spec=provider_spec,
-        filename=os.path.join(get_specs_dir_key(), provider_spec_file_name),
-        provider_type=cls.provider_type,
-        vm_images=vm_images,
-    )
+    if cls.provider_type == "AHV_VM":
+        boot_config = provider_spec["resources"].get("boot_config", {})
+        if not boot_config:
+            LOG.error(
+                "Boot config not present in {} substrate spec".format(cls.__name__)
+            )
+            sys.exit(-1)
+        vm_cls = AhvVmType.decompile(provider_spec)
+        user_attrs["provider_spec"] = vm_cls.__name__
+        ahv_vm_str = render_ahv_vm(vm_cls, boot_config)
 
-    # Write provider spec to separate file
-    file_location = os.path.join(spec_dir, provider_spec_file_name)
-    with open(file_location, "w+") as fd:
-        fd.write(yaml.dump(provider_spec, default_flow_style=False))
+    else:
+        # creating a file for storing provider_spec
+        provider_spec_file_name = cls.__name__ + "_provider_spec.yaml"
+        user_attrs["provider_spec"] = get_provider_spec_string(
+            spec=provider_spec,
+            filename=os.path.join(get_specs_dir_key(), provider_spec_file_name),
+            provider_type=cls.provider_type,
+            vm_images=vm_images,
+        )
+
+        # Write provider spec to separate file
+        file_location = os.path.join(spec_dir, provider_spec_file_name)
+        with open(file_location, "w+") as fd:
+            fd.write(yaml.dump(provider_spec, default_flow_style=False))
 
     # Actions
     action_list = []
@@ -97,8 +111,12 @@ def render_substrate_template(cls, vm_images=[]):
 
     user_attrs["actions"] = action_list
 
-    text = render_template(schema_file="substrate.py.jinja2", obj=user_attrs)
-    return text.strip()
+    substrate_text = render_template(schema_file="substrate.py.jinja2", obj=user_attrs)
+    if cls.provider_type == "AHV_VM":
+        # Append definition for ahv vm class on top of substrate class
+        substrate_text = "{}\n{}".format(ahv_vm_str, substrate_text)
+
+    return substrate_text.strip()
 
 
 def get_provider_spec_string(spec, filename, provider_type, vm_images):
