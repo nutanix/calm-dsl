@@ -10,6 +10,7 @@ from calm.dsl.tools import StrictDraft7Validator
 from calm.dsl.tools import get_logging_handle
 from .schema import get_schema_details
 from .utils import get_valid_identifier
+from .client_attrs import get_ui_dsl_name_map
 
 LOG = get_logging_handle(__name__)
 
@@ -329,12 +330,6 @@ class EntityType(EntityTypeBase):
         VariableType = types.get("Variable")
         ActionType = types.get("Action")
 
-        if not isinstance(cls, (VariableType, ActionType)):
-            if "description" in cdict and cdict["name"] != str(cls):
-                cdict["description"] = '{{"dsl_entity_name":"{}"}}\n{}'.format(
-                    str(cls), cdict["description"]
-                )
-
         # Add extra info for roundtrip
         # TODO - remove during serialization before sending to server
         # cdict['__kind__'] = cls.__kind__
@@ -350,6 +345,12 @@ class EntityType(EntityTypeBase):
         # kind = cdict.pop('__kind__')
 
         dsl_class_name = name
+
+        display_name_map = get_ui_dsl_name_map()
+        if dsl_class_name:
+            dsl_class_name = display_name_map.get(dsl_class_name, dsl_class_name)
+
+        # TODO Add another workaround for action/variables name mapping and remove this messing with description
         if description is not None:
             if description.find("\n") != -1:
                 data = description.split("\n")

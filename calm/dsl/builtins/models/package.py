@@ -1,10 +1,11 @@
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
+from .client_attrs import add_ui_dsl_name_map_entry
 
 from .task import dag
 from .action import runbook_create, _action_create
-from calm.dsl.tools import get_logging_handle
 from .runbook import RunbookType
+from calm.dsl.tools import get_logging_handle
 
 
 LOG = get_logging_handle(__name__)
@@ -87,6 +88,9 @@ class PackageType(EntityType):
                 "Supported Package Types: ['SUBSTRATE_IMAGE', 'CUSTOM', 'K8S_IMAGE']"
             )
             raise Exception("Un-supported package type {}".format(ptype))
+
+        if cdict["name"] != cls.__name__:
+            add_ui_dsl_name_map_entry(cdict["name"], cls.__name__)
 
         return cdict
 

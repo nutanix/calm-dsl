@@ -61,6 +61,11 @@ from .models.ahv_vm import (
     AhvVmResourcesType,
 )
 
+from .models.client_attrs import (
+    add_ui_dsl_name_map_entry,
+    get_ui_dsl_name_map,
+    update_ui_dsl_name_map_,
+)
 
 __all__ = [
     "Ref",
@@ -142,4 +147,7 @@ __all__ = [
     "AhvGCType",
     "AhvVmResourcesType",
     "AhvVmType",
+    "add_ui_dsl_name_map_entry",
+    "get_ui_dsl_name_map",
+    "update_ui_dsl_name_map_",
 ]

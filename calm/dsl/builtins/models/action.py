@@ -135,7 +135,7 @@ class action(metaclass=DescriptorType):
     action descriptor
     """
 
-    def __init__(self, user_func, runbook_name=None):
+    def __init__(self, user_func):
         """
         A decorator for generating actions from a function definition.
         Args:
