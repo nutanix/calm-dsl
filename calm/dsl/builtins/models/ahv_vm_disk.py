@@ -14,14 +14,18 @@ LOG = get_logging_handle(__name__)
 # AHV VM Disk
 
 
-ADAPTER_INDEX_MAP = {"SCSI": 0, "PCI": 0, "IDE": 0, "SATA": 0}
 IMAGE_TYPE_MAP = {"DISK": "DISK_IMAGE", "CDROM": "ISO_IMAGE"}
-BOOT_CONFIG = {}
 
 
 class AhvDiskType(EntityType):
     __schema_name__ = "AhvDisk"
     __openapi_type__ = "vm_ahv_disk"
+
+    def compile(cls):
+        cdict = super().compile()
+        # Pop bootable from cdict
+        cdict.pop("bootable", None)
+        return cdict
 
 
 class AhvDiskValidator(PropertyValidator, openapi_type="vm_ahv_disk"):
@@ -35,27 +39,15 @@ def ahv_vm_disk(**kwargs):
     return AhvDiskType(name, bases, kwargs)
 
 
-def get_boot_config():
-    if not BOOT_CONFIG:
-        raise ValueError("There is no bootable disk selected.")
-
-    return BOOT_CONFIG
-
-
 def allocate_on_storage_container(adapter_type="SCSI", size=8):
-    global ADAPTER_INDEX_MAP
     kwargs = {
         "device_properties": {
             "device_type": "DISK",
-            "disk_address": {
-                "adapter_type": adapter_type,
-                "device_index": ADAPTER_INDEX_MAP[adapter_type],
-            },
+            "disk_address": {"adapter_type": adapter_type, "device_index": -1},
         },
         "disk_size_mib": size * 1024,
     }
 
-    ADAPTER_INDEX_MAP[adapter_type] += 1
     return ahv_vm_disk(**kwargs)
 
 
@@ -65,33 +57,16 @@ def update_disk_config(
     if not image_data:
         raise ValueError("Image data not found")
 
-    global ADAPTER_INDEX_MAP
     kwargs = {
         "data_source_reference": image_data,
         "device_properties": {
             "device_type": device_type,
-            "disk_address": {
-                "adapter_type": adapter_type,
-                "device_index": ADAPTER_INDEX_MAP[adapter_type],
-            },
+            "disk_address": {"adapter_type": adapter_type, "device_index": -1},
         },
         "disk_size_mib": 0,
+        "bootable": bootable,
     }
 
-    if bootable:
-        global BOOT_CONFIG
-        BOOT_CONFIG.update(
-            {
-                "boot_device": {
-                    "disk_address": {
-                        "device_index": ADAPTER_INDEX_MAP[adapter_type],
-                        "adapter_type": adapter_type,
-                    }
-                }
-            }
-        )
-
-    ADAPTER_INDEX_MAP[adapter_type] += 1
     return ahv_vm_disk(**kwargs)
 
 
@@ -149,8 +124,6 @@ def clone_from_image_service(
 def clone_from_vm_image_service(
     device_type="DISK", adapter_type="SCSI", bootable=False, vm_disk_package=None
 ):
-    global ADAPTER_INDEX_MAP
-
     if not vm_disk_package:
         raise ValueError("vm_disk_package not provided !!!")
 
@@ -170,19 +143,14 @@ def clone_from_vm_image_service(
 
 
 def empty_cd_rom(adapter_type="IDE"):
-    global ADAPTER_INDEX_MAP
     kwargs = {
         "device_properties": {
             "device_type": "CDROM",
-            "disk_address": {
-                "adapter_type": adapter_type,
-                "device_index": ADAPTER_INDEX_MAP[adapter_type],
-            },
+            "disk_address": {"adapter_type": adapter_type, "device_index": -1},
         },
         "disk_size_mib": 0,
     }
 
-    ADAPTER_INDEX_MAP[adapter_type] += 1
     return ahv_vm_disk(**kwargs)
 
 
