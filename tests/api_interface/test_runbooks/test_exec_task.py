@@ -322,6 +322,7 @@ class TestExecTasks:
             if err:
                 pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
+    @pytest.mark.runbook
     @pytest.mark.regression
     def test_http_endpoint_macro_in_script(self):
         """ test_macro_in_script """
