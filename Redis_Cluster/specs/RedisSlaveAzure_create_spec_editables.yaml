@@ -1,0 +1,19 @@
+resources:
+  availability_set_id: true
+  hw_profile: {}
+  nw_profile:
+    nic_list:
+      '0':
+        nsg_id: true
+        subnet_id: true
+        vnet_id: true
+  resource_group: true
+  storage_profile:
+    data_disk_list: true
+    image_details: {}
+    os_disk_details:
+      caching_type: true
+      create_option: true
+      name: true
+      storage_type: true
+  vm_name: true

@@ -1,0 +1,18 @@
+resources:
+  blankDisks:
+    '0':
+      autoDelete: true
+      disk_type: true
+      name: true
+      sizeGb: true
+  guestCustomization:
+    startupScript: true
+  labels: true
+  machineType: true
+  name: true
+  serviceAccounts:
+    '0':
+      scopes: true
+  sshKeys:
+    '0': true
+  zone: true

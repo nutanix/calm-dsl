@@ -1,0 +1,7 @@
+|-
+#cloud-config
+users:
+  - name: centos
+    ssh-authorized-keys:
+      - @@{CENTOS.public_key}@@
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']

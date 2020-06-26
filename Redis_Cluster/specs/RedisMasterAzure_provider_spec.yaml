@@ -1,0 +1,81 @@
+name: ''
+resources:
+  account_uuid: c60353ad-51e3-73fe-2c09-de9efe037b8e
+  availability_set_id: ''
+  hw_profile:
+    max_data_disk_count: 4
+    type: ''
+    vm_size: Standard_DS1_v2
+  location: eastus2
+  nw_profile:
+    nic_list:
+    - nic_name: nic-@@{calm_unique_hash}@@-@@{calm_array_index}@@-0
+      nsg_id: /subscriptions/c88c75b1-c860-411e-b920-a48d02a8ce45/resourceGroups/calmrg/providers/Microsoft.Network/networkSecurityGroups/sg-allow-all-eastus2
+      nsg_name: ''
+      private_ip_info:
+        ip_address: ''
+        ip_allocation_method: Dynamic
+        type: ''
+      public_ip_info:
+        dns_label: dns-@@{calm_unique_hash}@@-@@{calm_array_index}@@-0
+        ip_allocation_method: Dynamic
+        ip_name: public-ip-@@{calm_unique_hash}@@-@@{calm_array_index}@@-0
+        type: ''
+      subnet_id: /subscriptions/c88c75b1-c860-411e-b920-a48d02a8ce45/resourceGroups/calmrg/providers/Microsoft.Network/virtualNetworks/calm-virtual-network-eastus2/subnets/default
+      subnet_name: ''
+      type: ''
+      vnet_id: /subscriptions/c88c75b1-c860-411e-b920-a48d02a8ce45/resourceGroups/calmrg/providers/Microsoft.Network/virtualNetworks/calm-virtual-network-eastus2
+      vnet_name: ''
+    primary_nic: -1
+    type: ''
+  os_profile:
+    linux_config:
+      custom_data: ''
+      disable_password_auth: false
+      public_keys: []
+      type: ''
+    secrets: []
+    type: ''
+    windows_config:
+      additional_unattend_content: []
+      auto_updates: false
+      provision_vm_agent: true
+      time_zone: ''
+      type: ''
+      winrm_listeners: []
+  resource_group: calmrg
+  rg_details: {}
+  rg_operation: ''
+  storage_profile:
+    data_disk_list:
+    - caching_type: None
+      create_option: Empty
+      lun: 0
+      name: data-disk-@@{calm_unique_hash}@@-@@{calm_array_index}@@-0
+      size_in_gb: 30
+      storage_name: ''
+      storage_type: Standard_LRS
+      type: ''
+    image_details:
+      offer: CentOS-HPC
+      publisher: OpenLogic
+      sku: '6.5'
+      source_image_id: ''
+      source_image_type: Marketplace
+      type: ''
+      version: 6.5.20160408
+    is_managed: true
+    os_disk_details:
+      caching_type: ReadWrite
+      create_option: FromImage
+      lun: -1
+      name: os-@@{calm_unique_hash}@@-@@{calm_array_index}@@-disk
+      size_in_gb: -1
+      storage_name: ''
+      storage_type: Standard_LRS
+      type: ''
+    type: ''
+  tag_list: []
+  type: ''
+  vm_name: vm-@@{calm_unique_hash}@@-@@{calm_array_index}@@
+type: PROVISION_AZURE_VM

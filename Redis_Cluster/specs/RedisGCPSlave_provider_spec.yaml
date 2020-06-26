@@ -1,0 +1,71 @@
+resources:
+  account_uuid: e2acde26-a3e9-c08c-24f7-65a137b1fd46
+  blankDisks:
+  - autoDelete: true
+    disk_type: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/asia-east1-b/diskTypes/pd-ssd
+    name: vm-@@{calm_array_index}@@-@@{calm_random}@@-blankdisk-1
+    sizeGb: 10
+    type: ''
+  canIpForward: false
+  description: ''
+  disks:
+  - autoDelete: true
+    boot: true
+    deviceName: ''
+    diskEncryptionKey: {}
+    disk_type: PERSISTENT
+    initializeParams:
+      diskName: ''
+      diskSizeGb: -1
+      diskType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/asia-east1-b/diskTypes/pd-ssd
+      sourceImage: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/images/centos-7
+      sourceImageEncryptionKey: {}
+      type: ''
+    interface: ''
+    mode: ''
+    source: ''
+    type: ''
+  guestCustomization:
+    startupScript: ''
+    sysprep: ''
+    type: ''
+  labelFingerprint: ''
+  labels: []
+  machineType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/asia-east1-b/machineTypes/n1-highcpu-4
+  metadata:
+    fingerprint: ''
+    items: []
+    type: ''
+  minCpuPlatform: ''
+  name: vm-@@{calm_array_index}@@-@@{calm_random}@@
+  networkInterfaces:
+  - accessConfigs:
+    - config_type: ONE_TO_ONE_NAT
+      name: default
+      natIP: ''
+      type: ''
+    aliasIpRanges: []
+    associatePublicIP: true
+    network: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/networks/default
+    networkIP: ''
+    subnetwork: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/regions/asia-east1/subnetworks/default
+    type: ''
+  scheduling:
+    automaticRestart: true
+    onHostMaintenance: TERMINATE
+    preemptible: false
+    type: ''
+  serviceAccounts:
+  - email: 108048128720-compute@developer.gserviceaccount.com
+    scopes: []
+    type: ''
+  sshKeys:
+  - "centos:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCyh19kFkO3oAYZrL2wbjOoK3DzGReYF6ZY59TYyvW7bCEGh2RFsCHsGlyNSFp8U19oGykSiIQAabGR42IbByqNgZ3IGr5+4hB29+IPMHo8Qk1LnNO9O+Cb+1XxOGmX0eRZl7HJcNDAZxMgTKghmT35odMXEjX9mQaX85NYKA0/id1kd7GOQGagLVcNPklZmYbAsaTXurTwLL5M0V0M3v5cBiwT/M4SWi1e/SJoCt0wGf4EsRb6PZo2rpqB7Z+9Vv1jadS+0cOjlzJ0eAPCkliPt6LP4wcCCMYcfEMcZmvGpKhIVzppPGl7X6lCE/OXUA+7GjqsX+QjCXIgN6fQUDPbW5HzejSG+xiOF3m9WJbylzGvogx+ESyNbgweqnZ+DPraUD5pLeszidWLZXQBOaIM9plOyww9rwd+lul2fgmf73V5R4+W8Nl7eZVjC33Tar5cUEi75AroURiKS+f1YAvQ8HjLlWkIGWURIpy9GhQaz9HGWwtqwDLTcAmUg1BDTHEjKaHYz849eGxoSl+cXTxMMUulALClXvBPadKdJWYXBDQ6N0gKi4TF6XK7Lyi5IGYPuyyKqX2xkntQoGmqRV5Ovxk7h9eAgSPy8DfbSLB3nUBTmXy7/cCgVQwwSGL7L/d54kisrYdMuwRZlfRF83v30mmZmeVxZmaklbg5WRmNtQ==\
+    \ centos@nutanix.com\n"
+  tags:
+    fingerprint: ''
+    items: []
+    type: ''
+  type: ''
+  zone: asia-east1-b
+type: PROVISION_GCP_VM
