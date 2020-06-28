@@ -337,18 +337,18 @@ class EntityType(EntityTypeBase):
         return cdict
 
     @classmethod
-    def decompile(mcls, cdict):
+    def pre_decompile(mcls, cdict):
 
         # Remove extra info
-        name = cdict.get("name", None)
+        ui_name = cdict.get("name", None)
         description = cdict.pop("description", None)
-        # kind = cdict.pop('__kind__')
 
-        dsl_class_name = name
-
+        dsl_class_name = ""
         display_name_map = get_ui_dsl_name_map()
-        if dsl_class_name:
-            dsl_class_name = display_name_map.get(dsl_class_name, dsl_class_name)
+        if ui_name:
+            dsl_class_name = display_name_map.get(ui_name, None) or ui_name
+        else:
+            dsl_class_name = ui_name
 
         # TODO Add another workaround for action/variables name mapping and remove this messing with description
         if description is not None:
@@ -363,6 +363,14 @@ class EntityType(EntityTypeBase):
 
         # Impose validation for valid identifier
         dsl_class_name = get_valid_identifier(dsl_class_name)
+        cdict["dsl_class_name"] = dsl_class_name
+
+    @classmethod
+    def decompile(mcls, cdict):
+
+        # Pre decompile step to get class names in blueprint file
+        mcls.pre_decompile(cdict)
+        dsl_class_name = cdict.pop("dsl_class_name", None)
 
         # Convert attribute names to x-calm-dsl-display-name, if given
         attrs = {}
@@ -424,7 +432,7 @@ class EntityType(EntityTypeBase):
         # Create new class based on type
 
         cls = mcls(dsl_class_name, (Entity,), attrs)
-        cls.__doc__ = description
+        cls.__doc__ = cdict.get("description", "")
 
         return cls
 
@@ -496,6 +504,8 @@ class EntityJSONEncoder(JSONEncoder):
         if not hasattr(cls, "__kind__"):
             return super().default(cls)
 
+        # Add single function(wrapper) that can contain pre-post checks
+        res = cls.compile()
         return cls.compile()
 
 
