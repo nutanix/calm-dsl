@@ -62,9 +62,9 @@ from .models.ahv_vm import (
 )
 
 from .models.client_attrs import (
-    add_ui_dsl_name_map_entry,
-    get_ui_dsl_name_map,
-    update_ui_dsl_name_map_,
+    init_dsl_metadata_map,
+    get_dsl_metadata_map,
+    update_dsl_metadata_map,
 )
 
 __all__ = [
@@ -147,7 +147,7 @@ __all__ = [
     "AhvGCType",
     "AhvVmResourcesType",
     "AhvVmType",
-    "add_ui_dsl_name_map_entry",
-    "get_ui_dsl_name_map",
-    "update_ui_dsl_name_map_",
+    "init_dsl_metadata_map",
+    "get_dsl_metadata_map",
+    "update_dsl_metadata_map",
 ]

@@ -23,12 +23,6 @@ class TaskType(EntityType):
             cdict.pop("target_any_local_reference", None)
         return cdict
 
-    @classmethod
-    def decompile(mcls, cdict):
-        cls = super().decompile(cdict)
-        # TODO make proper class attributes i.e. credentials
-        return cls
-
 
 class TaskValidator(PropertyValidator, openapi_type="app_task"):
     __default__ = None

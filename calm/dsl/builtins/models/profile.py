@@ -1,6 +1,5 @@
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
-from .client_attrs import add_ui_dsl_name_map_entry
 
 
 # Profile
@@ -13,14 +12,6 @@ class ProfileType(EntityType):
 
     def get_task_target(cls):
         return
-
-    def compile(cls):
-
-        cdict = super().compile()
-        if cdict["name"] != cls.__name__:
-            add_ui_dsl_name_map_entry(cdict["name"], cls.__name__)
-
-        return cdict
 
 
 class ProfileValidator(PropertyValidator, openapi_type="app_profile"):

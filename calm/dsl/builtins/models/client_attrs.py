@@ -1,28 +1,37 @@
-import sys
+import copy
 from calm.dsl.tools import get_logging_handle
 
 LOG = get_logging_handle(__name__)
-UI_DSL_NAME_MAP = {}
+DSL_METADATA_MAP = {
+    "Service": {},
+    "Package": {},
+    "Deployment": {},
+    "Profile": {},
+    "Substrate": {},
+}
 
 
-# Limited to names for service/package/deployment/profile/substrate/VM_name
-# TODO enhance it for variable and action names also
-def add_ui_dsl_name_map_entry(ui_name, dsl_name):
-    global UI_DSL_NAME_MAP
+def update_dsl_metadata_map(entity_type, entity_name, entity_obj):
+    global DSL_METADATA_MAP
+    if entity_type not in DSL_METADATA_MAP:
+        return
 
-    if UI_DSL_NAME_MAP.get(ui_name, None):
-        LOG.error("Multiple entities with same name '{}' found".format(ui_name))
-        sys.exit(-1)
-
-    UI_DSL_NAME_MAP[ui_name] = dsl_name
+    DSL_METADATA_MAP[entity_type][entity_name] = entity_obj
 
 
-def get_ui_dsl_name_map():
-    global UI_DSL_NAME_MAP
-    return UI_DSL_NAME_MAP
+def get_dsl_metadata_map(context=[]):
+    global DSL_METADATA_MAP
+
+    metadata = copy.deepcopy(DSL_METADATA_MAP)
+    for c in context:
+        if c in metadata:
+            metadata = metadata[c]
+        else:
+            return
+
+    return metadata
 
 
-def update_ui_dsl_name_map_(updated_map):
-    global UI_DSL_NAME_MAP
-    if updated_map and isinstance(updated_map, dict):
-        UI_DSL_NAME_MAP = updated_map
+def init_dsl_metadata_map(metadata):
+    global DSL_METADATA_MAP
+    DSL_METADATA_MAP = metadata

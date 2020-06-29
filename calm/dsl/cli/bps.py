@@ -17,8 +17,8 @@ from calm.dsl.builtins import (
     BlueprintType,
     get_valid_identifier,
     file_exists,
-    get_ui_dsl_name_map,
-    update_ui_dsl_name_map_,
+    get_dsl_metadata_map,
+    init_dsl_metadata_map,
 )
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
@@ -241,7 +241,7 @@ def compile_blueprint(bp_file):
         bp_payload = UserBlueprintPayload.get_dict()
 
         # Adding the display map to client attr
-        display_name_map = get_ui_dsl_name_map()
+        display_name_map = get_dsl_metadata_map()
         bp_payload["spec"]["resources"]["client_attrs"] = {"None": display_name_map}
 
         # Note - Install/Uninstall runbooks are not actions in Packages.
@@ -309,7 +309,7 @@ def _decompile_bp(bp_payload, with_secrets=False):
 
     # Copying dsl_name_map to global client_attrs
     if bp_payload["spec"]["resources"]["client_attrs"].get("None", {}):
-        update_ui_dsl_name_map_(bp_payload["spec"]["resources"]["client_attrs"]["None"])
+        init_dsl_metadata_map(bp_payload["spec"]["resources"]["client_attrs"]["None"])
 
     LOG.info("Decompiling blueprint {}".format(blueprint_name))
     bp_cls = BlueprintType.decompile(blueprint)

@@ -1,6 +1,5 @@
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
-from .client_attrs import add_ui_dsl_name_map_entry
 
 from .task import dag
 from .action import runbook_create, _action_create
@@ -56,9 +55,6 @@ class ServiceType(EntityType):
                 }
             )
             cdict["action_list"].append(user_action)
-
-        if cdict["name"] != cls.__name__:
-            add_ui_dsl_name_map_entry(cdict["name"], cls.__name__)
 
         return cdict
 

@@ -62,7 +62,7 @@ class PHPService(Service):
     dependencies = [ref(MySQLService)]
 
     @action
-    def test_action():
+    def test_action(display_name="php service test_action"):
 
         blah = CalmVariable.Simple("2")  # noqa
         CalmTask.Exec.ssh(name="Task2", script='echo "Hello"')

@@ -1,6 +1,5 @@
 from .entity import EntityType, Entity, EntityDict
 from .validator import PropertyValidator
-from .client_attrs import add_ui_dsl_name_map_entry
 
 
 # Substrate
@@ -178,9 +177,6 @@ class SubstrateType(EntityType):
             }
 
         cdict["readiness_probe"] = readiness_probe
-
-        if cdict["name"] != cls.__name__:
-            add_ui_dsl_name_map_entry(cdict["name"], cls.__name__)
 
         return cdict
 

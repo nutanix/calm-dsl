@@ -150,16 +150,6 @@ class action(metaclass=DescriptorType):
         self.user_func = user_func
         self.user_runbook = None
 
-        # Parse the parameters of function
-        sig = inspect.signature(user_func)
-        display_name = sig.parameters.get("display_name", None)
-
-        if display_name and display_name.default != self.action_name:
-            self.action_description = '{{"dsl_entity_name":"{}"}}\n{}'.format(
-                str(self.action_name), self.action_description
-            )
-            self.action_name = display_name.default
-
     def __call__(self, name=None):
         if self.user_runbook:
             return create_call_rb(self.user_runbook, name=name)
@@ -238,7 +228,14 @@ class action(metaclass=DescriptorType):
         self.user_runbook.variables = [variable for variable in variables.values()]
 
         # System action names
-        action_name = self.action_name
+        # Extract action name from display_name parameter
+        sig = inspect.signature(self.user_func)
+        display_name = sig.parameters.get("display_name", None)
+        if display_name and display_name.default != self.action_name:
+            action_name = display_name.default
+        else:
+            action_name = self.action_name
+
         ACTION_TYPE = "user"
         func_name = self.user_func.__name__.lower()
         # Note: Display name parameter will not work on system actions

@@ -82,7 +82,7 @@ class VmDiskPackageType(PackageType):
         return pkg.compile()
 
     @classmethod
-    def decompile(mcls, cdict):
+    def decompile(mcls, cdict, context=[]):
         """decompile method for downloadble images"""
 
         name = cdict.get("name", "")

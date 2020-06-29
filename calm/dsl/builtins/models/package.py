@@ -1,6 +1,5 @@
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
-from .client_attrs import add_ui_dsl_name_map_entry
 
 from .task import dag
 from .action import runbook_create, _action_create
@@ -89,15 +88,12 @@ class PackageType(EntityType):
             )
             raise Exception("Un-supported package type {}".format(ptype))
 
-        if cdict["name"] != cls.__name__:
-            add_ui_dsl_name_map_entry(cdict["name"], cls.__name__)
-
         return cdict
 
     @classmethod
-    def decompile(mcls, cdict):
+    def decompile(mcls, cdict, context=[]):
 
-        cls = super().decompile(cdict)
+        cls = super().decompile(cdict, context=context)
         options = cls.options
         delattr(cls, "options")
 
