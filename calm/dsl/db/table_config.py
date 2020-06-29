@@ -164,7 +164,7 @@ class AhvSubnetsCache(CacheTableBase):
         cls.clear()
 
         client = get_api_client()
-        payload = {"length": 250, "filter": "type==nutanix_pc"}
+        payload = {"length": 250, "filter": "state==VERIFIED;type==nutanix_pc"}
         account_name_uuid_map = client.account.get_name_uuid_map(payload)
 
         AhvVmProvider = get_provider("AHV_VM")
@@ -312,7 +312,7 @@ class AhvImagesCache(CacheTableBase):
         cls.clear()
 
         client = get_api_client()
-        payload = {"length": 250, "filter": "type==nutanix_pc"}
+        payload = {"length": 250, "filter": "state==VERIFIED;type==nutanix_pc"}
         account_name_uuid_map = client.account.get_name_uuid_map(payload)
 
         AhvVmProvider = get_provider("AHV_VM")
