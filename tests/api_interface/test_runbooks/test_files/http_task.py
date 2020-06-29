@@ -5,7 +5,7 @@ import json
 
 from calm.dsl.builtins import read_local_file
 from calm.dsl.builtins import runbook
-from calm.dsl.builtins import CalmTask, CalmVariable
+from calm.dsl.builtins import CalmTask as Task, CalmVariable
 from calm.dsl.builtins import CalmEndpoint, Auth, ref
 from calm.dsl.config import get_config
 from utils import read_test_config, change_uuids
@@ -39,7 +39,7 @@ def get_http_task_runbook():
     def HTTPTask(endpoints=[endpoint]):
 
         # Creating an endpoint with POST call
-        CalmTask.HTTP.endpoint(
+        Task.HTTP.endpoint(
             "POST",
             body=json.dumps(endpoint_payload),
             headers={"Content-Type": "application/json"},
@@ -50,7 +50,7 @@ def get_http_task_runbook():
         )
 
         # Check the type of the created endpoint
-        CalmTask.HTTP.endpoint(
+        Task.HTTP.endpoint(
             "GET",
             relative_url="/" + endpoint_payload["metadata"]["uuid"],
             headers={"Content-Type": "application/json"},
@@ -61,7 +61,7 @@ def get_http_task_runbook():
         )
 
         # Delete the created endpoint
-        CalmTask.HTTP.endpoint(
+        Task.HTTP.endpoint(
             "DELETE",
             relative_url="/" + endpoint_payload["metadata"]["uuid"],
             headers={"Content-Type": "application/json"},
@@ -70,7 +70,7 @@ def get_http_task_runbook():
             target=ref(endpoint),
         )
 
-        CalmTask.Exec.escript(name="ExecTask", script='''print "@@{ep_type}@@"''')
+        Task.Exec.escript(name="ExecTask", script='''print "@@{ep_type}@@"''')
 
     return HTTPTask
 
@@ -79,7 +79,7 @@ def get_http_task_runbook():
 def HTTPTaskWithValidations():
 
     # Creating an endpoint with POST call
-    CalmTask.HTTP.endpoint(
+    Task.HTTP.endpoint(
         "POST",
         relative_url="/list",
         body=json.dumps({}),
@@ -95,7 +95,7 @@ def HTTPTaskWithoutAuth(
 ):
 
     # Creating an endpoint with POST call
-    CalmTask.HTTP.endpoint("GET", content_type="text/html", status_mapping={200: True})
+    Task.HTTP.endpoint("GET", content_type="text/html", status_mapping={200: True})
 
 
 @runbook
@@ -104,7 +104,7 @@ def HTTPTaskWithIncorrectCode(
 ):
 
     # Creating an endpoint with POST call
-    CalmTask.HTTP.endpoint(
+    Task.HTTP.endpoint(
         "GET", name="HTTPTask", content_type="text/html", status_mapping={300: True}
     )
 
@@ -115,7 +115,7 @@ def HTTPTaskWithFailureState(
 ):
 
     # Creating an endpoint with POST call
-    CalmTask.HTTP.endpoint(
+    Task.HTTP.endpoint(
         "GET", name="HTTPTask", content_type="text/html", status_mapping={200: False}
     )
 
@@ -124,7 +124,7 @@ def HTTPTaskWithFailureState(
 def HTTPTaskWithUnsupportedURL(endpoints=[endpoint], default_target=ref(endpoint)):
 
     # Creating an endpoint with POST call
-    CalmTask.HTTP.endpoint(
+    Task.HTTP.endpoint(
         "GET",
         name="HTTPTask",
         relative_url="unsupported url",
@@ -138,7 +138,7 @@ def HTTPTaskWithUnsupportedURL(endpoints=[endpoint], default_target=ref(endpoint
 def HTTPTaskWithUnsupportedPayload(endpoints=[endpoint]):
 
     # Creating an endpoint with POST call
-    CalmTask.HTTP.endpoint(
+    Task.HTTP.endpoint(
         "POST",
         name="HTTPTask",
         relative_url="/list",
@@ -154,7 +154,7 @@ def HTTPTaskWithUnsupportedPayload(endpoints=[endpoint]):
 def HTTPTaskWithIncorrectAuth(endpoints=[endpoint_with_incorrect_auth]):
 
     # Creating an endpoint with POST call
-    CalmTask.HTTP.endpoint(
+    Task.HTTP.endpoint(
         "POST",
         name="HTTPTask",
         relative_url="/list",
@@ -170,7 +170,7 @@ def HTTPTaskWithIncorrectAuth(endpoints=[endpoint_with_incorrect_auth]):
 def HTTPTaskWithTLSVerify(endpoints=[endpoint_with_tls_verify]):
 
     # Creating an endpoint with POST call
-    CalmTask.HTTP.endpoint(
+    Task.HTTP.endpoint(
         "POST",
         name="HTTPTask",
         relative_url="/list",
@@ -186,7 +186,7 @@ def HTTPTaskWithTLSVerify(endpoints=[endpoint_with_tls_verify]):
 def HTTPHeadersWithMacro(endpoints=[endpoint_with_incorrect_auth]):
 
     # Creating an endpoint with POST call
-    CalmTask.HTTP.endpoint(
+    Task.HTTP.endpoint(
         "POST",
         name="HTTPTask",
         relative_url="/list",
@@ -203,7 +203,7 @@ def HTTPRelativeURLWithMacro(endpoints=[endpoint]):
 
     relative_url_var = CalmVariable.Simple("/list")  # noqa
     # Creating an endpoint with POST call
-    CalmTask.HTTP.endpoint(
+    Task.HTTP.endpoint(
         "POST",
         name="HTTPTask",
         relative_url="@@{relative_url_var}@@",

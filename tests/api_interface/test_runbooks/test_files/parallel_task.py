@@ -4,13 +4,13 @@ Calm DSL Sample Runbook for parallel task
 """
 
 from calm.dsl.builtins import runbook
-from calm.dsl.builtins import CalmTask
+from calm.dsl.builtins import CalmTask as Task
 
 
 @runbook
 def ParallelTask():
     "Runbook Service example"
-    with CalmTask.Parallel():
-        CalmTask.Delay(60, name="Delay1")
-        CalmTask.Delay(60, name="Delay2")
-        CalmTask.Delay(60, name="Delay3")
+    with Task.Parallel():
+        Task.Delay(60, name="Delay1")
+        Task.Delay(60, name="Delay2")
+        Task.Delay(60, name="Delay3")

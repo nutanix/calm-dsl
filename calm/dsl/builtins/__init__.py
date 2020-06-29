@@ -9,7 +9,7 @@ from .models.credential import basic_cred, secret_cred
 from .models.variable import Variable, setvar, CalmVariable
 from .models.action import action, parallel
 
-from .models.task import Task, CalmTask
+from .models.task import Task, CalmTask, Status
 from .models.runbook import Runbook, runbook, serial
 
 from .models.port import Port, port
@@ -62,6 +62,7 @@ __all__ = [
     "CalmVariable",
     "Task",
     "CalmTask",
+    "Status",
     "action",
     "parallel",
     "Runbook",

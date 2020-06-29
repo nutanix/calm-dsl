@@ -1,3 +1,4 @@
+import enum
 import uuid
 import os
 import sys
@@ -9,13 +10,21 @@ from .task_input import TaskInputType
 from .variable import CalmVariable
 from calm.dsl.tools import get_logging_handle
 
-EXIT_CONDITION_MAP = {
-    "SUCCESS": "on_success",
-    "FAILURE": "on_failure",
-    "DONT_CARE": "dont_care",
-}
-
 LOG = get_logging_handle(__name__)
+
+
+class Status(enum.Enum):
+
+    SUCCESS = 1
+    FAILURE = 2
+    DONT_CARE = 3
+
+
+EXIT_CONDITION_MAP = {
+    Status.SUCCESS: "on_success",
+    Status.FAILURE: "on_failure",
+    Status.DONT_CARE: "dont_care",
+}
 
 # Task
 
@@ -1090,14 +1099,14 @@ class CalmTask:
         def __new__(cls, name=None, child_tasks=[], attrs={}):
             return parallel_task(name=name, child_tasks=child_tasks, attrs=attrs)
 
-    class While:
+    class Loop:
         def __new__(
             cls,
             iterations,
             name=None,
             child_tasks=[],
             loop_variable="iteration",
-            exit_condition="DONT_CARE",
+            exit_condition=Status.DONT_CARE,
         ):
             attrs = {
                 "iterations": str(iterations),
@@ -1108,9 +1117,7 @@ class CalmTask:
                 attrs["exit_condition_type"] = exit_code
             else:
                 raise ValueError(
-                    "Valid Exit Conditions for while loop are {}".format(
-                        EXIT_CONDITION_MAP.keys()
-                    )
+                    "Valid Exit Conditions for loop are 'Status.SUCCESS/Status.FAILURE/Status.DONT_CARE'."
                 )
             return while_loop(name=name, child_tasks=child_tasks, attrs=attrs)
 

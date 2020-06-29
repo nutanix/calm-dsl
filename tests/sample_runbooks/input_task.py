@@ -4,7 +4,7 @@ Calm DSL Runbook Sample for input task
 """
 
 from calm.dsl.builtins import runbook
-from calm.dsl.builtins import CalmTask, CalmVariable
+from calm.dsl.builtins import CalmTask as Task, CalmVariable
 
 
 code = """print "Hello @@{user_name}@@"
@@ -18,7 +18,7 @@ print "User selected is @@{user}@@"
 @runbook
 def DslInputRunbook():
     "Runbook Service example"
-    CalmTask.Input(
+    Task.Input(
         name="Input_Task",
         inputs=[
             CalmVariable.TaskInput("user_name"),
@@ -30,7 +30,7 @@ def DslInputRunbook():
             ),
         ],
     )
-    CalmTask.Exec.escript(name="Exec_Task", script=code)
+    Task.Exec.escript(name="Exec_Task", script=code)
 
 
 def main():

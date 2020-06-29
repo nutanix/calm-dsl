@@ -5,7 +5,7 @@ Calm DSL While Task Example
 import json
 
 from calm.dsl.builtins import runbook
-from calm.dsl.builtins import CalmTask, Auth
+from calm.dsl.builtins import CalmTask as Task, Auth, Status
 from calm.dsl.builtins import CalmEndpoint, ref
 from calm.dsl.builtins import read_local_file, basic_cred
 
@@ -31,38 +31,38 @@ http_endpoint = CalmEndpoint.HTTP(
 @runbook
 def WhileTask(endpoints=[linux_endpoint, windows_endpoint, http_endpoint]):
     "Runbook Service example"
-    with CalmTask.While(10, exit_condition="SUCCESS"):
-        with CalmTask.Decision.ssh(
+    with Task.Loop(10, exit_condition=Status.SUCCESS):
+        with Task.Decision.ssh(
             name="Task1", script="exit 0", target=ref(linux_endpoint)
         ) as val:
 
             if val.true:
-                CalmTask.Exec.ssh(
+                Task.Exec.ssh(
                     name="SUCCESS1", script="echo 'SUCCESS'", target=ref(linux_endpoint)
                 )
 
             if val.false:
-                CalmTask.Exec.ssh(
+                Task.Exec.ssh(
                     name="FAILURE1", script="echo 'FAILURE'", target=ref(linux_endpoint)
                 )
 
-        with CalmTask.Decision.ssh(
+        with Task.Decision.ssh(
             name="Task2", script="exit 1", target=ref(linux_endpoint)
         ) as val:
 
             if val.true:
-                CalmTask.Exec.ssh(
+                Task.Exec.ssh(
                     name="SUCCESS2", script="echo 'SUCCESS'", target=ref(linux_endpoint)
                 )
 
             if val.false:
-                CalmTask.Exec.ssh(
+                Task.Exec.ssh(
                     name="FAILURE2", script="echo 'FAILURE'", target=ref(linux_endpoint)
                 )
 
-        CalmTask.Delay(15, name="Task3")
-        CalmTask.Delay(15, name="Task4")
-        CalmTask.HTTP.endpoint(
+        Task.Delay(15, name="Task3")
+        Task.Delay(15, name="Task4")
+        Task.HTTP.endpoint(
             "POST",
             name="Task5",
             relative_url="/list",
@@ -72,7 +72,7 @@ def WhileTask(endpoints=[linux_endpoint, windows_endpoint, http_endpoint]):
             status_mapping={200: True},
             target=ref(http_endpoint),
         )
-        CalmTask.HTTP.endpoint(
+        Task.HTTP.endpoint(
             "POST",
             name="Task6",
             relative_url="/list",
@@ -82,26 +82,22 @@ def WhileTask(endpoints=[linux_endpoint, windows_endpoint, http_endpoint]):
             status_mapping={200: True},
             target=ref(http_endpoint),
         )
-        with CalmTask.While(
-            10, name="Task7", loop_variable="iteration1", exit_condition="SUCCESS"
+        with Task.Loop(
+            10, name="Task7", loop_variable="iteration1", exit_condition=Status.SUCCESS
         ):
-            CalmTask.Exec.escript(script="print 'test'")
-        with CalmTask.While(
-            10, name="Task8", loop_variable="iteration2", exit_condition="SUCCESS"
+            Task.Exec.escript(script="print 'test'")
+        with Task.Loop(
+            10, name="Task8", loop_variable="iteration2", exit_condition=Status.SUCCESS
         ):
-            CalmTask.Exec.escript(script="print 'test'")
-        CalmTask.Exec.escript(script="print 'test'", name="Task9")
-        CalmTask.Exec.escript(script="print 'test'", name="Task10")
-        CalmTask.Exec.ssh(
-            script="echo 'test'", name="Task11", target=ref(linux_endpoint)
-        )
-        CalmTask.Exec.ssh(
-            script="echo 'test'", name="Task12", target=ref(linux_endpoint)
-        )
-        CalmTask.Exec.powershell(
+            Task.Exec.escript(script="print 'test'")
+        Task.Exec.escript(script="print 'test'", name="Task9")
+        Task.Exec.escript(script="print 'test'", name="Task10")
+        Task.Exec.ssh(script="echo 'test'", name="Task11", target=ref(linux_endpoint))
+        Task.Exec.ssh(script="echo 'test'", name="Task12", target=ref(linux_endpoint))
+        Task.Exec.powershell(
             script="echo 'test'", name="Task13", target=ref(windows_endpoint)
         )
-        CalmTask.Exec.powershell(
+        Task.Exec.powershell(
             script="echo 'test'", name="Task14", target=ref(windows_endpoint)
         )
 
@@ -109,14 +105,14 @@ def WhileTask(endpoints=[linux_endpoint, windows_endpoint, http_endpoint]):
 @runbook
 def WhileTaskLoopVariable(endpoints=[linux_endpoint, windows_endpoint, http_endpoint]):
     "Runbook Service example"
-    with CalmTask.While(10, name="Task1", loop_variable="iteration"):
-        CalmTask.SetVariable.escript(
+    with Task.Loop(10, name="Task1", loop_variable="iteration"):
+        Task.SetVariable.escript(
             name="SetVariableTask",
             script='''print "iteration=random"''',
             variables=["iteration"],
         )
-        with CalmTask.While(10, name="Task2", loop_variable="iteration"):
-            CalmTask.HTTP.endpoint(
+        with Task.Loop(10, name="Task2", loop_variable="iteration"):
+            Task.HTTP.endpoint(
                 "POST",
                 relative_url="/list",
                 body=json.dumps({}),

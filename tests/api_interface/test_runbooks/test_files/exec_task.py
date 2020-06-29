@@ -3,7 +3,7 @@ Calm Runbook Sample for running http tasks
 """
 from calm.dsl.builtins import read_local_file
 from calm.dsl.builtins import runbook
-from calm.dsl.builtins import CalmTask, basic_cred
+from calm.dsl.builtins import CalmTask as Task, basic_cred
 from calm.dsl.builtins import CalmEndpoint, ref
 
 linux_ip = read_local_file(".tests/runbook_tests/vm_ip")
@@ -28,24 +28,22 @@ multiple_windows_endpoint = CalmEndpoint.Windows.ip(
 
 @runbook
 def EscriptTask():
-    CalmTask.Exec.escript(name="ExecTask", script='''print "Task is Successful"''')
+    Task.Exec.escript(name="ExecTask", script='''print "Task is Successful"''')
 
 
 @runbook
 def SetVariableOnEscript():
-    CalmTask.SetVariable.escript(
+    Task.SetVariable.escript(
         name="SetVariableTask",
         script='''print "task_state=Successful"''',
         variables=["task_state"],
     )
-    CalmTask.Exec.escript(
-        name="ExecTask", script='''print "Task is @@{task_state}@@"'''
-    )
+    Task.Exec.escript(name="ExecTask", script='''print "Task is @@{task_state}@@"''')
 
 
 @runbook
 def EscriptOnEndpoint(endpoints=[multiple_linux_endpoint]):
-    CalmTask.Exec.escript(
+    Task.Exec.escript(
         name="ExecTask",
         script='''print "Task is Successful"''',
         target=ref(multiple_linux_endpoint),
@@ -54,7 +52,7 @@ def EscriptOnEndpoint(endpoints=[multiple_linux_endpoint]):
 
 @runbook
 def PowershellTask(endpoints=[windows_endpoint]):
-    CalmTask.Exec.powershell(
+    Task.Exec.powershell(
         name="ExecTask",
         script='''echo "Task is Successful"''',
         target=ref(windows_endpoint),
@@ -65,19 +63,17 @@ def PowershellTask(endpoints=[windows_endpoint]):
 def SetVariableOnPowershell(
     endpoints=[windows_endpoint], default_target=ref(windows_endpoint)
 ):
-    CalmTask.SetVariable.powershell(
+    Task.SetVariable.powershell(
         name="SetVariableTask",
         script='''echo "task_state=Successful"''',
         variables=["task_state"],
     )
-    CalmTask.Exec.powershell(
-        name="ExecTask", script='''echo "Task is @@{task_state}@@"'''
-    )
+    Task.Exec.powershell(name="ExecTask", script='''echo "Task is @@{task_state}@@"''')
 
 
 @runbook
 def PowershellOnMultipleIPs(endpoints=[multiple_windows_endpoint]):
-    CalmTask.Exec.powershell(
+    Task.Exec.powershell(
         name="ExecTask",
         script='''echo "Task is Successful"''',
         target=ref(multiple_windows_endpoint),
@@ -88,7 +84,7 @@ def PowershellOnMultipleIPs(endpoints=[multiple_windows_endpoint]):
 def PowershellWithCredOverwrite(
     endpoints=[windows_endpoint_with_wrong_cred], credentials=[WindowsCred]
 ):
-    CalmTask.Exec.powershell(
+    Task.Exec.powershell(
         name="ExecTask",
         script='''echo "Task is Successful"''',
         target=ref(windows_endpoint_with_wrong_cred),
@@ -98,7 +94,7 @@ def PowershellWithCredOverwrite(
 
 @runbook
 def ShellTask(endpoints=[linux_endpoint]):
-    CalmTask.Exec.ssh(
+    Task.Exec.ssh(
         name="ExecTask",
         script='''echo "Task is Successful"''',
         target=ref(linux_endpoint),
@@ -107,17 +103,17 @@ def ShellTask(endpoints=[linux_endpoint]):
 
 @runbook
 def SetVariableOnShell(endpoints=[linux_endpoint], default_target=ref(linux_endpoint)):
-    CalmTask.SetVariable.ssh(
+    Task.SetVariable.ssh(
         name="SetVariableTask",
         script='''echo "task_state=Successful"''',
         variables=["task_state"],
     )
-    CalmTask.Exec.ssh(name="ExecTask", script='''echo "Task is @@{task_state}@@"''')
+    Task.Exec.ssh(name="ExecTask", script='''echo "Task is @@{task_state}@@"''')
 
 
 @runbook
 def ShellOnMultipleIPs(endpoints=[multiple_linux_endpoint]):
-    CalmTask.Exec.ssh(
+    Task.Exec.ssh(
         name="ExecTask",
         script='''echo "Task is Successful"''',
         target=ref(multiple_linux_endpoint),
@@ -128,7 +124,7 @@ def ShellOnMultipleIPs(endpoints=[multiple_linux_endpoint]):
 def ShellWithCredOverwrite(
     endpoints=[linux_endpoint_with_wrong_cred], credentials=[LinuxCred]
 ):
-    CalmTask.Exec.ssh(
+    Task.Exec.ssh(
         name="ExecTask",
         script='''echo "Task is Successful"''',
         target=ref(linux_endpoint_with_wrong_cred),
@@ -138,17 +134,17 @@ def ShellWithCredOverwrite(
 
 @runbook
 def PowershellTaskWithoutTarget():
-    CalmTask.Exec.powershell(name="ExecTask", script='''echo "Task is Successful"''')
+    Task.Exec.powershell(name="ExecTask", script='''echo "Task is Successful"''')
 
 
 @runbook
 def ShellTaskWithoutTarget():
-    CalmTask.Exec.ssh(name="ExecTask", script='''echo "Task is Successful"''')
+    Task.Exec.ssh(name="ExecTask", script='''echo "Task is Successful"''')
 
 
 @runbook
 def MacroOnShell(endpoints=[linux_endpoint], default_target=ref(linux_endpoint)):
-    CalmTask.Exec.ssh(
+    Task.Exec.ssh(
         name="ExecTask",
         script='''echo "@@{calm_runbook_name}@@, @@{calm_runbook_uuid}@@ @@{calm_project_name}@@ @@{calm_jwt}@@ @@{calm_date}@@"''',
     )
@@ -158,7 +154,7 @@ def MacroOnShell(endpoints=[linux_endpoint], default_target=ref(linux_endpoint))
 def MacroOnPowershell(
     endpoints=[windows_endpoint], default_target=ref(windows_endpoint)
 ):
-    CalmTask.Exec.powershell(
+    Task.Exec.powershell(
         name="ExecTask",
         script='''echo "@@{calm_runbook_name}@@, @@{calm_runbook_uuid}@@ @@{calm_project_name}@@ @@{calm_jwt}@@ @@{calm_date}@@"''',
     )
@@ -166,7 +162,7 @@ def MacroOnPowershell(
 
 @runbook
 def MacroOnEscript():
-    CalmTask.Exec.escript(
+    Task.Exec.escript(
         name="ExecTask",
         script='''print "@@{calm_runbook_name}@@, @@{calm_runbook_uuid}@@ @@{calm_project_name}@@ @@{calm_jwt}@@ @@{calm_date}@@"''',
     )

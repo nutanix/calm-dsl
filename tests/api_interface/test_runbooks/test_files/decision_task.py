@@ -4,7 +4,7 @@ Calm DSL Decision Task Example
 """
 
 from calm.dsl.builtins import runbook
-from calm.dsl.builtins import CalmTask
+from calm.dsl.builtins import CalmTask as Task
 from calm.dsl.builtins import CalmEndpoint, ref
 from calm.dsl.builtins import read_local_file, basic_cred
 
@@ -24,70 +24,66 @@ windows_endpoint = CalmEndpoint.Windows.ip([windows_ip], cred=WindowsCred)
 @runbook
 def DecisionTask(endpoints=[linux_endpoint, windows_endpoint]):
     "Runbook Service example"
-    with CalmTask.Decision.ssh(script="exit 0", target=ref(linux_endpoint)) as val:
+    with Task.Decision.ssh(script="exit 0", target=ref(linux_endpoint)) as val:
 
         if val.true:
-            CalmTask.Exec.ssh(
+            Task.Exec.ssh(
                 name="SUCCESS1", script="echo 'SUCCESS'", target=ref(linux_endpoint)
             )
 
         if val.false:
-            CalmTask.Exec.ssh(
+            Task.Exec.ssh(
                 name="FAILURE1", script="echo 'FAILURE'", target=ref(linux_endpoint)
             )
 
-    with CalmTask.Decision.ssh(script="exit 1", target=ref(linux_endpoint)) as val:
+    with Task.Decision.ssh(script="exit 1", target=ref(linux_endpoint)) as val:
 
         if val.true:
-            CalmTask.Exec.ssh(
+            Task.Exec.ssh(
                 name="SUCCESS2", script="echo 'SUCCESS'", target=ref(linux_endpoint)
             )
 
         if val.false:
-            CalmTask.Exec.ssh(
+            Task.Exec.ssh(
                 name="FAILURE2", script="echo 'FAILURE'", target=ref(linux_endpoint)
             )
 
-    with CalmTask.Decision.powershell(
-        script="exit 0", target=ref(windows_endpoint)
-    ) as val:
+    with Task.Decision.powershell(script="exit 0", target=ref(windows_endpoint)) as val:
 
         if val.true:
-            CalmTask.Exec.powershell(
+            Task.Exec.powershell(
                 name="SUCCESS3", script="echo 'SUCCESS'", target=ref(windows_endpoint)
             )
 
         if val.false:
-            CalmTask.Exec.powershell(
+            Task.Exec.powershell(
                 name="FAILURE3", script="echo 'FAILURE'", target=ref(windows_endpoint)
             )
 
-    with CalmTask.Decision.powershell(
-        script="exit 1", target=ref(windows_endpoint)
-    ) as val:
+    with Task.Decision.powershell(script="exit 1", target=ref(windows_endpoint)) as val:
 
         if val.true:
-            CalmTask.Exec.powershell(
+            Task.Exec.powershell(
                 name="SUCCESS4", script="echo 'SUCCESS'", target=ref(windows_endpoint)
             )
 
         if val.false:
-            CalmTask.Exec.powershell(
+            Task.Exec.powershell(
                 name="FAILURE4", script="echo 'FAILURE'", target=ref(windows_endpoint)
             )
 
-    with CalmTask.Decision.escript(script="exit(0)") as val:
+    with Task.Decision.escript(script="exit(0)") as val:
 
         if val.true:
-            CalmTask.Exec.escript(name="SUCCESS5", script="print 'SUCCESS'")
+            Task.Exec.escript(name="SUCCESS5", script="print 'SUCCESS'")
 
         if val.false:
-            CalmTask.Exec.escript(name="FAILURE5", script="print 'FAILURE'")
+            Task.Exec.escript(name="FAILURE5", script="print 'FAILURE'")
 
-    with CalmTask.Decision.escript(script="exit(1)") as val:
+    with Task.Decision.escript(script="exit(1)") as val:
 
         if val.true:
-            CalmTask.Exec.escript(name="SUCCESS6", script="print 'SUCCESS'")
+            Task.Exec.escript(name="SUCCESS6", script="print 'SUCCESS'")
 
         if val.false:
-            CalmTask.Exec.escript(name="FAILURE6", script="print 'FAILURE'")
+            Task.Exec.escript(name="FAILURE6", script="print 'FAILURE'")

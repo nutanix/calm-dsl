@@ -4,7 +4,7 @@ Calm DSL Confirm Task Example
 """
 
 from calm.dsl.builtins import runbook
-from calm.dsl.builtins import CalmTask
+from calm.dsl.builtins import CalmTask as Task
 
 
 code = '''print "Hello"
@@ -14,8 +14,8 @@ print "Bye"'''
 @runbook
 def DslConfirmRunbook():
     "Runbook Service example"
-    CalmTask.Confirm(name="Confirm_Task")
-    CalmTask.Exec.escript(name="Exec_Task", script=code)
+    Task.Confirm(name="Confirm_Task")
+    Task.Exec.escript(name="Exec_Task", script=code)
 
 
 def main():
