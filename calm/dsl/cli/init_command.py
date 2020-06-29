@@ -232,9 +232,7 @@ def init_dsl_bp(bp_name, dir_name, provider_type):
 @click.option(
     "--dir_name", "-d", default=os.getcwd(), help="Directory path for the runbook"
 )
-@click.option(
-    "--ip", help="VM IP for the sample runbook"
-)
+@click.option("--ip", help="VM IP for the sample runbook")
 def init_dsl_runbook(runbook_name, dir_name, ip):
     """Creates a starting directory for runbook"""
 

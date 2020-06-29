@@ -57,7 +57,7 @@ def make_runbook_dirs(dir_name, runbook_name):
     return (runbook_dir, script_dir)
 
 
-def init_runbook(runbook_name, dir_name, vm_ip='127.0.0.1'):
+def init_runbook(runbook_name, dir_name, vm_ip="127.0.0.1"):
 
     runbook_name = runbook_name.strip().split()[0].title()
     runbook_dir, script_dir = make_runbook_dirs(dir_name, runbook_name)
