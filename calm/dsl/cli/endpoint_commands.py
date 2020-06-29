@@ -76,7 +76,7 @@ def _delete_endpoint(endpoint_names):
     "out",
     type=click.Choice(["text", "json"]),
     default="text",
-    help="output format [json|yaml].",
+    help="output format [text|json].",
 )
 def _describe_endpoint(endpoint_name, out):
     """Describe a endpoint"""

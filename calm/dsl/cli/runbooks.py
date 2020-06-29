@@ -110,7 +110,7 @@ def get_runbook_list(name, filter_by, limit, offset, quiet, all_items):
 
 def get_runbook_module_from_file(runbook_file):
     """Return Runbook module given a user runbook dsl file (.py)"""
-    return get_module_from_file("calm.dsl.user_bp", runbook_file)
+    return get_module_from_file("calm.dsl.user_runbook", runbook_file)
 
 
 def get_runbook_class_from_module(user_runbook_module):

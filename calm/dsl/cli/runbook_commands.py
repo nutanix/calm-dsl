@@ -120,7 +120,7 @@ def _delete_runbook(runbook_names):
     "out",
     type=click.Choice(["text", "json"]),
     default="text",
-    help="output format [json|yaml].",
+    help="output format [text|json].",
 )
 def _describe_runbook(runbook_name, out):
     """Describe a runbook"""

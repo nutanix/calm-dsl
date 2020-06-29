@@ -106,7 +106,7 @@ def get_endpoint_list(name, filter_by, limit, offset, quiet, all_items):
 
 def get_endpoint_module_from_file(endpoint_file):
     """Return Endpoint module given a user endpoint dsl file (.py)"""
-    return get_module_from_file("calm.dsl.user_bp", endpoint_file)
+    return get_module_from_file("calm.dsl.user_endpoint", endpoint_file)
 
 
 def get_endpoint_class_from_module(user_endpoint_module):
