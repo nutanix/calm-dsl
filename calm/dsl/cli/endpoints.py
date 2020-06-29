@@ -152,6 +152,7 @@ def compile_endpoint_command(endpoint_file, out):
         LOG.error(
             "Project {} not found. Please run: calm update cache".format(project_name)
         )
+        sys.exit(-1)
 
     project_uuid = project_cache_data.get("uuid", "")
     endpoint_payload["metadata"]["project_reference"] = {
@@ -287,8 +288,8 @@ def create_endpoint_command(endpoint_file, name, description, force):
     if endpoint_state != "ACTIVE":
         msg_list = endpoint_status.get("message_list", [])
         if not msg_list:
-            LOG.error("Endpoint {} created with errors.".format(endpoint_name))
             LOG.debug(json.dumps(endpoint_status))
+            LOG.error("Endpoint {} created with errors.".format(endpoint_name))
             sys.exit(-1)
 
         msgs = []
