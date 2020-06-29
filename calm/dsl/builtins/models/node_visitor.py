@@ -145,22 +145,37 @@ class GetCallNodes(ast.NodeVisitor):
             failure_path = None
             for statement in node.body:
 
-                if isinstance(statement, ast.If) and isinstance(statement.test, ast.Compare) and statement.test.left.value.id == var and statement.test.left.attr == 'exit_code' and isinstance(statement.test.ops[0], ast.Eq) and isinstance(statement.test.comparators[0], ast.Num):
+                if (
+                    isinstance(statement, ast.If)
+                    and isinstance(statement.test, ast.Compare)
+                    and statement.test.left.value.id == var
+                    and statement.test.left.attr == "exit_code"
+                    and isinstance(statement.test.ops[0], ast.Eq)
+                    and isinstance(statement.test.comparators[0], ast.Num)
+                ):
 
-                    if len(statement.test.comparators) != 1 or not isinstance(statement.test.comparators[0], ast.Num) or statement.test.comparators[0].n not in [0, 1]:
+                    if (
+                        len(statement.test.comparators) != 1
+                        or not isinstance(statement.test.comparators[0], ast.Num)
+                        or statement.test.comparators[0].n not in [0, 1]
+                    ):
                         raise ValueError(
                             "Decision task on supports only exit_code 0 and 1."
                         )
 
                     if statement.orelse:
                         raise ValueError(
-                            "elif or else are not supported in 'if {}.exit_code == 0/1'".format(var)
+                            "elif or else are not supported in 'if {}.exit_code == 0/1'".format(
+                                var
+                            )
                         )
 
                     if statement.test.comparators[0].n == 0:
                         if success_path:
                             raise ValueError(
-                                "'True' flow is defined more than once in {} task.".format(context.name)
+                                "'True' flow is defined more than once in {} task.".format(
+                                    context.name
+                                )
                             )
                         success_path, tasks, variables = handle_meta_create(
                             statement, self._globals
@@ -171,7 +186,9 @@ class GetCallNodes(ast.NodeVisitor):
                     elif statement.test.comparators[0].n == 1:
                         if failure_path:
                             raise ValueError(
-                                "'False' flow is defined more than once in {} task.".format(context.name)
+                                "'False' flow is defined more than once in {} task.".format(
+                                    context.name
+                                )
                             )
                         failure_path, tasks, variables = handle_meta_create(
                             statement, self._globals
@@ -179,13 +196,22 @@ class GetCallNodes(ast.NodeVisitor):
                         self.all_tasks.extend([failure_path] + tasks)
                         self.variables.update(variables)
 
-                elif isinstance(statement, ast.If) and isinstance(statement.test, ast.Attribute) and statement.test.value.id == var and statement.test.attr == 'ok':
+                elif (
+                    isinstance(statement, ast.If)
+                    and isinstance(statement.test, ast.Attribute)
+                    and statement.test.value.id == var
+                    and statement.test.attr == "ok"
+                ):
 
                     if success_path:
                         raise ValueError(
-                            "'True' flow is defined more than once in {} task.".format(context.name)
+                            "'True' flow is defined more than once in {} task.".format(
+                                context.name
+                            )
                         )
-                    ifBody = ast.FunctionDef(body=statement.body, col_offset=node.col_offset)
+                    ifBody = ast.FunctionDef(
+                        body=statement.body, col_offset=node.col_offset
+                    )
                     success_path, tasks, variables = handle_meta_create(
                         ifBody, self._globals
                     )
@@ -195,16 +221,24 @@ class GetCallNodes(ast.NodeVisitor):
                     if statement.orelse:
                         if failure_path:
                             raise ValueError(
-                                "'False' flow is defined more than once in {} task.".format(context.name)
+                                "'False' flow is defined more than once in {} task.".format(
+                                    context.name
+                                )
                             )
-                        elseBody = ast.FunctionDef(body=statement.orelse, col_offset=node.col_offset)
-                        failure_path, tasks, variables = handle_meta_create(elseBody, self._globals)
+                        elseBody = ast.FunctionDef(
+                            body=statement.orelse, col_offset=node.col_offset
+                        )
+                        failure_path, tasks, variables = handle_meta_create(
+                            elseBody, self._globals
+                        )
                         self.all_tasks.extend([failure_path] + tasks)
                         self.variables.update(variables)
 
                 else:
                     raise ValueError(
-                        "Only 'if {}.exit_code == 0/1' or 'if {}.ok' statements are supported in decision context".format(var, var)
+                        "Only 'if {}.exit_code == 0/1' or 'if {}.ok' statements are supported in decision context".format(
+                            var, var
+                        )
                     )
 
             if not success_path or not failure_path:
