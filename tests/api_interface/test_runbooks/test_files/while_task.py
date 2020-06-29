@@ -34,28 +34,28 @@ def WhileTask(endpoints=[linux_endpoint, windows_endpoint, http_endpoint]):
     with Task.Loop(10, exit_condition=Status.SUCCESS):
         with Task.Decision.ssh(
             name="Task1", script="exit 0", target=ref(linux_endpoint)
-        ) as val:
+        ) as d:
 
-            if val.true:
+            if d.ok:
                 Task.Exec.ssh(
                     name="SUCCESS1", script="echo 'SUCCESS'", target=ref(linux_endpoint)
                 )
 
-            if val.false:
+            else:
                 Task.Exec.ssh(
                     name="FAILURE1", script="echo 'FAILURE'", target=ref(linux_endpoint)
                 )
 
         with Task.Decision.ssh(
             name="Task2", script="exit 1", target=ref(linux_endpoint)
-        ) as val:
+        ) as d:
 
-            if val.true:
+            if d.ok:
                 Task.Exec.ssh(
                     name="SUCCESS2", script="echo 'SUCCESS'", target=ref(linux_endpoint)
                 )
 
-            if val.false:
+            else:
                 Task.Exec.ssh(
                     name="FAILURE2", script="echo 'FAILURE'", target=ref(linux_endpoint)
                 )

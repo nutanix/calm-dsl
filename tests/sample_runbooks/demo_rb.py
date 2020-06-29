@@ -21,9 +21,9 @@ def DslDemoRunbook(endpoints=[DslLinuxEndpoint], default_target=ref(DslLinuxEndp
     "Runbook Service example"
     size_limit = CalmVariable.Simple.int("102400", runtime=True)  # noqa
     Task.Input(name="InputTask", inputs=[CalmVariable.TaskInput("log_path")])
-    with Task.Decision.ssh(name="DecisionTask", script="cd @@{log_path}@@") as val:
+    with Task.Decision.ssh(name="DecisionTask", script="cd @@{log_path}@@") as d:
 
-        if val.true:
+        if d.ok:
             Task.SetVariable.ssh(
                 name="StoreLogsSizeBeforeCleanup",
                 script="""echo "size_before_cleanup="$(du -d 0 @@{log_path}@@ | awk  "{print $1}")""",
@@ -41,7 +41,7 @@ def DslDemoRunbook(endpoints=[DslLinuxEndpoint], default_target=ref(DslLinuxEndp
                 target=ref(DslLinuxEndpoint),
             )
 
-        if val.false:
+        else:
             Task.Exec.escript(script='''print "Given Logs Directory doesn't exists"''')
 
 
