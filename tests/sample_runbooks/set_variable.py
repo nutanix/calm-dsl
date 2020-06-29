@@ -16,7 +16,7 @@ endpoint = CalmEndpoint.Linux.ip([VM_IP], cred=Cred)
 
 
 @runbook
-def DslSetVariableTask(endpoints=[endpoint]):
+def DslSetVariableTask(endpoints=[endpoint], default=False):
     "Runbook Service example"
     Task.SetVariable.escript(
         script="print 'var1=test'", variables=["var1"],

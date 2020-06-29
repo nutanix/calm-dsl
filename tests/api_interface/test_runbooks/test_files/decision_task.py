@@ -22,7 +22,7 @@ windows_endpoint = CalmEndpoint.Windows.ip([windows_ip], cred=WindowsCred)
 
 
 @runbook
-def DecisionTask(endpoints=[linux_endpoint, windows_endpoint]):
+def DecisionTask(endpoints=[linux_endpoint, windows_endpoint], default=False):
     "Runbook Service example"
     with Task.Decision.ssh(script="exit 0", target=ref(linux_endpoint)) as d:
 

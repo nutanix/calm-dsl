@@ -5,7 +5,7 @@ Calm Runbook Sample for task running on an endpoint
 from calm.dsl.builtins import read_local_file
 from calm.dsl.builtins import runbook
 from calm.dsl.builtins import basic_cred, CalmTask as Task
-from calm.dsl.builtins import CalmEndpoint, ref
+from calm.dsl.builtins import CalmEndpoint
 
 CRED_USERNAME = read_local_file(".tests/runbook_tests/username")
 CRED_PASSWORD = read_local_file(".tests/runbook_tests/password")
@@ -25,7 +25,7 @@ script = """
 @runbook
 def DslTaskOnEndpoint(endpoints=[endpoint]):
     "Runbook Service example"
-    Task.Exec.ssh(name="Task1", script=script, target=ref(endpoint))
+    Task.Exec.ssh(name="Task1", script=script)
 
 
 def main():

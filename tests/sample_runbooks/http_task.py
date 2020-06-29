@@ -16,7 +16,7 @@ endpoint = CalmEndpoint.HTTP(
 
 
 @runbook
-def DslHTTPTask(endpoints=[endpoint]):
+def DslHTTPTask(endpoints=[endpoint], default=False):
     "Runbook Service example"
     Task.HTTP.endpoint(
         "GET",

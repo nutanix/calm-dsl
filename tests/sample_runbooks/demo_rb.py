@@ -17,7 +17,7 @@ DslLinuxEndpoint = CalmEndpoint.Linux.ip([VM_IP], cred=Cred)
 
 
 @runbook
-def DslDemoRunbook(endpoints=[DslLinuxEndpoint], default_target=ref(DslLinuxEndpoint)):
+def DslDemoRunbook(endpoints=[DslLinuxEndpoint]):
     "Runbook Service example"
     size_limit = CalmVariable.Simple.int("102400", runtime=True)  # noqa
     Task.Input(name="InputTask", inputs=[CalmVariable.TaskInput("log_path")])

@@ -16,7 +16,7 @@ endpoint = CalmEndpoint.Linux.ip([VM_IP], cred=Cred)
 
 
 @runbook
-def DslDefaultEndpoint(endpoints=[endpoint], default_target=ref(endpoint)):
+def DslDefaultEndpoint(endpoints=[endpoint]):
     "Runbook Service example"
     Task.Exec.ssh(script='echo "hello"')
 

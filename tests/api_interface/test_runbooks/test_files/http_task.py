@@ -90,18 +90,14 @@ def HTTPTaskWithValidations():
 
 
 @runbook
-def HTTPTaskWithoutAuth(
-    endpoints=[endpoint_without_auth], default_target=ref(endpoint_without_auth)
-):
+def HTTPTaskWithoutAuth(endpoints=[endpoint_without_auth]):
 
     # Creating an endpoint with POST call
     Task.HTTP.endpoint("GET", content_type="text/html", status_mapping={200: True})
 
 
 @runbook
-def HTTPTaskWithIncorrectCode(
-    endpoints=[endpoint_without_auth], default_target=ref(endpoint_without_auth)
-):
+def HTTPTaskWithIncorrectCode(endpoints=[endpoint_without_auth]):
 
     # Creating an endpoint with POST call
     Task.HTTP.endpoint(
@@ -110,9 +106,7 @@ def HTTPTaskWithIncorrectCode(
 
 
 @runbook
-def HTTPTaskWithFailureState(
-    endpoints=[endpoint_without_auth], default_target=ref(endpoint_without_auth)
-):
+def HTTPTaskWithFailureState(endpoints=[endpoint_without_auth]):
 
     # Creating an endpoint with POST call
     Task.HTTP.endpoint(
@@ -121,7 +115,7 @@ def HTTPTaskWithFailureState(
 
 
 @runbook
-def HTTPTaskWithUnsupportedURL(endpoints=[endpoint], default_target=ref(endpoint)):
+def HTTPTaskWithUnsupportedURL(endpoints=[endpoint]):
 
     # Creating an endpoint with POST call
     Task.HTTP.endpoint(

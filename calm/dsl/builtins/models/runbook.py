@@ -1,6 +1,7 @@
 import ast
 import inspect
 
+from .ref import ref
 from .task import dag
 from .entity import EntityType, Entity
 from .endpoint import EndpointType
@@ -163,7 +164,7 @@ class runbook(metaclass=DescriptorType):
 
             credentials = args.pop("credentials", [])
             endpoints = args.pop("endpoints", [])
-            default_target = args.pop("default_target", None)
+            default_target = args.pop("default", 0)
 
             for arg in args:
                 raise ValueError("{} is an unexpected argument.".format(arg))
@@ -180,13 +181,25 @@ class runbook(metaclass=DescriptorType):
                 if not isinstance(ep, EndpointType):
                     raise TypeError("{} is not of type {}".format(ep, EndpointType))
 
-            if default_target:
-                if not isinstance(default_target, RefType):
+            if default_target is not False:
+                if not isinstance(default_target, RefType) and not isinstance(
+                    default_target, int
+                ):
                     raise TypeError(
-                        "{} is not of type {}".format(default_target, RefType)
+                        "{} is not of type {} or {}".format(
+                            default_target, RefType, "Integer"
+                        )
                     )
-                else:
+                elif isinstance(default_target, RefType):
                     self.runbook.default_target = default_target
+                elif len(endpoints) > 0:
+                    if len(endpoints) <= int(default_target):
+                        raise TypeError(
+                            "No Endpoint preset at {} index for default Target".format(
+                                int(default_target)
+                            )
+                        )
+                    self.runbook.default_target = ref(endpoints[int(default_target)])
 
             self.runbook.credentials = credentials
             self.runbook.endpoints = endpoints

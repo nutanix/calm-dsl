@@ -60,9 +60,7 @@ def PowershellTask(endpoints=[windows_endpoint]):
 
 
 @runbook
-def SetVariableOnPowershell(
-    endpoints=[windows_endpoint], default_target=ref(windows_endpoint)
-):
+def SetVariableOnPowershell(endpoints=[windows_endpoint]):
     Task.SetVariable.powershell(
         name="SetVariableTask",
         script='''echo "task_state=Successful"''',
@@ -102,7 +100,7 @@ def ShellTask(endpoints=[linux_endpoint]):
 
 
 @runbook
-def SetVariableOnShell(endpoints=[linux_endpoint], default_target=ref(linux_endpoint)):
+def SetVariableOnShell(endpoints=[linux_endpoint]):
     Task.SetVariable.ssh(
         name="SetVariableTask",
         script='''echo "task_state=Successful"''',
@@ -143,7 +141,7 @@ def ShellTaskWithoutTarget():
 
 
 @runbook
-def MacroOnShell(endpoints=[linux_endpoint], default_target=ref(linux_endpoint)):
+def MacroOnShell(endpoints=[linux_endpoint]):
     Task.Exec.ssh(
         name="ExecTask",
         script='''echo "@@{calm_runbook_name}@@, @@{calm_runbook_uuid}@@ @@{calm_project_name}@@ @@{calm_jwt}@@ @@{calm_date}@@"''',
@@ -151,9 +149,7 @@ def MacroOnShell(endpoints=[linux_endpoint], default_target=ref(linux_endpoint))
 
 
 @runbook
-def MacroOnPowershell(
-    endpoints=[windows_endpoint], default_target=ref(windows_endpoint)
-):
+def MacroOnPowershell(endpoints=[windows_endpoint]):
     Task.Exec.powershell(
         name="ExecTask",
         script='''echo "@@{calm_runbook_name}@@, @@{calm_runbook_uuid}@@ @@{calm_project_name}@@ @@{calm_jwt}@@ @@{calm_date}@@"''',
