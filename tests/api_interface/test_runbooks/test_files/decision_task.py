@@ -27,26 +27,18 @@ def DecisionTask(endpoints=[linux_endpoint, windows_endpoint], default=False):
     with Task.Decision.ssh(script="exit 0", target=endpoints[0]) as d:
 
         if d.ok:
-            Task.Exec.ssh(
-                name="SUCCESS1", script="echo 'SUCCESS'", target=endpoints[0]
-            )
+            Task.Exec.ssh(name="SUCCESS1", script="echo 'SUCCESS'", target=endpoints[0])
 
         else:
-            Task.Exec.ssh(
-                name="FAILURE1", script="echo 'FAILURE'", target=endpoints[0]
-            )
+            Task.Exec.ssh(name="FAILURE1", script="echo 'FAILURE'", target=endpoints[0])
 
     with Task.Decision.ssh(script="exit 1", target=endpoints[0]) as d:
 
         if d.ok:
-            Task.Exec.ssh(
-                name="SUCCESS2", script="echo 'SUCCESS'", target=endpoints[0]
-            )
+            Task.Exec.ssh(name="SUCCESS2", script="echo 'SUCCESS'", target=endpoints[0])
 
         else:
-            Task.Exec.ssh(
-                name="FAILURE2", script="echo 'FAILURE'", target=endpoints[0]
-            )
+            Task.Exec.ssh(name="FAILURE2", script="echo 'FAILURE'", target=endpoints[0])
 
     with Task.Decision.powershell(script="exit 0", target=endpoints[1]) as d:
 

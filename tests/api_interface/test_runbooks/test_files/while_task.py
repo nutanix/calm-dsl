@@ -32,9 +32,7 @@ http_endpoint = CalmEndpoint.HTTP(
 def WhileTask(endpoints=[linux_endpoint, windows_endpoint, http_endpoint]):
     "Runbook Service example"
     with Task.Loop(10, exit_condition=Status.SUCCESS):
-        with Task.Decision.ssh(
-            name="Task1", script="exit 0", target=endpoints[0]
-        ) as d:
+        with Task.Decision.ssh(name="Task1", script="exit 0", target=endpoints[0]) as d:
 
             if d.ok:
                 Task.Exec.ssh(
@@ -46,9 +44,7 @@ def WhileTask(endpoints=[linux_endpoint, windows_endpoint, http_endpoint]):
                     name="FAILURE1", script="echo 'FAILURE'", target=endpoints[0]
                 )
 
-        with Task.Decision.ssh(
-            name="Task2", script="exit 1", target=endpoints[0]
-        ) as d:
+        with Task.Decision.ssh(name="Task2", script="exit 1", target=endpoints[0]) as d:
 
             if d.ok:
                 Task.Exec.ssh(
@@ -94,12 +90,8 @@ def WhileTask(endpoints=[linux_endpoint, windows_endpoint, http_endpoint]):
         Task.Exec.escript(script="print 'test'", name="Task10")
         Task.Exec.ssh(script="echo 'test'", name="Task11", target=endpoints[0])
         Task.Exec.ssh(script="echo 'test'", name="Task12", target=endpoints[0])
-        Task.Exec.powershell(
-            script="echo 'test'", name="Task13", target=endpoints[1]
-        )
-        Task.Exec.powershell(
-            script="echo 'test'", name="Task14", target=endpoints[1]
-        )
+        Task.Exec.powershell(script="echo 'test'", name="Task13", target=endpoints[1])
+        Task.Exec.powershell(script="echo 'test'", name="Task14", target=endpoints[1])
 
 
 @runbook
