@@ -5,7 +5,7 @@ Calm DSL Decision Task Example
 
 from calm.dsl.builtins import runbook
 from calm.dsl.builtins import CalmTask as Task
-from calm.dsl.builtins import CalmEndpoint, ref
+from calm.dsl.builtins import CalmEndpoint
 from calm.dsl.builtins import read_local_file, basic_cred
 
 linux_ip = read_local_file(".tests/runbook_tests/vm_ip")
@@ -24,52 +24,52 @@ windows_endpoint = CalmEndpoint.Windows.ip([windows_ip], cred=WindowsCred)
 @runbook
 def DecisionTask(endpoints=[linux_endpoint, windows_endpoint], default=False):
     "Runbook Service example"
-    with Task.Decision.ssh(script="exit 0", target=ref(linux_endpoint)) as d:
+    with Task.Decision.ssh(script="exit 0", target=endpoints[0]) as d:
 
         if d.ok:
             Task.Exec.ssh(
-                name="SUCCESS1", script="echo 'SUCCESS'", target=ref(linux_endpoint)
+                name="SUCCESS1", script="echo 'SUCCESS'", target=endpoints[0]
             )
 
         else:
             Task.Exec.ssh(
-                name="FAILURE1", script="echo 'FAILURE'", target=ref(linux_endpoint)
+                name="FAILURE1", script="echo 'FAILURE'", target=endpoints[0]
             )
 
-    with Task.Decision.ssh(script="exit 1", target=ref(linux_endpoint)) as d:
+    with Task.Decision.ssh(script="exit 1", target=endpoints[0]) as d:
 
         if d.ok:
             Task.Exec.ssh(
-                name="SUCCESS2", script="echo 'SUCCESS'", target=ref(linux_endpoint)
+                name="SUCCESS2", script="echo 'SUCCESS'", target=endpoints[0]
             )
 
         else:
             Task.Exec.ssh(
-                name="FAILURE2", script="echo 'FAILURE'", target=ref(linux_endpoint)
+                name="FAILURE2", script="echo 'FAILURE'", target=endpoints[0]
             )
 
-    with Task.Decision.powershell(script="exit 0", target=ref(windows_endpoint)) as d:
+    with Task.Decision.powershell(script="exit 0", target=endpoints[1]) as d:
 
         if d.ok:
             Task.Exec.powershell(
-                name="SUCCESS3", script="echo 'SUCCESS'", target=ref(windows_endpoint)
+                name="SUCCESS3", script="echo 'SUCCESS'", target=endpoints[1]
             )
 
         else:
             Task.Exec.powershell(
-                name="FAILURE3", script="echo 'FAILURE'", target=ref(windows_endpoint)
+                name="FAILURE3", script="echo 'FAILURE'", target=endpoints[1]
             )
 
-    with Task.Decision.powershell(script="exit 1", target=ref(windows_endpoint)) as d:
+    with Task.Decision.powershell(script="exit 1", target=endpoints[1]) as d:
 
         if d.ok:
             Task.Exec.powershell(
-                name="SUCCESS4", script="echo 'SUCCESS'", target=ref(windows_endpoint)
+                name="SUCCESS4", script="echo 'SUCCESS'", target=endpoints[1]
             )
 
         else:
             Task.Exec.powershell(
-                name="FAILURE4", script="echo 'FAILURE'", target=ref(windows_endpoint)
+                name="FAILURE4", script="echo 'FAILURE'", target=endpoints[1]
             )
 
     with Task.Decision.escript(script="exit(0)") as d:

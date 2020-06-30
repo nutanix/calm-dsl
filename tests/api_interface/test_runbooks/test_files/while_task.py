@@ -6,7 +6,7 @@ import json
 
 from calm.dsl.builtins import runbook
 from calm.dsl.builtins import CalmTask as Task, Auth, Status
-from calm.dsl.builtins import CalmEndpoint, ref
+from calm.dsl.builtins import CalmEndpoint
 from calm.dsl.builtins import read_local_file, basic_cred
 
 linux_ip = read_local_file(".tests/runbook_tests/vm_ip")
@@ -33,31 +33,31 @@ def WhileTask(endpoints=[linux_endpoint, windows_endpoint, http_endpoint]):
     "Runbook Service example"
     with Task.Loop(10, exit_condition=Status.SUCCESS):
         with Task.Decision.ssh(
-            name="Task1", script="exit 0", target=ref(linux_endpoint)
+            name="Task1", script="exit 0", target=endpoints[0]
         ) as d:
 
             if d.ok:
                 Task.Exec.ssh(
-                    name="SUCCESS1", script="echo 'SUCCESS'", target=ref(linux_endpoint)
+                    name="SUCCESS1", script="echo 'SUCCESS'", target=endpoints[0]
                 )
 
             else:
                 Task.Exec.ssh(
-                    name="FAILURE1", script="echo 'FAILURE'", target=ref(linux_endpoint)
+                    name="FAILURE1", script="echo 'FAILURE'", target=endpoints[0]
                 )
 
         with Task.Decision.ssh(
-            name="Task2", script="exit 1", target=ref(linux_endpoint)
+            name="Task2", script="exit 1", target=endpoints[0]
         ) as d:
 
             if d.ok:
                 Task.Exec.ssh(
-                    name="SUCCESS2", script="echo 'SUCCESS'", target=ref(linux_endpoint)
+                    name="SUCCESS2", script="echo 'SUCCESS'", target=endpoints[0]
                 )
 
             else:
                 Task.Exec.ssh(
-                    name="FAILURE2", script="echo 'FAILURE'", target=ref(linux_endpoint)
+                    name="FAILURE2", script="echo 'FAILURE'", target=endpoints[0]
                 )
 
         Task.Delay(15, name="Task3")
@@ -70,7 +70,7 @@ def WhileTask(endpoints=[linux_endpoint, windows_endpoint, http_endpoint]):
             headers={"Content-Type": "application/json"},
             content_type="application/json",
             status_mapping={200: True},
-            target=ref(http_endpoint),
+            target=endpoints[2],
         )
         Task.HTTP.endpoint(
             "POST",
@@ -80,7 +80,7 @@ def WhileTask(endpoints=[linux_endpoint, windows_endpoint, http_endpoint]):
             headers={"Content-Type": "application/json"},
             content_type="application/json",
             status_mapping={200: True},
-            target=ref(http_endpoint),
+            target=endpoints[2],
         )
         with Task.Loop(
             10, name="Task7", loop_variable="iteration1", exit_condition=Status.SUCCESS
@@ -92,18 +92,18 @@ def WhileTask(endpoints=[linux_endpoint, windows_endpoint, http_endpoint]):
             Task.Exec.escript(script="print 'test'")
         Task.Exec.escript(script="print 'test'", name="Task9")
         Task.Exec.escript(script="print 'test'", name="Task10")
-        Task.Exec.ssh(script="echo 'test'", name="Task11", target=ref(linux_endpoint))
-        Task.Exec.ssh(script="echo 'test'", name="Task12", target=ref(linux_endpoint))
+        Task.Exec.ssh(script="echo 'test'", name="Task11", target=endpoints[0])
+        Task.Exec.ssh(script="echo 'test'", name="Task12", target=endpoints[0])
         Task.Exec.powershell(
-            script="echo 'test'", name="Task13", target=ref(windows_endpoint)
+            script="echo 'test'", name="Task13", target=endpoints[1]
         )
         Task.Exec.powershell(
-            script="echo 'test'", name="Task14", target=ref(windows_endpoint)
+            script="echo 'test'", name="Task14", target=endpoints[1]
         )
 
 
 @runbook
-def WhileTaskLoopVariable(endpoints=[linux_endpoint, windows_endpoint, http_endpoint]):
+def WhileTaskLoopVariable(endpoints=[http_endpoint]):
     "Runbook Service example"
     with Task.Loop(10, name="Task1", loop_variable="iteration"):
         Task.SetVariable.escript(
@@ -120,5 +120,5 @@ def WhileTaskLoopVariable(endpoints=[linux_endpoint, windows_endpoint, http_endp
                 content_type="application/json",
                 response_paths={"iteration": "$"},
                 status_mapping={200: True},
-                target=ref(http_endpoint),
+                target=endpoints[0],
             )

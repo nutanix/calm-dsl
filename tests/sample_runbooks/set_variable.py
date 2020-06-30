@@ -5,7 +5,7 @@ Calm Runbook Sample for set variable task
 from calm.dsl.builtins import read_local_file
 from calm.dsl.builtins import runbook
 from calm.dsl.builtins import CalmTask as Task
-from calm.dsl.builtins import CalmEndpoint, ref, basic_cred
+from calm.dsl.builtins import CalmEndpoint, basic_cred
 
 CRED_USERNAME = read_local_file(".tests/runbook_tests/username")
 CRED_PASSWORD = read_local_file(".tests/runbook_tests/password")
@@ -22,7 +22,7 @@ def DslSetVariableTask(endpoints=[endpoint], default=False):
         script="print 'var1=test'", variables=["var1"],
     )
     Task.SetVariable.ssh(
-        filename="scripts/sample_script.sh", variables=["var2"], target=ref(endpoint),
+        filename="scripts/sample_script.sh", variables=["var2"], target=endpoints[0],
     )
     Task.Exec.escript(script="print '@@{var1}@@ @@{var2}@@'")
 

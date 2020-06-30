@@ -97,6 +97,18 @@ class runbook(metaclass=DescriptorType):
         # ast.Call nodes. ast.Assign nodes become variables.
         node = ast.parse(new_src)
         func_globals = self.user_func.__globals__.copy()
+
+        # for runbooks updating func_globals with endpoints and credentials passed in kwargs
+        if self.__class__ == runbook:
+            args = dict()
+            sig = inspect.signature(self.user_func)
+            for name, param in sig.parameters.items():
+                args[name] = param.default
+            if args.get("credentials", []):
+                func_globals.update({"credentials": args["credentials"]})
+            if args.get("endpoints", []):
+                func_globals.update({"endpoints": args["endpoints"]})
+
         node_visitor = GetCallNodes(
             func_globals,
             target=cls.get_task_target() if hasattr(cls, "get_task_target") else None,

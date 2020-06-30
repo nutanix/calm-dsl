@@ -4,7 +4,7 @@ Calm Runbook Sample for running http tasks
 from calm.dsl.builtins import read_local_file
 from calm.dsl.builtins import runbook
 from calm.dsl.builtins import CalmTask as Task, basic_cred
-from calm.dsl.builtins import CalmEndpoint, ref
+from calm.dsl.builtins import CalmEndpoint
 
 linux_ip = read_local_file(".tests/runbook_tests/vm_ip")
 windows_ip = read_local_file(".tests/runbook_tests/windows_vm_ip")
@@ -46,7 +46,7 @@ def EscriptOnEndpoint(endpoints=[multiple_linux_endpoint]):
     Task.Exec.escript(
         name="ExecTask",
         script='''print "Task is Successful"''',
-        target=ref(multiple_linux_endpoint),
+        target=endpoints[0],
     )
 
 
@@ -55,7 +55,7 @@ def PowershellTask(endpoints=[windows_endpoint]):
     Task.Exec.powershell(
         name="ExecTask",
         script='''echo "Task is Successful"''',
-        target=ref(windows_endpoint),
+        target=endpoints[0],
     )
 
 
@@ -74,7 +74,7 @@ def PowershellOnMultipleIPs(endpoints=[multiple_windows_endpoint]):
     Task.Exec.powershell(
         name="ExecTask",
         script='''echo "Task is Successful"''',
-        target=ref(multiple_windows_endpoint),
+        target=endpoints[0],
     )
 
 
@@ -85,7 +85,7 @@ def PowershellWithCredOverwrite(
     Task.Exec.powershell(
         name="ExecTask",
         script='''echo "Task is Successful"''',
-        target=ref(windows_endpoint_with_wrong_cred),
+        target=endpoints[0],
         cred=WindowsCred,
     )
 
@@ -95,7 +95,7 @@ def ShellTask(endpoints=[linux_endpoint]):
     Task.Exec.ssh(
         name="ExecTask",
         script='''echo "Task is Successful"''',
-        target=ref(linux_endpoint),
+        target=endpoints[0],
     )
 
 
@@ -114,7 +114,7 @@ def ShellOnMultipleIPs(endpoints=[multiple_linux_endpoint]):
     Task.Exec.ssh(
         name="ExecTask",
         script='''echo "Task is Successful"''',
-        target=ref(multiple_linux_endpoint),
+        target=endpoints[0],
     )
 
 
@@ -125,7 +125,7 @@ def ShellWithCredOverwrite(
     Task.Exec.ssh(
         name="ExecTask",
         script='''echo "Task is Successful"''',
-        target=ref(linux_endpoint_with_wrong_cred),
+        target=endpoints[0],
         cred=LinuxCred,
     )
 

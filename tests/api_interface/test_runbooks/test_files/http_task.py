@@ -6,7 +6,7 @@ import json
 from calm.dsl.builtins import read_local_file
 from calm.dsl.builtins import runbook
 from calm.dsl.builtins import CalmTask as Task, CalmVariable
-from calm.dsl.builtins import CalmEndpoint, Auth, ref
+from calm.dsl.builtins import CalmEndpoint, Auth
 from calm.dsl.config import get_config
 from utils import read_test_config, change_uuids
 
@@ -46,7 +46,7 @@ def get_http_task_runbook():
             content_type="application/json",
             response_paths={"ep_uuid": "$.metadata.uuid"},
             status_mapping={200: True},
-            target=ref(endpoint),
+            target=endpoints[0],
         )
 
         # Check the type of the created endpoint
@@ -57,7 +57,7 @@ def get_http_task_runbook():
             content_type="application/json",
             response_paths={"ep_type": "$.spec.resources.type"},
             status_mapping={200: True},
-            target=ref(endpoint),
+            target=endpoints[0],
         )
 
         # Delete the created endpoint
@@ -67,7 +67,7 @@ def get_http_task_runbook():
             headers={"Content-Type": "application/json"},
             content_type="application/json",
             status_mapping={200: True},
-            target=ref(endpoint),
+            target=endpoints[0],
         )
 
         Task.Exec.escript(name="ExecTask", script='''print "@@{ep_type}@@"''')
@@ -140,7 +140,7 @@ def HTTPTaskWithUnsupportedPayload(endpoints=[endpoint]):
         headers={"Content-Type": "application/json"},
         content_type="application/json",
         status_mapping={200: True},
-        target=ref(endpoint),
+        target=endpoints[0],
     )
 
 
@@ -156,7 +156,7 @@ def HTTPTaskWithIncorrectAuth(endpoints=[endpoint_with_incorrect_auth]):
         headers={"Content-Type": "application/json"},
         content_type="application/json",
         status_mapping={200: True},
-        target=ref(endpoint_with_incorrect_auth),
+        target=endpoints[0],
     )
 
 
@@ -172,7 +172,7 @@ def HTTPTaskWithTLSVerify(endpoints=[endpoint_with_tls_verify]):
         headers={"Content-Type": "application/json"},
         content_type="application/json",
         status_mapping={200: True},
-        target=ref(endpoint_with_tls_verify),
+        target=endpoints[0],
     )
 
 
@@ -188,7 +188,7 @@ def HTTPHeadersWithMacro(endpoints=[endpoint_with_incorrect_auth]):
         headers={"Authorization": "Bearer @@{calm_jwt}@@"},
         content_type="application/json",
         status_mapping={200: True},
-        target=ref(endpoint_with_incorrect_auth),
+        target=endpoints[0],
     )
 
 
@@ -204,5 +204,5 @@ def HTTPRelativeURLWithMacro(endpoints=[endpoint]):
         body=json.dumps({}),
         content_type="application/json",
         status_mapping={200: True},
-        target=ref(endpoint),
+        target=endpoints[0],
     )

@@ -38,7 +38,7 @@ def DslDemoRunbook(endpoints=[DslLinuxEndpoint]):
             Task.Exec.escript(
                 name="FinalOutput",
                 script="print 'logs size changed from @@{size_before_cleanup}@@ => @@{size_after_cleanup}@@'",
-                target=ref(DslLinuxEndpoint),
+                target=endpoints[0],
             )
 
         else:
