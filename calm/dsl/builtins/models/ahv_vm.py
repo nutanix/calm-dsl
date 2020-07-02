@@ -1,3 +1,5 @@
+import copy
+
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .ahv_vm_disk import get_boot_config
