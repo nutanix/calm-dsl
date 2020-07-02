@@ -289,7 +289,7 @@ def create_blueprint_command(bp_file, name, description, force):
     "--launch_params",
     "-l",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
-    help="Path to python file containing 'runtime_vars' parameter",
+    help="Path to python file for runtime editables",
 )
 def launch_blueprint_command(
     blueprint_name,
@@ -300,9 +300,26 @@ def launch_blueprint_command(
     blueprint=None,
 ):
     """Launches a blueprint.
-    All runtime variables will be prompted by default. When passing the 'ignore_runtime_editable' flag, no variables will be prompted and all default values will be used.
-    The blueprint default values can be overridden by passing a Python file via 'launch_params'. Any variable not defined in the Python file will keep the default value defined in the blueprint. When passing a Python file, no variables will be prompted.
-    """
+All runtime variables will be prompted by default. When passing the 'ignore_runtime_editable' flag, no variables will be prompted and all default values will be used.
+The blueprint default values can be overridden by passing a Python file via 'launch_params'. Any variable not defined in the Python file will keep the default value defined in the blueprint. When passing a Python file, no variables will be prompted.
+
+\b
+>: launch_params: Python file consisting of variables 'variable_list' and 'substrate_list'
+Ex: variable_list = {
+    "value": {"value": <Variable Value>},
+    "context": <Context for variable>
+    "name": "<Variable Name>"
+}
+substrate_list = {
+    "value":  {
+        <substrate_editable_data_object>
+    },
+    "name": <Substrate Name>,
+}
+Sample context for variables: 
+    1. context = "<Profile Name>"    # For variable under profile
+    2. context = "<Service Name>"    # For variable under service
+"""
     launch_blueprint_simple(
         blueprint_name,
         app_name,
