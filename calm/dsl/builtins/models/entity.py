@@ -318,21 +318,21 @@ class EntityType(EntityTypeBase):
         dsl_name = cls.__name__
         ui_name = getattr(cls, "display_name", dsl_name)
 
-        entity_obj = {"dsl_cls_name": dsl_name, "Action": {}}
+        entity_obj = {"dsl_name": dsl_name, "Action": {}}
+        types = EntityTypeBase.get_entity_types()
+        ActionType = types.get("Action", None)
+
+        # Fetching actions data inside entity
         for ek, ev in cls.__dict__.items():
             e_obj = getattr(cls, ek)
-            schema_name = getattr(e_obj, "__schema_name__", None)
-            if not schema_name:
-                continue
-
-            if schema_name == "Action":
+            if isinstance(e_obj, ActionType):
                 user_func = ev.user_func
                 sig = inspect.signature(user_func)
                 display_name = sig.parameters.get("display_name", None)
 
                 if display_name and display_name.default != ev.action_name:
                     entity_obj["Action"][display_name.default] = {
-                        "dsl_cls_name": ev.action_name
+                        "dsl_name": ev.action_name
                     }
 
         update_dsl_metadata_map(entity_type, entity_name=ui_name, entity_obj=entity_obj)
@@ -370,11 +370,14 @@ class EntityType(EntityTypeBase):
 
         ui_name = cdict.get("name", None)
         metadata = get_dsl_metadata_map(context) or {}
-        dsl_cls_name = metadata.get("dsl_cls_name", ui_name)
+        dsl_name = metadata.get("dsl_name", ui_name)
 
         # Impose validation for valid identifier
-        dsl_cls_name = get_valid_identifier(dsl_cls_name)
-        cdict["dsl_cls_name"] = dsl_cls_name
+        dsl_name = get_valid_identifier(dsl_name)
+        cdict["__name__"] = dsl_name
+
+        # Adding description
+        cdict["__doc__"] = cdict.get("description", "")
 
     @classmethod
     def decompile(mcls, cdict, context=[]):
@@ -388,7 +391,6 @@ class EntityType(EntityTypeBase):
             cur_context.extend([schema_name, ui_name])
 
         mcls.pre_decompile(cdict, context=cur_context)
-        dsl_class_name = cdict.pop("dsl_cls_name", None)
 
         # Convert attribute names to x-calm-dsl-display-name, if given
         attrs = {}
@@ -396,13 +398,21 @@ class EntityType(EntityTypeBase):
         display_map = {v: k for k, v in display_map.items()}
 
         for k, v in cdict.items():
-            # case for uuid, editables
-            if not display_map.get(k, None):
+            if k.startswith("__") and k.endswith("__"):
+                attrs.setdefault(k, v)
                 continue
+
+            # case for uuid, editables
+            elif not display_map.get(k, None):
+                continue
+
             attrs.setdefault(display_map[k], v)
 
         validator_dict = getattr(mcls, "__validator_dict__")
         for k, v in attrs.items():
+            if k.startswith("__") and k.endswith("__"):
+                continue
+
             validator, is_array = validator_dict[k]
 
             if hasattr(validator, "__kind__"):
@@ -449,12 +459,9 @@ class EntityType(EntityTypeBase):
 
             attrs[k] = new_value
 
-        # Create new class based on type
-
-        cls = mcls(dsl_class_name, (Entity,), attrs)
-        cls.__doc__ = cdict.get("description", "")
-
-        return cls
+        # Creating class
+        name = attrs.get("__name__", ui_name)
+        return mcls(name, (Entity,), attrs)
 
     def json_dumps(cls, pprint=False, sort_keys=False):
 

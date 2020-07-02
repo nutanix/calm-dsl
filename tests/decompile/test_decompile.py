@@ -8,11 +8,23 @@ from calm.dsl.builtins import (
 )
 from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
-from calm.dsl.builtins import read_provider_spec, read_local_file
+from calm.dsl.builtins import read_provider_spec, read_local_file, vm_disk_package
+from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC, AhvVmResources, AhvVm
 
 CRED_USERNAME = read_local_file(".tests/username")
 CRED_PASSWORD = read_local_file(".tests/password")
 DNS_SERVER = read_local_file(".tests/dns_server")
+
+
+Era_Disk = vm_disk_package(
+    name="era_disk",
+    config={
+        # By default image type is set to DISK_IMAGE
+        "image": {
+            "source": "http://download.nutanix.com/era/1.1.1/ERA-Server-build-1.1.1-340d9db1118eac81219bec98507d4982045d8799.qcow2"
+        }
+    },
+)
 
 
 class MySQLService(Service):
@@ -39,11 +51,36 @@ class MySQLPackage(Package):
         CalmTask.Exec.ssh(name="Task1", script="echo @@{foo}@@")
 
 
+class MyAhvVm1Resources(AhvVmResources):
+
+    memory = 4
+    vCPUs = 2
+    cores_per_vCPU = 1
+    disks = [
+        AhvVmDisk.Disk.Scsi.cloneFromImageService("Centos7", bootable=True),
+        AhvVmDisk.CdRom.Sata.cloneFromImageService("SQLServer2014SP2-FullSlipstream-x64"),
+        AhvVmDisk.CdRom.Ide.cloneFromImageService("SQLServer2014SP2-FullSlipstream-x64"),
+        AhvVmDisk.Disk.Scsi.cloneFromImageService("AHV_CENTOS_76"),
+        AhvVmDisk.Disk.Pci.allocateOnStorageContainer(12),
+        AhvVmDisk.CdRom.Sata.emptyCdRom(),
+        AhvVmDisk.CdRom.Ide.emptyCdRom(),
+        AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(Era_Disk),
+    ]
+    nics = [AhvVmNic.DirectNic.ingress("vlan.0")]
+
+
+class MyAhvVm1(AhvVm):
+
+    display_name = "@@{calm_application_name}@@-@@{calm_array_index}@@"
+    resources = MyAhvVm1Resources
+    categories = {"AppFamily": "Backup", "AppType": "Default"}
+
+
 class AHVVMforMySQL(Substrate):
     """AHV VM config given by reading a spec file"""
 
     display_name = "ahv vm for sql"
-    provider_spec = read_provider_spec("specs/ahv_provider_spec.yaml")
+    provider_spec = MyAhvVm1
 
 
 class MySQLDeployment(Deployment):
@@ -82,12 +119,36 @@ class PHPPackage(Package):
         CalmTask.Exec.ssh(name="Task4", script="echo @@{foo}@@")
 
 
+class MyAhvVm2Resources(AhvVmResources):
+
+    memory = 4
+    vCPUs = 2
+    cores_per_vCPU = 1
+    disks = [
+        AhvVmDisk.Disk.Scsi.cloneFromImageService("Centos7", bootable=True),
+        AhvVmDisk.CdRom.Sata.cloneFromImageService("SQLServer2014SP2-FullSlipstream-x64"),
+        AhvVmDisk.CdRom.Ide.cloneFromImageService("SQLServer2014SP2-FullSlipstream-x64"),
+        AhvVmDisk.Disk.Scsi.cloneFromImageService("AHV_CENTOS_76"),
+        AhvVmDisk.Disk.Pci.allocateOnStorageContainer(12),
+        AhvVmDisk.CdRom.Sata.emptyCdRom(),
+        AhvVmDisk.CdRom.Ide.emptyCdRom(),
+        AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(Era_Disk),
+    ]
+    nics = [AhvVmNic.DirectNic.ingress("vlan.0")]
+
+
+class MyAhvVm2(AhvVm):
+
+    display_name = "@@{calm_application_name}@@-@@{calm_array_index}@@"
+    resources = MyAhvVm2Resources
+    categories = {"AppFamily": "Backup", "AppType": "Default"}
+
+
 class AHVVMforPHP(Substrate):
     """AHV VM config given by reading a spec file"""
 
     display_name = "ahv vm for php substrate"
-
-    provider_spec = read_provider_spec("specs/ahv_provider_spec.yaml")
+    provider_spec = MyAhvVm2
 
 
 class PHPDeployment(Deployment):
@@ -134,6 +195,6 @@ class TestDecompile(Blueprint):
         basic_cred(CRED_USERNAME, CRED_PASSWORD, default=True),
     ]
     services = [MySQLService, PHPService]
-    packages = [MySQLPackage, PHPPackage]
+    packages = [MySQLPackage, PHPPackage, Era_Disk]
     substrates = [AHVVMforMySQL, AHVVMforPHP]
     profiles = [DefaultProfile]

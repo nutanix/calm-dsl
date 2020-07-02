@@ -9,6 +9,7 @@ DSL_METADATA_MAP = {
     "Profile": {},
     "Substrate": {},
 }
+# TODO Check for credential
 
 
 def update_dsl_metadata_map(entity_type, entity_name, entity_obj):
