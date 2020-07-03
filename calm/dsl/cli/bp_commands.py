@@ -316,7 +316,7 @@ substrate_list = {
     },
     "name": <Substrate Name>,
 }
-Sample context for variables: 
+Sample context for variables:
     1. context = "<Profile Name>"    # For variable under profile
     2. context = "<Service Name>"    # For variable under service
 """
