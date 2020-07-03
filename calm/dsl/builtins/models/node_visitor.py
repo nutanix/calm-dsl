@@ -3,7 +3,7 @@ import uuid
 
 from .task import meta
 from .entity import EntityType
-from .task import CalmTask, TaskType
+from .task import CalmTask, RunbookTask, TaskType
 from .variable import CalmVariable, VariableType
 
 
@@ -52,7 +52,7 @@ class GetCallNodes(ast.NodeVisitor):
         while not isinstance(sub_node, ast.Name):
             sub_node = sub_node.value
         py_object = eval(compile(ast.Expression(sub_node), "", "eval"), self._globals)
-        if py_object == CalmTask or isinstance(py_object, EntityType):
+        if py_object == CalmTask or RunbookTask or isinstance(py_object, EntityType):
             task = eval(compile(ast.Expression(node), "", "eval"), self._globals)
             if task is not None and isinstance(task, TaskType):
                 if self.target is not None and not task.target_any_local_reference:

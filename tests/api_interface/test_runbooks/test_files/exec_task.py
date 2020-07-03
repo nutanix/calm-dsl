@@ -3,7 +3,7 @@ Calm Runbook Sample for running http tasks
 """
 from calm.dsl.builtins import read_local_file
 from calm.dsl.builtins import runbook
-from calm.dsl.builtins import CalmTask as Task, basic_cred
+from calm.dsl.builtins import RunbookTask as Task, basic_cred
 from calm.dsl.builtins import CalmEndpoint
 
 linux_ip = read_local_file(".tests/runbook_tests/vm_ip")

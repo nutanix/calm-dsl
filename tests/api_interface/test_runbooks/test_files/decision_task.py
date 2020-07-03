@@ -4,7 +4,7 @@ Calm DSL Decision Task Example
 """
 
 from calm.dsl.builtins import runbook
-from calm.dsl.builtins import CalmTask as Task
+from calm.dsl.builtins import RunbookTask as Task
 from calm.dsl.builtins import CalmEndpoint
 from calm.dsl.builtins import read_local_file, basic_cred
 

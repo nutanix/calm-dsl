@@ -450,12 +450,7 @@ def http_task_on_endpoint(
         method (str): HTTP method ("GET", "POST", "PUT", "DELETE", ..)
         headers (dict): Request headers
         secret_headers (dict): Request headers that are to be masked
-        credential (Credential): Credential object. Currently only supports basic auth.
         content_type (string): Request Content-Type (application/json, application/xml, etc.)
-        timeout (int): Request timeout in seconds (Default: 120)
-        verify (bool): TLS verify (Default: False)
-        retries (int): Number of times to retry this request if it fails. (Default: 0)
-        retry_interval (int): Time to wait in seconds between retries (Default: 10)
         status_mapping (dict): Mapping of  Response status code (int) to
                                task status (True: success, False: Failure)
         response_paths (dict): Mapping of variable name (str) to path in response (str)
@@ -477,6 +472,58 @@ def http_task_on_endpoint(
         name=name,
         target=target,
     )
+
+
+def http_task_get_on_endpoint(**kwargs):
+    """
+
+    Defines a HTTP GET Task on http endpoint target.
+
+    Args:
+        kwargs (Ref): keyword arguments for http task on endpoint
+    Returns:
+        (Task): HTTP Task
+    """
+    return http_task_on_endpoint("GET", **kwargs)
+
+
+def http_task_post_on_endpoint(**kwargs):
+    """
+
+    Defines a HTTP POST Task on http endpoint target.
+
+    Args:
+        kwargs (Ref): keyword arguments for http task on endpoint
+    Returns:
+        (Task): HTTP Task
+    """
+    return http_task_on_endpoint("POST", **kwargs)
+
+
+def http_task_put_on_endpoint(**kwargs):
+    """
+
+    Defines a HTTP PUT Task on http endpoint target.
+
+    Args:
+        kwargs (Ref): keyword arguments for http task on endpoint
+    Returns:
+        (Task): HTTP Task
+    """
+    return http_task_on_endpoint("PUT", **kwargs)
+
+
+def http_task_delete_on_endpoint(**kwargs):
+    """
+
+    Defines a HTTP GET Task on http endpoint target.
+
+    Args:
+        kwargs (Ref): keyword arguments for http task on endpoint
+    Returns:
+        (Task): HTTP Task
+    """
+    return http_task_on_endpoint("DELETE", **kwargs)
 
 
 def http_task_get(
@@ -1035,14 +1082,6 @@ class CalmTask:
         powershell = exec_task_powershell
         escript = exec_task_escript
 
-    class Decision:
-        def __new__(cls, *args, **kwargs):
-            raise TypeError("'{}' is not callable".format(cls.__name__))
-
-        ssh = decision_task_ssh
-        powershell = decision_task_powershell
-        escript = decision_task_escript
-
     class HTTP:
         def __new__(
             cls,
@@ -1095,9 +1134,27 @@ class CalmTask:
         scale_in = scale_in_task
         scale_out = scale_out_task
 
-    class Parallel:
-        def __new__(cls, name=None, child_tasks=[], attrs={}):
-            return parallel_task(name=name, child_tasks=child_tasks, attrs=attrs)
+    class Delay:
+        def __new__(cls, delay_seconds=None, name=None, target=None):
+            return delay_task(delay_seconds=delay_seconds, name=name, target=target)
+
+
+class RunbookTask(CalmTask):
+    class Input:
+        def __new__(cls, timeout=500, name=None, inputs=[]):
+            return input_task(timeout=timeout, name=name, inputs=inputs)
+
+    class Confirm:
+        def __new__(cls, timeout=500, name=None):
+            return confirm_task(timeout=timeout, name=name)
+
+    class Decision:
+        def __new__(cls, *args, **kwargs):
+            raise TypeError("'{}' is not callable".format(cls.__name__))
+
+        ssh = decision_task_ssh
+        powershell = decision_task_powershell
+        escript = decision_task_escript
 
     class Loop:
         def __new__(
@@ -1121,14 +1178,38 @@ class CalmTask:
                 )
             return while_loop(name=name, child_tasks=child_tasks, attrs=attrs)
 
-    class Delay:
-        def __new__(cls, delay_seconds=None, name=None, target=None):
-            return delay_task(delay_seconds=delay_seconds, name=name, target=target)
+    class Parallel:
+        def __new__(cls, name=None, child_tasks=[], attrs={}):
+            return parallel_task(name=name, child_tasks=child_tasks, attrs=attrs)
 
-    class Input:
-        def __new__(cls, timeout=500, name=None, inputs=[]):
-            return input_task(timeout=timeout, name=name, inputs=inputs)
+    class HTTP:
+        def __new__(
+            cls,
+            method,
+            relative_url=None,
+            body=None,
+            headers=None,
+            secret_headers=None,
+            content_type=None,
+            status_mapping=None,
+            response_paths=None,
+            name=None,
+            target=None,
+        ):
+            return http_task_on_endpoint(
+                method,
+                relative_url=relative_url,
+                body=body,
+                headers=headers,
+                secret_headers=secret_headers,
+                content_type=content_type,
+                status_mapping=status_mapping,
+                response_paths=response_paths,
+                name=name,
+                target=target,
+            )
 
-    class Confirm:
-        def __new__(cls, timeout=500, name=None):
-            return confirm_task(timeout=timeout, name=name)
+        get = http_task_get_on_endpoint
+        post = http_task_post_on_endpoint
+        put = http_task_put_on_endpoint
+        delete = http_task_delete_on_endpoint

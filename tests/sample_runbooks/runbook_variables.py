@@ -4,7 +4,7 @@ Calm DSL Sample Runbook with runbook variable usecase
 """
 
 from calm.dsl.builtins import runbook
-from calm.dsl.builtins import CalmTask as Task, CalmVariable
+from calm.dsl.builtins import RunbookTask as Task, CalmVariable
 
 
 code = """print "Hello @@{firstname}@@ @@{lastname}@@"

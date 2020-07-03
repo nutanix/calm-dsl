@@ -4,7 +4,7 @@ Calm DSL Sample Runbook for parallel task
 """
 
 from calm.dsl.builtins import runbook, serial
-from calm.dsl.builtins import CalmTask as Task
+from calm.dsl.builtins import RunbookTask as Task
 
 
 code = '''print "hello"'''
@@ -17,7 +17,7 @@ def DslParallelRunbook():
     with Task.Parallel(name="ParallelTask"):
         Task.Exec.escript(name="Task2", script="print 'Inside Task2'")
 
-        with Task.While(iterations=1):
+        with Task.Loop(iterations=1):
             Task.Exec.escript(name="Task3_1", script="print 'Inside Task3.1'")
             Task.Exec.escript(name="Task3_2", script="sleep(30)")
             Task.Exec.escript(name="Task3_3", script="print 'Inside Task3.3'")

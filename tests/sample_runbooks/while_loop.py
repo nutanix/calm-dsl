@@ -4,7 +4,7 @@ Calm DSL Sample Runbook with while loop task
 """
 
 from calm.dsl.builtins import runbook
-from calm.dsl.builtins import CalmTask as Task, Status
+from calm.dsl.builtins import RunbookTask as Task, Status
 
 
 @runbook

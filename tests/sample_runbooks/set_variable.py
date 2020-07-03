@@ -4,7 +4,7 @@ Calm Runbook Sample for set variable task
 
 from calm.dsl.builtins import read_local_file
 from calm.dsl.builtins import runbook
-from calm.dsl.builtins import CalmTask as Task
+from calm.dsl.builtins import RunbookTask as Task
 from calm.dsl.builtins import CalmEndpoint, basic_cred
 
 CRED_USERNAME = read_local_file(".tests/runbook_tests/username")

@@ -5,7 +5,7 @@ Calm DSL While Task Example
 import json
 
 from calm.dsl.builtins import runbook
-from calm.dsl.builtins import CalmTask as Task, Auth, Status
+from calm.dsl.builtins import RunbookTask as Task, Auth, Status
 from calm.dsl.builtins import CalmEndpoint
 from calm.dsl.builtins import read_local_file, basic_cred
 
@@ -58,8 +58,7 @@ def WhileTask(endpoints=[linux_endpoint, windows_endpoint, http_endpoint]):
 
         Task.Delay(15, name="Task3")
         Task.Delay(15, name="Task4")
-        Task.HTTP.endpoint(
-            "POST",
+        Task.HTTP.post(
             name="Task5",
             relative_url="/list",
             body=json.dumps({}),
@@ -68,8 +67,7 @@ def WhileTask(endpoints=[linux_endpoint, windows_endpoint, http_endpoint]):
             status_mapping={200: True},
             target=endpoints[2],
         )
-        Task.HTTP.endpoint(
-            "POST",
+        Task.HTTP.post(
             name="Task6",
             relative_url="/list",
             body=json.dumps({}),
@@ -104,8 +102,7 @@ def WhileTaskLoopVariable(endpoints=[http_endpoint]):
             variables=["iteration"],
         )
         with Task.Loop(10, name="Task2", loop_variable="iteration"):
-            Task.HTTP.endpoint(
-                "POST",
+            Task.HTTP.post(
                 relative_url="/list",
                 body=json.dumps({}),
                 headers={"Content-Type": "application/json"},

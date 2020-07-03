@@ -3,7 +3,7 @@ Calm Runbook Sample for running http tasks
 """
 from calm.dsl.builtins import read_local_file
 from calm.dsl.builtins import runbook
-from calm.dsl.builtins import CalmTask as Task
+from calm.dsl.builtins import RunbookTask as Task
 from calm.dsl.builtins import CalmEndpoint, Auth
 
 AUTH_USERNAME = read_local_file(".tests/runbook_tests/auth_username")
@@ -18,8 +18,7 @@ endpoint = CalmEndpoint.HTTP(
 @runbook
 def DslHTTPTask(endpoints=[endpoint], default=False):
     "Runbook Service example"
-    Task.HTTP.endpoint(
-        "GET",
+    Task.HTTP.get(
         headers={"Content-Type": "application/json"},
         content_type="application/json",
         status_mapping={200: True},
