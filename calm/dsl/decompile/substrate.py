@@ -78,7 +78,9 @@ def render_substrate_template(cls, vm_images=[]):
                 "Boot config not present in {} substrate spec".format(cls.__name__)
             )
             sys.exit(-1)
-        vm_cls = AhvVmType.decompile(provider_spec, context=[cls.__schema_name__, gui_display_name])
+        vm_cls = AhvVmType.decompile(
+            provider_spec, context=[cls.__schema_name__, gui_display_name]
+        )
         user_attrs["provider_spec"] = vm_cls.__name__
         ahv_vm_str = render_ahv_vm(vm_cls, boot_config)
 

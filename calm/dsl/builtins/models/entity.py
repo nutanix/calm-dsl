@@ -387,7 +387,12 @@ class EntityType(EntityTypeBase):
         ui_name = cdict.get("name", None)
 
         cur_context = copy.deepcopy(context)
-        if schema_name and ui_name and schema_name != "Blueprint":
+        # TODO clear this mess. Store context of entities as per order in blueprint
+        if schema_name == "Deployment":
+            # As cur_context will contain Profile details. So reinitiate context
+            cur_context = [schema_name, ui_name]
+
+        elif schema_name and ui_name and schema_name != "Blueprint":
             cur_context.extend([schema_name, ui_name])
 
         mcls.pre_decompile(cdict, context=cur_context)

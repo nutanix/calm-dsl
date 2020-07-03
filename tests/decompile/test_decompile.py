@@ -58,8 +58,12 @@ class MyAhvVm1Resources(AhvVmResources):
     cores_per_vCPU = 1
     disks = [
         AhvVmDisk.Disk.Scsi.cloneFromImageService("Centos7", bootable=True),
-        AhvVmDisk.CdRom.Sata.cloneFromImageService("SQLServer2014SP2-FullSlipstream-x64"),
-        AhvVmDisk.CdRom.Ide.cloneFromImageService("SQLServer2014SP2-FullSlipstream-x64"),
+        AhvVmDisk.CdRom.Sata.cloneFromImageService(
+            "SQLServer2014SP2-FullSlipstream-x64"
+        ),
+        AhvVmDisk.CdRom.Ide.cloneFromImageService(
+            "SQLServer2014SP2-FullSlipstream-x64"
+        ),
         AhvVmDisk.Disk.Scsi.cloneFromImageService("AHV_CENTOS_76"),
         AhvVmDisk.Disk.Pci.allocateOnStorageContainer(12),
         AhvVmDisk.CdRom.Sata.emptyCdRom(),
@@ -126,8 +130,12 @@ class MyAhvVm2Resources(AhvVmResources):
     cores_per_vCPU = 1
     disks = [
         AhvVmDisk.Disk.Scsi.cloneFromImageService("Centos7", bootable=True),
-        AhvVmDisk.CdRom.Sata.cloneFromImageService("SQLServer2014SP2-FullSlipstream-x64"),
-        AhvVmDisk.CdRom.Ide.cloneFromImageService("SQLServer2014SP2-FullSlipstream-x64"),
+        AhvVmDisk.CdRom.Sata.cloneFromImageService(
+            "SQLServer2014SP2-FullSlipstream-x64"
+        ),
+        AhvVmDisk.CdRom.Ide.cloneFromImageService(
+            "SQLServer2014SP2-FullSlipstream-x64"
+        ),
         AhvVmDisk.Disk.Scsi.cloneFromImageService("AHV_CENTOS_76"),
         AhvVmDisk.Disk.Pci.allocateOnStorageContainer(12),
         AhvVmDisk.CdRom.Sata.emptyCdRom(),
