@@ -31,11 +31,8 @@ def render_substrate_template(cls, vm_images=[]):
     )
 
     # Update substrate name map and gui name
-    gui_display_name = getattr(cls, "display_name", "")
-    if not gui_display_name:
-        gui_display_name = cls.__name__
-
-    elif gui_display_name != cls.__name__:
+    gui_display_name = getattr(cls, "display_name", cls.__name__)
+    if gui_display_name != cls.__name__:
         user_attrs["gui_display_name"] = gui_display_name
 
     # updating ui and dsl name mapping
@@ -81,7 +78,9 @@ def render_substrate_template(cls, vm_images=[]):
                 "Boot config not present in {} substrate spec".format(cls.__name__)
             )
             sys.exit(-1)
-        vm_cls = AhvVmType.decompile(provider_spec)
+        vm_cls = AhvVmType.decompile(
+            provider_spec, context=[cls.__schema_name__, gui_display_name]
+        )
         user_attrs["provider_spec"] = vm_cls.__name__
         ahv_vm_str = render_ahv_vm(vm_cls, boot_config)
 

@@ -2,14 +2,17 @@ from collections import OrderedDict
 import json
 from json import JSONEncoder, JSONDecoder
 import sys
+import inspect
 from types import MappingProxyType
 import uuid
+import copy
 
 from ruamel.yaml import YAML, resolver, SafeRepresenter
 from calm.dsl.tools import StrictDraft7Validator
 from calm.dsl.tools import get_logging_handle
 from .schema import get_schema_details
 from .utils import get_valid_identifier
+from .client_attrs import update_dsl_metadata_map, get_dsl_metadata_map
 
 LOG = get_logging_handle(__name__)
 
@@ -304,8 +307,39 @@ class EntityType(EntityTypeBase):
 
         return ncls.get_user_attrs()
 
+    def pre_compile(cls):
+        """Hook to construct dsl metadata map"""
+        if not hasattr(cls, "__schema_name__"):
+            return
+
+        entity_type = cls.__schema_name__
+        entity_obj = {}
+
+        dsl_name = cls.__name__
+        ui_name = getattr(cls, "display_name", dsl_name)
+
+        entity_obj = {"dsl_name": dsl_name, "Action": {}}
+        types = EntityTypeBase.get_entity_types()
+        ActionType = types.get("Action", None)
+
+        # Fetching actions data inside entity
+        for ek, ev in cls.__dict__.items():
+            e_obj = getattr(cls, ek)
+            if isinstance(e_obj, ActionType):
+                user_func = ev.user_func
+                sig = inspect.signature(user_func)
+                display_name = sig.parameters.get("display_name", None)
+
+                if display_name and display_name.default != ev.action_name:
+                    entity_obj["Action"][display_name.default] = {
+                        "dsl_name": ev.action_name
+                    }
+
+        update_dsl_metadata_map(entity_type, entity_name=ui_name, entity_obj=entity_obj)
+
     def compile(cls):
 
+        cls.pre_compile()
         attrs = cls.get_all_attrs()
         cls.update_attrs(attrs)
 
@@ -324,17 +358,6 @@ class EntityType(EntityTypeBase):
         if "description" in cdict and cdict["description"] == "":
             cdict["description"] = cls.__doc__ if cls.__doc__ else ""
 
-        # Send cls name if it is different from cdict["name"] for round trip
-        types = EntityTypeBase.get_entity_types()
-        VariableType = types.get("Variable")
-        ActionType = types.get("Action")
-
-        if not isinstance(cls, (VariableType, ActionType)):
-            if "description" in cdict and cdict["name"] != str(cls):
-                cdict["description"] = '{{"dsl_entity_name":"{}"}}\n{}'.format(
-                    str(cls), cdict["description"]
-                )
-
         # Add extra info for roundtrip
         # TODO - remove during serialization before sending to server
         # cdict['__kind__'] = cls.__kind__
@@ -342,26 +365,37 @@ class EntityType(EntityTypeBase):
         return cdict
 
     @classmethod
-    def decompile(mcls, cdict):
+    def pre_decompile(mcls, cdict, context):
+        """Hook to modify cdict based on dsl metadata"""
 
-        # Remove extra info
-        name = cdict.get("name", None)
-        description = cdict.pop("description", None)
-        # kind = cdict.pop('__kind__')
-
-        dsl_class_name = name
-        if description is not None:
-            if description.find("\n") != -1:
-                data = description.split("\n")
-                try:
-                    dsl_dict = json.loads(data[0])
-                    dsl_class_name = get_valid_identifier(dsl_dict["dsl_entity_name"])
-                    description = "\n".join(data[1:])
-                except Exception:
-                    pass
+        ui_name = cdict.get("name", None)
+        metadata = get_dsl_metadata_map(context) or {}
+        dsl_name = metadata.get("dsl_name", ui_name)
 
         # Impose validation for valid identifier
-        dsl_class_name = get_valid_identifier(dsl_class_name)
+        dsl_name = get_valid_identifier(dsl_name)
+        cdict["__name__"] = dsl_name
+
+        # Adding description
+        cdict["__doc__"] = cdict.get("description", "")
+
+    @classmethod
+    def decompile(mcls, cdict, context=[]):
+
+        # Pre decompile step to get class names in blueprint file
+        schema_name = getattr(mcls, "__schema_name__", None)
+        ui_name = cdict.get("name", None)
+
+        cur_context = copy.deepcopy(context)
+        # TODO clear this mess. Store context of entities as per order in blueprint
+        if schema_name == "Deployment":
+            # As cur_context will contain Profile details. So reinitiate context
+            cur_context = [schema_name, ui_name]
+
+        elif schema_name and ui_name and schema_name != "Blueprint":
+            cur_context.extend([schema_name, ui_name])
+
+        mcls.pre_decompile(cdict, context=cur_context)
 
         # Convert attribute names to x-calm-dsl-display-name, if given
         attrs = {}
@@ -369,13 +403,21 @@ class EntityType(EntityTypeBase):
         display_map = {v: k for k, v in display_map.items()}
 
         for k, v in cdict.items():
-            # case for uuid, editables
-            if not display_map.get(k, None):
+            if k.startswith("__") and k.endswith("__"):
+                attrs.setdefault(k, v)
                 continue
+
+            # case for uuid, editables
+            elif not display_map.get(k, None):
+                continue
+
             attrs.setdefault(display_map[k], v)
 
         validator_dict = getattr(mcls, "__validator_dict__")
         for k, v in attrs.items():
+            if k.startswith("__") and k.endswith("__"):
+                continue
+
             validator, is_array = validator_dict[k]
 
             if hasattr(validator, "__kind__"):
@@ -398,10 +440,12 @@ class EntityType(EntityTypeBase):
                         raise TypeError("Value {} is not of type list".format(v))
 
                     for val in v:
-                        new_value.append(entity_type.decompile(val))
+                        new_value.append(
+                            entity_type.decompile(val, context=cur_context)
+                        )
 
                 else:
-                    new_value = entity_type.decompile(v)
+                    new_value = entity_type.decompile(v, context=cur_context)
 
             else:
                 # validation for existing classes(str, dict etc.)
@@ -420,12 +464,9 @@ class EntityType(EntityTypeBase):
 
             attrs[k] = new_value
 
-        # Create new class based on type
-
-        cls = mcls(dsl_class_name, (Entity,), attrs)
-        cls.__doc__ = description
-
-        return cls
+        # Creating class
+        name = attrs.get("__name__", ui_name)
+        return mcls(name, (Entity,), attrs)
 
     def json_dumps(cls, pprint=False, sort_keys=False):
 
@@ -495,6 +536,7 @@ class EntityJSONEncoder(JSONEncoder):
         if not hasattr(cls, "__kind__"):
             return super().default(cls)
 
+        # Add single function(wrapper) that can contain pre-post checks
         return cls.compile()
 
 

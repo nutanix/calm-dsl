@@ -52,7 +52,7 @@ class ObjectDict(EntityDict):
                 ret[self.display_map[key]] = value
         return ret
 
-    def decompile(cls, cdict):
+    def decompile(cls, cdict, context=[]):
 
         if not cdict:
             return cdict

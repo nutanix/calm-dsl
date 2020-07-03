@@ -1,3 +1,5 @@
+import copy
+
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .provider_spec import ProviderSpecType
@@ -63,7 +65,7 @@ class AhvVmResourcesType(EntityType):
         return cdict
 
     @classmethod
-    def decompile(mcls, cdict):
+    def decompile(mcls, cdict, context=[]):
         # Check for serial ports
         serial_port_list = cdict.pop("serial_port_list", [])
         serial_port_dict = {}

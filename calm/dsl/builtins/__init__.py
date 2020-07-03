@@ -61,6 +61,11 @@ from .models.ahv_vm import (
     AhvVmResourcesType,
 )
 
+from .models.client_attrs import (
+    init_dsl_metadata_map,
+    get_dsl_metadata_map,
+    update_dsl_metadata_map,
+)
 
 __all__ = [
     "Ref",
@@ -142,4 +147,7 @@ __all__ = [
     "AhvGCType",
     "AhvVmResourcesType",
     "AhvVmType",
+    "init_dsl_metadata_map",
+    "get_dsl_metadata_map",
+    "update_dsl_metadata_map",
 ]

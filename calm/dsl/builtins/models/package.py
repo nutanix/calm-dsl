@@ -3,8 +3,8 @@ from .validator import PropertyValidator
 
 from .task import dag
 from .action import runbook_create, _action_create
-from calm.dsl.tools import get_logging_handle
 from .runbook import RunbookType
+from calm.dsl.tools import get_logging_handle
 
 
 LOG = get_logging_handle(__name__)
@@ -91,9 +91,9 @@ class PackageType(EntityType):
         return cdict
 
     @classmethod
-    def decompile(mcls, cdict):
+    def decompile(mcls, cdict, context=[]):
 
-        cls = super().decompile(cdict)
+        cls = super().decompile(cdict, context=context)
         options = cls.options
         delattr(cls, "options")
 
