@@ -407,7 +407,7 @@ class EntityType(EntityTypeBase):
                 attrs.setdefault(k, v)
                 continue
 
-            # case for uuid, editables
+            # case for deployment editables and some other keys
             elif not display_map.get(k, None):
                 continue
 
