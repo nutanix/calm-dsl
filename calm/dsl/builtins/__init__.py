@@ -6,7 +6,7 @@
 
 from .models.ref import Ref, ref
 from .models.credential import basic_cred, secret_cred
-from .models.variable import Variable, setvar, CalmVariable
+from .models.variable import Variable, setvar, CalmVariable, RunbookVariable
 from .models.action import action, parallel
 
 from .models.task import Task, CalmTask, RunbookTask, Status
@@ -60,6 +60,7 @@ __all__ = [
     "Variable",
     "setvar",
     "CalmVariable",
+    "RunbookVariable",
     "Task",
     "CalmTask",
     "RunbookTask",

@@ -5,7 +5,7 @@ import json
 
 from calm.dsl.builtins import read_local_file
 from calm.dsl.builtins import runbook
-from calm.dsl.builtins import RunbookTask as Task, CalmVariable
+from calm.dsl.builtins import RunbookTask as Task, RunbookVariable as Variable
 from calm.dsl.builtins import CalmEndpoint, Auth
 from calm.dsl.config import get_config
 from utils import read_test_config, change_uuids
@@ -184,7 +184,7 @@ def HTTPHeadersWithMacro(endpoints=[endpoint_with_incorrect_auth]):
 @runbook
 def HTTPRelativeURLWithMacro(endpoints=[endpoint]):
 
-    relative_url_var = CalmVariable.Simple("/list")  # noqa
+    relative_url_var = Variable.Simple("/list")  # noqa
     # Creating an endpoint with POST call
     Task.HTTP.post(
         name="HTTPTask",

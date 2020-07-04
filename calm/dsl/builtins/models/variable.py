@@ -1453,6 +1453,9 @@ class CalmVariable:
                 datetime = variable_datetime_with_options_from_task_array
                 multiline = variable_multiline_with_options_from_task_array
 
+
+class RunbookVariable(CalmVariable):
+
     class TaskInput:
         def __new__(cls, *args, **kwargs):
             return _task_input(*args, **kwargs)

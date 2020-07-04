@@ -4,7 +4,7 @@ Calm DSL Sample Runbook with runbook variable usecase
 """
 
 from calm.dsl.builtins import runbook
-from calm.dsl.builtins import RunbookTask as Task, CalmVariable
+from calm.dsl.builtins import RunbookTask as Task, RunbookVariable as Variable
 
 
 code = """print "Hello @@{firstname}@@ @@{lastname}@@"
@@ -14,8 +14,8 @@ code = """print "Hello @@{firstname}@@ @@{lastname}@@"
 @runbook
 def DslRunbookWithVariables():
     "Runbook Service example"
-    firstname = CalmVariable.Simple("FIRSTNAME", runtime=True)  # noqa
-    lastname = CalmVariable.Simple("LASTNAME")  # noqa
+    firstname = Variable.Simple("FIRSTNAME", runtime=True)  # noqa
+    lastname = Variable.Simple("LASTNAME")  # noqa
     Task.Exec.escript(name="Exec_Task", script=code)
 
 
