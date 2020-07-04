@@ -2,7 +2,7 @@
 Calm Runbook Sample for running http tasks
 """
 from calm.dsl.runbooks import read_local_file
-from calm.dsl.runbooks import runbook
+from calm.dsl.runbooks import runbook, runbook_json
 from calm.dsl.runbooks import RunbookTask as Task
 from calm.dsl.runbooks import CalmEndpoint as Endpoint
 
@@ -28,7 +28,7 @@ def DslHTTPTask(endpoints=[endpoint], default=False):
 
 
 def main():
-    print(DslHTTPTask.runbook.json_dumps(pprint=True))
+    print(runbook_json(DslHTTPTask))
 
 
 if __name__ == "__main__":

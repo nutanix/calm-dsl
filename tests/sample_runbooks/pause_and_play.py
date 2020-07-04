@@ -3,7 +3,7 @@ Calm DSL Sample Runbook used for testing runbook pause and play
 
 """
 
-from calm.dsl.runbooks import runbook
+from calm.dsl.runbooks import runbook, runbook_json
 from calm.dsl.runbooks import RunbookTask as Task
 
 
@@ -23,7 +23,7 @@ def DslPausePlayRunbook():
 
 
 def main():
-    print(DslPausePlayRunbook.runbook.json_dumps(pprint=True))
+    print(runbook_json(DslPausePlayRunbook))
 
 
 if __name__ == "__main__":

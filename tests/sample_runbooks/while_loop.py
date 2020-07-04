@@ -3,7 +3,7 @@ Calm DSL Sample Runbook with while loop task
 
 """
 
-from calm.dsl.runbooks import runbook
+from calm.dsl.runbooks import runbook, runbook_json
 from calm.dsl.runbooks import RunbookTask as Task, Status
 
 
@@ -18,7 +18,7 @@ def DslWhileLoopRunbook():
 
 
 def main():
-    print(DslWhileLoopRunbook.runbook.json_dumps(pprint=True))
+    print(runbook_json(DslWhileLoopRunbook))
 
 
 if __name__ == "__main__":

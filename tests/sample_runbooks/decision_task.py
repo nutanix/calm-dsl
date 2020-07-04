@@ -3,7 +3,7 @@ Calm DSL Decision Task Example
 
 """
 
-from calm.dsl.runbooks import runbook
+from calm.dsl.runbooks import runbook, runbook_json
 from calm.dsl.runbooks import RunbookTask as Task
 from calm.dsl.runbooks import CalmEndpoint as Endpoint, ref
 
@@ -27,7 +27,7 @@ def DslDecisionRunbook():
 
 
 def main():
-    print(DslDecisionRunbook.runbook.json_dumps(pprint=True))
+    print(runbook_json(DslDecisionRunbook))
 
 
 if __name__ == "__main__":

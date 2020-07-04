@@ -3,7 +3,7 @@ Calm DSL Sample Runbook with runbook variable usecase
 
 """
 
-from calm.dsl.runbooks import runbook
+from calm.dsl.runbooks import runbook, runbook_json
 from calm.dsl.runbooks import RunbookTask as Task, RunbookVariable as Variable
 
 
@@ -20,7 +20,7 @@ def DslRunbookWithVariables():
 
 
 def main():
-    print(DslRunbookWithVariables.runbook.json_dumps(pprint=True))
+    print(runbook_json(DslRunbookWithVariables))
 
 
 if __name__ == "__main__":

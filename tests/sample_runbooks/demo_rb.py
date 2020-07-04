@@ -4,7 +4,7 @@ Calm DSL Demo 1
 """
 
 from calm.dsl.runbooks import read_local_file, basic_cred
-from calm.dsl.runbooks import runbook
+from calm.dsl.runbooks import runbook, runbook_json
 from calm.dsl.runbooks import RunbookTask as Task, RunbookVariable as Variable
 from calm.dsl.runbooks import CalmEndpoint as Endpoint
 
@@ -46,7 +46,7 @@ def DslDemoRunbook(endpoints=[DslLinuxEndpoint]):
 
 
 def main():
-    print(DslDemoRunbook.runbook.json_dumps(pprint=True))
+    print(runbook_json(DslDemoRunbook))
 
 
 if __name__ == "__main__":

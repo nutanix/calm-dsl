@@ -224,3 +224,11 @@ class runbook(metaclass=DescriptorType):
 
 class serial:
     __calm_type__ = "serial"
+
+
+# helper function to get runbook json dump
+def runbook_json(DslRunbook):
+
+    if not isinstance(DslRunbook, runbook):
+        raise TypeError("{} is not of type {}".format(DslRunbook, runbook))
+    return DslRunbook.runbook.json_dumps(pprint=True)
