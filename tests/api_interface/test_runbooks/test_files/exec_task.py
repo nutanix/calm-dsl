@@ -1,10 +1,10 @@
 """
 Calm Runbook Sample for running http tasks
 """
-from calm.dsl.builtins import read_local_file
-from calm.dsl.builtins import runbook
-from calm.dsl.builtins import RunbookTask as Task, basic_cred
-from calm.dsl.builtins import CalmEndpoint
+from calm.dsl.runbooks import read_local_file
+from calm.dsl.runbooks import runbook
+from calm.dsl.runbooks import RunbookTask as Task, basic_cred
+from calm.dsl.runbooks import CalmEndpoint as Endpoint
 
 linux_ip = read_local_file(".tests/runbook_tests/vm_ip")
 windows_ip = read_local_file(".tests/runbook_tests/windows_vm_ip")
@@ -15,13 +15,13 @@ CRED_PASSWORD = read_local_file(".tests/runbook_tests/password")
 LinuxCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
 WindowsCred = basic_cred(CRED_WINDOWS_USERNAME, CRED_PASSWORD, name="endpoint_cred")
 
-linux_endpoint = CalmEndpoint.Linux.ip([linux_ip], cred=LinuxCred)
-linux_endpoint_with_wrong_cred = CalmEndpoint.Linux.ip([linux_ip], cred=WindowsCred)
-multiple_linux_endpoint = CalmEndpoint.Linux.ip([linux_ip, linux_ip], cred=LinuxCred)
+linux_endpoint = Endpoint.Linux.ip([linux_ip], cred=LinuxCred)
+linux_endpoint_with_wrong_cred = Endpoint.Linux.ip([linux_ip], cred=WindowsCred)
+multiple_linux_endpoint = Endpoint.Linux.ip([linux_ip, linux_ip], cred=LinuxCred)
 
-windows_endpoint = CalmEndpoint.Windows.ip([windows_ip], cred=WindowsCred)
-windows_endpoint_with_wrong_cred = CalmEndpoint.Windows.ip([windows_ip], cred=LinuxCred)
-multiple_windows_endpoint = CalmEndpoint.Windows.ip(
+windows_endpoint = Endpoint.Windows.ip([windows_ip], cred=WindowsCred)
+windows_endpoint_with_wrong_cred = Endpoint.Windows.ip([windows_ip], cred=LinuxCred)
+multiple_windows_endpoint = Endpoint.Windows.ip(
     [windows_ip, windows_ip], cred=WindowsCred
 )
 

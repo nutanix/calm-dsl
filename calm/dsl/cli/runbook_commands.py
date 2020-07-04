@@ -163,7 +163,7 @@ def _compile_runbook_command(runbook_file, out):
     compile_runbook_command(runbook_file, out)
 
 
-@run.command("runbook")
+@run.command("runbook", feature_min_version="3.0.0")
 @click.argument("runbook_name", required=False)
 @click.option(
     "--file",

@@ -3,8 +3,8 @@ Calm DSL Sample Runbook used for testing runbook pause and play
 
 """
 
-from calm.dsl.builtins import runbook
-from calm.dsl.builtins import RunbookTask as Task
+from calm.dsl.runbooks import runbook
+from calm.dsl.runbooks import RunbookTask as Task
 
 
 code = '''print "Start"

@@ -1140,7 +1140,6 @@ class CalmTask:
 
 
 class RunbookTask(CalmTask):
-
     class Decision:
         def __new__(cls, *args, **kwargs):
             raise TypeError("'{}' is not callable".format(cls.__name__))

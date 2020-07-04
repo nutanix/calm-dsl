@@ -3,9 +3,9 @@ Calm DSL Sample Runbook used for testing runbook update
 
 """
 
-from calm.dsl.builtins import runbook
-from calm.dsl.builtins import RunbookTask as Task
-from calm.dsl.builtins import read_local_file, basic_cred
+from calm.dsl.runbooks import runbook
+from calm.dsl.runbooks import RunbookTask as Task
+from calm.dsl.runbooks import read_local_file, basic_cred
 
 
 code = '''print "Start"

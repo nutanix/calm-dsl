@@ -4,10 +4,10 @@ Calm DSL While Task Example
 """
 import json
 
-from calm.dsl.builtins import runbook
-from calm.dsl.builtins import RunbookTask as Task, Auth, Status
-from calm.dsl.builtins import CalmEndpoint
-from calm.dsl.builtins import read_local_file, basic_cred
+from calm.dsl.runbooks import runbook
+from calm.dsl.runbooks import RunbookTask as Task, Auth, Status
+from calm.dsl.runbooks import CalmEndpoint as Endpoint
+from calm.dsl.runbooks import read_local_file, basic_cred
 
 linux_ip = read_local_file(".tests/runbook_tests/vm_ip")
 windows_ip = read_local_file(".tests/runbook_tests/windows_vm_ip")
@@ -21,9 +21,9 @@ AUTH_PASSWORD = read_local_file(".tests/runbook_tests/auth_password")
 LinuxCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="linux_cred")
 WindowsCred = basic_cred(CRED_WINDOWS_USERNAME, CRED_PASSWORD, name="windows_cred")
 
-linux_endpoint = CalmEndpoint.Linux.ip([linux_ip], cred=LinuxCred)
-windows_endpoint = CalmEndpoint.Windows.ip([windows_ip], cred=WindowsCred)
-http_endpoint = CalmEndpoint.HTTP(
+linux_endpoint = Endpoint.Linux.ip([linux_ip], cred=LinuxCred)
+windows_endpoint = Endpoint.Windows.ip([windows_ip], cred=WindowsCred)
+http_endpoint = Endpoint.HTTP(
     URL, verify=False, auth=Auth.Basic(AUTH_USERNAME, AUTH_PASSWORD)
 )
 

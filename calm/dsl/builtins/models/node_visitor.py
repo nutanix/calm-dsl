@@ -4,7 +4,7 @@ import uuid
 from .task import meta
 from .entity import EntityType
 from .task import CalmTask, RunbookTask, TaskType
-from .variable import CalmVariable, VariableType
+from .variable import CalmVariable, RunbookVariable, VariableType
 
 
 def handle_meta_create(node, func_globals):
@@ -73,6 +73,8 @@ class GetCallNodes(ast.NodeVisitor):
         if (
             eval(compile(ast.Expression(sub_node), "", "eval"), self._globals)
             == CalmVariable
+            or eval(compile(ast.Expression(sub_node), "", "eval"), self._globals)
+            == RunbookVariable
         ):
             if len(node.targets) > 1:
                 raise ValueError(

@@ -3,10 +3,10 @@ Calm DSL Decision Task Example
 
 """
 
-from calm.dsl.builtins import runbook
-from calm.dsl.builtins import RunbookTask as Task
-from calm.dsl.builtins import CalmEndpoint
-from calm.dsl.builtins import read_local_file, basic_cred
+from calm.dsl.runbooks import runbook
+from calm.dsl.runbooks import RunbookTask as Task
+from calm.dsl.runbooks import CalmEndpoint as Endpoint
+from calm.dsl.runbooks import read_local_file, basic_cred
 
 linux_ip = read_local_file(".tests/runbook_tests/vm_ip")
 windows_ip = read_local_file(".tests/runbook_tests/windows_vm_ip")
@@ -17,8 +17,8 @@ CRED_PASSWORD = read_local_file(".tests/runbook_tests/password")
 LinuxCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="linux_cred")
 WindowsCred = basic_cred(CRED_WINDOWS_USERNAME, CRED_PASSWORD, name="windows_cred")
 
-linux_endpoint = CalmEndpoint.Linux.ip([linux_ip], cred=LinuxCred)
-windows_endpoint = CalmEndpoint.Windows.ip([windows_ip], cred=WindowsCred)
+linux_endpoint = Endpoint.Linux.ip([linux_ip], cred=LinuxCred)
+windows_endpoint = Endpoint.Windows.ip([windows_ip], cred=WindowsCred)
 
 
 @runbook

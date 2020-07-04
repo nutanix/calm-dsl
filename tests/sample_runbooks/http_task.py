@@ -1,16 +1,16 @@
 """
 Calm Runbook Sample for running http tasks
 """
-from calm.dsl.builtins import read_local_file
-from calm.dsl.builtins import runbook
-from calm.dsl.builtins import RunbookTask as Task
-from calm.dsl.builtins import CalmEndpoint, Auth
+from calm.dsl.runbooks import read_local_file
+from calm.dsl.runbooks import runbook
+from calm.dsl.runbooks import RunbookTask as Task
+from calm.dsl.runbooks import CalmEndpoint as Endpoint, Auth
 
 AUTH_USERNAME = read_local_file(".tests/runbook_tests/auth_username")
 AUTH_PASSWORD = read_local_file(".tests/runbook_tests/auth_password")
 URL = read_local_file(".tests/runbook_tests/url")
 
-endpoint = CalmEndpoint.HTTP(
+endpoint = Endpoint.HTTP(
     URL, verify=True, auth=Auth.Basic(AUTH_USERNAME, AUTH_PASSWORD)
 )
 

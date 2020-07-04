@@ -1455,7 +1455,6 @@ class CalmVariable:
 
 
 class RunbookVariable(CalmVariable):
-
     class TaskInput:
         def __new__(cls, *args, **kwargs):
             return _task_input(*args, **kwargs)

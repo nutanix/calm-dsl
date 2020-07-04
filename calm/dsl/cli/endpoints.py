@@ -9,7 +9,7 @@ import click
 from prettytable import PrettyTable
 from black import format_file_in_place, WriteBack, FileMode
 
-from calm.dsl.builtins import Endpoint, create_endpoint_payload
+from calm.dsl.runbooks import Endpoint, create_endpoint_payload
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
 

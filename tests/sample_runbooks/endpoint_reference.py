@@ -2,16 +2,16 @@
 Calm Runbook Sample for running task on already existing endpoint
 """
 
-from calm.dsl.builtins import runbook
-from calm.dsl.builtins import RunbookTask as Task
-from calm.dsl.builtins import CalmEndpoint, ref
+from calm.dsl.runbooks import runbook
+from calm.dsl.runbooks import RunbookTask as Task
+from calm.dsl.runbooks import CalmEndpoint as Endpoint, ref
 
 
 @runbook
 def DslEndpointReference():
     "Runbook Service example"
     Task.Exec.ssh(
-        name="Task1", script='echo "hello"', target=ref(CalmEndpoint("DslEndpoint"))
+        name="Task1", script='echo "hello"', target=ref(Endpoint("DslEndpoint"))
     )
 
 

@@ -3,10 +3,10 @@ Calm Runbook Sample for running http tasks
 """
 import json
 
-from calm.dsl.builtins import read_local_file
-from calm.dsl.builtins import runbook
-from calm.dsl.builtins import RunbookTask as Task, RunbookVariable as Variable
-from calm.dsl.builtins import CalmEndpoint, Auth
+from calm.dsl.runbooks import read_local_file
+from calm.dsl.runbooks import runbook
+from calm.dsl.runbooks import RunbookTask as Task, RunbookVariable as Variable
+from calm.dsl.runbooks import CalmEndpoint as Endpoint, Auth
 from calm.dsl.config import get_config
 from utils import read_test_config, change_uuids
 
@@ -17,14 +17,14 @@ URL = read_local_file(".tests/runbook_tests/url")
 config = get_config()
 TEST_URL = "https://{}:9440/".format(config["SERVER"]["pc_ip"])
 
-endpoint = CalmEndpoint.HTTP(
+endpoint = Endpoint.HTTP(
     URL, verify=False, auth=Auth.Basic(AUTH_USERNAME, AUTH_PASSWORD)
 )
-endpoint_with_tls_verify = CalmEndpoint.HTTP(
+endpoint_with_tls_verify = Endpoint.HTTP(
     URL, verify=True, auth=Auth.Basic(AUTH_USERNAME, AUTH_PASSWORD)
 )
-endpoint_with_incorrect_auth = CalmEndpoint.HTTP(URL, verify=False)
-endpoint_without_auth = CalmEndpoint.HTTP(TEST_URL)
+endpoint_with_incorrect_auth = Endpoint.HTTP(URL, verify=False)
+endpoint_without_auth = Endpoint.HTTP(TEST_URL)
 
 
 def get_http_task_runbook():
