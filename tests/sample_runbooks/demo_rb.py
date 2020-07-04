@@ -20,7 +20,7 @@ DslLinuxEndpoint = CalmEndpoint.Linux.ip([VM_IP], cred=Cred)
 def DslDemoRunbook(endpoints=[DslLinuxEndpoint]):
     "Runbook Service example"
     size_limit = Variable.Simple.int("102400", runtime=True)  # noqa
-    Task.Input(name="InputTask", inputs=[Variable.TaskInput("log_path")])
+    log_path = Variable.Simple("/logs", runtime=True) # noqa
     with Task.Decision.ssh(name="DecisionTask", script="cd @@{log_path}@@") as d:
 
         if d.ok:

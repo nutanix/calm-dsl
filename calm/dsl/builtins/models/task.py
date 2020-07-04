@@ -1140,13 +1140,6 @@ class CalmTask:
 
 
 class RunbookTask(CalmTask):
-    class Input:
-        def __new__(cls, timeout=500, name=None, inputs=[]):
-            return input_task(timeout=timeout, name=name, inputs=inputs)
-
-    class Confirm:
-        def __new__(cls, timeout=500, name=None):
-            return confirm_task(timeout=timeout, name=name)
 
     class Decision:
         def __new__(cls, *args, **kwargs):
@@ -1177,10 +1170,6 @@ class RunbookTask(CalmTask):
                     "Valid Exit Conditions for loop are 'Status.SUCCESS/Status.FAILURE/Status.DONT_CARE'."
                 )
             return while_loop(name=name, child_tasks=child_tasks, attrs=attrs)
-
-    class Parallel:
-        def __new__(cls, name=None, child_tasks=[], attrs={}):
-            return parallel_task(name=name, child_tasks=child_tasks, attrs=attrs)
 
     class HTTP:
         def __new__(
