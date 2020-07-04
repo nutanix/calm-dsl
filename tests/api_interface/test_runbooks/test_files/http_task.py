@@ -6,7 +6,7 @@ import json
 from calm.dsl.runbooks import read_local_file
 from calm.dsl.runbooks import runbook
 from calm.dsl.runbooks import RunbookTask as Task, RunbookVariable as Variable
-from calm.dsl.runbooks import CalmEndpoint as Endpoint, Auth
+from calm.dsl.runbooks import CalmEndpoint as Endpoint
 from calm.dsl.config import get_config
 from utils import read_test_config, change_uuids
 
@@ -18,10 +18,10 @@ config = get_config()
 TEST_URL = "https://{}:9440/".format(config["SERVER"]["pc_ip"])
 
 endpoint = Endpoint.HTTP(
-    URL, verify=False, auth=Auth.Basic(AUTH_USERNAME, AUTH_PASSWORD)
+    URL, verify=False, auth=Endpoint.Auth(AUTH_USERNAME, AUTH_PASSWORD)
 )
 endpoint_with_tls_verify = Endpoint.HTTP(
-    URL, verify=True, auth=Auth.Basic(AUTH_USERNAME, AUTH_PASSWORD)
+    URL, verify=True, auth=Endpoint.Auth(AUTH_USERNAME, AUTH_PASSWORD)
 )
 endpoint_with_incorrect_auth = Endpoint.HTTP(URL, verify=False)
 endpoint_without_auth = Endpoint.HTTP(TEST_URL)

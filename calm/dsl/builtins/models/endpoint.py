@@ -72,7 +72,7 @@ def _exec_create(
     kwargs = {
         "name": name,
         "type": ep_type,
-        "attrs": {"values": ip_list, "value_type": value_type, "port": port,},
+        "attrs": {"values": ip_list, "value_type": value_type, "port": port},
     }
     if connection_protocol:
         kwargs["attrs"]["connection_protocol"] = connection_protocol
@@ -111,6 +111,15 @@ def windows_endpoint_ip(
     )
 
 
+def _basic_auth(username, password):
+    secret = {"attrs": {"is_secret_modified": True}, "value": password}
+    auth = {}
+    auth["type"] = "basic"
+    auth["username"] = username
+    auth["password"] = secret
+    return auth
+
+
 class CalmEndpoint:
     def __new__(cls, name):
         kwargs = {"name": name, "attrs": {}}
@@ -133,24 +142,6 @@ class CalmEndpoint:
         def __new__(cls, *args, **kwargs):
             return _http_endpoint(*args, **kwargs)
 
-
-class Auth:
-    def __new__(cls, name):
-        raise TypeError("'{}' is not callable".format(cls.__name__))
-
-    def Basic(username, password):
-        secret = {"attrs": {"is_secret_modified": True}, "value": password}
-        auth = {}
-        auth["type"] = "basic"
-        auth["username"] = username
-        auth["password"] = secret
-        return auth
-
-    def BasicCred(cred):
-        if not isinstance(cred, CredentialType):
-            raise TypeError("{} should of type CredentialType".format(cred))
-
-        auth = {}
-        auth["type"] = "basic_with_cred"
-        auth["credential_local_reference"] = cred.get_ref()
-        return auth
+    class Auth:
+        def __new__(cls, *args, **kwargs):
+            return _basic_auth(*args, **kwargs)
