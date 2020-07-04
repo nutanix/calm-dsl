@@ -637,6 +637,33 @@ def run_runbook(screen, client, runbook_uuid, watch, input_data={}, payload={}):
     screen.refresh()
 
 
+def watch_runbook_execution(runlog_uuid):
+
+    client = get_api_client()
+
+    def render_runbook_execution(screen):
+        screen.clear()
+        screen.refresh()
+
+        def poll_runlog_status():
+            return client.runbook.poll_action_run(runlog_uuid)
+
+        should_continue = poll_action(poll_runlog_status, get_runlog_status(screen))
+        if not should_continue:
+            exit(-1)
+        res, err = client.runbook.poll_action_run(runlog_uuid)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        response = res.json()
+        runbook = response["status"]["runbook_json"]["resources"]["runbook"]
+
+        screen.refresh()
+        watch_runbook(runlog_uuid, runbook, screen)
+        screen.wait_for_input(10.0)
+
+    Display.wrapper(render_runbook_execution, True)
+
+
 def watch_runbook(runlog_uuid, runbook, screen, poll_interval=10, input_data={}):
 
     client = get_api_client()

@@ -2,7 +2,7 @@ import click
 
 from calm.dsl.tools import get_logging_handle
 
-from .main import compile, get, describe, delete, run, create, update, format
+from .main import compile, get, describe, delete, run, create, update, format, watch
 from .runbooks import (
     get_runbook_list,
     create_runbook_command,
@@ -13,6 +13,7 @@ from .runbooks import (
     delete_runbook,
     format_runbook_command,
     compile_runbook_command,
+    watch_runbook_execution,
 )
 
 LOG = get_logging_handle(__name__)
@@ -39,7 +40,7 @@ def _get_runbook_list(name, filter_by, limit, offset, quiet, all_items):
     get_runbook_list(name, filter_by, limit, offset, quiet, all_items)
 
 
-@get.command("execution_history", feature_min_version="3.0.0")
+@get.command("runbook_executions", feature_min_version="3.0.0")
 @click.option(
     "--name",
     "-n",
@@ -200,3 +201,11 @@ def _run_runbook_command(
         runbook_file=runbook_file,
         input_file=input_file,
     )
+
+
+@watch.command("runbook_execution", feature_min_version="3.0.0")
+@click.argument("runlog_uuid", required=True)
+def _watch_runbook_execution(runlog_uuid):
+    """Watch the runbook execution using given runlog UUID"""
+
+    watch_runbook_execution(runlog_uuid)
