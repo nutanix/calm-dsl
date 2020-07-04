@@ -808,6 +808,34 @@ def delete_runbook(runbook_names):
         LOG.info("Runbook {} deleted".format(runbook_name))
 
 
+def pause_runbook_execution(runlog_uuid):
+
+    client = get_api_client()
+    res, err = client.runbook.pause(runlog_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    response = res.json()
+    state = response['status']['state']
+    if state in RUNLOG.TERMINAL_STATES:
+        LOG.warning("Runbook Execution is in terminal state {}.".format(state))
+    else:
+        LOG.info("Pause triggered for the given runbook execution.")
+
+
+def play_runbook_execution(runlog_uuid):
+
+    client = get_api_client()
+    res, err = client.runbook.play(runlog_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    response = res.json()
+    state = response['status']['state']
+    if state == RUNLOG.STATUS.PAUSED:
+        LOG.info("Play triggered for the given paused runbook execution.")
+    else:
+        LOG.warning("Runbook execution is not in paused state, {}.".format(state))
+
+
 def poll_action(poll_func, completion_func, poll_interval=10, **kwargs):
     # Poll every 10 seconds on the runlog status, for 10 mins
     maxWait = 10 * 60

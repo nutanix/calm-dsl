@@ -2,7 +2,7 @@ import click
 
 from calm.dsl.tools import get_logging_handle
 
-from .main import compile, get, describe, delete, run, create, update, format, watch
+from .main import compile, get, describe, delete, run, create, update, format, watch, pause, play
 from .runbooks import (
     get_runbook_list,
     create_runbook_command,
@@ -14,6 +14,8 @@ from .runbooks import (
     format_runbook_command,
     compile_runbook_command,
     watch_runbook_execution,
+    play_runbook_execution,
+    pause_runbook_execution,
 )
 
 LOG = get_logging_handle(__name__)
@@ -209,3 +211,19 @@ def _watch_runbook_execution(runlog_uuid):
     """Watch the runbook execution using given runlog UUID"""
 
     watch_runbook_execution(runlog_uuid)
+
+
+@pause.command("runbook_execution", feature_min_version="3.0.0")
+@click.argument("runlog_uuid", required=True)
+def _pause_runbook_execution(runlog_uuid):
+    """Pause the running runbook execution"""
+
+    pause_runbook_execution(runlog_uuid)
+
+
+@play.command("runbook_execution", feature_min_version="3.0.0")
+@click.argument("runlog_uuid", required=True)
+def _play_runbook_execution(runlog_uuid):
+    """Play the paused runbook execution"""
+
+    play_runbook_execution(runlog_uuid)

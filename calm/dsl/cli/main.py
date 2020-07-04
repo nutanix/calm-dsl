@@ -304,7 +304,19 @@ def run():
 
 @main.group(cls=FeatureFlagGroup)
 def watch():
-    """Track actions running on apps"""
+    """Track actions running on apps or runbook executions"""
+    pass
+
+
+@main.group(cls=FeatureFlagGroup)
+def pause():
+    """Pause running runbook executions"""
+    pass
+
+
+@main.group(cls=FeatureFlagGroup)
+def play():
+    """Play paused runbook executions"""
     pass
 
 
