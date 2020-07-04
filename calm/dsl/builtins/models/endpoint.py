@@ -120,11 +120,17 @@ def _basic_auth(username, password):
     return auth
 
 
+def existing_endpoint(name):
+    kwargs = {"name": name, "attrs": {}}
+    bases = (Endpoint,)
+    return EndpointType(name, bases, kwargs)
+
+
 class CalmEndpoint:
-    def __new__(cls, name):
-        kwargs = {"name": name, "attrs": {}}
-        bases = (Endpoint,)
-        return EndpointType(name, bases, kwargs)
+    def __new__(cls, *args, **kwargs):
+        raise TypeError("'{}' is not callable".format(cls.__name__))
+
+    use_existing = existing_endpoint
 
     class Linux:
         def __new__(cls, *args, **kwargs):
