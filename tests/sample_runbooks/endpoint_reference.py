@@ -11,7 +11,9 @@ from calm.dsl.runbooks import CalmEndpoint as Endpoint, ref
 def DslEndpointReference():
     "Runbook Service example"
     Task.Exec.ssh(
-        name="Task1", script='echo "hello"', target=ref(Endpoint.use_existing("DslEndpoint"))
+        name="Task1",
+        script='echo "hello"',
+        target=ref(Endpoint.use_existing("DslEndpoint")),
     )
 
 

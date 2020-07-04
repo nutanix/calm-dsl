@@ -12,7 +12,9 @@ from calm.dsl.runbooks import CalmEndpoint as Endpoint, ref
 def DslDecisionRunbook():
     "Runbook Service example"
     with Task.Decision.ssh(
-        name="DecisionTask", script="cat hell", target=ref(Endpoint.use_existing("DslEndpoint"))
+        name="DecisionTask",
+        script="cat hell",
+        target=ref(Endpoint.use_existing("DslEndpoint")),
     ) as d:
 
         if d.ok:
