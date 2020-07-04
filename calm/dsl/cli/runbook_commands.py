@@ -2,7 +2,19 @@ import click
 
 from calm.dsl.tools import get_logging_handle
 
-from .main import compile, get, describe, delete, run, create, update, format, watch, pause, play
+from .main import (
+    compile,
+    get,
+    describe,
+    delete,
+    run,
+    create,
+    update,
+    format,
+    watch,
+    pause,
+    play,
+)
 from .runbooks import (
     get_runbook_list,
     create_runbook_command,

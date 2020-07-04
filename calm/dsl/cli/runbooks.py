@@ -815,7 +815,7 @@ def pause_runbook_execution(runlog_uuid):
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
     response = res.json()
-    state = response['status']['state']
+    state = response["status"]["state"]
     if state in RUNLOG.TERMINAL_STATES:
         LOG.warning("Runbook Execution is in terminal state {}.".format(state))
     else:
@@ -829,7 +829,7 @@ def play_runbook_execution(runlog_uuid):
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
     response = res.json()
-    state = response['status']['state']
+    state = response["status"]["state"]
     if state == RUNLOG.STATUS.PAUSED:
         LOG.info("Play triggered for the given paused runbook execution.")
     else:
