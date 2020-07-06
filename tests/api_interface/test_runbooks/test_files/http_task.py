@@ -21,6 +21,7 @@ endpoint = CalmEndpoint.HTTP(URL, verify=False, auth=Auth.Basic(AUTH_USERNAME, A
 endpoint_with_tls_verify = CalmEndpoint.HTTP(URL, verify=True, auth=Auth.Basic(AUTH_USERNAME, AUTH_PASSWORD))
 endpoint_with_incorrect_auth = CalmEndpoint.HTTP(URL, verify=False)
 endpoint_without_auth = CalmEndpoint.HTTP(TEST_URL)
+endpoint_with_multiple_urls = CalmEndpoint.HTTP(["@@{base}@@/endpoints", "@@{base}@@/blueprints", "@@{base}@@/runbooks", "@@{base}@@/apps"], auth=Auth.Basic(AUTH_USERNAME, AUTH_PASSWORD))
 
 
 def get_http_task_runbook():
@@ -209,4 +210,20 @@ def HTTPRelativeURLWithMacro(endpoints=[endpoint]):
         content_type="application/json",
         status_mapping={200: True},
         target=ref(endpoint)
+    )
+
+
+@runbook
+def HTTPEndpointWithMultipleURLs(endpoints=[endpoint_with_multiple_urls]):
+
+    base = CalmVariable.Simple("https://{}:9440/api/nutanix/v3".format(config["SERVER"]["pc_ip"]))  # noqa
+    # Creating an endpoint with POST call
+    CalmTask.HTTP.endpoint(
+        "POST",
+        name="HTTPTask",
+        relative_url="/list",
+        body=json.dumps({}),
+        content_type="application/json",
+        status_mapping={200: True},
+        target=ref(endpoint_with_multiple_urls)
     )
