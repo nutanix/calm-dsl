@@ -26,9 +26,7 @@ def render_substrate_template(cls, vm_images=[]):
 
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__
-    user_attrs["description"] = cls.__doc__ or "{} Substrate description".format(
-        cls.__name__
-    )
+    user_attrs["description"] = cls.__doc__ or ""
 
     # Update substrate name map and gui name
     gui_display_name = getattr(cls, "display_name", cls.__name__)

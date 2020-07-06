@@ -18,9 +18,7 @@ def render_deployment_template(cls):
 
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__
-    user_attrs["description"] = cls.__doc__ or "{} Deployment description".format(
-        cls.__name__
-    )
+    user_attrs["description"] = cls.__doc__ or ""
 
     # Update deployment name map and gui name
     gui_display_name = getattr(cls, "display_name", "")
