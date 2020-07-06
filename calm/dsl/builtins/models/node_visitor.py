@@ -12,7 +12,7 @@ def handle_meta_create(node, func_globals):
     helper for create parsing tasks and creating meta
     """
 
-    node_visitor = GetCallNodes(func_globals, is_runbook=True)
+    node_visitor = GetCallNodes(func_globals, is_runbook=True, is_metatask_context=True)
     try:
         node_visitor.visit(node)
     except Exception as ex:
@@ -34,7 +34,9 @@ def handle_meta_create(node, func_globals):
 class GetCallNodes(ast.NodeVisitor):
 
     # TODO: Need to add validations for unsupported nodes.
-    def __init__(self, func_globals, target=None, is_runbook=False):
+    def __init__(
+        self, func_globals, target=None, is_runbook=False, is_metatask_context=False
+    ):
         self.task_list = []
         self.all_tasks = []
         self.variables = {}
@@ -43,6 +45,9 @@ class GetCallNodes(ast.NodeVisitor):
 
         # flag to check if this runbook is in context of RaaS, as decision, while, parallel tasks are supported only in RaaS
         self.is_runbook = is_runbook
+
+        # flag to check if tasks are in context of metatask
+        self.is_metatask = is_metatask_context
 
     def get_objects(self):
         return self.all_tasks, self.variables, self.task_list
@@ -95,7 +100,6 @@ class GetCallNodes(ast.NodeVisitor):
         return self.generic_visit(node)
 
     def visit_With(self, node):
-        parallel_tasks = []
         if len(node.items) > 1:
             raise ValueError(
                 "Only a single context is supported in 'with' statements inside the action."
@@ -109,6 +113,7 @@ class GetCallNodes(ast.NodeVisitor):
             and hasattr(context, "__calm_type__")
             and context.__calm_type__ == "parallel"
         ):
+            parallel_tasks = []
             for statement in node.body:
                 if not isinstance(statement.value, ast.Call):
                     raise ValueError(
@@ -120,17 +125,50 @@ class GetCallNodes(ast.NodeVisitor):
                     self.all_tasks.append(task)
             self.task_list.append(parallel_tasks)
 
-        # for running tasks serially
+        # for parallel tasks in runbooks
         elif (
             self.is_runbook
             and hasattr(context, "__calm_type__")
-            and context.__calm_type__ == "serial"
+            and context.__calm_type__ == "parallel"
         ):
-            serialBody = ast.FunctionDef(body=node.body, col_offset=node.col_offset)
-            meta_task, tasks, variables = handle_meta_create(serialBody, self._globals)
-            self.all_tasks.extend([meta_task] + tasks)
-            self.variables.update(variables)
-            self.task_list.append(meta_task)
+            if self.is_metatask:
+                raise ValueError(
+                    "parallel is not supported in runbooks under decision or loop task context."
+                )
+
+            if not node.items[0].optional_vars:
+                raise ValueError(
+                    "Parallel must be used in the format `with parallel as p`"
+                )
+            var = node.items[0].optional_vars.id
+            parallel_tasks = []
+
+            for statement in node.body:
+                if (
+                    isinstance(statement, ast.FunctionDef)
+                    and statement.name == "branch"
+                    and len(statement.args.args) == 1
+                    and node.body[0].args.args[0].arg == var
+                ):
+
+                    _node_visitor = GetCallNodes(self._globals, is_runbook=True)
+                    try:
+                        _node_visitor.visit(statement)
+                    except Exception as ex:
+                        raise ex
+                    tasks, variables, task_list = _node_visitor.get_objects()
+                    if len(task_list) == 0:
+                        raise ValueError(
+                            "Atleast one task is required under parallel branch"
+                        )
+                    parallel_tasks.append(task_list)
+                    self.all_tasks.extend(tasks)
+                    self.variables.update(variables)
+                else:
+                    raise ValueError("Unsupported statements under paralle context.")
+
+            if len(parallel_tasks) > 0:
+                self.task_list.append(parallel_tasks)
 
         # for decision tasks
         elif (
@@ -250,28 +288,6 @@ class GetCallNodes(ast.NodeVisitor):
 
             context.attrs["success_child_reference"] = success_path.get_ref()
             context.attrs["failure_child_reference"] = failure_path.get_ref()
-            self.all_tasks.append(context)
-            self.task_list.append(context)
-
-        # for parallel tasks
-        elif (
-            self.is_runbook
-            and isinstance(context, TaskType)
-            and context.type == "PARALLEL"
-        ):
-            parallelBody = ast.FunctionDef(body=node.body, col_offset=node.col_offset)
-            _node_visitor = GetCallNodes(self._globals, is_runbook=True)
-            try:
-                _node_visitor.visit(parallelBody)
-            except Exception as ex:
-                raise ex
-            tasks, variables, task_list = _node_visitor.get_objects()
-            self.all_tasks.extend(tasks)
-            self.variables.update(variables)
-
-            for task in task_list:
-                context.child_tasks_local_reference_list.append(task.get_ref())
-
             self.all_tasks.append(context)
             self.task_list.append(context)
 

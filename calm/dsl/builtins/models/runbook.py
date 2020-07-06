@@ -121,21 +121,41 @@ class runbook(metaclass=DescriptorType):
             raise
         tasks, variables, task_list = node_visitor.get_objects()
         edges = []
-        for from_tasks, to_tasks in zip(task_list, task_list[1:]):
-            if not isinstance(from_tasks, list):
-                from_tasks = [from_tasks]
+        child_tasks = []
+
+        def create_edges(_task_list, from_task=None):
+
+            if len(_task_list) == 0:
+                return
+            to_tasks = _task_list[0]
             if not isinstance(to_tasks, list):
                 to_tasks = [to_tasks]
-            for from_task in from_tasks:
-                for to_task in to_tasks:
-                    edges.append((from_task.get_ref(), to_task.get_ref()))
+            for to_task in to_tasks:
+                if isinstance(to_task, list):
+                    create_edges(to_task, from_task=from_task)
+                else:
+                    child_tasks.append(to_task)
+                    if from_task:
+                        edges.append((from_task.get_ref(), to_task.get_ref()))
 
-        child_tasks = []
-        for child_task in task_list:
-            if not isinstance(child_task, list):
-                child_task = [child_task]
-            child_tasks.extend(child_task)
+            for from_tasks, to_tasks in zip(_task_list, _task_list[1:]):
+                if not isinstance(from_tasks, list):
+                    from_tasks = [from_tasks]
+                if not isinstance(to_tasks, list):
+                    to_tasks = [to_tasks]
+                for from_task in from_tasks:
+                    for to_task in to_tasks:
+                        if isinstance(from_task, list):
+                            raise ValueError(
+                                "Tasks are not supported after parallel in runbooks"
+                            )
+                        if isinstance(to_task, list) and len(from_tasks) == 1:
+                            create_edges(to_task, from_task=from_task)
+                        else:
+                            child_tasks.append(to_task)
+                            edges.append((from_task.get_ref(), to_task.get_ref()))
 
+        create_edges(task_list)
         # Note - Server checks for name uniqueness in runbooks across actions
         # Generate unique names using class name and func name.
         prefix = (
@@ -220,10 +240,6 @@ class runbook(metaclass=DescriptorType):
 
         else:
             return self.user_runbook
-
-
-class serial:
-    __calm_type__ = "serial"
 
 
 # helper function to get runbook json dump
