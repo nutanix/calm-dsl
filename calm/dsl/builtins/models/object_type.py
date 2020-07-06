@@ -81,43 +81,27 @@ class ObjectDict(EntityDict):
         for k, v in attrs.items():
             validator, is_array = validator_dict[k]
 
-            if hasattr(validator, "__kind__"):
-                entity_type = validator.__kind__
-
-            else:
+            if getattr(validator, "__is_object__", False):
                 # Case for recursive Object Dict
                 entity_type = validator
 
-            new_value = None
+            else:
+                entity_type = validator.get_kind()
+
+            # No decompilation is needed for entity_type = str, dict, int etc.
             if hasattr(entity_type, "decompile"):
                 if is_array:
                     new_value = []
-                    if not isinstance(v, list):
-                        raise Exception("Value not of type list")
-
                     for val in v:
                         new_value.append(entity_type.decompile(val))
 
                 else:
                     new_value = entity_type.decompile(v)
 
-            else:
-                # validation for existing classes(str, dict etc.)
-                # validation for existing classes(str, dict etc.)
-                if is_array:
-                    new_value = []
-                    for val in v:
-                        if not isinstance(val, entity_type):
-                            raise TypeError(
-                                "Value {} is not of type {}".format(val, entity_type)
-                            )
+                attrs[k] = new_value
 
-                        new_value.append(entity_type(val))
-
-                else:
-                    new_value = entity_type(v)
-
-            attrs[k] = new_value
+            # validate the new data
+            validator.validate(attrs[k], is_array)
 
         return attrs
 

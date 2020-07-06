@@ -118,6 +118,7 @@ def render_substrate_template(cls, vm_images=[]):
 
 def get_provider_spec_string(spec, filename, provider_type, vm_images):
 
+    # TODO add switch to use YAML_file/Helper_class for ahv provider
     if provider_type == "AHV_VM":
         disk_list = spec["resources"]["disk_list"]
 

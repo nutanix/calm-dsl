@@ -316,7 +316,7 @@ class EntityType(EntityTypeBase):
         entity_obj = {}
 
         dsl_name = cls.__name__
-        ui_name = getattr(cls, "display_name", dsl_name)
+        ui_name = getattr(cls, "display_name", None) or dsl_name
 
         entity_obj = {"dsl_name": dsl_name, "Action": {}}
         types = EntityTypeBase.get_entity_types()
@@ -410,66 +410,50 @@ class EntityType(EntityTypeBase):
         display_map = getattr(mcls, "__display_map__")
         display_map = {v: k for k, v in display_map.items()}
 
+        user_attrs = {}
         for k, v in cdict.items():
             # Case for __name__ and __doc__ attributes of class
             if k.startswith("__") and k.endswith("__"):
                 attrs.setdefault(k, v)
                 continue
 
-            attrs.setdefault(display_map[k], v)
+            user_attrs.setdefault(display_map[k], v)
 
         validator_dict = getattr(mcls, "__validator_dict__")
-        for k, v in attrs.items():
-            if k.startswith("__") and k.endswith("__"):
-                continue
-
+        for k, v in user_attrs.items():
             validator, is_array = validator_dict[k]
 
-            if hasattr(validator, "__kind__"):
-                entity_type = validator.__kind__
+            # Getting the metaclass for creation of class
+            if getattr(validator, "__is_object__", False):
+                entity_type = validator
+
+            else:
+                entity_type = validator.get_kind()
+                # TODO check if pure dict can be supplied
                 if entity_type.__name__ == "ProviderSpecType":
                     from .provider_spec import provider_spec  # TODO improve it
 
-                    attrs[k] = provider_spec(v)
+                    user_attrs[k] = provider_spec(v)
                     continue
 
-            else:
-                # Object Dict
-                entity_type = validator
-
-            new_value = None
+            # No decompilation is needed for entity_type = str, dict, int etc.
             if hasattr(entity_type, "decompile"):
                 if is_array:
                     new_value = []
-                    if not isinstance(v, list):
-                        raise TypeError("Value {} is not of type list".format(v))
-
                     for val in v:
                         new_value.append(
                             entity_type.decompile(val, context=cur_context)
                         )
-
                 else:
                     new_value = entity_type.decompile(v, context=cur_context)
 
-            else:
-                # validation for existing classes(str, dict etc.)
-                if is_array:
-                    new_value = []
-                    for val in v:
-                        if not isinstance(val, entity_type):
-                            raise TypeError(
-                                "Value {} is not of type {}".format(val, entity_type)
-                            )
+                user_attrs[k] = new_value
 
-                        new_value.append(entity_type(val))
+            # validate the new data
+            validator.validate(user_attrs[k], is_array)
 
-                else:
-                    new_value = entity_type(v)
-
-            attrs[k] = new_value
-
-        # Creating class
+        # Merging dsl_attrs("__name__", "__doc__" etc.) and user_attrs
+        attrs.update(user_attrs)
         name = attrs.get("__name__", ui_name)
         return mcls(name, (Entity,), attrs)
 

@@ -1,4 +1,4 @@
-from .entity import EntityType, Entity
+from .entity import EntityType, Entity, EntityTypeBase
 from .validator import PropertyValidator
 
 from .task import dag
@@ -132,7 +132,10 @@ class PackageType(EntityType):
                 "description": cls.__doc__,
                 "options": option_data,
             }
-            from .vm_disk_package import VmDiskPackageType
+            types = EntityTypeBase.get_entity_types()
+            VmDiskPackageType = types.get("VmDiskPackage", None)
+            if not VmDiskPackageType:
+                raise ModuleNotFoundError("VmDiskPackage Module not found.")
 
             cls = VmDiskPackageType.decompile(cdict)
         return cls

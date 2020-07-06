@@ -493,23 +493,18 @@ def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_s
     )
     del bp_payload["status"]
 
+    client = get_api_client()
+    blueprint_uuid = bp_payload["metadata"]["uuid"]
+    res, err = client.blueprint.export_file(blueprint_uuid)
+    if err:
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
+
+    bp_payload = res.json()
     blueprint = bp_payload["spec"]["resources"]
     blueprint_name = get_valid_identifier(bp_name or name)
     blueprint_dir = bp_name or "mpi_bp_{}_v{}".format(blueprint_name, version)
     blueprint_description = bp_payload["spec"].get("description", "")
-
-    # Vmware template
-    vm_img_uuid_name_map = {}
-    LOG.debug("Decompiling vmware downloadable image templates")
-    for pkg in blueprint["package_definition_list"]:
-        if pkg["type"] == "SUBSTRATE_IMAGE":
-            vm_img_uuid_name_map[pkg["uuid"]] = get_valid_identifier(pkg["name"])
-
-    for substrate in blueprint["substrate_definition_list"]:
-        if substrate["type"] == "VMWARE_VM":
-            template_id = substrate["create_spec"]["template"]
-            if template_id in list(vm_img_uuid_name_map.keys()):
-                substrate["create_spec"]["template"] = vm_img_uuid_name_map[template_id]
 
     LOG.info("Decompiling marketplace blueprint {}".format(name))
     bp_cls = BlueprintType.decompile(blueprint)

@@ -191,7 +191,7 @@ class SubstrateType(EntityType):
 
         provider_spec = cls.provider_spec
         if isinstance(provider_spec, AhvVmType):
-            ui_name = getattr(cls, "display_name", cls.__name__)
+            ui_name = getattr(cls, "display_name", None) or cls.__name__
             sub_metadata = get_dsl_metadata_map([cls.__schema_name__, ui_name])
 
             vm_dsl_name = provider_spec.__name__
