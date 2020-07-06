@@ -4,7 +4,7 @@ import uuid
 
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import RUNLOG
-from tests.sample_runbooks import DslPausePlayRunbook
+from tests.sample_runbooks import DslSimpleRunbook
 from utils import upload_runbook, poll_runlog_status
 
 
@@ -12,7 +12,7 @@ class TestRunbooks:
     @pytest.mark.runbook
     @pytest.mark.ces
     @pytest.mark.regression
-    @pytest.mark.parametrize("Runbook", [DslPausePlayRunbook])
+    @pytest.mark.parametrize("Runbook", [DslSimpleRunbook])
     def test_rb_pause_and_play(self, Runbook):
         """ test_pause_and_play """
 

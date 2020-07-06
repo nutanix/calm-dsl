@@ -8,8 +8,8 @@ from calm.dsl.runbooks import CalmEndpoint as Endpoint, ref
 
 
 @runbook
-def DslEndpointReference():
-    "Runbook Service example"
+def DslExistingEndpoint():
+    "Runbook Service example for using exisiting endpoint"
     Task.Exec.ssh(
         name="Task1",
         script='echo "hello"',
@@ -18,7 +18,7 @@ def DslEndpointReference():
 
 
 def main():
-    print(runbook_json(DslEndpointReference))
+    print(runbook_json(DslExistingEndpoint))
 
 
 if __name__ == "__main__":

@@ -13,7 +13,7 @@ print "End"'''
 
 
 @runbook
-def DslPausePlayRunbook():
+def DslSimpleRunbook():
     "Runbook Service example"
     Task.Exec.escript(name="Task1", script=code)
     Task.Exec.escript(name="Task2", script=code)
@@ -23,7 +23,7 @@ def DslPausePlayRunbook():
 
 
 def main():
-    print(runbook_json(DslPausePlayRunbook))
+    print(runbook_json(DslSimpleRunbook))
 
 
 if __name__ == "__main__":

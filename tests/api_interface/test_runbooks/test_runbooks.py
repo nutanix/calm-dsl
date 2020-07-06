@@ -5,7 +5,7 @@ import uuid
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import RUNLOG
 from calm.dsl.builtins import create_endpoint_payload
-from tests.sample_runbooks import DslPausePlayRunbook
+from tests.sample_runbooks import DslSimpleRunbook
 from utils import (
     upload_runbook,
     update_runbook,
@@ -175,7 +175,7 @@ class TestRunbooks:
 
     @pytest.mark.runbook
     @pytest.mark.regression
-    @pytest.mark.parametrize("Runbook", [DslPausePlayRunbook])
+    @pytest.mark.parametrize("Runbook", [DslSimpleRunbook])
     def test_rb_update(self, Runbook):
 
         client = get_api_client()
@@ -249,7 +249,7 @@ class TestRunbooks:
         rb_name = "Test_" + str(uuid.uuid4())[-10:]
 
         # creating the runbook
-        rb = upload_runbook(client, rb_name, DslPausePlayRunbook)
+        rb = upload_runbook(client, rb_name, DslSimpleRunbook)
         rb_state = rb["status"]["state"]
         rb_uuid = rb["metadata"]["uuid"]
         print(">> Runbook state: {}".format(rb_state))
