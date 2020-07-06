@@ -17,8 +17,9 @@ DslLinuxEndpoint = Endpoint.Linux.ip([VM_IP], cred=Cred)
 
 
 @runbook
-def DslDemoRunbook(endpoints=[DslLinuxEndpoint]):
-    "Runbook Service example"
+def DslLogsCleanupRunbook(endpoints=[DslLinuxEndpoint]):
+
+    "Example runbook for cleaning up logs on a machine"
     size_limit = Variable.Simple.int("102400", runtime=True)  # noqa
     log_path = Variable.Simple("/logs", runtime=True)  # noqa
     with Task.Decision.ssh(name="DecisionTask", script="cd @@{log_path}@@") as d:
@@ -46,7 +47,7 @@ def DslDemoRunbook(endpoints=[DslLinuxEndpoint]):
 
 
 def main():
-    print(runbook_json(DslDemoRunbook))
+    print(runbook_json(DslLogsCleanupRunbook))
 
 
 if __name__ == "__main__":
