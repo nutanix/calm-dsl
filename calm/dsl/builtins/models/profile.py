@@ -13,6 +13,12 @@ class ProfileType(EntityType):
     def get_task_target(cls):
         return
 
+    def compile(cls):
+        cdict = super().compile()
+        # description attribute in profile gives bp launch error: https://jira.nutanix.com/browse/CALM-19380
+        cdict.pop("description", None)
+        return cdict
+
 
 class ProfileValidator(PropertyValidator, openapi_type="app_profile"):
     __default__ = None

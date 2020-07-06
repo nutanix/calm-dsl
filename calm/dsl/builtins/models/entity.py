@@ -379,6 +379,14 @@ class EntityType(EntityTypeBase):
         # Adding description
         cdict["__doc__"] = cdict.get("description", "")
 
+        # Remove NULL and empty string data
+        attrs = {}
+        for k, v in cdict.items():
+            if v is not None and v != "":
+                attrs[k] = v
+
+        return attrs
+
     @classmethod
     def decompile(mcls, cdict, context=[]):
 
@@ -395,7 +403,7 @@ class EntityType(EntityTypeBase):
         elif schema_name and ui_name and schema_name != "Blueprint":
             cur_context.extend([schema_name, ui_name])
 
-        mcls.pre_decompile(cdict, context=cur_context)
+        cdict = mcls.pre_decompile(cdict, context=cur_context)
 
         # Convert attribute names to x-calm-dsl-display-name, if given
         attrs = {}
@@ -403,12 +411,9 @@ class EntityType(EntityTypeBase):
         display_map = {v: k for k, v in display_map.items()}
 
         for k, v in cdict.items():
+            # Case for __name__ and __doc__ attributes of class
             if k.startswith("__") and k.endswith("__"):
                 attrs.setdefault(k, v)
-                continue
-
-            # case for deployment editables and some other keys
-            elif not display_map.get(k, None):
                 continue
 
             attrs.setdefault(display_map[k], v)

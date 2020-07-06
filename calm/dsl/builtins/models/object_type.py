@@ -52,19 +52,28 @@ class ObjectDict(EntityDict):
                 ret[self.display_map[key]] = value
         return ret
 
+    def pre_decompile(mcls, cdict, context):
+
+        # Remove NULL and empty string data
+        attrs = {}
+        for k, v in cdict.items():
+            if v is not None and v != "":
+                attrs[k] = v
+
+        return attrs
+
     def decompile(cls, cdict, context=[]):
 
         if not cdict:
             return cdict
+
+        cdict = cls.pre_decompile(cdict, context=context)
         attrs = {}
         display_map = copy.deepcopy(cls.display_map)
         display_map = {v: k for k, v in display_map.items()}
 
         # reversing display map values
         for k, v in cdict.items():
-            # case for uuid, editables
-            if not display_map.get(k, None):
-                continue
             attrs.setdefault(display_map[k], v)
 
         # recursive decompile
