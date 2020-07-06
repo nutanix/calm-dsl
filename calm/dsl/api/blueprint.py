@@ -344,7 +344,5 @@ class BlueprintAPI(ResourceAPI):
 
     def export_file(self, uuid):
         return self.connection._call(
-            self.EXPORT_FILE.format(uuid),
-            verify=False,
-            method=REQUEST.METHOD.GET
+            self.EXPORT_FILE.format(uuid), verify=False, method=REQUEST.METHOD.GET
         )

@@ -201,9 +201,9 @@ class SubstrateType(EntityType):
                 vm_display_name: {"dsl_name": vm_dsl_name}
             }
 
-        update_dsl_metadata_map(
-            cls.__schema_name__, entity_name=ui_name, entity_obj=sub_metadata
-        )
+            update_dsl_metadata_map(
+                cls.__schema_name__, entity_name=ui_name, entity_obj=sub_metadata
+            )
 
     def get_task_target(cls):
         return cls.get_ref()
