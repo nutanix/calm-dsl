@@ -1,5 +1,6 @@
 from .entity import EntityType, Entity, EntityTypeBase, EntityDict
 from .validator import PropertyValidator
+from .provider_spec import provider_spec
 from .client_attrs import update_dsl_metadata_map, get_dsl_metadata_map
 
 
@@ -204,6 +205,14 @@ class SubstrateType(EntityType):
             update_dsl_metadata_map(
                 cls.__schema_name__, entity_name=ui_name, entity_obj=sub_metadata
             )
+
+    @classmethod
+    def pre_decompile(mcls, cdict, context=[]):
+
+        # Handle provider_spec
+        cdict = super().pre_decompile(cdict, context=context)
+        cdict["create_spec"] = provider_spec(cdict["create_spec"])
+        return cdict
 
     def get_task_target(cls):
         return cls.get_ref()

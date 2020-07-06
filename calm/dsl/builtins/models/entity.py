@@ -419,6 +419,9 @@ class EntityType(EntityTypeBase):
 
             user_attrs.setdefault(display_map[k], v)
 
+        types = EntityTypeBase.get_entity_types()
+        ProviderSpecType = types.get("ProviderSpec", None)
+
         validator_dict = getattr(mcls, "__validator_dict__")
         for k, v in user_attrs.items():
             validator, is_array = validator_dict[k]
@@ -429,11 +432,8 @@ class EntityType(EntityTypeBase):
 
             else:
                 entity_type = validator.get_kind()
-                # TODO check if pure dict can be supplied
-                if entity_type.__name__ == "ProviderSpecType":
-                    from .provider_spec import provider_spec  # TODO improve it
-
-                    user_attrs[k] = provider_spec(v)
+                if getattr(entity_type, "__schema_name__", "") == "ProviderSpec":
+                    # Case already handled in Substrate.pre_decompile
                     continue
 
             # No decompilation is needed for entity_type = str, dict, int etc.
