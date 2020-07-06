@@ -21,8 +21,11 @@ Useful commands (execute from top-level directory):
   3. calm get runbooks --name <runbook_name>
   4. calm describe runbook <runbook_name>
   5. calm run runbook <runbook_name> -w
-  6. calm get run_history
+  6. calm get runbook_executions
   7. calm delete runbook <runbook_name>
+  8. calm watch runbook_execution <RUNLOG_UUID>
+  9. calm pause runbook_execution <RUNLOG_UUID>
+  10. calm play runbook_execution <RUNLOG_UUID>
 
 """
 
@@ -37,7 +40,7 @@ LinuxEndpoint = Endpoint.Linux.ip(["{{vm_ip}}"], cred=Cred)
 
 
 @runbook
-def {{runbook_name}}(endpoints=[LinuxEndpoint], default_target=ref(LinuxEndpoint)):
+def {{runbook_name}}(endpoints=[LinuxEndpoint]):
     """ Sample runbook for {{runbook_name}} """
 
     # Defining size limit for logs cleanup
@@ -45,9 +48,9 @@ def {{runbook_name}}(endpoints=[LinuxEndpoint], default_target=ref(LinuxEndpoint
     log_path = Variable.Simple.string("/var/log", runtime=True)  # noqa
 
     # Decision Task to check if logs folder is present or not
-    with Task.Decision.ssh(name="DecisionTask", script="cd @@{log_path}@@") as val:
+    with Task.Decision.ssh(name="DecisionTask", script="cd @@{log_path}@@") as d:
 
-        if val.true:
+        if d.exit_code == 0:
             Task.SetVariable.ssh(
                 name="StoreLogsSizeBeforeCleanup",
                 script="""echo "size_before_cleanup="$(du -d 0 @@{log_path}@@ | awk  "{print $1}")""",
@@ -62,10 +65,10 @@ def {{runbook_name}}(endpoints=[LinuxEndpoint], default_target=ref(LinuxEndpoint
             Task.Exec.escript(
                 name="FinalOutput",
                 script="print 'logs size changed from @@{size_before_cleanup}@@ => @@{size_after_cleanup}@@'",
-                target=ref(LinuxEndpoint),
+                target=ref(endpoints[0]),
             )
 
-        if val.false:
+        if d.exit_code == 1:
             Task.Exec.escript(
                 script='''print "Given Logs Directory doesn't exists"'''
             )

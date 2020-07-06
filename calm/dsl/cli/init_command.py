@@ -227,7 +227,7 @@ def init_dsl_bp(bp_name, dir_name, provider_type):
     init_bp(bp_name, dir_name, provider_type)
 
 
-@init.command("runbook")
+@init.command("runbook", feature_min_version="3.0.0")
 @click.option("--name", "-n", "runbook_name", default="Hello", help="Name of runbook")
 @click.option(
     "--dir_name", "-d", default=os.getcwd(), help="Directory path for the runbook"
