@@ -10,6 +10,7 @@ from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import read_provider_spec, read_local_file, vm_disk_package
 from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC, AhvVmResources, AhvVm
+from calm.dsl.builtins import readiness_probe
 
 CRED_USERNAME = read_local_file(".tests/username")
 CRED_PASSWORD = read_local_file(".tests/password")
@@ -35,7 +36,8 @@ class MySQLService(Service):
 
     @action
     def __create__():
-        # Step 1
+        "System action for creating an application"
+
         CalmTask.Exec.ssh(name="Task1", script="echo 'Service create in ENV=@@{ENV}@@'")
 
 
@@ -85,6 +87,15 @@ class AHVVMforMySQL(Substrate):
 
     display_name = "ahv vm for sql"
     provider_spec = MyAhvVm1
+
+    readiness_probe = readiness_probe(
+        connection_type="SSH",
+        disabled=False,
+        retries="5",
+        connection_port=22,
+        address="@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
+        delay_secs="0",
+    )
 
 
 class MySQLDeployment(Deployment):
@@ -157,6 +168,15 @@ class AHVVMforPHP(Substrate):
 
     display_name = "ahv vm for php substrate"
     provider_spec = MyAhvVm2
+
+    readiness_probe = readiness_probe(
+        connection_type="SSH",
+        disabled=False,
+        retries="5",
+        connection_port=22,
+        address="@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
+        delay_secs="0",
+    )
 
 
 class PHPDeployment(Deployment):
