@@ -300,7 +300,7 @@ An endpoint is either one of the following type.
 
 ## Runbooks
 
-Runbook is a framework to automate routine tasks which pan across multiple applications or not tied to any application. A runbook is a collection of tasks that you can define to run sequentially or parallelly at different endpoints.
+Runbook is a framework to automate routine tasks which pan across multiple applications or not tied to any application. A runbook is a collection of tasks that you can define to run sequentially or parallelly at different [endpoints](#endpoints).
 
 You can define the following types of tasks in a runbook -
 
