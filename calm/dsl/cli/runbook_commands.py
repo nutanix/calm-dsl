@@ -14,6 +14,7 @@ from .main import (
     watch,
     pause,
     play,
+    abort,
 )
 from .runbooks import (
     get_runbook_list,
@@ -28,6 +29,7 @@ from .runbooks import (
     watch_runbook_execution,
     play_runbook_execution,
     pause_runbook_execution,
+    abort_runbook_execution,
 )
 
 LOG = get_logging_handle(__name__)
@@ -239,3 +241,11 @@ def _play_runbook_execution(runlog_uuid):
     """Play the paused runbook execution"""
 
     play_runbook_execution(runlog_uuid)
+
+
+@abort.command("runbook_execution", feature_min_version="3.0.0")
+@click.argument("runlog_uuid", required=True)
+def _abort_runbook_execution(runlog_uuid):
+    """Abort the runbook execution"""
+
+    abort_runbook_execution(runlog_uuid)

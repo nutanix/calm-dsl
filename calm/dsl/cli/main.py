@@ -320,6 +320,12 @@ def play():
     pass
 
 
+@main.group(cls=FeatureFlagGroup)
+def abort():
+    """Abort runbook executions"""
+    pass
+
+
 @create.command("provider_spec")
 @click.option(
     "--type",

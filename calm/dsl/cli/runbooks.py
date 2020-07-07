@@ -836,6 +836,36 @@ def play_runbook_execution(runlog_uuid):
         LOG.warning("Runbook execution is not in paused state, {}.".format(state))
 
 
+def abort_runbook_execution(runlog_uuid):
+
+    client = get_api_client()
+    res, err = client.runbook.poll_action_run(runlog_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    response = res.json()
+    state = response["status"]["state"]
+    if state in RUNLOG.TERMINAL_STATES:
+        LOG.warning("Runbook Execution is in terminal state: {}".format(state))
+        sys.exit(0)
+    res, err = client.runbook.abort(runlog_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    response = res.json()
+    state = response["status"]["state"]
+    LOG.info("Abort triggered for the given runbook execution.")
+    config = get_config()
+    pc_ip = config["SERVER"]["pc_ip"]
+    pc_port = config["SERVER"]["pc_port"]
+    link = "https://{}:{}/console/#page/explore/calm/runbooks/runlogs/{}".format(
+        pc_ip, pc_port, runlog_uuid
+    )
+    stdout_dict = {
+        "link": link,
+        "state": state,
+    }
+    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+
+
 def poll_action(poll_func, completion_func, poll_interval=10, **kwargs):
     # Poll every 10 seconds on the runlog status, for 10 mins
     maxWait = 10 * 60
