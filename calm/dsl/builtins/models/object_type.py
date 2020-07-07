@@ -2,6 +2,9 @@ import copy
 
 from .validator import PropertyValidator
 from .entity import EntityDict
+from calm.dsl.tools import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 class ObjectDict(EntityDict):
@@ -74,6 +77,10 @@ class ObjectDict(EntityDict):
 
         # reversing display map values
         for k, v in cdict.items():
+            if k not in display_map:
+                LOG.warning("Additional Property ({}) found".format(k))
+                continue
+
             attrs.setdefault(display_map[k], v)
 
         # recursive decompile

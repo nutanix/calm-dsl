@@ -417,6 +417,10 @@ class EntityType(EntityTypeBase):
                 attrs.setdefault(k, v)
                 continue
 
+            elif k not in display_map:
+                LOG.warning("Additional Property ({}) found".format(k))
+                continue
+
             user_attrs.setdefault(display_map[k], v)
 
         types = EntityTypeBase.get_entity_types()
