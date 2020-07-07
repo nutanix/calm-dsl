@@ -383,7 +383,7 @@ properties:
     type: string
   type:
     type: string
-    enum: [PROVISION_AZURE_VM]
+    enum: [PROVISION_AZURE_VM, '']
     default: PROVISION_AZURE_VM
   resources:
     {{ azureResources() | indent(4) }}
