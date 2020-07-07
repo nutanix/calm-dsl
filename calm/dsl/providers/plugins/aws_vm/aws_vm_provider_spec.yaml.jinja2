@@ -187,8 +187,7 @@ properties:
     type: string
   type:
     type: string
-    enum: 
-    - PROVISION_AWS_VM
+    enum: [PROVISION_AWS_VM, '']
     default: PROVISION_AWS_VM
   resources:
     {{ awsResource() | indent(4) }}
