@@ -148,14 +148,18 @@ class GetCallNodes(ast.NodeVisitor):
                         "Only a single context is supported in 'with' statements inside the parallel."
                     )
                 statementContext = eval(
-                    compile(ast.Expression(statement.items[0].context_expr), "", "eval"),
+                    compile(
+                        ast.Expression(statement.items[0].context_expr), "", "eval"
+                    ),
                     _globals,
                 )
                 if (
                     hasattr(statementContext, "__calm_type__")
                     and statementContext.__calm_type__ == "branch"
                 ):
-                    statementBody = ast.FunctionDef(body=statement.body, col_offset=statement.col_offset)
+                    statementBody = ast.FunctionDef(
+                        body=statement.body, col_offset=statement.col_offset
+                    )
                     _node_visitor = GetCallNodes(self._globals, is_runbook=True)
                     try:
                         _node_visitor.visit(statementBody)
@@ -170,7 +174,9 @@ class GetCallNodes(ast.NodeVisitor):
                     self.all_tasks.extend(tasks)
                     self.variables.update(variables)
                 else:
-                    raise ValueError("Only with branch() contexts are supported under parallel context.")
+                    raise ValueError(
+                        "Only with branch() contexts are supported under parallel context."
+                    )
 
             if len(parallel_tasks) > 0:
                 self.task_list.append(parallel_tasks)
