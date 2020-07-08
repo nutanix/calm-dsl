@@ -3,7 +3,8 @@ Calm DSL Sample Runbook used for testing runbook pause and play
 
 """
 
-from calm.dsl.runbooks import runbook, runbook_json, parallel
+from calm.dsl.runbooks import parallel, branch
+from calm.dsl.runbooks import runbook, runbook_json
 from calm.dsl.runbooks import RunbookTask as Task
 
 
@@ -17,16 +18,16 @@ def DslParallelRunbook():
     "Runbook Service example"
 
     Task.Exec.escript(name="root", script=code)
-    with parallel as p:  # noqa
+    with parallel() as p:
 
-        def branch(p):
+        with branch(p):
             Task.Exec.escript(name="Task1", script=code)
 
-        def branch(p):  # noqa
+        with branch(p):
             Task.Exec.escript(name="Task2", script=code)
             Task.Exec.escript(name="Task3", script=code)
 
-        def branch(p):  # noqa
+        with branch(p):
             Task.Exec.escript(name="Task4", script=code)
             Task.Exec.escript(name="Task5", script=code)
 

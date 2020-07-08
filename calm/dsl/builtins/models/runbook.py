@@ -248,3 +248,10 @@ def runbook_json(DslRunbook):
     if not isinstance(DslRunbook, runbook):
         raise TypeError("{} is not of type {}".format(DslRunbook, runbook))
     return DslRunbook.runbook.json_dumps(pprint=True)
+
+
+class branch:
+    __calm_type__ = "branch"
+
+    def __new__(cls, *args, **kwargs):
+        return cls

@@ -2,7 +2,7 @@ from calm.dsl.builtins import *  # noqa
 
 from calm.dsl.builtins.models.variable import RunbookVariable
 from calm.dsl.builtins.models.task import RunbookTask, Status
-from calm.dsl.builtins.models.runbook import Runbook, runbook, runbook_json
+from calm.dsl.builtins.models.runbook import Runbook, runbook, runbook_json, branch
 
 from calm.dsl.builtins.models.endpoint import Endpoint, _endpoint, CalmEndpoint
 
@@ -17,6 +17,7 @@ __all__ = [
     "Runbook",
     "runbook",
     "runbook_json",
+    "branch",
     "Endpoint",
     "_endpoint",
     "CalmEndpoint",

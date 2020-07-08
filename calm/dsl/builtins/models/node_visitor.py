@@ -135,25 +135,30 @@ class GetCallNodes(ast.NodeVisitor):
                 raise ValueError(
                     "parallel is not supported in runbooks under decision or loop task context."
                 )
+            _globals = self._globals.copy()
+            if node.items[0].optional_vars:
+                var = node.items[0].optional_vars.id
+                _globals.update({var: "var"})
 
-            if not node.items[0].optional_vars:
-                raise ValueError(
-                    "Parallel must be used in the format `with parallel as p`"
-                )
-            var = node.items[0].optional_vars.id
             parallel_tasks = []
 
             for statement in node.body:
+                if len(statement.items) > 1:
+                    raise ValueError(
+                        "Only a single context is supported in 'with' statements inside the parallel."
+                    )
+                statementContext = eval(
+                    compile(ast.Expression(statement.items[0].context_expr), "", "eval"),
+                    _globals,
+                )
                 if (
-                    isinstance(statement, ast.FunctionDef)
-                    and statement.name == "branch"
-                    and len(statement.args.args) == 1
-                    and node.body[0].args.args[0].arg == var
+                    hasattr(statementContext, "__calm_type__")
+                    and statementContext.__calm_type__ == "branch"
                 ):
-
+                    statementBody = ast.FunctionDef(body=statement.body, col_offset=statement.col_offset)
                     _node_visitor = GetCallNodes(self._globals, is_runbook=True)
                     try:
-                        _node_visitor.visit(statement)
+                        _node_visitor.visit(statementBody)
                     except Exception as ex:
                         raise ex
                     tasks, variables, task_list = _node_visitor.get_objects()
@@ -165,7 +170,7 @@ class GetCallNodes(ast.NodeVisitor):
                     self.all_tasks.extend(tasks)
                     self.variables.update(variables)
                 else:
-                    raise ValueError("Unsupported statements under paralle context.")
+                    raise ValueError("Only with branch() contexts are supported under parallel context.")
 
             if len(parallel_tasks) > 0:
                 self.task_list.append(parallel_tasks)
