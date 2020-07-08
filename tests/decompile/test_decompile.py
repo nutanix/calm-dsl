@@ -8,8 +8,8 @@ from calm.dsl.builtins import (
 )
 from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
-from calm.dsl.builtins import read_provider_spec, read_local_file, vm_disk_package
-from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC, AhvVmResources, AhvVm
+from calm.dsl.builtins import read_local_file, vm_disk_package
+from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmResources, AhvVm
 from calm.dsl.builtins import readiness_probe
 
 CRED_USERNAME = read_local_file(".tests/username")

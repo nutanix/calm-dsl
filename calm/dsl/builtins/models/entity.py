@@ -423,9 +423,6 @@ class EntityType(EntityTypeBase):
 
             user_attrs.setdefault(display_map[k], v)
 
-        types = EntityTypeBase.get_entity_types()
-        ProviderSpecType = types.get("ProviderSpec", None)
-
         validator_dict = getattr(mcls, "__validator_dict__")
         for k, v in user_attrs.items():
             validator, is_array = validator_dict[k]

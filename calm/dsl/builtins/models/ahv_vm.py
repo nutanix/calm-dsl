@@ -1,5 +1,3 @@
-import copy
-
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .provider_spec import ProviderSpecType
