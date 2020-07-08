@@ -156,7 +156,7 @@ class PackageValidator(PropertyValidator, openapi_type="app_package"):
 
 
 def package(**kwargs):
-    name = kwargs.get("display_name", None) or kwargs.get("name", None)
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return PackageType(name, bases, kwargs)
 

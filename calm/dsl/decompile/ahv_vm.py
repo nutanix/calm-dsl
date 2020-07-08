@@ -18,8 +18,8 @@ def render_ahv_vm(cls, boot_config):
     user_attrs["name"] = vm_name
 
     # Update service name map and gui name
-    gui_display_name = getattr(cls, "display_name", "")
-    if gui_display_name and gui_display_name != vm_name:
+    gui_display_name = getattr(cls, "name", "") or vm_name
+    if gui_display_name != vm_name:
         user_attrs["gui_display_name"] = gui_display_name
 
     # render resources template

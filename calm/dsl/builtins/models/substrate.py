@@ -192,11 +192,11 @@ class SubstrateType(EntityType):
 
         provider_spec = cls.provider_spec
         if isinstance(provider_spec, AhvVmType):
-            ui_name = getattr(cls, "display_name", None) or cls.__name__
+            ui_name = getattr(cls, "name", "") or cls.__name__
             sub_metadata = get_dsl_metadata_map([cls.__schema_name__, ui_name])
 
             vm_dsl_name = provider_spec.__name__
-            vm_display_name = provider_spec.display_name or vm_dsl_name
+            vm_display_name = getattr(provider_spec, "name", "") or vm_dsl_name
 
             sub_metadata[AhvVmType.__schema_name__] = {
                 vm_display_name: {"dsl_name": vm_dsl_name}
@@ -224,7 +224,7 @@ class SubstrateValidator(PropertyValidator, openapi_type="app_substrate"):
 
 
 def substrate(**kwargs):
-    name = kwargs.get("display_name", None) or kwargs.get("name", None)
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return SubstrateType(name, bases, kwargs)
 

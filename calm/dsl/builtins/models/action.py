@@ -228,11 +228,11 @@ class action(metaclass=DescriptorType):
         self.user_runbook.variables = [variable for variable in variables.values()]
 
         # System action names
-        # Extract action name from display_name parameter
+        # Extract action name from `name` parameter
         sig = inspect.signature(self.user_func)
-        display_name = sig.parameters.get("display_name", None)
-        if display_name and display_name.default != self.action_name:
-            action_name = display_name.default
+        gui_display_name = sig.parameters.get("name", None)
+        if gui_display_name and gui_display_name.default != self.action_name:
+            action_name = gui_display_name.default
         else:
             action_name = self.action_name
 

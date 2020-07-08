@@ -31,7 +31,7 @@ Era_Disk = vm_disk_package(
 class MySQLService(Service):
     """Sample mysql service"""
 
-    display_name = "my sql service"
+    name = "my sql service"
     ENV = CalmVariable.Simple("DEV")
 
     @action
@@ -44,7 +44,7 @@ class MySQLService(Service):
 class MySQLPackage(Package):
     """Example package with variables, install tasks and link to service"""
 
-    display_name = "my sql package"
+    name = "my sql package"
     foo = CalmVariable.Simple("bar")
     services = [ref(MySQLService)]
 
@@ -77,7 +77,7 @@ class MyAhvVm1Resources(AhvVmResources):
 
 class MyAhvVm1(AhvVm):
 
-    display_name = "@@{calm_application_name}@@-@@{calm_array_index}@@"
+    name = "@@{calm_application_name}@@-@@{calm_array_index}@@"
     resources = MyAhvVm1Resources
     categories = {"AppFamily": "Backup", "AppType": "Default"}
 
@@ -85,7 +85,7 @@ class MyAhvVm1(AhvVm):
 class AHVVMforMySQL(Substrate):
     """AHV VM config given by reading a spec file"""
 
-    display_name = "ahv vm for sql"
+    name = "ahv vm for sql"
     provider_spec = MyAhvVm1
 
     readiness_probe = readiness_probe(
@@ -101,7 +101,7 @@ class AHVVMforMySQL(Substrate):
 class MySQLDeployment(Deployment):
     """Sample deployment pulling in service and substrate references"""
 
-    display_name = "my sql deployment"
+    name = "my sql deployment"
     packages = [ref(MySQLPackage)]
     substrate = ref(AHVVMforMySQL)
 
@@ -109,12 +109,12 @@ class MySQLDeployment(Deployment):
 class PHPService(Service):
     """Sample PHP service with a custom action"""
 
-    display_name = "php service"
+    name = "php service"
     # Dependency to indicate PHP service is dependent on SQL service being up
     dependencies = [ref(MySQLService)]
 
     @action
-    def test_action(display_name="php service test_action"):
+    def test_action(name="php service test_action"):
 
         blah = CalmVariable.Simple("2")  # noqa
         CalmTask.Exec.ssh(name="Task2", script='echo "Hello"')
@@ -124,7 +124,7 @@ class PHPService(Service):
 class PHPPackage(Package):
     """Example PHP package with custom install task"""
 
-    display_name = "php package"
+    name = "php package"
 
     foo = CalmVariable.Simple("baz")
     services = [ref(PHPService)]
@@ -158,7 +158,7 @@ class MyAhvVm2Resources(AhvVmResources):
 
 class MyAhvVm2(AhvVm):
 
-    display_name = "@@{calm_application_name}@@-@@{calm_array_index}@@"
+    name = "@@{calm_application_name}@@-@@{calm_array_index}@@"
     resources = MyAhvVm2Resources
     categories = {"AppFamily": "Backup", "AppType": "Default"}
 
@@ -166,7 +166,7 @@ class MyAhvVm2(AhvVm):
 class AHVVMforPHP(Substrate):
     """AHV VM config given by reading a spec file"""
 
-    display_name = "ahv vm for php substrate"
+    name = "ahv vm for php substrate"
     provider_spec = MyAhvVm2
 
     readiness_probe = readiness_probe(
@@ -182,7 +182,7 @@ class AHVVMforPHP(Substrate):
 class PHPDeployment(Deployment):
     """Sample deployment pulling in service and substrate references"""
 
-    display_name = "php deplyment"
+    name = "php deplyment"
 
     packages = [ref(PHPPackage)]
     substrate = ref(AHVVMforPHP)
@@ -191,7 +191,7 @@ class PHPDeployment(Deployment):
 class DefaultProfile(Profile):
     """Sample application profile with variables"""
 
-    display_name = "default profile"
+    name = "default profile"
 
     nameserver = CalmVariable.Simple(DNS_SERVER, label="Local DNS resolver")
     foo1 = CalmVariable.Simple("bar1", runtime=True)
@@ -200,7 +200,7 @@ class DefaultProfile(Profile):
     deployments = [MySQLDeployment, PHPDeployment]
 
     @action
-    def test_profile_action(display_name="test profile action"):
+    def test_profile_action(name="test profile action"):
         """Sample description for a profile action"""
         CalmTask.Exec.ssh(name="Task5", script='echo "Hello"', target=ref(MySQLService))
         PHPService.test_action(name="Call Runbook Task")

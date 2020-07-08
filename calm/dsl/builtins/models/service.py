@@ -65,7 +65,7 @@ class ServiceValidator(PropertyValidator, openapi_type="app_service"):
 
 
 def service(**kwargs):
-    name = kwargs.get("display_name", None) or kwargs.get("name", None)
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return ServiceType(name, bases, kwargs)
 

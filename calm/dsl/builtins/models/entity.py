@@ -316,7 +316,7 @@ class EntityType(EntityTypeBase):
         entity_obj = {}
 
         dsl_name = cls.__name__
-        ui_name = getattr(cls, "display_name", None) or dsl_name
+        ui_name = getattr(cls, "name", "") or dsl_name
 
         entity_obj = {"dsl_name": dsl_name, "Action": {}}
         types = EntityTypeBase.get_entity_types()
@@ -328,10 +328,10 @@ class EntityType(EntityTypeBase):
             if isinstance(e_obj, ActionType):
                 user_func = ev.user_func
                 sig = inspect.signature(user_func)
-                display_name = sig.parameters.get("display_name", None)
+                gui_display_name = sig.parameters.get("name", None)
 
-                if display_name and display_name.default != ev.action_name:
-                    entity_obj["Action"][display_name.default] = {
+                if gui_display_name and gui_display_name.default != ev.action_name:
+                    entity_obj["Action"][gui_display_name.default] = {
                         "dsl_name": ev.action_name
                     }
 
@@ -496,21 +496,11 @@ class EntityType(EntityTypeBase):
         ref = types.get("Ref")
         if not ref:
             return
-        name = None
-        bases = (Entity,)
-        if ref:
-            attrs = {}
-            if isinstance(cls, ref):
-                # As ref objects do not have display_name attribute
-                attrs["name"] = getattr(cls, "name", "")
-            else:
-                # Service, Packages etc. classes have display_name attribute
-                attrs["name"] = getattr(cls, "display_name", "")
-
-            if not attrs["name"]:
-                attrs["name"] = str(cls)
-            attrs["kind"] = kind or getattr(cls, "__kind__")
-        return ref(name, bases, attrs)
+        attrs = {
+            "name": getattr(cls, "name", "") or cls.__name__,
+            "kind": kind or getattr(cls, "__kind__"),
+        }
+        return ref(None, (Entity,), attrs)
 
     def get_dict(cls):
         return json.loads(cls.json_dumps())

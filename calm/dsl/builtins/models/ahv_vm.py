@@ -106,7 +106,7 @@ class AhvVmValidator(PropertyValidator, openapi_type="vm_ahv"):
 
 
 def ahv_vm(**kwargs):
-    name = kwargs.get("display_name", None) or kwargs.get("name", None)
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return AhvVmType(name, bases, kwargs)
 
