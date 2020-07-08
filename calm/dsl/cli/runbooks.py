@@ -817,12 +817,23 @@ def pause_runbook_execution(runlog_uuid):
     response = res.json()
     state = response["status"]["state"]
     if state in RUNLOG.TERMINAL_STATES:
-        LOG.warning("Runbook Execution is in terminal state {}.".format(state))
+        LOG.warning("Runbook Execution is in terminal state.")
     else:
         LOG.info("Pause triggered for the given runbook execution.")
+    config = get_config()
+    pc_ip = config["SERVER"]["pc_ip"]
+    pc_port = config["SERVER"]["pc_port"]
+    link = "https://{}:{}/console/#page/explore/calm/runbooks/runlogs/{}".format(
+        pc_ip, pc_port, runlog_uuid
+    )
+    stdout_dict = {
+        "link": link,
+        "state": state,
+    }
+    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
 
-def play_runbook_execution(runlog_uuid):
+def resume_runbook_execution(runlog_uuid):
 
     client = get_api_client()
     res, err = client.runbook.play(runlog_uuid)
@@ -831,9 +842,20 @@ def play_runbook_execution(runlog_uuid):
     response = res.json()
     state = response["status"]["state"]
     if state == RUNLOG.STATUS.PAUSED:
-        LOG.info("Play triggered for the given paused runbook execution.")
+        LOG.info("Resume triggered for the given paused runbook execution.")
     else:
-        LOG.warning("Runbook execution is not in paused state, {}.".format(state))
+        LOG.warning("Runbook execution is not in paused state.")
+    config = get_config()
+    pc_ip = config["SERVER"]["pc_ip"]
+    pc_port = config["SERVER"]["pc_port"]
+    link = "https://{}:{}/console/#page/explore/calm/runbooks/runlogs/{}".format(
+        pc_ip, pc_port, runlog_uuid
+    )
+    stdout_dict = {
+        "link": link,
+        "state": state,
+    }
+    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
 
 def abort_runbook_execution(runlog_uuid):

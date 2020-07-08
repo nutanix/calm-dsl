@@ -36,7 +36,7 @@ Language design is black art, and building upon a well-established language is d
  - List runbook executions: `calm get runbook_executions`.
  - Watch runbook execution: `calm watch runbook_execution <runlog_id>`. It will display the runbook execution.
  - Pause runbook execution: `calm pause runbook_execution <runlog_id>`. It will pause the running runbook execution.
- - Play runbook execution: `calm play runbook_execution <runlog_id>`. It will play/resume the paused runbook execution.
+ - Resume runbook execution: `calm resume runbook_execution <runlog_id>`. It will play/resume the paused runbook execution.
  - Abort runbook execution: `calm abort runbook_execution <runlog_id>`. It will abort the runbook execution.
 
 ## Docker

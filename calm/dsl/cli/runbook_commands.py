@@ -13,7 +13,7 @@ from .main import (
     format,
     watch,
     pause,
-    play,
+    resume,
     abort,
 )
 from .runbooks import (
@@ -27,7 +27,7 @@ from .runbooks import (
     format_runbook_command,
     compile_runbook_command,
     watch_runbook_execution,
-    play_runbook_execution,
+    resume_runbook_execution,
     pause_runbook_execution,
     abort_runbook_execution,
 )
@@ -235,12 +235,12 @@ def _pause_runbook_execution(runlog_uuid):
     pause_runbook_execution(runlog_uuid)
 
 
-@play.command("runbook_execution", feature_min_version="3.0.0")
+@resume.command("runbook_execution", feature_min_version="3.0.0")
 @click.argument("runlog_uuid", required=True)
-def _play_runbook_execution(runlog_uuid):
-    """Play the paused runbook execution"""
+def _resume_runbook_execution(runlog_uuid):
+    """Resume the paused runbook execution"""
 
-    play_runbook_execution(runlog_uuid)
+    resume_runbook_execution(runlog_uuid)
 
 
 @abort.command("runbook_execution", feature_min_version="3.0.0")

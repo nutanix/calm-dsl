@@ -315,8 +315,8 @@ def pause():
 
 
 @main.group(cls=FeatureFlagGroup)
-def play():
-    """Play paused runbook executions"""
+def resume():
+    """resume paused runbook executions"""
     pass
 
 
