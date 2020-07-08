@@ -13,7 +13,7 @@ def DslWhileLoopRunbook():
     with Task.Loop(iterations=2, name="WhileTask", exit_condition=Status.SUCCESS):
         Task.Exec.escript(name="Task1", script="print 'Inside loop1 @@{iteration}@@'")
 
-    with Task.Loop(iterations=2):
+    with Task.Loop(iterations=2, name="WhileTask2"):
         Task.Exec.escript(name="Task2", script="print 'Inside loop2 @@{iteration}@@'")
 
 

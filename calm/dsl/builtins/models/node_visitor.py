@@ -7,7 +7,7 @@ from .task import CalmTask, RunbookTask, TaskType
 from .variable import CalmVariable, RunbookVariable, VariableType
 
 
-def handle_meta_create(node, func_globals):
+def handle_meta_create(node, func_globals, prefix=None):
     """
     helper for create parsing tasks and creating meta
     """
@@ -26,7 +26,9 @@ def handle_meta_create(node, func_globals):
         child_tasks.extend(child_task)
 
     # First create the meta
-    user_meta = meta(name=str(uuid.uuid4())[-10:] + "_meta", child_tasks=child_tasks)
+    if prefix is None:
+        prefix = str(uuid.uuid4())[-10:]
+    user_meta = meta(name=prefix + "_meta_task", child_tasks=child_tasks)
 
     return user_meta, tasks, variables
 
@@ -229,7 +231,7 @@ class GetCallNodes(ast.NodeVisitor):
                                 )
                             )
                         success_path, tasks, variables = handle_meta_create(
-                            statement, self._globals
+                            statement, self._globals, prefix=context.name + "_success"
                         )
                         self.all_tasks.extend([success_path] + tasks)
                         self.variables.update(variables)
@@ -242,7 +244,7 @@ class GetCallNodes(ast.NodeVisitor):
                                 )
                             )
                         failure_path, tasks, variables = handle_meta_create(
-                            statement, self._globals
+                            statement, self._globals, prefix=context.name + "_failure"
                         )
                         self.all_tasks.extend([failure_path] + tasks)
                         self.variables.update(variables)
@@ -264,7 +266,7 @@ class GetCallNodes(ast.NodeVisitor):
                         body=statement.body, col_offset=node.col_offset
                     )
                     success_path, tasks, variables = handle_meta_create(
-                        ifBody, self._globals
+                        ifBody, self._globals, prefix=context.name + "_success"
                     )
                     self.all_tasks.extend([success_path] + tasks)
                     self.variables.update(variables)
@@ -280,7 +282,7 @@ class GetCallNodes(ast.NodeVisitor):
                             body=statement.orelse, col_offset=node.col_offset
                         )
                         failure_path, tasks, variables = handle_meta_create(
-                            elseBody, self._globals
+                            elseBody, self._globals, prefix=context.name + "_success"
                         )
                         self.all_tasks.extend([failure_path] + tasks)
                         self.variables.update(variables)
@@ -309,7 +311,9 @@ class GetCallNodes(ast.NodeVisitor):
             and context.type == "WHILE_LOOP"
         ):
             whileBody = ast.FunctionDef(body=node.body, col_offset=node.col_offset)
-            meta_task, tasks, variables = handle_meta_create(whileBody, self._globals)
+            meta_task, tasks, variables = handle_meta_create(
+                whileBody, self._globals, prefix=context.name + "_loop"
+            )
             self.all_tasks.extend([meta_task] + tasks)
             self.variables.update(variables)
             context.child_tasks_local_reference_list.append(meta_task.get_ref())
