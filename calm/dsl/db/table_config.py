@@ -171,7 +171,15 @@ class AhvSubnetsCache(CacheTableBase):
         AhvObj = AhvVmProvider.get_api_obj()
 
         for e_name, e_uuid in account_name_uuid_map.items():
-            res = AhvObj.subnets(account_uuid=e_uuid)
+            try:
+                res = AhvObj.subnets(account_uuid=e_uuid)
+            except Exception:
+                LOG.warning(
+                    "Unable to fetch subnets for Nutanix_PC Account(uuid={})".format(
+                        e_uuid
+                    )
+                )
+                continue
 
             for entity in res["entities"]:
                 name = entity["status"]["name"]
@@ -319,7 +327,16 @@ class AhvImagesCache(CacheTableBase):
         AhvObj = AhvVmProvider.get_api_obj()
 
         for e_name, e_uuid in account_name_uuid_map.items():
-            res = AhvObj.images(account_uuid=e_uuid)
+            try:
+                res = AhvObj.images(account_uuid=e_uuid)
+            except Exception:
+                LOG.warning(
+                    "Unable to fetch images for Nutanix_PC Account(uuid={})".format(
+                        e_uuid
+                    )
+                )
+                continue
+
             for entity in res["entities"]:
                 name = entity["status"]["name"]
                 uuid = entity["metadata"]["uuid"]

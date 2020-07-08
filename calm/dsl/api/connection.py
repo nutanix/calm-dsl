@@ -290,7 +290,8 @@ class Connection:
             err = {"error": err_msg, "code": status_code}
 
             if ignore_error:
-                LOG.warning(warning_msg)
+                if warning_msg:
+                    LOG.warning(warning_msg)
                 return None, err
 
             LOG.error(
