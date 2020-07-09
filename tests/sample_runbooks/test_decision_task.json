@@ -50,7 +50,7 @@
                 "variable_list": []
             },
             {
-                "name": "DecisionTask_success_meta_task",
+                "name": "DecisionTask_failure_meta_task",
                 "description": "",
                 "type": "META",
                 "attrs": {},
@@ -90,7 +90,7 @@
                     },
                     "failure_child_reference": {
                         "kind": "app_task",
-                        "name": "DecisionTask_success_meta_task"
+                        "name": "DecisionTask_failure_meta_task"
                     }
                 },
                 "child_tasks_local_reference_list": [],
