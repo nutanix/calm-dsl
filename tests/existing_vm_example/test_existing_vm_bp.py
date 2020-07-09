@@ -487,7 +487,6 @@ def test_json():
     file_path = os.path.join(dir_path, "test_existing_vm_bp.json")
 
     generated_json = ExistingVMBlueprint.json_dumps(pprint=True)
-    print(generated_json)
 
     known_json = open(file_path).read()
     assert generated_json == known_json
