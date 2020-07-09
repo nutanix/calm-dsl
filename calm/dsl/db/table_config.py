@@ -487,7 +487,11 @@ class ProjectCache(CacheTableBase):
             account_map = {}
             for account in account_list:
                 account_uuid = account["uuid"]
-                account_type = account_uuid_type_map[account_uuid]
+                # As projects may have deleted accounts registered
+                if account_uuid in account_uuid_type_map:
+                    account_type = account_uuid_type_map[account_uuid]
+                else:
+                    continue
 
                 # For now only single provider account per provider is allowed
                 account_map[account_type] = account_uuid
