@@ -282,7 +282,7 @@ class GetCallNodes(ast.NodeVisitor):
                             body=statement.orelse, col_offset=node.col_offset
                         )
                         failure_path, tasks, variables = handle_meta_create(
-                            elseBody, self._globals, prefix=context.name + "_success"
+                            elseBody, self._globals, prefix=context.name + "_failure"
                         )
                         self.all_tasks.extend([failure_path] + tasks)
                         self.variables.update(variables)

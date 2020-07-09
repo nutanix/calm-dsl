@@ -4,7 +4,7 @@ import uuid
 
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import RUNLOG
-from calm.dsl.builtins import create_endpoint_payload
+from calm.dsl.runbooks import create_endpoint_payload
 from tests.sample_runbooks import DslSimpleRunbook
 from utils import (
     upload_runbook,
