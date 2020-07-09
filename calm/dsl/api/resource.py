@@ -33,9 +33,13 @@ class ResourceAPI:
             self.ITEM.format(uuid), verify=False, method=REQUEST.METHOD.DELETE
         )
 
-    def list(self, params={}):
+    def list(self, params={}, ignore_error=False):
         return self.connection._call(
-            self.LIST, verify=False, request_json=params, method=REQUEST.METHOD.POST
+            self.LIST,
+            verify=False,
+            request_json=params,
+            method=REQUEST.METHOD.POST,
+            ignore_error=ignore_error,
         )
 
     def get_name_uuid_map(self, params={}):

@@ -10,6 +10,14 @@ class CredentialType(EntityType):
     __schema_name__ = "Credential"
     __openapi_type__ = "app_credential"
 
+    @classmethod
+    def pre_decompile(mcls, cdict, context=[]):
+
+        cdict = super().pre_decompile(cdict, context=context)
+        # For now editables are not supported in credentials
+        cdict.pop("editables", None)
+        return cdict
+
 
 class CredentialValidator(PropertyValidator, openapi_type="app_credential"):
     __default__ = None

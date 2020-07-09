@@ -9,7 +9,7 @@ from calm.dsl.tools import get_logging_handle
 
 from .secrets import find_secret, create_secret
 from .utils import highlight_text
-from .main import get, compile, describe, create, launch, delete, format
+from .main import get, compile, describe, create, launch, delete, decompile, format
 from .bps import (
     get_blueprint_list,
     describe_bp,
@@ -18,6 +18,7 @@ from .bps import (
     compile_blueprint,
     launch_blueprint_simple,
     delete_blueprint,
+    decompile_bp,
 )
 
 LOG = get_logging_handle(__name__)
@@ -101,6 +102,28 @@ def _format_blueprint_command(bp_file):
 def _compile_blueprint_command(bp_file, out):
     """Compiles a DSL (Python) blueprint into JSON or YAML"""
     compile_blueprint_command(bp_file, out)
+
+
+@decompile.command("bp", experimental=True)
+@click.argument("name", required=False)
+@click.option(
+    "--file",
+    "-f",
+    "bp_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to Blueprint file",
+)
+@click.option(
+    "--with_secrets",
+    "-w",
+    is_flag=True,
+    default=False,
+    help="Interactive Mode to provide the value for secrets",
+)
+def _decompile_bp(name, bp_file, with_secrets):
+    """Decompiles blueprint present on server or json file"""
+
+    decompile_bp(name, bp_file, with_secrets)
 
 
 def create_blueprint(

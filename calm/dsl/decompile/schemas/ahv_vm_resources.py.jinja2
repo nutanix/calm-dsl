@@ -1,0 +1,14 @@
+{% macro ahv_vm_resources(obj) %}
+class {{obj.name}}(AhvVmResources):
+
+    memory = {{obj.memory}}
+    vCPUs = {{obj.vCPUs}}
+    cores_per_vCPU = {{obj.cores_per_vCPU}}
+    {% if obj.disks %}disks = [{{obj.disks}}]{% endif %}
+    {% if obj.nics %}nics = [{{obj.nics}}]{% endif %}
+    {% if obj.gpus %}gpus = [{{obj.gpus}}]{% endif %}
+    {% if obj.guest_customization %}guest_customization = {{obj.guest_customization}}{% endif %}
+    {% if obj.serial_ports %}serial_ports = {{obj.serial_ports}}{% endif %}
+{% endmacro %}
+
+{{ ahv_vm_resources(obj) }}

@@ -171,7 +171,15 @@ class AhvSubnetsCache(CacheTableBase):
         AhvObj = AhvVmProvider.get_api_obj()
 
         for e_name, e_uuid in account_name_uuid_map.items():
-            res = AhvObj.subnets(account_uuid=e_uuid)
+            try:
+                res = AhvObj.subnets(account_uuid=e_uuid)
+            except Exception:
+                LOG.warning(
+                    "Unable to fetch subnets for Nutanix_PC Account(uuid={})".format(
+                        e_uuid
+                    )
+                )
+                continue
 
             for entity in res["entities"]:
                 name = entity["status"]["name"]
@@ -230,16 +238,12 @@ class AhvSubnetsCache(CacheTableBase):
     @classmethod
     def get_entity_data_using_uuid(cls, uuid, **kwargs):
         account_uuid = kwargs.get("account_uuid", "")
-        if not account_uuid:
-            LOG.error(
-                "Account UUID not supplied for fetching subnet with uuid {}".format(
-                    uuid
-                )
-            )
-            sys.exit(-1)
 
         try:
-            entity = super().get(cls.uuid == uuid, cls.account_uuid == account_uuid)
+            if account_uuid:
+                entity = super().get(cls.uuid == uuid, cls.account_uuid == account_uuid)
+            else:
+                entity = super().get(cls.uuid == uuid)
             return entity.get_detail_dict()
 
         except DoesNotExist:
@@ -319,7 +323,16 @@ class AhvImagesCache(CacheTableBase):
         AhvObj = AhvVmProvider.get_api_obj()
 
         for e_name, e_uuid in account_name_uuid_map.items():
-            res = AhvObj.images(account_uuid=e_uuid)
+            try:
+                res = AhvObj.images(account_uuid=e_uuid)
+            except Exception:
+                LOG.warning(
+                    "Unable to fetch images for Nutanix_PC Account(uuid={})".format(
+                        e_uuid
+                    )
+                )
+                continue
+
             for entity in res["entities"]:
                 name = entity["status"]["name"]
                 uuid = entity["metadata"]["uuid"]
@@ -368,16 +381,12 @@ class AhvImagesCache(CacheTableBase):
     @classmethod
     def get_entity_data_using_uuid(cls, uuid, **kwargs):
         account_uuid = kwargs.get("account_uuid", "")
-        if not account_uuid:
-            # For now we can attach multiple nutanix_pc account pointing to same pc
-            # https://jira.nutanix.com/browse/CALM-19273, So make account_uuid as necessary
-            LOG.error(
-                "Account UUID not supplied for fetching image with uuid {}".format(uuid)
-            )
-            sys.exit(-1)
 
         try:
-            entity = super().get(cls.uuid == uuid, cls.account_uuid == account_uuid)
+            if account_uuid:
+                entity = super().get(cls.uuid == uuid, cls.account_uuid == account_uuid)
+            else:
+                entity = super().get(cls.uuid == uuid)
             return entity.get_detail_dict()
 
         except DoesNotExist:
@@ -470,6 +479,7 @@ class ProjectCache(CacheTableBase):
             account_map = {}
             for account in account_list:
                 account_uuid = account["uuid"]
+                # As projects may have deleted accounts registered
                 if account_uuid in account_uuid_type_map:
                     account_type = account_uuid_type_map[account_uuid]
                 else:

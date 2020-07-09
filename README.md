@@ -25,6 +25,8 @@ Language design is black art, and building upon a well-established language is d
  - List apps: `calm get apps`.
  - Describe app: `calm describe app <app_name>`. It will print a summary of the application and the current application state. Use `calm describe app <name> 2>/dev/null --out json | jq '.["status"]'` to get fields from the app json. More info on how to use `jq` [here](https://stedolan.github.io/jq/tutorial/).
  - Delete app: `calm delete app <app_name>`. You can delete multiple apps using: `calm get apps -q | xargs -I {} calm delete app {}`.
+ - Decompile blueprint: `calm decompile bp <bp_name>`. Command will decompile existing blueprint on server to dsl directory for blueprint files.
+ - Decompile marketplace blueprint: `calm decompile marketplace_bp <bp_name> -v <version>`. Command will decompile existing marketplace blueprint with given version to dsl directory for blueprint files.
 
 ## [Runbooks](docs/01-Calm-Terminology#runbooks)
  - First runbook: `calm init runbook`. This will create a folder `HelloRunbook` with all the necessary files. `HelloRunbook/runbook.py` is the main runbook DSL file. Please read the comments in the beginning of the file for more details about the runbook.

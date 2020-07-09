@@ -1,0 +1,9 @@
+{%- macro ahv_vm_disk_scsi_clone_from_image(obj) -%}
+{% if obj.bootable %}
+AhvVmDisk.Disk.Scsi.cloneFromImageService("{{obj.name}}", bootable=True)
+{% else %}
+AhvVmDisk.Disk.Scsi.cloneFromImageService("{{obj.name}}")
+{% endif %}
+{% endmacro %}
+
+{{ ahv_vm_disk_scsi_clone_from_image(obj) }}

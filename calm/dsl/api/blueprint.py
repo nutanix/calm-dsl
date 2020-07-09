@@ -16,6 +16,7 @@ class BlueprintAPI(ResourceAPI):
         self.BP_EDITABLES = self.ITEM + "/runtime_editables"
         self.EXPORT_JSON = self.ITEM + "/export_json"
         self.EXPORT_JSON_WITH_SECRETS = self.ITEM + "/export_json?keep_secrets=true"
+        self.EXPORT_FILE = self.ITEM + "/export_file"
 
     # TODO https://jira.nutanix.com/browse/CALM-17178
     # Blueprint creation timeout is dependent on payload.
@@ -220,3 +221,8 @@ class BlueprintAPI(ResourceAPI):
     def export_json_with_secrets(self, uuid):
         url = self.EXPORT_JSON_WITH_SECRETS.format(uuid)
         return self.connection._call(url, verify=False, method=REQUEST.METHOD.GET)
+
+    def export_file(self, uuid):
+        return self.connection._call(
+            self.EXPORT_FILE.format(uuid), verify=False, method=REQUEST.METHOD.GET
+        )

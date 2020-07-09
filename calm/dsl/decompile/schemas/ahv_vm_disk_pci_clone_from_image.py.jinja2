@@ -1,0 +1,10 @@
+{%- macro ahv_vm_disk_pci_clone_from_image(obj) -%}
+{% if obj.bootable %}
+AhvVmDisk.Disk.Pci.cloneFromImageService("{{obj.name}}", bootable=True)
+{% else %}
+AhvVmDisk.Disk.Pci.cloneFromImageService("{{obj.name}}")
+{% endif %}
+{% endmacro %}
+
+
+{{ ahv_vm_disk_pci_clone_from_image(obj) }}

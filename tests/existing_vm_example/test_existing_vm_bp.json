@@ -72,7 +72,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -103,7 +105,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -134,7 +138,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -165,7 +171,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -196,7 +204,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -227,7 +237,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -295,7 +307,9 @@
                                         "name": "Task3"
                                     }
                                 ],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             },
                             {
                                 "name": "Task2",
@@ -310,7 +324,9 @@
                                     "script": "echo \"Hello\"; sleep 10"
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             },
                             {
                                 "name": "Task3",
@@ -329,7 +345,9 @@
                                     }
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": [
@@ -385,7 +403,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -416,7 +436,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -447,7 +469,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -478,7 +502,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -509,7 +535,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -540,7 +568,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -581,7 +611,9 @@
                                     "name": "Task1"
                                 }
                             ],
-                            "variable_list": []
+                            "variable_list": [],
+                            "retries": "",
+                            "timeout_secs": ""
                         },
                         {
                             "name": "Task1",
@@ -600,7 +632,9 @@
                                 }
                             },
                             "child_tasks_local_reference_list": [],
-                            "variable_list": []
+                            "variable_list": [],
+                            "retries": "",
+                            "timeout_secs": ""
                         }
                     ],
                     "variable_list": []
@@ -625,7 +659,9 @@
                                 "edges": []
                             },
                             "child_tasks_local_reference_list": [],
-                            "variable_list": []
+                            "variable_list": [],
+                            "retries": "",
+                            "timeout_secs": ""
                         }
                     ],
                     "variable_list": []
@@ -686,7 +722,9 @@
                                     "name": "Task4"
                                 }
                             ],
-                            "variable_list": []
+                            "variable_list": [],
+                            "retries": "",
+                            "timeout_secs": ""
                         },
                         {
                             "name": "Task4",
@@ -701,7 +739,9 @@
                                 "script": "echo @@{foo}@@"
                             },
                             "child_tasks_local_reference_list": [],
-                            "variable_list": []
+                            "variable_list": [],
+                            "retries": "",
+                            "timeout_secs": ""
                         }
                     ],
                     "variable_list": []
@@ -726,7 +766,9 @@
                                 "edges": []
                             },
                             "child_tasks_local_reference_list": [],
-                            "variable_list": []
+                            "variable_list": [],
+                            "retries": "",
+                            "timeout_secs": ""
                         }
                     ],
                     "variable_list": []
@@ -798,7 +840,9 @@
                                         "name": "Pre Create Task"
                                     }
                                 ],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             },
                             {
                                 "name": "Pre Create Task",
@@ -813,7 +857,9 @@
                                     "script": "print 'Hello!'"
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -873,11 +919,15 @@
                         "name": "ExistingVM"
                     },
                     "depends_on_list": [],
+                    "variable_list": [],
+                    "action_list": [],
                     "min_replicas": "1",
+                    "default_replicas": "",
                     "max_replicas": "2",
                     "type": "GREENFIELD",
                     "name": "LampDeployment",
-                    "options": {}
+                    "options": {},
+                    "description": ""
                 }
             ],
             "variable_list": [
@@ -1958,7 +2008,9 @@
                                         "name": "Scale in Lamp"
                                     }
                                 ],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             },
                             {
                                 "name": "Task5",
@@ -1973,7 +2025,9 @@
                                     "script": "echo \"Hello\"\nsleep 10\n"
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             },
                             {
                                 "name": "Task6",
@@ -1990,7 +2044,9 @@
                                     }
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             },
                             {
                                 "name": "Test HTTP Task Get",
@@ -2057,7 +2113,9 @@
                                     }
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             },
                             {
                                 "name": "Test HTTP Task Post",
@@ -2104,7 +2162,9 @@
                                     }
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             },
                             {
                                 "name": "Test HTTP Task Put",
@@ -2151,7 +2211,9 @@
                                     }
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             },
                             {
                                 "name": "Test HTTP Task Delete",
@@ -2194,7 +2256,9 @@
                                     ]
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             },
                             {
                                 "name": "Test HTTP Task",
@@ -2241,7 +2305,9 @@
                                     }
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             },
                             {
                                 "name": "Test Escript",
@@ -2256,7 +2322,9 @@
                                     "script": "print 'Hello World!'"
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             },
                             {
                                 "name": "Test Setvar Escript",
@@ -2274,7 +2342,9 @@
                                     ]
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             },
                             {
                                 "name": "Test Setvar SSH",
@@ -2292,7 +2362,9 @@
                                     ]
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             },
                             {
                                 "name": "Scale out Lamp",
@@ -2307,7 +2379,9 @@
                                     "scaling_count": "1"
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             },
                             {
                                 "name": "Delay",
@@ -2321,7 +2395,9 @@
                                     "interval_secs": 60
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             },
                             {
                                 "name": "Scale in Lamp",
@@ -2336,7 +2412,9 @@
                                     "scaling_count": "1"
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": [
@@ -2381,5 +2459,6 @@
             ]
         }
     ],
-    "client_attrs": {}
+    "client_attrs": {},
+    "default_credential_local_reference": null
 }
