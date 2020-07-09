@@ -141,8 +141,16 @@ def show_all_commands(ctx):
         if isinstance(cmd, FeatureFlagGroup):
             commands_queue.append([subcommand, cmd])
         else:
+            if root_cmd.experimental_cmd_map.get(subcommand, False):
+                is_experimental = True
+            else:
+                is_experimental = "-"
             commands_res_list.append(
-                (subcommand, root_cmd.feature_version_map.get(subcommand, "-"))
+                (
+                    subcommand,
+                    root_cmd.feature_version_map.get(subcommand, "-"),
+                    is_experimental,
+                )
             )
 
     while commands_queue:
@@ -159,21 +167,30 @@ def show_all_commands(ctx):
             else:
                 ele_temp = copy.deepcopy(ele)
                 ele_temp.append(subcommand)
+                if grp.experimental_cmd_map.get(subcommand, False):
+                    is_experimental = True
+                else:
+                    is_experimental = "-"
                 commands_res_list.append(
-                    (" ".join(ele_temp), grp.feature_version_map.get(subcommand, "-"))
+                    (
+                        " ".join(ele_temp),
+                        grp.feature_version_map.get(subcommand, "-"),
+                        is_experimental,
+                    )
                 )
 
     table = PrettyTable()
-    table.field_names = ["COMMAND", "MIN COMMAND VERSION"]
-
-    cmd_list = []
-    for subcommand in commands_res_list:
-        cmd_str = "{} {}".format(ctx_root.command_path, " ".join(subcommand))
-        cmd_list.append(cmd_str)
+    table.field_names = ["COMMAND", "MIN COMMAND VERSION", "EXPERIMENTAL"]
 
     for cmd_tuple in commands_res_list:
         cmd_str = "{} {}".format(ctx_root.command_path, cmd_tuple[0])
-        table.add_row([highlight_text(cmd_str), highlight_text(cmd_tuple[1])])
+        table.add_row(
+            [
+                highlight_text(cmd_str),
+                highlight_text(cmd_tuple[1]),
+                highlight_text(cmd_tuple[2]),
+            ]
+        )
 
     # left align the command column
     table.align["COMMAND"] = "l"
@@ -237,6 +254,12 @@ def format():
 @main.group(cls=FeatureFlagGroup)
 def compile():
     """Compile blueprint to json / yaml"""
+    pass
+
+
+@main.group(cls=FeatureFlagGroup)
+def decompile():
+    """"""
     pass
 
 

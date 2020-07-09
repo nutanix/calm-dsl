@@ -1,0 +1,5 @@
+{% macro readiness_probe(obj) %}
+readiness_probe(connection_type="{{obj.connection_type}}", disabled={{obj.disabled}}{% if obj.retries %}, retries="{{obj.retries}}"{% endif %}{% if obj.connection_port %}, connection_port={{obj.connection_port}}{% endif %}{% if obj.address %}, address="{{obj.address}}"{% endif %}{% if obj.delay_secs %}, delay_secs="{{obj.delay_secs}}"{% endif %}{% if obj.credential %}, credential={{obj.credential}}{% endif %}{% if obj.editables_list %}, editables_list={{obj.editables_list}}{% endif %})
+{%- endmacro %}
+
+{{ readiness_probe(obj) }}

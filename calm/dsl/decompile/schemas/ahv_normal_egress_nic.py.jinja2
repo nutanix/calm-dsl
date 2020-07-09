@@ -1,0 +1,5 @@
+{%- macro ahv_normal_egress_nic(obj) -%}
+AhvVmNic.NormalNic.egress("{{obj.subnet_name}}", cluster="{{obj.cluster_name}}")
+{% endmacro %}
+
+{{ ahv_normal_egress_nic(obj) }}

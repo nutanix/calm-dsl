@@ -14,10 +14,16 @@ from calm.dsl.builtins import (
     Blueprint,
     SimpleBlueprint,
     create_blueprint_payload,
+    BlueprintType,
+    get_valid_identifier,
     file_exists,
+    get_dsl_metadata_map,
+    init_dsl_metadata_map,
 )
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
+from calm.dsl.decompile.decompile_render import create_bp_dir
+from calm.dsl.decompile.file_handler import get_bp_dir
 
 from .utils import (
     get_name_query,
@@ -234,6 +240,10 @@ def compile_blueprint(bp_file):
         UserBlueprintPayload, _ = create_blueprint_payload(UserBlueprint)
         bp_payload = UserBlueprintPayload.get_dict()
 
+        # Adding the display map to client attr
+        display_name_map = get_dsl_metadata_map()
+        bp_payload["spec"]["resources"]["client_attrs"] = {"None": display_name_map}
+
         # Note - Install/Uninstall runbooks are not actions in Packages.
         # Remove package actions after compiling.
         cdict = bp_payload["spec"]["resources"]
@@ -242,6 +252,85 @@ def compile_blueprint(bp_file):
                 del package["action_list"]
 
     return bp_payload
+
+
+def decompile_bp(name, bp_file, with_secrets=False):
+    """helper to decompile blueprint"""
+
+    if name and bp_file:
+        LOG.error(
+            "Please provide either blueprint file location or server blueprint name"
+        )
+        sys.exit(-1)
+
+    if name:
+        decompile_bp_from_server(name=name, with_secrets=with_secrets)
+
+    elif bp_file:
+        decompile_bp_from_file(filename=bp_file, with_secrets=with_secrets)
+
+    else:
+        LOG.error(
+            "Please provide either blueprint file location or server blueprint name"
+        )
+        sys.exit(-1)
+
+
+def decompile_bp_from_server(name, with_secrets=False):
+    """decompiles the blueprint by fetching it from server"""
+
+    client = get_api_client()
+    blueprint = get_blueprint(client, name)
+    bp_uuid = blueprint["metadata"]["uuid"]
+
+    res, err = client.blueprint.export_file(bp_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    res = res.json()
+    _decompile_bp(bp_payload=res, with_secrets=with_secrets)
+
+
+def decompile_bp_from_file(filename, with_secrets=False):
+    """decompile blueprint from local blueprint file"""
+
+    # ToDo - Fix this
+    bp_payload = json.loads(open(filename).read())
+    # bp_payload = read_spec(filename)
+    _decompile_bp(bp_payload=bp_payload, with_secrets=with_secrets)
+
+
+def _decompile_bp(bp_payload, with_secrets=False):
+    """decompiles the blueprint from payload"""
+
+    blueprint = bp_payload["spec"]["resources"]
+    blueprint_name = bp_payload["spec"].get("name", "DslBlueprint")
+    blueprint_description = bp_payload["spec"].get("description", "")
+
+    # Copying dsl_name_map to global client_attrs
+    if bp_payload["spec"]["resources"]["client_attrs"].get("None", {}):
+        init_dsl_metadata_map(bp_payload["spec"]["resources"]["client_attrs"]["None"])
+
+    LOG.info("Decompiling blueprint {}".format(blueprint_name))
+
+    for sub_obj in blueprint.get("substrate_definition_list"):
+        sub_type = sub_obj.get("type", "") or "AHV_VM"
+        if sub_type == "K8S_POD":
+            raise NotImplementedError(
+                "Decompilation for k8s pod is not supported right now"
+            )
+        elif sub_type != "AHV_VM":
+            LOG.warning(
+                "Decompilation support for providers other than AHV is experimental/best effort"
+            )
+            break
+
+    bp_cls = BlueprintType.decompile(blueprint)
+    bp_cls.__name__ = get_valid_identifier(blueprint_name)
+    bp_cls.__doc__ = blueprint_description
+
+    create_bp_dir(bp_cls=bp_cls, with_secrets=with_secrets)
+    click.echo("\nSuccessfully decompiled. Directory location: {}".format(get_bp_dir()))
 
 
 def compile_blueprint_command(bp_file, out):

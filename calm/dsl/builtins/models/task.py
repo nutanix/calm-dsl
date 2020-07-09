@@ -23,6 +23,15 @@ class TaskType(EntityType):
             cdict.pop("target_any_local_reference", None)
         return cdict
 
+    @classmethod
+    def pre_decompile(mcls, cdict, context=[]):
+
+        cdict = super().pre_decompile(cdict, context=context)
+        # Removing additional attributes
+        cdict.pop("state", None)
+        cdict.pop("message_list", None)
+        return cdict
+
 
 class TaskValidator(PropertyValidator, openapi_type="app_task"):
     __default__ = None

@@ -87,6 +87,7 @@ class FeatureFlagMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.feature_version_map = dict()
+        self.experimental_cmd_map = dict()
 
     def command(self, *args, **kwargs):
         """Behaves the same as `click.Group.command()` except added an
@@ -95,9 +96,13 @@ class FeatureFlagMixin:
         """
 
         feature_min_version = kwargs.pop("feature_min_version", None)
-        if feature_min_version:
+        if feature_min_version and args:
             cmd_name = args[0]
             self.feature_version_map[cmd_name] = feature_min_version
+
+        is_experimental = kwargs.pop("experimental", False)
+        if args:
+            self.experimental_cmd_map[args[0]] = is_experimental
 
         return super().command(*args, **kwargs)
 

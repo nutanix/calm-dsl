@@ -2,13 +2,17 @@ from collections import OrderedDict
 import json
 from json import JSONEncoder, JSONDecoder
 import sys
+import inspect
 from types import MappingProxyType
 import uuid
+import copy
 
 from ruamel.yaml import YAML, resolver, SafeRepresenter
 from calm.dsl.tools import StrictDraft7Validator
 from calm.dsl.tools import get_logging_handle
 from .schema import get_schema_details
+from .utils import get_valid_identifier
+from .client_attrs import update_dsl_metadata_map, get_dsl_metadata_map
 
 LOG = get_logging_handle(__name__)
 
@@ -303,8 +307,44 @@ class EntityType(EntityTypeBase):
 
         return ncls.get_user_attrs()
 
+    def pre_compile(cls):
+        """Hook to construct dsl metadata map"""
+        if not hasattr(cls, "__schema_name__"):
+            return
+
+        entity_type = cls.__schema_name__
+        entity_obj = {}
+
+        dsl_name = cls.__name__
+        ui_name = getattr(cls, "name", "") or dsl_name
+
+        entity_obj = {"dsl_name": dsl_name, "Action": {}}
+        types = EntityTypeBase.get_entity_types()
+        ActionType = types.get("Action", None)
+
+        # Fetching actions data inside entity
+        for ek, ev in cls.__dict__.items():
+            e_obj = getattr(cls, ek)
+            if isinstance(e_obj, ActionType):
+                user_func = ev.user_func
+                SYSTEM = getattr(cls, "ALLOWED_SYSTEM_ACTIONS", {})
+                FRAGMENT = getattr(cls, "ALLOWED_FRAGMENT_ACTIONS", {})
+                func_name = user_func.__name__.lower()
+                if func_name not in SYSTEM and func_name not in FRAGMENT:
+                    # Store naming map for non-system actions
+                    sig = inspect.signature(user_func)
+                    gui_display_name = sig.parameters.get("name", None)
+
+                    if gui_display_name and gui_display_name.default != ev.action_name:
+                        entity_obj["Action"][gui_display_name.default] = {
+                            "dsl_name": ev.action_name
+                        }
+
+        update_dsl_metadata_map(entity_type, entity_name=ui_name, entity_obj=entity_obj)
+
     def compile(cls):
 
+        cls.pre_compile()
         attrs = cls.get_all_attrs()
         cls.update_attrs(attrs)
 
@@ -330,24 +370,98 @@ class EntityType(EntityTypeBase):
         return cdict
 
     @classmethod
-    def decompile(mcls, cdict):
+    def pre_decompile(mcls, cdict, context):
+        """Hook to modify cdict based on dsl metadata"""
 
-        # Remove extra info
-        name = cdict.pop("name", mcls.__schema_name__)
-        description = cdict.pop("description", None)
-        # kind = cdict.pop('__kind__')
+        ui_name = cdict.get("name", None)
+        metadata = get_dsl_metadata_map(context) or {}
+        dsl_name = metadata.get("dsl_name", ui_name)
+
+        # Impose validation for valid identifier
+        dsl_name = get_valid_identifier(dsl_name)
+        cdict["__name__"] = dsl_name
+
+        # Adding description
+        cdict["__doc__"] = cdict.get("description", "")
+
+        # Remove NULL and empty string data
+        attrs = {}
+        for k, v in cdict.items():
+            if v is not None and v != "":
+                attrs[k] = v
+
+        return attrs
+
+    @classmethod
+    def decompile(mcls, cdict, context=[]):
+
+        # Pre decompile step to get class names in blueprint file
+        schema_name = getattr(mcls, "__schema_name__", None)
+        ui_name = cdict.get("name", None)
+
+        cur_context = copy.deepcopy(context)
+        # TODO clear this mess. Store context of entities as per order in blueprint
+        if schema_name == "Deployment":
+            # As cur_context will contain Profile details. So reinitiate context
+            cur_context = [schema_name, ui_name]
+
+        elif schema_name and ui_name and schema_name != "Blueprint":
+            cur_context.extend([schema_name, ui_name])
+
+        cdict = mcls.pre_decompile(cdict, context=cur_context)
 
         # Convert attribute names to x-calm-dsl-display-name, if given
         attrs = {}
         display_map = getattr(mcls, "__display_map__")
+        display_map = {v: k for k, v in display_map.items()}
+
+        user_attrs = {}
         for k, v in cdict.items():
-            attrs.setdefault(display_map.inverse[k], v)
+            # Case for __name__ and __doc__ attributes of class
+            if k.startswith("__") and k.endswith("__"):
+                attrs.setdefault(k, v)
+                continue
 
-        # Create new class based on type
-        cls = mcls(name, (Entity,), attrs)
-        cls.__doc__ = description
+            elif k not in display_map:
+                LOG.warning("Additional Property ({}) found".format(k))
+                continue
 
-        return cls
+            user_attrs.setdefault(display_map[k], v)
+
+        validator_dict = getattr(mcls, "__validator_dict__")
+        for k, v in user_attrs.items():
+            validator, is_array = validator_dict[k]
+
+            # Getting the metaclass for creation of class
+            if getattr(validator, "__is_object__", False):
+                entity_type = validator
+
+            else:
+                entity_type = validator.get_kind()
+                if getattr(entity_type, "__schema_name__", "") == "ProviderSpec":
+                    # Case already handled in Substrate.pre_decompile
+                    continue
+
+            # No decompilation is needed for entity_type = str, dict, int etc.
+            if hasattr(entity_type, "decompile"):
+                if is_array:
+                    new_value = []
+                    for val in v:
+                        new_value.append(
+                            entity_type.decompile(val, context=cur_context)
+                        )
+                else:
+                    new_value = entity_type.decompile(v, context=cur_context)
+
+                user_attrs[k] = new_value
+
+            # validate the new data
+            validator.validate(user_attrs[k], is_array)
+
+        # Merging dsl_attrs("__name__", "__doc__" etc.) and user_attrs
+        attrs.update(user_attrs)
+        name = attrs.get("__name__", ui_name)
+        return mcls(name, (Entity,), attrs)
 
     def json_dumps(cls, pprint=False, sort_keys=False):
 
@@ -387,13 +501,11 @@ class EntityType(EntityTypeBase):
         ref = types.get("Ref")
         if not ref:
             return
-        name = None
-        bases = (Entity,)
-        if ref:
-            attrs = {}
-            attrs["name"] = str(cls)
-            attrs["kind"] = kind or getattr(cls, "__kind__")
-        return ref(name, bases, attrs)
+        attrs = {
+            "name": getattr(cls, "name", "") or cls.__name__,
+            "kind": kind or getattr(cls, "__kind__"),
+        }
+        return ref(None, (Entity,), attrs)
 
     def get_dict(cls):
         return json.loads(cls.json_dumps())
@@ -409,6 +521,7 @@ class EntityJSONEncoder(JSONEncoder):
         if not hasattr(cls, "__kind__"):
             return super().default(cls)
 
+        # Add single function(wrapper) that can contain pre-post checks
         return cls.compile()
 
 

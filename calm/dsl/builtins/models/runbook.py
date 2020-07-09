@@ -9,6 +9,15 @@ class RunbookType(EntityType):
     def __call__(*args, **kwargs):
         pass
 
+    @classmethod
+    def pre_decompile(mcls, cdict, context=[]):
+
+        cdict = super().pre_decompile(cdict, context=context)
+        # Removing additional attributes
+        cdict.pop("state", None)
+        cdict.pop("message_list", None)
+        return cdict
+
 
 class RunbookValidator(PropertyValidator, openapi_type="app_runbook"):
     __default__ = None
