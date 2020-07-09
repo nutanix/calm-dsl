@@ -327,13 +327,18 @@ class EntityType(EntityTypeBase):
             e_obj = getattr(cls, ek)
             if isinstance(e_obj, ActionType):
                 user_func = ev.user_func
-                sig = inspect.signature(user_func)
-                gui_display_name = sig.parameters.get("name", None)
+                SYSTEM = getattr(cls, "ALLOWED_SYSTEM_ACTIONS", {})
+                FRAGMENT = getattr(cls, "ALLOWED_FRAGMENT_ACTIONS", {})
+                func_name = user_func.__name__.lower()
+                if func_name not in SYSTEM and func_name not in FRAGMENT:
+                    # Store naming map for non-system actions
+                    sig = inspect.signature(user_func)
+                    gui_display_name = sig.parameters.get("name", None)
 
-                if gui_display_name and gui_display_name.default != ev.action_name:
-                    entity_obj["Action"][gui_display_name.default] = {
-                        "dsl_name": ev.action_name
-                    }
+                    if gui_display_name and gui_display_name.default != ev.action_name:
+                        entity_obj["Action"][gui_display_name.default] = {
+                            "dsl_name": ev.action_name
+                        }
 
         update_dsl_metadata_map(entity_type, entity_name=ui_name, entity_obj=entity_obj)
 

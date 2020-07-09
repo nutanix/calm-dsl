@@ -104,7 +104,7 @@ def _compile_blueprint_command(bp_file, out):
     compile_blueprint_command(bp_file, out)
 
 
-@decompile.command("bp")
+@decompile.command("bp", experimental=True)
 @click.argument("name", required=False)
 @click.option(
     "--file",
