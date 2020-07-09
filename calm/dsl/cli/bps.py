@@ -312,6 +312,19 @@ def _decompile_bp(bp_payload, with_secrets=False):
         init_dsl_metadata_map(bp_payload["spec"]["resources"]["client_attrs"]["None"])
 
     LOG.info("Decompiling blueprint {}".format(blueprint_name))
+
+    for sub_obj in blueprint.get("substrate_definition_list"):
+        sub_type = sub_obj.get("type", "") or "AHV_VM"
+        if sub_type == "K8S_POD":
+            raise NotImplementedError(
+                "Decompilation for k8s pod is not supported right now"
+            )
+        elif sub_type != "AHV_VM":
+            LOG.warning(
+                "Decompilation support for providers other than AHV is experimental/best effort"
+            )
+            break
+
     bp_cls = BlueprintType.decompile(blueprint)
     bp_cls.__name__ = get_valid_identifier(blueprint_name)
     bp_cls.__doc__ = blueprint_description

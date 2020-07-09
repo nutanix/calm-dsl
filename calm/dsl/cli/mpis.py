@@ -507,6 +507,18 @@ def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_s
     blueprint_description = bp_payload["spec"].get("description", "")
 
     LOG.info("Decompiling marketplace blueprint {}".format(name))
+    for sub_obj in blueprint.get("substrate_definition_list"):
+        sub_type = sub_obj.get("type", "") or "AHV_VM"
+        if sub_type == "K8S_POD":
+            raise NotImplementedError(
+                "Decompilation for k8s pod is not supported right now"
+            )
+        elif sub_type != "AHV_VM":
+            LOG.warning(
+                "Decompilation support for providers other than AHV is experimental/best effort"
+            )
+            break
+
     bp_cls = BlueprintType.decompile(blueprint)
     bp_cls.__name__ = blueprint_name
     bp_cls.__doc__ = blueprint_description
