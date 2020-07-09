@@ -205,7 +205,7 @@ def _launch_marketplace_bp(
     )
 
 
-@decompile.command("marketplace_bp")
+@decompile.command("marketplace_bp", experimental=True)
 @click.argument("mpi_name")
 @click.option("--name", "-n", default=None, help="Name of blueprint")
 @click.option("--version", "-v", default=None, help="Version of marketplace blueprint")
