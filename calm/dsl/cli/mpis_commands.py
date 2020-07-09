@@ -225,7 +225,7 @@ def _launch_marketplace_bp(
     help="Interactive Mode to provide the value for secrets",
 )
 def _decompile_marketplace_bp(mpi_name, version, project, name, source, with_secrets):
-    """Decompile a marketplace blueprint"""
+    """Decompiles marketplace blueprint"""
 
     decompile_marketplace_bp(
         name=mpi_name,

@@ -121,6 +121,7 @@ def _compile_blueprint_command(bp_file, out):
     help="Interactive Mode to provide the value for secrets",
 )
 def _decompile_bp(name, bp_file, with_secrets):
+    """Decompiles blueprint present on server or json file"""
 
     decompile_bp(name, bp_file, with_secrets)
 
