@@ -31,6 +31,7 @@ class SimpleBlueprintType(EntityType):
         for dep in deployments:
             if dep.deployment_spec and dep.service_spec:
                 pod_dep = simple_pod_deployment(
+                    name=getattr(dep, "name", "") or dep.__name__,
                     service_spec=dep.service_spec,
                     deployment_spec=dep.deployment_spec,
                     dependencies=dep.dependencies,
