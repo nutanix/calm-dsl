@@ -114,6 +114,12 @@ class FeatureFlagMixin:
             return super(FeatureFlagMixin, self).invoke(ctx)
 
         cmd_name = ctx.protected_args[0]
+
+        # Handle base case
+        # ToDO - fix this hack
+        if cmd_name == "dsl":
+            return super().invoke(ctx)
+
         feature_min_version = self.feature_version_map.get(cmd_name, "")
         if feature_min_version:
             calm_version = Version.get_version("Calm")
