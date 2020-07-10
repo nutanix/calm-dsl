@@ -1,0 +1,5 @@
+{%- macro runbook_task(obj) -%}
+{{obj.target}}.{{obj.action}}(name='{{obj.name}}')
+{%- endmacro %}
+
+{{ runbook_task(obj) }}

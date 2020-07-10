@@ -1,0 +1,13 @@
+{%- macro http_put_task(obj) -%}
+{%- if obj.target is not defined and obj.attrs.request_body is not defined %}
+CalmTask.HTTP.put('{{obj.attrs.url}}', headers={{obj.headers}}, secret_headers={{obj.secret_headers}} , content_type='{{obj.attrs.content_type}}', verify={{obj.attrs.tls_verify}}, status_mapping={{obj.status_mapping}}, response_paths={{obj.response_paths}}, name='{{obj.name}}')
+{%- elif obj.target is not defined %}
+CalmTask.HTTP.put('{{obj.attrs.url}}', body=json.dumps({{obj.attrs.request_body}}), headers={{obj.headers}}, secret_headers={{obj.secret_headers}} , content_type='{{obj.attrs.content_type}}', verify={{obj.attrs.tls_verify}}, status_mapping={{obj.status_mapping}}, response_paths={{obj.response_paths}}, name='{{obj.name}}')
+{%- elif obj.attrs.request_body is not defined %}
+CalmTask.HTTP.put('{{obj.attrs.url}}', headers={{obj.headers}}, secret_headers={{obj.secret_headers}} , content_type='{{obj.attrs.content_type}}', verify={{obj.attrs.tls_verify}}, status_mapping={{obj.status_mapping}}, response_paths={{obj.response_paths}}, name='{{obj.name}}', target={{obj.target}})
+{%- else %}
+CalmTask.HTTP.put('{{obj.attrs.url}}', body=json.dumps({{obj.attrs.request_body}}), headers={{obj.headers}}, secret_headers={{obj.secret_headers}} , content_type='{{obj.attrs.content_type}}', verify={{obj.attrs.tls_verify}}, status_mapping={{obj.status_mapping}}, response_paths={{obj.response_paths}}, name='{{obj.name}}', target={{obj.target}})
+{%- endif %}
+{%- endmacro %}
+
+{{ http_put_task(obj) }}

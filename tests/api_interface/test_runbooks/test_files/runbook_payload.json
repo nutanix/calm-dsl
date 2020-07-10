@@ -1,0 +1,65 @@
+{
+  "spec": {
+    "name": "test_rb",
+    "resources": {
+      "endpoint_definition_list": [],
+      "credential_definition_list": [],
+      "runbook": {
+        "main_task_local_reference": {
+          "kind": "app_task",
+          "uuid": "cd34c055-ac7d-b4ad-89a7-ee45659c7882"
+        },
+        "task_definition_list": [
+          {
+            "attrs": {
+              "edges": []
+            },
+            "type": "DAG",
+            "name": "Untitled",
+            "child_tasks_local_reference_list": [
+              {
+                "kind": "app_task",
+                "uuid": "ad00db90-c0c4-fd42-a633-0c03cfb7e7ec"
+              }
+            ],
+            "uuid": "cd34c055-ac7d-b4ad-89a7-ee45659c7882"
+          },
+          {
+            "uuid": "ad00db90-c0c4-fd42-a633-0c03cfb7e7ec",
+            "child_tasks_local_reference_list": [],
+            "attrs": {
+              "interval_secs": 60
+            },
+            "type": "DELAY",
+            "variable_list": [],
+            "name": "Task1"
+          }
+        ],
+        "name": "runbook",
+        "variable_list": [
+          {
+            "val_type": "STRING",
+            "name": "var",
+            "data_type": "BASE",
+            "uuid": "0997acb5-7222-f7f9-1e5e-e4d8791c543d",
+            "value": "variable1",
+            "label": "",
+            "attrs": {},
+            "is_hidden": false,
+            "type": "LOCAL",
+            "options": {
+              "type": "PREDEFINED"
+            },
+            "description": ""
+          }
+        ],
+        "uuid": "48574a4c-d27a-2041-851b-16fee880e1b4"
+      }
+    }
+  },
+  "api_version": "3.0",
+  "metadata": {
+    "kind": "runbook",
+    "name": "test_rb"
+  }
+}

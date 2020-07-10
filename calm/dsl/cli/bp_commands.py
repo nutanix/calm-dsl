@@ -9,7 +9,7 @@ from calm.dsl.tools import get_logging_handle
 
 from .secrets import find_secret, create_secret
 from .utils import highlight_text
-from .main import get, compile, describe, create, launch, delete, format
+from .main import get, compile, describe, create, launch, delete, decompile, format
 from .bps import (
     get_blueprint_list,
     describe_bp,
@@ -18,6 +18,7 @@ from .bps import (
     compile_blueprint,
     launch_blueprint_simple,
     delete_blueprint,
+    decompile_bp,
 )
 
 LOG = get_logging_handle(__name__)
@@ -38,10 +39,18 @@ LOG = get_logging_handle(__name__)
 @click.option(
     "--all-items", "-a", is_flag=True, help="Get all items, including deleted ones"
 )
-def _get_blueprint_list(name, filter_by, limit, offset, quiet, all_items):
+@click.option(
+    "--out",
+    "-o",
+    "out",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="output format",
+)
+def _get_blueprint_list(name, filter_by, limit, offset, quiet, all_items, out):
     """Get the blueprints, optionally filtered by a string"""
 
-    get_blueprint_list(name, filter_by, limit, offset, quiet, all_items)
+    get_blueprint_list(name, filter_by, limit, offset, quiet, all_items, out)
 
 
 @describe.command("bp")
@@ -52,7 +61,7 @@ def _get_blueprint_list(name, filter_by, limit, offset, quiet, all_items):
     "out",
     type=click.Choice(["text", "json"]),
     default="text",
-    help="output format [json|yaml].",
+    help="output format",
 )
 def _describe_bp(bp_name, out):
     """Describe a blueprint"""
@@ -88,11 +97,33 @@ def _format_blueprint_command(bp_file):
     "out",
     type=click.Choice(["json", "yaml"]),
     default="json",
-    help="output format [json|yaml].",
+    help="output format",
 )
 def _compile_blueprint_command(bp_file, out):
     """Compiles a DSL (Python) blueprint into JSON or YAML"""
     compile_blueprint_command(bp_file, out)
+
+
+@decompile.command("bp", experimental=True)
+@click.argument("name", required=False)
+@click.option(
+    "--file",
+    "-f",
+    "bp_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to Blueprint file",
+)
+@click.option(
+    "--with_secrets",
+    "-w",
+    is_flag=True,
+    default=False,
+    help="Interactive Mode to provide the value for secrets",
+)
+def _decompile_bp(name, bp_file, with_secrets):
+    """Decompiles blueprint present on server or json file"""
+
+    decompile_bp(name, bp_file, with_secrets)
 
 
 def create_blueprint(
@@ -281,7 +312,7 @@ def create_blueprint_command(bp_file, name, description, force):
     "--launch_params",
     "-l",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
-    help="Path to python file containing 'runtime_vars' parameter",
+    help="Path to python file for runtime editables",
 )
 def launch_blueprint_command(
     blueprint_name,
@@ -292,9 +323,26 @@ def launch_blueprint_command(
     blueprint=None,
 ):
     """Launches a blueprint.
-    All runtime variables will be prompted by default. When passing the 'ignore_runtime_editable' flag, no variables will be prompted and all default values will be used.
-    The blueprint default values can be overridden by passing a Python file via 'launch_params'. Any variable not defined in the Python file will keep the default value defined in the blueprint. When passing a Python file, no variables will be prompted.
-    """
+All runtime variables will be prompted by default. When passing the 'ignore_runtime_editable' flag, no variables will be prompted and all default values will be used.
+The blueprint default values can be overridden by passing a Python file via 'launch_params'. Any variable not defined in the Python file will keep the default value defined in the blueprint. When passing a Python file, no variables will be prompted.
+
+\b
+>: launch_params: Python file consisting of variables 'variable_list' and 'substrate_list'
+Ex: variable_list = {
+    "value": {"value": <Variable Value>},
+    "context": <Context for variable>
+    "name": "<Variable Name>"
+}
+substrate_list = {
+    "value":  {
+        <substrate_editable_data_object>
+    },
+    "name": <Substrate Name>,
+}
+Sample context for variables:
+    1. context = "<Profile Name>"    # For variable under profile
+    2. context = "<Service Name>"    # For variable under service
+"""
     launch_blueprint_simple(
         blueprint_name,
         app_name,

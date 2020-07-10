@@ -82,6 +82,10 @@ properties:
             default: SCSI
   disk_size_mib:
     type: integer
+    default: 0
+  bootable:
+    type: boolean
+    default: False
   uuid:
     type: string
 
@@ -102,6 +106,7 @@ properties:
         type: string
       install_type:
         type: string
+        default: PREPARED
       is_domain:
         type: boolean
         default: False
@@ -170,6 +175,8 @@ properties:
     type: string
     enum: [ON, OFF]
     default: ON
+  account_uuid:
+    type: string
   gpu_list:
     type: array
     x-calm-dsl-display-name: gpus
@@ -192,6 +199,9 @@ properties:
   serial_port_list:
     type: object
     x-calm-dsl-display-name: serial_ports
+    x-calm-dsl-type: dict
+  boot_config:
+    type: object
     x-calm-dsl-type: dict
 
 {%- endmacro %}

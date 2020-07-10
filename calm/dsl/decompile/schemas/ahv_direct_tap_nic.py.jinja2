@@ -1,0 +1,5 @@
+{%- macro ahv_direct_tap_nic(obj) -%}
+AhvVmNic.DirectNic.tap("{{obj.subnet_name}}", cluster="{{obj.cluster_name}}")
+{% endmacro %}
+
+{{ ahv_direct_tap_nic(obj) }}

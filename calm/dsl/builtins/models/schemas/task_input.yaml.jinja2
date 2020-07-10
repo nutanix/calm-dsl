@@ -1,0 +1,29 @@
+{% macro TaskInput() -%}
+
+title: TaskInput
+type: object
+x-calm-dsl-type: task_input
+required:
+  - name
+properties:
+  input_type:
+    type: string
+    default: "text"
+    enum: ["text", "password", "checkbox", "select", "selectmultiple", "date", "time", "datetime", "file"]
+  name:
+    type: string
+  options:
+    type: array
+    items:
+      type: string
+
+
+{%- endmacro -%}
+
+
+{% macro TaskInputSchema() -%}
+
+TaskInput:
+  {{ TaskInput()|indent(2) }}
+
+{%- endmacro %}

@@ -1,3 +1,5 @@
+{% import "ref.yaml.jinja2" as ref %}
+
 {% macro Blueprint() -%}
 
 title: Blueprint
@@ -47,6 +49,9 @@ properties:
     type: object
     additionalProperties: true
     x-calm-dsl-type: dict
+  default_credential_local_reference:
+    x-calm-dsl-display-name: default_cred
+    {{ ref.Ref() | indent(4) }}
 
 {%- endmacro %}
 

@@ -1,5 +1,7 @@
-from .entity import EntityType, Entity, EntityDict
+from .entity import EntityType, Entity, EntityTypeBase, EntityDict
 from .validator import PropertyValidator
+from .provider_spec import provider_spec
+from .client_attrs import update_dsl_metadata_map, get_dsl_metadata_map
 
 
 # Substrate
@@ -177,6 +179,39 @@ class SubstrateType(EntityType):
             }
 
         cdict["readiness_probe"] = readiness_probe
+
+        return cdict
+
+    def pre_compile(cls):
+        """Adds Ahvvm data to substrate metadata"""
+        super().pre_compile()
+
+        # Adding mapping for substrate class in case of AHV provider
+        types = EntityTypeBase.get_entity_types()
+        AhvVmType = types.get("AhvVm", None)
+
+        provider_spec = cls.provider_spec
+        if isinstance(provider_spec, AhvVmType):
+            ui_name = getattr(cls, "name", "") or cls.__name__
+            sub_metadata = get_dsl_metadata_map([cls.__schema_name__, ui_name])
+
+            vm_dsl_name = provider_spec.__name__
+            vm_display_name = getattr(provider_spec, "name", "") or vm_dsl_name
+
+            sub_metadata[AhvVmType.__schema_name__] = {
+                vm_display_name: {"dsl_name": vm_dsl_name}
+            }
+
+            update_dsl_metadata_map(
+                cls.__schema_name__, entity_name=ui_name, entity_obj=sub_metadata
+            )
+
+    @classmethod
+    def pre_decompile(mcls, cdict, context=[]):
+
+        # Handle provider_spec
+        cdict = super().pre_decompile(cdict, context=context)
+        cdict["create_spec"] = provider_spec(cdict["create_spec"])
         return cdict
 
     def get_task_target(cls):

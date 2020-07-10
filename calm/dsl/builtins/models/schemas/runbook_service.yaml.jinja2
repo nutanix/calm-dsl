@@ -1,0 +1,36 @@
+{% macro RunbookService() -%}
+title: RunbookService
+type: object
+x-calm-dsl-type: runbook_service
+properties:
+  endpoint_definition_list:
+    x-calm-dsl-display-name: endpoints
+    description: Endpoint definitions for runbook service.
+    type: array
+    items:
+      $ref: '#/components/schemas/Endpoint'
+  credential_definition_list:
+    x-calm-dsl-display-name: credentials
+    description: Credential definitions for runbook service.
+    type: array
+    items:
+      $ref: '#/components/schemas/Credential'
+  client_attrs:
+    type: object
+    additionalProperties: true
+    x-calm-dsl-type: dict
+  runbook:
+    $ref: '#/components/schemas/Runbook'
+  default_target_reference:
+    type: object
+    x-calm-dsl-type: app_ref
+    x-calm-dsl-display-name: default_target
+{%- endmacro %}
+
+
+{% macro RunbookServiceSchema() -%}
+
+RunbookService:
+  {{ RunbookService()|indent(2) }}
+
+{%- endmacro %}

@@ -1,0 +1,44 @@
+{
+    "DslInputRunbook": {
+        "input_payload": {
+            "user_name": {
+                "secret": false,
+                "value": "User"
+            },
+            "password": {
+                "secret": true,
+                "value": "abzy"
+            },
+            "date": {
+                "secret": false,
+                "value": "2019-09-13"
+            },
+            "time": {
+                "secret": false,
+                "value": "00:00:00"
+            },
+            "user": {
+                "secret": false,
+                "value": "user2"
+            }
+        },
+        "expected_output": "Hello User\nYour Password is xxxx\nDate you selected is 2019-09-13\nTime selected is 00:00:00\nUser selected is user2\n"
+    },
+    "DslRunbookWithVariables": {
+        "run_payload": {
+            "spec": {
+                "args": [
+                    {
+                        "name": "firstname",
+                        "value": "Mr X"
+                    },
+                    {
+                        "name": "lastname",
+                        "value": "Y"
+                    }
+                ]
+            }
+        },
+        "expected_output": "Hello Mr X LASTNAME\n"
+    }
+}

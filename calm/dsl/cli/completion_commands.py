@@ -4,7 +4,7 @@ import click_completion
 from .main import completion
 
 
-@completion.command()
+@completion.command("show")
 @click.option(
     "-i", "--case-insensitive/--no-case-insensitive", help="Case insensitive completion"
 )
@@ -23,7 +23,7 @@ def show(shell, case_insensitive):
     click.echo(click_completion.core.get_code(shell, extra_env=extra_env))
 
 
-@completion.command()
+@completion.command("install")
 @click.option(
     "--append/--overwrite", help="Append the completion code to the file", default=None
 )

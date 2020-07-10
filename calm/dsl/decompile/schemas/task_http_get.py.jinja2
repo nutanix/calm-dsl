@@ -1,0 +1,9 @@
+{%- macro http_get_task(obj) -%}
+{%- if obj.target is not defined %}
+CalmTask.HTTP.get('{{obj.attrs.url}}', headers={{obj.headers}}, secret_headers={{obj.secret_headers}} , content_type='{{obj.attrs.content_type}}', verify={{obj.attrs.tls_verify}}, status_mapping={{obj.status_mapping}}, response_paths={{obj.response_paths}}, name='{{obj.name}}')
+{%- else %}
+CalmTask.HTTP.get('{{obj.attrs.url}}', headers={{obj.headers}}, secret_headers={{obj.secret_headers}} , content_type='{{obj.attrs.content_type}}', verify={{obj.attrs.tls_verify}}, status_mapping={{obj.status_mapping}}, response_paths={{obj.response_paths}}, name='{{obj.name}}', target={{obj.target}})
+{%- endif %}
+{%- endmacro %}
+
+{{ http_get_task(obj) }}

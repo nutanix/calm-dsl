@@ -1,4 +1,5 @@
 import atexit
+import os
 
 from calm.dsl.config import get_init_data
 from .table_config import dsl_database, SecretTable, DataTable, VersionTable
@@ -26,9 +27,7 @@ class Database:
         return dsl_database
 
     def __init__(self):
-        if not self.db:
-            self.update_db(self.instantiate_db())
-
+        self.update_db(self.instantiate_db())
         self.connect()
         self.secret_table = self.set_and_verify(SecretTable)
         self.data_table = self.set_and_verify(DataTable)
@@ -50,6 +49,15 @@ class Database:
             self.registered_tables.append(table_cls)
 
         return table_cls
+
+    def is_closed(self):
+        """return True if db connection is closed else False"""
+
+        if self.db:
+            return self.db.is_closed()
+
+        # If db not found, return true
+        return True
 
     def connect(self):
 
@@ -74,3 +82,26 @@ def get_db_handle():
         _Database = Database()
 
     return _Database
+
+
+def init_db_handle():
+    """Initializes database module and replaces the existing one"""
+
+    global _Database
+
+    # Closing existing connection if exists
+    if not _Database.is_closed():
+        # Unregister close() method from atexit handler
+        atexit.unregister(_Database.close)
+
+        # Close the connection
+        _Database.close()
+
+    # Removing existing db at init location if exists
+    init_obj = get_init_data()
+    db_location = init_obj["DB"].get("location")
+    if os.path.exists(db_location):
+        os.remove(db_location)
+
+    # Initialize new database object
+    _Database = Database()

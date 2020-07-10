@@ -10,6 +10,7 @@ from .main import (
     delete,
     reject,
     unpublish,
+    decompile,
 )
 from .mpis import (
     get_marketplace_items,
@@ -26,6 +27,7 @@ from .mpis import (
     delete_marketplace_bp,
     reject_marketplace_bp,
     unpublish_marketplace_bp,
+    decompile_marketplace_bp,
 )
 from .constants import MARKETPLACE_BLUEPRINT
 
@@ -107,6 +109,14 @@ def _get_marketplace_bps(name, quiet, app_family, app_states):
 
 @describe.command("marketplace_item")
 @click.argument("name")
+@click.option(
+    "--out",
+    "-o",
+    "out",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="output format",
+)
 @click.option("--version", "-v", default=None, help="Version of marketplace item")
 @click.option(
     "--source",
@@ -115,14 +125,22 @@ def _get_marketplace_bps(name, quiet, app_family, app_states):
     type=click.Choice(APP_SOURCES),
     help="App Source for marketplace item",
 )
-def _describe_marketplace_item(name, version, source):
+def _describe_marketplace_item(name, out, version, source):
     """Describe a market place item"""
 
-    describe_marketplace_item(name=name, version=version, app_source=source)
+    describe_marketplace_item(name=name, out=out, version=version, app_source=source)
 
 
 @describe.command("marketplace_bp")
 @click.argument("name")
+@click.option(
+    "--out",
+    "-o",
+    "out",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="output format.",
+)
 @click.option("--version", "-v", default=None, help="Version of marketplace blueprint")
 @click.option(
     "--source",
@@ -138,11 +156,11 @@ def _describe_marketplace_item(name, version, source):
     type=click.Choice(APP_STATES),
     help="State of marketplace blueprint",
 )
-def _describe_marketplace_bp(name, version, source, app_state):
+def _describe_marketplace_bp(name, out, version, source, app_state):
     """Describe a market place blueprint"""
 
     describe_marketplace_bp(
-        name=name, version=version, app_source=source, app_state=app_state
+        name=name, out=out, version=version, app_source=source, app_state=app_state
     )
 
 
@@ -184,6 +202,38 @@ def _launch_marketplace_bp(
         profile_name=profile_name,
         patch_editables=not ignore_runtime_variables,
         app_source=source,
+    )
+
+
+@decompile.command("marketplace_bp", experimental=True)
+@click.argument("mpi_name")
+@click.option("--name", "-n", default=None, help="Name of blueprint")
+@click.option("--version", "-v", default=None, help="Version of marketplace blueprint")
+@click.option("--project", "-p", default=None, help="Project for the blueprint")
+@click.option(
+    "--source",
+    "-s",
+    default=None,
+    type=click.Choice(APP_SOURCES),
+    help="App Source of marketplace blueprint",
+)
+@click.option(
+    "--with_secrets",
+    "-w",
+    is_flag=True,
+    default=False,
+    help="Interactive Mode to provide the value for secrets",
+)
+def _decompile_marketplace_bp(mpi_name, version, project, name, source, with_secrets):
+    """Decompiles marketplace blueprint"""
+
+    decompile_marketplace_bp(
+        name=mpi_name,
+        version=version,
+        project=project,
+        bp_name=name,
+        app_source=None,
+        with_secrets=with_secrets,
     )
 
 

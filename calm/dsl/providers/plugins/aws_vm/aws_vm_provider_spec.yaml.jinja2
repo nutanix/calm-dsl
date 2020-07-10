@@ -34,8 +34,8 @@ type: object
 properties:
   account_uuid:
     type: string
-    minLength: 36
-    maxLength: 36
+  name:
+    type: string
   instance_type:
     type: string
   key_name:
@@ -49,6 +49,10 @@ properties:
   associate_public_ip_address:
     type: boolean
   region:
+    type: string
+  private_ip_address:
+    type: string
+  type:
     type: string
   security_group_list:
     type: array
@@ -79,6 +83,8 @@ properties:
           type: string
         value:
           type: string
+        type:
+          type: string
   block_device_map:
     type: object
     properties:
@@ -90,17 +96,6 @@ properties:
         type: array
         items:
           {{ awsDisks() | indent(10) }}
-
-{%- endmacro %}
-
-
-{% macro kind_reference() -%}
-
-title: Reference
-type: object
-properties:
-  kind:
-    type: string
 
 {%- endmacro %}
 
@@ -120,6 +115,8 @@ properties:
     type: integer
   interval_type:
     type: string
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -135,6 +132,8 @@ properties:
     type: string
   local_retention_quantity:
     type: integer
+  type:
+    type: string
   schedule:
     {{ nutanixSnapshotSchedule() | indent(4) }}
 
@@ -146,13 +145,35 @@ properties:
 title: Nutanix Snapshot Policy
 type: object
 properties:
+  type:
+    type: string
   replication_target:
     type: object
     properties:
       cluster_reference:
-        {{ kind_reference() | indent(8) }}
+        type: [object, "null"]
+        properties:
+          uuid:
+            type: string
+          kind:
+            type: string
+            default: cluster
+          name:
+            type: string
+          type:
+            type: string
       availability_zone_reference:
-        {{ kind_reference() | indent(8) }}
+        type: [object, "null"]
+        properties:
+          uuid:
+            type: string
+          kind:
+            type: string
+            default: availability_zone
+          name:
+            type: string
+          type:
+            type: string
   snapshot_schedule_list:
     type: array
     items:
@@ -164,11 +185,13 @@ properties:
 {% macro nutanixBackupPolicy() -%}
 
 title: Nutanix Backup Policy
-type: object
+type: [object, "null"]
 properties:
   default_snapshot_type:
     type: string
   consistency_group_identifier:
+    type: string
+  type:
     type: string
   snapshot_policy_list:
     type: array
@@ -187,17 +210,36 @@ properties:
     type: string
   type:
     type: string
-    enum: 
-    - PROVISION_AWS_VM
+    enum: [PROVISION_AWS_VM, '']
     default: PROVISION_AWS_VM
   resources:
     {{ awsResource() | indent(4) }}
-  availability_zone_reference:          # TODO add enums['availability_zone']
-    {{ kind_reference() | indent(4) }}
+  cluster_reference:
+    type: [object, "null"]
+    properties:
+      uuid:
+        type: string
+      kind:
+        type: string
+        default: cluster
+      name:
+        type: string
+      type:
+        type: string
+  availability_zone_reference:
+    type: [object, "null"]
+    properties:
+      uuid:
+        type: string
+      kind:
+        type: string
+        default: availability_zone
+      name:
+        type: string
+      type:
+        type: string
   backup_policy:
     {{ nutanixBackupPolicy() | indent(4) }}
-  cluster_reference:                    # TODO add enums['cluster']
-    {{ kind_reference() | indent(4) }}
 
 {%- endmacro %}
 

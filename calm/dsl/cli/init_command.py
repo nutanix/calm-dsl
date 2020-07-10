@@ -12,10 +12,10 @@ from calm.dsl.config import (
     get_default_db_file,
     get_default_local_dir,
 )
-from calm.dsl.db import get_db_handle
+from calm.dsl.db import init_db_handle
 from calm.dsl.api import get_resource_api, update_client_handle, get_client_handle
 from calm.dsl.store import Cache
-from calm.dsl.init import init_bp
+from calm.dsl.init import init_bp, init_runbook
 from calm.dsl.providers import get_provider_types
 
 from .main import init, set
@@ -197,11 +197,10 @@ def set_server_details(
 
 def init_db():
     LOG.info("Creating local database")
-    get_db_handle()
+    init_db_handle()
 
 
 def sync_cache():
-    LOG.info("Updating Cache")
     Cache.sync()
 
 
@@ -226,6 +225,22 @@ def init_dsl_bp(bp_name, dir_name, provider_type):
         sys.exit(-1)
 
     init_bp(bp_name, dir_name, provider_type)
+
+
+@init.command("runbook", feature_min_version="3.0.0", experimental=True)
+@click.option("--name", "-n", "runbook_name", default="Hello", help="Name of runbook")
+@click.option(
+    "--dir_name", "-d", default=os.getcwd(), help="Directory path for the runbook"
+)
+@click.option("--ip", help="VM IP for the sample runbook")
+def init_dsl_runbook(runbook_name, dir_name, ip):
+    """Creates a starting directory for runbook"""
+
+    if not runbook_name.isidentifier():
+        LOG.error("Runbook name '{}' is not a valid identifier".format(runbook_name))
+        sys.exit(-1)
+
+    init_runbook(runbook_name, dir_name, vm_ip=ip)
 
 
 @set.command("config")

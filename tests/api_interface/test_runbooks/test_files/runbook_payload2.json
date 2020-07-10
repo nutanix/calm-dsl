@@ -1,0 +1,83 @@
+{
+  "spec": {
+    "name": "test_rb",
+    "resources": {
+      "default_target_reference": {
+        "kind": "app_endpoint",
+        "uuid": "7eedc21e-d525-f942-8f11-ccb18f585a6e",
+        "name": "Linux_53ef06e9d7"
+      },
+      "endpoint_definition_list": [],
+      "credential_definition_list": [
+        {
+          "username": "username",
+          "secret": {
+            "attrs": {
+              "is_secret_modified": true
+            },
+            "value": "password"
+          },
+          "type": "PASSWORD",
+          "name": "d",
+          "uuid": "f9419521-1116-f638-b127-25d0289f80e7"
+        }
+      ],
+      "runbook": {
+        "main_task_local_reference": {
+          "kind": "app_task",
+          "uuid": "cd34c055-ac7d-b4ad-89a7-ee45659c7882"
+        },
+        "task_definition_list": [
+          {
+            "attrs": {
+              "edges": []
+            },
+            "type": "DAG",
+            "name": "Untitled",
+            "child_tasks_local_reference_list": [
+              {
+                "kind": "app_task",
+                "uuid": "561d8bd5-37d5-dd07-e2d2-9386178710f2"
+              }
+            ],
+            "uuid": "cd34c055-ac7d-b4ad-89a7-ee45659c7882"
+          },
+          {
+            "uuid": "561d8bd5-37d5-dd07-e2d2-9386178710f2",
+            "child_tasks_local_reference_list": [],
+            "attrs": {
+              "script": "echo \"@@{new_var}@@\"",
+              "script_type": "sh"
+            },
+            "type": "EXEC",
+            "variable_list": [],
+            "name": "Task2"
+          }
+        ],
+        "name": "runbook",
+        "variable_list": [
+          {
+            "val_type": "STRING",
+            "name": "new_var",
+            "data_type": "BASE",
+            "uuid": "4b103066-dcf2-c81e-3e19-fa4713cb77d2",
+            "value": "NEW_VAL",
+            "label": "",
+            "attrs": {},
+            "is_hidden": false,
+            "type": "LOCAL",
+            "options": {
+              "type": "PREDEFINED"
+            },
+            "description": ""
+          }
+        ],
+        "uuid": "48574a4c-d27a-2041-851b-16fee880e1b4"
+      }
+    }
+  },
+  "api_version": "3.0",
+  "metadata": {
+    "kind": "runbook"
+  }
+}

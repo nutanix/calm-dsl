@@ -8,6 +8,8 @@ properties:
     type: string
   net_name:
     type: string
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -27,6 +29,8 @@ properties:
   key:
     type: integer
     default: -1
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -43,8 +47,7 @@ properties:
     type: string
     default: SCSI
   disk_size_mb:
-    type: integer
-    default: -1
+    type: ["integer", "null"]
   disk_mode:
     type: string
     default: "persistent"
@@ -54,10 +57,12 @@ properties:
   controller_key:
     type: integer
   device_slot:
-    type: integer
+    type: ["integer", "string"]
   iso_path:
     type: string
     default: ""
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -74,8 +79,7 @@ properties:
     type: string
     default: SCSI
   disk_size_mb:
-    type: integer
-    default: -1
+    type: ["integer", "null"]
   disk_mode:
     type: string
   location:
@@ -85,7 +89,7 @@ properties:
     type: integer
     default: -1
   device_slot:
-    type: integer
+    type: ["integer", "string"]
     default: -1
   iso_path:
     type: string
@@ -95,6 +99,8 @@ properties:
     default: False
   key:
     type: integer
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -110,6 +116,8 @@ properties:
     type: integer
     default: -1
   bus_sharing:
+    type: string
+  type:
     type: string
 
 {%- endmacro %}
@@ -129,6 +137,8 @@ properties:
   is_deleted:
     type: boolean
     default: False
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -150,6 +160,8 @@ properties:
     type: boolean
   ip:
     type: string
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -157,7 +169,7 @@ properties:
 {% macro VcenterLinuxSpecInfo() -%}
 
 title: Guest Customization Linux data
-type: object
+type: [object, "null"]
 properties:
   hostname:
     type: string
@@ -181,6 +193,8 @@ properties:
     type: array
     items:
       {{ VcenterNetworkSetting() | indent(6) }}
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -188,7 +202,7 @@ properties:
 {% macro VcenterWindowsSpecInfo() -%}
 
 title: Guest Customization Windows data
-type: object
+type: [object, "null"]
 properties:
   computer_name:
     type: string
@@ -232,6 +246,8 @@ properties:
   login_count:
     type: integer
     default: 1
+  type:
+    type: string
   password:
     type: object
     properties:
@@ -244,7 +260,11 @@ properties:
           secret_reference:
             type: object
             default: {}
+          type:
+            type: string
       value:
+        type: string
+      type:
         type: string
   domain_password:
     type: object
@@ -258,7 +278,11 @@ properties:
           secret_reference:
             type: object
             default: {}
+          type:
+            type: string
       value:
+        type: string
+      type:
         type: string
 
 {%- endmacro %}
@@ -282,6 +306,8 @@ properties:
     {{ VcenterLinuxSpecInfo() | indent(4) }}
   windows_data:
     {{ VcenterWindowsSpecInfo() | indent(4) }}
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -293,8 +319,6 @@ type: object
 properties:
   account_uuid:
     type: string
-    minLength: 36
-    maxLength: 36
   num_vcpus_per_socket:
     type: integer
     default: 0
@@ -307,6 +331,8 @@ properties:
   power_state:
     type: string
     default: poweron
+  type:
+    type: string
   nic_list:
     type: array
     items:
@@ -346,8 +372,7 @@ properties:
     type: string
   type:
     type: string
-    enum: 
-    - PROVISION_VMWARE_VM
+    enum: [PROVISION_VMWARE_VM, '']
     default: PROVISION_VMWARE_VM
   drs_mode:
     type: boolean

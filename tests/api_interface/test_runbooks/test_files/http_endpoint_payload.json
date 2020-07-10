@@ -1,0 +1,31 @@
+{
+  "spec": {
+    "name": "http_test",
+    "resources": {
+      "type": "HTTP",
+      "attrs": {
+        "urls": ["www.nutanix.com"],
+        "retry_interval": 10,
+        "retry_count": 1,
+        "authentication": {
+          "username": "wefewf",
+          "password": {
+            "attrs": {
+              "is_secret_modified": true
+            },
+            "value": "Password"
+          },
+          "type": "basic"
+        },
+        "tls_verify": true,
+        "connection_timeout": 120
+      }
+    }
+  },
+  "api_version": "3.0",
+  "metadata": {
+    "kind": "endpoint",
+    "name": "http_test",
+    "uuid": "b12c4087-6a65-408a-b9b5-7d573aee2d09"
+  }
+}

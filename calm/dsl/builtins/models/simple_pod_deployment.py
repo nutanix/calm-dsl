@@ -19,7 +19,7 @@ class SimplePODDeploymentValidator(
 
 
 def simple_pod_deployment(**kwargs):
-    name = kwargs.get("name") or getattr(PODDeploymentType, "__schema_name__")
+    name = kwargs.pop("name", None) or getattr(PODDeploymentType, "__schema_name__")
     bases = (Entity,)
     return SimplePODDeploymentType(name, bases, kwargs)
 
