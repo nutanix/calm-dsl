@@ -361,7 +361,11 @@ class AhvImagesCache(CacheTableBase):
         image_type = kwargs.get("image_type", "")
         # store data in table
         super().create(
-            name=name, uuid=uuid, image_type=image_type, image_size=image_size, account_uuid=account_uuid
+            name=name,
+            uuid=uuid,
+            image_type=image_type,
+            image_size=image_size,
+            account_uuid=account_uuid,
         )
 
     @classmethod
