@@ -1,0 +1,50 @@
+{
+    "endpoint_definition_list": [],
+    "credential_definition_list": [],
+    "client_attrs": {},
+    "runbook": {
+        "name": "DslExistingEndpoint_runbook",
+        "description": "",
+        "main_task_local_reference": {
+            "kind": "app_task",
+            "name": "DslExistingEndpoint_dag"
+        },
+        "task_definition_list": [
+            {
+                "name": "DslExistingEndpoint_dag",
+                "description": "",
+                "type": "DAG",
+                "attrs": {
+                    "edges": []
+                },
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "Task1"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "Task1",
+                "description": "",
+                "type": "EXEC",
+                "target_any_local_reference": {
+                    "kind": "app_endpoint",
+                    "name": "DslEndpoint"
+                },
+                "attrs": {
+                    "script_type": "sh",
+                    "script": "echo \"hello\""
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            }
+        ],
+        "variable_list": []
+    }
+}

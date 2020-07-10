@@ -1,0 +1,74 @@
+{
+    "endpoint_definition_list": [],
+    "credential_definition_list": [],
+    "client_attrs": {},
+    "runbook": {
+        "name": "DslRunbookWithVariables_runbook",
+        "description": "",
+        "main_task_local_reference": {
+            "kind": "app_task",
+            "name": "DslRunbookWithVariables_dag"
+        },
+        "task_definition_list": [
+            {
+                "name": "DslRunbookWithVariables_dag",
+                "description": "",
+                "type": "DAG",
+                "attrs": {
+                    "edges": []
+                },
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "Exec_Task"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "Exec_Task",
+                "description": "",
+                "type": "EXEC",
+                "attrs": {
+                    "script_type": "static",
+                    "script": "print \"Hello @@{firstname}@@ @@{lastname}@@\"\n"
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            }
+        ],
+        "variable_list": [
+            {
+                "name": "firstname",
+                "description": "",
+                "type": "LOCAL",
+                "label": "",
+                "attrs": {},
+                "val_type": "STRING",
+                "value": "FIRSTNAME",
+                "data_type": "BASE",
+                "editables": {
+                    "value": true
+                },
+                "is_hidden": false,
+                "is_mandatory": false
+            },
+            {
+                "name": "lastname",
+                "description": "",
+                "type": "LOCAL",
+                "label": "",
+                "attrs": {},
+                "val_type": "STRING",
+                "value": "LASTNAME",
+                "data_type": "BASE",
+                "is_hidden": false,
+                "is_mandatory": false
+            }
+        ]
+    }
+}

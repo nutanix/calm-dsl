@@ -1,0 +1,26 @@
+{% macro Endpoint() -%}
+
+title: Endpoint
+type: object
+x-calm-dsl-type: app_endpoint
+properties:
+  name:
+    type: string
+    maxLength: 64
+  type:
+    type: string
+    maxLength: 64
+  attrs:
+    additionalProperties: true
+    type: object
+    x-calm-dsl-type: dict
+  
+{%- endmacro %}
+
+
+{% macro EndpointSchema() -%}
+
+Endpoint:
+  {{ Endpoint()|indent(2) }}
+
+{%- endmacro %}

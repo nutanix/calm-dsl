@@ -1,0 +1,142 @@
+{
+    "endpoint_definition_list": [],
+    "credential_definition_list": [],
+    "client_attrs": {},
+    "runbook": {
+        "name": "DslWhileLoopRunbook_runbook",
+        "description": "",
+        "main_task_local_reference": {
+            "kind": "app_task",
+            "name": "DslWhileLoopRunbook_dag"
+        },
+        "task_definition_list": [
+            {
+                "name": "DslWhileLoopRunbook_dag",
+                "description": "",
+                "type": "DAG",
+                "attrs": {
+                    "edges": [
+                        {
+                            "from_task_reference": {
+                                "kind": "app_task",
+                                "name": "WhileTask"
+                            },
+                            "to_task_reference": {
+                                "kind": "app_task",
+                                "name": "WhileTask2"
+                            }
+                        }
+                    ]
+                },
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "WhileTask"
+                    },
+                    {
+                        "kind": "app_task",
+                        "name": "WhileTask2"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "WhileTask_loop_meta_task",
+                "description": "",
+                "type": "META",
+                "attrs": {},
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "Task1"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "Task1",
+                "description": "",
+                "type": "EXEC",
+                "attrs": {
+                    "script_type": "static",
+                    "script": "print 'Inside loop1 @@{loop_var}@@'"
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "WhileTask",
+                "description": "",
+                "type": "WHILE_LOOP",
+                "attrs": {
+                    "iterations": "2",
+                    "loop_variable": "loop_var",
+                    "exit_condition_type": "on_success"
+                },
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "WhileTask_loop_meta_task"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "WhileTask2_loop_meta_task",
+                "description": "",
+                "type": "META",
+                "attrs": {},
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "Task2"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "Task2",
+                "description": "",
+                "type": "EXEC",
+                "attrs": {
+                    "script_type": "static",
+                    "script": "print 'Inside loop2 @@{iteration}@@'"
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "WhileTask2",
+                "description": "",
+                "type": "WHILE_LOOP",
+                "attrs": {
+                    "iterations": "2",
+                    "loop_variable": "iteration",
+                    "exit_condition_type": "dont_care"
+                },
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "WhileTask2_loop_meta_task"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            }
+        ],
+        "variable_list": []
+    }
+}

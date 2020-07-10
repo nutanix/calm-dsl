@@ -1,0 +1,155 @@
+{
+    "endpoint_definition_list": [],
+    "credential_definition_list": [],
+    "client_attrs": {},
+    "runbook": {
+        "name": "DslSimpleRunbook_runbook",
+        "description": "",
+        "main_task_local_reference": {
+            "kind": "app_task",
+            "name": "DslSimpleRunbook_dag"
+        },
+        "task_definition_list": [
+            {
+                "name": "DslSimpleRunbook_dag",
+                "description": "",
+                "type": "DAG",
+                "attrs": {
+                    "edges": [
+                        {
+                            "from_task_reference": {
+                                "kind": "app_task",
+                                "name": "Task1"
+                            },
+                            "to_task_reference": {
+                                "kind": "app_task",
+                                "name": "Task2"
+                            }
+                        },
+                        {
+                            "from_task_reference": {
+                                "kind": "app_task",
+                                "name": "Task2"
+                            },
+                            "to_task_reference": {
+                                "kind": "app_task",
+                                "name": "Task3"
+                            }
+                        },
+                        {
+                            "from_task_reference": {
+                                "kind": "app_task",
+                                "name": "Task3"
+                            },
+                            "to_task_reference": {
+                                "kind": "app_task",
+                                "name": "Task4"
+                            }
+                        },
+                        {
+                            "from_task_reference": {
+                                "kind": "app_task",
+                                "name": "Task4"
+                            },
+                            "to_task_reference": {
+                                "kind": "app_task",
+                                "name": "Task5"
+                            }
+                        }
+                    ]
+                },
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "Task1"
+                    },
+                    {
+                        "kind": "app_task",
+                        "name": "Task2"
+                    },
+                    {
+                        "kind": "app_task",
+                        "name": "Task3"
+                    },
+                    {
+                        "kind": "app_task",
+                        "name": "Task4"
+                    },
+                    {
+                        "kind": "app_task",
+                        "name": "Task5"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "Task1",
+                "description": "",
+                "type": "EXEC",
+                "attrs": {
+                    "script_type": "static",
+                    "script": "print \"Start\"\nsleep(20)\nprint \"End\""
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "Task2",
+                "description": "",
+                "type": "EXEC",
+                "attrs": {
+                    "script_type": "static",
+                    "script": "print \"Start\"\nsleep(20)\nprint \"End\""
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "Task3",
+                "description": "",
+                "type": "EXEC",
+                "attrs": {
+                    "script_type": "static",
+                    "script": "print \"Start\"\nsleep(20)\nprint \"End\""
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "Task4",
+                "description": "",
+                "type": "EXEC",
+                "attrs": {
+                    "script_type": "static",
+                    "script": "print \"Start\"\nsleep(20)\nprint \"End\""
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "Task5",
+                "description": "",
+                "type": "EXEC",
+                "attrs": {
+                    "script_type": "static",
+                    "script": "print \"Start\"\nsleep(20)\nprint \"End\""
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            }
+        ],
+        "variable_list": []
+    }
+}

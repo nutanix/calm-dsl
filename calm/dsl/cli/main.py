@@ -60,6 +60,14 @@ Commonly used commands:
   calm create bp -f sample_bp.py --name Sample-App-3   -> Upload a new blueprint from a python DSL file
   calm describe app Fancy-App-1   -> Describe an existing app
   calm app Fancy-App-1 -w my_action   -> Run an action on an app
+  calm get runbooks  -> Get list of runbooks
+  calm describe runbook MyFancyRunbook   -> Describe an existing runbook
+  calm create runbook -f sample_rb.py --name Sample-RB  -> Upload a new runbook from a python DSL file
+  calm run runbook MyFancyRunbook -> Runs the existing runbook MyFancyRunbook
+  calm run runbook -f sample_rb.py -> Runs the runbook from a python DSL file
+  calm get execution_history  -> Get list of runbook executions
+  calm get endpoints -> Get list of endpoints
+  calm create endpoint -f sample_ep.py --name Sample-Endpoint -> Upload a new endpoint from a python DSL file
 """
     ctx.ensure_object(dict)
     ctx.obj["verbose"] = True
@@ -114,7 +122,7 @@ def validate_provider_spec(spec_file, provider_type):
 
 @main.group(cls=FeatureFlagGroup)
 def get():
-    """Get various things like blueprints, apps: `get apps` and `get bps` are the primary ones."""
+    """Get various things like blueprints, apps: `get apps`, `get bps`, `get endpoints` and `get runbooks` are the primary ones."""
     pass
 
 
@@ -265,7 +273,7 @@ def decompile():
 
 @main.group(cls=FeatureFlagGroup)
 def create():
-    """Create entities in Calm (blueprint, project) """
+    """Create entities in Calm (blueprint, project, endpoint, runbook) """
     pass
 
 
@@ -307,19 +315,37 @@ def reject():
 
 @main.group(cls=FeatureFlagGroup)
 def describe():
-    """Describe apps, blueprints, projects, accounts"""
+    """Describe apps, blueprints, projects, accounts, endpoints, runbooks"""
     pass
 
 
 @main.group(cls=FeatureFlagGroup)
 def run():
-    """Run actions in an app"""
+    """Run actions in an app or runbooks"""
     pass
 
 
 @main.group(cls=FeatureFlagGroup)
 def watch():
-    """Track actions running on apps"""
+    """Track actions running on apps or runbook executions"""
+    pass
+
+
+@main.group(cls=FeatureFlagGroup)
+def pause():
+    """Pause running runbook executions"""
+    pass
+
+
+@main.group(cls=FeatureFlagGroup)
+def resume():
+    """resume paused runbook executions"""
+    pass
+
+
+@main.group(cls=FeatureFlagGroup)
+def abort():
+    """Abort runbook executions"""
     pass
 
 
