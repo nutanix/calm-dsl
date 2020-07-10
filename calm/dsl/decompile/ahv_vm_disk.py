@@ -41,13 +41,16 @@ def render_ahv_vm_disk(cls, boot_config):
         elif data_source_ref["kind"] == "image":
             operation_type = "cloneFromImageService"
             img_uuid = data_source_ref.get("uuid")
-            disk_cache_data = Cache.get_entity_data_using_uuid(
-                entity_type="ahv_disk_image", uuid=img_uuid
+            disk_cache_data = (
+                Cache.get_entity_data_using_uuid(
+                    entity_type="ahv_disk_image", uuid=img_uuid
+                )
+                or {}
             )
             if not disk_cache_data:
-                LOG.error("Image with uuid '{}' not found".format(img_uuid))
-                sys.exit(-1)
-            user_attrs["name"] = disk_cache_data["name"]
+                # Windows images may not be present
+                LOG.warning("Image with uuid '{}' not found".format(img_uuid))
+            user_attrs["name"] = disk_cache_data.get("name", "")
 
         else:
             LOG.error(

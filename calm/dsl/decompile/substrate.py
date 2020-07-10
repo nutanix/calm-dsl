@@ -59,8 +59,11 @@ def render_substrate_template(cls, vm_images=[]):
     if create_spec_editables:
         create_spec_editable_file_name = cls.__name__ + "_create_spec_editables.yaml"
         file_location = os.path.join(spec_dir, create_spec_editable_file_name)
-        user_attrs["provider_spec_editables"] = "read_spec('{}')".format(
-            os.path.join(get_specs_dir_key(), create_spec_editable_file_name)
+        dsl_file_location_alias = "os.path.join('{}', '{}')".format(
+            get_specs_dir_key(), create_spec_editable_file_name
+        )
+        user_attrs["provider_spec_editables"] = "read_spec({})".format(
+            dsl_file_location_alias
         )
 
         # Write editable spec to separate file
@@ -87,7 +90,7 @@ def render_substrate_template(cls, vm_images=[]):
         provider_spec_file_name = cls.__name__ + "_provider_spec.yaml"
         user_attrs["provider_spec"] = get_provider_spec_string(
             spec=provider_spec,
-            filename=os.path.join(get_specs_dir_key(), provider_spec_file_name),
+            filename=provider_spec_file_name,
             provider_type=cls.provider_type,
             vm_images=vm_images,
         )
@@ -119,6 +122,9 @@ def render_substrate_template(cls, vm_images=[]):
 def get_provider_spec_string(spec, filename, provider_type, vm_images):
 
     # TODO add switch to use YAML_file/Helper_class for ahv provider
+    dsl_file_location_alias = "os.path.join('{}', '{}')".format(
+        get_specs_dir_key(), filename
+    )
     if provider_type == "AHV_VM":
         disk_list = spec["resources"]["disk_list"]
 
@@ -139,8 +145,8 @@ def get_provider_spec_string(spec, filename, provider_type, vm_images):
             disk_pkg_string = disk_pkg_string[1:]
         disk_pkg_string = "{" + disk_pkg_string + "}"
 
-        res = "read_ahv_spec('{}', disk_packages = {})".format(
-            filename, disk_pkg_string
+        res = "read_ahv_spec({}, disk_packages = {})".format(
+            dsl_file_location_alias, disk_pkg_string
         )
 
     elif provider_type == "VMWARE_VM":
@@ -148,12 +154,14 @@ def get_provider_spec_string(spec, filename, provider_type, vm_images):
 
         if spec_template in vm_images:
             spec["template"] = ""
-            res = "read_vmw_spec('{}', vm_template={})".format(filename, spec_template)
+            res = "read_vmw_spec({}, vm_template={})".format(
+                dsl_file_location_alias, spec_template
+            )
 
         else:
-            res = "read_vmw_spec('{}')".format(filename)
+            res = "read_vmw_spec({})".format(dsl_file_location_alias)
 
     else:
-        res = "read_provider_spec('{}')".format(filename)
+        res = "read_provider_spec({})".format(dsl_file_location_alias)
 
     return res
