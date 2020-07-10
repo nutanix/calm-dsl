@@ -35,7 +35,7 @@ from .runbooks import (
 LOG = get_logging_handle(__name__)
 
 
-@get.command("runbooks", feature_min_version="3.0.0")
+@get.command("runbooks", feature_min_version="3.0.0", experimental=True)
 @click.option("--name", "-n", default=None, help="Search for runbooks by name")
 @click.option(
     "--filter", "filter_by", "-f", default=None, help="Filter runbooks by this string"
@@ -56,7 +56,7 @@ def _get_runbook_list(name, filter_by, limit, offset, quiet, all_items):
     get_runbook_list(name, filter_by, limit, offset, quiet, all_items)
 
 
-@get.command("runbook_executions", feature_min_version="3.0.0")
+@get.command("runbook_executions", feature_min_version="3.0.0", experimental=True)
 @click.option(
     "--name",
     "-n",
@@ -80,7 +80,7 @@ def _get_execution_history(name, filter_by, limit, offset):
     get_execution_history(name, filter_by, limit, offset)
 
 
-@create.command("runbook", feature_min_version="3.0.0")
+@create.command("runbook", feature_min_version="3.0.0", experimental=True)
 @click.option(
     "--file",
     "-f",
@@ -104,7 +104,7 @@ def _create_runbook_command(runbook_file, name, description, force):
     create_runbook_command(runbook_file, name, description, force)
 
 
-@update.command("runbook", feature_min_version="3.0.0")
+@update.command("runbook", feature_min_version="3.0.0", experimental=True)
 @click.option(
     "--file",
     "-f",
@@ -121,7 +121,7 @@ def _update_runbook_command(runbook_file, name, description):
     update_runbook_command(runbook_file, name, description)
 
 
-@delete.command("runbook", feature_min_version="3.0.0")
+@delete.command("runbook", feature_min_version="3.0.0", experimental=True)
 @click.argument("runbook_names", nargs=-1)
 def _delete_runbook(runbook_names):
     """Deletes a runbook"""
@@ -129,7 +129,7 @@ def _delete_runbook(runbook_names):
     delete_runbook(runbook_names)
 
 
-@describe.command("runbook", feature_min_version="3.0.0")
+@describe.command("runbook", feature_min_version="3.0.0", experimental=True)
 @click.argument("runbook_name")
 @click.option(
     "--out",
@@ -145,7 +145,7 @@ def _describe_runbook(runbook_name, out):
     describe_runbook(runbook_name, out)
 
 
-@format.command("runbook", feature_min_version="3.0.0")
+@format.command("runbook", feature_min_version="3.0.0", experimental=True)
 @click.option(
     "--file",
     "-f",
@@ -158,7 +158,7 @@ def _format_runbook_command(runbook_file):
     format_runbook_command(runbook_file)
 
 
-@compile.command("runbook", feature_min_version="3.0.0")
+@compile.command("runbook", feature_min_version="3.0.0", experimental=True)
 @click.option(
     "--file",
     "-f",
@@ -180,7 +180,7 @@ def _compile_runbook_command(runbook_file, out):
     compile_runbook_command(runbook_file, out)
 
 
-@run.command("runbook", feature_min_version="3.0.0")
+@run.command("runbook", feature_min_version="3.0.0", experimental=True)
 @click.argument("runbook_name", required=False)
 @click.option(
     "--file",
@@ -219,7 +219,7 @@ def _run_runbook_command(
     )
 
 
-@watch.command("runbook_execution", feature_min_version="3.0.0")
+@watch.command("runbook_execution", feature_min_version="3.0.0", experimental=True)
 @click.argument("runlog_uuid", required=True)
 def _watch_runbook_execution(runlog_uuid):
     """Watch the runbook execution using given runlog UUID"""
@@ -227,7 +227,7 @@ def _watch_runbook_execution(runlog_uuid):
     watch_runbook_execution(runlog_uuid)
 
 
-@pause.command("runbook_execution", feature_min_version="3.0.0")
+@pause.command("runbook_execution", feature_min_version="3.0.0", experimental=True)
 @click.argument("runlog_uuid", required=True)
 def _pause_runbook_execution(runlog_uuid):
     """Pause the running runbook execution"""
@@ -235,7 +235,7 @@ def _pause_runbook_execution(runlog_uuid):
     pause_runbook_execution(runlog_uuid)
 
 
-@resume.command("runbook_execution", feature_min_version="3.0.0")
+@resume.command("runbook_execution", feature_min_version="3.0.0", experimental=True)
 @click.argument("runlog_uuid", required=True)
 def _resume_runbook_execution(runlog_uuid):
     """Resume the paused runbook execution"""
@@ -243,7 +243,7 @@ def _resume_runbook_execution(runlog_uuid):
     resume_runbook_execution(runlog_uuid)
 
 
-@abort.command("runbook_execution", feature_min_version="3.0.0")
+@abort.command("runbook_execution", feature_min_version="3.0.0", experimental=True)
 @click.argument("runlog_uuid", required=True)
 def _abort_runbook_execution(runlog_uuid):
     """Abort the runbook execution"""

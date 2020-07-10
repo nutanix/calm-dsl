@@ -15,7 +15,7 @@ from .endpoints import (
 LOG = get_logging_handle(__name__)
 
 
-@get.command("endpoints", feature_min_version="3.0.0")
+@get.command("endpoints", feature_min_version="3.0.0", experimental=True)
 @click.option("--name", "-n", default=None, help="Search for endpoints by name")
 @click.option(
     "--filter", "filter_by", "-f", default=None, help="Filter endpoints by this string"
@@ -36,7 +36,7 @@ def _get_endpoint_list(name, filter_by, limit, offset, quiet, all_items):
     get_endpoint_list(name, filter_by, limit, offset, quiet, all_items)
 
 
-@create.command("endpoint", feature_min_version="3.0.0")
+@create.command("endpoint", feature_min_version="3.0.0", experimental=True)
 @click.option(
     "--file",
     "-f",
@@ -60,7 +60,7 @@ def _create_endpoint_command(endpoint_file, name, description, force):
     create_endpoint_command(endpoint_file, name, description, force)
 
 
-@delete.command("endpoint", feature_min_version="3.0.0")
+@delete.command("endpoint", feature_min_version="3.0.0", experimental=True)
 @click.argument("endpoint_names", nargs=-1)
 def _delete_endpoint(endpoint_names):
     """Deletes endpoints"""
@@ -68,7 +68,7 @@ def _delete_endpoint(endpoint_names):
     delete_endpoint(endpoint_names)
 
 
-@describe.command("endpoint", feature_min_version="3.0.0")
+@describe.command("endpoint", feature_min_version="3.0.0", experimental=True)
 @click.argument("endpoint_name")
 @click.option(
     "--out",
@@ -84,7 +84,7 @@ def _describe_endpoint(endpoint_name, out):
     describe_endpoint(endpoint_name, out)
 
 
-@format.command("endpoint", feature_min_version="3.0.0")
+@format.command("endpoint", feature_min_version="3.0.0", experimental=True)
 @click.option(
     "--file",
     "-f",
@@ -97,7 +97,7 @@ def _format_endpoint_command(endpoint_file):
     format_endpoint_command(endpoint_file)
 
 
-@compile.command("endpoint", feature_min_version="3.0.0")
+@compile.command("endpoint", feature_min_version="3.0.0", experimental=True)
 @click.option(
     "--file",
     "-f",
