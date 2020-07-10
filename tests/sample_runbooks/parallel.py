@@ -15,7 +15,7 @@ print "End"'''
 
 @runbook
 def DslParallelRunbook():
-    "Runbook example for running tasks in paralle"
+    "Runbook example for running tasks in parallel"
 
     Task.Exec.escript(name="root", script=code)
     with parallel() as p:
