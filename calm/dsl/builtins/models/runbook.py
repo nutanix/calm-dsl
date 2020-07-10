@@ -152,8 +152,10 @@ class runbook(metaclass=DescriptorType):
                     from_tasks = [from_tasks]
                 if not isinstance(to_tasks, list):
                     to_tasks = [to_tasks]
-                for from_task in from_tasks:
-                    for to_task in to_tasks:
+                for to_task in to_tasks:
+                    if not isinstance(to_task, list):
+                        child_tasks.append(to_task)
+                    for from_task in from_tasks:
                         if isinstance(from_task, list):
                             raise ValueError(
                                 "Tasks are not supported after parallel in runbooks"
@@ -161,7 +163,6 @@ class runbook(metaclass=DescriptorType):
                         if isinstance(to_task, list) and len(from_tasks) == 1:
                             create_edges(to_task, from_task=from_task)
                         else:
-                            child_tasks.append(to_task)
                             edges.append((from_task.get_ref(), to_task.get_ref()))
 
         create_edges(task_list)
@@ -178,7 +179,7 @@ class runbook(metaclass=DescriptorType):
         # First create the dag
         self.user_dag = dag(
             name=dag_name,
-            child_tasks=child_tasks,
+            child_tasks=child_tasks if self.__class__ == runbook else tasks,
             edges=edges,
             target=cls.get_task_target()
             if getattr(cls, "__has_dag_target__", True)
