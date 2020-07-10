@@ -80,7 +80,9 @@
                         "name": "Task5"
                     }
                 ],
-                "variable_list": []
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
             },
             {
                 "name": "Task1",
@@ -91,7 +93,9 @@
                     "script": "print \"Start\"\nsleep(20)\nprint \"End\""
                 },
                 "child_tasks_local_reference_list": [],
-                "variable_list": []
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
             },
             {
                 "name": "Task2",
@@ -102,7 +106,9 @@
                     "script": "print \"Start\"\nsleep(20)\nprint \"End\""
                 },
                 "child_tasks_local_reference_list": [],
-                "variable_list": []
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
             },
             {
                 "name": "Task3",
@@ -113,7 +119,9 @@
                     "script": "print \"Start\"\nsleep(20)\nprint \"End\""
                 },
                 "child_tasks_local_reference_list": [],
-                "variable_list": []
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
             },
             {
                 "name": "Task4",
@@ -124,7 +132,9 @@
                     "script": "print \"Start\"\nsleep(20)\nprint \"End\""
                 },
                 "child_tasks_local_reference_list": [],
-                "variable_list": []
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
             },
             {
                 "name": "Task5",
@@ -135,7 +145,9 @@
                     "script": "print \"Start\"\nsleep(20)\nprint \"End\""
                 },
                 "child_tasks_local_reference_list": [],
-                "variable_list": []
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
             }
         ],
         "variable_list": []

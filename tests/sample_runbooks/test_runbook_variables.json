@@ -23,7 +23,9 @@
                         "name": "Exec_Task"
                     }
                 ],
-                "variable_list": []
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
             },
             {
                 "name": "Exec_Task",
@@ -34,7 +36,9 @@
                     "script": "print \"Hello @@{firstname}@@ @@{lastname}@@\"\n"
                 },
                 "child_tasks_local_reference_list": [],
-                "variable_list": []
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
             }
         ],
         "variable_list": [

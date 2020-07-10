@@ -13,7 +13,8 @@ code = """print "Hello @@{firstname}@@ @@{lastname}@@"
 
 @runbook
 def DslRunbookWithVariables():
-    "Runbook Service example"
+    "Runbook example with variables"
+
     firstname = Variable.Simple("FIRSTNAME", runtime=True)  # noqa
     lastname = Variable.Simple("LASTNAME")  # noqa
     Task.Exec.escript(name="Exec_Task", script=code)

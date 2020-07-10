@@ -23,7 +23,9 @@
                         "name": "DecisionTask"
                     }
                 ],
-                "variable_list": []
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
             },
             {
                 "name": "DecisionTask_success_meta_task",
@@ -36,7 +38,9 @@
                         "name": "Task1"
                     }
                 ],
-                "variable_list": []
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
             },
             {
                 "name": "Task1",
@@ -47,7 +51,9 @@
                     "script": "print 'Decision Task is Successful'"
                 },
                 "child_tasks_local_reference_list": [],
-                "variable_list": []
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
             },
             {
                 "name": "DecisionTask_failure_meta_task",
@@ -60,7 +66,9 @@
                         "name": "Task2"
                     }
                 ],
-                "variable_list": []
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
             },
             {
                 "name": "Task2",
@@ -71,7 +79,9 @@
                     "script": "print 'Decision Task Failed'"
                 },
                 "child_tasks_local_reference_list": [],
-                "variable_list": []
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
             },
             {
                 "name": "DecisionTask",
@@ -94,7 +104,9 @@
                     }
                 },
                 "child_tasks_local_reference_list": [],
-                "variable_list": []
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
             }
         ],
         "variable_list": []

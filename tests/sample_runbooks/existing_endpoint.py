@@ -9,7 +9,12 @@ from calm.dsl.runbooks import CalmEndpoint as Endpoint, ref
 
 @runbook
 def DslExistingEndpoint():
-    "Runbook Service example for using exisiting endpoint"
+    """
+    Runbook example for using existing endpoint
+    Existing endpoint as target can be given as 'Endpoint.use_existing(<ep-name>)'
+    Existing endpoints are not allowed in endpoints argument in runbook creation
+    """
+
     Task.Exec.ssh(
         name="Task1",
         script='echo "hello"',

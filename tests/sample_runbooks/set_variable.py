@@ -17,7 +17,8 @@ endpoint = Endpoint.Linux.ip([VM_IP], cred=Cred)
 
 @runbook
 def DslSetVariableTask(endpoints=[endpoint], default=False):
-    "Runbook Service example"
+    "Runbook example with Set Variable Tasks"
+
     Task.SetVariable.escript(
         script="print 'var1=test'", variables=["var1"],
     )

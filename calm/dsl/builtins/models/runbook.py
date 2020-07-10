@@ -221,6 +221,12 @@ class runbook(metaclass=DescriptorType):
             for ep in endpoints:
                 if not isinstance(ep, EndpointType):
                     raise TypeError("{} is not of type {}".format(ep, EndpointType))
+                if not ep.type:
+                    raise ValueError(
+                        "Existing endpoint {} are not allowed in endpoints argument.".format(
+                            ep
+                        )
+                    )
 
             if default_target is not False:
                 if not isinstance(default_target, RefType) and not isinstance(

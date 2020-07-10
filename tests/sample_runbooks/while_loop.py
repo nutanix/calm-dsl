@@ -9,7 +9,8 @@ from calm.dsl.runbooks import RunbookTask as Task, Status
 
 @runbook
 def DslWhileLoopRunbook():
-    "Runbook Service example"
+    "Runbook example with while loop"
+
     with Task.Loop(iterations=2, name="WhileTask", exit_condition=Status.SUCCESS):
         Task.Exec.escript(name="Task1", script="print 'Inside loop1 @@{iteration}@@'")
 

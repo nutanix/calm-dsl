@@ -10,7 +10,21 @@ from calm.dsl.runbooks import CalmEndpoint as Endpoint, ref
 
 @runbook
 def DslDecisionRunbook():
-    "Runbook Service example"
+    """
+    Runbook example with decision task
+    Decision tasks can be defined in 2 ways
+    1. with Task.Decision() as d:
+        if d.ok:
+            true_path
+        else:
+            false_path
+    2. with Task.Decision() as d:
+        if d.exit_code == 0:
+            true_path
+        if d.exit_code == 1:
+            false_path
+    """
+
     with Task.Decision.ssh(
         name="DecisionTask",
         script="cat hell",

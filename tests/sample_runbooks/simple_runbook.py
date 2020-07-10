@@ -14,7 +14,8 @@ print "End"'''
 
 @runbook
 def DslSimpleRunbook():
-    "Runbook Service example"
+    "Runbook example"
+
     Task.Exec.escript(name="Task1", script=code)
     Task.Exec.escript(name="Task2", script=code)
     Task.Exec.escript(name="Task3", script=code)

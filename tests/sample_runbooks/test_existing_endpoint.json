@@ -23,7 +23,9 @@
                         "name": "Task1"
                     }
                 ],
-                "variable_list": []
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
             },
             {
                 "name": "Task1",
@@ -38,7 +40,9 @@
                     "script": "echo \"hello\""
                 },
                 "child_tasks_local_reference_list": [],
-                "variable_list": []
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
             }
         ],
         "variable_list": []

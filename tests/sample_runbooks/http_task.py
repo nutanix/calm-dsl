@@ -17,7 +17,8 @@ endpoint = Endpoint.HTTP(
 
 @runbook
 def DslHTTPTask(endpoints=[endpoint], default=False):
-    "Runbook Service example"
+    "Runbook example for HTTP Tasks"
+
     Task.HTTP.get(
         headers={"Content-Type": "application/json"},
         content_type="application/json",

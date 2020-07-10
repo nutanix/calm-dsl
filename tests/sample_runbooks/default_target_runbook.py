@@ -17,7 +17,13 @@ endpoint = Endpoint.Linux.ip([VM_IP], cred=Cred)
 
 @runbook
 def DslDefaultEndpoint(endpoints=[endpoint]):
-    "Runbook Service example"
+    """
+    Runbook example with default target
+    The default target for runbook is 'endpoints[0]'
+    If no default target is required, 'default=False', can given in runbook arguments
+    Existing Endpoint can also be given as default target- 'default.Endpoint.use_existin(<ep-name>)'
+    """
+
     Task.Exec.ssh(script='echo "hello"')
 
 
