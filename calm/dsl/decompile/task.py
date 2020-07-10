@@ -161,4 +161,7 @@ def create_script_file(script_type, script="", entity_context=""):
     with open(file_location, "w+") as fd:
         fd.write(script)
 
-    return os.path.join(get_scripts_dir_key(), file_name)
+    dsl_file_location = "os.path.join('{}', '{}')".format(
+        get_scripts_dir_key(), file_name
+    )
+    return dsl_file_location
