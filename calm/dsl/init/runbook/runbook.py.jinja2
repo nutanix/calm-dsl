@@ -7,7 +7,7 @@ The top-level folder contains the following files:
 {{runbook_name}}Runbook/
 ├── runbook.py
 └── scripts	
-    └── entity_stats.txt
+    └── entity_stats.py
 
 On run, this runbook does the following:
   1. Creates a HTTP and a Linux Endpoint
@@ -99,7 +99,7 @@ def {{runbook_name}}(endpoints=[PCEndpoint, IPEndpoint]):
         with branch(p):
 
             # Exec Task to print all entity stats
-            Task.Exec.escript(name="EntityStats", filename="scripts/entity_stats.txt", target=endpoints[1])
+            Task.Exec.escript(name="EntityStats", filename="scripts/entity_stats.py", target=endpoints[1])
 
         with branch(p):
         

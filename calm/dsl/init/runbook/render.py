@@ -17,7 +17,11 @@ def render_runbook_template(runbook_name):
     template = env.get_template(schema_file)
     LOG.info("Rendering runbook template")
     config = get_config()
-    text = template.render(runbook_name=runbook_name, pc_ip=config["SERVER"]["pc_ip"], pc_port=config["SERVER"]["pc_port"])
+    text = template.render(
+        runbook_name=runbook_name,
+        pc_ip=config["SERVER"]["pc_ip"],
+        pc_port=config["SERVER"]["pc_port"],
+    )
     LOG.info("Success")
 
     return text.strip() + os.linesep
