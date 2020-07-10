@@ -126,7 +126,7 @@ class FeatureFlagMixin:
 
             else:
                 LOG.warning(
-                    "Please update from {} to {} for using this command.".format(
+                    "Please update Calm (v{} -> >=v{}) to use this command.".format(
                         calm_version, feature_min_version
                     )
                 )
