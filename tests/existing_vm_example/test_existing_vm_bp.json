@@ -895,7 +895,8 @@
                 },
                 "value": "passwd"
             },
-            "default": true
+            "default": true,
+            "editables": {}
         }
     ],
     "app_profile_list": [
@@ -927,7 +928,8 @@
                     "type": "GREENFIELD",
                     "name": "LampDeployment",
                     "options": {},
-                    "description": ""
+                    "description": "",
+                    "editables": {}
                 }
             ],
             "variable_list": [

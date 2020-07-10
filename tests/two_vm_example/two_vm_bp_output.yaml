@@ -5,6 +5,7 @@ app_profile_list:
     default_replicas: ''
     depends_on_list: []
     description: Sample deployment pulling in service and substrate references
+    editables: {}
     max_replicas: '1'
     min_replicas: '1'
     name: MySQLDeployment
@@ -22,6 +23,7 @@ app_profile_list:
     default_replicas: ''
     depends_on_list: []
     description: Sample deployment pulling in service and substrate references
+    editables: {}
     max_replicas: '1'
     min_replicas: '1'
     name: PHPDeployment
@@ -61,6 +63,7 @@ client_attrs: {}
 credential_definition_list:
 - default: true
   description: ''
+  editables: {}
   name: default
   secret:
     attrs:

@@ -1699,7 +1699,8 @@
                         },
                         "value": "passwd"
                     },
-                    "default": true
+                    "default": true,
+                    "editables": {}
                 }
             ],
             "app_profile_list": [
@@ -1727,7 +1728,8 @@
                             "type": "GREENFIELD",
                             "name": "MySQLDeployment",
                             "options": {},
-                            "description": ""
+                            "description": "",
+                            "editables": {}
                         },
                         {
                             "published_service_local_reference_list": [],
@@ -1759,7 +1761,8 @@
                             "type": "GREENFIELD",
                             "name": "PHPDeployment",
                             "options": {},
-                            "description": ""
+                            "description": "",
+                            "editables": {}
                         },
                         {
                             "published_service_local_reference_list": [
@@ -1816,7 +1819,8 @@
                                     "annotations": {}
                                 }
                             },
-                            "description": ""
+                            "description": "",
+                            "editables": {}
                         }
                     ],
                     "variable_list": [
