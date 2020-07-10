@@ -45,7 +45,7 @@ def {{runbook_name}}(endpoints=[LinuxEndpoint]):
     """ Sample runbook for {{runbook_name}} """
 
     # Defining size limit for logs cleanup
-    size_limit = Variable.Simple.int("102400", runtime=True)    # noqa
+    size_limit = Variable.Simple.int("102400", runtime=True)  # noqa
     log_path = Variable.Simple.string("/var/log", runtime=True)  # noqa
 
     # Decision Task to check if logs folder is present or not
@@ -71,7 +71,7 @@ def {{runbook_name}}(endpoints=[LinuxEndpoint]):
 
         if d.exit_code == 1:
             Task.Exec.escript(
-                script='''print "Given Logs Directory doesn't exists"'''
+                name="Exit", script='''print "Given Logs Directory doesn't exists"'''
             )
 
 {%- endmacro %}
