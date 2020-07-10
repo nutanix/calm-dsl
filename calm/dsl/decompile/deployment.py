@@ -42,5 +42,8 @@ def render_deployment_template(cls):
     user_attrs["packages"] = ", ".join(package_list)
     user_attrs["dependencies"] = ",".join(depends_on_list)
 
+    if user_attrs.get("editables", {}):
+        user_attrs["editables"] = user_attrs["editables"].get_dict()
+
     text = render_template("deployment.py.jinja2", obj=user_attrs)
     return text.strip()
