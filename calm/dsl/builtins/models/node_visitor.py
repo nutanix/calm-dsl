@@ -137,23 +137,34 @@ class GetCallNodes(ast.NodeVisitor):
                 raise ValueError(
                     "parallel is not supported in runbooks under decision or loop task context."
                 )
+            if not node.items[0].optional_vars:
+                raise ValueError(
+                    "Parallel task must be used in the format `with parallel as p`"
+                )
             _globals = self._globals.copy()
-            if node.items[0].optional_vars:
-                var = node.items[0].optional_vars.id
-                _globals.update({var: "var"})
+            var = node.items[0].optional_vars.id
+            _globals.update({var: "var"})
 
             parallel_tasks = []
 
             for statement in node.body:
-                if len(statement.items) > 1:
+                if not isinstance(statement, ast.With) or len(statement.items) > 1:
                     raise ValueError(
                         "Only a single context is supported in 'with' statements inside the parallel."
                     )
+                statement_context = statement.items[0].context_expr
+                if (
+                    len(statement_context.args) != 1
+                    or not isinstance(statement_context.args[0], ast.Name)
+                    or statement_context.args[0].id != var
+                ):
+                    raise ValueError(
+                        "Incorrect argument is passed in 'branch()', use 'with branch({})'".format(
+                            var
+                        )
+                    )
                 statementContext = eval(
-                    compile(
-                        ast.Expression(statement.items[0].context_expr), "", "eval"
-                    ),
-                    _globals,
+                    compile(ast.Expression(statement_context), "", "eval"), _globals,
                 )
                 if (
                     hasattr(statementContext, "__calm_type__")
