@@ -10,6 +10,7 @@ from calm.dsl.tools import get_logging_handle
 from calm.dsl.store import Version
 
 LOG = get_logging_handle(__name__)
+BASE_FEATURE_VERSION = "2.9.7"
 
 
 def get_states_filter(STATES_CLASS=None, state_key="state", states=[]):
@@ -97,8 +98,9 @@ class FeatureFlagMixin:
 
         feature_min_version = kwargs.pop("feature_min_version", None)
         if feature_min_version and args:
-            cmd_name = args[0]
-            self.feature_version_map[cmd_name] = feature_min_version
+            self.feature_version_map[args[0]] = feature_min_version
+        elif args:
+            self.feature_version_map[args[0]] = BASE_FEATURE_VERSION
 
         is_experimental = kwargs.pop("experimental", False)
         if args:
