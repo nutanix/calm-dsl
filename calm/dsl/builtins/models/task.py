@@ -1132,7 +1132,6 @@ class CalmTask:
         post = http_task_post
         put = http_task_put
         delete = http_task_delete
-        endpoint = http_task_on_endpoint
 
     class SetVariable:
         ssh = set_variable_task_ssh
