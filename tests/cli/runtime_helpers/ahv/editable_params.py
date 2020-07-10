@@ -1,3 +1,9 @@
+from calm.dsl.builtins import read_local_file
+
+
+CRED_USERNAME = read_local_file(".tests/username")
+CRED_PASSWORD = read_local_file(".tests/password")
+
 variable_list = [
     {"value": {"value": "foo1_new_val"}, "context": "DefaultProfile", "name": "foo1"},
     {"value": {"value": "foo2_new_val"}, "context": "DefaultProfile", "name": "foo2"},
@@ -57,5 +63,24 @@ substrate_list = [
         },
         "context": "MySQLDeployment",  # Will be ignored
         "name": "AhvSubstrate",
+    }
+]
+
+deployment_list = [
+    {
+        "value": {"min_replicas": "2", "default_replicas": "3", "max_replicas": "4"},
+        "context": "DefaultProfile",  # Will be ignored
+        "name": "AhvDeployment",
+    }
+]
+
+credential_list = [
+    {
+        "value": {
+            "username": CRED_USERNAME,
+            "secret": {"attrs": {"is_secret_modified": True}, "value": CRED_PASSWORD},
+        },
+        "context": "AhvSubstrate",  # will be ignored
+        "name": "default cred",
     }
 ]

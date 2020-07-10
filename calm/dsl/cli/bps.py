@@ -464,7 +464,7 @@ def get_field_values(
 
             new_val = None
             if launch_runtime_vars:
-                new_val = get_val_launch_runtime_vars(
+                new_val = get_val_launch_runtime_var(
                     launch_runtime_vars, field, path, context
                 )
             else:
@@ -539,7 +539,7 @@ def get_variable_data(bp_data, context_data, var_context, var_name):
     sys.exit(-1)
 
 
-def get_val_launch_runtime_vars(launch_runtime_vars, field, path, context):
+def get_val_launch_runtime_var(launch_runtime_vars, field, path, context):
     """Returns value of variable from launch_runtime_vars(Non-interactive)"""
 
     filtered_launch_runtime_vars = list(
@@ -561,7 +561,7 @@ def get_val_launch_runtime_vars(launch_runtime_vars, field, path, context):
     return None
 
 
-def get_val_launch_runtime_substrates(launch_runtime_substrates, path, context):
+def get_val_launch_runtime_substrate(launch_runtime_substrates, path, context=None):
     """Returns value of substrate from launch_runtime_substrates(Non-interactive)"""
 
     filtered_launch_runtime_substrates = list(
@@ -576,6 +576,42 @@ def get_val_launch_runtime_substrates(launch_runtime_substrates, path, context):
         sys.exit(-1)
     if len(filtered_launch_runtime_substrates) == 1:
         return filtered_launch_runtime_substrates[0].get("value", {})
+    return None
+
+
+def get_val_launch_runtime_deployment(launch_runtime_deployments, path, context=None):
+    """Returns value of deployment from launch_runtime_deployments(Non-interactive)"""
+
+    launch_runtime_deployments = list(
+        filter(lambda e: e["name"] == path, launch_runtime_deployments,)
+    )
+    if len(launch_runtime_deployments) > 1:
+        LOG.error(
+            "Unable to populate runtime editables: Multiple matches for name {} and context {}".format(
+                path, context
+            )
+        )
+        sys.exit(-1)
+    if len(launch_runtime_deployments) == 1:
+        return launch_runtime_deployments[0].get("value", {})
+    return None
+
+
+def get_val_launch_runtime_credential(launch_runtime_credentials, path, context=None):
+    """Returns value of credential from launch_runtime_credentials(Non-interactive)"""
+
+    launch_runtime_credentials = list(
+        filter(lambda e: e["name"] == path, launch_runtime_credentials,)
+    )
+    if len(launch_runtime_credentials) > 1:
+        LOG.error(
+            "Unable to populate runtime editables: Multiple matches for name {} and context {}".format(
+                path, context
+            )
+        )
+        sys.exit(-1)
+    if len(launch_runtime_credentials) == 1:
+        return launch_runtime_credentials[0].get("value", {})
     return None
 
 
@@ -607,7 +643,7 @@ def is_launch_runtime_var_action_match(launch_runtime_var_context, context_list)
 
 
 def parse_launch_runtime_vars(launch_params):
-    """Returns runtime_vars object from launch_params file"""
+    """Returns variable_list object from launch_params file"""
 
     if launch_params:
         if file_exists(launch_params) and launch_params.endswith(".py"):
@@ -620,11 +656,37 @@ def parse_launch_runtime_vars(launch_params):
 
 
 def parse_launch_runtime_substrates(launch_params):
-    """Returns runtime_substrates object from launch_params file"""
+    """Returns substrate_list object from launch_params file"""
 
     if launch_params:
         if file_exists(launch_params) and launch_params.endswith(".py"):
             return import_var_from_file(launch_params, "substrate_list", [])
+        else:
+            LOG.warning(
+                "Invalid launch_params passed! Must be a valid and existing.py file! Ignoring..."
+            )
+    return []
+
+
+def parse_launch_runtime_deployments(launch_params):
+    """Returns deployment_list object from launch_params file"""
+
+    if launch_params:
+        if file_exists(launch_params) and launch_params.endswith(".py"):
+            return import_var_from_file(launch_params, "deployment_list", [])
+        else:
+            LOG.warning(
+                "Invalid launch_params passed! Must be a valid and existing.py file! Ignoring..."
+            )
+    return []
+
+
+def parse_launch_runtime_credentials(launch_params):
+    """Returns credential_list object from launch_params file"""
+
+    if launch_params:
+        if file_exists(launch_params) and launch_params.endswith(".py"):
+            return import_var_from_file(launch_params, "credential_list", [])
         else:
             LOG.warning(
                 "Invalid launch_params passed! Must be a valid and existing.py file! Ignoring..."
@@ -710,6 +772,8 @@ def launch_blueprint_simple(
         # Check user input
         launch_runtime_vars = parse_launch_runtime_vars(launch_params)
         launch_runtime_substrates = parse_launch_runtime_substrates(launch_params)
+        launch_runtime_deployments = parse_launch_runtime_deployments(launch_params)
+        launch_runtime_credentials = parse_launch_runtime_credentials(launch_params)
 
         res, err = client.blueprint.read(blueprint_uuid)
         if err:
@@ -741,10 +805,10 @@ def launch_blueprint_simple(
 
             for substrate in substrate_list:
                 if launch_params:
-                    new_val = get_val_launch_runtime_substrates(
+                    new_val = get_val_launch_runtime_substrate(
                         launch_runtime_substrates=launch_runtime_substrates,
                         path=substrate.get("name"),
-                        context=substrate.get("context"),
+                        context=substrate.get("context", None),
                     )
                     if new_val:
                         substrate["value"] = new_val
@@ -761,7 +825,7 @@ def launch_blueprint_simple(
 
         variable_list = runtime_editables.get("variable_list", [])
         if variable_list:
-            if not launch_runtime_vars:
+            if not launch_params:
                 click.echo("\n\t\t\t", nl=False)
                 click.secho("VARIABLE LIST DATA", underline=True, bold=True)
             for variable in variable_list:
@@ -776,6 +840,30 @@ def launch_blueprint_simple(
                     hide_input=hide_input,
                     launch_runtime_vars=launch_runtime_vars,
                 )
+
+        deployment_list = runtime_editables.get("deployment_list", [])
+        # deployment can be only supplied via non-interactive way for now
+        if deployment_list and launch_params:
+            for deployment in deployment_list:
+                new_val = get_val_launch_runtime_deployment(
+                    launch_runtime_deployments=launch_runtime_deployments,
+                    path=deployment.get("name"),
+                    context=deployment.get("context", None),
+                )
+                if new_val:
+                    deployment["value"] = new_val
+
+        credential_list = runtime_editables.get("credential_list", [])
+        # credential can be only supplied via non-interactive way for now
+        if credential_list and launch_params:
+            for credential in credential_list:
+                new_val = get_val_launch_runtime_credential(
+                    launch_runtime_credentials=launch_runtime_credentials,
+                    path=credential.get("name"),
+                    context=credential.get("context", None),
+                )
+                if new_val:
+                    credential["value"] = new_val
 
         runtime_editables_json = json.dumps(
             runtime_editables, indent=4, separators=(",", ": ")

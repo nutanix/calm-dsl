@@ -32,6 +32,10 @@ def render_credential_template(cls):
 
     user_attrs["var_name"] = var_name
     user_attrs["value"] = file_name
+
+    if user_attrs.get("editables", {}):
+        user_attrs["editables"] = user_attrs["editables"].get_dict()
+
     # update the map
     CRED_VAR_NAME_MAP[user_attrs["name"]] = var_name
     CRED_FILES.append(file_name)
