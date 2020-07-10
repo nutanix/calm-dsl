@@ -748,7 +748,8 @@
                 },
                 "value": "passwd"
             },
-            "default": true
+            "default": true,
+            "editables": {}
         }
     ],
     "app_profile_list": [
@@ -776,7 +777,8 @@
                     "type": "GREENFIELD",
                     "name": "MySQLDeployment",
                     "options": {},
-                    "description": "Sample deployment pulling in service and substrate references"
+                    "description": "Sample deployment pulling in service and substrate references",
+                    "editables": {}
                 },
                 {
                     "published_service_local_reference_list": [],
@@ -799,7 +801,8 @@
                     "type": "GREENFIELD",
                     "name": "PHPDeployment",
                     "options": {},
-                    "description": "Sample deployment pulling in service and substrate references"
+                    "description": "Sample deployment pulling in service and substrate references",
+                    "editables": {}
                 }
             ],
             "variable_list": [
