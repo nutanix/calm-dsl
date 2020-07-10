@@ -232,15 +232,14 @@ def init_dsl_bp(bp_name, dir_name, provider_type):
 @click.option(
     "--dir_name", "-d", default=os.getcwd(), help="Directory path for the runbook"
 )
-@click.option("--ip", help="VM IP for the sample runbook")
-def init_dsl_runbook(runbook_name, dir_name, ip):
+def init_dsl_runbook(runbook_name, dir_name):
     """Creates a starting directory for runbook"""
 
     if not runbook_name.isidentifier():
         LOG.error("Runbook name '{}' is not a valid identifier".format(runbook_name))
         sys.exit(-1)
 
-    init_runbook(runbook_name, dir_name, vm_ip=ip)
+    init_runbook(runbook_name, dir_name)
 
 
 @set.command("config")
