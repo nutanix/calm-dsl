@@ -54,6 +54,16 @@ properties:
     type: object
   description:
     type: string
+  editables:
+    type: object
+    x-calm-dsl-type: object
+    properties:
+      min_replicas:
+        type: boolean
+      default_replicas:
+        type: boolean
+      max_replicas:
+        type: boolean
 
 {%- endmacro %}
 

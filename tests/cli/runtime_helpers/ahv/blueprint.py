@@ -15,7 +15,11 @@ CRED_PASSWORD = read_local_file(".tests/password")
 DNS_SERVER = read_local_file(".tests/dns_server")
 
 DefaultCred = basic_cred(
-    CRED_USERNAME, CRED_PASSWORD, name="default cred", default=True
+    CRED_USERNAME,
+    CRED_PASSWORD,
+    name="default cred",
+    default=True,
+    editables={"username": True, "secret": True},
 )
 
 
@@ -55,6 +59,11 @@ class AhvDeployment(Deployment):
 
     packages = [ref(AhvPackage)]
     substrate = ref(AhvSubstrate)
+    editables = {
+        "min_replicas": True,
+        "default_replicas": True,
+        "max_replicas": True,
+    }
 
 
 class DefaultProfile(Profile):
