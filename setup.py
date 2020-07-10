@@ -27,7 +27,7 @@ class PyTest(TestCommand):
 
 setuptools.setup(
     name="calm.dsl",
-    version="0.9.0-alpha",
+    version="3.0.0-alpha",
     author="Nutanix",
     author_email="nucalm@nutanix.com",
     description="Calm DSL for blueprints",
@@ -42,7 +42,7 @@ setuptools.setup(
     zip_safe=False,
     include_package_data=True,
     entry_points={
-        "console_scripts": ["calm=calm.dsl.cli:main", "nutanix=calm.dsl.cli:main"]
+        "console_scripts": ["calm=calm.dsl.cli:main"]
     },
     classifiers=[
         "Development Status :: 3 - Alpha",
