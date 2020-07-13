@@ -319,12 +319,16 @@ type: object
 properties:
   account_uuid:
     type: string
+  cpu_hot_add:
+    type: boolean
   num_vcpus_per_socket:
     type: integer
     default: 0
   num_sockets:
     type: integer
     default: 0
+  memory_hot_plug:
+    type: boolean
   memory_size_mib:
     type: integer
     default: 0
