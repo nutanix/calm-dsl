@@ -550,11 +550,27 @@ def create_spec(client):
     spec["name"] = click.prompt("\nEnter instance name", default=vm_name)
 
     spec["resources"] = {}
+    
+    # Enable CPU Hot Add
+    choice = click.prompt(
+        "\n{}\n{}(y/n)".format("Want to enable cpu hot add?", 
+        highlight_text("Warning: Support for CPU Hot Add depends upon the Guest OS of the VM"
+        "\nHot updating the CPU will fail if not supported by the Guest OS.")), default="n"
+    )
+    spec["resources"]["cpu_hot_add"] = choice[0] == "y"
+    
     spec["resources"]["num_sockets"] = click.prompt("\nEnter no. of vCPUs", default=1)
-
     spec["resources"]["num_vcpus_per_socket"] = click.prompt(
         "\nCores per vCPU", default=1
     )
+
+    # Enable Memory Hot Plug
+    choice = click.prompt(
+       "\n{}\n{}(y/n)".format("Want to enable memory hot add?", 
+        highlight_text("Warning: Support for Memory Hot Plug depends upon the Guest OS of the VM"
+        "\nHot updating the memory will fail if not supported by the Guest OS.")), default="n"
+    )
+    spec["resources"]["memory_hot_plug"] = choice[0] == "y"
 
     spec["resources"]["memory_size_mib"] = (
         click.prompt("\nMemory(in GiB)", default=1)
