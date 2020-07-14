@@ -17,9 +17,7 @@ HTTP_AUTH_PASSWORD = read_local_file(".tests/runbook_tests/auth_password")
 HTTP_URL = read_local_file(".tests/runbook_tests/url")
 
 http_endpoint = Endpoint.HTTP(
-    HTTP_URL,
-    verify=False,
-    auth=Endpoint.Auth.Basic(HTTP_AUTH_USERNAME, HTTP_AUTH_PASSWORD),
+    HTTP_URL, verify=False, auth=Endpoint.Auth(HTTP_AUTH_USERNAME, HTTP_AUTH_PASSWORD),
 )
 
 LinuxCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")

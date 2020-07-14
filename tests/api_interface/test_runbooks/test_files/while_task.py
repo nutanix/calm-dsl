@@ -5,7 +5,7 @@ Calm DSL While Task Example
 import json
 
 from calm.dsl.runbooks import runbook
-from calm.dsl.runbooks import RunbookTask as Task, Status
+from calm.dsl.runbooks import RunbookTask as Task, Status, RunbookVariable as Variable
 from calm.dsl.runbooks import CalmEndpoint as Endpoint
 from calm.dsl.runbooks import read_local_file, basic_cred
 

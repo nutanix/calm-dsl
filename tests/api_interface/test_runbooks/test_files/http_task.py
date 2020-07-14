@@ -18,16 +18,16 @@ config = get_config()
 TEST_URL = "https://{}:9440/".format(config["SERVER"]["pc_ip"])
 
 endpoint = Endpoint.HTTP(
-    URL, verify=False, auth=Endpoint.Auth.Basic(AUTH_USERNAME, AUTH_PASSWORD)
+    URL, verify=False, auth=Endpoint.Auth(AUTH_USERNAME, AUTH_PASSWORD)
 )
 endpoint_with_tls_verify = Endpoint.HTTP(
-    URL, verify=True, auth=Endpoint.Auth.Basic(AUTH_USERNAME, AUTH_PASSWORD)
+    URL, verify=True, auth=Endpoint.Auth(AUTH_USERNAME, AUTH_PASSWORD)
 )
 endpoint_with_incorrect_auth = Endpoint.HTTP(URL, verify=False)
 endpoint_without_auth = Endpoint.HTTP(TEST_URL)
 endpoint_with_multiple_urls = Endpoint.HTTP(
     ["@@{base}@@/endpoints", "@@{base}@@/blueprints", "@@{base}@@/runbooks"],
-    auth=Endpoint.Auth.Basic(AUTH_USERNAME, AUTH_PASSWORD),
+    auth=Endpoint.Auth(AUTH_USERNAME, AUTH_PASSWORD),
 )
 
 
@@ -203,9 +203,9 @@ def HTTPRelativeURLWithMacro(endpoints=[endpoint]):
 @runbook
 def HTTPEndpointWithMultipleURLs(endpoints=[endpoint_with_multiple_urls]):
 
-    base = Variable.Simple(
+    base = Variable.Simple(  # noqa
         "https://{}:9440/api/nutanix/v3".format(config["SERVER"]["pc_ip"])
-    )  # noqa
+    )
     # Creating an endpoint with POST call
     Task.HTTP.endpoint(
         "POST",
