@@ -7,7 +7,7 @@ from calm.dsl.runbooks import runbook, runbook_json
 from calm.dsl.runbooks import RunbookTask as Task, RunbookVariable as Variable
 
 
-code = """print "Hello @@{my_name}@@"
+code = """print "Hello @@{user_name}@@"
 print "Your Password is @@{password}@@"
 print "Date you selected is @@{date}@@"
 print "Time selected is @@{time}@@"
