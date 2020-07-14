@@ -52,17 +52,16 @@ Language design is black art, and building upon a well-established language is d
      - Please look [here](docs/01-Calm-Terminology#runbooks) for more details.
 
     ### Decompile
-    Decompilation is process to consume json data for any entity and convert it back to dsl python helpers/classes. Currently decompile is supported for converting blueprint json to python files.(Experimental feature). 
-    Brief summary for support for blueprint decompilation:
+    Decompilation is process to consume json data for any entity and convert it back to dsl python helpers/classes. Currently decompile is supported for converting blueprint json to python files. Summary of support for blueprint decompilation(Experimental feature):
     - Python helpers/classes are automatically generated with the use of jinja templates.
     - Generated python file is formatted using [black](https://github.com/psf/black)
     - Default values for most of the entities will be shown in decompiled file.
     - Separate files are created under `.local` directory in decompiled blueprint directory for handling secrets used inside blueprints i.e. passwords etc.
     - Separate files are created under `scripts` directory in decompiled blueprint directory for storing scripts used in variable, tasks, guest customization etc.
-    - Decompliation support for providers other than AHV are best effort(Experimental).
     - Decompile existing server blueprint: `calm decompile bp <bp_name>`. Use `calm decompile bp <bp_name> --with_secrets` to fill the value for secrets used inside blueprint interactively while decompiling blueprint.
     - Decompile bp from existing json file: `calm decompile bp --file <json_file_location>`.
     - Decompile marketplace blueprint: `calm decompile marketplace_bp <bp_name> --version <bp_version>`.
+    - Note: Decompliation support for providers other than AHV are best effort(Experimental).
 
 ## Docker
  - Latest image: `docker pull ntnx/calm-dsl`
