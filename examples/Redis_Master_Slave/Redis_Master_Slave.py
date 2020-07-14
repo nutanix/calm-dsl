@@ -108,8 +108,7 @@ class AHVRedisMasterSubstrate(Substrate):
         "connection_port": 22,
         "credential": ref(DefaultCred),
     }
-    editables = {
-        "create_spec": {
+    provider_spec_editables = {
             "resources": {
                 "nic_list": {},
                 "disk_list": True,
@@ -118,7 +117,6 @@ class AHVRedisMasterSubstrate(Substrate):
                 "memory_size_mib": True,
                 "serial_port_list": {},
             }
-        }
     }
 
 
