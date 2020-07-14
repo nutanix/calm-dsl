@@ -3,18 +3,20 @@ import uuid
 
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import RUNLOG
-from tests.api_interface.test_runbooks.test_files.http_task import (get_http_task_runbook,
-                                                                    HTTPTaskWithValidations,
-                                                                    HTTPTaskWithoutAuth,
-                                                                    HTTPTaskWithIncorrectCode,
-                                                                    HTTPTaskWithFailureState,
-                                                                    HTTPTaskWithUnsupportedURL,
-                                                                    HTTPTaskWithUnsupportedPayload,
-                                                                    HTTPTaskWithTLSVerify,
-                                                                    HTTPTaskWithIncorrectAuth,
-                                                                    HTTPHeadersWithMacro,
-                                                                    HTTPRelativeURLWithMacro,
-                                                                    HTTPEndpointWithMultipleURLs)
+from tests.api_interface.test_runbooks.test_files.http_task import (
+    get_http_task_runbook,
+    HTTPTaskWithValidations,
+    HTTPTaskWithoutAuth,
+    HTTPTaskWithIncorrectCode,
+    HTTPTaskWithFailureState,
+    HTTPTaskWithUnsupportedURL,
+    HTTPTaskWithUnsupportedPayload,
+    HTTPTaskWithTLSVerify,
+    HTTPTaskWithIncorrectAuth,
+    HTTPHeadersWithMacro,
+    HTTPRelativeURLWithMacro,
+    HTTPEndpointWithMultipleURLs,
+)
 from utils import upload_runbook, poll_runlog_status
 
 
@@ -221,9 +223,11 @@ class TestHTTPTasks:
         response = res.json()
         entities = response["entities"]
         for entity in entities:
-            if entity["status"]["type"] == "task_runlog" and\
-                    entity["status"]["task_reference"]["name"] == "HTTPTask" and\
-                    runlog_uuid in entity["status"].get("machine_name", ""):
+            if (
+                entity["status"]["type"] == "task_runlog"
+                and entity["status"]["task_reference"]["name"] == "HTTPTask"
+                and runlog_uuid in entity["status"].get("machine_name", "")
+            ):
                 http_task = entity["metadata"]["uuid"]
 
         # Now checking the output of exec task
@@ -341,7 +345,10 @@ class TestHTTPTasks:
 
     @pytest.mark.regression
     @pytest.mark.runbook
-    @pytest.mark.parametrize("Runbook", [HTTPHeadersWithMacro, HTTPRelativeURLWithMacro, HTTPEndpointWithMultipleURLs])
+    @pytest.mark.parametrize(
+        "Runbook",
+        [HTTPHeadersWithMacro, HTTPRelativeURLWithMacro, HTTPEndpointWithMultipleURLs],
+    )
     def test_macros_in_http_header(self, Runbook):
         """ test_macros_in_http_header, test_variable_in_relative_url """
 

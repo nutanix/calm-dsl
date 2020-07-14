@@ -16,8 +16,11 @@ HTTP_AUTH_USERNAME = read_local_file(".tests/runbook_tests/auth_username")
 HTTP_AUTH_PASSWORD = read_local_file(".tests/runbook_tests/auth_password")
 HTTP_URL = read_local_file(".tests/runbook_tests/url")
 
-http_endpoint = Endpoint.HTTP(HTTP_URL, verify=False,
-                              auth=Endpoint.Auth.Basic(HTTP_AUTH_USERNAME, HTTP_AUTH_PASSWORD))
+http_endpoint = Endpoint.HTTP(
+    HTTP_URL,
+    verify=False,
+    auth=Endpoint.Auth.Basic(HTTP_AUTH_USERNAME, HTTP_AUTH_PASSWORD),
+)
 
 LinuxCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
 WindowsCred = basic_cred(CRED_WINDOWS_USERNAME, CRED_PASSWORD, name="endpoint_cred")
@@ -155,14 +158,18 @@ def MacroOnPowershell(endpoints=[windows_endpoint]):
 
 @runbook
 def MacroOnEscript():
-    Task.Exec.escript(name="ExecTask", script='''print "@@{calm_runbook_name}@@, @@{calm_runbook_uuid}@@ @@{calm_project_name}@@ @@{calm_jwt}@@ @@{calm_date}@@"''')
+    Task.Exec.escript(
+        name="ExecTask",
+        script='''print "@@{calm_runbook_name}@@, @@{calm_runbook_uuid}@@ @@{calm_project_name}@@ @@{calm_jwt}@@ @@{calm_date}@@"''',
+    )
 
 
 @runbook
 def EndpointMacroOnShell(endpoints=[linux_endpoint]):
     Task.Exec.ssh(
         name="ExecTask",
-        script='''echo "@@{endpoint.name}@@, @@{endpoint.type}@@, @@{endpoint.address}@@, @@{endpoint.port}@@, @@{endpoint.credential.username}@@"''')
+        script='''echo "@@{endpoint.name}@@, @@{endpoint.type}@@, @@{endpoint.address}@@, @@{endpoint.port}@@, @@{endpoint.credential.username}@@"''',
+    )
 
 
 @runbook
@@ -170,7 +177,8 @@ def EndpointMacroOnPowershell(endpoints=[windows_endpoint]):
     Task.Exec.powershell(
         name="ExecTask",
         script='''echo "@@{endpoint.name}@@, @@{endpoint.type}@@, @@{endpoint.address}@@, @@{endpoint.port}@@,\
-        @@{endpoint.connection_protocol}@@, @@{endpoint.credential.username}@@"''')
+        @@{endpoint.connection_protocol}@@, @@{endpoint.credential.username}@@"''',
+    )
 
 
 @runbook
@@ -179,7 +187,8 @@ def WindowsEndpointMacroOnEscript(endpoints=[windows_endpoint], default=False):
         name="ExecTask",
         target=endpoints[0],
         script='''print "@@{endpoint.name}@@, @@{endpoint.type}@@, @@{endpoint.address}@@, @@{endpoint.port}@@,\
-        @@{endpoint.connection_protocol}@@, @@{endpoint.credential.username}@@"''')
+        @@{endpoint.connection_protocol}@@, @@{endpoint.credential.username}@@"''',
+    )
 
 
 @runbook
@@ -187,7 +196,8 @@ def LinuxEndpointMacroOnEscript(endpoints=[linux_endpoint], default=False):
     Task.Exec.escript(
         name="ExecTask",
         target=endpoints[0],
-        script='''print "@@{endpoint.name}@@, @@{endpoint.type}@@, @@{endpoint.address}@@, @@{endpoint.port}@@, @@{endpoint.credential.username}@@"''')
+        script='''print "@@{endpoint.name}@@, @@{endpoint.type}@@, @@{endpoint.address}@@, @@{endpoint.port}@@, @@{endpoint.credential.username}@@"''',
+    )
 
 
 @runbook
@@ -196,4 +206,5 @@ def HttpEndpointMacroOnEscript(endpoints=[http_endpoint], default=False):
         name="ExecTask",
         target=endpoints[0],
         script='''print "@@{endpoint.name}@@, @@{endpoint.type}@@, @@{endpoint.base_url}@@, @@{endpoint.retry_count}@@, \
-        @@{endpoint.retry_interval}@@, @@{endpoint.tls_verify}@@, @@{endpoint.connection_timeout}@@"''')
+        @@{endpoint.retry_interval}@@, @@{endpoint.tls_verify}@@, @@{endpoint.connection_timeout}@@"''',
+    )

@@ -38,7 +38,9 @@ class TestRunbooks:
         runlog_uuid = response["status"]["runlog_uuid"]
 
         # polling till runbook run gets to confirm state
-        state, reasons = poll_runlog_status(client, runlog_uuid, [RUNLOG.STATUS.CONFIRM])
+        state, reasons = poll_runlog_status(
+            client, runlog_uuid, [RUNLOG.STATUS.CONFIRM]
+        )
 
         print(">> Runbook Run state: {}\n{}".format(state, reasons))
         assert state == RUNLOG.STATUS.CONFIRM
@@ -50,12 +52,17 @@ class TestRunbooks:
         response = res.json()
         entities = response["entities"]
         for entity in entities:
-            if entity["status"]["type"] == "task_runlog" and entity["status"]["state"] == RUNLOG.STATUS.CONFIRM:
+            if (
+                entity["status"]["type"] == "task_runlog"
+                and entity["status"]["state"] == RUNLOG.STATUS.CONFIRM
+            ):
                 task_uuid = entity["metadata"]["uuid"]
                 break
 
         # calling resume on the confirm task with failure state
-        res, err = client.runbook.resume(runlog_uuid, task_uuid, {"confirm_answer": "FAILURE"})
+        res, err = client.runbook.resume(
+            runlog_uuid, task_uuid, {"confirm_answer": "FAILURE"}
+        )
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
@@ -73,13 +80,17 @@ class TestRunbooks:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
         # polling till runbook run gets to confirm state
-        state, reasons = poll_runlog_status(client, runlog_uuid, [RUNLOG.STATUS.CONFIRM])
+        state, reasons = poll_runlog_status(
+            client, runlog_uuid, [RUNLOG.STATUS.CONFIRM]
+        )
 
         print(">> Runbook Run state: {}\n{}".format(state, reasons))
         assert state == RUNLOG.STATUS.CONFIRM
 
         # calling resume on the confirm task with failure state
-        res, err = client.runbook.resume(runlog_uuid, task_uuid, {"confirm_answer": "SUCCESS"})
+        res, err = client.runbook.resume(
+            runlog_uuid, task_uuid, {"confirm_answer": "SUCCESS"}
+        )
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 

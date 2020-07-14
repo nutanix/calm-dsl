@@ -3,7 +3,11 @@ import uuid
 
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import RUNLOG
-from tests.api_interface.test_runbooks.test_files.while_task import WhileTask, WhileTaskLoopVariable, WhileTaskMacro
+from tests.api_interface.test_runbooks.test_files.while_task import (
+    WhileTask,
+    WhileTaskLoopVariable,
+    WhileTaskMacro,
+)
 from utils import upload_runbook, poll_runlog_status
 
 
