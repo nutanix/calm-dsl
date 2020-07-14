@@ -1,4 +1,4 @@
-from .confirm_task import DslConfirmTask
+from .confirm_task import DslConfirmRunbook
 from .decision_task import DslDecisionRunbook
 from .default_target_runbook import DslDefaultEndpoint
 from .existing_endpoint import DslExistingEndpoint
@@ -11,7 +11,7 @@ from .simple_runbook import DslSimpleRunbook
 from .while_loop import DslWhileLoopRunbook
 
 __all__ = [
-    DslConfirmTask,
+    DslConfirmRunbook,
     DslDecisionRunbook,
     DslDefaultEndpoint,
     DslExistingEndpoint,
