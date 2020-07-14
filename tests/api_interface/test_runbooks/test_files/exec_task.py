@@ -4,13 +4,23 @@ Calm Runbook Sample for running http tasks
 from calm.dsl.builtins import read_local_file
 from calm.dsl.builtins import runbook
 from calm.dsl.builtins import CalmTask, basic_cred
-from calm.dsl.builtins import CalmEndpoint, ref
+from calm.dsl.builtins import CalmEndpoint, ref, Auth
+from calm.dsl.config import get_config
 
 linux_ip = read_local_file(".tests/runbook_tests/vm_ip")
 windows_ip = read_local_file(".tests/runbook_tests/windows_vm_ip")
 CRED_USERNAME = read_local_file(".tests/runbook_tests/username")
 CRED_WINDOWS_USERNAME = read_local_file(".tests/runbook_tests/windows_username")
 CRED_PASSWORD = read_local_file(".tests/runbook_tests/password")
+
+HTTP_AUTH_USERNAME = read_local_file(".tests/runbook_tests/auth_username")
+HTTP_AUTH_PASSWORD = read_local_file(".tests/runbook_tests/auth_password")
+HTTP_URL = read_local_file(".tests/runbook_tests/url")
+
+config = get_config()
+
+http_endpoint = CalmEndpoint.HTTP(HTTP_URL, verify=False,
+                                  auth=Auth.Basic(HTTP_AUTH_USERNAME, HTTP_AUTH_PASSWORD))
 
 LinuxCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
 WindowsCred = basic_cred(CRED_WINDOWS_USERNAME, CRED_PASSWORD, name="endpoint_cred")
@@ -117,3 +127,44 @@ def MacroOnPowershell(endpoints=[windows_endpoint], default_target=ref(windows_e
 @runbook
 def MacroOnEscript():
     CalmTask.Exec.escript(name="ExecTask", script='''print "@@{calm_runbook_name}@@, @@{calm_runbook_uuid}@@ @@{calm_project_name}@@ @@{calm_jwt}@@ @@{calm_date}@@"''')
+
+
+@runbook
+def EndpointMacroOnShell(endpoints=[linux_endpoint], default_target=ref(linux_endpoint)):
+    CalmTask.Exec.ssh(
+        name="ExecTask",
+        script='''echo "@@{endpoint.name}@@, @@{endpoint.type}@@, @@{endpoint.address}@@, @@{endpoint.port}@@, @@{endpoint.credential.username}@@"''')
+
+
+@runbook
+def EndpointMacroOnPowershell(endpoints=[windows_endpoint], default_target=ref(windows_endpoint)):
+    CalmTask.Exec.powershell(
+        name="ExecTask",
+        script='''echo "@@{endpoint.name}@@, @@{endpoint.type}@@, @@{endpoint.address}@@, @@{endpoint.port}@@,\
+        @@{endpoint.connection_protocol}@@, @@{endpoint.credential.username}@@"''')
+
+
+@runbook
+def WindowsEndpointMacroOnEscript(endpoints=[windows_endpoint]):
+    CalmTask.Exec.escript(
+        name="ExecTask",
+        target=ref(windows_endpoint),
+        script='''print "@@{endpoint.name}@@, @@{endpoint.type}@@, @@{endpoint.address}@@, @@{endpoint.port}@@,\
+        @@{endpoint.connection_protocol}@@, @@{endpoint.credential.username}@@"''')
+
+
+@runbook
+def LinuxEndpointMacroOnEscript(endpoints=[linux_endpoint]):
+    CalmTask.Exec.escript(
+        name="ExecTask",
+        target=ref(linux_endpoint),
+        script='''print "@@{endpoint.name}@@, @@{endpoint.type}@@, @@{endpoint.address}@@, @@{endpoint.port}@@, @@{endpoint.credential.username}@@"''')
+
+
+@runbook
+def HttpEndpointMacroOnEscript(endpoints=[http_endpoint]):
+    CalmTask.Exec.escript(
+        name="ExecTask",
+        target=ref(http_endpoint),
+        script='''print "@@{endpoint.name}@@, @@{endpoint.type}@@, @@{endpoint.base_url}@@, @@{endpoint.retry_count}@@, \
+        @@{endpoint.retry_interval}@@, @@{endpoint.tls_verify}@@, @@{endpoint.connection_timeout}@@"''')
