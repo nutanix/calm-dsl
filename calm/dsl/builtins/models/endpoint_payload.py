@@ -11,15 +11,13 @@ class EndpointPayloadType(EntityType):
     __openapi_type__ = "endpoint_payload"
 
 
-class EndpointPayloadValidator(
-    PropertyValidator, openapi_type="endpoint_payload"
-):
+class EndpointPayloadValidator(PropertyValidator, openapi_type="endpoint_payload"):
     __default__ = None
     __kind__ = EndpointPayloadType
 
 
 def _endpoint_payload(**kwargs):
-    name = getattr(EndpointPayloadType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return EndpointPayloadType(name, bases, kwargs)
 

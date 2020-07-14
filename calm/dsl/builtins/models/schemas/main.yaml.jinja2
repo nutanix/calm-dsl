@@ -27,6 +27,7 @@
 {% import "ahv_vm.yaml.jinja2" as ahv_vm %}
 {% import "simple_pod_deployment.yaml.jinja2" as simple_pod_deployment %}
 {% import "vm_disk_package.yaml.jinja2" as vm_disk_package %}
+{% import "readiness_probe.yaml.jinja2" as readiness_probe %}
 
 {% macro Schemas() -%}
 
@@ -59,6 +60,7 @@
 {{ simple_blueprint.SimpleBlueprintSchema() }}
 {{ ahv_vm.AhvVmSchema() }}
 {{ vm_disk_package.VmDiskPackageSchema() }}
+{{ readiness_probe.ReadinessProbeSchema() }}
 
 {%- endmacro %}
 

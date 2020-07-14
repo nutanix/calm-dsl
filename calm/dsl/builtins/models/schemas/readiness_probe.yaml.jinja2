@@ -1,0 +1,50 @@
+{% import "ref.yaml.jinja2" as ref %}
+
+{% macro ReadinessProbe() -%}
+
+title: Readiness Probe
+type: object
+x-calm-dsl-type: app_readiness_probe
+properties:
+  connection_type:
+    type: string
+    default: SSH
+    enum:
+    - SSH
+    - POWERSHELL
+  connection_port:
+    type: integer
+    default: 22
+  connection_protocol:
+    type: string
+  login_credential_local_reference:
+    x-calm-dsl-display-name: credential
+    {{ ref.Ref() | indent(4) }}
+  timeout_secs:
+    type: string
+  delay_secs:
+    type: string
+    default: '60'
+  retries:
+    type: string
+    default: '5'
+  address:
+    type: string
+  disable_readiness_probe:
+    x-calm-dsl-display-name: disabled
+    default: false
+    type: boolean
+  editables_list:
+    type: array
+    items:
+      type: string
+
+{%- endmacro %}
+
+
+{% macro ReadinessProbeSchema() -%}
+
+ReadinessProbe:
+  {{ ReadinessProbe()|indent(2) }}
+
+{%- endmacro %}

@@ -27,8 +27,8 @@ class TestRunbooks:
 
         # getting the run payload from the json
         data = read_test_config()
-        run_payload = data[Runbook.action_name]['run_payload']
-        expected_output = data[Runbook.action_name]['expected_output']
+        run_payload = data[Runbook.action_name]["run_payload"]
+        expected_output = data[Runbook.action_name]["expected_output"]
 
         # running the runbook
         print("\n>>Running the runbook")
@@ -53,7 +53,10 @@ class TestRunbooks:
         response = res.json()
         entities = response["entities"]
         for entity in entities:
-            if entity["status"]["type"] == "task_runlog" and entity["status"]["task_reference"]["name"] == "Exec_Task":
+            if (
+                entity["status"]["type"] == "task_runlog"
+                and entity["status"]["task_reference"]["name"] == "Exec_Task"
+            ):
                 exec_task = entity["metadata"]["uuid"]
 
         # Now checking the output of exec task
@@ -62,8 +65,8 @@ class TestRunbooks:
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
         runlog_output = res.json()
-        output_list = runlog_output['status']['output_list']
-        assert output_list[0]['output'] == expected_output
+        output_list = runlog_output["status"]["output_list"]
+        assert output_list[0]["output"] == expected_output
 
         # delete the runbook
         res, err = client.runbook.delete(rb_uuid)

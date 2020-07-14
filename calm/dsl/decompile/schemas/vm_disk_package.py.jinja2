@@ -1,0 +1,5 @@
+{%- macro package(obj) -%}
+{{obj.name}} = vm_disk_package(name='{{obj.name}}', description='{{obj.description}}', config={{obj.config}})
+{%- endmacro %}
+
+{{ package(obj) }}

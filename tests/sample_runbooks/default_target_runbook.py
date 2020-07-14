@@ -2,27 +2,33 @@
 Calm DSL Runbook Sample with default endpoint target
 """
 
-from calm.dsl.builtins import read_local_file
-from calm.dsl.builtins import runbook
-from calm.dsl.builtins import basic_cred, CalmTask
-from calm.dsl.builtins import CalmEndpoint, ref
+from calm.dsl.runbooks import read_local_file
+from calm.dsl.runbooks import runbook, runbook_json
+from calm.dsl.runbooks import basic_cred, RunbookTask as Task
+from calm.dsl.runbooks import CalmEndpoint as Endpoint
 
 CRED_USERNAME = read_local_file(".tests/runbook_tests/username")
 CRED_PASSWORD = read_local_file(".tests/runbook_tests/password")
 VM_IP = read_local_file(".tests/runbook_tests/vm_ip")
 
 Cred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
-endpoint = CalmEndpoint.Linux.ip([VM_IP], cred=Cred)
+endpoint = Endpoint.Linux.ip([VM_IP], cred=Cred)
 
 
 @runbook
-def DslDefaultEndpoint(endpoints=[endpoint], default_target=ref(endpoint)):
-    "Runbook Service example"
-    CalmTask.Exec.ssh(script='echo "hello"')
+def DslDefaultEndpoint(endpoints=[endpoint]):
+    """
+    Runbook example with default target
+    The default target for runbook is 'endpoints[0]'
+    If no default target is required, 'default=False', can given in runbook arguments
+    Existing Endpoint can also be given as default target- 'default.Endpoint.use_existin(<ep-name>)'
+    """
+
+    Task.Exec.ssh(script='echo "hello"')
 
 
 def main():
-    print(DslDefaultEndpoint.runbook.json_dumps(pprint=True))
+    print(runbook_json(DslDefaultEndpoint))
 
 
 if __name__ == "__main__":

@@ -1,19 +1,21 @@
 import time
 import click
 import arrow
+import json
 from prettytable import PrettyTable
 
 from calm.dsl.builtins import ProjectValidator
-from calm.dsl.api import get_resource_api, get_api_client
+from calm.dsl.api import get_api_client
 from calm.dsl.config import get_config
 
 from .utils import get_name_query, highlight_text
 from calm.dsl.tools import get_logging_handle
+from calm.dsl.providers import get_provider
 
 LOG = get_logging_handle(__name__)
 
 
-def get_projects(name, filter_by, limit, offset, quiet):
+def get_projects(name, filter_by, limit, offset, quiet, out):
     """ Get the projects, optionally filtered by a string """
 
     client = get_api_client()
@@ -38,6 +40,10 @@ def get_projects(name, filter_by, limit, offset, quiet):
     if err:
         pc_ip = config["SERVER"]["pc_ip"]
         LOG.warning("Cannot fetch projects from {}".format(pc_ip))
+        return
+
+    if out == "json":
+        click.echo(json.dumps(res.json(), indent=4, separators=(",", ": ")))
         return
 
     json_rows = res.json()["entities"]
@@ -238,12 +244,18 @@ def describe_project(project_name):
     accounts = project["status"]["project_status"]["resources"][
         "account_reference_list"
     ]
-    account_name_uuid_map = client.account.get_name_uuid_map()
-    account_uuid_name_map = {
-        v: k for k, v in account_name_uuid_map.items()
-    }  # TODO check it
+    payload = {"length": 200, "offset": 0, "filter": "state!=DELETED;type!=nutanix"}
+    account_name_uuid_map = client.account.get_name_uuid_map(payload)
+    account_uuid_name_map = {}
+    # BUG: Same type of account have multiple uuids (Nutanix clusters)
+    for k, v in account_name_uuid_map.items():
+        if isinstance(v, list):
+            for i in v:
+                account_uuid_name_map[i] = k
+        else:
+            account_uuid_name_map[v] = k
 
-    res, err = client.account.list()
+    res, err = client.account.list(payload)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -254,14 +266,28 @@ def describe_project(project_name):
         account_type = entity["status"]["resources"]["type"]
         account_name_type_map[name] = account_type
 
-    account_type_name_map = {}
-    for account in accounts:  # TODO remove this mess
+    subnets_list = []
+    for subnet in project["status"]["project_status"]["resources"][
+        "subnet_reference_list"
+    ]:
+        subnets_list.append(subnet["uuid"])
+
+    # Extending external subnet's list from remote account
+    for subnet in project["status"]["project_status"]["resources"].get(
+        "external_network_list", []
+    ):
+        subnets_list.append(subnet["uuid"])
+
+    ntnx_pc_account_uuid = ""
+    for account in accounts:
         account_uuid = account["uuid"]
         account_name = account_uuid_name_map[account_uuid]
         account_type = account_name_type_map[account_name]
-        account_type_name_map[account_type] = account_name
 
-    for account_type, account_name in account_type_name_map.items():
+        if account_type == "nutanix_pc":
+            ntnx_pc_account_uuid = account_uuid
+            continue
+
         click.echo("Account Type: " + highlight_text(account_type.upper()))
         click.echo(
             "Name: {} (uuid: {})\n".format(
@@ -269,33 +295,48 @@ def describe_project(project_name):
             )
         )
 
-    subnets = project["status"]["project_status"]["resources"]["subnet_reference_list"]
-    if subnets:
-        click.echo("Account Type: " + highlight_text("NUTANIX"))
-
-    for subnet in subnets:
-        subnet_name = subnet["name"]
-
-        # TODO move this to AHV specific method
-        Obj = get_resource_api("subnets", client.connection)
-        res, err = Obj.read(subnet["uuid"])
-
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        res = res.json()
-        cluster_name = res["status"]["cluster_reference"]["name"]
-        vlan_id = res["status"]["resources"]["vlan_id"]
-
-        click.echo(
-            "Subnet Name: {}\tVLAN ID: {}\tCluster Name: {}".format(
-                highlight_text(subnet_name),
-                highlight_text(vlan_id),
-                highlight_text(cluster_name),
+    # Extracting subnets for nutanix accounts
+    if subnets_list or ntnx_pc_account_uuid:
+        if ntnx_pc_account_uuid:
+            account_name = account_uuid_name_map[ntnx_pc_account_uuid]
+            account_type = account_name_type_map[account_name]
+            click.echo("Account Type: " + highlight_text(account_type.upper()))
+            click.echo(
+                "Name: {} (uuid: {})\n".format(
+                    highlight_text(account_name), highlight_text(account_uuid)
+                )
             )
-        )
 
-    if not (subnets or accounts):
+        else:
+            click.echo("Account Type: " + highlight_text("NUTANIX"))
+
+        AhvVmProvider = get_provider("AHV_VM")
+        AhvObj = AhvVmProvider.get_api_obj()
+
+        filter_query = "(_entity_id_=={})".format(",_entity_id_==".join(subnets_list),)
+        nics = AhvObj.subnets(
+            account_uuid=ntnx_pc_account_uuid, filter_query=filter_query
+        )
+        nics = nics["entities"]
+
+        if nics:
+            click.echo("\tWhitelisted Subnets:\n\t--------------------")
+        for nic in nics:
+            nic_name = nic["status"]["name"]
+            vlan_id = nic["status"]["resources"]["vlan_id"]
+            cluster_name = nic["status"]["cluster_reference"]["name"]
+            nic_uuid = nic["metadata"]["uuid"]
+
+            click.echo(
+                "\tName: {} (uuid: {})\tVLAN ID: {}\tCluster Name: {}".format(
+                    highlight_text(nic_name),
+                    highlight_text(nic_uuid),
+                    highlight_text(vlan_id),
+                    highlight_text(cluster_name),
+                )
+            )
+
+    if not (subnets_list or accounts):
         click.echo(highlight_text("No provider's account registered"))
 
     click.echo("\nQuotas: \n-------\n")

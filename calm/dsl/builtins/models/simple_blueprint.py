@@ -4,7 +4,7 @@ from .validator import PropertyValidator
 from .profile import profile
 from .deployment import deployment
 from .simple_pod_deployment import simple_pod_deployment
-from .provider_spec import ProviderSpec
+from .provider_spec import provider_spec as get_provider_spec
 from .substrate import substrate
 from .service import service
 from .package import package
@@ -31,6 +31,7 @@ class SimpleBlueprintType(EntityType):
         for dep in deployments:
             if dep.deployment_spec and dep.service_spec:
                 pod_dep = simple_pod_deployment(
+                    name=getattr(dep, "name", "") or dep.__name__,
                     service_spec=dep.service_spec,
                     deployment_spec=dep.deployment_spec,
                     dependencies=dep.dependencies,
@@ -106,7 +107,7 @@ class SimpleBlueprintType(EntityType):
             sub = substrate(
                 name=sd["name"] + "Substrate",
                 provider_type=sd["provider_type"],
-                provider_spec=ProviderSpec(sd["provider_spec"]),
+                provider_spec=get_provider_spec(sd["provider_spec"]),
                 readiness_probe=sd["readiness_probe"],
                 os_type=sd["os_type"],
             )
@@ -159,8 +160,8 @@ class SimpleBlueprintType(EntityType):
 
             app_profile["deployment_create_list"].append(ddict)
 
-        for dep in pod_deployments:
-            pod_dict = dep.extract_deployment()
+        for pdep in pod_deployments:
+            pod_dict = pdep.extract_deployment()
             for sd in pod_dict["service_definition_list"]:
                 sdict = sd.get_dict()
                 service_definition_list.append(sdict)
@@ -231,7 +232,7 @@ class SimpleBlueprintValidator(PropertyValidator, openapi_type="app_simple_bluep
 
 
 def simple_blueprint(**kwargs):
-    name = getattr(SimpleBlueprintType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return SimpleBlueprintType(name, bases, kwargs)
 

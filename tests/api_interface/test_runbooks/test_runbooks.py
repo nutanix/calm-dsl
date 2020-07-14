@@ -4,9 +4,15 @@ import uuid
 
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import RUNLOG
-from calm.dsl.builtins import create_endpoint_payload
-from tests.sample_runbooks import DslPausePlayRunbook
-from utils import upload_runbook, update_runbook, poll_runlog_status, read_test_config, change_uuids
+from calm.dsl.runbooks import create_endpoint_payload
+from tests.sample_runbooks import DslSimpleRunbook
+from utils import (
+    upload_runbook,
+    update_runbook,
+    poll_runlog_status,
+    read_test_config,
+    change_uuids,
+)
 from test_files.exec_task import linux_endpoint
 from test_files.updated_runbook import DslUpdatedRunbook
 
@@ -69,7 +75,9 @@ class TestRunbooks:
         # creating an endpoint
         EndpointPayload, _ = create_endpoint_payload(linux_endpoint)
         ep_payload = EndpointPayload.get_dict()
-        res, err = client.endpoint.upload_with_secrets("endpoint_" + str(uuid.uuid4())[-10:], "", ep_payload["spec"]["resources"])
+        res, err = client.endpoint.upload_with_secrets(
+            "endpoint_" + str(uuid.uuid4())[-10:], "", ep_payload["spec"]["resources"]
+        )
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
         endpoint = res.json()
@@ -81,14 +89,22 @@ class TestRunbooks:
         # updating the runbook
         del rb["status"]
         resources = change_uuids(RunbookUpdatePayload["spec"]["resources"], {})
-        rb["spec"]["resources"]["credential_definition_list"] = resources["credential_definition_list"]
-        rb["spec"]["resources"]["runbook"]["task_definition_list"][1] = resources["runbook"]["task_definition_list"][1]
-        rb["spec"]["resources"]["runbook"]["task_definition_list"][0]["child_tasks_local_reference_list"][0]["uuid"] = resources["runbook"]["task_definition_list"][1]["uuid"]
-        rb["spec"]["resources"]["runbook"]["variable_list"].append(resources["runbook"]["variable_list"][0])
+        rb["spec"]["resources"]["credential_definition_list"] = resources[
+            "credential_definition_list"
+        ]
+        rb["spec"]["resources"]["runbook"]["task_definition_list"][1] = resources[
+            "runbook"
+        ]["task_definition_list"][1]
+        rb["spec"]["resources"]["runbook"]["task_definition_list"][0][
+            "child_tasks_local_reference_list"
+        ][0]["uuid"] = resources["runbook"]["task_definition_list"][1]["uuid"]
+        rb["spec"]["resources"]["runbook"]["variable_list"].append(
+            resources["runbook"]["variable_list"][0]
+        )
         rb["spec"]["resources"]["default_target_reference"] = {
             "uuid": endpoint_uuid,
             "name": endpoint_name,
-            "kind": "app_endpoint"
+            "kind": "app_endpoint",
         }
         rb["spec"]["description"] = "user-\u018e-name-\xf1"
         res, err = client.runbook.update(rb_uuid, rb)
@@ -118,9 +134,12 @@ class TestRunbooks:
         file_path = client.runbook.export_file(rb_uuid, passphrase="test_passphrase")
 
         # upload the runbook
-        res, err = client.runbook.import_file(file_path, rb_name + "-uploaded",
-                                              rb["metadata"].get("project_reference", {}).get("uuid", ""),
-                                              passphrase="test_passphrase")
+        res, err = client.runbook.import_file(
+            file_path,
+            rb_name + "-uploaded",
+            rb["metadata"].get("project_reference", {}).get("uuid", ""),
+            passphrase="test_passphrase",
+        )
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
         uploaded_rb = res.json()
@@ -156,7 +175,7 @@ class TestRunbooks:
 
     @pytest.mark.runbook
     @pytest.mark.regression
-    @pytest.mark.parametrize("Runbook", [DslPausePlayRunbook])
+    @pytest.mark.parametrize("Runbook", [DslSimpleRunbook])
     def test_rb_update(self, Runbook):
 
         client = get_api_client()
@@ -230,7 +249,7 @@ class TestRunbooks:
         rb_name = "Test_" + str(uuid.uuid4())[-10:]
 
         # creating the runbook
-        rb = upload_runbook(client, rb_name, DslPausePlayRunbook)
+        rb = upload_runbook(client, rb_name, DslSimpleRunbook)
         rb_state = rb["status"]["state"]
         rb_uuid = rb["metadata"]["uuid"]
         print(">> Runbook state: {}".format(rb_state))
@@ -248,7 +267,9 @@ class TestRunbooks:
         runlog_uuid = response["status"]["runlog_uuid"]
 
         # polling till runbook run starts RUNNING
-        state, reasons = poll_runlog_status(client, runlog_uuid, [RUNLOG.STATUS.RUNNING])
+        state, reasons = poll_runlog_status(
+            client, runlog_uuid, [RUNLOG.STATUS.RUNNING]
+        )
         _, err = client.runbook.abort(runlog_uuid)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
@@ -304,7 +325,9 @@ class TestRunbooks:
         # creating an endpoint
         EndpointPayload, _ = create_endpoint_payload(linux_endpoint)
         ep_payload = EndpointPayload.get_dict()
-        res, err = client.endpoint.upload_with_secrets("endpoint_" + str(uuid.uuid4())[-10:], "", ep_payload["spec"]["resources"])
+        res, err = client.endpoint.upload_with_secrets(
+            "endpoint_" + str(uuid.uuid4())[-10:], "", ep_payload["spec"]["resources"]
+        )
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
         endpoint = res.json()
@@ -318,7 +341,7 @@ class TestRunbooks:
         rb["spec"]["resources"]["default_target_reference"] = {
             "uuid": endpoint_uuid,
             "name": endpoint_name,
-            "kind": "app_endpoint"
+            "kind": "app_endpoint",
         }
         res, err = client.runbook.update(rb_uuid, rb)
         if err:
@@ -335,15 +358,15 @@ class TestRunbooks:
         # run the runbook
         print("\n>>Running the runbook")
         res, err = client.runbook.run(rb_uuid, {})
-        if err['code'] != 400:
+        if err["code"] != 400:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
         res = res.json()
         errors = ""
-        for message in res.get('message_list', []):
-            errors += message['message']
+        for message in res.get("message_list", []):
+            errors += message["message"]
 
-        assert 'Default target is not in active state' in errors
+        assert "Default target is not in active state" in errors
 
         # deleting runbook
         print("\n>>Deleting runbook")

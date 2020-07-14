@@ -24,10 +24,22 @@ properties:
     type: array
     items:
       $ref: '#/components/schemas/Ref'
+  variable_list:
+    x-calm-dsl-display-name: variables
+    type: array
+    items:
+      $ref: '#/components/schemas/Variable'
+  action_list:
+    x-calm-dsl-display-name: actions
+    type: array
+    items:
+      $ref: '#/components/schemas/Action'
   min_replicas:
     description: Minimum replicas for the deployment.
     type: string
     default: "1"
+  default_replicas:
+    type: string
   max_replicas:
     description: Maximum replicas for the deployment.
     type: string
@@ -40,6 +52,18 @@ properties:
   options:
     x-calm-dsl-type: dict
     type: object
+  description:
+    type: string
+  editables:
+    type: object
+    x-calm-dsl-type: object
+    properties:
+      min_replicas:
+        type: boolean
+      default_replicas:
+        type: boolean
+      max_replicas:
+        type: boolean
 
 {%- endmacro %}
 

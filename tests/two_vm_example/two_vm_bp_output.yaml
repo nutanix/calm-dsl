@@ -1,7 +1,11 @@
 app_profile_list:
 - action_list: []
   deployment_create_list:
-  - depends_on_list: []
+  - action_list: []
+    default_replicas: ''
+    depends_on_list: []
+    description: Sample deployment pulling in service and substrate references
+    editables: {}
     max_replicas: '1'
     min_replicas: '1'
     name: MySQLDeployment
@@ -14,7 +18,12 @@ app_profile_list:
       kind: app_substrate
       name: AHVMedVM
     type: GREENFIELD
-  - depends_on_list: []
+    variable_list: []
+  - action_list: []
+    default_replicas: ''
+    depends_on_list: []
+    description: Sample deployment pulling in service and substrate references
+    editables: {}
     max_replicas: '1'
     min_replicas: '1'
     name: PHPDeployment
@@ -27,6 +36,7 @@ app_profile_list:
       kind: app_substrate
       name: AHVMedVMForPHP
     type: GREENFIELD
+    variable_list: []
   name: NxProfile
   variable_list:
   - attrs: {}
@@ -53,6 +63,7 @@ client_attrs: {}
 credential_definition_list:
 - default: true
   description: ''
+  editables: {}
   name: default
   secret:
     attrs:
@@ -60,6 +71,7 @@ credential_definition_list:
     value: passwd
   type: PASSWORD
   username: root
+default_credential_local_reference: null
 package_definition_list:
 - description: Example package with variables and link to service
   name: MySQLPackage
@@ -76,9 +88,11 @@ package_definition_list:
         child_tasks_local_reference_list: []
         description: ''
         name: DAG_Task_for_Package_MySQLPackage_action_install
+        retries: ''
         target_any_local_reference:
           kind: app_service
           name: MySQLService
+        timeout_secs: ''
         type: DAG
         variable_list: []
       variable_list: []
@@ -94,9 +108,11 @@ package_definition_list:
         child_tasks_local_reference_list: []
         description: ''
         name: DAG_Task_for_Package_MySQLPackage_action_uninstall
+        retries: ''
         target_any_local_reference:
           kind: app_service
           name: MySQLService
+        timeout_secs: ''
         type: DAG
         variable_list: []
       variable_list: []
@@ -131,9 +147,11 @@ package_definition_list:
         child_tasks_local_reference_list: []
         description: ''
         name: DAG_Task_for_Package_PHPPackage_action_install
+        retries: ''
         target_any_local_reference:
           kind: app_service
           name: PHPService
+        timeout_secs: ''
         type: DAG
         variable_list: []
       variable_list: []
@@ -149,9 +167,11 @@ package_definition_list:
         child_tasks_local_reference_list: []
         description: ''
         name: DAG_Task_for_Package_PHPPackage_action_uninstall
+        retries: ''
         target_any_local_reference:
           kind: app_service
           name: PHPService
+        timeout_secs: ''
         type: DAG
         variable_list: []
       variable_list: []
@@ -179,9 +199,11 @@ service_definition_list:
         child_tasks_local_reference_list: []
         description: ''
         name: DAG_Task_for_Service_MySQLService_action_create
+        retries: ''
         target_any_local_reference:
           kind: app_service
           name: MySQLService
+        timeout_secs: ''
         type: DAG
         variable_list: []
       variable_list: []
@@ -201,9 +223,11 @@ service_definition_list:
         child_tasks_local_reference_list: []
         description: ''
         name: DAG_Task_for_Service_MySQLService_action_delete
+        retries: ''
         target_any_local_reference:
           kind: app_service
           name: MySQLService
+        timeout_secs: ''
         type: DAG
         variable_list: []
       variable_list: []
@@ -223,9 +247,11 @@ service_definition_list:
         child_tasks_local_reference_list: []
         description: ''
         name: DAG_Task_for_Service_MySQLService_action_start
+        retries: ''
         target_any_local_reference:
           kind: app_service
           name: MySQLService
+        timeout_secs: ''
         type: DAG
         variable_list: []
       variable_list: []
@@ -245,9 +271,11 @@ service_definition_list:
         child_tasks_local_reference_list: []
         description: ''
         name: DAG_Task_for_Service_MySQLService_action_stop
+        retries: ''
         target_any_local_reference:
           kind: app_service
           name: MySQLService
+        timeout_secs: ''
         type: DAG
         variable_list: []
       variable_list: []
@@ -267,9 +295,11 @@ service_definition_list:
         child_tasks_local_reference_list: []
         description: ''
         name: DAG_Task_for_Service_MySQLService_action_restart
+        retries: ''
         target_any_local_reference:
           kind: app_service
           name: MySQLService
+        timeout_secs: ''
         type: DAG
         variable_list: []
       variable_list: []
@@ -289,9 +319,11 @@ service_definition_list:
         child_tasks_local_reference_list: []
         description: ''
         name: DAG_Task_for_Service_MySQLService_action_soft_delete
+        retries: ''
         target_any_local_reference:
           kind: app_service
           name: MySQLService
+        timeout_secs: ''
         type: DAG
         variable_list: []
       variable_list: []
@@ -325,9 +357,11 @@ service_definition_list:
         child_tasks_local_reference_list: []
         description: ''
         name: DAG_Task_for_Service_PHPService_action_create
+        retries: ''
         target_any_local_reference:
           kind: app_service
           name: PHPService
+        timeout_secs: ''
         type: DAG
         variable_list: []
       variable_list: []
@@ -347,9 +381,11 @@ service_definition_list:
         child_tasks_local_reference_list: []
         description: ''
         name: DAG_Task_for_Service_PHPService_action_delete
+        retries: ''
         target_any_local_reference:
           kind: app_service
           name: PHPService
+        timeout_secs: ''
         type: DAG
         variable_list: []
       variable_list: []
@@ -369,9 +405,11 @@ service_definition_list:
         child_tasks_local_reference_list: []
         description: ''
         name: DAG_Task_for_Service_PHPService_action_start
+        retries: ''
         target_any_local_reference:
           kind: app_service
           name: PHPService
+        timeout_secs: ''
         type: DAG
         variable_list: []
       variable_list: []
@@ -391,9 +429,11 @@ service_definition_list:
         child_tasks_local_reference_list: []
         description: ''
         name: DAG_Task_for_Service_PHPService_action_stop
+        retries: ''
         target_any_local_reference:
           kind: app_service
           name: PHPService
+        timeout_secs: ''
         type: DAG
         variable_list: []
       variable_list: []
@@ -413,9 +453,11 @@ service_definition_list:
         child_tasks_local_reference_list: []
         description: ''
         name: DAG_Task_for_Service_PHPService_action_restart
+        retries: ''
         target_any_local_reference:
           kind: app_service
           name: PHPService
+        timeout_secs: ''
         type: DAG
         variable_list: []
       variable_list: []
@@ -435,9 +477,11 @@ service_definition_list:
         child_tasks_local_reference_list: []
         description: ''
         name: DAG_Task_for_Service_PHPService_action_soft_delete
+        retries: ''
         target_any_local_reference:
           kind: app_service
           name: PHPService
+        timeout_secs: ''
         type: DAG
         variable_list: []
       variable_list: []
@@ -501,6 +545,7 @@ substrate_definition_list:
       num_vcpus_per_socket: 1
       power_state: ON
   description: Medium size AHV VM config given by reading a spec file
+  editables: {}
   name: AHVMedVM
   os_type: Linux
   readiness_probe:
@@ -544,6 +589,7 @@ substrate_definition_list:
       num_vcpus_per_socket: 1
       power_state: ON
   description: Medium size AHV VM config given by reading a spec file
+  editables: {}
   name: AHVMedVMForPHP
   os_type: Linux
   readiness_probe:

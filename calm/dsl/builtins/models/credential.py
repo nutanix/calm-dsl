@@ -17,8 +17,7 @@ class CredentialValidator(PropertyValidator, openapi_type="app_credential"):
 
 
 def _credential(**kwargs):
-    name = getattr(CredentialType, "__schema_name__")
-    name = kwargs.get("name", name)
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return CredentialType(name, bases, kwargs)
 
@@ -27,7 +26,13 @@ Credential = _credential()
 
 
 def basic_cred(
-    username, password="", name="default", default=False, type="PASSWORD", filename=None
+    username,
+    password="",
+    name="default",
+    default=False,
+    type="PASSWORD",
+    filename=None,
+    editables=dict(),
 ):
 
     if filename:
@@ -41,12 +46,19 @@ def basic_cred(
     kwargs["secret"] = secret
     kwargs["name"] = name
     kwargs["default"] = default
+    if editables:
+        kwargs["editables"] = editables
 
     return _credential(**kwargs)
 
 
 def secret_cred(
-    username, name="default", secret="default", type="PASSWORD", default=False
+    username,
+    name="default",
+    secret="default",
+    type="PASSWORD",
+    default=False,
+    editables=dict(),
 ):
 
     # This secret value will be replaced when user is creatring a blueprint
@@ -58,5 +70,7 @@ def secret_cred(
     kwargs["secret"] = secret
     kwargs["name"] = name
     kwargs["default"] = default
+    if editables:
+        kwargs["editables"] = editables
 
     return _credential(**kwargs)

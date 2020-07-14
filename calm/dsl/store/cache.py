@@ -1,7 +1,10 @@
-import peewee
+import click
+import sys
+import traceback
+from peewee import OperationalError, IntegrityError
 
-from ..db import get_db_handle
-from calm.dsl.api import get_resource_api, get_api_client
+from ..db import get_db_handle, init_db_handle
+from .version import Version
 from calm.dsl.tools import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -10,100 +13,119 @@ LOG = get_logging_handle(__name__)
 class Cache:
     """Cache class Implementation"""
 
-    # TODO move this mapping to constants(api may change)
-    entity_type_api_map = {
-        "AHV_DISK_IMAGE": "images",
-        "AHV_SUBNET": "subnets",
-        "AHV_NETWORK_FUNCTION_CHAIN": "network_function_chains",
-        "PROJECT": "projects",
-    }
-
     @classmethod
-    def get_entity_types(cls):
-        """Entity types used in the cache"""
-        return list(cls.entity_type_api_map.keys())
-
-    @classmethod
-    def create(cls, entity_type="", entity_name="", entity_uuid=""):
-        """Store the uuid of entity in cache"""
+    def get_cache_tables(cls):
+        """returns tables used for cache purpose"""
 
         db = get_db_handle()
-        db.cache_table.create(
-            entity_type=entity_type,
-            entity_name=entity_name,
-            entity_uuid=entity_uuid,
-            entity_list_api_suffix=cls.entity_type_api_map[entity_type],
-        )
+        db_tables = db.registered_tables
+
+        cache_tables = {}
+        for table in db_tables:
+            if hasattr(table, "__cache_type__"):
+                cache_tables[table.__cache_type__] = table
+        return cache_tables
 
     @classmethod
-    def get_entity_uuid(cls, entity_type, entity_name):
-        """Returns the uuid of entity present"""
+    def get_entity_data(cls, entity_type, name, **kwargs):
+        """returns entity data corresponding to supplied entry using entity name"""
 
-        db = get_db_handle()
+        cache_tables = cls.get_cache_tables()
+        if not entity_type:
+            LOG.error("No entity type for cache supplied")
+            sys.exit(-1)
+
+        db_cls = cache_tables.get(entity_type, None)
+        if not db_cls:
+            LOG.error("Unknown entity type ({}) supplied".format(entity_type))
+            sys.exit(-1)
+
         try:
-            entity = db.cache_table.get(
-                db.cache_table.entity_type == entity_type
-                and db.cache_table.entity_name == entity_name
+            res = db_cls.get_entity_data(name=name, **kwargs)
+        except OperationalError:
+            formatted_exc = traceback.format_exc()
+            LOG.debug("Exception Traceback:\n{}".format(formatted_exc))
+            LOG.error(
+                "Cache error occurred. Please update cache using 'calm update cache' command"
             )
+            sys.exit(-1)
 
-            return entity.entity_uuid
-
-        except peewee.DoesNotExist:
-            return None
+        return res
 
     @classmethod
-    def sync(cls, entity_type=None):
+    def get_entity_data_using_uuid(cls, entity_type, uuid, *args, **kwargs):
+        """returns entity data corresponding to supplied entry using entity uuid"""
 
-        updating_entity_types = []
+        cache_tables = cls.get_cache_tables()
+        if not entity_type:
+            LOG.error("No entity type for cache supplied")
+            sys.exit(-1)
 
-        if entity_type:
-            if entity_type not in cls.get_entity_types():
-                LOG.debug("Registered entity types: {}".format(cls.get_entity_types()))
-                raise ValueError("Entity type {} not registered".format(entity_type))
+        db_cls = cache_tables.get(entity_type, None)
+        if not db_cls:
+            LOG.error("Unknown entity type ({}) supplied".format(entity_type))
+            sys.exit(-1)
 
-            updating_entity_types.append(entity_type)
-
-        else:
-            updating_entity_types.extend(list(cls.entity_type_api_map.keys()))
-
-        db = get_db_handle()
-
-        for entity_type in updating_entity_types:
-            query = db.cache_table.delete().where(
-                db.cache_table.entity_type == entity_type
+        try:
+            res = db_cls.get_entity_data_using_uuid(uuid=uuid, **kwargs)
+        except OperationalError:
+            formatted_exc = traceback.format_exc()
+            LOG.debug("Exception Traceback:\n{}".format(formatted_exc))
+            LOG.error(
+                "Cache error occurred. Please update cache using 'calm update cache' command"
             )
-            query.execute()
+            sys.exit(-1)
 
-        client = get_api_client()
+        return res
 
-        for entity_type in updating_entity_types:
-            api_suffix = cls.entity_type_api_map[entity_type]
-            Obj = get_resource_api(api_suffix, client.connection)
-            try:
-                res = Obj.get_name_uuid_map()
-                for name, uuid in res.items():
-                    cls.create(
-                        entity_type=entity_type, entity_name=name, entity_uuid=uuid
-                    )
-            except Exception:
-                pc_ip = client.connection.host
-                LOG.warning("Cannot fetch data from {}".format(pc_ip))
+    @classmethod
+    def sync(cls):
+        """Sync cache by latest data"""
+
+        def sync_tables(tables):
+            for table in tables:
+                table.sync()
+                click.echo(".", nl=False, err=True)
+
+        cache_table_map = cls.get_cache_tables()
+        tables = list(cache_table_map.values())
+
+        # Inserting version table at start
+        tables.insert(0, Version)
+
+        try:
+            LOG.info("Updating cache", nl=False)
+            sync_tables(tables)
+
+        except (OperationalError, IntegrityError):
+            click.echo(" [Fail]")
+            # init db handle once (recreating db if some schema changes are there)
+            LOG.info("Removing existing db and updating cache again")
+            init_db_handle()
+            LOG.info("Updating cache", nl=False)
+            sync_tables(tables)
+            click.echo(" [Done]", err=True)
 
     @classmethod
     def clear_entities(cls):
-        """Deletes all the data present in the cache"""
+        """Clear data present in the cache tables"""
 
-        db = get_db_handle()
-        for db_entity in db.cache_table.select():
-            db_entity.delete_instance()
+        # For now clearing means erasing all data. So reinitialising whole database
+        init_db_handle()
 
     @classmethod
-    def list(cls):
-        """return the list of entities stored in db"""
+    def show_data(cls):
+        """Display data present in cache tables"""
 
-        db = get_db_handle()
-        cache_data = []
-        for entity in db.cache_table.select():
-            cache_data.append(entity.get_detail_dict())
-
-        return cache_data
+        cache_tables = cls.get_cache_tables()
+        for cache_type, table in cache_tables.items():
+            click.echo("\n{}".format(cache_type.upper()))
+            try:
+                table.show_data()
+            except OperationalError:
+                formatted_exc = traceback.format_exc()
+                LOG.debug("Exception Traceback:\n{}".format(formatted_exc))
+                LOG.error(
+                    "Cache error occurred. Please update cache using 'calm update cache' command"
+                )
+                sys.exit(-1)

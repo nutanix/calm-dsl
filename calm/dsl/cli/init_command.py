@@ -12,10 +12,10 @@ from calm.dsl.config import (
     get_default_db_file,
     get_default_local_dir,
 )
-from calm.dsl.db import get_db_handle
+from calm.dsl.db import init_db_handle
 from calm.dsl.api import get_resource_api, update_client_handle, get_client_handle
 from calm.dsl.store import Cache
-from calm.dsl.init import init_bp
+from calm.dsl.init import init_bp, init_runbook
 from calm.dsl.providers import get_provider_types
 
 from .main import init, set
@@ -120,7 +120,7 @@ def initialize_engine(
         "2. Create and validate the blueprint: calm create bp --file HelloBlueprint/blueprint.py"
     )
     click.echo(
-        "3. Start an application using the blueprint: calm launch bp HelloBlueprint --app_name HelloApp01 -i"
+        "3. Start an application using the blueprint: calm launch bp Hello --app_name HelloApp01 -i"
     )
 
     click.echo("\nKeep Calm and DSL On!\n")
@@ -190,7 +190,6 @@ def set_server_details(
 
     LOG.info("Writing config to {}".format(config_file))
     init_config(host, port, username, password, project_name, log_level)
-    LOG.info("Success")
 
     # Update client handle with new settings if no exception occurs
     update_client_handle(host, port, auth=(username, password))
@@ -198,14 +197,11 @@ def set_server_details(
 
 def init_db():
     LOG.info("Creating local database")
-    get_db_handle()
-    LOG.info("Success")
+    init_db_handle()
 
 
 def sync_cache():
-    LOG.info("Updating Cache")
     Cache.sync()
-    LOG.info("Success")
 
 
 @init.command("bp")
@@ -229,6 +225,21 @@ def init_dsl_bp(bp_name, dir_name, provider_type):
         sys.exit(-1)
 
     init_bp(bp_name, dir_name, provider_type)
+
+
+@init.command("runbook", feature_min_version="3.0.0", experimental=True)
+@click.option("--name", "-n", "runbook_name", default="Hello", help="Name of runbook")
+@click.option(
+    "--dir_name", "-d", default=os.getcwd(), help="Directory path for the runbook"
+)
+def init_dsl_runbook(runbook_name, dir_name):
+    """Creates a starting directory for runbook"""
+
+    if not runbook_name.isidentifier():
+        LOG.error("Runbook name '{}' is not a valid identifier".format(runbook_name))
+        sys.exit(-1)
+
+    init_runbook(runbook_name, dir_name)
 
 
 @set.command("config")

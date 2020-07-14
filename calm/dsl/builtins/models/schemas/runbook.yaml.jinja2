@@ -3,22 +3,23 @@ title: Runbook
 type: object
 x-calm-dsl-type: app_runbook
 properties:
-    name:
-      type: string
-    description:
-      type: string
-    main_task_local_reference:
-      $ref: '#/components/schemas/Ref'
-    task_definition_list:
-      x-calm-dsl-display-name: tasks
-      type: array
-      items:
-        $ref: "#/components/schemas/Task"
-    variable_list:
-      x-calm-dsl-display-name: variables
-      type: array
-      items:
-        $ref: '#/components/schemas/Variable'
+  name:
+    type: string
+  description:
+    type: string
+  main_task_local_reference:
+    $ref: '#/components/schemas/Ref'
+  task_definition_list:
+    x-calm-dsl-display-name: tasks
+    type: array
+    items:
+      $ref: "#/components/schemas/Task"
+  variable_list:
+    x-calm-dsl-display-name: variables
+    type: array
+    items:
+      $ref: '#/components/schemas/Variable'
+
 {%- endmacro %}
 
 

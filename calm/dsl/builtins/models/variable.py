@@ -2,6 +2,7 @@ import re
 
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
+from .task_input import _task_input
 
 
 # Variable
@@ -53,7 +54,7 @@ class VariableValidator(PropertyValidator, openapi_type="app_variable"):
 
 
 def _var(**kwargs):
-    name = getattr(VariableType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return VariableType(name, bases, kwargs)
 
@@ -63,8 +64,6 @@ Variable = _var()
 
 def setvar(name, value, type_="LOCAL", **kwargs):
 
-    if name is None:
-        name = getattr(VariableType, "__schema_name__")
     kwargs["name"] = name
     if value is not None:
         kwargs["value"] = value
@@ -82,10 +81,10 @@ def simple_variable(
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
+    description="",
 ):
     kwargs = {"is_hidden": is_hidden, "is_mandatory": is_mandatory}
     editables = {}
-    name = name or getattr(VariableType, "__schema_name__")
     if runtime:
         editables = {"value": True}
         kwargs["editables"] = editables
@@ -109,6 +108,9 @@ def simple_variable(
 
         regex = {"value": regex, "should_validate": validate_regex}
         kwargs["regex"] = regex
+    if description is not None:
+        kwargs["description"] = description
+
     return setvar(name, value, **kwargs)
 
 
@@ -121,10 +123,10 @@ def simple_variable_secret(
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
+    description="",
 ):
     kwargs = {"is_hidden": is_hidden, "is_mandatory": is_mandatory}
     editables = {}
-    name = name or getattr(VariableType, "__schema_name__")
     if runtime:
         editables = {"value": True}
         kwargs["editables"] = editables
@@ -148,6 +150,8 @@ def simple_variable_secret(
 
         regex = {"value": regex, "should_validate": validate_regex}
         kwargs["regex"] = regex
+    if description is not None:
+        kwargs["description"] = description
     return setvar(name, value, type_="SECRET", **kwargs)
 
 
@@ -165,6 +169,7 @@ def _advanced_variable(
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
+    description="",
 ):
     kwargs = {"name": name, "value": value, "type_": type_}
     if runtime:
@@ -294,6 +299,8 @@ def _advanced_variable(
         kwargs["is_hidden"] = bool(is_hidden)
     if is_mandatory is not None:
         kwargs["is_mandatory"] = bool(is_mandatory)
+    if description is not None:
+        kwargs["description"] = description
 
     return setvar(**kwargs)
 
@@ -306,6 +313,7 @@ def simple_variable_int(
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -318,6 +326,7 @@ def simple_variable_int(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
+        description=description,
     )
 
 
@@ -329,6 +338,7 @@ def simple_variable_date(
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -341,6 +351,7 @@ def simple_variable_date(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
+        description=description,
     )
 
 
@@ -352,6 +363,7 @@ def simple_variable_time(
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -364,6 +376,7 @@ def simple_variable_time(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
+        description=description,
     )
 
 
@@ -375,6 +388,7 @@ def simple_variable_datetime(
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -387,6 +401,7 @@ def simple_variable_datetime(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
+        description=description,
     )
 
 
@@ -398,6 +413,7 @@ def simple_variable_multiline(
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -410,6 +426,7 @@ def simple_variable_multiline(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
+        description=description,
     )
 
 
@@ -421,6 +438,7 @@ def simple_variable_int_secret(
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
+    description="",
 ):
     return _advanced_variable(
         "SECRET",
@@ -433,6 +451,7 @@ def simple_variable_int_secret(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
+        description=description,
     )
 
 
@@ -444,6 +463,7 @@ def simple_variable_date_secret(
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
+    description="",
 ):
     return _advanced_variable(
         "SECRET",
@@ -456,6 +476,7 @@ def simple_variable_date_secret(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
+        description=description,
     )
 
 
@@ -467,6 +488,7 @@ def simple_variable_time_secret(
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
+    description="",
 ):
     return _advanced_variable(
         "SECRET",
@@ -479,6 +501,7 @@ def simple_variable_time_secret(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
+        description=description,
     )
 
 
@@ -490,6 +513,7 @@ def simple_variable_datetime_secret(
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
+    description="",
 ):
     return _advanced_variable(
         "SECRET",
@@ -502,6 +526,7 @@ def simple_variable_datetime_secret(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
+        description=description,
     )
 
 
@@ -513,6 +538,7 @@ def simple_variable_multiline_secret(
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
+    description="",
 ):
     return _advanced_variable(
         "SECRET",
@@ -525,6 +551,7 @@ def simple_variable_multiline_secret(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
+        description=description,
     )
 
 
@@ -538,6 +565,7 @@ def variable_string_with_predefined_options(
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -552,6 +580,7 @@ def variable_string_with_predefined_options(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
+        description=description,
     )
 
 
@@ -565,6 +594,7 @@ def variable_int_with_predefined_options(
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -579,6 +609,7 @@ def variable_int_with_predefined_options(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
+        description=description,
     )
 
 
@@ -592,6 +623,7 @@ def variable_date_with_predefined_options(
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -606,6 +638,7 @@ def variable_date_with_predefined_options(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
+        description=description,
     )
 
 
@@ -619,6 +652,7 @@ def variable_time_with_predefined_options(
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -633,6 +667,7 @@ def variable_time_with_predefined_options(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
+        description=description,
     )
 
 
@@ -646,6 +681,7 @@ def variable_datetime_with_predefined_options(
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -660,6 +696,7 @@ def variable_datetime_with_predefined_options(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
+        description=description,
     )
 
 
@@ -673,6 +710,7 @@ def variable_multiline_with_predefined_options(
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -687,6 +725,7 @@ def variable_multiline_with_predefined_options(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
+        description=description,
     )
 
 
@@ -700,6 +739,7 @@ def variable_string_with_predefined_options_array(
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -714,6 +754,7 @@ def variable_string_with_predefined_options_array(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
+        description=description,
     )
 
 
@@ -727,6 +768,7 @@ def variable_int_with_predefined_options_array(
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -741,6 +783,7 @@ def variable_int_with_predefined_options_array(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
+        description=description,
     )
 
 
@@ -754,6 +797,7 @@ def variable_date_with_predefined_options_array(
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -768,6 +812,7 @@ def variable_date_with_predefined_options_array(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
+        description=description,
     )
 
 
@@ -781,6 +826,7 @@ def variable_time_with_predefined_options_array(
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -795,6 +841,7 @@ def variable_time_with_predefined_options_array(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
+        description=description,
     )
 
 
@@ -808,6 +855,7 @@ def variable_datetime_with_predefined_options_array(
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -822,6 +870,7 @@ def variable_datetime_with_predefined_options_array(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
+        description=description,
     )
 
 
@@ -835,6 +884,7 @@ def variable_multiline_with_predefined_options_array(
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -849,6 +899,7 @@ def variable_multiline_with_predefined_options_array(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
+        description=description,
     )
 
 
@@ -860,6 +911,7 @@ def variable_string_with_options_from_task(
     validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -873,6 +925,7 @@ def variable_string_with_options_from_task(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=True,
+        description=description,
     )
 
 
@@ -884,6 +937,7 @@ def variable_int_with_options_from_task(
     validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -897,6 +951,7 @@ def variable_int_with_options_from_task(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=True,
+        description=description,
     )
 
 
@@ -908,6 +963,7 @@ def variable_date_with_options_from_task(
     validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -921,6 +977,7 @@ def variable_date_with_options_from_task(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=True,
+        description=description,
     )
 
 
@@ -932,6 +989,7 @@ def variable_time_with_options_from_task(
     validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -945,6 +1003,7 @@ def variable_time_with_options_from_task(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=True,
+        description=description,
     )
 
 
@@ -956,6 +1015,7 @@ def variable_datetime_with_options_from_task(
     validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -969,6 +1029,7 @@ def variable_datetime_with_options_from_task(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=True,
+        description=description,
     )
 
 
@@ -980,6 +1041,7 @@ def variable_multiline_with_options_from_task(
     validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -993,6 +1055,7 @@ def variable_multiline_with_options_from_task(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=True,
+        description=description,
     )
 
 
@@ -1004,6 +1067,7 @@ def variable_string_with_options_from_task_array(
     validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1017,6 +1081,7 @@ def variable_string_with_options_from_task_array(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=True,
+        description=description,
     )
 
 
@@ -1028,6 +1093,7 @@ def variable_int_with_options_from_task_array(
     validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1041,6 +1107,7 @@ def variable_int_with_options_from_task_array(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=True,
+        description=description,
     )
 
 
@@ -1052,6 +1119,7 @@ def variable_date_with_options_from_task_array(
     validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1065,6 +1133,7 @@ def variable_date_with_options_from_task_array(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=True,
+        description=description,
     )
 
 
@@ -1076,6 +1145,7 @@ def variable_time_with_options_from_task_array(
     validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1089,6 +1159,7 @@ def variable_time_with_options_from_task_array(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=True,
+        description=description,
     )
 
 
@@ -1100,6 +1171,7 @@ def variable_datetime_with_options_from_task_array(
     validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1113,6 +1185,7 @@ def variable_datetime_with_options_from_task_array(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=True,
+        description=description,
     )
 
 
@@ -1124,6 +1197,7 @@ def variable_multiline_with_options_from_task_array(
     validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
+    description="",
 ):
     return _advanced_variable(
         "LOCAL",
@@ -1137,6 +1211,7 @@ def variable_multiline_with_options_from_task_array(
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=True,
+        description=description,
     )
 
 
@@ -1150,6 +1225,7 @@ class CalmVariable:
         is_hidden=False,
         is_mandatory=False,
         runtime=False,
+        description="",
     ):
         return simple_variable(
             value,
@@ -1159,6 +1235,7 @@ class CalmVariable:
             is_hidden=is_hidden,
             is_mandatory=is_mandatory,
             runtime=runtime,
+            description=description,
         )
 
     class Simple:
@@ -1171,6 +1248,7 @@ class CalmVariable:
             is_hidden=False,
             is_mandatory=False,
             runtime=False,
+            description="",
         ):
             return simple_variable(
                 value,
@@ -1180,6 +1258,7 @@ class CalmVariable:
                 is_hidden=is_hidden,
                 is_mandatory=is_mandatory,
                 runtime=runtime,
+                description=description,
             )
 
         string = simple_variable
@@ -1199,6 +1278,7 @@ class CalmVariable:
                 is_hidden=False,
                 is_mandatory=False,
                 runtime=False,
+                description="",
             ):
                 return simple_variable_secret(
                     value,
@@ -1208,6 +1288,7 @@ class CalmVariable:
                     is_hidden=is_hidden,
                     is_mandatory=is_mandatory,
                     runtime=runtime,
+                    description=description,
                 )
 
             string = simple_variable_secret
@@ -1229,6 +1310,7 @@ class CalmVariable:
             is_hidden=False,
             is_mandatory=False,
             runtime=False,
+            description="",
         ):
             return variable_string_with_predefined_options(
                 options,
@@ -1240,6 +1322,7 @@ class CalmVariable:
                 is_hidden=is_hidden,
                 is_mandatory=is_mandatory,
                 runtime=runtime,
+                description=description,
             )
 
         class Predefined:
@@ -1254,6 +1337,7 @@ class CalmVariable:
                 is_hidden=False,
                 is_mandatory=False,
                 runtime=False,
+                description="",
             ):
                 return variable_string_with_predefined_options(
                     options,
@@ -1265,6 +1349,7 @@ class CalmVariable:
                     is_hidden=is_hidden,
                     is_mandatory=is_mandatory,
                     runtime=runtime,
+                    description=description,
                 )
 
             string = variable_string_with_predefined_options
@@ -1286,6 +1371,7 @@ class CalmVariable:
                     is_hidden=False,
                     is_mandatory=False,
                     runtime=False,
+                    description="",
                 ):
                     return variable_string_with_predefined_options_array(
                         options,
@@ -1297,6 +1383,7 @@ class CalmVariable:
                         is_hidden=is_hidden,
                         is_mandatory=is_mandatory,
                         runtime=runtime,
+                        description=description,
                     )
 
                 string = variable_string_with_predefined_options_array
@@ -1316,6 +1403,7 @@ class CalmVariable:
                 validate_regex=False,
                 is_hidden=False,
                 is_mandatory=False,
+                description="",
             ):
                 return variable_string_with_options_from_task(
                     task,
@@ -1325,6 +1413,7 @@ class CalmVariable:
                     validate_regex=validate_regex,
                     is_hidden=is_hidden,
                     is_mandatory=is_mandatory,
+                    description=description,
                 )
 
             string = variable_string_with_options_from_task
@@ -1344,6 +1433,7 @@ class CalmVariable:
                     validate_regex=False,
                     is_hidden=False,
                     is_mandatory=False,
+                    description="",
                 ):
                     return variable_string_with_options_from_task_array(
                         task,
@@ -1353,6 +1443,7 @@ class CalmVariable:
                         validate_regex=validate_regex,
                         is_hidden=is_hidden,
                         is_mandatory=is_mandatory,
+                        description=description,
                     )
 
                 string = variable_string_with_options_from_task_array
@@ -1361,3 +1452,9 @@ class CalmVariable:
                 time = variable_time_with_options_from_task_array
                 datetime = variable_datetime_with_options_from_task_array
                 multiline = variable_multiline_with_options_from_task_array
+
+
+class RunbookVariable(CalmVariable):
+    class TaskInput:
+        def __new__(cls, *args, **kwargs):
+            return _task_input(*args, **kwargs)

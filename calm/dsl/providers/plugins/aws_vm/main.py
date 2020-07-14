@@ -21,6 +21,13 @@ class AwsVmProvider(Provider):
         client = get_api_client()
         create_spec(client)
 
+    @classmethod
+    def get_api_obj(cls):
+        """returns object to call ahv provider specific apis"""
+
+        client = get_api_client()
+        return AWS(client.connection)
+
 
 class AWS:
     def __init__(self, connection):
@@ -174,6 +181,8 @@ class AWS:
 
         Obj = get_resource_api(aws.SECURITY_GROUPS, self.connection)
         res, err = Obj.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
         res = res.json()
 
         sg_name_id_map = {}
@@ -195,6 +204,8 @@ class AWS:
         subnet_list = []
         Obj = get_resource_api(aws.SUBNETS, self.connection)
         res, err = Obj.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
         res = res.json()
 
         for entity in res["entities"]:

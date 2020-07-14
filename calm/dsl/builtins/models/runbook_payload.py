@@ -11,15 +11,13 @@ class RunbookPayloadType(EntityType):
     __openapi_type__ = "runbook_payload"
 
 
-class RunbookPayloadValidator(
-    PropertyValidator, openapi_type="runbook_payload"
-):
+class RunbookPayloadValidator(PropertyValidator, openapi_type="runbook_payload"):
     __default__ = None
     __kind__ = RunbookPayloadType
 
 
 def _runbook_payload(**kwargs):
-    name = getattr(RunbookPayloadType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return RunbookPayloadType(name, bases, kwargs)
 

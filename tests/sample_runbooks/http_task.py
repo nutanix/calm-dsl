@@ -1,33 +1,35 @@
 """
 Calm Runbook Sample for running http tasks
 """
-from calm.dsl.builtins import read_local_file
-from calm.dsl.builtins import runbook
-from calm.dsl.builtins import CalmTask
-from calm.dsl.builtins import CalmEndpoint, Auth, ref
+from calm.dsl.runbooks import read_local_file
+from calm.dsl.runbooks import runbook, runbook_json
+from calm.dsl.runbooks import RunbookTask as Task
+from calm.dsl.runbooks import CalmEndpoint as Endpoint
 
 AUTH_USERNAME = read_local_file(".tests/runbook_tests/auth_username")
 AUTH_PASSWORD = read_local_file(".tests/runbook_tests/auth_password")
 URL = read_local_file(".tests/runbook_tests/url")
 
-endpoint = CalmEndpoint.HTTP(URL, verify=True, auth=Auth.Basic(AUTH_USERNAME, AUTH_PASSWORD))
+endpoint = Endpoint.HTTP(
+    URL, verify=True, auth=Endpoint.Auth(AUTH_USERNAME, AUTH_PASSWORD)
+)
 
 
 @runbook
-def DslHTTPTask(endpoints=[endpoint]):
-    "Runbook Service example"
-    CalmTask.HTTP.endpoint(
-        "GET",
+def DslHTTPTask(endpoints=[endpoint], default=False):
+    "Runbook example for HTTP Tasks"
+
+    Task.HTTP.get(
         headers={"Content-Type": "application/json"},
         content_type="application/json",
         status_mapping={200: True},
         response_paths={"ep_type": "$.spec.resources.type"},
-        target=ref(endpoint),
+        target=endpoints[0],
     )
 
 
 def main():
-    print(DslHTTPTask.runbook.json_dumps(pprint=True))
+    print(runbook_json(DslHTTPTask))
 
 
 if __name__ == "__main__":

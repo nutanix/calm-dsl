@@ -3,8 +3,8 @@ Calm DSL Runbook Sample for input task
 
 """
 
-from calm.dsl.builtins import runbook
-from calm.dsl.builtins import CalmTask, TaskInput
+from calm.dsl.runbooks import runbook
+from calm.dsl.runbooks import RunbookTask as Task, RunbookVariable as Varia
 
 
 inputs = [

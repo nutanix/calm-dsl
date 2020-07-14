@@ -1,9 +1,10 @@
 import os
+import sys
+import json
 from jinja2 import Environment, PackageLoader
 from Crypto.PublicKey import RSA
 
 from calm.dsl.config import get_config
-from calm.dsl.api import get_api_client
 from calm.dsl.store import Cache
 from calm.dsl.builtins import read_file
 from calm.dsl.tools import get_logging_handle
@@ -13,30 +14,56 @@ LOG = get_logging_handle(__name__)
 
 def render_ahv_template(template, bp_name):
 
-    # Getting the subnet registered to the project
-    client = get_api_client()
     config = get_config()
 
     project_name = config["PROJECT"].get("name", "default")
-    project_uuid = Cache.get_entity_uuid("PROJECT", project_name)
+    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
+    if not project_cache_data:
+        LOG.error(
+            "Project {} not found. Please run: calm update cache".format(project_name)
+        )
+        sys.exit(-1)
 
-    LOG.info("Fetching ahv subnets attached to the project {}".format(project_name))
-    res, err = client.project.read(project_uuid)
-    if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-    LOG.info("Success")
+    # Fetch Nutanix_PC account registered
+    project_accounts = project_cache_data["accounts_data"]
+    account_uuid = project_accounts.get("nutanix_pc", "")
+    if not account_uuid:
+        LOG.error("No nutanix_pc account registered to project {}".format(project_name))
 
-    res = res.json()
-    subnets = res["status"]["project_status"]["resources"].get(
-        "subnet_reference_list", []
+    # Fetch whitelisted subnets
+    project_subnets = project_cache_data["whitelisted_subnets"]
+    if not project_subnets:
+        LOG.error("No subnets registered to project {}".format(project_name))
+        sys.exit(-1)
+
+    # Fetch data for first subnet
+    subnet_cache_data = Cache.get_entity_data_using_uuid(
+        entity_type="ahv_subnet", uuid=project_subnets[0], account_uuid=account_uuid
     )
-    if not subnets:
-        raise Exception("no subnets registered !!!")
+    if not subnet_cache_data:
+        # Case when project have a subnet that is not available in subnets from registered account
+        context_data = {
+            "Project Whitelisted Subnets": project_subnets,
+            "Account UUID": account_uuid,
+            "Project Name": project_name,
+        }
+        LOG.debug(
+            "Context data: {}".format(
+                json.dumps(context_data, indent=4, separators=(",", ": "))
+            )
+        )
+        LOG.error(
+            "Subnet configuration mismatch in registered account's subnets and whitelisted subnets in project"
+        )
+        sys.exit(-1)
 
-    default_subnet = subnets[0]["name"]
+    cluster_name = subnet_cache_data["cluster"]
+    default_subnet = subnet_cache_data["name"]
+
     LOG.info("Rendering ahv template")
-    text = template.render(bp_name=bp_name, subnet_name=default_subnet)
-    LOG.info("Success")
+    text = template.render(
+        bp_name=bp_name, subnet_name=default_subnet, cluster_name=cluster_name
+    )
 
     return text.strip() + os.linesep
 
@@ -71,7 +98,6 @@ def create_bp_file(dir_name, bp_name, provider_type):
     LOG.info("Writing bp file to {}".format(bp_path))
     with open(bp_path, "w") as fd:
         fd.write(bp_text)
-    LOG.info("Success")
 
 
 def create_cred_keys(dir_name):
@@ -125,23 +151,17 @@ def make_bp_dirs(dir_name, bp_name):
     if not os.path.isdir(script_dir):
         os.makedirs(script_dir)
 
-    return (bp_dir, local_dir, key_dir, script_dir)
+    return (bp_dir, key_dir, script_dir)
 
 
 def init_bp(bp_name, dir_name, provider_type):
 
     bp_name = bp_name.strip().split()[0].title()
-    bp_dir, local_dir, key_dir, script_dir = make_bp_dirs(dir_name, bp_name)
-
-    # sync cache
-    LOG.info("Syncing cache")
-    Cache.sync()
-    LOG.info("Success")
+    bp_dir, key_dir, script_dir = make_bp_dirs(dir_name, bp_name)
 
     # Creating keys
     LOG.info("Generating keys for credentials")
     create_cred_keys(key_dir)
-    LOG.info("Success")
 
     # create scripts
     create_scripts(script_dir)

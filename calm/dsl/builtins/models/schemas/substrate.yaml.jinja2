@@ -1,5 +1,3 @@
-{% import "ref.yaml.jinja2" as ref %}
-
 {% macro Substrate() -%}
 
 title: Substrate
@@ -25,6 +23,10 @@ properties:
     x-calm-dsl-display-name: provider_spec
     type: object
     x-calm-dsl-type: app_provider_spec
+  editables:
+    x-calm-dsl-display-name: provider_spec_editables
+    type: object
+    x-calm-dsl-type: dict
   variable_list:
     x-calm-dsl-display-name: variables
     type: array
@@ -34,39 +36,9 @@ properties:
     x-calm-dsl-display-name: actions
     type: array
     items:
-      additionalProperties: true
-      type: object
-      x-calm-dsl-type: dict
+      $ref: '#/components/schemas/Action'
   readiness_probe:
-    type: object
-    x-calm-dsl-type: object
-    properties:
-      connection_type:
-        type: string
-        default: SSH
-        enum: [SSH, POWERSHELL]
-      connection_port:
-        type: integer
-        default: 22
-      connection_protocol:
-        type: string
-      login_credential_local_reference:
-        x-calm-dsl-display-name: credential
-        {{ ref.Ref() | indent(8) }}
-      timeout_secs:
-        type: string
-      delay_secs:
-        type: string
-        default: "60"
-      retries:
-        type: string
-        default: "5"
-      address:
-        type: string
-      disable_readiness_probe:
-        x-calm-dsl-display-name: disabled
-        default: false
-        type: boolean
+    $ref: '#/components/schemas/ReadinessProbe'
 
 {%- endmacro %}
 

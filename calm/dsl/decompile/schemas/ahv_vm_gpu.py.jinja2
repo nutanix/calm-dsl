@@ -1,0 +1,5 @@
+{% macro ahv_gpu(obj) %}
+AhvVmGpu.{{obj.vendor_key}}.{{obj.mode_key}}({% if obj.device_id and obj.device_id != -1 %}device_id={{obj.device_id}}{% endif %})
+{% endmacro %}
+
+{{ ahv_gpu(obj) }}

@@ -1,3 +1,4 @@
+import enum
 import uuid
 import os
 import sys
@@ -9,13 +10,21 @@ from .task_input import TaskInputType
 from .variable import CalmVariable
 from calm.dsl.tools import get_logging_handle
 
-EXIT_CONDITION_MAP = {
-    "SUCCESS": "on_success",
-    "FAILURE": "on_failure",
-    "DONT_CARE": "dont_care"
-}
-
 LOG = get_logging_handle(__name__)
+
+
+class Status(enum.Enum):
+
+    SUCCESS = 1
+    FAILURE = 2
+    DONT_CARE = 3
+
+
+EXIT_CONDITION_MAP = {
+    Status.SUCCESS: "on_success",
+    Status.FAILURE: "on_failure",
+    Status.DONT_CARE: "dont_care",
+}
 
 # Task
 
@@ -30,6 +39,15 @@ class TaskType(EntityType):
             cdict.pop("target_any_local_reference", None)
         return cdict
 
+    @classmethod
+    def pre_decompile(mcls, cdict, context=[]):
+
+        cdict = super().pre_decompile(cdict, context=context)
+        # Removing additional attributes
+        cdict.pop("state", None)
+        cdict.pop("message_list", None)
+        return cdict
+
 
 class TaskValidator(PropertyValidator, openapi_type="app_task"):
     __default__ = None
@@ -37,7 +55,7 @@ class TaskValidator(PropertyValidator, openapi_type="app_task"):
 
 
 def _task(**kwargs):
-    name = getattr(TaskType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return TaskType(name, bases, kwargs)
 
@@ -60,12 +78,13 @@ def _get_target_ref(target):
 
 
 def _task_create(**kwargs):
+
     name = kwargs.get("name", kwargs.pop("__name__", None))
     if name is None:
-        name = getattr(TaskType, "__schema_name__") + "_" + str(uuid.uuid4())[:8]
+        name = "_" + getattr(TaskType, "__schema_name__") + str(uuid.uuid4())[:8]
         kwargs["name"] = name
-    bases = (Task,)
-    return TaskType(name, bases, kwargs)
+
+    return _task(**kwargs)
 
 
 def create_call_rb(runbook, target=None, name=None):
@@ -89,8 +108,7 @@ def create_call_rb(runbook, target=None, name=None):
 
 
 def _exec_create(
-    script_type, script=None, filename=None, name=None,
-    target=None, cred=None, depth=2
+    script_type, script=None, filename=None, name=None, target=None, cred=None, depth=2
 ):
     if script is not None and filename is not None:
         raise ValueError(
@@ -125,8 +143,7 @@ def _exec_create(
 
 
 def _decision_create(
-    script_type, script=None, filename=None, name=None,
-    target=None, cred=None, depth=2
+    script_type, script=None, filename=None, name=None, target=None, cred=None, depth=2
 ):
     if script is not None and filename is not None:
         raise ValueError(
@@ -303,7 +320,7 @@ def exec_task_escript(script=None, filename=None, name=None, target=None, depth=
 
 
 def exec_task_powershell(
-        script=None, filename=None, name=None, target=None, cred=None, depth=2
+    script=None, filename=None, name=None, target=None, cred=None, depth=2
 ):
     return _exec_create(
         "npsscript",
@@ -312,7 +329,7 @@ def exec_task_powershell(
         name=name,
         target=target,
         cred=cred,
-        depth=depth
+        depth=depth,
     )
 
 
@@ -331,7 +348,7 @@ def decision_task_ssh(
 
 
 def decision_task_powershell(
-        script=None, filename=None, name=None, target=None, cred=None, depth=2
+    script=None, filename=None, name=None, target=None, cred=None, depth=2
 ):
     return _decision_create(
         "npsscript",
@@ -340,12 +357,12 @@ def decision_task_powershell(
         name=name,
         target=target,
         cred=cred,
-        depth=depth
+        depth=depth,
     )
 
 
 def decision_task_escript(
-        script=None, filename=None, name=None, target=None, cred=None, depth=2
+    script=None, filename=None, name=None, target=None, cred=None, depth=2
 ):
     return _decision_create(
         "static",
@@ -354,7 +371,7 @@ def decision_task_escript(
         name=name,
         target=target,
         cred=cred,
-        depth=depth
+        depth=depth,
     )
 
 
@@ -442,12 +459,7 @@ def http_task_on_endpoint(
         method (str): HTTP method ("GET", "POST", "PUT", "DELETE", ..)
         headers (dict): Request headers
         secret_headers (dict): Request headers that are to be masked
-        credential (Credential): Credential object. Currently only supports basic auth.
         content_type (string): Request Content-Type (application/json, application/xml, etc.)
-        timeout (int): Request timeout in seconds (Default: 120)
-        verify (bool): TLS verify (Default: False)
-        retries (int): Number of times to retry this request if it fails. (Default: 0)
-        retry_interval (int): Time to wait in seconds between retries (Default: 10)
         status_mapping (dict): Mapping of  Response status code (int) to
                                task status (True: success, False: Failure)
         response_paths (dict): Mapping of variable name (str) to path in response (str)
@@ -469,6 +481,58 @@ def http_task_on_endpoint(
         name=name,
         target=target,
     )
+
+
+def http_task_get_on_endpoint(**kwargs):
+    """
+
+    Defines a HTTP GET Task on http endpoint target.
+
+    Args:
+        kwargs (Ref): keyword arguments for http task on endpoint
+    Returns:
+        (Task): HTTP Task
+    """
+    return http_task_on_endpoint("GET", **kwargs)
+
+
+def http_task_post_on_endpoint(**kwargs):
+    """
+
+    Defines a HTTP POST Task on http endpoint target.
+
+    Args:
+        kwargs (Ref): keyword arguments for http task on endpoint
+    Returns:
+        (Task): HTTP Task
+    """
+    return http_task_on_endpoint("POST", **kwargs)
+
+
+def http_task_put_on_endpoint(**kwargs):
+    """
+
+    Defines a HTTP PUT Task on http endpoint target.
+
+    Args:
+        kwargs (Ref): keyword arguments for http task on endpoint
+    Returns:
+        (Task): HTTP Task
+    """
+    return http_task_on_endpoint("PUT", **kwargs)
+
+
+def http_task_delete_on_endpoint(**kwargs):
+    """
+
+    Defines a HTTP GET Task on http endpoint target.
+
+    Args:
+        kwargs (Ref): keyword arguments for http task on endpoint
+    Returns:
+        (Task): HTTP Task
+    """
+    return http_task_on_endpoint("DELETE", **kwargs)
 
 
 def http_task_get(
@@ -773,7 +837,7 @@ def http_task(
     Returns:
         (Task): HTTP Task
     """
-    auth_obj = {"type": "none"}
+    auth_obj = {"auth_type": "none"}
     if credential is not None:
         if getattr(credential, "__kind__", None) != "app_credential":
             raise ValueError(
@@ -787,10 +851,13 @@ def http_task(
         # We could also possibly check calm server version to switch between
         # the two auth mechanisms since basic auth will be deprecated.
         auth_obj = {
-            "type": "basic",
+            "auth_type": "basic",
             "basic_auth": {
                 "username": credential.username,
-                "password": {"value": credential.secret.get("value")},
+                "password": {
+                    "value": credential.secret.get("value"),
+                    "attrs": {"is_secret_modified": True},
+                },
             },
         }
 
@@ -971,11 +1038,13 @@ def input_task(timeout=None, name=None, inputs=[]):
     """
     if not isinstance(timeout, int):
         raise TypeError(
-            "timeout is expected to be an integer, got {}".format(
-                type(timeout)
-            )
+            "timeout is expected to be an integer, got {}".format(type(timeout))
         )
-    kwargs = {"name": name, "type": "INPUT", "attrs": {"task_timeout": timeout, "inputs": []}}
+    kwargs = {
+        "name": name,
+        "type": "INPUT",
+        "attrs": {"task_timeout": timeout, "inputs": []},
+    }
     for task_input in inputs:
         if not isinstance(task_input, TaskInputType):
             raise TypeError(
@@ -983,9 +1052,13 @@ def input_task(timeout=None, name=None, inputs=[]):
                     type(task_input)
                 )
             )
-        kwargs["attrs"]["inputs"].append({
-            "name": task_input.name, "input_type": task_input.input_type, "options": task_input.options
-        })
+        kwargs["attrs"]["inputs"].append(
+            {
+                "name": task_input.name,
+                "input_type": task_input.input_type,
+                "options": task_input.options,
+            }
+        )
     return _task_create(**kwargs)
 
 
@@ -1000,9 +1073,7 @@ def confirm_task(timeout=None, name=None):
     """
     if not isinstance(timeout, int):
         raise TypeError(
-            "timeout is expected to be an integer, got {}".format(
-                type(timeout)
-            )
+            "timeout is expected to be an integer, got {}".format(type(timeout))
         )
     kwargs = {"name": name, "type": "CONFIRM", "attrs": {"task_timeout": timeout}}
     return _task_create(**kwargs)
@@ -1019,14 +1090,6 @@ class CalmTask:
         ssh = exec_task_ssh
         powershell = exec_task_powershell
         escript = exec_task_escript
-
-    class Decision:
-        def __new__(cls, *args, **kwargs):
-            raise TypeError("'{}' is not callable".format(cls.__name__))
-
-        ssh = decision_task_ssh
-        powershell = decision_task_powershell
-        escript = decision_task_escript
 
     class HTTP:
         def __new__(
@@ -1069,7 +1132,6 @@ class CalmTask:
         post = http_task_post
         put = http_task_put
         delete = http_task_delete
-        endpoint = http_task_on_endpoint
 
     class SetVariable:
         ssh = set_variable_task_ssh
@@ -1080,30 +1142,73 @@ class CalmTask:
         scale_in = scale_in_task
         scale_out = scale_out_task
 
-    class Parallel:
-        def __new__(cls, name=None, child_tasks=[], attrs={}):
-            return parallel_task(name=name, child_tasks=child_tasks, attrs=attrs)
+    class Delay:
+        def __new__(cls, delay_seconds=None, name=None, target=None):
+            return delay_task(delay_seconds=delay_seconds, name=name, target=target)
 
-    class While:
-        def __new__(cls, iterations, name=None, child_tasks=[],
-                    loop_variable="iteration", parallel_factor=1, exit_condition="SUCCESS"):
+
+class RunbookTask(CalmTask):
+    class Decision:
+        def __new__(cls, *args, **kwargs):
+            raise TypeError("'{}' is not callable".format(cls.__name__))
+
+        ssh = decision_task_ssh
+        powershell = decision_task_powershell
+        escript = decision_task_escript
+
+    class Loop:
+        def __new__(
+            cls,
+            iterations,
+            name=None,
+            child_tasks=[],
+            loop_variable="iteration",
+            exit_condition=Status.DONT_CARE,
+        ):
             attrs = {
-                "apf": str(parallel_factor),
                 "iterations": str(iterations),
-                "loop_variable": loop_variable
+                "loop_variable": loop_variable,
             }
             exit_code = EXIT_CONDITION_MAP.get(exit_condition, None)
             if exit_code:
                 attrs["exit_condition_type"] = exit_code
             else:
                 raise ValueError(
-                    "Valid Exit Conditions for while loop are {}".format(EXIT_CONDITION_MAP.keys())
+                    "Valid Exit Conditions for loop are 'Status.SUCCESS/Status.FAILURE/Status.DONT_CARE'."
                 )
             return while_loop(name=name, child_tasks=child_tasks, attrs=attrs)
 
-    class Delay:
-        def __new__(cls, delay_seconds=None, name=None, target=None):
-            return delay_task(delay_seconds=delay_seconds, name=name, target=target)
+    class HTTP:
+        def __new__(
+            cls,
+            method,
+            relative_url=None,
+            body=None,
+            headers=None,
+            secret_headers=None,
+            content_type=None,
+            status_mapping=None,
+            response_paths=None,
+            name=None,
+            target=None,
+        ):
+            return http_task_on_endpoint(
+                method,
+                relative_url=relative_url,
+                body=body,
+                headers=headers,
+                secret_headers=secret_headers,
+                content_type=content_type,
+                status_mapping=status_mapping,
+                response_paths=response_paths,
+                name=name,
+                target=target,
+            )
+
+        get = http_task_get_on_endpoint
+        post = http_task_post_on_endpoint
+        put = http_task_put_on_endpoint
+        delete = http_task_delete_on_endpoint
 
     class Input:
         def __new__(cls, timeout=500, name=None, inputs=[]):

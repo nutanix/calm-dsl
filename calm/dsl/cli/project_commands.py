@@ -1,5 +1,4 @@
 import click
-from ruamel import yaml
 
 from .projects import (
     get_projects,
@@ -10,6 +9,7 @@ from .projects import (
 )
 from .main import create, get, update, delete, describe
 from calm.dsl.tools import get_logging_handle
+from calm.dsl.builtins import read_spec
 
 LOG = get_logging_handle(__name__)
 
@@ -26,15 +26,23 @@ LOG = get_logging_handle(__name__)
 @click.option(
     "--quiet", "-q", is_flag=True, default=False, help="Show only project names"
 )
-def _get_projects(name, filter_by, limit, offset, quiet):
+@click.option(
+    "--out",
+    "-o",
+    "out",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="output format",
+)
+def _get_projects(name, filter_by, limit, offset, quiet, out):
     """Get projects, optionally filtered by a string"""
 
-    get_projects(name, filter_by, limit, offset, quiet)
+    get_projects(name, filter_by, limit, offset, quiet, out)
 
 
 def create_project_from_file(file_location, project_name):
 
-    project_payload = yaml.safe_load(open(file_location, "r").read())
+    project_payload = read_spec(file_location)
     if project_name:
         project_payload["project_detail"]["name"] = project_name
 
@@ -64,7 +72,6 @@ def _create_project(project_file, project_name):
 
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        return
 
     project = res.json()
     state = project["status"]["state"]
@@ -101,7 +108,7 @@ def _update_project(project_name, project_file):
     """Updates a project"""
 
     if project_file.endswith(".json") or project_file.endswith(".yaml"):
-        payload = yaml.safe_load(open(project_file, "r").read())
+        payload = read_spec(project_file)
         res, err = update_project(project_name, payload)
     else:
         LOG.error("Unknown file format")
@@ -109,7 +116,6 @@ def _update_project(project_name, project_file):
 
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        return
 
     project = res.json()
     state = project["status"]["state"]

@@ -2,73 +2,91 @@ from collections import OrderedDict
 import json
 from json import JSONEncoder, JSONDecoder
 import sys
+import inspect
 from types import MappingProxyType
+import uuid
+import copy
 
 from ruamel.yaml import YAML, resolver, SafeRepresenter
 from calm.dsl.tools import StrictDraft7Validator
 from calm.dsl.tools import get_logging_handle
 from .schema import get_schema_details
+from .utils import get_valid_identifier
+from .client_attrs import update_dsl_metadata_map, get_dsl_metadata_map
 
 LOG = get_logging_handle(__name__)
 
 
-def _validate(vdict, name, value):
-
-    if name.startswith("__") and name.endswith("__"):
+class EntityDict(OrderedDict):
+    @staticmethod
+    def pre_validate(vdict, name, value):
+        """hook to change values before validation, typecast, etc
+        """
         return value
 
-    try:
+    @classmethod
+    def _validate_attr(cls, vdict, name, value):
+        """validates  name-value pair via __validator_dict__ of entity"""
 
-        if name not in vdict:
-            raise TypeError("Unknown attribute {} given".format(name))
-        ValidatorType, is_array = vdict[name]
-        if getattr(ValidatorType, "__is_object__", False):
-            return ValidatorType.validate(value, is_array)
+        value = cls.pre_validate(vdict, name, value)
 
-    except TypeError:
+        if name.startswith("__") and name.endswith("__"):
+            return value
 
-        # Check if value is a variable/action/runbook
-        types = EntityTypeBase.get_entity_types()
-        VariableType = types.get("Variable", None)
-        if not VariableType:
-            raise TypeError("Variable type not defined")
-        DescriptorType = types.get("Descriptor", None)
-        if not DescriptorType:
-            raise TypeError("Descriptor type not defined")
-        if not (
-            ("variables" in vdict and isinstance(value, (VariableType,)))
-            or ("actions" in vdict and isinstance(type(value), DescriptorType))
-            or ("runbook" in vdict and isinstance(type(value), DescriptorType))
-        ):
-            LOG.debug("Validating object: {}".format(vdict))
-            raise
+        try:
+            if name not in vdict:
+                raise TypeError("Unknown attribute {} given".format(name))
+            ValidatorType, is_array = vdict[name]
+            if getattr(ValidatorType, "__is_object__", False):
+                return ValidatorType.validate(value, is_array)
 
-        # Validate and set variable/action/runbook
-        # get validator for variables/action/runbook
-        if isinstance(value, VariableType):
-            ValidatorType, _ = vdict["variables"]
-            # Set name attribute in variable
-            setattr(value, "name", name)
+        except TypeError:
+            # Check if value is a variable/action
+            types = EntityTypeBase.get_entity_types()
+            VariableType = types.get("Variable", None)
+            if not VariableType:
+                raise TypeError("Variable type not defined")
+            DescriptorType = types.get("Descriptor", None)
+            if not DescriptorType:
+                raise TypeError("Descriptor type not defined")
+            if not (
+                ("variables" in vdict and isinstance(value, (VariableType,)))
+                or ("actions" in vdict and isinstance(type(value), DescriptorType))
+                or ("runbook" in vdict and isinstance(type(value), DescriptorType))
+            ):
+                LOG.debug("Validating object: {}".format(vdict))
+                raise
 
-        elif isinstance(type(value), DescriptorType):
-            ValidatorType = None
-        is_array = False
+            # Validate and set variable/action/runbook
+            # get validator for variables/action/runbook
+            if isinstance(value, VariableType):
+                ValidatorType, _ = vdict["variables"]
+                # Set name attribute in variable
+                setattr(value, "name", name)
 
-    if ValidatorType is not None:
-        ValidatorType.validate(value, is_array)
-    return value
+            elif isinstance(type(value), DescriptorType):
+                ValidatorType = None
+            is_array = False
 
+        if ValidatorType is not None:
+            ValidatorType.validate(value, is_array)
+        return value
 
-class EntityDict(OrderedDict):
-    def __init__(self, validators):
+    def __init__(self, validators=dict()):
         self.validators = validators
 
     def _validate(self, name, value):
         vdict = self.validators
-        return _validate(vdict, name, value)
+        if vdict:
+            return self._validate_attr(vdict, name, value)
+        return value
 
     def __setitem__(self, name, value):
+
+        # Validate attribute
         value = self._validate(name, value)
+
+        # Set attribute
         super().__setitem__(name, value)
 
 
@@ -118,7 +136,9 @@ class EntityType(EntityTypeBase):
 
     __schema_name__ = None
     __openapi_type__ = None
+    __prepare_dict__ = EntityDict
 
+    @classmethod
     def validate_dict(cls, entity_dict):
         schema = {"type": "object", "properties": cls.__schema_props__}
         validator = StrictDraft7Validator(schema)
@@ -136,23 +156,32 @@ class EntityType(EntityTypeBase):
 
         # Handle base case (Entity)
         if not schema_name:
-            return dict()
+            return mcls.__prepare_dict__()
 
         validators = getattr(mcls, "__validator_dict__")
 
         # Class creation would happen using EntityDict() instead of dict().
         # This is done to add validations to class attrs during class creation.
         # Look at __setitem__ in EntityDict
-        return EntityDict(validators)
+        return mcls.__prepare_dict__(validators)
 
     def __new__(mcls, name, bases, kwargs):
 
-        if not isinstance(kwargs, EntityDict):
+        if not isinstance(kwargs, mcls.__prepare_dict__):
             entitydict = mcls.__prepare__(name, bases)
             for k, v in kwargs.items():
                 entitydict[k] = v
         else:
             entitydict = kwargs
+
+        schema_name = getattr(mcls, "__schema_name__")
+
+        if not name:
+            # Generate unique name
+            name = "_" + schema_name + str(uuid.uuid4())[:8]
+        else:
+            if name == schema_name:
+                raise TypeError("{} is a reserved name for this entity".format(name))
 
         cls = super().__new__(mcls, name, bases, entitydict)
 
@@ -169,9 +198,13 @@ class EntityType(EntityTypeBase):
 
     @classmethod
     def validate(mcls, name, value):
+
         if hasattr(mcls, "__validator_dict__"):
             vdict = mcls.__validator_dict__
-            return _validate(vdict, name, value)
+            entity_dict = mcls.__prepare_dict__
+            return entity_dict._validate_attr(vdict, name, value)
+
+        return value
 
     def __setattr__(cls, name, value):
 
@@ -224,7 +257,11 @@ class EntityType(EntityTypeBase):
             return
 
         vdict = getattr(mcls, "__validator_dict__")
-        if "variables" not in vdict and "actions" not in vdict and "runbook" not in vdict:
+        if (
+            "variables" not in vdict
+            and "actions" not in vdict
+            and "runbook" not in vdict
+        ):
             return
 
         # Variables and actions have [] as defaults.
@@ -271,14 +308,56 @@ class EntityType(EntityTypeBase):
             attrs.pop(k)
 
     def get_all_attrs(cls):
-        default_attrs = cls.get_default_attrs()
-        user_attrs = cls.get_user_attrs()
 
-        # Merge both attrs. Overwrite user attrs on default attrs
-        return {**default_attrs, **user_attrs}
+        ncls_ns = cls.get_default_attrs()
+        for klass in reversed(cls.mro()):
+            if hasattr(klass, "get_user_attrs") and callable(
+                getattr(klass, "get_user_attrs")
+            ):
+                ncls_ns = {**ncls_ns, **klass.__dict__}
+
+        ncls = type(cls)(cls.__name__, cls.__bases__, ncls_ns)
+
+        return ncls.get_user_attrs()
+
+    def pre_compile(cls):
+        """Hook to construct dsl metadata map"""
+        if not hasattr(cls, "__schema_name__"):
+            return
+
+        entity_type = cls.__schema_name__
+        entity_obj = {}
+
+        dsl_name = cls.__name__
+        ui_name = getattr(cls, "name", "") or dsl_name
+
+        entity_obj = {"dsl_name": dsl_name, "Action": {}}
+        types = EntityTypeBase.get_entity_types()
+        ActionType = types.get("Action", None)
+
+        # Fetching actions data inside entity
+        for ek, ev in cls.__dict__.items():
+            e_obj = getattr(cls, ek)
+            if isinstance(e_obj, ActionType):
+                user_func = ev.user_func
+                SYSTEM = getattr(cls, "ALLOWED_SYSTEM_ACTIONS", {})
+                FRAGMENT = getattr(cls, "ALLOWED_FRAGMENT_ACTIONS", {})
+                func_name = user_func.__name__.lower()
+                if func_name not in SYSTEM and func_name not in FRAGMENT:
+                    # Store naming map for non-system actions
+                    sig = inspect.signature(user_func)
+                    gui_display_name = sig.parameters.get("name", None)
+
+                    if gui_display_name and gui_display_name.default != ev.action_name:
+                        entity_obj["Action"][gui_display_name.default] = {
+                            "dsl_name": ev.action_name
+                        }
+
+        update_dsl_metadata_map(entity_type, entity_name=ui_name, entity_obj=entity_obj)
 
     def compile(cls):
 
+        cls.pre_compile()
         attrs = cls.get_all_attrs()
         cls.update_attrs(attrs)
 
@@ -304,24 +383,98 @@ class EntityType(EntityTypeBase):
         return cdict
 
     @classmethod
-    def decompile(mcls, cdict):
+    def pre_decompile(mcls, cdict, context):
+        """Hook to modify cdict based on dsl metadata"""
 
-        # Remove extra info
-        name = cdict.pop("name", mcls.__schema_name__)
-        description = cdict.pop("description", None)
-        # kind = cdict.pop('__kind__')
+        ui_name = cdict.get("name", None)
+        metadata = get_dsl_metadata_map(context) or {}
+        dsl_name = metadata.get("dsl_name", ui_name)
+
+        # Impose validation for valid identifier
+        dsl_name = get_valid_identifier(dsl_name)
+        cdict["__name__"] = dsl_name
+
+        # Adding description
+        cdict["__doc__"] = cdict.get("description", "")
+
+        # Remove NULL and empty string data
+        attrs = {}
+        for k, v in cdict.items():
+            if v is not None and v != "":
+                attrs[k] = v
+
+        return attrs
+
+    @classmethod
+    def decompile(mcls, cdict, context=[]):
+
+        # Pre decompile step to get class names in blueprint file
+        schema_name = getattr(mcls, "__schema_name__", None)
+        ui_name = cdict.get("name", None)
+
+        cur_context = copy.deepcopy(context)
+        # TODO clear this mess. Store context of entities as per order in blueprint
+        if schema_name == "Deployment":
+            # As cur_context will contain Profile details. So reinitiate context
+            cur_context = [schema_name, ui_name]
+
+        elif schema_name and ui_name and schema_name != "Blueprint":
+            cur_context.extend([schema_name, ui_name])
+
+        cdict = mcls.pre_decompile(cdict, context=cur_context)
 
         # Convert attribute names to x-calm-dsl-display-name, if given
         attrs = {}
         display_map = getattr(mcls, "__display_map__")
+        display_map = {v: k for k, v in display_map.items()}
+
+        user_attrs = {}
         for k, v in cdict.items():
-            attrs.setdefault(display_map.inverse[k], v)
+            # Case for __name__ and __doc__ attributes of class
+            if k.startswith("__") and k.endswith("__"):
+                attrs.setdefault(k, v)
+                continue
 
-        # Create new class based on type
-        cls = mcls(name, (Entity,), attrs)
-        cls.__doc__ = description
+            elif k not in display_map:
+                LOG.warning("Additional Property ({}) found".format(k))
+                continue
 
-        return cls
+            user_attrs.setdefault(display_map[k], v)
+
+        validator_dict = getattr(mcls, "__validator_dict__")
+        for k, v in user_attrs.items():
+            validator, is_array = validator_dict[k]
+
+            # Getting the metaclass for creation of class
+            if getattr(validator, "__is_object__", False):
+                entity_type = validator
+
+            else:
+                entity_type = validator.get_kind()
+                if getattr(entity_type, "__schema_name__", "") == "ProviderSpec":
+                    # Case already handled in Substrate.pre_decompile
+                    continue
+
+            # No decompilation is needed for entity_type = str, dict, int etc.
+            if hasattr(entity_type, "decompile"):
+                if is_array:
+                    new_value = []
+                    for val in v:
+                        new_value.append(
+                            entity_type.decompile(val, context=cur_context)
+                        )
+                else:
+                    new_value = entity_type.decompile(v, context=cur_context)
+
+                user_attrs[k] = new_value
+
+            # validate the new data
+            validator.validate(user_attrs[k], is_array)
+
+        # Merging dsl_attrs("__name__", "__doc__" etc.) and user_attrs
+        attrs.update(user_attrs)
+        name = attrs.get("__name__", ui_name)
+        return mcls(name, (Entity,), attrs)
 
     def json_dumps(cls, pprint=False, sort_keys=False):
 
@@ -361,13 +514,11 @@ class EntityType(EntityTypeBase):
         ref = types.get("Ref")
         if not ref:
             return
-        name = getattr(ref, "__schema_name__")
-        bases = (Entity,)
-        if ref:
-            attrs = {}
-            attrs["name"] = str(cls)
-            attrs["kind"] = kind or getattr(cls, "__kind__")
-        return ref(name, bases, attrs)
+        attrs = {
+            "name": getattr(cls, "name", "") or cls.__name__,
+            "kind": kind or getattr(cls, "__kind__"),
+        }
+        return ref(None, (Entity,), attrs)
 
     def get_dict(cls):
         return json.loads(cls.json_dumps())
@@ -383,6 +534,7 @@ class EntityJSONEncoder(JSONEncoder):
         if not hasattr(cls, "__kind__"):
             return super().default(cls)
 
+        # Add single function(wrapper) that can contain pre-post checks
         return cls.compile()
 
 

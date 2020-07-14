@@ -1,23 +1,37 @@
+import json
 import time
-import warnings
-import importlib.util
+import sys
+import uuid
+import pathlib
 
+from ruamel import yaml
 import arrow
 import click
 from prettytable import PrettyTable
+from black import format_file_in_place, WriteBack, FileMode
 
-from calm.dsl.builtins import runbook, create_runbook_payload
+from calm.dsl.runbooks import runbook, create_runbook_payload
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
-from .utils import get_name_query, highlight_text, get_states_filter
+from calm.dsl.tools import get_logging_handle
+from calm.dsl.store import Cache
+from .utils import (
+    Display,
+    get_name_query,
+    highlight_text,
+    get_states_filter,
+    get_module_from_file,
+)
 from .constants import RUNBOOK, RUNLOG
 from .runlog import get_completion_func, get_runlog_status
 from .endpoints import get_endpoint
 
 from anytree import NodeMixin, RenderTree
 
+LOG = get_logging_handle(__name__)
 
-def get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
+
+def get_runbook_list(name, filter_by, limit, offset, quiet, all_items):
     """Get the runbooks, optionally filtered by a string"""
 
     client = get_api_client()
@@ -28,7 +42,7 @@ def get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
     if name:
         filter_query = get_name_query([name])
     if filter_by:
-        filter_query = filter_query + ";" + filter_by if name else filter_by
+        filter_query = filter_query + ";(" + filter_by + ")"
 
     if all_items:
         filter_query += get_states_filter(RUNBOOK.STATES)
@@ -42,10 +56,13 @@ def get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
 
     if err:
         pc_ip = config["SERVER"]["pc_ip"]
-        warnings.warn(UserWarning("Cannot fetch runbooks from {}".format(pc_ip)))
+        LOG.warning("Cannot fetch runbooks from {}".format(pc_ip))
         return
 
     json_rows = res.json()["entities"]
+    if not json_rows:
+        click.echo(highlight_text("No runbook found !!!\n"))
+        return
 
     if quiet:
         for _row in json_rows:
@@ -59,10 +76,10 @@ def get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
         "DESCRIPTION",
         "PROJECT",
         "STATE",
-        "RUN COUNT",
+        "EXECUTION HISTORY",
         "CREATED BY",
+        "LAST EXECUTED AT",
         "LAST UPDATED",
-        "LAST RUN",
         "UUID",
     ]
     for _row in json_rows:
@@ -81,10 +98,10 @@ def get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
                 highlight_text(row["description"]),
                 highlight_text(project),
                 highlight_text(row["state"]),
-                highlight_text(total_runs if total_runs else '-'),
+                highlight_text(total_runs if total_runs else "-"),
                 highlight_text(created_by),
-                "{}".format(arrow.get(last_update_time).humanize()),
                 "{}".format(arrow.get(last_run).humanize()) if last_run else "-",
+                "{}".format(arrow.get(last_update_time).humanize()),
                 highlight_text(row["uuid"]),
             ]
         )
@@ -93,12 +110,7 @@ def get_runbook_list(obj, name, filter_by, limit, offset, quiet, all_items):
 
 def get_runbook_module_from_file(runbook_file):
     """Return Runbook module given a user runbook dsl file (.py)"""
-
-    spec = importlib.util.spec_from_file_location("calm.dsl.user_bp", runbook_file)
-    user_runbook_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(user_runbook_module)
-
-    return user_runbook_module
+    return get_module_from_file("calm.dsl.user_runbook", runbook_file)
 
 
 def get_runbook_class_from_module(user_runbook_module):
@@ -126,7 +138,257 @@ def compile_runbook(runbook_file):
     return runbook_payload
 
 
-def get_previous_runs(obj, name, filter_by, limit, offset):
+def compile_runbook_command(runbook_file, out):
+
+    rb_payload = compile_runbook(runbook_file)
+    if rb_payload is None:
+        LOG.error("User runbook not found in {}".format(runbook_file))
+        return
+
+    config = get_config()
+
+    project_name = config["PROJECT"].get("name", "default")
+    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
+
+    if not project_cache_data:
+        LOG.error(
+            "Project {} not found. Please run: calm update cache".format(project_name)
+        )
+
+    project_uuid = project_cache_data.get("uuid", "")
+    rb_payload["metadata"]["project_reference"] = {
+        "type": "project",
+        "uuid": project_uuid,
+        "name": project_name,
+    }
+
+    if out == "json":
+        click.echo(json.dumps(rb_payload, indent=4, separators=(",", ": ")))
+    elif out == "yaml":
+        click.echo(yaml.dump(rb_payload, default_flow_style=False))
+    else:
+        LOG.error("Unknown output format {} given".format(out))
+
+
+def create_runbook(
+    client, runbook_payload, name=None, description=None, force_create=False
+):
+
+    runbook_payload.pop("status", None)
+
+    if name:
+        runbook_payload["spec"]["name"] = name
+        runbook_payload["metadata"]["name"] = name
+
+    if description:
+        runbook_payload["spec"]["description"] = description
+
+    runbook_resources = runbook_payload["spec"]["resources"]
+    runbook_name = runbook_payload["spec"]["name"]
+    runbook_desc = runbook_payload["spec"]["description"]
+
+    return client.runbook.upload_with_secrets(
+        runbook_name, runbook_desc, runbook_resources, force_create=force_create
+    )
+
+
+def create_runbook_from_json(
+    client, path_to_json, name=None, description=None, force_create=False
+):
+
+    runbook_payload = json.loads(open(path_to_json, "r").read())
+    return create_runbook(
+        client,
+        runbook_payload,
+        name=name,
+        description=description,
+        force_create=force_create,
+    )
+
+
+def create_runbook_from_dsl(
+    client, runbook_file, name=None, description=None, force_create=False
+):
+
+    runbook_payload = compile_runbook(runbook_file)
+    if runbook_payload is None:
+        err_msg = "User runbook not found in {}".format(runbook_file)
+        err = {"error": err_msg, "code": -1}
+        return None, err
+
+    return create_runbook(
+        client,
+        runbook_payload,
+        name=name,
+        description=description,
+        force_create=force_create,
+    )
+
+
+def create_runbook_command(runbook_file, name, description, force):
+    """Creates a runbook"""
+
+    client = get_api_client()
+
+    if runbook_file.endswith(".json"):
+        res, err = create_runbook_from_json(
+            client, runbook_file, name=name, description=description, force_create=force
+        )
+    elif runbook_file.endswith(".py"):
+        res, err = create_runbook_from_dsl(
+            client, runbook_file, name=name, description=description, force_create=force
+        )
+    else:
+        LOG.error("Unknown file format {}".format(runbook_file))
+        return
+
+    if err:
+        LOG.error(err["error"])
+        return
+
+    runbook = res.json()
+    runbook_uuid = runbook["metadata"]["uuid"]
+    runbook_name = runbook["metadata"]["name"]
+    runbook_status = runbook.get("status", {})
+    runbook_state = runbook_status.get("state", "DRAFT")
+    LOG.debug("Runbook {} has state: {}".format(runbook_name, runbook_state))
+
+    if runbook_state != "ACTIVE":
+        msg_list = runbook_status.get("message_list", [])
+        if not msg_list:
+            LOG.error("Runbook {} created with errors.".format(runbook_name))
+            LOG.debug(json.dumps(runbook_status))
+            sys.exit(-1)
+
+        msgs = []
+        for msg_dict in msg_list:
+            msgs.append(msg_dict.get("message", ""))
+
+        LOG.error(
+            "Runbook {} created with {} error(s): {}".format(
+                runbook_name, len(msg_list), msgs
+            )
+        )
+        sys.exit(-1)
+
+    LOG.info("Runbook {} created successfully.".format(runbook_name))
+    config = get_config()
+    pc_ip = config["SERVER"]["pc_ip"]
+    pc_port = config["SERVER"]["pc_port"]
+    link = "https://{}:{}/console/#page/explore/calm/runbooks/{}".format(
+        pc_ip, pc_port, runbook_uuid
+    )
+    stdout_dict = {
+        "name": runbook_name,
+        "link": link,
+        "state": runbook_state,
+    }
+    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+
+
+def update_runbook(client, runbook_payload, name=None, description=None):
+
+    runbook_payload.pop("status", None)
+
+    if name:
+        runbook_payload["spec"]["name"] = name
+        runbook_payload["metadata"]["name"] = name
+
+    if description:
+        runbook_payload["spec"]["description"] = description
+
+    runbook_resources = runbook_payload["spec"]["resources"]
+    runbook_name = runbook_payload["spec"]["name"]
+    runbook_desc = runbook_payload["spec"]["description"]
+
+    runbook = get_runbook(client, runbook_payload["spec"]["name"])
+    uuid = runbook["metadata"]["uuid"]
+    spec_version = runbook["metadata"]["spec_version"]
+
+    return client.runbook.update_with_secrets(
+        uuid, runbook_name, runbook_desc, runbook_resources, spec_version
+    )
+
+
+def update_runbook_from_json(client, path_to_json, name=None, description=None):
+
+    runbook_payload = json.loads(open(path_to_json, "r").read())
+    return update_runbook(client, runbook_payload, name=name, description=description)
+
+
+def update_runbook_from_dsl(client, runbook_file, name=None, description=None):
+
+    runbook_payload = compile_runbook(runbook_file)
+    if runbook_payload is None:
+        err_msg = "User runbook not found in {}".format(runbook_file)
+        err = {"error": err_msg, "code": -1}
+        return None, err
+
+    return update_runbook(client, runbook_payload, name=name, description=description)
+
+
+def update_runbook_command(runbook_file, name, description):
+    """Updates a runbook"""
+
+    client = get_api_client()
+
+    if runbook_file.endswith(".json"):
+        res, err = update_runbook_from_json(
+            client, runbook_file, name=name, description=description
+        )
+    elif runbook_file.endswith(".py"):
+        res, err = update_runbook_from_dsl(
+            client, runbook_file, name=name, description=description
+        )
+    else:
+        LOG.error("Unknown file format {}".format(runbook_file))
+        return
+
+    if err:
+        LOG.error(err["error"])
+        return
+
+    runbook = res.json()
+    runbook_uuid = runbook["metadata"]["uuid"]
+    runbook_name = runbook["metadata"]["name"]
+    runbook_status = runbook.get("status", {})
+    runbook_state = runbook_status.get("state", "DRAFT")
+    LOG.debug("Runbook {} has state: {}".format(runbook_name, runbook_state))
+
+    if runbook_state != "ACTIVE":
+        msg_list = runbook_status.get("message_list", [])
+        if not msg_list:
+            LOG.error("Runbook {} updated with errors.".format(runbook_name))
+            LOG.debug(json.dumps(runbook_status))
+            sys.exit(-1)
+
+        msgs = []
+        for msg_dict in msg_list:
+            msgs.append(msg_dict.get("message", ""))
+
+        LOG.error(
+            "Runbook {} updated with {} error(s): {}".format(
+                runbook_name, len(msg_list), msgs
+            )
+        )
+        sys.exit(-1)
+
+    LOG.info("Runbook {} updated successfully.".format(runbook_name))
+    config = get_config()
+    pc_ip = config["SERVER"]["pc_ip"]
+    pc_port = config["SERVER"]["pc_port"]
+    link = "https://{}:{}/console/#page/explore/calm/runbooks/{}".format(
+        pc_ip, pc_port, runbook_uuid
+    )
+    stdout_dict = {
+        "name": runbook_name,
+        "link": link,
+        "state": runbook_state,
+    }
+    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+
+
+def get_execution_history(name, filter_by, limit, offset):
     client = get_api_client()
     config = get_config()
 
@@ -137,21 +399,24 @@ def get_previous_runs(obj, name, filter_by, limit, offset):
         runbook_uuid = runbook["metadata"]["uuid"]
         filter_query = filter_query + ";action_reference=={}".format(runbook_uuid)
     if filter_by:
-        filter_query = filter_query + ";" + filter_by if name else filter_by
+        filter_query = filter_query + ";(" + filter_by + ")"
     if filter_query.startswith(";"):
         filter_query = filter_query[1:]
 
     if filter_query:
         params["filter"] = filter_query
 
-    res, err = client.runbook.list_previous_runs(params=params)
+    res, err = client.runbook.list_runbook_runlogs(params=params)
 
     if err:
         pc_ip = config["SERVER"]["pc_ip"]
-        warnings.warn(UserWarning("Cannot fetch previous runs from {}".format(pc_ip)))
+        LOG.warning("Cannot fetch previous runs from {}".format(pc_ip))
         return
 
     json_rows = res.json()["entities"]
+    if not json_rows:
+        click.echo(highlight_text("No runbook execution found !!!\n"))
+        return
 
     table = PrettyTable()
     table.field_names = [
@@ -159,7 +424,7 @@ def get_previous_runs(obj, name, filter_by, limit, offset):
         "STARTED AT",
         "ENDED AT",
         "COMPLETED IN",
-        "RUN BY",
+        "EXECUTED BY",
         "UUID",
         "STATE",
     ]
@@ -188,7 +453,9 @@ def get_previous_runs(obj, name, filter_by, limit, offset):
             [
                 highlight_text(row["action_reference"]["name"]),
                 highlight_text(time.ctime(started_at)),
-                "{}".format(arrow.get(last_update_time).humanize()) if state in RUNLOG.TERMINAL_STATES else "-",
+                "{}".format(arrow.get(last_update_time).humanize())
+                if state in RUNLOG.TERMINAL_STATES
+                else "-",
                 highlight_text(timetaken),
                 highlight_text(row["userdata_reference"]["name"]),
                 highlight_text(metadata["uuid"]),
@@ -216,10 +483,10 @@ def get_runbook(client, name, all=False):
         if len(entities) != 1:
             raise Exception("More than one runbook found - {}".format(entities))
 
-        click.echo(">> Runbook {} found >>".format(name))
+        LOG.info("{} found ".format(name))
         runbook = entities[0]
     else:
-        raise Exception(">> No runbook found with name {} found >>".format(name))
+        raise Exception("No runbook found with name {} found".format(name))
     return runbook
 
 
@@ -235,12 +502,23 @@ def patch_runbook_runtime_editables(client, runbook):
                 )
             )
             if new_val:
-                args.append({"name": variable.get("name"), "value": type(variable.get("value"))(new_val)})
+                args.append(
+                    {
+                        "name": variable.get("name"),
+                        "value": type(variable.get("value"))(new_val),
+                    }
+                )
 
     payload = {"spec": {"args": args}}
-    default_target = runbook["spec"]["resources"].get("default_target_reference", {}).get("name", None)
+    default_target = (
+        runbook["spec"]["resources"]
+        .get("default_target_reference", {})
+        .get("name", None)
+    )
     target = input(
-        "Endpoint target for the Runbook Run (default target={}): ".format(default_target)
+        "Endpoint target for the Runbook Run (default target={}): ".format(
+            default_target
+        )
     )
     if target:
         endpoint = get_endpoint(client, target)
@@ -248,24 +526,82 @@ def patch_runbook_runtime_editables(client, runbook):
         payload["spec"]["default_target_reference"] = {
             "kind": "app_endpoint",
             "uuid": endpoint_id,
-            "name": target
+            "name": target,
         }
     return payload
 
 
-def run_runbook(
-    screen,
-    client,
-    runbook_uuid,
-    watch,
-    input_data={},
-    payload={}
+def run_runbook_command(
+    runbook_name, watch, ignore_runtime_variables, runbook_file=None, input_file=None,
 ):
+
+    if runbook_file is None and runbook_name is None:
+        LOG.error(
+            "One of either Runbook Name or Runbook File is required to run runbook."
+        )
+        return
+
+    client = get_api_client()
+    runbook = None
+
+    if runbook_file:
+        LOG.info("Uploading runbook: {}".format(runbook_file))
+        name = "runbook" + "_" + str(uuid.uuid4())[:8]
+        if runbook_file.endswith(".json"):
+            res, err = create_runbook_from_json(client, runbook_file, name=name)
+        elif runbook_file.endswith(".py"):
+            res, err = create_runbook_from_dsl(client, runbook_file, name=name)
+        else:
+            LOG.error("Unknown file format {}".format(runbook_file))
+            return
+
+        if err:
+            LOG.error(err["error"])
+            return
+
+        LOG.info("Uploaded runbook: {}".format(runbook_file))
+        runbook = res.json()
+        runbook_id = runbook["metadata"]["uuid"]
+    else:
+        runbook_id = get_runbook(client, runbook_name)["metadata"]["uuid"]
+        res, err = client.runbook.read(runbook_id)
+        if err:
+            LOG.error(err["error"])
+            return
+        runbook = res.json()
+
+    input_data = {}
+    if input_file is not None and input_file.endswith(".json"):
+        input_data = json.loads(open(input_file, "r").read())
+    elif input_file is not None:
+        LOG.error("Unknown input file format {}".format(input_file))
+        return
+
+    payload = {}
+    if not ignore_runtime_variables:
+        payload = patch_runbook_runtime_editables(client, runbook)
+
+    def render_runbook(screen):
+        screen.clear()
+        screen.refresh()
+        run_runbook(
+            screen, client, runbook_id, watch, input_data=input_data, payload=payload
+        )
+        if runbook_file:
+            res, err = client.runbook.delete(runbook_id)
+            if err:
+                raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        screen.wait_for_input(10.0)
+
+    Display.wrapper(render_runbook, watch)
+
+
+def run_runbook(screen, client, runbook_uuid, watch, input_data={}, payload={}):
 
     res, err = client.runbook.run(runbook_uuid, payload)
     if not err:
         screen.clear()
-        screen.print_at(">> Runbook queued for run", 0, 0)
+        screen.print_at("Runbook queued for run", 0, 0)
     else:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
     response = res.json()
@@ -273,6 +609,7 @@ def run_runbook(
 
     def poll_runlog_status():
         return client.runbook.poll_action_run(runlog_uuid)
+
     screen.refresh()
     should_continue = poll_action(poll_runlog_status, get_runlog_status(screen))
     if not should_continue:
@@ -281,7 +618,7 @@ def run_runbook(
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
     response = res.json()
-    runbook = response['status']['runbook_json']['resources']['runbook']
+    runbook = response["status"]["runbook_json"]["resources"]["runbook"]
 
     if watch:
         screen.refresh()
@@ -290,10 +627,41 @@ def run_runbook(
     config = get_config()
     pc_ip = config["SERVER"]["pc_ip"]
     pc_port = config["SERVER"]["pc_port"]
-    run_url = "https://{}:{}/console/#page/explore/calm/runs/{}?runbookId={}".format(pc_ip, pc_port, runlog_uuid, runbook_uuid)
+    run_url = "https://{}:{}/console/#page/explore/calm/runbooks/runlogs/{}".format(
+        pc_ip, pc_port, runlog_uuid
+    )
     if not watch:
-        screen.print_at("Runbook run url: {}".format(highlight_text(run_url)), 0, 0)
+        screen.print_at(
+            "Runbook execution url: {}".format(highlight_text(run_url)), 0, 0
+        )
     screen.refresh()
+
+
+def watch_runbook_execution(runlog_uuid):
+
+    client = get_api_client()
+
+    def render_runbook_execution(screen):
+        screen.clear()
+        screen.refresh()
+
+        def poll_runlog_status():
+            return client.runbook.poll_action_run(runlog_uuid)
+
+        should_continue = poll_action(poll_runlog_status, get_runlog_status(screen))
+        if not should_continue:
+            exit(-1)
+        res, err = client.runbook.poll_action_run(runlog_uuid)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        response = res.json()
+        runbook = response["status"]["runbook_json"]["resources"]["runbook"]
+
+        screen.refresh()
+        watch_runbook(runlog_uuid, runbook, screen)
+        screen.wait_for_input(10.0)
+
+    Display.wrapper(render_runbook_execution, True)
 
 
 def watch_runbook(runlog_uuid, runbook, screen, poll_interval=10, input_data={}):
@@ -304,22 +672,31 @@ def watch_runbook(runlog_uuid, runbook, screen, poll_interval=10, input_data={})
         return client.runbook.list_runlogs(runlog_uuid)
 
     # following code block gets list of metaTask uuids and list of top level tasks uuid of runbook
-    tasks = runbook['task_definition_list']
-    main_task_reference = runbook['main_task_local_reference']['uuid']
-    metatasks = []
+    tasks = runbook["task_definition_list"]
+    main_task_reference = runbook["main_task_local_reference"]["uuid"]
+    task_type_map = {}
     top_level_tasks = []
     for task in tasks:
-        if task.get('type', '') == 'META':
-            metatasks.append(task.get('uuid'))
-        if task.get('uuid') == main_task_reference:
-            task_list = task.get('child_tasks_local_reference_list', [])
+        task_type_map[task.get("uuid")] = task.get("type", "")
+        if task.get("uuid") == main_task_reference:
+            task_list = task.get("child_tasks_local_reference_list", [])
             for t in task_list:
-                top_level_tasks.append(t.get('uuid', ''))
+                top_level_tasks.append(t.get("uuid", ""))
 
-    poll_action(poll_func, get_completion_func(screen), poll_interval=poll_interval, metatasks=metatasks, top_level_tasks=top_level_tasks, input_data=input_data, runlog_uuid=runlog_uuid)
+    poll_action(
+        poll_func,
+        get_completion_func(screen),
+        poll_interval=poll_interval,
+        task_type_map=task_type_map,
+        top_level_tasks=top_level_tasks,
+        input_data=input_data,
+        runlog_uuid=runlog_uuid,
+    )
 
 
-def describe_runbook(obj, runbook_name):
+def describe_runbook(runbook_name, out):
+    """Displays runbook data"""
+
     client = get_api_client()
     runbook = get_runbook(client, runbook_name, all=True)
 
@@ -328,6 +705,11 @@ def describe_runbook(obj, runbook_name):
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     runbook = res.json()
+
+    if out == "json":
+        runbook.pop("status", None)
+        click.echo(json.dumps(runbook, indent=4, separators=(",", ": ")))
+        return
 
     click.echo("\n----Runbook Summary----\n")
     click.echo(
@@ -340,12 +722,11 @@ def describe_runbook(obj, runbook_name):
     click.echo("Description: " + highlight_text(runbook["status"]["description"]))
     click.echo("Status: " + highlight_text(runbook["status"]["state"]))
     click.echo(
-        "Owner: " + highlight_text(runbook["metadata"]["owner_reference"]["name"]), nl=False
+        "Owner: " + highlight_text(runbook["metadata"]["owner_reference"]["name"]),
+        nl=False,
     )
     project = runbook["metadata"].get("project_reference", {})
-    click.echo(
-        " Project: " + highlight_text(project.get("name", ""))
-    )
+    click.echo(" Project: " + highlight_text(project.get("name", "")))
 
     created_on = int(runbook["metadata"]["creation_time"]) // 1000000
     past = arrow.get(created_on).humanize()
@@ -393,11 +774,28 @@ def describe_runbook(obj, runbook_name):
     click.echo("Credentials [{}]:".format(highlight_text(len(credential_types))))
     click.echo("\t{}\n".format(highlight_text(", ".join(credential_types))))
 
-    default_target = runbook_resources.get("default_target_reference", {}).get("name", "-")
+    default_target = runbook_resources.get("default_target_reference", {}).get(
+        "name", "-"
+    )
     click.echo("Default Endpoint Target: {}\n".format(highlight_text(default_target)))
 
 
-def delete_runbook(obj, runbook_names):
+def format_runbook_command(runbook_file):
+    path = pathlib.Path(runbook_file)
+    LOG.debug("Formatting runbook {} using black".format(path))
+    if format_file_in_place(
+        path, fast=False, mode=FileMode(), write_back=WriteBack.DIFF
+    ):
+        LOG.info("Patching above diff to runbook - {}".format(path))
+        format_file_in_place(
+            path, fast=False, mode=FileMode(), write_back=WriteBack.YES
+        )
+        LOG.info("All done!")
+    else:
+        LOG.info("Runbook {} left unchanged.".format(path))
+
+
+def delete_runbook(runbook_names):
 
     client = get_api_client()
 
@@ -407,11 +805,91 @@ def delete_runbook(obj, runbook_names):
         res, err = client.runbook.delete(runbook_id)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        click.echo("Runbook {} deleted".format(runbook_name))
+        LOG.info("Runbook {} deleted".format(runbook_name))
+
+
+def pause_runbook_execution(runlog_uuid):
+
+    client = get_api_client()
+    res, err = client.runbook.pause(runlog_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    response = res.json()
+    state = response["status"]["state"]
+    if state in RUNLOG.TERMINAL_STATES:
+        LOG.warning("Runbook Execution is in terminal state.")
+    else:
+        LOG.info("Pause triggered for the given runbook execution.")
+    config = get_config()
+    pc_ip = config["SERVER"]["pc_ip"]
+    pc_port = config["SERVER"]["pc_port"]
+    link = "https://{}:{}/console/#page/explore/calm/runbooks/runlogs/{}".format(
+        pc_ip, pc_port, runlog_uuid
+    )
+    stdout_dict = {
+        "link": link,
+        "state": state,
+    }
+    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+
+
+def resume_runbook_execution(runlog_uuid):
+
+    client = get_api_client()
+    res, err = client.runbook.play(runlog_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    response = res.json()
+    state = response["status"]["state"]
+    if state == RUNLOG.STATUS.PAUSED:
+        LOG.info("Resume triggered for the given paused runbook execution.")
+    else:
+        LOG.warning("Runbook execution is not in paused state.")
+    config = get_config()
+    pc_ip = config["SERVER"]["pc_ip"]
+    pc_port = config["SERVER"]["pc_port"]
+    link = "https://{}:{}/console/#page/explore/calm/runbooks/runlogs/{}".format(
+        pc_ip, pc_port, runlog_uuid
+    )
+    stdout_dict = {
+        "link": link,
+        "state": state,
+    }
+    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+
+
+def abort_runbook_execution(runlog_uuid):
+
+    client = get_api_client()
+    res, err = client.runbook.poll_action_run(runlog_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    response = res.json()
+    state = response["status"]["state"]
+    if state in RUNLOG.TERMINAL_STATES:
+        LOG.warning("Runbook Execution is in terminal state: {}".format(state))
+        sys.exit(0)
+    res, err = client.runbook.abort(runlog_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    response = res.json()
+    state = response["status"]["state"]
+    LOG.info("Abort triggered for the given runbook execution.")
+    config = get_config()
+    pc_ip = config["SERVER"]["pc_ip"]
+    pc_port = config["SERVER"]["pc_port"]
+    link = "https://{}:{}/console/#page/explore/calm/runbooks/runlogs/{}".format(
+        pc_ip, pc_port, runlog_uuid
+    )
+    stdout_dict = {
+        "link": link,
+        "state": state,
+    }
+    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
 
 def poll_action(poll_func, completion_func, poll_interval=10, **kwargs):
-    # Poll every 10 seconds on the app status, for 5 mins
+    # Poll every 10 seconds on the runlog status, for 10 mins
     maxWait = 10 * 60
     count = 0
     while count < maxWait:
@@ -448,17 +926,23 @@ def addTaskNodes(task_uuid, task_map, parent=None):
     if task_type == "DAG":
         node = TaskNode("ROOT")
     elif task_type != "META":
-        node = TaskNode(task_name, task_type=task_type, target=task_target, parent=parent)
+        node = TaskNode(
+            task_name, task_type=task_type, target=task_target, parent=parent
+        )
     else:
         node = parent
 
     if task_type == "DECISION":
         success_node = TaskNode("SUCCESS", parent=node)
         failure_node = TaskNode("FAILURE", parent=node)
-        success_task = task.get("attrs", {}).get("success_child_reference", {}).get("uuid", "")
+        success_task = (
+            task.get("attrs", {}).get("success_child_reference", {}).get("uuid", "")
+        )
         if success_task:
             addTaskNodes(success_task, task_map, success_node)
-        failure_task = task.get("attrs", {}).get("failure_child_reference", {}).get("uuid", "")
+        failure_task = (
+            task.get("attrs", {}).get("failure_child_reference", {}).get("uuid", "")
+        )
         if failure_task:
             addTaskNodes(failure_task, task_map, failure_node)
         return node
@@ -471,8 +955,19 @@ def addTaskNodes(task_uuid, task_map, parent=None):
 
 def displayTaskNode(node, pre):
     if node.type and node.target:
-        click.echo("\t{}{} (Type: {}, Target: {})".format(pre, highlight_text(node.name), highlight_text(node.type), highlight_text(node.target)))
+        click.echo(
+            "\t{}{} (Type: {}, Target: {})".format(
+                pre,
+                highlight_text(node.name),
+                highlight_text(node.type),
+                highlight_text(node.target),
+            )
+        )
     elif node.type:
-        click.echo("\t{}{} (Type: {})".format(pre, highlight_text(node.name), highlight_text(node.type)))
+        click.echo(
+            "\t{}{} (Type: {})".format(
+                pre, highlight_text(node.name), highlight_text(node.type)
+            )
+        )
     else:
         click.echo("\t{}{}".format(pre, highlight_text(node.name)))

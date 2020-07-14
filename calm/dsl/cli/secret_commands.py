@@ -9,6 +9,7 @@ from .secrets import (
     clear_secrets,
 )
 
+
 # TODO Apply --type = local/server parameter
 @create.command("secret")
 @click.argument("name", nargs=1)

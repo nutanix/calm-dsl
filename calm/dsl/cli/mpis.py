@@ -1,10 +1,15 @@
 import uuid
 import click
 import sys
+import json
 from prettytable import PrettyTable
 
+from calm.dsl.builtins import BlueprintType, get_valid_identifier
+from calm.dsl.decompile.decompile_render import create_bp_dir
+from calm.dsl.decompile.file_handler import get_bp_dir
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.config import get_config
+
 from .utils import highlight_text, get_states_filter
 from .bps import launch_blueprint_simple, get_blueprint
 from .projects import get_project
@@ -322,6 +327,8 @@ def get_mpi_by_name_n_version(name, version, app_states=[], app_source=None):
         "length": 250,
         "filter": filter,
     }
+
+    LOG.debug("Calling list api on marketplace_items")
     res, err = client.market_place.list(params=payload)
     if err:
         LOG.error("[{}] - {}".format(err["code"], err["error"]))
@@ -337,6 +344,7 @@ def get_mpi_by_name_n_version(name, version, app_states=[], app_source=None):
         sys.exit(-1)
 
     app_uuid = res["entities"][0]["metadata"]["uuid"]
+    LOG.debug("Reading marketplace_item with uuid {}".format(app_uuid))
     res, err = client.market_place.read(app_uuid)
     if err:
         LOG.error("[{}] - {}".format(err["code"], err["error"]))
@@ -346,18 +354,19 @@ def get_mpi_by_name_n_version(name, version, app_states=[], app_source=None):
     return res
 
 
-def describe_marketplace_item(name, version=None, app_source=None):
+def describe_marketplace_item(name, out, version=None, app_source=None):
     """describes the marketplace blueprint related to marketplace item"""
 
     describe_marketplace_bp(
         name=name,
+        out=out,
         version=version,
         app_source=app_source,
         app_state=MARKETPLACE_BLUEPRINT.STATES.PUBLISHED,
     )
 
 
-def describe_marketplace_bp(name, version=None, app_source=None, app_state=None):
+def describe_marketplace_bp(name, out, version=None, app_source=None, app_state=None):
     """describes the marketplace blueprint"""
 
     app_states = [app_state] if app_state else []
@@ -372,6 +381,12 @@ def describe_marketplace_bp(name, version=None, app_source=None, app_state=None)
     bp = get_mpi_by_name_n_version(
         name=name, version=version, app_states=app_states, app_source=app_source
     )
+
+    if out == "json":
+        blueprint = bp["status"]["resources"]["app_blueprint_template"]
+        blueprint.pop("status", None)
+        click.echo(json.dumps(blueprint, indent=4, separators=(",", ": ")))
+        return
 
     click.echo("\n----MarketPlace Blueprint Summary----\n")
     click.echo(
@@ -464,6 +479,54 @@ def launch_marketplace_bp(
     LOG.info("App {} creation is successful".format(app_name))
 
 
+def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_secrets):
+    """decompiles marketplace blueprint"""
+
+    if not version:
+        LOG.info("Fetching latest version of Marketplace Blueprint {} ".format(name))
+        version = get_mpi_latest_version(name=name, app_source=app_source,)
+        LOG.info(version)
+
+    LOG.info("Converting MPI into blueprint")
+    bp_payload = convert_mpi_into_blueprint(
+        name=name, version=version, project_name=project, app_source=app_source
+    )
+    del bp_payload["status"]
+
+    client = get_api_client()
+    blueprint_uuid = bp_payload["metadata"]["uuid"]
+    res, err = client.blueprint.export_file(blueprint_uuid)
+    if err:
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
+
+    bp_payload = res.json()
+    blueprint = bp_payload["spec"]["resources"]
+    blueprint_name = get_valid_identifier(bp_name or name)
+    blueprint_dir = bp_name or "mpi_bp_{}_v{}".format(blueprint_name, version)
+    blueprint_description = bp_payload["spec"].get("description", "")
+
+    LOG.info("Decompiling marketplace blueprint {}".format(name))
+    for sub_obj in blueprint.get("substrate_definition_list"):
+        sub_type = sub_obj.get("type", "") or "AHV_VM"
+        if sub_type == "K8S_POD":
+            raise NotImplementedError(
+                "Decompilation for k8s pod is not supported right now"
+            )
+        elif sub_type != "AHV_VM":
+            LOG.warning(
+                "Decompilation support for providers other than AHV is experimental/best effort"
+            )
+            break
+
+    bp_cls = BlueprintType.decompile(blueprint)
+    bp_cls.__name__ = blueprint_name
+    bp_cls.__doc__ = blueprint_description
+
+    create_bp_dir(bp_cls, blueprint_dir, with_secrets)
+    click.echo("\nSuccessfully decompiled. Directory location: {}".format(get_bp_dir()))
+
+
 def launch_marketplace_item(
     name,
     version,
@@ -549,7 +612,7 @@ def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None
             ref_projects.append(project["name"])
 
         if project_name not in ref_projects:
-            LOG.debug("Associated Projects: {}".format())
+            LOG.debug("Associated Projects: {}".format(ref_projects))
             LOG.error(
                 "Project {} is not shared with marketplace item {} with version {}".format(
                     project_name, name, version
@@ -665,6 +728,7 @@ def publish_bp_to_marketplace_manager(
         ]
 
     res, err = client.market_place.create(bp_template)
+    LOG.debug("Api response: {}".format(res.json()))
     if err:
         LOG.error("[{}] - {}".format(err["code"], err["error"]))
         sys.exit(-1)
@@ -1089,6 +1153,7 @@ def delete_marketplace_bp(name, version, app_source=None, app_state=None):
     bp_uuid = mpi_data["metadata"]["uuid"]
 
     res, err = client.market_place.delete(bp_uuid)
+    LOG.debug("Api response: {}".format(res.json()))
     if err:
         LOG.error("[{}] - {}".format(err["code"], err["error"]))
         sys.exit(-1)

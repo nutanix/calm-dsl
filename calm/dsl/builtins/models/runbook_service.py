@@ -1,12 +1,10 @@
-import uuid
-
-from .action import ActionType, Action
+from .action import EntityType, Entity
 from .validator import PropertyValidator
 
 # RunbookService
 
 
-class RunbookServiceType(ActionType):
+class RunbookServiceType(EntityType):
     __schema_name__ = "RunbookService"
     __openapi_type__ = "runbook_service"
 
@@ -23,8 +21,8 @@ class RunbookServiceValidator(PropertyValidator, openapi_type="runbook_service")
 
 
 def runbook_service(**kwargs):
-    name = getattr(RunbookServiceType, "__schema_name__")
-    bases = (Action,)
+    name = kwargs.get("name", None)
+    bases = (Entity,)
     return RunbookServiceType(name, bases, kwargs)
 
 
@@ -32,7 +30,6 @@ RunbookService = runbook_service()
 
 
 def _runbook_service_create(**kwargs):
-    name = str(uuid.uuid4())[:8] + "_" + getattr(RunbookServiceType, "__schema_name__")
-    name = kwargs.pop("name", kwargs.get("__name__", name))
+    name = kwargs.get("name", kwargs.get("__name__", None))
     bases = (RunbookService,)
     return RunbookServiceType(name, bases, kwargs)

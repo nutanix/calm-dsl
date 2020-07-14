@@ -7,6 +7,7 @@ from .credential import CredentialType
 
 # Endpoint
 
+
 class EndpointType(EntityType):
     __schema_name__ = "Endpoint"
     __openapi_type__ = "app_endpoint"
@@ -21,7 +22,7 @@ class EndpointValidator(PropertyValidator, openapi_type="app_endpoint"):
 
 
 def _endpoint(**kwargs):
-    name = kwargs.get("name") or getattr(EndpointType, "__schema_name__")
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return EndpointType(name, bases, kwargs)
 
@@ -30,7 +31,7 @@ Endpoint = _endpoint()
 
 
 def _endpoint_create(**kwargs):
-    name = kwargs.get("name", kwargs.pop("__name__", None))
+    name = kwargs.get("name", kwargs.get("__name__", None))
     if name is None:
         name = getattr(EndpointType, "__schema_name__") + "_" + str(uuid.uuid4())[:8]
         kwargs["name"] = name
@@ -39,8 +40,7 @@ def _endpoint_create(**kwargs):
 
 
 def _http_endpoint(
-        url, name=None, retries=0, retry_interval=10,
-        timeout=120, verify=False, auth=None
+    url, name=None, retries=0, retry_interval=10, timeout=120, verify=False, auth=None
 ):
     kwargs = {
         "name": name,
@@ -51,7 +51,7 @@ def _http_endpoint(
             "retry_interval": retry_interval,
             "connection_timeout": timeout,
             "tls_verify": verify,
-        }
+        },
     }
     if auth:
         kwargs["attrs"]["authentication"] = auth
@@ -61,17 +61,18 @@ def _http_endpoint(
 
 
 def _exec_create(
-        value_type, ip_list, name=None, ep_type="Linux",
-        port=22, connection_protocol=None, cred=None
+    value_type,
+    ip_list,
+    name=None,
+    ep_type="Linux",
+    port=22,
+    connection_protocol=None,
+    cred=None,
 ):
     kwargs = {
         "name": name,
         "type": ep_type,
-        "attrs": {
-            "values": ip_list,
-            "value_type": value_type,
-            "port": port,
-        }
+        "attrs": {"values": ip_list, "value_type": value_type, "port": port},
     }
     if connection_protocol:
         kwargs["attrs"]["connection_protocol"] = connection_protocol
@@ -81,17 +82,8 @@ def _exec_create(
     return _endpoint_create(**kwargs)
 
 
-def linux_endpoint_ip(
-    value, name=None, port=22, os_type="Linux", cred=None
-):
-    return _exec_create(
-        "IP",
-        value,
-        ep_type="Linux",
-        name=name,
-        port=port,
-        cred=cred
-    )
+def linux_endpoint_ip(value, name=None, port=22, os_type="Linux", cred=None):
+    return _exec_create("IP", value, ep_type="Linux", name=name, port=port, cred=cred)
 
 
 def windows_endpoint_ip(
@@ -99,7 +91,9 @@ def windows_endpoint_ip(
 ):
     connection_protocol = connection_protocol.lower()
     if connection_protocol not in ["http", "https"]:
-        raise TypeError("Connection Protocol ({}) should be HTTP/HTTPS".format(connection_protocol))
+        raise TypeError(
+            "Connection Protocol ({}) should be HTTP/HTTPS".format(connection_protocol)
+        )
 
     if port is None:
         if connection_protocol == "http":
@@ -113,18 +107,30 @@ def windows_endpoint_ip(
         connection_protocol=connection_protocol,
         name=name,
         port=port,
-        cred=cred
+        cred=cred,
     )
 
 
+def _basic_auth(username, password):
+    secret = {"attrs": {"is_secret_modified": True}, "value": password}
+    auth = {}
+    auth["type"] = "basic"
+    auth["username"] = username
+    auth["password"] = secret
+    return auth
+
+
+def existing_endpoint(name):
+    kwargs = {"name": name, "attrs": {}}
+    bases = (Endpoint,)
+    return EndpointType(name, bases, kwargs)
+
+
 class CalmEndpoint:
-    def __new__(cls, name):
-        kwargs = {
-            "name": name,
-            "attrs": {}
-        }
-        bases = (Endpoint,)
-        return EndpointType(name, bases, kwargs)
+    def __new__(cls, *args, **kwargs):
+        raise TypeError("'{}' is not callable".format(cls.__name__))
+
+    use_existing = existing_endpoint
 
     class Linux:
         def __new__(cls, *args, **kwargs):
@@ -142,24 +148,6 @@ class CalmEndpoint:
         def __new__(cls, *args, **kwargs):
             return _http_endpoint(*args, **kwargs)
 
-
-class Auth:
-    def __new__(cls, name):
-        raise TypeError("'{}' is not callable".format(cls.__name__))
-
-    def Basic(username, password):
-        secret = {"attrs": {"is_secret_modified": True}, "value": password}
-        auth = {}
-        auth["type"] = "basic"
-        auth["username"] = username
-        auth["password"] = secret
-        return auth
-
-    def BasicCred(cred):
-        if not isinstance(cred, CredentialType):
-            raise TypeError("{} should of type CredentialType".format(cred))
-
-        auth = {}
-        auth["type"] = "basic_with_cred"
-        auth["credential_local_reference"] = cred.get_ref()
-        return auth
+    class Auth:
+        def __new__(cls, *args, **kwargs):
+            return _basic_auth(*args, **kwargs)

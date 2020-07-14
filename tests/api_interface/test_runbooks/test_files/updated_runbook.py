@@ -3,9 +3,9 @@ Calm DSL Sample Runbook used for testing runbook update
 
 """
 
-from calm.dsl.builtins import runbook
-from calm.dsl.builtins import CalmTask
-from calm.dsl.builtins import read_local_file, basic_cred
+from calm.dsl.runbooks import runbook
+from calm.dsl.runbooks import RunbookTask as Task
+from calm.dsl.runbooks import read_local_file, basic_cred
 
 
 code = '''print "Start"
@@ -21,7 +21,7 @@ LinuxCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="linux_cred")
 @runbook
 def DslUpdatedRunbook(credentials=[LinuxCred]):
     "Runbook Service example"
-    CalmTask.Exec.escript(name="Task2", script=code)
-    CalmTask.Exec.escript(name="Task3", script=code)
-    CalmTask.Exec.escript(name="Task4", script=code)
-    CalmTask.Exec.escript(name="Task5", script=code)
+    Task.Exec.escript(name="Task2", script=code)
+    Task.Exec.escript(name="Task3", script=code)
+    Task.Exec.escript(name="Task4", script=code)
+    Task.Exec.escript(name="Task5", script=code)

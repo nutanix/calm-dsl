@@ -1,0 +1,9 @@
+_calm_completion() {
+    local IFS=$'\t'
+    COMPREPLY=( $( env COMP_WORDS="${COMP_WORDS[*]}" \
+                   COMP_CWORD=$COMP_CWORD \
+                   _CALM_COMPLETE=complete-bash $1 ) )
+    return 0
+}
+
+complete -F _calm_completion -o default calm

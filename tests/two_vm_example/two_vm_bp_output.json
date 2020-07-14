@@ -43,7 +43,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -74,7 +76,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -105,7 +109,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -136,7 +142,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -167,7 +175,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -198,7 +208,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -267,7 +279,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -298,7 +312,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -329,7 +345,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -360,7 +378,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -391,7 +411,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -422,7 +444,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -458,7 +482,9 @@
                                 "edges": []
                             },
                             "child_tasks_local_reference_list": [],
-                            "variable_list": []
+                            "variable_list": [],
+                            "retries": "",
+                            "timeout_secs": ""
                         }
                     ],
                     "variable_list": []
@@ -483,7 +509,9 @@
                                 "edges": []
                             },
                             "child_tasks_local_reference_list": [],
-                            "variable_list": []
+                            "variable_list": [],
+                            "retries": "",
+                            "timeout_secs": ""
                         }
                     ],
                     "variable_list": []
@@ -536,7 +564,9 @@
                                 "edges": []
                             },
                             "child_tasks_local_reference_list": [],
-                            "variable_list": []
+                            "variable_list": [],
+                            "retries": "",
+                            "timeout_secs": ""
                         }
                     ],
                     "variable_list": []
@@ -561,7 +591,9 @@
                                 "edges": []
                             },
                             "child_tasks_local_reference_list": [],
-                            "variable_list": []
+                            "variable_list": [],
+                            "retries": "",
+                            "timeout_secs": ""
                         }
                     ],
                     "variable_list": []
@@ -638,7 +670,8 @@
                 "connection_type": "SSH",
                 "connection_port": 22,
                 "connection_protocol": ""
-            }
+            },
+            "editables": {}
         },
         {
             "name": "AHVMedVMForPHP",
@@ -699,7 +732,8 @@
                 "connection_type": "SSH",
                 "connection_port": 22,
                 "connection_protocol": ""
-            }
+            },
+            "editables": {}
         }
     ],
     "credential_definition_list": [
@@ -714,7 +748,8 @@
                 },
                 "value": "passwd"
             },
-            "default": true
+            "default": true,
+            "editables": {}
         }
     ],
     "app_profile_list": [
@@ -734,11 +769,16 @@
                         "name": "AHVMedVM"
                     },
                     "depends_on_list": [],
+                    "variable_list": [],
+                    "action_list": [],
                     "min_replicas": "1",
+                    "default_replicas": "",
                     "max_replicas": "1",
                     "type": "GREENFIELD",
                     "name": "MySQLDeployment",
-                    "options": {}
+                    "options": {},
+                    "description": "Sample deployment pulling in service and substrate references",
+                    "editables": {}
                 },
                 {
                     "published_service_local_reference_list": [],
@@ -753,11 +793,16 @@
                         "name": "AHVMedVMForPHP"
                     },
                     "depends_on_list": [],
+                    "variable_list": [],
+                    "action_list": [],
                     "min_replicas": "1",
+                    "default_replicas": "",
                     "max_replicas": "1",
                     "type": "GREENFIELD",
                     "name": "PHPDeployment",
-                    "options": {}
+                    "options": {},
+                    "description": "Sample deployment pulling in service and substrate references",
+                    "editables": {}
                 }
             ],
             "variable_list": [
@@ -789,5 +834,6 @@
             "action_list": []
         }
     ],
-    "client_attrs": {}
+    "client_attrs": {},
+    "default_credential_local_reference": null
 }

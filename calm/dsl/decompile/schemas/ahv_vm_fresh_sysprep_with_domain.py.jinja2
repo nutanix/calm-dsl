@@ -1,0 +1,5 @@
+{% macro ahv_fresh_sysprep_gc_with_domain(obj) %}
+AhvVmGC.Sysprep.FreshScript.withDomain(filename={{obj.filename}},{% if obj.sysprep.domain %} domain = '{{obj.sysprep.domain}}',{% endif %}{% if obj.sysprep.dns_ip %} dns_ip = '{{obj.sysprep.dns_ip}}',{% endif %}{% if obj.sysprep.dns_search_path %} dns_search_path = '{{obj.sysprep.dns_search_path}}',{% endif %}{% if obj.sysprep.credential %} credential = '{{obj.sysprep.credential}}',{% endif %})
+{% endmacro %}
+
+{{ ahv_fresh_sysprep_gc_with_domain(obj) }}

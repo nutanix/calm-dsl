@@ -1,3 +1,5 @@
+import os
+
 from .resource import ResourceAPI
 from .connection import REQUEST
 from .util import strip_secrets, patch_secrets
@@ -9,6 +11,10 @@ class EndpointAPI(ResourceAPI):
     def __init__(self, connection):
         super().__init__(connection, resource_type="endpoints")
         self.UPLOAD = self.PREFIX + "/import_json"
+        self.EXPORT_FILE = self.ITEM + "/export_file"
+        self.IMPORT_FILE = self.PREFIX + "/import_file"
+        self.EXPORT_JSON = self.ITEM + "/export_json"
+        self.EXPORT_JSON_WITH_SECRETS = self.ITEM + "/export_json?keep_secrets=true"
 
     def upload(self, payload):
         return self.connection._call(
@@ -16,7 +22,9 @@ class EndpointAPI(ResourceAPI):
         )
 
     @staticmethod
-    def _make_endpoint_payload(endpoint_name, endpoint_desc, endpoint_resources, spec_version=None):
+    def _make_endpoint_payload(
+        endpoint_name, endpoint_desc, endpoint_resources, spec_version=None
+    ):
 
         endpoint_payload = {
             "spec": {
@@ -29,12 +37,14 @@ class EndpointAPI(ResourceAPI):
                 "name": endpoint_name,
                 "kind": "endpoint",
             },
-            "api_version": "3.0"
+            "api_version": "3.0",
         }
 
         return endpoint_payload
 
-    def upload_with_secrets(self, endpoint_name, endpoint_desc, endpoint_resources):
+    def upload_with_secrets(
+        self, endpoint_name, endpoint_desc, endpoint_resources, force_create=False
+    ):
 
         # check if endpoint with the given name already exists
         params = {"filter": "name=={};deleted==FALSE".format(endpoint_name)}
@@ -46,16 +56,27 @@ class EndpointAPI(ResourceAPI):
         entities = response.get("entities", None)
         if entities:
             if len(entities) > 0:
-                err_msg = "Endpoint with name {} already exists.".format(endpoint_name)
-                err = {"error": err_msg, "code": -1}
-                return None, err
+                if not force_create:
+                    err_msg = "Endpoint {} already exists. Use --force to first delete existing blueprint before create.".format(
+                        endpoint_name
+                    )
+                    err = {"error": err_msg, "code": -1}
+                    return None, err
+
+                # --force option used in create. Delete existing endpoint with same name.
+                ep_uuid = entities[0]["metadata"]["uuid"]
+                _, err = self.delete(ep_uuid)
+                if err:
+                    return None, err
 
         secret_map = {}
         secret_variables = []
 
         strip_secrets(endpoint_resources["attrs"], secret_map, secret_variables)
         endpoint_resources["attrs"].pop("default_credential_local_reference", None)
-        upload_payload = self._make_endpoint_payload(endpoint_name, endpoint_desc, endpoint_resources)
+        upload_payload = self._make_endpoint_payload(
+            endpoint_name, endpoint_desc, endpoint_resources
+        )
 
         config = get_config()
         project_name = config["PROJECT"]["name"]
@@ -86,17 +107,61 @@ class EndpointAPI(ResourceAPI):
         if err:
             return res, err
 
-        # Add secrets and update endpoint
         endpoint = res.json()
         del endpoint["status"]
 
-        # Update endpoint
-        patch_secrets(endpoint['spec']['resources']['attrs'], secret_map, secret_variables)
+        # Add secrets and update endpoint
+        patch_secrets(
+            endpoint["spec"]["resources"]["attrs"], secret_map, secret_variables
+        )
 
-        # TODO - insert categories during update as /import_json fails if categories are given!
-        # Populating the categories at runtime
-        config_categories = dict(config.items("CATEGORIES"))
-        endpoint["metadata"]["categories"] = config_categories
+        # Update endpoint
         uuid = endpoint["metadata"]["uuid"]
 
         return self.update(uuid, endpoint)
+
+    def export_file(self, uuid, passphrase=None):
+        current_path = os.path.dirname(os.path.realpath(__file__))
+        if passphrase:
+            res, err = self.connection._call(
+                self.EXPORT_FILE.format(uuid),
+                verify=False,
+                method=REQUEST.METHOD.POST,
+                request_json={"passphrase": passphrase},
+                files=[],
+            )
+        else:
+            res, err = self.connection._call(
+                self.EXPORT_FILE.format(uuid), verify=False, method=REQUEST.METHOD.GET
+            )
+
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        with open(current_path + "/" + uuid + ".json", "wb") as downloaded_file:
+            for chunk in res.iter_content(chunk_size=2048):
+                downloaded_file.write(chunk)
+
+        return current_path + "/" + uuid + ".json"
+
+    def import_file(self, file_path, name, project_uuid, passphrase=None):
+
+        payload = {"name": name, "project_uuid": project_uuid}
+        if passphrase:
+            payload["passphrase"] = passphrase
+        files = {"file": ("file", open(file_path, "rb"))}
+
+        return self.connection._call(
+            self.IMPORT_FILE,
+            verify=False,
+            files=files,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
+        )
+
+    def export_json(self, uuid):
+        url = self.EXPORT_JSON.format(uuid)
+        return self.connection._call(url, verify=False, method=REQUEST.METHOD.GET)
+
+    def export_json_with_secrets(self, uuid):
+        url = self.EXPORT_JSON_WITH_SECRETS.format(uuid)
+        return self.connection._call(url, verify=False, method=REQUEST.METHOD.GET)

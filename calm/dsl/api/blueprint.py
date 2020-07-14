@@ -16,10 +16,18 @@ class BlueprintAPI(ResourceAPI):
         self.BP_EDITABLES = self.ITEM + "/runtime_editables"
         self.EXPORT_JSON = self.ITEM + "/export_json"
         self.EXPORT_JSON_WITH_SECRETS = self.ITEM + "/export_json?keep_secrets=true"
+        self.EXPORT_FILE = self.ITEM + "/export_file"
 
+    # TODO https://jira.nutanix.com/browse/CALM-17178
+    # Blueprint creation timeout is dependent on payload.
+    # So setting read timeout to 300 seconds
     def upload(self, payload):
         return self.connection._call(
-            self.UPLOAD, verify=False, request_json=payload, method=REQUEST.METHOD.POST
+            self.UPLOAD,
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
+            timeout=(5, 300),
         )
 
     def launch(self, uuid, payload):
@@ -76,7 +84,9 @@ class BlueprintAPI(ResourceAPI):
 
         return bp_payload
 
-    def upload_with_secrets(self, bp_name, bp_desc, bp_resources, categories=None):
+    def upload_with_secrets(
+        self, bp_name, bp_desc, bp_resources, categories=None, force_create=False
+    ):
 
         # check if bp with the given name already exists
         params = {"filter": "name=={};state!=DELETED".format(bp_name)}
@@ -88,10 +98,19 @@ class BlueprintAPI(ResourceAPI):
         entities = response.get("entities", None)
         if entities:
             if len(entities) > 0:
-                err_msg = "Blueprint with name {} already exists.".format(bp_name)
-                # ToDo: Add command to edit Blueprints
-                err = {"error": err_msg, "code": -1}
-                return None, err
+                if not force_create:
+                    err_msg = "Blueprint {} already exists. Use --force to first delete existing blueprint before create.".format(
+                        bp_name
+                    )
+                    # ToDo: Add command to edit Blueprints
+                    err = {"error": err_msg, "code": -1}
+                    return None, err
+
+                # --force option used in create. Delete existing blueprint with same name.
+                bp_uuid = entities[0]["metadata"]["uuid"]
+                _, err = self.delete(bp_uuid)
+                if err:
+                    return None, err
 
         secret_map = {}
         secret_variables = []
@@ -101,7 +120,9 @@ class BlueprintAPI(ResourceAPI):
             "substrate_definition_list",
             "app_profile_list",
         ]
-        strip_secrets(bp_resources, secret_map, secret_variables, object_lists=object_lists)
+        strip_secrets(
+            bp_resources, secret_map, secret_variables, object_lists=object_lists
+        )
 
         # Handling vmware secrets
         def strip_vmware_secrets(path_list, obj):
@@ -177,7 +198,7 @@ class BlueprintAPI(ResourceAPI):
         bp = res.json()
         del bp["status"]
 
-        patch_secrets(bp['spec']['resources'], secret_map, secret_variables)
+        patch_secrets(bp["spec"]["resources"], secret_map, secret_variables)
 
         # TODO - insert categories during update as /import_json fails if categories are given!
         # Populating the categories at runtime
@@ -200,3 +221,8 @@ class BlueprintAPI(ResourceAPI):
     def export_json_with_secrets(self, uuid):
         url = self.EXPORT_JSON_WITH_SECRETS.format(uuid)
         return self.connection._call(url, verify=False, method=REQUEST.METHOD.GET)
+
+    def export_file(self, uuid):
+        return self.connection._call(
+            self.EXPORT_FILE.format(uuid), verify=False, method=REQUEST.METHOD.GET
+        )
