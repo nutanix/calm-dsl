@@ -7,7 +7,7 @@ from .validator import PropertyValidator
 from .variable import VariableType, CalmVariable
 from .task import dag, create_call_rb, CalmTask, TaskType
 from .runbook import runbook_create
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 # Action - Since action, runbook and DAG task are heavily coupled together,
 # the action type behaves as all three.

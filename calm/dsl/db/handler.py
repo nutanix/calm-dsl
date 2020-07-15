@@ -4,7 +4,7 @@ import os
 from calm.dsl.config import get_init_data
 from .table_config import dsl_database, SecretTable, DataTable, VersionTable
 from .table_config import CacheTableBase
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -98,8 +98,8 @@ def init_db_handle():
             # Close the connection
             _Database.close()
 
-    except Exception as exp:
-        LOG.debug(exp)
+    except:  # noqa
+        pass
 
     # Removing existing db at init location if exists
     init_obj = get_init_data()

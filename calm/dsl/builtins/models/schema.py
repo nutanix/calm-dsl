@@ -10,7 +10,7 @@ import jsonref
 from bidict import bidict
 
 from .validator import get_property_validators
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 
 LOG = get_logging_handle(__name__)

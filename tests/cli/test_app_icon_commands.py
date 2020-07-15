@@ -3,7 +3,7 @@ import uuid
 import sys
 from click.testing import CliRunner
 
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 from calm.dsl.cli import main as cli
 from calm.dsl.api import get_api_client
 

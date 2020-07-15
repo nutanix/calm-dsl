@@ -6,7 +6,7 @@ from asciimatics.screen import Screen
 from click_didyoumean import DYMMixin
 from distutils.version import LooseVersion as LV
 
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Version
 
 LOG = get_logging_handle(__name__)

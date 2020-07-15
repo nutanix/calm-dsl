@@ -13,7 +13,7 @@ from calm.dsl.config import get_config
 from .utils import highlight_text, get_states_filter
 from .bps import launch_blueprint_simple, get_blueprint
 from .projects import get_project
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 from .constants import MARKETPLACE_BLUEPRINT
 
 LOG = get_logging_handle(__name__)

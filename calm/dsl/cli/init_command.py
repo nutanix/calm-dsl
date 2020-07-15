@@ -19,7 +19,7 @@ from calm.dsl.init import init_bp
 from calm.dsl.providers import get_provider_types
 
 from .main import init, set
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 

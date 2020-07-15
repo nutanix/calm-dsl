@@ -4,7 +4,7 @@ from .validator import PropertyValidator
 from .task import dag
 from .action import runbook_create, _action_create
 from .runbook import RunbookType
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 
 LOG = get_logging_handle(__name__)

@@ -1,7 +1,7 @@
 from calm.dsl.decompile.render import render_template
 from calm.dsl.builtins import BlueprintType
 from calm.dsl.decompile.credential import get_cred_var_name
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 

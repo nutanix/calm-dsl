@@ -7,7 +7,7 @@ from calm.dsl.builtins import file_exists
 
 from .entity import EntityType
 from .validator import PropertyValidator
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
