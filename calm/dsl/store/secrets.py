@@ -4,7 +4,7 @@ import peewee
 
 from ..crypto import Crypto
 from ..db import get_db_handle
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 

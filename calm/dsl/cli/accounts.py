@@ -11,7 +11,7 @@ from calm.dsl.config import get_config
 from .utils import get_name_query, get_states_filter, highlight_text
 from .constants import ACCOUNT
 from calm.dsl.store import Version
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 

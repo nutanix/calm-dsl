@@ -13,7 +13,7 @@ from black import format_file_in_place, WriteBack, FileMode
 from calm.dsl.runbooks import runbook, create_runbook_payload
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Cache
 from .utils import (
     Display,

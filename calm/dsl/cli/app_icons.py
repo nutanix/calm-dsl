@@ -3,7 +3,7 @@ import sys
 from prettytable import PrettyTable
 
 from calm.dsl.api import get_api_client
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 from .utils import highlight_text, get_name_query
 
 LOG = get_logging_handle(__name__)

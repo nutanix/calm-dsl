@@ -4,7 +4,7 @@ import os
 
 from jinja2 import Environment, PackageLoader
 
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 from .schema import validate_config, validate_init_config
 

@@ -10,7 +10,7 @@ from .ref import ref
 from .deployment import deployment
 from .action import action
 from inspect import signature
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 
 LOG = get_logging_handle(__name__)

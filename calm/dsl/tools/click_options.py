@@ -1,7 +1,7 @@
 import click
 
 from calm.dsl.config import get_config
-from .logger import CustomLogging, set_verbose_level, set_show_trace
+from calm.dsl.log import CustomLogging
 
 
 def simple_verbosity_option(logging_mod=None, *names, **kwargs):
@@ -50,8 +50,7 @@ def simple_verbosity_option(logging_mod=None, *names, **kwargs):
 
             log_level = logging_levels[value - 1]
             x = getattr(logging_mod, log_level, None)
-            logging_mod.set_logger_level(x)
-            set_verbose_level(x)
+            CustomLogging.set_verbose_level(x)
 
         return click.option(*names, callback=_set_level, **kwargs)(f)
 
@@ -74,7 +73,7 @@ def show_trace_option(logging_mod=None, **kwargs):
     def decorator(f):
         def _set_show_trace(ctx, param, value):
             if value:
-                set_show_trace()
+                CustomLogging.enable_show_trace()
 
         return click.option(*names, callback=_set_show_trace, **kwargs)(f)
 

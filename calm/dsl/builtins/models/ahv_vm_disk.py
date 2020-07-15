@@ -7,7 +7,7 @@ from .ref import ref
 from calm.dsl.store import Cache
 from .package import PackageType
 from calm.dsl.config import get_config
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 

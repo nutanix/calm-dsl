@@ -8,7 +8,7 @@ from .validator import PropertyValidator
 from .ref import RefType
 from .task_input import TaskInputType
 from .variable import CalmVariable
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 

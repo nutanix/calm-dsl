@@ -2,7 +2,7 @@ import os
 from jinja2 import Environment, PackageLoader
 
 from calm.dsl.builtins import read_file
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 from calm.dsl.config import get_config
 
 LOG = get_logging_handle(__name__)
