@@ -350,13 +350,17 @@ properties:
     {{ azureRgDetails() | indent(4) }}
   rg_operation:
     type: string
-  availability_set_id:
-    type: string
   account_uuid:
     type: string
   type:
     type: string
   location:
+    type: string
+  availability_set_id:
+    type: string
+  availability_option:
+    type: string
+  availability_zone:
     type: string
   tag_list:
     type: array
