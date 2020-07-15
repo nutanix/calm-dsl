@@ -98,8 +98,8 @@ def init_db_handle():
             # Close the connection
             _Database.close()
 
-    except:
-        pass
+    except Exception as exp:
+        LOG.debug(exp)
 
     # Removing existing db at init location if exists
     init_obj = get_init_data()
