@@ -89,13 +89,17 @@ def init_db_handle():
 
     global _Database
 
-    # Closing existing connection if exists
-    if not _Database.is_closed():
-        # Unregister close() method from atexit handler
-        atexit.unregister(_Database.close)
+    try:
+        # Closing existing connection if exists
+        if not _Database.is_closed():
+            # Unregister close() method from atexit handler
+            atexit.unregister(_Database.close)
 
-        # Close the connection
-        _Database.close()
+            # Close the connection
+            _Database.close()
+
+    except Exception as exp:
+        LOG.debug(exp)
 
     # Removing existing db at init location if exists
     init_obj = get_init_data()

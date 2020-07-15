@@ -29,7 +29,6 @@ class Version:
             return entity.version
 
         except peewee.DoesNotExist:
-            LOG.warning("Calm version not found")
             return None
 
     @classmethod
