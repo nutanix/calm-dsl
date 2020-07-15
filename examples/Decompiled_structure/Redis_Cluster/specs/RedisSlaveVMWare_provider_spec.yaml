@@ -13,7 +13,7 @@ resources:
     cloud_init: |-
       #cloud-config
       users:
-        - name: centos
+        - name: @@{CENTOS.username}@@
           ssh-authorized-keys:
             - @@{CENTOS.public_key}@@
           sudo: ['ALL=(ALL) NOPASSWD:ALL']
