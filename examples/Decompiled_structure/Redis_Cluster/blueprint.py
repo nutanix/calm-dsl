@@ -37,7 +37,7 @@ AHV_CENTOS_77 = vm_disk_package(
         "image": {
             "name": "CENTOS_77",
             "type": "DISK_IMAGE",
-            "source": "http://download.nutanix.com/Calm/CentOS-7-x86_64-1908.qcow2",
+            "source": "http://10.40.64.33/GoldImages/NuCalm/AHV-UVM-Images/CentOS-7-x86_64-2003.qcow2",
             "architecture": "X86_64",
         },
         "product": {"name": "", "version": ""},
@@ -52,7 +52,7 @@ ESX_CENTOS_77 = vm_disk_package(
         "image": {
             "name": "CENTOS_77",
             "type": "DISK_IMAGE",
-            "source": "http://download.nutanix.com/Calm/CentOS-7-x86_64-1908.ova",
+            "source": "http://10.40.64.33/GoldImages/NuCalm/Ova/CentOS-7-x86_64-2003.ova",
             "architecture": "X86_64",
         },
         "product": {"name": "", "version": ""},
@@ -95,7 +95,7 @@ class v2mcalm_array_indexcalm_time(AhvVm):
     resources = vmcalm_array_indexcalm_timeResources
 
 class RedisMaster(Substrate):
-    """RedisMaster Substrate description"""
+    """RedisMaster Substrate"""
 
     os_type = "Linux"
     provider_type = "AHV_VM"
@@ -135,7 +135,7 @@ class vmcalm_array_indexcalm_time(AhvVm):
 
 
 class RedisSlave(Substrate):
-    """RedisSlave Substrate description"""
+    """RedisSlave Substrate"""
 
     os_type = "Linux"
     provider_type = "AHV_VM"
@@ -153,7 +153,7 @@ class RedisSlave(Substrate):
 
 
 class RedisMasterAWS(Substrate):
-    """RedisMasterAWS Substrate description"""
+    """RedisMasterAWS Substrate"""
 
     os_type = "Linux"
     provider_type = "AWS_VM"
@@ -173,7 +173,7 @@ class RedisMasterAWS(Substrate):
 
 
 class RedisSlaveAWS(Substrate):
-    """RedisSlaveAWS Substrate description"""
+    """RedisSlaveAWS Substrate"""
 
     os_type = "Linux"
     provider_type = "AWS_VM"
@@ -193,7 +193,7 @@ class RedisSlaveAWS(Substrate):
 
 
 class RedisGCPMaster(Substrate):
-    """RedisGCPMaster Substrate description"""
+    """RedisGCPMaster Substrate"""
 
     os_type = "Linux"
     provider_type = "GCP_VM"
@@ -213,7 +213,7 @@ class RedisGCPMaster(Substrate):
 
 
 class RedisGCPSlave(Substrate):
-    """RedisGCPSlave Substrate description"""
+    """RedisGCPSlave Substrate"""
 
     os_type = "Linux"
     provider_type = "GCP_VM"
@@ -233,7 +233,7 @@ class RedisGCPSlave(Substrate):
 
 
 class RedisMasterAzure(Substrate):
-    """RedisMasterAzure Substrate description"""
+    """RedisMasterAzure Substrate"""
 
     os_type = "Linux"
     provider_type = "AZURE_VM"
@@ -253,7 +253,7 @@ class RedisMasterAzure(Substrate):
 
 
 class RedisSlaveAzure(Substrate):
-    """RedisSlaveAzure Substrate description"""
+    """RedisSlaveAzure Substrate"""
 
     os_type = "Linux"
     provider_type = "AZURE_VM"
@@ -273,7 +273,7 @@ class RedisSlaveAzure(Substrate):
 
 
 class RedisMasterVMWare(Substrate):
-    """RedisMasterVMWare Substrate description"""
+    """RedisMasterVMWare Substrate"""
 
     os_type = "Linux"
     provider_type = "VMWARE_VM"
@@ -293,7 +293,7 @@ class RedisMasterVMWare(Substrate):
 
 
 class RedisSlaveVMWare(Substrate):
-    """RedisSlaveVMWare Substrate description"""
+    """RedisSlaveVMWare Substrate"""
 
     os_type = "Linux"
     provider_type = "VMWARE_VM"
@@ -313,13 +313,13 @@ class RedisSlaveVMWare(Substrate):
 
 
 class Redis_Slave(Service):
-    """Redis_Slave Service description"""
+    """Redis_Slave Service"""
 
     dependencies = [ref(Redis_Master)]
 
 
 class RedisMasterPackage(Package):
-    """RedisMasterPackage Package description"""
+    """RedisMasterPackage Package"""
 
     services = [ref(Redis_Master)]
 
@@ -347,7 +347,7 @@ class RedisMasterPackage(Package):
 
 
 class RedisMasterPackageAWS(Package):
-    """RedisMasterPackageAWS Package description"""
+    """RedisMasterPackageAWS Package"""
 
     services = [ref(Redis_Master)]
 
@@ -375,7 +375,7 @@ class RedisMasterPackageAWS(Package):
 
 
 class RedisMasterGCPPackage(Package):
-    """RedisMasterGCPPackage Package description"""
+    """RedisMasterGCPPackage Package"""
 
     services = [ref(Redis_Master)]
 
@@ -392,7 +392,7 @@ class RedisMasterGCPPackage(Package):
 
 
 class PackageMasterAZure(Package):
-    """PackageMasterAZure Package description"""
+    """PackageMasterAZure Package"""
 
     services = [ref(Redis_Master)]
 
@@ -409,7 +409,7 @@ class PackageMasterAZure(Package):
 
 
 class PackageMasterVMWare(Package):
-    """PackageMasterVMWare Package description"""
+    """PackageMasterVMWare Package"""
 
     services = [ref(Redis_Master)]
 
@@ -426,7 +426,7 @@ class PackageMasterVMWare(Package):
 
 
 class RedisSlavePackage(Package):
-    """RedisSlavePackage Package description"""
+    """RedisSlavePackage Package"""
 
     services = [ref(Redis_Slave)]
 
@@ -454,7 +454,7 @@ class RedisSlavePackage(Package):
 
 
 class RedisSlavePackageAWS(Package):
-    """RedisSlavePackageAWS Package description"""
+    """RedisSlavePackageAWS Package"""
 
     services = [ref(Redis_Slave)]
 
@@ -482,7 +482,7 @@ class RedisSlavePackageAWS(Package):
 
 
 class RedisSlaveGCPPackage(Package):
-    """RedisSlaveGCPPackage Package description"""
+    """RedisSlaveGCPPackage Package"""
 
     services = [ref(Redis_Slave)]
 
@@ -499,7 +499,7 @@ class RedisSlaveGCPPackage(Package):
 
 
 class PackageSlaveAZure(Package):
-    """PackageSlaveAZure Package description"""
+    """PackageSlaveAZure Package"""
 
     services = [ref(Redis_Slave)]
 
@@ -516,7 +516,7 @@ class PackageSlaveAZure(Package):
 
 
 class PackageSlaveVMWare(Package):
-    """PackageSlaveVMWare Package description"""
+    """PackageSlaveVMWare Package"""
 
     services = [ref(Redis_Slave)]
 
@@ -532,10 +532,10 @@ class PackageSlaveVMWare(Package):
         )
 
 
-class _8b347ab3_deployment(Deployment):
-    """_8b347ab3_deployment Deployment description"""
+class RedisMasterAHVDeployment(Deployment):
+    """RedisAHVDeployment"""
 
-    display_name = "8b347ab3_deployment"
+    display_name = "RedisAHVDeployment"
     min_replicas = "1"
     max_replicas = "1"
 
@@ -543,8 +543,8 @@ class _8b347ab3_deployment(Deployment):
     substrate = ref(RedisMaster)
 
 
-class _14ac6f34_deployment(Deployment):
-    """_14ac6f34_deployment Deployment description"""
+class RedisMasterAWSDeployment(Deployment):
+    """RedisAWSDeployment"""
 
     display_name = "14ac6f34_deployment"
     min_replicas = "1"
@@ -554,8 +554,8 @@ class _14ac6f34_deployment(Deployment):
     substrate = ref(RedisMasterAWS)
 
 
-class fca6ffcc_deployment(Deployment):
-    """fca6ffcc_deployment Deployment description"""
+class RedisMasterGCPDeployment(Deployment):
+    """RedisGCPDeployment"""
 
     min_replicas = "1"
     max_replicas = "1"
@@ -564,8 +564,8 @@ class fca6ffcc_deployment(Deployment):
     substrate = ref(RedisGCPMaster)
 
 
-class ab643c16_deployment(Deployment):
-    """ab643c16_deployment Deployment description"""
+class RedisMasterAzureDeployment(Deployment):
+    """RedisAzureDeployment"""
 
     min_replicas = "1"
     max_replicas = "1"
@@ -574,8 +574,8 @@ class ab643c16_deployment(Deployment):
     substrate = ref(RedisMasterAzure)
 
 
-class ab643c16_deployment_cloned_0(Deployment):
-    """ab643c16_deployment_cloned_0 Deployment description"""
+class RedisMasterVMwareDeployment(Deployment):
+    """RedisVMwareDeployment"""
 
     min_replicas = "1"
     max_replicas = "1"
@@ -584,10 +584,10 @@ class ab643c16_deployment_cloned_0(Deployment):
     substrate = ref(RedisMasterVMWare)
 
 
-class _4f977866_deployment(Deployment):
-    """_4f977866_deployment Deployment description"""
+class RedisSlaveAHVDeployment(Deployment):
+    """RedisSlaveAHVDeployment"""
 
-    display_name = "4f977866_deployment"
+    display_name = "RedisSlaveAHVDeployment"
     min_replicas = "2"
     max_replicas = "4"
 
@@ -595,8 +595,8 @@ class _4f977866_deployment(Deployment):
     substrate = ref(RedisSlave)
 
 
-class acc663db_deployment(Deployment):
-    """acc663db_deployment Deployment description"""
+class RedisSlaveAWSDeployment(Deployment):
+    """RedisSlaveAWSDeployment"""
 
     min_replicas = "2"
     max_replicas = "4"
@@ -605,10 +605,10 @@ class acc663db_deployment(Deployment):
     substrate = ref(RedisSlaveAWS)
 
 
-class _76aecbee_deployment(Deployment):
-    """_76aecbee_deployment Deployment description"""
+class RedisSlaveGCPDeployment(Deployment):
+    """RedisSlaveGCPDeployment"""
 
-    display_name = "76aecbee_deployment"
+    display_name = "RedisSlaveGCPDeployment"
     min_replicas = "2"
     max_replicas = "4"
 
@@ -616,8 +616,8 @@ class _76aecbee_deployment(Deployment):
     substrate = ref(RedisGCPSlave)
 
 
-class ee6d01cf_deployment(Deployment):
-    """ee6d01cf_deployment Deployment description"""
+class RedisSlaveAzureDeployment(Deployment):
+    """RedisSlaveAzureDeployment"""
 
     min_replicas = "2"
     max_replicas = "4"
@@ -626,8 +626,8 @@ class ee6d01cf_deployment(Deployment):
     substrate = ref(RedisSlaveAzure)
 
 
-class ee6d01cf_deployment_cloned_0(Deployment):
-    """ee6d01cf_deployment_cloned_0 Deployment description"""
+class RedisSlaveVMwareDeployment(Deployment):
+    """RedisSlaveVMwareDeployment"""
 
     min_replicas = "2"
     max_replicas = "4"
@@ -637,9 +637,9 @@ class ee6d01cf_deployment_cloned_0(Deployment):
 
 
 class Nutanix(Profile):
-    """Nutanix Profile description"""
+    """Nutanix Profile"""
 
-    deployments = [_8b347ab3_deployment, _4f977866_deployment]
+    deployments = [RedisMasterAHVDeployment, RedisSlaveAHVDeployment]
 
     REDIS_CONFIG_PASSWORD = CalmVariable.Simple.Secret(
         Profile_Nutanix_variable_REDIS_CONFIG_PASSWORD,
@@ -664,7 +664,7 @@ class Nutanix(Profile):
             description="",
         )
         CalmTask.Scaling.scale_out(
-            "@@{Scaleout}@@", name="Scaleout", target=ref(_4f977866_deployment)
+            "@@{Scaleout}@@", name="Scaleout", target=ref(RedisSlaveAHVDeployment)
         )
 
     @action
@@ -681,14 +681,14 @@ class Nutanix(Profile):
             description="",
         )
         CalmTask.Scaling.scale_in(
-            "@@{ScaleIn}@@", name="ScaleIn", target=ref(_4f977866_deployment)
+            "@@{ScaleIn}@@", name="ScaleIn", target=ref(RedisSlaveAHVDeployment)
         )
 
 
 class AWS(Profile):
-    """AWS Profile description"""
+    """AWS Profile"""
 
-    deployments = [_14ac6f34_deployment, acc663db_deployment]
+    deployments = [RedisMasterAWSDeployment, RedisSlaveAWSDeployment]
 
     REDIS_CONFIG_PASSWORD = CalmVariable.Simple.Secret(
         Profile_AWS_variable_REDIS_CONFIG_PASSWORD,
@@ -713,7 +713,7 @@ class AWS(Profile):
             description="",
         )
         CalmTask.Scaling.scale_out(
-            "@@{ScaleOut}@@", name="ScaleOut", target=ref(acc663db_deployment)
+            "@@{ScaleOut}@@", name="ScaleOut", target=ref(RedisSlaveAWSDeployment)
         )
 
     @action
@@ -730,14 +730,14 @@ class AWS(Profile):
             description="",
         )
         CalmTask.Scaling.scale_in(
-            "@@{ScaleIn}@@", name="ScaleIn", target=ref(acc663db_deployment)
+            "@@{ScaleIn}@@", name="ScaleIn", target=ref(RedisSlaveAWSDeployment)
         )
 
 
 class GCP(Profile):
-    """GCP Profile description"""
+    """GCP Profile"""
 
-    deployments = [fca6ffcc_deployment, _76aecbee_deployment]
+    deployments = [RedisMasterGCPDeployment, RedisSlaveGCPDeployment]
 
     REDIS_CONFIG_PASSWORD = CalmVariable.Simple.Secret(
         Profile_GCP_variable_REDIS_CONFIG_PASSWORD,
@@ -762,7 +762,7 @@ class GCP(Profile):
             description="",
         )
         CalmTask.Scaling.scale_out(
-            "@@{ScaleOut}@@", name="ScaleOut", target=ref(_76aecbee_deployment)
+            "@@{ScaleOut}@@", name="ScaleOut", target=ref(RedisSlaveGCPDeployment)
         )
 
     @action
@@ -779,14 +779,14 @@ class GCP(Profile):
             description="",
         )
         CalmTask.Scaling.scale_in(
-            "@@{ScaleIn}@@", name="ScaleIn", target=ref(_76aecbee_deployment)
+            "@@{ScaleIn}@@", name="ScaleIn", target=ref(RedisSlaveGCPDeployment)
         )
 
 
 class Azure(Profile):
-    """Azure Profile description"""
+    """Azure Profile"""
 
-    deployments = [ab643c16_deployment, ee6d01cf_deployment]
+    deployments = [RedisMasterAzureDeployment, RedisSlaveAzureDeployment]
 
     REDIS_CONFIG_PASSWORD = CalmVariable.Simple.Secret(
         Profile_Azure_variable_REDIS_CONFIG_PASSWORD,
@@ -802,20 +802,20 @@ class Azure(Profile):
         """This action will scale out Redis slaves by given scale out count
     """
 
-        CalmTask.Scaling.scale_out("1", name="Task1", target=ref(ee6d01cf_deployment))
+        CalmTask.Scaling.scale_out("1", name="Task1", target=ref(RedisSlaveAzureDeployment))
 
     @action
     def ScaleIn():
         """This action will scale in Redis slaves by given scale in count
     """
 
-        CalmTask.Scaling.scale_in("1", name="Task1", target=ref(ee6d01cf_deployment))
+        CalmTask.Scaling.scale_in("1", name="Task1", target=ref(RedisSlaveAzureDeployment))
 
 
 class VMware(Profile):
-    """VMware Profile description"""
+    """VMware Profile"""
 
-    deployments = [ab643c16_deployment_cloned_0, ee6d01cf_deployment_cloned_0]
+    deployments = [RedisMasterVMwareDeployment, RedisSlaveVMwareDeployment]
 
     REDIS_CONFIG_PASSWORD = CalmVariable.Simple.Secret(
         Profile_VMware_variable_REDIS_CONFIG_PASSWORD,
@@ -832,7 +832,7 @@ class VMware(Profile):
     """
 
         CalmTask.Scaling.scale_out(
-            "1", name="ScaleOut", target=ref(ee6d01cf_deployment_cloned_0)
+            "1", name="ScaleOut", target=ref(RedisSlaveVMwareDeployment)
         )
 
     @action
@@ -841,7 +841,7 @@ class VMware(Profile):
     """
 
         CalmTask.Scaling.scale_in(
-            "1", name="ScaleIn", target=ref(ee6d01cf_deployment_cloned_0)
+            "1", name="ScaleIn", target=ref(RedisSlaveVMwareDeployment)
         )
 
 
