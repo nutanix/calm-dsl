@@ -207,8 +207,7 @@ def HTTPEndpointWithMultipleURLs(endpoints=[endpoint_with_multiple_urls]):
         "https://{}:9440/api/nutanix/v3".format(config["SERVER"]["pc_ip"])
     )
     # Creating an endpoint with POST call
-    Task.HTTP.endpoint(
-        "POST",
+    Task.HTTP.post(
         name="HTTPTask",
         relative_url="/list",
         body=json.dumps({}),

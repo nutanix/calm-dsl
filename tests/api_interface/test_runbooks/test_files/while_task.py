@@ -117,5 +117,5 @@ def WhileTaskLoopVariable(endpoints=[http_endpoint]):
 def WhileTaskMacro():
     "Runbook Service example"
     var = Variable.Simple("3")  # noqa
-    while Task.Loop("@@{var}@@", name="WhileTask", loop_variable="iteration"):
+    with Task.Loop("@@{var}@@", name="WhileTask", loop_variable="iteration"):
         Task.Exec.escript(name="Exec", script='''print "test"''')
