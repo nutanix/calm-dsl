@@ -7,7 +7,7 @@ from Crypto.PublicKey import RSA
 from calm.dsl.config import get_config
 from calm.dsl.store import Cache
 from calm.dsl.builtins import read_file
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 

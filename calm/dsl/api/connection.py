@@ -21,7 +21,7 @@ from requests_toolbelt import MultipartEncoder
 from requests.adapters import HTTPAdapter
 from requests.exceptions import ConnectTimeout
 
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 urllib3.disable_warnings()
 LOG = get_logging_handle(__name__)

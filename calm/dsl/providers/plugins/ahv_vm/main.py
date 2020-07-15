@@ -10,7 +10,8 @@ from collections import OrderedDict
 
 from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.providers import get_provider_interface
-from calm.dsl.tools import StrictDraft7Validator, get_logging_handle
+from calm.dsl.tools import StrictDraft7Validator
+from calm.dsl.log import get_logging_handle
 from calm.dsl.builtins import ref
 from calm.dsl.store import Version
 

@@ -6,7 +6,7 @@ from calm.dsl.decompile.credential import get_cred_var_name
 from calm.dsl.decompile.file_handler import get_scripts_dir, get_scripts_dir_key
 from calm.dsl.builtins import TaskType
 from calm.dsl.builtins import RefType
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 

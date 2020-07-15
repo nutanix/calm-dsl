@@ -16,7 +16,7 @@ import sys
 from prettytable import PrettyTable
 
 from calm.dsl.api import get_resource_api, get_api_client
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
 
 LOG = get_logging_handle(__name__)

@@ -3,7 +3,7 @@ import os
 from calm.dsl.decompile.render import render_template
 from calm.dsl.builtins import CredentialType
 from calm.dsl.decompile.file_handler import get_local_dir
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 from calm.dsl.builtins import get_valid_identifier
 
 LOG = get_logging_handle(__name__)

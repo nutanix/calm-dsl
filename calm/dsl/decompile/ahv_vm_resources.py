@@ -5,7 +5,7 @@ from calm.dsl.decompile.ahv_vm_disk import render_ahv_vm_disk
 from calm.dsl.decompile.ahv_vm_nic import render_ahv_vm_nic
 from calm.dsl.decompile.ahv_vm_gc import render_ahv_vm_gc
 from calm.dsl.decompile.ahv_vm_gpu import render_ahv_vm_gpu
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
