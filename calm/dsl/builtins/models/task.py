@@ -1079,7 +1079,7 @@ def confirm_task(timeout=None, name=None):
     return _task_create(**kwargs)
 
 
-class CalmTask:
+class BaseTask:
     def __new__(cls, *args, **kwargs):
         raise TypeError("'{}' is not callable".format(cls.__name__))
 
@@ -1138,16 +1138,18 @@ class CalmTask:
         powershell = set_variable_task_powershell
         escript = set_variable_task_escript
 
-    class Scaling:
-        scale_in = scale_in_task
-        scale_out = scale_out_task
-
     class Delay:
         def __new__(cls, delay_seconds=None, name=None, target=None):
             return delay_task(delay_seconds=delay_seconds, name=name, target=target)
 
 
-class RunbookTask(CalmTask):
+class CalmTask(BaseTask):
+    class Scaling:
+        scale_in = scale_in_task
+        scale_out = scale_out_task
+
+
+class RunbookTask(BaseTask):
     class Decision:
         def __new__(cls, *args, **kwargs):
             raise TypeError("'{}' is not callable".format(cls.__name__))
