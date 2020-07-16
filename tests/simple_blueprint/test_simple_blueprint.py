@@ -6,6 +6,7 @@ Only 1 Service & 1 Package allowed per Deployment
 Only 1 Profile per Blueprint
 
 """
+import sys
 
 from calm.dsl.builtins import ref, basic_cred
 from calm.dsl.builtins import SimpleDeployment, SimpleBlueprint
@@ -17,6 +18,8 @@ from calm.dsl.builtins import action, parallel
 CRED_USERNAME = read_local_file(".tests/username")
 CRED_PASSWORD = read_local_file(".tests/password")
 DNS_SERVER = read_local_file(".tests/dns_server")
+# Setting the recursion limit to max for
+sys.setrecursionlimit(100000)
 
 
 class MySQLDeployment(SimpleDeployment):
@@ -121,11 +124,11 @@ class SimpleLampBlueprint(SimpleBlueprint):
 def test_json():
 
     import json
+    import os
 
-    bp_dict = SimpleLampBlueprint.make_bp_dict()
-    generated_json = json.dumps(bp_dict, indent=4)
-    print(generated_json)
+    generated_json = SimpleLampBlueprint.make_bp_dict()
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    file_path = os.path.join(dir_path, "test_simple_blueprint.json")
+    known_json = json.loads(open(file_path).read())
 
-
-if __name__ == "__main__":
-    test_json()
+    assert generated_json == known_json

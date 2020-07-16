@@ -9,6 +9,8 @@ properties:
     type: array
     items:
       type: string
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -19,6 +21,8 @@ title: GCP Encryption Key
 type: object
 properties:
   rawKey:
+    type: string
+  type:
     type: string
 
 {%- endmacro %}
@@ -38,6 +42,8 @@ properties:
     default: -1
   diskType:
     type: string
+  type:
+    type: string
   sourceImageEncryptionKey:
     {{ GcpEncryptionKey() | indent(4) }}
 
@@ -49,6 +55,8 @@ properties:
 title: GCP Disk
 type: object
 properties:
+  type:
+    type: string
   disk_type:
     type: string
   mode:
@@ -87,6 +95,8 @@ properties:
   sizeGb:
     type: integer
     default: -1
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -102,6 +112,8 @@ properties:
     type: string
   natIP:
     type: string
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -115,6 +127,8 @@ properties:
     type: string
   subnetworkRangeName:
     type: string
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -124,6 +138,8 @@ properties:
 title: GCP Network Interface
 type: object
 properties:
+  type:
+    type: string
   network:
     type: string
   subnetwork:
@@ -154,6 +170,8 @@ properties:
     type: string
   value:
     type: string
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -163,6 +181,8 @@ properties:
 title: GCP Metadata
 type: object
 properties:
+  type:
+    type: string
   fingerprint:
     type: string
   items:
@@ -184,6 +204,8 @@ properties:
     type: array
     items:
       type: string
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -200,6 +222,8 @@ properties:
     type: boolean
   preemptible:
     type: boolean
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -212,6 +236,8 @@ properties:
   key:
     type: string
   value:
+    type: string
+  type:
     type: string
 
 {%- endmacro %}
@@ -226,6 +252,8 @@ properties:
     type: string
   sysprep:
     type: string
+  type:
+    type: string
 
 {%- endmacro %}
 
@@ -236,6 +264,8 @@ title: GCP VM Resource
 type: object
 properties:
   name:
+    type: string
+  type:
     type: string
   description:
     type: string
@@ -294,7 +324,7 @@ type: object
 properties:
   type:
     type: string
-    enum: [PROVISION_GCP_VM]
+    enum: [PROVISION_GCP_VM, '']
     default: PROVISION_GCP_VM
   resources:
     {{ GcpVMResource() | indent(4) }}

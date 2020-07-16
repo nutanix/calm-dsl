@@ -14,7 +14,7 @@ from calm.dsl.cli.mpis import (
 )
 from calm.dsl.cli.utils import get_states_filter
 from calm.dsl.cli.constants import APPLICATION, MARKETPLACE_BLUEPRINT
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 APP_ICON_IMAGE_PATH = "tests/cli/images/test_app_icon.jpg"

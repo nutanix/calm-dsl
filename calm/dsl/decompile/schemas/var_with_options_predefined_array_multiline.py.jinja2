@@ -1,0 +1,9 @@
+{%- macro with_options_predefined_array_multiline_var(obj) -%}
+{%- if obj.regex %}
+{{obj.name}} = CalmVariable.WithOptions.Predefined.Array.multiline({{obj.choices}}, label='{{obj.label}}', defaults={{obj.value}}, regex='{{obj.regex}}', validate_regex={{obj.validate_regex}}, is_mandatory={{obj.is_mandatory}}, is_hidden={{obj.is_hidden}}, runtime={{obj.runtime}}, description='{{obj.description}}')
+{%- else %}
+{{obj.name}} = CalmVariable.WithOptions.Predefined.Array.multiline({{obj.choices}}, label='{{obj.label}}', defaults={{obj.value}}, is_mandatory={{obj.is_mandatory}}, is_hidden={{obj.is_hidden}}, runtime={{obj.runtime}}, description='{{obj.description}}')
+{%- endif %}
+{%- endmacro %}
+
+{{ with_options_predefined_array_multiline_var(obj) }}

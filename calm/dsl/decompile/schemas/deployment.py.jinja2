@@ -1,0 +1,15 @@
+{%- macro deployment(obj) %}
+class {{obj.name}}(Deployment):
+    {% if obj.description %}"""{{obj.description}}"""{% endif %}
+
+    {% if obj.gui_display_name %}name="{{obj.gui_display_name}}"{% endif %}
+    min_replicas = '{{obj.min_replicas}}'
+    max_replicas = '{{obj.max_replicas}}'
+    {% if obj.default_replicas %}default_replicas = '{{obj.default_replicas}}'{%- endif %}
+    {% if obj.dependencies %}dependencies = [{{obj.dependencies}}]{%- endif %}
+    {% if obj.packages %}packages = [{{obj.packages}}]{%- endif %}
+    {% if obj.substrate %}substrate = {{obj.substrate}}{%- endif %}
+    {% if obj.editables %}editables = {{obj.editables}}{%- endif %}
+{%- endmacro %}
+
+{{ deployment(obj) }}

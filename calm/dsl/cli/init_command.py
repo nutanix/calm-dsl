@@ -4,22 +4,21 @@ import json
 import sys
 
 from calm.dsl.config import (
-    init_config,
+    update_config,
     get_default_config_file,
     set_config,
     update_init_config,
-    get_user_config_file,
     get_default_db_file,
     get_default_local_dir,
 )
-from calm.dsl.db import get_db_handle
+from calm.dsl.db import init_db_handle
 from calm.dsl.api import get_resource_api, update_client_handle, get_client_handle
 from calm.dsl.store import Cache
 from calm.dsl.init import init_bp
 from calm.dsl.providers import get_provider_types
 
 from .main import init, set
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -189,7 +188,7 @@ def set_server_details(
     update_init_config(config_file=config_file, db_file=db_file, local_dir=local_dir)
 
     LOG.info("Writing config to {}".format(config_file))
-    init_config(host, port, username, password, project_name, log_level)
+    update_config(host, port, username, password, project_name, log_level)
 
     # Update client handle with new settings if no exception occurs
     update_client_handle(host, port, auth=(username, password))
@@ -197,11 +196,10 @@ def set_server_details(
 
 def init_db():
     LOG.info("Creating local database")
-    get_db_handle()
+    init_db_handle()
 
 
 def sync_cache():
-    LOG.info("Updating Cache")
     Cache.sync()
 
 
@@ -277,7 +275,7 @@ def init_dsl_bp(bp_name, dir_name, provider_type):
     help="Path to local directory for storing secrets",
 )
 @click.option("--log_level", "-l", default=None, help="Default log level")
-@click.argument("config_file", default=get_user_config_file())
+@click.argument("config_file", required=False)
 def _set_config(
     host,
     port,

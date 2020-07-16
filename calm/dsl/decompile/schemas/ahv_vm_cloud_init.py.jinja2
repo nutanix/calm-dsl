@@ -1,0 +1,5 @@
+{% macro ahv_cloud_init_gc(obj) %}
+AhvVmGC.CloudInit(filename={{obj.filename}})
+{% endmacro %}
+
+{{ ahv_cloud_init_gc(obj) }}

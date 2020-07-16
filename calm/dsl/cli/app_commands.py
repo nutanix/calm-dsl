@@ -3,7 +3,7 @@ import click
 from calm.dsl.api import get_api_client
 
 from .main import main, get, describe, delete, run, watch, download
-from .utils import Display
+from .utils import Display, FeatureFlagGroup
 from .apps import (
     get_apps,
     describe_app,
@@ -13,7 +13,7 @@ from .apps import (
     delete_app,
     download_runlog,
 )
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -33,9 +33,17 @@ LOG = get_logging_handle(__name__)
 @click.option(
     "--all-items", "-a", is_flag=True, help="Get all items, including deleted ones"
 )
-def _get_apps(name, filter_by, limit, offset, quiet, all_items):
+@click.option(
+    "--out",
+    "-o",
+    "out",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="output format",
+)
+def _get_apps(name, filter_by, limit, offset, quiet, all_items, out):
     """Get Apps, optionally filtered by a string"""
-    get_apps(name, filter_by, limit, offset, quiet, all_items)
+    get_apps(name, filter_by, limit, offset, quiet, all_items, out)
 
 
 @describe.command("app")
@@ -46,7 +54,7 @@ def _get_apps(name, filter_by, limit, offset, quiet, all_items):
     "out",
     type=click.Choice(["text", "json"]),
     default="text",
-    help="output format [json|yaml].",
+    help="output format",
 )
 def _describe_app(app_name, out):
     """Describe an app"""
@@ -155,19 +163,19 @@ def _delete_app(app_names, soft):
     delete_app(app_names, soft)
 
 
-@main.group()
+@main.group(cls=FeatureFlagGroup)
 def start():
     """Start entities"""
     pass
 
 
-@main.group()
+@main.group(cls=FeatureFlagGroup)
 def stop():
     """Stop entities"""
     pass
 
 
-@main.group()
+@main.group(cls=FeatureFlagGroup)
 def restart():
     """Restart entities"""
     pass

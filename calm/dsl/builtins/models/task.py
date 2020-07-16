@@ -6,7 +6,7 @@ from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .ref import RefType
 from .variable import CalmVariable
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -21,6 +21,15 @@ class TaskType(EntityType):
         cdict = super().compile()
         if (cdict.get("target_any_local_reference", None) or None) is None:
             cdict.pop("target_any_local_reference", None)
+        return cdict
+
+    @classmethod
+    def pre_decompile(mcls, cdict, context=[]):
+
+        cdict = super().pre_decompile(cdict, context=context)
+        # Removing additional attributes
+        cdict.pop("state", None)
+        cdict.pop("message_list", None)
         return cdict
 
 

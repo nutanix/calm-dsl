@@ -1,0 +1,9 @@
+{%- macro ahv_vm_cdrom_sata_clone_from_img_pkg(obj) -%}
+{% if obj.bootable %}
+AhvVmDisk.CdRom.Sata.cloneFromVMDiskPackage({{obj.name}}, bootable=True)
+{% else %}
+AhvVmDisk.CdRom.Sata.cloneFromVMDiskPackage({{obj.name}})
+{% endif %}
+{% endmacro %}
+
+{{ ahv_vm_cdrom_sata_clone_from_img_pkg(obj) }}

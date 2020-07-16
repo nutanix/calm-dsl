@@ -1,0 +1,17 @@
+{%- macro substrate(obj) %}
+class {{obj.name}}(Substrate):
+    {% if obj.description -%}"""{{obj.description}}"""{%- endif %}
+
+    {% if obj.gui_display_name %}name="{{obj.gui_display_name}}"{% endif %}
+    os_type = '{{obj.os_type}}'
+    provider_type = '{{obj.provider_type}}'
+    provider_spec = {{obj.provider_spec}}
+    {% if obj.provider_spec_editables%}provider_spec_editables = {{obj.provider_spec_editables}}{%- endif %}
+    readiness_probe = {{obj.readiness_probe}}
+    {% if obj.readiness_probe_cred -%}readiness_probe["credential"] =  {{obj.readiness_probe_cred}}{%- endif %}
+{% for action in obj.actions %}
+{{action | indent( width=4, indentfirst=True)}}
+{% endfor %}
+{%- endmacro %}
+
+{{ substrate(obj) }}

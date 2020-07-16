@@ -24,18 +24,18 @@ DefaultCred = basic_cred(
 )
 
 
-def test_ping_code():
-    """Check if we can reach the VM"""
-    from calm.dsl.tools import ping
+# def test_ping_code():
+#     """Check if we can reach the VM"""
+#     from calm.dsl.tools import ping
 
-    assert ping(TEST_PC_IP) is True
+#     assert ping(TEST_PC_IP) is True
 
 
-def test_ping_code_negative():
-    """Check if we fail to reach the VM"""
-    from calm.dsl.tools import ping
+# def test_ping_code_negative():
+#     """Check if we fail to reach the VM"""
+#     from calm.dsl.tools import ping
 
-    assert ping("1.2.3.4") is False
+#     assert ping("1.2.3.4") is False
 
 
 class MySQLService(Service):
@@ -464,7 +464,7 @@ class DefaultProfile(Profile):
                 target=ref(MySQLService),
             )
         CalmTask.Scaling.scale_out(1, target=ref(LampDeployment), name="Scale out Lamp")
-        CalmTask.Delay(delay_seconds=60, target=ref(MySQLService))
+        CalmTask.Delay(delay_seconds=60, target=ref(MySQLService), name="Delay")
         CalmTask.Scaling.scale_in(1, target=LampDeployment, name="Scale in Lamp")
 
 
@@ -478,8 +478,22 @@ class ExistingVMBlueprint(Blueprint):
     profiles = [DefaultProfile]
 
 
+def test_json():
+    """Test the generated json for a single VM
+    against known output"""
+    import os
+
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    file_path = os.path.join(dir_path, "test_existing_vm_bp.json")
+
+    generated_json = ExistingVMBlueprint.json_dumps(pprint=True)
+
+    known_json = open(file_path).read()
+    assert generated_json == known_json
+
+
 def main():
-    print(ExistingVMBlueprint.json_dumps(pprint=True))
+    print(ExistingVMBlueprint.json_dumps(pprint=True), end="")
 
 
 if __name__ == "__main__":

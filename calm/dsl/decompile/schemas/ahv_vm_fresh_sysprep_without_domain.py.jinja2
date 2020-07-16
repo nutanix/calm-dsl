@@ -1,0 +1,5 @@
+{% macro ahv_fresh_sysprep_gc_without_domain(obj) %}
+AhvVmGC.Sysprep.FreshScript.withoutDomain(filename={{obj.filename}})
+{% endmacro %}
+
+{{ ahv_fresh_sysprep_gc_without_domain(obj) }}

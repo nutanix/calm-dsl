@@ -1,0 +1,9 @@
+{%- macro ahv_vm_disk_scsi_clone_from_img_pkg(obj) -%}
+{% if obj.bootable %}
+AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage({{obj.name}}, bootable=True)
+{% else %}
+AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage({{obj.name}})
+{% endif %}
+{% endmacro %}
+
+{{ ahv_vm_disk_scsi_clone_from_img_pkg(obj) }}

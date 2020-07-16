@@ -1,5 +1,10 @@
+import copy
+
 from .validator import PropertyValidator
 from .entity import EntityDict
+from calm.dsl.log import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 class ObjectDict(EntityDict):
@@ -26,6 +31,18 @@ class ObjectDict(EntityDict):
         self.__items_set__ = True
         super().__setitem__(name, value)
 
+    def get_dict(self):
+        ret = {}
+        if not self.__items_set__:
+            return ret
+        for key, value in self.defaults.items():
+            value = self.get(key, value())
+            if getattr(value, "__is_object__", False):
+                ret[key] = value.get_dict()
+            else:
+                ret[key] = value
+        return ret
+
     def compile(self, cls):
         ret = {}
         if not self.__items_set__:
@@ -37,6 +54,63 @@ class ObjectDict(EntityDict):
             else:
                 ret[self.display_map[key]] = value
         return ret
+
+    def pre_decompile(mcls, cdict, context):
+
+        # Remove NULL and empty string data
+        attrs = {}
+        for k, v in cdict.items():
+            if v is not None and v != "":
+                attrs[k] = v
+
+        return attrs
+
+    def decompile(cls, cdict, context=[]):
+
+        if not cdict:
+            return cdict
+
+        cdict = cls.pre_decompile(cdict, context=context)
+        attrs = {}
+        display_map = copy.deepcopy(cls.display_map)
+        display_map = {v: k for k, v in display_map.items()}
+
+        # reversing display map values
+        for k, v in cdict.items():
+            if k not in display_map:
+                LOG.warning("Additional Property ({}) found".format(k))
+                continue
+
+            attrs.setdefault(display_map[k], v)
+
+        # recursive decompile
+        validator_dict = cls.validators
+        for k, v in attrs.items():
+            validator, is_array = validator_dict[k]
+
+            if getattr(validator, "__is_object__", False):
+                # Case for recursive Object Dict
+                entity_type = validator
+
+            else:
+                entity_type = validator.get_kind()
+
+            # No decompilation is needed for entity_type = str, dict, int etc.
+            if hasattr(entity_type, "decompile"):
+                if is_array:
+                    new_value = []
+                    for val in v:
+                        new_value.append(entity_type.decompile(val))
+
+                else:
+                    new_value = entity_type.decompile(v)
+
+                attrs[k] = new_value
+
+            # validate the new data
+            validator.validate(attrs[k], is_array)
+
+        return attrs
 
     def _validate_item(self, value):
         if not isinstance(value, dict):

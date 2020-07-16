@@ -1,0 +1,5 @@
+{%- macro ahv_vm_disk_scsi_allocate_storage(obj) -%}
+AhvVmDisk.Disk.Scsi.allocateOnStorageContainer({{obj.size}})
+{% endmacro %}
+
+{{ ahv_vm_disk_scsi_allocate_storage(obj) }}

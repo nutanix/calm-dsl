@@ -1,7 +1,15 @@
 import click
+import sys
 import importlib.util
 from functools import reduce
 from asciimatics.screen import Screen
+from click_didyoumean import DYMMixin
+from distutils.version import LooseVersion as LV
+
+from calm.dsl.log import get_logging_handle
+from calm.dsl.store import Version
+
+LOG = get_logging_handle(__name__)
 
 
 def get_states_filter(STATES_CLASS=None, state_key="state", states=[]):
@@ -73,3 +81,60 @@ class Display:
 
 
 display = Display()
+
+
+class FeatureFlagMixin:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.feature_version_map = dict()
+        self.experimental_cmd_map = dict()
+
+    def command(self, *args, **kwargs):
+        """Behaves the same as `click.Group.command()` except added an
+        `feature_min_version` flag which can be used to warn users if command
+        is not supported setup calm version.
+        """
+
+        feature_min_version = kwargs.pop("feature_min_version", None)
+        if feature_min_version and args:
+            self.feature_version_map[args[0]] = feature_min_version
+
+        is_experimental = kwargs.pop("experimental", False)
+        if args:
+            self.experimental_cmd_map[args[0]] = is_experimental
+
+        return super().command(*args, **kwargs)
+
+    def invoke(self, ctx):
+
+        if not ctx.protected_args:
+            return super(FeatureFlagMixin, self).invoke(ctx)
+
+        cmd_name = ctx.protected_args[0]
+        feature_min_version = self.feature_version_map.get(cmd_name, "")
+        if feature_min_version:
+            calm_version = Version.get_version("Calm")
+            if not calm_version:
+                LOG.error("Calm version not found. Please update cache")
+                sys.exit(-1)
+
+            if LV(calm_version) >= LV(feature_min_version):
+                return super().invoke(ctx)
+
+            else:
+                LOG.warning(
+                    "Please update Calm (v{} -> >=v{}) to use this command.".format(
+                        calm_version, feature_min_version
+                    )
+                )
+                return None
+
+        else:
+            return super().invoke(ctx)
+
+
+class FeatureFlagGroup(FeatureFlagMixin, DYMMixin, click.Group):
+    """click Group that have *did-you-mean* functionality and adds *feature_min_version* paramter to each subcommand
+    which can be used to set minimum calm version for command"""
+
+    pass

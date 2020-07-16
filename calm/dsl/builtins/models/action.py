@@ -7,9 +7,12 @@ from .validator import PropertyValidator
 from .variable import VariableType, CalmVariable
 from .task import dag, create_call_rb, CalmTask, TaskType
 from .runbook import runbook_create
+from calm.dsl.log import get_logging_handle
 
 # Action - Since action, runbook and DAG task are heavily coupled together,
 # the action type behaves as all three.
+
+LOG = get_logging_handle(__name__)
 
 
 class ActionType(EntityType):
@@ -229,6 +232,7 @@ class action(metaclass=DescriptorType):
 
         # System action names
         action_name = self.action_name
+
         ACTION_TYPE = "user"
         func_name = self.user_func.__name__.lower()
         if func_name.startswith("__") and func_name.endswith("__"):
@@ -240,6 +244,13 @@ class action(metaclass=DescriptorType):
             elif func_name in FRAGMENT:
                 ACTION_TYPE = "fragment"
                 action_name = FRAGMENT[func_name]
+
+        else:
+            # `name` argument is only supported in non-system actions
+            sig = inspect.signature(self.user_func)
+            gui_display_name = sig.parameters.get("name", None)
+            if gui_display_name and gui_display_name.default != action_name:
+                action_name = gui_display_name.default
 
         # Finally create the action
         self.user_action = _action_create(

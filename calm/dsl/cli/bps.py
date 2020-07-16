@@ -14,10 +14,16 @@ from calm.dsl.builtins import (
     Blueprint,
     SimpleBlueprint,
     create_blueprint_payload,
+    BlueprintType,
+    get_valid_identifier,
     file_exists,
+    get_dsl_metadata_map,
+    init_dsl_metadata_map,
 )
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
+from calm.dsl.decompile.decompile_render import create_bp_dir
+from calm.dsl.decompile.file_handler import get_bp_dir
 
 from .utils import (
     get_name_query,
@@ -28,13 +34,13 @@ from .utils import (
 )
 from .constants import BLUEPRINT
 from calm.dsl.store import Cache
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
 
 LOG = get_logging_handle(__name__)
 
 
-def get_blueprint_list(name, filter_by, limit, offset, quiet, all_items):
+def get_blueprint_list(name, filter_by, limit, offset, quiet, all_items, out):
     """Get the blueprints, optionally filtered by a string"""
 
     client = get_api_client()
@@ -59,6 +65,10 @@ def get_blueprint_list(name, filter_by, limit, offset, quiet, all_items):
     if err:
         pc_ip = config["SERVER"]["pc_ip"]
         LOG.warning("Cannot fetch blueprints from {}".format(pc_ip))
+        return
+
+    if out == "json":
+        click.echo(json.dumps(res.json(), indent=4, separators=(",", ": ")))
         return
 
     json_rows = res.json()["entities"]
@@ -230,6 +240,10 @@ def compile_blueprint(bp_file):
         UserBlueprintPayload, _ = create_blueprint_payload(UserBlueprint)
         bp_payload = UserBlueprintPayload.get_dict()
 
+        # Adding the display map to client attr
+        display_name_map = get_dsl_metadata_map()
+        bp_payload["spec"]["resources"]["client_attrs"] = {"None": display_name_map}
+
         # Note - Install/Uninstall runbooks are not actions in Packages.
         # Remove package actions after compiling.
         cdict = bp_payload["spec"]["resources"]
@@ -238,6 +252,85 @@ def compile_blueprint(bp_file):
                 del package["action_list"]
 
     return bp_payload
+
+
+def decompile_bp(name, bp_file, with_secrets=False):
+    """helper to decompile blueprint"""
+
+    if name and bp_file:
+        LOG.error(
+            "Please provide either blueprint file location or server blueprint name"
+        )
+        sys.exit(-1)
+
+    if name:
+        decompile_bp_from_server(name=name, with_secrets=with_secrets)
+
+    elif bp_file:
+        decompile_bp_from_file(filename=bp_file, with_secrets=with_secrets)
+
+    else:
+        LOG.error(
+            "Please provide either blueprint file location or server blueprint name"
+        )
+        sys.exit(-1)
+
+
+def decompile_bp_from_server(name, with_secrets=False):
+    """decompiles the blueprint by fetching it from server"""
+
+    client = get_api_client()
+    blueprint = get_blueprint(client, name)
+    bp_uuid = blueprint["metadata"]["uuid"]
+
+    res, err = client.blueprint.export_file(bp_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    res = res.json()
+    _decompile_bp(bp_payload=res, with_secrets=with_secrets)
+
+
+def decompile_bp_from_file(filename, with_secrets=False):
+    """decompile blueprint from local blueprint file"""
+
+    # ToDo - Fix this
+    bp_payload = json.loads(open(filename).read())
+    # bp_payload = read_spec(filename)
+    _decompile_bp(bp_payload=bp_payload, with_secrets=with_secrets)
+
+
+def _decompile_bp(bp_payload, with_secrets=False):
+    """decompiles the blueprint from payload"""
+
+    blueprint = bp_payload["spec"]["resources"]
+    blueprint_name = bp_payload["spec"].get("name", "DslBlueprint")
+    blueprint_description = bp_payload["spec"].get("description", "")
+
+    # Copying dsl_name_map to global client_attrs
+    if bp_payload["spec"]["resources"]["client_attrs"].get("None", {}):
+        init_dsl_metadata_map(bp_payload["spec"]["resources"]["client_attrs"]["None"])
+
+    LOG.info("Decompiling blueprint {}".format(blueprint_name))
+
+    for sub_obj in blueprint.get("substrate_definition_list"):
+        sub_type = sub_obj.get("type", "") or "AHV_VM"
+        if sub_type == "K8S_POD":
+            raise NotImplementedError(
+                "Decompilation for k8s pod is not supported right now"
+            )
+        elif sub_type != "AHV_VM":
+            LOG.warning(
+                "Decompilation support for providers other than AHV is experimental/best effort"
+            )
+            break
+
+    bp_cls = BlueprintType.decompile(blueprint)
+    bp_cls.__name__ = get_valid_identifier(blueprint_name)
+    bp_cls.__doc__ = blueprint_description
+
+    create_bp_dir(bp_cls=bp_cls, with_secrets=with_secrets)
+    click.echo("\nSuccessfully decompiled. Directory location: {}".format(get_bp_dir()))
 
 
 def compile_blueprint_command(bp_file, out):
@@ -256,6 +349,7 @@ def compile_blueprint_command(bp_file, out):
         LOG.error(
             "Project {} not found. Please run: calm update cache".format(project_name)
         )
+        sys.exit(-1)
 
     project_uuid = project_cache_data.get("uuid", "")
     bp_payload["metadata"]["project_reference"] = {
@@ -370,7 +464,7 @@ def get_field_values(
 
             new_val = None
             if launch_runtime_vars:
-                new_val = get_val_launch_runtime_vars(
+                new_val = get_val_launch_runtime_var(
                     launch_runtime_vars, field, path, context
                 )
             else:
@@ -445,7 +539,7 @@ def get_variable_data(bp_data, context_data, var_context, var_name):
     sys.exit(-1)
 
 
-def get_val_launch_runtime_vars(launch_runtime_vars, field, path, context):
+def get_val_launch_runtime_var(launch_runtime_vars, field, path, context):
     """Returns value of variable from launch_runtime_vars(Non-interactive)"""
 
     filtered_launch_runtime_vars = list(
@@ -467,7 +561,7 @@ def get_val_launch_runtime_vars(launch_runtime_vars, field, path, context):
     return None
 
 
-def get_val_launch_runtime_substrates(launch_runtime_substrates, path, context):
+def get_val_launch_runtime_substrate(launch_runtime_substrates, path, context=None):
     """Returns value of substrate from launch_runtime_substrates(Non-interactive)"""
 
     filtered_launch_runtime_substrates = list(
@@ -482,6 +576,42 @@ def get_val_launch_runtime_substrates(launch_runtime_substrates, path, context):
         sys.exit(-1)
     if len(filtered_launch_runtime_substrates) == 1:
         return filtered_launch_runtime_substrates[0].get("value", {})
+    return None
+
+
+def get_val_launch_runtime_deployment(launch_runtime_deployments, path, context=None):
+    """Returns value of deployment from launch_runtime_deployments(Non-interactive)"""
+
+    launch_runtime_deployments = list(
+        filter(lambda e: e["name"] == path, launch_runtime_deployments,)
+    )
+    if len(launch_runtime_deployments) > 1:
+        LOG.error(
+            "Unable to populate runtime editables: Multiple matches for name {} and context {}".format(
+                path, context
+            )
+        )
+        sys.exit(-1)
+    if len(launch_runtime_deployments) == 1:
+        return launch_runtime_deployments[0].get("value", {})
+    return None
+
+
+def get_val_launch_runtime_credential(launch_runtime_credentials, path, context=None):
+    """Returns value of credential from launch_runtime_credentials(Non-interactive)"""
+
+    launch_runtime_credentials = list(
+        filter(lambda e: e["name"] == path, launch_runtime_credentials,)
+    )
+    if len(launch_runtime_credentials) > 1:
+        LOG.error(
+            "Unable to populate runtime editables: Multiple matches for name {} and context {}".format(
+                path, context
+            )
+        )
+        sys.exit(-1)
+    if len(launch_runtime_credentials) == 1:
+        return launch_runtime_credentials[0].get("value", {})
     return None
 
 
@@ -513,7 +643,7 @@ def is_launch_runtime_var_action_match(launch_runtime_var_context, context_list)
 
 
 def parse_launch_runtime_vars(launch_params):
-    """Returns runtime_vars object from launch_params file"""
+    """Returns variable_list object from launch_params file"""
 
     if launch_params:
         if file_exists(launch_params) and launch_params.endswith(".py"):
@@ -526,11 +656,37 @@ def parse_launch_runtime_vars(launch_params):
 
 
 def parse_launch_runtime_substrates(launch_params):
-    """Returns runtime_substrates object from launch_params file"""
+    """Returns substrate_list object from launch_params file"""
 
     if launch_params:
         if file_exists(launch_params) and launch_params.endswith(".py"):
             return import_var_from_file(launch_params, "substrate_list", [])
+        else:
+            LOG.warning(
+                "Invalid launch_params passed! Must be a valid and existing.py file! Ignoring..."
+            )
+    return []
+
+
+def parse_launch_runtime_deployments(launch_params):
+    """Returns deployment_list object from launch_params file"""
+
+    if launch_params:
+        if file_exists(launch_params) and launch_params.endswith(".py"):
+            return import_var_from_file(launch_params, "deployment_list", [])
+        else:
+            LOG.warning(
+                "Invalid launch_params passed! Must be a valid and existing.py file! Ignoring..."
+            )
+    return []
+
+
+def parse_launch_runtime_credentials(launch_params):
+    """Returns credential_list object from launch_params file"""
+
+    if launch_params:
+        if file_exists(launch_params) and launch_params.endswith(".py"):
+            return import_var_from_file(launch_params, "credential_list", [])
         else:
             LOG.warning(
                 "Invalid launch_params passed! Must be a valid and existing.py file! Ignoring..."
@@ -616,6 +772,8 @@ def launch_blueprint_simple(
         # Check user input
         launch_runtime_vars = parse_launch_runtime_vars(launch_params)
         launch_runtime_substrates = parse_launch_runtime_substrates(launch_params)
+        launch_runtime_deployments = parse_launch_runtime_deployments(launch_params)
+        launch_runtime_credentials = parse_launch_runtime_credentials(launch_params)
 
         res, err = client.blueprint.read(blueprint_uuid)
         if err:
@@ -647,10 +805,10 @@ def launch_blueprint_simple(
 
             for substrate in substrate_list:
                 if launch_params:
-                    new_val = get_val_launch_runtime_substrates(
+                    new_val = get_val_launch_runtime_substrate(
                         launch_runtime_substrates=launch_runtime_substrates,
                         path=substrate.get("name"),
-                        context=substrate.get("context"),
+                        context=substrate.get("context", None),
                     )
                     if new_val:
                         substrate["value"] = new_val
@@ -667,7 +825,7 @@ def launch_blueprint_simple(
 
         variable_list = runtime_editables.get("variable_list", [])
         if variable_list:
-            if not launch_runtime_vars:
+            if not launch_params:
                 click.echo("\n\t\t\t", nl=False)
                 click.secho("VARIABLE LIST DATA", underline=True, bold=True)
             for variable in variable_list:
@@ -682,6 +840,30 @@ def launch_blueprint_simple(
                     hide_input=hide_input,
                     launch_runtime_vars=launch_runtime_vars,
                 )
+
+        deployment_list = runtime_editables.get("deployment_list", [])
+        # deployment can be only supplied via non-interactive way for now
+        if deployment_list and launch_params:
+            for deployment in deployment_list:
+                new_val = get_val_launch_runtime_deployment(
+                    launch_runtime_deployments=launch_runtime_deployments,
+                    path=deployment.get("name"),
+                    context=deployment.get("context", None),
+                )
+                if new_val:
+                    deployment["value"] = new_val
+
+        credential_list = runtime_editables.get("credential_list", [])
+        # credential can be only supplied via non-interactive way for now
+        if credential_list and launch_params:
+            for credential in credential_list:
+                new_val = get_val_launch_runtime_credential(
+                    launch_runtime_credentials=launch_runtime_credentials,
+                    path=credential.get("name"),
+                    context=credential.get("context", None),
+                )
+                if new_val:
+                    credential["value"] = new_val
 
         runtime_editables_json = json.dumps(
             runtime_editables, indent=4, separators=(",", ": ")

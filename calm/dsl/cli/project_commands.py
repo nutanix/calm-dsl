@@ -8,7 +8,7 @@ from .projects import (
     update_project,
 )
 from .main import create, get, update, delete, describe
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 from calm.dsl.builtins import read_spec
 
 LOG = get_logging_handle(__name__)
@@ -26,10 +26,18 @@ LOG = get_logging_handle(__name__)
 @click.option(
     "--quiet", "-q", is_flag=True, default=False, help="Show only project names"
 )
-def _get_projects(name, filter_by, limit, offset, quiet):
+@click.option(
+    "--out",
+    "-o",
+    "out",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="output format",
+)
+def _get_projects(name, filter_by, limit, offset, quiet, out):
     """Get projects, optionally filtered by a string"""
 
-    get_projects(name, filter_by, limit, offset, quiet)
+    get_projects(name, filter_by, limit, offset, quiet, out)
 
 
 def create_project_from_file(file_location, project_name):

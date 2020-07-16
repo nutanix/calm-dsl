@@ -5,7 +5,7 @@ import time
 
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.bps import launch_blueprint_simple
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 from calm.dsl.cli.constants import RUNLOG, APPLICATION
 from tests.api_interface.entity_spec.existing_vm_bp import (
     ExistingVMBlueprint as Blueprint,

@@ -1,0 +1,15 @@
+{%- macro setvariable_escript_task(obj) -%}
+{%- if obj.cred is not defined and obj.target and obj.variables is not defined %}
+CalmTask.SetVariable.escript(name='{{obj.name}}', filename={{obj.attrs.script_file}})
+{%- elif obj.cred is not defined %}
+CalmTask.SetVariable.escript(name='{{obj.name}}', filename={{obj.attrs.script_file}}, target={{obj.target}}, variables={{obj.variables}})
+{%- elif obj.target is not defined %}
+CalmTask.SetVariable.escript(name='{{obj.name}}', filename={{obj.attrs.script_file}}, cred={{obj.cred}}, variables={{obj.variables}})
+{%- elif obj.variables is not defined %}
+CalmTask.SetVariable.escript(name='{{obj.name}}', filename={{obj.attrs.script_file}}, cred={{obj.cred}}, target={{obj.target}})
+{%- else %}
+CalmTask.SetVariable.escript(name='{{obj.name}}', filename={{obj.attrs.script_file}}, cred={{obj.cred}}, target={{obj.target}}, variables={{obj.variables}})
+{%- endif %}
+{%- endmacro %}
+
+{{ setvariable_escript_task(obj) }}

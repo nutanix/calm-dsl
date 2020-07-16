@@ -1,6 +1,7 @@
 import time
 import click
 import arrow
+import json
 from prettytable import PrettyTable
 
 from calm.dsl.builtins import ProjectValidator
@@ -8,13 +9,13 @@ from calm.dsl.api import get_api_client
 from calm.dsl.config import get_config
 
 from .utils import get_name_query, highlight_text
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
 
 LOG = get_logging_handle(__name__)
 
 
-def get_projects(name, filter_by, limit, offset, quiet):
+def get_projects(name, filter_by, limit, offset, quiet, out):
     """ Get the projects, optionally filtered by a string """
 
     client = get_api_client()
@@ -39,6 +40,10 @@ def get_projects(name, filter_by, limit, offset, quiet):
     if err:
         pc_ip = config["SERVER"]["pc_ip"]
         LOG.warning("Cannot fetch projects from {}".format(pc_ip))
+        return
+
+    if out == "json":
+        click.echo(json.dumps(res.json(), indent=4, separators=(",", ": ")))
         return
 
     json_rows = res.json()["entities"]
@@ -250,7 +255,7 @@ def describe_project(project_name):
         else:
             account_uuid_name_map[v] = k
 
-    res, err = client.account.list()
+    res, err = client.account.list(payload)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 

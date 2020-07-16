@@ -10,7 +10,8 @@ from collections import OrderedDict
 
 from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.providers import get_provider_interface
-from calm.dsl.tools import StrictDraft7Validator, get_logging_handle
+from calm.dsl.tools import StrictDraft7Validator
+from calm.dsl.log import get_logging_handle
 from calm.dsl.builtins import ref
 from calm.dsl.store import Version
 
@@ -827,7 +828,7 @@ class AhvNew(AhvBase):
             filter_query = filter_query[1:]
 
         params = {"length": limit, "offset": offset, "filter": filter_query}
-        res, err = Obj.list(params)
+        res, err = Obj.list(params, ignore_error=True)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -848,7 +849,7 @@ class AhvNew(AhvBase):
             filter_query = filter_query[1:]
 
         params = {"length": limit, "offset": offset, "filter": filter_query}
-        res, err = Obj.list(params)
+        res, err = Obj.list(params, ignore_error=True)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -923,7 +924,7 @@ class Ahv(AhvBase):
         filter_query = kwargs.get("filter_query", "")
 
         params = {"length": limit, "offset": offset, "filter": filter_query}
-        res, err = Obj.list(params)
+        res, err = Obj.list(params, ignore_error=True)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -937,7 +938,7 @@ class Ahv(AhvBase):
         filter_query = kwargs.get("filter_query", "")
 
         params = {"length": limit, "offset": offset, "filter": filter_query}
-        res, err = Obj.list(params)
+        res, err = Obj.list(params, ignore_error=True)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
