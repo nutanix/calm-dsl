@@ -4,11 +4,10 @@ import json
 import sys
 
 from calm.dsl.config import (
-    init_config,
+    update_config,
     get_default_config_file,
     set_config,
     update_init_config,
-    get_user_config_file,
     get_default_db_file,
     get_default_local_dir,
 )
@@ -189,7 +188,7 @@ def set_server_details(
     update_init_config(config_file=config_file, db_file=db_file, local_dir=local_dir)
 
     LOG.info("Writing config to {}".format(config_file))
-    init_config(host, port, username, password, project_name, log_level)
+    update_config(host, port, username, password, project_name, log_level)
 
     # Update client handle with new settings if no exception occurs
     update_client_handle(host, port, auth=(username, password))
@@ -291,7 +290,7 @@ def init_dsl_runbook(runbook_name, dir_name):
     help="Path to local directory for storing secrets",
 )
 @click.option("--log_level", "-l", default=None, help="Default log level")
-@click.argument("config_file", default=get_user_config_file())
+@click.argument("config_file", required=False)
 def _set_config(
     host,
     port,
