@@ -75,6 +75,7 @@ MacOS:
  - Install [Xcode](https://apps.apple.com/us/app/xcode/id497799835)
  - Install homebrew: `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`.
  - Install python3, git and openssl: `brew install git python3 openssl`.
+ - Install virtualenv: `pip install virtualenv`
  - Add path to flags: `export LDFLAGS="-L$(brew --prefix openssl)/lib"` & `export CFLAGS="-I$(brew --prefix openssl)/include"`.
  - Clone this repo and run: `make dev` from top directory.
  - Getting into virtualenv: `source venv/bin/activate`.
