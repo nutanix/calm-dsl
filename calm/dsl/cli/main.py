@@ -16,7 +16,7 @@ from calm.dsl.tools import (
     show_trace_option,
 )
 from calm.dsl.log import get_logging_handle
-from calm.dsl.config import get_config
+from calm.dsl.config import update_config_file_location
 from calm.dsl.store import Cache
 
 from .version_validator import validate_version
@@ -69,7 +69,7 @@ Commonly used commands:
         LOG.debug("Could not validate version")
         pass
     if config_file:
-        get_config(config_file=config_file)
+        update_config_file_location(config_file=config_file)
     if sync:
         Cache.sync()
 
