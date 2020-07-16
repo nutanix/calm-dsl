@@ -8,7 +8,7 @@ from .projects import (
     update_project,
 )
 from .main import create, get, update, delete, describe
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 from calm.dsl.builtins import read_spec
 
 LOG = get_logging_handle(__name__)

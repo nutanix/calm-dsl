@@ -5,7 +5,7 @@ import click
 
 from calm.dsl.api import get_api_client
 from calm.dsl.config import get_config
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 from .secrets import find_secret, create_secret
 from .utils import highlight_text

@@ -8,7 +8,7 @@ from calm.dsl.cli.projects import (
     poll_updation_status,
     poll_deletion_status,
 )
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 

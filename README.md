@@ -58,6 +58,8 @@ Language design is black art, and building upon a well-established language is d
     - Default values for most of the entities will be shown in decompiled file.
     - Separate files are created under `.local` directory in decompiled blueprint directory for handling secrets used inside blueprints i.e. passwords etc.
     - Separate files are created under `scripts` directory in decompiled blueprint directory for storing scripts used in variable, tasks, guest customization etc.
+    - Provider specs (Other than AHV) / Runtime editables for substrates  are stored in `specs` directory in blueprint directory.
+    - Name of created files are taken from the context of variable/task. For ex: Filename for service action task script: Service_MySQLService_Action___create___Task_Task1
     - Decompile existing server blueprint: `calm decompile bp <bp_name>`. Use `calm decompile bp <bp_name> --with_secrets` to fill the value for secrets used inside blueprint interactively while decompiling blueprint.
     - Decompile bp from existing json file: `calm decompile bp --file <json_file_location>`.
     - Decompile marketplace blueprint: `calm decompile marketplace_bp <bp_name> --version <bp_version>`.

@@ -9,7 +9,7 @@ from calm.dsl.api import get_api_client
 from calm.dsl.config import get_config
 
 from .utils import get_name_query, highlight_text
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
 
 LOG = get_logging_handle(__name__)

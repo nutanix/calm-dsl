@@ -12,10 +12,10 @@ from prettytable import PrettyTable
 from calm.dsl.providers import get_provider, get_provider_types
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.tools import (
-    get_logging_handle,
     simple_verbosity_option,
     show_trace_option,
 )
+from calm.dsl.log import get_logging_handle
 from calm.dsl.config import get_config
 from calm.dsl.store import Cache
 

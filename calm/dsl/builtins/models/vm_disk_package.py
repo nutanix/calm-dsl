@@ -3,7 +3,7 @@ from .provider_spec import read_spec
 from .package import PackageType
 from .validator import PropertyValidator
 from .entity import Entity
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 
 # Downloadable Image

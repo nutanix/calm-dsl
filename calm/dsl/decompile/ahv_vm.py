@@ -2,7 +2,7 @@ from calm.dsl.builtins import AhvVmType
 
 from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.ahv_vm_resources import render_ahv_vm_resources
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
