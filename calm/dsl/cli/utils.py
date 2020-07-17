@@ -1,5 +1,6 @@
 import click
 import sys
+import os
 import importlib.util
 from functools import reduce
 from asciimatics.screen import Screen
@@ -62,7 +63,7 @@ def import_var_from_file(file, var, default_value=None):
 class Display:
     @classmethod
     def wrapper(cls, func, watch=False):
-        if watch:
+        if watch and os.isatty(sys.stdout.fileno()):
             Screen.wrapper(func, height=1000, catch_interrupt=True)
         else:
             func(display)
