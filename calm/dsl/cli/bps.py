@@ -86,7 +86,6 @@ def get_blueprint_list(name, filter_by, limit, offset, quiet, all_items, out):
     table.field_names = [
         "NAME",
         "BLUEPRINT TYPE",
-        "DESCRIPTION",
         "APPLICATION COUNT",
         "PROJECT",
         "STATE",
@@ -118,7 +117,6 @@ def get_blueprint_list(name, filter_by, limit, offset, quiet, all_items, out):
             [
                 highlight_text(row["name"]),
                 highlight_text(bp_type),
-                highlight_text(row["description"]),
                 highlight_text(row["application_count"]),
                 highlight_text(project),
                 highlight_text(row["state"]),
