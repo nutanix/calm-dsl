@@ -27,7 +27,7 @@ class PyTest(TestCommand):
 
 setuptools.setup(
     name="calm.dsl",
-    version="3.0.0-alpha",
+    version=read_file("CalmVersion"),
     author="Nutanix",
     author_email="nucalm@nutanix.com",
     description="Calm DSL for blueprints",
