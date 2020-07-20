@@ -68,6 +68,9 @@ from .models.client_attrs import (
     update_dsl_metadata_map,
 )
 
+from .models.providers import Provider
+
+
 __all__ = [
     "Ref",
     "ref",
@@ -151,4 +154,5 @@ __all__ = [
     "init_dsl_metadata_map",
     "get_dsl_metadata_map",
     "update_dsl_metadata_map",
+    "Provider",
 ]

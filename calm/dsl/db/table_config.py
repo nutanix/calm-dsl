@@ -397,6 +397,109 @@ class AhvImagesCache(CacheTableBase):
         primary_key = CompositeKey("name", "uuid")
 
 
+class AccountCache(CacheTableBase):
+    __cache_type__ = "account"
+    name = CharField()
+    uuid = CharField()
+    provider_type = CharField()
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self, *args, **kwargs):
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "provider_type": self.provider_type,
+            "last_update_time": self.last_update_time,
+        }
+
+    @classmethod
+    def clear(cls):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = [
+            "NAME",
+            "provider_type",
+            "UUID",
+            "LAST UPDATED",
+        ]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["provider_type"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        provider_type = kwargs.get("provider_type", "")
+        if not provider_type:
+            LOG.error("Provider type not supplied for fetching user {}".format(name))
+            sys.exit(-1)
+
+        super().create(name=name, uuid=uuid, provider_type=provider_type)
+
+    @classmethod
+    def sync(cls):
+        """sync the table from server"""
+
+        # clear old data
+        cls.clear()
+
+        client = get_api_client()
+        payload = {"length": 250, "filter": "state==VERIFIED;type!=nutanix"}
+        res, err = client.account.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        for entity in res["entities"]:
+            cls.create_entry(
+                name=entity["status"]["name"],
+                uuid=entity["metadata"]["uuid"],
+                provider_type=entity["status"]["resources"]["type"],
+            )
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        try:
+            entity = super().get(cls.name == name)
+            return entity.get_detail_dict()
+        except DoesNotExist:
+            return None
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
+        try:
+            entity = super().get(cls.uuid == uuid)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return None
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("name", "uuid")
+
+
 class ProjectCache(CacheTableBase):
     __cache_type__ = "project"
     name = CharField()
