@@ -17,39 +17,39 @@ Language design is black art, and building upon a well-established language is d
  - Server status: `calm get server status`. Check if Calm is enabled on PC & Calm version is >=2.9.7.
  - Config: `calm show config`. Check if you have the right config. By default, config is stored at `~/.calm/config.ini`. Please see `calm set config --help` for details to update config.
 
-    ### Blueprint
-     - First blueprint: `calm init bp`. This will create a folder `HelloBlueprint` with all the necessary files. `HelloBlueprint/blueprint.py` is the main blueprint DSL file. Please read the comments in the beginning of the file for more details about the blueprint.
-     - Compile blueprint: `calm compile bp --file HelloBlueprint/blueprint.py`. This command will print the compiled blueprint JSON.
-     - Create blueprint on Calm Server: `calm create bp --file HelloBlueprint/blueprint.py --name <blueprint_name>`. Please use a unique name for `<blueprint_name>`.
-     - List blueprints: `calm get bps`. You can also pass in filters like `calm get bps --name <blueprint_name>` and so on. Please look at `calm get bps --help`.
-     - Describe blueprint: `calm describe bp <blueprint_name>`. It will print a summary of the blueprint.
-     - Launch blueprint to create Application: `calm launch bp <blueprint_name> --app_name <app_name> -i`
+### Blueprint
+ - First blueprint: `calm init bp`. This will create a folder `HelloBlueprint` with all the necessary files. `HelloBlueprint/blueprint.py` is the main blueprint DSL file. Please read the comments in the beginning of the file for more details about the blueprint.
+ - Compile blueprint: `calm compile bp --file HelloBlueprint/blueprint.py`. This command will print the compiled blueprint JSON.
+ - Create blueprint on Calm Server: `calm create bp --file HelloBlueprint/blueprint.py --name <blueprint_name>`. Please use a unique name for `<blueprint_name>`.
+ - List blueprints: `calm get bps`. You can also pass in filters like `calm get bps --name <blueprint_name>` and so on. Please look at `calm get bps --help`.
+ - Describe blueprint: `calm describe bp <blueprint_name>`. It will print a summary of the blueprint.
+ - Launch blueprint to create Application: `calm launch bp <blueprint_name> --app_name <app_name> -i`
 
-    ### Application
-     - List apps: `calm get apps`. Use `calm get apps -q` to show only application names.
-     - Describe app: `calm describe app <app_name>`. It will print a summary of the application and the current application state. Use `calm describe app <name> 2>/dev/null --out json | jq '.["status"]'` to get fields from the app json. More info on how to use `jq` [here](https://stedolan.github.io/jq/tutorial/).
-     - Delete app: `calm delete app <app_name>`. You can delete multiple apps using: `calm get apps -q | xargs -I {} calm delete app {}`.
-     - Run action on application: `calm run action <action_name> --app <application_name>`
-     - Start an application: `calm start app <app_name>`
-     - Stop an application: `calm stop app <app_name>`
-     - Restart an application: `calm restart app <app_name>`
-     - Display app action runlogs: `calm watch app <app_name>`
-     - Watch app action runlog: `calm watch action_runlog <runlog_uuid> --app <application_name>`
-     - Download app action runlogs: `calm download action_runlog <runlog_uuid> --app <application_name> --file <file_name>`
+### Application
+ - List apps: `calm get apps`. Use `calm get apps -q` to show only application names.
+ - Describe app: `calm describe app <app_name>`. It will print a summary of the application and the current application state. Use `calm describe app <name> 2>/dev/null --out json | jq '.["status"]'` to get fields from the app json. More info on how to use `jq` [here](https://stedolan.github.io/jq/tutorial/).
+ - Delete app: `calm delete app <app_name>`. You can delete multiple apps using: `calm get apps -q | xargs -I {} calm delete app {}`.
+ - Run action on application: `calm run action <action_name> --app <application_name>`
+ - Start an application: `calm start app <app_name>`
+ - Stop an application: `calm stop app <app_name>`
+ - Restart an application: `calm restart app <app_name>`
+ - Display app action runlogs: `calm watch app <app_name>`
+ - Watch app action runlog: `calm watch action_runlog <runlog_uuid> --app <application_name>`
+ - Download app action runlogs: `calm download action_runlog <runlog_uuid> --app <application_name> --file <file_name>`
 
-    ### Decompile
-    Decompilation is process to consume json data for any entity and convert it back to dsl python helpers/classes. Currently decompile is supported for converting blueprint json to python files. Summary of support for blueprint decompilation(Experimental feature):
-    - Python helpers/classes are automatically generated with the use of jinja templates.
-    - Generated python file is formatted using [black](https://github.com/psf/black)
-    - Default values for most of the entities will be shown in decompiled file.
-    - Separate files are created under `.local` directory in decompiled blueprint directory for handling secrets used inside blueprints i.e. passwords etc.
-    - Separate files are created under `scripts` directory in decompiled blueprint directory for storing scripts used in variable, tasks, guest customization etc.
-    - Provider specs (Other than AHV) / Runtime editables for substrates  are stored in `specs` directory in blueprint directory.
-    - Name of created files are taken from the context of variable/task. For ex: Filename for service action task script: Service_MySQLService_Action___create___Task_Task1
-    - Decompile existing server blueprint: `calm decompile bp <bp_name>`. Use `calm decompile bp <bp_name> --with_secrets` to fill the value for secrets used inside blueprint interactively while decompiling blueprint.
-    - Decompile bp from existing json file: `calm decompile bp --file <json_file_location>`.
-    - Decompile marketplace blueprint: `calm decompile marketplace_bp <bp_name> --version <bp_version>`.
-    - Note: Decompliation support for providers other than AHV are best effort(Experimental).
+### Decompile
+Decompilation is process to consume json data for any entity and convert it back to dsl python helpers/classes. Currently decompile is supported for converting blueprint json to python files. Summary of support for blueprint decompilation(Experimental feature):
+- Python helpers/classes are automatically generated with the use of jinja templates.
+- Generated python file is formatted using [black](https://github.com/psf/black)
+- Default values for most of the entities will be shown in decompiled file.
+- Separate files are created under `.local` directory in decompiled blueprint directory for handling secrets used inside blueprints i.e. passwords etc.
+- Separate files are created under `scripts` directory in decompiled blueprint directory for storing scripts used in variable, tasks, guest customization etc.
+- Provider specs (Other than AHV) / Runtime editables for substrates  are stored in `specs` directory in blueprint directory.
+- Name of created files are taken from the context of variable/task. For ex: Filename for service action task script: Service_MySQLService_Action___create___Task_Task1
+- Decompile existing server blueprint: `calm decompile bp <bp_name>`. Use `calm decompile bp <bp_name> --with_secrets` to fill the value for secrets used inside blueprint interactively while decompiling blueprint.
+- Decompile bp from existing json file: `calm decompile bp --file <json_file_location>`.
+- Decompile marketplace blueprint: `calm decompile marketplace_bp <bp_name> --version <bp_version>`.
+- Note: Decompliation support for providers other than AHV are best effort(Experimental).
 
 ## Docker
  - Latest image: `docker pull ntnx/calm-dsl`
