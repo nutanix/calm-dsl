@@ -3,12 +3,13 @@ import click
 import arrow
 import json
 from prettytable import PrettyTable
+from ruamel import yaml
 
-from calm.dsl.builtins import ProjectValidator
+from calm.dsl.builtins import ProjectValidator, create_project_payload, AhvProject
 from calm.dsl.api import get_api_client
 from calm.dsl.config import get_config
 
-from .utils import get_name_query, highlight_text
+from .utils import get_name_query, get_module_from_file, highlight_text
 from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
 
@@ -135,6 +136,69 @@ def delete_project(project_names):
         LOG.info("Project {} deleted".format(project_name))
 
 
+def get_project_module_from_file(project_file):
+    """Returns Project module given a user project dsl file (.py)"""
+    return get_module_from_file("calm.dsl.user_project", project_file)
+
+
+def get_project_class_from_module(user_project_module):
+    """Returns project class given a module"""
+
+    UserProject = None
+    for item in dir(user_project_module):
+        obj = getattr(user_project_module, item)
+        if isinstance(obj, type(AhvProject)):
+            if obj.__bases__[0] == AhvProject:
+                UserProject = obj
+
+    return UserProject
+
+
+def compile_project(project_file):
+
+    user_project_module = get_project_module_from_file(project_file)
+    UserProject = get_project_class_from_module(user_project_module)
+    if UserProject is None:
+        return None
+
+    project_payload = None
+    UserProjectPayload, _ = create_project_payload(UserProject)
+    project_payload = UserProjectPayload.get_dict()
+
+    return project_payload
+
+
+def create_project_using_dsl_payload(project_payload, name="", description=""):
+
+    client = get_api_client()
+
+    project_payload.pop("status", None)
+
+    if name:
+        project_payload["spec"]["name"] = name
+        project_payload["metadata"]["name"] = name
+
+    if description:
+        project_payload["spec"]["description"] = description
+
+    return client.project.create(project_payload)
+
+
+def compile_project_command(project_file, out):
+
+    project_payload = compile_project(project_file)
+    if project_payload is None:
+        LOG.error("User project not found in {}".format(project_file))
+        return
+
+    if out == "json":
+        click.echo(json.dumps(project_payload, indent=4, separators=(",", ": ")))
+    elif out == "yaml":
+        click.echo(yaml.dump(project_payload, default_flow_style=False))
+    else:
+        LOG.error("Unknown output format {} given".format(out))
+
+
 def create_project(payload):
 
     name = payload["project_detail"]["name"]
@@ -165,7 +229,7 @@ def create_project(payload):
         "spec": payload,
     }
 
-    return client.project.create(payload)
+    return client.project.create_internal(payload)
 
 
 def describe_project(project_name):

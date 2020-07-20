@@ -69,6 +69,7 @@ from .models.client_attrs import (
 )
 
 from .models.providers import Provider
+from .models.project_payload import create_project_payload
 
 
 __all__ = [
@@ -155,4 +156,5 @@ __all__ = [
     "get_dsl_metadata_map",
     "update_dsl_metadata_map",
     "Provider",
+    "create_project_payload",
 ]

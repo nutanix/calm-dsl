@@ -46,7 +46,7 @@ class TestProjects:
         payload["spec"]["project_detail"]["name"] = project_name
 
         LOG.info("Creating project {}".format(project_name))
-        res, err = client.project.create(payload)
+        res, err = client.project.create_internal(payload)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 

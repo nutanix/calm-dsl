@@ -31,21 +31,6 @@ properties:
     type: array
     items:
       {{ ProviderData() | indent(6) }}
-  resource_domain:
-    type: object
-    x-calm-dsl-type: object
-    x-calm-dsl-display-name: resources
-    properties:
-      resources:
-        type: array
-        items:
-          type: object
-          x-calm-dsl-type: object
-          properties:
-            limit:
-              type: integer
-            resource_type:
-              type: string
 
 {%- endmacro %}
 

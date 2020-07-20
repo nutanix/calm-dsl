@@ -12,11 +12,3 @@ class AbhiProject(AhvProject):
         Provider.Vmware(name="VMWARE account"),
         Provider.K8s(name="K8S_account_basic_auth"),
     ]
-
-
-def main():
-    print(AbhiProject.json_dumps(pprint=True))
-
-
-if __name__ == "__main__":
-    main()
