@@ -17,7 +17,7 @@ Language design is black art, and building upon a well-established language is d
  - Server status: `calm get server status`. Check if Calm is enabled on PC & Calm version is >=2.9.7.
  - Config: `calm show config`. Check if you have the right config. By default, config is stored at `~/.calm/config.ini`. Please see `calm set config --help` for details to update config.
 
-### Blueprint
+## Blueprint
  - First blueprint: `calm init bp`. This will create a folder `HelloBlueprint` with all the necessary files. `HelloBlueprint/blueprint.py` is the main blueprint DSL file. Please read the comments in the beginning of the file for more details about the blueprint.
  - Compile blueprint: `calm compile bp --file HelloBlueprint/blueprint.py`. This command will print the compiled blueprint JSON.
  - Create blueprint on Calm Server: `calm create bp --file HelloBlueprint/blueprint.py --name <blueprint_name>`. Please use a unique name for `<blueprint_name>`.
@@ -25,7 +25,7 @@ Language design is black art, and building upon a well-established language is d
  - Describe blueprint: `calm describe bp <blueprint_name>`. It will print a summary of the blueprint.
  - Launch blueprint to create Application: `calm launch bp <blueprint_name> --app_name <app_name> -i`
 
-### Application
+## Application
  - List apps: `calm get apps`. Use `calm get apps -q` to show only application names.
  - Describe app: `calm describe app <app_name>`. It will print a summary of the application and the current application state. Use `calm describe app <name> 2>/dev/null --out json | jq '.["status"]'` to get fields from the app json. More info on how to use `jq` [here](https://stedolan.github.io/jq/tutorial/).
  - Delete app: `calm delete app <app_name>`. You can delete multiple apps using: `calm get apps -q | xargs -I {} calm delete app {}`.
@@ -37,7 +37,7 @@ Language design is black art, and building upon a well-established language is d
  - Watch app action runlog: `calm watch action_runlog <runlog_uuid> --app <application_name>`
  - Download app action runlogs: `calm download action_runlog <runlog_uuid> --app <application_name> --file <file_name>`
 
-### Decompile
+## Decompile
 Decompilation is process to consume json data for any entity and convert it back to dsl python helpers/classes. Currently decompile is supported for converting blueprint json to python files. Summary of support for blueprint decompilation(Experimental feature):
 - Python helpers/classes are automatically generated with the use of jinja templates.
 - Generated python file is formatted using [black](https://github.com/psf/black)
