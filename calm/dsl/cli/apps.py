@@ -503,11 +503,12 @@ def watch_app(app_name, screen, app=None):
                     if state not in RUNLOG.TERMINAL_STATES:
                         is_complete = False
 
-            if not msg:
-                msg = "Action ran successfully."
+            if is_complete:
+                if not msg:
+                    msg = "Action ran successfully."
 
-            if os.isatty(sys.stdout.fileno()):
-                msg += " Exit screen? "
+                if os.isatty(sys.stdout.fileno()):
+                    msg += " Exit screen? "
             if not is_app_describe:
                 screen.print_at(msg, 0, line)
                 screen.refresh()
