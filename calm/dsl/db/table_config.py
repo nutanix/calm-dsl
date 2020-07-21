@@ -5,6 +5,7 @@ from peewee import (
     BlobField,
     DateTimeField,
     ForeignKeyField,
+    BooleanField,
     CompositeKey,
     DoesNotExist,
 )
@@ -402,6 +403,7 @@ class AccountCache(CacheTableBase):
     name = CharField()
     uuid = CharField()
     provider_type = CharField()
+    is_host = BooleanField(default=False)  # Used for Ntnx accounts only
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
     def get_detail_dict(self, *args, **kwargs):
@@ -480,8 +482,14 @@ class AccountCache(CacheTableBase):
 
     @classmethod
     def get_entity_data(cls, name, **kwargs):
+        provider_type = kwargs.get("provider_type", "")
         try:
-            entity = super().get(cls.name == name)
+            if provider_type:
+                entity = super().get(
+                    cls.name == name, cls.provider_type == provider_type
+                )
+            else:
+                entity = super().get(cls.name == name)
             return entity.get_detail_dict()
         except DoesNotExist:
             return None

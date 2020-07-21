@@ -16,6 +16,40 @@ properties:
         type: string
       uuid:
         type: string
+  subnet_reference_list:
+    type: array
+    items:
+      type: object
+      x-calm-dsl-type: object
+      properties:
+        kind:
+          type: string
+        name:
+          type: string
+        uuid:
+          type: string
+  external_network_list:
+    type: array
+    items:
+      type: object
+      x-calm-dsl-type: object
+      properties:
+        kind:
+          type: string
+        name:
+          type: string
+        uuid:
+          type: string   
+  default_subnet_reference:
+    type: object
+    x-calm-dsl-type: object
+    properties:
+      kind:
+        type: string
+      name:
+        type: string
+      uuid:
+        type: string
   
 {%- endmacro %}
 
