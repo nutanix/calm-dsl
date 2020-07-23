@@ -12,8 +12,6 @@ from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.providers import get_provider_interface
 from calm.dsl.tools import StrictDraft7Validator
 from calm.dsl.log import get_logging_handle
-from calm.dsl.builtins import ref
-from calm.dsl.store import Version
 
 from .constants import AHV as AhvConstants
 
@@ -58,7 +56,7 @@ class AhvVmProvider(Provider):
                 raise TypeError("image type mismatch in disk {}".format(disk_ind))
 
             # Set the reference of this disk
-            disk["data_source_reference"] = ref(img_cls).compile()
+            disk["data_source_reference"] = img_cls.get_ref().compile()
 
     @classmethod
     def get_runtime_editables(
@@ -747,6 +745,8 @@ class AhvVmProvider(Provider):
         """returns object to call ahv provider specific apis"""
 
         client = get_api_client()
+        # TODO remove this mess
+        from calm.dsl.store.version import Version
         calm_version = Version.get_version("Calm")
         api_handlers = AhvBase.api_handlers
 

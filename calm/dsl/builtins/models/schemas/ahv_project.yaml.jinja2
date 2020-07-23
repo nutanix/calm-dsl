@@ -62,6 +62,7 @@ type: object
 x-calm-dsl-type: app_ahv_project
 properties:
   provider_list:
+    x-calm-dsl-display-name: providers
     type: array
     items:
       {{ ProviderData() | indent(6) }}
