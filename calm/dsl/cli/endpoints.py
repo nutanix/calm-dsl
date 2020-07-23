@@ -13,7 +13,7 @@ from calm.dsl.runbooks import Endpoint, create_endpoint_payload
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
 
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 from .utils import (
     get_name_query,
