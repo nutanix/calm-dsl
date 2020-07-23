@@ -10,6 +10,7 @@ from .app_icons import AppIconAPI
 from .version import VersionAPI
 from .showback import ShowbackAPI
 from .user import UserAPI
+from .user_group import UserGroupAPI
 
 
 class ClientHandle:
@@ -30,6 +31,7 @@ class ClientHandle:
         self.version = VersionAPI(self.connection)
         self.showback = ShowbackAPI(self.connection)
         self.user = UserAPI(self.connection)
+        self.group = UserGroupAPI(self.connection)
 
 
 _CLIENT_HANDLE = None

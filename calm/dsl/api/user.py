@@ -1,5 +1,4 @@
 from .resource import ResourceAPI
-from .connection import REQUEST
 
 
 class UserAPI(ResourceAPI):
