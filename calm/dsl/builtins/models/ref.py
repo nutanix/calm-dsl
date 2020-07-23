@@ -113,7 +113,7 @@ class Ref:
                 )
 
             return {
-                "kind": "user_group",
+                "kind": "account",
                 "name": name,
                 "uuid": account_cache_data["uuid"],
             }
