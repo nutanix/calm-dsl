@@ -759,7 +759,7 @@ class UsersCache(CacheTableBase):
             directory_service_ref = (
                 directory_service_user.get("directory_service_reference") or dict()
             )
-            directory_service_name = directory_service_ref.get("name", "")
+            directory_service_name = directory_service_ref.get("name", "LOCAL")
 
             if directory_service_name:
                 cls.create_entry(
