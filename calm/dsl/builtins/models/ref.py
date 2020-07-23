@@ -22,7 +22,6 @@ def _ref(**kwargs):
     return RefType(name, bases, kwargs)
 
 
-
 def ref(cls):
 
     if isinstance(cls, RefType):
@@ -34,7 +33,7 @@ def ref(cls):
 class Ref:
     def __new__(cls, *args, **kwargs):
         raise TypeError("'{}' is not callable".format(cls.__name__))
-    
+
     class Subnet:
         def __new__(cls, name, **kwargs):
             cluster = kwargs.get("cluster")
@@ -49,15 +48,13 @@ class Ref:
 
             if not subnet_cache_data:
                 raise Exception(
-                    "AHV Subnet {} not found. Please run: calm update cache".format(name)
+                    "AHV Subnet {} not found. Please run: calm update cache".format(
+                        name
+                    )
                 )
-        
-            return {
-                "kind": "subnet",
-                "name": name,
-                "uuid": subnet_cache_data["uuid"]
-            }
-    
+
+            return {"kind": "subnet", "name": name, "uuid": subnet_cache_data["uuid"]}
+
     class User:
         def __new__(cls, name, **kwargs):
 
@@ -67,20 +64,16 @@ class Ref:
                 entity_type="user",
                 name=name,
                 directory=directory,
-                display_name=display_name
+                display_name=display_name,
             )
 
             if not user_cache_data:
                 raise Exception(
                     "User {} not found. Please run: calm update cache".format(name)
                 )
-            
-            return {
-                "kind": "user",
-                "name": name,
-                "uuid": user_cache_data["uuid"]
-            }
-    
+
+            return {"kind": "user", "name": name, "uuid": user_cache_data["uuid"]}
+
     class Group:
         def __new__(cls, name, **kwargs):
 
@@ -90,16 +83,37 @@ class Ref:
                 entity_type="user_group",
                 name=name,
                 directory=directory,
-                display_name=display_name
+                display_name=display_name,
             )
 
             if not user_group_cache_data:
                 raise Exception(
-                    "User Group {} not found. Please run: calm update cache".format(name)
+                    "User Group {} not found. Please run: calm update cache".format(
+                        name
+                    )
                 )
-            
+
             return {
-                "kind": "user",
+                "kind": "user_group",
                 "name": name,
-                "uuid": user_group_cache_data["uuid"]
+                "uuid": user_group_cache_data["uuid"],
+            }
+
+    class Account:
+        def __new__(cls, name, **kwargs):
+
+            provider_type = kwargs.get("provider_type") or ""
+            account_cache_data = Cache.get_entity_data(
+                entity_type="account", name=name, provider_type=provider_type,
+            )
+
+            if not account_cache_data:
+                raise Exception(
+                    "Account {} not found. Please run: calm update cache".format(name)
+                )
+
+            return {
+                "kind": "user_group",
+                "name": name,
+                "uuid": account_cache_data["uuid"],
             }

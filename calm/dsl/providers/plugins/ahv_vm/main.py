@@ -747,6 +747,7 @@ class AhvVmProvider(Provider):
         client = get_api_client()
         # TODO remove this mess
         from calm.dsl.store.version import Version
+
         calm_version = Version.get_version("Calm")
         api_handlers = AhvBase.api_handlers
 

@@ -66,6 +66,20 @@ properties:
     type: array
     items:
       {{ ProviderData() | indent(6) }}
+  
+  user_reference_list:
+    x-calm-dsl-display-name: users
+    type: array
+    items:
+      type: object
+      x-calm-dsl-type: object
+      properties:
+        kind:
+          type: string
+        name:
+          type: string
+        uuid:
+          type: string
 
 {%- endmacro %}
 

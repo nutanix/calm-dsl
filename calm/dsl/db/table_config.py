@@ -409,6 +409,7 @@ class AccountCache(CacheTableBase):
             "name": self.name,
             "uuid": self.uuid,
             "provider_type": self.provider_type,
+            "is_host": self.is_host,
             "last_update_time": self.last_update_time,
         }
 
@@ -455,7 +456,11 @@ class AccountCache(CacheTableBase):
             LOG.error("Provider type not supplied for fetching user {}".format(name))
             sys.exit(-1)
 
-        super().create(name=name, uuid=uuid, provider_type=provider_type)
+        is_host = kwargs.get("is_host", False)
+
+        super().create(
+            name=name, uuid=uuid, provider_type=provider_type, is_host=is_host
+        )
 
     @classmethod
     def sync(cls):
@@ -472,11 +477,17 @@ class AccountCache(CacheTableBase):
 
         res = res.json()
         for entity in res["entities"]:
-            cls.create_entry(
-                name=entity["status"]["name"],
-                uuid=entity["metadata"]["uuid"],
-                provider_type=entity["status"]["resources"]["type"],
-            )
+            provider_type = entity["status"]["resources"]["type"]
+            query_obj = {
+                "name": entity["status"]["name"],
+                "uuid": entity["metadata"]["uuid"],
+                "provider_type": entity["status"]["resources"]["type"],
+            }
+
+            if provider_type == "nutanix_pc":
+                query_obj["is_host"] = entity["status"]["resources"]["data"]["host_pc"]
+
+            cls.create_entry(**query_obj)
 
     @classmethod
     def get_entity_data(cls, name, **kwargs):
@@ -671,7 +682,7 @@ class UsersCache(CacheTableBase):
             "directory": self.directory,
             "last_update_time": self.last_update_time,
         }
-    
+
     @classmethod
     def clear(cls):
         """removes entire data from table"""
@@ -714,14 +725,16 @@ class UsersCache(CacheTableBase):
     def create_entry(cls, name, uuid, **kwargs):
         directory = kwargs.get("directory", "")
         if not directory:
-            LOG.error("Directory_service not supplied for creating user {}".format(name))
+            LOG.error(
+                "Directory_service not supplied for creating user {}".format(name)
+            )
             sys.exit(-1)
 
         display_name = kwargs.get("display_name") or ""
         super().create(
             name=name, uuid=uuid, directory=directory, display_name=display_name
         )
-    
+
     @classmethod
     def sync(cls):
         """sync the table from server"""
@@ -734,14 +747,18 @@ class UsersCache(CacheTableBase):
         res, err = Obj.list({"length": 1000})
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        
+
         res = res.json()
         for entity in res["entities"]:
             name = entity["status"]["name"]
             uuid = entity["metadata"]["uuid"]
             display_name = entity["status"]["resources"].get("display_name") or ""
-            directory_service_user = entity["status"]["resources"].get("directory_service_user") or dict()
-            directory_service_ref = directory_service_user.get("directory_service_reference") or dict()
+            directory_service_user = (
+                entity["status"]["resources"].get("directory_service_user") or dict()
+            )
+            directory_service_ref = (
+                directory_service_user.get("directory_service_reference") or dict()
+            )
             directory_service_name = directory_service_ref.get("name", "")
 
             if directory_service_name:
@@ -749,20 +766,18 @@ class UsersCache(CacheTableBase):
                     name=name,
                     uuid=uuid,
                     display_name=display_name,
-                    directory=directory_service_name
+                    directory=directory_service_name,
                 )
-    
+
     @classmethod
     def get_entity_data(cls, name, **kwargs):
 
-        query_obj = {
-            "name": name
-        }
+        query_obj = {"name": name}
 
         display_name = kwargs.get("display_name", "")
         if display_name:
             query_obj["display_name"] = display_name
-        
+
         directory = kwargs.get("directory", "")
         if directory:
             query_obj["directory"] = directory
@@ -804,7 +819,7 @@ class UserGroupCache(CacheTableBase):
             "directory": self.directory,
             "last_update_time": self.last_update_time,
         }
-    
+
     @classmethod
     def clear(cls):
         """removes entire data from table"""
@@ -847,14 +862,16 @@ class UserGroupCache(CacheTableBase):
     def create_entry(cls, name, uuid, **kwargs):
         directory = kwargs.get("directory", "")
         if not directory:
-            LOG.error("Directory_service not supplied for creating user {}".format(name))
+            LOG.error(
+                "Directory_service not supplied for creating user {}".format(name)
+            )
             sys.exit(-1)
 
         display_name = kwargs.get("display_name") or ""
         super().create(
             name=name, uuid=uuid, directory=directory, display_name=display_name
         )
-    
+
     @classmethod
     def sync(cls):
         """sync the table from server"""
@@ -867,7 +884,7 @@ class UserGroupCache(CacheTableBase):
         res, err = Obj.list({"length": 1000})
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        
+
         res = res.json()
         for entity in res["entities"]:
             state = entity["status"]["state"]
@@ -876,10 +893,15 @@ class UserGroupCache(CacheTableBase):
 
             e_resources = entity["status"]["resources"]
 
-            directory_service_user_group = e_resources.get("directory_service_user_group") or dict()
+            directory_service_user_group = (
+                e_resources.get("directory_service_user_group") or dict()
+            )
             distinguished_name = directory_service_user_group.get("distinguished_name")
 
-            directory_service_ref = directory_service_user_group.get("directory_service_reference") or dict()
+            directory_service_ref = (
+                directory_service_user_group.get("directory_service_reference")
+                or dict()
+            )
             directory_service_name = directory_service_ref.get("name", "")
 
             display_name = e_resources.get("display_name", "")
@@ -890,20 +912,18 @@ class UserGroupCache(CacheTableBase):
                     name=distinguished_name,
                     uuid=uuid,
                     display_name=display_name,
-                    directory=directory_service_name
+                    directory=directory_service_name,
                 )
-    
+
     @classmethod
     def get_entity_data(cls, name, **kwargs):
 
-        query_obj = {
-            "name": name
-        }
+        query_obj = {"name": name}
 
         display_name = kwargs.get("display_name", "")
         if display_name:
             query_obj["display_name"] = display_name
-        
+
         directory = kwargs.get("directory", "")
         if directory:
             query_obj["directory"] = directory
