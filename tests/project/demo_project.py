@@ -2,16 +2,22 @@ from calm.dsl.builtins import AhvProject
 from calm.dsl.builtins import Provider, Ref
 
 
-class TestDslProject(AhvProject):
-    """Sample DSL Project"""
+ACCOUNT = "NTNX_LOCAL_AZ"
+SUBNET = "vlan.0"
+CLUSTER = "calmdev1"
+USER = "sspuser1@systest.nutanix.com"
+
+
+class TestProject(AhvProject):
+    """Test project"""
 
     providers = [
         Provider.Ntnx(
-            account=Ref.Account("NTNX_LOCAL_AZ"),
-            subnets=[Ref.Subnet(name="vlan.0", cluster="calmdev1")],
-        )
+            account=Ref.Account(ACCOUNT),
+            subnets=[Ref.Subnet(name=SUBNET, cluster=CLUSTER)],
+        ),
     ]
 
     users = [
-        Ref.User(name="sspuser1@systest.nutanix.com"),
+        Ref.User(name=USER),
     ]
