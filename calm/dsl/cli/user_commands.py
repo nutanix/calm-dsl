@@ -14,9 +14,7 @@ from .main import get
 @click.option(
     "--offset", "-o", default=0, help="Offset results by the specified amount"
 )
-@click.option(
-    "--quiet", "-q", is_flag=True, default=False, help="Show only user names"
-)
+@click.option("--quiet", "-q", is_flag=True, default=False, help="Show only user names")
 @click.option(
     "--out",
     "-o",
