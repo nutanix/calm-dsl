@@ -214,23 +214,19 @@ class AhvSubnetsCache(CacheTableBase):
 
     @classmethod
     def get_entity_data(cls, name, **kwargs):
+        query_obj = {"name": name}
         account_uuid = kwargs.get("account_uuid", "")
-        if not account_uuid:
-            LOG.error("Account UUID not supplied for fetching subnet {}".format(name))
-            sys.exit(-1)
+        if account_uuid:
+            query_obj["account_uuid"] = account_uuid
 
         cluster_name = kwargs.get("cluster", "")
+        if cluster_name:
+            query_obj["cluster"] = cluster_name
+
         try:
-            if cluster_name:
-                entity = super().get(
-                    cls.name == name,
-                    cls.cluster == cluster_name,
-                    cls.account_uuid == account_uuid,
-                )
-            else:
-                # The get() method is shorthand for selecting with a limit of 1
-                # If more than one row is found, the first row returned by the database cursor
-                entity = super().get(cls.name == name, cls.account_uuid == account_uuid)
+            # The get() method is shorthand for selecting with a limit of 1
+            # If more than one row is found, the first row returned by the database cursor
+            entity = super().get(**query_obj)
             return entity.get_detail_dict()
 
         except DoesNotExist:
@@ -368,12 +364,14 @@ class AhvImagesCache(CacheTableBase):
             LOG.error("image_type not provided for image {}".format(name))
             sys.exit(-1)
 
+        query_obj = {
+            "name": name,
+            "image_type": image_type,
+            "account_uuid": account_uuid,
+        }
+
         try:
-            entity = super().get(
-                cls.name == name,
-                cls.image_type == image_type,
-                cls.account_uuid == account_uuid,
-            )
+            entity = super().get(**query_obj)
             return entity.get_detail_dict()
 
         except DoesNotExist:
@@ -482,14 +480,16 @@ class AccountCache(CacheTableBase):
 
     @classmethod
     def get_entity_data(cls, name, **kwargs):
+        query_obj = {"name": name}
+
         provider_type = kwargs.get("provider_type", "")
+        if provider_type:
+            query_obj["provider_type"] = provider_type
+
         try:
-            if provider_type:
-                entity = super().get(
-                    cls.name == name, cls.provider_type == provider_type
-                )
-            else:
-                entity = super().get(cls.name == name)
+            # The get() method is shorthand for selecting with a limit of 1
+            # If more than one row is found, the first row returned by the database cursor
+            entity = super().get(**query_obj)
             return entity.get_detail_dict()
         except DoesNotExist:
             return None
@@ -633,8 +633,9 @@ class ProjectCache(CacheTableBase):
 
     @classmethod
     def get_entity_data(cls, name, **kwargs):
+        query_obj = {"name": name}
         try:
-            entity = super().get(cls.name == name)
+            entity = super().get(**query_obj)
             return entity.get_detail_dict()
 
         except DoesNotExist:
