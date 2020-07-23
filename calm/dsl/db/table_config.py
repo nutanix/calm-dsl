@@ -655,6 +655,280 @@ class ProjectCache(CacheTableBase):
         primary_key = CompositeKey("name", "uuid")
 
 
+class UsersCache(CacheTableBase):
+    __cache_type__ = "user"
+    name = CharField()
+    uuid = CharField()
+    display_name = CharField()
+    directory = CharField()
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self, *args, **kwargs):
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "display_name": self.display_name,
+            "directory": self.directory,
+            "last_update_time": self.last_update_time,
+        }
+    
+    @classmethod
+    def clear(cls):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = [
+            "NAME",
+            "DISPLAY_NAME",
+            "UUID",
+            "DIRECTORY",
+            "LAST UPDATED",
+        ]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["display_name"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(entity_data["directory"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        directory = kwargs.get("directory", "")
+        if not directory:
+            LOG.error("Directory_service not supplied for creating user {}".format(name))
+            sys.exit(-1)
+
+        display_name = kwargs.get("display_name") or ""
+        super().create(
+            name=name, uuid=uuid, directory=directory, display_name=display_name
+        )
+    
+    @classmethod
+    def sync(cls):
+        """sync the table from server"""
+
+        # clear old data
+        cls.clear()
+
+        client = get_api_client()
+        Obj = get_resource_api("users", client.connection)
+        res, err = Obj.list({"length": 1000})
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        
+        res = res.json()
+        for entity in res["entities"]:
+            name = entity["status"]["name"]
+            uuid = entity["metadata"]["uuid"]
+            display_name = entity["status"]["resources"].get("display_name") or ""
+            directory_service_user = entity["status"]["resources"].get("directory_service_user") or dict()
+            directory_service_ref = directory_service_user.get("directory_service_reference") or dict()
+            directory_service_name = directory_service_ref.get("name", "")
+
+            if directory_service_name:
+                cls.create_entry(
+                    name=name,
+                    uuid=uuid,
+                    display_name=display_name,
+                    directory=directory_service_name
+                )
+    
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+
+        query_obj = {
+            "name": name
+        }
+
+        display_name = kwargs.get("display_name", "")
+        if display_name:
+            query_obj["display_name"] = display_name
+        
+        directory = kwargs.get("directory", "")
+        if directory:
+            query_obj["directory"] = directory
+
+        try:
+            entity = super().get(**query_obj)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return None
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
+        try:
+            entity = super().get(cls.uuid == uuid)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return None
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("name", "uuid")
+
+
+class UserGroupCache(CacheTableBase):
+    __cache_type__ = "user_group"
+    name = CharField()
+    uuid = CharField()
+    display_name = CharField()
+    directory = CharField()
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self, *args, **kwargs):
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "display_name": self.display_name,
+            "directory": self.directory,
+            "last_update_time": self.last_update_time,
+        }
+    
+    @classmethod
+    def clear(cls):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = [
+            "NAME",
+            "DISPLAY_NAME",
+            "UUID",
+            "DIRECTORY",
+            "LAST UPDATED",
+        ]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["display_name"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(entity_data["directory"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        directory = kwargs.get("directory", "")
+        if not directory:
+            LOG.error("Directory_service not supplied for creating user {}".format(name))
+            sys.exit(-1)
+
+        display_name = kwargs.get("display_name") or ""
+        super().create(
+            name=name, uuid=uuid, directory=directory, display_name=display_name
+        )
+    
+    @classmethod
+    def sync(cls):
+        """sync the table from server"""
+
+        # clear old data
+        cls.clear()
+
+        client = get_api_client()
+        Obj = get_resource_api("user_groups", client.connection)
+        res, err = Obj.list({"length": 1000})
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        
+        res = res.json()
+        for entity in res["entities"]:
+            state = entity["status"]["state"]
+            if state != "COMPLETE":
+                continue
+
+            e_resources = entity["status"]["resources"]
+
+            directory_service_user_group = e_resources.get("directory_service_user_group") or dict()
+            distinguished_name = directory_service_user_group.get("distinguished_name")
+
+            directory_service_ref = directory_service_user_group.get("directory_service_reference") or dict()
+            directory_service_name = directory_service_ref.get("name", "")
+
+            display_name = e_resources.get("display_name", "")
+            uuid = entity["metadata"]["uuid"]
+
+            if directory_service_name and distinguished_name:
+                cls.create_entry(
+                    name=distinguished_name,
+                    uuid=uuid,
+                    display_name=display_name,
+                    directory=directory_service_name
+                )
+    
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+
+        query_obj = {
+            "name": name
+        }
+
+        display_name = kwargs.get("display_name", "")
+        if display_name:
+            query_obj["display_name"] = display_name
+        
+        directory = kwargs.get("directory", "")
+        if directory:
+            query_obj["directory"] = directory
+
+        try:
+            entity = super().get(**query_obj)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return None
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
+        try:
+            entity = super().get(cls.uuid == uuid)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return None
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("name", "uuid")
+
+
 class AhvNetworkFunctionChain(CacheTableBase):
     __cache_type__ = "ahv_network_function_chain"
     name = CharField()
