@@ -135,10 +135,18 @@ def _delete_project(project_names):
 
 @describe.command("project")
 @click.argument("project_name")
-def _describe_project(project_name):
+@click.option(
+    "--out",
+    "-o",
+    "out",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="output format",
+)
+def _describe_project(project_name, out):
     """Describe a project"""
 
-    describe_project(project_name)
+    describe_project(project_name, out)
 
 
 @update.command("project")

@@ -232,10 +232,14 @@ def create_project(payload):
     return client.project.create_internal(payload)
 
 
-def describe_project(project_name):
+def describe_project(project_name, out):
 
     client = get_api_client()
     project = get_project(client, project_name)
+
+    if out == "json":
+        click.echo(json.dumps(project, indent=4, separators=(",", ": ")))
+        return
 
     click.echo("\n----Project Summary----\n")
     click.echo(
