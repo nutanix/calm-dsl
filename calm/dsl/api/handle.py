@@ -12,6 +12,7 @@ from .showback import ShowbackAPI
 from .user import UserAPI
 from .user_group import UserGroupAPI
 from .role import RoleAPI
+from .directory_service import DirectoryServiceAPI
 
 
 class ClientHandle:
@@ -34,6 +35,7 @@ class ClientHandle:
         self.user = UserAPI(self.connection)
         self.group = UserGroupAPI(self.connection)
         self.role = RoleAPI(self.connection)
+        self.directory_service = DirectoryServiceAPI(self.connection)
 
 
 _CLIENT_HANDLE = None
