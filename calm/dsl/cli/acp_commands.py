@@ -1,8 +1,8 @@
 import click
 import json
 
-from .acps import get_acps
-from .main import get
+from .acps import get_acps, create_acp, get_system_roles
+from .main import get, create
 
 
 @get.command("acps")
@@ -27,3 +27,20 @@ def _get_acps(name, filter_by, limit, offset, quiet, out):
     """Get acps, optionally filtered by a string"""
 
     get_acps(name, filter_by, limit, offset, quiet, out)
+
+
+@create.command("acp")
+@click.option(
+    "--role",
+    "-r",
+    required=True,
+    type=click.Choice(get_system_roles()),
+    help="ACP role",
+)
+@click.option("--project", "-p", required=True, help="ACP project name")
+@click.option("--user", "-u", multiple=True, default=[])
+@click.option("--group", "-g", multiple=True, default=[])
+@click.option("--name", "-name", default=None)
+def _create_acp(role, project, user, group, name):
+
+    create_acp(role, project, user, group, name)

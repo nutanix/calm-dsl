@@ -117,3 +117,31 @@ class Ref:
                 "name": name,
                 "uuid": account_cache_data["uuid"],
             }
+
+    class Role:
+        def __new__(cls, name, **kwargs):
+
+            role_cache_data = Cache.get_entity_data(entity_type="role", name=name)
+            if not role_cache_data:
+                raise Exception(
+                    "Role {} not found. Please run: calm update cache".format(name)
+                )
+            return {
+                "kind": "role",
+                "name": name,
+                "uuid": role_cache_data["uuid"],
+            }
+
+    class Project:
+        def __new__(cls, name, **kwargs):
+
+            project_cache_data = Cache.get_entity_data(entity_type="project", name=name)
+            if not project_cache_data:
+                raise Exception(
+                    "Project {} not found. Please run: calm update cache".format(name)
+                )
+            return {
+                "kind": "project",
+                "name": name,
+                "uuid": project_cache_data["uuid"],
+            }

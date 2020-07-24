@@ -108,6 +108,9 @@ class AhvSubnetsCache(CacheTableBase):
     uuid = CharField()
     cluster = CharField()
     account_uuid = CharField(default="")
+    cluster_uuid = CharField(
+        default=""
+    )  # TODO separate out uuid and create separate table for it
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
     def get_detail_dict(self, *args, **kwargs):
@@ -115,6 +118,7 @@ class AhvSubnetsCache(CacheTableBase):
             "name": self.name,
             "uuid": self.uuid,
             "cluster": self.cluster,
+            "cluster_uuid": self.cluster_uuid,
             "account_uuid": self.account_uuid,
             "last_update_time": self.last_update_time,
         }
@@ -187,9 +191,14 @@ class AhvSubnetsCache(CacheTableBase):
                 uuid = entity["metadata"]["uuid"]
                 cluster_ref = entity["status"]["cluster_reference"]
                 cluster_name = cluster_ref.get("name", "")
+                cluster_uuid = cluster_ref.get("uuid", "")
 
                 cls.create_entry(
-                    name=name, uuid=uuid, cluster=cluster_name, account_uuid=e_uuid
+                    name=name,
+                    uuid=uuid,
+                    cluster=cluster_name,
+                    account_uuid=e_uuid,
+                    cluster_uuid=cluster_uuid,
                 )
 
         # For older version < 2.9.0
@@ -207,9 +216,15 @@ class AhvSubnetsCache(CacheTableBase):
             LOG.error("cluster not supplied for subnet {}".format(name))
             sys.exit(-1)
 
+        cluster_uuid = kwargs.get("cluster_uuid", "")
+
         # store data in table
         super().create(
-            name=name, uuid=uuid, cluster=cluster_name, account_uuid=account_uuid
+            name=name,
+            uuid=uuid,
+            cluster=cluster_name,
+            account_uuid=account_uuid,
+            cluster_uuid=cluster_uuid,
         )
 
     @classmethod
@@ -782,6 +797,103 @@ class UsersCache(CacheTableBase):
         if directory:
             query_obj["directory"] = directory
 
+        try:
+            entity = super().get(**query_obj)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return None
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
+        try:
+            entity = super().get(cls.uuid == uuid)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return None
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("name", "uuid")
+
+
+class RolesCache(CacheTableBase):
+    __cache_type__ = "role"
+    name = CharField()
+    uuid = CharField()
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self, *args, **kwargs):
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "last_update_time": self.last_update_time,
+        }
+
+    @classmethod
+    def clear(cls):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = [
+            "NAME",
+            "UUID",
+            "LAST UPDATED",
+        ]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        super().create(name=name, uuid=uuid)
+
+    @classmethod
+    def sync(cls):
+        """sync the table from server"""
+
+        # clear old data
+        cls.clear()
+
+        client = get_api_client()
+        Obj = get_resource_api("roles", client.connection)
+        res, err = Obj.list({"length": 1000})
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        for entity in res["entities"]:
+            name = entity["status"]["name"]
+            uuid = entity["metadata"]["uuid"]
+            cls.create_entry(
+                name=name, uuid=uuid,
+            )
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+
+        query_obj = {"name": name}
         try:
             entity = super().get(**query_obj)
             return entity.get_detail_dict()
