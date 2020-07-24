@@ -1,8 +1,8 @@
 import click
 import json
 
-from .acps import get_acps, create_acp, get_system_roles
-from .main import get, create
+from .acps import get_acps, create_acp, get_system_roles, delete_acp
+from .main import get, create, delete
 
 
 @get.command("acps")
@@ -44,3 +44,11 @@ def _get_acps(name, filter_by, limit, offset, quiet, out):
 def _create_acp(role, project, user, group, name):
 
     create_acp(role, project, user, group, name)
+
+
+@delete.command("acp")
+@click.argument("acp_names", nargs=-1)
+def _delete_acp(acp_names):
+    """Deletes a blueprint"""
+
+    delete_acp(acp_names)

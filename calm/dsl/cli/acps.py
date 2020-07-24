@@ -216,5 +216,30 @@ def create_acp(role, project, user, group, name):
     if err:
         LOG.error(err)
         sys.exit(-1)
+    
+    res = res.json()
+    stdout_dict = {
+        "name": name,
+        "uuid": res["metadata"]["uuid"],
+        "execution_context": res["status"]["execution_context"]
 
-    print(json.dumps(res.json(), indent=4))
+    }
+
+
+def delete_acp(acp_names):
+
+    client = get_api_client()
+    params = {"length": 1000}
+    acp_name_uuid_map = client.acp.get_name_uuid_map(params)
+
+    for acp in acp_names:
+        acp_uuid = acp_name_uuid_map.get(acp, "")
+        if not acp_uuid:
+            LOG.error("ACP {} doesn't exists". format(acp))
+            sys.exit(-1)
+
+        res, err = client.acp.delete(acp_uuid)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        
+        LOG.info("ACP {} deleted". format(acp))
