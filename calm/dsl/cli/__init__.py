@@ -13,5 +13,6 @@ from .mpis_commands import *  # NoQA
 from .app_icon_commands import *  # NoQA
 from .user_commands import *  # NoQA
 from .group_commands import *  # NoQA
+from .role_commands import *  # NoQA
 
 __all__ = ["main", "get_api_client"]

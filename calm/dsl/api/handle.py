@@ -11,6 +11,7 @@ from .version import VersionAPI
 from .showback import ShowbackAPI
 from .user import UserAPI
 from .user_group import UserGroupAPI
+from .role import RoleAPI
 
 
 class ClientHandle:
@@ -32,6 +33,7 @@ class ClientHandle:
         self.showback = ShowbackAPI(self.connection)
         self.user = UserAPI(self.connection)
         self.group = UserGroupAPI(self.connection)
+        self.role = RoleAPI(self.connection)
 
 
 _CLIENT_HANDLE = None
