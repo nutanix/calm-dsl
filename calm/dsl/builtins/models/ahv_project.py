@@ -54,25 +54,6 @@ class AhvProjectType(EntityType):
 
             cdict["account_reference_list"].append(provider_obj["account_reference"])
 
-        # Extracting user groups from user_reference_list
-        user_references = []
-        user_group_references = []
-        for user in cdict.pop("user_reference_list", []):
-            if user["kind"] == "user":
-                user_references.append(user)
-
-            elif user["kind"] == "user_group":
-                user_group_references.append(user)
-
-            else:
-                LOG.error("Invalid reference object '{}'".format(user["kind"]))
-
-        if user_references:
-            cdict["user_reference_list"] = user_references
-
-        if user_group_references:
-            cdict["external_user_group_reference_list"] = user_group_references
-
         return cdict
 
 

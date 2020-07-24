@@ -80,6 +80,20 @@ properties:
           type: string
         uuid:
           type: string
+  
+  external_user_group_reference_list:
+    x-calm-dsl-display-name: groups
+    type: array
+    items:
+      type: object
+      x-calm-dsl-type: object
+      properties:
+        kind:
+          type: string
+        name:
+          type: string
+        uuid:
+          type: string
 
 {%- endmacro %}
 

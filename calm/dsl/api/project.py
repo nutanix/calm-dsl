@@ -28,3 +28,24 @@ class ProjectAPI(ResourceAPI):
         return self.connection._call(
             self.INTERNAL_ITEM.format(id), verify=False, method=REQUEST.METHOD.GET
         )
+
+    def create(self, payload):
+
+        project_name = payload["spec"].get("name") or payload["metadata"].get("name")
+
+        # check if project with the given name already exists
+        params = {"filter": "name=={}".format(project_name)}
+        res, err = self.list(params=params)
+        if err:
+            return None, err
+
+        response = res.json()
+        entities = response.get("entities", None)
+
+        if entities:
+            err_msg = "Project {} already exists.".format(project_name)
+
+            err = {"error": err_msg, "code": -1}
+            return None, err
+
+        return super().create(payload)

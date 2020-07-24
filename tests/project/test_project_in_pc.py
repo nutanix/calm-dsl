@@ -19,5 +19,8 @@ class TestDslProject(AhvProject):
 
     users = [
         Ref.User(name="sspuser1@systest.nutanix.com"),
+    ]
+
+    groups = [
         Ref.Group(name="cn=sspgroup1,ou=pc,dc=systest,dc=nutanix,dc=com"),
     ]

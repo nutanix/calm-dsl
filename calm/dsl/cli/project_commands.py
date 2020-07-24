@@ -1,5 +1,6 @@
 import click
 import json
+import sys
 
 from .projects import (
     get_projects,
@@ -103,16 +104,15 @@ def _compile_project_command(project_file, out):
 def _create_project(project_file, project_name):
     """Creates a project"""
 
-    if project_file.endswith(".json") or project_file.endswith(".yaml"):
-        res, err = create_project_from_json(project_file, project_name)
-    elif project_file.endswith(".py"):
+    if project_file.endswith(".py"):
         res, err = create_project_from_dsl(project_file, project_name)
     else:
         LOG.error("Unknown file format")
         return
 
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.error(err["error"])
+        sys.exit(-1)
 
     project = res.json()
     LOG.info("Project creation triggered successfully")
