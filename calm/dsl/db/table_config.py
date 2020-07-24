@@ -915,6 +915,103 @@ class RolesCache(CacheTableBase):
         primary_key = CompositeKey("name", "uuid")
 
 
+class DirectoryServiceCache(CacheTableBase):
+    __cache_type__ = "directory_service"
+    name = CharField()
+    uuid = CharField()
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self, *args, **kwargs):
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "last_update_time": self.last_update_time,
+        }
+
+    @classmethod
+    def clear(cls):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = [
+            "NAME",
+            "UUID",
+            "LAST UPDATED",
+        ]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        super().create(name=name, uuid=uuid)
+
+    @classmethod
+    def sync(cls):
+        """sync the table from server"""
+
+        # clear old data
+        cls.clear()
+
+        client = get_api_client()
+        Obj = get_resource_api("directory_services", client.connection)
+        res, err = Obj.list({"length": 1000})
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        for entity in res["entities"]:
+            name = entity["status"]["name"]
+            uuid = entity["metadata"]["uuid"]
+            cls.create_entry(
+                name=name, uuid=uuid,
+            )
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+
+        query_obj = {"name": name}
+        try:
+            entity = super().get(**query_obj)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return None
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
+        try:
+            entity = super().get(cls.uuid == uuid)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return None
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("name", "uuid")
+
+
 class UserGroupCache(CacheTableBase):
     __cache_type__ = "user_group"
     name = CharField()

@@ -2,10 +2,12 @@ import time
 import click
 import arrow
 import json
+import sys
 from prettytable import PrettyTable
 
 from calm.dsl.api import get_api_client
 from calm.dsl.config import get_config
+from calm.dsl.builtins import Ref
 from calm.dsl.log import get_logging_handle
 
 from .utils import get_name_query, highlight_text
@@ -78,3 +80,62 @@ def get_users(name, filter_by, limit, offset, quiet, out):
         )
 
     click.echo(table)
+
+
+def create_user(name, directory_service):
+
+    client = get_api_client()
+
+    params = {"length": 1000}
+    user_name_uuid_map = client.user.get_name_uuid_map(params)
+
+    if user_name_uuid_map.get("name"):
+        LOG.error("User with name {} already exists".format(name))
+        sys.exit(-1)
+
+    user_payload = {
+        "spec": {
+            "resources": {
+                "directory_service_user": {
+                    "user_principal_name": name,
+                    "directory_service_reference": Ref.DirectoryService(
+                        directory_service
+                    ),
+                }
+            }
+        },
+        "metadata": {"kind": "user", "spec_version": 0,},
+    }
+
+    res, err = client.user.create(user_payload)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    res = res.json()
+    stdout_dict = {
+        "name": name,
+        "uuid": res["metadata"]["uuid"],
+        "execution_context": res["status"]["execution_context"],
+    }
+    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+
+
+def delete_user(user_names):
+
+    client = get_api_client()
+    params = {"length": 1000}
+    user_name_uuid_map = client.user.get_name_uuid_map(params)
+
+    for name in user_names:
+        user_uuid = user_name_uuid_map.get(name, "")
+        if not user_uuid:
+            LOG.error("User {} doesn't exists".format(name))
+            sys.exit(-1)
+
+        res, err = client.user.delete(user_uuid)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        LOG.info("User {} deleted".format(name))
+    LOG.warning("Please update cache.")

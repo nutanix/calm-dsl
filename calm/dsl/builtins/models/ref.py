@@ -145,3 +145,21 @@ class Ref:
                 "name": name,
                 "uuid": project_cache_data["uuid"],
             }
+
+    class DirectoryService:
+        def __new__(cls, name, **kwargs):
+
+            ds_cache_data = Cache.get_entity_data(
+                entity_type="directory_service", name=name
+            )
+            if not ds_cache_data:
+                raise Exception(
+                    "Directory Service {} not found. Please run: calm update cache".format(
+                        name
+                    )
+                )
+            return {
+                "kind": "directory_service",
+                "name": name,
+                "uuid": ds_cache_data["uuid"],
+            }

@@ -2,9 +2,11 @@ import time
 import click
 import arrow
 import json
+import sys
 from prettytable import PrettyTable
 
 from calm.dsl.api import get_api_client
+from calm.dsl.builtins import Ref
 from calm.dsl.config import get_config
 from calm.dsl.log import get_logging_handle
 
@@ -85,3 +87,41 @@ def get_groups(name, filter_by, limit, offset, quiet, out):
         )
 
     click.echo(table)
+
+
+def create_group(name):
+
+    client = get_api_client()
+    group_payload = {
+        "spec": {
+            "resources": {"directory_service_user_group": {"distinguished_name": name,}}
+        },
+        "metadata": {"kind": "user_group", "spec_version": 0,},
+    }
+
+    res, err = client.group.create(group_payload)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    res = res.json()
+    stdout_dict = {
+        "name": name,
+        "uuid": res["metadata"]["uuid"],
+        "execution_context": res["status"]["execution_context"],
+    }
+    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+
+
+def delete_group(group_names):
+
+    client = get_api_client()
+
+    for name in group_names:
+        group_ref = Ref.Group(name)
+        res, err = client.group.delete(group_ref["uuid"])
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        LOG.info("Group '{}' deleted".format(name))
+    LOG.warning("Please update cache.")

@@ -1,8 +1,8 @@
 import click
 import json
 
-from .groups import get_groups
-from .main import get
+from .groups import get_groups, create_group, delete_group
+from .main import get, create, delete
 
 
 @get.command("groups")
@@ -29,3 +29,18 @@ def _get_groups(name, filter_by, limit, offset, quiet, out):
     """Get groups, optionally filtered by a string"""
 
     get_groups(name, filter_by, limit, offset, quiet, out)
+
+
+@create.command("group")
+@click.option("--name", "-n", required=True, help="Distinguished name of group")
+def _create_group(name):
+
+    create_group(name)
+
+
+@delete.command("group")
+@click.argument("group_names", nargs=-1)
+def _delete_group(group_names):
+    """Deletes a group"""
+
+    delete_group(group_names)

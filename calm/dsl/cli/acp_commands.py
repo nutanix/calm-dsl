@@ -49,6 +49,6 @@ def _create_acp(role, project, user, group, name):
 @delete.command("acp")
 @click.argument("acp_names", nargs=-1)
 def _delete_acp(acp_names):
-    """Deletes a blueprint"""
+    """Deletes a acp"""
 
     delete_acp(acp_names)

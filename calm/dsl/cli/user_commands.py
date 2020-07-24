@@ -1,8 +1,8 @@
 import click
 import json
 
-from .users import get_users
-from .main import get
+from .users import get_users, create_user, delete_user
+from .main import get, create, delete
 
 
 @get.command("users")
@@ -27,3 +27,25 @@ def _get_users(name, filter_by, limit, offset, quiet, out):
     """Get users, optionally filtered by a string"""
 
     get_users(name, filter_by, limit, offset, quiet, out)
+
+
+@create.command("user")
+@click.option("--name", "-n", required=True, help="Principal Name of user")
+@click.option(
+    "--directory",
+    "-d",
+    "directory_service",
+    required=True,
+    help="Directory Service of user",
+)
+def _create_user(name, directory_service):
+
+    create_user(name, directory_service)
+
+
+@delete.command("user")
+@click.argument("user_names", nargs=-1)
+def _delete_user(user_names):
+    """Deletes a user"""
+
+    delete_user(user_names)
