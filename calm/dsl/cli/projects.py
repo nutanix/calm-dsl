@@ -96,7 +96,7 @@ def get_project(client, name):
 
     params = {"filter": "name=={}".format(name)}
 
-    LOG.info("Searcing for the project {}".format(name))
+    LOG.info("Searching for the project {}".format(name))
     res, err = client.project.list(params=params)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
