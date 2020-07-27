@@ -435,6 +435,7 @@ def get_field_values(
     context,
     path=None,
     hide_input=False,
+    prompt=True,
     launch_runtime_vars=None,
     bp_data=None,
 ):
@@ -447,25 +448,22 @@ def get_field_values(
                 path=path + "." + field,
                 bp_data=bp_data,
                 hide_input=hide_input,
+                prompt=prompt,
                 launch_runtime_vars=launch_runtime_vars,
             )
         else:
-            var_data = get_variable_data(
-                bp_data=bp_data,
-                context_data=bp_data,
-                var_context=context,
-                var_name=path,
-            )
-
-            options = var_data.get("options", {})
-            choices = options.get("choices", [])
-
             new_val = None
-            if launch_runtime_vars:
-                new_val = get_val_launch_runtime_var(
-                    launch_runtime_vars, field, path, context
+            if prompt:
+                var_data = get_variable_data(
+                    bp_data=bp_data,
+                    context_data=bp_data,
+                    var_context=context,
+                    var_name=path,
                 )
-            else:
+
+                options = var_data.get("options", {})
+                choices = options.get("choices", [])
+
                 click.echo("")
                 if choices:
                     click.echo("Choose from given choices: ")
@@ -479,6 +477,11 @@ def get_field_values(
                     default=value,
                     show_default=False,
                     hide_input=hide_input,
+                )
+            
+            else:
+                new_val = get_val_launch_runtime_var(
+                    launch_runtime_vars, field, path, context
                 )
 
             if new_val:
@@ -647,11 +650,12 @@ def parse_launch_runtime_vars(launch_params):
         if file_exists(launch_params) and launch_params.endswith(".py"):
             return import_var_from_file(launch_params, "variable_list", [])
         else:
-            LOG.warning(
-                "Invalid launch_params passed! Must be a valid and existing.py file! Ignoring..."
+            LOG.error(
+                "Invalid launch_params passed! Must be a valid and existing.py file!"
             )
+            sys.exit(-1)
     return []
-
+   
 
 def parse_launch_runtime_substrates(launch_params):
     """Returns substrate_list object from launch_params file"""
@@ -660,9 +664,10 @@ def parse_launch_runtime_substrates(launch_params):
         if file_exists(launch_params) and launch_params.endswith(".py"):
             return import_var_from_file(launch_params, "substrate_list", [])
         else:
-            LOG.warning(
-                "Invalid launch_params passed! Must be a valid and existing.py file! Ignoring..."
+            LOG.error(
+                "Invalid launch_params passed! Must be a valid and existing.py file!"
             )
+            sys.exit(-1)
     return []
 
 
@@ -673,9 +678,10 @@ def parse_launch_runtime_deployments(launch_params):
         if file_exists(launch_params) and launch_params.endswith(".py"):
             return import_var_from_file(launch_params, "deployment_list", [])
         else:
-            LOG.warning(
-                "Invalid launch_params passed! Must be a valid and existing.py file! Ignoring..."
+            LOG.error(
+                "Invalid launch_params passed! Must be a valid and existing.py file!"
             )
+            sys.exit(-1)
     return []
 
 
@@ -686,9 +692,10 @@ def parse_launch_runtime_credentials(launch_params):
         if file_exists(launch_params) and launch_params.endswith(".py"):
             return import_var_from_file(launch_params, "credential_list", [])
         else:
-            LOG.warning(
-                "Invalid launch_params passed! Must be a valid and existing.py file! Ignoring..."
+            LOG.error(
+                "Invalid launch_params passed! Must be a valid and existing.py file!"
             )
+            sys.exit(-1)
     return []
 
 
@@ -768,6 +775,7 @@ def launch_blueprint_simple(
         click.echo("Blueprint editables are:\n{}".format(runtime_editables_json))
 
         # Check user input
+        prompt_cli = bool(not launch_params)
         launch_runtime_vars = parse_launch_runtime_vars(launch_params)
         launch_runtime_substrates = parse_launch_runtime_substrates(launch_params)
         launch_runtime_deployments = parse_launch_runtime_deployments(launch_params)
@@ -836,6 +844,7 @@ def launch_blueprint_simple(
                     path=variable.get("name", ""),
                     bp_data=bp_data["status"]["resources"],
                     hide_input=hide_input,
+                    prompt=prompt_cli,
                     launch_runtime_vars=launch_runtime_vars,
                 )
 
