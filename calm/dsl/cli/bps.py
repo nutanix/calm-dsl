@@ -478,7 +478,7 @@ def get_field_values(
                     show_default=False,
                     hide_input=hide_input,
                 )
-            
+
             else:
                 new_val = get_val_launch_runtime_var(
                     launch_runtime_vars, field, path, context
@@ -655,7 +655,7 @@ def parse_launch_runtime_vars(launch_params):
             )
             sys.exit(-1)
     return []
-   
+
 
 def parse_launch_runtime_substrates(launch_params):
     """Returns substrate_list object from launch_params file"""
