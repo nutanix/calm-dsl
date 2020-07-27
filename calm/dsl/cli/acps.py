@@ -6,7 +6,7 @@ import sys
 import uuid
 from prettytable import PrettyTable
 
-from calm.dsl.api import get_api_client
+from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.config import get_config
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Cache
@@ -63,6 +63,8 @@ def get_acps(name, filter_by, limit, offset, quiet, out):
     table.field_names = [
         "NAME",
         "STATE",
+        "REFERENCED_ROLE",
+        "REFERENCED_PROJECT",
         "UUID",
     ]
 
@@ -70,10 +72,18 @@ def get_acps(name, filter_by, limit, offset, quiet, out):
         row = _row["status"]
         metadata = _row["metadata"]
 
+        role_ref = row["resources"].get("role_reference", {})
+        role = role_ref.get("name", "-")
+
+        project_ref = metadata.get("project_reference", {})
+        project_name = project_ref.get("name", "-")
+
         table.add_row(
             [
                 highlight_text(row["name"]),
                 highlight_text(row["state"]),
+                highlight_text(role),
+                highlight_text(project_name),
                 highlight_text(metadata["uuid"]),
             ]
         )
@@ -243,3 +253,61 @@ def delete_acp(acp_names):
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
         LOG.info("ACP {} deleted".format(acp))
+
+
+def delete_acp(acp_names):
+
+    client = get_api_client()
+    params = {"length": 1000}
+    acp_name_uuid_map = client.acp.get_name_uuid_map(params)
+
+    for acp in acp_names:
+        acp_uuid = acp_name_uuid_map.get(acp, "")
+        if not acp_uuid:
+            LOG.error("ACP {} not found.".format(acp))
+            sys.exit(-1)
+
+        if isinstance(acp_uuid, list):
+            for _uuid in acp_uuid:
+                delete_acp_using_projects_internal_api(_uuid)
+        else:
+            delete_acp_using_projects_internal_api(acp_uuid)
+
+        LOG.info("ACP {} deleted".format(acp))
+
+
+def delete_acp_using_projects_internal_api(acp_uuid):
+
+    client = get_api_client()
+    res, err = client.acp.read(acp_uuid)
+    res = res.json()
+
+    metadata = res["metadata"]
+    project_ref = metadata.get("project_reference", {})
+    project_uuid = project_ref.get("uuid")
+
+    if not project_uuid:
+        LOG.warning("No project is referenced to acp (uuid={})".format(acp_uuid))
+        return
+
+    Obj = get_resource_api("projects_internal", client.connection)
+    res, err = Obj.read(project_uuid)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    project_payload = res.json()
+    project_payload.pop("status", None)
+
+    for _row in project_payload["spec"].get("access_control_policy_list", []):
+        if _row["metadata"]["uuid"] == acp_uuid:
+            _row["operation"] = "DELETE"
+        else:
+            _row["operation"] = "UPDATE"
+
+    res, err = client.project.update(project_uuid, project_payload)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    click.echo("Delete action on acp (uuid={}) triggered".format(acp_uuid))
