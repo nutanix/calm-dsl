@@ -150,9 +150,14 @@ class MARKETPLACE_BLUEPRINT:
         LOCAL = "LOCAL"
 
 class TASKS:
-    class TYPES:
+    class TASK_TYPES:
         EXEC = "EXEC"
         SET_VARIABLE = "SET_VARIABLE"
         HTTP = "HTTP"
+    class SCRIPT_TYPES:
+        POWERSHELL = "npsscript"
+        ESCRIPT = "static"
     class STATES:
         ACTIVE = "ACTIVE"
+        DELETED = "DELETED"
+        DRAFT = "DRAFT"

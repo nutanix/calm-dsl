@@ -4,9 +4,11 @@ from calm.dsl.log import get_logging_handle
 
 from .main import (
     get,
+    describe,
 )
 from .tasks import (
     get_tasks_list,
+    describe_task,
 )
 
 LOG = get_logging_handle(__name__)
@@ -31,3 +33,19 @@ def _get_tasks_list(name, filter_by, limit, offset, quiet, all_items):
     """Get the tasks, optionally filtered by a string"""
 
     get_tasks_list(name, filter_by, limit, offset, quiet, all_items)
+
+
+@describe.command("task")
+@click.argument("task_name")
+@click.option(
+    "--out",
+    "-o",
+    "out",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="output format",
+)
+def _describe_task(task_name, out):
+    """Describe a task"""
+
+    describe_task(task_name, out)

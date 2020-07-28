@@ -7,6 +7,6 @@ from .resource import ResourceAPI
 #from .project import ProjectAPI
 
 
-class RunbookAPI(ResourceAPI):
+class TaskAPI(ResourceAPI):
     def __init__(self, connection):
         super().__init__(connection, resource_type="app_tasks")
