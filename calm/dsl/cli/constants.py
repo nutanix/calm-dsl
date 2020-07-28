@@ -148,3 +148,11 @@ class MARKETPLACE_BLUEPRINT:
     class SOURCES:
         GLOBAL = "GLOBAL_STORE"
         LOCAL = "LOCAL"
+
+class TASKS:
+    class TYPES:
+        EXEC = "EXEC"
+        SET_VARIABLE = "SET_VARIABLE"
+        HTTP = "HTTP"
+    class STATES:
+        ACTIVE = "ACTIVE"
