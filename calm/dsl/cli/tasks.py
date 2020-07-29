@@ -1,6 +1,8 @@
+import os
 import json
 import time
 import sys
+import ntpath
 
 import arrow
 import click
@@ -81,7 +83,6 @@ def get_tasks_list(name, filter_by, limit, offset, quiet, all_items):
         projects = []
         for project in row["resources"]["project_reference_list"]:
             projects.append(project["name"])
-        total_runs = int(row.get("run_count", 0)) + int(row.get("running_runs", 0))
 
         table.add_row(
             [
@@ -175,7 +176,7 @@ def get_task(client, name, all=False):
     params = {"filter": "name=={}".format(name)}
     if not all:
         params["filter"] += ";state!=DELETED"
- 
+
     res, err = client.task.list(params=params)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -266,9 +267,7 @@ def create_update_task(client, task_payload, name=None, force_create=None):
     res, err = client.task.create(task_payload)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        LOG.error(
-            "Failed to create Task Library item {}".format(name)
-            )
+        LOG.error("Failed to create Task Library item {}".format(name))
         sys.exit(-1)
 
     return res, err
@@ -318,7 +317,7 @@ def create_task_using_script_file(
         },
         "metadata": {"spec_version": 1, "name": name, "kind": "app_task"},
         "api_version": "3.0",
-        }
+    }
 
     return create_update_task(
         client,
@@ -332,6 +331,9 @@ def create_task(task_file, name, description, force):
     """Creates a task library item"""
 
     client = get_api_client()
+    if not name:
+        task_file_name = ntpath.basename(task_file)
+        name = os.path.splitext(task_file_name.replace(" ", '_'))[0]
 
     if task_file.endswith(".json"):
         res, err = create_task_from_json(

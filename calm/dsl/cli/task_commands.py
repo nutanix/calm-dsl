@@ -15,28 +15,26 @@ from .tasks import (
     create_task,
 )
 
-from .constants import TASKS
-
 LOG = get_logging_handle(__name__)
 
 
 @get.command("tasks", feature_min_version="3.0.0", experimental=True)
-@click.option("--name", "-n", default=None, help="Search for task by name")
+@click.option("--name", "-n", default=None, help="Search for task from task library by name")
 @click.option(
-    "--filter", "filter_by", "-f", default=None, help="Filter tasks by this string"
+    "--filter", "filter_by", "-f", default=None, help="Filter tasks from task library by this string"
 )
 @click.option("--limit", "-l", default=20, help="Number of results to return")
 @click.option(
     "--offset", "-o", default=0, help="Offset results by the specified amount"
 )
 @click.option(
-    "--quiet", "-q", is_flag=True, default=False, help="Show only task names."
+    "--quiet", "-q", is_flag=True, default=False, help="Show only task from task library names."
 )
 @click.option(
     "--all-items", "-a", is_flag=True, help="Get all items, including deleted ones"
 )
 def _get_tasks_list(name, filter_by, limit, offset, quiet, all_items):
-    """Get the tasks, optionally filtered by a string"""
+    """Get the task from task library, optionally filtered by a string"""
 
     get_tasks_list(name, filter_by, limit, offset, quiet, all_items)
 
@@ -52,7 +50,7 @@ def _get_tasks_list(name, filter_by, limit, offset, quiet, all_items):
     help="output format",
 )
 def _describe_task(task_name, out):
-    """Describe a task"""
+    """Describe a task from task library"""
 
     describe_task(task_name, out)
 
@@ -60,7 +58,7 @@ def _describe_task(task_name, out):
 @delete.command("task", feature_min_version="3.0.0", experimental=True)
 @click.argument("task_names", nargs=-1)
 def _delete_task(task_names):
-    """Deletes a task library items"""
+    """Deletes a task from task library"""
 
     delete_task(task_names)
 
@@ -86,6 +84,21 @@ def _delete_task(task_names):
     help="Updates existing task library item with the same name.",
 )
 def _create_task(task_file, name, description, force):
-    """Creates a task library item"""
-    
+
+    """Create task library item.
+
+(-f | --file) supports:\n
+\t.json     - Full json payload download from Calm API (v3 #GET) or using `calm describe <task_name> -o json`\n
+\t.sh       - Shell script file\n
+\t.escript  - Escript file\n
+\t.ps1      - Powershell Script File\n
+
+Note: HTTP tasks is supported only from downloaded .json.
+
+Sample:\n
+calm create bp --name=HTTPGetVM -f HTTPGetVM.json\n
+calm create bp --name="Install IIS" -f Install_IIS.ps1\n
+calm create bp -f Install_Docker.sh
+"""
+
     create_task(task_file, name, description, force)
