@@ -108,7 +108,7 @@ def create_call_rb(runbook, target=None, name=None):
 
 
 def _exec_create(
-    script_type, script=None, filename=None, name=None, target=None, cred=None, depth=2
+    script_type, script=None, filename=None, name=None, target=None, target_endpoint=None, cred=None, depth=2
 ):
     if script is not None and filename is not None:
         raise ValueError(
@@ -138,6 +138,8 @@ def _exec_create(
         kwargs["attrs"]["login_credential_local_reference"] = _get_target_ref(cred)
     if target is not None:
         kwargs["target_any_local_reference"] = _get_target_ref(target)
+    if target_endpoint is not None:
+        kwargs["exec_target_reference"] = _get_target_ref(target_endpoint)
 
     return _task_create(**kwargs)
 
@@ -295,7 +297,7 @@ def meta(name=None, child_tasks=None, edges=None, target=None):
 
 
 def exec_task_ssh(
-    script=None, filename=None, name=None, target=None, cred=None, depth=2
+    script=None, filename=None, name=None, target=None, target_endpoint=None, cred=None, depth=2
 ):
     return _exec_create(
         "sh",
@@ -303,6 +305,7 @@ def exec_task_ssh(
         filename=filename,
         name=name,
         target=target,
+        target_endpoint=target_endpoint,
         cred=cred,
         depth=depth,
     )
@@ -315,12 +318,13 @@ def exec_task_escript(script=None, filename=None, name=None, target=None, depth=
         filename=filename,
         name=name,
         target=target,
+        target_endpoint=None,
         depth=depth,
     )
 
 
 def exec_task_powershell(
-    script=None, filename=None, name=None, target=None, cred=None, depth=2
+    script=None, filename=None, name=None, target=None, target_endpoint=None, cred=None, depth=2
 ):
     return _exec_create(
         "npsscript",
@@ -328,6 +332,7 @@ def exec_task_powershell(
         filename=filename,
         name=name,
         target=target,
+        target_endpoint=target_endpoint,
         cred=cred,
         depth=depth,
     )
@@ -395,6 +400,7 @@ def set_variable_task_ssh(
     filename=None,
     name=None,
     target=None,
+    target_endpoint=None,
     variables=None,
     depth=3,
     cred=None,
@@ -404,6 +410,7 @@ def set_variable_task_ssh(
         filename=filename,
         name=name,
         target=target,
+        target_endpoint=target_endpoint,
         depth=depth,
         cred=cred,
     )
@@ -424,6 +431,7 @@ def set_variable_task_powershell(
     filename=None,
     name=None,
     target=None,
+    target_endpoint=None,
     variables=None,
     depth=3,
     cred=None,
@@ -433,6 +441,7 @@ def set_variable_task_powershell(
         filename=filename,
         name=name,
         target=target,
+        target_endpoint=target_endpoint,
         depth=depth,
         cred=cred,
     )
