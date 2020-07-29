@@ -1,7 +1,7 @@
 from .entity import EntityType
 
 
-# Project
+# Task
 
 
 class TaskType(EntityType):
@@ -12,7 +12,7 @@ class TaskType(EntityType):
 def task(**kwargs):
     name = kwargs.get("name", None)
     bases = ()
-    return ProjectType(name, bases, kwargs)
+    return TaskType(name, bases, kwargs)
 
 
 Task = task()
