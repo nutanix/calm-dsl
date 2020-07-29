@@ -202,3 +202,16 @@ def get_task(client, name, all=False):
     else:
         raise Exception("No task found with name {}".format(name))
     return task
+
+
+def delete_task(task_names):
+
+    client = get_api_client()
+
+    for task_name in task_names:
+        task = get_task(client, task_name)
+        task_id = task["metadata"]["uuid"]
+        res, err = client.task.delete(task_id)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.info("Task Library item {} deleted".format(task_name))

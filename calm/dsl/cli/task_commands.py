@@ -5,10 +5,12 @@ from calm.dsl.log import get_logging_handle
 from .main import (
     get,
     describe,
+    delete,
 )
 from .tasks import (
     get_tasks_list,
     describe_task,
+    delete_task
 )
 
 LOG = get_logging_handle(__name__)
@@ -35,7 +37,7 @@ def _get_tasks_list(name, filter_by, limit, offset, quiet, all_items):
     get_tasks_list(name, filter_by, limit, offset, quiet, all_items)
 
 
-@describe.command("task")
+@describe.command("task", feature_min_version="3.0.0", experimental=True)
 @click.argument("task_name")
 @click.option(
     "--out",
@@ -49,3 +51,11 @@ def _describe_task(task_name, out):
     """Describe a task"""
 
     describe_task(task_name, out)
+
+
+@delete.command("task", feature_min_version="3.0.0", experimental=True)
+@click.argument("task_names", nargs=-1)
+def _delete_task(task_names):
+    """Deletes a task library items"""
+
+    delete_task(task_names)
