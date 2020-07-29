@@ -61,7 +61,6 @@ def get_projects(name, filter_by, limit, offset, quiet, out):
     table = PrettyTable()
     table.field_names = [
         "NAME",
-        "DESCRIPTION",
         "STATE",
         "OWNER",
         "USER COUNT",
@@ -80,7 +79,6 @@ def get_projects(name, filter_by, limit, offset, quiet, out):
         table.add_row(
             [
                 highlight_text(row["name"]),
-                highlight_text(row["description"]),
                 highlight_text(row["state"]),
                 highlight_text(metadata["owner_reference"]["name"]),
                 highlight_text(len(row["resources"]["user_reference_list"])),
