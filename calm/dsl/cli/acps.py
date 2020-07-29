@@ -12,7 +12,7 @@ from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Cache
 from calm.dsl.builtins import Ref
 
-from .constants import ACP, ERGON_TASK
+from .constants import ACP
 from .utils import get_name_query, highlight_text
 
 
