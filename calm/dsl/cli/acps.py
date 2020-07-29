@@ -12,18 +12,28 @@ from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Cache
 from calm.dsl.builtins import Ref
 
-from .constants import ACP
+from .constants import ACP, ERGON_TASK
 from .utils import get_name_query, highlight_text
 
 
 LOG = get_logging_handle(__name__)
 
 
-def get_acps(name, filter_by, limit, offset, quiet, out):
+def get_acps(name, project_name, filter_by, limit, offset, quiet, out):
     """ Get the acps, optionally filtered by a string """
 
     client = get_api_client()
     config = get_config()
+
+    # TODO remove this internal call by projects api
+    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
+    if not project_cache_data:
+        LOG.error(
+            "Project {} not found. Please run: calm update cache".format(project_name)
+        )
+        sys.exit(-1)
+
+    project_uuid = project_cache_data["uuid"]
 
     params = {"length": limit, "offset": offset}
     filter_query = ""
@@ -31,6 +41,8 @@ def get_acps(name, filter_by, limit, offset, quiet, out):
         filter_query = get_name_query([name])
     if filter_by:
         filter_query = filter_query + ";(" + filter_by + ")"
+    if project_uuid:
+        filter_query = filter_query + ";(project_reference=={})".format(project_uuid)
     if filter_query.startswith(";"):
         filter_query = filter_query[1:]
 
@@ -75,9 +87,6 @@ def get_acps(name, filter_by, limit, offset, quiet, out):
         role_ref = row["resources"].get("role_reference", {})
         role = role_ref.get("name", "-")
 
-        project_ref = metadata.get("project_reference", {})
-        project_name = project_ref.get("name", "-")
-
         table.add_row(
             [
                 highlight_text(row["name"]),
@@ -115,6 +124,7 @@ def create_acp(role, project, user, group, name):
         LOG.error("ACP {} already exists.".format(acp_name))
         sys.exit(-1)
 
+    # TODO remove this internal call by projects api
     project_cache_data = Cache.get_entity_data(entity_type="project", name=project)
     if not project_cache_data:
         LOG.error("Project {} not found. Please run: calm update cache".format(project))
@@ -206,7 +216,7 @@ def create_acp(role, project, user, group, name):
         )
 
     acp_payload = {
-        "spec": {
+        "acp": {
             "name": acp_name,
             "resources": {
                 "role_reference": Ref.Role(role),
@@ -215,14 +225,24 @@ def create_acp(role, project, user, group, name):
                 "filter_list": {"context_list": context_list},
             },
         },
-        "metadata": {
-            "kind": "access_control_policy",
-            "spec_version": 0,
-            "project_reference": Ref.Project(project),
-        },
+        "metadata": {"kind": "access_control_policy",},
+        "operation": "ADD",
     }
 
-    res, err = client.acp.create(acp_payload)
+    # Getting the project_internal payload
+    ProjectInternalObj = get_resource_api("projects_internal", client.connection)
+    res, err = ProjectInternalObj.read(project_uuid)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    project_payload = res.json()
+    project_payload.pop("status", None)
+
+    # Appending acp payload to project
+    project_payload["spec"]["access_control_policy_list"].append(acp_payload)
+
+    res, err = ProjectInternalObj.update(project_uuid, project_payload)
     if err:
         LOG.error(err)
         sys.exit(-1)
@@ -230,66 +250,26 @@ def create_acp(role, project, user, group, name):
     res = res.json()
     stdout_dict = {
         "name": acp_name,
-        "uuid": res["metadata"]["uuid"],
         "execution_context": res["status"]["execution_context"],
     }
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
 
-def delete_acp(acp_names):
+def delete_acp(acp_name, project_name):
 
     client = get_api_client()
-    params = {"length": 1000}
-    acp_name_uuid_map = client.acp.get_name_uuid_map(params)
 
-    for acp in acp_names:
-        acp_uuid = acp_name_uuid_map.get(acp, "")
-        if not acp_uuid:
-            LOG.error("ACP {} doesn't exists".format(acp))
-            sys.exit(-1)
+    # TODO remove this internal call by projects api
+    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
+    if not project_cache_data:
+        LOG.error(
+            "Project {} not found. Please run: calm update cache".format(project_name)
+        )
+        sys.exit(-1)
 
-        res, err = client.acp.delete(acp_uuid)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    project_uuid = project_cache_data["uuid"]
 
-        LOG.info("ACP {} deleted".format(acp))
-
-
-def delete_acp(acp_names):
-
-    client = get_api_client()
-    params = {"length": 1000}
-    acp_name_uuid_map = client.acp.get_name_uuid_map(params)
-
-    for acp in acp_names:
-        acp_uuid = acp_name_uuid_map.get(acp, "")
-        if not acp_uuid:
-            LOG.error("ACP {} not found.".format(acp))
-            sys.exit(-1)
-
-        if isinstance(acp_uuid, list):
-            for _uuid in acp_uuid:
-                delete_acp_using_projects_internal_api(_uuid)
-        else:
-            delete_acp_using_projects_internal_api(acp_uuid)
-
-        LOG.info("ACP {} deleted".format(acp))
-
-
-def delete_acp_using_projects_internal_api(acp_uuid):
-
-    client = get_api_client()
-    res, err = client.acp.read(acp_uuid)
-    res = res.json()
-
-    metadata = res["metadata"]
-    project_ref = metadata.get("project_reference", {})
-    project_uuid = project_ref.get("uuid")
-
-    if not project_uuid:
-        LOG.warning("No project is referenced to acp (uuid={})".format(acp_uuid))
-        return
-
+    LOG.info("Fetching project '{}' details".format(project_name))
     Obj = get_resource_api("projects_internal", client.connection)
     res, err = Obj.read(project_uuid)
     if err:
@@ -300,14 +280,107 @@ def delete_acp_using_projects_internal_api(acp_uuid):
     project_payload.pop("status", None)
 
     for _row in project_payload["spec"].get("access_control_policy_list", []):
-        if _row["metadata"]["uuid"] == acp_uuid:
+        if _row["acp"]["name"] == acp_name:
             _row["operation"] = "DELETE"
         else:
             _row["operation"] = "UPDATE"
 
+    LOG.info(
+        "Deleting acp '{}' associated with project '{}'".format(acp_name, project_name)
+    )
     res, err = client.project.update(project_uuid, project_payload)
     if err:
         LOG.error(err)
         sys.exit(-1)
 
-    click.echo("Delete action on acp (uuid={}) triggered".format(acp_uuid))
+    res = res.json()
+    stdout_dict = {
+        "name": acp_name,
+        "execution_context": res["status"]["execution_context"],
+    }
+    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+
+
+def update_acp(acp_name, project_name, users, groups, is_remove_operation=False):
+
+    client = get_api_client()
+
+    # TODO remove this internal call by projects api
+    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
+    if not project_cache_data:
+        LOG.error(
+            "Project {} not found. Please run: calm update cache".format(project_name)
+        )
+        sys.exit(-1)
+
+    project_uuid = project_cache_data["uuid"]
+
+    LOG.info("Fetching project '{}' details".format(project_name))
+    Obj = get_resource_api("projects_internal", client.connection)
+    res, err = Obj.read(project_uuid)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    project_payload = res.json()
+    project_payload.pop("status", None)
+
+    # Flag to checvk whether given acp is present in project or not
+    is_acp_present = False
+    for _row in project_payload["spec"].get("access_control_policy_list", []):
+        _row["operation"] = "UPDATE"
+
+        if _row["acp"]["name"] == acp_name:
+            is_acp_present = True
+            acp_resources = _row["acp"]["resources"]
+            updated_user_reference_list = []
+            updated_group_reference_list = []
+
+            if is_remove_operation:
+                for user in acp_resources.get("user_reference_list", []):
+                    if user["name"] not in users:
+                        updated_user_reference_list.append(user)
+
+                for group in acp_resources.get("user_group_reference_list", []):
+                    if group["name"] not in groups:
+                        updated_group_reference_list.append(group)
+
+            else:
+                updated_user_reference_list = acp_resources.get(
+                    "user_reference_list", []
+                )
+                updated_group_reference_list = acp_resources.get(
+                    "user_group_reference_list", []
+                )
+
+                for user in users:
+                    updated_user_reference_list.append(Ref.User(user))
+
+                for group in groups:
+                    updated_group_reference_list.append(Ref.Group(group))
+
+            acp_resources["user_reference_list"] = updated_user_reference_list
+            acp_resources["user_group_reference_list"] = updated_group_reference_list
+
+    if not is_acp_present:
+        LOG.error(
+            "No ACP with name '{}' exists in project '{}'".format(
+                acp_name, project_name
+            )
+        )
+        sys.exit(-1)
+
+    LOG.info(
+        "Updating acp '{}' associated with project '{}'".format(acp_name, project_name)
+    )
+    res, err = client.project.update(project_uuid, project_payload)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    res = res.json()
+    stdout_dict = {
+        "name": acp_name,
+        "execution_context": res["status"]["execution_context"],
+    }
+    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
