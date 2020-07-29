@@ -1,30 +1,20 @@
 import json
 import time
-# import sys
-# import uuid
-# import pathlib
+import sys
 
-# from ruamel import yaml
 import arrow
 import click
 from prettytable import PrettyTable
-# from black import format_file_in_place, WriteBack, FileMode
 
-# from calm.dsl.runbooks import runbook, create_runbook_payload
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
 from calm.dsl.log import get_logging_handle
-# from calm.dsl.store import Cache
 from .utils import (
-    # Display,
     get_name_query,
     highlight_text,
     get_states_filter,
-    # get_module_from_file,
 )
-from .constants import TASKS  # , RUNLOG
-# from .runlog import get_completion_func, get_runlog_status
-# from .endpoints import get_endpoint
+from .constants import TASKS
 
 # from anytree import NodeMixin, RenderTree
 
@@ -215,3 +205,154 @@ def delete_task(task_names):
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
         LOG.info("Task Library item {} deleted".format(task_name))
+
+
+def create_update_task(client, task_payload, name=None, force_create=None):
+
+    task_payload.pop("status", None)
+    task_payload.get("metadata").pop("uuid", None)
+    task_payload.get("metadata").pop("last_update_time", None)
+    task_payload.get("metadata").pop("owner_reference", None)
+    task_payload.get("metadata").pop("creation_time", None)
+
+    # check if task with the given name already exists
+    params = {"filter": "name=={};state!=DELETED".format(name)}
+    res, err = client.task.list(params=params)
+
+    if err:
+        return None, err
+
+    response = res.json()
+    entities = response.get("entities", None)
+    if entities:
+        if len(entities) > 0:
+            if not force_create:
+                err_msg = "Task Library item {} already exists. Use --force to delete existing task library item before create.".format(
+                    name
+                )
+                # ToDo: Add command to edit Tasks Library
+                err = {"error": err_msg, "code": -1}
+                return None, err
+
+            # --force option used in create. Delete existing task library item with same name.
+            task_uuid = entities[0]["metadata"]["uuid"]
+            _, err = client.task.delete(task_uuid)
+            if err:
+                return None, err
+
+    config = get_config()
+    project_name = config["PROJECT"]["name"]
+
+    # Fetch project details
+    params = {"filter": "name=={}".format(project_name)}
+    res, err = client.project.list(params=params)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    response = res.json()
+    entities = response.get("entities", None)
+    if not entities:
+        raise Exception("No project with name {} exists".format(project_name))
+
+    project_id = entities[0]["metadata"]["uuid"]
+
+    # Setting project reference
+    task_payload["metadata"]["project_reference"] = {
+        "kind": "project",
+        "uuid": project_id,
+        "name": project_name,
+    }
+
+    res, err = client.task.create(task_payload)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.error(
+            "Failed to create Task Library item {}".format(name)
+            )
+        sys.exit(-1)
+
+    return res, err
+
+
+def create_task_from_json(
+    client, path_to_json, name=None, description=None, force_create=False
+):
+
+    with open(path_to_json, "r") as f:
+        task_payload = json.loads(f.read())
+
+    return create_update_task(
+        client,
+        task_payload,
+        name=name,
+        force_create=force_create,
+    )
+
+
+def create_task_using_script_file(
+    client, task_file, script_type, name=None, description=None, force_create=False
+):
+
+    with open(task_file, "r") as f:
+        task_file_content = f.read()
+
+    if task_file_content is None:
+        err_msg = "User task not found in {}".format(task_file)
+        err = {"error": err_msg, "code": -1}
+        return None, err
+
+    task_resources = {
+        "type": "EXEC",
+        "attrs": {
+            "script": task_file_content,
+            "script_type": script_type
+        },
+        "variable_list": []
+    }
+
+    task_payload = {
+        "spec": {
+            "name": name,
+            "description": description or "",
+            "resources": task_resources,
+        },
+        "metadata": {"spec_version": 1, "name": name, "kind": "app_task"},
+        "api_version": "3.0",
+        }
+
+    return create_update_task(
+        client,
+        task_payload,
+        name=name,
+        force_create=force_create,
+    )
+
+
+def create_task(task_file, name, description, force):
+    """Creates a task library item"""
+
+    client = get_api_client()
+
+    if task_file.endswith(".json"):
+        res, err = create_task_from_json(
+            client, task_file, name=name, description=description, force_create=force
+        )
+    elif task_file.endswith(".py") or task_file.endswith(".sh") or task_file.endswith(".escript"):
+        script_type = TASKS.SCRIPT_TYPES.SHELL
+        res, err = create_task_using_script_file(
+            client, task_file, script_type, name=name, description=description, force_create=force
+        )
+    elif task_file.endswith(".ps1"):
+        script_type = TASKS.SCRIPT_TYPES.POWERSHELL
+        res, err = create_task_using_script_file(
+            client, task_file, script_type, name=name, description=description, force_create=force
+        )
+    else:
+        LOG.error("Unknown file format {}".format(task_file))
+        return
+
+    if err:
+        LOG.error(err["error"])
+        return
+
+    LOG.info("Task Library item {} created successfully.".format(name))

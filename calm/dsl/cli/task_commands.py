@@ -6,12 +6,16 @@ from .main import (
     get,
     describe,
     delete,
+    create,
 )
 from .tasks import (
     get_tasks_list,
     describe_task,
-    delete_task
+    delete_task,
+    create_task,
 )
+
+from .constants import TASKS
 
 LOG = get_logging_handle(__name__)
 
@@ -59,3 +63,29 @@ def _delete_task(task_names):
     """Deletes a task library items"""
 
     delete_task(task_names)
+
+
+@create.command("task", feature_min_version="3.0.0", experimental=True)
+@click.option(
+    "--file",
+    "-f",
+    "task_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    required=True,
+    help="Path of task file (.json, .sh, .py, .escript, .ps1)",
+)
+@click.option("--name", "-n", default=None, help="Task Library item name (Optional)")
+@click.option(
+    "--description", "-d", default=None, help="Blueprint description (Optional)"
+)
+@click.option(
+    "--force",
+    "-fc",
+    is_flag=True,
+    default=False,
+    help="Updates existing task library item with the same name.",
+)
+def _create_task(task_file, name, description, force):
+    """Creates a task library item"""
+    
+    create_task(task_file, name, description, force)

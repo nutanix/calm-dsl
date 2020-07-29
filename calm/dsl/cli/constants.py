@@ -156,7 +156,7 @@ class TASKS:
         HTTP = "HTTP"
     class SCRIPT_TYPES:
         POWERSHELL = "npsscript"
-        ESCRIPT = "static"
+        SHELL = "static"
     class STATES:
         ACTIVE = "ACTIVE"
         DELETED = "DELETED"
