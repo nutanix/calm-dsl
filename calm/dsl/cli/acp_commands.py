@@ -43,6 +43,7 @@ def _get_acps(name, project, filter_by, limit, offset, quiet, out):
 @click.option("--group", "-g", multiple=True, default=[])
 @click.option("--name", "-name", default=None)
 def _create_acp(role, project, user, group, name):
+    """Creates an acp"""
 
     create_acp(role, project, user, group, name)
 
@@ -51,7 +52,7 @@ def _create_acp(role, project, user, group, name):
 @click.argument("acp_name")
 @click.option("--project", "-p", required=True, help="ACP project name")
 def _delete_acp(acp_name, project):
-    """Deletes a acp"""
+    """Deletes an acp"""
 
     delete_acp(acp_name, project)
 
@@ -59,16 +60,25 @@ def _delete_acp(acp_name, project):
 @update.command("acp")
 @click.argument("acp_name")
 @click.option("--project", "-p", required=True, help="ACP project name")
-@click.option("--user", "-u", multiple=True, default=[])
-@click.option("--group", "-g", multiple=True, default=[])
-@click.option("--remove_operation", "-r", is_flag=True, default=False, help="Flag to indicate operation is to remove users/groups from acp")
-def _update_acp(acp_name, project, user, group, remove_operation):
-    """Updates a a cp"""
+@click.option("--add_user", "-au", "add_user_list", multiple=True, default=[])
+@click.option("--add_group", "-ag", "add_group_list", multiple=True, default=[])
+@click.option("--remove_user", "-ru", "remove_user_list", multiple=True, default=[])
+@click.option("--remove_group", "-rg", "remove_group_list", multiple=True, default=[])
+def _update_acp(
+    acp_name,
+    project,
+    add_user_list,
+    add_group_list,
+    remove_user_list,
+    remove_group_list,
+):
+    """Updates an acp"""
 
     update_acp(
         acp_name=acp_name,
         project_name=project,
-        users=user,
-        groups=group,
-        is_remove_operation=remove_operation,
+        add_user_list=add_user_list,
+        add_group_list=add_group_list,
+        remove_user_list=remove_user_list,
+        remove_group_list=remove_group_list,
     )

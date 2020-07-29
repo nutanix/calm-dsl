@@ -301,7 +301,14 @@ def delete_acp(acp_name, project_name):
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
 
-def update_acp(acp_name, project_name, users, groups, is_remove_operation=False):
+def update_acp(
+    acp_name,
+    project_name,
+    add_user_list,
+    add_group_list,
+    remove_user_list,
+    remove_group_list,
+):
 
     client = get_api_client()
 
@@ -325,6 +332,21 @@ def update_acp(acp_name, project_name, users, groups, is_remove_operation=False)
     project_payload = res.json()
     project_payload.pop("status", None)
 
+    # Raise error if same user/group is present in both add/remove list
+    common_users = set(add_user_list).intersection(set(remove_user_list))
+    if common_users:
+        LOG.error("Users {} are both in add_user and remove_user".format(common_users))
+        sys.exit(-1)
+
+    common_groups = set(add_group_list).intersection(set(remove_group_list))
+    if common_groups:
+        LOG.error(
+            "Groups {} are present both in add_groups and remove_groups".format(
+                common_groups
+            )
+        )
+        sys.exit(-1)
+
     # Flag to checvk whether given acp is present in project or not
     is_acp_present = False
     for _row in project_payload["spec"].get("access_control_policy_list", []):
@@ -336,28 +358,19 @@ def update_acp(acp_name, project_name, users, groups, is_remove_operation=False)
             updated_user_reference_list = []
             updated_group_reference_list = []
 
-            if is_remove_operation:
-                for user in acp_resources.get("user_reference_list", []):
-                    if user["name"] not in users:
-                        updated_user_reference_list.append(user)
+            for user in acp_resources.get("user_reference_list", []):
+                if user["name"] not in remove_user_list:
+                    updated_user_reference_list.append(user)
 
-                for group in acp_resources.get("user_group_reference_list", []):
-                    if group["name"] not in groups:
-                        updated_group_reference_list.append(group)
+            for group in acp_resources.get("user_group_reference_list", []):
+                if group["name"] not in remove_group_list:
+                    updated_group_reference_list.append(group)
 
-            else:
-                updated_user_reference_list = acp_resources.get(
-                    "user_reference_list", []
-                )
-                updated_group_reference_list = acp_resources.get(
-                    "user_group_reference_list", []
-                )
+            for user in add_user_list:
+                updated_user_reference_list.append(Ref.User(user))
 
-                for user in users:
-                    updated_user_reference_list.append(Ref.User(user))
-
-                for group in groups:
-                    updated_group_reference_list.append(Ref.Group(group))
+            for group in add_group_list:
+                updated_group_reference_list.append(Ref.Group(group))
 
             acp_resources["user_reference_list"] = updated_user_reference_list
             acp_resources["user_group_reference_list"] = updated_group_reference_list
