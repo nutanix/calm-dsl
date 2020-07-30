@@ -1,5 +1,5 @@
 NAME    := ntnx/calm-dsl
-VERSION := $(shell git describe --abbrev=0 --tags 2>/dev/null || echo v0.9.0-alpha)
+VERSION := $(shell git describe --abbrev=0 --tags 2>/dev/null || cat CalmVersion)
 COMMIT  := $(shell git rev-parse --short HEAD)
 TAG     := $(shell git describe --abbrev=0 --tags --exact-match ${COMMIT} 2>/dev/null \
 		|| echo ${VERSION}.$(shell date +"%Y.%m.%d").commit.${COMMIT})
