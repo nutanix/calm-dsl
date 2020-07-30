@@ -1,8 +1,15 @@
 import click
 import json
 
-from .acps import get_acps, create_acp, get_system_roles, delete_acp, update_acp
-from .main import get, create, delete, update
+from .acps import (
+    get_acps,
+    create_acp,
+    get_system_roles,
+    delete_acp,
+    update_acp,
+    describe_acp,
+)
+from .main import get, create, delete, update, describe
 
 
 @get.command("acps")
@@ -82,3 +89,20 @@ def _update_acp(
         remove_user_list=remove_user_list,
         remove_group_list=remove_group_list,
     )
+
+
+@describe.command("acp")
+@click.argument("acp_name")
+@click.option("--project", "-p", required=True, help="ACP project name")
+@click.option(
+    "--out",
+    "-o",
+    "out",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="output format",
+)
+def _describe_acp(acp_name, project, out):
+    """Describe an acp"""
+
+    describe_acp(acp_name=acp_name, project_name=project, out=out)

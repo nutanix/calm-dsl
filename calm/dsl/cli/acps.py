@@ -301,6 +301,99 @@ def delete_acp(acp_name, project_name):
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
 
+def describe_acp(acp_name, project_name, out):
+
+    client = get_api_client()
+
+    # TODO remove this internal call by projects api
+    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
+    if not project_cache_data:
+        LOG.error(
+            "Project {} not found. Please run: calm update cache".format(project_name)
+        )
+        sys.exit(-1)
+
+    project_uuid = project_cache_data["uuid"]
+    params = {
+        "length": 1000,
+        "filter": "(name=={});(project_reference=={})".format(acp_name, project_uuid),
+    }
+    acp_map = client.acp.get_name_uuid_map(params)
+
+    acp_uuid = acp_map.get(acp_name, "")
+    if not acp_uuid:
+        LOG.error(
+            "No ACP found with name '{}' and project '{}'".format(
+                acp_name, project_name
+            )
+        )
+        sys.exit(-1)
+
+    LOG.info("Fetching acp {} details". format(acp_name))
+    res, err = client.acp.read(acp_uuid)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    acp = res.json()
+    if out == "json":
+        acp.pop("status", None)
+        click.echo(json.dumps(acp, indent=4, separators=(",", ": ")))
+        return
+
+    click.echo("\n----ACP Summary----\n")
+    click.echo("Name: " + highlight_text(acp_name) + " (uuid: " + acp_uuid + ")")
+    click.echo("Status: " + highlight_text(acp["status"]["state"]))
+    click.echo("Project: " + highlight_text(project_name))
+
+    acp_users = acp["spec"]["resources"].get("user_reference_list", [])
+    acp_groups = acp["spec"]["resources"].get("user_group_reference_list", [])
+    acp_role = acp["spec"]["resources"].get("role_reference", [])
+
+    if acp_role:
+        role_data = Cache.get_entity_data_using_uuid(
+            entity_type="role", uuid=acp_role["uuid"]
+        )
+        if not role_data:
+            LOG.error(
+                "Role ({}) details not present. Please update cache".format(
+                    acp_role["uuid"]
+                )
+            )
+            sys.exit(-1)
+        click.echo("Role: " + highlight_text(role_data["name"]))
+
+    if acp_users:
+        click.echo("Users [{}]:".format(highlight_text(len(acp_users))))
+        for user in acp_users:
+            user_data = Cache.get_entity_data_using_uuid(
+                entity_type="user", uuid=user["uuid"]
+            )
+            if not user_data:
+                LOG.error(
+                    "User ({}) details not present. Please update cache".format(
+                        user["uuid"]
+                    )
+                )
+                sys.exit(-1)
+            click.echo("\t" + highlight_text(user_data["name"]))
+
+    if acp_groups:
+        click.echo("Groups [{}]:".format(highlight_text(len(acp_groups))))
+        for group in acp_groups:
+            group_data = Cache.get_entity_data_using_uuid(
+                entity_type="user_group", uuid=group["uuid"]
+            )
+            if not group_data:
+                LOG.error(
+                    "Group ({}) details not present. Please update cache".format(
+                        group["uuid"]
+                    )
+                )
+                sys.exit(-1)
+            click.echo("\t" + highlight_text(group_data["name"]))
+
+
 def update_acp(
     acp_name,
     project_name,
@@ -331,6 +424,48 @@ def update_acp(
 
     project_payload = res.json()
     project_payload.pop("status", None)
+
+    project_resources = project_payload["spec"]["project_detail"]["resources"]
+    project_users = []
+    project_groups = []
+    for user in project_resources.get("user_reference_list", []):
+        project_users.append(user["name"])
+
+    for group in project_resources.get("external_user_group_reference_list", []):
+        project_groups.append(group["name"])
+
+    # Checking if supplied user/group are registered in project
+    if not set(add_user_list).issubset(set(project_users)):
+        LOG.error(
+            "Users {} are not registered in project".format(
+                set(add_user_list).difference(set(project_users))
+            )
+        )
+        sys.exit(-1)
+
+    if not set(remove_user_list).issubset(set(project_users)):
+        LOG.error(
+            "Users {} are not registered in project".format(
+                set(remove_user_list).difference(set(project_users))
+            )
+        )
+        sys.exit(-1)
+
+    if not set(add_group_list).issubset(set(project_groups)):
+        LOG.error(
+            "Groups {} are not registered in project".format(
+                set(add_group_list).difference(set(project_groups))
+            )
+        )
+        sys.exit(-1)
+
+    if not set(remove_group_list).issubset(set(project_groups)):
+        LOG.error(
+            "Groups {} are not registered in project".format(
+                set(remove_group_list).difference(set(project_groups))
+            )
+        )
+        sys.exit(-1)
 
     # Raise error if same user/group is present in both add/remove list
     common_users = set(add_user_list).intersection(set(remove_user_list))
