@@ -4,13 +4,11 @@ import sys
 
 from .projects import (
     get_projects,
-    delete_project,
+    compile_project,
+    compile_project_command,
     create_project,
     describe_project,
-    update_project,
-    compile_project,
-    create_project_using_dsl_payload,
-    compile_project_command,
+    delete_project,
 )
 from .main import create, get, update, delete, describe, compile
 from calm.dsl.log import get_logging_handle
@@ -45,15 +43,6 @@ def _get_projects(name, filter_by, limit, offset, quiet, out):
     get_projects(name, filter_by, limit, offset, quiet, out)
 
 
-def create_project_from_json(file_location, project_name):
-
-    project_payload = read_spec(file_location)
-    if project_name:
-        project_payload["project_detail"]["name"] = project_name
-
-    return create_project(project_payload)
-
-
 def create_project_from_dsl(project_file, project_name, description=""):
 
     project_payload = compile_project(project_file)
@@ -62,9 +51,7 @@ def create_project_from_dsl(project_file, project_name, description=""):
         err = {"error": err_msg, "code": -1}
         return None, err
 
-    return create_project_using_dsl_payload(
-        project_payload, name=project_name, description=description
-    )
+    return create_project(project_payload, name=project_name, description=description)
 
 
 @compile.command("project")
@@ -149,6 +136,7 @@ def _describe_project(project_name, out):
     describe_project(project_name, out)
 
 
+'''
 @update.command("project")
 @click.argument("project_name")
 @click.option(
@@ -175,3 +163,4 @@ def _update_project(project_name, project_file):
     project = res.json()
     state = project["status"]["state"]
     LOG.info("Project state: {}".format(state))
+'''

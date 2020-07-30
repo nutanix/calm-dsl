@@ -103,6 +103,23 @@ class MARKETPLACE_BLUEPRINT:
         LOCAL = "LOCAL"
 
 
+class ERGON_TASK:
+    class STATUS:
+        QUEUED = "QUEUED"
+        RUNNING = "RUNNING"
+        ABORTED = "ABORTED"
+        SUCCEEDED = "SUCCEEDED"
+        SUSPENDED = "SUSPENDED"
+        FAILED = "FAILED"
+
+    TERMINAL_STATES = [
+        STATUS.SUCCEEDED,
+        STATUS.FAILED,
+        STATUS.ABORTED,
+        STATUS.SUSPENDED,
+    ]
+
+
 class ACP:
     class ENTITY_FILTER_EXPRESSION_LIST:
         DEVELOPER = [

@@ -329,7 +329,7 @@ def describe_acp(acp_name, project_name, out):
         )
         sys.exit(-1)
 
-    LOG.info("Fetching acp {} details". format(acp_name))
+    LOG.info("Fetching acp {} details".format(acp_name))
     res, err = client.acp.read(acp_uuid)
     if err:
         LOG.error(err)

@@ -2,6 +2,7 @@ import time
 import click
 import arrow
 import json
+import sys
 from prettytable import PrettyTable
 from ruamel import yaml
 
@@ -12,6 +13,7 @@ from calm.dsl.config import get_config
 from .utils import get_name_query, get_module_from_file, highlight_text
 from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
+from calm.dsl.store import Cache
 
 LOG = get_logging_handle(__name__)
 
@@ -90,8 +92,9 @@ def get_projects(name, filter_by, limit, offset, quiet, out):
     click.echo(table)
 
 
-def get_project(client, name):
+def get_project(name):
 
+    client = get_api_client()
     params = {"filter": "name=={}".format(name)}
 
     LOG.info("Searching for the project {}".format(name))
@@ -119,19 +122,6 @@ def get_project(client, name):
 
     project = res.json()
     return project
-
-
-def delete_project(project_names):
-
-    client = get_api_client()
-
-    for project_name in project_names:
-        project = get_project(client, project_name)
-        project_id = project["metadata"]["uuid"]
-        res, err = client.project.delete(project_id)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        LOG.info("Project {} deleted".format(project_name))
 
 
 def get_project_module_from_file(project_file):
@@ -166,22 +156,6 @@ def compile_project(project_file):
     return project_payload
 
 
-def create_project_using_dsl_payload(project_payload, name="", description=""):
-
-    client = get_api_client()
-
-    project_payload.pop("status", None)
-
-    if name:
-        project_payload["spec"]["name"] = name
-        project_payload["metadata"]["name"] = name
-
-    if description:
-        project_payload["spec"]["description"] = description
-
-    return client.project.create(project_payload)
-
-
 def compile_project_command(project_file, out):
 
     project_payload = compile_project(project_file)
@@ -197,45 +171,29 @@ def compile_project_command(project_file, out):
         LOG.error("Unknown output format {} given".format(out))
 
 
-def create_project(payload):
+def create_project(project_payload, name="", description=""):
 
-    name = payload["project_detail"]["name"]
     client = get_api_client()
 
-    # check if project having same name exists
-    LOG.info("Searching for projects having same name ")
-    params = {"filter": "name=={}".format(name)}
-    res, err = client.project.list(params=params)
-    if err:
-        return None, err
+    project_payload.pop("status", None)
 
-    response = res.json()
-    entities = response.get("entities", None)
-    if entities:
-        if len(entities) > 0:
-            err_msg = "Project with name {} already exists".format(name)
-            err = {"error": err_msg, "code": -1}
-            return None, err
+    if name:
+        project_payload["spec"]["name"] = name
+        project_payload["metadata"]["name"] = name
 
-    LOG.info("Creating the project {}".format(name))
+    if description:
+        project_payload["spec"]["description"] = description
 
-    # validating the payload
-    ProjectValidator.validate_dict(payload)
-    payload = {
-        "api_version": "3.0",  # TODO Remove by a constant
-        "metadata": {"kind": "project"},
-        "spec": payload,
-    }
-
-    return client.project.create_internal(payload)
+    return client.project.create(project_payload)
 
 
 def describe_project(project_name, out):
 
     client = get_api_client()
-    project = get_project(client, project_name)
+    project = get_project(project_name)
 
     if out == "json":
+        project.pop("status", None)
         click.echo(json.dumps(project, indent=4, separators=(",", ": ")))
         return
 
@@ -261,9 +219,8 @@ def describe_project(project_name, out):
         )
     )
 
-    environments = project["status"]["project_status"]["resources"][
-        "environment_reference_list"
-    ]
+    project_resources = project["status"].get("resources", {})
+    environments = project_resources.get("environment_reference_list", [])
     click.echo("Environment Registered: ", nl=False)
 
     if not environments:
@@ -273,305 +230,120 @@ def describe_project(project_name, out):
             "{} ( uuid: {} )".format(highlight_text("Yes"), environments[0]["uuid"])
         )
 
-    acp_list = project["status"]["access_control_policy_list_status"]
-    click.echo("\nUsers, Group and Roles: \n-----------------------\n")
-    if not acp_list:
-        click.echo(highlight_text("No users or groups registered\n"))
+    users = project_resources.get("user_reference_list", [])
+    if users:
+        click.echo("\nRegistered Users: \n--------------------")
+        for user in users:
+            user_data = Cache.get_entity_data_using_uuid(
+                entity_type="user", uuid=user["uuid"]
+            )
+            if not user_data:
+                LOG.error(
+                    "User ({}) details not present. Please update cache".format(
+                        user["uuid"]
+                    )
+                )
+                sys.exit(-1)
+            click.echo("\t{}".format(highlight_text(user_data["name"])))
 
-    else:
-        for acp in acp_list:
-            role = acp["access_control_policy_status"]["resources"]["role_reference"]
-            users = acp["access_control_policy_status"]["resources"][
-                "user_reference_list"
-            ]
-            groups = acp["access_control_policy_status"]["resources"][
-                "user_group_reference_list"
-            ]
+    groups = project_resources.get("external_user_group_reference_list", [])
+    if groups:
+        click.echo("\nRegistered Groups: \n--------------------")
+        for group in groups:
+            group_data = Cache.get_entity_data_using_uuid(
+                entity_type="user_group", uuid=group["uuid"]
+            )
+            if not group_data:
+                LOG.error(
+                    "User Group ({}) details not present. Please update cache".format(
+                        group["uuid"]
+                    )
+                )
+                sys.exit(-1)
+            click.echo("\t{}".format(highlight_text(group_data["name"])))
 
-            click.echo("Role: {}".format(highlight_text(role["name"])))
-
-            if users:
-                click.echo("Users: ")
-                for index, user in enumerate(users):
-                    name = user["name"].split("@")[0]
-                    click.echo("\t{}. {}".format(str(index + 1), highlight_text(name)))
-
-            if groups:
-                click.echo("User Groups: ")
-                for index, group in enumerate(groups):
-                    name = group["name"].split(",")[0]
-                    name = name.split("=")[1]
-                    click.echo("\t{}. {}".format(str(index + 1), highlight_text(name)))
-
-            click.echo("")
-
-    click.echo("Infrastructure: \n---------------\n")
-
-    accounts = project["status"]["project_status"]["resources"][
-        "account_reference_list"
-    ]
-    payload = {"length": 200, "offset": 0, "filter": "state!=DELETED;type!=nutanix"}
-    account_name_uuid_map = client.account.get_name_uuid_map(payload)
-    account_uuid_name_map = {}
-    # BUG: Same type of account have multiple uuids (Nutanix clusters)
-    for k, v in account_name_uuid_map.items():
-        if isinstance(v, list):
-            for i in v:
-                account_uuid_name_map[i] = k
-        else:
-            account_uuid_name_map[v] = k
-
-    res, err = client.account.list(payload)
-    if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-    res = res.json()
-    account_name_type_map = {}
-    for entity in res["entities"]:
-        name = entity["status"]["name"]
-        account_type = entity["status"]["resources"]["type"]
-        account_name_type_map[name] = account_type
+    click.echo("\nInfrastructure: \n---------------")
 
     subnets_list = []
-    for subnet in project["status"]["project_status"]["resources"][
-        "subnet_reference_list"
-    ]:
+    for subnet in project_resources["subnet_reference_list"]:
         subnets_list.append(subnet["uuid"])
 
     # Extending external subnet's list from remote account
-    for subnet in project["status"]["project_status"]["resources"].get(
-        "external_network_list", []
-    ):
+    for subnet in project_resources.get("external_network_list", []):
         subnets_list.append(subnet["uuid"])
 
-    ntnx_pc_account_uuid = ""
+    accounts = project_resources["account_reference_list"]
     for account in accounts:
         account_uuid = account["uuid"]
-        account_name = account_uuid_name_map[account_uuid]
-        account_type = account_name_type_map[account_name]
+        account_cache_data = Cache.get_entity_data_using_uuid(
+            entity_type="account", uuid=account_uuid
+        )
+        if not account_cache_data:
+            LOG.error(
+                "Account (uuid={}) not found. Please update cache".format(account_uuid)
+            )
+            sys.exit(-1)
 
-        if account_type == "nutanix_pc":
-            ntnx_pc_account_uuid = account_uuid
-            continue
-
-        click.echo("Account Type: " + highlight_text(account_type.upper()))
+        account_type = account_cache_data["provider_type"]
+        click.echo("\nAccount Type: " + highlight_text(account_type.upper()))
         click.echo(
-            "Name: {} (uuid: {})\n".format(
-                highlight_text(account_name), highlight_text(account_uuid)
+            "Name: {} (uuid: {})".format(
+                highlight_text(account_cache_data["name"]),
+                highlight_text(account_cache_data["uuid"]),
             )
         )
 
-    # Extracting subnets for nutanix accounts
-    if subnets_list or ntnx_pc_account_uuid:
-        if ntnx_pc_account_uuid:
-            account_name = account_uuid_name_map[ntnx_pc_account_uuid]
-            account_type = account_name_type_map[account_name]
-            click.echo("Account Type: " + highlight_text(account_type.upper()))
-            click.echo(
-                "Name: {} (uuid: {})\n".format(
-                    highlight_text(account_name), highlight_text(account_uuid)
-                )
+        if account_type == "nutanix_pc" and subnets_list:
+            AhvVmProvider = get_provider("AHV_VM")
+            AhvObj = AhvVmProvider.get_api_obj()
+
+            filter_query = "(_entity_id_=={})".format(
+                ",_entity_id_==".join(subnets_list),
             )
+            nics = AhvObj.subnets(account_uuid=account_uuid, filter_query=filter_query)
+            nics = nics["entities"]
 
-        else:
-            click.echo("Account Type: " + highlight_text("NUTANIX"))
+            click.echo("\n\tWhitelisted Subnets:\n\t--------------------")
+            for nic in nics:
+                nic_name = nic["status"]["name"]
+                vlan_id = nic["status"]["resources"]["vlan_id"]
+                cluster_name = nic["status"]["cluster_reference"]["name"]
+                nic_uuid = nic["metadata"]["uuid"]
 
-        AhvVmProvider = get_provider("AHV_VM")
-        AhvObj = AhvVmProvider.get_api_obj()
-
-        filter_query = "(_entity_id_=={})".format(",_entity_id_==".join(subnets_list),)
-        nics = AhvObj.subnets(
-            account_uuid=ntnx_pc_account_uuid, filter_query=filter_query
-        )
-        nics = nics["entities"]
-
-        if nics:
-            click.echo("\tWhitelisted Subnets:\n\t--------------------")
-        for nic in nics:
-            nic_name = nic["status"]["name"]
-            vlan_id = nic["status"]["resources"]["vlan_id"]
-            cluster_name = nic["status"]["cluster_reference"]["name"]
-            nic_uuid = nic["metadata"]["uuid"]
-
-            click.echo(
-                "\tName: {} (uuid: {})\tVLAN ID: {}\tCluster Name: {}".format(
-                    highlight_text(nic_name),
-                    highlight_text(nic_uuid),
-                    highlight_text(vlan_id),
-                    highlight_text(cluster_name),
+                click.echo(
+                    "\tName: {} (uuid: {})\tVLAN ID: {}\tCluster Name: {}".format(
+                        highlight_text(nic_name),
+                        highlight_text(nic_uuid),
+                        highlight_text(vlan_id),
+                        highlight_text(cluster_name),
+                    )
                 )
-            )
 
-    if not (subnets_list or accounts):
+    if not accounts:
         click.echo(highlight_text("No provider's account registered"))
 
-    click.echo("\nQuotas: \n-------\n")
-    resources = project["status"]["project_status"]["resources"]
-
-    if not resources.get("resource_domain"):
-        click.echo(highlight_text("No quotas available"))
-    else:
-        resources = resources["resource_domain"]["resources"]
-        for resource in resources:
+    quota_resources = project_resources.get("resource_domain", {}).get("resources", [])
+    if quota_resources:
+        click.echo("\nQuotas: \n-------\n")
+        for qr in quota_resources:
             click.echo(
-                "{} : {}".format(
-                    resource["resource_type"], highlight_text(resource["value"])
-                )
+                "\t{} : {}".format(qr["resource_type"], highlight_text(qr["value"]))
             )
 
-        if not resources:
-            click.echo(highlight_text("No quotas data provided"))
 
-    click.echo("\n")
-
-
-def update_project(name, payload):
+def delete_project(project_names):
 
     client = get_api_client()
-    LOG.info("Searching for project")
-    project = get_project(client, name)
+    params = {"length": 1000}
+    project_name_uuid_map = client.project.get_name_uuid_map(params)
+    for project_name in project_names:
+        project = get_project(project_name)
+        project_id = project_name_uuid_map.get(project_name, "")
+        if not project_id:
+            LOG.warning("Project {} doesn't exist".format(project_name))
+            continue
 
-    new_name = payload["project_detail"]["name"]
-    if name != new_name:
-        # Search whether any other project exists with new name
-        LOG.info("\nSearching project with name {}".format(new_name))
-        try:
-            get_project(client, new_name)
-            err_msg = "Another project exists with name {}".format(new_name)
-            err = {"error": err_msg, "code": -1}
-            return None, err
-
-        except Exception:
-            LOG.info("No project exists with name {}".format(new_name))
-
-    project_id = project["metadata"]["uuid"]
-    spec_version = project["metadata"]["spec_version"]
-    ProjectValidator.validate_dict(payload)
-
-    payload = {
-        "api_version": "3.0",  # TODO Remove by a constant
-        "metadata": {
-            "kind": "project",
-            "uuid": project_id,
-            "spec_version": spec_version,
-        },
-        "spec": payload,
-    }
-
-    LOG.info("Updating the project")
-    return client.project.update(project_id, payload)
-
-
-def poll_creation_status(client, project_uuid):
-
-    cnt = 0
-    project_state = "PENDING"
-    while True:
-        LOG.info("Fetching status of project creation")
-        res, err = client.project.read(project_uuid)
+        res, err = client.project.delete(project_id)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        project = res.json()
-        project_state = project["status"]["state"]
-        if project_state == "COMPLETE":
-            LOG.info("CREATED")
-            return
-
-        elif project_state == "RUNNING":
-            LOG.info("RUNNING")
-
-        elif project_state == "PENDING":
-            LOG.info("PENDING")
-
-        else:
-            msg = str(project["status"]["message_list"])
-            msg = "Project creation unsuccessful !!!\nmessage={}".format(msg)
-            raise Exception(msg)
-
-        time.sleep(2)
-        cnt += 1
-        if cnt == 10:
-            break
-
-    LOG.debug("Waited for project creation for 20 seconds(polled at 2 sec interval).")
-    LOG.info("Project state: {}".format(project_state))
-
-
-def poll_updation_status(client, project_uuid, old_spec_version):
-
-    cnt = 0
-    project_state = "PENDING"
-    while True:
-        LOG.info("Fetching status of project updation")
-        res, err = client.project.read(project_uuid)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        project = res.json()
-        project_state = project["status"]["state"]
-        spec_version = project["metadata"]["spec_version"]
-
-        # On updation spec_version should be incremented
-        if spec_version == old_spec_version:
-            raise Exception("No update operation performed on project !!!")
-
-        elif project_state == "PENDING":
-            LOG.info("PENDING")
-
-        elif project_state == "COMPLETE":
-            LOG.info("UPDATED")
-            return
-
-        elif project_state == "RUNNING":
-            LOG.info("RUNNING")
-
-        else:
-            msg = str(project["status"]["message_list"])
-            msg = "Project updation failed !!!\nmessage={}".format(msg)
-            raise Exception(msg)
-
-        time.sleep(2)
-        cnt += 1
-        if cnt == 10:
-            break
-
-    LOG.debug("Waited for project updation for 20 seconds(polled at 2 sec interval)")
-    LOG.info("Project state: {}".format(project_state))
-
-
-def poll_deletion_status(client, project_uuid):
-
-    cnt = 0
-    project_state = "DELETE_IN_PROGRESS"
-    while True:
-        LOG.info("Fetching status of project deletion")
-        res, err = client.project.read(project_uuid)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        project = res.json()
-        project_state = project["status"]["state"]
-
-        if project_state == "DELETE_IN_PROGRESS":
-            LOG.info(project_state)
-
-        elif project_state == "COMPLETE":
-            LOG.info("DELETED")
-            return
-
-        elif project_state == "DELETE_PENDING":
-            LOG.info(project_state)
-
-        else:
-            LOG.debug(project_state)
-            msg = str(project["status"]["message_list"])
-            msg = "Project updation failed !!!\nmessage={}".format(msg)
-            raise Exception(msg)
-
-        time.sleep(1)
-        cnt += 2
-        if cnt == 10:
-            break
-
-    LOG.debug("Waited for project deletion for 20 seconds(polled at 2 sec interval)")
-    LOG.info("Project state: {}".format(project_state))
+        LOG.info("Project {} deleted".format(project_name))
