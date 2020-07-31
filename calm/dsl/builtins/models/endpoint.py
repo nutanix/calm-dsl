@@ -62,18 +62,33 @@ def _http_endpoint(
 
 def _exec_create(
     value_type,
-    ip_list,
+    value_list,
     name=None,
     ep_type="Linux",
+    provider_type=None,
     port=22,
     connection_protocol=None,
     cred=None,
+    filter_type=None,
+    subnet=None,
+    filter=None,
+    account=None
 ):
     kwargs = {
         "name": name,
         "type": ep_type,
-        "attrs": {"values": ip_list, "value_type": value_type, "port": port},
+        "value_type": value_type,
+        "attrs": {"values": value_list, "port": port},
     }
+
+    if value_type == "VM":
+        kwargs["provider_type"] = provider_type
+        kwargs["attrs"]["subnet"] = subnet
+        kwargs["attrs"]["filter_type"] = filter_type
+        kwargs["attrs"]["account_reference"] = account
+        if filter_type == "dynamic":
+            kwargs["attrs"]["filter"] = filter
+
     if connection_protocol:
         kwargs["attrs"]["connection_protocol"] = connection_protocol
     if cred is not None and isinstance(cred, CredentialType):
@@ -84,7 +99,6 @@ def _exec_create(
 
 def linux_endpoint_ip(value, name=None, port=22, os_type="Linux", cred=None):
     return _exec_create("IP", value, ep_type="Linux", name=name, port=port, cred=cred)
-
 
 def windows_endpoint_ip(
     value, name=None, connection_protocol="HTTP", port=None, cred=None
@@ -110,6 +124,39 @@ def windows_endpoint_ip(
         cred=cred,
     )
 
+def linux_endpoint_vm(values, provider_type="nutanix", filter_type="static", filter=None, name=None, port=22,
+                      subnet="10.0.0.0/8", cred=None, account=None):
+    return _exec_create("VM", values, name=name, ep_type="Linux", provider_type=provider_type, filter_type=filter_type,
+                        filter=filter, port=port, subnet=subnet, cred=cred, account=account)
+
+def windows_endpoint_vm(
+    value, name=None, provider_type="nutanix", filter_type="static", filter=None, connection_protocol="HTTP", port=None,
+    cred=None, subnet="10.0.0.0/8", account=None):
+    connection_protocol = connection_protocol.lower()
+    if connection_protocol not in ["http", "https"]:
+        raise TypeError(
+            "Connection Protocol ({}) should be HTTP/HTTPS".format(connection_protocol)
+        )
+
+    if port is None:
+        if connection_protocol == "http":
+            port = 5985
+        else:
+            port = 5986
+    return _exec_create(
+        "VM",
+        value,
+        ep_type="Windows",
+        provider_type=provider_type,
+        connection_protocol=connection_protocol,
+        name=name,
+        port=port,
+        cred=cred,
+        filter_type=filter_type,
+        filter=filter,
+        subnet=subnet,
+        account=account
+    )
 
 def _basic_auth(username, password):
     secret = {"attrs": {"is_secret_modified": True}, "value": password}
@@ -137,12 +184,14 @@ class CalmEndpoint:
             raise TypeError("'{}' is not callable".format(cls.__name__))
 
         ip = linux_endpoint_ip
+        vm = linux_endpoint_vm
 
     class Windows:
         def __new__(cls, *args, **kwargs):
             raise TypeError("'{}' is not callable".format(cls.__name__))
 
         ip = windows_endpoint_ip
+        vm = windows_endpoint_vm
 
     class HTTP:
         def __new__(cls, *args, **kwargs):

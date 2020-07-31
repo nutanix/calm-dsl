@@ -9,6 +9,7 @@ from calm.dsl.builtins.models.endpoint import Endpoint, _endpoint, CalmEndpoint
 from calm.dsl.builtins.models.runbook_service import RunbookService
 from calm.dsl.builtins.models.endpoint_payload import create_endpoint_payload
 from calm.dsl.builtins.models.runbook_payload import create_runbook_payload
+from calm.dsl.builtins.models.account import CalmAccount
 
 __all__ = [
     "RunbookVariable",
@@ -24,4 +25,5 @@ __all__ = [
     "RunbookService",
     "create_endpoint_payload",
     "create_runbook_payload",
+    "CalmAccount",
 ]

@@ -62,6 +62,10 @@ class ENDPOINT:
         WINDOWS = "Windows"
         LINUX = "Linux"
 
+    class VALUE_TYPES:
+        VM = "VM"
+        IP = "IP"
+
 
 class BLUEPRINT:
     class STATES:

@@ -5,6 +5,7 @@ from calm.dsl.runbooks import read_local_file
 from calm.dsl.runbooks import runbook
 from calm.dsl.runbooks import RunbookTask as Task, basic_cred
 from calm.dsl.runbooks import CalmEndpoint as Endpoint
+from calm.dsl.runbooks import CalmAccount as Account
 
 linux_ip = read_local_file(".tests/runbook_tests/vm_ip")
 windows_ip = read_local_file(".tests/runbook_tests/windows_vm_ip")
@@ -23,7 +24,22 @@ http_endpoint = Endpoint.HTTP(
 LinuxCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
 WindowsCred = basic_cred(CRED_WINDOWS_USERNAME, CRED_PASSWORD, name="endpoint_cred")
 
+AHVAccount = Account.NutanixPC(name="NTNX_LOCAL_AZ", uuid="3fa44454-b86e-4485-84f1-2867daa3e3c8")
+VMWareAccount = Account.VMWare(name="Vmware 1", uuid="b1c1d336-a32e-4d50-c9d3-007e3aaa774d")
+
+
 linux_endpoint = Endpoint.Linux.ip([linux_ip], cred=LinuxCred)
+linux_ahv_static_vm_endpoint = Endpoint.Linux.vm(filter_type="static", values=["afb650a3-b67b-4194-a552-94f686f34b6c"],
+                                             cred=LinuxCred, account=AHVAccount)
+linux_ahv_dynamic_vm_endpoint1 = Endpoint.Linux.vm(filter_type="dynamic", filter="category==cat1:value1", values=[],
+                                              cred=LinuxCred, account=AHVAccount)
+linux_ahv_dynamic_vm_endpoint2 = Endpoint.Linux.vm(filter_type="dynamic", filter="name==vm.*", values=[],
+                                              cred=LinuxCred, account=AHVAccount)
+linux_vmware_static_vm_endpoint = Endpoint.Linux.vm(filter_type="static", values=["50139713-420a-9780-f219-075170764fec"],
+                                                    cred=LinuxCred, account=VMWareAccount)
+windows_ahv_static_vm_endpoint = Endpoint.Windows.vm(filter_type="static", value=["ecf1ba40-aac8-4450-b82b-240e7b722f5d"],
+                                                     cred=WindowsCred, account=AHVAccount)
+
 linux_endpoint_with_wrong_cred = Endpoint.Linux.ip([linux_ip], cred=WindowsCred)
 multiple_linux_endpoint = Endpoint.Linux.ip([linux_ip, linux_ip], cred=LinuxCred)
 
@@ -98,6 +114,37 @@ def ShellTask(endpoints=[linux_endpoint]):
         name="ExecTask", script='''echo "Task is Successful"''', target=endpoints[0],
     )
 
+@runbook
+def ShellTaskOnLinuxVMAHVStaticEndpoint(endpoints=[linux_ahv_static_vm_endpoint]):
+    Task.Exec.ssh(
+        name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0],
+    )
+
+@runbook
+def ShellTaskOnLinuxVMAHVDynamicEndpoint1(endpoints=[linux_ahv_dynamic_vm_endpoint1]):
+    Task.Exec.ssh(
+        name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0],
+    )
+
+@runbook
+def ShellTaskOnLinuxVMAHVDynamicEndpoint2(endpoints=[linux_ahv_dynamic_vm_endpoint2]):
+    Task.Exec.ssh(
+        name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0],
+    )
+
+@runbook
+def ShellTaskOnLinuxVMVMWareStaticEndpoint(endpoints=[linux_vmware_static_vm_endpoint]):
+    Task.Exec.ssh(
+        name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0],
+    )
+
+@runbook
+def ShellTaskOnWindowsVMAHVStaticEndpoint(endpoints=[windows_ahv_static_vm_endpoint]):
+    Task.Exec.powershell(
+        name="ExecTask",
+        script='''echo "Task is Successful"''',
+        target=endpoints[0]
+    )
 
 @runbook
 def SetVariableOnShell(endpoints=[linux_endpoint]):
@@ -206,3 +253,5 @@ def HttpEndpointMacroOnEscript(endpoints=[http_endpoint], default=False):
         script='''print "@@{endpoint.name}@@, @@{endpoint.type}@@, @@{endpoint.base_url}@@, @@{endpoint.retry_count}@@, \
         @@{endpoint.retry_interval}@@, @@{endpoint.tls_verify}@@, @@{endpoint.connection_timeout}@@"''',
     )
+
+
