@@ -9,6 +9,8 @@ from .projects import (
     create_project,
     describe_project,
     delete_project,
+    update_project_from_dsl,
+    update_project_using_cli_switches,
 )
 from .main import create, get, update, delete, describe, compile
 from calm.dsl.log import get_logging_handle
@@ -136,7 +138,6 @@ def _describe_project(project_name, out):
     describe_project(project_name, out)
 
 
-'''
 @update.command("project")
 @click.argument("project_name")
 @click.option(
@@ -145,22 +146,55 @@ def _describe_project(project_name, out):
     "project_file",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path of Project file to upload",
-    required=True,
 )
-def _update_project(project_name, project_file):
-    """Updates a project"""
+@click.option("--add_user", "-au", "add_user_list", multiple=True, default=[])
+@click.option("--add_group", "-ag", "add_group_list", multiple=True, default=[])
+@click.option("--remove_user", "-ru", "remove_user_list", multiple=True, default=[])
+@click.option("--remove_group", "-rg", "remove_group_list", multiple=True, default=[])
+def _update_project(
+    project_name,
+    project_file,
+    add_user_list,
+    add_group_list,
+    remove_user_list,
+    remove_group_list,
+):
+    """
+    Updates a project.
 
-    if project_file.endswith(".json") or project_file.endswith(".yaml"):
-        payload = read_spec(project_file)
-        res, err = update_project(project_name, payload)
-    else:
-        LOG.error("Unknown file format")
-        return
+\b
+Usability: 
+    a. If project_file is given, command will use file to update project
+    b. If project_file is not given , project will be updated based on other cli switches 
+       i.e. add_user, add_group, remove_user, remove_group
+    """
 
-    if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    if not (
+        project_file
+        or add_user_list
+        or add_group_list
+        or remove_user_list
+        or remove_group_list
+    ):
+        LOG.error(
+            "Either project file or add/remove paramters for users/groups should be given"
+        )
+        sys.exit(-1)
 
-    project = res.json()
-    state = project["status"]["state"]
-    LOG.info("Project state: {}".format(state))
-'''
+    if project_file:
+        if project_file.endswith(".py"):
+            update_project_from_dsl(
+                project_name=project_name, project_file=project_file
+            )
+            return
+        else:
+            LOG.error("Unknown file format")
+            return
+
+    update_project_using_cli_switches(
+        project_name=project_name,
+        add_user_list=add_user_list,
+        add_group_list=add_group_list,
+        remove_user_list=remove_user_list,
+        remove_group_list=remove_group_list,
+    )

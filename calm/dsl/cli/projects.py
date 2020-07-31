@@ -6,7 +6,7 @@ import sys
 from prettytable import PrettyTable
 from ruamel import yaml
 
-from calm.dsl.builtins import ProjectValidator, create_project_payload, AhvProject
+from calm.dsl.builtins import ProjectValidator, create_project_payload, AhvProject, Ref
 from calm.dsl.api import get_api_client
 from calm.dsl.config import get_config
 
@@ -337,13 +337,148 @@ def delete_project(project_names):
     params = {"length": 1000}
     project_name_uuid_map = client.project.get_name_uuid_map(params)
     for project_name in project_names:
-        project = get_project(project_name)
         project_id = project_name_uuid_map.get(project_name, "")
         if not project_id:
-            LOG.warning("Project {} doesn't exist".format(project_name))
+            LOG.warning("Project {} not found.".format(project_name))
             continue
 
         res, err = client.project.delete(project_id)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
         LOG.info("Project {} deleted".format(project_name))
+
+
+def update_project_from_dsl(project_name, project_file):
+
+    client = get_api_client()
+
+    project_payload = compile_project(project_file)
+    if project_payload is None:
+        err_msg = "Project not found in {}".format(project_file)
+        err = {"error": err_msg, "code": -1}
+        return None, err
+
+    LOG.info("Fetching project '{}' details".format(project_name))
+    params = {"length": 1000, "filter": "name=={}".format(project_name)}
+    project_name_uuid_map = client.project.get_name_uuid_map(params)
+    project_uuid = project_name_uuid_map.get(project_name, "")
+
+    if not project_uuid:
+        LOG.error("Project {} not found.".format(project_name))
+        sys.exit(-1)
+
+    res, err = client.project.read(project_uuid)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    res = res.json()
+    project_payload["metadata"] = res["metadata"]
+
+    # As name of project is not editable
+    project_payload["spec"]["name"] = project_name
+    project_payload["metadata"]["name"] = project_name
+
+    # TODO removed users should be removed from acps also.
+    LOG.info("Updating project '{}'".format(project_name))
+    res, err = client.project.update(project_uuid, project_payload)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    res = res.json()
+    stdout_dict = {
+        "name": res["metadata"]["name"],
+        "uuid": res["metadata"]["uuid"],
+        "execution_context": res["status"]["execution_context"],
+    }
+    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+
+
+def update_project_using_cli_switches(
+    project_name, add_user_list, add_group_list, remove_user_list, remove_group_list,
+):
+
+    client = get_api_client()
+
+    LOG.info("Fetching project '{}' details".format(project_name))
+    params = {"length": 1000, "filter": "name=={}".format(project_name)}
+    project_name_uuid_map = client.project.get_name_uuid_map(params)
+    project_uuid = project_name_uuid_map.get(project_name, "")
+
+    if not project_uuid:
+        LOG.error("Project {} not found.".format(project_name))
+        sys.exit(-1)
+
+    res, err = client.project.read(project_uuid)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    project_payload = res.json()
+    project_payload.pop("status", None)
+
+    project_resources = project_payload["spec"]["resources"]
+    project_users = []
+    project_groups = []
+    for user in project_resources.get("user_reference_list", []):
+        project_users.append(user["name"])
+
+    for group in project_resources.get("external_user_group_reference_list", []):
+        project_groups.append(group["name"])
+
+    # Checking remove users/groups are part of project or not
+    if not set(remove_user_list).issubset(set(project_users)):
+        LOG.error(
+            "Users {} are not registered in project".format(
+                set(remove_user_list).difference(set(project_users))
+            )
+        )
+        sys.exit(-1)
+
+    if not set(remove_group_list).issubset(set(project_groups)):
+        LOG.error(
+            "Groups {} are not registered in project".format(
+                set(remove_group_list).difference(set(project_groups))
+            )
+        )
+        sys.exit(-1)
+
+    # Append users
+    updated_user_reference_list = []
+    updated_group_reference_list = []
+
+    for user in project_resources.get("user_reference_list", []):
+        if user["name"] not in remove_user_list:
+            updated_user_reference_list.append(user)
+
+    for group in project_resources.get("external_user_group_reference_list", []):
+        if group["name"] not in remove_group_list:
+            updated_group_reference_list.append(group)
+
+    for user in add_user_list:
+        updated_user_reference_list.append(Ref.User(user))
+
+    for group in add_group_list:
+        updated_group_reference_list.append(Ref.Group(group))
+
+    project_resources["user_reference_list"] = updated_user_reference_list
+    project_resources[
+        "external_user_group_reference_list"
+    ] = updated_group_reference_list
+
+    # TODO removed users should be removed from acps also.
+    LOG.info("Updating project '{}'".format(project_name))
+    res, err = client.project.update(project_uuid, project_payload)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    res = res.json()
+    stdout_dict = {
+        "name": res["metadata"]["name"],
+        "uuid": res["metadata"]["uuid"],
+        "execution_context": res["status"]["execution_context"],
+    }
+
+    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
