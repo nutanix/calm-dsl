@@ -459,8 +459,8 @@ def update_acp(
         sys.exit(-1)
 
     LOG.info("Fetching project '{}' details".format(project_name))
-    Obj = get_resource_api("projects_internal", client.connection)
-    res, err = Obj.read(project_uuid)
+    ProjectInternalObj = get_resource_api("projects_internal", client.connection)
+    res, err = ProjectInternalObj.read(project_uuid)
     if err:
         LOG.error(err)
         sys.exit(-1)
@@ -477,7 +477,7 @@ def update_acp(
     for group in project_resources.get("external_user_group_reference_list", []):
         project_groups.append(group["name"])
 
-    # Checking if supplied user/group are registered in project
+    # Checking if to be added users/groups are registered in project
     if not set(add_user_list).issubset(set(project_users)):
         LOG.error(
             "Users {} are not registered in project".format(
@@ -486,26 +486,10 @@ def update_acp(
         )
         sys.exit(-1)
 
-    if not set(remove_user_list).issubset(set(project_users)):
-        LOG.error(
-            "Users {} are not registered in project".format(
-                set(remove_user_list).difference(set(project_users))
-            )
-        )
-        sys.exit(-1)
-
     if not set(add_group_list).issubset(set(project_groups)):
         LOG.error(
             "Groups {} are not registered in project".format(
                 set(add_group_list).difference(set(project_groups))
-            )
-        )
-        sys.exit(-1)
-
-    if not set(remove_group_list).issubset(set(project_groups)):
-        LOG.error(
-            "Groups {} are not registered in project".format(
-                set(remove_group_list).difference(set(project_groups))
             )
         )
         sys.exit(-1)
@@ -525,7 +509,7 @@ def update_acp(
         )
         sys.exit(-1)
 
-    # Flag to checvk whether given acp is present in project or not
+    # Flag to check whether given acp is present in project or not
     is_acp_present = False
     for _row in project_payload["spec"].get("access_control_policy_list", []):
         _row["operation"] = "UPDATE"
@@ -535,6 +519,30 @@ def update_acp(
             acp_resources = _row["acp"]["resources"]
             updated_user_reference_list = []
             updated_group_reference_list = []
+
+            acp_users = []
+            acp_groups = []
+            for user in acp_resources.get("user_reference_list", []):
+                acp_users.append(user["name"])
+
+            for group in acp_resources.get("user_group_reference_list", []):
+                acp_groups.append(group["name"])
+
+            if not set(remove_user_list).issubset(set(acp_users)):
+                LOG.error(
+                    "Users {} are not registered in acp".format(
+                        set(remove_user_list).difference(set(acp_users))
+                    )
+                )
+                sys.exit(-1)
+
+            if not set(remove_group_list).issubset(set(acp_groups)):
+                LOG.error(
+                    "Groups {} are not registered in acp".format(
+                        set(remove_group_list).difference(set(acp_groups))
+                    )
+                )
+                sys.exit(-1)
 
             for user in acp_resources.get("user_reference_list", []):
                 if user["name"] not in remove_user_list:
@@ -565,7 +573,7 @@ def update_acp(
     LOG.info(
         "Updating acp '{}' associated with project '{}'".format(acp_name, project_name)
     )
-    res, err = client.project.update(project_uuid, project_payload)
+    res, err = ProjectInternalObj.update(project_uuid, project_payload)
     if err:
         LOG.error(err)
         sys.exit(-1)

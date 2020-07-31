@@ -25,7 +25,7 @@ def watch_task(task_uuid, poll_interval=2):
         LOG.info(status)
 
         if status in ERGON_TASK.TERMINAL_STATES:
-            return
+            return status
 
         time.sleep(poll_interval)
         cnt += 1
