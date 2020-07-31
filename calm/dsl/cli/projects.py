@@ -6,7 +6,7 @@ import sys
 from prettytable import PrettyTable
 from ruamel import yaml
 
-from calm.dsl.builtins import ProjectValidator, create_project_payload, AhvProject, Ref
+from calm.dsl.builtins import create_project_payload, Project, Ref
 from calm.dsl.api import get_api_client
 from calm.dsl.config import get_config
 
@@ -135,8 +135,8 @@ def get_project_class_from_module(user_project_module):
     UserProject = None
     for item in dir(user_project_module):
         obj = getattr(user_project_module, item)
-        if isinstance(obj, type(AhvProject)):
-            if obj.__bases__[0] == AhvProject:
+        if isinstance(obj, type(Project)):
+            if obj.__bases__[0] == Project:
                 UserProject = obj
 
     return UserProject

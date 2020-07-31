@@ -15,7 +15,6 @@
 {% import "runbook.yaml.jinja2" as runbook %}
 {% import "action.yaml.jinja2" as action %}
 {% import "project.yaml.jinja2" as project %}
-{% import "ahv_project.yaml.jinja2" as ahv_project %}
 {% import "project_payload.yaml.jinja2" as project_payload %}
 {% import "simple_deployment.yaml.jinja2" as simple_deployment %}
 {% import "simple_blueprint.yaml.jinja2" as simple_blueprint %}
@@ -48,7 +47,6 @@
 {{ runbook.RunbookSchema() }}
 {{ action.ActionSchema() }}
 {{ project.ProjectSchema() }}
-{{ ahv_project.AhvProjectSchema() }}
 {{ project_payload.ProjectPayloadSchema() }}
 {{ simple_deployment.SimpleDeploymentSchema() }}
 {{ simple_blueprint.SimpleBlueprintSchema() }}

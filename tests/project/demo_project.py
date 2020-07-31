@@ -1,4 +1,4 @@
-from calm.dsl.builtins import AhvProject
+from calm.dsl.builtins import Project
 from calm.dsl.builtins import Provider, Ref
 
 
@@ -8,7 +8,7 @@ CLUSTER = "calmdev1"
 USER = "sspuser1@systest.nutanix.com"
 
 
-class TestProject(AhvProject):
+class TestProject(Project):
     """Test project"""
 
     providers = [

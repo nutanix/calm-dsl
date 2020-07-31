@@ -1,8 +1,8 @@
-from calm.dsl.builtins import AhvProject
+from calm.dsl.builtins import Project
 from calm.dsl.builtins import Provider, Ref
 
 
-class TestDslProject(AhvProject):
+class TestDslProject(Project):
     """Sample DSL Project"""
 
     providers = [

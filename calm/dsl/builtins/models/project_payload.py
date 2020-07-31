@@ -1,6 +1,6 @@
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
-from .ahv_project import AhvProjectType
+from .project import ProjectType
 
 
 # Blueprint Payload
@@ -33,8 +33,8 @@ def create_project_payload(UserProject):
         err["error"] = "Given project is empty."
         return None, err
 
-    if not isinstance(UserProject, AhvProjectType):
-        err["error"] = "Given project is not of type AhvProject"
+    if not isinstance(UserProject, ProjectType):
+        err["error"] = "Given project is not of type Project"
         return None, err
 
     spec = {
