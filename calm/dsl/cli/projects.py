@@ -7,10 +7,12 @@ from prettytable import PrettyTable
 from ruamel import yaml
 
 from calm.dsl.builtins import create_project_payload, Project, Ref
-from calm.dsl.api import get_api_client
+from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.config import get_config
 
 from .utils import get_name_query, get_module_from_file, highlight_text
+from .task_commands import watch_task
+from .constants import ERGON_TASK
 from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
 from calm.dsl.store import Cache
@@ -180,11 +182,30 @@ def create_project(project_payload, name="", description=""):
     if name:
         project_payload["spec"]["name"] = name
         project_payload["metadata"]["name"] = name
+    else:
+        name = project_payload["spec"]["name"]
 
     if description:
         project_payload["spec"]["description"] = description
 
-    return client.project.create(project_payload)
+    LOG.info("Creating project '{}'".format(name))
+    res, err = client.project.create(project_payload)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    project = res.json()
+    stdout_dict = {
+        "name": project["metadata"]["name"],
+        "uuid": project["metadata"]["uuid"],
+        "execution_context": project["status"]["execution_context"],
+    }
+    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+
+    LOG.info("Polling on project creation task")
+    task_state = watch_task(project["status"]["execution_context"]["task_uuid"])
+    if task_state in ERGON_TASK.FAILURE_STATES:
+        raise Exception("Project creation task went to {} state".format(task_state))
 
 
 def describe_project(project_name, out):
@@ -193,7 +214,6 @@ def describe_project(project_name, out):
     project = get_project(project_name)
 
     if out == "json":
-        project.pop("status", None)
         click.echo(json.dumps(project, indent=4, separators=(",", ": ")))
         return
 
@@ -342,10 +362,16 @@ def delete_project(project_names):
             LOG.warning("Project {} not found.".format(project_name))
             continue
 
+        LOG.info("Deleting project '{}'".format(project_name))
         res, err = client.project.delete(project_id)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        LOG.info("Project {} deleted".format(project_name))
+        LOG.info("Polling on project deletion task")
+        res = res.json()
+        task_state = watch_task(res["status"]["execution_context"]["task_uuid"])
+        if task_state in ERGON_TASK.FAILURE_STATES:
+            raise Exception("Project deletion task went to {} state".format(task_state))
+        click.echo("")
 
 
 def update_project_from_dsl(project_name, project_file):
@@ -372,8 +398,35 @@ def update_project_from_dsl(project_name, project_file):
         LOG.error(err)
         sys.exit(-1)
 
-    res = res.json()
-    project_payload["metadata"] = res["metadata"]
+    old_project_payload = res.json()
+
+    # Find users already registered
+    updated_project_user_list = []
+    for _user in project_payload["spec"]["resources"].get("user_reference_list", []):
+        updated_project_user_list.append(_user["name"])
+
+    updated_project_groups_list = []
+    for _group in project_payload["spec"]["resources"].get(
+        "external_user_group_reference_list", []
+    ):
+        updated_project_groups_list.append(_group["name"])
+
+    acp_remove_user_list = []
+    acp_remove_group_list = []
+    for _user in old_project_payload["spec"]["resources"].get(
+        "user_reference_list", []
+    ):
+        if _user["name"] not in updated_project_user_list:
+            acp_remove_user_list.append(_user["name"])
+
+    for _group in old_project_payload["spec"]["resources"].get(
+        "external_user_group_reference_list", []
+    ):
+        if _group["name"] not in updated_project_groups_list:
+            acp_remove_group_list.append(_group["name"])
+
+    # Setting correct metadata for update call
+    project_payload["metadata"] = old_project_payload["metadata"]
 
     # As name of project is not editable
     project_payload["spec"]["name"] = project_name
@@ -392,7 +445,22 @@ def update_project_from_dsl(project_name, project_file):
         "uuid": res["metadata"]["uuid"],
         "execution_context": res["status"]["execution_context"],
     }
+
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+
+    LOG.info("Polling on project creation task")
+    task_state = watch_task(res["status"]["execution_context"]["task_uuid"])
+    if task_state not in ERGON_TASK.FAILURE_STATES:
+        # Remove project removed user and groups from acps
+        if acp_remove_user_list or acp_remove_group_list:
+            LOG.info("Updating project acps")
+            remove_users_from_project_acps(
+                project_uuid=project_uuid,
+                remove_user_list=acp_remove_user_list,
+                remove_group_list=acp_remove_group_list,
+            )
+    else:
+        raise Exception("Project updation task went to {} state".format(task_state))
 
 
 def update_project_using_cli_switches(
@@ -448,13 +516,20 @@ def update_project_using_cli_switches(
     updated_user_reference_list = []
     updated_group_reference_list = []
 
+    acp_remove_user_list = []
+    acp_remove_group_list = []
+
     for user in project_resources.get("user_reference_list", []):
         if user["name"] not in remove_user_list:
             updated_user_reference_list.append(user)
+        else:
+            acp_remove_user_list.append(user["name"])
 
     for group in project_resources.get("external_user_group_reference_list", []):
         if group["name"] not in remove_group_list:
             updated_group_reference_list.append(group)
+        else:
+            acp_remove_group_list.append(group["name"])
 
     for user in add_user_list:
         updated_user_reference_list.append(Ref.User(user))
@@ -467,7 +542,6 @@ def update_project_using_cli_switches(
         "external_user_group_reference_list"
     ] = updated_group_reference_list
 
-    # TODO removed users should be removed from acps also.
     LOG.info("Updating project '{}'".format(project_name))
     res, err = client.project.update(project_uuid, project_payload)
     if err:
@@ -482,3 +556,56 @@ def update_project_using_cli_switches(
     }
 
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+
+    # Remove project removed user and groups from acps
+    LOG.info("Polling on project updation task")
+    task_state = watch_task(res["status"]["execution_context"]["task_uuid"])
+    if task_state not in ERGON_TASK.FAILURE_STATES:
+        if acp_remove_user_list or acp_remove_group_list:
+            LOG.info("Updating project acps")
+            remove_users_from_project_acps(
+                project_uuid=project_uuid,
+                remove_user_list=acp_remove_user_list,
+                remove_group_list=acp_remove_group_list,
+            )
+    else:
+        raise Exception("Project updation task went to {} state".format(task_state))
+
+
+def remove_users_from_project_acps(project_uuid, remove_user_list, remove_group_list):
+
+    client = get_api_client()
+    ProjectInternalObj = get_resource_api("projects_internal", client.connection)
+    res, err = ProjectInternalObj.read(project_uuid)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    project_payload = res.json()
+    project_payload.pop("status", None)
+
+    for _acp in project_payload["spec"].get("access_control_policy_list", []):
+        _acp["operation"] = "UPDATE"
+        _acp_resources = _acp["acp"]["resources"]
+        updated_users = []
+        updated_groups = []
+
+        for _user in _acp_resources.get("user_reference_list", []):
+            if _user["name"] not in remove_user_list:
+                updated_users.append(_user)
+
+        for _group in _acp_resources.get("user_group_reference_list", []):
+            if _group["name"] not in remove_group_list:
+                updated_groups.append(_group)
+
+        _acp_resources["user_reference_list"] = updated_users
+        _acp_resources["user_group_reference_list"] = updated_groups
+
+    res, err = ProjectInternalObj.update(project_uuid, project_payload)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    res = res.json()
+    LOG.info("Polling on task for updating project ACPS")
+    watch_task(res["status"]["execution_context"]["task_uuid"])

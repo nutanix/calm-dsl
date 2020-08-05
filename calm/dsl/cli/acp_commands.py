@@ -46,13 +46,13 @@ def _get_acps(name, project, filter_by, limit, offset, quiet, out):
     help="ACP role",
 )
 @click.option("--project", "-p", required=True, help="ACP project name")
-@click.option("--user", "-u", multiple=True, default=[])
-@click.option("--group", "-g", multiple=True, default=[])
+@click.option("--user", "-u", "users", multiple=True, default=[])
+@click.option("--group", "-g", "groups", multiple=True, default=[])
 @click.option("--name", "-name", default=None)
-def _create_acp(role, project, user, group, name):
+def _create_acp(role, project, users, groups, name):
     """Creates an acp"""
 
-    create_acp(role, project, user, group, name)
+    create_acp(role, project, users, groups, name)
 
 
 @delete.command("acp")

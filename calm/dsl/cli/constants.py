@@ -119,6 +119,12 @@ class ERGON_TASK:
         STATUS.SUSPENDED,
     ]
 
+    FAILURE_STATES = [
+        STATUS.FAILED,
+        STATUS.ABORTED,
+        STATUS.SUSPENDED,
+    ]
+
 
 class ACP:
     class ENTITY_FILTER_EXPRESSION_LIST:

@@ -25,6 +25,9 @@ def watch_task(task_uuid, poll_interval=2):
         LOG.info(status)
 
         if status in ERGON_TASK.TERMINAL_STATES:
+            error_detail = res.get("error_detail", "")
+            if error_detail:
+                LOG.error(error_detail)
             return status
 
         time.sleep(poll_interval)

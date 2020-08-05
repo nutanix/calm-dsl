@@ -53,7 +53,7 @@ def create_project_from_dsl(project_file, project_name, description=""):
         err = {"error": err_msg, "code": -1}
         return None, err
 
-    return create_project(project_payload, name=project_name, description=description)
+    create_project(project_payload, name=project_name, description=description)
 
 
 @compile.command("project")
@@ -90,28 +90,17 @@ def _compile_project_command(project_file, out):
 @click.option(
     "--name", "-n", "project_name", type=str, default="", help="Project name(optional)"
 )
-def _create_project(project_file, project_name):
+@click.option(
+    "--description", "-d", default=None, help="Blueprint description (Optional)"
+)
+def _create_project(project_file, project_name, description):
     """Creates a project"""
 
     if project_file.endswith(".py"):
-        res, err = create_project_from_dsl(project_file, project_name)
+        create_project_from_dsl(project_file, project_name, description)
     else:
         LOG.error("Unknown file format")
         return
-
-    if err:
-        LOG.error(err["error"])
-        sys.exit(-1)
-
-    project = res.json()
-    LOG.info("Project creation triggered successfully")
-
-    stdout_dict = {
-        "name": project["metadata"]["name"],
-        "uuid": project["metadata"]["uuid"],
-        "execution_context": project["status"]["execution_context"],
-    }
-    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
 
 @delete.command("project")
@@ -167,6 +156,7 @@ Usability:
     a. If project_file is given, command will use file to update project
     b. If project_file is not given , project will be updated based on other cli switches 
        i.e. add_user, add_group, remove_user, remove_group
+    c. Project ACPs will be updated asynchronously you remove users/groups from project
     """
 
     if not (

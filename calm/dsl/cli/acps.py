@@ -13,6 +13,7 @@ from calm.dsl.store import Cache
 from calm.dsl.builtins import Ref
 
 from .constants import ACP
+from .task_commands import watch_task
 from .utils import get_name_query, highlight_text
 
 
@@ -105,6 +106,10 @@ def get_system_roles():
 
 
 def create_acp(role, project, acp_users, acp_groups, name):
+
+    if not (acp_users or acp_groups):
+        LOG.error("Atleast single user/group should be given")
+        sys.exit(-1)
 
     client = get_api_client()
     acp_name = name or "nuCalmAcp-{}".format(str(uuid.uuid4()))
@@ -293,6 +298,8 @@ def create_acp(role, project, acp_users, acp_groups, name):
         "execution_context": res["status"]["execution_context"],
     }
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+    LOG.info("Polling on acp creation task")
+    watch_task(res["status"]["execution_context"]["task_uuid"])
 
 
 def delete_acp(acp_name, project_name):
@@ -345,6 +352,8 @@ def delete_acp(acp_name, project_name):
         "execution_context": res["status"]["execution_context"],
     }
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+    LOG.info("Polling on acp deletion task")
+    watch_task(res["status"]["execution_context"]["task_uuid"])
 
 
 def describe_acp(acp_name, project_name, out):
@@ -382,7 +391,6 @@ def describe_acp(acp_name, project_name, out):
 
     acp = res.json()
     if out == "json":
-        acp.pop("status", None)
         click.echo(json.dumps(acp, indent=4, separators=(",", ": ")))
         return
 
@@ -391,9 +399,9 @@ def describe_acp(acp_name, project_name, out):
     click.echo("Status: " + highlight_text(acp["status"]["state"]))
     click.echo("Project: " + highlight_text(project_name))
 
-    acp_users = acp["spec"]["resources"].get("user_reference_list", [])
-    acp_groups = acp["spec"]["resources"].get("user_group_reference_list", [])
-    acp_role = acp["spec"]["resources"].get("role_reference", [])
+    acp_users = acp["status"]["resources"].get("user_reference_list", [])
+    acp_groups = acp["status"]["resources"].get("user_group_reference_list", [])
+    acp_role = acp["status"]["resources"].get("role_reference", [])
 
     if acp_role:
         role_data = Cache.get_entity_data_using_uuid(
@@ -447,6 +455,10 @@ def update_acp(
     remove_user_list,
     remove_group_list,
 ):
+
+    if not (add_user_list or add_group_list or remove_user_list or remove_group_list):
+        LOG.error("Atleast single user/group should be given for add/remove operations")
+        sys.exit(-1)
 
     client = get_api_client()
 
@@ -584,3 +596,5 @@ def update_acp(
         "execution_context": res["status"]["execution_context"],
     }
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+    LOG.info("Polling on acp updation task")
+    watch_task(res["status"]["execution_context"]["task_uuid"])
