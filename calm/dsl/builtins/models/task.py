@@ -339,6 +339,31 @@ def exec_task_powershell(
         depth=depth,
     )
 
+def exec_task_ssh_runbook(
+    script=None, filename=None, name=None, target=None, cred=None, depth=2
+):
+    return _exec_create(
+        "sh",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        cred=cred,
+        depth=depth,
+    )
+
+def exec_task_powershell_runbook(
+    script=None, filename=None, name=None, target=None,cred=None, depth=2
+):
+    return _exec_create(
+        "npsscript",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        cred=cred,
+        depth=depth,
+    )
 
 def decision_task_ssh(
     script=None, filename=None, name=None, target=None, cred=None, depth=2
@@ -1094,14 +1119,6 @@ class BaseTask:
     def __new__(cls, *args, **kwargs):
         raise TypeError("'{}' is not callable".format(cls.__name__))
 
-    class Exec:
-        def __new__(cls, *args, **kwargs):
-            raise TypeError("'{}' is not callable".format(cls.__name__))
-
-        ssh = exec_task_ssh
-        powershell = exec_task_powershell
-        escript = exec_task_escript
-
     class HTTP:
         def __new__(
             cls,
@@ -1159,6 +1176,14 @@ class CalmTask(BaseTask):
         scale_in = scale_in_task
         scale_out = scale_out_task
 
+    class Exec:
+        def __new__(cls, *args, **kwargs):
+            raise TypeError("'{}' is not callable".format(cls.__name__))
+
+        ssh = exec_task_ssh
+        powershell = exec_task_powershell
+        escript = exec_task_escript
+
 
 class RunbookTask(BaseTask):
     class Decision:
@@ -1168,6 +1193,14 @@ class RunbookTask(BaseTask):
         ssh = decision_task_ssh
         powershell = decision_task_powershell
         escript = decision_task_escript
+
+    class Exec:
+        def __new__(cls, *args, **kwargs):
+            raise TypeError("'{}' is not callable".format(cls.__name__))
+
+        ssh = exec_task_ssh_runbook
+        powershell = exec_task_powershell_runbook
+        escript = exec_task_escript
 
     class Loop:
         def __new__(
