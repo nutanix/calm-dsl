@@ -155,4 +155,6 @@ __all__ = [
     "update_dsl_metadata_map",
     "Provider",
     "create_project_payload",
+    "ProjectType",
+    "Project",
 ]

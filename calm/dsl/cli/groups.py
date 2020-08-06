@@ -1,6 +1,4 @@
-import time
 import click
-import arrow
 import json
 import sys
 from prettytable import PrettyTable
@@ -94,9 +92,9 @@ def create_group(name):
     client = get_api_client()
     group_payload = {
         "spec": {
-            "resources": {"directory_service_user_group": {"distinguished_name": name,}}
+            "resources": {"directory_service_user_group": {"distinguished_name": name}}
         },
-        "metadata": {"kind": "user_group", "spec_version": 0,},
+        "metadata": {"kind": "user_group", "spec_version": 0},
     }
 
     res, err = client.group.create(group_payload)

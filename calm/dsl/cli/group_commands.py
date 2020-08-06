@@ -1,5 +1,4 @@
 import click
-import json
 
 from .groups import get_groups, create_group, delete_group
 from .main import get, create, delete

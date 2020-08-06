@@ -1,6 +1,4 @@
-import time
 import click
-import arrow
 import json
 import sys
 from prettytable import PrettyTable
@@ -104,7 +102,7 @@ def create_user(name, directory_service):
                 }
             }
         },
-        "metadata": {"kind": "user", "spec_version": 0,},
+        "metadata": {"kind": "user", "spec_version": 0},
     }
 
     res, err = client.user.create(user_payload)

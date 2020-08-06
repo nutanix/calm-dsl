@@ -1,6 +1,4 @@
-import time
 import click
-import arrow
 import json
 import sys
 import uuid
@@ -244,8 +242,8 @@ def create_acp(role, project, acp_users, acp_groups, name):
         entity_filter_expression_list.append(
             {
                 "operator": "IN",
-                "left_hand_side": {"entity_type": "cluster",},
-                "right_hand_side": {"uuid_list": cluster_uuids,},
+                "left_hand_side": {"entity_type": "cluster"},
+                "right_hand_side": {"uuid_list": cluster_uuids},
             }
         )
 
@@ -274,7 +272,7 @@ def create_acp(role, project, acp_users, acp_groups, name):
                 "filter_list": {"context_list": context_list},
             },
         },
-        "metadata": {"kind": "access_control_policy",},
+        "metadata": {"kind": "access_control_policy"},
         "operation": "ADD",
     }
 

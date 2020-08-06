@@ -131,142 +131,142 @@ class ACP:
         DEVELOPER = [
             {
                 "operator": "IN",
-                "left_hand_side": {"entity_type": "image",},
-                "right_hand_side": {"collection": "ALL",},
+                "left_hand_side": {"entity_type": "image"},
+                "right_hand_side": {"collection": "ALL"},
             },
             {
                 "operator": "IN",
-                "left_hand_side": {"entity_type": "marketplace_item",},
-                "right_hand_side": {"collection": "SELF_OWNED",},
+                "left_hand_side": {"entity_type": "marketplace_item"},
+                "right_hand_side": {"collection": "SELF_OWNED"},
             },
             {
                 "operator": "IN",
-                "right_hand_side": {"collection": "ALL",},
-                "left_hand_side": {"entity_type": "app_icon",},
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "app_icon"},
             },
             {
                 "operator": "IN",
-                "right_hand_side": {"collection": "ALL",},
-                "left_hand_side": {"entity_type": "category",},
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "category"},
             },
             {
                 "operator": "IN",
-                "left_hand_side": {"entity_type": "app_task",},
-                "right_hand_side": {"collection": "SELF_OWNED",},
+                "left_hand_side": {"entity_type": "app_task"},
+                "right_hand_side": {"collection": "SELF_OWNED"},
             },
             {
                 "operator": "IN",
-                "left_hand_side": {"entity_type": "app_variable",},
-                "right_hand_side": {"collection": "SELF_OWNED",},
+                "left_hand_side": {"entity_type": "app_variable"},
+                "right_hand_side": {"collection": "SELF_OWNED"},
             },
         ]
 
         OPERATOR = [
             {
                 "operator": "IN",
-                "right_hand_side": {"collection": "ALL",},
-                "left_hand_side": {"entity_type": "app_icon",},
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "app_icon"},
             },
             {
                 "operator": "IN",
-                "right_hand_side": {"collection": "ALL",},
-                "left_hand_side": {"entity_type": "category",},
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "category"},
             },
         ]
 
         CONSUMER = [
             {
                 "operator": "IN",
-                "left_hand_side": {"entity_type": "image",},
-                "right_hand_side": {"collection": "ALL",},
+                "left_hand_side": {"entity_type": "image"},
+                "right_hand_side": {"collection": "ALL"},
             },
             {
                 "operator": "IN",
-                "left_hand_side": {"entity_type": "marketplace_item",},
-                "right_hand_side": {"collection": "SELF_OWNED",},
+                "left_hand_side": {"entity_type": "marketplace_item"},
+                "right_hand_side": {"collection": "SELF_OWNED"},
             },
             {
                 "operator": "IN",
-                "right_hand_side": {"collection": "ALL",},
-                "left_hand_side": {"entity_type": "app_icon",},
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "app_icon"},
             },
             {
                 "operator": "IN",
-                "right_hand_side": {"collection": "ALL",},
-                "left_hand_side": {"entity_type": "category",},
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "category"},
             },
             {
                 "operator": "IN",
-                "left_hand_side": {"entity_type": "app_task",},
-                "right_hand_side": {"collection": "SELF_OWNED",},
+                "left_hand_side": {"entity_type": "app_task"},
+                "right_hand_side": {"collection": "SELF_OWNED"},
             },
             {
                 "operator": "IN",
-                "left_hand_side": {"entity_type": "app_variable",},
-                "right_hand_side": {"collection": "SELF_OWNED",},
+                "left_hand_side": {"entity_type": "app_variable"},
+                "right_hand_side": {"collection": "SELF_OWNED"},
             },
         ]
 
         PROJECT_ADMIN = [
             {
                 "operator": "IN",
-                "left_hand_side": {"entity_type": "image",},
-                "right_hand_side": {"collection": "ALL",},
+                "left_hand_side": {"entity_type": "image"},
+                "right_hand_side": {"collection": "ALL"},
             },
             {
                 "operator": "IN",
-                "left_hand_side": {"entity_type": "marketplace_item",},
-                "right_hand_side": {"collection": "SELF_OWNED",},
+                "left_hand_side": {"entity_type": "marketplace_item"},
+                "right_hand_side": {"collection": "SELF_OWNED"},
             },
             {
                 "operator": "IN",
-                "right_hand_side": {"collection": "ALL",},
-                "left_hand_side": {"entity_type": "directory_service",},
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "directory_service"},
             },
             {
                 "operator": "IN",
-                "right_hand_side": {"collection": "ALL",},
-                "left_hand_side": {"entity_type": "role",},
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "role"},
             },
             {
                 "operator": "IN",
-                "right_hand_side": {"uuid_list": [],},
-                "left_hand_side": {"entity_type": "project",},
+                "right_hand_side": {"uuid_list": []},
+                "left_hand_side": {"entity_type": "project"},
             },
             {
                 "operator": "IN",
-                "right_hand_side": {"collection": "ALL",},
-                "left_hand_side": {"entity_type": "user",},
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "user"},
             },
             {
                 "operator": "IN",
-                "right_hand_side": {"collection": "ALL",},
-                "left_hand_side": {"entity_type": "user_group",},
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "user_group"},
             },
             {
                 "operator": "IN",
-                "right_hand_side": {"collection": "SELF_OWNED",},
-                "left_hand_side": {"entity_type": "environment",},
+                "right_hand_side": {"collection": "SELF_OWNED"},
+                "left_hand_side": {"entity_type": "environment"},
             },
             {
                 "operator": "IN",
-                "right_hand_side": {"collection": "ALL",},
-                "left_hand_side": {"entity_type": "app_icon",},
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "app_icon"},
             },
             {
                 "operator": "IN",
-                "right_hand_side": {"collection": "ALL",},
-                "left_hand_side": {"entity_type": "category",},
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "category"},
             },
             {
                 "operator": "IN",
-                "left_hand_side": {"entity_type": "app_task",},
-                "right_hand_side": {"collection": "SELF_OWNED",},
+                "left_hand_side": {"entity_type": "app_task"},
+                "right_hand_side": {"collection": "SELF_OWNED"},
             },
             {
                 "operator": "IN",
-                "left_hand_side": {"entity_type": "app_variable",},
-                "right_hand_side": {"collection": "SELF_OWNED",},
+                "left_hand_side": {"entity_type": "app_variable"},
+                "right_hand_side": {"collection": "SELF_OWNED"},
             },
         ]
 

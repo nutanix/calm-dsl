@@ -1,5 +1,4 @@
 import click
-import json
 
 from .roles import get_roles
 from .main import get

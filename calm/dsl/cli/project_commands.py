@@ -1,5 +1,4 @@
 import click
-import json
 import sys
 
 from .projects import (
@@ -14,7 +13,6 @@ from .projects import (
 )
 from .main import create, get, update, delete, describe, compile
 from calm.dsl.log import get_logging_handle
-from calm.dsl.builtins import read_spec
 
 LOG = get_logging_handle(__name__)
 
@@ -180,9 +178,9 @@ def _update_project(
     Updates a project.
 
 \b
-Usability: 
+Usability:
     a. If project_file is given, command will use file to update project
-    b. If project_file is not given , project will be updated based on other cli switches 
+    b. If project_file is not given , project will be updated based on other cli switches
        i.e. add_user, add_group, remove_user, remove_group
     c. Project ACPs will be updated asynchronously you remove users/groups from project
     """

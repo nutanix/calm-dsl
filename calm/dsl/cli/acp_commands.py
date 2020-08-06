@@ -1,5 +1,4 @@
 import click
-import json
 
 from .acps import (
     get_acps,

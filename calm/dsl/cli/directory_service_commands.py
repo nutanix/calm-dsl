@@ -1,5 +1,4 @@
 import click
-import json
 
 from .directory_services import get_directory_services
 from .main import get

@@ -210,7 +210,6 @@ def create_project(project_payload, name="", description=""):
 
 def describe_project(project_name, out):
 
-    client = get_api_client()
     project = get_project(project_name)
 
     if out == "json":

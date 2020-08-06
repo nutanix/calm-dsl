@@ -1,5 +1,4 @@
 import click
-import json
 
 from .users import get_users, create_user, delete_user
 from .main import get, create, delete

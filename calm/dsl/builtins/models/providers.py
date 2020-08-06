@@ -1,9 +1,4 @@
-import sys
-
-from .entity import EntityType, Entity
-from .validator import PropertyValidator
 from .ref import Ref
-from calm.dsl.store import Cache
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -69,10 +64,6 @@ class Provider:
     class Vmware:
         def __new__(cls, account):
             return {"provider_type": "vmware", "account_reference": account}
-
-    class Gcp:
-        def __new__(cls, account):
-            return {"provider_type": "gcp", "account_reference": account}
 
     class K8s:
         def __new__(cls, account):

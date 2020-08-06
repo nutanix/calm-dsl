@@ -1,6 +1,4 @@
-import time
 import click
-import arrow
 import json
 from prettytable import PrettyTable
 
