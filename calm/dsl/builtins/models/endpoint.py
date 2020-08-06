@@ -133,7 +133,7 @@ def linux_endpoint_vm(
     filter=None,
     name=None,
     port=22,
-    subnet="10.0.0.0/8",
+    subnet="",
     cred=None,
     account=None,
 ):
@@ -161,7 +161,7 @@ def windows_endpoint_vm(
     connection_protocol="HTTP",
     port=None,
     cred=None,
-    subnet="10.0.0.0/8",
+    subnet="",
     account=None,
 ):
 
