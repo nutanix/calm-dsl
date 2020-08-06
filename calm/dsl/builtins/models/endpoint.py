@@ -60,7 +60,7 @@ def _http_endpoint(
     return _endpoint_create(**kwargs)
 
 
-def _exec_create(
+def _os_endpoint(
     value_type,
     value_list,
     name=None,
@@ -72,7 +72,7 @@ def _exec_create(
     filter_type=None,
     subnet=None,
     filter=None,
-    account=None
+    account=None,
 ):
     kwargs = {
         "name": name,
@@ -98,7 +98,8 @@ def _exec_create(
 
 
 def linux_endpoint_ip(value, name=None, port=22, os_type="Linux", cred=None):
-    return _exec_create("IP", value, ep_type="Linux", name=name, port=port, cred=cred)
+    return _os_endpoint("IP", value, ep_type="Linux", name=name, port=port, cred=cred)
+
 
 def windows_endpoint_ip(
     value, name=None, connection_protocol="HTTP", port=None, cred=None
@@ -114,7 +115,7 @@ def windows_endpoint_ip(
             port = 5985
         else:
             port = 5986
-    return _exec_create(
+    return _os_endpoint(
         "IP",
         value,
         ep_type="Windows",
@@ -124,14 +125,46 @@ def windows_endpoint_ip(
         cred=cred,
     )
 
-def linux_endpoint_vm(values, provider_type="nutanix", filter_type="static", filter=None, name=None, port=22,
-                      subnet="10.0.0.0/8", cred=None, account=None):
-    return _exec_create("VM", values, name=name, ep_type="Linux", provider_type=provider_type, filter_type=filter_type,
-                        filter=filter, port=port, subnet=subnet, cred=cred, account=account)
+
+def linux_endpoint_vm(
+    values,
+    provider_type="nutanix",
+    filter_type="static",
+    filter=None,
+    name=None,
+    port=22,
+    subnet="10.0.0.0/8",
+    cred=None,
+    account=None,
+):
+    return _os_endpoint(
+        "VM",
+        values,
+        name=name,
+        ep_type="Linux",
+        provider_type=provider_type,
+        filter_type=filter_type,
+        filter=filter,
+        port=port,
+        subnet=subnet,
+        cred=cred,
+        account=account,
+    )
+
 
 def windows_endpoint_vm(
-    value, name=None, provider_type="nutanix", filter_type="static", filter=None, connection_protocol="HTTP", port=None,
-    cred=None, subnet="10.0.0.0/8", account=None):
+    value,
+    name=None,
+    provider_type="nutanix",
+    filter_type="static",
+    filter=None,
+    connection_protocol="HTTP",
+    port=None,
+    cred=None,
+    subnet="10.0.0.0/8",
+    account=None,
+):
+
     connection_protocol = connection_protocol.lower()
     if connection_protocol not in ["http", "https"]:
         raise TypeError(
@@ -143,7 +176,7 @@ def windows_endpoint_vm(
             port = 5985
         else:
             port = 5986
-    return _exec_create(
+    return _os_endpoint(
         "VM",
         value,
         ep_type="Windows",
@@ -155,8 +188,9 @@ def windows_endpoint_vm(
         filter_type=filter_type,
         filter=filter,
         subnet=subnet,
-        account=account
+        account=account,
     )
+
 
 def _basic_auth(username, password):
     secret = {"attrs": {"is_secret_modified": True}, "value": password}

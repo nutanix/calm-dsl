@@ -5,25 +5,34 @@ from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import ENDPOINT
 from utils import read_test_config
 
-LinuxVMStaticAHVEpPayload = read_test_config(file_name="linux_vm_static_ahv_ep_payload.json")
-LinuxVMDynamicAHVEpPayload = read_test_config(file_name="linux_vm_dynamic_ahv_ep_payload.json")
-WindowsVMStaticAHVEpPayload = read_test_config(file_name="windows_vm_static_ahv_ep_payload.json")
-WindowsVMDynamicAHVEpPayload = read_test_config(file_name="windows_vm_dynamic_ahv_ep_payload.json")
+LinuxVMStaticAHVEpPayload = read_test_config(
+    file_name="linux_vm_static_ahv_ep_payload.json"
+)
+LinuxVMDynamicAHVEpPayload = read_test_config(
+    file_name="linux_vm_dynamic_ahv_ep_payload.json"
+)
+WindowsVMStaticAHVEpPayload = read_test_config(
+    file_name="windows_vm_static_ahv_ep_payload.json"
+)
+WindowsVMDynamicAHVEpPayload = read_test_config(
+    file_name="windows_vm_dynamic_ahv_ep_payload.json"
+)
 
 
 class TestVMEndpoints:
-
     @pytest.mark.parametrize(
         "EndpointPayload",
-        [WindowsVMStaticAHVEpPayload,
-         LinuxVMStaticAHVEpPayload,
-         LinuxVMDynamicAHVEpPayload,
-         WindowsVMDynamicAHVEpPayload
+        [
+            WindowsVMStaticAHVEpPayload,
+            LinuxVMStaticAHVEpPayload,
+            LinuxVMDynamicAHVEpPayload,
+            WindowsVMDynamicAHVEpPayload,
+        ],
     )
     def test_vm_endpoint_static_crud(self, EndpointPayload):
         """Endpoint for VM crud"""
         client = get_api_client()
-        #endpoint = change_uuids(EndpointPayload, {})
+        # endpoint = change_uuids(EndpointPayload, {})
         endpoint = EndpointPayload
 
         # Endpoint Create
@@ -52,7 +61,10 @@ class TestVMEndpoints:
         ep_value_type = ep["spec"]["resources"]["value_type"]
         del ep["status"]
         if ep_type != ENDPOINT.TYPES.HTTP and ep_value_type == ENDPOINT.VALUE_TYPES.VM:
-            ep["spec"]["resources"]["attrs"]["values"] = ["f2fa6e06-5684-4089-9c73-f84f19afc15e", "b78f1695-bb14-4de1-be87-dd17012f913c"]
+            ep["spec"]["resources"]["attrs"]["values"] = [
+                "f2fa6e06-5684-4089-9c73-f84f19afc15e",
+                "b78f1695-bb14-4de1-be87-dd17012f913c",
+            ]
         else:
             pytest.fail("Invalid type {} of the endpoint".format(ep_type))
 
@@ -66,8 +78,14 @@ class TestVMEndpoints:
         print(">> Endpoint state: {}".format(ep_state))
         assert ep_state == "ACTIVE"
         if ep_type != ENDPOINT.TYPES.HTTP and ep_value_type == ENDPOINT.VALUE_TYPES.VM:
-            assert "f2fa6e06-5684-4089-9c73-f84f19afc15e" in ep["spec"]["resources"]["attrs"]["values"]
-            assert "b78f1695-bb14-4de1-be87-dd17012f913c" in ep["spec"]["resources"]["attrs"]["values"]
+            assert (
+                "f2fa6e06-5684-4089-9c73-f84f19afc15e"
+                in ep["spec"]["resources"]["attrs"]["values"]
+            )
+            assert (
+                "b78f1695-bb14-4de1-be87-dd17012f913c"
+                in ep["spec"]["resources"]["attrs"]["values"]
+            )
             assert len(ep["spec"]["resources"]["attrs"]["values"]) == 2
         else:
             pytest.fail("Invalid type {} of the endpoint".format(ep_type))
@@ -113,13 +131,12 @@ class TestVMEndpoints:
         assert ep_state == "DELETED"
 
     @pytest.mark.parametrize(
-        "EndpointPayload",
-        [WindowsVMDynamicAHVEpPayload],
+        "EndpointPayload", [WindowsVMDynamicAHVEpPayload],
     )
     def test_vm_endpoint_dynamic_crud(self, EndpointPayload):
         """Endpoint for VM crud"""
         client = get_api_client()
-        #endpoint = change_uuids(EndpointPayload, {})
+        # endpoint = change_uuids(EndpointPayload, {})
         endpoint = EndpointPayload
 
         # Endpoint Create
@@ -150,7 +167,11 @@ class TestVMEndpoints:
         ep_value_type = ep["spec"]["resources"]["value_type"]
         ep_filter_type = ep["spec"]["resources"]["attrs"]["filter_type"]
         del ep["status"]
-        if ep_type != ENDPOINT.TYPES.HTTP and ep_value_type == ENDPOINT.VALUE_TYPES.VM and ep_filter_type == "dynamic":
+        if (
+            ep_type != ENDPOINT.TYPES.HTTP
+            and ep_value_type == ENDPOINT.VALUE_TYPES.VM
+            and ep_filter_type == "dynamic"
+        ):
             ep["spec"]["resources"]["attrs"]["filter"] = "power_state==on"
         else:
             pytest.fail("Invalid type {} of the endpoint".format(ep_type))
@@ -164,7 +185,11 @@ class TestVMEndpoints:
         ep_value_type = ep["status"]["resources"]["value_type"]
         print(">> Endpoint state: {}".format(ep_state))
         assert ep_state == "ACTIVE"
-        if ep_type != ENDPOINT.TYPES.HTTP and ep_value_type == ENDPOINT.VALUE_TYPES.VM and ep_filter_type == "dynamic":
+        if (
+            ep_type != ENDPOINT.TYPES.HTTP
+            and ep_value_type == ENDPOINT.VALUE_TYPES.VM
+            and ep_filter_type == "dynamic"
+        ):
             assert "power_state==on" in ep["spec"]["resources"]["attrs"]["filter"]
         else:
             pytest.fail("Invalid type {} of the endpoint".format(ep_type))

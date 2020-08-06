@@ -1,5 +1,3 @@
-
-
 class CalmAccount:
     def __new__(cls, *args, **kwargs):
         raise TypeError("'{}' is not callable".format(cls.__name__))
@@ -15,6 +13,7 @@ class CalmAccount:
     class VMWare:
         def __new__(cls, *args, **kwargs):
             return _account(*args, **kwargs)
+
 
 def _account(name=None, uuid=None):
     account = {}

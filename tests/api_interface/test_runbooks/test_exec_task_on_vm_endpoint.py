@@ -8,20 +8,20 @@ from tests.api_interface.test_runbooks.test_files.exec_task import (
     ShellTaskOnLinuxVMAHVStaticEndpoint,
     ShellTaskOnLinuxVMAHVDynamicEndpoint1,
     ShellTaskOnLinuxVMAHVDynamicEndpoint2,
-    #ShellTaskOnLinuxVMVMWareStaticEndpoint
-    #ShellTaskOnWindowsVMAHVStaticEndpoint
+    # ShellTaskOnLinuxVMVMWareStaticEndpoint
+    # ShellTaskOnWindowsVMAHVStaticEndpoint
 )
 from utils import upload_runbook, poll_runlog_status
 
 
 class TestExecTasksVMEndpoint:
-
     @pytest.mark.abhinay_run
     @pytest.mark.parametrize(
-        "Runbook", [
+        "Runbook",
+        [
             ShellTaskOnLinuxVMAHVStaticEndpoint,
             ShellTaskOnLinuxVMAHVDynamicEndpoint1,
-            ShellTaskOnLinuxVMAHVDynamicEndpoint2
+            ShellTaskOnLinuxVMAHVDynamicEndpoint2,
         ],
     )
     def test_script_run(self, Runbook):
@@ -93,4 +93,3 @@ class TestExecTasksVMEndpoint:
             _, err = client.endpoint.delete(endpoint["uuid"])
             if err:
                 pytest.fail("[{}] - {}".format(err["code"], err["error"]))
-
