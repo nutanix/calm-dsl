@@ -34,6 +34,7 @@ def _get_groups(name, filter_by, limit, offset, quiet, out):
 @create.command("group")
 @click.option("--name", "-n", required=True, help="Distinguished name of group")
 def _create_group(name):
+    """Creates a user-group"""
 
     create_group(name)
 

@@ -79,6 +79,8 @@ def _describe_bp(bp_name, out):
     help="Path of Blueprint file to format",
 )
 def _format_blueprint_command(bp_file):
+    """Formats blueprint file using black"""
+
     format_blueprint_command(bp_file)
 
 

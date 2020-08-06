@@ -39,6 +39,7 @@ def _get_users(name, filter_by, limit, offset, quiet, out):
     help="Directory Service of user",
 )
 def _create_user(name, directory_service):
+    """Creates a user"""
 
     create_user(name, directory_service)
 
