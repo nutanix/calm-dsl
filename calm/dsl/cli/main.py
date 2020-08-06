@@ -420,3 +420,27 @@ def calmrepl():
 def set():
     """Sets the entities"""
     pass
+
+
+@get.group("library")
+def library_get():
+    """Get Library entities"""
+    pass
+
+
+@create.group("library")
+def library_create():
+    """Create Library entities"""
+    pass
+
+
+@describe.group("library")
+def library_describe():
+    """Describe Library entities"""
+    pass
+
+
+@delete.group("library")
+def library_delete():
+    """Delete Library entities"""
+    pass

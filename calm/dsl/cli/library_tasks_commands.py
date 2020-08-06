@@ -3,12 +3,12 @@ import click
 from calm.dsl.log import get_logging_handle
 
 from .main import (
-    get,
-    describe,
-    delete,
-    create,
+    library_get,
+    library_create,
+    library_describe,
+    library_delete,
 )
-from .tasks import (
+from .library_tasks import (
     get_tasks_list,
     describe_task,
     delete_task,
@@ -18,7 +18,7 @@ from .tasks import (
 LOG = get_logging_handle(__name__)
 
 
-@get.command("tasks", feature_min_version="3.0.0", experimental=True)
+@library_get.command("tasks")
 @click.option("--name", "-n", default=None, help="Search for task from task library by name")
 @click.option(
     "--filter", "filter_by", "-f", default=None, help="Filter tasks from task library by this string"
@@ -39,7 +39,7 @@ def _get_tasks_list(name, filter_by, limit, offset, quiet, all_items):
     get_tasks_list(name, filter_by, limit, offset, quiet, all_items)
 
 
-@describe.command("task", feature_min_version="3.0.0", experimental=True)
+@library_describe.command("task")
 @click.argument("task_name")
 @click.option(
     "--out",
@@ -55,7 +55,7 @@ def _describe_task(task_name, out):
     describe_task(task_name, out)
 
 
-@delete.command("task", feature_min_version="3.0.0", experimental=True)
+@library_delete.command("task")
 @click.argument("task_names", nargs=-1)
 def _delete_task(task_names):
     """Deletes a task from task library"""
@@ -63,7 +63,7 @@ def _delete_task(task_names):
     delete_task(task_names)
 
 
-@create.command("task", feature_min_version="3.0.0", experimental=True)
+@library_create.command("task")
 @click.option(
     "--file",
     "-f",
