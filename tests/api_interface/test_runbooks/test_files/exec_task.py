@@ -9,6 +9,10 @@ from calm.dsl.runbooks import CalmAccount as Account
 
 linux_ip = read_local_file(".tests/runbook_tests/vm_ip")
 windows_ip = read_local_file(".tests/runbook_tests/windows_vm_ip")
+AHV_LINUX_ID = read_local_file(".tests/runbook_tests/ahv_linux_id")
+AHV_WINDOWS_ID = read_local_file(".tests/runbook_tests/ahv_windows_id")
+VMWARE_LINUX_ID = read_local_file(".tests/runbook_tests/vmware_linux_id")
+VMWARE_WINDOWS_ID = read_local_file(".tests/runbook_tests/vmware_windows_id")
 CRED_USERNAME = read_local_file(".tests/runbook_tests/username")
 CRED_WINDOWS_USERNAME = read_local_file(".tests/runbook_tests/windows_username")
 CRED_PASSWORD = read_local_file(".tests/runbook_tests/password")
@@ -35,33 +39,33 @@ VMWareAccount = Account.VMWare(
 linux_endpoint = Endpoint.Linux.ip([linux_ip], cred=LinuxCred)
 linux_ahv_static_vm_endpoint = Endpoint.Linux.vm(
     filter_type="static",
-    values=["afb650a3-b67b-4194-a552-94f686f34b6c"],
+    values=[AHV_LINUX_ID],
     cred=LinuxCred,
     account=AHVAccount,
 )
 linux_ahv_dynamic_vm_endpoint1 = Endpoint.Linux.vm(
     filter_type="dynamic",
-    filter="category==cat1:value1",
+    filter="name==linux_vm.*;category==cat1:value1",
     values=[],
     cred=LinuxCred,
     account=AHVAccount,
 )
 linux_ahv_dynamic_vm_endpoint2 = Endpoint.Linux.vm(
     filter_type="dynamic",
-    filter="name==vm.*",
+    filter="name==linux_vm.*",
     values=[],
     cred=LinuxCred,
     account=AHVAccount,
 )
 linux_vmware_static_vm_endpoint = Endpoint.Linux.vm(
     filter_type="static",
-    values=["50139713-420a-9780-f219-075170764fec"],
+    values=[VMWARE_LINUX_ID],
     cred=LinuxCred,
     account=VMWareAccount,
 )
 windows_ahv_static_vm_endpoint = Endpoint.Windows.vm(
     filter_type="static",
-    value=["ecf1ba40-aac8-4450-b82b-240e7b722f5d"],
+    value=[AHV_WINDOWS_ID],
     cred=WindowsCred,
     account=AHVAccount,
 )

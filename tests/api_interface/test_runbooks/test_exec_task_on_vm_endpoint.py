@@ -3,7 +3,6 @@ import uuid
 
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import RUNLOG
-from calm.dsl.config import get_config
 from tests.api_interface.test_runbooks.test_files.exec_task import (
     ShellTaskOnLinuxVMAHVStaticEndpoint,
     ShellTaskOnLinuxVMAHVDynamicEndpoint1,
@@ -15,7 +14,9 @@ from utils import upload_runbook, poll_runlog_status
 
 
 class TestExecTasksVMEndpoint:
-    @pytest.mark.abhinay_run
+    @pytest.mark.now
+    @pytest.mark.runbook
+    @pytest.mark.regression
     @pytest.mark.parametrize(
         "Runbook",
         [
