@@ -17,6 +17,26 @@ Language design is black art, and building upon a well-established language is d
  - Server status: `calm get server status`. Check if Calm is enabled on PC & Calm version is >=2.9.7.
  - Config: `calm show config`. Check if you have the right config. By default, config is stored at `~/.calm/config.ini`. Please see `calm set config --help` for details to update config.
 
+## Project
+- Create user: `calm create user --name <principal_name> --directory <directory_service>`.
+- Create user-group: `calm create group -- name <distinguished_name_of_group>`/
+- List users/user-groups: `calm get users/groups`.
+- Delete user/user-group: `calm delete user/group <name>`. It will print summary of user/group.
+- List directory services: `calm get directory_services`
+- Compile project: `calm compile project --file <project_file_location>`.
+- Create project: `calm create project --file <project_file_location>`.
+- List projects: `calm get projects`
+- Describe project: `calm describe project <project_name>`. It will print summary of project.
+- Update project using dsl file: `calm update project <project_name> --file <project_file_location>`.
+- Update project using cli switches: `calm update project --add_user/--remove_user <user_name> --add_group/--remove_group <group_name>`.
+- Delete project: `calm delete project <project_name>`.
+- Create ACP: `calm create acp --role <role_name> --project <project_name> --name <acp_name>`. Custom roles are not supported for acp creation.
+- List ACPs: `calm get acps --project <project_name>`.
+- Read ACP: `calm describe acp <acp_name> --project <project_name>`.
+- Update ACP: `calm update acp <acp_name> --project <project_name> --add_user/--remove_user <user_name> --add_group/--remove_group <group_name>`
+- Delete ACP: `calm delete acp <acp_name> --project <project_name>`.
+Note: Project option is required for acp commands.
+
 ## Blueprint
  - First blueprint: `calm init bp`. This will create a folder `HelloBlueprint` with all the necessary files. `HelloBlueprint/blueprint.py` is the main blueprint DSL file. Please read the comments in the beginning of the file for more details about the blueprint.
  - Compile blueprint: `calm compile bp --file HelloBlueprint/blueprint.py`. This command will print the compiled blueprint JSON.

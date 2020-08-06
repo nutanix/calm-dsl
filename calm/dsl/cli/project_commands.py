@@ -136,10 +136,38 @@ def _describe_project(project_name, out):
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path of Project file to upload",
 )
-@click.option("--add_user", "-au", "add_user_list", multiple=True, default=[])
-@click.option("--add_group", "-ag", "add_group_list", multiple=True, default=[])
-@click.option("--remove_user", "-ru", "remove_user_list", multiple=True, default=[])
-@click.option("--remove_group", "-rg", "remove_group_list", multiple=True, default=[])
+@click.option(
+    "--add_user",
+    "-au",
+    "add_user_list",
+    help="name of user to be added",
+    multiple=True,
+    default=[],
+)
+@click.option(
+    "--add_group",
+    "-ag",
+    "add_group_list",
+    help="name of group to be added",
+    multiple=True,
+    default=[],
+)
+@click.option(
+    "--remove_user",
+    "-ru",
+    "remove_user_list",
+    help="name of user to be removed",
+    multiple=True,
+    default=[],
+)
+@click.option(
+    "--remove_group",
+    "-rg",
+    "remove_group_list",
+    help="name of group to be removed",
+    multiple=True,
+    default=[],
+)
 def _update_project(
     project_name,
     project_file,
