@@ -129,7 +129,7 @@ def _decompile_bp(name, bp_file, with_secrets):
 
 
 def create_blueprint(
-    client, bp_payload, name=None, description=None, categories=None, force_create=False
+    client, bp_payload, name=None, description=None, force_create=False
 ):
 
     bp_payload.pop("status", None)
@@ -167,14 +167,13 @@ def create_blueprint(
     bp_resources = bp_payload["spec"]["resources"]
     bp_name = bp_payload["spec"]["name"]
     bp_desc = bp_payload["spec"]["description"]
-
-    categories = bp_payload["metadata"].get("categories", None)
+    bp_metadata = bp_payload["metadata"]
 
     return client.blueprint.upload_with_secrets(
         bp_name,
         bp_desc,
         bp_resources,
-        categories=categories,
+        bp_metadata=bp_metadata,
         force_create=force_create,
     )
 

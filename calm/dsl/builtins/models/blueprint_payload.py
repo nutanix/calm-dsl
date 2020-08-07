@@ -1,7 +1,10 @@
+from calm.dsl.config import get_config
+
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .blueprint import BlueprintType
 from .simple_blueprint import SimpleBlueprintType
+from .ref import Ref
 
 
 # Blueprint Payload
@@ -28,7 +31,7 @@ def _blueprint_payload(**kwargs):
 BlueprintPayload = _blueprint_payload()
 
 
-def create_blueprint_payload(UserBlueprint, categories=None):
+def create_blueprint_payload(UserBlueprint, metadata={}):
 
     err = {"error": "", "code": -1}
 
@@ -46,11 +49,22 @@ def create_blueprint_payload(UserBlueprint, categories=None):
         "resources": UserBlueprint,
     }
 
-    metadata = {"spec_version": 1, "kind": "blueprint", "name": UserBlueprint.__name__}
+    if not metadata:
+        config = get_config()
+        project_name = config["PROJECT"].get("name", "default")
+        metadata = {
+            "spec_version": 1,
+            "name": UserBlueprint.__name__,
+            "project_reference": Ref.Project(project_name),
+        }
 
-    if categories:
-        metadata["categories"] = categories
+        config_categories = dict(config.items("CATEGORIES"))
+        metadata["categories"] = config_categories
+    else:
+        # Set the blueprint name correctly
+        metadata["name"] = UserBlueprint.__name__
 
+    metadata["kind"] = "blueprint"
     UserBlueprintPayload = _blueprint_payload()
     UserBlueprintPayload.metadata = metadata
     UserBlueprintPayload.spec = spec

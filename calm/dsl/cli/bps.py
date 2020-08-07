@@ -32,6 +32,7 @@ from .utils import (
     get_module_from_file,
     import_var_from_file,
 )
+from .metadata import get_metadata_payload
 from .constants import BLUEPRINT
 from calm.dsl.store import Cache
 from calm.dsl.log import get_logging_handle
@@ -231,11 +232,16 @@ def compile_blueprint(bp_file):
     if UserBlueprint is None:
         return None
 
+    # Constructing metadata payload
+    metadata_payload = get_metadata_payload(bp_file)
+
     bp_payload = None
     if isinstance(UserBlueprint, type(SimpleBlueprint)):
         bp_payload = UserBlueprint.make_bp_dict()
     else:
-        UserBlueprintPayload, _ = create_blueprint_payload(UserBlueprint)
+        UserBlueprintPayload, _ = create_blueprint_payload(
+            UserBlueprint, metadata=metadata_payload
+        )
         bp_payload = UserBlueprintPayload.get_dict()
 
         # Adding the display map to client attr
@@ -337,24 +343,6 @@ def compile_blueprint_command(bp_file, out):
     if bp_payload is None:
         LOG.error("User blueprint not found in {}".format(bp_file))
         return
-
-    config = get_config()
-
-    project_name = config["PROJECT"].get("name", "default")
-    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
-
-    if not project_cache_data:
-        LOG.error(
-            "Project {} not found. Please run: calm update cache".format(project_name)
-        )
-        sys.exit(-1)
-
-    project_uuid = project_cache_data.get("uuid", "")
-    bp_payload["metadata"]["project_reference"] = {
-        "type": "project",
-        "uuid": project_uuid,
-        "name": project_name,
-    }
 
     credential_list = bp_payload["spec"]["resources"]["credential_definition_list"]
     is_secret_avl = False
