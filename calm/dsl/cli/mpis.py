@@ -10,10 +10,12 @@ from calm.dsl.decompile.file_handler import get_bp_dir
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.config import get_config
 
-from .utils import highlight_text, get_states_filter
+from .utils import highlight_text, get_states_filter, Display
 from .bps import launch_blueprint_simple, get_blueprint
-from .runbooks import get_runbook
+from .runbooks import get_runbook, poll_action, watch_runbook
 from .projects import get_project
+from .runlog import get_runlog_status
+from .endpoints import get_endpoint
 from calm.dsl.log import get_logging_handle
 from .constants import MARKETPLACE_ITEM
 
@@ -1520,3 +1522,205 @@ def publish_runbook_as_existing_marketplace_item(
                 version=version,
                 app_source=MARKETPLACE_ITEM.SOURCES.LOCAL,
             )
+
+
+def execute_marketplace_runbook_command(
+    name,
+    version,
+    project,
+    app_source=None,
+    ignore_runtime_variables=False,
+    watch=False
+):
+    """
+        Launch marketplace blueprints
+        If version not there search in published, pendingm, accepted blueprints
+    """
+
+    if not version:
+        LOG.info("Fetching latest version of Marketplace Runbook {} ".format(name))
+        version = get_mpi_latest_version(
+            name=name,
+            app_source=app_source,
+            app_states=[
+                MARKETPLACE_ITEM.STATES.ACCEPTED,
+                MARKETPLACE_ITEM.STATES.PUBLISHED,
+                MARKETPLACE_ITEM.STATES.PENDING,
+            ],
+        )
+        LOG.info(version)
+
+    config = get_config()
+    client = get_api_client()
+
+    project_name = project or config["PROJECT"]["name"]
+    project_data = get_project(client, project_name)
+
+    project_uuid = project_data["metadata"]["uuid"]
+
+    LOG.info("Fetching MPI details")
+    mpi_data = get_mpi_by_name_n_version(
+        name=name,
+        version=version,
+        app_source=app_source,
+        app_states=[
+            MARKETPLACE_ITEM.STATES.ACCEPTED,
+            MARKETPLACE_ITEM.STATES.PUBLISHED,
+            MARKETPLACE_ITEM.STATES.PENDING,
+        ],
+    )
+
+    mpi_type = mpi_data["status"]["resources"]['type']
+    if mpi_type != MARKETPLACE_ITEM.TYPES.RUNBOOK:
+        LOG.error("Selected marketplace item is not of type runbook")
+        return
+
+    mpi_uuid = mpi_data['metadata']['uuid']
+    payload = {
+        "api_version": "3.0",
+        "metadata": {
+            "kind": "runbook",
+            "project_reference": {
+                "uuid": project_uuid,
+                "kind": "project"
+            }
+        },
+        "spec": {
+            "resources": {
+                "args": [],
+                "marketplace_reference": {
+                    "kind": "marketplace_item",
+                    "uuid": mpi_uuid
+                }
+            }
+        }
+    }
+
+    patch_runbook_endpoints(client, mpi_data, payload)
+    if not ignore_runtime_variables:
+        patch_runbook_runtime_editables(client, mpi_data, payload)
+
+    def render_runbook(screen):
+        screen.clear()
+        screen.refresh()
+        execute_marketplace_runbook(
+            screen, client, watch, payload=payload
+        )
+        screen.wait_for_input(10.0)
+
+    Display.wrapper(render_runbook, watch)
+
+
+def execute_marketplace_runbook(screen, client,
+                                watch, payload={}):
+
+    res, err = client.runbook.marketplace_execute(payload)
+    if not err:
+        screen.clear()
+        screen.print_at("Runbook queued for run", 0, 0)
+    else:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    response = res.json()
+    runlog_uuid = response["status"]["runlog_uuid"]
+
+    def poll_runlog_status():
+        return client.runbook.poll_action_run(runlog_uuid)
+
+    screen.refresh()
+    should_continue = poll_action(poll_runlog_status, get_runlog_status(screen))
+    if not should_continue:
+        return
+    res, err = client.runbook.poll_action_run(runlog_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    response = res.json()
+    runbook = response["status"]["runbook_json"]["resources"]["runbook"]
+
+    if watch:
+        screen.refresh()
+        watch_runbook(runlog_uuid, runbook, screen=screen)
+
+    config = get_config()
+    pc_ip = config["SERVER"]["pc_ip"]
+    pc_port = config["SERVER"]["pc_port"]
+    run_url = "https://{}:{}/console/#page/explore/calm/runbooks/runlogs/{}".format(
+        pc_ip, pc_port, runlog_uuid
+    )
+    if not watch:
+        screen.print_at(
+            "Runbook execution url: {}".format(highlight_text(run_url)), 0, 0
+        )
+    screen.refresh()
+
+
+def patch_runbook_endpoints(client, mpi_data, payload):
+    template_info = mpi_data['status']['resources'].get('runbook_template_info', {})
+    runbook = template_info.get('runbook_template', {})
+
+    if template_info.get('is_published_with_endpoints', False):
+        # No patching of endpoints required as runbook is published with endpoints
+        return payload
+
+    default_target = input("Default target for execution of Marketplace Runbook:")
+
+    if default_target:
+        endpoint = get_endpoint(client, default_target)
+        endpoint_id = endpoint.get("metadata", {}).get("uuid", "")
+        payload["spec"]['resources']["default_target_reference"] = {
+            "kind": "app_endpoint",
+            "uuid": endpoint_id,
+            "name": default_target,
+        }
+
+    tasks = runbook['spec']['resources']['runbook']['task_definition_list']
+    used_endpoints = []
+    for task in tasks:
+        target_name = task.get('target_any_local_reference', {}).get('name', '')
+        if target_name:
+            used_endpoints.append(target_name)
+
+    endpoints_description_map = {}
+    for ep_info in runbook['spec']['resources'].get('endpoints_information', []):
+        ep_name = ep_info.get('endpoint_reference', {}).get('name', '')
+        ep_description = ep_info.get('description', '')
+        if ep_name and ep_description:
+            endpoints_description_map[ep_name] = ep_description
+
+    if used_endpoints:
+        LOG.info("Please select an endpoint belonging to the selected project for every endpoint used in the marketplace\
+              /item.")
+    endpoints_mapping = {}
+    for used_endpoint in used_endpoints:
+        des = endpoints_description_map.get(used_endpoint, used_endpoint)
+        selected_endpoint = input("{}:".format(des))
+        if selected_endpoint:
+            endpoint = get_endpoint(client, selected_endpoint)
+            endpoint_id = endpoint.get("metadata", {}).get("uuid", "")
+            endpoints_mapping[used_endpoint] = endpoint_id
+
+    payload['spec']['resources']['endpoints_mapping'] = endpoints_mapping
+
+
+def patch_runbook_runtime_editables(client, mpi_data, payload):
+
+    runbook = mpi_data['status']['resources'].get('runbook_template_info', {}).get('runbook_template', {})
+    variable_list = runbook["spec"]["resources"]["runbook"].get("variable_list", [])
+    args = payload.get('spec', {}).get('resources', {}).get('args', [])
+
+    for variable in variable_list:
+        if variable.get("editables", {}).get("value", False):
+            new_val = input(
+                "Value for Variable {} in Runbook (default value={}): ".format(
+                    variable.get("name"), variable.get("value", "")
+                )
+            )
+            if new_val:
+                args.append(
+                    {
+                        "name": variable.get("name"),
+                        "value": type(variable.get("value", ""))(new_val),
+                    }
+                )
+
+    payload['spec']['resources']['args'] = args
+    return payload

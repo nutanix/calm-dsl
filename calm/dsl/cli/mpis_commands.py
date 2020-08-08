@@ -4,6 +4,7 @@ from .main import (
     get,
     describe,
     launch,
+    run,
     publish,
     approve,
     update,
@@ -30,6 +31,7 @@ from .mpis import (
     reject_marketplace_item,
     unpublish_marketplace_item,
     decompile_marketplace_bp,
+    execute_marketplace_runbook_command,
 )
 from .constants import MARKETPLACE_ITEM
 
@@ -651,3 +653,37 @@ def publish_runbook(
             icon_name=icon_name,
             icon_file=icon_file,
         )
+
+
+@run.command("marketplace_runbook")
+@click.argument("name")
+@click.option("--version", "-v", default=None, help="Version of marketplace item")
+@click.option("--project", "-pj", default=None, help="Project for the execution")
+@click.option(
+    "--ignore_runtime_variables",
+    "-i",
+    is_flag=True,
+    default=False,
+    help="Ignore runtime variables and use defaults for runbook execution",
+)
+@click.option(
+    "--source",
+    "-s",
+    default=None,
+    type=click.Choice(APP_SOURCES),
+    help="App Source of marketplace item",
+)
+@click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
+def _run_marketplace_runbook(
+    name, version, project, source, ignore_runtime_variables, watch
+):
+    """Execute a marketplace item of type runbook"""
+
+    execute_marketplace_runbook_command(
+        name=name,
+        version=version,
+        project=project,
+        app_source=source,
+        watch=watch,
+        ignore_runtime_variables=ignore_runtime_variables
+    )
