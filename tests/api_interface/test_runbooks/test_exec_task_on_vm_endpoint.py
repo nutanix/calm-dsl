@@ -5,8 +5,8 @@ from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import RUNLOG
 from tests.api_interface.test_runbooks.test_files.exec_task import (
     ShellTaskOnLinuxVMAHVStaticEndpoint,
-    ShellTaskOnLinuxVMAHVDynamicEndpoint1,
-    ShellTaskOnLinuxVMAHVDynamicEndpoint2,
+    # ShellTaskOnLinuxVMAHVDynamicEndpoint1,
+    # ShellTaskOnLinuxVMAHVDynamicEndpoint2,
     # ShellTaskOnLinuxVMVMWareStaticEndpoint
     # ShellTaskOnWindowsVMAHVStaticEndpoint
 )
@@ -18,12 +18,7 @@ class TestExecTasksVMEndpoint:
     @pytest.mark.runbook
     @pytest.mark.regression
     @pytest.mark.parametrize(
-        "Runbook",
-        [
-            ShellTaskOnLinuxVMAHVStaticEndpoint,
-            ShellTaskOnLinuxVMAHVDynamicEndpoint1,
-            ShellTaskOnLinuxVMAHVDynamicEndpoint2,
-        ],
+        "Runbook", [ShellTaskOnLinuxVMAHVStaticEndpoint],
     )
     def test_script_run(self, Runbook):
         client = get_api_client()
