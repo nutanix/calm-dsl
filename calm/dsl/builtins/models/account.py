@@ -15,9 +15,8 @@ class CalmAccount:
             return _account(*args, **kwargs)
 
 
-def _account(name=None, uuid=None):
+def _account(name):
     account = {}
     account["name"] = name
-    account["kind"] = "app_account"
-    account["uuid"] = uuid
+    account["kind"] = "account"
     return account

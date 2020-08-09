@@ -1,3 +1,4 @@
+import enum
 import uuid
 
 from .entity import EntityType, Entity
@@ -6,6 +7,30 @@ from .credential import CredentialType
 
 
 # Endpoint
+
+
+class ENDPOINT_FILTER(enum.Enum):
+
+    STATIC = 1
+    DYNAMIC = 2
+
+
+ENDPOINT_FILTER_MAP = {
+    ENDPOINT_FILTER.STATIC: "static",
+    ENDPOINT_FILTER.DYNAMIC: "dynamic",
+}
+
+
+class ENDPOINT_PROVIDER(enum.Enum):
+
+    NUTANIX = 1
+    VMWARE = 2
+
+
+PROVIDER_TYPE_MAP = {
+    ENDPOINT_PROVIDER.NUTANIX: "nutanix",
+    ENDPOINT_PROVIDER.VMWARE: "vmware",
+}
 
 
 class EndpointType(EntityType):
@@ -62,14 +87,14 @@ def _http_endpoint(
 
 def _os_endpoint(
     value_type,
-    value_list,
+    value_list=[],
     name=None,
     ep_type="Linux",
-    provider_type=None,
+    provider_type=ENDPOINT_PROVIDER.NUTANIX,
     port=22,
     connection_protocol=None,
     cred=None,
-    filter_type=None,
+    filter_type=ENDPOINT_FILTER.STATIC,
     subnet=None,
     filter=None,
     account=None,
@@ -82,11 +107,11 @@ def _os_endpoint(
     }
 
     if value_type == "VM":
-        kwargs["provider_type"] = provider_type
+        kwargs["provider_type"] = PROVIDER_TYPE_MAP.get(provider_type, "nutanix")
         kwargs["attrs"]["subnet"] = subnet
-        kwargs["attrs"]["filter_type"] = filter_type
+        kwargs["attrs"]["filter_type"] = ENDPOINT_FILTER_MAP.get(filter_type, "static")
         kwargs["attrs"]["account_reference"] = account
-        if filter_type == "dynamic":
+        if filter_type == ENDPOINT_FILTER.DYNAMIC:
             kwargs["attrs"]["filter"] = filter
 
     if connection_protocol:
@@ -127,9 +152,9 @@ def windows_endpoint_ip(
 
 
 def linux_endpoint_vm(
-    values,
-    provider_type="nutanix",
-    filter_type="static",
+    values=[],
+    provider_type=ENDPOINT_PROVIDER.NUTANIX,
+    filter_type=ENDPOINT_FILTER.STATIC,
     filter=None,
     name=None,
     port=22,
@@ -153,10 +178,10 @@ def linux_endpoint_vm(
 
 
 def windows_endpoint_vm(
-    value,
+    value=[],
     name=None,
-    provider_type="nutanix",
-    filter_type="static",
+    provider_type=ENDPOINT_PROVIDER.NUTANIX,
+    filter_type=ENDPOINT_FILTER.STATIC,
     filter=None,
     connection_protocol="HTTP",
     port=None,

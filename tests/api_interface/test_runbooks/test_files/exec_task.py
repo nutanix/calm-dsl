@@ -6,6 +6,7 @@ from calm.dsl.runbooks import runbook
 from calm.dsl.runbooks import RunbookTask as Task, basic_cred
 from calm.dsl.runbooks import CalmEndpoint as Endpoint
 from calm.dsl.runbooks import CalmAccount as Account
+from calm.dsl.runbooks import ENDPOINT_FILTER, ENDPOINT_PROVIDER
 
 linux_ip = read_local_file(".tests/runbook_tests/vm_ip")
 windows_ip = read_local_file(".tests/runbook_tests/windows_vm_ip")
@@ -28,46 +29,41 @@ http_endpoint = Endpoint.HTTP(
 LinuxCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
 WindowsCred = basic_cred(CRED_WINDOWS_USERNAME, CRED_PASSWORD, name="endpoint_cred")
 
-AHVAccount = Account.NutanixPC(
-    name="NTNX_LOCAL_AZ", uuid="3fa44454-b86e-4485-84f1-2867daa3e3c8"
-)
-VMWareAccount = Account.VMWare(
-    name="Vmware 1", uuid="b1c1d336-a32e-4d50-c9d3-007e3aaa774d"
-)
-
-
 linux_endpoint = Endpoint.Linux.ip([linux_ip], cred=LinuxCred)
 linux_ahv_static_vm_endpoint = Endpoint.Linux.vm(
-    filter_type="static",
+    filter_type=ENDPOINT_FILTER.STATIC,
     values=[AHV_LINUX_ID],
     cred=LinuxCred,
-    account=AHVAccount,
+    provider_type=ENDPOINT_PROVIDER.NUTANIX,
+    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
 )
 linux_ahv_dynamic_vm_endpoint1 = Endpoint.Linux.vm(
-    filter_type="dynamic",
+    filter_type=ENDPOINT_FILTER.DYNAMIC,
     filter="name==linux_vm.*;category==cat1:value1",
-    values=[],
     cred=LinuxCred,
-    account=AHVAccount,
+    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
+    provider_type=ENDPOINT_PROVIDER.NUTANIX,
 )
 linux_ahv_dynamic_vm_endpoint2 = Endpoint.Linux.vm(
-    filter_type="dynamic",
+    filter_type=ENDPOINT_FILTER.DYNAMIC,
     filter="name==linux_vm.*",
-    values=[],
     cred=LinuxCred,
-    account=AHVAccount,
+    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
+    provider_type=ENDPOINT_PROVIDER.NUTANIX,
 )
 linux_vmware_static_vm_endpoint = Endpoint.Linux.vm(
-    filter_type="static",
+    filter_type=ENDPOINT_FILTER.STATIC,
     values=[VMWARE_LINUX_ID],
     cred=LinuxCred,
-    account=VMWareAccount,
+    account=Account.VMWare("vmware"),
+    provider_type=ENDPOINT_PROVIDER.VMWARE,
 )
 windows_ahv_static_vm_endpoint = Endpoint.Windows.vm(
-    filter_type="static",
+    filter_type=ENDPOINT_FILTER.STATIC,
     value=[AHV_WINDOWS_ID],
     cred=WindowsCred,
-    account=AHVAccount,
+    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
+    provider_type=ENDPOINT_PROVIDER.NUTANIX,
 )
 
 linux_endpoint_with_wrong_cred = Endpoint.Linux.ip([linux_ip], cred=WindowsCred)
