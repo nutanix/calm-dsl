@@ -88,10 +88,12 @@ def get_tasks_list(name, filter_by, limit, offset, quiet, all_items):
             [
                 highlight_text(row["name"]),
                 highlight_text(row["description"]),
-                highlight_text(','.join(projects)),
+                highlight_text(",".join(projects)),
                 highlight_text(row["state"]),
                 highlight_text(row["resources"]["type"]),
-                highlight_text(row.get("resources", {}).get("attrs", {}).get("script_type", "")),
+                highlight_text(
+                    row.get("resources", {}).get("attrs", {}).get("script_type", "")
+                ),
                 highlight_text(created_by),
                 "{}".format(arrow.get(last_update_time).humanize()),
                 highlight_text(metadata["uuid"]),
@@ -133,13 +135,20 @@ def describe_task(task_name, out):
     click.echo("Status: " + highlight_text(task["status"]["state"]))
     click.echo("Task Type: " + highlight_text(task["status"]["resources"]["type"]))
     if task["status"]["resources"]["type"] != TASKS.TASK_TYPES.HTTP:
-        click.echo("Script Type: " + highlight_text(task["status"].get("resources", {}).get("attrs", {}).get("script_type", "")))
+        click.echo(
+            "Script Type: "
+            + highlight_text(
+                task["status"]
+                .get("resources", {})
+                .get("attrs", {})
+                .get("script_type", "")
+            )
+        )
     click.echo(
-        "Owner: " + highlight_text(task["metadata"]["owner_reference"]["name"]), nl=False
+        "Owner: " + highlight_text(task["metadata"]["owner_reference"]["name"]),
+        nl=False,
     )
-    click.echo(
-        " Projects: " + highlight_text(','.join(projects))
-    )
+    click.echo(" Projects: " + highlight_text(",".join(projects)))
 
     created_on = int(task["metadata"]["creation_time"]) // 1000000
     past = arrow.get(created_on).humanize()
@@ -150,23 +159,35 @@ def describe_task(task_name, out):
     )
     if task["status"]["resources"]["type"] == TASKS.TASK_TYPES.HTTP:
         click.echo(
-            "Request URL: " + highlight_text(task["status"]["resources"]["attrs"]["url"])
+            "Request URL: "
+            + highlight_text(task["status"]["resources"]["attrs"]["url"])
         )
         click.echo(
-            "Request Method: " + highlight_text(task["status"]["resources"]["attrs"]["method"])
+            "Request Method: "
+            + highlight_text(task["status"]["resources"]["attrs"]["method"])
         )
         click.echo(
-            "Content Type: " + highlight_text(task["status"]["resources"]["attrs"]["content_type"])
+            "Content Type: "
+            + highlight_text(task["status"]["resources"]["attrs"]["content_type"])
         )
         click.echo(
-            "Headers: " + highlight_text(json.dumps(task["status"]["resources"]["attrs"]["headers"]))
+            "Headers: "
+            + highlight_text(
+                json.dumps(task["status"]["resources"]["attrs"]["headers"])
+            )
         )
         click.echo(
-            "Expected Response Options: " + highlight_text(json.dumps(task["status"]["resources"]["attrs"]["expected_response_params"]))
+            "Expected Response Options: "
+            + highlight_text(
+                json.dumps(
+                    task["status"]["resources"]["attrs"]["expected_response_params"]
+                )
+            )
         )
     else:
         click.echo(
-            "Script Data: \n\n" + highlight_text(task["status"]["resources"]["attrs"]["script"])
+            "Script Data: \n\n"
+            + highlight_text(task["status"]["resources"]["attrs"]["script"])
         )
 
 
@@ -281,10 +302,7 @@ def create_task_from_json(
         task_payload = json.loads(f.read())
 
     return create_update_task(
-        client,
-        task_payload,
-        name=name,
-        force_create=force_create,
+        client, task_payload, name=name, force_create=force_create,
     )
 
 
@@ -302,11 +320,8 @@ def create_task_using_script_file(
 
     task_resources = {
         "type": "EXEC",
-        "attrs": {
-            "script": task_file_content,
-            "script_type": script_type
-        },
-        "variable_list": []
+        "attrs": {"script": task_file_content, "script_type": script_type},
+        "variable_list": [],
     }
 
     task_payload = {
@@ -320,10 +335,7 @@ def create_task_using_script_file(
     }
 
     return create_update_task(
-        client,
-        task_payload,
-        name=name,
-        force_create=force_create,
+        client, task_payload, name=name, force_create=force_create,
     )
 
 
@@ -333,21 +345,35 @@ def create_task(task_file, name, description, force):
     client = get_api_client()
     if not name:
         task_file_name = ntpath.basename(task_file)
-        name = os.path.splitext(task_file_name.replace(" ", '_'))[0]
+        name = os.path.splitext(task_file_name.replace(" ", "_"))[0]
 
     if task_file.endswith(".json"):
         res, err = create_task_from_json(
             client, task_file, name=name, description=description, force_create=force
         )
-    elif task_file.endswith(".py") or task_file.endswith(".sh") or task_file.endswith(".escript"):
+    elif (
+        task_file.endswith(".py")
+        or task_file.endswith(".sh")
+        or task_file.endswith(".escript")
+    ):
         script_type = TASKS.SCRIPT_TYPES.SHELL
         res, err = create_task_using_script_file(
-            client, task_file, script_type, name=name, description=description, force_create=force
+            client,
+            task_file,
+            script_type,
+            name=name,
+            description=description,
+            force_create=force,
         )
     elif task_file.endswith(".ps1"):
         script_type = TASKS.SCRIPT_TYPES.POWERSHELL
         res, err = create_task_using_script_file(
-            client, task_file, script_type, name=name, description=description, force_create=force
+            client,
+            task_file,
+            script_type,
+            name=name,
+            description=description,
+            force_create=force,
         )
     else:
         LOG.error("Unknown file format {}".format(task_file))

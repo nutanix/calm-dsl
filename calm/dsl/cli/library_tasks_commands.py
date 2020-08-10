@@ -19,16 +19,26 @@ LOG = get_logging_handle(__name__)
 
 
 @library_get.command("tasks")
-@click.option("--name", "-n", default=None, help="Search for task from task library by name")
 @click.option(
-    "--filter", "filter_by", "-f", default=None, help="Filter tasks from task library by this string"
+    "--name", "-n", default=None, help="Search for task from task library by name"
+)
+@click.option(
+    "--filter",
+    "filter_by",
+    "-f",
+    default=None,
+    help="Filter tasks from task library by this string",
 )
 @click.option("--limit", "-l", default=20, help="Number of results to return")
 @click.option(
     "--offset", "-o", default=0, help="Offset results by the specified amount"
 )
 @click.option(
-    "--quiet", "-q", is_flag=True, default=False, help="Show only task from task library names."
+    "--quiet",
+    "-q",
+    is_flag=True,
+    default=False,
+    help="Show only task from task library names.",
 )
 @click.option(
     "--all-items", "-a", is_flag=True, help="Get all items, including deleted ones"
