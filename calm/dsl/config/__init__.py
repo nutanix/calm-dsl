@@ -9,6 +9,7 @@ from .config import (
     set_config,
     get_config,
     print_config,
+    make_file_dir,
 )
 
 
@@ -23,4 +24,5 @@ __all__ = [
     "set_config",
     "get_config",
     "print_config",
+    "make_file_dir",
 ]

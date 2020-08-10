@@ -32,7 +32,7 @@ def _create_secret(name, value):
     "--quiet", "-q", is_flag=True, default=False, help="Show only sceret names."
 )
 def _get_secrets(quiet):
-    """List the secrets """
+    """Get secrets """
 
     get_secrets(quiet)
 
@@ -40,7 +40,7 @@ def _get_secrets(quiet):
 @delete.command("secret")
 @click.argument("name", nargs=1)
 def _delete_secret(name):
-    """Delete a secret"""
+    """Deletes a secret"""
 
     delete_secret(name)
 
@@ -49,7 +49,7 @@ def _delete_secret(name):
 @click.argument("name", nargs=1)
 @click.option("--value", "-v", prompt=True, hide_input=True, confirmation_prompt=True)
 def _update_secret(name, value):
-    """Update the secret
+    """Updates a secret
 
     NAME is the alias for your secret
     """
@@ -59,6 +59,6 @@ def _update_secret(name, value):
 
 @clear.command("secrets")
 def _clear_secrets():
-    """Delete alll the secrets stored in the local db"""
+    """Delete all the secrets stored in the local db"""
 
     clear_secrets()

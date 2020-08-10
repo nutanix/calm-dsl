@@ -73,6 +73,7 @@ def get_user_config_file():
 
     if "config.ini" in os.listdir(cwd):
         config_file = os.path.join(cwd, "config.ini")
+        return config_file
 
     if not _CONFIG_FILE:
         try:
