@@ -34,7 +34,6 @@ from .utils import (
 )
 from .metadata import get_metadata_payload
 from .constants import BLUEPRINT
-from calm.dsl.store import Cache
 from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
 
