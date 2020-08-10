@@ -35,7 +35,7 @@ Language design is black art, and building upon a well-established language is d
 - Read ACP: `calm describe acp <acp_name> --project <project_name>`.
 - Update ACP: `calm update acp <acp_name> --project <project_name> --add_user/--remove_user <user_name> --add_group/--remove_group <group_name>`
 - Delete ACP: `calm delete acp <acp_name> --project <project_name>`.
-Note: Project option is required for acp commands.
+- Note: Project option is required for acp commands.
 
 ## Blueprint
  - First blueprint: `calm init bp`. This will create a folder `HelloBlueprint` with all the necessary files. `HelloBlueprint/blueprint.py` is the main blueprint DSL file. Please read the comments in the beginning of the file for more details about the blueprint.
