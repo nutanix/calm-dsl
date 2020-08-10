@@ -49,20 +49,26 @@ def create_blueprint_payload(UserBlueprint, metadata={}):
         "resources": UserBlueprint,
     }
 
-    if not metadata:
-        config = get_config()
-        project_name = config["PROJECT"].get("name", "default")
-        metadata = {
-            "spec_version": 1,
-            "name": UserBlueprint.__name__,
-            "project_reference": Ref.Project(project_name),
-        }
+    config = get_config()
 
+    # Set the blueprint name and kind correctly
+    metadata["name"] = UserBlueprint.__name__
+    metadata["kind"] = "blueprint"
+
+    #  Project will be taken from config if not provided
+    if not metadata.get("project_reference", {}):
+        project_name = config["PROJECT"].get("name", "default")
+        metadata["project_reference"] = Ref.Project(project_name)
+
+    #  User will be taken from config if not provided
+    if not metadata.get("owner_reference", {}):
+        user_name = config["SERVER"].get("pc_username")
+        metadata["owner_reference"] = Ref.User(user_name)
+
+    #  Categories will be taken from config if not provided
+    if not metadata.get("categories", {}):
         config_categories = dict(config.items("CATEGORIES"))
         metadata["categories"] = config_categories
-    else:
-        # Set the blueprint name correctly
-        metadata["name"] = UserBlueprint.__name__
 
     metadata["kind"] = "blueprint"
     UserBlueprintPayload = _blueprint_payload()
