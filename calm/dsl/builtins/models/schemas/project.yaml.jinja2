@@ -94,6 +94,19 @@ properties:
           type: string
         uuid:
           type: string
+  quotas:
+    type: object
+    x-calm-dsl-type: object
+    properties:
+      VCPUS:
+        x-calm-dsl-display-name: vcpus
+        type: integer
+      STORAGE:
+        x-calm-dsl-display-name: storage
+        type: integer
+      MEMORY:
+        x-calm-dsl-display-name: memory
+        type: integer
 
 {%- endmacro %}
 

@@ -24,3 +24,9 @@ class TestDslProject(Project):
     groups = [
         Ref.Group(name="cn=sspgroup1,ou=pc,dc=systest,dc=nutanix,dc=com"),
     ]
+
+    quotas = {
+        "vcpus": 1,
+        "storage": 2,
+        "memory": 1,
+    }

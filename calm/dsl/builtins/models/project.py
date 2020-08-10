@@ -54,6 +54,17 @@ class ProjectType(EntityType):
 
             cdict["account_reference_list"].append(provider_obj["account_reference"])
 
+        quotas = cdict.pop("quotas", None)
+        if quotas:
+            project_resources = []
+            for qk, qv in quotas.items():
+                if qk != "VCPUS":
+                    qv *= 1073741824
+
+                project_resources.append({"limit": qv, "resource_type": qk})
+
+            cdict["resource_domain"] = {"resources": project_resources}
+
         return cdict
 
 
