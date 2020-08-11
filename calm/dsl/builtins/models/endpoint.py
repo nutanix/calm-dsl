@@ -37,6 +37,12 @@ class EndpointType(EntityType):
     __schema_name__ = "Endpoint"
     __openapi_type__ = "app_endpoint"
 
+    def compile(cls):
+        cdict = super().compile()
+        if (cdict.get("provider_type", "")) == "":
+            cdict.pop("provider_type", "")
+        return cdict
+
     def __call__(*args, **kwargs):
         pass
 
