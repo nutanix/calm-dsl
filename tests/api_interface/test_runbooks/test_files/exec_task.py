@@ -65,6 +65,20 @@ windows_ahv_static_vm_endpoint = Endpoint.Windows.vm(
     account=Account.NutanixPC("NTNX_LOCAL_AZ"),
     provider_type=ENDPOINT_PROVIDER.NUTANIX,
 )
+windows_ahv_dynamic_vm_endpoint1 = Endpoint.Windows.vm(
+    filter_type=ENDPOINT_FILTER.DYNAMIC,
+    filter="category==cat1:value2",
+    cred=WindowsCred,
+    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
+    provider_type=ENDPOINT_PROVIDER.NUTANIX,
+)
+windows_ahv_dynamic_vm_endpoint2 = Endpoint.Windows.vm(
+    filter_type=ENDPOINT_FILTER.DYNAMIC,
+    filter="category==name==windows.*",
+    cred=WindowsCred,
+    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
+    provider_type=ENDPOINT_PROVIDER.NUTANIX,
+)
 
 linux_endpoint_with_wrong_cred = Endpoint.Linux.ip([linux_ip], cred=WindowsCred)
 multiple_linux_endpoint = Endpoint.Linux.ip([linux_ip, linux_ip], cred=LinuxCred)
@@ -172,7 +186,25 @@ def ShellTaskOnLinuxVMVMWareStaticEndpoint(endpoints=[linux_vmware_static_vm_end
 @runbook
 def ShellTaskOnWindowsVMAHVStaticEndpoint(endpoints=[windows_ahv_static_vm_endpoint]):
     Task.Exec.powershell(
-        name="ExecTask", script='''echo "Task is Successful"''', target=endpoints[0]
+        name="ExecTask",
+        script='''echo "Task is successful"''',
+        target=endpoints[0]
+    )
+
+@runbook
+def ShellTaskOnWindowsVMAHVDynamicEndpoint1(endpoints=[windows_ahv_dynamic_vm_endpoint1]):
+    Task.Exec.powershell(
+        name="ExecTask",
+        script='''echo "Task is successful"''',
+        target=endpoints[0]
+    )
+
+@runbook
+def ShellTaskOnWindowsVMAHVDynamicEndpoint2(endpoints=[windows_ahv_dynamic_vm_endpoint2]):
+    Task.Exec.powershell(
+        name="ExecTask",
+        script='''echo "Task is successful"''',
+        target=endpoints[0]
     )
 
 
