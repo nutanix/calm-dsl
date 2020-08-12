@@ -77,6 +77,26 @@ class ResourceAPI:
 
         return name_uuid_map
 
+    def get_uuid_name_map(self, params={}):
+        response, err = self.list(params)
+        if not err:
+            response = response.json()
+        else:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        total_matches = response["metadata"]["total_matches"]
+        if total_matches == 0:
+            return {}
+
+        uuid_name_map = {}
+        for entity in response["entities"]:
+            entity_name = entity["status"]["name"]
+            entity_uuid = entity["metadata"]["uuid"]
+
+            uuid_name_map[entity_uuid] = entity_name
+
+        return uuid_name_map
+
 
 def get_resource_api(resource_type, connection):
     return ResourceAPI(connection, resource_type)

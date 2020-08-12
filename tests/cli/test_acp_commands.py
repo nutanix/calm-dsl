@@ -14,14 +14,56 @@ DSL_PROJECT_PATH = "tests/project/test_project_in_pc.py"
 
 
 class TestACPCommands:
+    def setup_method(self):
+        runner = CliRunner()
+        self.dsl_project_name = "Test_DSL_Project_{}".format(str(uuid.uuid4()))
+        result = runner.invoke(
+            cli,
+            [
+                "create",
+                "project",
+                "--file={}".format(DSL_PROJECT_PATH),
+                "--name={}".format(self.dsl_project_name),
+                "--description='Test DSL Project to delete'",
+            ],
+        )
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Project creation from python file failed")
+
+    def teardown_method(self):
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["delete", "project", self.dsl_project_name])
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Project delete call failed")
+
     def test_acp_crud(self):
         """
             It will cover create/describe/update/delete/get commands on project acps
             This test assumes users/groups mentioned in project file are already created
         """
-
-        # Create project
-        self._project_create()
 
         # Create ACP operation
         self._test_acp_create()
@@ -41,9 +83,6 @@ class TestACPCommands:
         # Delete operations
         click.echo("")
         self._test_acp_delete()
-
-        # Delete project
-        self._project_delete()
 
     def _test_acp_create(self):
 
@@ -227,49 +266,3 @@ class TestACPCommands:
             )
             pytest.fail("ACP delete call failed")
         LOG.info("Success")
-
-    def _project_create(self):
-
-        runner = CliRunner()
-        self.dsl_project_name = "Test_DSL_Project_{}".format(str(uuid.uuid4()))
-        result = runner.invoke(
-            cli,
-            [
-                "create",
-                "project",
-                "--file={}".format(DSL_PROJECT_PATH),
-                "--name={}".format(self.dsl_project_name),
-                "--description='Test DSL Project to delete'",
-            ],
-        )
-        if result.exit_code:
-            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
-            LOG.debug(
-                "Cli Response: {}".format(
-                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
-                )
-            )
-            LOG.debug(
-                "Traceback: \n{}".format(
-                    "".join(traceback.format_tb(result.exc_info[2]))
-                )
-            )
-            pytest.fail("Project creation from python file failed")
-
-    def _project_delete(self):
-
-        runner = CliRunner()
-        result = runner.invoke(cli, ["delete", "project", self.dsl_project_name])
-        if result.exit_code:
-            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
-            LOG.debug(
-                "Cli Response: {}".format(
-                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
-                )
-            )
-            LOG.debug(
-                "Traceback: \n{}".format(
-                    "".join(traceback.format_tb(result.exc_info[2]))
-                )
-            )
-            pytest.fail("Project delete call failed")
