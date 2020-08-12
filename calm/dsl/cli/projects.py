@@ -84,7 +84,6 @@ def get_projects(name, filter_by, limit, offset, quiet, out):
         else:
             owner_reference_name = "-"
 
-
         table.add_row(
             [
                 highlight_text(row["name"]),
