@@ -41,6 +41,8 @@ class EndpointType(EntityType):
         cdict = super().compile()
         if (cdict.get("provider_type", "")) == "":
             cdict.pop("provider_type", "")
+        if (cdict.get("value_type", "")) == "":
+            cdict.pop("value_type", "")
         return cdict
 
     def __call__(*args, **kwargs):
