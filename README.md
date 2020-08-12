@@ -70,6 +70,11 @@ Decompilation is process to consume json data for any entity and convert it back
 
 ## Getting started for Admins
 
+### Initialization
+ - Setup: `calm init dsl`. Please fill in the right Prism Central (PC) settings.
+ - Server status: `calm get server status`. Check if Calm is enabled on PC & Calm version is >=2.9.7.
+ - Config: `calm show config`. Default config is stored at `~/.calm/config.ini`. Please see `calm set config --help` to update config file.
+
 ### Roles
 Use `calm get roles` to list all roles in PC. The below roles are relevant for Calm:
  - `Prism Admin`: Day-to-day admin of a Nutanix deployment. Manages the infrastructure and platform, but cannot entitle other users to be admins.
@@ -88,11 +93,11 @@ Use `calm get roles` to list all roles in PC. The below roles are relevant for C
 
 ### Projects
 - Compile project: `calm compile project --file <project_file_location>`. This command will print the compiled project JSON. Look at sample file [here](https://github.com/nutanix/calm-dsl/blob/release/2.9/tests/project/demo_project.py).
-- Create project on Calm Server: `calm create project --file <project_file_location> --name <project_name>`.
+- Create project on Calm Server: `calm create project --file <project_file_location> --name <project_name> --description <description>`.
 - List projects: `calm get projects`. Get projects, optionally filtered by a string
 - Describe project: `calm describe project <project_name>`. It will print summary of project.
 - Update project using dsl file: `calm update project <project_name> --file <project_file_location>`.
-- Update project using cli switches: `calm update project --add_user/--remove_user <user_name> --add_group/--remove_group <group_name>`.
+- Update project using cli switches: `calm update project <project_name> --add_user/--remove_user <user_name> --add_group/--remove_group <group_name>`.
 - Delete project: `calm delete project <project_name>`.
 
 ### Access Control Policies
@@ -104,14 +109,23 @@ Access control policies ensures that a project member can access only the entiti
 - Delete ACP: `calm delete acp <acp_name> --project <project_name>`.
 
 ### Examples
+Sample Project flow for `Admin` users:
+- Project Creation: `calm create project --file "project_file_location" --name "project_name"`
+- Create users: `calm create user --name "user_1" --directory "user_1_directory_service"`
+- Create User-Group: `calm create group "group_1"`
+- Update Project for adding created users/groups to project: `calm update project "project_name" --add_user "user_1" --add_user "user_2" --add_group "group_1" --add_group "group_2"`.
+- Create ACP for `Project Admin` role assignment to project users/groups:  `calm create acp --role "Project Admin" --project "project_name" --user "user_1" --user "user_2" --group "group_1" --group "group_2" --name "acp_name"`
 
+Sample Project Flow for `Project Admin` users:
+- Update project for adding/removing users or groups in project: `calm update project "project_name" --add_user "user_3" --remove_user "user_2" --add_group "group_3" --remove_group "group_2"`.
+- Create ACPs for other roles in project i.e. Consumer, Developer, Operator. Ex: `calm create acp --role "Developer" --project "project_name" --user "user_3" --group "group_3" --name "acp_developer_name"`
+- Update ACPs: `calm update acp "acp_developer_name" --project "project_name" --add_user "user_1" --remove_user "user_3" --add_group "group_1" --remove_group "group_3"`.
 
 ## Docker
  - Latest image: `docker pull ntnx/calm-dsl`
  - Run: `docker run -it ntnx/calm-dsl`
 
 ## Dev Setup
-
 MacOS:
  - Install [Xcode](https://apps.apple.com/us/app/xcode/id497799835)
  - Install homebrew: `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`.
