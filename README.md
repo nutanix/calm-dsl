@@ -17,7 +17,7 @@ Language design is black art, and building upon a well-established language is d
  - Server status: `calm get server status`. Check if Calm is enabled on PC & Calm version is >=2.9.7.
  - Config: `calm show config`. Check if you have the right config. By default, config is stored at `~/.calm/config.ini`. Please see `calm set config --help` for details to update config.
  
-# Roles
+## Roles
 Brief description for system roles available in Calm:
 - `Prism Admin`: Day-to-day admin of a Nutanix deployment. Manages the infrastructure and platform, but cannot entitle other users to be admins.
 - `Project Admin`: Team lead to whom cloud administration gets delegated in the context of a project. Manages end users within the project and has full access to their entities.
@@ -38,15 +38,15 @@ Project Flow for `Project Admin`:
 - Update project for adding/removing users or groups in project
 - Create/Update ACP for other roles in project i.e. Consumer, Developer, Operator etc.
 
-# Directory Services:
+## Directory Services:
 - List directory services: `calm get directory_services`. Get directory services, optionally filtered by a string
 
-# Users
+## Users
 - Create user: `calm create user --name <principal_name> --directory <directory_service>`.
 - List users: `calm get users`. Get users, optionally filtered by a string
 - Delete user: `calm delete user <principal_name>`
 
-# Groups
+## Groups
 - Create group: `calm create group <distinguished_name>`. 
 - List groups: `calm get groups`. Get user groups, optionally filtered by a string
 - Delete group: `calm delete group <distinguished_name>`
