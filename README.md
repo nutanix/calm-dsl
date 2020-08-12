@@ -16,26 +16,59 @@ Language design is black art, and building upon a well-established language is d
  - Setup: `calm init dsl`. Please fill in the right Prism Central (PC) settings.
  - Server status: `calm get server status`. Check if Calm is enabled on PC & Calm version is >=2.9.7.
  - Config: `calm show config`. Check if you have the right config. By default, config is stored at `~/.calm/config.ini`. Please see `calm set config --help` for details to update config.
+ 
+# Roles
+Brief description for system roles available in Calm:
+- `Prism Admin`: Day-to-day admin of a Nutanix deployment. Manages the infrastructure and platform, but cannot entitle other users to be admins.
+- `Project Admin`: Team lead to whom cloud administration gets delegated in the context of a project. Manages end users within the project and has full access to their entities.
+- `Developer`: Application developer within a team. Authors blueprints, tests deployments, and publishes applications for other project members.
+- `Operator`: Owner of team applications at runtime. Works on existing application deployments, exercises blueprint actions.
+- `Consumer`: Lifecycle manager for team applications. Launches blueprints and controls their lifecycle and actions.
+
+Commands:
+- List roles: `calm get roles`. Get roles, optionally filtered by a string
+
+Project flow for `Admin`:
+- Create a Project
+- Create users/groups
+- Update Project for adding created users/groups to project
+- Create ACP for `Project Admin` role assignment to project users
+
+Project Flow for `Project Admin`:
+- Update project for adding/removing users or groups in project
+- Create/Update ACP for other roles in project i.e. Consumer, Developer, Operator etc.
+
+# Directory Services:
+- List directory services: `calm get directory_services`. Get directory services, optionally filtered by a string
+
+# Users
+- Create user: `calm create user --name <principal_name> --directory <directory_service>`.
+- List users: `calm get users`. Get users, optionally filtered by a string
+- Delete user: `calm delete user <principal_name>`
+
+# Groups
+- Create group: `calm create group <distinguished_name>`. 
+- List groups: `calm get groups`. Get user groups, optionally filtered by a string
+- Delete group: `calm delete group <distinguished_name>`
 
 ## Project
-- Create user: `calm create user --name <principal_name> --directory <directory_service>`.
-- Create user-group: `calm create group -- name <distinguished_name_of_group>`/
-- List users/user-groups: `calm get users/groups`.
-- Delete user/user-group: `calm delete user/group <name>`. It will print summary of user/group.
-- List directory services: `calm get directory_services`
-- Compile project: `calm compile project --file <project_file_location>`.
-- Create project: `calm create project --file <project_file_location>`.
-- List projects: `calm get projects`
+- Compile project: `calm compile project --file <project_file_location>`. This command will print the compiled project JSON. Look at sample file [here](https://github.com/nutanix/calm-dsl/blob/release/2.9/tests/project/demo_project.py).
+- Create project on Calm Server: `calm create project --file <project_file_location> --name <project_name>`. 
+- List projects: `calm get projects`. Get projects, optionally filtered by a string
 - Describe project: `calm describe project <project_name>`. It will print summary of project.
 - Update project using dsl file: `calm update project <project_name> --file <project_file_location>`.
 - Update project using cli switches: `calm update project --add_user/--remove_user <user_name> --add_group/--remove_group <group_name>`.
 - Delete project: `calm delete project <project_name>`.
-- Create ACP: `calm create acp --role <role_name> --project <project_name> --name <acp_name>`. Custom roles are not supported for acp creation.
-- List ACPs: `calm get acps --project <project_name>`.
-- Read ACP: `calm describe acp <acp_name> --project <project_name>`.
-- Update ACP: `calm update acp <acp_name> --project <project_name> --add_user/--remove_user <user_name> --add_group/--remove_group <group_name>`
+
+## ACP
+Access control ensures that a project member can access only the entities or perform only the actions defined in the role assigned to that project member.
+
+Commands:
+- Create ACP: `calm create acp --role <role_name> --project <project_name> --user <user_principal_name> --group <group_distinguished_name> --name <acp_name>`.It is used to assign given role to users/groups. Parameters `user` and `group` can be provided multiple times.
+- List ACPs: `calm get acps --project <project_name>`.Get acps, optionally filtered by a string
+- Describe ACP: `calm describe acp <acp_name> --project <project_name>`.
+- Update ACP: `calm update acp <acp_name> --project <project_name> --add_user/--remove_user <user_name> --add_group/--remove_group <group_name>`. Paramters `add_user`, `remove_user`, `add_group` and `remove_group` can be provided multiple times.
 - Delete ACP: `calm delete acp <acp_name> --project <project_name>`.
-- Note: Project option is required for acp commands.
 
 ## Blueprint
  - First blueprint: `calm init bp`. This will create a folder `HelloBlueprint` with all the necessary files. `HelloBlueprint/blueprint.py` is the main blueprint DSL file. Please read the comments in the beginning of the file for more details about the blueprint.
@@ -70,6 +103,20 @@ Decompilation is process to consume json data for any entity and convert it back
 - Decompile bp from existing json file: `calm decompile bp --file <json_file_location>`.
 - Decompile marketplace blueprint: `calm decompile marketplace_bp <bp_name> --version <bp_version>`.
 - Note: Decompliation support for providers other than AHV are best effort(Experimental).
+
+## Runbooks
+ - First runbook: `calm init runbook`. This will create a folder `HelloRunbook` with all the necessary files. `HelloRunbook/runbook.py` is the main runbook DSL file. Please read the comments in the beginning of the file for more details about the runbook.
+ - Compile runbook: `calm compile runbook --file HelloRunbook/runbook.py`. This command will print the compiled runbook JSON.
+ - Create runbook on Calm Server: `calm create runbook --file HelloRunbook/runbook.py --name <runbook_name>`. Please use a unique name for `<runbook_name>`.
+ - List runbooks: `calm get runbooks`. You can also pass in filters like `calm get runbooks --name <runbook_name>` and so on. Please look at `calm get runbooks --help`.
+ - Describe runbook: `calm describe runbook <runbook_name>`. It will print a summary of the runbook.
+ - Execute runbook: `calm run runbook <runbook_name>`. Please look at `calm run runbook -h` for more info.
+ - List runbook executions: `calm get runbook_executions`.
+ - Watch runbook execution: `calm watch runbook_execution <runlog_id>`. It will display the runbook execution.
+ - Pause runbook execution: `calm pause runbook_execution <runlog_id>`. It will pause the running runbook execution.
+ - Resume runbook execution: `calm resume runbook_execution <runlog_id>`. It will play/resume the paused runbook execution.
+ - Abort runbook execution: `calm abort runbook_execution <runlog_id>`. It will abort the runbook execution.
+ - Please look [here](docs/01-Calm-Terminology#runbooks) for more details.
 
 ## Docker
  - Latest image: `docker pull ntnx/calm-dsl`
