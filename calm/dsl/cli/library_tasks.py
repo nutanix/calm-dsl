@@ -374,12 +374,11 @@ def create_task(task_file, name, description, out_vars, force):
             client, task_file, name=name, description=description, force_create=force
         )
     elif (
-        task_file.endswith(".py")
-        or task_file.endswith(".sh")
+        task_file.endswith(".sh")
         or task_file.endswith(".escript")
         or task_file.endswith(".ps1")
     ):
-        if task_file.endswith(".py") or task_file.endswith(".sh"):
+        if task_file.endswith(".sh"):
             script_type = TASKS.SCRIPT_TYPES.SHELL
         elif task_file.endswith(".escript"):
             script_type = TASKS.SCRIPT_TYPES.ESCRIPT
