@@ -158,7 +158,8 @@ class TASKS:
 
     class SCRIPT_TYPES:
         POWERSHELL = "npsscript"
-        SHELL = "static"
+        SHELL = "sh"
+        ESCRIPT = "static"
 
     class STATES:
         ACTIVE = "ACTIVE"

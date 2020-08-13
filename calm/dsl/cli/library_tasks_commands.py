@@ -87,13 +87,20 @@ def _delete_task(task_names):
     "--description", "-d", default=None, help="Blueprint description (Optional)"
 )
 @click.option(
+    "--out-vars",
+    "-v",
+    "out_vars",
+    default=None,
+    help="Set-variable output variables coma seperated (,) (Optional)",
+)
+@click.option(
     "--force",
     "-fc",
     is_flag=True,
     default=False,
     help="Updates existing task library item with the same name.",
 )
-def _create_task(task_file, name, description, force):
+def _create_task(task_file, name, description, out_vars, force):
 
     """Create task library item.
 
@@ -103,12 +110,15 @@ def _create_task(task_file, name, description, force):
 \t.escript  - Escript file\n
 \t.ps1      - Powershell Script File\n
 
-Note: HTTP tasks is supported only from downloaded .json.
+Note:\n
+    HTTP tasks is supported only from downloaded .json.\n
+    To create Set-Variable task, use --out-vars="OUT1,OUT2".
 
-Sample:\n
+Examples:\n
 calm create library task --name=HTTPGetVM -f HTTPGetVM.json\n
 calm create library task --name="Install IIS" -f Install_IIS.ps1\n
-calm create library task -f Install_Docker.sh
+calm create library task -f Install_Docker.sh\n
+calm create library task -f Install_Docker.sh --out-vars="IP_ADDRESS,PORT"
 """
 
-    create_task(task_file, name, description, force)
+    create_task(task_file, name, description, out_vars, force)

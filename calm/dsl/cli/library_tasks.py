@@ -143,6 +143,16 @@ def describe_task(task_name, out):
                 .get("script_type", "")
             )
         )
+    if task["status"]["resources"]["type"] == TASKS.TASK_TYPES.SET_VARIABLE:
+        click.echo(
+            "Output Variables: "
+            + highlight_text(
+                task["status"]
+                .get("resources", {})
+                .get("attrs", {})
+                .get("eval_variables", [])
+            )
+        )
     click.echo(
         "Owner: " + highlight_text(task["metadata"]["owner_reference"]["name"]),
         nl=False,
@@ -306,7 +316,14 @@ def create_task_from_json(
 
 
 def create_task_using_script_file(
-    client, task_file, script_type, name=None, description=None, force_create=False
+    client,
+    task_file,
+    script_type,
+    task_type,
+    out_vars=None,
+    name=None,
+    description=None,
+    force_create=False,
 ):
 
     with open(task_file, "r") as f:
@@ -318,10 +335,13 @@ def create_task_using_script_file(
         return None, err
 
     task_resources = {
-        "type": "EXEC",
+        "type": task_type,
         "attrs": {"script": task_file_content, "script_type": script_type},
         "variable_list": [],
     }
+
+    if out_vars:
+        task_resources["attrs"]["eval_variables"] = out_vars.split(",")
 
     task_payload = {
         "spec": {
@@ -338,7 +358,7 @@ def create_task_using_script_file(
     )
 
 
-def create_task(task_file, name, description, force):
+def create_task(task_file, name, description, out_vars, force):
     """Creates a task library item"""
 
     client = get_api_client()
@@ -347,6 +367,9 @@ def create_task(task_file, name, description, force):
         name = os.path.splitext(task_file_name.replace(" ", "_"))[0]
 
     if task_file.endswith(".json"):
+        if out_vars:
+            LOG.error("--out-vars is not allowed for file type (.json)")
+            return
         res, err = create_task_from_json(
             client, task_file, name=name, description=description, force_create=force
         )
@@ -354,22 +377,26 @@ def create_task(task_file, name, description, force):
         task_file.endswith(".py")
         or task_file.endswith(".sh")
         or task_file.endswith(".escript")
+        or task_file.endswith(".ps1")
     ):
-        script_type = TASKS.SCRIPT_TYPES.SHELL
+        if task_file.endswith(".py") or task_file.endswith(".sh"):
+            script_type = TASKS.SCRIPT_TYPES.SHELL
+        elif task_file.endswith(".escript"):
+            script_type = TASKS.SCRIPT_TYPES.ESCRIPT
+        elif task_file.endswith(".ps1"):
+            script_type = TASKS.SCRIPT_TYPES.POWERSHELL
+
+        if out_vars:
+            task_type = TASKS.TASK_TYPES.SET_VARIABLE
+        else:
+            task_type = TASKS.TASK_TYPES.EXEC
+
         res, err = create_task_using_script_file(
             client,
             task_file,
             script_type,
-            name=name,
-            description=description,
-            force_create=force,
-        )
-    elif task_file.endswith(".ps1"):
-        script_type = TASKS.SCRIPT_TYPES.POWERSHELL
-        res, err = create_task_using_script_file(
-            client,
-            task_file,
-            script_type,
+            task_type,
+            out_vars=out_vars,
             name=name,
             description=description,
             force_create=force,
