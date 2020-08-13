@@ -63,7 +63,7 @@ def VMEndpointWithIncorrectID(endpoints=[EndpointWithIncorrectId]):
     )
     Task.Exec.escript(
         name="EscriptTask",
-        script='''echo "Escript Task is Successful"''',
+        script='''print "Escript Task is Successful"''',
         target=endpoints[0],
     )
 
@@ -77,7 +77,7 @@ def VMEndpointWithNoIP(endpoints=[EndpointWithNoIP]):
     )
     Task.Exec.escript(
         name="EscriptTask",
-        script='''echo "Escript Task is Successful"''',
+        script='''print "Escript Task is Successful"''',
         target=endpoints[0],
     )
 
@@ -91,7 +91,7 @@ def VMEndpointWithIPOutsideSubnet(endpoints=[EndpointWithIPOutsideSubnet]):
     )
     Task.Exec.escript(
         name="EscriptTask",
-        script='''echo "Escript Task is Successful"''',
+        script='''print "Escript Task is Successful"''',
         target=endpoints[0],
     )
 
@@ -105,6 +105,6 @@ def VMEndpointWithOffState(endpoints=[EndpointWithOffState]):
     )
     Task.Exec.escript(
         name="EscriptTask",
-        script='''echo "Escript Task is Successful"''',
+        script='''print "Escript Task is Successful"''',
         target=endpoints[0],
     )
