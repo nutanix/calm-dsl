@@ -106,9 +106,9 @@ def _create_task(task_file, name, description, force):
 Note: HTTP tasks is supported only from downloaded .json.
 
 Sample:\n
-calm create bp --name=HTTPGetVM -f HTTPGetVM.json\n
-calm create bp --name="Install IIS" -f Install_IIS.ps1\n
-calm create bp -f Install_Docker.sh
+calm create library task --name=HTTPGetVM -f HTTPGetVM.json\n
+calm create library task --name="Install IIS" -f Install_IIS.ps1\n
+calm create library task -f Install_Docker.sh
 """
 
     create_task(task_file, name, description, force)

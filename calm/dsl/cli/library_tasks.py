@@ -115,7 +115,6 @@ def describe_task(task_name, out):
     task = res.json()
 
     if out == "json":
-        task.pop("status", None)
         click.echo(json.dumps(task, indent=4, separators=(",", ": ")))
         return
 

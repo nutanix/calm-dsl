@@ -4,7 +4,7 @@ from .connection import get_connection, update_connection, REQUEST, Connection
 from .blueprint import BlueprintAPI
 from .endpoint import EndpointAPI
 from .runbook import RunbookAPI
-from .task import TaskAPI
+from .library_tasks import TaskLibraryApi
 from .application import ApplicationAPI
 from .project import ProjectAPI
 from .setting import SettingAPI
@@ -27,7 +27,7 @@ class ClientHandle:
         self.blueprint = BlueprintAPI(self.connection)
         self.endpoint = EndpointAPI(self.connection)
         self.runbook = RunbookAPI(self.connection)
-        self.task = TaskAPI(self.connection)
+        self.task = TaskLibraryApi(self.connection)
         self.application = ApplicationAPI(self.connection)
         self.account = SettingAPI(self.connection)
         self.market_place = MarketPlaceAPI(self.connection)
