@@ -97,7 +97,7 @@ Use `calm get roles` to list all roles in PC. The below roles are relevant for C
 - Delete group: `calm delete group <distinguished_name>`
 
 ### Projects
-- Compile project: `calm compile project --file <project_file_location>`. This command will print the compiled project JSON. Look at sample file [here](https://github.com/nutanix/calm-dsl/blob/release/2.9/tests/project/demo_project.py).
+- Compile project: `calm compile project --file <project_file_location>`. This command will print the compiled project JSON. Look at sample file [here](https://github.com/nutanix/calm-dsl/blob/master/tests/project/demo_project.py) and [here](https://github.com/nutanix/calm-dsl/blob/master/tests/project/test_project_in_pc.py).
 - Create project on Calm Server: `calm create project --file <project_file_location> --name <project_name> --description <description>`.
 - List projects: `calm get projects`. Get projects, optionally filtered by a string
 - Describe project: `calm describe project <project_name>`. It will print summary of project.
