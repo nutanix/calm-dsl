@@ -6,7 +6,7 @@ import sys
 from prettytable import PrettyTable
 from ruamel import yaml
 
-from calm.dsl.builtins import create_project_payload, Project, Ref
+from calm.dsl.builtins import create_project_payload, Project
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.config import get_config
 
@@ -210,6 +210,7 @@ def create_project(project_payload, name="", description=""):
 
 def describe_project(project_name, out):
 
+    client = get_api_client()
     project = get_project(project_name)
 
     if out == "json":
@@ -251,35 +252,17 @@ def describe_project(project_name, out):
 
     users = project_resources.get("user_reference_list", [])
     if users:
+        user_uuid_name_map = client.user.get_uuid_name_map({"length": 1000})
         click.echo("\nRegistered Users: \n--------------------")
         for user in users:
-            user_data = Cache.get_entity_data_using_uuid(
-                entity_type="user", uuid=user["uuid"]
-            )
-            if not user_data:
-                LOG.error(
-                    "User ({}) details not present. Please update cache".format(
-                        user["uuid"]
-                    )
-                )
-                sys.exit(-1)
-            click.echo("\t{}".format(highlight_text(user_data["name"])))
+            click.echo("\t" + highlight_text(user_uuid_name_map[user["uuid"]]))
 
     groups = project_resources.get("external_user_group_reference_list", [])
     if groups:
+        usergroup_uuid_name_map = client.group.get_uuid_name_map({"length": 1000})
         click.echo("\nRegistered Groups: \n--------------------")
         for group in groups:
-            group_data = Cache.get_entity_data_using_uuid(
-                entity_type="user_group", uuid=group["uuid"]
-            )
-            if not group_data:
-                LOG.error(
-                    "User Group ({}) details not present. Please update cache".format(
-                        group["uuid"]
-                    )
-                )
-                sys.exit(-1)
-            click.echo("\t{}".format(highlight_text(group_data["name"])))
+            click.echo("\t" + highlight_text(usergroup_uuid_name_map[group["uuid"]]))
 
     click.echo("\nInfrastructure: \n---------------")
 
@@ -530,11 +513,21 @@ def update_project_using_cli_switches(
         else:
             acp_remove_group_list.append(group["name"])
 
+    user_name_uuid_map = client.user.get_name_uuid_map({"length": 1000})
     for user in add_user_list:
-        updated_user_reference_list.append(Ref.User(user))
+        updated_user_reference_list.append(
+            {"kind": "user", "name": user, "uuid": user_name_uuid_map[user]}
+        )
 
+    usergroup_name_uuid_map = client.group.get_name_uuid_map({"length": 1000})
     for group in add_group_list:
-        updated_group_reference_list.append(Ref.Group(group))
+        updated_group_reference_list.append(
+            {
+                "kind": "user_group",
+                "name": group,
+                "uuid": usergroup_name_uuid_map[group],
+            }
+        )
 
     project_resources["user_reference_list"] = updated_user_reference_list
     project_resources[
