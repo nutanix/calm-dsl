@@ -226,13 +226,14 @@ def get_blueprint_class_from_module(user_bp_module):
 
 def compile_blueprint(bp_file):
 
+    # Constructing metadata payload
+    # Note: This should be constructed before loading bp module. As metadata will be used while getting bp_payload
+    metadata_payload = get_metadata_payload(bp_file)
+
     user_bp_module = get_blueprint_module_from_file(bp_file)
     UserBlueprint = get_blueprint_class_from_module(user_bp_module)
     if UserBlueprint is None:
         return None
-
-    # Constructing metadata payload
-    metadata_payload = get_metadata_payload(bp_file)
 
     bp_payload = None
     if isinstance(UserBlueprint, type(SimpleBlueprint)):

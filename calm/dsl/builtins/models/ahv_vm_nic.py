@@ -4,6 +4,7 @@ from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from calm.dsl.store import Cache
 from calm.dsl.config import get_config
+from calm.dsl.cli.metadata import get_metadata_obj
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -41,9 +42,15 @@ def create_ahv_nic(
 
     # Get project details
     config = get_config()
-    project_name = config["PROJECT"]["name"]
-    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
 
+    # Getting the metadata obj
+    metadata_obj = get_metadata_obj()
+    project_ref = metadata_obj.get("project_reference", {})
+
+    # If project not found in metadata, it will take project from config
+    project_name = project_ref.get("name", config["PROJECT"]["name"])
+
+    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
     if not project_cache_data:
         LOG.error(
             "Project {} not found. Please run: calm update cache".format(project_name)
@@ -68,9 +75,15 @@ def create_ahv_nic(
         )
 
         if not subnet_cache_data:
-            raise Exception(
+            LOG.debug(
+                "Ahv Subnet (name = '{}') not found in registered nutanix_pc account (uuid = '{}') in project (name = '{}')".format(
+                    subnet, account_uuid, project_name
+                )
+            )
+            LOG.error(
                 "AHV Subnet {} not found. Please run: calm update cache".format(subnet)
             )
+            sys.exit(-1)
 
         subnet_uuid = subnet_cache_data.get("uuid", "")
         if subnet_uuid not in project_subnets:
