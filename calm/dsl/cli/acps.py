@@ -249,12 +249,18 @@ def create_acp(role, project, acp_users, acp_groups, name):
 
     # TODO check these users are not present in project's other acps
     user_references = []
+    user_name_uuid_map = client.user.get_name_uuid_map({"length": 1000})
     for u in acp_users:
-        user_references.append(Ref.User(u))
+        user_references.append(
+            {"kind": "user", "name": u, "uuid": user_name_uuid_map[u]}
+        )
 
+    usergroup_name_uuid_map = client.group.get_name_uuid_map({"length": 1000})
     group_references = []
     for g in acp_groups:
-        group_references.append(Ref.Group(g))
+        group_references.append(
+            {"kind": "user_group", "name": g, "uuid": usergroup_name_uuid_map[g]}
+        )
 
     context_list = [default_context]
     if entity_filter_expression_list:
@@ -415,34 +421,16 @@ def describe_acp(acp_name, project_name, out):
         click.echo("Role: " + highlight_text(role_data["name"]))
 
     if acp_users:
+        user_uuid_name_map = client.user.get_uuid_name_map({"length": 1000})
         click.echo("Users [{}]:".format(highlight_text(len(acp_users))))
         for user in acp_users:
-            user_data = Cache.get_entity_data_using_uuid(
-                entity_type="user", uuid=user["uuid"]
-            )
-            if not user_data:
-                LOG.error(
-                    "User ({}) details not present. Please update cache".format(
-                        user["uuid"]
-                    )
-                )
-                sys.exit(-1)
-            click.echo("\t" + highlight_text(user_data["name"]))
+            click.echo("\t" + highlight_text(user_uuid_name_map[user["uuid"]]))
 
     if acp_groups:
+        usergroup_uuid_name_map = client.group.get_uuid_name_map({"length": 1000})
         click.echo("Groups [{}]:".format(highlight_text(len(acp_groups))))
         for group in acp_groups:
-            group_data = Cache.get_entity_data_using_uuid(
-                entity_type="user_group", uuid=group["uuid"]
-            )
-            if not group_data:
-                LOG.error(
-                    "Group ({}) details not present. Please update cache".format(
-                        group["uuid"]
-                    )
-                )
-                sys.exit(-1)
-            click.echo("\t" + highlight_text(group_data["name"]))
+            click.echo("\t" + highlight_text(usergroup_uuid_name_map[group["uuid"]]))
 
 
 def update_acp(
@@ -563,11 +551,21 @@ def update_acp(
                     updated_group_reference_list.append(group)
 
             # TODO check these users are not present in project's other acps
+            user_name_uuid_map = client.user.get_name_uuid_map({"length": 1000})
             for user in add_user_list:
-                updated_user_reference_list.append(Ref.User(user))
+                updated_user_reference_list.append(
+                    {"kind": "user", "name": user, "uuid": user_name_uuid_map[user]}
+                )
 
+            usergroup_name_uuid_map = client.group.get_name_uuid_map({"length": 1000})
             for group in add_group_list:
-                updated_group_reference_list.append(Ref.Group(group))
+                updated_group_reference_list.append(
+                    {
+                        "kind": "user_group",
+                        "name": group,
+                        "uuid": usergroup_name_uuid_map[group],
+                    }
+                )
 
             acp_resources["user_reference_list"] = updated_user_reference_list
             acp_resources["user_group_reference_list"] = updated_group_reference_list
