@@ -66,7 +66,7 @@ APP_SOURCES = [
     help="Show all marketplace blueprints which are published",
 )
 def _get_marketplace_items(name, quiet, app_family, display_all):
-    """List the marketplace items in marketplace"""
+    """Get marketplace store blueprints"""
 
     get_marketplace_items(
         name=name, quiet=quiet, app_family=app_family, display_all=display_all
@@ -100,7 +100,7 @@ def _get_marketplace_items(name, quiet, app_family, display_all):
     help="filter by state of marketplace blueprints",
 )
 def _get_marketplace_bps(name, quiet, app_family, app_states):
-    """List the marketplace blueprints in marketplace manager"""
+    """Get marketplace manager blueprints"""
 
     get_marketplace_bps(
         name=name, quiet=quiet, app_family=app_family, app_states=app_states
@@ -126,7 +126,7 @@ def _get_marketplace_bps(name, quiet, app_family, app_states):
     help="App Source for marketplace item",
 )
 def _describe_marketplace_item(name, out, version, source):
-    """Describe a market place item"""
+    """Describe a marketplace store item"""
 
     describe_marketplace_item(name=name, out=out, version=version, app_source=source)
 
@@ -157,7 +157,7 @@ def _describe_marketplace_item(name, out, version, source):
     help="State of marketplace blueprint",
 )
 def _describe_marketplace_bp(name, out, version, source, app_state):
-    """Describe a market place blueprint"""
+    """Describe a marketplace manager blueprint"""
 
     describe_marketplace_bp(
         name=name, out=out, version=version, app_source=source, app_state=app_state
@@ -192,7 +192,7 @@ def _describe_marketplace_bp(name, out, version, source, app_state):
 def _launch_marketplace_bp(
     name, version, project, app_name, profile_name, ignore_runtime_variables, source,
 ):
-    """Launch a marketplace blueprint"""
+    """Launch a marketplace manager blueprint"""
 
     launch_marketplace_bp(
         name=name,
@@ -225,7 +225,7 @@ def _launch_marketplace_bp(
     help="Interactive Mode to provide the value for secrets",
 )
 def _decompile_marketplace_bp(mpi_name, version, project, name, source, with_secrets):
-    """Decompiles marketplace blueprint"""
+    """Decompiles marketplace manager blueprint"""
 
     decompile_marketplace_bp(
         name=mpi_name,
@@ -265,7 +265,7 @@ def _decompile_marketplace_bp(mpi_name, version, project, name, source, with_sec
 def _launch_marketplace_item(
     name, version, project, app_name, profile_name, ignore_runtime_variables, source,
 ):
-    """Launch a marketplace item"""
+    """Launch a marketplace store item"""
 
     launch_marketplace_item(
         name=name,
@@ -465,7 +465,7 @@ def _publish_marketplace_bp(name, version, category, source, projects=[]):
     help="App Source for marketplace blueprint",
 )
 def _update_marketplace_bp(name, version, category, projects, description, source):
-    """Update a marketplace_manager blueprint"""
+    """Update a marketplace manager blueprint"""
 
     update_marketplace_bp(
         name=name,
@@ -497,7 +497,7 @@ def _update_marketplace_bp(name, version, category, projects, description, sourc
     help="State of marketplace blueprint",
 )
 def _delete_marketplace_bp(name, version, source, app_state):
-    """Delete marketplace manager blueprint"""
+    """Deletes marketplace manager blueprint"""
 
     delete_marketplace_bp(
         name=name, version=version, app_source=source, app_state=app_state
@@ -528,6 +528,6 @@ def _reject_marketplace_bp(name, version):
     help="App Source of marketplace blueprint",
 )
 def _unpublish_marketplace_bp(name, version, source):
-    """Unpublish marketplace blueprint to marketplace manager blueprint"""
+    """Unpublish marketplace store blueprint"""
 
     unpublish_marketplace_bp(name=name, version=version, app_source=source)

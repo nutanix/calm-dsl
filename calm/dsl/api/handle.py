@@ -12,6 +12,11 @@ from .marketplace import MarketPlaceAPI
 from .app_icons import AppIconAPI
 from .version import VersionAPI
 from .showback import ShowbackAPI
+from .user import UserAPI
+from .user_group import UserGroupAPI
+from .role import RoleAPI
+from .directory_service import DirectoryServiceAPI
+from .access_control_policy import AccessControlPolicyAPI
 
 
 class ClientHandle:
@@ -34,6 +39,11 @@ class ClientHandle:
         self.app_icon = AppIconAPI(self.connection)
         self.version = VersionAPI(self.connection)
         self.showback = ShowbackAPI(self.connection)
+        self.user = UserAPI(self.connection)
+        self.group = UserGroupAPI(self.connection)
+        self.role = RoleAPI(self.connection)
+        self.directory_service = DirectoryServiceAPI(self.connection)
+        self.acp = AccessControlPolicyAPI(self.connection)
 
 
 _CLIENT_HANDLE = None
