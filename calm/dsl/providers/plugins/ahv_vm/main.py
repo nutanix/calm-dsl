@@ -73,20 +73,14 @@ class AhvVmProvider(Provider):
 
         project = res.json()
         subnets_list = []
-        for subnet in project["status"]["project_status"]["resources"][
-            "subnet_reference_list"
-        ]:
+        for subnet in project["status"]["resources"]["subnet_reference_list"]:
             subnets_list.append(subnet["uuid"])
 
         # Extending external subnet's list from remote account
-        for subnet in project["status"]["project_status"]["resources"].get(
-            "external_network_list"
-        ):
+        for subnet in project["status"]["resources"].get("external_network_list"):
             subnets_list.append(subnet["uuid"])
 
-        accounts = project["status"]["project_status"]["resources"][
-            "account_reference_list"
-        ]
+        accounts = project["status"]["resources"]["account_reference_list"]
 
         reg_accounts = []
         for account in accounts:
@@ -1010,20 +1004,14 @@ def create_spec(client):
 
     project = res.json()
     subnets_list = []
-    for subnet in project["status"]["project_status"]["resources"][
-        "subnet_reference_list"
-    ]:
+    for subnet in project["status"]["resources"]["subnet_reference_list"]:
         subnets_list.append(subnet["uuid"])
 
     # Extending external subnet's list from remote account
-    for subnet in project["status"]["project_status"]["resources"].get(
-        "external_network_list", []
-    ):
+    for subnet in project["status"]["resources"].get("external_network_list", []):
         subnets_list.append(subnet["uuid"])
 
-    accounts = project["status"]["project_status"]["resources"][
-        "account_reference_list"
-    ]
+    accounts = project["status"]["resources"]["account_reference_list"]
 
     reg_accounts = []
     for account in accounts:

@@ -10,9 +10,10 @@ from calm.dsl.builtins import create_project_payload, Project
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.config import get_config
 
-from .utils import get_name_query, get_module_from_file, highlight_text
+from .utils import get_name_query, highlight_text
 from .task_commands import watch_task
 from .constants import ERGON_TASK
+from calm.dsl.tools import get_module_from_file
 from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
 from calm.dsl.store import Cache
@@ -79,12 +80,16 @@ def get_projects(name, filter_by, limit, offset, quiet, out):
 
         creation_time = arrow.get(metadata["creation_time"]).timestamp
         last_update_time = arrow.get(metadata["last_update_time"])
+        if "owner_reference" in metadata:
+            owner_reference_name = metadata["owner_reference"]["name"]
+        else:
+            owner_reference_name = "-"
 
         table.add_row(
             [
                 highlight_text(row["name"]),
                 highlight_text(row["state"]),
-                highlight_text(metadata["owner_reference"]["name"]),
+                highlight_text(owner_reference_name),
                 highlight_text(len(row["resources"]["user_reference_list"])),
                 highlight_text(time.ctime(creation_time)),
                 "{}".format(last_update_time.humanize()),
