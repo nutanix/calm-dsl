@@ -31,7 +31,7 @@ LOG = get_logging_handle(__name__)
 )
 @click.option("--limit", "-l", default=20, help="Number of results to return")
 @click.option(
-    "--offset", "-o", default=0, help="Offset results by the specified amount"
+    "--offset", "-s", default=0, help="Offset results by the specified amount"
 )
 @click.option(
     "--quiet", "-q", is_flag=True, default=False, help="Show only blueprint names."
@@ -79,6 +79,8 @@ def _describe_bp(bp_name, out):
     help="Path of Blueprint file to format",
 )
 def _format_blueprint_command(bp_file):
+    """Formats blueprint file using black"""
+
     format_blueprint_command(bp_file)
 
 
@@ -127,7 +129,7 @@ def _decompile_bp(name, bp_file, with_secrets):
 
 
 def create_blueprint(
-    client, bp_payload, name=None, description=None, categories=None, force_create=False
+    client, bp_payload, name=None, description=None, force_create=False
 ):
 
     bp_payload.pop("status", None)
@@ -165,14 +167,13 @@ def create_blueprint(
     bp_resources = bp_payload["spec"]["resources"]
     bp_name = bp_payload["spec"]["name"]
     bp_desc = bp_payload["spec"]["description"]
-
-    categories = bp_payload["metadata"].get("categories", None)
+    bp_metadata = bp_payload["metadata"]
 
     return client.blueprint.upload_with_secrets(
         bp_name,
         bp_desc,
         bp_resources,
-        categories=categories,
+        bp_metadata=bp_metadata,
         force_create=force_create,
     )
 
