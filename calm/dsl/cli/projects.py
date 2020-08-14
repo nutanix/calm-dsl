@@ -79,12 +79,16 @@ def get_projects(name, filter_by, limit, offset, quiet, out):
 
         creation_time = arrow.get(metadata["creation_time"]).timestamp
         last_update_time = arrow.get(metadata["last_update_time"])
+        if "owner_reference" in metadata:
+            owner_reference_name = metadata["owner_reference"]["name"]
+        else:
+            owner_reference_name = "-"
 
         table.add_row(
             [
                 highlight_text(row["name"]),
                 highlight_text(row["state"]),
-                highlight_text(metadata["owner_reference"]["name"]),
+                highlight_text(owner_reference_name),
                 highlight_text(len(row["resources"]["user_reference_list"])),
                 highlight_text(time.ctime(creation_time)),
                 "{}".format(last_update_time.humanize()),
