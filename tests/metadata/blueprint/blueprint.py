@@ -25,11 +25,6 @@ Era_Disk = vm_disk_package(
 )
 
 
-class BpMetadata(Metadata):
-
-    project = Ref.Project(PROJECT_NAME)
-
-
 class AhvVmService(Service):
     """Sample mysql service"""
 
@@ -114,3 +109,8 @@ class AhvBlueprint(Blueprint):
     packages = [AhvVmPackage, Era_Disk]
     substrates = [AhvVmSubstrate]
     profiles = [AhvVmProfile]
+
+
+class BpMetadata(Metadata):
+
+    project = Ref.Project(PROJECT_NAME)

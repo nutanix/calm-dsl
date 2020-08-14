@@ -1,23 +1,17 @@
-import importlib.util
+# NOTE This module is not added to `builtins.__init__` bczit is only for dsl internal logics not for making blueprints
+#       Below helpers are used in both `calm/dsl/cli/` and `calm/dsl/builtins/`
+#       Import its helpers using `from calm.dsl.builtins.models.metadata_payload import *`
 
-from calm.dsl.builtins import Metadata
+from .metadata import Metadata
+from calm.dsl.tools import get_module_from_file
 
-_Metadata = dict()
+_MetadataPayload = dict()
 
 
 def get_metadata_module_from_file(dsl_file):
     """Returns module given a file (.py)"""
 
-    module_name = "calm.dsl.user_metadata"
-    spec = importlib.util.spec_from_file_location(module_name, dsl_file)
-    user_module = importlib.util.module_from_spec(spec)
-    try:
-        spec.loader.exec_module(user_module)
-    except SystemExit:
-        # As some entities require metadata context. So absence of it will raise Error
-        pass
-
-    return user_module
+    return get_module_from_file("calm.dsl.user_metadata", dsl_file)
 
 
 def get_metadata_class_from_module(user_module):
@@ -35,17 +29,18 @@ def get_metadata_class_from_module(user_module):
 
 def get_metadata_payload(dsl_file):
 
-    global _Metadata
+    global _MetadataPayload
     user_metadata_module = get_metadata_module_from_file(dsl_file)
     UserMetadata = get_metadata_class_from_module(user_metadata_module)
-    if not UserMetadata:
-        return {}
 
-    payload = UserMetadata.get_dict()
+    payload = {}
+    if UserMetadata:
+        payload = UserMetadata.get_dict()
+
     # updating global object
-    _Metadata = payload
+    _MetadataPayload = payload
     return payload
 
 
 def get_metadata_obj():
-    return _Metadata
+    return _MetadataPayload

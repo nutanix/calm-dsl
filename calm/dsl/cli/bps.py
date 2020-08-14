@@ -20,6 +20,7 @@ from calm.dsl.builtins import (
     get_dsl_metadata_map,
     init_dsl_metadata_map,
 )
+from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
 from calm.dsl.decompile.decompile_render import create_bp_dir
@@ -29,11 +30,10 @@ from .utils import (
     get_name_query,
     get_states_filter,
     highlight_text,
-    get_module_from_file,
     import_var_from_file,
 )
-from .metadata import get_metadata_payload
 from .constants import BLUEPRINT
+from calm.dsl.tools import get_module_from_file
 from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
 
