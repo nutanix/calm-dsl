@@ -582,9 +582,7 @@ def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None
         sys.exit(-1)
 
     res = res.json()
-    environments = res["status"]["project_status"]["resources"][
-        "environment_reference_list"
-    ]
+    environments = res["status"]["resources"]["environment_reference_list"]
 
     # For now only single environment exists
     env_uuid = environments[0]["uuid"]

@@ -10,9 +10,10 @@ from calm.dsl.builtins import create_project_payload, Project
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.config import get_config
 
-from .utils import get_name_query, get_module_from_file, highlight_text
+from .utils import get_name_query, highlight_text
 from .task_commands import watch_task
 from .constants import ERGON_TASK
+from calm.dsl.tools import get_module_from_file
 from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
 from calm.dsl.store import Cache

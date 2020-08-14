@@ -31,7 +31,6 @@ class UserGroupAPI(ResourceAPI):
             )
             directory_service_name = directory_service_ref.get("name", "")
 
-            display_name = e_resources.get("display_name", "")
             uuid = entity["metadata"]["uuid"]
 
             if directory_service_name and distinguished_name:
@@ -65,7 +64,6 @@ class UserGroupAPI(ResourceAPI):
             )
             directory_service_name = directory_service_ref.get("name", "")
 
-            display_name = e_resources.get("display_name", "")
             uuid = entity["metadata"]["uuid"]
 
             if directory_service_name and distinguished_name:
