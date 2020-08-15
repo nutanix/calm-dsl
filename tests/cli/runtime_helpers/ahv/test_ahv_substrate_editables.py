@@ -2,6 +2,7 @@ from click.testing import CliRunner
 import time
 import pytest
 import json
+import traceback
 
 from calm.dsl.cli import main as cli
 from calm.dsl.cli.constants import APPLICATION
@@ -86,6 +87,15 @@ def test_ahv_substrate_editables_interactive_mode():
         pass
 
     if result.exit_code:
+        cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+        LOG.debug(
+            "Cli Response: {}".format(
+                json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+            )
+        )
+        LOG.debug(
+            "Traceback: \n{}".format("".join(traceback.format_tb(result.exc_info[2])))
+        )
         pytest.fail("App creation failed")
 
 

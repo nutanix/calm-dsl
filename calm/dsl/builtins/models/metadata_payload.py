@@ -1,5 +1,11 @@
-from calm.dsl.builtins import Metadata
-from .utils import get_module_from_file
+# NOTE This module is not added to `builtins.__init__` bczit is only for dsl internal logics not for making blueprints
+#       Below helpers are used in both `calm/dsl/cli/` and `calm/dsl/builtins/`
+#       Import its helpers using `from calm.dsl.builtins.models.metadata_payload import *`
+
+from .metadata import Metadata
+from calm.dsl.tools import get_module_from_file
+
+_MetadataPayload = dict()
 
 
 def get_metadata_module_from_file(dsl_file):
@@ -23,10 +29,18 @@ def get_metadata_class_from_module(user_module):
 
 def get_metadata_payload(dsl_file):
 
+    global _MetadataPayload
     user_metadata_module = get_metadata_module_from_file(dsl_file)
     UserMetadata = get_metadata_class_from_module(user_metadata_module)
-    if not UserMetadata:
-        return {}
 
-    payload = UserMetadata.get_dict()
+    payload = {}
+    if UserMetadata:
+        payload = UserMetadata.get_dict()
+
+    # updating global object
+    _MetadataPayload = payload
     return payload
+
+
+def get_metadata_obj():
+    return _MetadataPayload
