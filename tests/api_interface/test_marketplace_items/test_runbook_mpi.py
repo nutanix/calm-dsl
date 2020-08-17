@@ -5,7 +5,8 @@ from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import RUNLOG, MARKETPLACE_ITEM
 from tests.sample_runbooks import DslRunbookWithVariables
 from tests.api_interface.test_runbooks.utils import upload_runbook, poll_runlog_status, read_test_config
-from utils import publish_runbook_to_marketplace_manager, change_state
+from utils import (publish_runbook_to_marketplace_manager, change_state,
+                   clone_marketplace_runbook, execute_marketplace_runbook)
 
 
 class TestMarketplaceRunbook:
@@ -231,3 +232,163 @@ class TestMarketplaceRunbook:
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
         assert mpi_state == MARKETPLACE_ITEM.STATES.PUBLISHED
+
+    @pytest.mark.mpi
+    @pytest.mark.regression
+    @pytest.mark.parametrize("with_endpoints", [True, False])
+    @pytest.mark.parametrize("Runbook", [DslRunbookWithVariables])
+    def test_mpi_runbook_clone_same_project(self, Runbook, with_endpoints):
+        """
+        test_mpi_runbook_with_endpoint_clone_same_project
+        test_mpi_runbook_without_endpoint_clone_same_project
+        """
+        client = get_api_client()
+
+        if not self.publish_runbook_uuid:
+            rb_name = "test_clone_runbook_" + str(uuid.uuid4())[-10:]
+
+            rb = upload_runbook(client, rb_name, Runbook)
+            rb_state = rb["status"]["state"]
+            rb_uuid = rb["metadata"]["uuid"]
+            print(">> Runbook state: {}".format(rb_state))
+            assert rb_state == "ACTIVE"
+            assert rb_name == rb["spec"]["name"]
+            assert rb_name == rb["metadata"]["name"]
+            self.publish_runbook_uuid = rb_uuid
+
+        assert self.publish_runbook_uuid is not None, "Unable to find runbook name"
+        mpi_name = "test_clone_mpi_" + str(uuid.uuid4())[-10:]
+        version = '1.0.0'
+        print(">> Publishing mpi {} - {}".format(
+            mpi_name, version))
+
+        mpi_data = publish_runbook_to_marketplace_manager(
+            client,
+            self.publish_runbook_uuid,
+            mpi_name,
+            version,
+            with_endpoints=with_endpoints,
+            with_secrets=True
+        )
+        mpi_state = mpi_data["status"]["resources"]["app_state"]
+        print(">> MPI state: {}".format(mpi_state))
+        assert mpi_state == MARKETPLACE_ITEM.STATES.PENDING
+        assert mpi_name == mpi_data["spec"]["name"]
+        assert mpi_name == mpi_data["metadata"]["name"]
+
+        runbook_template_info = mpi_data['status']['resources']['runbook_template_info']
+        assert rb_uuid == runbook_template_info['source_runbook_reference']['uuid']
+
+        mpi_uuid = mpi_data['metadata']['uuid']
+        mpi_data = change_state(client, mpi_uuid, MARKETPLACE_ITEM.STATES.ACCEPTED)
+        mpi_state = mpi_data["status"]["resources"]["app_state"]
+        print(">> MPI state: {}".format(mpi_state))
+        assert mpi_state == MARKETPLACE_ITEM.STATES.ACCEPTED
+
+        mpi_data = change_state(client, mpi_uuid, MARKETPLACE_ITEM.STATES.PUBLISHED, project_list=['default'])
+        mpi_state = mpi_data["status"]["resources"]["app_state"]
+        print(">> MPI state: {}".format(mpi_state))
+        assert mpi_state == MARKETPLACE_ITEM.STATES.PUBLISHED
+
+        cloned_rb_name = rb_name + "_cloned_" + str(uuid.uuid4())[-10:]
+        cloned_runbook_uuid = clone_marketplace_runbook(client, mpi_uuid,
+                                                        cloned_rb_name,
+                                                        project="default")
+
+        res, err = client.runbook.read(cloned_runbook_uuid)
+
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        cloned_rb = res.json()
+        cloned_rb_state = cloned_rb["status"]["state"]
+
+        assert cloned_rb_name == cloned_rb["spec"]["name"]
+        assert cloned_rb_name == cloned_rb["metadata"]["name"]
+
+        print(">> Runbook state: {}".format(cloned_rb_state))
+        if with_endpoints:
+            assert cloned_rb_state == "ACTIVE", "Runbook published with endpoints should be in Active state"
+        else:
+            assert cloned_rb_state == "ACTIVE", "Runbook published with endpoints should be in Active state"
+
+    @pytest.mark.mpi
+    @pytest.mark.regression
+    @pytest.mark.parametrize("with_endpoints", [True, False])
+    @pytest.mark.parametrize("Runbook", [DslRunbookWithVariables])
+    def test_mpi_runbook_execute_same_project(self, Runbook, with_endpoints):
+        """
+        test_mpi_runbook_with_endpoint_clone_same_project
+        test_mpi_runbook_without_endpoint_clone_same_project
+        """
+        client = get_api_client()
+
+        if not self.publish_runbook_uuid:
+            rb_name = "test_clone_runbook_" + str(uuid.uuid4())[-10:]
+
+            rb = upload_runbook(client, rb_name, Runbook)
+            rb_state = rb["status"]["state"]
+            rb_uuid = rb["metadata"]["uuid"]
+            print(">> Runbook state: {}".format(rb_state))
+            assert rb_state == "ACTIVE"
+            assert rb_name == rb["spec"]["name"]
+            assert rb_name == rb["metadata"]["name"]
+            self.publish_runbook_uuid = rb_uuid
+
+        assert self.publish_runbook_uuid is not None, "Unable to find runbook name"
+        mpi_name = "test_clone_mpi_" + str(uuid.uuid4())[-10:]
+        version = '1.0.0'
+        print(">> Publishing mpi {} - {}".format(
+            mpi_name, version))
+
+        mpi_data = publish_runbook_to_marketplace_manager(
+            client,
+            self.publish_runbook_uuid,
+            mpi_name,
+            version,
+            with_endpoints=with_endpoints,
+            with_secrets=True
+        )
+        mpi_state = mpi_data["status"]["resources"]["app_state"]
+        print(">> MPI state: {}".format(mpi_state))
+        assert mpi_state == MARKETPLACE_ITEM.STATES.PENDING
+        assert mpi_name == mpi_data["spec"]["name"]
+        assert mpi_name == mpi_data["metadata"]["name"]
+
+        runbook_template_info = mpi_data['status']['resources']['runbook_template_info']
+        assert rb_uuid == runbook_template_info['source_runbook_reference']['uuid']
+
+        mpi_uuid = mpi_data['metadata']['uuid']
+        mpi_data = change_state(client, mpi_uuid, MARKETPLACE_ITEM.STATES.ACCEPTED)
+        mpi_state = mpi_data["status"]["resources"]["app_state"]
+        print(">> MPI state: {}".format(mpi_state))
+        assert mpi_state == MARKETPLACE_ITEM.STATES.ACCEPTED
+
+        mpi_data = change_state(client, mpi_uuid, MARKETPLACE_ITEM.STATES.PUBLISHED, project_list=['default'])
+        mpi_state = mpi_data["status"]["resources"]["app_state"]
+        print(">> MPI state: {}".format(mpi_state))
+        assert mpi_state == MARKETPLACE_ITEM.STATES.PUBLISHED
+
+#        if not with_endpoints:
+#            endpoints_mapping = {}
+#            default_endpoint = {}
+#
+#        runlog_uuid = execute_marketplace_runbook(client, mpi_uuid,
+#                                                  project="default")
+#
+#        res, err = client.runbook.read(cloned_runbook_uuid)
+#
+#        if err:
+#            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+#
+#        cloned_rb = res.json()
+#        cloned_rb_state = cloned_rb["status"]["state"]
+#
+#        assert cloned_rb_name == cloned_rb["spec"]["name"]
+#        assert cloned_rb_name == cloned_rb["metadata"]["name"]
+#
+#        print(">> Runbook state: {}".format(cloned_rb_state))
+#        if with_endpoints:
+#            assert cloned_rb_state == "ACTIVE", "Runbook published with endpoints should be in Active state"
+#        else:
+#            assert cloned_rb_state == "ACTIVE", "Runbook published with endpoints should be in Active state"

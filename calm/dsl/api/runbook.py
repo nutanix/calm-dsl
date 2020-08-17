@@ -29,6 +29,7 @@ class RunbookAPI(ResourceAPI):
         self.EXPORT_JSON = self.ITEM + "/export_json"
         self.EXPORT_JSON_WITH_SECRETS = self.ITEM + "/export_json?keep_secrets=true"
         self.MARKETPLACE_EXECUTE = self.PREFIX + "/marketplace_execute"
+        self.MARKETPLACE_CLONE = self.PREFIX + "/marketplace_clone"
 
     def upload(self, payload):
         return self.connection._call(
@@ -402,6 +403,14 @@ class RunbookAPI(ResourceAPI):
     def marketplace_execute(self, payload):
         return self.connection._call(
             self.MARKETPLACE_EXECUTE,
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
+        )
+
+    def marketplace_clone(self, payload):
+        return self.connection._call(
+            self.MARKETPLACE_CLONE,
             verify=False,
             request_json=payload,
             method=REQUEST.METHOD.POST,

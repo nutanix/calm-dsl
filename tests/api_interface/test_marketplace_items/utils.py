@@ -70,9 +70,131 @@ def change_state(client, mpi_uuid, new_state,
     mpi_data = res.json()
     mpi_data.pop("status", None)
     mpi_data["spec"]["resources"]["app_state"] = new_state
-    res, err = client.market_place.update(uuid=mpi_uuid, payload=mpi_data)
+    if project_list is not None:
+        project_reference_list = []
+        for project in project_list:
+            project_params = {"filter": "name=={}".format(project)}
+            res, err = client.project.list(params=project_params)
+            if err:
+                pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
+            response = res.json()
+            entities = response.get("entities", None)
+            if not entities:
+                raise Exception("No project with name {} exists".format(project))
+
+            project_id = entities[0]["metadata"]["uuid"]
+            project_reference_list.append({
+                "name": project,
+                "uuid": project_id,
+                "kind": "project"
+            })
+
+        mpi_data['spec']['resources']['project_reference_list'] = project_reference_list
+
+    res, err = client.market_place.update(uuid=mpi_uuid, payload=mpi_data)
     if err:
         pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
     return res.json()
+
+
+def clone_marketplace_runbook(client, mpi_uuid, runbook_name, project):
+
+    project_params = {"filter": "name=={}".format(project)}
+    res, err = client.project.list(params=project_params)
+    if err:
+        pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+    response = res.json()
+    project_entities = response.get("entities", None)
+    if not project_entities:
+        raise Exception("No project with name {} exists".format(project))
+
+    project_id = project_entities[0]["metadata"]["uuid"]
+
+    payload = {
+        "api_version": "3.0",
+        "metadata": {
+            "name": runbook_name,
+            "project_reference": {
+                "name": project,
+                "uuid": project_id,
+                "kind": "project"
+            },
+            "kind": "runbook"
+        },
+        "spec": {
+            "name": runbook_name,
+            "resources": {
+                "marketplace_reference": {
+                    "uuid": mpi_uuid,
+                    "kind": "marketplace_item"
+                }
+            }
+        }
+    }
+
+    res, err = client.runbook.marketplace_clone(payload)
+    if err:
+        pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+    response = res.json()
+    return response['runbook_uuid']
+
+
+def execute_marketplace_runbook(client, mpi_uuid, project_name,
+                                default_endpoint_uuid=None,
+                                endpoints_mapping=None,
+                                runtime_variables=None):
+
+    project_params = {"filter": "name=={}".format(project_name)}
+    res, err = client.project.list(params=project_params)
+    if err:
+        pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+    response = res.json()
+    project_entities = response.get("entities", None)
+    if not project_entities:
+        raise Exception("No project with name {} exists".format(project_name))
+
+    project_id = project_entities[0]["metadata"]["uuid"]
+
+    payload = {
+        "api_version": "3.0",
+        "metadata": {
+            "project_reference": {
+                "name": project_name,
+                "uuid": project_id,
+                "kind": "project"
+            },
+            "kind": "runbook"
+        },
+        "spec": {
+            "resources": {
+                "marketplace_reference": {
+                    "uuid": mpi_uuid,
+                    "kind": "marketplace_item"
+                }
+            }
+        }
+    }
+
+    if runtime_variables:
+        payload['spec']['resources']['args'] = runtime_variables
+
+    if default_endpoint_uuid:
+        payload['spec']['resources']['default_target_reference'] = {
+            "uuid": default_endpoint_uuid,
+            "kind": "app_endpoint"
+        }
+
+    if endpoints_mapping:
+        payload['spec']['resources']['endpoints_mapping'] = endpoints_mapping
+
+    res, err = client.runbook.marketplace_execute(payload)
+    if err:
+        pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+    response = res.json()
+    return response['status']['runlog_uuid']
