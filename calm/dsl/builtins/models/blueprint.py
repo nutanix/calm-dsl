@@ -43,6 +43,17 @@ class BlueprintType(EntityType):
 
         cdict = super().compile()
         cdict = unzip_pod_deployments(cdict)
+
+        # Searching for brownfield deployments
+        is_brownfield = False
+        for profile in cdict.get("app_profile_list", []):
+            for dep in profile.deployments:
+                if dep.type == "BROWNFIELD":
+                    is_brownfield = True
+
+        if is_brownfield:
+            cdict["type"] = "BROWNFIELD"
+
         return cdict
 
 

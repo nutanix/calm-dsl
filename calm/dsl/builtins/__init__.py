@@ -70,6 +70,7 @@ from .models.client_attrs import (
 
 from .models.providers import Provider
 from .models.project_payload import create_project_payload
+from .models.brownfield import Brownfield
 
 
 __all__ = [
@@ -160,4 +161,5 @@ __all__ = [
     "Project",
     "Metadata",
     "MetadataType",
+    "Brownfield",
 ]

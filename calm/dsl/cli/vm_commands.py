@@ -13,9 +13,7 @@ LOG = get_logging_handle(__name__)
 @click.option(
     "--offset", "-s", default=0, help="Offset results by the specified amount"
 )
-@click.option(
-    "--quiet", "-q", is_flag=True, default=False, help="Show only vms names."
-)
+@click.option("--quiet", "-q", is_flag=True, default=False, help="Show only vms names.")
 @click.option(
     "--out",
     "-o",
@@ -29,7 +27,7 @@ LOG = get_logging_handle(__name__)
     "-u",
     is_flag=True,
     default=False,
-    help="To find Calm Managed/Unmanaged vms"
+    help="To find Calm Managed/Unmanaged vms",
 )
 def _get_vm_list(limit, offset, quiet, out, unmanaged):
     """Get the vms, optionally filtered by a string"""
@@ -39,5 +37,3 @@ def _get_vm_list(limit, offset, quiet, out, unmanaged):
 
     else:
         get_ahv_vm_list(limit, offset, quiet, out)
-    
-    

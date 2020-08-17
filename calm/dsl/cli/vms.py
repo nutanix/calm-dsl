@@ -157,8 +157,23 @@ def get_brownfield_ahv_vm_list(limit, offset, quiet, out):
         LOG.error("No nutanix account registered to project {}".format(project_name))
         sys.exit(-1)
 
-    filter_query = "project_uuid=={};account_uuid=={}". format(project_uuid, account_uuid)
-    import pdb; pdb.set_trace()
+    res, err = client.account.read(account_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    res = res.json()
+    clusters = res["status"]["resources"]["data"].get(
+        "cluster_account_reference_list", []
+    )
+    if not clusters:
+        LOG.error("No cluster found in ahv account (uuid='{}')".format(account_uuid))
+        sys.exit(-1)
+
+    cluster_uuid = clusters[0]["uuid"]
+
+    filter_query = "project_uuid=={};account_uuid=={}".format(
+        project_uuid, cluster_uuid
+    )
     params = {"length": limit, "offset": offset, "filter": filter_query}
     res, err = Obj.list(params=params)
     if err:
@@ -167,7 +182,11 @@ def get_brownfield_ahv_vm_list(limit, offset, quiet, out):
 
     json_rows = res.json()["entities"]
     if not json_rows:
-        click.echo(highlight_text("No ahv_vm on account(uuid={}) found !!!\n". format(account_uuid)))
+        click.echo(
+            highlight_text(
+                "No ahv_vm on account(uuid={}) found !!!\n".format(account_uuid)
+            )
+        )
         return
 
     if quiet:
@@ -195,8 +214,8 @@ def get_brownfield_ahv_vm_list(limit, offset, quiet, out):
 
         cluster = st_resources["cluster_name"]
         subnet = st_resources["subnet_list"]
-        address = ",". join(st_resources["address_list"])
-        memory = st_resources["memory_size_mib"]//1024
+        address = ",".join(st_resources["address_list"])
+        memory = st_resources["memory_size_mib"] // 1024
         sockets = st_resources["num_sockets"]
         vcpus = st_resources["num_vcpus_per_socket"]
         instance_id = st_resources["instance_id"]

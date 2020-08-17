@@ -1,0 +1,5 @@
+resources:
+  nic_list:
+  - subnet_reference:
+      kind: subnet
+      uuid: ""
