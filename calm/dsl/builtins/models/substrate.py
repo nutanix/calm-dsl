@@ -1,7 +1,16 @@
+import sys
+
 from .entity import EntityType, Entity, EntityTypeBase, EntityDict
 from .validator import PropertyValidator
 from .provider_spec import provider_spec
 from .client_attrs import update_dsl_metadata_map, get_dsl_metadata_map
+from .metadata_payload import get_metadata_obj
+
+from calm.dsl.config import get_config
+from calm.dsl.store import Cache
+from calm.dsl.log import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 # Substrate
@@ -96,6 +105,39 @@ class SubstrateType(EntityType):
             elif not readiness_probe.get("address"):
                 readiness_probe["address"] = "@@{public_ip_address}@@"
 
+            # UI expects defaults. Atleast account_uuid
+            if not cdict.get("create_spec"):
+                config = get_config()
+
+                # Getting the metadata obj
+                metadata_obj = get_metadata_obj()
+                project_ref = metadata_obj.get("project_reference") or dict()
+
+                # If project not found in metadata, it will take project from config
+                project_name = project_ref.get("name", config["PROJECT"]["name"])
+
+                project_cache_data = Cache.get_entity_data(
+                    entity_type="project", name=project_name
+                )
+                if not project_cache_data:
+                    LOG.error(
+                        "Project {} not found. Please run: calm update cache".format(
+                            project_name
+                        )
+                    )
+                    sys.exit(-1)
+
+                project_uuid = project_cache_data.get("uuid")
+                project_accounts = project_cache_data["accounts_data"]
+                account_uuid = project_accounts.get("aws", "")
+                if not account_uuid:
+                    LOG.error(
+                        "No aws account registered in project '{}'".format(project_name)
+                    )
+                    sys.exit(-1)
+
+                cdict["create_spec"] = {"resources": {"account_uuid": account_uuid}}
+
         elif cdict["type"] == "K8S_POD":  # Never used (Omit after discussion)
             readiness_probe = {
                 "address": "",
@@ -126,6 +168,41 @@ class SubstrateType(EntityType):
             elif not readiness_probe.get("address"):
                 readiness_probe["address"] = "@@{platform.publicIPAddressList[0]}@@"
 
+            # UI expects defaults. Atleast account_uuid
+            if not cdict.get("create_spec"):
+                config = get_config()
+
+                # Getting the metadata obj
+                metadata_obj = get_metadata_obj()
+                project_ref = metadata_obj.get("project_reference") or dict()
+
+                # If project not found in metadata, it will take project from config
+                project_name = project_ref.get("name", config["PROJECT"]["name"])
+
+                project_cache_data = Cache.get_entity_data(
+                    entity_type="project", name=project_name
+                )
+                if not project_cache_data:
+                    LOG.error(
+                        "Project {} not found. Please run: calm update cache".format(
+                            project_name
+                        )
+                    )
+                    sys.exit(-1)
+
+                project_uuid = project_cache_data.get("uuid")
+                project_accounts = project_cache_data["accounts_data"]
+                account_uuid = project_accounts.get("azure", "")
+                if not account_uuid:
+                    LOG.error(
+                        "No azure account registered in project '{}'".format(
+                            project_name
+                        )
+                    )
+                    sys.exit(-1)
+
+                cdict["create_spec"] = {"resources": {"account_uuid": account_uuid}}
+
         elif cdict["type"] == "VMWARE_VM":
             if not readiness_probe:
                 readiness_probe = {
@@ -144,6 +221,41 @@ class SubstrateType(EntityType):
                     readiness_probe["connection_protocol"] = "http"
             elif not readiness_probe.get("address"):
                 readiness_probe["address"] = "@@{platform.ipAddressList[0]}@@"
+
+            # UI expects defaults. Atleast account_uuid
+            if not cdict.get("create_spec"):
+                config = get_config()
+
+                # Getting the metadata obj
+                metadata_obj = get_metadata_obj()
+                project_ref = metadata_obj.get("project_reference") or dict()
+
+                # If project not found in metadata, it will take project from config
+                project_name = project_ref.get("name", config["PROJECT"]["name"])
+
+                project_cache_data = Cache.get_entity_data(
+                    entity_type="project", name=project_name
+                )
+                if not project_cache_data:
+                    LOG.error(
+                        "Project {} not found. Please run: calm update cache".format(
+                            project_name
+                        )
+                    )
+                    sys.exit(-1)
+
+                project_uuid = project_cache_data.get("uuid")
+                project_accounts = project_cache_data["accounts_data"]
+                account_uuid = project_accounts.get("vmware", "")
+                if not account_uuid:
+                    LOG.error(
+                        "No vmware account registered in project '{}'".format(
+                            project_name
+                        )
+                    )
+                    sys.exit(-1)
+
+                cdict["create_spec"] = {"resources": {"account_uuid": account_uuid}, "template":""}
 
         elif cdict["type"] == "GCP_VM":
             if not readiness_probe:
@@ -165,6 +277,40 @@ class SubstrateType(EntityType):
                 readiness_probe[
                     "address"
                 ] = "@@{platform.networkInterfaces[0].networkIP}@@"
+
+            # UI expects defaults. Atleast account_uuid
+            if not cdict.get("create_spec"):
+                config = get_config()
+
+                # Getting the metadata obj
+                metadata_obj = get_metadata_obj()
+                project_ref = metadata_obj.get("project_reference") or dict()
+
+                # If project not found in metadata, it will take project from config
+                project_name = project_ref.get("name", config["PROJECT"]["name"])
+
+                project_cache_data = Cache.get_entity_data(
+                    entity_type="project", name=project_name
+                )
+                if not project_cache_data:
+                    LOG.error(
+                        "Project {} not found. Please run: calm update cache".format(
+                            project_name
+                        )
+                    )
+                    sys.exit(-1)
+
+                project_uuid = project_cache_data.get("uuid")
+                project_accounts = project_cache_data["accounts_data"]
+                account_uuid = project_accounts.get("gcp", "")
+                if not account_uuid:
+                    LOG.error(
+                        "No gcp account registered in project '{}'".format(project_name)
+                    )
+                    sys.exit(-1)
+
+                cdict["create_spec"] = {"resources": {"account_uuid": account_uuid}}
+
         else:
             raise Exception("Un-supported vm type :{}".format(cdict["type"]))
 

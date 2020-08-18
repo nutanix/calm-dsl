@@ -45,7 +45,11 @@ def get_ahv_bf_vm_data(
 
     res = res.json()
     if not res["metadata"]["total_matches"]:
-        LOG.error("No brownfield vms found")  # TODO improve it
+        LOG.error(
+            "No nutanix brownfield vms found on account(uuid='{}') and project(uuid='{}')".format(
+                account_uuid, project_uuid
+            )
+        )
         sys.exit(-1)
 
     for entity in res["entities"]:
@@ -64,12 +68,230 @@ def get_ahv_bf_vm_data(
                 "instance_name": instance_name,
                 "instance_id": instance_id,
                 "address": list(ip_address),
-                "platform_data": {},
             }
 
     # If not vm found raise error
     LOG.error(
         "No nutanix brownfield vm (name='{}') found on account(uuid='{}') and project(uuid='{}')".format(
+            instance_name, account_uuid, project_uuid
+        )
+    )
+    sys.exit(-1)
+
+
+def get_aws_bf_vm_data(
+    project_uuid, account_uuid, instance_name, ip_address=[], instance_id=None
+):
+
+    client = get_api_client()
+
+    params = {
+        "length": 250,
+        "offset": 0,
+        "filter": "project_uuid=={};account_uuid=={}".format(
+            project_uuid, account_uuid
+        ),
+    }
+    res, err = client.blueprint.brownfield_vms(params)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    res = res.json()
+    if not res["metadata"]["total_matches"]:
+        LOG.error(
+            "No aws brownfield vms found on account(uuid='{}') and project(uuid='{}')".format(
+                account_uuid, project_uuid
+            )
+        )
+        sys.exit(-1)
+
+    for entity in res["entities"]:
+        e_resources = entity["status"]["resources"]
+        if e_resources["instance_name"] == instance_name:
+            if instance_id and e_resources["instance_id"] != instance_id:
+                continue
+
+            if ip_address and not set(ip_address).issubset(
+                e_resources["public_ip_address"]
+            ):
+                continue
+
+            ip_address = ip_address or e_resources["address"]
+            instance_id = e_resources["instance_id"]
+
+            return {
+                "instance_name": instance_name,
+                "instance_id": instance_id,
+                "address": list(ip_address),
+            }
+
+    # If not vm found raise error
+    LOG.error(
+        "No aws brownfield vm (name='{}') found on account(uuid='{}') and project(uuid='{}')".format(
+            instance_name, account_uuid, project_uuid
+        )
+    )
+    sys.exit(-1)
+
+
+def get_azure_bf_vm_data(
+    project_uuid, account_uuid, instance_name, ip_address=[], instance_id=None
+):
+
+    client = get_api_client()
+
+    params = {
+        "length": 250,
+        "offset": 0,
+        "filter": "project_uuid=={};account_uuid=={}".format(
+            project_uuid, account_uuid
+        ),
+    }
+    res, err = client.blueprint.brownfield_vms(params)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    res = res.json()
+    if not res["metadata"]["total_matches"]:
+        LOG.error(
+            "No azure brownfield vms found on account(uuid='{}') and project(uuid='{}')".format(
+                account_uuid, project_uuid
+            )
+        )
+        sys.exit(-1)
+
+    for entity in res["entities"]:
+        e_resources = entity["status"]["resources"]
+        if e_resources["instance_name"] == instance_name:
+            if instance_id and e_resources["instance_id"] != instance_id:
+                continue
+
+            if ip_address and not set(ip_address).issubset(e_resources["address"]):
+                continue
+
+            ip_address = ip_address or e_resources["address"]
+            instance_id = e_resources["instance_id"]
+
+            return {
+                "instance_name": instance_name,
+                "instance_id": instance_id,
+                "address": list(ip_address),
+                "platform_data": {"resource_group": e_resources["resource_group"]},
+            }
+
+    # If not vm found raise error
+    LOG.error(
+        "No azure brownfield vm (name='{}') found on account(uuid='{}') and project(uuid='{}')".format(
+            instance_name, account_uuid, project_uuid
+        )
+    )
+    sys.exit(-1)
+
+
+def get_vmware_bf_vm_data(
+    project_uuid, account_uuid, instance_name, ip_address=[], instance_id=None
+):
+
+    client = get_api_client()
+
+    params = {
+        "length": 250,
+        "offset": 0,
+        "filter": "project_uuid=={};account_uuid=={}".format(
+            project_uuid, account_uuid
+        ),
+    }
+    res, err = client.blueprint.brownfield_vms(params)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    res = res.json()
+    if not res["metadata"]["total_matches"]:
+        LOG.error(
+            "No vmware brownfield vms found on account(uuid='{}') and project(uuid='{}')".format(
+                account_uuid, project_uuid
+            )
+        )
+        sys.exit(-1)
+
+    for entity in res["entities"]:
+        e_resources = entity["status"]["resources"]
+        if e_resources["instance_name"] == instance_name:
+            if instance_id and e_resources["instance_id"] != instance_id:
+                continue
+
+            if ip_address and not set(ip_address).issubset(
+                e_resources["guest.ipAddress"]
+            ):
+                continue
+
+            ip_address = ip_address or e_resources["address"]
+            instance_id = e_resources["instance_id"]
+
+            return {
+                "instance_name": instance_name,
+                "instance_id": instance_id,
+                "address": list(ip_address),
+                "platform_data": {},
+            }
+
+    # If not vm found raise error
+    LOG.error(
+        "No vmware brownfield vm (name='{}') found on account(uuid='{}') and project(uuid='{}')".format(
+            instance_name, account_uuid, project_uuid
+        )
+    )
+    sys.exit(-1)
+
+
+def get_gcp_bf_vm_data(
+    project_uuid, account_uuid, instance_name, ip_address=[], instance_id=None
+):
+
+    client = get_api_client()
+
+    params = {
+        "length": 250,
+        "offset": 0,
+        "filter": "project_uuid=={};account_uuid=={}".format(
+            project_uuid, account_uuid
+        ),
+    }
+    res, err = client.blueprint.brownfield_vms(params)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    res = res.json()
+    if not res["metadata"]["total_matches"]:
+        LOG.error(
+            "No gcp brownfield vms found on account(uuid='{}') and project(uuid='{}')".format(
+                account_uuid, project_uuid
+            )
+        )
+        sys.exit(-1)
+
+    for entity in res["entities"]:
+        e_resources = entity["status"]["resources"]
+        if e_resources["instance_name"] == instance_name:
+            if instance_id and e_resources["id"] != instance_id:
+                continue
+
+            if ip_address and not set(ip_address).issubset(e_resources["natIP"]):
+                continue
+
+            ip_address = ip_address or e_resources["address"]
+            instance_id = e_resources["id"]
+
+            return {
+                "instance_name": instance_name,
+                "instance_id": instance_id,
+                "address": list(ip_address),
+                "platform_data": {"zone": e_resources["zone"]},
+            }
+
+    # If not vm found raise error
+    LOG.error(
+        "No gcp brownfield vm (name='{}') found on account(uuid='{}') and project(uuid='{}')".format(
             instance_name, account_uuid, project_uuid
         )
     )
@@ -128,8 +350,76 @@ class BrownfiedVmType(EntityType):
                 instance_id=cdict["instance_id"],
             )
 
+        elif provider_type == "AWS_VM":
+            account_uuid = project_accounts.get("aws", "")
+            if not account_uuid:
+                LOG.error(
+                    "No aws account registered in project '{}'".format(project_name)
+                )
+                sys.exit(-1)
+
+            cdict = get_aws_bf_vm_data(
+                project_uuid=project_uuid,
+                account_uuid=account_uuid,
+                instance_name=cdict["instance_name"],
+                ip_address=cdict["address"],
+                instance_id=cdict["instance_id"],
+            )
+
+        elif provider_type == "AZURE_VM":
+            account_uuid = project_accounts.get("azure", "")
+            if not account_uuid:
+                LOG.error(
+                    "No azure account registered in project '{}'".format(project_name)
+                )
+                sys.exit(-1)
+
+            cdict = get_azure_bf_vm_data(
+                project_uuid=project_uuid,
+                account_uuid=account_uuid,
+                instance_name=cdict["instance_name"],
+                ip_address=cdict["address"],
+                instance_id=cdict["instance_id"],
+            )
+
+        elif provider_type == "VMWARE_VM":
+            account_uuid = project_accounts.get("vmware", "")
+            if not account_uuid:
+                LOG.error(
+                    "No vmware account registered in project '{}'".format(project_name)
+                )
+                sys.exit(-1)
+
+            cdict = get_vmware_bf_vm_data(
+                project_uuid=project_uuid,
+                account_uuid=account_uuid,
+                instance_name=cdict["instance_name"],
+                ip_address=cdict["address"],
+                instance_id=cdict["instance_id"],
+            )
+
+        elif provider_type == "GCP_VM":
+            account_uuid = project_accounts.get("gcp", "")
+            if not account_uuid:
+                LOG.error(
+                    "No gcp account registered in project '{}'".format(project_name)
+                )
+                sys.exit(-1)
+
+            cdict = get_gcp_bf_vm_data(
+                project_uuid=project_uuid,
+                account_uuid=account_uuid,
+                instance_name=cdict["instance_name"],
+                ip_address=cdict["address"],
+                instance_id=cdict["instance_id"],
+            )
+
         else:
-            LOG.error("Support for {} provider not available".format(provider_type))
+            LOG.error(
+                "Support for {} provider's brownfield vm not available".format(
+                    provider_type
+                )
+            )
             sys.exit(-1)
 
         return cdict
