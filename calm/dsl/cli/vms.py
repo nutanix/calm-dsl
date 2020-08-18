@@ -204,7 +204,7 @@ def get_brownfield_ahv_vm_list(limit, offset, quiet, out):
         "MEMORY",
         "SOCKETS",
         "VCPU",
-        "UUID",
+        "ID",
     ]
 
     for row in json_rows:
@@ -230,6 +230,371 @@ def get_brownfield_ahv_vm_list(limit, offset, quiet, out):
                 highlight_text(memory),
                 highlight_text(sockets),
                 highlight_text(vcpus),
+                highlight_text(instance_id),
+            ]
+        )
+
+    click.echo(table)
+
+
+def get_brownfield_aws_vm_list(limit, offset, quiet, out):
+
+    client = get_api_client()
+    Obj = get_resource_api("blueprints/brownfield_import/vms", client.connection)
+
+    config = get_config()
+    project_name = config["PROJECT"]["name"]
+    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
+
+    if not project_cache_data:
+        LOG.error(
+            "Project {} not found. Please run: calm update cache".format(project_name)
+        )
+        sys.exit(-1)
+
+    project_accounts = project_cache_data["accounts_data"]
+    project_subnets = project_cache_data["whitelisted_subnets"]
+    # Fetch Nutanix_PC account registered
+    project_uuid = project_cache_data["uuid"]
+    account_uuid = project_accounts.get("aws", "")
+
+    if not account_uuid:
+        LOG.error("No aws account registered to project {}".format(project_name))
+        sys.exit(-1)
+
+    filter_query = "project_uuid=={};account_uuid=={}".format(
+        project_uuid, account_uuid
+    )
+    params = {"length": limit, "offset": offset, "filter": filter_query}
+    res, err = Obj.list(params=params)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    json_rows = res.json()["entities"]
+    if not json_rows:
+        click.echo(
+            highlight_text(
+                "No aws brownfield vm on account(uuid={}) found !!!\n".format(
+                    account_uuid
+                )
+            )
+        )
+        return
+
+    if quiet:
+        for _row in json_rows:
+            row = _row["status"]
+            click.echo(highlight_text(row["name"]))
+        return
+
+    table = PrettyTable()
+    table.field_names = [
+        "NAME",
+        "PUBLIC IP ADDRESS",
+        "PRIVATE DNS",
+        "PUBLIC DNS",
+        "REGION",
+        "POWER STATE",
+        "ID",
+    ]
+
+    for row in json_rows:
+
+        # Status section
+        st_resources = row["status"]["resources"]
+
+        address = ",".join(st_resources["public_ip_address"])
+        private_dns_name = st_resources["private_dns_name"]
+        public_dns_name = ",".join(st_resources["public_dns_name"])
+        region = ",".join(st_resources["region"])
+        power_state = st_resources["power_state"]
+        instance_id = st_resources["instance_id"]
+        instance_name = st_resources["instance_name"]
+
+        table.add_row(
+            [
+                highlight_text(instance_name),
+                highlight_text(address),
+                highlight_text(private_dns_name),
+                highlight_text(public_dns_name),
+                highlight_text(region),
+                highlight_text(power_state),
+                highlight_text(instance_id),
+            ]
+        )
+
+    click.echo(table)
+
+
+def get_brownfield_azure_vm_list(limit, offset, quiet, out):
+
+    client = get_api_client()
+    Obj = get_resource_api("blueprints/brownfield_import/vms", client.connection)
+
+    config = get_config()
+    project_name = config["PROJECT"]["name"]
+    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
+
+    if not project_cache_data:
+        LOG.error(
+            "Project {} not found. Please run: calm update cache".format(project_name)
+        )
+        sys.exit(-1)
+
+    project_accounts = project_cache_data["accounts_data"]
+    project_subnets = project_cache_data["whitelisted_subnets"]
+    project_uuid = project_cache_data["uuid"]
+    account_uuid = project_accounts.get("azure", "")
+
+    if not account_uuid:
+        LOG.error("No azure account registered to project {}".format(project_name))
+        sys.exit(-1)
+
+    filter_query = "project_uuid=={};account_uuid=={}".format(
+        project_uuid, account_uuid
+    )
+    params = {"length": limit, "offset": offset, "filter": filter_query}
+    res, err = Obj.list(params=params)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    json_rows = res.json()["entities"]
+    if not json_rows:
+        click.echo(
+            highlight_text(
+                "No azure brownfield vm on account(uuid={}) found !!!\n".format(
+                    account_uuid
+                )
+            )
+        )
+        return
+
+    if quiet:
+        for _row in json_rows:
+            row = _row["status"]
+            click.echo(highlight_text(row["name"]))
+        return
+
+    table = PrettyTable()
+    table.field_names = [
+        "NAME",
+        "RESOURCE GROUP",
+        "LOCATION",
+        "PUBLIC IP",
+        "PRIVATE IP",
+        "HARDWARE PROFILE",
+        "ID",
+    ]
+
+    for row in json_rows:
+
+        # Status section
+        st_resources = row["status"]["resources"]
+
+        instance_id = st_resources["instance_id"]
+        instance_name = st_resources["instance_name"]
+        resource_group = st_resources["resource_group"]
+        location = st_resources["location"]
+        public_ip = st_resources["public_ip_address"]
+        private_ip = st_resources["private_ip_address"]
+        hardwareProfile = (
+            st_resources["properties"].get("hardwareProfile", {}).get("vmSize", "")
+        )
+
+        table.add_row(
+            [
+                highlight_text(instance_name),
+                highlight_text(resource_group),
+                highlight_text(location),
+                highlight_text(public_ip),
+                highlight_text(private_ip),
+                highlight_text(hardwareProfile),
+                highlight_text(instance_id),
+            ]
+        )
+
+    click.echo(table)
+
+
+def get_brownfield_gcp_vm_list(limit, offset, quiet, out):
+
+    client = get_api_client()
+    Obj = get_resource_api("blueprints/brownfield_import/vms", client.connection)
+
+    config = get_config()
+    project_name = config["PROJECT"]["name"]
+    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
+
+    if not project_cache_data:
+        LOG.error(
+            "Project {} not found. Please run: calm update cache".format(project_name)
+        )
+        sys.exit(-1)
+
+    project_accounts = project_cache_data["accounts_data"]
+    project_subnets = project_cache_data["whitelisted_subnets"]
+    project_uuid = project_cache_data["uuid"]
+    account_uuid = project_accounts.get("gcp", "")
+
+    if not account_uuid:
+        LOG.error("No gcp account registered to project {}".format(project_name))
+        sys.exit(-1)
+
+    filter_query = "project_uuid=={};account_uuid=={}".format(
+        project_uuid, account_uuid
+    )
+    params = {"length": limit, "offset": offset, "filter": filter_query}
+    res, err = Obj.list(params=params)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    json_rows = res.json()["entities"]
+    if not json_rows:
+        click.echo(
+            highlight_text(
+                "No azure brownfield vm on account(uuid={}) found !!!\n".format(
+                    account_uuid
+                )
+            )
+        )
+        return
+
+    if quiet:
+        for _row in json_rows:
+            row = _row["status"]
+            click.echo(highlight_text(row["name"]))
+        return
+
+    table = PrettyTable()
+    table.field_names = [
+        "NAME",
+        "ZONE",
+        "SUBNETS",
+        "NETWORK",
+        "NAT IP",
+        "NETWORK NAME",
+        "ID",
+    ]
+
+    for row in json_rows:
+
+        # Status section
+        st_resources = row["status"]["resources"]
+
+        instance_id = st_resources["id"]
+        instance_name = st_resources["instance_name"]
+        zone = st_resources["zone"]
+        subnetwork = st_resources["subnetwork"]
+        network = st_resources["network"]
+        natIP = ",".join(st_resources["natIP"])
+        network_name = ",".join(st_resources["network_name"])
+
+        table.add_row(
+            [
+                highlight_text(instance_name),
+                highlight_text(zone),
+                highlight_text(subnetwork),
+                highlight_text(network),
+                highlight_text(natIP),
+                highlight_text(network_name),
+                highlight_text(instance_id),
+            ]
+        )
+
+    click.echo(table)
+
+
+def get_brownfield_vmware_vm_list(limit, offset, quiet, out):
+
+    client = get_api_client()
+    Obj = get_resource_api("blueprints/brownfield_import/vms", client.connection)
+
+    config = get_config()
+    project_name = config["PROJECT"]["name"]
+    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
+
+    if not project_cache_data:
+        LOG.error(
+            "Project {} not found. Please run: calm update cache".format(project_name)
+        )
+        sys.exit(-1)
+
+    project_accounts = project_cache_data["accounts_data"]
+    project_subnets = project_cache_data["whitelisted_subnets"]
+    project_uuid = project_cache_data["uuid"]
+    account_uuid = project_accounts.get("vmware", "")
+
+    if not account_uuid:
+        LOG.error("No vmware account registered to project {}".format(project_name))
+        sys.exit(-1)
+
+    filter_query = "project_uuid=={};account_uuid=={}".format(
+        project_uuid, account_uuid
+    )
+    params = {"length": limit, "offset": offset, "filter": filter_query}
+    res, err = Obj.list(params=params)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    json_rows = res.json()["entities"]
+    if not json_rows:
+        click.echo(
+            highlight_text(
+                "No vmware brownfield vm on account(uuid={}) found !!!\n".format(
+                    account_uuid
+                )
+            )
+        )
+        return
+
+    if quiet:
+        for _row in json_rows:
+            row = _row["status"]
+            click.echo(highlight_text(row["name"]))
+        return
+
+    table = PrettyTable()
+    table.field_names = [
+        "NAME",
+        "HOSTNAME",
+        "IP ADDRESS",
+        "VCPU",
+        "CORES PER VCPU",
+        "MEMORY (GIB)",
+        "GUEST FAMILY",
+        "TEMPLATE",
+        "ID",
+    ]
+
+    for row in json_rows:
+
+        # Status section
+        st_resources = row["status"]["resources"]
+
+        instance_id = st_resources["instance_id"]
+        instance_name = st_resources["instance_name"]
+        hostname = st_resources["guest.hostName"]
+        address = ",".join(st_resources["guest.ipAddress"])
+        vcpus = st_resources["config.hardware.numCPU"]
+        sockets = st_resources["config.hardware.numCoresPerSocket"]
+        memory = int(st_resources["config.hardware.memoryMB"]) // 1024
+        guest_family = st_resources["guest.guestFamily"]
+        template = st_resources["config.template"]
+
+        table.add_row(
+            [
+                highlight_text(instance_name),
+                highlight_text(hostname),
+                highlight_text(address),
+                highlight_text(vcpus),
+                highlight_text(sockets),
+                highlight_text(memory),
+                highlight_text(guest_family),
+                highlight_text(template),
                 highlight_text(instance_id),
             ]
         )
