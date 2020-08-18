@@ -58,6 +58,10 @@ class SubstrateType(EntityType):
                     "address"
                 ] = "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@"
 
+            # UI expects defaults. Jira: https://jira.nutanix.com/browse/CALM-20134
+            if not cdict.get("create_spec"):
+                cdict["create_spec"] = {"resources": {"nic_list": []}}
+
         elif cdict["type"] == "EXISTING_VM":
             if not readiness_probe:
                 readiness_probe = {

@@ -69,7 +69,7 @@ class AhvVmPackage3(AhvVmPackage):
 class AhvVmSubstrate(Substrate):
     """AHV VM config given by reading a spec file"""
 
-    provider_spec = read_provider_spec("specs/ahv_provider_spec.yaml")
+    provider_spec = {}
 
 
 class AhvVmSubstrate2(AhvVmSubstrate):
