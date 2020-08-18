@@ -331,11 +331,15 @@ def describe_project(project_name, out):
 
     quota_resources = project_resources.get("resource_domain", {}).get("resources", [])
     if quota_resources:
-        click.echo("\nQuotas: \n-------\n")
+        click.echo("\nQuotas: \n-------")
         for qr in quota_resources:
-            click.echo(
-                "\t{} : {}".format(qr["resource_type"], highlight_text(qr["value"]))
-            )
+            qk = qr["resource_type"]
+            qv = qr["limit"]
+            if qr["units"] == "BYTES":
+                qv = qv // 1073741824
+                qv = str(qv) + " (GiB)"
+
+            click.echo("\t{} : {}".format(qk, highlight_text(qv)))
 
 
 def delete_project(project_names):
