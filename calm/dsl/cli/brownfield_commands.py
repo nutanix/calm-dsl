@@ -36,6 +36,7 @@ def brownfield_get():
     default="text",
     help="output format",
 )
+@click.option("--project", "-p", help="Project name", required=True)
 @click.option(
     "--type",
     "-t",
@@ -44,17 +45,17 @@ def brownfield_get():
     default="AHV_VM",
     help="Provider type",
 )
-def _get_vm_list(limit, offset, quiet, out, provider_type):
+def _get_vm_list(limit, offset, quiet, out, project, provider_type):
     """Get the brownfield vms, optionally filtered by a string"""
 
     if provider_type == "AHV_VM":
-        get_brownfield_ahv_vm_list(limit, offset, quiet, out)
+        get_brownfield_ahv_vm_list(limit, offset, quiet, out, project)
     elif provider_type == "AWS_VM":
-        get_brownfield_aws_vm_list(limit, offset, quiet, out)
+        get_brownfield_aws_vm_list(limit, offset, quiet, out, project)
     elif provider_type == "AZURE_VM":
-        get_brownfield_azure_vm_list(limit, offset, quiet, out)
+        get_brownfield_azure_vm_list(limit, offset, quiet, out, project)
     elif provider_type == "GCP_VM":
-        get_brownfield_gcp_vm_list(limit, offset, quiet, out)
+        get_brownfield_gcp_vm_list(limit, offset, quiet, out, project)
     elif provider_type == "VMWARE_VM":
         # Has issue with it. Fixed in 2.9.8.1 and 3.0.0 (https://jira.nutanix.com/browse/CALM-18635)
-        get_brownfield_vmware_vm_list(limit, offset, quiet, out)
+        get_brownfield_vmware_vm_list(limit, offset, quiet, out, project)

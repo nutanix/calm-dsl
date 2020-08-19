@@ -16,31 +16,59 @@ from .utils import highlight_text
 LOG = get_logging_handle(__name__)
 
 
-def get_brownfield_ahv_vm_list(limit, offset, quiet, out):
+def get_provider_account_from_project(project_name, provider_type):
+    """
+        Returns tuple containing project_uuid and account_uuid of provider_account registered in project
+        i.e (project_uuid, account_uuid)
+    """
 
     client = get_api_client()
-    Obj = get_resource_api("blueprints/brownfield_import/vms", client.connection)
 
-    config = get_config()
-    project_name = config["PROJECT"]["name"]
-    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
+    # Getting the account uuid map
+    params = {"length": 250, "filter": "state!=DELETED;type=={}".format(provider_type)}
+    account_uuid_type_map = client.account.get_uuid_type_map(params)
+    provider_account_uuids = list(account_uuid_type_map.keys())
 
-    if not project_cache_data:
+    params = {"length": 250, "filter": "name=={}".format(project_name)}
+    res, err = client.project.list(params)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    res = res.json()
+    if res["metadata"]["total_matches"] == 0:
+        LOG.error("Project {} not found".format(project_name))
+        sys.exit(-1)
+
+    pj_data = res["entities"][0]
+    account_list = pj_data["status"]["resources"]["account_reference_list"]
+    project_uuid = pj_data["metadata"]["uuid"]
+    account_uuid = ""
+    for account in account_list:
+        if account["uuid"] in provider_account_uuids:
+            account_uuid = account["uuid"]
+
+    # If provider acount not found raise error
+    if not account_uuid:
         LOG.error(
-            "Project {} not found. Please run: calm update cache".format(project_name)
+            "No {} account registered to project {}".format(provider_type, project_name)
         )
         sys.exit(-1)
+    else:
+        return (project_uuid, account_uuid)
 
-    project_accounts = project_cache_data["accounts_data"]
-    project_subnets = project_cache_data["whitelisted_subnets"]
-    # Fetch Nutanix_PC account registered
-    project_uuid = project_cache_data["uuid"]
-    account_uuid = project_accounts.get("nutanix_pc", "")
 
-    if not account_uuid:
-        LOG.error("No nutanix account registered to project {}".format(project_name))
-        sys.exit(-1)
+def get_brownfield_ahv_vm_list(limit, offset, quiet, out, project_name):
+    """returns ahv brownfield vms"""
 
+    client = get_api_client()
+
+    # Getting provider account_uuid registered in project
+    LOG.info("Fetching project '{}' details".format(project_name))
+    project_uuid, account_uuid = get_provider_account_from_project(
+        project_name, "nutanix_pc"
+    )
+
+    LOG.info("Fetching account(uuid={}) details".format(account_uuid))
     res, err = client.account.read(account_uuid)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -55,6 +83,8 @@ def get_brownfield_ahv_vm_list(limit, offset, quiet, out):
 
     cluster_uuid = clusters[0]["uuid"]
 
+    LOG.info("Fetching brownfield vms")
+    Obj = get_resource_api("blueprints/brownfield_import/vms", client.connection)
     filter_query = "project_uuid=={};account_uuid=={}".format(
         project_uuid, cluster_uuid
     )
@@ -121,31 +151,17 @@ def get_brownfield_ahv_vm_list(limit, offset, quiet, out):
     click.echo(table)
 
 
-def get_brownfield_aws_vm_list(limit, offset, quiet, out):
+def get_brownfield_aws_vm_list(limit, offset, quiet, out, project_name):
+    """returns aws brownfield vms"""
 
     client = get_api_client()
+
+    # Getting provider account_uuid registered in project
+    LOG.info("Fetching project '{}' details".format(project_name))
+    project_uuid, account_uuid = get_provider_account_from_project(project_name, "aws")
+
+    LOG.info("Fetching brownfield vms")
     Obj = get_resource_api("blueprints/brownfield_import/vms", client.connection)
-
-    config = get_config()
-    project_name = config["PROJECT"]["name"]
-    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
-
-    if not project_cache_data:
-        LOG.error(
-            "Project {} not found. Please run: calm update cache".format(project_name)
-        )
-        sys.exit(-1)
-
-    project_accounts = project_cache_data["accounts_data"]
-    project_subnets = project_cache_data["whitelisted_subnets"]
-    # Fetch Nutanix_PC account registered
-    project_uuid = project_cache_data["uuid"]
-    account_uuid = project_accounts.get("aws", "")
-
-    if not account_uuid:
-        LOG.error("No aws account registered to project {}".format(project_name))
-        sys.exit(-1)
-
     filter_query = "project_uuid=={};account_uuid=={}".format(
         project_uuid, account_uuid
     )
@@ -211,30 +227,19 @@ def get_brownfield_aws_vm_list(limit, offset, quiet, out):
     click.echo(table)
 
 
-def get_brownfield_azure_vm_list(limit, offset, quiet, out):
+def get_brownfield_azure_vm_list(limit, offset, quiet, out, project_name):
+    """returns azure brownfield vms"""
 
     client = get_api_client()
+
+    # Getting provider account_uuid registered in project
+    LOG.info("Fetching project '{}' details".format(project_name))
+    project_uuid, account_uuid = get_provider_account_from_project(
+        project_name, "azure"
+    )
+
+    LOG.info("Fetching brownfield vms")
     Obj = get_resource_api("blueprints/brownfield_import/vms", client.connection)
-
-    config = get_config()
-    project_name = config["PROJECT"]["name"]
-    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
-
-    if not project_cache_data:
-        LOG.error(
-            "Project {} not found. Please run: calm update cache".format(project_name)
-        )
-        sys.exit(-1)
-
-    project_accounts = project_cache_data["accounts_data"]
-    project_subnets = project_cache_data["whitelisted_subnets"]
-    project_uuid = project_cache_data["uuid"]
-    account_uuid = project_accounts.get("azure", "")
-
-    if not account_uuid:
-        LOG.error("No azure account registered to project {}".format(project_name))
-        sys.exit(-1)
-
     filter_query = "project_uuid=={};account_uuid=={}".format(
         project_uuid, account_uuid
     )
@@ -302,30 +307,17 @@ def get_brownfield_azure_vm_list(limit, offset, quiet, out):
     click.echo(table)
 
 
-def get_brownfield_gcp_vm_list(limit, offset, quiet, out):
+def get_brownfield_gcp_vm_list(limit, offset, quiet, out, project_name):
+    """returns gcp brownfield vms"""
 
     client = get_api_client()
+
+    # Getting provider account_uuid registered in project
+    LOG.info("Fetching project '{}' details".format(project_name))
+    project_uuid, account_uuid = get_provider_account_from_project(project_name, "gcp")
+
+    LOG.info("Fetching brownfield vms")
     Obj = get_resource_api("blueprints/brownfield_import/vms", client.connection)
-
-    config = get_config()
-    project_name = config["PROJECT"]["name"]
-    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
-
-    if not project_cache_data:
-        LOG.error(
-            "Project {} not found. Please run: calm update cache".format(project_name)
-        )
-        sys.exit(-1)
-
-    project_accounts = project_cache_data["accounts_data"]
-    project_subnets = project_cache_data["whitelisted_subnets"]
-    project_uuid = project_cache_data["uuid"]
-    account_uuid = project_accounts.get("gcp", "")
-
-    if not account_uuid:
-        LOG.error("No gcp account registered to project {}".format(project_name))
-        sys.exit(-1)
-
     filter_query = "project_uuid=={};account_uuid=={}".format(
         project_uuid, account_uuid
     )
@@ -391,30 +383,17 @@ def get_brownfield_gcp_vm_list(limit, offset, quiet, out):
     click.echo(table)
 
 
-def get_brownfield_vmware_vm_list(limit, offset, quiet, out):
+def get_brownfield_vmware_vm_list(limit, offset, quiet, out, project_name):
+    """returns vmware brownfield vms"""
 
     client = get_api_client()
+
+    # Getting provider account_uuid registered in project
+    LOG.info("Fetching project '{}' details".format(project_name))
+    project_uuid, account_uuid = get_provider_account_from_project(project_name, "gcp")
+
+    LOG.info("Fetching brownfield vms")
     Obj = get_resource_api("blueprints/brownfield_import/vms", client.connection)
-
-    config = get_config()
-    project_name = config["PROJECT"]["name"]
-    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
-
-    if not project_cache_data:
-        LOG.error(
-            "Project {} not found. Please run: calm update cache".format(project_name)
-        )
-        sys.exit(-1)
-
-    project_accounts = project_cache_data["accounts_data"]
-    project_subnets = project_cache_data["whitelisted_subnets"]
-    project_uuid = project_cache_data["uuid"]
-    account_uuid = project_accounts.get("vmware", "")
-
-    if not account_uuid:
-        LOG.error("No vmware account registered to project {}".format(project_name))
-        sys.exit(-1)
-
     filter_query = "project_uuid=={};account_uuid=={}".format(
         project_uuid, account_uuid
     )
