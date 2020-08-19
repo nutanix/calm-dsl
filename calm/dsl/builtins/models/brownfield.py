@@ -13,6 +13,7 @@ from calm.dsl.log import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
+# TODO merge provider specific helpers into one
 def get_ahv_bf_vm_data(
     project_uuid, account_uuid, instance_name, ip_address=[], instance_id=None
 ):
