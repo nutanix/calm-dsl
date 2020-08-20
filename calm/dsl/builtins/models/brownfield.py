@@ -13,10 +13,69 @@ from calm.dsl.log import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
+def match_vm_data(
+    vm_name,
+    vm_address_list,
+    vm_id,
+    instance_name=None,
+    instance_address=[],
+    instance_id=None,
+):
+    """Returns True/False based on if vm data is matched with provided instance data"""
+
+    if instance_id:  # Case when ip address is given
+        if instance_id == vm_id:
+            # If supplied ip_addresses not found in given instance, raise error
+            if not set(instance_address).issubset(set(vm_address_list)):
+                diff_ips = set(instance_address).difference(set(vm_address_list))
+                LOG.error(
+                    "IP Address {} not found in instance(id={})".format(diff_ips, vm_id)
+                )
+                sys.exit(-1)
+
+            # If supplied name not matched with instance name, raise error
+            if instance_name and instance_name != vm_name:
+                LOG.error(
+                    "Provided instance_name ({}) not matched with server instance name ({})".format(
+                        instance_name, vm_name
+                    )
+                )
+                sys.exit(-1)
+
+            # If checks are correct, return True
+            return True
+
+    elif instance_address:  # Case when ip_address is given
+        if set(instance_address).issubset(set(vm_address_list)):
+            # If supplied name not matched with instance name, raise error
+            if instance_name and instance_name != vm_name:
+                LOG.error(
+                    "Provided instance_name ({}) not matched with server instance name ({})".format(
+                        instance_name, vm_name
+                    )
+                )
+                sys.exit(-1)
+
+            # If checks are correct, return True
+            return True
+
+    elif instance_name == vm_name:  # Case when instance_name is provided
+        return True
+
+    # If not matched by any check return False
+    return False
+
+
 # TODO merge provider specific helpers into one
 def get_ahv_bf_vm_data(
-    project_uuid, account_uuid, instance_name, ip_address=[], instance_id=None
+    project_uuid, account_uuid, instance_name=None, ip_address=[], instance_id=None
 ):
+    """Return ahv vm data matched with provided instacne details"""
+
+    if not instance_id:
+        if not (instance_name or ip_address):
+            LOG.error("One of 'instance_name' or 'ip_address' must be given.")
+            sys.exit(-1)
 
     client = get_api_client()
     res, err = client.account.read(account_uuid)
@@ -53,36 +112,51 @@ def get_ahv_bf_vm_data(
         )
         sys.exit(-1)
 
+    res_vm_data = None
     for entity in res["entities"]:
         e_resources = entity["status"]["resources"]
-        if e_resources["instance_name"] == instance_name:
-            if instance_id and e_resources["instance_id"] != instance_id:
-                continue
+        e_name = e_resources["instance_name"]
+        e_id = e_resources["instance_id"]
+        e_address = e_resources["address"]
+        e_address_list = e_resources["address_list"]
 
-            if ip_address and not set(ip_address).issubset(e_resources["address_list"]):
-                continue
+        if match_vm_data(
+            vm_name=e_name,
+            vm_address_list=e_address_list,
+            vm_id=e_id,
+            instance_name=instance_name,
+            instance_address=ip_address,
+            instance_id=instance_id,
+        ):
+            if res_vm_data:
+                # If there is an existing vm with provided configuration
+                LOG.error(
+                    "Multiple vms with same name ({}) found".format(instance_name)
+                )
+                sys.exit(-1)
 
-            ip_address = ip_address or e_resources["address"]
-            instance_id = e_resources["instance_id"]
-
-            return {
-                "instance_name": instance_name,
-                "instance_id": instance_id,
-                "address": list(ip_address),
+            res_vm_data = {
+                "instance_name": e_name,
+                "instance_id": e_id,
+                "address": ip_address or e_address,
             }
 
-    # If not vm found raise error
-    LOG.error(
-        "No nutanix brownfield vm (name='{}') found on account(uuid='{}') and project(uuid='{}')".format(
-            instance_name, account_uuid, project_uuid
+    # If vm not found raise error
+    if not res_vm_data:
+        LOG.error(
+            "No nutanix brownfield vm with details (name='{}', address='{}', id='{}') found on account(uuid='{}') and project(uuid='{}')".format(
+                instance_name, ip_address, instance_id, account_uuid, project_uuid
+            )
         )
-    )
-    sys.exit(-1)
+        sys.exit(-1)
+
+    return res_vm_data
 
 
 def get_aws_bf_vm_data(
     project_uuid, account_uuid, instance_name, ip_address=[], instance_id=None
 ):
+    """Return aws vm data matched with provided instacne details"""
 
     client = get_api_client()
 
@@ -106,38 +180,51 @@ def get_aws_bf_vm_data(
         )
         sys.exit(-1)
 
+    res_vm_data = None
     for entity in res["entities"]:
         e_resources = entity["status"]["resources"]
-        if e_resources["instance_name"] == instance_name:
-            if instance_id and e_resources["instance_id"] != instance_id:
-                continue
+        e_name = e_resources["instance_name"]
+        e_id = e_resources["instance_id"]
+        e_address = e_resources["address"]
+        e_address_list = e_resources["public_ip_address"]
 
-            if ip_address and not set(ip_address).issubset(
-                e_resources["public_ip_address"]
-            ):
-                continue
+        if match_vm_data(
+            vm_name=e_name,
+            vm_address_list=e_address_list,
+            vm_id=e_id,
+            instance_name=instance_name,
+            instance_address=ip_address,
+            instance_id=instance_id,
+        ):
+            if res_vm_data:
+                # If there is an existing vm with provided configuration
+                LOG.error(
+                    "Multiple vms with same name ({}) found".format(instance_name)
+                )
+                sys.exit(-1)
 
-            ip_address = ip_address or e_resources["address"]
-            instance_id = e_resources["instance_id"]
-
-            return {
-                "instance_name": instance_name,
-                "instance_id": instance_id,
-                "address": list(ip_address),
+            res_vm_data = {
+                "instance_name": e_name,
+                "instance_id": e_id,
+                "address": ip_address or e_address,
             }
 
-    # If not vm found raise error
-    LOG.error(
-        "No aws brownfield vm (name='{}') found on account(uuid='{}') and project(uuid='{}')".format(
-            instance_name, account_uuid, project_uuid
+    # If vm not found raise error
+    if not res_vm_data:
+        LOG.error(
+            "No aws brownfield vm with details (name='{}', address='{}', id='{}') found on account(uuid='{}') and project(uuid='{}')".format(
+                instance_name, ip_address, instance_id, account_uuid, project_uuid
+            )
         )
-    )
-    sys.exit(-1)
+        sys.exit(-1)
+
+    return res_vm_data
 
 
 def get_azure_bf_vm_data(
     project_uuid, account_uuid, instance_name, ip_address=[], instance_id=None
 ):
+    """Return azure vm data matched with provided instacne details"""
 
     client = get_api_client()
 
@@ -161,37 +248,52 @@ def get_azure_bf_vm_data(
         )
         sys.exit(-1)
 
+    res_vm_data = None
     for entity in res["entities"]:
         e_resources = entity["status"]["resources"]
-        if e_resources["instance_name"] == instance_name:
-            if instance_id and e_resources["instance_id"] != instance_id:
-                continue
+        e_name = e_resources["instance_name"]
+        e_id = e_resources["instance_id"]
+        e_address = e_resources["address"]
+        e_address_list = e_resources["public_ip_address"]
 
-            if ip_address and not set(ip_address).issubset(e_resources["address"]):
-                continue
+        if match_vm_data(
+            vm_name=e_name,
+            vm_address_list=e_address_list,
+            vm_id=e_id,
+            instance_name=instance_name,
+            instance_address=ip_address,
+            instance_id=instance_id,
+        ):
+            if res_vm_data:
+                # If there is an existing vm with provided configuration
+                LOG.error(
+                    "Multiple vms with same name ({}) found".format(instance_name)
+                )
+                sys.exit(-1)
 
-            ip_address = ip_address or e_resources["address"]
-            instance_id = e_resources["instance_id"]
-
-            return {
-                "instance_name": instance_name,
-                "instance_id": instance_id,
-                "address": list(ip_address),
+            res_vm_data = {
+                "instance_name": e_name,
+                "instance_id": e_id,
+                "address": ip_address or e_address,
                 "platform_data": {"resource_group": e_resources["resource_group"]},
             }
 
-    # If not vm found raise error
-    LOG.error(
-        "No azure brownfield vm (name='{}') found on account(uuid='{}') and project(uuid='{}')".format(
-            instance_name, account_uuid, project_uuid
+    # If vm not found raise error
+    if not res_vm_data:
+        LOG.error(
+            "No azure brownfield vm with details (name='{}', address='{}', id='{}') found on account(uuid='{}') and project(uuid='{}')".format(
+                instance_name, ip_address, instance_id, account_uuid, project_uuid
+            )
         )
-    )
-    sys.exit(-1)
+        sys.exit(-1)
+
+    return res_vm_data
 
 
 def get_vmware_bf_vm_data(
     project_uuid, account_uuid, instance_name, ip_address=[], instance_id=None
 ):
+    """Return vmware vm data matched with provided instacne details"""
 
     client = get_api_client()
 
@@ -215,39 +317,51 @@ def get_vmware_bf_vm_data(
         )
         sys.exit(-1)
 
+    res_vm_data = None
     for entity in res["entities"]:
         e_resources = entity["status"]["resources"]
-        if e_resources["instance_name"] == instance_name:
-            if instance_id and e_resources["instance_id"] != instance_id:
-                continue
+        e_name = e_resources["instance_name"]
+        e_id = e_resources["instance_id"]
+        e_address = e_resources["address"]
+        e_address_list = e_resources["guest.ipAddress"]
 
-            if ip_address and not set(ip_address).issubset(
-                e_resources["guest.ipAddress"]
-            ):
-                continue
+        if match_vm_data(
+            vm_name=e_name,
+            vm_address_list=e_address_list,
+            vm_id=e_id,
+            instance_name=instance_name,
+            instance_address=ip_address,
+            instance_id=instance_id,
+        ):
+            if res_vm_data:
+                # If there is an existing vm with provided configuration
+                LOG.error(
+                    "Multiple vms with same name ({}) found".format(instance_name)
+                )
+                sys.exit(-1)
 
-            ip_address = ip_address or e_resources["address"]
-            instance_id = e_resources["instance_id"]
-
-            return {
-                "instance_name": instance_name,
-                "instance_id": instance_id,
-                "address": list(ip_address),
-                "platform_data": {},
+            res_vm_data = {
+                "instance_name": e_name,
+                "instance_id": e_id,
+                "address": ip_address or e_address,
             }
 
-    # If not vm found raise error
-    LOG.error(
-        "No vmware brownfield vm (name='{}') found on account(uuid='{}') and project(uuid='{}')".format(
-            instance_name, account_uuid, project_uuid
+    # If vm not found raise error
+    if not res_vm_data:
+        LOG.error(
+            "No vmware brownfield vm with details (name='{}', address='{}', id='{}') found on account(uuid='{}') and project(uuid='{}')".format(
+                instance_name, ip_address, instance_id, account_uuid, project_uuid
+            )
         )
-    )
-    sys.exit(-1)
+        sys.exit(-1)
+
+    return res_vm_data
 
 
 def get_gcp_bf_vm_data(
     project_uuid, account_uuid, instance_name, ip_address=[], instance_id=None
 ):
+    """Return gcp vm data matched with provided instacne details"""
 
     client = get_api_client()
 
@@ -271,32 +385,45 @@ def get_gcp_bf_vm_data(
         )
         sys.exit(-1)
 
+    res_vm_data = None
     for entity in res["entities"]:
         e_resources = entity["status"]["resources"]
-        if e_resources["instance_name"] == instance_name:
-            if instance_id and e_resources["id"] != instance_id:
-                continue
+        e_name = e_resources["instance_name"]
+        e_id = e_resources["id"]
+        e_address = e_resources["address"]
+        e_address_list = e_resources["natIP"]
 
-            if ip_address and not set(ip_address).issubset(e_resources["natIP"]):
-                continue
+        if match_vm_data(
+            vm_name=e_name,
+            vm_address_list=e_address_list,
+            vm_id=e_id,
+            instance_name=instance_name,
+            instance_address=ip_address,
+            instance_id=instance_id,
+        ):
+            if res_vm_data:
+                # If there is an existing vm with provided configuration
+                LOG.error(
+                    "Multiple vms with same name ({}) found".format(instance_name)
+                )
+                sys.exit(-1)
 
-            ip_address = ip_address or e_resources["address"]
-            instance_id = e_resources["id"]
-
-            return {
-                "instance_name": instance_name,
-                "instance_id": instance_id,
-                "address": list(ip_address),
-                "platform_data": {"zone": e_resources["zone"]},
+            res_vm_data = {
+                "instance_name": e_name,
+                "instance_id": e_id,
+                "address": ip_address or e_address,
             }
 
-    # If not vm found raise error
-    LOG.error(
-        "No gcp brownfield vm (name='{}') found on account(uuid='{}') and project(uuid='{}')".format(
-            instance_name, account_uuid, project_uuid
+    # If vm not found raise error
+    if not res_vm_data:
+        LOG.error(
+            "No gcp brownfield vm with details (name='{}', address='{}', id='{}') found on account(uuid='{}') and project(uuid='{}')".format(
+                instance_name, ip_address, instance_id, account_uuid, project_uuid
+            )
         )
-    )
-    sys.exit(-1)
+        sys.exit(-1)
+
+    return res_vm_data
 
 
 # Brownfield Vm
@@ -478,6 +605,12 @@ class Brownfield:
 
     class Vm:
         def __new__(cls, instance_name, ip_address=[], instance_id=None):
+            """Vms are searched using these ways:
+                1. If instance_id is given will search using that
+                2. Else Search using ip_address if given
+                3. Else Search using name
+            """
+
             kwargs = {
                 "instance_name": instance_name,
                 "address": ip_address,
@@ -488,6 +621,12 @@ class Brownfield:
 
         class Ahv:
             def __new__(cls, instance_name, ip_address=[], instance_id=None):
+                """Vms are searched using these ways:
+                    1. If instance_id is given will search using that
+                    2. Else Search using ip_address if given
+                    3. Else Search using name
+                """
+
                 kwargs = {
                     "instance_name": instance_name,
                     "address": ip_address,
@@ -498,6 +637,12 @@ class Brownfield:
 
         class Aws:
             def __new__(cls, instance_name, ip_address=[], instance_id=None):
+                """Vms are searched using these ways:
+                    1. If instance_id is given will search using that
+                    2. Else Search using ip_address if given
+                    3. Else Search using name
+                """
+
                 kwargs = {
                     "instance_name": instance_name,
                     "address": ip_address,
@@ -508,6 +653,12 @@ class Brownfield:
 
         class Azure:
             def __new__(cls, instance_name, ip_address=[], instance_id=None):
+                """Vms are searched using these ways:
+                    1. If instance_id is given will search using that
+                    2. Else Search using ip_address if given
+                    3. Else Search using name
+                """
+
                 kwargs = {
                     "instance_name": instance_name,
                     "address": ip_address,
@@ -518,6 +669,12 @@ class Brownfield:
 
         class Gcp:
             def __new__(cls, instance_name, ip_address=[], instance_id=None):
+                """Vms are searched using these ways:
+                    1. If instance_id is given will search using that
+                    2. Else Search using ip_address if given
+                    3. Else Search using name
+                """
+
                 kwargs = {
                     "instance_name": instance_name,
                     "address": ip_address,
@@ -528,6 +685,12 @@ class Brownfield:
 
         class Vmware:
             def __new__(cls, instance_name, ip_address=[], instance_id=None):
+                """Vms are searched using these ways:
+                    1. If instance_id is given will search using that
+                    2. Else Search using ip_address if given
+                    3. Else Search using name
+                """
+
                 kwargs = {
                     "instance_name": instance_name,
                     "address": ip_address,
