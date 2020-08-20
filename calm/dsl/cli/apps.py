@@ -240,12 +240,19 @@ def describe_app(app_name, out):
 
 
 def create_app(
-    bp_file, app_name=None, profile_name=None, patch_editables=True, launch_params=None
+    bp_file,
+    brownfield_deployment_file=None,
+    app_name=None,
+    profile_name=None,
+    patch_editables=True,
+    launch_params=None,
 ):
     client = get_api_client()
 
     # Compile blueprint
-    bp_payload = compile_blueprint(bp_file)
+    bp_payload = compile_blueprint(
+        bp_file, brownfield_deployment_file=brownfield_deployment_file
+    )
     if bp_payload is None:
         LOG.error("User blueprint not found in {}".format(bp_file))
         sys.exit(-1)

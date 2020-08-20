@@ -34,6 +34,7 @@ from .utils import (
 )
 from .constants import BLUEPRINT
 from calm.dsl.tools import get_module_from_file
+from calm.dsl.builtins import Brownfield as BF
 from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
 
@@ -224,7 +225,26 @@ def get_blueprint_class_from_module(user_bp_module):
     return UserBlueprint
 
 
-def compile_blueprint(bp_file):
+def get_brownfield_deployment_classes(brownfield_deployment_file=None):
+    """Get brownfield deployment classes"""
+
+    bf_deployments = []
+    if not brownfield_deployment_file:
+        return []
+
+    bd_module = get_module_from_file(
+        "calm.dsl.brownfield_deployment", brownfield_deployment_file
+    )
+    for item in dir(bd_module):
+        obj = getattr(bd_module, item)
+        if isinstance(obj, type(BF.Deployment)):
+            if obj.__bases__[0] == (BF.Deployment):
+                bf_deployments.append(obj)
+
+    return bf_deployments
+
+
+def compile_blueprint(bp_file, brownfield_deployment_file=None):
 
     # Constructing metadata payload
     # Note: This should be constructed before loading bp module. As metadata will be used while getting bp_payload
@@ -234,6 +254,21 @@ def compile_blueprint(bp_file):
     UserBlueprint = get_blueprint_class_from_module(user_bp_module)
     if UserBlueprint is None:
         return None
+
+    # Fetching bf_deployments
+    bf_deployments = get_brownfield_deployment_classes(brownfield_deployment_file)
+    if bf_deployments:
+        bf_dep_map = {bd.__name__: bd for bd in bf_deployments}
+        for pf in UserBlueprint.profiles:
+            for ind, dep in enumerate(pf.deployments):
+                if dep.__name__ in bf_dep_map:
+                    bf_dep = bf_dep_map[dep.__name__]
+                    # Add the packages and substrates from deployment
+                    bf_dep.packages = dep.packages
+                    bf_dep.substrate = dep.substrate
+
+                    # Replacing new deployment in profile.deployments
+                    pf.deployments[ind] = bf_dep
 
     bp_payload = None
     if isinstance(UserBlueprint, type(SimpleBlueprint)):

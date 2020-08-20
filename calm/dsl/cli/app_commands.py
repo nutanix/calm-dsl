@@ -29,6 +29,13 @@ LOG = get_logging_handle(__name__)
     help="Path of Blueprint file to upload",
 )
 @click.option(
+    "--brownfield_deployments",
+    "-b",
+    "brownfield_deployment_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path of Brownfield Deployment file",
+)
+@click.option(
     "--name", "-n", "app_name", default=None, help="Application name (Optional)"
 )
 @click.option(
@@ -51,7 +58,12 @@ LOG = get_logging_handle(__name__)
     help="Path to python file for runtime editables",
 )
 def _create_app(
-    app_name, bp_file, profile_name, ignore_runtime_variables, launch_params
+    app_name,
+    bp_file,
+    brownfield_deployment_file,
+    profile_name,
+    ignore_runtime_variables,
+    launch_params,
 ):
     """Creates an application.
 
@@ -66,6 +78,7 @@ If created blueprint is in ACTIVE state, then it got launched to create an appli
         profile_name=profile_name,
         patch_editables=not ignore_runtime_variables,
         launch_params=launch_params,
+        brownfield_deployment_file=brownfield_deployment_file,
     )
 
 
