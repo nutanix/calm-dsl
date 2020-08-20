@@ -22,13 +22,22 @@ class TestExecTasksVMEndpoint:
     @pytest.mark.regression
     @pytest.mark.parametrize(
         "Runbook", [
+
+            # AHV Provider Endpoints
             ShellTaskOnLinuxVMAHVStaticEndpoint,
             ShellTaskOnLinuxVMAHVDynamicEndpoint1,
             ShellTaskOnLinuxVMAHVDynamicEndpoint2,
-            ShellTaskOnLinuxVMVMWareStaticEndpoint,
             ShellTaskOnWindowsVMAHVStaticEndpoint,
             ShellTaskOnWindowsVMAHVDynamicEndpoint1,
-            ShellTaskOnWindowsVMAHVDynamicEndpoint2
+            ShellTaskOnWindowsVMAHVDynamicEndpoint2,
+
+            # VMWare Provider Endpoints
+            ShellTaskOnLinuxVMVMWareStaticEndpoint,
+            ShellTaskOnLinuxVMVMWareDynamicEndpoint1,
+            ShellTaskOnLinuxVMVMWareDynamicEndpoint2,
+            ShellTaskOnWindowsVMVMWareStaticEndpoint,
+            ShellTaskOnWindowsVMVMWareDynamicEndpoint1,
+            ShellTaskOnWindowsVMVMWareDynamicEndpoint2
         ],
     )
     def test_script_run(self, Runbook):

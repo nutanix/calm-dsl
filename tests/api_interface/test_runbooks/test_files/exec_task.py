@@ -58,6 +58,21 @@ linux_vmware_static_vm_endpoint = Endpoint.Linux.vm(
     account=Account.VMWare("vmware"),
     provider_type=ENDPOINT_PROVIDER.VMWARE,
 )
+linux_vmware_dynamic_vm_endpoint1 = Endpoint.Linux.vm(
+    filter_type=ENDPOINT_FILTER.DYNAMIC,
+    filter="tags==urn:vmomi:InventoryServiceTag:16edada7-2ed8-4953-b8b2-74f3093559af:GLOBAL",
+    cred=LinuxCred,
+    account=Account.VMWare("vmware"),
+    provider_type=ENDPOINT_PROVIDER.VMWARE,
+)
+linux_vmware_dynamic_vm_endpoint2 = Endpoint.Linux.vm(
+    filter_type=ENDPOINT_FILTER.DYNAMIC,
+    filter="name==vm*",
+    cred=LinuxCred,
+    account=Account.VMWare("vmware"),
+    provider_type=ENDPOINT_PROVIDER.VMWARE,
+)
+
 windows_ahv_static_vm_endpoint = Endpoint.Windows.vm(
     filter_type=ENDPOINT_FILTER.STATIC,
     value=[AHV_WINDOWS_ID],
@@ -75,6 +90,28 @@ windows_ahv_dynamic_vm_endpoint1 = Endpoint.Windows.vm(
 windows_ahv_dynamic_vm_endpoint2 = Endpoint.Windows.vm(
     filter_type=ENDPOINT_FILTER.DYNAMIC,
     filter="category==name==windows.*",
+    cred=WindowsCred,
+    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
+    provider_type=ENDPOINT_PROVIDER.NUTANIX,
+)
+
+windows_vmware_static_vm_endpoint = Endpoint.Windows.vm(
+    filter_type=ENDPOINT_FILTER.STATIC,
+    value=[VMWARE_WINDOWS_ID],
+    cred=WindowsCred,
+    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
+    provider_type=ENDPOINT_PROVIDER.NUTANIX,
+)
+windows_vmware_dynamic_vm_endpoint1 = Endpoint.Windows.vm(
+    filter_type=ENDPOINT_FILTER.DYNAMIC,
+    filter="tags==urn:vmomi:InventoryServiceTag:16edada7-2ed8-4953-b8b2-74f3093559af:GLOBAL",
+    cred=WindowsCred,
+    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
+    provider_type=ENDPOINT_PROVIDER.NUTANIX,
+)
+windows_vmware_dynamic_vm_endpoint2 = Endpoint.Windows.vm(
+    filter_type=ENDPOINT_FILTER.DYNAMIC,
+    filter="name==vm*",
     cred=WindowsCred,
     account=Account.NutanixPC("NTNX_LOCAL_AZ"),
     provider_type=ENDPOINT_PROVIDER.NUTANIX,
@@ -179,7 +216,26 @@ def ShellTaskOnLinuxVMAHVDynamicEndpoint2(endpoints=[linux_ahv_dynamic_vm_endpoi
 @runbook
 def ShellTaskOnLinuxVMVMWareStaticEndpoint(endpoints=[linux_vmware_static_vm_endpoint]):
     Task.Exec.ssh(
-        name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0],
+        name="ExecTask",
+        script='''echo "Task is successful"''',
+        target=endpoints[0],
+    )
+
+
+@runbook
+def ShellTaskOnLinuxVMVMWareDynamicEndpoint1(endpoints=[linux_vmware_dynamic_vm_endpoint1]):
+    Task.Exec.ssh(
+        name="ExecTask",
+        script='''echo "Task is successful"''',
+        target=endpoints[0],
+    )
+
+@runbook
+def ShellTaskOnLinuxVMVMWareDynamicEndpoint2(endpoints=[linux_vmware_dynamic_vm_endpoint2]):
+    Task.Exec.ssh(
+        name="ExecTask",
+        script='''echo "Task is successful"''',
+        target=endpoints[0],
     )
 
 
@@ -207,6 +263,30 @@ def ShellTaskOnWindowsVMAHVDynamicEndpoint2(endpoints=[windows_ahv_dynamic_vm_en
         target=endpoints[0]
     )
 
+
+@runbook
+def ShellTaskOnWindowsVMVMWareStaticEndpoint(endpoints=[windows_vmware_static_vm_endpoint]):
+    Task.Exec.powershell(
+        name="ExecTask",
+        script='''echo "Task is successful"''',
+        target=endpoints[0]
+    )
+
+@runbook
+def ShellTaskOnWindowsVMVMWareDynamicEndpoint1(endpoints=[windows_vmware_dynamic_vm_endpoint1]):
+    Task.Exec.powershell(
+        name="ExecTask",
+        script='''echo "Task is successful"''',
+        target=endpoints[0]
+    )
+
+@runbook
+def ShellTaskOnWindowsVMVMWareDynamicEndpoint2(endpoints=[windows_vmware_dynamic_vm_endpoint2]):
+    Task.Exec.powershell(
+        name="ExecTask",
+        script='''echo "Task is successful"''',
+        target=endpoints[0]
+    )
 
 @runbook
 def SetVariableOnShell(endpoints=[linux_endpoint]):
