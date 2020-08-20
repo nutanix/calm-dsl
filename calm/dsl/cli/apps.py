@@ -289,6 +289,7 @@ def create_app(
         profile_name=profile_name,
         patch_editables=patch_editables,
         launch_params=launch_params,
+        is_brownfield=True,
     )
 
 

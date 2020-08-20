@@ -414,12 +414,15 @@ def format_blueprint_command(bp_file):
         LOG.info("Blueprint {} left unchanged.".format(path))
 
 
-def get_blueprint(client, name, all=False):
+def get_blueprint(client, name, all=False, is_brownfield=False):
 
     # find bp
     params = {"filter": "name=={}".format(name)}
     if not all:
         params["filter"] += ";state!=DELETED"
+
+    if is_brownfield:
+        params["filter"] += ";type==BROWNFIELD"
 
     res, err = client.blueprint.list(params=params)
     if err:
@@ -722,6 +725,7 @@ def launch_blueprint_simple(
     profile_name=None,
     patch_editables=True,
     launch_params=None,
+    is_brownfield=False,
 ):
     client = get_api_client()
 
@@ -744,7 +748,10 @@ def launch_blueprint_simple(
         LOG.info("No existing application found with name {}".format(app_name))
 
     if not blueprint:
-        blueprint = get_blueprint(client, blueprint_name)
+        if is_brownfield:
+            blueprint = get_blueprint(client, blueprint_name, is_brownfield=True)
+        else:
+            blueprint = get_blueprint(client, blueprint_name)
 
     blueprint_uuid = blueprint.get("metadata", {}).get("uuid", "")
     blueprint_name = blueprint_name or blueprint.get("metadata", {}).get("name", "")

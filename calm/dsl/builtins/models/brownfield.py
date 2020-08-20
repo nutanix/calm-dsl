@@ -154,7 +154,7 @@ def get_ahv_bf_vm_data(
 
 
 def get_aws_bf_vm_data(
-    project_uuid, account_uuid, instance_name, ip_address=[], instance_id=None
+    project_uuid, account_uuid, instance_name=None, ip_address=[], instance_id=None
 ):
     """Return aws vm data matched with provided instacne details"""
 
@@ -222,7 +222,7 @@ def get_aws_bf_vm_data(
 
 
 def get_azure_bf_vm_data(
-    project_uuid, account_uuid, instance_name, ip_address=[], instance_id=None
+    project_uuid, account_uuid, instance_name=None, ip_address=[], instance_id=None
 ):
     """Return azure vm data matched with provided instacne details"""
 
@@ -291,7 +291,7 @@ def get_azure_bf_vm_data(
 
 
 def get_vmware_bf_vm_data(
-    project_uuid, account_uuid, instance_name, ip_address=[], instance_id=None
+    project_uuid, account_uuid, instance_name=None, ip_address=[], instance_id=None
 ):
     """Return vmware vm data matched with provided instacne details"""
 
@@ -359,7 +359,7 @@ def get_vmware_bf_vm_data(
 
 
 def get_gcp_bf_vm_data(
-    project_uuid, account_uuid, instance_name, ip_address=[], instance_id=None
+    project_uuid, account_uuid, instance_name=None, ip_address=[], instance_id=None
 ):
     """Return gcp vm data matched with provided instacne details"""
 
@@ -604,7 +604,7 @@ class Brownfield:
     Deployment = BrownfieldDeployment
 
     class Vm:
-        def __new__(cls, instance_name, ip_address=[], instance_id=None):
+        def __new__(cls, instance_name=None, ip_address=[], instance_id=None):
             """Vms are searched using these ways:
                 1. If instance_id is given will search using that
                 2. Else Search using ip_address if given
@@ -620,7 +620,7 @@ class Brownfield:
             return brownfield_vm(**kwargs)
 
         class Ahv:
-            def __new__(cls, instance_name, ip_address=[], instance_id=None):
+            def __new__(cls, instance_name=None, ip_address=[], instance_id=None):
                 """Vms are searched using these ways:
                     1. If instance_id is given will search using that
                     2. Else Search using ip_address if given
@@ -636,7 +636,7 @@ class Brownfield:
                 return brownfield_vm(**kwargs)
 
         class Aws:
-            def __new__(cls, instance_name, ip_address=[], instance_id=None):
+            def __new__(cls, instance_name=None, ip_address=[], instance_id=None):
                 """Vms are searched using these ways:
                     1. If instance_id is given will search using that
                     2. Else Search using ip_address if given
@@ -652,7 +652,7 @@ class Brownfield:
                 return brownfield_vm(**kwargs)
 
         class Azure:
-            def __new__(cls, instance_name, ip_address=[], instance_id=None):
+            def __new__(cls, instance_name=None, ip_address=[], instance_id=None):
                 """Vms are searched using these ways:
                     1. If instance_id is given will search using that
                     2. Else Search using ip_address if given
@@ -668,7 +668,7 @@ class Brownfield:
                 return brownfield_vm(**kwargs)
 
         class Gcp:
-            def __new__(cls, instance_name, ip_address=[], instance_id=None):
+            def __new__(cls, instance_name=None, ip_address=[], instance_id=None):
                 """Vms are searched using these ways:
                     1. If instance_id is given will search using that
                     2. Else Search using ip_address if given
@@ -684,7 +684,7 @@ class Brownfield:
                 return brownfield_vm(**kwargs)
 
         class Vmware:
-            def __new__(cls, instance_name, ip_address=[], instance_id=None):
+            def __new__(cls, instance_name=None, ip_address=[], instance_id=None):
                 """Vms are searched using these ways:
                     1. If instance_id is given will search using that
                     2. Else Search using ip_address if given
