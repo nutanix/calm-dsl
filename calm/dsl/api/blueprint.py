@@ -65,6 +65,8 @@ class BlueprintAPI(ResourceAPI):
         )
 
     def brownfield_vms(self, payload):
+        # Adding refresh cache for call. As redis expiry is 10 mins.
+        payload["filter"] += ";refresh_cache==True"
         return self.connection._call(
             self.BROWNFIELD_VM_LIST,
             verify=False,
