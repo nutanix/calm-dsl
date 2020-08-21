@@ -7,37 +7,37 @@ from tests.api_interface.test_runbooks.test_files.exec_task import (
     ShellTaskOnLinuxVMAHVStaticEndpoint,
     ShellTaskOnLinuxVMAHVDynamicEndpoint1,
     ShellTaskOnLinuxVMAHVDynamicEndpoint2,
-    ShellTaskOnLinuxVMVMWareStaticEndpoint
-    ShellTaskOnWindowsVMAHVStaticEndpoint,
-    ShellTaskOnWindowsVMAHVDynamicEndpoint1,
-    ShellTaskOnWindowsVMAHVDynamicEndpoint2
-    #ShellTaskOnLinuxVMVMWareStaticEndpoint,
+    ShellTaskOnLinuxVMAHVDynamicEndpoint3,
+    ShellTaskOnLinuxVMAHVDynamicEndpoint4,
+
+    #  ShellTaskOnLinuxVMVMWareStaticEndpoint,
+    #  ShellTaskOnWindowsVMAHVStaticEndpoint,
+    #  ShellTaskOnWindowsVMAHVDynamicEndpoint1,
+    #  ShellTaskOnWindowsVMAHVDynamicEndpoint2
+    #  ShellTaskOnLinuxVMVMWareStaticEndpoint,
 )
 from utils import upload_runbook, poll_runlog_status
 
 
 class TestExecTasksVMEndpoint:
-    @pytest.mark.now
     @pytest.mark.runbook
     @pytest.mark.regression
     @pytest.mark.parametrize(
         "Runbook", [
-
-            # AHV Provider Endpoints
+            # Static VM IDs
             ShellTaskOnLinuxVMAHVStaticEndpoint,
-            ShellTaskOnLinuxVMAHVDynamicEndpoint1,
-            ShellTaskOnLinuxVMAHVDynamicEndpoint2,
-            ShellTaskOnWindowsVMAHVStaticEndpoint,
-            ShellTaskOnWindowsVMAHVDynamicEndpoint1,
-            ShellTaskOnWindowsVMAHVDynamicEndpoint2,
 
-            # VMWare Provider Endpoints
-            ShellTaskOnLinuxVMVMWareStaticEndpoint,
-            ShellTaskOnLinuxVMVMWareDynamicEndpoint1,
-            ShellTaskOnLinuxVMVMWareDynamicEndpoint2,
-            ShellTaskOnWindowsVMVMWareStaticEndpoint,
-            ShellTaskOnWindowsVMVMWareDynamicEndpoint1,
-            ShellTaskOnWindowsVMVMWareDynamicEndpoint2
+            # Dynamic filter name equals
+            ShellTaskOnLinuxVMAHVDynamicEndpoint1,
+
+            # Dynamic filter name starts with
+            ShellTaskOnLinuxVMAHVDynamicEndpoint2,
+
+            # Dynamic filter power_state equals
+            ShellTaskOnLinuxVMAHVDynamicEndpoint3,
+
+            # Dynamic filter with uuid=in=
+            ShellTaskOnLinuxVMAHVDynamicEndpoint4
         ],
     )
     def test_script_run(self, Runbook):
