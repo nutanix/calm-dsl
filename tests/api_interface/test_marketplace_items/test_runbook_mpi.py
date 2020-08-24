@@ -3,7 +3,7 @@ import uuid
 
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import RUNLOG, MARKETPLACE_ITEM
-from tests.sample_runbooks import DslRunbookWithVariables
+from runbook_definition import DslRunbookForMPI
 from tests.api_interface.test_runbooks.utils import (upload_runbook, poll_runlog_status, read_test_config, change_uuids)
 from utils import (publish_runbook_to_marketplace_manager, change_state,
                    clone_marketplace_runbook, execute_marketplace_runbook)
@@ -20,33 +20,54 @@ class TestMarketplaceRunbook:
         '''setting up'''
 
         client = get_api_client()
-        cls.default_endpoints = {}
-        for endpoint_payload in [LinuxEndpointPayload, WindowsEndpointPayload, HTTPEndpointPayload]:
-            endpoint = change_uuids(endpoint_payload, {})
-
-            # Endpoint Create
-            res, err = client.endpoint.create(endpoint)
-            ep = res.json()
-            ep_state = ep["status"]["state"]
-            ep_uuid = ep["metadata"]["uuid"]
-            ep_name = ep["spec"]["name"]
-            ep_type = ep['spec']['resources']['type']
-            print(">> Endpoint created with name {} is in state: {}".format(ep_name, ep_state))
-            cls.default_endpoints[ep_type] = (ep_name, ep_uuid)
+#        for endpoint_payload in [LinuxEndpointPayload, WindowsEndpointPayload, HTTPEndpointPayload]:
+#            endpoint = change_uuids(endpoint_payload, {})
+#
+#            # Endpoint Create
+#            res, err = client.endpoint.create(endpoint)
+#            ep = res.json()
+#            ep_state = ep["status"]["state"]
+#            ep_uuid = ep["metadata"]["uuid"]
+#            ep_name = ep["spec"]["name"]
+#            ep_type = ep['spec']['resources']['type']
+#            print(">> Endpoint created with name {} is in state: {}".format(ep_name, ep_state))
+#            cls.default_endpoints[ep_type] = (ep_name, ep_uuid)
 
         cls.runbook_name = "test_publish_runbook_" + str(uuid.uuid4())[-10:]
-        rb = upload_runbook(client, cls.runbook_name, DslRunbookWithVariables)
+        rb = upload_runbook(client, cls.runbook_name, DslRunbookForMPI)
         rb_state = rb["status"]["state"]
         rb_uuid = rb["metadata"]["uuid"]
         print(">> Runbook state: {}".format(rb_state))
         cls.runbook_uuid = rb_uuid
 
+        cls.default_project_endpoints = {}
+        endpoint_uuids = []
+        default_endpoint_uuid = rb['status']['resources'].get("default_target_reference", {}).get("uuid", "")
+        if default_endpoint_uuid:
+            res, err = client.endpoint.read(default_endpoint_uuid)
+            ep = res.json()
+            ep_type = ep['spec']['resources']['type']
+            ep_name = ep["spec"]["name"]
+            cls.default_project_endpoints[ep_type] = (ep_name, default_endpoint_uuid)
+            endpoint_uuids.append(default_endpoint_uuid)
+
+        for task in rb['status']['resources']['runbook']['task_definition_list']:
+            ep_uuid = task.get('target_any_local_reference', {}).get('uuid', '')
+            if ep_uuid and ep_uuid not in endpoint_uuids:
+                res, err = client.endpoint.read(ep_uuid)
+                ep = res.json()
+                ep_type = ep['spec']['resources']['type']
+                ep_name = ep["spec"]["name"]
+                cls.default_project_endpoints[ep_type] = (ep_name, ep_uuid)
+                endpoint_uuids.append(ep_uuid)
+
+        print(">> endpoints {}".format(cls.default_project_endpoints))
+
     @pytest.mark.mpi
     @pytest.mark.regression
     @pytest.mark.parametrize("with_secrets", [True, False])
     @pytest.mark.parametrize("with_endpoints", [True, False])
-    @pytest.mark.parametrize("Runbook", [DslRunbookWithVariables])
-    def test_publish_runbook(self, Runbook, with_secrets, with_endpoints):
+    def test_publish_runbook(self, with_secrets, with_endpoints):
         """
         test_runbook_publish_with_secret_with_endpoint_with_version
         test_runbook_publish_without_secret_with_endpoint
@@ -93,9 +114,8 @@ class TestMarketplaceRunbook:
 
     @pytest.mark.mpi
     @pytest.mark.regression
-    @pytest.mark.parametrize("Runbook", [DslRunbookWithVariables])
     @pytest.mark.parametrize("state", [MARKETPLACE_ITEM.STATES.ACCEPTED, MARKETPLACE_ITEM.STATES.REJECTED])
-    def test_approve_and_reject_runbook_marketplace(self, Runbook, state):
+    def test_approve_and_reject_runbook_marketplace(self, state):
         """
         test_marketplace_runbook_approve_market_manager
         test_reject_runbook
@@ -142,8 +162,7 @@ class TestMarketplaceRunbook:
 
     @pytest.mark.mpi
     @pytest.mark.regression
-    @pytest.mark.parametrize("Runbook", [DslRunbookWithVariables])
-    def test_mpi_different_version(self, Runbook):
+    def test_mpi_different_version(self):
         """ test_same_runbook_publish_with_secret_with_endpoint_with_different_version """
         client = get_api_client()
 
@@ -210,8 +229,7 @@ class TestMarketplaceRunbook:
 
     @pytest.mark.mpi
     @pytest.mark.regression
-    @pytest.mark.parametrize("Runbook", [DslRunbookWithVariables])
-    def test_publish_runbook_store(self, Runbook):
+    def test_publish_runbook_store(self):
         """ test_marketplace_runbook_publish_market_manager """
         client = get_api_client()
 
@@ -261,8 +279,7 @@ class TestMarketplaceRunbook:
     @pytest.mark.mpi
     @pytest.mark.regression
     @pytest.mark.parametrize("with_endpoints", [True, False])
-    @pytest.mark.parametrize("Runbook", [DslRunbookWithVariables])
-    def test_mpi_runbook_clone_same_project(self, Runbook, with_endpoints):
+    def test_mpi_runbook_clone_same_project(self, with_endpoints):
         """
         test_mpi_runbook_with_endpoint_clone_same_project
         test_mpi_runbook_without_endpoint_clone_same_project
@@ -338,8 +355,7 @@ class TestMarketplaceRunbook:
     @pytest.mark.mpi
     @pytest.mark.regression
     @pytest.mark.parametrize("with_endpoints", [True, False])
-    @pytest.mark.parametrize("Runbook", [DslRunbookWithVariables])
-    def test_mpi_runbook_execute_same_project(self, Runbook, with_endpoints):
+    def test_mpi_runbook_execute_same_project(self, with_endpoints):
         """
         test_mpi_runbook_with_endpoint_clone_same_project
         test_mpi_runbook_without_endpoint_clone_same_project
