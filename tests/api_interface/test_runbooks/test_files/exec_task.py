@@ -292,25 +292,25 @@ def ShellTaskOnLinuxVMVMWareDynamicEndpoint2(endpoints=[linux_vmware_dynamic_vm_
 @runbook
 def ShellTaskOnWindowsVMAHVStaticEndpoint(endpoints=[windows_ahv_static_vm_endpoint]):
     Task.Exec.powershell(
-        name="ExecTask",
-        script='''echo "Task is successful"''',
-        target=endpoints[0]
+        name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0]
     )
 
-@runbook
-def ShellTaskOnWindowsVMAHVDynamicEndpoint1(endpoints=[windows_ahv_dynamic_vm_endpoint1]):
-    Task.Exec.powershell(
-        name="ExecTask",
-        script='''echo "Task is successful"''',
-        target=endpoints[0]
-    )
 
 @runbook
-def ShellTaskOnWindowsVMAHVDynamicEndpoint2(endpoints=[windows_ahv_dynamic_vm_endpoint2]):
+def ShellTaskOnWindowsVMAHVDynamicEndpoint1(
+    endpoints=[windows_ahv_dynamic_vm_endpoint1],
+):
     Task.Exec.powershell(
-        name="ExecTask",
-        script='''echo "Task is successful"''',
-        target=endpoints[0]
+        name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0]
+    )
+
+
+@runbook
+def ShellTaskOnWindowsVMAHVDynamicEndpoint2(
+    endpoints=[windows_ahv_dynamic_vm_endpoint2],
+):
+    Task.Exec.powershell(
+        name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0]
     )
 
 

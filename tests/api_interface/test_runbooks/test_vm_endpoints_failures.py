@@ -3,46 +3,39 @@ import uuid
 
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import RUNLOG
-from tests.api_interface.test_runbooks.test_files.exec_task import (
-    ShellTaskOnLinuxVMAHVStaticEndpoint,
-    ShellTaskOnLinuxVMAHVDynamicEndpoint1,
-    ShellTaskOnLinuxVMAHVDynamicEndpoint2,
-    ShellTaskOnLinuxVMAHVDynamicEndpoint3,
-    ShellTaskOnLinuxVMAHVDynamicEndpoint4,
-
-    #  ShellTaskOnLinuxVMVMWareStaticEndpoint,
-    #  ShellTaskOnWindowsVMAHVStaticEndpoint,
-    #  ShellTaskOnWindowsVMAHVDynamicEndpoint1,
-    #  ShellTaskOnWindowsVMAHVDynamicEndpoint2
-    #  ShellTaskOnLinuxVMVMWareStaticEndpoint,
+from tests.api_interface.test_runbooks.test_files.vm_endpoints_warning import (
+    VMEndpointWithIncorrectID,
+    VMEndpointWithNoIP,
+    VMEndpointWithIPOutsideSubnet,
+    VMEndpointWithOffState,
 )
 from utils import upload_runbook, poll_runlog_status
 
 
-class TestExecTasksVMEndpoint:
+class TestVMEndpointsFailureScenarios:
     @pytest.mark.runbook
     @pytest.mark.regression
     @pytest.mark.parametrize(
-        "Runbook", [
-            # Static VM IDs
-            ShellTaskOnLinuxVMAHVStaticEndpoint,
-
-            # Dynamic filter name equals
-            ShellTaskOnLinuxVMAHVDynamicEndpoint1,
-
-            # Dynamic filter name starts with
-            ShellTaskOnLinuxVMAHVDynamicEndpoint2,
-
-            # Dynamic filter power_state equals
-            ShellTaskOnLinuxVMAHVDynamicEndpoint3,
-
-            # Dynamic filter with uuid=in=
-            ShellTaskOnLinuxVMAHVDynamicEndpoint4,
+        "Runbook, warning_msg",
+        [
+            pytest.param(
+                VMEndpointWithIncorrectID, "No VM Found with the given instance ID"
+            ),
+            pytest.param(VMEndpointWithNoIP, "VM doesn't have any IP Address"),
+            pytest.param(
+                VMEndpointWithIPOutsideSubnet,
+                "VM doesn't have any IP address that match the subnet range as defined by the given subnet",
+            ),
+            pytest.param(VMEndpointWithOffState, "VM is not in powered ON State"),
         ],
     )
-    def test_script_run(self, Runbook):
+    def test_warnings_on_vm_endpoint(self, Runbook, warning_msg):
+        """
+        Test Warnings scenarios on exec tasks over vm endpoint
+        """
+
         client = get_api_client()
-        rb_name = "test_exectask_vm_ep_" + str(uuid.uuid4())[-10:]
+        rb_name = "test_warning_vm_endpoint_" + str(uuid.uuid4())[-10:]
 
         rb = upload_runbook(client, rb_name, Runbook)
         rb_state = rb["status"]["state"]
@@ -71,10 +64,10 @@ class TestExecTasksVMEndpoint:
         )
 
         print(">> Runbook Run state: {}\n{}".format(state, reasons))
-        assert state == RUNLOG.STATUS.SUCCESS
+        assert state == RUNLOG.STATUS.WARNING
 
-        # Finding the trl id for the exec task (all runlogs for multiple IPs)
-        exec_tasks = []
+        # Finding the trl id for the shell and escript task (all runlogs for multiple IPs)
+        escript_tasks = []
         res, err = client.runbook.list_runlogs(runlog_uuid)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
@@ -83,19 +76,30 @@ class TestExecTasksVMEndpoint:
         for entity in entities:
             if (
                 entity["status"]["type"] == "task_runlog"
-                and entity["status"]["task_reference"]["name"] == "ExecTask"
+                and entity["status"]["task_reference"]["name"] == "ShellTask"
                 and runlog_uuid in entity["status"].get("machine_name", "")
             ):
-                exec_tasks.append(entity["metadata"]["uuid"])
+                reasons = ""
+                for reason in entity["status"]["reason_list"]:
+                    reasons += reason
+                assert warning_msg in reasons
+                assert entity["status"]["state"] == RUNLOG.STATUS.WARNING
+            elif (
+                entity["status"]["type"] == "task_runlog"
+                and entity["status"]["task_reference"]["name"] == "EscriptTask"
+                and runlog_uuid in entity["status"].get("machine_name", "")
+            ):
+                assert entity["status"]["state"] == RUNLOG.STATUS.SUCCESS
+                escript_tasks.append(entity["metadata"]["uuid"])
 
-        # Now checking the output of exec task
-        for exec_task in exec_tasks:
+        # Now checking the output of exec tasks
+        for exec_task in escript_tasks:
             res, err = client.runbook.runlog_output(runlog_uuid, exec_task)
             if err:
                 pytest.fail("[{}] - {}".format(err["code"], err["error"]))
             runlog_output = res.json()
             output_list = runlog_output["status"]["output_list"]
-            assert "Task is successful" in output_list[0]["output"]
+            assert "Escript Task is Successful" in output_list[0]["output"]
 
         # delete the runbook
         _, err = client.runbook.delete(rb_uuid)
