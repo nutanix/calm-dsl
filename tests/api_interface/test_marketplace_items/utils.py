@@ -99,26 +99,18 @@ def change_state(client, mpi_uuid, new_state,
     return res.json()
 
 
-def clone_marketplace_runbook(client, mpi_uuid, runbook_name, project):
+def clone_marketplace_runbook(client, mpi_uuid, runbook_name, project_name):
 
-    project_params = {"filter": "name=={}".format(project)}
-    res, err = client.project.list(params=project_params)
-    if err:
-        pytest.fail("[{}] - {}".format(err["code"], err["error"]))
-
-    response = res.json()
-    project_entities = response.get("entities", None)
-    if not project_entities:
-        raise Exception("No project with name {} exists".format(project))
-
-    project_id = project_entities[0]["metadata"]["uuid"]
+    project_id = get_project_id_from_name(client, project_name)
+    if not project_id:
+        raise Exception("No project with name {} exists".format(project_name))
 
     payload = {
         "api_version": "3.0",
         "metadata": {
             "name": runbook_name,
             "project_reference": {
-                "name": project,
+                "name": project_name,
                 "uuid": project_id,
                 "kind": "project"
             },
@@ -148,17 +140,9 @@ def execute_marketplace_runbook(client, mpi_uuid, project_name,
                                 endpoints_mapping=None,
                                 runtime_variables=None):
 
-    project_params = {"filter": "name=={}".format(project_name)}
-    res, err = client.project.list(params=project_params)
-    if err:
-        pytest.fail("[{}] - {}".format(err["code"], err["error"]))
-
-    response = res.json()
-    project_entities = response.get("entities", None)
-    if not project_entities:
+    project_id = get_project_id_from_name(client, project_name)
+    if not project_id:
         raise Exception("No project with name {} exists".format(project_name))
-
-    project_id = project_entities[0]["metadata"]["uuid"]
 
     payload = {
         "api_version": "3.0",
@@ -198,3 +182,19 @@ def execute_marketplace_runbook(client, mpi_uuid, project_name,
 
     response = res.json()
     return response['status']['runlog_uuid']
+
+
+def get_project_id_from_name(client, project_name):
+    project_params = {"filter": "name=={}".format(project_name)}
+    res, err = client.project.list(params=project_params)
+    if err:
+        pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+    response = res.json()
+    project_entities = response.get("entities", None)
+    project_id = None
+
+    if project_entities:
+        project_id = project_entities[0]["metadata"]["uuid"]
+
+    return project_id
