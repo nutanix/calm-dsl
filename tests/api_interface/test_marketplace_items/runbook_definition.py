@@ -1,7 +1,9 @@
 """
-Calm DSL Sample Runbook with runbook variable usecase
+Calm Runbook Definition for testing RUnbook Sharing
 
 """
+
+import json
 
 from calm.dsl.runbooks import read_local_file
 from calm.dsl.runbooks import runbook
@@ -59,8 +61,10 @@ def DslRunbookForMPI(endpoints=[windows_endpoint, linux_endpoint, http_endpoint]
     firstname = Variable.Simple("FIRSTNAME", runtime=True)  # noqa
     lastname = Variable.Simple("LASTNAME")  # noqa
 
-    Task.HTTP.get(
+    Task.HTTP.post(
         name="HTTP_Task",
+        relative_url="/list",
+        body=json.dumps({}),
         headers={"Content-Type": "application/json"},
         content_type="application/json",
         status_mapping={200: True},
@@ -73,5 +77,5 @@ def DslRunbookForMPI(endpoints=[windows_endpoint, linux_endpoint, http_endpoint]
                   script=ssh_code,
                   target=endpoints[1])
 
-    Task.Exec.powershell(name="PowerShell_Task",
-                         script=ssh_code)
+#    Task.Exec.powershell(name="PowerShell_Task",
+#                         script=ssh_code)
