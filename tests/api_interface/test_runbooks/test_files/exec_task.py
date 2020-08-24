@@ -79,79 +79,79 @@ linux_ahv_dynamic_vm_endpoint4 = Endpoint.Linux.vm(
 )
 
 # Linux AHV VM Endpoint with Dynamic filter category equal filter
-linux_ahv_dynamic_vm_endpoint5 = Endpoint.Linux.vm(
-    filter_type=ENDPOINT_FILTER.DYNAMIC,
-    filter="categories==cat1:value1",
-    cred=LinuxCred,
-    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
-    provider_type=ENDPOINT_PROVIDER.NUTANIX,
-)
+# linux_ahv_dynamic_vm_endpoint5 = Endpoint.Linux.vm(
+#     filter_type=ENDPOINT_FILTER.DYNAMIC,
+#     filter="categories==cat1:value1",
+#     cred=LinuxCred,
+#     account=Account.NutanixPC("NTNX_LOCAL_AZ"),
+#     provider_type=ENDPOINT_PROVIDER.NUTANIX,
+# )
 
-linux_vmware_static_vm_endpoint = Endpoint.Linux.vm(
-    filter_type=ENDPOINT_FILTER.STATIC,
-    values=[VMWARE_LINUX_ID],
-    cred=LinuxCred,
-    account=Account.VMWare("vmware"),
-    provider_type=ENDPOINT_PROVIDER.VMWARE,
-)
-linux_vmware_dynamic_vm_endpoint1 = Endpoint.Linux.vm(
-    filter_type=ENDPOINT_FILTER.DYNAMIC,
-    filter="tags==urn:vmomi:InventoryServiceTag:16edada7-2ed8-4953-b8b2-74f3093559af:GLOBAL",
-    cred=LinuxCred,
-    account=Account.VMWare("vmware"),
-    provider_type=ENDPOINT_PROVIDER.VMWARE,
-)
-linux_vmware_dynamic_vm_endpoint2 = Endpoint.Linux.vm(
-    filter_type=ENDPOINT_FILTER.DYNAMIC,
-    filter="name==vm*",
-    cred=LinuxCred,
-    account=Account.VMWare("vmware"),
-    provider_type=ENDPOINT_PROVIDER.VMWARE,
-)
+# linux_vmware_static_vm_endpoint = Endpoint.Linux.vm(
+#     filter_type=ENDPOINT_FILTER.STATIC,
+#     values=[VMWARE_LINUX_ID],
+#     cred=LinuxCred,
+#     account=Account.VMWare("vmware"),
+#     provider_type=ENDPOINT_PROVIDER.VMWARE,
+# )
+# linux_vmware_dynamic_vm_endpoint1 = Endpoint.Linux.vm(
+#     filter_type=ENDPOINT_FILTER.DYNAMIC,
+#     filter="tags==urn:vmomi:InventoryServiceTag:16edada7-2ed8-4953-b8b2-74f3093559af:GLOBAL",
+#     cred=LinuxCred,
+#     account=Account.VMWare("vmware"),
+#     provider_type=ENDPOINT_PROVIDER.VMWARE,
+# )
+# linux_vmware_dynamic_vm_endpoint2 = Endpoint.Linux.vm(
+#     filter_type=ENDPOINT_FILTER.DYNAMIC,
+#     filter="name==vm*",
+#     cred=LinuxCred,
+#     account=Account.VMWare("vmware"),
+#     provider_type=ENDPOINT_PROVIDER.VMWARE,
+# )
 
-windows_ahv_static_vm_endpoint = Endpoint.Windows.vm(
-    filter_type=ENDPOINT_FILTER.STATIC,
-    value=[AHV_WINDOWS_ID],
-    cred=WindowsCred,
-    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
-    provider_type=ENDPOINT_PROVIDER.NUTANIX,
-)
-windows_ahv_dynamic_vm_endpoint1 = Endpoint.Windows.vm(
-    filter_type=ENDPOINT_FILTER.DYNAMIC,
-    filter="category==cat1:value2",
-    cred=WindowsCred,
-    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
-    provider_type=ENDPOINT_PROVIDER.NUTANIX,
-)
-windows_ahv_dynamic_vm_endpoint2 = Endpoint.Windows.vm(
-    filter_type=ENDPOINT_FILTER.DYNAMIC,
-    filter="category==name==windows.*",
-    cred=WindowsCred,
-    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
-    provider_type=ENDPOINT_PROVIDER.NUTANIX,
-)
-
-windows_vmware_static_vm_endpoint = Endpoint.Windows.vm(
-    filter_type=ENDPOINT_FILTER.STATIC,
-    value=[VMWARE_WINDOWS_ID],
-    cred=WindowsCred,
-    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
-    provider_type=ENDPOINT_PROVIDER.NUTANIX,
-)
-windows_vmware_dynamic_vm_endpoint1 = Endpoint.Windows.vm(
-    filter_type=ENDPOINT_FILTER.DYNAMIC,
-    filter="tags==urn:vmomi:InventoryServiceTag:16edada7-2ed8-4953-b8b2-74f3093559af:GLOBAL",
-    cred=WindowsCred,
-    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
-    provider_type=ENDPOINT_PROVIDER.NUTANIX,
-)
-windows_vmware_dynamic_vm_endpoint2 = Endpoint.Windows.vm(
-    filter_type=ENDPOINT_FILTER.DYNAMIC,
-    filter="name==vm*",
-    cred=WindowsCred,
-    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
-    provider_type=ENDPOINT_PROVIDER.NUTANIX,
-)
+# windows_ahv_static_vm_endpoint = Endpoint.Windows.vm(
+#     filter_type=ENDPOINT_FILTER.STATIC,
+#     value=[AHV_WINDOWS_ID],
+#     cred=WindowsCred,
+#     account=Account.NutanixPC("NTNX_LOCAL_AZ"),
+#     provider_type=ENDPOINT_PROVIDER.NUTANIX,
+# )
+# windows_ahv_dynamic_vm_endpoint1 = Endpoint.Windows.vm(
+#     filter_type=ENDPOINT_FILTER.DYNAMIC,
+#     filter="category==cat1:value2",
+#     cred=WindowsCred,
+#     account=Account.NutanixPC("NTNX_LOCAL_AZ"),
+#     provider_type=ENDPOINT_PROVIDER.NUTANIX,
+# )
+# windows_ahv_dynamic_vm_endpoint2 = Endpoint.Windows.vm(
+#     filter_type=ENDPOINT_FILTER.DYNAMIC,
+#     filter="category==name==windows.*",
+#     cred=WindowsCred,
+#     account=Account.NutanixPC("NTNX_LOCAL_AZ"),
+#     provider_type=ENDPOINT_PROVIDER.NUTANIX,
+# )
+#
+# windows_vmware_static_vm_endpoint = Endpoint.Windows.vm(
+#     filter_type=ENDPOINT_FILTER.STATIC,
+#     value=[VMWARE_WINDOWS_ID],
+#     cred=WindowsCred,
+#     account=Account.NutanixPC("NTNX_LOCAL_AZ"),
+#     provider_type=ENDPOINT_PROVIDER.NUTANIX,
+# )
+# windows_vmware_dynamic_vm_endpoint1 = Endpoint.Windows.vm(
+#     filter_type=ENDPOINT_FILTER.DYNAMIC,
+#     filter="tags==urn:vmomi:InventoryServiceTag:16edada7-2ed8-4953-b8b2-74f3093559af:GLOBAL",
+#     cred=WindowsCred,
+#     account=Account.NutanixPC("NTNX_LOCAL_AZ"),
+#     provider_type=ENDPOINT_PROVIDER.NUTANIX,
+# )
+# windows_vmware_dynamic_vm_endpoint2 = Endpoint.Windows.vm(
+#     filter_type=ENDPOINT_FILTER.DYNAMIC,
+#     filter="name==vm*",
+#     cred=WindowsCred,
+#     account=Account.NutanixPC("NTNX_LOCAL_AZ"),
+#     provider_type=ENDPOINT_PROVIDER.NUTANIX,
+# )
 
 linux_endpoint_with_wrong_cred = Endpoint.Linux.ip([linux_ip], cred=WindowsCred)
 multiple_linux_endpoint = Endpoint.Linux.ip([linux_ip, linux_ip], cred=LinuxCred)
@@ -289,11 +289,11 @@ def ShellTaskOnLinuxVMVMWareDynamicEndpoint2(endpoints=[linux_vmware_dynamic_vm_
     )
 
 
-@runbook
-def ShellTaskOnWindowsVMAHVStaticEndpoint(endpoints=[windows_ahv_static_vm_endpoint]):
-    Task.Exec.powershell(
-        name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0]
-    )
+# @runbook
+# def ShellTaskOnWindowsVMAHVStaticEndpoint(endpoints=[windows_ahv_static_vm_endpoint]):
+#     Task.Exec.powershell(
+#         name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0]
+#     )
 
 
 @runbook

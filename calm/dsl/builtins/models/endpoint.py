@@ -78,6 +78,7 @@ def _http_endpoint(
     kwargs = {
         "name": name,
         "type": "HTTP",
+        "value_type": "IP",
         "attrs": {
             "urls": [url] if isinstance(url, str) else url,
             "retry_count": retries + 1,
