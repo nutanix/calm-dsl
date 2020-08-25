@@ -5,7 +5,7 @@ import json
 
 from ruamel import yaml
 import re
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 from calm.dsl.config import get_init_data
 
 LOG = get_logging_handle(__name__)

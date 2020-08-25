@@ -1,6 +1,6 @@
 from calm.dsl.decompile.render import render_template
 from calm.dsl.builtins import RefType
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 from calm.dsl.decompile.ref_dependency import (
     get_service_name,
     get_profile_name,

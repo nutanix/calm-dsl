@@ -246,6 +246,20 @@ class TestInheritance(Blueprint):
     profiles = [Default]
 
 
+def test_json():
+    """Test the generated json for a single VM
+    against known output"""
+    import os
+
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    file_path = os.path.join(dir_path, "test_inheritance_bp_output.json")
+
+    generated_json = TestInheritance.json_dumps(pprint=True)
+    known_json = open(file_path).read()
+
+    assert generated_json == known_json
+
+
 def main():
     print(TestInheritance.json_dumps(pprint=True))
 

@@ -11,7 +11,7 @@ from .main import get, delete, describe
 )
 @click.option("--limit", "-l", default=20, help="Number of results to return")
 @click.option(
-    "--offset", "-o", default=0, help="Offset results by the specified amount"
+    "--offset", "-s", default=0, help="Offset results by the specified amount"
 )
 @click.option(
     "--quiet", "-q", is_flag=True, default=False, help="Show only account names"

@@ -13,14 +13,14 @@ from black import format_file_in_place, WriteBack, FileMode
 from calm.dsl.runbooks import runbook, create_runbook_payload
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Cache
+from calm.dsl.tools import get_module_from_file
 from .utils import (
     Display,
     get_name_query,
     highlight_text,
     get_states_filter,
-    get_module_from_file,
 )
 from .constants import RUNBOOK, RUNLOG
 from .runlog import get_completion_func, get_runlog_status

@@ -13,7 +13,7 @@ from calm.dsl.config import get_config
 from .utils import highlight_text, get_states_filter
 from .bps import launch_blueprint_simple, get_blueprint
 from .projects import get_project
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 from .constants import MARKETPLACE_BLUEPRINT
 
 LOG = get_logging_handle(__name__)
@@ -571,7 +571,7 @@ def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None
     config = get_config()
 
     project_name = project_name or config["PROJECT"]["name"]
-    project_data = get_project(client, project_name)
+    project_data = get_project(project_name)
 
     project_uuid = project_data["metadata"]["uuid"]
 
@@ -582,9 +582,7 @@ def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None
         sys.exit(-1)
 
     res = res.json()
-    environments = res["status"]["project_status"]["resources"][
-        "environment_reference_list"
-    ]
+    environments = res["status"]["resources"]["environment_reference_list"]
 
     # For now only single environment exists
     env_uuid = environments[0]["uuid"]
@@ -944,7 +942,7 @@ def approve_marketplace_bp(bp_name, version=None, projects=[], category=None):
         bp_data["metadata"]["categories"] = {"AppFamily": category}
 
     for project in projects:
-        project_data = get_project(client, project)
+        project_data = get_project(project)
 
         bp_data["spec"]["resources"]["project_reference_list"].append(
             {
@@ -1028,7 +1026,7 @@ def publish_marketplace_bp(
         # Clear the stored projects
         bp_data["spec"]["resources"]["project_reference_list"] = []
         for project in projects:
-            project_data = get_project(client, project)
+            project_data = get_project(project)
 
             bp_data["spec"]["resources"]["project_reference_list"].append(
                 {
@@ -1099,7 +1097,7 @@ def update_marketplace_bp(
         # Clear all stored projects
         bp_data["spec"]["resources"]["project_reference_list"] = []
         for project in projects:
-            project_data = get_project(client, project)
+            project_data = get_project(project)
 
             bp_data["spec"]["resources"]["project_reference_list"].append(
                 {

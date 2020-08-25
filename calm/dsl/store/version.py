@@ -1,10 +1,7 @@
 import peewee
 
-from ..db import get_db_handle
+from calm.dsl.db import get_db_handle
 from calm.dsl.api import get_api_client
-from calm.dsl.tools import get_logging_handle
-
-LOG = get_logging_handle(__name__)
 
 
 class Version:
@@ -29,7 +26,6 @@ class Version:
             return entity.version
 
         except peewee.DoesNotExist:
-            LOG.warning("Calm version not found")
             return None
 
     @classmethod

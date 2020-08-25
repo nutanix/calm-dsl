@@ -2,19 +2,23 @@ import sys
 
 from calm.dsl.decompile.render import render_template
 from calm.dsl.store import Cache
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
 
 def render_ahv_vm_nic(cls):
 
-    nic_data = cls.get_dict()
+    # Note cls.get_dict() may not contain subnet name
+    # So it will fail. So use class attributes instead of getting dict object
+    subnet_ref = cls.subnet_reference
+    if subnet_ref:
+        subnet_ref = subnet_ref.get_dict()
 
-    subnet_ref = nic_data["subnet_reference"]
-    nic_type = nic_data["nic_type"]
-    network_function_nic_type = nic_data["network_function_nic_type"]
-    subnet_uuid = subnet_ref["uuid"]
+    nic_type = cls.nic_type
+    network_function_nic_type = cls.network_function_nic_type
+
+    subnet_uuid = subnet_ref.get("uuid", "")
     subnet_cache_data = Cache.get_entity_data_using_uuid(
         entity_type="ahv_subnet", uuid=subnet_uuid
     )

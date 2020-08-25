@@ -1,3 +1,5 @@
+import os
+import sys
 import time
 import json
 from json import JSONEncoder
@@ -10,9 +12,14 @@ from anytree import NodeMixin, RenderTree
 from calm.dsl.api import get_api_client
 from calm.dsl.config import get_config
 
-from .utils import get_name_query, get_states_filter, highlight_text, Display
+from .utils import (
+    get_name_query,
+    get_states_filter,
+    highlight_text,
+    Display,
+)
 from .constants import APPLICATION, RUNLOG, SYSTEM_ACTIONS
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -368,14 +375,16 @@ def get_completion_func(screen):
             for runlog in sorted_entities:
                 state = runlog["status"]["state"]
                 if state in RUNLOG.FAILURE_STATES:
-                    msg = "Action failed. Exit screen? (y)"
+                    msg = "Action failed."
                     screen.print_at(msg, 0, line)
                     screen.refresh()
                     return (True, msg)
                 if state not in RUNLOG.TERMINAL_STATES:
                     return (False, "")
 
-            msg = "Action ran successfully. Exit screen? (y)"
+            msg = "Action ran successfully."
+            if os.isatty(sys.stdout.fileno()):
+                msg += " Exit screen? "
             screen.print_at(msg, 0, line)
             screen.refresh()
 
@@ -489,13 +498,17 @@ def watch_app(app_name, screen, app=None):
                 for runlog in sorted_entities:
                     state = runlog["status"]["state"]
                     if state in RUNLOG.FAILURE_STATES:
-                        msg = "Action failed. Exit screen? (y)"
+                        msg = "Action failed."
                         is_complete = True
                     if state not in RUNLOG.TERMINAL_STATES:
                         is_complete = False
 
-            if not msg:
-                msg = "Action ran successfully. Exit screen? (y)"
+            if is_complete:
+                if not msg:
+                    msg = "Action ran successfully."
+
+                if os.isatty(sys.stdout.fileno()):
+                    msg += " Exit screen? "
             if not is_app_describe:
                 screen.print_at(msg, 0, line)
                 screen.refresh()

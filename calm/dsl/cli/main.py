@@ -12,11 +12,11 @@ from prettytable import PrettyTable
 from calm.dsl.providers import get_provider, get_provider_types
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.tools import (
-    get_logging_handle,
     simple_verbosity_option,
     show_trace_option,
 )
-from calm.dsl.config import get_config
+from calm.dsl.log import get_logging_handle
+from calm.dsl.config import update_config_file_location
 from calm.dsl.store import Cache
 
 from .version_validator import validate_version
@@ -77,7 +77,7 @@ Commonly used commands:
         LOG.debug("Could not validate version")
         pass
     if config_file:
-        get_config(config_file=config_file)
+        update_config_file_location(config_file=config_file)
     if sync:
         Cache.sync()
 
@@ -106,6 +106,7 @@ def validate():
     help="Provider type",
 )
 def validate_provider_spec(spec_file, provider_type):
+    """validates provider spec for given provider"""
 
     with open(spec_file) as f:
         spec = yaml.safe_load(f.read())
@@ -133,9 +134,38 @@ def show(ctx):
     pass
 
 
+def make_default_short_help(help, max_length=45):
+    """Return a condensed version of help string."""
+    if not help:
+        return ""
+
+    words = help.split()
+    total_length = 0
+    result = []
+    done = False
+
+    for word in words:
+        if word[-1:] == ".":
+            done = True
+        new_length = 1 + len(word) if result else len(word)
+        if total_length + new_length > max_length:
+            result.append("...")
+            done = True
+        else:
+            if result:
+                result.append(" ")
+            result.append(word)
+        if done:
+            break
+        total_length += new_length
+
+    return "".join(result)
+
+
 @show.command("commands")
 @click.pass_context
 def show_all_commands(ctx):
+    """show all commands of dsl cli"""
 
     ctx_root = ctx.find_root()
     root_cmd = ctx_root.command
@@ -156,6 +186,7 @@ def show_all_commands(ctx):
             commands_res_list.append(
                 (
                     subcommand,
+                    getattr(cmd, "__doc__", ""),
                     root_cmd.feature_version_map.get(subcommand, "-"),
                     is_experimental,
                 )
@@ -182,21 +213,24 @@ def show_all_commands(ctx):
                 commands_res_list.append(
                     (
                         " ".join(ele_temp),
+                        getattr(cmd, "__doc__", ""),
                         grp.feature_version_map.get(subcommand, "-"),
                         is_experimental,
                     )
                 )
 
     table = PrettyTable()
-    table.field_names = ["COMMAND", "MIN COMMAND VERSION", "EXPERIMENTAL"]
+    table.field_names = ["COMMAND", "HELP", "MIN COMMAND VERSION", "EXPERIMENTAL"]
 
     for cmd_tuple in commands_res_list:
         cmd_str = "{} {}".format(ctx_root.command_path, cmd_tuple[0])
+        cmd_help = make_default_short_help(cmd_tuple[1])
         table.add_row(
             [
                 highlight_text(cmd_str),
-                highlight_text(cmd_tuple[1]),
+                highlight_text(cmd_help),
                 highlight_text(cmd_tuple[2]),
+                highlight_text(cmd_tuple[3]),
             ]
         )
 
