@@ -14,6 +14,7 @@ class BlueprintAPI(ResourceAPI):
         self.EXPORT_JSON = self.ITEM + "/export_json"
         self.EXPORT_JSON_WITH_SECRETS = self.ITEM + "/export_json?keep_secrets=true"
         self.EXPORT_FILE = self.ITEM + "/export_file"
+        self.BROWNFIELD_VM_LIST = self.PREFIX + "/brownfield_import/vms/list"
 
     # TODO https://jira.nutanix.com/browse/CALM-17178
     # Blueprint creation timeout is dependent on payload.
@@ -61,6 +62,16 @@ class BlueprintAPI(ResourceAPI):
     def _get_editables(self, bp_uuid):
         return self.connection._call(
             self.BP_EDITABLES.format(bp_uuid), verify=False, method=REQUEST.METHOD.GET
+        )
+
+    def brownfield_vms(self, payload):
+        # Adding refresh cache for call. As redis expiry is 10 mins.
+        payload["filter"] += ";refresh_cache==True"
+        return self.connection._call(
+            self.BROWNFIELD_VM_LIST,
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
         )
 
     @staticmethod

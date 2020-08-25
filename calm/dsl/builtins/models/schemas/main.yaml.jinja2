@@ -25,6 +25,9 @@
 {% import "vm_disk_package.yaml.jinja2" as vm_disk_package %}
 {% import "readiness_probe.yaml.jinja2" as readiness_probe %}
 {% import "metadata.yaml.jinja2" as metadata %}
+{% import "brownfield_vm.yaml.jinja2" as brownfield_vm %}
+{% import "brownfield_deployment.yaml.jinja2" as brownfield_deployment %}
+
 
 {% macro Schemas() -%}
 
@@ -55,6 +58,8 @@
 {{ vm_disk_package.VmDiskPackageSchema() }}
 {{ readiness_probe.ReadinessProbeSchema() }}
 {{ metadata.MetadataSchema() }}
+{{ brownfield_vm.BrownfieldVmSchema() }}
+{{ brownfield_deployment.BrownfieldDeploymentSchema() }}
 
 {%- endmacro %}
 
