@@ -90,8 +90,8 @@ def get_ahv_bf_vm_data(
         LOG.error("No cluster found in ahv account (uuid='{}')".format(account_uuid))
         sys.exit(-1)
 
-    # TODO https://jira.nutanix.com/browse/CALM-20205
-    # Cluster should be a part of project whitelisted clusters. Change after jira is resolved
+    # TODO Cluster should be a part of project whitelisted clusters. Change after jira is resolved
+    # Jira: https://jira.nutanix.com/browse/CALM-20205
     cluster_uuid = clusters[0]["uuid"]
 
     params = {
