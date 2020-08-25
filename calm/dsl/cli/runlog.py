@@ -203,7 +203,7 @@ def displayRunLogTree(screen, root, completed_tasks, total_tasks, msg=None):
 
     screen.print_at(
         runlog_state,
-        screen.width - len(runlog_state) - 5,
+        screen.width - len(runlog_state) - 5 if hasattr(screen, "width") else 0,
         0,
         colour=colour,
         attr=Screen.A_UNDERLINE,
@@ -577,18 +577,20 @@ def get_completion_func(screen):
                     msg = "Action failed."
                     if os.isatty(sys.stdout.fileno()):
                         msg += " Exit screen?"
-                    screen.play([Scene([RerunFrame(state, screen)], -1)])
-                    if rerun.get("rerun", False):
-                        client.runbook.rerun(runlog_uuid)
-                        msg = "Triggered rerun for the Runbook Runlog"
+                        screen.play([Scene([RerunFrame(state, screen)], -1)])
+                        if rerun.get("rerun", False):
+                            client.runbook.rerun(runlog_uuid)
+                            msg = "Triggered rerun for the Runbook Runlog"
+                            displayRunLogTree(
+                                screen, root, completed_tasks, total_tasks, msg=msg
+                            )
+                            return (False, "")
                         displayRunLogTree(
                             screen, root, completed_tasks, total_tasks, msg=msg
                         )
-                        return (False, "")
-                    displayRunLogTree(
-                        screen, root, completed_tasks, total_tasks, msg=msg
-                    )
-                    return (True, msg)
+                        return (True, msg)
+                    else:
+                        return (True, msg)
                 if state not in RUNLOG.TERMINAL_STATES:
                     return (False, "")
 
