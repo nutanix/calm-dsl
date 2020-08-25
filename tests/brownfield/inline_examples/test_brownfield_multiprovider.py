@@ -1,11 +1,8 @@
-from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC
-from calm.dsl.builtins import ref, basic_cred, AhvVmResources, AhvVm
+from calm.dsl.builtins import ref, basic_cred
 from calm.dsl.builtins import vm_disk_package, read_local_file
-
 from calm.dsl.builtins import Service, Package, Substrate
-from calm.dsl.builtins import Deployment, Profile, Blueprint
+from calm.dsl.builtins import Profile, Blueprint
 from calm.dsl.builtins import CalmVariable, CalmTask, action
-from calm.dsl.builtins import Ref, Metadata, read_provider_spec
 from calm.dsl.builtins import Brownfield as BF
 
 

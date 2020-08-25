@@ -13,7 +13,7 @@ class TestDslProject(Project):
         Provider.Aws(account=Ref.Account("AWS account")),
         Provider.Azure(account=Ref.Account("AZURE_account")),
         Provider.Gcp(account=Ref.Account("GCP Account")),
-        Provider.Vmware(account=Ref.Account("VMWARE account")),
+        Provider.Vmware(account=Ref.Account("Vmware Account")),
         Provider.K8s(account=Ref.Account("K8S_account_basic_auth")),
     ]
 
