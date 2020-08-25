@@ -299,7 +299,8 @@ def displayRunLog(screen, obj, pre, fill, line):
         colour = 4  # blue for running state
     elif state == RUNLOG.STATUS.INPUT:
         colour = 6  # cyan for input state
-    screen.print_at("{}".format(state), len(prefix) + 1, idx(), colour=colour)
+    if os.isatty(sys.stdout.fileno()):
+        screen.print_at("{}".format(state), len(prefix) + 1, idx(), colour=colour)
 
     if obj.children:
         fill = fill + u"\u2502"
