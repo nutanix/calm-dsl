@@ -262,31 +262,31 @@ def ShellTaskOnLinuxVMAHVDynamicEndpoint4(endpoints=[linux_ahv_dynamic_vm_endpoi
         name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0],
     )
 
+#
+# @runbook
+# def ShellTaskOnLinuxVMVMWareStaticEndpoint(endpoints=[linux_vmware_static_vm_endpoint]):
+#     Task.Exec.ssh(
+#         name="ExecTask",
+#         script='''echo "Task is successful"''',
+#         target=endpoints[0],
+#     )
 
-@runbook
-def ShellTaskOnLinuxVMVMWareStaticEndpoint(endpoints=[linux_vmware_static_vm_endpoint]):
-    Task.Exec.ssh(
-        name="ExecTask",
-        script='''echo "Task is successful"''',
-        target=endpoints[0],
-    )
 
-
-@runbook
-def ShellTaskOnLinuxVMVMWareDynamicEndpoint1(endpoints=[linux_vmware_dynamic_vm_endpoint1]):
-    Task.Exec.ssh(
-        name="ExecTask",
-        script='''echo "Task is successful"''',
-        target=endpoints[0],
-    )
-
-@runbook
-def ShellTaskOnLinuxVMVMWareDynamicEndpoint2(endpoints=[linux_vmware_dynamic_vm_endpoint2]):
-    Task.Exec.ssh(
-        name="ExecTask",
-        script='''echo "Task is successful"''',
-        target=endpoints[0],
-    )
+# @runbook
+# def ShellTaskOnLinuxVMVMWareDynamicEndpoint1(endpoints=[linux_vmware_dynamic_vm_endpoint1]):
+#     Task.Exec.ssh(
+#         name="ExecTask",
+#         script='''echo "Task is successful"''',
+#         target=endpoints[0],
+#     )
+#
+# @runbook
+# def ShellTaskOnLinuxVMVMWareDynamicEndpoint2(endpoints=[linux_vmware_dynamic_vm_endpoint2]):
+#     Task.Exec.ssh(
+#         name="ExecTask",
+#         script='''echo "Task is successful"''',
+#         target=endpoints[0],
+#     )
 
 
 # @runbook
@@ -296,47 +296,47 @@ def ShellTaskOnLinuxVMVMWareDynamicEndpoint2(endpoints=[linux_vmware_dynamic_vm_
 #     )
 
 
-@runbook
-def ShellTaskOnWindowsVMAHVDynamicEndpoint1(
-    endpoints=[windows_ahv_dynamic_vm_endpoint1],
-):
-    Task.Exec.powershell(
-        name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0]
-    )
+# @runbook
+# def ShellTaskOnWindowsVMAHVDynamicEndpoint1(
+#     endpoints=[windows_ahv_dynamic_vm_endpoint1],
+# ):
+#     Task.Exec.powershell(
+#         name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0]
+#     )
+#
 
-
-@runbook
-def ShellTaskOnWindowsVMAHVDynamicEndpoint2(
-    endpoints=[windows_ahv_dynamic_vm_endpoint2],
-):
-    Task.Exec.powershell(
-        name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0]
-    )
-
-
-@runbook
-def ShellTaskOnWindowsVMVMWareStaticEndpoint(endpoints=[windows_vmware_static_vm_endpoint]):
-    Task.Exec.powershell(
-        name="ExecTask",
-        script='''echo "Task is successful"''',
-        target=endpoints[0]
-    )
-
-@runbook
-def ShellTaskOnWindowsVMVMWareDynamicEndpoint1(endpoints=[windows_vmware_dynamic_vm_endpoint1]):
-    Task.Exec.powershell(
-        name="ExecTask",
-        script='''echo "Task is successful"''',
-        target=endpoints[0]
-    )
-
-@runbook
-def ShellTaskOnWindowsVMVMWareDynamicEndpoint2(endpoints=[windows_vmware_dynamic_vm_endpoint2]):
-    Task.Exec.powershell(
-        name="ExecTask",
-        script='''echo "Task is successful"''',
-        target=endpoints[0]
-    )
+# @runbook
+# def ShellTaskOnWindowsVMAHVDynamicEndpoint2(
+#     endpoints=[windows_ahv_dynamic_vm_endpoint2],
+# ):
+#     Task.Exec.powershell(
+#         name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0]
+#     )
+#
+#
+# @runbook
+# def ShellTaskOnWindowsVMVMWareStaticEndpoint(endpoints=[windows_vmware_static_vm_endpoint]):
+#     Task.Exec.powershell(
+#         name="ExecTask",
+#         script='''echo "Task is successful"''',
+#         target=endpoints[0]
+#     )
+#
+# @runbook
+# def ShellTaskOnWindowsVMVMWareDynamicEndpoint1(endpoints=[windows_vmware_dynamic_vm_endpoint1]):
+#     Task.Exec.powershell(
+#         name="ExecTask",
+#         script='''echo "Task is successful"''',
+#         target=endpoints[0]
+#     )
+#
+# @runbook
+# def ShellTaskOnWindowsVMVMWareDynamicEndpoint2(endpoints=[windows_vmware_dynamic_vm_endpoint2]):
+#     Task.Exec.powershell(
+#         name="ExecTask",
+#         script='''echo "Task is successful"''',
+#         target=endpoints[0]
+#     )
 
 @runbook
 def SetVariableOnShell(endpoints=[linux_endpoint]):
@@ -393,6 +393,7 @@ def MacroOnPowershell(endpoints=[windows_endpoint]):
     )
 
 
+@runbook
 @runbook
 def MacroOnEscript():
     Task.Exec.escript(
