@@ -1,3 +1,4 @@
+import os
 import sys
 
 from asciimatics.widgets import (
@@ -361,7 +362,9 @@ def get_completion_func(screen):
         if len(entities):
 
             # catching interrupt for pause and play
-            interrupt = screen.get_event()
+            interrupt = None
+            if hasattr(screen, "get_event"):
+                interrupt = screen.get_event()
 
             # Sort entities based on creation time
             sorted_entities = sorted(
@@ -571,7 +574,9 @@ def get_completion_func(screen):
                 state = runlog["status"]["state"]
                 if state in RUNLOG.FAILURE_STATES:
                     sleep(2)
-                    msg = "Action failed. Exit screen? (y)"
+                    msg = "Action failed."
+                    if os.isatty(sys.stdout.fileno()):
+                        msg += " Exit screen?"
                     screen.play([Scene([RerunFrame(state, screen)], -1)])
                     if rerun.get("rerun", False):
                         client.runbook.rerun(runlog_uuid)
@@ -587,7 +592,9 @@ def get_completion_func(screen):
                 if state not in RUNLOG.TERMINAL_STATES:
                     return (False, "")
 
-            msg = "Action ran successfully. Exit screen? (y)"
+            msg = "Action ran successfully."
+            if os.isatty(sys.stdout.fileno()):
+                msg += " Exit screen?"
             screen.print_at(msg, 0, line, colour=6)
             screen.refresh()
 
