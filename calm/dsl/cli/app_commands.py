@@ -39,12 +39,6 @@ LOG = get_logging_handle(__name__)
     "--name", "-n", "app_name", default=None, help="Application name (Optional)"
 )
 @click.option(
-    "--profile_name",
-    "-p",
-    default=None,
-    help="Name of app profile to be used for blueprint launch",
-)
-@click.option(
     "--ignore_runtime_variables",
     "-i",
     is_flag=True,
@@ -61,7 +55,6 @@ def _create_app(
     app_name,
     bp_file,
     brownfield_deployment_file,
-    profile_name,
     ignore_runtime_variables,
     launch_params,
 ):
@@ -75,7 +68,6 @@ If created blueprint is in ACTIVE state, then it got launched to create an appli
     create_app(
         app_name=app_name,
         bp_file=bp_file,
-        profile_name=profile_name,
         patch_editables=not ignore_runtime_variables,
         launch_params=launch_params,
         brownfield_deployment_file=brownfield_deployment_file,
