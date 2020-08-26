@@ -70,13 +70,13 @@ linux_ahv_dynamic_vm_endpoint3 = Endpoint.Linux.vm(
 )
 
 # Linux AHV VM Endpoint with Dynamic filter UUID in filter
-linux_ahv_dynamic_vm_endpoint4 = Endpoint.Linux.vm(
-    filter_type=ENDPOINT_FILTER.DYNAMIC,
-    filter="uuid=in=(" + AHV_LINUX_ID + ")",
-    cred=LinuxCred,
-    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
-    provider_type=ENDPOINT_PROVIDER.NUTANIX,
-)
+# linux_ahv_dynamic_vm_endpoint4 = Endpoint.Linux.vm(
+#     filter_type=ENDPOINT_FILTER.DYNAMIC,
+#     filter="uuid=in=(" + AHV_LINUX_ID + ")",
+#     cred=LinuxCred,
+#     account=Account.NutanixPC("NTNX_LOCAL_AZ"),
+#     provider_type=ENDPOINT_PROVIDER.NUTANIX,
+# )
 
 # Linux AHV VM Endpoint with Dynamic filter category equal filter
 # linux_ahv_dynamic_vm_endpoint5 = Endpoint.Linux.vm(
@@ -256,12 +256,12 @@ def ShellTaskOnLinuxVMAHVDynamicEndpoint3(endpoints=[linux_ahv_dynamic_vm_endpoi
     )
 
 
-@runbook
-def ShellTaskOnLinuxVMAHVDynamicEndpoint4(endpoints=[linux_ahv_dynamic_vm_endpoint4]):
-    Task.Exec.ssh(
-        name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0],
-    )
-
+# @runbook
+# def ShellTaskOnLinuxVMAHVDynamicEndpoint4(endpoints=[linux_ahv_dynamic_vm_endpoint4]):
+#     Task.Exec.ssh(
+#         name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0],
+#     )
+#
 #
 # @runbook
 # def ShellTaskOnLinuxVMVMWareStaticEndpoint(endpoints=[linux_vmware_static_vm_endpoint]):

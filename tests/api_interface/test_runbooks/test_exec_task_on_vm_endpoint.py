@@ -8,7 +8,7 @@ from tests.api_interface.test_runbooks.test_files.exec_task import (
     ShellTaskOnLinuxVMAHVDynamicEndpoint1,
     ShellTaskOnLinuxVMAHVDynamicEndpoint2,
     ShellTaskOnLinuxVMAHVDynamicEndpoint3,
-    ShellTaskOnLinuxVMAHVDynamicEndpoint4,
+    # ShellTaskOnLinuxVMAHVDynamicEndpoint4,
 
     #  ShellTaskOnLinuxVMVMWareStaticEndpoint,
     #  ShellTaskOnWindowsVMAHVStaticEndpoint,
@@ -37,7 +37,7 @@ class TestExecTasksVMEndpoint:
             ShellTaskOnLinuxVMAHVDynamicEndpoint3,
 
             # Dynamic filter with uuid=in=
-            ShellTaskOnLinuxVMAHVDynamicEndpoint4,
+            # ShellTaskOnLinuxVMAHVDynamicEndpoint4,
         ],
     )
     def test_script_run(self, Runbook):
