@@ -392,8 +392,6 @@ def MacroOnPowershell(endpoints=[windows_endpoint]):
         script='''echo "@@{calm_runbook_name}@@, @@{calm_runbook_uuid}@@ @@{calm_project_name}@@ @@{calm_jwt}@@ @@{calm_date}@@"''',
     )
 
-
-@runbook
 @runbook
 def MacroOnEscript():
     Task.Exec.escript(
