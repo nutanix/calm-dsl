@@ -94,6 +94,13 @@ def _format_blueprint_command(bp_file):
     help="Path of Blueprint file to upload",
 )
 @click.option(
+    "--brownfield_deployments",
+    "-b",
+    "brownfield_deployment_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path of Brownfield Deployment file",
+)
+@click.option(
     "--out",
     "-o",
     "out",
@@ -101,9 +108,9 @@ def _format_blueprint_command(bp_file):
     default="json",
     help="output format",
 )
-def _compile_blueprint_command(bp_file, out):
+def _compile_blueprint_command(bp_file, brownfield_deployment_file, out):
     """Compiles a DSL (Python) blueprint into JSON or YAML"""
-    compile_blueprint_command(bp_file, out)
+    compile_blueprint_command(bp_file, brownfield_deployment_file, out)
 
 
 @decompile.command("bp", experimental=True)

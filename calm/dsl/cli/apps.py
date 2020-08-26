@@ -257,6 +257,12 @@ def create_app(
         LOG.error("User blueprint not found in {}".format(bp_file))
         sys.exit(-1)
 
+    if bp_payload["spec"]["resources"].get("type", "") != "BROWNFIELD":
+        LOG.error(
+            "Command only allowed for brownfield application. Please use 'calm create bp' and 'calm launch bp' for USER applications"
+        )
+        sys.exit(-1)
+
     # Create blueprint from dsl file
     bp_name = "Blueprint{}".format(str(uuid.uuid4())[:10])
     LOG.info("Creating blueprint {}".format(bp_name))

@@ -372,9 +372,11 @@ def _decompile_bp(bp_payload, with_secrets=False):
     click.echo("\nSuccessfully decompiled. Directory location: {}".format(get_bp_dir()))
 
 
-def compile_blueprint_command(bp_file, out):
+def compile_blueprint_command(bp_file, brownfield_deployment_file, out):
 
-    bp_payload = compile_blueprint(bp_file)
+    bp_payload = compile_blueprint(
+        bp_file, brownfield_deployment_file=brownfield_deployment_file
+    )
     if bp_payload is None:
         LOG.error("User blueprint not found in {}".format(bp_file))
         return
