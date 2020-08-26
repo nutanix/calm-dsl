@@ -39,6 +39,12 @@ Language design is black art, and building upon a well-established language is d
  - Watch app action runlog: `calm watch action_runlog <runlog_uuid> --app <application_name>`
  - Download app action runlogs: `calm download action_runlog <runlog_uuid> --app <application_name> --file <file_name>`
 
+### Brownfield Application
+- Two ways to declare brownfield deployments in dsl: User can define brownfield deployments in blueprint [file](https://github.com/nutanix/calm-dsl/blob/release/2.9/examples/Brownfield/inline_example/blueprint.py) OR he can declare brownfield deployments in separate [file](https://github.com/nutanix/calm-dsl/blob/release/2.9/examples/Brownfield/separate_file_example/brownfield_deployments.py) and pass it as cli parameter while creating brownfield application.
+- List Brownfield vms: `calm get brownfield vms --project <project_name> --type [AHV_VM|AWS_VM|AZURE_VM|GCP_VM|VMWARE_VM]`.
+- Compile Blueprint: `calm compile bp -f <blueprint_file_location> -b <brownfield_deployments_file_location>`.
+- Create Brownfield Application: `calm create app -f <bluprint_file_location> -b <brownfield_deployments_file_location> -n <app_name> -i`.
+
 ### Decompiling Blueprints (`.json`->`.py`)
 Decompilation is process to consume json data for any entity and convert it back to dsl python helpers/classes. Currently, decompile is supported for converting blueprint json to python files. Summary of support for blueprint decompilation(Experimental feature):
 - Python helpers/classes are automatically generated with the use of jinja templates.
@@ -52,20 +58,6 @@ Decompilation is process to consume json data for any entity and convert it back
 - Decompile bp from existing json file: `calm decompile bp --file <json_file_location>`.
 - Decompile marketplace blueprint: `calm decompile marketplace_bp <bp_name> --version <bp_version>`.
 - Note: Decompliation support for providers other than AHV are best effort(Experimental).
-
-### Runbooks
- - First runbook: `calm init runbook`. This will create a folder `HelloRunbook` with all the necessary files. `HelloRunbook/runbook.py` is the main runbook DSL file. Please read the comments in the beginning of the file for more details about the runbook.
- - Compile runbook: `calm compile runbook --file HelloRunbook/runbook.py`. This command will print the compiled runbook JSON.
- - Create runbook on Calm Server: `calm create runbook --file HelloRunbook/runbook.py --name <runbook_name>`. Please use a unique name for `<runbook_name>`.
- - List runbooks: `calm get runbooks`. You can also pass in filters like `calm get runbooks --name <runbook_name>` and so on. Please look at `calm get runbooks --help`.
- - Describe runbook: `calm describe runbook <runbook_name>`. It will print a summary of the runbook.
- - Execute runbook: `calm run runbook <runbook_name>`. Please look at `calm run runbook -h` for more info.
- - List runbook executions: `calm get runbook_executions`.
- - Watch runbook execution: `calm watch runbook_execution <runlog_id>`. It will display the runbook execution.
- - Pause runbook execution: `calm pause runbook_execution <runlog_id>`. It will pause the running runbook execution.
- - Resume runbook execution: `calm resume runbook_execution <runlog_id>`. It will play/resume the paused runbook execution.
- - Abort runbook execution: `calm abort runbook_execution <runlog_id>`. It will abort the runbook execution.
- - Please look [here](docs/01-Calm-Terminology#runbooks) for more details.
 
 
 ## Getting started for Admins
