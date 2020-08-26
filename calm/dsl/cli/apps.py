@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import json
+import uuid
 from json import JSONEncoder
 
 import arrow
@@ -19,6 +20,8 @@ from .utils import (
     Display,
 )
 from .constants import APPLICATION, RUNLOG, SYSTEM_ACTIONS
+from .bp_commands import create_blueprint
+from .bps import launch_blueprint_simple, compile_blueprint
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -233,6 +236,66 @@ def describe_app(app_name, out):
         "# Hint: You can run actions on the app using: calm run action <action_name> --app {}".format(
             app_name
         )
+    )
+
+
+def create_app(
+    bp_file,
+    brownfield_deployment_file=None,
+    app_name=None,
+    profile_name=None,
+    patch_editables=True,
+    launch_params=None,
+):
+    client = get_api_client()
+
+    # Compile blueprint
+    bp_payload = compile_blueprint(
+        bp_file, brownfield_deployment_file=brownfield_deployment_file
+    )
+    if bp_payload is None:
+        LOG.error("User blueprint not found in {}".format(bp_file))
+        sys.exit(-1)
+
+    if bp_payload["spec"]["resources"].get("type", "") != "BROWNFIELD":
+        LOG.error(
+            "Command only allowed for brownfield application. Please use 'calm create bp' and 'calm launch bp' for USER applications"
+        )
+        sys.exit(-1)
+
+    # Create blueprint from dsl file
+    bp_name = "Blueprint{}".format(str(uuid.uuid4())[:10])
+    LOG.info("Creating blueprint {}".format(bp_name))
+    res, err = create_blueprint(client=client, bp_payload=bp_payload, name=bp_name,)
+    if err:
+        LOG.error(err["error"])
+        return
+
+    bp = res.json()
+    bp_state = bp["status"].get("state", "DRAFT")
+    bp_uuid = bp["metadata"].get("uuid", "")
+
+    if bp_state != "ACTIVE":
+        LOG.debug("message_list: {}".format(bp["status"].get("message_list", [])))
+        LOG.error("Blueprint {} went to {} state".format(bp_name, bp_state))
+        sys.exit(-1)
+
+    LOG.info(
+        "Blueprint {}(uuid={}) created successfully.".format(
+            highlight_text(bp_name), highlight_text(bp_uuid)
+        )
+    )
+
+    # Creating an app
+    app_name = app_name or "App{}".format(str(uuid.uuid4())[:10])
+    LOG.info("Creating app {}".format(app_name))
+    launch_blueprint_simple(
+        blueprint_name=bp_name,
+        app_name=app_name,
+        profile_name=profile_name,
+        patch_editables=patch_editables,
+        launch_params=launch_params,
+        is_brownfield=True,
     )
 
 
