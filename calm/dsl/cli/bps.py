@@ -267,6 +267,11 @@ def compile_blueprint(bp_file, brownfield_deployment_file=None):
                     bf_dep.packages = dep.packages
                     bf_dep.substrate = dep.substrate
 
+                    # If name attribute not exists in brownfield deployment file and given in blueprint file,
+                    # Use the one that is given in blueprint file
+                    if dep.name and (not bf_dep.name):
+                        bf_dep.name = dep.name
+
                     # Replacing new deployment in profile.deployments
                     pf.deployments[ind] = bf_dep
 
