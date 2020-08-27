@@ -104,8 +104,8 @@ def get_default_local_dir():
 
 def update_config_file_location(config_file):
     """
-        updates the config file location (global _CONFIG_FILE object)
-        If update_init is True, it will update the config file location at init file also
+    updates the config file location (global _CONFIG_FILE object)
+    If update_init is True, it will update the config file location at init file also
     """
 
     global _CONFIG_FILE
@@ -211,10 +211,10 @@ def set_config(
     local_dir,
 ):
     """
-        overrides the existing server/dsl configuration
-        Note: This helper assumes that valid configuration is present. It is invoked just to update the existing configuration.
+    overrides the existing server/dsl configuration
+    Note: This helper assumes that valid configuration is present. It is invoked just to update the existing configuration.
 
-        if config_file is given, it will update config file location in `init.ini` and update the server details in that file
+    if config_file is given, it will update config file location in `init.ini` and update the server details in that file
     """
 
     init_obj = get_init_data()

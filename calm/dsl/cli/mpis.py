@@ -50,8 +50,8 @@ def get_app_family_list():
 
 
 def get_group_data_value(data_list, field, value_list=False):
-    """ to find the field value in group api call
-        return whole list of values if value_list is True
+    """to find the field value in group api call
+    return whole list of values if value_list is True
     """
 
     for entity in data_list:
@@ -89,8 +89,8 @@ def get_mpis_group_call(
     app_group_uuid=None,
 ):
     """
-        To call groups() api for marketplace items
-        if group_member_count is 0, it will not apply the group_count filter
+    To call groups() api for marketplace items
+    if group_member_count is 0, it will not apply the group_count filter
     """
 
     client = get_api_client()
@@ -444,8 +444,8 @@ def launch_marketplace_bp(
     app_source=None,
 ):
     """
-        Launch marketplace blueprints
-        If version not there search in published, pendingm, accepted blueprints
+    Launch marketplace blueprints
+    If version not there search in published, pendingm, accepted blueprints
     """
 
     if not version:
@@ -534,8 +534,8 @@ def launch_marketplace_item(
     app_source=None,
 ):
     """
-        Launch marketplace items
-        If version not there search in published blueprints
+    Launch marketplace items
+    If version not there search in published blueprints
     """
 
     if not version:
@@ -1050,8 +1050,8 @@ def update_marketplace_bp(
     name, version, category=None, projects=[], description=None, app_source=None
 ):
     """
-        updates the marketplace bp
-        version is required to prevent unwanted update of another mpi
+    updates the marketplace bp
+    version is required to prevent unwanted update of another mpi
     """
 
     client = get_api_client()

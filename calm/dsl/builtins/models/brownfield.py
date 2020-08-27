@@ -608,9 +608,9 @@ class Brownfield:
     class Vm:
         def __new__(cls, instance_name=None, ip_address=[], instance_id=None):
             """Vms are searched using these ways:
-                1. If instance_id is given will search using that
-                2. Else Search using ip_address if given
-                3. Else Search using name
+            1. If instance_id is given will search using that
+            2. Else Search using ip_address if given
+            3. Else Search using name
             """
 
             kwargs = {
@@ -624,9 +624,9 @@ class Brownfield:
         class Ahv:
             def __new__(cls, instance_name=None, ip_address=[], instance_id=None):
                 """Vms are searched using these ways:
-                    1. If instance_id is given will search using that
-                    2. Else Search using ip_address if given
-                    3. Else Search using name
+                1. If instance_id is given will search using that
+                2. Else Search using ip_address if given
+                3. Else Search using name
                 """
 
                 kwargs = {
@@ -640,9 +640,9 @@ class Brownfield:
         class Aws:
             def __new__(cls, instance_name=None, ip_address=[], instance_id=None):
                 """Vms are searched using these ways:
-                    1. If instance_id is given will search using that
-                    2. Else Search using ip_address if given
-                    3. Else Search using name
+                1. If instance_id is given will search using that
+                2. Else Search using ip_address if given
+                3. Else Search using name
                 """
 
                 kwargs = {
@@ -656,9 +656,9 @@ class Brownfield:
         class Azure:
             def __new__(cls, instance_name=None, ip_address=[], instance_id=None):
                 """Vms are searched using these ways:
-                    1. If instance_id is given will search using that
-                    2. Else Search using ip_address if given
-                    3. Else Search using name
+                1. If instance_id is given will search using that
+                2. Else Search using ip_address if given
+                3. Else Search using name
                 """
 
                 kwargs = {
@@ -672,9 +672,9 @@ class Brownfield:
         class Gcp:
             def __new__(cls, instance_name=None, ip_address=[], instance_id=None):
                 """Vms are searched using these ways:
-                    1. If instance_id is given will search using that
-                    2. Else Search using ip_address if given
-                    3. Else Search using name
+                1. If instance_id is given will search using that
+                2. Else Search using ip_address if given
+                3. Else Search using name
                 """
 
                 kwargs = {
@@ -688,9 +688,9 @@ class Brownfield:
         class Vmware:
             def __new__(cls, instance_name=None, ip_address=[], instance_id=None):
                 """Vms are searched using these ways:
-                    1. If instance_id is given will search using that
-                    2. Else Search using ip_address if given
-                    3. Else Search using name
+                1. If instance_id is given will search using that
+                2. Else Search using ip_address if given
+                3. Else Search using name
                 """
 
                 kwargs = {

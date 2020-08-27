@@ -60,9 +60,9 @@ def _create_app(
 ):
     """Creates an application.
 
-\b
-Command consumes a dsl blueprint file and creates a blueprint from it.
-If created blueprint is in ACTIVE state, then it got launched to create an application.
+    \b
+    Command consumes a dsl blueprint file and creates a blueprint from it.
+    If created blueprint is in ACTIVE state, then it got launched to create an application.
     """
 
     create_app(

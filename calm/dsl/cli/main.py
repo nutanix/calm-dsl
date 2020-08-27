@@ -442,8 +442,7 @@ def calmrepl():
 
       :exit, :q, :quit  exits the repl
 
-      :?, :h, :help     displays general help information
-"""
+      :?, :h, :help     displays general help information"""
     repl(click.get_current_context())
 
 
