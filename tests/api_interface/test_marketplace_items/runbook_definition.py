@@ -3,8 +3,6 @@ Calm Runbook Definition for testing RUnbook Sharing
 
 """
 
-import json
-
 from calm.dsl.runbooks import read_local_file
 from calm.dsl.runbooks import runbook
 from calm.dsl.runbooks import RunbookTask as Task, RunbookVariable as Variable, basic_cred
@@ -19,11 +17,9 @@ CRED_PASSWORD = read_local_file(".tests/runbook_tests/password")
 
 HTTP_AUTH_USERNAME = read_local_file(".tests/runbook_tests/auth_username")
 HTTP_AUTH_PASSWORD = read_local_file(".tests/runbook_tests/auth_password")
-HTTP_URL = read_local_file(".tests/runbook_tests/url")
+HTTP_URL = read_local_file(".tests/runbook_tests/url1")
 
-http_endpoint = Endpoint.HTTP(
-    HTTP_URL, verify=False, auth=Endpoint.Auth(HTTP_AUTH_USERNAME, HTTP_AUTH_PASSWORD),
-)
+http_endpoint = Endpoint.HTTP(HTTP_URL, verify=True)
 
 LinuxCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
 WindowsCred = basic_cred(CRED_WINDOWS_USERNAME, CRED_PASSWORD, name="endpoint_cred")
@@ -61,12 +57,9 @@ def DslRunbookForMPI(endpoints=[windows_endpoint, linux_endpoint, http_endpoint]
     firstname = Variable.Simple("FIRSTNAME", runtime=True)  # noqa
     lastname = Variable.Simple("LASTNAME")  # noqa
 
-    Task.HTTP.post(
+    Task.HTTP.get(
         name="HTTP_Task",
-        relative_url="/list",
-        body=json.dumps({}),
-        headers={"Content-Type": "application/json"},
-        content_type="application/json",
+        content_type="text/html",
         status_mapping={200: True},
         target=endpoints[2],
     )
@@ -77,5 +70,5 @@ def DslRunbookForMPI(endpoints=[windows_endpoint, linux_endpoint, http_endpoint]
                   script=ssh_code,
                   target=endpoints[1])
 
-#    Task.Exec.powershell(name="PowerShell_Task",
-#                         script=ssh_code)
+    Task.Exec.powershell(name="PowerShell_Task",
+                         script=ssh_code)

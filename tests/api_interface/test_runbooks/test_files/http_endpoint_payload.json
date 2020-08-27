@@ -4,7 +4,7 @@
     "resources": {
       "type": "HTTP",
       "attrs": {
-        "urls": ["www.nutanix.com"],
+        "urls": ["https://www.nutanix.com"],
         "retry_interval": 10,
         "retry_count": 1,
         "authentication": {
