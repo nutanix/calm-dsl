@@ -53,7 +53,7 @@ docker: dist
 		docker tag ${NAME}:${TAG} ${NAME}:latest
 
 black:
-	black --exclude '/(\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|venv|_build|buck-out|build|dist|examples)/' .
+	black .
 
 run:
 	docker run -it ${NAME}
