@@ -323,10 +323,7 @@ def get_mpi_by_name_n_version(name, version, app_states=[], app_source=None):
     if app_source:
         filter += ";app_source=={}".format(app_source)
 
-    payload = {
-        "length": 250,
-        "filter": filter,
-    }
+    payload = {"length": 250, "filter": filter}
 
     LOG.debug("Calling list api on marketplace_items")
     res, err = client.market_place.list(params=payload)
@@ -484,7 +481,7 @@ def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_s
 
     if not version:
         LOG.info("Fetching latest version of Marketplace Blueprint {} ".format(name))
-        version = get_mpi_latest_version(name=name, app_source=app_source,)
+        version = get_mpi_latest_version(name=name, app_source=app_source)
         LOG.info(version)
 
     LOG.info("Converting MPI into blueprint")

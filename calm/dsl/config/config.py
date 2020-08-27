@@ -135,7 +135,7 @@ def _render_init_template(
     env = Environment(loader=loader)
     template = env.get_template(schema_file)
     text = template.render(
-        config_file=config_file, db_file=db_file, local_dir=local_dir,
+        config_file=config_file, db_file=db_file, local_dir=local_dir
     )
     return text.strip() + os.linesep
 

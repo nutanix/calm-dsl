@@ -17,16 +17,8 @@ class TestDslProject(Project):
         Provider.K8s(account=Ref.Account("K8S_account_basic_auth")),
     ]
 
-    users = [
-        Ref.User(name="sspuser1@systest.nutanix.com"),
-    ]
+    users = [Ref.User(name="sspuser1@systest.nutanix.com")]
 
-    groups = [
-        Ref.Group(name="cn=sspgroup1,ou=pc,dc=systest,dc=nutanix,dc=com"),
-    ]
+    groups = [Ref.Group(name="cn=sspgroup1,ou=pc,dc=systest,dc=nutanix,dc=com")]
 
-    quotas = {
-        "vcpus": 1,
-        "storage": 2,
-        "memory": 1,
-    }
+    quotas = {"vcpus": 1, "storage": 2, "memory": 1}

@@ -898,8 +898,7 @@ def get_networks(gcp_obj, account_id, zone):
         network_map.pop(network)  # Pop out used network
         nic_index += 1
         choice = click.prompt(
-            "\n{}(y/n)".format(highlight_text("Want to add more networks")),
-            default="n",
+            "\n{}(y/n)".format(highlight_text("Want to add more networks")), default="n"
         )
 
     return networks

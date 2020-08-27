@@ -305,7 +305,7 @@ def describe_project(project_name, out):
             AhvObj = AhvVmProvider.get_api_obj()
 
             filter_query = "(_entity_id_=={})".format(
-                ",_entity_id_==".join(subnets_list),
+                ",_entity_id_==".join(subnets_list)
             )
             nics = AhvObj.subnets(account_uuid=account_uuid, filter_query=filter_query)
             nics = nics["entities"]
@@ -455,7 +455,7 @@ def update_project_from_dsl(project_name, project_file):
 
 
 def update_project_using_cli_switches(
-    project_name, add_user_list, add_group_list, remove_user_list, remove_group_list,
+    project_name, add_user_list, add_group_list, remove_user_list, remove_group_list
 ):
 
     client = get_api_client()

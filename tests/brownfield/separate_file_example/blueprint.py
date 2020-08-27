@@ -45,9 +45,7 @@ class MyAhvVmResources(AhvVmResources):
     memory = 4
     vCPUs = 2
     cores_per_vCPU = 1
-    disks = [
-        AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(Era_Disk, bootable=True),
-    ]
+    disks = [AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(Era_Disk, bootable=True)]
     nics = [AhvVmNic("vlan.0")]
 
     guest_customization = AhvVmGC.CloudInit(
