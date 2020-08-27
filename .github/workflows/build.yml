@@ -19,7 +19,7 @@ jobs:
       with:
         python-version: 3.7
     - name: black
-      uses: lgeiger/black-action@v1.0.1
+      uses: psf/black@stable
       with:
         args: . --diff --check --exclude '/(\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|venv|_build|buck-out|build|dist|examples)/'
     - name: Setup env
