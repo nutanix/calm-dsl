@@ -20,8 +20,6 @@ jobs:
         python-version: 3.7
     - name: black
       uses: psf/black@stable # Exclude list is not honored - https://github.com/psf/black/issues/1584
-      with:
-        args: calm/ --diff --check --exclude '/(\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|venv|_build|buck-out|examples)/'
     - name: Setup env
       run: |
         python -m pip install --upgrade pip
