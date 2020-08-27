@@ -145,7 +145,7 @@ class GCP:
 
     def disk_images(self, account_id, zone):
         """
-            Returns gcpImages + gcpSnapshots + configuredPublicImages
+        Returns gcpImages + gcpSnapshots + configuredPublicImages
         """
 
         image_map = {}

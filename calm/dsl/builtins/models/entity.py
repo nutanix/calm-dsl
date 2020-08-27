@@ -20,8 +20,7 @@ LOG = get_logging_handle(__name__)
 class EntityDict(OrderedDict):
     @staticmethod
     def pre_validate(vdict, name, value):
-        """hook to change values before validation, typecast, etc
-        """
+        """hook to change values before validation, typecast, etc"""
         return value
 
     @classmethod

@@ -73,7 +73,7 @@ class TestBlueprintMetadata:
 
     def test_metadata_in_blueprint(self):
         """
-            Tests metadata in blueprint file
+        Tests metadata in blueprint file
         """
 
         runner = CliRunner()

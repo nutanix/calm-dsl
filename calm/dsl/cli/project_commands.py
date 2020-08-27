@@ -175,14 +175,14 @@ def _update_project(
     remove_group_list,
 ):
     """
-    Updates a project.
+        Updates a project.
 
-\b
-Usability:
-    a. If project_file is given, command will use file to update project
-    b. If project_file is not given , project will be updated based on other cli switches
-       i.e. add_user, add_group, remove_user, remove_group
-    c. Project ACPs will be updated asynchronously you remove users/groups from project
+    \b
+    Usability:
+        a. If project_file is given, command will use file to update project
+        b. If project_file is not given , project will be updated based on other cli switches
+           i.e. add_user, add_group, remove_user, remove_group
+        c. Project ACPs will be updated asynchronously you remove users/groups from project
     """
 
     if not (

@@ -49,15 +49,14 @@ LOG = get_logging_handle(__name__)
 def main(ctx, config_file, sync):
     """Calm CLI
 
-\b
-Commonly used commands:
-  calm get apps   -> Get list of apps
-  calm get bps   -> Get list of blueprints
-  calm launch bp --app_name Fancy-App-1 MyFancyBlueprint   -> Launch a new app from an existing blueprint
-  calm create bp -f sample_bp.py --name Sample-App-3   -> Upload a new blueprint from a python DSL file
-  calm describe app Fancy-App-1   -> Describe an existing app
-  calm app Fancy-App-1 -w my_action   -> Run an action on an app
-"""
+    \b
+    Commonly used commands:
+      calm get apps   -> Get list of apps
+      calm get bps   -> Get list of blueprints
+      calm launch bp --app_name Fancy-App-1 MyFancyBlueprint   -> Launch a new app from an existing blueprint
+      calm create bp -f sample_bp.py --name Sample-App-3   -> Upload a new blueprint from a python DSL file
+      calm describe app Fancy-App-1   -> Describe an existing app
+      calm app Fancy-App-1 -w my_action   -> Run an action on an app"""
     ctx.ensure_object(dict)
     ctx.obj["verbose"] = True
     try:
@@ -416,8 +415,7 @@ def calmrepl():
 
       :exit, :q, :quit  exits the repl
 
-      :?, :h, :help     displays general help information
-"""
+      :?, :h, :help     displays general help information"""
     repl(click.get_current_context())
 
 

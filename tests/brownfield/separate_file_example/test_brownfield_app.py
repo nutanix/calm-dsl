@@ -101,12 +101,12 @@ class TestBrownFieldCommands:
 
     def test_app_vm_in_brownfield_bp(self):
         """
-            Steps:
-                1. Create Blueprint
-                2. Create App
-                3. Soft Delete app and extract vm-ip from it
-                4. Create Brownfield Application using that vm-ip
-                5. Delete brownfield application
+        Steps:
+            1. Create Blueprint
+            2. Create App
+            3. Soft Delete app and extract vm-ip from it
+            4. Create Brownfield Application using that vm-ip
+            5. Delete brownfield application
         """
 
         runner = CliRunner()
@@ -208,8 +208,8 @@ class TestBrownFieldCommands:
     @pytest.mark.parametrize("project", ["default"])
     def test_get_brownfield_vms(self, vm_type, project):
         """
-            Test get command on brownfield vms
-            Note: Test will fail for provider = VMWARE_VM for version less than 2.9.8.1 and 3.0.0 (https://jira.nutanix.com/browse/CALM-18635)
+        Test get command on brownfield vms
+        Note: Test will fail for provider = VMWARE_VM for version less than 2.9.8.1 and 3.0.0 (https://jira.nutanix.com/browse/CALM-18635)
         """
 
         runner = CliRunner()

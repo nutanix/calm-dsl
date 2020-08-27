@@ -18,8 +18,8 @@ LOG = get_logging_handle(__name__)
 
 def get_provider_account_from_project(project_name, provider_type):
     """
-        Returns tuple containing project_uuid and account_uuid of provider_account registered in project
-        i.e (project_uuid, account_uuid)
+    Returns tuple containing project_uuid and account_uuid of provider_account registered in project
+    i.e (project_uuid, account_uuid)
     """
 
     client = get_api_client()
