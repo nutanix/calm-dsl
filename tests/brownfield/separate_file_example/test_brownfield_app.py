@@ -22,10 +22,7 @@ NON_BUSY_APP_STATES = [
     APPLICATION.STATES.ERROR,
 ]
 
-NON_BUSY_APP_DELETE_STATES = [
-    APPLICATION.STATES.ERROR,
-    APPLICATION.STATES.DELETED,
-]
+NON_BUSY_APP_DELETE_STATES = [APPLICATION.STATES.ERROR, APPLICATION.STATES.DELETED]
 
 
 class TestBrownFieldCommands:
@@ -141,7 +138,7 @@ class TestBrownFieldCommands:
         LOG.info("Application {} created successfully".format(app_name))
 
         LOG.info("Extracting vm ip from the app")
-        result = runner.invoke(cli, ["describe", "app", app_name, "--out=json"],)
+        result = runner.invoke(cli, ["describe", "app", app_name, "--out=json"])
         if result.exit_code:
             LOG.error(result.output)
             pytest.fail("Describe of app {} failed".format(app_name))
@@ -158,7 +155,7 @@ class TestBrownFieldCommands:
         ]["element_list"][0]["address"]
 
         LOG.info("Soft deleting the app {}".format(app_name))
-        result = runner.invoke(cli, ["delete", "app", app_name, "--soft"],)
+        result = runner.invoke(cli, ["delete", "app", app_name, "--soft"])
         if result.exit_code:
             LOG.error(result.output)
             pytest.fail("Deletion of app {} failed".format(app_name))

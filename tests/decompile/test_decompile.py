@@ -1,11 +1,4 @@
-from calm.dsl.builtins import (
-    ref,
-    basic_cred,
-    CalmVariable,
-    CalmTask,
-    action,
-    parallel,
-)
+from calm.dsl.builtins import ref, basic_cred, CalmVariable, CalmTask, action, parallel
 from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import read_local_file, vm_disk_package
@@ -219,9 +212,7 @@ class DefaultProfile(Profile):
 class TestDecompile(Blueprint):
     """Calm DSL .NEXT demo"""
 
-    credentials = [
-        basic_cred(CRED_USERNAME, CRED_PASSWORD, default=True),
-    ]
+    credentials = [basic_cred(CRED_USERNAME, CRED_PASSWORD, default=True)]
     services = [MySQLService, PHPService]
     packages = [MySQLPackage, PHPPackage, Era_Disk]
     substrates = [AHVVMforMySQL, AHVVMforPHP]

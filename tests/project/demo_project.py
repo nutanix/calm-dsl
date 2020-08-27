@@ -19,12 +19,10 @@ class TestDemoProject(Project):
         Provider.Ntnx(
             account=Ref.Account(ACCOUNT),
             subnets=[Ref.Subnet(name=SUBNET, cluster=CLUSTER)],
-        ),
+        )
     ]
 
-    users = [
-        Ref.User(name=USER),
-    ]
+    users = [Ref.User(name=USER)]
 
     groups = [Ref.Group(name=GROUP)]
 

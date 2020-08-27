@@ -13,12 +13,7 @@ from anytree import NodeMixin, RenderTree
 from calm.dsl.api import get_api_client
 from calm.dsl.config import get_config
 
-from .utils import (
-    get_name_query,
-    get_states_filter,
-    highlight_text,
-    Display,
-)
+from .utils import get_name_query, get_states_filter, highlight_text, Display
 from .constants import APPLICATION, RUNLOG, SYSTEM_ACTIONS
 from .bp_commands import create_blueprint
 from .bps import launch_blueprint_simple, compile_blueprint
@@ -266,7 +261,7 @@ def create_app(
     # Create blueprint from dsl file
     bp_name = "Blueprint{}".format(str(uuid.uuid4())[:10])
     LOG.info("Creating blueprint {}".format(bp_name))
-    res, err = create_blueprint(client=client, bp_payload=bp_payload, name=bp_name,)
+    res, err = create_blueprint(client=client, bp_payload=bp_payload, name=bp_name)
     if err:
         LOG.error(err["error"])
         return
@@ -430,7 +425,7 @@ def get_completion_func(screen):
                         screen.print_at("{}{}".format(pre, linestr), 0, line)
                     else:
                         screen.print_at(
-                            "{}{}".format(fill, linestr.replace("\\t", "")), 0, line,
+                            "{}{}".format(fill, linestr.replace("\\t", "")), 0, line
                         )
                     line += 1
             screen.refresh()
@@ -550,7 +545,7 @@ def watch_app(app_name, screen, app=None):
                         screen.print_at("{}{}".format(pre, linestr), 0, line)
                     else:
                         screen.print_at(
-                            "{}{}".format(fill, linestr.replace("\\t", "")), 0, line,
+                            "{}{}".format(fill, linestr.replace("\\t", "")), 0, line
                         )
                     line += 1
             screen.refresh()

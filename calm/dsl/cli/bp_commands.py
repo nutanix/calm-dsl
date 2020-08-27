@@ -299,11 +299,7 @@ def create_blueprint_command(bp_file, name, description, force):
     link = "https://{}:{}/console/#page/explore/calm/blueprints/{}".format(
         pc_ip, pc_port, bp_uuid
     )
-    stdout_dict = {
-        "name": bp_name,
-        "link": link,
-        "state": bp_state,
-    }
+    stdout_dict = {"name": bp_name, "link": link, "state": bp_state}
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
 

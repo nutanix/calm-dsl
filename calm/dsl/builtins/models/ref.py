@@ -104,7 +104,7 @@ class Ref:
 
             provider_type = kwargs.get("provider_type") or ""
             account_cache_data = Cache.get_entity_data(
-                entity_type="account", name=name, provider_type=provider_type,
+                entity_type="account", name=name, provider_type=provider_type
             )
 
             if not account_cache_data:
@@ -112,11 +112,7 @@ class Ref:
                     "Account {} not found. Please run: calm update cache".format(name)
                 )
 
-            return {
-                "kind": "account",
-                "name": name,
-                "uuid": account_cache_data["uuid"],
-            }
+            return {"kind": "account", "name": name, "uuid": account_cache_data["uuid"]}
 
     class Role:
         def __new__(cls, name, **kwargs):
@@ -126,11 +122,7 @@ class Ref:
                 raise Exception(
                     "Role {} not found. Please run: calm update cache".format(name)
                 )
-            return {
-                "kind": "role",
-                "name": name,
-                "uuid": role_cache_data["uuid"],
-            }
+            return {"kind": "role", "name": name, "uuid": role_cache_data["uuid"]}
 
     class Project:
         def __new__(cls, name, **kwargs):
@@ -140,11 +132,7 @@ class Ref:
                 raise Exception(
                     "Project {} not found. Please run: calm update cache".format(name)
                 )
-            return {
-                "kind": "project",
-                "name": name,
-                "uuid": project_cache_data["uuid"],
-            }
+            return {"kind": "project", "name": name, "uuid": project_cache_data["uuid"]}
 
     class DirectoryService:
         def __new__(cls, name, **kwargs):

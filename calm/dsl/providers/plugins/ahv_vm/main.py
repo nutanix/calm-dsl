@@ -276,7 +276,7 @@ class AhvVmProvider(Provider):
             click.secho("NICS data\n", underline=True)
 
             filter_query = "(_entity_id_=={})".format(
-                ",_entity_id_==".join(subnets_list),
+                ",_entity_id_==".join(subnets_list)
             )
             nics = Obj.subnets(account_uuid=account_uuid, filter_query=filter_query)
             nics = nics["entities"]
@@ -1369,7 +1369,7 @@ def create_spec(client):
         else:
             nics = []
             filter_query = "(_entity_id_=={})".format(
-                ",_entity_id_==".join(subnets_list),
+                ",_entity_id_==".join(subnets_list)
             )
             nics = AhvObj.subnets(account_uuid=account_uuid, filter_query=filter_query)
             nics = nics["entities"]

@@ -77,7 +77,7 @@ def extend_validator(ValidatorClass):
 
             if property in properties:
                 for error in validator.descend(
-                    value, properties[property], path=property, schema_path=property,
+                    value, properties[property], path=property, schema_path=property
                 ):
                     yield error
 

@@ -15,13 +15,13 @@ CENTOS_USER = "centos"
 CENTOS_KEY = read_local_file(os.path.join("keys", "centos"))
 CENTOS_PUBLIC_KEY = read_local_file(os.path.join("keys", "centos_pub"))
 CentosCred = basic_cred(
-    CENTOS_USER, CENTOS_KEY, name="Centos", type="KEY", default=True,
+    CENTOS_USER, CENTOS_KEY, name="Centos", type="KEY", default=True
 )
 
 # OS Image details for VM
 CENTOS_IMAGE_SOURCE = "http://download.nutanix.com/calm/CentOS-7-x86_64-1810.qcow2"
 CentosPackage = vm_disk_package(
-    name="centos_disk", config={"image": {"source": CENTOS_IMAGE_SOURCE}},
+    name="centos_disk", config={"image": {"source": CENTOS_IMAGE_SOURCE}}
 )
 
 
@@ -69,9 +69,7 @@ class AnimalVmResources(AhvVmResources):
     memory = 4
     vCPUs = 2
     cores_per_vCPU = 1
-    disks = [
-        AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(CentosPackage, bootable=True),
-    ]
+    disks = [AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(CentosPackage, bootable=True)]
     nics = [AhvVmNic.DirectNic.ingress("vlan.0")]
 
     guest_customization = AhvVmGC.CloudInit(
