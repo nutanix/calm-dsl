@@ -303,7 +303,7 @@ def displayRunLog(screen, obj, pre, fill, line):
         screen.print_at("{}".format(state), len(prefix) + 1, idx(), colour=colour)
 
     if obj.children:
-        fill = fill + u"\u2502"
+        fill = fill + "\u2502"
 
     if status["type"] == "action_runlog":
         screen.print_at("{}\t Runlog UUID: {}".format(fill, metadata["uuid"]), 0, idx())
@@ -348,7 +348,7 @@ def get_completion_func(screen):
         top_level_tasks=[],
         input_data={},
         runlog_uuid=None,
-        **kwargs
+        **kwargs,
     ):
 
         client = get_api_client()
