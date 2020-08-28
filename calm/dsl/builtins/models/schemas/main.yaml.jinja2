@@ -27,6 +27,8 @@
 {% import "metadata.yaml.jinja2" as metadata %}
 {% import "brownfield_vm.yaml.jinja2" as brownfield_vm %}
 {% import "brownfield_deployment.yaml.jinja2" as brownfield_deployment %}
+{% import "environment.yaml.jinja2" as environment %}
+{% import "environment_payload.yaml.jinja2" as environment_payload %}
 
 
 {% macro Schemas() -%}
@@ -60,6 +62,8 @@
 {{ metadata.MetadataSchema() }}
 {{ brownfield_vm.BrownfieldVmSchema() }}
 {{ brownfield_deployment.BrownfieldDeploymentSchema() }}
+{{ environment.EnvironmentSchema() }}
+{{ environment_payload.EnvironmentPayloadSchema() }}
 
 {%- endmacro %}
 

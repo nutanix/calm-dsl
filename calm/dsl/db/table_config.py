@@ -887,7 +887,8 @@ class RolesCache(CacheTableBase):
             name = entity["status"]["name"]
             uuid = entity["metadata"]["uuid"]
             cls.create_entry(
-                name=name, uuid=uuid,
+                name=name,
+                uuid=uuid,
             )
 
     @classmethod
@@ -984,7 +985,8 @@ class DirectoryServiceCache(CacheTableBase):
             name = entity["status"]["name"]
             uuid = entity["metadata"]["uuid"]
             cls.create_entry(
-                name=name, uuid=uuid,
+                name=name,
+                uuid=uuid,
             )
 
     @classmethod
@@ -1222,7 +1224,8 @@ class AhvNetworkFunctionChain(CacheTableBase):
     @classmethod
     def create_entry(cls, name, uuid, **kwargs):
         super().create(
-            name=name, uuid=uuid,
+            name=name,
+            uuid=uuid,
         )
 
     @classmethod

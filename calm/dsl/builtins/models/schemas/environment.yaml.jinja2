@@ -1,0 +1,28 @@
+{% macro Environment() -%}
+
+title: Environment
+type: object
+x-calm-dsl-type: environment
+properties:
+  substrate_definition_list:
+    x-calm-dsl-display-name: substrates
+    description: Substrate definitions for blueprint.
+    type: array
+    items:
+      $ref: '#/components/schemas/Substrate'
+  credential_definition_list:
+    x-calm-dsl-display-name: credentials
+    description: Credential definitions for blueprint.
+    type: array
+    items:
+      $ref: '#/components/schemas/Credential'
+
+{%- endmacro %}
+
+
+{% macro EnvironmentSchema() -%}
+
+Environment:
+  {{ Environment()|indent(2) }}
+
+{%- endmacro %}

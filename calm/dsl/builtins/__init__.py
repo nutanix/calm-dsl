@@ -71,6 +71,8 @@ from .models.client_attrs import (
 from .models.providers import Provider
 from .models.project_payload import create_project_payload
 from .models.brownfield import Brownfield
+from .models.environment import Environment
+from .models.environment_payload import create_environment_payload
 
 
 __all__ = [
@@ -162,4 +164,6 @@ __all__ = [
     "Metadata",
     "MetadataType",
     "Brownfield",
+    "Environment",
+    "create_environment_payload",
 ]

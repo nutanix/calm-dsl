@@ -44,3 +44,10 @@ def get_metadata_payload(dsl_file):
 
 def get_metadata_obj():
     return _MetadataPayload
+
+
+# TODO improve this mess. It is not related to metadata at all.
+def update_project_metadata(project_name):
+
+    global _MetadataPayload
+    _MetadataPayload["project_reference"] = {"kind": "project", "name": project_name}
