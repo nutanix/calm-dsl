@@ -20,6 +20,9 @@ WindowsVMDynamicAHVEpPayload = read_test_config(
 
 
 class TestVMEndpoints:
+
+    @pytest.mark.runbook
+    @pytest.mark.regression
     @pytest.mark.parametrize(
         "EndpointPayload",
         [
