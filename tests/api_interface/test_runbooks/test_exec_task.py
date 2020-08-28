@@ -45,17 +45,17 @@ class TestExecTasks:
         ],
     )
     def test_script_run(self, Runbook):
-        """ test_access_set_variable_in_next_task, test_escript_task,
-            test_script_type_escript_execute_task_on_endpoint_with_multiple_ips,
-            test_rb_run_with_script_type_powershell_setVariable_task,
-            test__script_type_powershell_execute_task,
-            test_powershell_on_default_target,
-            test_script_type_powershell_execute_task_on_endpoint_with_multiple_ips,
-            test_script_credential_overwrite for powershell task,
-            test_rb_run_with_script_type_shell_setVariable_task,
-            test_script_type_shell_execute_task,
-            test_shell_on_default_target,
-            test_script_credential_overwrite for shell task"""
+        """test_access_set_variable_in_next_task, test_escript_task,
+        test_script_type_escript_execute_task_on_endpoint_with_multiple_ips,
+        test_rb_run_with_script_type_powershell_setVariable_task,
+        test__script_type_powershell_execute_task,
+        test_powershell_on_default_target,
+        test_script_type_powershell_execute_task_on_endpoint_with_multiple_ips,
+        test_script_credential_overwrite for powershell task,
+        test_rb_run_with_script_type_shell_setVariable_task,
+        test_script_type_shell_execute_task,
+        test_shell_on_default_target,
+        test_script_credential_overwrite for shell task"""
 
         client = get_api_client()
         rb_name = "test_exectask_" + str(uuid.uuid4())[-10:]

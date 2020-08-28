@@ -1,6 +1,7 @@
 from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC, AhvVmGpu
 from calm.dsl.builtins import basic_cred, ahv_vm_resources
 from calm.dsl.builtins import vm_disk_package, read_local_file
+from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
 
 
 AhvVm = ahv_vm_resources()
@@ -65,6 +66,10 @@ class MyAhvVm(AhvVm):
 
 
 def test_json():
+
+    # Ahv Helpers uses Metadata Context, It should the context(if any) defined in this file only
+    get_metadata_payload(__file__)
+
     print(MyAhvVm.json_dumps(pprint=True))
 
 

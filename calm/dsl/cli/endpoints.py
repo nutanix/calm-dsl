@@ -14,13 +14,9 @@ from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
 
 from calm.dsl.log import get_logging_handle
+from calm.dsl.tools import get_module_from_file
 
-from .utils import (
-    get_name_query,
-    highlight_text,
-    get_states_filter,
-    get_module_from_file,
-)
+from .utils import get_name_query, highlight_text, get_states_filter
 from .constants import ENDPOINT
 from calm.dsl.store import Cache
 
@@ -212,7 +208,7 @@ def create_endpoint(
     endpoint_desc = endpoint_payload["spec"]["description"]
 
     return client.endpoint.upload_with_secrets(
-        endpoint_name, endpoint_desc, endpoint_resources, force_create=force_create,
+        endpoint_name, endpoint_desc, endpoint_resources, force_create=force_create
     )
 
 
@@ -311,11 +307,7 @@ def create_endpoint_command(endpoint_file, name, description, force):
         pc_ip, pc_port, endpoint_uuid
     )
 
-    stdout_dict = {
-        "name": endpoint_name,
-        "link": link,
-        "state": endpoint_state,
-    }
+    stdout_dict = {"name": endpoint_name, "link": link, "state": endpoint_state}
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
 

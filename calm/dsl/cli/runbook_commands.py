@@ -206,7 +206,7 @@ def _compile_runbook_command(runbook_file, out):
 )
 @click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
 def _run_runbook_command(
-    runbook_name, watch, ignore_runtime_variables, runbook_file=None, input_file=None,
+    runbook_name, watch, ignore_runtime_variables, runbook_file=None, input_file=None
 ):
     """Execute the runbook given by name or runbook file"""
 
