@@ -1,6 +1,10 @@
+import sys
+
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
+from calm.dsl.log import get_logging_handle
 
+LOG = get_logging_handle(__name__)
 
 # Blueprint
 
@@ -43,6 +47,22 @@ class BlueprintType(EntityType):
 
         cdict = super().compile()
         cdict = unzip_pod_deployments(cdict)
+
+        # Searching for brownfield deployments
+        is_brownfield = False
+        for profile in cdict.get("app_profile_list", []):
+            for dep in profile.deployments:
+                if dep.type == "BROWNFIELD":
+                    is_brownfield = True
+
+        if is_brownfield:
+            cdict["type"] = "BROWNFIELD"
+
+            # Multiple profiles are not allowed in brownfield blueprint (UI behaviour)
+            if len(cdict["app_profile_list"]) > 1:
+                LOG.error("Multiple profiles are not allowed in brownfield application")
+                sys.exit(-1)
+
         return cdict
 
 

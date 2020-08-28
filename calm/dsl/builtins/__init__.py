@@ -5,6 +5,7 @@
 # the import for these below the entities will cause a TypeError.
 
 from .models.ref import Ref, ref, RefType
+from .models.metadata import Metadata, MetadataType
 from .models.credential import basic_cred, secret_cred, CredentialType
 from .models.variable import Variable, setvar, CalmVariable, VariableType
 from .models.action import action, parallel, ActionType
@@ -41,7 +42,7 @@ from .models.simple_deployment import SimpleDeployment
 from .models.simple_blueprint import SimpleBlueprint
 
 from .models.blueprint_payload import create_blueprint_payload
-from .models.project import Project as ProjectValidator
+from .models.project import Project, ProjectType
 from .models.vm_disk_package import (
     vm_disk_package,
     ahv_vm_disk_package,
@@ -66,6 +67,11 @@ from .models.client_attrs import (
     get_dsl_metadata_map,
     update_dsl_metadata_map,
 )
+
+from .models.providers import Provider
+from .models.project_payload import create_project_payload
+from .models.brownfield import Brownfield
+
 
 __all__ = [
     "Ref",
@@ -122,7 +128,6 @@ __all__ = [
     "blueprint",
     "BlueprintType",
     "create_blueprint_payload",
-    "ProjectValidator",
     "SimpleDeployment",
     "SimpleBlueprint",
     "get_valid_identifier",
@@ -150,4 +155,11 @@ __all__ = [
     "init_dsl_metadata_map",
     "get_dsl_metadata_map",
     "update_dsl_metadata_map",
+    "Provider",
+    "create_project_payload",
+    "ProjectType",
+    "Project",
+    "Metadata",
+    "MetadataType",
+    "Brownfield",
 ]

@@ -53,8 +53,8 @@ def get_app_family_list():
 
 
 def get_group_data_value(data_list, field, value_list=False):
-    """ to find the field value in group api call
-        return whole list of values if value_list is True
+    """to find the field value in group api call
+    return whole list of values if value_list is True
     """
 
     for entity in data_list:
@@ -93,8 +93,8 @@ def get_mpis_group_call(
     type=None,
 ):
     """
-        To call groups() api for marketplace items
-        if group_member_count is 0, it will not apply the group_count filter
+    To call groups() api for marketplace items
+    if group_member_count is 0, it will not apply the group_count filter
     """
 
     client = get_api_client()
@@ -335,10 +335,7 @@ def get_mpi_by_name_n_version(name, version, app_states=[], app_source=None):
     if app_source:
         filter += ";app_source=={}".format(app_source)
 
-    payload = {
-        "length": 250,
-        "filter": filter,
-    }
+    payload = {"length": 250, "filter": filter}
 
     LOG.debug("Calling list api on marketplace_items")
     res, err = client.market_place.list(params=payload)
@@ -467,8 +464,8 @@ def launch_marketplace_bp(
     app_source=None,
 ):
     """
-        Launch marketplace blueprints
-        If version not there search in published, pendingm, accepted blueprints
+    Launch marketplace blueprints
+    If version not there search in published, pendingm, accepted blueprints
     """
 
     if not version:
@@ -504,7 +501,7 @@ def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_s
 
     if not version:
         LOG.info("Fetching latest version of Marketplace Blueprint {} ".format(name))
-        version = get_mpi_latest_version(name=name, app_source=app_source,)
+        version = get_mpi_latest_version(name=name, app_source=app_source)
         LOG.info(version)
 
     LOG.info("Converting MPI into blueprint")
@@ -557,8 +554,8 @@ def launch_marketplace_item(
     app_source=None,
 ):
     """
-        Launch marketplace items
-        If version not there search in published blueprints
+    Launch marketplace items
+    If version not there search in published blueprints
     """
 
     if not version:
@@ -591,7 +588,7 @@ def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None
     config = get_config()
 
     project_name = project_name or config["PROJECT"]["name"]
-    project_data = get_project(client, project_name)
+    project_data = get_project(project_name)
 
     project_uuid = project_data["metadata"]["uuid"]
 
@@ -602,9 +599,7 @@ def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None
         sys.exit(-1)
 
     res = res.json()
-    environments = res["status"]["project_status"]["resources"][
-        "environment_reference_list"
-    ]
+    environments = res["status"]["resources"]["environment_reference_list"]
 
     # For now only single environment exists
     env_uuid = environments[0]["uuid"]
@@ -968,7 +963,7 @@ def approve_marketplace_item(name, version=None, projects=[], category=None):
         item_data["metadata"]["categories"] = {"AppFamily": category}
 
     for project in projects:
-        project_data = get_project(client, project)
+        project_data = get_project(project)
 
         item_data["spec"]["resources"]["project_reference_list"].append(
             {
@@ -1055,7 +1050,7 @@ def publish_marketplace_item(
         # Clear the stored projects
         item_data["spec"]["resources"]["project_reference_list"] = []
         for project in projects:
-            project_data = get_project(client, project)
+            project_data = get_project(project)
 
             item_data["spec"]["resources"]["project_reference_list"].append(
                 {
@@ -1082,8 +1077,8 @@ def update_marketplace_item(
     name, version, category=None, projects=[], description=None, app_source=None
 ):
     """
-        updates the marketplace item
-        version is required to prevent unwanted update of another mpi
+    updates the marketplace item
+    version is required to prevent unwanted update of another mpi
     """
 
     client = get_api_client()
@@ -1126,7 +1121,7 @@ def update_marketplace_item(
         # Clear all stored projects
         item_data["spec"]["resources"]["project_reference_list"] = []
         for project in projects:
-            project_data = get_project(client, project)
+            project_data = get_project(project)
 
             item_data["spec"]["resources"]["project_reference_list"].append(
                 {

@@ -1,0 +1,46 @@
+{% macro ProjectPayload() -%}
+
+title: ProjectPayload
+type: object
+x-calm-dsl-type: app_project_payload
+properties:
+  spec:
+    type: object
+    x-calm-dsl-type: dict
+    properties:
+      name:
+        type: string
+        description: Project name
+      description:
+        type: string
+        description: Project description
+      resources:
+        type: object
+        properties:
+          $ref: '#/components/schemas/Project'
+
+  api_version:
+    type: string
+    default: "3.0"
+
+  metadata:
+    type: object
+    x-calm-dsl-type: dict
+    additionalProperties: true
+    properties:
+      spec_version:
+        type: integer
+        default: 1
+      kind:
+        type: string
+        default: project
+
+{%- endmacro %}
+
+
+{% macro ProjectPayloadSchema() -%}
+
+ProjectPayload:
+  {{ ProjectPayload()|indent(2) }}
+
+{%- endmacro %}

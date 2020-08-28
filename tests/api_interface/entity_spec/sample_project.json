@@ -1,9 +1,14 @@
 {
-  "project_detail": {
-    "name": "test_ASK",
-    "resources": {}
-  },
-  "user_list": [],
-  "user_group_list": [],
-  "access_control_policy_list": []
+    "spec": {
+        "name": "TestDslProject",
+        "description": "Sample DSL Project",
+        "resources": {
+        }
+    },
+    "api_version": "3.0",
+    "metadata": {
+        "spec_version": 0,
+        "kind": "project",
+        "name": "TestDslProject"
+    }
 }

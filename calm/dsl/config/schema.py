@@ -15,9 +15,9 @@ config_schema_dict = {
 
 
 init_schema_dict = {
-    "DB": {"location": And(Use(str)),},  # NoQA
-    "LOCAL_DIR": {"location": And(Use(str)),},  # NoQA
-    "CONFIG": {"location": And(Use(str)),},  # NoQA
+    "DB": {"location": And(Use(str))},  # NoQA
+    "LOCAL_DIR": {"location": And(Use(str))},  # NoQA
+    "CONFIG": {"location": And(Use(str))},  # NoQA
 }
 
 

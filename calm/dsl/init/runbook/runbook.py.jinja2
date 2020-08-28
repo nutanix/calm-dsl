@@ -6,7 +6,7 @@ Sample Calm DSL for {{runbook_name}} runbook
 The top-level folder contains the following files:
 {{runbook_name}}Runbook/
 ├── runbook.py
-└── scripts	
+└── scripts
     └── entity_stats.py
 
 On run, this runbook does the following:
@@ -92,27 +92,27 @@ def {{runbook_name}}(endpoints=[PCEndpoint, IPEndpoint]):
         response_paths={"apps_count": "$.metadata.total_matches"},
         status_mapping={200: True},
     )
-    
+
     # running tasks in parallel
     with parallel() as p:
 
         with branch(p):
 
             # Exec Task to print all entity stats
-            Task.Exec.escript(name="EntityStats", filename="scripts/entity_stats.py", target=endpoints[1])
+            Task.Exec.escript(name="EntityStats", filename="scripts/entity_stats.py2", target=endpoints[1])
 
         with branch(p):
-        
+
             # loop task example
             with Task.Loop(iterations=2, name="LoopTask", loop_variable="loop_var"):
-            
+
                 # decision task example
                 with Task.Decision.escript(name="DecisionTask", script="print 'ExitCode-@@{loop_var}@@';exit(@@{loop_var}@@)") as d:
                     if d.ok:
                         Task.Exec.escript(name="TruePath", script="print 'True path is executed'")
                     else:
                         Task.Exec.escript(name="FalsePath", script="print 'False path is executed'")
-    
+
 
 {%- endmacro %}
 
