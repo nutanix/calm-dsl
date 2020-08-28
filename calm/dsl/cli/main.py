@@ -11,10 +11,7 @@ from prettytable import PrettyTable
 # TODO - move providers to separate file
 from calm.dsl.providers import get_provider, get_provider_types
 from calm.dsl.api import get_api_client, get_resource_api
-from calm.dsl.tools import (
-    simple_verbosity_option,
-    show_trace_option,
-)
+from calm.dsl.tools import simple_verbosity_option, show_trace_option
 from calm.dsl.log import get_logging_handle
 from calm.dsl.config import update_config_file_location
 from calm.dsl.store import Cache
@@ -52,23 +49,22 @@ LOG = get_logging_handle(__name__)
 def main(ctx, config_file, sync):
     """Calm CLI
 
-\b
-Commonly used commands:
-  calm get apps   -> Get list of apps
-  calm get bps   -> Get list of blueprints
-  calm launch bp --app_name Fancy-App-1 MyFancyBlueprint   -> Launch a new app from an existing blueprint
-  calm create bp -f sample_bp.py --name Sample-App-3   -> Upload a new blueprint from a python DSL file
-  calm describe app Fancy-App-1   -> Describe an existing app
-  calm app Fancy-App-1 -w my_action   -> Run an action on an app
-  calm get runbooks  -> Get list of runbooks
-  calm describe runbook MyFancyRunbook   -> Describe an existing runbook
-  calm create runbook -f sample_rb.py --name Sample-RB  -> Upload a new runbook from a python DSL file
-  calm run runbook MyFancyRunbook -> Runs the existing runbook MyFancyRunbook
-  calm run runbook -f sample_rb.py -> Runs the runbook from a python DSL file
-  calm get execution_history  -> Get list of runbook executions
-  calm get endpoints -> Get list of endpoints
-  calm create endpoint -f sample_ep.py --name Sample-Endpoint -> Upload a new endpoint from a python DSL file
-"""
+    \b
+    Commonly used commands:
+      calm get apps   -> Get list of apps
+      calm get bps   -> Get list of blueprints
+      calm launch bp --app_name Fancy-App-1 MyFancyBlueprint   -> Launch a new app from an existing blueprint
+      calm create bp -f sample_bp.py --name Sample-App-3   -> Upload a new blueprint from a python DSL file
+      calm describe app Fancy-App-1   -> Describe an existing app
+      calm app Fancy-App-1 -w my_action   -> Run an action on an app
+      calm get runbooks  -> Get list of runbooks
+      calm describe runbook MyFancyRunbook   -> Describe an existing runbook
+      calm create runbook -f sample_rb.py --name Sample-RB  -> Upload a new runbook from a python DSL file
+      calm run runbook MyFancyRunbook -> Runs the existing runbook MyFancyRunbook
+      calm run runbook -f sample_rb.py -> Runs the runbook from a python DSL file
+      calm get execution_history  -> Get list of runbook executions
+      calm get endpoints -> Get list of endpoints
+      calm create endpoint -f sample_ep.py --name Sample-Endpoint -> Upload a new endpoint from a python DSL file"""
     ctx.ensure_object(dict)
     ctx.obj["verbose"] = True
     try:
@@ -106,6 +102,7 @@ def validate():
     help="Provider type",
 )
 def validate_provider_spec(spec_file, provider_type):
+    """validates provider spec for given provider"""
 
     with open(spec_file) as f:
         spec = yaml.safe_load(f.read())
@@ -133,9 +130,38 @@ def show(ctx):
     pass
 
 
+def make_default_short_help(help, max_length=45):
+    """Return a condensed version of help string."""
+    if not help:
+        return ""
+
+    words = help.split()
+    total_length = 0
+    result = []
+    done = False
+
+    for word in words:
+        if word[-1:] == ".":
+            done = True
+        new_length = 1 + len(word) if result else len(word)
+        if total_length + new_length > max_length:
+            result.append("...")
+            done = True
+        else:
+            if result:
+                result.append(" ")
+            result.append(word)
+        if done:
+            break
+        total_length += new_length
+
+    return "".join(result)
+
+
 @show.command("commands")
 @click.pass_context
 def show_all_commands(ctx):
+    """show all commands of dsl cli"""
 
     ctx_root = ctx.find_root()
     root_cmd = ctx_root.command
@@ -156,6 +182,7 @@ def show_all_commands(ctx):
             commands_res_list.append(
                 (
                     subcommand,
+                    getattr(cmd, "__doc__", ""),
                     root_cmd.feature_version_map.get(subcommand, "-"),
                     is_experimental,
                 )
@@ -182,21 +209,24 @@ def show_all_commands(ctx):
                 commands_res_list.append(
                     (
                         " ".join(ele_temp),
+                        getattr(cmd, "__doc__", ""),
                         grp.feature_version_map.get(subcommand, "-"),
                         is_experimental,
                     )
                 )
 
     table = PrettyTable()
-    table.field_names = ["COMMAND", "MIN COMMAND VERSION", "EXPERIMENTAL"]
+    table.field_names = ["COMMAND", "HELP", "MIN COMMAND VERSION", "EXPERIMENTAL"]
 
     for cmd_tuple in commands_res_list:
         cmd_str = "{} {}".format(ctx_root.command_path, cmd_tuple[0])
+        cmd_help = make_default_short_help(cmd_tuple[1])
         table.add_row(
             [
                 highlight_text(cmd_str),
-                highlight_text(cmd_tuple[1]),
+                highlight_text(cmd_help),
                 highlight_text(cmd_tuple[2]),
+                highlight_text(cmd_tuple[3]),
             ]
         )
 
@@ -411,8 +441,7 @@ def calmrepl():
 
       :exit, :q, :quit  exits the repl
 
-      :?, :h, :help     displays general help information
-"""
+      :?, :h, :help     displays general help information"""
     repl(click.get_current_context())
 
 

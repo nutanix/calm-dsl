@@ -1,7 +1,16 @@
+import sys
+
 from .entity import EntityType, Entity, EntityTypeBase, EntityDict
 from .validator import PropertyValidator
 from .provider_spec import provider_spec
 from .client_attrs import update_dsl_metadata_map, get_dsl_metadata_map
+from .metadata_payload import get_metadata_obj
+
+from calm.dsl.config import get_config
+from calm.dsl.store import Cache
+from calm.dsl.log import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 # Substrate
@@ -161,8 +170,68 @@ class SubstrateType(EntityType):
                 readiness_probe[
                     "address"
                 ] = "@@{platform.networkInterfaces[0].networkIP}@@"
+
         else:
             raise Exception("Un-supported vm type :{}".format(cdict["type"]))
+
+        # Adding min defaults in vm spec required by each provider
+        if not cdict.get("create_spec"):
+
+            # TODO shift them to constants file
+            provider_type_map = {
+                "AWS_VM": "aws",
+                "VMWARE_VM": "vmware",
+                "AHV_VM": "nutanix_pc",  # Accounts of type nutanix are not used after 2.9
+                "AZURE_VM": "azure",
+                "GCP_VM": "gcp",
+            }
+
+            if cdict["type"] in provider_type_map:
+                if cdict["type"] == "AHV_VM":
+                    # UI expects defaults. Jira: https://jira.nutanix.com/browse/CALM-20134
+                    if not cdict.get("create_spec"):
+                        cdict["create_spec"] = {"resources": {"nic_list": []}}
+
+                else:
+                    # Getting the account_uuid for each provider
+                    config = get_config()
+
+                    # Getting the metadata obj
+                    metadata_obj = get_metadata_obj()
+                    project_ref = metadata_obj.get("project_reference") or dict()
+
+                    # If project not found in metadata, it will take project from config
+                    project_name = project_ref.get("name", config["PROJECT"]["name"])
+
+                    project_cache_data = Cache.get_entity_data(
+                        entity_type="project", name=project_name
+                    )
+                    if not project_cache_data:
+                        LOG.error(
+                            "Project {} not found. Please run: calm update cache".format(
+                                project_name
+                            )
+                        )
+                        sys.exit(-1)
+
+                    # Registered accounts
+                    project_accounts = project_cache_data["accounts_data"]
+                    provider_type = provider_type_map[cdict["type"]]
+                    account_uuid = project_accounts.get(provider_type, "")
+                    if not account_uuid:
+                        LOG.error(
+                            "No {} account registered in project '{}'".format(
+                                provider_type, project_name
+                            )
+                        )
+                        sys.exit(-1)
+
+                    # Adding default spec
+                    cdict["create_spec"] = {"resources": {"account_uuid": account_uuid}}
+
+                    # Template attribute should be present for vmware spec
+                    if cdict["type"] == "VMWARE_VM":
+                        cdict["create_spec"]["template"] = ""
 
         # Modifying the editable object
         provider_spec_editables = cdict.pop("editables", {})

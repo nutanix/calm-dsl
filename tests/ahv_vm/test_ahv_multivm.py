@@ -5,6 +5,7 @@ from calm.dsl.builtins import vm_disk_package, read_local_file
 from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import CalmVariable, CalmTask, action
+from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
 
 
 CENTOS_KEY = read_local_file("keys/centos")
@@ -193,8 +194,11 @@ class AhvBlueprint(Blueprint):
 
 def test_multivm_with_diff_bootconfig():
     """
-        Tests in case of multi-vm blueprint, correct disk is set to bootable
+    Tests in case of multi-vm blueprint, correct disk is set to bootable
     """
+
+    # Ahv Helpers uses Metadata Context, It should the context(if any) defined in this file only
+    get_metadata_payload(__file__)
 
     spec = AhvBlueprint.get_dict()
     substrate_list = spec["substrate_definition_list"]

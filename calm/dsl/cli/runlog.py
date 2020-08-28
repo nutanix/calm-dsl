@@ -1,3 +1,4 @@
+import os
 import sys
 
 from asciimatics.widgets import (
@@ -202,7 +203,7 @@ def displayRunLogTree(screen, root, completed_tasks, total_tasks, msg=None):
 
     screen.print_at(
         runlog_state,
-        screen.width - len(runlog_state) - 5,
+        screen.width - len(runlog_state) - 5 if hasattr(screen, "width") else 0,
         0,
         colour=colour,
         attr=Screen.A_UNDERLINE,
@@ -298,10 +299,11 @@ def displayRunLog(screen, obj, pre, fill, line):
         colour = 4  # blue for running state
     elif state == RUNLOG.STATUS.INPUT:
         colour = 6  # cyan for input state
-    screen.print_at("{}".format(state), len(prefix) + 1, idx(), colour=colour)
+    if os.isatty(sys.stdout.fileno()):
+        screen.print_at("{}".format(state), len(prefix) + 1, idx(), colour=colour)
 
     if obj.children:
-        fill = fill + u"\u2502"
+        fill = fill + "\u2502"
 
     if status["type"] == "action_runlog":
         screen.print_at("{}\t Runlog UUID: {}".format(fill, metadata["uuid"]), 0, idx())
@@ -346,7 +348,7 @@ def get_completion_func(screen):
         top_level_tasks=[],
         input_data={},
         runlog_uuid=None,
-        **kwargs
+        **kwargs,
     ):
 
         client = get_api_client()
@@ -361,7 +363,9 @@ def get_completion_func(screen):
         if len(entities):
 
             # catching interrupt for pause and play
-            interrupt = screen.get_event()
+            interrupt = None
+            if hasattr(screen, "get_event"):
+                interrupt = screen.get_event()
 
             # Sort entities based on creation time
             sorted_entities = sorted(
@@ -571,23 +575,29 @@ def get_completion_func(screen):
                 state = runlog["status"]["state"]
                 if state in RUNLOG.FAILURE_STATES:
                     sleep(2)
-                    msg = "Action failed. Exit screen? (y)"
-                    screen.play([Scene([RerunFrame(state, screen)], -1)])
-                    if rerun.get("rerun", False):
-                        client.runbook.rerun(runlog_uuid)
-                        msg = "Triggered rerun for the Runbook Runlog"
+                    msg = "Action failed."
+                    if os.isatty(sys.stdout.fileno()):
+                        msg += " Exit screen?"
+                        screen.play([Scene([RerunFrame(state, screen)], -1)])
+                        if rerun.get("rerun", False):
+                            client.runbook.rerun(runlog_uuid)
+                            msg = "Triggered rerun for the Runbook Runlog"
+                            displayRunLogTree(
+                                screen, root, completed_tasks, total_tasks, msg=msg
+                            )
+                            return (False, "")
                         displayRunLogTree(
                             screen, root, completed_tasks, total_tasks, msg=msg
                         )
-                        return (False, "")
-                    displayRunLogTree(
-                        screen, root, completed_tasks, total_tasks, msg=msg
-                    )
-                    return (True, msg)
+                        return (True, msg)
+                    else:
+                        return (True, msg)
                 if state not in RUNLOG.TERMINAL_STATES:
                     return (False, "")
 
-            msg = "Action ran successfully. Exit screen? (y)"
+            msg = "Action ran successfully."
+            if os.isatty(sys.stdout.fileno()):
+                msg += " Exit screen?"
             screen.print_at(msg, 0, line, colour=6)
             screen.refresh()
 
