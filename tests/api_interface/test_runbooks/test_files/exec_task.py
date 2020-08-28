@@ -63,7 +63,7 @@ linux_ahv_dynamic_vm_endpoint2 = Endpoint.Linux.vm(
 # Linux AHV VM Endpoint with Dynamic filter power state is on filter
 linux_ahv_dynamic_vm_endpoint3 = Endpoint.Linux.vm(
     filter_type=ENDPOINT_FILTER.DYNAMIC,
-    filter="power_state==on",
+    filter="power_state==on;name==" + AHV_LINUX_VM_NAME_PREFIX + ".*",
     cred=LinuxCred,
     account=Account.NutanixPC("NTNX_LOCAL_AZ"),
     provider_type=ENDPOINT_PROVIDER.NUTANIX,
