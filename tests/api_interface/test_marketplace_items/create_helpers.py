@@ -23,6 +23,8 @@ HTTP_AUTH_USERNAME = read_local_file(".tests/runbook_tests/auth_username")
 HTTP_AUTH_PASSWORD = read_local_file(".tests/runbook_tests/auth_password")
 HTTP_URL = read_local_file(".tests/runbook_tests/url1")
 
+RBAC_PROJECT = read_local_file(".tests/runbook_tests/rbac_project")
+
 http_endpoint = Endpoint.HTTP(HTTP_URL, verify=True)
 
 LinuxCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
@@ -78,7 +80,7 @@ def DslRunbookForMPI(endpoints=[windows_endpoint, linux_endpoint, http_endpoint]
                          script=ssh_code)
 
 
-def create_project_endpoints(client, project_name):
+def create_project_endpoints(client, project_name=RBAC_PROJECT):
     linux_payload = read_test_config(file_name="linux_endpoint_payload.json")
     windows_payload = read_test_config(file_name="windows_endpoint_payload.json")
     http_payload = read_test_config(file_name="http_endpoint_payload.json")
@@ -119,4 +121,4 @@ def create_project_endpoints(client, project_name):
             print(">> Endpoint created with name {} is in state: {}".format(ep_name, ep_state))
             project_endpoints[ep_type] = (ep_name, ep_uuid)
 
-    return project_endpoints
+    return project_name, project_endpoints

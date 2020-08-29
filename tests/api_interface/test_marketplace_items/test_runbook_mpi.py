@@ -51,8 +51,7 @@ class TestMarketplaceRunbook:
                 cls.default_project_endpoints[ep_type] = (ep_name, ep_uuid)
                 endpoint_uuids.append(ep_uuid)
 
-        cls.second_project_name = "rbac_bp_test_project"
-        cls.second_project_endpoints = create_project_endpoints(client, cls.second_project_name)
+        # cls.second_project_name, cls.second_project_endpoints = create_project_endpoints(client)
 
     @pytest.mark.runbook
     @pytest.mark.mpi
@@ -395,6 +394,7 @@ class TestMarketplaceRunbook:
         else:
             assert cloned_rb_state == "DRAFT", "Runbook published without endpoints should be in Draft state"
 
+    @pytest.mark.skip(reason="different project tests will be enabled after setup lands on master")
     @pytest.mark.runbook
     @pytest.mark.mpi
     @pytest.mark.regression
@@ -549,6 +549,7 @@ class TestMarketplaceRunbook:
         print(">> Runbook Run state: {}\n{}".format(state, reasons))
         assert state == RUNLOG.STATUS.SUCCESS
 
+    @pytest.mark.skip(reason="different project tests will be enabled after setup lands on master")
     @pytest.mark.runbook
     @pytest.mark.mpi
     @pytest.mark.regression
