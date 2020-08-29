@@ -3,15 +3,10 @@ import uuid
 
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import RUNLOG, MARKETPLACE_ITEM
-from runbook_definition import DslRunbookForMPI
-from tests.api_interface.test_runbooks.utils import (upload_runbook, poll_runlog_status, read_test_config, change_uuids)
+from create_helpers import DslRunbookForMPI, create_project_endpoints
+from tests.api_interface.test_runbooks.utils import (upload_runbook, poll_runlog_status)
 from utils import (publish_runbook_to_marketplace_manager, change_state,
-                   clone_marketplace_runbook, execute_marketplace_runbook,
-                   get_project_id_from_name)
-
-LinuxEndpointPayload = read_test_config(file_name="linux_endpoint_payload.json")
-WindowsEndpointPayload = read_test_config(file_name="windows_endpoint_payload.json")
-HTTPEndpointPayload = read_test_config(file_name="http_endpoint_payload.json")
+                   clone_marketplace_runbook, execute_marketplace_runbook)
 
 
 class TestMarketplaceRunbook:
@@ -57,27 +52,7 @@ class TestMarketplaceRunbook:
                 endpoint_uuids.append(ep_uuid)
 
         cls.second_project_name = "rbac_bp_test_project"
-        cls.second_project_uuid = get_project_id_from_name(client, cls.second_project_name)
-        if cls.second_project_uuid:
-            cls.second_project_endpoints = {}
-            for endpoint_payload in [LinuxEndpointPayload, WindowsEndpointPayload, HTTPEndpointPayload]:
-                endpoint = change_uuids(endpoint_payload, {})
-                endpoint['metadata']['project_reference'] = {
-                    "kind": "project",
-                    "uuid": cls.second_project_uuid,
-                    "name": cls.second_project_name
-                }
-                endpoint['spec']['name'] = "Endpoint_{}_{}".format(cls.second_project_name,
-                                                                   str(uuid.uuid4())[-10:])
-                # Endpoint Create
-                res, err = client.endpoint.create(endpoint)
-                ep = res.json()
-                ep_state = ep["status"]["state"]
-                ep_uuid = ep["metadata"]["uuid"]
-                ep_name = ep["spec"]["name"]
-                ep_type = ep['spec']['resources']['type']
-                print(">> Endpoint created with name {} is in state: {}".format(ep_name, ep_state))
-                cls.second_project_endpoints[ep_type] = (ep_name, ep_uuid)
+        cls.second_project_endpoints = create_project_endpoints(client, cls.second_project_name)
 
     @pytest.mark.runbook
     @pytest.mark.mpi
