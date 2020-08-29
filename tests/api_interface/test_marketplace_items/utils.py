@@ -138,7 +138,7 @@ def clone_marketplace_runbook(client, mpi_uuid, runbook_name, project_name):
 def execute_marketplace_runbook(client, mpi_uuid, project_name,
                                 default_endpoint_uuid=None,
                                 endpoints_mapping=None,
-                                runtime_variables=None):
+                                args=None):
 
     project_id = get_project_id_from_name(client, project_name)
     if not project_id:
@@ -164,8 +164,8 @@ def execute_marketplace_runbook(client, mpi_uuid, project_name,
         }
     }
 
-    if runtime_variables:
-        payload['spec']['resources']['args'] = runtime_variables
+    if args:
+        payload['spec']['resources']['args'] = args
 
     if default_endpoint_uuid:
         payload['spec']['resources']['default_target_reference'] = {

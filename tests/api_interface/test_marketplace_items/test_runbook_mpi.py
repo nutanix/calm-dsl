@@ -652,3 +652,127 @@ class TestMarketplaceRunbook:
 
         for mpi in mpi_entities:
             assert mpi['status']['type'] == MARKETPLACE_ITEM.TYPES.RUNBOOK, "MPI not of type runbook"
+
+    @pytest.mark.runbook
+    @pytest.mark.regression
+    @pytest.mark.mpi
+    @pytest.mark.parametrize("with_secrets", [True, False])
+    def test_mpi_runbook_variables(self, with_secrets):
+        """ test_mpi_runbook_variables """
+
+        print("Testing variables in MPI execute with_secrets {}".format(with_secrets))
+        client = get_api_client()
+        res, err = client.runbook.read(self.runbook_uuid)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        rb = res.json()
+
+        rb_state = rb["status"]["state"]
+        print(">> Runbook {} state: {}".format(self.runbook_uuid, rb_state))
+        assert rb_state == "ACTIVE"
+        assert self.runbook_name == rb["spec"]["name"]
+        assert self.runbook_name == rb["metadata"]["name"]
+
+        mpi_name = "test_execute_mpi_" + str(uuid.uuid4())[-10:]
+        version = '1.0.0'
+        print(">> Publishing mpi {} - {}".format(
+            mpi_name, version))
+
+        mpi_data = publish_runbook_to_marketplace_manager(
+            client,
+            self.runbook_uuid,
+            mpi_name,
+            version,
+            with_endpoints=True,
+            with_secrets=with_secrets
+        )
+        mpi_state = mpi_data["status"]["resources"]["app_state"]
+        print(">> MPI state: {}".format(mpi_state))
+        assert mpi_state == MARKETPLACE_ITEM.STATES.PENDING
+        assert mpi_name == mpi_data["spec"]["name"]
+        assert mpi_name == mpi_data["metadata"]["name"]
+
+        runbook_template_info = mpi_data['status']['resources']['runbook_template_info']
+        assert self.runbook_uuid == runbook_template_info['source_runbook_reference']['uuid']
+
+        mpi_uuid = mpi_data['metadata']['uuid']
+        mpi_data = change_state(client, mpi_uuid, MARKETPLACE_ITEM.STATES.ACCEPTED)
+        mpi_state = mpi_data["status"]["resources"]["app_state"]
+        print(">> MPI state: {}".format(mpi_state))
+        assert mpi_state == MARKETPLACE_ITEM.STATES.ACCEPTED
+
+        mpi_data = change_state(client, mpi_uuid, MARKETPLACE_ITEM.STATES.PUBLISHED, project_list=['default'])
+        mpi_state = mpi_data["status"]["resources"]["app_state"]
+        print(">> MPI state: {}".format(mpi_state))
+        assert mpi_state == MARKETPLACE_ITEM.STATES.PUBLISHED
+
+        if with_secrets:
+            args = [
+                {
+                    "name": "var2",
+                    "value": "no"
+                },
+                {
+                    "name": "firstname",
+                    "value": "Mr X"
+                },
+                {
+                    "name": "lastname",
+                    "value": "Y"
+                }
+            ]
+
+            expected_output = "xxxx\nyes\nxx\nxx\nHello Mr X LASTNAME\n"
+        else:
+            args = [
+                {
+                    "name": "var2",
+                    "value": "no"
+                },
+                {
+                    "name": "firstname",
+                    "value": "Mr X"
+                },
+                {
+                    "name": "lastname",
+                    "value": "Y"
+                }
+            ]
+            expected_output = "\nxx\nxx\nxx\nHello Mr X LASTNAME\n"
+
+        runlog_uuid = execute_marketplace_runbook(client, mpi_uuid,
+                                                  args=args,
+                                                  project_name="default")
+
+        # polling till runbook run gets to terminal state
+        state, reasons = poll_runlog_status(
+            client, runlog_uuid, RUNLOG.TERMINAL_STATES, maxWait=360
+        )
+
+        print(">> Runbook Run state: {}\n{}".format(state, reasons))
+        assert state == RUNLOG.STATUS.SUCCESS
+
+        # Finding the task_uuid for the exec task
+        res, err = client.runbook.list_runlogs(runlog_uuid)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        response = res.json()
+        entities = response["entities"]
+        for entity in entities:
+            if (
+                entity["status"]["type"] == "task_runlog"
+                and entity["status"]["task_reference"]["name"] == "ES_Task"
+            ):
+                exec_task = entity["metadata"]["uuid"]
+
+        # Now checking the output of exec task
+        print("runlog_id: {}".format(runlog_uuid))
+        res, err = client.runbook.runlog_output(runlog_uuid, exec_task)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        runlog_output = res.json()
+        output_list = runlog_output["status"]["output_list"]
+
+        print("ouput of the task: {}".format(output_list[0]["output"]))
+        assert output_list[0]["output"] == expected_output
