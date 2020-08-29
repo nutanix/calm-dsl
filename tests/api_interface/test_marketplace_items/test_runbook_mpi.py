@@ -79,6 +79,7 @@ class TestMarketplaceRunbook:
                 print(">> Endpoint created with name {} is in state: {}".format(ep_name, ep_state))
                 cls.second_project_endpoints[ep_type] = (ep_name, ep_uuid)
 
+    @pytest.mpi.runbook
     @pytest.mark.mpi
     @pytest.mark.regression
     @pytest.mark.parametrize("with_secrets", [True, False])
@@ -130,6 +131,7 @@ class TestMarketplaceRunbook:
         assert with_secrets == runbook_template_info.get('is_published_with_secrets', None)
         assert with_endpoints == runbook_template_info.get('is_published_with_endpoints', None)
 
+    @pytest.mpi.runbook
     @pytest.mark.mpi
     @pytest.mark.regression
     @pytest.mark.parametrize("state", [MARKETPLACE_ITEM.STATES.ACCEPTED, MARKETPLACE_ITEM.STATES.REJECTED])
@@ -185,6 +187,7 @@ class TestMarketplaceRunbook:
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
+    @pytest.mpi.runbook
     @pytest.mark.mpi
     @pytest.mark.regression
     def test_mpi_different_version(self):
@@ -254,6 +257,7 @@ class TestMarketplaceRunbook:
         assert with_secrets == runbook_template_info.get('is_published_with_secrets', None)
         assert with_endpoints == runbook_template_info.get('is_published_with_endpoints', None)
 
+    @pytest.mpi.runbook
     @pytest.mark.mpi
     @pytest.mark.regression
     def test_publish_unshare_unpublish_runbook_store(self):
@@ -336,6 +340,8 @@ class TestMarketplaceRunbook:
         print(">> MPI state: {}".format(mpi_state))
         assert mpi_state == MARKETPLACE_ITEM.STATES.ACCEPTED
 
+    @pytest.mpi.ces
+    @pytest.mpi.runbook
     @pytest.mark.mpi
     @pytest.mark.regression
     @pytest.mark.parametrize("with_endpoints", [True, False])
@@ -414,6 +420,7 @@ class TestMarketplaceRunbook:
         else:
             assert cloned_rb_state == "DRAFT", "Runbook published without endpoints should be in Draft state"
 
+    @pytest.mpi.runbook
     @pytest.mark.mpi
     @pytest.mark.regression
     @pytest.mark.parametrize("with_endpoints", [True, False])
@@ -490,6 +497,8 @@ class TestMarketplaceRunbook:
         print(">> Runbook state: {}".format(cloned_rb_state))
         assert cloned_rb_state == "DRAFT", "Runbook published without endpoints should be in Draft state"
 
+    @pytest.mpi.ces
+    @pytest.mpi.runbook
     @pytest.mark.mpi
     @pytest.mark.regression
     @pytest.mark.parametrize("with_endpoints", [True, False])
@@ -565,6 +574,7 @@ class TestMarketplaceRunbook:
         print(">> Runbook Run state: {}\n{}".format(state, reasons))
         assert state == RUNLOG.STATUS.SUCCESS
 
+    @pytest.mpi.runbook
     @pytest.mark.mpi
     @pytest.mark.regression
     @pytest.mark.parametrize("with_endpoints", [True, False])
@@ -644,6 +654,7 @@ class TestMarketplaceRunbook:
         print(">> Runbook Run state: {}\n{}".format(state, reasons))
         assert state == RUNLOG.STATUS.SUCCESS
 
+    @pytest.mpi.runbook
     @pytest.mark.mpi
     @pytest.mark.regression
     def test_mpi_list_with_type(self):
