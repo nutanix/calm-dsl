@@ -11,8 +11,8 @@
         "credential_definition_list": [
             {
 		        "username": "root",
-            	"uuid": "d3bbdf41-094a-44c9-b558-a336283ff9da",
-                "name": "endpoint_cred_a87bc793",
+            	"uuid": "79410ee9-5db3-460f-af71-195bdcdba9bc",
+                "name": "endpoint_cred_8f14ceb1",
                 "secret": {
                     "attrs": {
                         "is_secret_modified": true
@@ -25,11 +25,10 @@
         ],
         "login_credential_reference": {
             "kind": "app_credential",
-            "name": "endpoint_cred_a87bc793",
-            "uuid": "d3bbdf41-094a-44c9-b558-a336283ff9da"
+            "name": "endpoint_cred_8f14ceb1",
+            "uuid": "79410ee9-5db3-460f-af71-195bdcdba9bc"
         },
         "account_reference": {
-            "uuid": "3fa44454-b86e-4485-84f1-2867daa3e3c8",
             "kind": "account",
             "name": "NTNX_LOCAL_AZ"
         },
@@ -42,6 +41,6 @@
   "metadata": {
     "kind": "endpoint",
     "name": "linux_static_ahv_ep_1",
-    "uuid": "08695223-6940-4d7b-a303-207456499e73"
+    "uuid": "9e6fd4b2-6bab-4e3a-848f-d0a011057523"
   }
 }

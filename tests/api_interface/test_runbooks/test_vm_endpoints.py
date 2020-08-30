@@ -3,7 +3,7 @@ import os
 
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import ENDPOINT
-from utils import read_test_config
+from utils import read_test_config, change_uuids
 
 LinuxVMStaticAHVEpPayload = read_test_config(
     file_name="linux_vm_static_ahv_ep_payload.json"
@@ -35,8 +35,7 @@ class TestVMEndpoints:
     def test_vm_endpoint_static_crud(self, EndpointPayload):
         """Endpoint for VM crud"""
         client = get_api_client()
-        # endpoint = change_uuids(EndpointPayload, {})
-        endpoint = EndpointPayload
+        endpoint = change_uuids(EndpointPayload, {})
 
         # Endpoint Create
         res, err = client.endpoint.create(endpoint)
