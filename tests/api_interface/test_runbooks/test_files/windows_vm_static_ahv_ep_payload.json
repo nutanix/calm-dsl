@@ -4,7 +4,7 @@
     "resources": {
       "type": "Windows",
       "value_type": "VM",
-      "provider_type": "nutanix",
+      "provider_type": "nutanix_pc",
       "attrs": {
         "values": ["a265e505-1044-4d42-875b-40d2432a3f75"],
         "connection_protocol": "http",
