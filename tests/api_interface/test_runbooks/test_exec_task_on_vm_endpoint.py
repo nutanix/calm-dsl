@@ -5,8 +5,11 @@ from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import RUNLOG
 from tests.api_interface.test_runbooks.test_files.exec_task import (
     ShellTaskOnLinuxVMAHVStaticEndpoint,
-    #  ShellTaskOnLinuxVMAHVDynamicEndpoint1,
-    #  ShellTaskOnLinuxVMAHVDynamicEndpoint2,
+    ShellTaskOnLinuxVMAHVDynamicEndpoint1,
+    ShellTaskOnLinuxVMAHVDynamicEndpoint2,
+    ShellTaskOnLinuxVMAHVDynamicEndpoint3,
+
+    #  ShellTaskOnLinuxVMAHVDynamicEndpoint4,
     #  ShellTaskOnLinuxVMVMWareStaticEndpoint,
     #  ShellTaskOnWindowsVMAHVStaticEndpoint,
     #  ShellTaskOnWindowsVMAHVDynamicEndpoint1,
@@ -17,11 +20,22 @@ from utils import upload_runbook, poll_runlog_status
 
 
 class TestExecTasksVMEndpoint:
-    @pytest.mark.now
     @pytest.mark.runbook
     @pytest.mark.regression
     @pytest.mark.parametrize(
-        "Runbook", [ShellTaskOnLinuxVMAHVStaticEndpoint,],
+        "Runbook", [
+            # Static VM IDs
+            ShellTaskOnLinuxVMAHVStaticEndpoint,
+
+            # Dynamic filter name equals
+            ShellTaskOnLinuxVMAHVDynamicEndpoint1,
+
+            # Dynamic filter name starts with
+            ShellTaskOnLinuxVMAHVDynamicEndpoint2,
+
+            # Dynamic filter power_state equals
+            ShellTaskOnLinuxVMAHVDynamicEndpoint3,
+        ],
     )
     def test_script_run(self, Runbook):
         client = get_api_client()

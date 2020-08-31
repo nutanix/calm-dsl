@@ -4,7 +4,7 @@
     "resources": {
       "type": "Windows",
       "value_type": "VM",
-      "provider_type": "nutanix",
+      "provider_type": "nutanix_pc",
       "attrs": {
         "values": ["a265e505-1044-4d42-875b-40d2432a3f75"],
         "connection_protocol": "http",
@@ -12,8 +12,8 @@
         "credential_definition_list": [
             {
 		        "username": "root",
-            	"uuid": "a60feb00-2b70-4584-98bf-20bb2ed93edc",
-                "name": "endpoint_cred_a87bc793",
+            	"uuid": "b248f749-aef0-47ee-ae04-515993464d0b",
+                "name": "endpoint_cred_ede56b84",
                 "secret": {
                     "attrs": {
                         "is_secret_modified": true
@@ -26,11 +26,10 @@
         ],
         "login_credential_reference": {
             "kind": "app_credential",
-            "name": "endpoint_cred_a87bc793",
-            "uuid": "a60feb00-2b70-4584-98bf-20bb2ed93edc"
+            "name": "endpoint_cred_ede56b84",
+            "uuid": "b248f749-aef0-47ee-ae04-515993464d0b"
         },
         "account_reference": {
-            "uuid": "b1c1d336-a32e-4d50-c9d3-007e3aaa774d",
             "kind": "account",
             "name": "Vmware 1"
         },
@@ -43,6 +42,6 @@
   "metadata": {
     "kind": "endpoint",
     "name": "windows_static_ahv_ep_1",
-    "uuid": "5c07c6fd-0086-406d-bc99-442aa0170940"
+    "uuid": "d1eef780-50eb-46b2-b20c-1aa735f22869"
   }
 }

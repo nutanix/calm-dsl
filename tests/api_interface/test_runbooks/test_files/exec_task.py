@@ -11,9 +11,11 @@ from calm.dsl.runbooks import ENDPOINT_FILTER, ENDPOINT_PROVIDER
 linux_ip = read_local_file(".tests/runbook_tests/vm_ip")
 windows_ip = read_local_file(".tests/runbook_tests/windows_vm_ip")
 AHV_LINUX_ID = read_local_file(".tests/runbook_tests/ahv_linux_id")
-AHV_WINDOWS_ID = read_local_file(".tests/runbook_tests/ahv_windows_id")
-VMWARE_LINUX_ID = read_local_file(".tests/runbook_tests/vmware_linux_id")
-VMWARE_WINDOWS_ID = read_local_file(".tests/runbook_tests/vmware_windows_id")
+AHV_LINUX_VM_NAME = read_local_file(".tests/runbook_tests/ahv_linux_vm_name")
+AHV_LINUX_VM_NAME_PREFIX = read_local_file(".tests/runbook_tests/ahv_linux_vm_name_prefix")
+# AHV_WINDOWS_ID = read_local_file(".tests/runbook_tests/ahv_windows_id")
+# VMWARE_LINUX_ID = read_local_file(".tests/runbook_tests/vmware_linux_id")
+# VMWARE_WINDOWS_ID = read_local_file(".tests/runbook_tests/vmware_windows_id")
 CRED_USERNAME = read_local_file(".tests/runbook_tests/username")
 CRED_WINDOWS_USERNAME = read_local_file(".tests/runbook_tests/windows_username")
 CRED_PASSWORD = read_local_file(".tests/runbook_tests/password")
@@ -30,6 +32,8 @@ LinuxCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
 WindowsCred = basic_cred(CRED_WINDOWS_USERNAME, CRED_PASSWORD, name="endpoint_cred")
 
 linux_endpoint = Endpoint.Linux.ip([linux_ip], cred=LinuxCred)
+
+# Linux AHV VM Endpoint with static VM ID values
 linux_ahv_static_vm_endpoint = Endpoint.Linux.vm(
     filter_type=ENDPOINT_FILTER.STATIC,
     values=[AHV_LINUX_ID],
@@ -37,45 +41,30 @@ linux_ahv_static_vm_endpoint = Endpoint.Linux.vm(
     provider_type=ENDPOINT_PROVIDER.NUTANIX,
     account=Account.NutanixPC("NTNX_LOCAL_AZ"),
 )
+
+# Linux AHV VM Endpoint with Dynamic filter name equals filter
 linux_ahv_dynamic_vm_endpoint1 = Endpoint.Linux.vm(
     filter_type=ENDPOINT_FILTER.DYNAMIC,
-    filter="name==linux_vm.*;category==cat1:value1",
+    filter="name==" + AHV_LINUX_VM_NAME,
     cred=LinuxCred,
     account=Account.NutanixPC("NTNX_LOCAL_AZ"),
     provider_type=ENDPOINT_PROVIDER.NUTANIX,
 )
+
+# Linux AHV VM Endpoint with Dynamic filter name starts with filter
 linux_ahv_dynamic_vm_endpoint2 = Endpoint.Linux.vm(
     filter_type=ENDPOINT_FILTER.DYNAMIC,
-    filter="name==linux_vm.*",
+    filter="name==" + AHV_LINUX_VM_NAME_PREFIX + ".*",
     cred=LinuxCred,
     account=Account.NutanixPC("NTNX_LOCAL_AZ"),
     provider_type=ENDPOINT_PROVIDER.NUTANIX,
 )
-linux_vmware_static_vm_endpoint = Endpoint.Linux.vm(
-    filter_type=ENDPOINT_FILTER.STATIC,
-    values=[VMWARE_LINUX_ID],
+
+# Linux AHV VM Endpoint with Dynamic filter power state is on filter
+linux_ahv_dynamic_vm_endpoint3 = Endpoint.Linux.vm(
+    filter_type=ENDPOINT_FILTER.DYNAMIC,
+    filter="power_state==on;name==" + AHV_LINUX_VM_NAME_PREFIX + ".*",
     cred=LinuxCred,
-    account=Account.VMWare("vmware"),
-    provider_type=ENDPOINT_PROVIDER.VMWARE,
-)
-windows_ahv_static_vm_endpoint = Endpoint.Windows.vm(
-    filter_type=ENDPOINT_FILTER.STATIC,
-    value=[AHV_WINDOWS_ID],
-    cred=WindowsCred,
-    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
-    provider_type=ENDPOINT_PROVIDER.NUTANIX,
-)
-windows_ahv_dynamic_vm_endpoint1 = Endpoint.Windows.vm(
-    filter_type=ENDPOINT_FILTER.DYNAMIC,
-    filter="category==cat1:value2",
-    cred=WindowsCred,
-    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
-    provider_type=ENDPOINT_PROVIDER.NUTANIX,
-)
-windows_ahv_dynamic_vm_endpoint2 = Endpoint.Windows.vm(
-    filter_type=ENDPOINT_FILTER.DYNAMIC,
-    filter="category==name==windows.*",
-    cred=WindowsCred,
     account=Account.NutanixPC("NTNX_LOCAL_AZ"),
     provider_type=ENDPOINT_PROVIDER.NUTANIX,
 )
@@ -177,34 +166,9 @@ def ShellTaskOnLinuxVMAHVDynamicEndpoint2(endpoints=[linux_ahv_dynamic_vm_endpoi
 
 
 @runbook
-def ShellTaskOnLinuxVMVMWareStaticEndpoint(endpoints=[linux_vmware_static_vm_endpoint]):
+def ShellTaskOnLinuxVMAHVDynamicEndpoint3(endpoints=[linux_ahv_dynamic_vm_endpoint3]):
     Task.Exec.ssh(
         name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0],
-    )
-
-
-@runbook
-def ShellTaskOnWindowsVMAHVStaticEndpoint(endpoints=[windows_ahv_static_vm_endpoint]):
-    Task.Exec.powershell(
-        name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0]
-    )
-
-
-@runbook
-def ShellTaskOnWindowsVMAHVDynamicEndpoint1(
-    endpoints=[windows_ahv_dynamic_vm_endpoint1],
-):
-    Task.Exec.powershell(
-        name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0]
-    )
-
-
-@runbook
-def ShellTaskOnWindowsVMAHVDynamicEndpoint2(
-    endpoints=[windows_ahv_dynamic_vm_endpoint2],
-):
-    Task.Exec.powershell(
-        name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0]
     )
 
 
@@ -261,7 +225,6 @@ def MacroOnPowershell(endpoints=[windows_endpoint]):
         name="ExecTask",
         script='''echo "@@{calm_runbook_name}@@, @@{calm_runbook_uuid}@@ @@{calm_project_name}@@ @@{calm_jwt}@@ @@{calm_date}@@"''',
     )
-
 
 @runbook
 def MacroOnEscript():
