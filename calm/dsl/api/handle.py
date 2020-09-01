@@ -1,4 +1,4 @@
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 
 from .connection import get_connection, update_connection, REQUEST, Connection
 from .blueprint import BlueprintAPI
@@ -81,11 +81,12 @@ def update_client_handle(
 
 def get_api_client():
 
-    config = get_config()
+    context = get_context()
+    config = context.get_server_config()
 
-    pc_ip = config["SERVER"].get("pc_ip")
-    pc_port = config["SERVER"].get("pc_port")
-    username = config["SERVER"].get("pc_username")
-    password = config["SERVER"].get("pc_password")
+    pc_ip = config.get("pc_ip")
+    pc_port = config.get("pc_port")
+    username = config.get("pc_username")
+    password = config.get("pc_password")
 
     return get_client_handle(pc_ip, pc_port, auth=(username, password))

@@ -12,6 +12,7 @@ from .config import (
     make_file_dir,
 )
 
+from .context import get_context
 
 __all__ = [
     "get_init_data",
@@ -25,4 +26,5 @@ __all__ = [
     "get_config",
     "print_config",
     "make_file_dir",
+    "get_context",
 ]

@@ -3,14 +3,7 @@ import os
 import json
 import sys
 
-from calm.dsl.config import (
-    update_config,
-    get_default_config_file,
-    set_config,
-    update_init_config,
-    get_default_db_file,
-    get_default_local_dir,
-)
+from calm.dsl.config import get_context
 from calm.dsl.db import init_db_handle
 from calm.dsl.api import get_resource_api, update_client_handle, get_client_handle
 from calm.dsl.store import Cache
@@ -18,6 +11,11 @@ from calm.dsl.init import init_bp
 from calm.dsl.providers import get_provider_types
 
 from .main import init, set
+from .init_configs import (
+    get_default_config_file,
+    get_default_db_file,
+    get_default_local_dir,
+)
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -184,11 +182,23 @@ def set_server_details(
     service_enablement_status = result["service_enablement_status"]
     LOG.info(service_enablement_status)
 
+    # Fetching context object
+    ContextObj = get_context()
+
     # Updating init file data
-    update_init_config(config_file=config_file, db_file=db_file, local_dir=local_dir)
+    ContextObj.update_init_config(
+        config_file=config_file, db_file=db_file, local_dir=local_dir
+    )
 
     LOG.info("Writing config to {}".format(config_file))
-    update_config(host, port, username, password, project_name, log_level)
+    ContextObj.update_config_file(
+        host=host,
+        port=port,
+        username=username,
+        password=password,
+        project_name=project_name,
+        log_level=log_level,
+    )
 
     # Update client handle with new settings if no exception occurs
     update_client_handle(host, port, auth=(username, password))
@@ -289,14 +299,16 @@ def _set_config(
 ):
     """writes the configuration to config file"""
 
-    set_config(
-        host,
-        port,
-        username,
-        password,
-        project_name,
-        db_location,
-        log_level,
+    # Fetching context object
+    ContextObj = get_context()
+    ContextObj.set_config(
+        host=host,
+        port=port,
+        username=username,
+        password=password,
+        project_name=project_name,
+        db_location=db_location,
+        log_level=log_level,
         local_dir=local_dir,
         config_file=config_file,
     )

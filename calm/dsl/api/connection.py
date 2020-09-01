@@ -91,7 +91,7 @@ class Connection:
         response_processor=None,
         session_headers=None,
         retries_enabled=False,
-        **kwargs
+        **kwargs,
     ):
         """Generic client to connect to server.
 
