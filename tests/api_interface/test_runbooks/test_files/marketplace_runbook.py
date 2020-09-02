@@ -9,8 +9,7 @@ from calm.dsl.runbooks import read_local_file
 from calm.dsl.runbooks import runbook
 from calm.dsl.runbooks import RunbookTask as Task, RunbookVariable as Variable, basic_cred
 from calm.dsl.runbooks import CalmEndpoint as Endpoint
-from tests.api_interface.test_runbooks.utils import (read_test_config, change_uuids)
-from utils import get_project_id_from_name
+from utils import (read_test_config, change_uuids, get_project_id_from_name)
 
 
 linux_ip = read_local_file(".tests/runbook_tests/vm_ip")

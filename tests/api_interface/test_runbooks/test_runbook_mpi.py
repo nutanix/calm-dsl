@@ -3,10 +3,12 @@ import uuid
 
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import RUNLOG, MARKETPLACE_ITEM
-from create_helpers import DslRunbookForMPI, create_project_endpoints
-from tests.api_interface.test_runbooks.utils import (upload_runbook, poll_runlog_status)
+
+# from test_files.marketplace_runbook import DslRunbookForMPI, create_project_endpoints
+from test_files.marketplace_runbook import DslRunbookForMPI
 from utils import (publish_runbook_to_marketplace_manager, change_state,
-                   clone_marketplace_runbook, execute_marketplace_runbook)
+                   clone_marketplace_runbook, execute_marketplace_runbook,
+                   upload_runbook, poll_runlog_status)
 
 
 class TestMarketplaceRunbook:
@@ -51,6 +53,7 @@ class TestMarketplaceRunbook:
                 cls.default_project_endpoints[ep_type] = (ep_name, ep_uuid)
                 endpoint_uuids.append(ep_uuid)
 
+        # Will be added once setup changes landed
         # cls.second_project_name, cls.second_project_endpoints = create_project_endpoints(client)
 
     @pytest.mark.runbook
@@ -654,6 +657,7 @@ class TestMarketplaceRunbook:
         for mpi in mpi_entities:
             assert mpi['status']['type'] == MARKETPLACE_ITEM.TYPES.RUNBOOK, "MPI not of type runbook"
 
+    @pytest.mark.ces
     @pytest.mark.runbook
     @pytest.mark.regression
     @pytest.mark.mpi
