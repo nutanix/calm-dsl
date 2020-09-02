@@ -285,7 +285,8 @@ def publish_runbook_to_marketplace_manager(
         app_group_uuid (str): group uuid in case publishing new verion
         icon_file (str): icon file details
     Returns:
-        dict: returns response of the publish api
+        response (obj): returns response of the publish api
+        err (dict): error of operation
     """
     config = get_config()
 
@@ -322,15 +323,11 @@ def publish_runbook_to_marketplace_manager(
             }
         ]
 
-    res, err = client.market_place.create(mpi_spec)
-    if err:
-        pytest.fail("[{}] - {}".format(err["code"], err["error"]))
-
-    return res.json()
+    return client.market_place.create(mpi_spec)
 
 
-def change_state(client, mpi_uuid, new_state,
-                 project_list=None):
+def change_marketplace_state(client, mpi_uuid, new_state,
+                             project_list=None):
     """
     Change state of MPI and list of project it is shared it
     Args:
@@ -339,7 +336,7 @@ def change_state(client, mpi_uuid, new_state,
         new_state (str): New state of mpi
         project_list (list): list of project names
     Returns:
-        dict: returns response  of the update API
+        response (obj): returns response of the update API
     """
 
     res, err = client.market_place.read(mpi_uuid)
@@ -387,21 +384,13 @@ def clone_marketplace_runbook(client, mpi_uuid, runbook_name, project_name):
         runbook_name (str): Nmme of runbook
         project_name (str): project name
     Returns:
-        dict: returns response  of the clone API
+        response (obj): returns response of the clone API
+        err (dict): error of operation
     """
-    project_id = get_project_id_from_name(client, project_name)
-    if not project_id:
-        raise Exception("No project with name {} exists".format(project_name))
-
     payload = {
         "api_version": "3.0",
         "metadata": {
             "name": runbook_name,
-            "project_reference": {
-                "name": project_name,
-                "uuid": project_id,
-                "kind": "project"
-            },
             "kind": "runbook"
         },
         "spec": {
@@ -415,12 +404,18 @@ def clone_marketplace_runbook(client, mpi_uuid, runbook_name, project_name):
         }
     }
 
-    res, err = client.runbook.marketplace_clone(payload)
-    if err:
-        pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+    if project_name:
+        project_id = get_project_id_from_name(client, project_name)
+        if not project_id:
+            raise Exception("No project with name {} exists".format(project_name))
 
-    response = res.json()
-    return response['runbook_uuid']
+        payload['metadata']['project_reference'] = {
+            "name": project_name,
+            "uuid": project_id,
+            "kind": "project"
+        }
+
+    return client.runbook.marketplace_clone(payload)
 
 
 def execute_marketplace_runbook(client, mpi_uuid, project_name,
@@ -437,7 +432,8 @@ def execute_marketplace_runbook(client, mpi_uuid, project_name,
         endpoints_mapping (dict): current endpoint and new endpoint mapping
         args (listt): list if runtime variables
     Returns:
-        dict: returns response  of the execute API
+        response (obj): returns response of the clone API
+        err (dict): error of operation
     """
 
     project_id = get_project_id_from_name(client, project_name)
@@ -476,12 +472,7 @@ def execute_marketplace_runbook(client, mpi_uuid, project_name,
     if endpoints_mapping:
         payload['spec']['resources']['endpoints_mapping'] = endpoints_mapping
 
-    res, err = client.runbook.marketplace_execute(payload)
-    if err:
-        pytest.fail("[{}] - {}".format(err["code"], err["error"]))
-
-    response = res.json()
-    return response['status']['runlog_uuid']
+    return client.runbook.marketplace_execute(payload)
 
 
 def get_project_id_from_name(client, project_name):
@@ -507,3 +498,23 @@ def get_project_id_from_name(client, project_name):
         project_id = project_entities[0]["metadata"]["uuid"]
 
     return project_id
+
+
+def validate_error_message(err, expected_message):
+    """
+    Helper function to validate error messages with expected error
+    Args:
+        error (dict): error
+        expected_message (str): expected error message
+    """
+    message_list = err.get('message_list', [])
+    found = False
+    for message in message_list:
+        if expected_message in message['message'].lower():
+            found = True
+            break
+
+    if not found:
+        pytest.fail("Unable to found err {} in errors {}".format(
+            expected_message,
+            message_list))

@@ -6,9 +6,9 @@ from calm.dsl.cli.constants import RUNLOG, MARKETPLACE_ITEM
 
 # from test_files.marketplace_runbook import DslRunbookForMPI, create_project_endpoints
 from test_files.marketplace_runbook import DslRunbookForMPI
-from utils import (publish_runbook_to_marketplace_manager, change_state,
+from utils import (publish_runbook_to_marketplace_manager, change_marketplace_state,
                    clone_marketplace_runbook, execute_marketplace_runbook,
-                   upload_runbook, poll_runlog_status)
+                   upload_runbook, poll_runlog_status, validate_error_message)
 
 
 class TestMarketplaceRunbook:
@@ -89,7 +89,7 @@ class TestMarketplaceRunbook:
         print(">> Publishing mpi {} - {}, with_secrets {} and with endpoints {}".format(
             mpi_name, version, with_secrets, with_endpoints))
 
-        mpi = publish_runbook_to_marketplace_manager(
+        mpi, err = publish_runbook_to_marketplace_manager(
             client,
             self.runbook_uuid,
             mpi_name,
@@ -97,13 +97,18 @@ class TestMarketplaceRunbook:
             with_secrets=with_secrets,
             with_endpoints=with_endpoints
         )
-        mpi_state = mpi["status"]["resources"]["app_state"]
+
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        mpi_data = mpi.json()
+        mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
         assert mpi_state == "PENDING"
-        assert mpi_name == mpi["spec"]["name"]
-        assert mpi_name == mpi["metadata"]["name"]
+        assert mpi_name == mpi_data["spec"]["name"]
+        assert mpi_name == mpi_data["metadata"]["name"]
 
-        runbook_template_info = mpi['status']['resources']['runbook_template_info']
+        runbook_template_info = mpi_data['status']['resources']['runbook_template_info']
         assert self.runbook_uuid == runbook_template_info['source_runbook_reference']['uuid']
         assert with_secrets == runbook_template_info.get('is_published_with_secrets', None)
         assert with_endpoints == runbook_template_info.get('is_published_with_endpoints', None)
@@ -138,12 +143,17 @@ class TestMarketplaceRunbook:
         print(">> Publishing mpi {} - {}".format(
             mpi_name, version))
 
-        mpi_data = publish_runbook_to_marketplace_manager(
+        mpi, err = publish_runbook_to_marketplace_manager(
             client,
             self.runbook_uuid,
             mpi_name,
             version,
         )
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        mpi_data = mpi.json()
+
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
         assert mpi_state == MARKETPLACE_ITEM.STATES.PENDING
@@ -154,7 +164,7 @@ class TestMarketplaceRunbook:
         assert self.runbook_uuid == runbook_template_info['source_runbook_reference']['uuid']
 
         mpi_uuid = mpi_data['metadata']['uuid']
-        mpi_data = change_state(client, mpi_uuid, state)
+        mpi_data = change_marketplace_state(client, mpi_uuid, state)
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
         assert mpi_state == state
@@ -190,12 +200,17 @@ class TestMarketplaceRunbook:
         print(">> Publishing mpi {} - {}".format(
             mpi_name, version))
 
-        mpi_data = publish_runbook_to_marketplace_manager(
+        mpi, err = publish_runbook_to_marketplace_manager(
             client,
             self.runbook_uuid,
             mpi_name,
             version,
         )
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        mpi_data = mpi.json()
+        mpi_uuid = mpi_data['metadata']['uuid']
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
         assert mpi_state == MARKETPLACE_ITEM.STATES.PENDING
@@ -210,7 +225,7 @@ class TestMarketplaceRunbook:
         print(">> Publishing mpi {} - {}, with_secrets {} and with endpoints {}".format(
             mpi_name, new_mpi_version, with_secrets, with_endpoints))
 
-        new_mpi_data = publish_runbook_to_marketplace_manager(
+        new_mpi, err = publish_runbook_to_marketplace_manager(
             client,
             self.runbook_uuid,
             mpi_name,
@@ -219,7 +234,11 @@ class TestMarketplaceRunbook:
             with_endpoints=with_endpoints,
             app_group_uuid=app_group_uuid
         )
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
+        new_mpi_data = new_mpi.json()
+        new_mpi_uuid = new_mpi_data['metadata']['uuid']
         new_mpi_state = new_mpi_data["status"]["resources"]["app_state"]
         print(">> New MPI state: {}".format(new_mpi_state))
         assert new_mpi_state == MARKETPLACE_ITEM.STATES.PENDING
@@ -233,6 +252,15 @@ class TestMarketplaceRunbook:
         runbook_template_info = new_mpi_data['status']['resources']['runbook_template_info']
         assert with_secrets == runbook_template_info.get('is_published_with_secrets', None)
         assert with_endpoints == runbook_template_info.get('is_published_with_endpoints', None)
+
+        # DELETE MPI
+        res, err = client.market_place.delete(uuid=mpi_uuid)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        res, err = client.market_place.delete(uuid=new_mpi_uuid)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
     @pytest.mark.runbook
     @pytest.mark.mpi
@@ -265,12 +293,16 @@ class TestMarketplaceRunbook:
         print(">> Publishing mpi {} - {}".format(
             mpi_name, version))
 
-        mpi_data = publish_runbook_to_marketplace_manager(
+        mpi, err = publish_runbook_to_marketplace_manager(
             client,
             self.runbook_uuid,
             mpi_name,
             version,
         )
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        mpi_data = mpi.json()
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
         assert mpi_state == MARKETPLACE_ITEM.STATES.PENDING
@@ -281,16 +313,16 @@ class TestMarketplaceRunbook:
         assert self.runbook_uuid == runbook_template_info['source_runbook_reference']['uuid']
 
         mpi_uuid = mpi_data['metadata']['uuid']
-        mpi_data = change_state(client, mpi_uuid, MARKETPLACE_ITEM.STATES.ACCEPTED)
+        mpi_data = change_marketplace_state(client, mpi_uuid, MARKETPLACE_ITEM.STATES.ACCEPTED)
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
         assert mpi_state == MARKETPLACE_ITEM.STATES.ACCEPTED
 
         # TEST PUBLISH AND SHARE
         projects_shared_with = ['default']
-        mpi_data = change_state(client, mpi_uuid,
-                                MARKETPLACE_ITEM.STATES.PUBLISHED,
-                                project_list=projects_shared_with)
+        mpi_data = change_marketplace_state(client, mpi_uuid,
+                                            MARKETPLACE_ITEM.STATES.PUBLISHED,
+                                            project_list=projects_shared_with)
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
         assert mpi_state == MARKETPLACE_ITEM.STATES.PUBLISHED
@@ -300,9 +332,9 @@ class TestMarketplaceRunbook:
             assert project_name in projects_shared_with, "Marketplace shared with some other project"
 
         # TEST UNSHARE FROM PROJECT
-        mpi_data = change_state(client, mpi_uuid,
-                                MARKETPLACE_ITEM.STATES.PUBLISHED,
-                                project_list=[])
+        mpi_data = change_marketplace_state(client, mpi_uuid,
+                                            MARKETPLACE_ITEM.STATES.PUBLISHED,
+                                            project_list=[])
 
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
@@ -312,10 +344,15 @@ class TestMarketplaceRunbook:
         assert len(project_list) == 0, "Marketplace item still shared with some project"
 
         # TEST UNPUBLISH
-        mpi_data = change_state(client, mpi_uuid, MARKETPLACE_ITEM.STATES.ACCEPTED)
+        mpi_data = change_marketplace_state(client, mpi_uuid, MARKETPLACE_ITEM.STATES.ACCEPTED)
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
         assert mpi_state == MARKETPLACE_ITEM.STATES.ACCEPTED
+
+        # DELETE MPI
+        res, err = client.market_place.delete(uuid=mpi_uuid)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
     @pytest.mark.ces
     @pytest.mark.runbook
@@ -347,7 +384,7 @@ class TestMarketplaceRunbook:
         print(">> Publishing mpi {} - {}".format(
             mpi_name, version))
 
-        mpi_data = publish_runbook_to_marketplace_manager(
+        mpi, err = publish_runbook_to_marketplace_manager(
             client,
             self.runbook_uuid,
             mpi_name,
@@ -355,6 +392,10 @@ class TestMarketplaceRunbook:
             with_endpoints=with_endpoints,
             with_secrets=True
         )
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        mpi_data = mpi.json()
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
         assert mpi_state == MARKETPLACE_ITEM.STATES.PENDING
@@ -365,20 +406,28 @@ class TestMarketplaceRunbook:
         assert self.runbook_uuid == runbook_template_info['source_runbook_reference']['uuid']
 
         mpi_uuid = mpi_data['metadata']['uuid']
-        mpi_data = change_state(client, mpi_uuid, MARKETPLACE_ITEM.STATES.ACCEPTED)
+        mpi_data = change_marketplace_state(client, mpi_uuid, MARKETPLACE_ITEM.STATES.ACCEPTED)
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
         assert mpi_state == MARKETPLACE_ITEM.STATES.ACCEPTED
 
-        mpi_data = change_state(client, mpi_uuid, MARKETPLACE_ITEM.STATES.PUBLISHED, project_list=['default'])
+        mpi_data = change_marketplace_state(client, mpi_uuid,
+                                            MARKETPLACE_ITEM.STATES.PUBLISHED,
+                                            project_list=['default'])
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
         assert mpi_state == MARKETPLACE_ITEM.STATES.PUBLISHED
 
         cloned_rb_name = self.runbook_name + "_cloned_" + str(uuid.uuid4())[-10:]
-        cloned_runbook_uuid = clone_marketplace_runbook(client, mpi_uuid,
-                                                        cloned_rb_name,
-                                                        project_name="default")
+        res, err = clone_marketplace_runbook(client, mpi_uuid,
+                                             cloned_rb_name,
+                                             project_name="default")
+
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        cloned_runbook_uuid = res['runbook_uuid']
 
         res, err = client.runbook.read(cloned_runbook_uuid)
 
@@ -426,7 +475,7 @@ class TestMarketplaceRunbook:
         print(">> Publishing mpi {} - {}".format(
             mpi_name, version))
 
-        mpi_data = publish_runbook_to_marketplace_manager(
+        mpi, err = publish_runbook_to_marketplace_manager(
             client,
             self.runbook_uuid,
             mpi_name,
@@ -434,6 +483,10 @@ class TestMarketplaceRunbook:
             with_endpoints=with_endpoints,
             with_secrets=True
         )
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        mpi_data = mpi.json()
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
         assert mpi_state == MARKETPLACE_ITEM.STATES.PENDING
@@ -444,22 +497,27 @@ class TestMarketplaceRunbook:
         assert self.runbook_uuid == runbook_template_info['source_runbook_reference']['uuid']
 
         mpi_uuid = mpi_data['metadata']['uuid']
-        mpi_data = change_state(client, mpi_uuid, MARKETPLACE_ITEM.STATES.ACCEPTED)
+        mpi_data = change_marketplace_state(client, mpi_uuid, MARKETPLACE_ITEM.STATES.ACCEPTED)
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
         assert mpi_state == MARKETPLACE_ITEM.STATES.ACCEPTED
 
-        mpi_data = change_state(client, mpi_uuid,
-                                MARKETPLACE_ITEM.STATES.PUBLISHED,
-                                project_list=[self.second_project_name])
+        mpi_data = change_marketplace_state(client, mpi_uuid,
+                                            MARKETPLACE_ITEM.STATES.PUBLISHED,
+                                            project_list=[self.second_project_name])
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
         assert mpi_state == MARKETPLACE_ITEM.STATES.PUBLISHED
 
         cloned_rb_name = self.runbook_name + "_cloned_" + str(uuid.uuid4())[-10:]
-        cloned_runbook_uuid = clone_marketplace_runbook(client, mpi_uuid,
-                                                        cloned_rb_name,
-                                                        project_name=self.second_project_name)
+        res, err = clone_marketplace_runbook(client, mpi_uuid,
+                                             cloned_rb_name,
+                                             project_name=self.second_project_name)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        cloned_runbook_uuid = res['runbook_uuid']
 
         res, err = client.runbook.read(cloned_runbook_uuid)
 
@@ -504,7 +562,7 @@ class TestMarketplaceRunbook:
         print(">> Publishing mpi {} - {}".format(
             mpi_name, version))
 
-        mpi_data = publish_runbook_to_marketplace_manager(
+        mpi, err = publish_runbook_to_marketplace_manager(
             client,
             self.runbook_uuid,
             mpi_name,
@@ -512,6 +570,10 @@ class TestMarketplaceRunbook:
             with_endpoints=with_endpoints,
             with_secrets=True
         )
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        mpi_data = mpi.json()
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
         assert mpi_state == MARKETPLACE_ITEM.STATES.PENDING
@@ -522,12 +584,14 @@ class TestMarketplaceRunbook:
         assert self.runbook_uuid == runbook_template_info['source_runbook_reference']['uuid']
 
         mpi_uuid = mpi_data['metadata']['uuid']
-        mpi_data = change_state(client, mpi_uuid, MARKETPLACE_ITEM.STATES.ACCEPTED)
+        mpi_data = change_marketplace_state(client, mpi_uuid, MARKETPLACE_ITEM.STATES.ACCEPTED)
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
         assert mpi_state == MARKETPLACE_ITEM.STATES.ACCEPTED
 
-        mpi_data = change_state(client, mpi_uuid, MARKETPLACE_ITEM.STATES.PUBLISHED, project_list=['default'])
+        mpi_data = change_marketplace_state(client, mpi_uuid,
+                                            MARKETPLACE_ITEM.STATES.PUBLISHED,
+                                            project_list=['default'])
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
         assert mpi_state == MARKETPLACE_ITEM.STATES.PUBLISHED
@@ -539,10 +603,16 @@ class TestMarketplaceRunbook:
                 endpoints_mapping[ep_name] = ep_uuid
             default_endpoint_uuid = self.default_endpoint_details.get("uuid", None)
 
-        runlog_uuid = execute_marketplace_runbook(client, mpi_uuid,
-                                                  default_endpoint_uuid=default_endpoint_uuid,
-                                                  endpoints_mapping=endpoints_mapping,
-                                                  project_name="default")
+        res, err = execute_marketplace_runbook(client, mpi_uuid,
+                                               default_endpoint_uuid=default_endpoint_uuid,
+                                               endpoints_mapping=endpoints_mapping,
+                                               project_name="default")
+
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        runlog_uuid = res['status']['runlog_uuid']
 
         # polling till runbook run gets to terminal state
         state, reasons = poll_runlog_status(
@@ -581,7 +651,7 @@ class TestMarketplaceRunbook:
         print(">> Publishing mpi {} - {}".format(
             mpi_name, version))
 
-        mpi_data = publish_runbook_to_marketplace_manager(
+        mpi, err = publish_runbook_to_marketplace_manager(
             client,
             self.runbook_uuid,
             mpi_name,
@@ -589,6 +659,11 @@ class TestMarketplaceRunbook:
             with_endpoints=with_endpoints,
             with_secrets=True
         )
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        mpi_data = mpi.json()
+
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
         assert mpi_state == MARKETPLACE_ITEM.STATES.PENDING
@@ -599,13 +674,14 @@ class TestMarketplaceRunbook:
         assert self.runbook_uuid == runbook_template_info['source_runbook_reference']['uuid']
 
         mpi_uuid = mpi_data['metadata']['uuid']
-        mpi_data = change_state(client, mpi_uuid, MARKETPLACE_ITEM.STATES.ACCEPTED)
+        mpi_data = change_marketplace_state(client, mpi_uuid, MARKETPLACE_ITEM.STATES.ACCEPTED)
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
         assert mpi_state == MARKETPLACE_ITEM.STATES.ACCEPTED
 
-        mpi_data = change_state(client, mpi_uuid, MARKETPLACE_ITEM.STATES.PUBLISHED,
-                                project_list=[self.second_project_name])
+        mpi_data = change_marketplace_state(client, mpi_uuid,
+                                            MARKETPLACE_ITEM.STATES.PUBLISHED,
+                                            project_list=[self.second_project_name])
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
         assert mpi_state == MARKETPLACE_ITEM.STATES.PUBLISHED
@@ -620,10 +696,16 @@ class TestMarketplaceRunbook:
             default_endpoint_type = self.default_endpoint_details.get("type")
             default_endpoint_uuid = self.second_project_endpoints[default_endpoint_type][1]
 
-        runlog_uuid = execute_marketplace_runbook(client, mpi_uuid,
-                                                  default_endpoint_uuid=default_endpoint_uuid,
-                                                  endpoints_mapping=endpoints_mapping,
-                                                  project_name=self.second_project_name)
+        res, err = execute_marketplace_runbook(client, mpi_uuid,
+                                               default_endpoint_uuid=default_endpoint_uuid,
+                                               endpoints_mapping=endpoints_mapping,
+                                               project_name=self.second_project_name)
+
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        runlog_uuid = res['status']['runlog_uuid']
 
         # polling till runbook run gets to terminal state
         state, reasons = poll_runlog_status(
@@ -684,7 +766,7 @@ class TestMarketplaceRunbook:
         print(">> Publishing mpi {} - {}".format(
             mpi_name, version))
 
-        mpi_data = publish_runbook_to_marketplace_manager(
+        mpi, err = publish_runbook_to_marketplace_manager(
             client,
             self.runbook_uuid,
             mpi_name,
@@ -692,6 +774,10 @@ class TestMarketplaceRunbook:
             with_endpoints=True,
             with_secrets=with_secrets
         )
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        mpi_data = mpi.json()
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
         assert mpi_state == MARKETPLACE_ITEM.STATES.PENDING
@@ -702,12 +788,14 @@ class TestMarketplaceRunbook:
         assert self.runbook_uuid == runbook_template_info['source_runbook_reference']['uuid']
 
         mpi_uuid = mpi_data['metadata']['uuid']
-        mpi_data = change_state(client, mpi_uuid, MARKETPLACE_ITEM.STATES.ACCEPTED)
+        mpi_data = change_marketplace_state(client, mpi_uuid, MARKETPLACE_ITEM.STATES.ACCEPTED)
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
         assert mpi_state == MARKETPLACE_ITEM.STATES.ACCEPTED
 
-        mpi_data = change_state(client, mpi_uuid, MARKETPLACE_ITEM.STATES.PUBLISHED, project_list=['default'])
+        mpi_data = change_marketplace_state(client, mpi_uuid,
+                                            MARKETPLACE_ITEM.STATES.PUBLISHED,
+                                            project_list=['default'])
         mpi_state = mpi_data["status"]["resources"]["app_state"]
         print(">> MPI state: {}".format(mpi_state))
         assert mpi_state == MARKETPLACE_ITEM.STATES.PUBLISHED
@@ -746,9 +834,15 @@ class TestMarketplaceRunbook:
             ]
             expected_output = "\nxx\nxx\nxx\nHello Mr X LASTNAME\n"
 
-        runlog_uuid = execute_marketplace_runbook(client, mpi_uuid,
-                                                  args=args,
-                                                  project_name="default")
+        res, err = execute_marketplace_runbook(client, mpi_uuid,
+                                               args=args,
+                                               project_name="default")
+
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        runlog_uuid = res['status']['runlog_uuid']
 
         # polling till runbook run gets to terminal state
         state, reasons = poll_runlog_status(
@@ -781,3 +875,149 @@ class TestMarketplaceRunbook:
 
         print("ouput of the task: {}".format(output_list[0]["output"]))
         assert output_list[0]["output"] == expected_output
+
+    @pytest.mark.runbook
+    @pytest.mark.mpi
+    @pytest.mark.regression
+    def test_neg_runbook_marketplace(self):
+        """
+        test_neg_runbook_publish_empty_name
+        test_neg_runbook_publish_empty_version
+        test_neg_mpi_execute_without_mapping
+        test_neg_mpi_clone_without_name
+        test_neg_mpi_execute_deleted_mpi
+        test_neg_mpi_clone_deleted_mpi
+        """
+        print("Testing Negative runbook mpi test cases")
+        client = get_api_client()
+
+        res, err = client.runbook.read(self.runbook_uuid)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        rb = res.json()
+
+        rb_state = rb["status"]["state"]
+        print(">> Runbook {} state: {}".format(self.runbook_uuid, rb_state))
+        assert rb_state == "ACTIVE"
+        assert self.runbook_name == rb["spec"]["name"]
+        assert self.runbook_name == rb["metadata"]["name"]
+
+        mpi_name = "test_publish_mpi_" + str(uuid.uuid4())[-10:]
+        version = '1.0.0'
+
+        print("Neg testing publish without name")
+        mpi, err = publish_runbook_to_marketplace_manager(
+            client,
+            self.runbook_uuid,
+            marketplace_item_name="",
+            version=version,
+        )
+        if not err:
+            print("Publish of runbook without name is successful")
+            pytest.fail("Publish of runbook without name is successful")
+
+        validate_error_message(err['error'], 'name is empty')
+
+        print("Neg testing publish without version")
+        mpi, err = publish_runbook_to_marketplace_manager(
+            client,
+            self.runbook_uuid,
+            marketplace_item_name=mpi_name,
+            version="",
+        )
+        if not err:
+            print("Publish of runbook without version is successful")
+            pytest.fail("Publish of runbook without version is successful")
+
+        validate_error_message(err['error'], 'version is a required field')
+
+        print(">> Publishing mpi {} - {}".format(
+            mpi_name, version))
+
+        mpi, err = publish_runbook_to_marketplace_manager(
+            client,
+            self.runbook_uuid,
+            mpi_name,
+            version,
+            with_endpoints=False
+        )
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        mpi_data = mpi.json()
+
+        mpi_state = mpi_data["status"]["resources"]["app_state"]
+        print(">> MPI state: {}".format(mpi_state))
+        assert mpi_state == MARKETPLACE_ITEM.STATES.PENDING
+        assert mpi_name == mpi_data["spec"]["name"]
+        assert mpi_name == mpi_data["metadata"]["name"]
+
+        runbook_template_info = mpi_data['status']['resources']['runbook_template_info']
+        assert self.runbook_uuid == runbook_template_info['source_runbook_reference']['uuid']
+
+        mpi_uuid = mpi_data['metadata']['uuid']
+        mpi_data = change_marketplace_state(client, mpi_uuid, MARKETPLACE_ITEM.STATES.ACCEPTED)
+        mpi_state = mpi_data["status"]["resources"]["app_state"]
+        print(">> MPI state: {}".format(mpi_state))
+        assert mpi_state == MARKETPLACE_ITEM.STATES.ACCEPTED
+
+        mpi_data = change_marketplace_state(client, mpi_uuid,
+                                            MARKETPLACE_ITEM.STATES.PUBLISHED,
+                                            project_list=['default'])
+        mpi_state = mpi_data["status"]["resources"]["app_state"]
+        print(">> MPI state: {}".format(mpi_state))
+        assert mpi_state == MARKETPLACE_ITEM.STATES.PUBLISHED
+
+        print("Neg testing clone without name")
+        res, err = clone_marketplace_runbook(client, mpi_uuid,
+                                             runbook_name="",
+                                             project_name="default")
+        if not err:
+            print("Clone of mpi without runbook name is successful")
+            pytest.fail("Clone of mpi without runbook name is successful")
+
+        validate_error_message(err['error'], 'name cannot be empty')
+
+        print("Neg testing execute without endpoint mapping")
+        res, err = execute_marketplace_runbook(client, mpi_uuid,
+                                               project_name="default")
+
+        if not err:
+            print("Execute of mpi without endpoint mappping is successful")
+            pytest.fail("Execute of mpi without endpoint mappping is successful")
+
+        validate_error_message(err['error'], 'unable to find mapping for endpoint')
+
+        # Unplish MPI
+        mpi_data = change_marketplace_state(client, mpi_uuid,
+                                            MARKETPLACE_ITEM.STATES.ACCEPTED,
+                                            project_list=[])
+        mpi_state = mpi_data["status"]["resources"]["app_state"]
+        print(">> MPI state: {}".format(mpi_state))
+        assert mpi_state == MARKETPLACE_ITEM.STATES.ACCEPTED
+
+        # TEST DELETE MPI
+        res, err = client.market_place.delete(uuid=mpi_uuid)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        print("Neg testing clone of deleted mpi")
+        res, err = clone_marketplace_runbook(client, mpi_uuid,
+                                             runbook_name="rb",
+                                             project_name="default")
+        if not err:
+            print("Clone of deleted mpi is successful")
+            pytest.fail("Clone of deleted mpi is successful")
+
+        validate_error_message(err['error'], 'entity does not exist')
+
+        print("Neg testing execute of delete mpi")
+        res, err = execute_marketplace_runbook(client, mpi_uuid,
+                                               project_name="default")
+
+        if not err:
+            print("Execute of deleted mpi is successful")
+            pytest.fail("Execute of deleted mpi is successful")
+
+        validate_error_message(err['error'], 'entity does not exist')
