@@ -5,7 +5,7 @@ import click
 
 from calm.dsl.api import get_api_client
 from calm.dsl.config import get_config
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 from .secrets import find_secret, create_secret
 from .utils import highlight_text
@@ -31,7 +31,7 @@ LOG = get_logging_handle(__name__)
 )
 @click.option("--limit", "-l", default=20, help="Number of results to return")
 @click.option(
-    "--offset", "-o", default=0, help="Offset results by the specified amount"
+    "--offset", "-s", default=0, help="Offset results by the specified amount"
 )
 @click.option(
     "--quiet", "-q", is_flag=True, default=False, help="Show only blueprint names."
@@ -79,6 +79,8 @@ def _describe_bp(bp_name, out):
     help="Path of Blueprint file to format",
 )
 def _format_blueprint_command(bp_file):
+    """Formats blueprint file using black"""
+
     format_blueprint_command(bp_file)
 
 
@@ -92,6 +94,13 @@ def _format_blueprint_command(bp_file):
     help="Path of Blueprint file to upload",
 )
 @click.option(
+    "--brownfield_deployments",
+    "-b",
+    "brownfield_deployment_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path of Brownfield Deployment file",
+)
+@click.option(
     "--out",
     "-o",
     "out",
@@ -99,9 +108,9 @@ def _format_blueprint_command(bp_file):
     default="json",
     help="output format",
 )
-def _compile_blueprint_command(bp_file, out):
+def _compile_blueprint_command(bp_file, brownfield_deployment_file, out):
     """Compiles a DSL (Python) blueprint into JSON or YAML"""
-    compile_blueprint_command(bp_file, out)
+    compile_blueprint_command(bp_file, brownfield_deployment_file, out)
 
 
 @decompile.command("bp", experimental=True)
@@ -127,7 +136,7 @@ def _decompile_bp(name, bp_file, with_secrets):
 
 
 def create_blueprint(
-    client, bp_payload, name=None, description=None, categories=None, force_create=False
+    client, bp_payload, name=None, description=None, force_create=False
 ):
 
     bp_payload.pop("status", None)
@@ -165,14 +174,13 @@ def create_blueprint(
     bp_resources = bp_payload["spec"]["resources"]
     bp_name = bp_payload["spec"]["name"]
     bp_desc = bp_payload["spec"]["description"]
-
-    categories = bp_payload["metadata"].get("categories", None)
+    bp_metadata = bp_payload["metadata"]
 
     return client.blueprint.upload_with_secrets(
         bp_name,
         bp_desc,
         bp_resources,
-        categories=categories,
+        bp_metadata=bp_metadata,
         force_create=force_create,
     )
 
@@ -201,6 +209,13 @@ def create_blueprint_from_dsl(
         err_msg = "User blueprint not found in {}".format(bp_file)
         err = {"error": err_msg, "code": -1}
         return None, err
+
+    # Brownfield blueprints creation should be blocked using dsl file
+    if bp_payload["spec"]["resources"]["type"] == "BROWNFIELD":
+        LOG.error(
+            "Command not allowed for brownfield blueprints. Please use 'calm create app -f <bp_file_location>' for creating brownfield application"
+        )
+        sys.exit(-1)
 
     return create_blueprint(
         client,
@@ -284,11 +299,7 @@ def create_blueprint_command(bp_file, name, description, force):
     link = "https://{}:{}/console/#page/explore/calm/blueprints/{}".format(
         pc_ip, pc_port, bp_uuid
     )
-    stdout_dict = {
-        "name": bp_name,
-        "link": link,
-        "state": bp_state,
-    }
+    stdout_dict = {"name": bp_name, "link": link, "state": bp_state}
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
 
@@ -323,26 +334,25 @@ def launch_blueprint_command(
     blueprint=None,
 ):
     """Launches a blueprint.
-All runtime variables will be prompted by default. When passing the 'ignore_runtime_editable' flag, no variables will be prompted and all default values will be used.
-The blueprint default values can be overridden by passing a Python file via 'launch_params'. Any variable not defined in the Python file will keep the default value defined in the blueprint. When passing a Python file, no variables will be prompted.
+    All runtime variables will be prompted by default. When passing the 'ignore_runtime_editable' flag, no variables will be prompted and all default values will be used.
+    The blueprint default values can be overridden by passing a Python file via 'launch_params'. Any variable not defined in the Python file will keep the default value defined in the blueprint. When passing a Python file, no variables will be prompted.
 
-\b
->: launch_params: Python file consisting of variables 'variable_list' and 'substrate_list'
-Ex: variable_list = {
-    "value": {"value": <Variable Value>},
-    "context": <Context for variable>
-    "name": "<Variable Name>"
-}
-substrate_list = {
-    "value":  {
-        <substrate_editable_data_object>
-    },
-    "name": <Substrate Name>,
-}
-Sample context for variables:
-    1. context = "<Profile Name>"    # For variable under profile
-    2. context = "<Service Name>"    # For variable under service
-"""
+    \b
+    >: launch_params: Python file consisting of variables 'variable_list' and 'substrate_list'
+    Ex: variable_list = {
+        "value": {"value": <Variable Value>},
+        "context": <Context for variable>
+        "name": "<Variable Name>"
+    }
+    substrate_list = {
+        "value":  {
+            <substrate_editable_data_object>
+        },
+        "name": <Substrate Name>,
+    }
+    Sample context for variables:
+        1. context = "<Profile Name>"    # For variable under profile
+        2. context = "<Service Name>"    # For variable under service"""
     launch_blueprint_simple(
         blueprint_name,
         app_name,

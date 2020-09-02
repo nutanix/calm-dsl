@@ -5,10 +5,6 @@ from colorlog import ColoredFormatter
 import time
 import sys
 
-# Used for looking at verbose level
-VERBOSE_LEVEL = 20
-SHOW_TRACE = False
-
 
 class StdErrFilter(logging.Filter):
     """Filter for Stderr stream handler"""
@@ -32,6 +28,9 @@ class CustomLogging:
         * LOG.exception - [ERROR]
 
     """
+
+    _VERBOSE_LEVEL = 20
+    _SHOW_TRACE = False
 
     DEBUG = logging.DEBUG
     INFO = logging.INFO
@@ -75,19 +74,21 @@ class CustomLogging:
 
         return ":{}] {}".format(ln, msg)
 
+    @classmethod
+    def set_verbose_level(cls, lvl):
+        cls._VERBOSE_LEVEL = lvl
+
+    @classmethod
+    def enable_show_trace(cls):
+        cls._SHOW_TRACE = True
+
     def get_logger(self):
-        self.set_logger_level(VERBOSE_LEVEL)
-        self.show_trace = SHOW_TRACE
+        self.set_logger_level(self._VERBOSE_LEVEL)
+        self.show_trace = self._SHOW_TRACE
         return self._logger
 
     def get_logging_levels(self):
-        return [
-            "DEBUG",
-            "INFO",
-            "WARNING",
-            "ERROR",
-            "CRITICAL",
-        ]
+        return ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
     def set_logger_level(self, lvl):
         """sets the logger verbose level"""
@@ -232,13 +233,3 @@ def get_logging_handle(name):
 
     logging_handle = CustomLogging(name)
     return logging_handle
-
-
-def set_verbose_level(verbose_level):
-    global VERBOSE_LEVEL
-    VERBOSE_LEVEL = verbose_level
-
-
-def set_show_trace():
-    global SHOW_TRACE
-    SHOW_TRACE = True

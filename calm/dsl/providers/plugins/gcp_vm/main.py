@@ -145,7 +145,7 @@ class GCP:
 
     def disk_images(self, account_id, zone):
         """
-            Returns gcpImages + gcpSnapshots + configuredPublicImages
+        Returns gcpImages + gcpSnapshots + configuredPublicImages
         """
 
         image_map = {}
@@ -254,9 +254,7 @@ def create_spec(client):
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     project = res.json()
-    accounts = project["status"]["project_status"]["resources"][
-        "account_reference_list"
-    ]
+    accounts = project["status"]["resources"]["account_reference_list"]
 
     reg_accounts = []
     for account in accounts:
@@ -900,8 +898,7 @@ def get_networks(gcp_obj, account_id, zone):
         network_map.pop(network)  # Pop out used network
         nic_index += 1
         choice = click.prompt(
-            "\n{}(y/n)".format(highlight_text("Want to add more networks")),
-            default="n",
+            "\n{}(y/n)".format(highlight_text("Want to add more networks")), default="n"
         )
 
     return networks

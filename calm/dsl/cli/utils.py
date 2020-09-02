@@ -1,16 +1,16 @@
 import click
 import sys
-import importlib.util
+import os
 from functools import reduce
 from asciimatics.screen import Screen
 from click_didyoumean import DYMMixin
 from distutils.version import LooseVersion as LV
 
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
+from calm.dsl.tools import get_module_from_file
 from calm.dsl.store import Version
 
 LOG = get_logging_handle(__name__)
-BASE_FEATURE_VERSION = "2.9.7"
 
 
 def get_states_filter(STATES_CLASS=None, state_key="state", states=[]):
@@ -42,16 +42,6 @@ def highlight_text(text, **kwargs):
     return click.style("{}".format(text), fg="blue", bold=False, **kwargs)
 
 
-def get_module_from_file(module_name, file):
-    """Returns a module given a user python file (.py)"""
-
-    spec = importlib.util.spec_from_file_location(module_name, file)
-    user_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(user_module)
-
-    return user_module
-
-
 def import_var_from_file(file, var, default_value=None):
     try:
         module = get_module_from_file(var, file)
@@ -63,7 +53,7 @@ def import_var_from_file(file, var, default_value=None):
 class Display:
     @classmethod
     def wrapper(cls, func, watch=False):
-        if watch:
+        if watch and os.isatty(sys.stdout.fileno()):
             Screen.wrapper(func, height=1000, catch_interrupt=True)
         else:
             func(display)
@@ -77,7 +67,7 @@ class Display:
     def wait_for_input(self, *args):
         pass
 
-    def print_at(self, text, x, *args):
+    def print_at(self, text, x, *args, **kwargs):
         click.echo("{}{}".format((" " * x), text))
 
 
@@ -99,8 +89,6 @@ class FeatureFlagMixin:
         feature_min_version = kwargs.pop("feature_min_version", None)
         if feature_min_version and args:
             self.feature_version_map[args[0]] = feature_min_version
-        elif args:
-            self.feature_version_map[args[0]] = BASE_FEATURE_VERSION
 
         is_experimental = kwargs.pop("experimental", False)
         if args:
@@ -114,11 +102,6 @@ class FeatureFlagMixin:
             return super(FeatureFlagMixin, self).invoke(ctx)
 
         cmd_name = ctx.protected_args[0]
-
-        # Handle base case
-        # ToDO - fix this hack
-        if cmd_name == "dsl":
-            return super().invoke(ctx)
 
         feature_min_version = self.feature_version_map.get(cmd_name, "")
         if feature_min_version:

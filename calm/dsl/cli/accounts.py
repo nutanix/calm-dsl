@@ -11,7 +11,7 @@ from calm.dsl.config import get_config
 from .utils import get_name_query, get_states_filter, highlight_text
 from .constants import ACCOUNT
 from calm.dsl.store import Version
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -79,13 +79,17 @@ def get_accounts(name, filter_by, limit, offset, quiet, all_items, account_type)
 
         creation_time = int(metadata["creation_time"]) // 1000000
         last_update_time = int(metadata["last_update_time"]) // 1000000
+        if "owner_reference" in metadata:
+            owner_reference_name = metadata["owner_reference"]["name"]
+        else:
+            owner_reference_name = "-"
 
         table.add_row(
             [
                 highlight_text(row["name"]),
                 highlight_text(row["resources"]["type"]),
                 highlight_text(row["resources"]["state"]),
-                highlight_text(metadata["owner_reference"]["name"]),
+                highlight_text(owner_reference_name),
                 highlight_text(time.ctime(creation_time)),
                 "{}".format(arrow.get(last_update_time).humanize()),
                 highlight_text(metadata["uuid"]),

@@ -10,9 +10,8 @@ from collections import OrderedDict
 
 from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.providers import get_provider_interface
-from calm.dsl.tools import StrictDraft7Validator, get_logging_handle
-from calm.dsl.builtins import ref
-from calm.dsl.store import Version
+from calm.dsl.tools import StrictDraft7Validator
+from calm.dsl.log import get_logging_handle
 
 from .constants import AHV as AhvConstants
 
@@ -57,7 +56,7 @@ class AhvVmProvider(Provider):
                 raise TypeError("image type mismatch in disk {}".format(disk_ind))
 
             # Set the reference of this disk
-            disk["data_source_reference"] = ref(img_cls).compile()
+            disk["data_source_reference"] = img_cls.get_ref().compile()
 
     @classmethod
     def get_runtime_editables(
@@ -74,20 +73,14 @@ class AhvVmProvider(Provider):
 
         project = res.json()
         subnets_list = []
-        for subnet in project["status"]["project_status"]["resources"][
-            "subnet_reference_list"
-        ]:
+        for subnet in project["status"]["resources"]["subnet_reference_list"]:
             subnets_list.append(subnet["uuid"])
 
         # Extending external subnet's list from remote account
-        for subnet in project["status"]["project_status"]["resources"].get(
-            "external_network_list"
-        ):
+        for subnet in project["status"]["resources"].get("external_network_list"):
             subnets_list.append(subnet["uuid"])
 
-        accounts = project["status"]["project_status"]["resources"][
-            "account_reference_list"
-        ]
+        accounts = project["status"]["resources"]["account_reference_list"]
 
         reg_accounts = []
         for account in accounts:
@@ -283,7 +276,7 @@ class AhvVmProvider(Provider):
             click.secho("NICS data\n", underline=True)
 
             filter_query = "(_entity_id_=={})".format(
-                ",_entity_id_==".join(subnets_list),
+                ",_entity_id_==".join(subnets_list)
             )
             nics = Obj.subnets(account_uuid=account_uuid, filter_query=filter_query)
             nics = nics["entities"]
@@ -746,6 +739,9 @@ class AhvVmProvider(Provider):
         """returns object to call ahv provider specific apis"""
 
         client = get_api_client()
+        # TODO remove this mess
+        from calm.dsl.store.version import Version
+
         calm_version = Version.get_version("Calm")
         api_handlers = AhvBase.api_handlers
 
@@ -1008,20 +1004,14 @@ def create_spec(client):
 
     project = res.json()
     subnets_list = []
-    for subnet in project["status"]["project_status"]["resources"][
-        "subnet_reference_list"
-    ]:
+    for subnet in project["status"]["resources"]["subnet_reference_list"]:
         subnets_list.append(subnet["uuid"])
 
     # Extending external subnet's list from remote account
-    for subnet in project["status"]["project_status"]["resources"].get(
-        "external_network_list", []
-    ):
+    for subnet in project["status"]["resources"].get("external_network_list", []):
         subnets_list.append(subnet["uuid"])
 
-    accounts = project["status"]["project_status"]["resources"][
-        "account_reference_list"
-    ]
+    accounts = project["status"]["resources"]["account_reference_list"]
 
     reg_accounts = []
     for account in accounts:
@@ -1379,7 +1369,7 @@ def create_spec(client):
         else:
             nics = []
             filter_query = "(_entity_id_=={})".format(
-                ",_entity_id_==".join(subnets_list),
+                ",_entity_id_==".join(subnets_list)
             )
             nics = AhvObj.subnets(account_uuid=account_uuid, filter_query=filter_query)
             nics = nics["entities"]

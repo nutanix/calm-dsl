@@ -1,7 +1,7 @@
 import os
 from black import format_str, FileMode
 
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 from calm.dsl.decompile.bp_file_helper import render_bp_file_template
 from calm.dsl.decompile.file_handler import init_bp_dir
 

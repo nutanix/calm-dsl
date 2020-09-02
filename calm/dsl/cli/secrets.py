@@ -6,7 +6,7 @@ from prettytable import PrettyTable
 from .utils import highlight_text
 
 from calm.dsl.store import Secret
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 

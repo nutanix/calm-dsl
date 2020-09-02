@@ -3,14 +3,12 @@ from ruamel import yaml
 import uuid
 
 from calm.dsl.cli.main import get_api_client
-from calm.dsl.cli.projects import (
-    poll_creation_status,
-    poll_updation_status,
-    poll_deletion_status,
-)
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.cli.task_commands import watch_task
+from calm.dsl.cli.constants import ERGON_TASK
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
+PROJECT_SPEC_FILE_LOCATION = "tests/api_interface/entity_spec/sample_project.json"
 
 
 class TestProjects:
@@ -20,7 +18,7 @@ class TestProjects:
 
         params = {"length": 20, "offset": 0}
         LOG.info("Invoking list api call on projects")
-        res, err = client.blueprint.list(params=params)
+        res, err = client.project.list(params=params)
 
         if not err:
             assert res.ok is True
@@ -33,32 +31,30 @@ class TestProjects:
     def test_projects_crud(self):
 
         client = get_api_client()
-        file_location = "tests/api_interface/entity_spec/sample_project.json"
-        project_payload = yaml.safe_load(open(file_location, "r").read())
-
-        payload = {
-            "api_version": "3.0",
-            "metadata": {"kind": "project"},
-            "spec": project_payload,
-        }
-
         project_name = "test_proj" + str(uuid.uuid4())[-10:]
-        payload["spec"]["project_detail"]["name"] = project_name
+        project_payload = yaml.safe_load(open(PROJECT_SPEC_FILE_LOCATION, "r").read())
 
+        project_payload["spec"]["name"] = project_name
+        project_payload["metadata"]["name"] = project_name
+
+        # Create API
         LOG.info("Creating project {}".format(project_name))
-        res, err = client.project.create(payload)
+        res, err = client.project.create(project_payload)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
         else:
             assert res.ok is True
             res = res.json()
-            assert project_name == res["spec"]["project_detail"]["name"]
-            project_uuid = res["metadata"]["uuid"]
-            poll_creation_status(client, project_uuid)
+            assert project_name == res["metadata"]["name"]
+            task_state = watch_task(res["status"]["execution_context"]["task_uuid"])
+            if task_state in ERGON_TASK.FAILURE_STATES:
+                pytest.fail("Project creation task went to {} state".format(task_state))
             LOG.info("Success")
             LOG.debug("Response: {}".format(res))
 
+        # Read API
+        project_uuid = res["metadata"]["uuid"]
         LOG.info("Reading project {}".format(project_name))
         res, err = client.project.read(project_uuid)
         if err:
@@ -67,39 +63,34 @@ class TestProjects:
         else:
             assert res.ok is True
             res = res.json()
+            assert project_name == res["metadata"]["name"]
             LOG.info("Success")
             LOG.debug("Response: {}".format(res))
 
+        # Update API
         LOG.info("Updating project {}".format(project_name))
-        file_location = "tests/api_interface/entity_spec/sample_project_update.json"
-        project_payload = yaml.safe_load(open(file_location, "r").read())
-        spec_version = res["metadata"]["spec_version"]
+        project_upd_des = "Sample project Description {}".format(str(uuid.uuid4()))
 
-        payload = {
-            "api_version": "3.0",
-            "metadata": {
-                "kind": "project",
-                "uuid": project_uuid,
-                "spec_version": spec_version,
-            },
-            "spec": project_payload,
-        }
+        res.pop("status", None)
+        project_payload = res
+        project_payload["spec"]["description"] = project_upd_des
 
-        project_name = "test_proj" + str(uuid.uuid4())[-10:]
-        payload["spec"]["project_detail"]["name"] = project_name
-
-        res, err = client.project.update(project_uuid, payload)
+        res, err = client.project.update(project_uuid, project_payload)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
         else:
             assert res.ok is True
             res = res.json()
-            assert project_name == res["spec"]["project_detail"]["name"]
-            poll_updation_status(client, project_uuid, spec_version)
+            assert project_name == res["metadata"]["name"]
+            assert project_upd_des == res["spec"]["description"]
+            task_state = watch_task(res["status"]["execution_context"]["task_uuid"])
+            if task_state in ERGON_TASK.FAILURE_STATES:
+                pytest.fail("Project creation task went to {} state".format(task_state))
             LOG.info("Success")
             LOG.debug("Response: {}".format(res))
 
+        # Delete API
         LOG.info("Deleting project {}".format(project_name))
         res, err = client.project.delete(project_uuid)
         if err:
@@ -108,6 +99,8 @@ class TestProjects:
         else:
             assert res.ok is True
             res = res.json()
-            poll_deletion_status(client, project_uuid)
+            task_state = watch_task(res["status"]["execution_context"]["task_uuid"])
+            if task_state in ERGON_TASK.FAILURE_STATES:
+                pytest.fail("Project deletion task went to {} state".format(task_state))
             LOG.info("Success")
             LOG.debug("Response: {}".format(res))

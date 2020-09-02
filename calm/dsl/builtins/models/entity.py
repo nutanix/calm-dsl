@@ -9,7 +9,7 @@ import copy
 
 from ruamel.yaml import YAML, resolver, SafeRepresenter
 from calm.dsl.tools import StrictDraft7Validator
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 from .schema import get_schema_details
 from .utils import get_valid_identifier
 from .client_attrs import update_dsl_metadata_map, get_dsl_metadata_map
@@ -20,8 +20,7 @@ LOG = get_logging_handle(__name__)
 class EntityDict(OrderedDict):
     @staticmethod
     def pre_validate(vdict, name, value):
-        """hook to change values before validation, typecast, etc
-        """
+        """hook to change values before validation, typecast, etc"""
         return value
 
     @classmethod

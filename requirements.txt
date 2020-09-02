@@ -6,13 +6,13 @@ requests==2.21.0
 requests_toolbelt>=0.9.1
 docopt==0.6.2
 PTable==0.9.2
-Click==7.0
+Click==7.1.2
 click_completion>=0.5.1
 click-didyoumean>=0.0.3
 click-repl>=0.1.6
 colorama==0.4.1
 arrow==0.13.1
-jsonschema>=3.0.1
+jsonschema>=3.0.1g
 anytree>=2.6.0
 asciimatics>=1.11.0
 peewee==3.10.0
@@ -20,4 +20,4 @@ pycryptodome==3.9.0
 scrypt==0.8.13
 schema==0.7.1
 colorlog>=4.0.2
-black>=19.3b0
+black==20.8b1

@@ -14,7 +14,7 @@ from calm.dsl.cli.mpis import (
 )
 from calm.dsl.cli.utils import get_states_filter
 from calm.dsl.cli.constants import APPLICATION, MARKETPLACE_BLUEPRINT
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 APP_ICON_IMAGE_PATH = "tests/cli/images/test_app_icon.jpg"
@@ -333,20 +333,20 @@ class TestMPICommands:
 
     def test_mpi_basic_commands(self):
         """
-            Steps:
-                1. Create a blueprint
-                2. Publish this blueprint as new marketplace blueprint i.e. mp_bp1
-                3. Publish the same blueprint as existing marketplace blueprint i.e. mp_bp2
-                3. Publish the same blueprint with secrets as existing marketplace blueprint i.e. mp_bp3
-                4. Negative Test: Publish the same blueprint with mp_bp2 's version
-                5. Approve the mp_bp1
-                6. Publish the mp_bp1
-                7. Negative Test: Delete the published blueprint
-                8. Unpublish the blueprint mp_bp1
-                9. Delete the blueprint in ACCEPTED state i.e. mp_bp1
-                10. Reject the blueprint i.e. mp_bp2
-                11. Delete the blueprint in REJECTED state i.e. mp_bp2
-                12. Delete the blueprint in PENDING sates i.e. mp_bp3
+        Steps:
+            1. Create a blueprint
+            2. Publish this blueprint as new marketplace blueprint i.e. mp_bp1
+            3. Publish the same blueprint as existing marketplace blueprint i.e. mp_bp2
+            3. Publish the same blueprint with secrets as existing marketplace blueprint i.e. mp_bp3
+            4. Negative Test: Publish the same blueprint with mp_bp2 's version
+            5. Approve the mp_bp1
+            6. Publish the mp_bp1
+            7. Negative Test: Delete the published blueprint
+            8. Unpublish the blueprint mp_bp1
+            9. Delete the blueprint in ACCEPTED state i.e. mp_bp1
+            10. Reject the blueprint i.e. mp_bp2
+            11. Delete the blueprint in REJECTED state i.e. mp_bp2
+            12. Delete the blueprint in PENDING sates i.e. mp_bp3
 
         """
 
@@ -652,15 +652,15 @@ class TestMPICommands:
 
     def test_mpi_launch(self):
         """
-            Steps:
-                1. Create a blueprint
-                2. Publish the blueprint to marketplace manager
-                3. Launch the blueprint in PENDING state and delete the app
-                4. Approve the blueprint
-                5. Launch the blueprint in ACCEPTED state and delete the app
-                6. Publish the blueprint in marketplace
-                7. Launch the mpi and delete the app
-                8. Delete the blueprint
+        Steps:
+            1. Create a blueprint
+            2. Publish the blueprint to marketplace manager
+            3. Launch the blueprint in PENDING state and delete the app
+            4. Approve the blueprint
+            5. Launch the blueprint in ACCEPTED state and delete the app
+            6. Publish the blueprint in marketplace
+            7. Launch the mpi and delete the app
+            8. Delete the blueprint
         """
 
         self._create_bp()

@@ -4,7 +4,7 @@ import os
 from calm.dsl.config import get_init_data
 from .table_config import dsl_database, SecretTable, DataTable, VersionTable
 from .table_config import CacheTableBase
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -37,8 +37,8 @@ class Database:
             setattr(self, table_type, self.set_and_verify(table))
 
     def set_and_verify(self, table_cls):
-        """ Verify whether this class exists in db
-            If not, then creates one
+        """Verify whether this class exists in db
+        If not, then creates one
         """
 
         if not self.db.table_exists((table_cls.__name__).lower()):
@@ -98,7 +98,7 @@ def init_db_handle():
             # Close the connection
             _Database.close()
 
-    except:
+    except:  # noqa
         pass
 
     # Removing existing db at init location if exists

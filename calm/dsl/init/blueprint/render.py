@@ -7,7 +7,7 @@ from Crypto.PublicKey import RSA
 from calm.dsl.config import get_config
 from calm.dsl.store import Cache
 from calm.dsl.builtins import read_file
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -68,9 +68,7 @@ def render_ahv_template(template, bp_name):
     return text.strip() + os.linesep
 
 
-template_map = {
-    "AHV_VM": ("ahv_blueprint.py.jinja2", render_ahv_template),
-}
+template_map = {"AHV_VM": ("ahv_blueprint.py.jinja2", render_ahv_template)}
 
 
 def render_blueprint_template(bp_name, provider_type):

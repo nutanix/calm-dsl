@@ -3,7 +3,7 @@ from calm.dsl.decompile.task import render_task_template
 from calm.dsl.decompile.parallel_task import render_parallel_task_template
 from calm.dsl.decompile.variable import render_variable_template
 from calm.dsl.builtins import action, ActionType, RefType
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 RUNBOOK_ACTION_MAP = {}

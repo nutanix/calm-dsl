@@ -1,5 +1,8 @@
+import os
+import sys
 import time
 import json
+import uuid
 from json import JSONEncoder
 
 import arrow
@@ -12,7 +15,9 @@ from calm.dsl.config import get_config
 
 from .utils import get_name_query, get_states_filter, highlight_text, Display
 from .constants import APPLICATION, RUNLOG, SYSTEM_ACTIONS
-from calm.dsl.tools import get_logging_handle
+from .bp_commands import create_blueprint
+from .bps import launch_blueprint_simple, compile_blueprint
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -229,6 +234,66 @@ def describe_app(app_name, out):
     )
 
 
+def create_app(
+    bp_file,
+    brownfield_deployment_file=None,
+    app_name=None,
+    profile_name=None,
+    patch_editables=True,
+    launch_params=None,
+):
+    client = get_api_client()
+
+    # Compile blueprint
+    bp_payload = compile_blueprint(
+        bp_file, brownfield_deployment_file=brownfield_deployment_file
+    )
+    if bp_payload is None:
+        LOG.error("User blueprint not found in {}".format(bp_file))
+        sys.exit(-1)
+
+    if bp_payload["spec"]["resources"].get("type", "") != "BROWNFIELD":
+        LOG.error(
+            "Command only allowed for brownfield application. Please use 'calm create bp' and 'calm launch bp' for USER applications"
+        )
+        sys.exit(-1)
+
+    # Create blueprint from dsl file
+    bp_name = "Blueprint{}".format(str(uuid.uuid4())[:10])
+    LOG.info("Creating blueprint {}".format(bp_name))
+    res, err = create_blueprint(client=client, bp_payload=bp_payload, name=bp_name)
+    if err:
+        LOG.error(err["error"])
+        return
+
+    bp = res.json()
+    bp_state = bp["status"].get("state", "DRAFT")
+    bp_uuid = bp["metadata"].get("uuid", "")
+
+    if bp_state != "ACTIVE":
+        LOG.debug("message_list: {}".format(bp["status"].get("message_list", [])))
+        LOG.error("Blueprint {} went to {} state".format(bp_name, bp_state))
+        sys.exit(-1)
+
+    LOG.info(
+        "Blueprint {}(uuid={}) created successfully.".format(
+            highlight_text(bp_name), highlight_text(bp_uuid)
+        )
+    )
+
+    # Creating an app
+    app_name = app_name or "App{}".format(str(uuid.uuid4())[:10])
+    LOG.info("Creating app {}".format(app_name))
+    launch_blueprint_simple(
+        blueprint_name=bp_name,
+        app_name=app_name,
+        profile_name=profile_name,
+        patch_editables=patch_editables,
+        launch_params=launch_params,
+        is_brownfield=True,
+    )
+
+
 class RunlogNode(NodeMixin):
     def __init__(self, runlog, parent=None, children=None):
         self.runlog = runlog
@@ -360,7 +425,7 @@ def get_completion_func(screen):
                         screen.print_at("{}{}".format(pre, linestr), 0, line)
                     else:
                         screen.print_at(
-                            "{}{}".format(fill, linestr.replace("\\t", "")), 0, line,
+                            "{}{}".format(fill, linestr.replace("\\t", "")), 0, line
                         )
                     line += 1
             screen.refresh()
@@ -368,14 +433,16 @@ def get_completion_func(screen):
             for runlog in sorted_entities:
                 state = runlog["status"]["state"]
                 if state in RUNLOG.FAILURE_STATES:
-                    msg = "Action failed. Exit screen? (y)"
+                    msg = "Action failed."
                     screen.print_at(msg, 0, line)
                     screen.refresh()
                     return (True, msg)
                 if state not in RUNLOG.TERMINAL_STATES:
                     return (False, "")
 
-            msg = "Action ran successfully. Exit screen? (y)"
+            msg = "Action ran successfully."
+            if os.isatty(sys.stdout.fileno()):
+                msg += " Exit screen? "
             screen.print_at(msg, 0, line)
             screen.refresh()
 
@@ -478,7 +545,7 @@ def watch_app(app_name, screen, app=None):
                         screen.print_at("{}{}".format(pre, linestr), 0, line)
                     else:
                         screen.print_at(
-                            "{}{}".format(fill, linestr.replace("\\t", "")), 0, line,
+                            "{}{}".format(fill, linestr.replace("\\t", "")), 0, line
                         )
                     line += 1
             screen.refresh()
@@ -489,13 +556,17 @@ def watch_app(app_name, screen, app=None):
                 for runlog in sorted_entities:
                     state = runlog["status"]["state"]
                     if state in RUNLOG.FAILURE_STATES:
-                        msg = "Action failed. Exit screen? (y)"
+                        msg = "Action failed."
                         is_complete = True
                     if state not in RUNLOG.TERMINAL_STATES:
                         is_complete = False
 
-            if not msg:
-                msg = "Action ran successfully. Exit screen? (y)"
+            if is_complete:
+                if not msg:
+                    msg = "Action ran successfully."
+
+                if os.isatty(sys.stdout.fileno()):
+                    msg += " Exit screen? "
             if not is_app_describe:
                 screen.print_at(msg, 0, line)
                 screen.refresh()
