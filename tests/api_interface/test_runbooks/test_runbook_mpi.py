@@ -63,7 +63,7 @@ class TestMarketplaceRunbook:
     @pytest.mark.parametrize("with_endpoints", [True, False])
     def test_publish_runbook(self, with_secrets, with_endpoints):
         """
-        test_runbook_publish_with_secret_with_endpoint_with_version
+        test_runbook_publish_with_secret_with_endpoint
         test_runbook_publish_without_secret_with_endpoint
         test_runbook_publish_without_secret_without_endpoint
         test_runbook_publish_with_secret_without_endpoint
@@ -120,8 +120,8 @@ class TestMarketplaceRunbook:
     def test_approve_and_reject_runbook_marketplace(self, state):
         """
         test_marketplace_runbook_approve_market_manager
-        test_reject_runbook_mpi
-        test_delete_runbook_mpi
+        test_marketplace_runbook_reject_market_manager
+        test_delete_marketplace_runbook
         """
         print("Testing MPI {}".format(state))
         client = get_api_client()
@@ -177,8 +177,8 @@ class TestMarketplaceRunbook:
     @pytest.mark.runbook
     @pytest.mark.mpi
     @pytest.mark.regression
-    def test_mpi_different_version(self):
-        """ test_same_runbook_publish_with_secret_with_endpoint_with_different_version """
+    def test_same_name_mpi_with_different_version(self):
+        """test_same_name_mpi_with_different_version"""
 
         print("Testing RB publish with different versions")
         client = get_api_client()
@@ -268,9 +268,9 @@ class TestMarketplaceRunbook:
     def test_publish_unshare_unpublish_runbook_store(self):
         """
         test_marketplace_runbook_publish_market_manager
+        test_marketplace_manager_share_project
         test_marketplace_manager_unshare_project
-        test_marketplace_manager_unshare_project
-        test_marketplace_runbook_unshare_market_manager
+        test_marketplace_runbook_unpublish
         """
         print("Testing MPI publish and share to store and unshare and unplish from store")
 
@@ -361,8 +361,8 @@ class TestMarketplaceRunbook:
     @pytest.mark.parametrize("with_endpoints", [True, False])
     def test_mpi_runbook_clone_same_project(self, with_endpoints):
         """
-        test_mpi_runbook_with_endpoint_clone_same_project
-        test_mpi_runbook_without_endpoint_clone_same_project
+        test_marketplace_runbook_with_endpoint_clone_same_project
+        test_marketplace_runbook_without_endpoint_clone_same_project
         """
 
         print("Testing MPI clone in same project with_ep {}".format(with_endpoints))
@@ -453,8 +453,8 @@ class TestMarketplaceRunbook:
     @pytest.mark.parametrize("with_endpoints", [True, False])
     def test_mpi_runbook_clone_different_project(self, with_endpoints):
         """
-        test_mpi_runbook_with_endpoint_clone_same_project
-        test_mpi_runbook_without_endpoint_clone_same_project
+        test_marketplace_runbook_with_endpoint_clone_different_project
+        test_marketplace_runbook_without_endpoint_clone_different_project
         """
         print("Testing MPI clone in different project with_ep {}".format(with_endpoints))
         client = get_api_client()
@@ -540,8 +540,8 @@ class TestMarketplaceRunbook:
     @pytest.mark.parametrize("with_endpoints", [True, False])
     def test_mpi_runbook_execute_same_project(self, with_endpoints):
         """
-        test_mpi_runbook_with_endpoint_clone_same_project
-        test_mpi_runbook_without_endpoint_clone_same_project
+        test_marketplace_runbook_with_endpoint_execute_same_project
+        test_marketplace_runbook_without_endpoint_execute_same_project
         """
         print("Testing MPI execute in same project with_ep {}".format(with_endpoints))
         client = get_api_client()
@@ -629,8 +629,8 @@ class TestMarketplaceRunbook:
     @pytest.mark.parametrize("with_endpoints", [True, False])
     def test_mpi_runbook_execute_different_project(self, with_endpoints):
         """
-        test_mpi_runbook_with_endpoint_clone_different_project
-        test_mpi_runbook_without_endpoint_clone_different_project
+        test_marketplace_runbook_with_endpoint_execute_different_project
+        test_marketplace_runbook_without_endpoint_execute_different_project
         """
         print("Testing MPI execute in different project with_ep {}".format(with_endpoints))
         client = get_api_client()
@@ -745,7 +745,10 @@ class TestMarketplaceRunbook:
     @pytest.mark.mpi
     @pytest.mark.parametrize("with_secrets", [True, False])
     def test_mpi_runbook_variables(self, with_secrets):
-        """ test_mpi_runbook_variables """
+        """
+        test_marketplace_runbook_with_secret_execute_variables
+        test_marketplace_runbook_without_secret_execute_variables
+        """
 
         print("Testing variables in MPI execute with_secrets {}".format(with_secrets))
         client = get_api_client()
@@ -883,10 +886,10 @@ class TestMarketplaceRunbook:
         """
         test_neg_runbook_publish_empty_name
         test_neg_runbook_publish_empty_version
-        test_neg_mpi_execute_without_mapping
-        test_neg_mpi_clone_without_name
-        test_neg_mpi_execute_deleted_mpi
-        test_neg_mpi_clone_deleted_mpi
+        test_neg_mpi_runbook_execute_without_mapping
+        test_neg_mpi_runbook_clone_without_name
+        test_neg_mpi_runbook_execute_deleted_mpi
+        test_neg_mpi_runbook_clone_deleted_mpi
         """
         print("Testing Negative runbook mpi test cases")
         client = get_api_client()
