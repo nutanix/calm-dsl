@@ -2,7 +2,7 @@ import click
 
 from calm.dsl.api import get_api_client
 
-from .main import main, get, describe, delete, run, watch, download
+from .main import main, get, describe, delete, run, watch, download, create
 from .utils import Display, FeatureFlagGroup
 from .apps import (
     get_apps,
@@ -12,10 +12,66 @@ from .apps import (
     watch_app,
     delete_app,
     download_runlog,
+    create_app,
 )
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
+
+
+@create.command("app")
+@click.option(
+    "--file",
+    "-f",
+    "bp_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    required=True,
+    help="Path of Blueprint file to upload",
+)
+@click.option(
+    "--brownfield_deployments",
+    "-b",
+    "brownfield_deployment_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path of Brownfield Deployment file",
+)
+@click.option(
+    "--name", "-n", "app_name", default=None, help="Application name (Optional)"
+)
+@click.option(
+    "--ignore_runtime_variables",
+    "-i",
+    is_flag=True,
+    default=False,
+    help="Ignore runtime variables and use defaults while launching blueprint",
+)
+@click.option(
+    "--launch_params",
+    "-l",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to python file for runtime editables",
+)
+def _create_app(
+    app_name,
+    bp_file,
+    brownfield_deployment_file,
+    ignore_runtime_variables,
+    launch_params,
+):
+    """Creates an application.
+
+    \b
+    Command consumes a dsl blueprint file and creates a blueprint from it.
+    If created blueprint is in ACTIVE state, then it got launched to create an application.
+    """
+
+    create_app(
+        app_name=app_name,
+        bp_file=bp_file,
+        patch_editables=not ignore_runtime_variables,
+        launch_params=launch_params,
+        brownfield_deployment_file=brownfield_deployment_file,
+    )
 
 
 @get.command("apps")

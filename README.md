@@ -39,6 +39,12 @@ Language design is black art, and building upon a well-established language is d
  - Watch app action runlog: `calm watch action_runlog <runlog_uuid> --app <application_name>`
  - Download app action runlogs: `calm download action_runlog <runlog_uuid> --app <application_name> --file <file_name>`
 
+### Brownfield Application
+- Two ways to declare brownfield deployments in dsl: User can define brownfield deployments in blueprint [file](https://github.com/nutanix/calm-dsl/blob/release/2.9/examples/Brownfield/inline_example/blueprint.py) OR he can declare brownfield deployments in separate [file](https://github.com/nutanix/calm-dsl/blob/release/2.9/examples/Brownfield/separate_file_example/brownfield_deployments.py) and pass it as cli parameter while creating brownfield application.
+- List Brownfield vms: `calm get brownfield vms --project <project_name> --type [AHV_VM|AWS_VM|AZURE_VM|GCP_VM|VMWARE_VM]`.
+- Compile Blueprint: `calm compile bp -f <blueprint_file_location> -b <brownfield_deployments_file_location>`.
+- Create Brownfield Application: `calm create app -f <bluprint_file_location> -b <brownfield_deployments_file_location> -n <app_name> -i`.
+
 ### Decompiling Blueprints (`.json`->`.py`)
 Decompilation is process to consume json data for any entity and convert it back to dsl python helpers/classes. Currently, decompile is supported for converting blueprint json to python files. Summary of support for blueprint decompilation(Experimental feature):
 - Python helpers/classes are automatically generated with the use of jinja templates.

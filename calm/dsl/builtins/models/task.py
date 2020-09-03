@@ -1167,10 +1167,7 @@ class RunbookTask(BaseTask):
             loop_variable="iteration",
             exit_condition=Status.DONT_CARE,
         ):
-            attrs = {
-                "iterations": str(iterations),
-                "loop_variable": loop_variable,
-            }
+            attrs = {"iterations": str(iterations), "loop_variable": loop_variable}
             exit_code = EXIT_CONDITION_MAP.get(exit_condition, None)
             if exit_code:
                 attrs["exit_condition_type"] = exit_code

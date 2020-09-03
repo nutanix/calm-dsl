@@ -10,9 +10,10 @@ from calm.dsl.builtins import create_project_payload, Project
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.config import get_config
 
-from .utils import get_name_query, get_module_from_file, highlight_text
+from .utils import get_name_query, highlight_text
 from .task_commands import watch_task
 from .constants import ERGON_TASK
+from calm.dsl.tools import get_module_from_file
 from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
 from calm.dsl.store import Cache
@@ -79,12 +80,16 @@ def get_projects(name, filter_by, limit, offset, quiet, out):
 
         creation_time = arrow.get(metadata["creation_time"]).timestamp
         last_update_time = arrow.get(metadata["last_update_time"])
+        if "owner_reference" in metadata:
+            owner_reference_name = metadata["owner_reference"]["name"]
+        else:
+            owner_reference_name = "-"
 
         table.add_row(
             [
                 highlight_text(row["name"]),
                 highlight_text(row["state"]),
-                highlight_text(metadata["owner_reference"]["name"]),
+                highlight_text(owner_reference_name),
                 highlight_text(len(row["resources"]["user_reference_list"])),
                 highlight_text(time.ctime(creation_time)),
                 "{}".format(last_update_time.humanize()),
@@ -300,7 +305,7 @@ def describe_project(project_name, out):
             AhvObj = AhvVmProvider.get_api_obj()
 
             filter_query = "(_entity_id_=={})".format(
-                ",_entity_id_==".join(subnets_list),
+                ",_entity_id_==".join(subnets_list)
             )
             nics = AhvObj.subnets(account_uuid=account_uuid, filter_query=filter_query)
             nics = nics["entities"]
@@ -326,11 +331,15 @@ def describe_project(project_name, out):
 
     quota_resources = project_resources.get("resource_domain", {}).get("resources", [])
     if quota_resources:
-        click.echo("\nQuotas: \n-------\n")
+        click.echo("\nQuotas: \n-------")
         for qr in quota_resources:
-            click.echo(
-                "\t{} : {}".format(qr["resource_type"], highlight_text(qr["value"]))
-            )
+            qk = qr["resource_type"]
+            qv = qr["limit"]
+            if qr["units"] == "BYTES":
+                qv = qv // 1073741824
+                qv = str(qv) + " (GiB)"
+
+            click.echo("\t{} : {}".format(qk, highlight_text(qv)))
 
 
 def delete_project(project_names):
@@ -446,7 +455,7 @@ def update_project_from_dsl(project_name, project_file):
 
 
 def update_project_using_cli_switches(
-    project_name, add_user_list, add_group_list, remove_user_list, remove_group_list,
+    project_name, add_user_list, add_group_list, remove_user_list, remove_group_list
 ):
 
     client = get_api_client()

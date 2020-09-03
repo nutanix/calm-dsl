@@ -73,20 +73,14 @@ class AhvVmProvider(Provider):
 
         project = res.json()
         subnets_list = []
-        for subnet in project["status"]["project_status"]["resources"][
-            "subnet_reference_list"
-        ]:
+        for subnet in project["status"]["resources"]["subnet_reference_list"]:
             subnets_list.append(subnet["uuid"])
 
         # Extending external subnet's list from remote account
-        for subnet in project["status"]["project_status"]["resources"].get(
-            "external_network_list"
-        ):
+        for subnet in project["status"]["resources"].get("external_network_list"):
             subnets_list.append(subnet["uuid"])
 
-        accounts = project["status"]["project_status"]["resources"][
-            "account_reference_list"
-        ]
+        accounts = project["status"]["resources"]["account_reference_list"]
 
         reg_accounts = []
         for account in accounts:
@@ -282,7 +276,7 @@ class AhvVmProvider(Provider):
             click.secho("NICS data\n", underline=True)
 
             filter_query = "(_entity_id_=={})".format(
-                ",_entity_id_==".join(subnets_list),
+                ",_entity_id_==".join(subnets_list)
             )
             nics = Obj.subnets(account_uuid=account_uuid, filter_query=filter_query)
             nics = nics["entities"]
@@ -1010,20 +1004,14 @@ def create_spec(client):
 
     project = res.json()
     subnets_list = []
-    for subnet in project["status"]["project_status"]["resources"][
-        "subnet_reference_list"
-    ]:
+    for subnet in project["status"]["resources"]["subnet_reference_list"]:
         subnets_list.append(subnet["uuid"])
 
     # Extending external subnet's list from remote account
-    for subnet in project["status"]["project_status"]["resources"].get(
-        "external_network_list", []
-    ):
+    for subnet in project["status"]["resources"].get("external_network_list", []):
         subnets_list.append(subnet["uuid"])
 
-    accounts = project["status"]["project_status"]["resources"][
-        "account_reference_list"
-    ]
+    accounts = project["status"]["resources"]["account_reference_list"]
 
     reg_accounts = []
     for account in accounts:
@@ -1381,7 +1369,7 @@ def create_spec(client):
         else:
             nics = []
             filter_query = "(_entity_id_=={})".format(
-                ",_entity_id_==".join(subnets_list),
+                ",_entity_id_==".join(subnets_list)
             )
             nics = AhvObj.subnets(account_uuid=account_uuid, filter_query=filter_query)
             nics = nics["entities"]

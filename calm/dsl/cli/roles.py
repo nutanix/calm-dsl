@@ -53,11 +53,7 @@ def get_roles(name, filter_by, limit, offset, quiet, out):
         return
 
     table = PrettyTable()
-    table.field_names = [
-        "NAME",
-        "STATE",
-        "UUID",
-    ]
+    table.field_names = ["NAME", "STATE", "UUID"]
 
     for _row in json_rows:
         row = _row["status"]

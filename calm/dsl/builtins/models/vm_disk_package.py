@@ -99,7 +99,7 @@ class VmDiskPackageType(PackageType):
                 "type": resources["image_type"],
                 "source": resources["source_uri"],
                 "architecture": resources["architecture"],
-            },
+            }
         }
 
         if resources.get("version", None):

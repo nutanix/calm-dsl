@@ -443,12 +443,7 @@ class AccountCache(CacheTableBase):
             return
 
         table = PrettyTable()
-        table.field_names = [
-            "NAME",
-            "provider_type",
-            "UUID",
-            "LAST UPDATED",
-        ]
+        table.field_names = ["NAME", "provider_type", "UUID", "LAST UPDATED"]
         for entity in cls.select():
             entity_data = entity.get_detail_dict()
             last_update_time = arrow.get(
@@ -846,11 +841,7 @@ class RolesCache(CacheTableBase):
             return
 
         table = PrettyTable()
-        table.field_names = [
-            "NAME",
-            "UUID",
-            "LAST UPDATED",
-        ]
+        table.field_names = ["NAME", "UUID", "LAST UPDATED"]
         for entity in cls.select():
             entity_data = entity.get_detail_dict()
             last_update_time = arrow.get(
@@ -886,9 +877,7 @@ class RolesCache(CacheTableBase):
         for entity in res["entities"]:
             name = entity["status"]["name"]
             uuid = entity["metadata"]["uuid"]
-            cls.create_entry(
-                name=name, uuid=uuid,
-            )
+            cls.create_entry(name=name, uuid=uuid)
 
     @classmethod
     def get_entity_data(cls, name, **kwargs):
@@ -943,11 +932,7 @@ class DirectoryServiceCache(CacheTableBase):
             return
 
         table = PrettyTable()
-        table.field_names = [
-            "NAME",
-            "UUID",
-            "LAST UPDATED",
-        ]
+        table.field_names = ["NAME", "UUID", "LAST UPDATED"]
         for entity in cls.select():
             entity_data = entity.get_detail_dict()
             last_update_time = arrow.get(
@@ -983,9 +968,7 @@ class DirectoryServiceCache(CacheTableBase):
         for entity in res["entities"]:
             name = entity["status"]["name"]
             uuid = entity["metadata"]["uuid"]
-            cls.create_entry(
-                name=name, uuid=uuid,
-            )
+            cls.create_entry(name=name, uuid=uuid)
 
     @classmethod
     def get_entity_data(cls, name, **kwargs):
@@ -1221,9 +1204,7 @@ class AhvNetworkFunctionChain(CacheTableBase):
 
     @classmethod
     def create_entry(cls, name, uuid, **kwargs):
-        super().create(
-            name=name, uuid=uuid,
-        )
+        super().create(name=name, uuid=uuid)
 
     @classmethod
     def get_entity_data(cls, name, **kwargs):
@@ -1245,10 +1226,7 @@ class VersionTable(BaseModel):
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
     def get_detail_dict(self):
-        return {
-            "name": self.name,
-            "version": self.version,
-        }
+        return {"name": self.name, "version": self.version}
 
 
 def highlight_text(text, **kwargs):
