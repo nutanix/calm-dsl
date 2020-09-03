@@ -3,9 +3,9 @@ import os
 import json
 import sys
 
-from calm.dsl.config import get_context, get_config_handle, set_dsl_config
+from calm.dsl.config import get_context, init_context, set_dsl_config
 from calm.dsl.db import init_db_handle
-from calm.dsl.api import get_resource_api, update_client_handle, get_client_handle
+from calm.dsl.api import get_resource_api, get_client_handle_obj
 from calm.dsl.store import Cache
 from calm.dsl.init import init_bp
 from calm.dsl.providers import get_provider_types
@@ -169,8 +169,9 @@ def set_server_details(
         db_file = db_file or get_default_db_file()
 
     LOG.info("Checking if Calm is enabled on Server")
+
     # Get temporary client handle
-    client = get_client_handle(host, port, auth=(username, password), temp=True)
+    client = get_client_handle_obj(host, port, auth=(username, password))
     Obj = get_resource_api("services/nucalm/status", client.connection)
     res, err = Obj.read()
 
@@ -195,8 +196,10 @@ def set_server_details(
         local_dir=local_dir,
     )
 
-    # Update client handle with new settings if no exception occurs
-    update_client_handle(host, port, auth=(username, password))
+    # Updating context for using latest config data
+    LOG.info("Updating context for using latest config file data")
+    config_obj = get_context()
+    config_obj.update_config_file_context(config_file=config_file)
 
 
 def init_db():

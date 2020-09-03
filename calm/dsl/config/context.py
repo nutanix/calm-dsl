@@ -125,12 +125,18 @@ class Context:
         print(config_str)
 
 
-_Context = None
+_ContextHandle = None
+
+
+def init_context():
+
+    global _ContextHandle
+    _ContextHandle = Context()
 
 
 def get_context():
-    global _Context
-    if not _Context:
-        _Context = Context()
+    global _ContextHandle
+    if not _ContextHandle:
+        init_context()
 
-    return _Context
+    return _ContextHandle
