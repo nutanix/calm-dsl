@@ -211,7 +211,7 @@ def create_blueprint_from_dsl(
         return None, err
 
     # Brownfield blueprints creation should be blocked using dsl file
-    if bp_payload["spec"]["resources"]["type"] == "BROWNFIELD":
+    if bp_payload["spec"]["resources"].get("type", "") == "BROWNFIELD":
         LOG.error(
             "Command not allowed for brownfield blueprints. Please use 'calm create app -f <bp_file_location>' for creating brownfield application"
         )
