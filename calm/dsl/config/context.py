@@ -20,6 +20,7 @@ class Context:
         self.server_config = config_handle.get_server_config()
         self.project_config = config_handle.get_project_config()
         self.log_config = config_handle.get_log_config()
+        self.categories_config = config_handle.get_categories_config()
 
         # Override with env data
         self.server_config.update(EnvConfig.get_server_config())
@@ -84,6 +85,11 @@ class Context:
 
         return config
 
+    def get_categories_config(self):
+        """returns config categories"""
+
+        return self.categories_config
+
     def get_init_config(self):
         """returns init configuration"""
 
@@ -104,6 +110,9 @@ class Context:
         self.server_config.update(cxt_config_handle.get_server_config())
         self.project_config.update(cxt_config_handle.get_project_config())
         self.log_config.update(cxt_config_handle.get_log_config())
+
+        if cxt_config_handle.get_categories_config():
+            self.categories_config = cxt_config_handle.get_categories_config()
 
     def print_config(self):
         """prints the configuration"""

@@ -3,7 +3,7 @@ import os
 import json
 import sys
 
-from calm.dsl.config import get_context, init_context, set_dsl_config
+from calm.dsl.config import get_context, set_dsl_config
 from calm.dsl.db import init_db_handle
 from calm.dsl.api import get_resource_api, get_client_handle_obj
 from calm.dsl.store import Cache
@@ -320,10 +320,8 @@ def _set_config(
     db_location = db_location or init_config["DB"]["location"]
     local_dir = local_dir or init_config["LOCAL_DIR"]["location"]
 
-    # Fetching config handle
-    ConfigHandle = get_config_handle()
-
-    ConfigHandle.set_config(
+    # Set the dsl configuration
+    set_dsl_config(
         host=host,
         port=port,
         username=username,

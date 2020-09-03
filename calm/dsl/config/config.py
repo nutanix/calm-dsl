@@ -2,7 +2,7 @@ import os
 import configparser
 from jinja2 import Environment, PackageLoader
 
-from .schema import validate_init_config, validate_config
+from .schema import validate_config
 from .init_config import InitConfig
 from .utils import make_file_dir
 from calm.dsl.log import get_logging_handle
@@ -54,6 +54,15 @@ class ConfigFileParser:
         else:
             return {}
 
+    def get_categories_config(self):
+        """returns categories config"""
+
+        if "CATEGORIES" in self._CONFIG:
+            return self._CONFIG["CATEGORIES"]
+
+        else:
+            return {}
+
 
 class ConfigHandle:
     def __init__(self, config_file=None):
@@ -67,18 +76,27 @@ class ConfigHandle:
         self.server_config = config_obj.get_server_config()
         self.project_config = config_obj.get_project_config()
         self.log_config = config_obj.get_log_config()
+        self.categories_config = config_obj.get_categories_config()
 
     def get_server_config(self):
+        """returns server configuration"""
 
         return self.server_config
 
     def get_project_config(self):
+        """returns project configuration"""
 
         return self.project_config
 
     def get_log_config(self):
+        """returns logging configuration"""
 
         return self.log_config
+
+    def get_categories_config(self):
+        """returns config categories"""
+
+        return self.categories_config
 
     @classmethod
     def get_init_config(cls):

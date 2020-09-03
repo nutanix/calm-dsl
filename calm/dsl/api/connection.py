@@ -341,7 +341,7 @@ def get_connection_handle(
     """
     global _CONNECTION
     if not _CONNECTION:
-        update_connection(host, port, auth_type, scheme, auth)
+        update_connection_handle(host, port, auth_type, scheme, auth)
     return _CONNECTION
 
 

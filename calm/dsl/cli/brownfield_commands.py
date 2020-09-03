@@ -1,5 +1,4 @@
 import click
-import sys
 
 from .main import get
 from .brownfield_vms import (

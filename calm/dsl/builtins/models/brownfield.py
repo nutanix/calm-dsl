@@ -7,7 +7,7 @@ from .metadata_payload import get_metadata_obj
 
 from calm.dsl.config import get_context
 from calm.dsl.store import Cache
-from calm.dsl.api import get_api_client, get_resource_api
+from calm.dsl.api import get_api_client
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -438,9 +438,6 @@ class BrownfiedVmType(EntityType):
     def compile(cls):
         cdict = super().compile()
         provider_type = cdict.pop("provider")
-
-        # Get project details
-        client = get_api_client()
 
         # Getting the metadata obj
         metadata_obj = get_metadata_obj()

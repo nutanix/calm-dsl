@@ -52,7 +52,7 @@ def create_blueprint_payload(UserBlueprint, metadata={}):
     context_obj = get_context()
     server_config = context_obj.get_server_config()
     project_config = context_obj.get_project_config()
-    config_categories = context_obj.get_categories()
+    config_categories = context_obj.get_categories_config()
 
     # Set the blueprint name and kind correctly
     metadata["name"] = UserBlueprint.__name__
