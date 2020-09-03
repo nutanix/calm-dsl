@@ -1,7 +1,7 @@
 import sys
 
 from .env_config import EnvConfig
-from .config2 import get_config_handle
+from .config import get_config_handle
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -36,25 +36,25 @@ class Context:
         config = self.server_config
         if not config.get("pc_ip"):
             LOG.error(
-                "Host IP not found in config. Please provide it in config file or set environment variable 'PC_IP'"
+                "Host IP not found. Please provide it in config file or set environment variable 'PC_IP'"
             )
             sys.exit(-1)
 
         if not config.get("pc_port"):
             LOG.error(
-                "Host Port not found in config. Please provide it in config file or set environment variable 'PC_PORT'"
+                "Host Port not found. Please provide it in config file or set environment variable 'PC_PORT'"
             )
             sys.exit(-1)
 
         if not config.get("pc_username"):
             LOG.error(
-                "Host username not found in config. Please provide it in config file or set environment variable 'PC_USERNAME'"
+                "Host username not found. Please provide it in config file or set environment variable 'PC_USERNAME'"
             )
             sys.exit(-1)
 
         if not config.get("pc_password"):
             LOG.error(
-                "Host password not found in config. Please provide it in config file or set environment variable 'PC_PASSWORD'"
+                "Host password not found. Please provide it in config file or set environment variable 'PC_PASSWORD'"
             )
             sys.exit(-1)
 

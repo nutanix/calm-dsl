@@ -5,7 +5,7 @@ from .validator import PropertyValidator
 from .deployment import DeploymentType
 from .metadata_payload import get_metadata_obj
 
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 from calm.dsl.store import Cache
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.log import get_logging_handle
@@ -441,14 +441,15 @@ class BrownfiedVmType(EntityType):
 
         # Get project details
         client = get_api_client()
-        config = get_config()
 
         # Getting the metadata obj
         metadata_obj = get_metadata_obj()
         project_ref = metadata_obj.get("project_reference") or dict()
 
         # If project not found in metadata, it will take project from config
-        project_name = project_ref.get("name", config["PROJECT"]["name"])
+        context_obj = get_context()
+        project_config = context_obj.get_project_config()
+        project_name = project_ref.get("name") or project_config["name"]
 
         project_cache_data = Cache.get_entity_data(
             entity_type="project", name=project_name

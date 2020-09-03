@@ -7,7 +7,6 @@ import click
 from prettytable import PrettyTable
 
 from calm.dsl.api import get_api_client, get_resource_api
-from calm.dsl.config import get_config
 from calm.dsl.store import Cache
 from calm.dsl.log import get_logging_handle
 

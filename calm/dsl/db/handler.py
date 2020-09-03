@@ -1,7 +1,7 @@
 import atexit
 import os
 
-from calm.dsl.config import get_init_data
+from calm.dsl.config import get_context
 from .table_config import dsl_database, SecretTable, DataTable, VersionTable
 from .table_config import CacheTableBase
 from calm.dsl.log import get_logging_handle
@@ -21,8 +21,9 @@ class Database:
 
     @staticmethod
     def instantiate_db():
-        init_obj = get_init_data()
-        db_location = init_obj["DB"].get("location")
+        context_obj = get_context()
+        init_obj = context_obj.get_init_config()
+        db_location = init_obj["DB"]["location"]
         dsl_database.init(db_location)
         return dsl_database
 
@@ -102,8 +103,9 @@ def init_db_handle():
         pass
 
     # Removing existing db at init location if exists
-    init_obj = get_init_data()
-    db_location = init_obj["DB"].get("location")
+    context_obj = get_context()
+    init_obj = context_obj.get_init_config()
+    db_location = init_obj["DB"]["location"]
     if os.path.exists(db_location):
         os.remove(db_location)
 

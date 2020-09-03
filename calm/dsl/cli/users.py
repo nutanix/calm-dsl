@@ -18,8 +18,6 @@ def get_users(name, filter_by, limit, offset, quiet, out):
     """ Get the users, optionally filtered by a string """
 
     client = get_api_client()
-    ContextObj = get_context()
-    server_config = ContextObj.get_server_config()
 
     params = {"length": limit, "offset": offset}
     filter_query = ""
@@ -36,7 +34,10 @@ def get_users(name, filter_by, limit, offset, quiet, out):
     res, err = client.user.list(params=params)
 
     if err:
+        ContextObj = get_context()
+        server_config = ContextObj.get_server_config()
         pc_ip = server_config["pc_ip"]
+
         LOG.warning("Cannot fetch users from {}".format(pc_ip))
         return
 
