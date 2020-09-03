@@ -3,7 +3,7 @@ import os
 import json
 import sys
 
-from calm.dsl.config import get_context
+from calm.dsl.config import get_context, get_config_handle, set_dsl_config
 from calm.dsl.db import init_db_handle
 from calm.dsl.api import get_resource_api, update_client_handle, get_client_handle
 from calm.dsl.store import Cache
@@ -182,22 +182,17 @@ def set_server_details(
     service_enablement_status = result["service_enablement_status"]
     LOG.info(service_enablement_status)
 
-    # Fetching context object
-    ContextObj = get_context()
-
-    # Updating init file data
-    ContextObj.update_init_config(
-        config_file=config_file, db_file=db_file, local_dir=local_dir
-    )
-
-    LOG.info("Writing config to {}".format(config_file))
-    ContextObj.update_config_file(
+    # Writing configuration to file
+    set_dsl_config(
         host=host,
         port=port,
         username=username,
         password=password,
         project_name=project_name,
         log_level=log_level,
+        config_file=config_file,
+        db_location=db_file,
+        local_dir=local_dir,
     )
 
     # Update client handle with new settings if no exception occurs
@@ -297,11 +292,35 @@ def _set_config(
     config_file,
     local_dir,
 ):
-    """writes the configuration to config file"""
+    """writes the configuration to config files i.e. config.ini and init.ini"""
 
     # Fetching context object
     ContextObj = get_context()
-    ContextObj.set_config(
+
+    server_config = ContextObj.get_server_config()
+    host = host or server_config["pc_ip"]
+    username = username or server_config["pc_username"]
+    port = port or server_config["pc_port"]
+    password = password or server_config["pc_password"]
+
+    project_config = ContextObj.get_project_config()
+    project_name = project_name or project_config.get("name") or "default"
+
+    log_config = ContextObj.get_log_config()
+    log_level = log_level or log_config.get("level") or "INFO"
+
+    # Take init_configuration from user params or init file
+    init_config = ContextObj.get_init_config()
+    config_file = (
+        config_file or ContextObj._CONFIG_FILE or init_config["CONFIG"]["location"]
+    )
+    db_location = db_location or init_config["DB"]["location"]
+    local_dir = local_dir or init_config["LOCAL_DIR"]["location"]
+
+    # Fetching config handle
+    ConfigHandle = get_config_handle()
+
+    ConfigHandle.set_config(
         host=host,
         port=port,
         username=username,

@@ -10,54 +10,80 @@ from calm.dsl.log import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-class ConfigHandle:
-    _CONFIG_FILE = None
-
-    def __init__(self, config_file=None):
-
-        if not config_file:
-            init_obj = InitConfig.get_init_data()
-            config_file = init_obj["CONFIG"]["location"]
-
-        self._CONFIG_FILE = config_file
+class ConfigFileParser:
+    def __init__(self, config_file):
 
         config = configparser.ConfigParser()
         config.optionxform = str  # Maintaining case sensitivity for field names
         config.read(config_file)
 
         validate_config(config)
-        self._CONFIG = config
 
-    # Note: It is a classmethod, because it requires atleast a location to read config from
+        config_obj = {}
+        for section in config.sections():
+            config_obj[section] = {}
+            for k, v in config.items(section):
+                config_obj[section][k] = v
+
+        self._CONFIG = config_obj
+
     def get_server_config(self):
+        """returns server config"""
 
-        if "SERVER" not in self._CONFIG:
-            return {"pc_ip": "", "pc_port": "", "pc_username": "", "pc_password": ""}
+        if "SERVER" in self._CONFIG:
+            return self._CONFIG["SERVER"]
 
         else:
-            c_data = self._CONFIG["SERVER"]
-            return {
-                "pc_ip": c_data.get("pc_ip") or "",
-                "pc_port": c_data.get("pc_port") or "",
-                "pc_username": c_data.get("pc_username") or "",
-                "pc_password": c_data.get("pc_password") or "",
-            }
+            return {}
+
+    def get_project_config(self):
+        """returns project config"""
+
+        if "PROJECT" in self._CONFIG:
+            return self._CONFIG["PROJECT"]
+
+        else:
+            return {}
+
+    def get_log_config(self):
+        """returns log config"""
+
+        if "LOG" in self._CONFIG:
+            return self._CONFIG["LOG"]
+
+        else:
+            return {}
+
+
+class ConfigHandle:
+    def __init__(self, config_file=None):
+
+        if not config_file:
+            init_obj = InitConfig.get_init_data()
+            config_file = init_obj["CONFIG"]["location"]
+
+        config_obj = ConfigFileParser(config_file)
+
+        self.server_config = config_obj.get_server_config()
+        self.project_config = config_obj.get_project_config()
+        self.log_config = config_obj.get_log_config()
+
+    def get_server_config(self):
+
+        return self.server_config
 
     def get_project_config(self):
 
-        if "PROJECT" not in self._CONFIG:
-            return {"name": ""}
-
-        else:
-            return {"name": self._CONFIG["PROJECT"].get("name") or ""}
+        return self.project_config
 
     def get_log_config(self):
 
-        if "LOG" not in self._CONFIG:
-            return {"level": ""}
+        return self.log_config
 
-        else:
-            return {"level": self._CONFIG["LOG"].get("level") or ""}
+    @classmethod
+    def get_init_config(cls):
+
+        return InitConfig.get_init_data()
 
     @classmethod
     def _render_config_template(
@@ -86,13 +112,10 @@ class ConfigHandle:
         return text.strip() + os.linesep
 
     @classmethod
-    def update_config(cls, host, port, username, password, project_name, log_level):
+    def update_config_file(
+        cls, config_file, host, port, username, password, project_name, log_level
+    ):
         """Updates the config file data"""
-
-        config_file = cls._CONFIG_FILE
-        if not config_file:
-            init_obj = InitConfig.get_init_data()
-            config_file = init_obj["CONFIG"]["location"]
 
         LOG.debug("Rendering configuration template")
         make_file_dir(config_file)
@@ -103,3 +126,52 @@ class ConfigHandle:
         LOG.debug("Writing configuration to '{}'".format(config_file))
         with open(config_file, "w") as fd:
             fd.write(text)
+
+
+_CONFIG_HANDLE = None
+
+
+def get_config_handle(config_file=None):
+    """If global data not exists or config_file is given, it will create ConfigHandle object"""
+
+    global _CONFIG_HANDLE
+    if not _CONFIG_HANDLE or config_file:
+        _CONFIG_HANDLE = ConfigHandle(config_file)
+
+    return _CONFIG_HANDLE
+
+
+def set_dsl_config(
+    host,
+    port,
+    username,
+    password,
+    project_name,
+    log_level,
+    db_location,
+    local_dir,
+    config_file,
+):
+
+    """
+    overrides the existing server/dsl configuration
+    Note: This helper assumes that valid configuration is present. It is invoked just to update the existing configuration.
+
+    if config_file is given, it will update config file location in `init.ini` and update the server details in that file
+
+    Note: Context will not be changed according to it.
+    """
+
+    InitConfig.update_init_config(
+        config_file=config_file, db_file=db_location, local_dir=local_dir
+    )
+
+    ConfigHandle.update_config_file(
+        config_file=config_file,
+        host=host,
+        port=port,
+        username=username,
+        password=password,
+        project_name=project_name,
+        log_level=log_level,
+    )

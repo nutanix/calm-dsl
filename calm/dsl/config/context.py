@@ -1,15 +1,14 @@
+import sys
+
 from .env_config import EnvConfig
-from .config2 import ConfigHandle
-from .init_config import InitConfig
+from .config2 import get_config_handle
+from calm.dsl.log import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 class Context:
-    _CONFIG_FILE = None
-
-    _ConfigHandle = ConfigHandle
-    _InitConfig = InitConfig
-
-    def get_server_config(self):
+    def __init__(self):
         """
         # Priority (Decreases from 1 -> 3):
         # 1.) Config file passed as param
@@ -17,160 +16,94 @@ class Context:
         # 3.) Config file stored in init.ini
         """
 
-        # Read data from default config file i.e. config file from init.ini
-        config_obj = self._ConfigHandle()
-        server_config = config_obj.get_server_config()
+        config_handle = get_config_handle()
+        self.server_config = config_handle.get_server_config()
+        self.project_config = config_handle.get_project_config()
+        self.log_config = config_handle.get_log_config()
 
-        # Updatiing by environment data
-        env_config_data = EnvConfig.get_server_config()
-        server_config["pc_ip"] = env_config_data["pc_ip"] or server_config["pc_ip"]
-        server_config["pc_port"] = (
-            env_config_data["pc_port"] or server_config["pc_port"]
-        )
-        server_config["pc_username"] = (
-            env_config_data["pc_username"] or server_config["pc_username"]
-        )
-        server_config["pc_password"] = (
-            env_config_data["pc_password"] or server_config["pc_password"]
-        )
+        # Override with env data
+        self.server_config.update(EnvConfig.get_server_config())
+        self.project_config.update(EnvConfig.get_project_config())
+        self.log_config.update(EnvConfig.get_log_config())
 
-        # Updating by cli switch file (_CONFIG_FILE) if given
-        if self._CONFIG_FILE:
-            config_obj = self._ConfigHandle(self._CONFIG_FILE)
-            config_file_data = config_obj.get_server_config()
+        init_config = config_handle.get_init_config()
+        self._CONFIG_FILE = init_config["CONFIG"]["location"]
+        self._PROJECT = self.project_config.get("name", "")
 
-            server_config["pc_ip"] = config_file_data["pc_ip"] or server_config["pc_ip"]
-            server_config["pc_port"] = (
-                config_file_data["pc_port"] or server_config["pc_port"]
+    def get_server_config(self):
+        """returns server configuration"""
+
+        config = self.server_config
+        if not config.get("pc_ip"):
+            LOG.error(
+                "Host IP not found in config. Please provide it in config file or set environment variable 'PC_IP'"
             )
-            server_config["pc_username"] = (
-                config_file_data["pc_username"] or server_config["pc_username"]
-            )
-            server_config["pc_password"] = (
-                config_file_data["pc_password"] or server_config["pc_password"]
-            )
+            sys.exit(-1)
 
-        return server_config
+        if not config.get("pc_port"):
+            LOG.error(
+                "Host Port not found in config. Please provide it in config file or set environment variable 'PC_PORT'"
+            )
+            sys.exit(-1)
+
+        if not config.get("pc_username"):
+            LOG.error(
+                "Host username not found in config. Please provide it in config file or set environment variable 'PC_USERNAME'"
+            )
+            sys.exit(-1)
+
+        if not config.get("pc_password"):
+            LOG.error(
+                "Host password not found in config. Please provide it in config file or set environment variable 'PC_PASSWORD'"
+            )
+            sys.exit(-1)
+
+        return config
 
     def get_project_config(self):
         """returns project configuration"""
 
-        # Read data from default config file i.e. config file from init.ini
-        default_config_obj = self._ConfigHandle()
-        project_config = default_config_obj.get_project_config()
+        config = self.project_config
+        if not config.get("name"):
+            LOG.warning(
+                "Default project not found in config file or environment('DSL_DEFAULT_PROJECT' variable). Setting it to 'default' project"
+            )
+            config["name"] = "default"
 
-        # Updating by cli switch file (_CONFIG_FILE) if given
-        if self._CONFIG_FILE:
-            config_obj = self._ConfigHandle(self._CONFIG_FILE)
-            _project_config = config_obj.get_project_config()
-
-            project_config["name"] = _project_config["name"] or project_config["name"]
-
-        return project_config
+        return config
 
     def get_log_config(self):
         """returns logging configuration"""
 
-        # Read data from default config file i.e. config file from init.ini
-        default_config_obj = self._ConfigHandle()
-        log_config = default_config_obj.get_log_config()
+        config = self.log_config
+        if not config.get("level"):
+            LOG.warning(
+                "Default log-level not found in config file or environment('DSL_LOG_LEVEL'). Setting it to 'INFO' level"
+            )
+            config["level"] = "INFO"
 
-        # Updating by cli switch file (_CONFIG_FILE) if given
-        if self._CONFIG_FILE:
-            config_obj = self._ConfigHandle(self._CONFIG_FILE)
-            _log_config = config_obj.get_log_config()
+        return config
 
-            log_config["level"] = _log_config["level"] or log_config["level"]
+    def get_init_config(self):
+        """returns init configuration"""
 
-        return log_config
+        config_handle = get_config_handle()
+        return config_handle.get_init_config()
 
-    @classmethod
-    def update_config_file_location(cls, config_file):
-        """updates the config file location (global _CONFIG_FILE object)"""
+    def update_project_context(self, project_name):
+        """Overrides the existing project configuration"""
 
-        cls._CONFIG_FILE = config_file
+        self._PROJECT = project_name
+        self.project_config["name"] = project_name
 
-    @classmethod
-    def update_config_file(
-        cls, host, port, username, password, project_name, log_level
-    ):
-        """updates config file data"""
+    def update_config_file_context(self, config_file):
+        """Overrides the existing configuration with passed file configuration"""
 
-        cls._ConfigHandle.update_config(
-            host=host,
-            port=port,
-            username=username,
-            password=password,
-            project_name=project_name,
-            log_level=log_level,
-        )
-
-    @classmethod
-    def update_init_config_file(cls, config_file, db_file, local_dir):
-        """updates the init file data"""
-
-        cls._InitConfig.update_init_config(
-            config_file=config_file, db_file=db_file, local_dir=local_dir
-        )
-
-    def set_config(
-        self,
-        host,
-        port,
-        username,
-        password,
-        project_name,
-        db_location,
-        log_level,
-        local_dir,
-        config_file,
-    ):
-
-        """
-        overrides the existing server/dsl configuration
-        Note: This helper assumes that valid configuration is present. It is invoked just to update the existing configuration.
-
-        if config_file is given, it will update config file location in `init.ini` and update the server details in that file
-        """
-
-        # Missing data should be taken from existing configs.
-        # Note: Passed config file will not be used at all to use missing data from
-
-        server_config = self.get_server_config()
-        host = host or server_config["pc_ip"]
-        username = username or server_config["pc_username"]
-        port = port or server_config["pc_port"]
-        password = password or server_config["pc_password"]
-
-        project_config = self.get_project_config()
-        project_name = project_name or project_config.get("name") or "default"
-
-        log_config = self.get_log_config()
-        log_level = log_level or log_config.get("level") or "INFO"
-
-        init_data = self._InitConfig.get_init_data()
-
-        # TODO check pipelining of commands with changing db_location and local_dir should work
-        # Updating init file data
-        db_location = db_location or init_data["DB"]["location"]
-        local_dir_location = local_dir or init_data["LOCAL_DIR"]["location"]
-        config_file_location = config_file or init_data["CONFIG"]["location"]
-
-        self.update_init_config_file(
-            config_file=config_file_location,
-            db_file=db_location,
-            local_dir=local_dir_location,
-        )
-
-        # Updating config file data
-        self.update_config_file(
-            host=host,
-            port=port,
-            username=username,
-            password=password,
-            project_name=project_name,
-            log_level=log_level,
-        )
+        self._CONFIG_FILE = config_file
+        cxt_config_handle = get_config_handle(self._CONFIG_FILE)
+        self.server_config.update(cxt_config_handle.get_server_config())
+        self.project_config.update(cxt_config_handle.get_project_config())
+        self.log_config.update(cxt_config_handle.get_log_config())
 
     def print_config(self):
         """prints the configuration"""
@@ -179,7 +112,8 @@ class Context:
         project_config = self.get_project_config()
         log_config = self.get_log_config()
 
-        config_str = self._ConfigHandle._render_config_template(
+        ConfigHandle = get_config_handle()
+        config_str = ConfigHandle._render_config_template(
             ip=server_config["pc_ip"],
             port=server_config["pc_port"],
             username=server_config["pc_username"],
@@ -191,5 +125,12 @@ class Context:
         print(config_str)
 
 
+_Context = None
+
+
 def get_context():
-    return Context()
+    global _Context
+    if not _Context:
+        _Context = Context()
+
+    return _Context

@@ -12,7 +12,8 @@ from .config import (
     make_file_dir,
 )
 
-from .context import get_context
+from .context import get_context, update_config_file_context, update_project_context
+from .config2 import get_config_handle, set_dsl_config
 
 __all__ = [
     "get_init_data",
@@ -27,4 +28,6 @@ __all__ = [
     "print_config",
     "make_file_dir",
     "get_context",
+    "ConfigHandle",
+    "set_dsl_config",
 ]

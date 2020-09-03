@@ -279,6 +279,9 @@ def get_config():
             "Invalid config file: {}. Please run calm init dsl".format(config_file)
         )
 
+    import pdb
+
+    pdb.set_trace()
     return config
 
 

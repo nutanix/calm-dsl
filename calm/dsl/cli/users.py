@@ -4,7 +4,7 @@ import sys
 from prettytable import PrettyTable
 
 from calm.dsl.api import get_api_client
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 from calm.dsl.builtins import Ref
 from calm.dsl.log import get_logging_handle
 
@@ -18,7 +18,8 @@ def get_users(name, filter_by, limit, offset, quiet, out):
     """ Get the users, optionally filtered by a string """
 
     client = get_api_client()
-    config = get_config()
+    ContextObj = get_context()
+    server_config = ContextObj.get_server_config()
 
     params = {"length": limit, "offset": offset}
     filter_query = ""
@@ -35,7 +36,7 @@ def get_users(name, filter_by, limit, offset, quiet, out):
     res, err = client.user.list(params=params)
 
     if err:
-        pc_ip = config["SERVER"]["pc_ip"]
+        pc_ip = server_config["pc_ip"]
         LOG.warning("Cannot fetch users from {}".format(pc_ip))
         return
 

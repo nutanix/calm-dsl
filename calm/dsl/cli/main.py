@@ -13,7 +13,7 @@ from calm.dsl.providers import get_provider, get_provider_types
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.tools import simple_verbosity_option, show_trace_option
 from calm.dsl.log import get_logging_handle
-from calm.dsl.config import update_config_file_location, get_context
+from calm.dsl.config import get_context
 from calm.dsl.store import Cache
 
 from .version_validator import validate_version
@@ -65,11 +65,8 @@ def main(ctx, config_file, sync):
         LOG.debug("Could not validate version")
         pass
     if config_file:
-        cur_context = get_context()
-        cur_context.update_config_file_location(config_file=config_file)
-
-        # TODO remove it
-        update_config_file_location(config_file=config_file)
+        context_obj = get_context()
+        context_obj.update_config_file_context(config_file=config_file)
     if sync:
         Cache.sync()
 
