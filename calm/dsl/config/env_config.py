@@ -9,6 +9,10 @@ class EnvConfig:
     default_project = os.environ.get("DSL_DEFAULT_PROJECT") or ""
     log_level = os.environ.get("DSL_LOG_LEVEL") or ""
 
+    config_file_location = os.environ.get("DSL_CONFIG_FILE_LOCATION") or ""
+    local_dir_location = os.environ.get("DSL_LOCAL_DIR_LOCATION") or ""
+    db_location = os.environ.get("DSL_DB_LOCATION")
+
     @classmethod
     def get_server_config(cls):
 
@@ -42,5 +46,20 @@ class EnvConfig:
         config = {}
         if cls.log_level:
             config["level"] = cls.log_level
+
+        return config
+
+    @classmethod
+    def get_init_config(cls):
+
+        config = {}
+        if cls.config_file_location:
+            config["config_file_location"] = cls.config_file_location
+
+        if cls.local_dir_location:
+            config["local_dir_location"] = cls.local_dir_location
+
+        if cls.db_location:
+            config["db_location"] = cls.db_location
 
         return config
