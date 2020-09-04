@@ -451,6 +451,12 @@ def set():
     pass
 
 
+@main.group("import", cls=FeatureFlagGroup)
+def calm_import():
+    """Import entities in Calm (task library) """
+    pass
+
+
 @get.group("library")
 def library_get():
     """Get Library entities"""
@@ -460,6 +466,12 @@ def library_get():
 @create.group("library")
 def library_create():
     """Create Library entities"""
+    pass
+
+
+@calm_import.group("library")
+def library_import():
+    """Import Library entities"""
     pass
 
 

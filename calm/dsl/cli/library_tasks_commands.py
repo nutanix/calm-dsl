@@ -4,6 +4,7 @@ from calm.dsl.log import get_logging_handle
 
 from .main import (
     library_get,
+    library_import,
     library_create,
     library_describe,
     library_delete,
@@ -73,14 +74,14 @@ def _delete_task(task_names):
     delete_task(task_names)
 
 
-@library_create.command("task")
+@library_import.command("task")
 @click.option(
     "--file",
     "-f",
     "task_file",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     required=True,
-    help="Path of task file (.json, .sh, .py, .escript, .ps1)",
+    help="Path of task file (.json, .sh, .escript, .ps1)",
 )
 @click.option("--name", "-n", default=None, help="Task Library item name (Optional)")
 @click.option(
@@ -100,25 +101,57 @@ def _delete_task(task_names):
     default=False,
     help="Updates existing task library item with the same name.",
 )
-def _create_task(task_file, name, description, out_vars, force):
+def _import_task(task_file, name, description, out_vars, force):
+
+    """Import task library item.
+
+    (-f | --file) supports:\n
+    \t.json     - Full json payload download from Calm API (v3 #GET) or using `calm describe <task_name> -o json`\n
+    \t.sh       - Shell script file\n
+    \t.escript  - Escript file\n
+    \t.ps1      - Powershell Script File\n
+
+    Note:\n
+        HTTP tasks is supported only from downloaded .json.\n
+        To imports Set-Variable task, use --out-vars="OUT1,OUT2".
+
+    Examples:\n
+    calm imports library task --name=HTTPGetVM -f HTTPGetVM.json\n
+    calm imports library task --name="Install IIS" -f Install_IIS.ps1\n
+    calm imports library task -f Install_Docker.sh\n
+    calm imports library task -f Install_Docker.sh --out-vars="IP_ADDRESS,PORT" """
+
+    create_task(task_file, name, description, out_vars, force)
+
+
+@library_create.command("task")
+@click.option(
+    "--file",
+    "-f",
+    "task_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    required=True,
+    help="Path of task file (.py)",
+)
+@click.option("--name", "-n", default=None, help="Task Library item name (Optional)")
+@click.option(
+    "--description", "-d", default=None, help="Blueprint description (Optional)"
+)
+@click.option(
+    "--force",
+    "-fc",
+    is_flag=True,
+    default=False,
+    help="Updates existing task library item with the same name.",
+)
+def _create_task(task_file, name, description, force):
 
     """Create task library item.
 
-(-f | --file) supports:\n
-\t.json     - Full json payload download from Calm API (v3 #GET) or using `calm describe <task_name> -o json`\n
-\t.sh       - Shell script file\n
-\t.escript  - Escript file\n
-\t.ps1      - Powershell Script File\n
+    (-f | --file) supports:\n
+    \t.py       - Python DSL\n
 
-Note:\n
-    HTTP tasks is supported only from downloaded .json.\n
-    To create Set-Variable task, use --out-vars="OUT1,OUT2".
+    Examples:\n
+    calm create library task --name=HTTPGetVM -f HTTPGetVM.py\n"""
 
-Examples:\n
-calm create library task --name=HTTPGetVM -f HTTPGetVM.json\n
-calm create library task --name="Install IIS" -f Install_IIS.ps1\n
-calm create library task -f Install_Docker.sh\n
-calm create library task -f Install_Docker.sh --out-vars="IP_ADDRESS,PORT"
-"""
-
-    create_task(task_file, name, description, out_vars, force)
+    create_task(task_file, name, description, None, force)

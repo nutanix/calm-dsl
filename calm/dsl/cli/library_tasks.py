@@ -11,6 +11,8 @@ from prettytable import PrettyTable
 from calm.dsl.config import get_config
 from calm.dsl.api import get_api_client
 from calm.dsl.log import get_logging_handle
+from calm.dsl.tools import get_module_from_file
+from calm.dsl.builtins import TaskType
 from .utils import (
     get_name_query,
     highlight_text,
@@ -238,7 +240,8 @@ def delete_task(task_names):
         LOG.info("Task Library item {} deleted".format(task_name))
 
 
-def create_update_task(client, task_payload, name=None, force_create=None):
+def create_update_library_task(client, task_payload, name=None, force_create=None):
+    """Create/Update Task library item"""
 
     task_payload.pop("status", None)
     task_payload.get("metadata").pop("uuid", None)
@@ -300,48 +303,50 @@ def create_update_task(client, task_payload, name=None, force_create=None):
         LOG.error("Failed to create Task Library item {}".format(name))
         sys.exit(-1)
 
+    LOG.info("Task Library item '{}' created successfully.".format(name))
+
     return res, err
 
 
-def create_task_from_json(
-    client, path_to_json, name=None, description=None, force_create=False
-):
+def get_library_task_classes(library_task_dsl=None):
+    """Get Task Library deployment classes"""
 
-    with open(path_to_json, "r") as f:
-        task_payload = json.loads(f.read())
+    task_library_item = None
+    if not library_task_dsl:
+        return []
 
-    return create_update_task(
-        client, task_payload, name=name, force_create=force_create,
-    )
+    tl_module = get_module_from_file("calm.dsl.library_task", library_task_dsl)
+    for item in dir(tl_module):
+        obj = getattr(tl_module, item)
+        if isinstance(obj, type(TaskType)):
+            if type(obj) == (TaskType):
+                task_library_item = obj
+
+    return task_library_item
 
 
-def create_task_using_script_file(
-    client,
-    task_file,
-    script_type,
-    task_type,
-    out_vars=None,
-    name=None,
-    description=None,
-    force_create=False,
-):
-
-    with open(task_file, "r") as f:
-        task_file_content = f.read()
-
-    if task_file_content is None:
-        err_msg = "User task not found in {}".format(task_file)
-        err = {"error": err_msg, "code": -1}
-        return None, err
+def create_library_task_payload(name, task_type, attrs, description, out_vars=None):
+    """Create Task Library payload"""
 
     task_resources = {
         "type": task_type,
-        "attrs": {"script": task_file_content, "script_type": script_type},
         "variable_list": [],
     }
 
-    if out_vars:
-        task_resources["attrs"]["eval_variables"] = out_vars.split(",")
+    if task_type == "HTTP":
+        task_resources["attrs"] = attrs
+    else:
+        script_type = attrs.get("script_type")
+        script = attrs.get("script")
+        if out_vars:
+            out_vars = out_vars.split(",")
+        else:
+            out_vars = attrs.get("eval_variables", None)
+
+        task_resources["attrs"] = {"script": script, "script_type": script_type}
+
+        if out_vars:
+            task_resources["attrs"]["eval_variables"] = out_vars
 
     task_payload = {
         "spec": {
@@ -353,8 +358,106 @@ def create_task_using_script_file(
         "api_version": "3.0",
     }
 
-    return create_update_task(
-        client, task_payload, name=name, force_create=force_create,
+    return task_payload
+
+
+def compile_library_task(path_to_dsl):
+    """Compile Task Library item"""
+
+    TaskLibraryItem = get_library_task_classes(path_to_dsl)
+    task_dict = TaskLibraryItem.get_dict()
+
+    name = task_dict.get("name")
+    task_type = task_dict.get("type")
+    description = task_dict.get("description")
+    attrs = task_dict.get("attrs")
+
+    task_payload = create_library_task_payload(
+        name, task_type, attrs, description, out_vars=None
+    )
+
+    return task_payload
+
+
+def create_library_task_from_json(
+    client, path_to_json, name=None, description=None, force_create=False
+):
+    """Create Task Library from json"""
+
+    with open(path_to_json, "r") as f:
+        task_payload = json.loads(f.read())
+
+    if name:
+        task_payload["spec"]["name"] = name
+    else:
+        name = task_payload.get("spec").get("name")
+
+    return create_update_library_task(
+        client,
+        task_payload,
+        name=name,
+        force_create=force_create,
+    )
+
+
+def create_library_task_from_dsl(
+    client, path_to_dsl, name=None, description=None, force_create=False
+):
+    """Create Task Library from DSL"""
+
+    task_payload = compile_library_task(path_to_dsl)
+
+    if name:
+        task_payload["spec"]["name"] = name
+    else:
+        name = task_payload.get("spec").get("name")
+
+    return create_update_library_task(
+        client,
+        task_payload,
+        name=name,
+        force_create=force_create,
+    )
+
+
+def create_library_task_using_script_file(
+    client,
+    task_file,
+    script_type,
+    task_type,
+    out_vars=None,
+    name=None,
+    description=None,
+    force_create=False,
+):
+    """Create Task Library from Script"""
+
+    with open(task_file, "r") as f:
+        task_file_content = f.read()
+
+    if not name:
+        task_file_name = ntpath.basename(task_file)
+        name = os.path.splitext(task_file_name.replace(" ", "_"))[0]
+
+    if task_file_content is None:
+        err_msg = "User task not found in {}".format(task_file)
+        err = {"error": err_msg, "code": -1}
+        return None, err
+
+    attrs = {
+        "script_type": script_type,
+        "script": task_file_content,
+    }
+
+    task_payload = create_library_task_payload(
+        name, task_type, attrs, description, out_vars=out_vars
+    )
+
+    return create_update_library_task(
+        client,
+        task_payload,
+        name=name,
+        force_create=force_create,
     )
 
 
@@ -362,17 +465,23 @@ def create_task(task_file, name, description, out_vars, force):
     """Creates a task library item"""
 
     client = get_api_client()
-    if not name:
-        task_file_name = ntpath.basename(task_file)
-        name = os.path.splitext(task_file_name.replace(" ", "_"))[0]
 
     if task_file.endswith(".json"):
         if out_vars:
             LOG.error("--out-vars is not allowed for file type (.json)")
             return
-        res, err = create_task_from_json(
+        res, err = create_library_task_from_json(
             client, task_file, name=name, description=description, force_create=force
         )
+    elif task_file.endswith(".py"):
+        if out_vars:
+            LOG.error("--out-vars is not allowed for file type (.py)")
+            return
+
+        res, err = create_library_task_from_dsl(
+            client, task_file, name=name, description=description, force_create=force
+        )
+
     elif (
         task_file.endswith(".sh")
         or task_file.endswith(".escript")
@@ -390,7 +499,7 @@ def create_task(task_file, name, description, out_vars, force):
         else:
             task_type = TASKS.TASK_TYPES.EXEC
 
-        res, err = create_task_using_script_file(
+        res, err = create_library_task_using_script_file(
             client,
             task_file,
             script_type,
@@ -407,5 +516,3 @@ def create_task(task_file, name, description, out_vars, force):
     if err:
         LOG.error(err["error"])
         return
-
-    LOG.info("Task Library item {} created successfully.".format(name))
