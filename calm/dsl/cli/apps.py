@@ -11,7 +11,7 @@ from prettytable import PrettyTable
 from anytree import NodeMixin, RenderTree
 
 from calm.dsl.api import get_api_client
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 
 from .utils import get_name_query, get_states_filter, highlight_text, Display
 from .constants import APPLICATION, RUNLOG, SYSTEM_ACTIONS
@@ -24,7 +24,6 @@ LOG = get_logging_handle(__name__)
 
 def get_apps(name, filter_by, limit, offset, quiet, all_items, out):
     client = get_api_client()
-    config = get_config()
 
     params = {"length": limit, "offset": offset}
     filter_query = ""
@@ -43,7 +42,10 @@ def get_apps(name, filter_by, limit, offset, quiet, all_items, out):
     res, err = client.application.list(params=params)
 
     if err:
-        pc_ip = config["SERVER"]["pc_ip"]
+        ContextObj = get_context()
+        server_config = ContextObj.get_server_config()
+        pc_ip = server_config["pc_ip"]
+
         LOG.warning("Cannot fetch applications from {}".format(pc_ip))
         return
 

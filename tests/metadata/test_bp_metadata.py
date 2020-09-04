@@ -6,7 +6,7 @@ from click.testing import CliRunner
 
 
 from calm.dsl.cli import main as cli
-from calm.dsl.config import make_file_dir
+from calm.dsl.tools import make_file_dir
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)

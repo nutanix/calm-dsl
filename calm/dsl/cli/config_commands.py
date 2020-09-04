@@ -1,4 +1,4 @@
-from calm.dsl.config import print_config
+from calm.dsl.config import get_context
 from .main import show
 
 
@@ -6,4 +6,5 @@ from .main import show
 def show_config():
     """Shows server configuration"""
 
-    print_config()
+    ContextObj = get_context()
+    ContextObj.print_config()
