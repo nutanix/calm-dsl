@@ -2,16 +2,16 @@ import os
 
 
 class EnvConfig:
-    pc_ip = os.environ.get("PC_IP") or ""
-    pc_port = os.environ.get("PC_PORT") or ""
-    pc_username = os.environ.get("PC_USERNAME") or ""
-    pc_password = os.environ.get("PC_PASSWORD") or ""
-    default_project = os.environ.get("DSL_DEFAULT_PROJECT") or ""
-    log_level = os.environ.get("DSL_LOG_LEVEL") or ""
+    pc_ip = os.environ.get("CALM_DSL_PC_IP") or ""
+    pc_port = os.environ.get("CALM_DSL_PC_PORT") or ""
+    pc_username = os.environ.get("CALM_DSL_PC_USERNAME") or ""
+    pc_password = os.environ.get("CALM_DSL_PC_PASSWORD") or ""
+    default_project = os.environ.get("CALM_DSL_DEFAULT_PROJECT") or ""
+    log_level = os.environ.get("CALM_DSL_LOG_LEVEL") or ""
 
-    config_file_location = os.environ.get("DSL_CONFIG_FILE_LOCATION") or ""
-    local_dir_location = os.environ.get("DSL_LOCAL_DIR_LOCATION") or ""
-    db_location = os.environ.get("DSL_DB_LOCATION")
+    config_file_location = os.environ.get("CALM_DSL_CONFIG_FILE_LOCATION") or ""
+    local_dir_location = os.environ.get("CALM_DSL_LOCAL_DIR_LOCATION") or ""
+    db_location = os.environ.get("CALM_DSL_DB_LOCATION")
 
     @classmethod
     def get_server_config(cls):
