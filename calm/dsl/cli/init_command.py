@@ -4,15 +4,14 @@ import json
 import sys
 
 from calm.dsl.config import (
-    update_config,
+    get_context,
+    set_dsl_config,
     get_default_config_file,
-    set_config,
-    update_init_config,
     get_default_db_file,
     get_default_local_dir,
 )
 from calm.dsl.db import init_db_handle
-from calm.dsl.api import get_resource_api, update_client_handle, get_client_handle
+from calm.dsl.api import get_resource_api, get_client_handle_obj
 from calm.dsl.store import Cache
 from calm.dsl.init import init_bp, init_runbook
 from calm.dsl.providers import get_provider_types
@@ -171,8 +170,9 @@ def set_server_details(
         db_file = db_file or get_default_db_file()
 
     LOG.info("Checking if Calm is enabled on Server")
+
     # Get temporary client handle
-    client = get_client_handle(host, port, auth=(username, password), temp=True)
+    client = get_client_handle_obj(host, port, auth=(username, password))
     Obj = get_resource_api("services/nucalm/status", client.connection)
     res, err = Obj.read()
 
@@ -184,14 +184,23 @@ def set_server_details(
     service_enablement_status = result["service_enablement_status"]
     LOG.info(service_enablement_status)
 
-    # Updating init file data
-    update_init_config(config_file=config_file, db_file=db_file, local_dir=local_dir)
+    # Writing configuration to file
+    set_dsl_config(
+        host=host,
+        port=port,
+        username=username,
+        password=password,
+        project_name=project_name,
+        log_level=log_level,
+        config_file=config_file,
+        db_location=db_file,
+        local_dir=local_dir,
+    )
 
-    LOG.info("Writing config to {}".format(config_file))
-    update_config(host, port, username, password, project_name, log_level)
-
-    # Update client handle with new settings if no exception occurs
-    update_client_handle(host, port, auth=(username, password))
+    # Updating context for using latest config data
+    LOG.info("Updating context for using latest config file data")
+    config_obj = get_context()
+    config_obj.update_config_file_context(config_file=config_file)
 
 
 def init_db():
@@ -302,16 +311,40 @@ def _set_config(
     config_file,
     local_dir,
 ):
-    """writes the configuration to config file"""
+    """writes the configuration to config files i.e. config.ini and init.ini"""
 
-    set_config(
-        host,
-        port,
-        username,
-        password,
-        project_name,
-        db_location,
-        log_level,
+    # Fetching context object
+    ContextObj = get_context()
+
+    server_config = ContextObj.get_server_config()
+    host = host or server_config["pc_ip"]
+    username = username or server_config["pc_username"]
+    port = port or server_config["pc_port"]
+    password = password or server_config["pc_password"]
+
+    project_config = ContextObj.get_project_config()
+    project_name = project_name or project_config.get("name") or "default"
+
+    log_config = ContextObj.get_log_config()
+    log_level = log_level or log_config.get("level") or "INFO"
+
+    # Take init_configuration from user params or init file
+    init_config = ContextObj.get_init_config()
+    config_file = (
+        config_file or ContextObj._CONFIG_FILE or init_config["CONFIG"]["location"]
+    )
+    db_location = db_location or init_config["DB"]["location"]
+    local_dir = local_dir or init_config["LOCAL_DIR"]["location"]
+
+    # Set the dsl configuration
+    set_dsl_config(
+        host=host,
+        port=port,
+        username=username,
+        password=password,
+        project_name=project_name,
+        db_location=db_location,
+        log_level=log_level,
         local_dir=local_dir,
         config_file=config_file,
     )

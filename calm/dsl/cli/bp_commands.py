@@ -4,7 +4,7 @@ import sys
 import click
 
 from calm.dsl.api import get_api_client
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 
 from .secrets import find_secret, create_secret
@@ -293,9 +293,11 @@ def create_blueprint_command(bp_file, name, description, force):
         sys.exit(-1)
 
     LOG.info("Blueprint {} created successfully.".format(bp_name))
-    config = get_config()
-    pc_ip = config["SERVER"]["pc_ip"]
-    pc_port = config["SERVER"]["pc_port"]
+
+    context = get_context()
+    server_config = context.get_server_config()
+    pc_ip = server_config["pc_ip"]
+    pc_port = server_config["pc_port"]
     link = "https://{}:{}/console/#page/explore/calm/blueprints/{}".format(
         pc_ip, pc_port, bp_uuid
     )

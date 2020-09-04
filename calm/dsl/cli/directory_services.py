@@ -3,7 +3,7 @@ import json
 from prettytable import PrettyTable
 
 from calm.dsl.api import get_api_client
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 
 from .utils import get_name_query, highlight_text
@@ -16,7 +16,6 @@ def get_directory_services(name, filter_by, limit, offset, quiet, out):
     """ Get the directory services, optionally filtered by a string """
 
     client = get_api_client()
-    config = get_config()
 
     params = {"length": limit, "offset": offset}
     filter_query = ""
@@ -33,7 +32,10 @@ def get_directory_services(name, filter_by, limit, offset, quiet, out):
     res, err = client.directory_service.list(params=params)
 
     if err:
-        pc_ip = config["SERVER"]["pc_ip"]
+        context = get_context()
+        server_config = context.get_server_config()
+        pc_ip = server_config["pc_ip"]
+
         LOG.warning("Cannot fetch directory_services from {}".format(pc_ip))
         return
 

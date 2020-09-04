@@ -21,7 +21,7 @@ from calm.dsl.builtins import (
     init_dsl_metadata_map,
 )
 from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 from calm.dsl.api import get_api_client
 from calm.dsl.decompile.decompile_render import create_bp_dir
 from calm.dsl.decompile.file_handler import get_bp_dir
@@ -45,7 +45,6 @@ def get_blueprint_list(name, filter_by, limit, offset, quiet, all_items, out):
     """Get the blueprints, optionally filtered by a string"""
 
     client = get_api_client()
-    config = get_config()
 
     params = {"length": limit, "offset": offset}
     filter_query = ""
@@ -64,7 +63,10 @@ def get_blueprint_list(name, filter_by, limit, offset, quiet, all_items, out):
     res, err = client.blueprint.list(params=params)
 
     if err:
-        pc_ip = config["SERVER"]["pc_ip"]
+        context = get_context()
+        server_config = context.get_server_config()
+        pc_ip = server_config["pc_ip"]
+
         LOG.warning("Cannot fetch blueprints from {}".format(pc_ip))
         return
 
@@ -939,9 +941,10 @@ def poll_launch_status(client, blueprint_uuid, launch_req_id):
         if app_state == "success":
             app_uuid = response["status"]["application_uuid"]
 
-            config = get_config()
-            pc_ip = config["SERVER"]["pc_ip"]
-            pc_port = config["SERVER"]["pc_port"]
+            context = get_context()
+            server_config = context.get_server_config()
+            pc_ip = server_config["pc_ip"]
+            pc_port = server_config["pc_port"]
 
             click.echo("Successfully launched. App uuid is: {}".format(app_uuid))
 

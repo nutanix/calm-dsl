@@ -4,7 +4,7 @@ import json
 from jinja2 import Environment, PackageLoader
 from Crypto.PublicKey import RSA
 
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 from calm.dsl.store import Cache
 from calm.dsl.builtins import read_file
 from calm.dsl.log import get_logging_handle
@@ -14,9 +14,10 @@ LOG = get_logging_handle(__name__)
 
 def render_ahv_template(template, bp_name):
 
-    config = get_config()
+    ContextObj = get_context()
 
-    project_name = config["PROJECT"].get("name", "default")
+    project_config = ContextObj.get_project_config()
+    project_name = project_config.get("name") or "default"
     project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
     if not project_cache_data:
         LOG.error(
