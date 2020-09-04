@@ -11,7 +11,7 @@ from prettytable import PrettyTable
 from black import format_file_in_place, WriteBack, FileMode
 
 from calm.dsl.runbooks import runbook, create_runbook_payload
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 from calm.dsl.api import get_api_client
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Cache
@@ -30,7 +30,6 @@ def get_runbook_list(name, filter_by, limit, offset, quiet, all_items):
     """Get the runbooks, optionally filtered by a string"""
 
     client = get_api_client()
-    config = get_config()
 
     params = {"length": limit, "offset": offset}
     filter_query = ""
@@ -50,7 +49,9 @@ def get_runbook_list(name, filter_by, limit, offset, quiet, all_items):
     res, err = client.runbook.list(params=params)
 
     if err:
-        pc_ip = config["SERVER"]["pc_ip"]
+        ContextObj = get_context()
+        server_config = ContextObj.get_server_config()
+        pc_ip = server_config["pc_ip"]
         LOG.warning("Cannot fetch runbooks from {}".format(pc_ip))
         return
 
@@ -140,9 +141,9 @@ def compile_runbook_command(runbook_file, out):
         LOG.error("User runbook not found in {}".format(runbook_file))
         return
 
-    config = get_config()
-
-    project_name = config["PROJECT"].get("name", "default")
+    ContextObj = get_context()
+    project_config = ContextObj.get_project_config()
+    project_name = project_config["name"]
     project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
 
     if not project_cache_data:
@@ -267,9 +268,10 @@ def create_runbook_command(runbook_file, name, description, force):
         sys.exit(-1)
 
     LOG.info("Runbook {} created successfully.".format(runbook_name))
-    config = get_config()
-    pc_ip = config["SERVER"]["pc_ip"]
-    pc_port = config["SERVER"]["pc_port"]
+    ContextObj = get_context()
+    server_config = ContextObj.get_server_config()
+    pc_ip = server_config["pc_ip"]
+    pc_port = server_config["pc_port"]
     link = "https://{}:{}/console/#page/explore/calm/runbooks/{}".format(
         pc_ip, pc_port, runbook_uuid
     )
@@ -365,9 +367,10 @@ def update_runbook_command(runbook_file, name, description):
         sys.exit(-1)
 
     LOG.info("Runbook {} updated successfully.".format(runbook_name))
-    config = get_config()
-    pc_ip = config["SERVER"]["pc_ip"]
-    pc_port = config["SERVER"]["pc_port"]
+    ContextObj = get_context()
+    server_config = ContextObj.get_server_config()
+    pc_ip = server_config["pc_ip"]
+    pc_port = server_config["pc_port"]
     link = "https://{}:{}/console/#page/explore/calm/runbooks/{}".format(
         pc_ip, pc_port, runbook_uuid
     )
@@ -377,7 +380,6 @@ def update_runbook_command(runbook_file, name, description):
 
 def get_execution_history(name, filter_by, limit, offset):
     client = get_api_client()
-    config = get_config()
 
     params = {"length": limit, "offset": offset}
     filter_query = ""
@@ -396,7 +398,9 @@ def get_execution_history(name, filter_by, limit, offset):
     res, err = client.runbook.list_runbook_runlogs(params=params)
 
     if err:
-        pc_ip = config["SERVER"]["pc_ip"]
+        ContextObj = get_context()
+        server_config = ContextObj.get_server_config()
+        pc_ip = server_config["pc_ip"]
         LOG.warning("Cannot fetch previous runs from {}".format(pc_ip))
         return
 
@@ -611,9 +615,10 @@ def run_runbook(screen, client, runbook_uuid, watch, input_data={}, payload={}):
         screen.refresh()
         watch_runbook(runlog_uuid, runbook, screen=screen, input_data=input_data)
 
-    config = get_config()
-    pc_ip = config["SERVER"]["pc_ip"]
-    pc_port = config["SERVER"]["pc_port"]
+    ContextObj = get_context()
+    server_config = ContextObj.get_server_config()
+    pc_ip = server_config["pc_ip"]
+    pc_port = server_config["pc_port"]
     run_url = "https://{}:{}/console/#page/explore/calm/runbooks/runlogs/{}".format(
         pc_ip, pc_port, runlog_uuid
     )
@@ -807,9 +812,11 @@ def pause_runbook_execution(runlog_uuid):
         LOG.warning("Runbook Execution is in terminal state.")
     else:
         LOG.info("Pause triggered for the given runbook execution.")
-    config = get_config()
-    pc_ip = config["SERVER"]["pc_ip"]
-    pc_port = config["SERVER"]["pc_port"]
+
+    ContextObj = get_context()
+    server_config = ContextObj.get_server_config()
+    pc_ip = server_config["pc_ip"]
+    pc_port = server_config["pc_port"]
     link = "https://{}:{}/console/#page/explore/calm/runbooks/runlogs/{}".format(
         pc_ip, pc_port, runlog_uuid
     )
@@ -829,9 +836,11 @@ def resume_runbook_execution(runlog_uuid):
         LOG.info("Resume triggered for the given paused runbook execution.")
     else:
         LOG.warning("Runbook execution is not in paused state.")
-    config = get_config()
-    pc_ip = config["SERVER"]["pc_ip"]
-    pc_port = config["SERVER"]["pc_port"]
+
+    ContextObj = get_context()
+    server_config = ContextObj.get_server_config()
+    pc_ip = server_config["pc_ip"]
+    pc_port = server_config["pc_port"]
     link = "https://{}:{}/console/#page/explore/calm/runbooks/runlogs/{}".format(
         pc_ip, pc_port, runlog_uuid
     )
@@ -856,9 +865,11 @@ def abort_runbook_execution(runlog_uuid):
     response = res.json()
     state = response["status"]["state"]
     LOG.info("Abort triggered for the given runbook execution.")
-    config = get_config()
-    pc_ip = config["SERVER"]["pc_ip"]
-    pc_port = config["SERVER"]["pc_port"]
+
+    ContextObj = get_context()
+    server_config = ContextObj.get_server_config()
+    pc_ip = server_config["pc_ip"]
+    pc_port = server_config["pc_port"]
     link = "https://{}:{}/console/#page/explore/calm/runbooks/runlogs/{}".format(
         pc_ip, pc_port, runlog_uuid
     )
