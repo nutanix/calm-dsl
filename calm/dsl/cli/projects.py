@@ -305,7 +305,7 @@ def describe_project(project_name, out):
             AhvObj = AhvVmProvider.get_api_obj()
 
             filter_query = "(_entity_id_=={})".format(
-                ",_entity_id_==".join(subnets_list),
+                ",_entity_id_==".join(subnets_list)
             )
             nics = AhvObj.subnets(account_uuid=account_uuid, filter_query=filter_query)
             nics = nics["entities"]
@@ -331,11 +331,15 @@ def describe_project(project_name, out):
 
     quota_resources = project_resources.get("resource_domain", {}).get("resources", [])
     if quota_resources:
-        click.echo("\nQuotas: \n-------\n")
+        click.echo("\nQuotas: \n-------")
         for qr in quota_resources:
-            click.echo(
-                "\t{} : {}".format(qr["resource_type"], highlight_text(qr["value"]))
-            )
+            qk = qr["resource_type"]
+            qv = qr["limit"]
+            if qr["units"] == "BYTES":
+                qv = qv // 1073741824
+                qv = str(qv) + " (GiB)"
+
+            click.echo("\t{} : {}".format(qk, highlight_text(qv)))
 
 
 def delete_project(project_names):
@@ -451,7 +455,7 @@ def update_project_from_dsl(project_name, project_file):
 
 
 def update_project_using_cli_switches(
-    project_name, add_user_list, add_group_list, remove_user_list, remove_group_list,
+    project_name, add_user_list, add_group_list, remove_user_list, remove_group_list
 ):
 
     client = get_api_client()

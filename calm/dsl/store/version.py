@@ -12,9 +12,7 @@ class Version:
         """Store the uuid of entity in cache"""
 
         db = get_db_handle()
-        db.version_table.create(
-            name=name, version=version,
-        )
+        db.version_table.create(name=name, version=version)
 
     @classmethod
     def get_version(cls, name):

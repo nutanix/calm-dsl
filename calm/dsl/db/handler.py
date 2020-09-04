@@ -37,8 +37,8 @@ class Database:
             setattr(self, table_type, self.set_and_verify(table))
 
     def set_and_verify(self, table_cls):
-        """ Verify whether this class exists in db
-            If not, then creates one
+        """Verify whether this class exists in db
+        If not, then creates one
         """
 
         if not self.db.table_exists((table_cls.__name__).lower()):

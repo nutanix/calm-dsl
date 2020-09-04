@@ -61,8 +61,8 @@ class TestACPCommands:
 
     def test_acp_crud(self):
         """
-            It will cover create/describe/update/delete/get commands on project acps
-            This test assumes users/groups mentioned in project file are already created
+        It will cover create/describe/update/delete/get commands on project acps
+        This test assumes users/groups mentioned in project file are already created
         """
 
         # Create ACP operation
@@ -209,7 +209,7 @@ class TestACPCommands:
 
     def _test_update_acp_using_cli_switches(self):
         """
-            Removes user `sspuser1@systest.nutanix.com` from created acp.
+        Removes user `sspuser1@systest.nutanix.com` from created acp.
         """
 
         runner = CliRunner()

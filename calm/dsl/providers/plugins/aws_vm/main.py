@@ -93,9 +93,9 @@ class AWS:
 
     def mixed_images(self, account_id, region_name):
         """Returns a map
-            m[key] = (tupVal1, tupVal2)
-            tupVal1 = id of the image
-            tupVal2 = root_device_name of the image
+        m[key] = (tupVal1, tupVal2)
+        tupVal1 = id of the image
+        tupVal2 = root_device_name of the image
         """
 
         payload = {

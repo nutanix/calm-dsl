@@ -1,0 +1,26 @@
+{% macro BrownfieldVm() -%}
+
+title: BrownfieldVm
+type: object
+x-calm-dsl-type: app_brownfield_vm
+properties:
+  instance_name:
+    type: string
+  instance_id:
+    type: string
+  address:
+    type: array
+    items:
+      type: string
+  provider:
+    type: string
+
+{%- endmacro %}
+
+
+{% macro BrownfieldVmSchema() -%}
+
+BrownfieldVm:
+  {{ BrownfieldVm()|indent(2) }}
+
+{%- endmacro %}

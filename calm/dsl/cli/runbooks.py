@@ -16,12 +16,7 @@ from calm.dsl.api import get_api_client
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Cache
 from calm.dsl.tools import get_module_from_file
-from .utils import (
-    Display,
-    get_name_query,
-    highlight_text,
-    get_states_filter,
-)
+from .utils import Display, get_name_query, highlight_text, get_states_filter
 from .constants import RUNBOOK, RUNLOG
 from .runlog import get_completion_func, get_runlog_status
 from .endpoints import get_endpoint
@@ -278,11 +273,7 @@ def create_runbook_command(runbook_file, name, description, force):
     link = "https://{}:{}/console/#page/explore/calm/runbooks/{}".format(
         pc_ip, pc_port, runbook_uuid
     )
-    stdout_dict = {
-        "name": runbook_name,
-        "link": link,
-        "state": runbook_state,
-    }
+    stdout_dict = {"name": runbook_name, "link": link, "state": runbook_state}
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
 
@@ -380,11 +371,7 @@ def update_runbook_command(runbook_file, name, description):
     link = "https://{}:{}/console/#page/explore/calm/runbooks/{}".format(
         pc_ip, pc_port, runbook_uuid
     )
-    stdout_dict = {
-        "name": runbook_name,
-        "link": link,
-        "state": runbook_state,
-    }
+    stdout_dict = {"name": runbook_name, "link": link, "state": runbook_state}
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
 
@@ -532,7 +519,7 @@ def patch_runbook_runtime_editables(client, runbook):
 
 
 def run_runbook_command(
-    runbook_name, watch, ignore_runtime_variables, runbook_file=None, input_file=None,
+    runbook_name, watch, ignore_runtime_variables, runbook_file=None, input_file=None
 ):
 
     if runbook_file is None and runbook_name is None:
@@ -826,10 +813,7 @@ def pause_runbook_execution(runlog_uuid):
     link = "https://{}:{}/console/#page/explore/calm/runbooks/runlogs/{}".format(
         pc_ip, pc_port, runlog_uuid
     )
-    stdout_dict = {
-        "link": link,
-        "state": state,
-    }
+    stdout_dict = {"link": link, "state": state}
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
 
@@ -851,10 +835,7 @@ def resume_runbook_execution(runlog_uuid):
     link = "https://{}:{}/console/#page/explore/calm/runbooks/runlogs/{}".format(
         pc_ip, pc_port, runlog_uuid
     )
-    stdout_dict = {
-        "link": link,
-        "state": state,
-    }
+    stdout_dict = {"link": link, "state": state}
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
 
@@ -881,10 +862,7 @@ def abort_runbook_execution(runlog_uuid):
     link = "https://{}:{}/console/#page/explore/calm/runbooks/runlogs/{}".format(
         pc_ip, pc_port, runlog_uuid
     )
-    stdout_dict = {
-        "link": link,
-        "state": state,
-    }
+    stdout_dict = {"link": link, "state": state}
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
 

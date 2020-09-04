@@ -34,6 +34,7 @@ from .utils import (
 )
 from .constants import BLUEPRINT
 from calm.dsl.tools import get_module_from_file
+from calm.dsl.builtins import Brownfield as BF
 from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
 
@@ -224,7 +225,26 @@ def get_blueprint_class_from_module(user_bp_module):
     return UserBlueprint
 
 
-def compile_blueprint(bp_file):
+def get_brownfield_deployment_classes(brownfield_deployment_file=None):
+    """Get brownfield deployment classes"""
+
+    bf_deployments = []
+    if not brownfield_deployment_file:
+        return []
+
+    bd_module = get_module_from_file(
+        "calm.dsl.brownfield_deployment", brownfield_deployment_file
+    )
+    for item in dir(bd_module):
+        obj = getattr(bd_module, item)
+        if isinstance(obj, type(BF.Deployment)):
+            if obj.__bases__[0] == (BF.Deployment):
+                bf_deployments.append(obj)
+
+    return bf_deployments
+
+
+def compile_blueprint(bp_file, brownfield_deployment_file=None):
 
     # Constructing metadata payload
     # Note: This should be constructed before loading bp module. As metadata will be used while getting bp_payload
@@ -234,6 +254,26 @@ def compile_blueprint(bp_file):
     UserBlueprint = get_blueprint_class_from_module(user_bp_module)
     if UserBlueprint is None:
         return None
+
+    # Fetching bf_deployments
+    bf_deployments = get_brownfield_deployment_classes(brownfield_deployment_file)
+    if bf_deployments:
+        bf_dep_map = {bd.__name__: bd for bd in bf_deployments}
+        for pf in UserBlueprint.profiles:
+            for ind, dep in enumerate(pf.deployments):
+                if dep.__name__ in bf_dep_map:
+                    bf_dep = bf_dep_map[dep.__name__]
+                    # Add the packages and substrates from deployment
+                    bf_dep.packages = dep.packages
+                    bf_dep.substrate = dep.substrate
+
+                    # If name attribute not exists in brownfield deployment file and given in blueprint file,
+                    # Use the one that is given in blueprint file
+                    if dep.name and (not bf_dep.name):
+                        bf_dep.name = dep.name
+
+                    # Replacing new deployment in profile.deployments
+                    pf.deployments[ind] = bf_dep
 
     bp_payload = None
     if isinstance(UserBlueprint, type(SimpleBlueprint)):
@@ -337,9 +377,11 @@ def _decompile_bp(bp_payload, with_secrets=False):
     click.echo("\nSuccessfully decompiled. Directory location: {}".format(get_bp_dir()))
 
 
-def compile_blueprint_command(bp_file, out):
+def compile_blueprint_command(bp_file, brownfield_deployment_file, out):
 
-    bp_payload = compile_blueprint(bp_file)
+    bp_payload = compile_blueprint(
+        bp_file, brownfield_deployment_file=brownfield_deployment_file
+    )
     if bp_payload is None:
         LOG.error("User blueprint not found in {}".format(bp_file))
         return
@@ -379,12 +421,15 @@ def format_blueprint_command(bp_file):
         LOG.info("Blueprint {} left unchanged.".format(path))
 
 
-def get_blueprint(client, name, all=False):
+def get_blueprint(client, name, all=False, is_brownfield=False):
 
     # find bp
     params = {"filter": "name=={}".format(name)}
     if not all:
         params["filter"] += ";state!=DELETED"
+
+    if is_brownfield:
+        params["filter"] += ";type==BROWNFIELD"
 
     res, err = client.blueprint.list(params=params)
     if err:
@@ -554,7 +599,7 @@ def get_val_launch_runtime_substrate(launch_runtime_substrates, path, context=No
     """Returns value of substrate from launch_runtime_substrates(Non-interactive)"""
 
     filtered_launch_runtime_substrates = list(
-        filter(lambda e: e["name"] == path, launch_runtime_substrates,)
+        filter(lambda e: e["name"] == path, launch_runtime_substrates)
     )
     if len(filtered_launch_runtime_substrates) > 1:
         LOG.error(
@@ -572,7 +617,7 @@ def get_val_launch_runtime_deployment(launch_runtime_deployments, path, context=
     """Returns value of deployment from launch_runtime_deployments(Non-interactive)"""
 
     launch_runtime_deployments = list(
-        filter(lambda e: e["name"] == path, launch_runtime_deployments,)
+        filter(lambda e: e["name"] == path, launch_runtime_deployments)
     )
     if len(launch_runtime_deployments) > 1:
         LOG.error(
@@ -590,7 +635,7 @@ def get_val_launch_runtime_credential(launch_runtime_credentials, path, context=
     """Returns value of credential from launch_runtime_credentials(Non-interactive)"""
 
     launch_runtime_credentials = list(
-        filter(lambda e: e["name"] == path, launch_runtime_credentials,)
+        filter(lambda e: e["name"] == path, launch_runtime_credentials)
     )
     if len(launch_runtime_credentials) > 1:
         LOG.error(
@@ -694,6 +739,7 @@ def launch_blueprint_simple(
     profile_name=None,
     patch_editables=True,
     launch_params=None,
+    is_brownfield=False,
 ):
     client = get_api_client()
 
@@ -716,7 +762,10 @@ def launch_blueprint_simple(
         LOG.info("No existing application found with name {}".format(app_name))
 
     if not blueprint:
-        blueprint = get_blueprint(client, blueprint_name)
+        if is_brownfield:
+            blueprint = get_blueprint(client, blueprint_name, is_brownfield=True)
+        else:
+            blueprint = get_blueprint(client, blueprint_name)
 
     blueprint_uuid = blueprint.get("metadata", {}).get("uuid", "")
     blueprint_name = blueprint_name or blueprint.get("metadata", {}).get("name", "")

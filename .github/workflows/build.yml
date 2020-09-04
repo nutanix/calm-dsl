@@ -19,9 +19,7 @@ jobs:
       with:
         python-version: 3.7
     - name: black
-      uses: lgeiger/black-action@v1.0.1
-      with:
-        args: . --check --exclude '/(\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|venv|_build|buck-out|build|dist|examples)/'
+      uses: psf/black@stable # Exclude list is not honored - https://github.com/psf/black/issues/1584
     - name: Setup env
       run: |
         python -m pip install --upgrade pip
