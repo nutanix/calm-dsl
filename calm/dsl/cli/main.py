@@ -65,8 +65,8 @@ def main(ctx, config_file, sync):
         LOG.debug("Could not validate version")
         pass
     if config_file:
-        context_obj = get_context()
-        context_obj.update_config_file_context(config_file=config_file)
+        ContextObj = get_context()
+        ContextObj.update_config_file_context(config_file=config_file)
     if sync:
         Cache.sync()
 

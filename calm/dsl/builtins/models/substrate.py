@@ -199,8 +199,8 @@ class SubstrateType(EntityType):
                     project_ref = metadata_obj.get("project_reference") or dict()
 
                     # If project not found in metadata, it will take project from config
-                    context_obj = get_context()
-                    project_config = context_obj.get_project_config()
+                    ContextObj = get_context()
+                    project_config = ContextObj.get_project_config()
                     project_name = project_ref.get("name", project_config["name"])
 
                     project_cache_data = Cache.get_entity_data(

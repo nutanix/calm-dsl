@@ -117,8 +117,8 @@ def read_local_file(filename):
 
     # If not exists read from home directory
     if not file_exists(abs_file_path):
-        context_obj = get_context()
-        init_data = context_obj.get_init_config()
+        ContextObj = get_context()
+        init_data = ContextObj.get_init_config()
         file_path = os.path.join(init_data["LOCAL_DIR"]["location"], filename)
         return read_file(file_path, 0).rstrip()  # To remove \n, use rstrip
 

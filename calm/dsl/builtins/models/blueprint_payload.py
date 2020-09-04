@@ -49,10 +49,10 @@ def create_blueprint_payload(UserBlueprint, metadata={}):
         "resources": UserBlueprint,
     }
 
-    context_obj = get_context()
-    server_config = context_obj.get_server_config()
-    project_config = context_obj.get_project_config()
-    config_categories = context_obj.get_categories_config()
+    ContextObj = get_context()
+    server_config = ContextObj.get_server_config()
+    project_config = ContextObj.get_project_config()
+    config_categories = ContextObj.get_categories_config()
 
     # Set the blueprint name and kind correctly
     metadata["name"] = UserBlueprint.__name__

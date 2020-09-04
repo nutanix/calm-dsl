@@ -21,8 +21,8 @@ class Database:
 
     @staticmethod
     def instantiate_db():
-        context_obj = get_context()
-        init_obj = context_obj.get_init_config()
+        ContextObj = get_context()
+        init_obj = ContextObj.get_init_config()
         db_location = init_obj["DB"]["location"]
         dsl_database.init(db_location)
         return dsl_database
@@ -103,8 +103,8 @@ def init_db_handle():
         pass
 
     # Removing existing db at init location if exists
-    context_obj = get_context()
-    init_obj = context_obj.get_init_config()
+    ContextObj = get_context()
+    init_obj = ContextObj.get_init_config()
     db_location = init_obj["DB"]["location"]
     if os.path.exists(db_location):
         os.remove(db_location)
