@@ -88,13 +88,7 @@ class CustomLogging:
         return self._logger
 
     def get_logging_levels(self):
-        return [
-            "DEBUG",
-            "INFO",
-            "WARNING",
-            "ERROR",
-            "CRITICAL",
-        ]
+        return ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
     def set_logger_level(self, lvl):
         """sets the logger verbose level"""

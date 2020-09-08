@@ -194,7 +194,7 @@ class AhvBlueprint(Blueprint):
 
 def test_multivm_with_diff_bootconfig():
     """
-        Tests in case of multi-vm blueprint, correct disk is set to bootable
+    Tests in case of multi-vm blueprint, correct disk is set to bootable
     """
 
     # Ahv Helpers uses Metadata Context, It should the context(if any) defined in this file only

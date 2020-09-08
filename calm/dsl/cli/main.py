@@ -11,15 +11,12 @@ from prettytable import PrettyTable
 # TODO - move providers to separate file
 from calm.dsl.providers import get_provider, get_provider_types
 from calm.dsl.api import get_api_client, get_resource_api
-from calm.dsl.tools import (
-    simple_verbosity_option,
-    show_trace_option,
-)
 from calm.dsl.log import get_logging_handle
-from calm.dsl.config import update_config_file_location
+from calm.dsl.config import get_context
 from calm.dsl.store import Cache
 
 from .version_validator import validate_version
+from .click_options import simple_verbosity_option, show_trace_option
 from .utils import FeatureFlagGroup, highlight_text
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
@@ -52,15 +49,14 @@ LOG = get_logging_handle(__name__)
 def main(ctx, config_file, sync):
     """Calm CLI
 
-\b
-Commonly used commands:
-  calm get apps   -> Get list of apps
-  calm get bps   -> Get list of blueprints
-  calm launch bp --app_name Fancy-App-1 MyFancyBlueprint   -> Launch a new app from an existing blueprint
-  calm create bp -f sample_bp.py --name Sample-App-3   -> Upload a new blueprint from a python DSL file
-  calm describe app Fancy-App-1   -> Describe an existing app
-  calm app Fancy-App-1 -w my_action   -> Run an action on an app
-"""
+    \b
+    Commonly used commands:
+      calm get apps   -> Get list of apps
+      calm get bps   -> Get list of blueprints
+      calm launch bp --app_name Fancy-App-1 MyFancyBlueprint   -> Launch a new app from an existing blueprint
+      calm create bp -f sample_bp.py --name Sample-App-3   -> Upload a new blueprint from a python DSL file
+      calm describe app Fancy-App-1   -> Describe an existing app
+      calm app Fancy-App-1 -w my_action   -> Run an action on an app"""
     ctx.ensure_object(dict)
     ctx.obj["verbose"] = True
     try:
@@ -69,7 +65,8 @@ Commonly used commands:
         LOG.debug("Could not validate version")
         pass
     if config_file:
-        update_config_file_location(config_file=config_file)
+        ContextObj = get_context()
+        ContextObj.update_config_file_context(config_file=config_file)
     if sync:
         Cache.sync()
 
@@ -419,8 +416,7 @@ def calmrepl():
 
       :exit, :q, :quit  exits the repl
 
-      :?, :h, :help     displays general help information
-"""
+      :?, :h, :help     displays general help information"""
     repl(click.get_current_context())
 
 

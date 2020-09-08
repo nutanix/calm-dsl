@@ -1,6 +1,6 @@
 import click
 
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 from calm.dsl.log import CustomLogging
 
 
@@ -19,9 +19,11 @@ def simple_verbosity_option(logging_mod=None, *names, **kwargs):
 
     log_level = "INFO"
     try:
-        config = get_config()
-        if "LOG" in config:
-            log_level = config["LOG"].get("level") or log_level
+        ContextObj = get_context()
+        log_config = ContextObj.get_log_config()
+
+        if "level" in log_config:
+            log_level = log_config.get("level") or log_level
 
     except (FileNotFoundError, ValueError):
         # At the time of initializing dsl, config file may not be present or incorrect

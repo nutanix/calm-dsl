@@ -56,8 +56,8 @@ class TestProjectCommands:
 
     def test_project_crud(self):
         """
-            It will cover create/describe/update/delete/get commands on project
-            This test assumes users/groups mentioned in project file are already created
+        It will cover create/describe/update/delete/get commands on project
+        This test assumes users/groups mentioned in project file are already created
         """
 
         # Create operation
@@ -185,8 +185,8 @@ class TestProjectCommands:
 
     def _test_update_project_using_cli_switches(self):
         """
-            Adds user `sspuser10@systest.nutanix.com` to given project.
-            (User must be prsent in db)
+        Adds user `sspuser10@systest.nutanix.com` to given project.
+        (User must be prsent in db)
         """
 
         runner = CliRunner()
@@ -218,8 +218,8 @@ class TestProjectCommands:
 
     def _test_update_project_using_dsl_file(self):
         """
-            Removes user `sspuser10@systest.nutanix.com` to given project.
-            (User must be prsent in db)
+        Removes user `sspuser10@systest.nutanix.com` to given project.
+        (User must be prsent in db)
         """
 
         runner = CliRunner()

@@ -4,7 +4,7 @@ import sys
 import click
 
 from calm.dsl.api import get_api_client
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 
 from .secrets import find_secret, create_secret
@@ -211,7 +211,7 @@ def create_blueprint_from_dsl(
         return None, err
 
     # Brownfield blueprints creation should be blocked using dsl file
-    if bp_payload["spec"]["resources"]["type"] == "BROWNFIELD":
+    if bp_payload["spec"]["resources"].get("type", "") == "BROWNFIELD":
         LOG.error(
             "Command not allowed for brownfield blueprints. Please use 'calm create app -f <bp_file_location>' for creating brownfield application"
         )
@@ -293,17 +293,15 @@ def create_blueprint_command(bp_file, name, description, force):
         sys.exit(-1)
 
     LOG.info("Blueprint {} created successfully.".format(bp_name))
-    config = get_config()
-    pc_ip = config["SERVER"]["pc_ip"]
-    pc_port = config["SERVER"]["pc_port"]
+
+    context = get_context()
+    server_config = context.get_server_config()
+    pc_ip = server_config["pc_ip"]
+    pc_port = server_config["pc_port"]
     link = "https://{}:{}/console/#page/explore/calm/blueprints/{}".format(
         pc_ip, pc_port, bp_uuid
     )
-    stdout_dict = {
-        "name": bp_name,
-        "link": link,
-        "state": bp_state,
-    }
+    stdout_dict = {"name": bp_name, "link": link, "state": bp_state}
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
 
@@ -338,26 +336,25 @@ def launch_blueprint_command(
     blueprint=None,
 ):
     """Launches a blueprint.
-All runtime variables will be prompted by default. When passing the 'ignore_runtime_editable' flag, no variables will be prompted and all default values will be used.
-The blueprint default values can be overridden by passing a Python file via 'launch_params'. Any variable not defined in the Python file will keep the default value defined in the blueprint. When passing a Python file, no variables will be prompted.
+    All runtime variables will be prompted by default. When passing the 'ignore_runtime_editable' flag, no variables will be prompted and all default values will be used.
+    The blueprint default values can be overridden by passing a Python file via 'launch_params'. Any variable not defined in the Python file will keep the default value defined in the blueprint. When passing a Python file, no variables will be prompted.
 
-\b
->: launch_params: Python file consisting of variables 'variable_list' and 'substrate_list'
-Ex: variable_list = {
-    "value": {"value": <Variable Value>},
-    "context": <Context for variable>
-    "name": "<Variable Name>"
-}
-substrate_list = {
-    "value":  {
-        <substrate_editable_data_object>
-    },
-    "name": <Substrate Name>,
-}
-Sample context for variables:
-    1. context = "<Profile Name>"    # For variable under profile
-    2. context = "<Service Name>"    # For variable under service
-"""
+    \b
+    >: launch_params: Python file consisting of variables 'variable_list' and 'substrate_list'
+    Ex: variable_list = {
+        "value": {"value": <Variable Value>},
+        "context": <Context for variable>
+        "name": "<Variable Name>"
+    }
+    substrate_list = {
+        "value":  {
+            <substrate_editable_data_object>
+        },
+        "name": <Substrate Name>,
+    }
+    Sample context for variables:
+        1. context = "<Profile Name>"    # For variable under profile
+        2. context = "<Service Name>"    # For variable under service"""
     launch_blueprint_simple(
         blueprint_name,
         app_name,

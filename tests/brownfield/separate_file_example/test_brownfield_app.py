@@ -8,7 +8,7 @@ from click.testing import CliRunner
 
 from calm.dsl.cli import main as cli
 from calm.dsl.cli.constants import APPLICATION
-from calm.dsl.config import make_file_dir
+from calm.dsl.tools import make_file_dir
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -22,10 +22,7 @@ NON_BUSY_APP_STATES = [
     APPLICATION.STATES.ERROR,
 ]
 
-NON_BUSY_APP_DELETE_STATES = [
-    APPLICATION.STATES.ERROR,
-    APPLICATION.STATES.DELETED,
-]
+NON_BUSY_APP_DELETE_STATES = [APPLICATION.STATES.ERROR, APPLICATION.STATES.DELETED]
 
 
 class TestBrownFieldCommands:
@@ -104,12 +101,12 @@ class TestBrownFieldCommands:
 
     def test_app_vm_in_brownfield_bp(self):
         """
-            Steps:
-                1. Create Blueprint
-                2. Create App
-                3. Soft Delete app and extract vm-ip from it
-                4. Create Brownfield Application using that vm-ip
-                5. Delete brownfield application
+        Steps:
+            1. Create Blueprint
+            2. Create App
+            3. Soft Delete app and extract vm-ip from it
+            4. Create Brownfield Application using that vm-ip
+            5. Delete brownfield application
         """
 
         runner = CliRunner()
@@ -141,7 +138,7 @@ class TestBrownFieldCommands:
         LOG.info("Application {} created successfully".format(app_name))
 
         LOG.info("Extracting vm ip from the app")
-        result = runner.invoke(cli, ["describe", "app", app_name, "--out=json"],)
+        result = runner.invoke(cli, ["describe", "app", app_name, "--out=json"])
         if result.exit_code:
             LOG.error(result.output)
             pytest.fail("Describe of app {} failed".format(app_name))
@@ -158,7 +155,7 @@ class TestBrownFieldCommands:
         ]["element_list"][0]["address"]
 
         LOG.info("Soft deleting the app {}".format(app_name))
-        result = runner.invoke(cli, ["delete", "app", app_name, "--soft"],)
+        result = runner.invoke(cli, ["delete", "app", app_name, "--soft"])
         if result.exit_code:
             LOG.error(result.output)
             pytest.fail("Deletion of app {} failed".format(app_name))
@@ -211,8 +208,8 @@ class TestBrownFieldCommands:
     @pytest.mark.parametrize("project", ["default"])
     def test_get_brownfield_vms(self, vm_type, project):
         """
-            Test get command on brownfield vms
-            Note: Test will fail for provider = VMWARE_VM for version less than 2.9.8.1 and 3.0.0 (https://jira.nutanix.com/browse/CALM-18635)
+        Test get command on brownfield vms
+        Note: Test will fail for provider = VMWARE_VM for version less than 2.9.8.1 and 3.0.0 (https://jira.nutanix.com/browse/CALM-18635)
         """
 
         runner = CliRunner()

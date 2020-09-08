@@ -91,7 +91,7 @@ class Connection:
         response_processor=None,
         session_headers=None,
         retries_enabled=False,
-        **kwargs
+        **kwargs,
     ):
         """Generic client to connect to server.
 
@@ -306,7 +306,19 @@ class Connection:
 _CONNECTION = None
 
 
-def get_connection(
+def get_connection_obj(
+    host,
+    port,
+    auth_type=REQUEST.AUTH_TYPE.BASIC,
+    scheme=REQUEST.SCHEME.HTTPS,
+    auth=None,
+):
+    """Returns object of Connection class"""
+
+    return Connection(host, port, auth_type, scheme, auth)
+
+
+def get_connection_handle(
     host,
     port,
     auth_type=REQUEST.AUTH_TYPE.BASIC,
@@ -329,11 +341,11 @@ def get_connection(
     """
     global _CONNECTION
     if not _CONNECTION:
-        update_connection(host, port, auth_type, scheme, auth)
+        update_connection_handle(host, port, auth_type, scheme, auth)
     return _CONNECTION
 
 
-def update_connection(
+def update_connection_handle(
     host,
     port,
     auth_type=REQUEST.AUTH_TYPE.BASIC,

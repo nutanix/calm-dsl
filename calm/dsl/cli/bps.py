@@ -21,7 +21,7 @@ from calm.dsl.builtins import (
     init_dsl_metadata_map,
 )
 from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 from calm.dsl.api import get_api_client
 from calm.dsl.decompile.decompile_render import create_bp_dir
 from calm.dsl.decompile.file_handler import get_bp_dir
@@ -45,7 +45,6 @@ def get_blueprint_list(name, filter_by, limit, offset, quiet, all_items, out):
     """Get the blueprints, optionally filtered by a string"""
 
     client = get_api_client()
-    config = get_config()
 
     params = {"length": limit, "offset": offset}
     filter_query = ""
@@ -64,7 +63,10 @@ def get_blueprint_list(name, filter_by, limit, offset, quiet, all_items, out):
     res, err = client.blueprint.list(params=params)
 
     if err:
-        pc_ip = config["SERVER"]["pc_ip"]
+        context = get_context()
+        server_config = context.get_server_config()
+        pc_ip = server_config["pc_ip"]
+
         LOG.warning("Cannot fetch blueprints from {}".format(pc_ip))
         return
 
@@ -596,7 +598,7 @@ def get_val_launch_runtime_substrate(launch_runtime_substrates, path, context=No
     """Returns value of substrate from launch_runtime_substrates(Non-interactive)"""
 
     filtered_launch_runtime_substrates = list(
-        filter(lambda e: e["name"] == path, launch_runtime_substrates,)
+        filter(lambda e: e["name"] == path, launch_runtime_substrates)
     )
     if len(filtered_launch_runtime_substrates) > 1:
         LOG.error(
@@ -614,7 +616,7 @@ def get_val_launch_runtime_deployment(launch_runtime_deployments, path, context=
     """Returns value of deployment from launch_runtime_deployments(Non-interactive)"""
 
     launch_runtime_deployments = list(
-        filter(lambda e: e["name"] == path, launch_runtime_deployments,)
+        filter(lambda e: e["name"] == path, launch_runtime_deployments)
     )
     if len(launch_runtime_deployments) > 1:
         LOG.error(
@@ -632,7 +634,7 @@ def get_val_launch_runtime_credential(launch_runtime_credentials, path, context=
     """Returns value of credential from launch_runtime_credentials(Non-interactive)"""
 
     launch_runtime_credentials = list(
-        filter(lambda e: e["name"] == path, launch_runtime_credentials,)
+        filter(lambda e: e["name"] == path, launch_runtime_credentials)
     )
     if len(launch_runtime_credentials) > 1:
         LOG.error(
@@ -930,9 +932,10 @@ def poll_launch_status(client, blueprint_uuid, launch_req_id):
         if app_state == "success":
             app_uuid = response["status"]["application_uuid"]
 
-            config = get_config()
-            pc_ip = config["SERVER"]["pc_ip"]
-            pc_port = config["SERVER"]["pc_port"]
+            context = get_context()
+            server_config = context.get_server_config()
+            pc_ip = server_config["pc_ip"]
+            pc_port = server_config["pc_port"]
 
             click.echo("Successfully launched. App uuid is: {}".format(app_uuid))
 

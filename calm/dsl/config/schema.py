@@ -1,23 +1,23 @@
-from schema import Schema, And, Use, SchemaError
+from schema import Schema, And, Use, SchemaError, Optional
 
 
 config_schema_dict = {
-    "SERVER": {
-        "pc_ip": And(Use(str)),
-        "pc_port": And(Use(str)),
-        "pc_username": And(Use(str)),
-        "pc_password": And(Use(str)),
+    Optional("SERVER"): {
+        Optional("pc_ip"): And(Use(str)),
+        Optional("pc_port"): And(Use(str)),
+        Optional("pc_username"): And(Use(str)),
+        Optional("pc_password"): And(Use(str)),
     },
-    "PROJECT": {"name": And(Use(str))},
-    "LOG": {"level": And(Use(str))},
-    "CATEGORIES": {},
+    Optional("PROJECT"): {Optional("name"): And(Use(str))},
+    Optional("LOG"): {Optional("level"): And(Use(str))},
+    Optional("CATEGORIES"): {},
 }
 
 
 init_schema_dict = {
-    "DB": {"location": And(Use(str)),},  # NoQA
-    "LOCAL_DIR": {"location": And(Use(str)),},  # NoQA
-    "CONFIG": {"location": And(Use(str)),},  # NoQA
+    Optional("DB"): {Optional("location"): And(Use(str))},  # NoQA
+    Optional("LOCAL_DIR"): {Optional("location"): And(Use(str))},  # NoQA
+    Optional("CONFIG"): {Optional("location"): And(Use(str))},  # NoQA
 }
 
 

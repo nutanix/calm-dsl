@@ -6,7 +6,7 @@ from click.testing import CliRunner
 
 
 from calm.dsl.cli import main as cli
-from calm.dsl.config import make_file_dir
+from calm.dsl.tools import make_file_dir
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -73,7 +73,7 @@ class TestBlueprintMetadata:
 
     def test_metadata_in_blueprint(self):
         """
-            Tests metadata in blueprint file
+        Tests metadata in blueprint file
         """
 
         runner = CliRunner()

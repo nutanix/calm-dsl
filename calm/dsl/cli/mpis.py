@@ -8,7 +8,7 @@ from calm.dsl.builtins import BlueprintType, get_valid_identifier
 from calm.dsl.decompile.decompile_render import create_bp_dir
 from calm.dsl.decompile.file_handler import get_bp_dir
 from calm.dsl.api import get_api_client, get_resource_api
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 
 from .utils import highlight_text, get_states_filter
 from .bps import launch_blueprint_simple, get_blueprint
@@ -50,8 +50,8 @@ def get_app_family_list():
 
 
 def get_group_data_value(data_list, field, value_list=False):
-    """ to find the field value in group api call
-        return whole list of values if value_list is True
+    """to find the field value in group api call
+    return whole list of values if value_list is True
     """
 
     for entity in data_list:
@@ -89,8 +89,8 @@ def get_mpis_group_call(
     app_group_uuid=None,
 ):
     """
-        To call groups() api for marketplace items
-        if group_member_count is 0, it will not apply the group_count filter
+    To call groups() api for marketplace items
+    if group_member_count is 0, it will not apply the group_count filter
     """
 
     client = get_api_client()
@@ -323,10 +323,7 @@ def get_mpi_by_name_n_version(name, version, app_states=[], app_source=None):
     if app_source:
         filter += ";app_source=={}".format(app_source)
 
-    payload = {
-        "length": 250,
-        "filter": filter,
-    }
+    payload = {"length": 250, "filter": filter}
 
     LOG.debug("Calling list api on marketplace_items")
     res, err = client.market_place.list(params=payload)
@@ -447,8 +444,8 @@ def launch_marketplace_bp(
     app_source=None,
 ):
     """
-        Launch marketplace blueprints
-        If version not there search in published, pendingm, accepted blueprints
+    Launch marketplace blueprints
+    If version not there search in published, pendingm, accepted blueprints
     """
 
     if not version:
@@ -484,7 +481,7 @@ def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_s
 
     if not version:
         LOG.info("Fetching latest version of Marketplace Blueprint {} ".format(name))
-        version = get_mpi_latest_version(name=name, app_source=app_source,)
+        version = get_mpi_latest_version(name=name, app_source=app_source)
         LOG.info(version)
 
     LOG.info("Converting MPI into blueprint")
@@ -537,8 +534,8 @@ def launch_marketplace_item(
     app_source=None,
 ):
     """
-        Launch marketplace items
-        If version not there search in published blueprints
+    Launch marketplace items
+    If version not there search in published blueprints
     """
 
     if not version:
@@ -568,9 +565,10 @@ def launch_marketplace_item(
 def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None):
 
     client = get_api_client()
-    config = get_config()
+    context = get_context()
+    project_config = context.get_project_config()
 
-    project_name = project_name or config["PROJECT"]["name"]
+    project_name = project_name or project_config["name"]
     project_data = get_project(project_name)
 
     project_uuid = project_data["metadata"]["uuid"]
@@ -662,7 +660,9 @@ def publish_bp_to_marketplace_manager(
 ):
 
     client = get_api_client()
-    config = get_config()
+    context = get_context()
+    server_config = context.get_server_config()
+
     bp = get_blueprint(client, bp_name)
     bp_uuid = bp.get("metadata", {}).get("uuid", "")
 
@@ -694,7 +694,7 @@ def publish_bp_to_marketplace_manager(
             "resources": {
                 "app_attribute_list": ["FEATURED"],
                 "icon_reference_list": [],
-                "author": config["SERVER"]["pc_username"],
+                "author": server_config["pc_username"],
                 "version": version,
                 "app_group_uuid": app_group_uuid or str(uuid.uuid4()),
                 "app_blueprint_template": {
@@ -781,8 +781,9 @@ def publish_bp_as_new_marketplace_bp(
 
     if publish_to_marketplace or auto_approve:
         if not projects:
-            config = get_config()
-            projects = [config["PROJECT"]["name"]]
+            context = get_context()
+            project_config = context.get_project_config()
+            projects = [project_config["name"]]
 
         approve_marketplace_bp(
             bp_name=marketplace_bp_name,
@@ -877,8 +878,9 @@ def publish_bp_as_existing_marketplace_bp(
 
     if publish_to_marketplace or auto_approve:
         if not projects:
-            config = get_config()
-            projects = [config["PROJECT"]["name"]]
+            context = get_context()
+            project_config = context.get_project_config()
+            projects = [project_config["name"]]
 
         approve_marketplace_bp(
             bp_name=marketplace_bp_name,
@@ -1053,8 +1055,8 @@ def update_marketplace_bp(
     name, version, category=None, projects=[], description=None, app_source=None
 ):
     """
-        updates the marketplace bp
-        version is required to prevent unwanted update of another mpi
+    updates the marketplace bp
+    version is required to prevent unwanted update of another mpi
     """
 
     client = get_api_client()

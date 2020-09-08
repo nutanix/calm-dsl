@@ -1,16 +1,9 @@
-import json
 import sys
-import click
-from ruamel import yaml
-import arrow
 import click
 from prettytable import PrettyTable
 
 from calm.dsl.api import get_api_client, get_resource_api
-from calm.dsl.config import get_config
-from calm.dsl.store import Cache
 from calm.dsl.log import get_logging_handle
-
 from .utils import highlight_text
 
 LOG = get_logging_handle(__name__)
@@ -18,8 +11,8 @@ LOG = get_logging_handle(__name__)
 
 def get_provider_account_from_project(project_name, provider_type):
     """
-        Returns tuple containing project_uuid and account_uuid of provider_account registered in project
-        i.e (project_uuid, account_uuid)
+    Returns tuple containing project_uuid and account_uuid of provider_account registered in project
+    i.e (project_uuid, account_uuid)
     """
 
     client = get_api_client()

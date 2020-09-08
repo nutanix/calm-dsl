@@ -1,7 +1,7 @@
 import atexit
 import os
 
-from calm.dsl.config import get_init_data
+from calm.dsl.config import get_context
 from .table_config import dsl_database, SecretTable, DataTable, VersionTable
 from .table_config import CacheTableBase
 from calm.dsl.log import get_logging_handle
@@ -21,8 +21,9 @@ class Database:
 
     @staticmethod
     def instantiate_db():
-        init_obj = get_init_data()
-        db_location = init_obj["DB"].get("location")
+        ContextObj = get_context()
+        init_obj = ContextObj.get_init_config()
+        db_location = init_obj["DB"]["location"]
         dsl_database.init(db_location)
         return dsl_database
 
@@ -37,8 +38,8 @@ class Database:
             setattr(self, table_type, self.set_and_verify(table))
 
     def set_and_verify(self, table_cls):
-        """ Verify whether this class exists in db
-            If not, then creates one
+        """Verify whether this class exists in db
+        If not, then creates one
         """
 
         if not self.db.table_exists((table_cls.__name__).lower()):
@@ -102,8 +103,9 @@ def init_db_handle():
         pass
 
     # Removing existing db at init location if exists
-    init_obj = get_init_data()
-    db_location = init_obj["DB"].get("location")
+    ContextObj = get_context()
+    init_obj = ContextObj.get_init_config()
+    db_location = init_obj["DB"]["location"]
     if os.path.exists(db_location):
         os.remove(db_location)
 

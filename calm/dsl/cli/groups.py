@@ -5,7 +5,7 @@ from prettytable import PrettyTable
 
 from calm.dsl.api import get_api_client
 from calm.dsl.builtins import Ref
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 
 from .utils import get_name_query, highlight_text
@@ -18,7 +18,6 @@ def get_groups(name, filter_by, limit, offset, quiet, out):
     """ Get the groups, optionally filtered by a string """
 
     client = get_api_client()
-    config = get_config()
 
     params = {"length": limit, "offset": offset}
     filter_query = ""
@@ -35,7 +34,10 @@ def get_groups(name, filter_by, limit, offset, quiet, out):
     res, err = client.group.list(params=params)
 
     if err:
-        pc_ip = config["SERVER"]["pc_ip"]
+        context = get_context()
+        server_config = context.get_server_config()
+        pc_ip = server_config["pc_ip"]
+
         LOG.warning("Cannot fetch groups from {}".format(pc_ip))
         return
 
@@ -58,13 +60,7 @@ def get_groups(name, filter_by, limit, offset, quiet, out):
         return
 
     table = PrettyTable()
-    table.field_names = [
-        "NAME",
-        "DISPLAY NAME",
-        "TYPE",
-        "STATE",
-        "UUID",
-    ]
+    table.field_names = ["NAME", "DISPLAY NAME", "TYPE", "STATE", "UUID"]
 
     for _row in json_rows:
         row = _row["status"]

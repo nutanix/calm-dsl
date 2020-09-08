@@ -8,7 +8,7 @@ from ruamel import yaml
 
 from calm.dsl.builtins import create_project_payload, Project
 from calm.dsl.api import get_api_client, get_resource_api
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 
 from .utils import get_name_query, highlight_text
 from .task_commands import watch_task
@@ -27,7 +27,8 @@ def get_projects(name, filter_by, limit, offset, quiet, out):
     """ Get the projects, optionally filtered by a string """
 
     client = get_api_client()
-    config = get_config()
+    ContextObj = get_context()
+    server_config = ContextObj.get_server_config()
 
     params = {"length": limit, "offset": offset}
     filter_query = ""
@@ -46,7 +47,7 @@ def get_projects(name, filter_by, limit, offset, quiet, out):
     res, err = client.project.list(params=params)
 
     if err:
-        pc_ip = config["SERVER"]["pc_ip"]
+        pc_ip = server_config["pc_ip"]
         LOG.warning("Cannot fetch projects from {}".format(pc_ip))
         return
 
@@ -392,7 +393,7 @@ def describe_project(project_name, out):
             AhvObj = AhvVmProvider.get_api_obj()
 
             filter_query = "(_entity_id_=={})".format(
-                ",_entity_id_==".join(subnets_list),
+                ",_entity_id_==".join(subnets_list)
             )
             nics = AhvObj.subnets(account_uuid=account_uuid, filter_query=filter_query)
             nics = nics["entities"]
@@ -542,11 +543,7 @@ def update_project_from_dsl(project_name, project_file):
 
 
 def update_project_using_cli_switches(
-    project_name,
-    add_user_list,
-    add_group_list,
-    remove_user_list,
-    remove_group_list,
+    project_name, add_user_list, add_group_list, remove_user_list, remove_group_list
 ):
 
     client = get_api_client()
