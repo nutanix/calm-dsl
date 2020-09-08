@@ -98,7 +98,7 @@ def simple_variable(
                 + ", got {}".format(type(regex))
             )
         if validate_regex and regex and value:
-            regex_result = re.fullmatch(regex, value)
+            regex_result = re.match(regex, value)
             if not regex_result:
                 raise ValueError(
                     "Value '{}' doesn't match with specified regex '{}'".format(
@@ -140,7 +140,7 @@ def simple_variable_secret(
                 + ", got {}".format(type(regex))
             )
         if validate_regex and regex and value:
-            regex_result = re.fullmatch(regex, value)
+            regex_result = re.match(regex, value)
             if not regex_result:
                 raise ValueError(
                     "Value '{}' doesn't match with specified regex '{}'".format(
@@ -249,7 +249,7 @@ def _advanced_variable(
                     + ", got {}".format(type(choice))
                 )
             if validate_regex and regex:
-                regex_result = re.fullmatch(regex["value"], choice)
+                regex_result = re.match(regex["value"], choice)
                 if not regex_result:
                     raise ValueError(
                         "Option '{}' doesn't match with specified regex '{}'".format(
@@ -288,7 +288,7 @@ def _advanced_variable(
     else:
         # If options are None, just regex validate the value
         if validate_regex and regex and value:
-            regex_result = re.fullmatch(regex["value"], value)
+            regex_result = re.match(regex["value"], value)
             if not regex_result:
                 raise ValueError(
                     "Value '{}' doesn't match with specified regex '{}'".format(
