@@ -272,6 +272,29 @@ def create_project_from_dsl(project_file, project_name, description=""):
     # Strip environment
     envs = project_payload["spec"]["resources"].pop("environment_reference_list", [])
 
+    if len(envs) > 1:
+        LOG.error("Multiple environments are provided for project.")
+        sys.exit(-1)
+
+    # Check if environment with given name already exists
+    for env_ref in envs:
+        if env_ref["kind"] == "environment":
+            env_name = env_ref["name"]
+            LOG.info(
+                "Searching for existing environments with name '{}'".format(env_name)
+            )
+            res, err = client.environment.list({"filter": "name=={}".format(env_name)})
+            if err:
+                LOG.error(err)
+                sys.exit(-1)
+
+            res = res.json()
+            if res["metadata"]["total_matches"]:
+                LOG.error("Environment with name '{}' already exists".format(env_name))
+                sys.exit(-1)
+
+            LOG.info("No existing environment found with name '{}'".format(env_name))
+
     # Create Project
     project_data = create_project(
         project_payload, name=project_name, description=description
@@ -284,19 +307,25 @@ def create_project_from_dsl(project_file, project_name, description=""):
         Cache.sync_table("project")
 
         # As ahv helpers in environment should use account from project accounts
-        # WORKAROUND: update the project in metadata
-        update_project_metadata(project_name=project_name)
+        # updating the context
+        ContextObj = get_context()
+        ContextObj.update_project_context(project_name=project_name)
 
         # Create environment
-        env_uuid = create_environment_from_dsl(project_file)
+        env_ref_list = []
+        for env_ref in envs:
+            env_uuid = create_environment_from_dsl(
+                project_file, env_name=env_ref["name"]
+            )
+            env_ref_list.append({"kind": "environment", "uuid": env_uuid})
 
         LOG.info("Updating project for adding environment")
         project_payload = get_project(project_uuid=project_uuid)
 
         project_payload.pop("status", None)
-        project_payload["spec"]["resources"]["environment_reference_list"] = [
-            {"kind": "environment", "uuid": env_uuid}
-        ]
+        project_payload["spec"]["resources"][
+            "environment_reference_list"
+        ] = env_ref_list
 
         update_project(project_uuid=project_uuid, project_payload=project_payload)
 
