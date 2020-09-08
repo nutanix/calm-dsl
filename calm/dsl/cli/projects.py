@@ -232,7 +232,6 @@ def update_project(project_uuid, project_payload):
     client = get_api_client()
 
     project_payload.pop("status", None)
-    LOG.info("Updating project (uuid='{}')".format(project_uuid))
     res, err = client.project.update(project_uuid, project_payload)
     if err:
         LOG.error(err)
@@ -319,7 +318,7 @@ def create_project_from_dsl(project_file, project_name, description=""):
             )
             env_ref_list.append({"kind": "environment", "uuid": env_uuid})
 
-        LOG.info("Updating project for adding environment")
+        LOG.info("Updating project '{}' for adding environment".format(project_name))
         project_payload = get_project(project_uuid=project_uuid)
 
         project_payload.pop("status", None)
