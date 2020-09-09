@@ -13,7 +13,7 @@ from calm.dsl.config import get_context
 from .utils import get_name_query, highlight_text
 from .task_commands import watch_task
 from .constants import ERGON_TASK
-from .environments import create_environment_from_dsl
+from .environments import create_environment_from_dsl_class
 from calm.dsl.tools import get_module_from_file
 from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
@@ -161,15 +161,10 @@ def get_project_class_from_module(user_project_module):
     return UserProject
 
 
-def compile_project(project_file):
-
-    user_project_module = get_project_module_from_file(project_file)
-    UserProject = get_project_class_from_module(user_project_module)
-    if UserProject is None:
-        return None
+def compile_project_dsl_class(project_class):
 
     project_payload = None
-    UserProjectPayload, _ = create_project_payload(UserProject)
+    UserProjectPayload, _ = create_project_payload(project_class)
     project_payload = UserProjectPayload.get_dict()
 
     return project_payload
@@ -177,10 +172,17 @@ def compile_project(project_file):
 
 def compile_project_command(project_file, out):
 
-    project_payload = compile_project(project_file)
-    if project_payload is None:
+    user_project_module = get_project_module_from_file(project_file)
+    UserProject = get_project_class_from_module(user_project_module)
+    if UserProject is None:
         LOG.error("User project not found in {}".format(project_file))
         return
+
+    # Environment definitions are not part of project
+    if hasattr(UserProject, "envs"):
+        UserProject.envs = []
+
+    project_payload = compile_project_dsl_class(UserProject)
 
     if out == "json":
         click.echo(json.dumps(project_payload, indent=4, separators=(",", ": ")))
@@ -262,39 +264,38 @@ def create_project_from_dsl(project_file, project_name, description=""):
 
     client = get_api_client()
 
-    project_payload = compile_project(project_file)
-    if project_payload is None:
-        err_msg = "Project not found in {}".format(project_file)
-        err = {"error": err_msg, "code": -1}
-        return None, err
+    user_project_module = get_project_module_from_file(project_file)
+    UserProject = get_project_class_from_module(user_project_module)
+    if UserProject is None:
+        LOG.error("User project not found in {}".format(project_file))
+        return
 
-    # Strip environment
-    envs = project_payload["spec"]["resources"].pop("environment_reference_list", [])
+    envs = []
+    if hasattr(UserProject, "envs"):
+        envs = getattr(UserProject, "envs", [])
+        UserProject.envs = []
 
     if len(envs) > 1:
-        LOG.error("Multiple environments are provided for project.")
+        LOG.error("Multiple environments in a project are not allowed.")
         sys.exit(-1)
 
-    # Check if environment with given name already exists
-    for env_ref in envs:
-        if env_ref["kind"] == "environment":
-            env_name = env_ref["name"]
-            LOG.info(
-                "Searching for existing environments with name '{}'".format(env_name)
-            )
-            res, err = client.environment.list({"filter": "name=={}".format(env_name)})
-            if err:
-                LOG.error(err)
-                sys.exit(-1)
+    for _env in envs:
+        env_name = _env.__name__
+        LOG.info("Searching for existing environments with name '{}'".format(env_name))
+        res, err = client.environment.list({"filter": "name=={}".format(env_name)})
+        if err:
+            LOG.error(err)
+            sys.exit(-1)
 
-            res = res.json()
-            if res["metadata"]["total_matches"]:
-                LOG.error("Environment with name '{}' already exists".format(env_name))
-                sys.exit(-1)
+        res = res.json()
+        if res["metadata"]["total_matches"]:
+            LOG.error("Environment with name '{}' already exists".format(env_name))
+            sys.exit(-1)
 
-            LOG.info("No existing environment found with name '{}'".format(env_name))
+        LOG.info("No existing environment found with name '{}'".format(env_name))
 
-    # Create Project
+    # Creation of project
+    project_payload = compile_project_dsl_class(UserProject)
     project_data = create_project(
         project_payload, name=project_name, description=description
     )
@@ -312,15 +313,14 @@ def create_project_from_dsl(project_file, project_name, description=""):
 
         # Create environment
         env_ref_list = []
-        for env_ref in envs:
-            env_uuid = create_environment_from_dsl(
-                project_file, env_name=env_ref["name"]
-            )
-            env_ref_list.append({"kind": "environment", "uuid": env_uuid})
+        for env_obj in envs:
+            env_res_data = create_environment_from_dsl_class(env_obj)
+            env_ref_list.append({"kind": "environment", "uuid": env_res_data["uuid"]})
 
         LOG.info("Updating project '{}' for adding environment".format(project_name))
         project_payload = get_project(project_uuid=project_uuid)
 
+        # NOTE Single environment is supported. So not extending existing list
         project_payload.pop("status", None)
         project_payload["spec"]["resources"][
             "environment_reference_list"
@@ -485,11 +485,18 @@ def update_project_from_dsl(project_name, project_file):
 
     client = get_api_client()
 
-    project_payload = compile_project(project_file)
-    if project_payload is None:
-        err_msg = "Project not found in {}".format(project_file)
-        err = {"error": err_msg, "code": -1}
-        return None, err
+    user_project_module = get_project_module_from_file(project_file)
+    UserProject = get_project_class_from_module(user_project_module)
+    if UserProject is None:
+        LOG.error("User project not found in {}".format(project_file))
+        return
+
+    # Environment updation is not allowed using dsl file
+    envs = []
+    if hasattr(UserProject, "envs"):
+        UserProject.envs = []
+
+    project_payload = compile_project_dsl_class(UserProject)
 
     LOG.info("Fetching project '{}' details".format(project_name))
     params = {"length": 1000, "filter": "name=={}".format(project_name)}

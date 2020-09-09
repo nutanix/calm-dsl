@@ -3,7 +3,6 @@ import sys
 
 from .projects import (
     get_projects,
-    compile_project,
     compile_project_command,
     create_project_from_dsl,
     describe_project,
@@ -168,10 +167,10 @@ def _update_project(
 
     \b
     Usability:
-        a. If project_file is given, command will use file to update project
+        a. If project_file is given, command will use file to update project. Environment updation is not allowed
         b. If project_file is not given , project will be updated based on other cli switches
            i.e. add_user, add_group, remove_user, remove_group
-        c. Project ACPs will be updated asynchronously you remove users/groups from project
+        c. Project ACPs will be updated synchronously you remove users/groups from project
     """
 
     if not (

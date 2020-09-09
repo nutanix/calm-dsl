@@ -83,10 +83,16 @@ properties:
         uuid:
           type: string
   environment_reference_list:
-    x-calm-dsl-display-name: envs
+    x-calm-dsl-display-name: env_refs
     type: array
     items:
       $ref: '#/components/schemas/Ref'
+  environment_definition_list:
+    x-calm-dsl-display-name: envs
+    description: Inline definitions of environment in project
+    type: array
+    items:
+      $ref: '#/components/schemas/Environment'
   external_user_group_reference_list:
     x-calm-dsl-display-name: groups
     type: array

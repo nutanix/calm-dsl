@@ -91,8 +91,8 @@ class ProjEnvironment(Environment):
     credentials = [Centos]
 
 
-class TestDslProject(Project):
-    """Sample DSL Project"""
+class TestDslProjectWithEnv(Project):
+    """Sample DSL Project with environments"""
 
     providers = [
         Provider.Ntnx(
@@ -110,7 +110,7 @@ class TestDslProject(Project):
         Ref.User(name="sspuser1@systest.nutanix.com"),
     ]
 
-    envs = [ref(ProjEnvironment)]
+    envs = [ProjEnvironment]
 
     groups = [
         Ref.Group(name="cn=sspgroup1,ou=pc,dc=systest,dc=nutanix,dc=com"),
