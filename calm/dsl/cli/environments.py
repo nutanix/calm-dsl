@@ -1,7 +1,7 @@
 import sys
 import uuid
 
-from calm.dsl.builtins import Environment, create_environment_payload
+from calm.dsl.builtins import create_environment_payload
 from calm.dsl.api import get_api_client
 from calm.dsl.log import get_logging_handle
 

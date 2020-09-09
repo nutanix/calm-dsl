@@ -1,5 +1,4 @@
 import sys
-import uuid
 
 from .entity import EntityType
 from .validator import PropertyValidator

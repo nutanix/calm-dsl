@@ -25,6 +25,7 @@ NON_BUSY_APP_STATES = [
 NON_BUSY_APP_DELETE_STATES = [APPLICATION.STATES.ERROR, APPLICATION.STATES.DELETED]
 
 
+@pytest.mark.slow
 class TestBrownFieldCommands:
     def setup_method(self):
         """Method to instantiate to created_bp_list and created_app_list"""

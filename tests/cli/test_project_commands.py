@@ -276,7 +276,7 @@ class TestProjectCommands:
         """
 
         runner = CliRunner()
-        self.dsl_project_name = "Test_DSL_Project_Env_{}".format(str(uuid.uuid4()))
+        self.dsl_project_name = "Test_DSL_Project_Env{}".format(str(uuid.uuid4()))
         LOG.info("Testing 'calm create project' command")
         result = runner.invoke(
             cli,

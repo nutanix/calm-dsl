@@ -5,7 +5,7 @@ from calm.dsl.builtins import Project, read_local_file, readiness_probe
 from calm.dsl.builtins import Provider, Ref
 from calm.dsl.builtins import Substrate, Environment
 from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC
-from calm.dsl.builtins import ref, basic_cred, AhvVmResources, AhvVm
+from calm.dsl.builtins import basic_cred, AhvVmResources, AhvVm
 
 
 CENTOS_KEY = read_local_file("keys/centos")

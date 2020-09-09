@@ -148,17 +148,10 @@ class ConfigHandle:
             fd.write(text)
 
 
-_CONFIG_HANDLE = None
-
-
 def get_config_handle(config_file=None):
-    """If global data not exists or config_file is given, it will create ConfigHandle object"""
+    """returns ConfigHandle object"""
 
-    global _CONFIG_HANDLE
-    if not _CONFIG_HANDLE or config_file:
-        _CONFIG_HANDLE = ConfigHandle(config_file)
-
-    return _CONFIG_HANDLE
+    return ConfigHandle(config_file)
 
 
 def set_dsl_config(

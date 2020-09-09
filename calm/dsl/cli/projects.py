@@ -18,7 +18,6 @@ from calm.dsl.tools import get_module_from_file
 from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
 from calm.dsl.store import Cache
-from calm.dsl.builtins.models.metadata_payload import update_project_metadata
 
 LOG = get_logging_handle(__name__)
 
@@ -492,7 +491,6 @@ def update_project_from_dsl(project_name, project_file):
         return
 
     # Environment updation is not allowed using dsl file
-    envs = []
     if hasattr(UserProject, "envs"):
         UserProject.envs = []
 
