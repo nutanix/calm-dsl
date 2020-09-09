@@ -138,7 +138,11 @@ class SYSTEM_ACTIONS:
     SOFT_DELETE = "soft_delete"
 
 
-class MARKETPLACE_BLUEPRINT:
+class MARKETPLACE_ITEM:
+    class TYPES:
+        BLUEPRINT = "blueprint"
+        RUNBOOK = "runbook"
+
     class STATES:
         PENDING = "PENDING"
         ACCEPTED = "ACCEPTED"
