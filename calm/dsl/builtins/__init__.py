@@ -42,7 +42,6 @@ from .models.simple_deployment import SimpleDeployment
 from .models.simple_blueprint import SimpleBlueprint
 
 from .models.blueprint_payload import create_blueprint_payload
-from .models.project import Project, ProjectType
 from .models.vm_disk_package import (
     vm_disk_package,
     ahv_vm_disk_package,
@@ -69,6 +68,9 @@ from .models.client_attrs import (
 )
 
 from .models.providers import Provider
+from .models.environment import Environment
+from .models.environment_payload import create_environment_payload
+from .models.project import Project, ProjectType
 from .models.project_payload import create_project_payload
 from .models.brownfield import Brownfield
 
@@ -162,4 +164,6 @@ __all__ = [
     "Metadata",
     "MetadataType",
     "Brownfield",
+    "Environment",
+    "create_environment_payload",
 ]

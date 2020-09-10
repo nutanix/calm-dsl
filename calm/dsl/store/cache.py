@@ -107,6 +107,17 @@ class Cache:
             click.echo(" [Done]", err=True)
 
     @classmethod
+    def sync_table(cls, cache_type):
+
+        cache_table_map = cls.get_cache_tables()
+        if cache_type not in cache_table_map:
+            LOG.error("Invalid cache_type ('{}') provided".format(cache_type))
+            sys.exit(-1)
+
+        cache_table = cache_table_map[cache_type]
+        cache_table.sync()
+
+    @classmethod
     def clear_entities(cls):
         """Clear data present in the cache tables"""
 

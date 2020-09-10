@@ -11,6 +11,7 @@ from calm.dsl.log import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 DSL_PROJECT_PATH = "tests/project/test_project_in_pc.py"
+DSL_PROJECT_WITH_ENV_PATH = "tests/project/test_project_with_env.py"
 
 
 class TestProjectCommands:
@@ -267,3 +268,39 @@ class TestProjectCommands:
             )
             pytest.fail("Project delete call failed")
         LOG.info("Success")
+
+    def test_project_with_env_create_and_delete(self):
+        """
+        Describe and update flow are already checked in `test_project_crud`
+        It will test only create and delete flow on projects with environment
+        """
+
+        runner = CliRunner()
+        self.dsl_project_name = "Test_DSL_Project_Env{}".format(str(uuid.uuid4()))
+        LOG.info("Testing 'calm create project' command")
+        result = runner.invoke(
+            cli,
+            [
+                "create",
+                "project",
+                "--file={}".format(DSL_PROJECT_WITH_ENV_PATH),
+                "--name={}".format(self.dsl_project_name),
+                "--description='Test DSL Project with Env to delete'",
+            ],
+        )
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Project creation from python file failed")
+        LOG.info("Success")
+
+        self._test_project_delete()

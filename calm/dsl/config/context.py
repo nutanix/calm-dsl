@@ -9,11 +9,15 @@ LOG = get_logging_handle(__name__)
 
 class Context:
     def __init__(self):
-        """
-        # Priority (Decreases from 1 -> 3):
-        # 1.) Config file passed as param
-        # 2.) Environment Variables
-        # 3.) Config file stored in init.ini
+
+        self.initialize_configuration()
+
+    def initialize_configuration(self):
+        """initializes the confguration for context
+        Priority (Decreases from 1 -> 3):
+        1.) Config file passed as param
+        2.) Environment Variables
+        3.) Config file stored in init.ini
         """
 
         config_handle = get_config_handle()
@@ -30,6 +34,11 @@ class Context:
         init_config = config_handle.get_init_config()
         self._CONFIG_FILE = init_config["CONFIG"]["location"]
         self._PROJECT = self.project_config.get("name", "")
+
+    def reset_configuration(self):
+        """Resets the configuration"""
+
+        self.initialize_configuration()
 
     def get_server_config(self):
         """returns server configuration"""

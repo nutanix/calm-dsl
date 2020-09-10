@@ -21,6 +21,7 @@ from .user_group import UserGroupAPI
 from .role import RoleAPI
 from .directory_service import DirectoryServiceAPI
 from .access_control_policy import AccessControlPolicyAPI
+from .environment import EnvironmentAPI
 
 
 class ClientHandle:
@@ -47,6 +48,7 @@ class ClientHandle:
         self.role = RoleAPI(self.connection)
         self.directory_service = DirectoryServiceAPI(self.connection)
         self.acp = AccessControlPolicyAPI(self.connection)
+        self.environment = EnvironmentAPI(self.connection)
 
 
 def get_client_handle_obj(
