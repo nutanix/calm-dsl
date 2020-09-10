@@ -6,11 +6,11 @@
       "value_type": "VM",
       "provider_type": "nutanix_pc",
       "attrs": {
-        "vm_references": {
+        "vm_references": [{
             "kind": "vm",
             "name": "test_vm",
             "uuid": "a265e505-1044-4d42-875b-40d2432a3f75"
-        },
+        }],
         "port": 22,
         "credential_definition_list": [
             {
