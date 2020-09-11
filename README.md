@@ -57,7 +57,7 @@ Decompilation is process to consume json data for any entity and convert it back
 - Decompile existing server blueprint: `calm decompile bp <bp_name>`. Use `calm decompile bp <bp_name> --with_secrets` to fill the value for secrets used inside blueprint interactively while decompiling blueprint.
 - Decompile bp from existing json file: `calm decompile bp --file <json_file_location>`.
 - Decompile marketplace blueprint: `calm decompile marketplace_bp <bp_name> --version <bp_version>`.
-- Note: Decompliation support for providers other than AHV are best effort(Experimental).
+- Note: Decompliation support for providers other than AHV is experimental.
 
 ### Runbooks
  - First runbook: `calm init runbook`. This will create a folder `HelloRunbook` with all the necessary files. `HelloRunbook/runbook.py` is the main runbook DSL file. Please read the comments in the beginning of the file for more details about the runbook.
