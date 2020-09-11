@@ -19,7 +19,7 @@ Language design is black art, and building upon a well-established language is d
  - Server status: `calm get server status`. Check if Calm is enabled on PC & Calm version is >=2.9.7.
  - Config: `calm show config`. Please see `calm set config --help` to update configuration.
 
-### Context
+### Calm DSL Context
 Context info includes server, project and log configuration for dsl operations.
 - Flow: Context info is taken from config file passed inline with cli command or environment data or default config file stored mentioned in `~/.calm/init.ini`.
 - Environment variables for server configuration: `CALM_DSL_PC_IP`, `CALM_DSL_PC_PORT`, `CALM_DSL_PC_USERNAME`, `CALM_DSL_PC_PASSWORD`.
@@ -77,7 +77,7 @@ Decompilation is process to consume json data for any entity and convert it back
  - Server status: `calm get server status`. Check if Calm is enabled on PC & Calm version is >=2.9.7.
  - Config: `calm show config`. Please see `calm set config --help` to update configuration.
 
-### Context
+### Calm DSL Context
 Context information includes server, project and log configuration for dsl operations.
 - Flow: Context info is taken from config file passed inline with cli command or environment data or default config file stored mentioned in `~/.calm/init.ini`.
 - Environment variables for server configuration: `CALM_DSL_PC_IP`, `CALM_DSL_PC_PORT`, `CALM_DSL_PC_USERNAME`, `CALM_DSL_PC_PASSWORD`.
