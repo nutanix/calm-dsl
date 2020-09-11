@@ -512,7 +512,7 @@ def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_s
             )
         elif sub_type != "AHV_VM":
             LOG.warning(
-                "Decompilation support for providers other than AHV is experimental/best effort"
+                "Decompilation support for providers other than AHV is experimental."
             )
             break
 

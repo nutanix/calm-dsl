@@ -367,7 +367,7 @@ def _decompile_bp(bp_payload, with_secrets=False):
             )
         elif sub_type != "AHV_VM":
             LOG.warning(
-                "Decompilation support for providers other than AHV is experimental/best effort"
+                "Decompilation support for providers other than AHV is experimental."
             )
             break
 
