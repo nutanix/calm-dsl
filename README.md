@@ -17,7 +17,17 @@ Language design is black art, and building upon a well-established language is d
 ### Initialization
  - Setup: `calm init dsl`. Please fill in the right Prism Central (PC) settings.
  - Server status: `calm get server status`. Check if Calm is enabled on PC & Calm version is >=2.9.7.
- - Config: `calm show config`. Default config is stored at `~/.calm/config.ini`. Please see `calm set config --help` to update config file.
+ - Config: `calm show config`. Please see `calm set config --help` to update configuration.
+
+### Context
+Context info includes server, project and log configuration for dsl operations.
+- Flow: Context info is taken from config file passed inline with cli command or environment data or default config file stored mentioned in `~/.calm/init.ini`.
+- Environment variables for server configuration: `CALM_DSL_PC_IP`, `CALM_DSL_PC_PORT`, `CALM_DSL_PC_USERNAME`, `CALM_DSL_PC_PASSWORD`.
+- Environment variable for project configuration: `CALM_DSL_DEFAULT_PROJECT`.
+- Environment variable for log configuration: `CALM_DSL_LOG_LEVEL`.
+- Environment variables for init configuration: `CALM_DSL_CONFIG_FILE_LOCATION`, `CALM_DSL_LOCAL_DIR_LOCATION`, `CALM_DSL_DB_LOCATION`.
+- Config file parameter: `calm --config/-c <config_file_location> ...`
+- Show config in context: `calm show config`.
 
 ### Blueprint
  - First blueprint: `calm init bp`. This will create a folder `HelloBlueprint` with all the necessary files. `HelloBlueprint/blueprint.py` is the main blueprint DSL file. Please read the comments in the beginning of the file for more details about the blueprint.
@@ -65,7 +75,17 @@ Decompilation is process to consume json data for any entity and convert it back
 ### Initialization
  - Setup: `calm init dsl`. Please fill in the right Prism Central (PC) settings.
  - Server status: `calm get server status`. Check if Calm is enabled on PC & Calm version is >=2.9.7.
- - Config: `calm show config`. Default config is stored at `~/.calm/config.ini`. Please see `calm set config --help` to update config file.
+ - Config: `calm show config`. Please see `calm set config --help` to update configuration.
+
+### Context
+Context information includes server, project and log configuration for dsl operations.
+- Flow: Context info is taken from config file passed inline with cli command or environment data or default config file stored mentioned in `~/.calm/init.ini`.
+- Environment variables for server configuration: `CALM_DSL_PC_IP`, `CALM_DSL_PC_PORT`, `CALM_DSL_PC_USERNAME`, `CALM_DSL_PC_PASSWORD`.
+- Environment variable for project configuration: `CALM_DSL_DEFAULT_PROJECT`.
+- Environment variable for log configuration: `CALM_DSL_LOG_LEVEL`.
+- Environment variables for init configuration: `CALM_DSL_CONFIG_FILE_LOCATION`, `CALM_DSL_LOCAL_DIR_LOCATION`, `CALM_DSL_DB_LOCATION`.
+- Config file parameter: `calm --config/-c <config_file_location> ...`
+- Show config in context: `calm show config`.
 
 ### Roles
 Use `calm get roles` to list all roles in PC. The below roles are relevant for Calm:
