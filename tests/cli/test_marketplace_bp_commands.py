@@ -68,7 +68,7 @@ class TestMarketplaceBPCommands:
         result = runner.invoke(cli, ["get", "marketplace", "items"])
         if result.exit_code:
             LOG.error(result.output)
-            pytest.fail("MPI list call failed")
+            pytest.fail("Failed to fetch marketplace items")
         LOG.info("Success")
 
         # Test display all flag
@@ -76,7 +76,7 @@ class TestMarketplaceBPCommands:
         result = runner.invoke(cli, ["get", "marketplace", "items", "--display_all"])
         if result.exit_code:
             LOG.error(result.output)
-            pytest.fail("MPI list call with display_all flag failed")
+            pytest.fail("Failed to fetch marketplace items with display_all flag")
         LOG.info("Success")
 
         # Test quiet flag
@@ -84,7 +84,7 @@ class TestMarketplaceBPCommands:
         result = runner.invoke(cli, ["get", "marketplace", "items", "--quiet"])
         if result.exit_code:
             LOG.error(result.output)
-            pytest.fail("MPI list call with quiet flag failed")
+            pytest.fail("Failed to fetch marketplace items with quiet flag")
         LOG.info("Success")
 
         # Test app_family attribute
@@ -96,10 +96,7 @@ class TestMarketplaceBPCommands:
             result = runner.invoke(cli, input)
             if result.exit_code:
                 LOG.error(result.output)
-                import pdb
-
-                pdb.set_trace()
-                pytest.fail("MPI list call with app_family option failed")
+                pytest.fail("Failed to fetch marketplace items with app_family option")
         LOG.info("Success")
 
     def test_get_marketplace_bps(self):
@@ -111,7 +108,7 @@ class TestMarketplaceBPCommands:
         result = runner.invoke(cli, ["get", "marketplace", "bps"])
         if result.exit_code:
             LOG.error(result.output)
-            pytest.fail("MPI list call failed")
+            pytest.fail("Failed to fetch marketplace bps")
         LOG.info("Success")
 
         # Test quiet flag
@@ -119,7 +116,7 @@ class TestMarketplaceBPCommands:
         result = runner.invoke(cli, ["get", "marketplace", "bps", "--quiet"])
         if result.exit_code:
             LOG.error(result.output)
-            pytest.fail("MPI list call with quiet flag failed")
+            pytest.fail("Failed to fetch marketplace bps with quiet flag")
         LOG.info("Success")
 
         # Test app states option
@@ -140,7 +137,7 @@ class TestMarketplaceBPCommands:
             result = runner.invoke(cli, input)
             if result.exit_code:
                 LOG.error(result.ouput)
-                pytest.fail("MPI list call with app_state option failed")
+                pytest.fail("Failed to fetch marketplace bps with app_state option")
         LOG.info("Success")
 
         # Test app_family attribute
@@ -152,7 +149,7 @@ class TestMarketplaceBPCommands:
             result = runner.invoke(cli, input)
             if result.exit_code:
                 LOG.error(result.output)
-                pytest.fail("MPI list call with app_family option failed")
+                pytest.fail("Failed to fetch marketplace bps with app_family option")
         LOG.info("Success")
 
     def test_describe_marketplace_item_with_default_version(self):

@@ -11,7 +11,7 @@ from .marketplace_commands_main import (
     marketplace_delete,
     marketplace_reject,
     marketplace_unpublish,
-    publish
+    publish,
 )
 from .marketplace_bps import (
     get_marketplace_items,
