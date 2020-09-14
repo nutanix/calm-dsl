@@ -583,6 +583,10 @@ def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None
     environments = res["status"]["resources"]["environment_reference_list"]
 
     # For now only single environment exists
+    if not environments:
+        LOG.error("No environment registered to project '{}'".format(project_name))
+        sys.exit(-1)
+
     env_uuid = environments[0]["uuid"]
 
     LOG.info("Fetching MPI details")
