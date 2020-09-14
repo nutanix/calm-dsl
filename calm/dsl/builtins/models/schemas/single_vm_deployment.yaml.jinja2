@@ -1,0 +1,75 @@
+{% import "ref.yaml.jinja2" as ref %}
+
+{% macro SingleVmDeployment() -%}
+
+title: SingleVmDeployment
+type: object
+x-calm-dsl-type: app_blueprint_single_vm_deployment
+properties:
+  name:
+    type: string
+    maxLength: 64
+    default: ''
+  description:
+    type: string
+    maxLength: 1000
+    default: ''
+  action_list:
+    x-calm-dsl-display-name: actions
+    type: array
+    items:
+      $ref: '#/components/schemas/Action'
+  provider_type:
+    type: string
+    default: 'AHV_VM'
+  os_type:
+    type: string
+    default: 'Linux'
+  provider_spec:
+    type: object
+    x-calm-dsl-type: app_provider_spec
+  readiness_probe:
+    type: object
+    x-calm-dsl-type: object
+    properties:
+      connection_type:
+        type: string
+        default: SSH
+        enum: [SSH, POWERSHELL]
+      connection_port:
+        type: integer
+        default: 22
+      login_credential_local_reference:
+        x-calm-dsl-display-name: credential
+        {{ ref.Ref() | indent(8) }}
+      timeout_secs:
+        type: string
+      delay_secs:
+        type: string
+      retries:
+        type: string
+        default: "5"
+      address:
+        type: string
+      disable_readiness_probe:
+        x-calm-dsl-display-name: disabled
+        default: false
+        type: boolean
+  min_replicas:
+    description: Minimum replicas for the deployment.
+    type: string
+    default: "1"
+  max_replicas:
+    description: Maximum replicas for the deployment.
+    type: string
+    default: "1"
+
+{%- endmacro %}
+
+
+{% macro SingleVmDeploymentSchema() -%}
+
+SingleVmDeployment:
+  {{ SingleVmDeployment()|indent(2) }}
+
+{%- endmacro %}

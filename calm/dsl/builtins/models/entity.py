@@ -260,7 +260,8 @@ class EntityType(EntityTypeBase):
         # Variables and actions have [] as defaults.
         # As this list can be modified/extended here,
         # make a copy of variables and actions
-        attrs["variables"] = list(attrs.get("variables", []))
+        if "variables" in vdict:
+            attrs["variables"] = list(attrs.get("variables", []))
         if "actions" in vdict:
             attrs["actions"] = list(attrs.get("actions", []))
 

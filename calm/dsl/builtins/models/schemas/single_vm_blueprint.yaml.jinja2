@@ -1,0 +1,44 @@
+{% macro SingleVmBlueprint() -%}
+
+title: SingleVmBlueprint
+type: object
+x-calm-dsl-type: app_single_vm_blueprint
+properties:
+  name:
+    type: string
+    maxLength: 64
+    default: ''
+  description:
+    type: string
+    maxLength: 1000
+    default: ''
+  credentials:
+    type: array
+    items:
+      $ref: '#/components/schemas/Credential'
+  deployments:
+    type: array
+    description: single vm deployments
+    items:
+      $ref: '#/components/schemas/SingleVmDeployment'
+  variables:
+    type: array
+    description: Profile variables
+    items:
+      $ref: '#/components/schemas/Variable'
+  action_list:
+    x-calm-dsl-display-name: actions
+    description: Profile actions
+    type: array
+    items:
+      $ref: '#/components/schemas/Action'
+
+{%- endmacro %}
+
+
+{% macro SingleVmBlueprintSchema() -%}
+
+SingleVmBlueprint:
+  {{ SingleVmBlueprint()|indent(2) }}
+
+{%- endmacro %}
