@@ -11,6 +11,8 @@ from .service import service
 from .package import package
 from .ref import ref
 from .action import action as Action
+from .blueprint import blueprint
+from .variable import VariableType
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -25,6 +27,85 @@ class SingleVmBlueprintType(EntityType):
 
     def get_task_target(cls):
         return
+
+    def make_bp_obj(cls):
+
+        # Create blueprint objects
+        bp_credentials = cls.credentials
+
+        # Init Profile
+        bp_profile = profile(name=cls.__name__ + "Profile")
+
+        for k, v in cls.__dict__.items():
+            if isinstance(v, (VariableType, Action)):
+                setattr(bp_profile, k, v)
+
+        app_profile_list = [bp_profile]
+
+        service_definition_list = []
+        package_definition_list = []
+        substrate_definition_list = []
+
+        if len(cls.deployments) > 1:
+            LOG.error("Single deployment is allowed only in single vm blueprint.")
+            sys.exit(-1)
+        elif len(cls.deployments) == 0:
+            LOG.error("No Single Vm Deployment provided in blueprint.")
+            sys.exit(-1)
+
+        single_vm_dep = cls.deployments[0]
+
+        dep_name = getattr(single_vm_dep, "name", None) or single_vm_dep.__name__
+        dep_description = (
+            getattr(single_vm_dep, "description", None) or single_vm_dep.__doc__
+        )
+
+        bp_service = service(name=dep_name + "Service", description=dep_description)
+
+        bp_pkg = package(name=dep_name + "Package", services=[ref(bp_service)])
+
+        bp_sub = substrate(
+            name=dep_name + "Substrate",
+            provider_type=single_vm_dep.provider_type,
+            provider_spec=single_vm_dep.provider_spec,
+            readiness_probe=single_vm_dep.readiness_probe,
+            os_type=single_vm_dep.os_type,
+        )
+
+        for k, v in single_vm_dep.__dict__.items():
+            if isinstance(v, (Action)):
+                if k in ["__install__", "__uninstall__"]:
+                    setattr(bp_pkg, k, v)
+
+                elif k in ["__pre_create__", "__post_delete__"]:
+                    setattr(bp_sub, k, v)
+
+                else:
+                    LOG.error(
+                        "Only package and substrate actions are allowed in deployment"
+                    )
+                    sys.exit(-1)
+
+        bp_dep = deployment(
+            name=dep_name,
+            min_replicas=single_vm_dep.min_replicas,
+            max_replicas=single_vm_dep.max_replicas,
+            packages=[ref(bp_pkg)],
+            substrate=ref(bp_sub),
+        )
+
+        bp_profile.deployments = [bp_dep]
+
+        bp_obj = blueprint(
+            name=cls.__name__,
+            services=[bp_service],
+            packages=[bp_pkg],
+            substrates=[bp_sub],
+            credentials=bp_credentials,
+            profiles=[bp_profile],
+        )
+
+        return bp_obj
 
     def make_bp_dict(cls, categories=dict()):
 

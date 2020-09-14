@@ -1,9 +1,6 @@
 """
 Single Vm deployment interface for Calm DSL
 
-Limitations:
-Only 1 Service & 1 Package allowed per Deployment
-Only 1 Profile per Blueprint
 
 """
 import sys
@@ -11,36 +8,66 @@ import json
 
 from calm.dsl.builtins import ref, basic_cred
 from calm.dsl.builtins import SingleVmDeployment, SingleVmBlueprint
-from calm.dsl.builtins import read_provider_spec, read_spec, read_local_file
+from calm.dsl.builtins import read_local_file
 from calm.dsl.builtins import CalmTask as Task
 from calm.dsl.builtins import CalmVariable as Var
 from calm.dsl.builtins import action, parallel
 
-CRED_USERNAME = read_local_file(".tests/username")
-CRED_PASSWORD = read_local_file(".tests/password")
+from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC
+from calm.dsl.builtins import AhvVmResources, AhvVm
+from calm.dsl.builtins import Ref, Metadata
+
+
+# Credentials
+CENTOS_KEY = read_local_file("keys/centos")
+CENTOS_PUBLIC_KEY = read_local_file("keys/centos_pub")
+Centos = basic_cred("centos", CENTOS_KEY, name="Centos", type="KEY", default=True)
+
 DNS_SERVER = read_local_file(".tests/dns_server")
+
 # Setting the recursion limit to max for
 sys.setrecursionlimit(100000)
+
+
+class MyAhvVmResources(AhvVmResources):
+
+    memory = 4
+    vCPUs = 2
+    cores_per_vCPU = 1
+    disks = [AhvVmDisk.Disk.Scsi.cloneFromImageService("Centos7", bootable=True)]
+    nics = [AhvVmNic("vlan.0")]
+
+    guest_customization = AhvVmGC.CloudInit(
+        config={
+            "users": [
+                {
+                    "name": "centos",
+                    "ssh-authorized-keys": [CENTOS_PUBLIC_KEY],
+                    "sudo": ["ALL=(ALL) NOPASSWD:ALL"],
+                }
+            ]
+        }
+    )
+
+    serial_ports = {0: False, 1: False, 2: True, 3: True}
+
+
+class MyAhvVm(AhvVm):
+
+    resources = MyAhvVmResources
+    categories = {"AppFamily": "Backup", "AppType": "Default"}
 
 
 class MySQLDeployment(SingleVmDeployment):
     """MySQL deployment description"""
 
     # VM Spec
-    provider_spec = read_provider_spec("specs/ahv_provider_spec.yaml")
+    provider_spec = MyAhvVm
 
-    # All service, package and substrate system actions
+    # Only Actions under package and substrate are allowed
     @action
     def __install__():
         Task.Exec.ssh(name="Task1", filename="scripts/mysql_install_script.sh")
-
-    @action
-    def __start__():
-        Task.Exec.ssh(name="Task2", script="echo 'Service start in ENV=@@{ENV}@@'")
-
-    @action
-    def __stop__():
-        Task.Exec.ssh(name="Task3", script="echo 'Service stop in ENV=@@{ENV}@@'")
 
     @action
     def __pre_create__():
@@ -52,20 +79,16 @@ class SampleSingleVmBluerint(SingleVmBlueprint):
 
     nameserver = Var(DNS_SERVER, label="Local DNS resolver")
 
-    credentials = [
-        basic_cred(CRED_USERNAME, CRED_PASSWORD, name="default cred", default=True)
-    ]
+    credentials = [Centos]
     deployments = [MySQLDeployment]
 
-    @action  # Profile level action
+    # Only profile actions are allowed here
+    @action
     def test_profile_action():
 
         Task.Exec.ssh(name="Task9", script='echo "Hello"', target=ref(MySQLDeployment))
 
 
-if __name__ == "__main__":
-    print(
-        json.dumps(
-            SampleSingleVmBluerint.make_bp_dict(), indent=4, separators=(",", ": ")
-        )
-    )
+class BpMetadata(Metadata):
+
+    project = Ref.Project("Remote_PC_project")

@@ -281,11 +281,15 @@ def compile_blueprint(bp_file, brownfield_deployment_file=None):
                     pf.deployments[ind] = bf_dep
 
     bp_payload = None
-    if isinstance(UserBlueprint, type(SimpleBlueprint)) or isinstance(
-        UserBlueprint, type(SingleVmBlueprint)
-    ):
+    if isinstance(UserBlueprint, type(SimpleBlueprint)):
         bp_payload = UserBlueprint.make_bp_dict()
     else:
+        if isinstance(UserBlueprint, type(SingleVmBlueprint)):
+            UserBlueprint = UserBlueprint.make_bp_obj()
+            if "categories" not in metadata_payload:
+                metadata_payload["categories"] = {}
+            metadata_payload["categories"]["TemplateType"] = "Vm"
+
         UserBlueprintPayload, _ = create_blueprint_payload(
             UserBlueprint, metadata=metadata_payload
         )
