@@ -36,6 +36,7 @@ Context info includes server, project and log configuration for dsl operations.
  - List blueprints: `calm get bps`. You can also pass in filters like `calm get bps --name <blueprint_name>` and so on. Please look at `calm get bps --help`.
  - Describe blueprint: `calm describe bp <blueprint_name>`. It will print a summary of the blueprint.
  - Launch blueprint to create Application: `calm launch bp <blueprint_name> --app_name <app_name> -i`
+ - Publish blueprint to marketplace manager: `calm publish bp <bp_name> --version <version> --project <project_name>`. Please look at `calm publish bp --help`.
 
 ### Application
  - List apps: `calm get apps`. Use `calm get apps -q` to show only application names.
