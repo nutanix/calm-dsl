@@ -243,7 +243,7 @@ def create_blueprint_command(bp_file, name, description, force):
 @click.option(
     "--poll-interval",
     "poll_interval",
-    "-p",
+    "-pi",
     type=int,
     default=10,
     show_default=True,
