@@ -1,9 +1,15 @@
+{% import "ref.yaml.jinja2" as ref %}
+
 {% macro SingleVmBlueprint() -%}
 
 title: SingleVmBlueprint
 type: object
 x-calm-dsl-type: app_single_vm_blueprint
 properties:
+  name:
+    type: string
+    maxLength: 64
+    default: ''
   description:
     type: string
     maxLength: 1000
@@ -12,11 +18,25 @@ properties:
     type: array
     items:
       $ref: '#/components/schemas/Credential'
-  deployments:
-    type: array
-    description: single vm deployments
-    items:
-      $ref: '#/components/schemas/SingleVmDeployment'
+  os_type:
+    type: string
+    default: 'Linux'
+  provider_type:
+    type: string
+    default: 'AHV_VM'
+  provider_spec:
+    type: object
+    x-calm-dsl-type: app_provider_spec
+  readiness_probe:
+    $ref: '#/components/schemas/ReadinessProbe'
+  min_replicas:
+    description: Minimum replicas for the deployment.
+    type: string
+    default: "1"
+  max_replicas:
+    description: Maximum replicas for the deployment.
+    type: string
+    default: "1"
   variables:
     type: array
     description: Profile variables
@@ -24,7 +44,7 @@ properties:
       $ref: '#/components/schemas/Variable'
   action_list:
     x-calm-dsl-display-name: actions
-    description: Profile actions
+    description: Profile, Package and Substrate actions
     type: array
     items:
       $ref: '#/components/schemas/Action'

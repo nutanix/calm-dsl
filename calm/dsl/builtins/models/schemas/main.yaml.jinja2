@@ -29,7 +29,6 @@
 {% import "brownfield_deployment.yaml.jinja2" as brownfield_deployment %}
 {% import "environment.yaml.jinja2" as environment %}
 {% import "environment_payload.yaml.jinja2" as environment_payload %}
-{% import "single_vm_deployment.yaml.jinja2" as single_vm_deployment %}
 {% import "single_vm_blueprint.yaml.jinja2" as single_vm_blueprint %}
 
 
@@ -66,7 +65,6 @@
 {{ brownfield_deployment.BrownfieldDeploymentSchema() }}
 {{ environment.EnvironmentSchema() }}
 {{ environment_payload.EnvironmentPayloadSchema() }}
-{{ single_vm_deployment.SingleVmDeploymentSchema() }}
 {{ single_vm_blueprint.SingleVmBlueprintSchema() }}
 
 {%- endmacro %}

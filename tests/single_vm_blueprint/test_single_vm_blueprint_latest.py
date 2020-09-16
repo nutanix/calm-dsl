@@ -7,14 +7,14 @@ import sys
 import json
 
 from calm.dsl.builtins import ref, basic_cred
-from calm.dsl.builtins import SingleVmDeployment, SingleVmBlueprint
-from calm.dsl.builtins import read_local_file
+from calm.dsl.builtins import SingleVmBlueprint
+from calm.dsl.builtins import read_local_file, readiness_probe
 from calm.dsl.builtins import CalmTask as Task
 from calm.dsl.builtins import CalmVariable as Var
 from calm.dsl.builtins import action, parallel
 
 from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC
-from calm.dsl.builtins import AhvVmResources, AhvVm
+from calm.dsl.builtins import AhvVmResources, AhvVm, ahv_vm
 from calm.dsl.builtins import Ref, Metadata
 
 
@@ -52,19 +52,22 @@ class MyAhvVmResources(AhvVmResources):
     serial_ports = {0: False, 1: False, 2: True, 3: True}
 
 
-class MyAhvVm(AhvVm):
+class SampleSingleVmBluerint(SingleVmBlueprint):
+    """Simple blueprint Spec"""
 
-    resources = MyAhvVmResources
-    categories = {"AppFamily": "Backup", "AppType": "Default"}
+    # Blueprint credentials
+    credentials = [Centos]
 
+    # VM Spec for Substrate
+    provider_spec = ahv_vm(resources=AhvVmResources)
 
-class MySQLDeployment(SingleVmDeployment):
-    """MySQL deployment description"""
+    # Readiness probe for substrate
+    readiness_probe = readiness_probe(disabled=True)
 
-    # VM Spec
-    provider_spec = MyAhvVm
+    # Profile variables
+    nameserver = Var(DNS_SERVER, label="Local DNS resolver")
 
-    # Only Actions under package and substrate are allowed
+    # Only actions under Packages, Substrates and Profiles are allowed
     @action
     def __install__():
         Task.Exec.ssh(name="Task1", filename="scripts/mysql_install_script.sh")
@@ -73,20 +76,9 @@ class MySQLDeployment(SingleVmDeployment):
     def __pre_create__():
         Task.Exec.escript(name="Pre Create Task", script="print 'Hello!'")
 
-
-class SampleSingleVmBluerint(SingleVmBlueprint):
-    """Simple blueprint Spec"""
-
-    nameserver = Var(DNS_SERVER, label="Local DNS resolver")
-
-    credentials = [Centos]
-    deployments = [MySQLDeployment]
-
-    # Only profile actions are allowed here
     @action
     def test_profile_action():
-
-        Task.Exec.ssh(name="Task9", script='echo "Hello"', target=ref(MySQLDeployment))
+        Task.Exec.ssh(name="Task9", script='echo "Hello"')
 
 
 class BpMetadata(Metadata):

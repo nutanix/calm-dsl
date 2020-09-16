@@ -153,6 +153,9 @@ class action(metaclass=DescriptorType):
         self.user_func = user_func
         self.user_runbook = None
 
+        # task_target is used for single_vm_blueprint usecase, where we cann't give reference to reference to blueprint services
+        self.task_target = None
+
     def __call__(self, name=None):
         if self.user_runbook:
             return create_call_rb(self.user_runbook, name=name)
@@ -189,7 +192,9 @@ class action(metaclass=DescriptorType):
         # ast.Call nodes. ast.Assign nodes become variables.
         node = ast.parse(new_src)
         func_globals = self.user_func.__globals__.copy()
-        node_visitor = GetCallNodes(func_globals, target=cls.get_task_target())
+        node_visitor = GetCallNodes(
+            func_globals, target=self.task_target or cls.get_task_target()
+        )
         try:
             node_visitor.visit(node)
         except Exception as ex:
@@ -217,7 +222,7 @@ class action(metaclass=DescriptorType):
             name=dag_name,
             child_tasks=tasks,
             edges=edges,
-            target=cls.get_task_target()
+            target=self.task_target or cls.get_task_target()
             if getattr(cls, "__has_dag_target__", True)
             else None,
         )
