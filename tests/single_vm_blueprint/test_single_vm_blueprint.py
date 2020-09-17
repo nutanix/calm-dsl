@@ -2,17 +2,17 @@
 Single Vm deployment interface for Calm DSL
 
 """
+import os
 
 from calm.dsl.builtins import ref, basic_cred
 from calm.dsl.builtins import SingleVmBlueprint
 from calm.dsl.builtins import read_local_file, readiness_probe
 from calm.dsl.builtins import CalmTask as Task
 from calm.dsl.builtins import CalmVariable as Var
-from calm.dsl.builtins import action, parallel
+from calm.dsl.builtins import action
 
 from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC
-from calm.dsl.builtins import AhvVmResources, AhvVm, ahv_vm
-from calm.dsl.builtins import Ref, Metadata
+from calm.dsl.builtins import AhvVmResources, ahv_vm
 
 
 # Credentials
@@ -52,7 +52,7 @@ class SampleSingleVmBluerint(SingleVmBlueprint):
     credentials = [Centos]
 
     # VM Spec for Substrate
-    provider_spec = ahv_vm(resources=SingleVmAhvResources)
+    provider_spec = ahv_vm(resources=SingleVmAhvResources, name="MyAhvVm")
 
     # Readiness probe for substrate
     readiness_probe = readiness_probe(credential=ref(Centos), disabled=False)
@@ -63,7 +63,7 @@ class SampleSingleVmBluerint(SingleVmBlueprint):
     # Only actions under Packages, Substrates and Profiles are allowed
     @action
     def __install__():
-        Task.Exec.ssh(name="Task1", filename="scripts/mysql_install_script.sh")
+        Task.Exec.ssh(name="Task1", filename=os.path.join("scripts", "mysql_install_script.sh"))
 
     @action
     def __pre_create__():
@@ -74,6 +74,23 @@ class SampleSingleVmBluerint(SingleVmBlueprint):
         Task.Exec.ssh(name="Task9", script='echo "Hello"')
 
 
-class BpMetadata(Metadata):
+def test_json():
 
-    project = Ref.Project("default")
+    import sys
+
+    from calm.dsl.config import get_context
+
+    # Setting the recursion limit to max for
+    sys.setrecursionlimit(100000)
+
+    # Resetting context
+    ContextObj = get_context()
+    ContextObj.reset_configuration()
+
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    file_path = os.path.join(dir_path, "test_single_vm_bp_output.json")
+
+    generated_json = SampleSingleVmBluerint.make_bp_obj().json_dumps(pprint=True)
+    known_json = open(file_path).read()
+
+    assert generated_json == known_json
