@@ -1,10 +1,7 @@
 """
-Single Vm deployment interface for Calm DSL
-
+Single Vm deployment min interface for Calm DSL
 
 """
-import sys
-import json
 
 from calm.dsl.builtins import ref, basic_cred
 from calm.dsl.builtins import SingleVmBlueprint
@@ -18,11 +15,6 @@ from calm.dsl.builtins import AhvVmResources, AhvVm, ahv_vm
 CENTOS_KEY = read_local_file("keys/centos")
 CENTOS_PUBLIC_KEY = read_local_file("keys/centos_pub")
 Centos = basic_cred("centos", CENTOS_KEY, name="Centos", type="KEY", default=True)
-
-DNS_SERVER = read_local_file(".tests/dns_server")
-
-# Setting the recursion limit to max for
-sys.setrecursionlimit(100000)
 
 
 class MyAhvVmResources(AhvVmResources):
@@ -45,11 +37,12 @@ class MyAhvVmResources(AhvVmResources):
         }
     )
 
-    serial_ports = {0: False, 1: False, 2: True, 3: True}
 
-
-class SampleSingleVmBluerint(SingleVmBlueprint):
+class SingleVmMinInterfaceBluepeint(SingleVmBlueprint):
     """Simple blueprint Spec"""
 
+    # Credentials
+    credentials = [Centos]
+
     # VM Spec
-    provider_spec = ahv_vm(resources=AhvVmResources)
+    provider_spec = ahv_vm(resources=MyAhvVmResources)

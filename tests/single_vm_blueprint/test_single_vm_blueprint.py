@@ -1,10 +1,7 @@
 """
 Single Vm deployment interface for Calm DSL
 
-
 """
-import sys
-import json
 
 from calm.dsl.builtins import ref, basic_cred
 from calm.dsl.builtins import SingleVmBlueprint
@@ -25,11 +22,9 @@ Centos = basic_cred("centos", CENTOS_KEY, name="Centos", type="KEY", default=Tru
 
 DNS_SERVER = read_local_file(".tests/dns_server")
 
-# Setting the recursion limit to max for
-sys.setrecursionlimit(100000)
 
-
-class MyAhvVmResources(AhvVmResources):
+class SingleVmAhvResources(AhvVmResources):
+    """Vm configuration"""
 
     memory = 4
     vCPUs = 2
@@ -49,8 +44,6 @@ class MyAhvVmResources(AhvVmResources):
         }
     )
 
-    serial_ports = {0: False, 1: False, 2: True, 3: True}
-
 
 class SampleSingleVmBluerint(SingleVmBlueprint):
     """Simple blueprint Spec"""
@@ -59,10 +52,10 @@ class SampleSingleVmBluerint(SingleVmBlueprint):
     credentials = [Centos]
 
     # VM Spec for Substrate
-    provider_spec = ahv_vm(resources=AhvVmResources)
+    provider_spec = ahv_vm(resources=SingleVmAhvResources)
 
     # Readiness probe for substrate
-    readiness_probe = readiness_probe(disabled=True)
+    readiness_probe = readiness_probe(credential=ref(Centos), disabled=False)
 
     # Profile variables
     nameserver = Var(DNS_SERVER, label="Local DNS resolver")
@@ -83,4 +76,4 @@ class SampleSingleVmBluerint(SingleVmBlueprint):
 
 class BpMetadata(Metadata):
 
-    project = Ref.Project("Remote_PC_project")
+    project = Ref.Project("default")

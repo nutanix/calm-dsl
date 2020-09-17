@@ -1,18 +1,15 @@
-import sys
-
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 
 from .profile import profile
 from .deployment import deployment
-from .provider_spec import provider_spec as get_provider_spec
 from .substrate import substrate
 from .service import service
 from .package import package
 from .ref import ref
 from .action import action as Action
 from .blueprint import blueprint
-from .variable import VariableType
+from .variable import VariableType as Variable
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -24,6 +21,9 @@ class SingleVmBlueprintType(EntityType):
     __schema_name__ = "SingleVmBlueprint"
     __openapi_type__ = "app_single_vm_blueprint"
     __has_dag_target__ = False
+
+    def get_task_target(cls):
+        return
 
     def make_bp_obj(cls):
 
@@ -61,7 +61,7 @@ class SingleVmBlueprintType(EntityType):
 
         # Separate class action under packages, substrates and profile
         for k, v in cls.__dict__.items():
-            if isinstance(v, (Action)):
+            if isinstance(v, Action):
                 if k in ["__install__", "__uninstall__"]:
                     setattr(bp_pkg, k, v)
 
@@ -72,7 +72,7 @@ class SingleVmBlueprintType(EntityType):
                     v.task_target = ref(bp_service)
                     setattr(bp_profile, k, v)
 
-            elif isinstance(v, VariableType):
+            elif isinstance(v, Variable):
                 setattr(bp_profile, k, v)
 
         bp_obj = blueprint(
