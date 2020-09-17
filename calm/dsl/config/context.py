@@ -46,25 +46,25 @@ class Context:
         config = self.server_config
         if not config.get("pc_ip"):
             LOG.error(
-                "Host IP not found. Please provide it in config file or set environment variable 'PC_IP'"
+                "Host IP not found. Please provide it in config file or set environment variable 'CALM_DSL_PC_IP'"
             )
             sys.exit(-1)
 
         if not config.get("pc_port"):
             LOG.error(
-                "Host Port not found. Please provide it in config file or set environment variable 'PC_PORT'"
+                "Host Port not found. Please provide it in config file or set environment variable 'CALM_DSL_PC_PORT'"
             )
             sys.exit(-1)
 
         if not config.get("pc_username"):
             LOG.error(
-                "Host username not found. Please provide it in config file or set environment variable 'PC_USERNAME'"
+                "Host username not found. Please provide it in config file or set environment variable 'CALM_DSL_PC_USERNAME'"
             )
             sys.exit(-1)
 
         if not config.get("pc_password"):
             LOG.error(
-                "Host password not found. Please provide it in config file or set environment variable 'PC_PASSWORD'"
+                "Host password not found. Please provide it in config file or set environment variable 'CALM_DSL_PC_PASSWORD'"
             )
             sys.exit(-1)
 
@@ -76,7 +76,7 @@ class Context:
         config = self.project_config
         if not config.get("name"):
             LOG.warning(
-                "Default project not found in config file or environment('DSL_DEFAULT_PROJECT' variable). Setting it to 'default' project"
+                "Default project not found in config file or environment('CALM_DSL_DEFAULT_PROJECT' variable). Setting it to 'default' project"
             )
             config["name"] = "default"
 
@@ -88,7 +88,7 @@ class Context:
         config = self.log_config
         if not config.get("level"):
             LOG.warning(
-                "Default log-level not found in config file or environment('DSL_LOG_LEVEL'). Setting it to 'INFO' level"
+                "Default log-level not found in config file or environment('CALM_DSL_LOG_LEVEL'). Setting it to 'INFO' level"
             )
             config["level"] = "INFO"
 
