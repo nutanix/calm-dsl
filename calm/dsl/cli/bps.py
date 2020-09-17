@@ -309,6 +309,97 @@ def compile_blueprint(bp_file, brownfield_deployment_file=None):
     return bp_payload
 
 
+def create_blueprint(
+    client, bp_payload, name=None, description=None, force_create=False
+):
+
+    bp_payload.pop("status", None)
+
+    credential_list = bp_payload["spec"]["resources"]["credential_definition_list"]
+    for cred in credential_list:
+        if cred["secret"].get("secret", None):
+            secret = cred["secret"].pop("secret")
+
+            try:
+                value = find_secret(secret)
+
+            except ValueError:
+                click.echo(
+                    "\nNo secret corresponding to '{}' found !!!\n".format(secret)
+                )
+                value = click.prompt("Please enter its value", hide_input=True)
+
+                choice = click.prompt(
+                    "\n{}(y/n)".format(highlight_text("Want to store it locally")),
+                    default="n",
+                )
+                if choice[0] == "y":
+                    create_secret(secret, value)
+
+            cred["secret"]["value"] = value
+
+    if name:
+        bp_payload["spec"]["name"] = name
+        bp_payload["metadata"]["name"] = name
+
+    if description:
+        bp_payload["spec"]["description"] = description
+
+    bp_resources = bp_payload["spec"]["resources"]
+    bp_name = bp_payload["spec"]["name"]
+    bp_desc = bp_payload["spec"]["description"]
+    bp_metadata = bp_payload["metadata"]
+
+    return client.blueprint.upload_with_secrets(
+        bp_name,
+        bp_desc,
+        bp_resources,
+        bp_metadata=bp_metadata,
+        force_create=force_create,
+    )
+
+
+def create_blueprint_from_json(
+    client, path_to_json, name=None, description=None, force_create=False
+):
+
+    with open(path_to_json, "r") as f:
+        bp_payload = json.loads(f.read())
+    return create_blueprint(
+        client,
+        bp_payload,
+        name=name,
+        description=description,
+        force_create=force_create,
+    )
+
+
+def create_blueprint_from_dsl(
+    client, bp_file, name=None, description=None, force_create=False
+):
+
+    bp_payload = compile_blueprint(bp_file)
+    if bp_payload is None:
+        err_msg = "User blueprint not found in {}".format(bp_file)
+        err = {"error": err_msg, "code": -1}
+        return None, err
+
+    # Brownfield blueprints creation should be blocked using dsl file
+    if bp_payload["spec"]["resources"].get("type", "") == "BROWNFIELD":
+        LOG.error(
+            "Command not allowed for brownfield blueprints. Please use 'calm create app -f <bp_file_location>' for creating brownfield application"
+        )
+        sys.exit(-1)
+
+    return create_blueprint(
+        client,
+        bp_payload,
+        name=name,
+        description=description,
+        force_create=force_create,
+    )
+
+
 def decompile_bp(name, bp_file, with_secrets=False):
     """helper to decompile blueprint"""
 

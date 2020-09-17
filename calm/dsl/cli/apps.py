@@ -15,8 +15,7 @@ from calm.dsl.config import get_context
 
 from .utils import get_name_query, get_states_filter, highlight_text, Display
 from .constants import APPLICATION, RUNLOG, SYSTEM_ACTIONS
-from .bp_commands import create_blueprint
-from .bps import launch_blueprint_simple, compile_blueprint
+from .bps import launch_blueprint_simple, compile_blueprint, create_blueprint
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
