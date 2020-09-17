@@ -50,28 +50,28 @@ class SubstrateType(EntityType):
                 readiness_probe_dict = readiness_probe_dict.compile()
         else:
             readiness_probe_dict = readiness_probe().compile()
-        
+
         # Fill out os specific details if not found
         if cdict["os_type"] == "Linux":
             if not readiness_probe_dict.get("connection_type", ""):
                 readiness_probe_dict["connection_type"] = "SSH"
-            
+
             if not readiness_probe_dict.get("connection_port", ""):
-                readiness_probe_dict["connection_port"] = "22"
-            
+                readiness_probe_dict["connection_port"] = 22
+
             if not readiness_probe_dict.get("connection_protocol", ""):
                 readiness_probe_dict["connection_protocol"] = ""
-        
+
         else:
             if not readiness_probe_dict.get("connection_type", ""):
                 readiness_probe_dict["connection_type"] = "POWERSHELL"
-            
+
             if not readiness_probe_dict.get("connection_port", ""):
-                readiness_probe_dict["connection_port"] = "5985"
-            
+                readiness_probe_dict["connection_port"] = 5985
+
             if not readiness_probe_dict.get("connection_protocol", ""):
                 readiness_probe_dict["connection_protocol"] = "http"
-        
+
         # Fill out address for readiness probe if not given
         if cdict["type"] == "AHV_VM":
             if not readiness_probe_dict.get("address", ""):
@@ -81,20 +81,14 @@ class SubstrateType(EntityType):
 
         elif cdict["type"] == "EXISTING_VM":
             if not readiness_probe_dict.get("address", ""):
-                readiness_probe_dict[
-                    "address"
-                ] = "@@{ip_address}@@"
+                readiness_probe_dict["address"] = "@@{ip_address}@@"
 
         elif cdict["type"] == "AWS_VM":
             if not readiness_probe_dict.get("address", ""):
-                readiness_probe_dict[
-                    "address"
-                ] = "@@{public_ip_address}@@"
+                readiness_probe_dict["address"] = "@@{public_ip_address}@@"
 
         elif cdict["type"] == "K8S_POD":  # Never used (Omit after discussion)
-            readiness_probe_dict[
-                    "address"
-                ] = ""
+            readiness_probe_dict["address"] = ""
             cdict.pop("editables", None)
 
         elif cdict["type"] == "AZURE_VM":
@@ -105,9 +99,7 @@ class SubstrateType(EntityType):
 
         elif cdict["type"] == "VMWARE_VM":
             if not readiness_probe_dict.get("address", ""):
-                readiness_probe_dict[
-                    "address"
-                ] = "@@{platform.ipAddressList[0]}@@"
+                readiness_probe_dict["address"] = "@@{platform.ipAddressList[0]}@@"
 
         elif cdict["type"] == "GCP_VM":
             if not readiness_probe_dict.get("address", ""):
