@@ -87,7 +87,7 @@ class runbook(metaclass=DescriptorType):
         """
         if self.__parsed__:
             return self.runbook
-        
+
         # Get the task target
         if hasattr(cls, "get_task_target") and getattr(cls, "__has_dag_target__", True):
             self.task_target = cls.get_task_target() or self.task_target
