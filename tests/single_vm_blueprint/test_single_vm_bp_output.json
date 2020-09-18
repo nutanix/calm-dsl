@@ -230,6 +230,10 @@
                             "name": "SampleSingleVmBluerintPackage___install___dag",
                             "description": "",
                             "type": "DAG",
+                            "target_any_local_reference": {
+                                "kind": "app_service",
+                                "name": "SampleSingleVmBluerintService"
+                            },
                             "attrs": {
                                 "edges": []
                             },
@@ -247,6 +251,10 @@
                             "name": "Task1",
                             "description": "",
                             "type": "EXEC",
+                            "target_any_local_reference": {
+                                "kind": "app_service",
+                                "name": "SampleSingleVmBluerintService"
+                            },
                             "attrs": {
                                 "script_type": "sh",
                                 "script": "#!/bin/bash\n\nset -e\n\necho \"Installation script goes here ...\"\nsleep 3\n"

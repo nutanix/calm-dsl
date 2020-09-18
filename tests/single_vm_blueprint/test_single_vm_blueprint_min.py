@@ -3,12 +3,12 @@ Single Vm deployment min interface for Calm DSL
 
 """
 
-from calm.dsl.builtins import ref, basic_cred
+from calm.dsl.builtins import basic_cred
 from calm.dsl.builtins import SingleVmBlueprint
 from calm.dsl.builtins import read_local_file
 
 from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC
-from calm.dsl.builtins import AhvVmResources, AhvVm, ahv_vm
+from calm.dsl.builtins import AhvVmResources, ahv_vm
 
 
 # Credentials

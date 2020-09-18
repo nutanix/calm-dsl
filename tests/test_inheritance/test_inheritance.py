@@ -249,6 +249,10 @@ def test_json():
     """Test the generated json for a single VM
     against known output"""
     import os
+    import sys
+
+    # Setting the recursion limit to max for comparison
+    sys.setrecursionlimit(100000)
 
     # Resetting context
     ContextObj = get_context()

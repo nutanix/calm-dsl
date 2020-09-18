@@ -33,6 +33,7 @@ from .utils import (
     highlight_text,
     import_var_from_file,
 )
+from .secrets import find_secret, create_secret
 from .constants import BLUEPRINT
 from calm.dsl.tools import get_module_from_file
 from calm.dsl.builtins import Brownfield as BF
