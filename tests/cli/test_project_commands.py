@@ -6,6 +6,7 @@ import traceback
 from click.testing import CliRunner
 
 from calm.dsl.cli import main as cli
+from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -304,3 +305,6 @@ class TestProjectCommands:
         LOG.info("Success")
 
         self._test_project_delete()
+
+        # Restoring the metadata context
+        get_metadata_payload(__file__)
