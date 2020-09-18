@@ -7,15 +7,13 @@ from calm.dsl.api import get_api_client
 from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 
-from .secrets import find_secret, create_secret
-from .utils import Display, highlight_text
+from .utils import Display
 from .main import get, compile, describe, create, launch, delete, decompile, format
 from .bps import (
     get_blueprint_list,
     describe_bp,
     format_blueprint_command,
     compile_blueprint_command,
-    compile_blueprint,
     launch_blueprint_simple,
     delete_blueprint,
     decompile_bp,

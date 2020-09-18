@@ -8,6 +8,7 @@ from calm.dsl.tools import get_module_from_file
 _MetadataPayload = dict()
 
 
+# TODO change it to class
 def get_metadata_module_from_file(dsl_file):
     """Returns module given a file (.py)"""
 

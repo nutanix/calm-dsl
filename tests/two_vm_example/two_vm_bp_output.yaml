@@ -553,8 +553,10 @@ substrate_definition_list:
     connection_port: 22
     connection_protocol: ''
     connection_type: SSH
-    delay_secs: '0'
-    disable_readiness_probe: false
+    delay_secs: '60'
+    disable_readiness_probe: true
+    retries: '5'
+    timeout_secs: ''
   type: AHV_VM
   variable_list: []
 - action_list: []
@@ -597,8 +599,10 @@ substrate_definition_list:
     connection_port: 22
     connection_protocol: ''
     connection_type: SSH
-    delay_secs: '0'
-    disable_readiness_probe: false
+    delay_secs: '60'
+    disable_readiness_probe: true
+    retries: '5'
+    timeout_secs: ''
   type: AHV_VM
   variable_list: []
 type: USER

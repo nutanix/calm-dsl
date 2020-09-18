@@ -13,6 +13,7 @@ from black import format_file_in_place, WriteBack, FileMode
 from calm.dsl.builtins import (
     Blueprint,
     SimpleBlueprint,
+    SingleVmBlueprint,
     create_blueprint_payload,
     BlueprintType,
     get_valid_identifier,
@@ -32,6 +33,7 @@ from .utils import (
     highlight_text,
     import_var_from_file,
 )
+from .secrets import find_secret, create_secret
 from .constants import BLUEPRINT
 from calm.dsl.tools import get_module_from_file
 from calm.dsl.builtins import Brownfield as BF
@@ -220,8 +222,10 @@ def get_blueprint_class_from_module(user_bp_module):
     UserBlueprint = None
     for item in dir(user_bp_module):
         obj = getattr(user_bp_module, item)
-        if isinstance(obj, (type(Blueprint), type(SimpleBlueprint))):
-            if obj.__bases__[0] in (Blueprint, SimpleBlueprint):
+        if isinstance(
+            obj, (type(Blueprint), type(SimpleBlueprint), type(SingleVmBlueprint))
+        ):
+            if obj.__bases__[0] in (Blueprint, SimpleBlueprint, SingleVmBlueprint):
                 UserBlueprint = obj
 
     return UserBlueprint
@@ -281,6 +285,12 @@ def compile_blueprint(bp_file, brownfield_deployment_file=None):
     if isinstance(UserBlueprint, type(SimpleBlueprint)):
         bp_payload = UserBlueprint.make_bp_dict()
     else:
+        if isinstance(UserBlueprint, type(SingleVmBlueprint)):
+            UserBlueprint = UserBlueprint.make_bp_obj()
+            if "categories" not in metadata_payload:
+                metadata_payload["categories"] = {}
+            metadata_payload["categories"]["TemplateType"] = "Vm"
+
         UserBlueprintPayload, _ = create_blueprint_payload(
             UserBlueprint, metadata=metadata_payload
         )

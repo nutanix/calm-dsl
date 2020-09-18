@@ -104,6 +104,10 @@ def create_call_rb(runbook, target=None, name=None):
         ][0]
         kwargs["target_any_local_reference"] = main_dag.target_any_local_reference
 
+        if main_dag.target_any_local_reference.kind != "app_service":
+            LOG.error("Runbook Tasks are only allowed for service actions")
+            sys.exit(-1)
+
     return _task_create(**kwargs)
 
 
