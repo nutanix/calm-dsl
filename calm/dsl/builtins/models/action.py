@@ -154,12 +154,6 @@ class action(metaclass=DescriptorType):
         self.user_runbook = None
         self.task_target = None
 
-    def __set_name__(self, cls, name):
-        """sets the task target for all action tasks"""
-
-        if cls is not None:
-            self.task_target = cls.get_task_target() or self.task_target
-
     def __call__(self, name=None):
         if self.user_runbook:
             return create_call_rb(self.user_runbook, name=name)
@@ -191,6 +185,9 @@ class action(metaclass=DescriptorType):
         # This recreates the source code without the indentation and the
         # decorator.
         new_src = "\n".join(line[padding:] for line in src.split("\n")[1:])
+        
+        # Get the task target for all tasks
+        self.task_target = cls.get_task_target() or self.task_target
 
         # Get all the child tasks by parsing the source code and visiting the
         # ast.Call nodes. ast.Assign nodes become variables.
