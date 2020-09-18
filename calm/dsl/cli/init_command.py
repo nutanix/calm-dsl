@@ -225,14 +225,22 @@ def sync_cache():
     default="AHV_VM",
     help="Provider type",
 )
-def init_dsl_bp(bp_name, dir_name, provider_type):
+@click.option(
+    "--bp_type",
+    "-b",
+    "blueprint_type",
+    type=click.Choice(["SINGLE_VM", "MULTI_VM"]),
+    default="MULTI_VM",
+    help="Blueprint type",
+)
+def init_dsl_bp(bp_name, dir_name, provider_type, blueprint_type):
     """Creates a starting directory for blueprint"""
 
     if not bp_name.isidentifier():
         LOG.error("Blueprint name '{}' is not a valid identifier".format(bp_name))
         sys.exit(-1)
 
-    init_bp(bp_name, dir_name, provider_type)
+    init_bp(bp_name, dir_name, provider_type, blueprint_type)
 
 
 @set.command("config")

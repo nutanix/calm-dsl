@@ -185,7 +185,7 @@ class action(metaclass=DescriptorType):
         # This recreates the source code without the indentation and the
         # decorator.
         new_src = "\n".join(line[padding:] for line in src.split("\n")[1:])
-        
+
         # Get the task target for all tasks
         self.task_target = cls.get_task_target() or self.task_target
 

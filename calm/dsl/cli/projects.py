@@ -221,7 +221,9 @@ def create_project(project_payload, name="", description=""):
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
     LOG.info("Polling on project creation task")
-    task_state = watch_task(project["status"]["execution_context"]["task_uuid"], poll_interval=4)
+    task_state = watch_task(
+        project["status"]["execution_context"]["task_uuid"], poll_interval=4
+    )
     if task_state in ERGON_TASK.FAILURE_STATES:
         raise Exception("Project creation task went to {} state".format(task_state))
 
@@ -474,7 +476,9 @@ def delete_project(project_names):
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
         LOG.info("Polling on project deletion task")
         res = res.json()
-        task_state = watch_task(res["status"]["execution_context"]["task_uuid"], poll_interval=4)
+        task_state = watch_task(
+            res["status"]["execution_context"]["task_uuid"], poll_interval=4
+        )
         if task_state in ERGON_TASK.FAILURE_STATES:
             raise Exception("Project deletion task went to {} state".format(task_state))
         click.echo("")
@@ -561,7 +565,9 @@ def update_project_from_dsl(project_name, project_file):
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
     LOG.info("Polling on project creation task")
-    task_state = watch_task(res["status"]["execution_context"]["task_uuid"], poll_interval=4)
+    task_state = watch_task(
+        res["status"]["execution_context"]["task_uuid"], poll_interval=4
+    )
     if task_state not in ERGON_TASK.FAILURE_STATES:
         # Remove project removed user and groups from acps
         if acp_remove_user_list or acp_remove_group_list:
@@ -681,7 +687,9 @@ def update_project_using_cli_switches(
 
     # Remove project removed user and groups from acps
     LOG.info("Polling on project updation task")
-    task_state = watch_task(res["status"]["execution_context"]["task_uuid"], poll_interval=4)
+    task_state = watch_task(
+        res["status"]["execution_context"]["task_uuid"], poll_interval=4
+    )
     if task_state not in ERGON_TASK.FAILURE_STATES:
         if acp_remove_user_list or acp_remove_group_list:
             LOG.info("Updating project acps")

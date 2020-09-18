@@ -63,7 +63,9 @@ class SampleSingleVmBluerint(SingleVmBlueprint):
     # Only actions under Packages, Substrates and Profiles are allowed
     @action
     def __install__():
-        Task.Exec.ssh(name="Task1", filename=os.path.join("scripts", "mysql_install_script.sh"))
+        Task.Exec.ssh(
+            name="Task1", filename=os.path.join("scripts", "mysql_install_script.sh")
+        )
 
     @action
     def __pre_create__():

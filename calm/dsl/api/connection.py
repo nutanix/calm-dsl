@@ -141,7 +141,12 @@ class Connection:
             retry_strategy = Retry(
                 total=3,
                 status_forcelist=[429, 500, 502, 503, 504],
-                method_whitelist=["GET", "PUT", "DELETE", "POST",],
+                method_whitelist=[
+                    "GET",
+                    "PUT",
+                    "DELETE",
+                    "POST",
+                ],
             )
             http_adapter = HTTPAdapter(
                 pool_block=bool(self._pool_block),
