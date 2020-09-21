@@ -135,7 +135,7 @@ class Context:
             ip=server_config["pc_ip"],
             port=server_config["pc_port"],
             username=server_config["pc_username"],
-            password=server_config["pc_password"],
+            password="xxxxxxxx",  # Do not render password
             project_name=project_config["name"],
             log_level=log_config["level"],
         )
