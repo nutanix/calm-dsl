@@ -5,7 +5,7 @@ from calm.dsl.runbooks import read_local_file
 from calm.dsl.runbooks import runbook
 from calm.dsl.runbooks import RunbookTask as Task, basic_cred
 from calm.dsl.runbooks import CalmEndpoint as Endpoint
-from calm.dsl.runbooks import CalmAccount as Account
+from calm.dsl.runbooks import CalmAccount as Account, VM
 from calm.dsl.runbooks import ENDPOINT_FILTER, ENDPOINT_PROVIDER
 
 linux_ip = read_local_file(".tests/runbook_tests/vm_ip")
@@ -36,7 +36,7 @@ linux_endpoint = Endpoint.Linux.ip([linux_ip], cred=LinuxCred)
 # Linux AHV VM Endpoint with static VM ID values
 linux_ahv_static_vm_endpoint = Endpoint.Linux.vm(
     filter_type=ENDPOINT_FILTER.STATIC,
-    values=[AHV_LINUX_ID],
+    vms=[VM(uuid=AHV_LINUX_ID)],
     cred=LinuxCred,
     provider_type=ENDPOINT_PROVIDER.NUTANIX,
     account=Account.NutanixPC("NTNX_LOCAL_AZ"),

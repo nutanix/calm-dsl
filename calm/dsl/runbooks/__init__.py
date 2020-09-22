@@ -1,5 +1,6 @@
 from calm.dsl.builtins import *  # noqa
 
+from calm.dsl.builtins.models.vm_ref import VM
 from calm.dsl.builtins.models.variable import RunbookVariable
 from calm.dsl.builtins.models.task import RunbookTask, Status
 from calm.dsl.builtins.models.runbook import Runbook, runbook, runbook_json, branch
@@ -18,6 +19,7 @@ from calm.dsl.builtins.models.runbook_payload import create_runbook_payload
 from calm.dsl.builtins.models.account import CalmAccount
 
 __all__ = [
+    "VM",
     "RunbookVariable",
     "RunbookTask",
     "Status",

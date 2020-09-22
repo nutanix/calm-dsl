@@ -1,0 +1,25 @@
+{% macro VMRef() -%}
+
+title: VM Reference
+type: object
+x-calm-dsl-type: vm_ref
+required:
+  - kind
+  - uuid
+properties:
+  kind:
+    type: string
+  name:
+    type: string
+  uuid:
+    type: string
+
+{%- endmacro -%}
+
+
+{% macro VMRefSchema() -%}
+
+VMRef:
+  {{ VMRef()|indent(2) }}
+
+{%- endmacro %}

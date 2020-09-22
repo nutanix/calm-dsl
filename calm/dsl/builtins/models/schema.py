@@ -45,7 +45,7 @@ def get_schema(name):
     schemas = _get_all_schemas()
     schema = schemas.get(name, None)
     if not schema:
-        LOG.debug("Schema name can be one of {}".format(list(schema.keys())))
+        LOG.debug("Schema name can be one of {}".format(list(schemas.keys())))
         raise TypeError("Invalid schema name {} given".format(name))
 
     return schema

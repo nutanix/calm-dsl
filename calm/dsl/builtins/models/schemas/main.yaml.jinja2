@@ -7,6 +7,7 @@
 {% import "blueprint.yaml.jinja2" as blueprint %}
 {% import "blueprint_payload.yaml.jinja2" as blueprint_payload %}
 {% import "ref.yaml.jinja2" as ref %}
+{% import "vm_ref.yaml.jinja2" as vm_ref %}
 {% import "task_input.yaml.jinja2" as task_input %}
 {% import "descriptor.yaml.jinja2" as descriptor %}
 {% import "variable.yaml.jinja2" as variable %}
@@ -43,6 +44,7 @@
 {{ blueprint.BlueprintSchema() }}
 {{ blueprint_payload.BlueprintPayloadSchema() }}
 {{ ref.RefSchema() }}
+{{ vm_ref.VMRefSchema() }}
 {{ task_input.TaskInputSchema() }}
 {{ descriptor.DescriptorSchema() }}
 {{ variable.VariableSchema() }}

@@ -5,7 +5,7 @@ from calm.dsl.runbooks import read_local_file
 from calm.dsl.runbooks import runbook
 from calm.dsl.runbooks import RunbookTask as Task, basic_cred
 from calm.dsl.runbooks import CalmEndpoint as Endpoint
-from calm.dsl.runbooks import CalmAccount as Account
+from calm.dsl.runbooks import CalmAccount as Account, VM
 from calm.dsl.runbooks import ENDPOINT_FILTER, ENDPOINT_PROVIDER
 
 AHV_LINUX_ID = read_local_file(".tests/runbook_tests/ahv_linux_id")
@@ -19,7 +19,7 @@ LinuxCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
 
 EndpointWithIncorrectId = Endpoint.Linux.vm(
     filter_type=ENDPOINT_FILTER.STATIC,
-    values=[AHV_VM_INCORRECT],
+    vms=[VM(uuid=AHV_VM_INCORRECT)],
     cred=LinuxCred,
     provider_type=ENDPOINT_PROVIDER.NUTANIX,
     account=Account.NutanixPC("NTNX_LOCAL_AZ"),
@@ -28,7 +28,7 @@ EndpointWithIncorrectId = Endpoint.Linux.vm(
 
 EndpointWithNoIP = Endpoint.Linux.vm(
     filter_type=ENDPOINT_FILTER.STATIC,
-    values=[AHV_VM_WITHOUT_IP],
+    vms=[VM(uuid=AHV_VM_WITHOUT_IP)],
     cred=LinuxCred,
     provider_type=ENDPOINT_PROVIDER.NUTANIX,
     account=Account.NutanixPC("NTNX_LOCAL_AZ"),
@@ -37,7 +37,7 @@ EndpointWithNoIP = Endpoint.Linux.vm(
 
 EndpointWithOffState = Endpoint.Linux.vm(
     filter_type=ENDPOINT_FILTER.STATIC,
-    values=[AHV_VM_OFF],
+    vms=[VM(uuid=AHV_VM_OFF)],
     cred=LinuxCred,
     provider_type=ENDPOINT_PROVIDER.NUTANIX,
     account=Account.NutanixPC("NTNX_LOCAL_AZ"),
@@ -46,7 +46,7 @@ EndpointWithOffState = Endpoint.Linux.vm(
 
 EndpointWithIPOutsideSubnet = Endpoint.Linux.vm(
     filter_type=ENDPOINT_FILTER.STATIC,
-    values=[AHV_LINUX_ID],
+    vms=[VM(uuid=AHV_LINUX_ID)],
     subnet="255.255.255.255/1",
     cred=LinuxCred,
     provider_type=ENDPOINT_PROVIDER.NUTANIX,

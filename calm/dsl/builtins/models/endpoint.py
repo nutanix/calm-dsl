@@ -2,6 +2,7 @@ import enum
 import uuid
 
 from .entity import EntityType, Entity
+from .vm_ref import VMRefType
 from .validator import PropertyValidator
 from .credential import CredentialType
 
@@ -97,6 +98,7 @@ def _http_endpoint(
 def _os_endpoint(
     value_type,
     value_list=[],
+    vms=[],
     name=None,
     ep_type="Linux",
     provider_type=ENDPOINT_PROVIDER.NUTANIX,
@@ -116,6 +118,10 @@ def _os_endpoint(
     }
 
     if value_type == "VM":
+        for vm in vms:
+            if not isinstance(vm, VMRefType):
+                raise ValueError("VMs are not of type VMRefType")
+        kwargs["attrs"]["vm_references"] = vms
         kwargs["provider_type"] = PROVIDER_TYPE_MAP.get(provider_type, "nutanix")
         kwargs["attrs"]["subnet"] = subnet
         kwargs["attrs"]["filter_type"] = ENDPOINT_FILTER_MAP.get(filter_type, "static")
@@ -161,7 +167,7 @@ def windows_endpoint_ip(
 
 
 def linux_endpoint_vm(
-    values=[],
+    vms=[],
     provider_type=ENDPOINT_PROVIDER.NUTANIX,
     filter_type=ENDPOINT_FILTER.STATIC,
     filter=None,
@@ -173,7 +179,8 @@ def linux_endpoint_vm(
 ):
     return _os_endpoint(
         "VM",
-        values,
+        [],
+        vms=vms,
         name=name,
         ep_type="Linux",
         provider_type=provider_type,
@@ -187,7 +194,7 @@ def linux_endpoint_vm(
 
 
 def windows_endpoint_vm(
-    value=[],
+    vms=[],
     name=None,
     provider_type=ENDPOINT_PROVIDER.NUTANIX,
     filter_type=ENDPOINT_FILTER.STATIC,
@@ -212,7 +219,8 @@ def windows_endpoint_vm(
             port = 5986
     return _os_endpoint(
         "VM",
-        value,
+        [],
+        vms=vms,
         ep_type="Windows",
         provider_type=provider_type,
         connection_protocol=connection_protocol,

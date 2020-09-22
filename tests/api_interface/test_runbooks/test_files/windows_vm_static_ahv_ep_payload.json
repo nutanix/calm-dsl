@@ -6,7 +6,11 @@
       "value_type": "VM",
       "provider_type": "nutanix_pc",
       "attrs": {
-        "values": ["a265e505-1044-4d42-875b-40d2432a3f75"],
+        "vm_references": [{
+            "name": "test_vm",
+            "kind": "vm",
+            "uuid": "a265e505-1044-4d42-875b-40d2432a3f75"
+        }],
         "connection_protocol": "http",
         "port": 5985,
         "credential_definition_list": [
