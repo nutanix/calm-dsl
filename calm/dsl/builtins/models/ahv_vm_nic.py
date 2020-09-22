@@ -47,8 +47,15 @@ class AhvNicType(EntityType):
         account_uuid = project_accounts.get("nutanix_pc", "")
 
         subnet_ref = cdict.get("subnet_reference") or dict()
-        if subnet_ref:
-            subnet_name = subnet_ref.get("name", "")
+        subnet_name = subnet_ref.get("name", "") or ""
+
+        if subnet_name.startswith("@@{") and subnet_name.endswith("}@@"):
+            cdict["subnet_reference"] = {
+                "kind": "subnet",
+                "uuid": subnet_name,
+            }
+
+        elif subnet_name:
             cluster_name = subnet_ref.get("cluster", "")
             subnet_cache_data = Cache.get_entity_data(
                 entity_type="ahv_subnet",
