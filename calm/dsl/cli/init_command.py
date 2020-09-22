@@ -26,28 +26,28 @@ LOG = get_logging_handle(__name__)
 @click.option(
     "--ip",
     "-i",
-    envvar="PRISM_SERVER_IP",
+    envvar="CALM_DSL_PC_IP",
     default=None,
     help="Prism Central server IP or hostname",
 )
 @click.option(
     "--port",
     "-P",
-    envvar="PRISM_SERVER_PORT",
+    envvar="CALM_DSL_PC_PORT",
     default=None,
     help="Prism Central server port number",
 )
 @click.option(
     "--username",
     "-u",
-    envvar="PRISM_USERNAME",
+    envvar="CALM_DSL_PC_USERNAME",
     default=None,
     help="Prism Central username",
 )
 @click.option(
     "--password",
     "-p",
-    envvar="PRISM_PASSWORD",
+    envvar="CALM_DSL_PC_PASSWORD",
     default=None,
     help="Prism Central password",
 )
@@ -55,7 +55,7 @@ LOG = get_logging_handle(__name__)
     "--db_file",
     "-d",
     "db_file",
-    envvar="DATABASE_LOCATION",
+    envvar="CALM_DSL_DB_LOCATION",
     default=None,
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path to local database file",
@@ -63,27 +63,26 @@ LOG = get_logging_handle(__name__)
 @click.option(
     "--local_dir",
     "-ld",
-    envvar="LOCAL_DIR",
+    envvar="CALM_DSL_LOCAL_DIR_LOCATION",
     default=None,
     type=click.Path(exists=True, file_okay=False, dir_okay=True, readable=True),
     help="Path to local directory for storing secrets",
 )
 @click.option(
     "--config",
-    "-c",
+    "-cf",
     "config_file",
-    envvar="CONFIG FILE LOCATION",
+    envvar="CALM_DSL_CONFIG_FILE_LOCATION",
     default=None,
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
-    help="Path to config file",
+    help="Path to config file to store dsl configuration",
 )
-@click.option("--project", "-pj", "project_name", help="Project name for entity")
 @click.option(
-    "--use_custom_defaults",
-    "-cd",
-    is_flag=True,
-    default=False,
-    help="Use custom defaults for init configuration",
+    "--project",
+    "-pj",
+    "project_name",
+    envvar="CALM_DSL_DEFAULT_PROJECT",
+    help="Default project name used for entities",
 )
 def initialize_engine(
     ip,
@@ -94,9 +93,22 @@ def initialize_engine(
     db_file,
     local_dir,
     config_file,
-    use_custom_defaults,
 ):
-    """Initializes the calm dsl engine"""
+    """
+    \b
+    Initializes the calm dsl engine.
+
+    NOTE: Env variables(if available) will be used as defaults for configuration
+        i.) CALM_DSL_PC_IP: Prism Central IP
+        ii.) CALM_DSL_PC_PORT: Prism Central Port
+        iii.) CALM_DSL_PC_USERNAME: Prism Central username
+        iv.) CALM_DSL_PC_PASSWORD: Prism Central password
+        v.) CALM_DSL_DEFAULT_PROJECT: Default project name
+        vi.) CALM_DSL_CONFIG_FILE_LOCATION: Default config file location where dsl config will be stored
+        vii.) CALM_DSL_LOCAL_DIR_LOCATION: Default local directory location to store secrets
+        viii.) CALM_DSL_DB_LOCATION: Default internal dsl db location
+
+    """
 
     set_server_details(
         ip=ip,
@@ -107,7 +119,6 @@ def initialize_engine(
         db_file=db_file,
         local_dir=local_dir,
         config_file=config_file,
-        use_custom_defaults=use_custom_defaults,
     )
     init_db()
     sync_cache()
@@ -133,7 +144,6 @@ def set_server_details(
     db_file,
     local_dir,
     config_file,
-    use_custom_defaults,
 ):
 
     if not (ip and port and username and password and project_name):
@@ -148,26 +158,10 @@ def set_server_details(
     # Default log-level
     log_level = "INFO"
 
-    if use_custom_defaults:
-        # Prompt for config file
-        config_file = config_file or click.prompt(
-            "Config File location", default=get_default_config_file()
-        )
-
-        # Prompt for local dir location  at initializing dsl
-        local_dir = local_dir or click.prompt(
-            "Local files directory", default=get_default_local_dir()
-        )
-
-        # Prompt for db file location at initializing dsl
-        db_file = db_file or click.prompt(
-            "DSL local store location", default=get_default_db_file()
-        )
-
-    else:
-        config_file = config_file or get_default_config_file()
-        local_dir = local_dir or get_default_local_dir()
-        db_file = db_file or get_default_db_file()
+    # Do not prompt for init config variables, Take default values for init.ini file
+    config_file = config_file or get_default_config_file()
+    local_dir = local_dir or get_default_local_dir()
+    db_file = db_file or get_default_db_file()
 
     LOG.info("Checking if Calm is enabled on Server")
 
