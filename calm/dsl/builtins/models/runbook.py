@@ -68,7 +68,6 @@ class runbook(metaclass=DescriptorType):
         self.action_description = user_func.__doc__ or ""
         self.user_func = user_func
         self.user_runbook = None
-        self.__parsed__ = False
         self.task_target = None
         if self.__class__ == runbook:
             self.__get__()
@@ -85,9 +84,6 @@ class runbook(metaclass=DescriptorType):
         Returns:
             (RunbookType): Generated Runbook class
         """
-        if self.__parsed__:
-            return self.runbook
-
         # Get the task target
         if hasattr(cls, "get_task_target") and getattr(cls, "__has_dag_target__", True):
             self.task_target = cls.get_task_target() or self.task_target
@@ -253,7 +249,6 @@ class runbook(metaclass=DescriptorType):
 
             self.runbook.credentials = credentials
             self.runbook.endpoints = endpoints
-            self.__parsed__ = True
             return self.runbook
 
         else:

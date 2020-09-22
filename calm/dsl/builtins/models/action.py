@@ -67,9 +67,6 @@ class action(runbook):
         if cls is None:
             return self
 
-        if self.__parsed__:
-            return self.user_action
-
         super(action, self).__get__(instance, cls)
 
         # System action names
@@ -104,7 +101,6 @@ class action(runbook):
                 "runbook": self.user_runbook,
             }
         )
-        self.__parsed__ = True
 
         return self.user_action
 
