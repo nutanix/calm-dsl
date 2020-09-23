@@ -13,6 +13,7 @@ from calm.dsl.builtins import action
 
 from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC
 from calm.dsl.builtins import AhvVmResources, ahv_vm
+from calm.dsl.builtins import VmProfile, VmBlueprint
 
 
 # Credentials
@@ -45,20 +46,16 @@ class SingleVmAhvResources(AhvVmResources):
     )
 
 
-class SampleSingleVmBluerint(SingleVmBlueprint):
-    """Simple blueprint Spec"""
+class Profile1(VmProfile):
 
-    # Blueprint credentials
-    credentials = [Centos]
+    # Profile variables
+    nameserver = Var(DNS_SERVER, label="Local DNS resolver")
 
     # VM Spec for Substrate
     provider_spec = ahv_vm(resources=SingleVmAhvResources, name="MyAhvVm")
 
     # Readiness probe for substrate
     readiness_probe = readiness_probe(credential=ref(Centos), disabled=False)
-
-    # Profile variables
-    nameserver = Var(DNS_SERVER, label="Local DNS resolver")
 
     # Only actions under Packages, Substrates and Profiles are allowed
     @action
@@ -76,7 +73,26 @@ class SampleSingleVmBluerint(SingleVmBlueprint):
         Task.Exec.ssh(name="Task9", script='echo "Hello"')
 
 
-def test_json():
+"""class AhvVmProfile(VmProfile):
+
+    provider_type = "VMWARE_VM"
+    # VM Spec for Substrate
+    provider_spec = ahv_vm(resources=SingleVmAhvResources, name="MyAhvVm")
+
+"""
+class SampleSingleVmBluerint(VmBlueprint):
+    """Simple blueprint Spec"""
+
+    # Blueprint credentials
+    credentials = [Centos]
+
+    profiles = [Profile1]
+
+
+template_type = "App"
+
+
+"""def test_json():
 
     import sys
 
@@ -96,3 +112,8 @@ def test_json():
     known_json = open(file_path).read()
 
     assert generated_json == known_json
+"""
+
+if __name__ == "__main__":
+
+    print(SampleSingleVmBluerint.json_dumps(pprint=True))

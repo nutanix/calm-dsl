@@ -75,7 +75,8 @@ from .models.project_payload import create_project_payload
 from .models.brownfield import Brownfield
 
 from .models.single_vm_blueprint import SingleVmBlueprint
-
+from .models.vm_profile import VmProfile
+from .models.vm_blueprint import VmBlueprint
 
 __all__ = [
     "Ref",
@@ -169,4 +170,6 @@ __all__ = [
     "Environment",
     "create_environment_payload",
     "SingleVmBlueprint",
+    "VmProfile",
+    "VmBlueprint"
 ]
