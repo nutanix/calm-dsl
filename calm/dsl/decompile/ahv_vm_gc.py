@@ -6,7 +6,7 @@ from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.credential import get_cred_var_name
 from calm.dsl.decompile.file_handler import get_specs_dir, get_specs_dir_key
 from calm.dsl.builtins import RefType
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -25,7 +25,9 @@ def render_ahv_vm_gc(cls, vm_name_prefix=""):
     if cloud_init:
         schema_file = "ahv_vm_cloud_init.py.jinja2"
         file_name = "{}_cloud_init_data.yaml".format(vm_name_prefix)
-        user_attrs["filename"] = os.path.join(get_specs_dir_key(), file_name)
+        user_attrs["filename"] = "os.path.join('{}', '{}')".format(
+            get_specs_dir_key(), file_name
+        )
         cloud_init_user_data = cloud_init.get("user_data", "")
         if not cloud_init_user_data:
             return
@@ -36,7 +38,9 @@ def render_ahv_vm_gc(cls, vm_name_prefix=""):
 
     elif sys_prep:
         file_name = "{}_sysprep_unattend_xml.xml".format(vm_name_prefix)
-        user_attrs["filename"] = os.path.join(get_specs_dir_key(), file_name)
+        user_attrs["filename"] = "os.path.join('{}', '{}')".format(
+            get_specs_dir_key(), file_name
+        )
         sysprep_unattend_xml = sys_prep.get("unattend_xml", "")
         with open(os.path.join(spec_dir, file_name), "w+") as fd:
             fd.write(sysprep_unattend_xml)

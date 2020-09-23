@@ -8,10 +8,15 @@ from .validator import PropertyValidator
 class ProfileType(EntityType):
     __schema_name__ = "Profile"
     __openapi_type__ = "app_profile"
-    __has_dag_target__ = False
 
     def get_task_target(cls):
         return
+
+    def compile(cls):
+        cdict = super().compile()
+        # description attribute in profile gives bp launch error: https://jira.nutanix.com/browse/CALM-19380
+        cdict.pop("description", None)
+        return cdict
 
 
 class ProfileValidator(PropertyValidator, openapi_type="app_profile"):
@@ -20,7 +25,7 @@ class ProfileValidator(PropertyValidator, openapi_type="app_profile"):
 
 
 def profile(**kwargs):
-    name = kwargs.get("display_name", None) or kwargs.get("name", None)
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return ProfileType(name, bases, kwargs)
 

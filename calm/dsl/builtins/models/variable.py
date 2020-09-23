@@ -2,6 +2,7 @@ import re
 
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
+from .task_input import _task_input
 
 
 # Variable
@@ -97,7 +98,7 @@ def simple_variable(
                 + ", got {}".format(type(regex))
             )
         if validate_regex and regex and value:
-            regex_result = re.fullmatch(regex, value)
+            regex_result = re.match(regex, value)
             if not regex_result:
                 raise ValueError(
                     "Value '{}' doesn't match with specified regex '{}'".format(
@@ -139,7 +140,7 @@ def simple_variable_secret(
                 + ", got {}".format(type(regex))
             )
         if validate_regex and regex and value:
-            regex_result = re.fullmatch(regex, value)
+            regex_result = re.match(regex, value)
             if not regex_result:
                 raise ValueError(
                     "Value '{}' doesn't match with specified regex '{}'".format(
@@ -248,7 +249,7 @@ def _advanced_variable(
                     + ", got {}".format(type(choice))
                 )
             if validate_regex and regex:
-                regex_result = re.fullmatch(regex["value"], choice)
+                regex_result = re.match(regex["value"], choice)
                 if not regex_result:
                     raise ValueError(
                         "Option '{}' doesn't match with specified regex '{}'".format(
@@ -287,7 +288,7 @@ def _advanced_variable(
     else:
         # If options are None, just regex validate the value
         if validate_regex and regex and value:
-            regex_result = re.fullmatch(regex["value"], value)
+            regex_result = re.match(regex["value"], value)
             if not regex_result:
                 raise ValueError(
                     "Value '{}' doesn't match with specified regex '{}'".format(
@@ -306,6 +307,7 @@ def _advanced_variable(
 
 def simple_variable_int(
     value,
+    name=None,
     label=None,
     regex=r"^[\d]*$",
     validate_regex=False,
@@ -316,6 +318,7 @@ def simple_variable_int(
 ):
     return _advanced_variable(
         "LOCAL",
+        name=name,
         value=value,
         label=label,
         value_type="INT",
@@ -331,6 +334,7 @@ def simple_variable_int(
 
 def simple_variable_date(
     value,
+    name=None,
     label=None,
     regex=r"^((0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/[12]\d{3})$",
     validate_regex=False,
@@ -341,6 +345,7 @@ def simple_variable_date(
 ):
     return _advanced_variable(
         "LOCAL",
+        name=name,
         value=value,
         label=label,
         value_type="DATE",
@@ -356,6 +361,7 @@ def simple_variable_date(
 
 def simple_variable_time(
     value,
+    name=None,
     label=None,
     regex=r"^[\d]{2}:[\d]{2}(:[0-5]\d)?$",
     validate_regex=False,
@@ -366,6 +372,7 @@ def simple_variable_time(
 ):
     return _advanced_variable(
         "LOCAL",
+        name=name,
         value=value,
         label=label,
         value_type="TIME",
@@ -381,6 +388,7 @@ def simple_variable_time(
 
 def simple_variable_datetime(
     value,
+    name=None,
     label=None,
     regex=r"^((0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/[12]\d{3})((T)|(\s-\s))[\d]{2}:[\d]{2}(:[0-5]\d)?$",
     validate_regex=False,
@@ -391,6 +399,7 @@ def simple_variable_datetime(
 ):
     return _advanced_variable(
         "LOCAL",
+        name=name,
         value=value,
         label=label,
         value_type="DATE_TIME",
@@ -406,6 +415,7 @@ def simple_variable_datetime(
 
 def simple_variable_multiline(
     value,
+    name=None,
     label=None,
     regex=None,
     validate_regex=False,
@@ -416,6 +426,7 @@ def simple_variable_multiline(
 ):
     return _advanced_variable(
         "LOCAL",
+        name=name,
         value=value,
         label=label,
         value_type="MULTILINE_STRING",
@@ -431,6 +442,7 @@ def simple_variable_multiline(
 
 def simple_variable_int_secret(
     value,
+    name=None,
     label=None,
     regex=r"^[\d]*$",
     validate_regex=False,
@@ -441,6 +453,7 @@ def simple_variable_int_secret(
 ):
     return _advanced_variable(
         "SECRET",
+        name=name,
         value=value,
         label=label,
         value_type="INT",
@@ -456,6 +469,7 @@ def simple_variable_int_secret(
 
 def simple_variable_date_secret(
     value,
+    name=None,
     label=None,
     regex=r"^((0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/[12]\d{3})$",
     validate_regex=False,
@@ -466,6 +480,7 @@ def simple_variable_date_secret(
 ):
     return _advanced_variable(
         "SECRET",
+        name=name,
         value=value,
         label=label,
         value_type="DATE",
@@ -481,6 +496,7 @@ def simple_variable_date_secret(
 
 def simple_variable_time_secret(
     value,
+    name=None,
     label=None,
     regex=r"^[\d]{2}:[\d]{2}(:[0-5]\d)?$",
     validate_regex=False,
@@ -491,6 +507,7 @@ def simple_variable_time_secret(
 ):
     return _advanced_variable(
         "SECRET",
+        name=name,
         value=value,
         label=label,
         value_type="TIME",
@@ -506,6 +523,7 @@ def simple_variable_time_secret(
 
 def simple_variable_datetime_secret(
     value,
+    name=None,
     label=None,
     regex=r"^((0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/[12]\d{3})((T)|(\s-\s))[\d]{2}:[\d]{2}(:[0-5]\d)?$",
     validate_regex=False,
@@ -516,6 +534,7 @@ def simple_variable_datetime_secret(
 ):
     return _advanced_variable(
         "SECRET",
+        name=name,
         value=value,
         label=label,
         value_type="DATE_TIME",
@@ -531,6 +550,7 @@ def simple_variable_datetime_secret(
 
 def simple_variable_multiline_secret(
     value,
+    name=None,
     label=None,
     regex=None,
     validate_regex=False,
@@ -541,6 +561,7 @@ def simple_variable_multiline_secret(
 ):
     return _advanced_variable(
         "SECRET",
+        name=name,
         value=value,
         label=label,
         value_type="MULTILINE_STRING",
@@ -1218,6 +1239,7 @@ class CalmVariable:
     def __new__(
         cls,
         value,
+        name=None,
         label=None,
         regex=None,
         validate_regex=False,
@@ -1228,6 +1250,7 @@ class CalmVariable:
     ):
         return simple_variable(
             value,
+            name=name,
             label=label,
             regex=regex,
             validate_regex=validate_regex,
@@ -1241,6 +1264,7 @@ class CalmVariable:
         def __new__(
             cls,
             value,
+            name=None,
             label=None,
             regex=None,
             validate_regex=False,
@@ -1251,6 +1275,7 @@ class CalmVariable:
         ):
             return simple_variable(
                 value,
+                name=name,
                 label=label,
                 regex=regex,
                 validate_regex=validate_regex,
@@ -1271,6 +1296,7 @@ class CalmVariable:
             def __new__(
                 cls,
                 value,
+                name=None,
                 label=None,
                 regex=None,
                 validate_regex=False,
@@ -1281,6 +1307,7 @@ class CalmVariable:
             ):
                 return simple_variable_secret(
                     value,
+                    name=name,
                     label=label,
                     regex=regex,
                     validate_regex=validate_regex,
@@ -1451,3 +1478,9 @@ class CalmVariable:
                 time = variable_time_with_options_from_task_array
                 datetime = variable_datetime_with_options_from_task_array
                 multiline = variable_multiline_with_options_from_task_array
+
+
+class RunbookVariable(CalmVariable):
+    class TaskInput:
+        def __new__(cls, *args, **kwargs):
+            return _task_input(*args, **kwargs)

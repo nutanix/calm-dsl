@@ -6,12 +6,12 @@ from prettytable import PrettyTable
 from distutils.version import LooseVersion as LV
 
 from calm.dsl.api import get_resource_api, get_api_client
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 
 from .utils import get_name_query, get_states_filter, highlight_text
 from .constants import ACCOUNT
 from calm.dsl.store import Version
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -20,7 +20,6 @@ def get_accounts(name, filter_by, limit, offset, quiet, all_items, account_type)
     """ Get the accounts, optionally filtered by a string """
 
     client = get_api_client()
-    config = get_config()
     calm_version = Version.get_version("Calm")
 
     params = {"length": limit, "offset": offset}
@@ -47,7 +46,10 @@ def get_accounts(name, filter_by, limit, offset, quiet, all_items, account_type)
     res, err = client.account.list(params)
 
     if err:
-        pc_ip = config["SERVER"]["pc_ip"]
+        ContextObj = get_context()
+        server_config = ContextObj.get_server_config()
+        pc_ip = server_config["pc_ip"]
+
         LOG.warning("Cannot fetch accounts from {}".format(pc_ip))
         return
 
@@ -79,13 +81,17 @@ def get_accounts(name, filter_by, limit, offset, quiet, all_items, account_type)
 
         creation_time = int(metadata["creation_time"]) // 1000000
         last_update_time = int(metadata["last_update_time"]) // 1000000
+        if "owner_reference" in metadata:
+            owner_reference_name = metadata["owner_reference"]["name"]
+        else:
+            owner_reference_name = "-"
 
         table.add_row(
             [
                 highlight_text(row["name"]),
                 highlight_text(row["resources"]["type"]),
                 highlight_text(row["resources"]["state"]),
-                highlight_text(metadata["owner_reference"]["name"]),
+                highlight_text(owner_reference_name),
                 highlight_text(time.ctime(creation_time)),
                 "{}".format(arrow.get(last_update_time).humanize()),
                 highlight_text(metadata["uuid"]),
@@ -160,11 +166,13 @@ def describe_nutanix_pe_account(spec):
 
 def describe_nutanix_pc_account(provider_data):
 
-    config = get_config()
     client = get_api_client()
+    ContextObj = get_context()
+    server_config = ContextObj.get_server_config()
+
     pc_port = provider_data["port"]
     host_pc = provider_data["host_pc"]
-    pc_ip = provider_data["server"] if not host_pc else config["SERVER"]["pc_ip"]
+    pc_ip = provider_data["server"] if not host_pc else server_config["pc_ip"]
 
     click.echo("Is Host PC: {}".format(highlight_text(host_pc)))
     click.echo("PC IP: {}".format(highlight_text(pc_ip)))

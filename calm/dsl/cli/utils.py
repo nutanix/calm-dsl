@@ -1,12 +1,13 @@
 import click
 import sys
-import importlib.util
+import os
 from functools import reduce
 from asciimatics.screen import Screen
 from click_didyoumean import DYMMixin
 from distutils.version import LooseVersion as LV
 
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
+from calm.dsl.tools import get_module_from_file
 from calm.dsl.store import Version
 
 LOG = get_logging_handle(__name__)
@@ -41,16 +42,6 @@ def highlight_text(text, **kwargs):
     return click.style("{}".format(text), fg="blue", bold=False, **kwargs)
 
 
-def get_module_from_file(module_name, file):
-    """Returns a module given a user python file (.py)"""
-
-    spec = importlib.util.spec_from_file_location(module_name, file)
-    user_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(user_module)
-
-    return user_module
-
-
 def import_var_from_file(file, var, default_value=None):
     try:
         module = get_module_from_file(var, file)
@@ -62,8 +53,8 @@ def import_var_from_file(file, var, default_value=None):
 class Display:
     @classmethod
     def wrapper(cls, func, watch=False):
-        if watch:
-            Screen.wrapper(func)
+        if watch and os.isatty(sys.stdout.fileno()):
+            Screen.wrapper(func, height=1000, catch_interrupt=True)
         else:
             func(display)
 
@@ -76,7 +67,7 @@ class Display:
     def wait_for_input(self, *args):
         pass
 
-    def print_at(self, text, x, *args):
+    def print_at(self, text, x, *args, **kwargs):
         click.echo("{}{}".format((" " * x), text))
 
 
@@ -87,6 +78,7 @@ class FeatureFlagMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.feature_version_map = dict()
+        self.experimental_cmd_map = dict()
 
     def command(self, *args, **kwargs):
         """Behaves the same as `click.Group.command()` except added an
@@ -95,9 +87,12 @@ class FeatureFlagMixin:
         """
 
         feature_min_version = kwargs.pop("feature_min_version", None)
-        if feature_min_version:
-            cmd_name = args[0]
-            self.feature_version_map[cmd_name] = feature_min_version
+        if feature_min_version and args:
+            self.feature_version_map[args[0]] = feature_min_version
+
+        is_experimental = kwargs.pop("experimental", False)
+        if args:
+            self.experimental_cmd_map[args[0]] = is_experimental
 
         return super().command(*args, **kwargs)
 
@@ -107,6 +102,7 @@ class FeatureFlagMixin:
             return super(FeatureFlagMixin, self).invoke(ctx)
 
         cmd_name = ctx.protected_args[0]
+
         feature_min_version = self.feature_version_map.get(cmd_name, "")
         if feature_min_version:
             calm_version = Version.get_version("Calm")
@@ -119,7 +115,7 @@ class FeatureFlagMixin:
 
             else:
                 LOG.warning(
-                    "Please update from {} to {} for using this command.".format(
+                    "Please update Calm (v{} -> >=v{}) to use this command.".format(
                         calm_version, feature_min_version
                     )
                 )

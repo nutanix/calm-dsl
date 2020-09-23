@@ -1,0 +1,114 @@
+{
+    "endpoint_definition_list": [],
+    "credential_definition_list": [],
+    "client_attrs": {},
+    "runbook": {
+        "name": "DslDecisionRunbook_runbook",
+        "description": "",
+        "main_task_local_reference": {
+            "kind": "app_task",
+            "name": "DslDecisionRunbook_dag"
+        },
+        "task_definition_list": [
+            {
+                "name": "DslDecisionRunbook_dag",
+                "description": "",
+                "type": "DAG",
+                "attrs": {
+                    "edges": []
+                },
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "DecisionTask"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "DecisionTask_success_meta_task",
+                "description": "",
+                "type": "META",
+                "attrs": {},
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "Task1"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "Task1",
+                "description": "",
+                "type": "EXEC",
+                "attrs": {
+                    "script_type": "static",
+                    "script": "print 'Decision Task is Successful'"
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "DecisionTask_failure_meta_task",
+                "description": "",
+                "type": "META",
+                "attrs": {},
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "Task2"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "Task2",
+                "description": "",
+                "type": "EXEC",
+                "attrs": {
+                    "script_type": "static",
+                    "script": "print 'Decision Task Failed'"
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "DecisionTask",
+                "description": "",
+                "type": "DECISION",
+                "target_any_local_reference": {
+                    "kind": "app_endpoint",
+                    "name": "DslEndpoint"
+                },
+                "attrs": {
+                    "script_type": "sh",
+                    "script": "cat hell",
+                    "success_child_reference": {
+                        "kind": "app_task",
+                        "name": "DecisionTask_success_meta_task"
+                    },
+                    "failure_child_reference": {
+                        "kind": "app_task",
+                        "name": "DecisionTask_failure_meta_task"
+                    }
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            }
+        ],
+        "variable_list": []
+    }
+}

@@ -2,6 +2,9 @@ import copy
 
 from .validator import PropertyValidator
 from .entity import EntityDict
+from calm.dsl.log import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 class ObjectDict(EntityDict):
@@ -52,19 +55,32 @@ class ObjectDict(EntityDict):
                 ret[self.display_map[key]] = value
         return ret
 
-    def decompile(cls, cdict):
+    def pre_decompile(mcls, cdict, context):
+
+        # Remove NULL and empty string data
+        attrs = {}
+        for k, v in cdict.items():
+            if v is not None and v != "":
+                attrs[k] = v
+
+        return attrs
+
+    def decompile(cls, cdict, context=[]):
 
         if not cdict:
             return cdict
+
+        cdict = cls.pre_decompile(cdict, context=context)
         attrs = {}
         display_map = copy.deepcopy(cls.display_map)
         display_map = {v: k for k, v in display_map.items()}
 
         # reversing display map values
         for k, v in cdict.items():
-            # case for uuid, editables
-            if not display_map.get(k, None):
+            if k not in display_map:
+                LOG.warning("Additional Property ({}) found".format(k))
                 continue
+
             attrs.setdefault(display_map[k], v)
 
         # recursive decompile
@@ -72,43 +88,27 @@ class ObjectDict(EntityDict):
         for k, v in attrs.items():
             validator, is_array = validator_dict[k]
 
-            if hasattr(validator, "__kind__"):
-                entity_type = validator.__kind__
-
-            else:
+            if getattr(validator, "__is_object__", False):
                 # Case for recursive Object Dict
                 entity_type = validator
 
-            new_value = None
+            else:
+                entity_type = validator.get_kind()
+
+            # No decompilation is needed for entity_type = str, dict, int etc.
             if hasattr(entity_type, "decompile"):
                 if is_array:
                     new_value = []
-                    if not isinstance(v, list):
-                        raise Exception("Value not of type list")
-
                     for val in v:
                         new_value.append(entity_type.decompile(val))
 
                 else:
                     new_value = entity_type.decompile(v)
 
-            else:
-                # validation for existing classes(str, dict etc.)
-                # validation for existing classes(str, dict etc.)
-                if is_array:
-                    new_value = []
-                    for val in v:
-                        if not isinstance(val, entity_type):
-                            raise TypeError(
-                                "Value {} is not of type {}".format(val, entity_type)
-                            )
+                attrs[k] = new_value
 
-                        new_value.append(entity_type(val))
-
-                else:
-                    new_value = entity_type(v)
-
-            attrs[k] = new_value
+            # validate the new data
+            validator.validate(attrs[k], is_array)
 
         return attrs
 

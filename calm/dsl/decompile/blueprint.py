@@ -1,7 +1,7 @@
 from calm.dsl.decompile.render import render_template
 from calm.dsl.builtins import BlueprintType
 from calm.dsl.decompile.credential import get_cred_var_name
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -14,9 +14,7 @@ def render_blueprint_template(cls):
 
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__
-    user_attrs["description"] = cls.__doc__ or "{} Blueprint description".format(
-        cls.__name__
-    )
+    user_attrs["description"] = cls.__doc__ or ""
 
     credential_list = []
     for cred in cls.credentials:

@@ -6,7 +6,7 @@ from calm.dsl.decompile.credential import get_cred_var_name
 from calm.dsl.decompile.file_handler import get_scripts_dir, get_scripts_dir_key
 from calm.dsl.builtins import TaskType
 from calm.dsl.builtins import RefType
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -161,4 +161,7 @@ def create_script_file(script_type, script="", entity_context=""):
     with open(file_location, "w+") as fd:
         fd.write(script)
 
-    return os.path.join(get_scripts_dir_key(), file_name)
+    dsl_file_location = "os.path.join('{}', '{}')".format(
+        get_scripts_dir_key(), file_name
+    )
+    return dsl_file_location

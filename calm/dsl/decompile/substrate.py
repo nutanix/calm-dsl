@@ -10,7 +10,7 @@ from calm.dsl.decompile.file_handler import get_specs_dir, get_specs_dir_key
 from calm.dsl.builtins import SubstrateType, get_valid_identifier
 from calm.dsl.decompile.ahv_vm import render_ahv_vm
 from calm.dsl.decompile.ref_dependency import update_substrate_name
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -26,16 +26,11 @@ def render_substrate_template(cls, vm_images=[]):
 
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__
-    user_attrs["description"] = cls.__doc__ or "{} Substrate description".format(
-        cls.__name__
-    )
+    user_attrs["description"] = cls.__doc__ or ""
 
     # Update substrate name map and gui name
-    gui_display_name = getattr(cls, "display_name", "")
-    if not gui_display_name:
-        gui_display_name = cls.__name__
-
-    elif gui_display_name != cls.__name__:
+    gui_display_name = getattr(cls, "name", "") or cls.__name__
+    if gui_display_name != cls.__name__:
         user_attrs["gui_display_name"] = gui_display_name
 
     # updating ui and dsl name mapping
@@ -64,8 +59,11 @@ def render_substrate_template(cls, vm_images=[]):
     if create_spec_editables:
         create_spec_editable_file_name = cls.__name__ + "_create_spec_editables.yaml"
         file_location = os.path.join(spec_dir, create_spec_editable_file_name)
-        user_attrs["provider_spec_editables"] = "read_spec('{}')".format(
-            os.path.join(get_specs_dir_key(), create_spec_editable_file_name)
+        dsl_file_location_alias = "os.path.join('{}', '{}')".format(
+            get_specs_dir_key(), create_spec_editable_file_name
+        )
+        user_attrs["provider_spec_editables"] = "read_spec({})".format(
+            dsl_file_location_alias
         )
 
         # Write editable spec to separate file
@@ -81,7 +79,9 @@ def render_substrate_template(cls, vm_images=[]):
                 "Boot config not present in {} substrate spec".format(cls.__name__)
             )
             sys.exit(-1)
-        vm_cls = AhvVmType.decompile(provider_spec)
+        vm_cls = AhvVmType.decompile(
+            provider_spec, context=[cls.__schema_name__, gui_display_name]
+        )
         user_attrs["provider_spec"] = vm_cls.__name__
         ahv_vm_str = render_ahv_vm(vm_cls, boot_config)
 
@@ -90,7 +90,7 @@ def render_substrate_template(cls, vm_images=[]):
         provider_spec_file_name = cls.__name__ + "_provider_spec.yaml"
         user_attrs["provider_spec"] = get_provider_spec_string(
             spec=provider_spec,
-            filename=os.path.join(get_specs_dir_key(), provider_spec_file_name),
+            filename=provider_spec_file_name,
             provider_type=cls.provider_type,
             vm_images=vm_images,
         )
@@ -121,6 +121,10 @@ def render_substrate_template(cls, vm_images=[]):
 
 def get_provider_spec_string(spec, filename, provider_type, vm_images):
 
+    # TODO add switch to use YAML_file/Helper_class for ahv provider
+    dsl_file_location_alias = "os.path.join('{}', '{}')".format(
+        get_specs_dir_key(), filename
+    )
     if provider_type == "AHV_VM":
         disk_list = spec["resources"]["disk_list"]
 
@@ -141,8 +145,8 @@ def get_provider_spec_string(spec, filename, provider_type, vm_images):
             disk_pkg_string = disk_pkg_string[1:]
         disk_pkg_string = "{" + disk_pkg_string + "}"
 
-        res = "read_ahv_spec('{}', disk_packages = {})".format(
-            filename, disk_pkg_string
+        res = "read_ahv_spec({}, disk_packages = {})".format(
+            dsl_file_location_alias, disk_pkg_string
         )
 
     elif provider_type == "VMWARE_VM":
@@ -150,12 +154,14 @@ def get_provider_spec_string(spec, filename, provider_type, vm_images):
 
         if spec_template in vm_images:
             spec["template"] = ""
-            res = "read_vmw_spec('{}', vm_template={})".format(filename, spec_template)
+            res = "read_vmw_spec({}, vm_template={})".format(
+                dsl_file_location_alias, spec_template
+            )
 
         else:
-            res = "read_vmw_spec('{}')".format(filename)
+            res = "read_vmw_spec({})".format(dsl_file_location_alias)
 
     else:
-        res = "read_provider_spec('{}')".format(filename)
+        res = "read_provider_spec({})".format(dsl_file_location_alias)
 
     return res

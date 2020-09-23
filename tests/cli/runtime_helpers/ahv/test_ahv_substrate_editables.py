@@ -2,10 +2,12 @@ from click.testing import CliRunner
 import time
 import pytest
 import json
+import sys
+import traceback
 
 from calm.dsl.cli import main as cli
 from calm.dsl.cli.constants import APPLICATION
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 BP_FILE_PATH = "tests/cli/runtime_helpers/ahv/blueprint.py"
@@ -86,6 +88,15 @@ def test_ahv_substrate_editables_interactive_mode():
         pass
 
     if result.exit_code:
+        cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+        LOG.debug(
+            "Cli Response: {}".format(
+                json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+            )
+        )
+        LOG.debug(
+            "Traceback: \n{}".format("".join(traceback.format_tb(result.exc_info[2])))
+        )
         pytest.fail("App creation failed")
 
 
@@ -149,8 +160,13 @@ def _wait_for_non_busy_state(name):
     app_data = json.loads(result.output)
     LOG.info("App State: {}".format(app_data["status"]["state"]))
     LOG.debug("App Terminal states: {}".format(NON_BUSY_APP_STATES))
+    cnt = 0
     while app_data["status"]["state"] not in NON_BUSY_APP_STATES:
         time.sleep(5)
         result = runner.invoke(cli, ["describe", "app", name, "--out=json"])
         app_data = json.loads(result.output)
         LOG.info("App State: {}".format(app_data["status"]["state"]))
+        if cnt > 20:
+            LOG.error("Failed to reach terminal state in 100 seconds")
+            sys.exit(-1)
+        cnt += 1

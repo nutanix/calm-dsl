@@ -4,19 +4,21 @@ import json
 from jinja2 import Environment, PackageLoader
 from Crypto.PublicKey import RSA
 
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 from calm.dsl.store import Cache
 from calm.dsl.builtins import read_file
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
+from calm.dsl.providers import get_provider
 
 LOG = get_logging_handle(__name__)
 
 
 def render_ahv_template(template, bp_name):
 
-    config = get_config()
+    ContextObj = get_context()
 
-    project_name = config["PROJECT"].get("name", "default")
+    project_config = ContextObj.get_project_config()
+    project_name = project_config.get("name") or "default"
     project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
     if not project_cache_data:
         LOG.error(
@@ -68,12 +70,105 @@ def render_ahv_template(template, bp_name):
     return text.strip() + os.linesep
 
 
+def render_single_vm_bp_ahv_template(template, bp_name):
+
+    ContextObj = get_context()
+
+    project_config = ContextObj.get_project_config()
+    project_name = project_config.get("name") or "default"
+    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
+    if not project_cache_data:
+        LOG.error(
+            "Project {} not found. Please run: calm update cache".format(project_name)
+        )
+        sys.exit(-1)
+
+    # Fetch Nutanix_PC account registered
+    project_accounts = project_cache_data["accounts_data"]
+    account_uuid = project_accounts.get("nutanix_pc", "")
+    if not account_uuid:
+        LOG.error("No nutanix_pc account registered to project {}".format(project_name))
+
+    # Fetch whitelisted subnets
+    project_subnets = project_cache_data["whitelisted_subnets"]
+    if not project_subnets:
+        LOG.error("No subnets registered to project {}".format(project_name))
+        sys.exit(-1)
+
+    # Fetch data for first subnet
+    subnet_cache_data = Cache.get_entity_data_using_uuid(
+        entity_type="ahv_subnet", uuid=project_subnets[0], account_uuid=account_uuid
+    )
+    if not subnet_cache_data:
+        # Case when project have a subnet that is not available in subnets from registered account
+        context_data = {
+            "Project Whitelisted Subnets": project_subnets,
+            "Account UUID": account_uuid,
+            "Project Name": project_name,
+        }
+        LOG.debug(
+            "Context data: {}".format(
+                json.dumps(context_data, indent=4, separators=(",", ": "))
+            )
+        )
+        LOG.error(
+            "Subnet configuration mismatch in registered account's subnets and whitelisted subnets in project"
+        )
+        sys.exit(-1)
+
+    cluster_name = subnet_cache_data["cluster"]
+    default_subnet = subnet_cache_data["name"]
+
+    # Fetch image for vm
+    AhvVmProvider = get_provider("AHV_VM")
+    AhvObj = AhvVmProvider.get_api_obj()
+    try:
+        res = AhvObj.images(account_uuid=account_uuid)
+    except Exception:
+        LOG.error(
+            "Unable to fetch images for Nutanix_PC Account(uuid={})".format(
+                account_uuid
+            )
+        )
+        sys.exit(-1)
+
+    # NOTE: Make sure you use `DISK` image in your jinja template
+    vm_image = None
+    for entity in res["entities"]:
+        name = entity["status"]["name"]
+        image_type = entity["status"]["resources"].get("image_type", None) or ""
+
+        if image_type == "DISK_IMAGE":
+            vm_image = name
+            break
+
+    if not vm_image:
+        LOG.error("No Disk image found on account(uuid='{}')".format(account_uuid))
+        sys.exit(-1)
+
+    LOG.info("Rendering ahv template")
+    text = template.render(
+        bp_name=bp_name,
+        subnet_name=default_subnet,
+        cluster_name=cluster_name,
+        vm_image=vm_image,
+    )
+
+    return text.strip() + os.linesep
+
+
 template_map = {
-    "AHV_VM": ("ahv_blueprint.py.jinja2", render_ahv_template),
+    "AHV_VM": {
+        "MULTI_VM": ("ahv_blueprint.py.jinja2", render_ahv_template),
+        "SINGLE_VM": (
+            "ahv_single_vm_blueprint.py.jinja2",
+            render_single_vm_bp_ahv_template,
+        ),
+    }
 }
 
 
-def render_blueprint_template(bp_name, provider_type):
+def render_blueprint_template(bp_name, provider_type, bp_type):
 
     if provider_type not in template_map:
         print(
@@ -81,7 +176,7 @@ def render_blueprint_template(bp_name, provider_type):
         )
         provider_type = "AHV_VM"
 
-    schema_file, temp_render_helper = template_map.get(provider_type)
+    schema_file, temp_render_helper = template_map.get(provider_type).get(bp_type)
 
     loader = PackageLoader(__name__, "")
     env = Environment(loader=loader)
@@ -90,9 +185,9 @@ def render_blueprint_template(bp_name, provider_type):
     return temp_render_helper(template, bp_name)
 
 
-def create_bp_file(dir_name, bp_name, provider_type):
+def create_bp_file(dir_name, bp_name, provider_type, bp_type):
 
-    bp_text = render_blueprint_template(bp_name, provider_type)
+    bp_text = render_blueprint_template(bp_name, provider_type, bp_type)
     bp_path = os.path.join(dir_name, "blueprint.py")
 
     LOG.info("Writing bp file to {}".format(bp_path))
@@ -154,7 +249,7 @@ def make_bp_dirs(dir_name, bp_name):
     return (bp_dir, key_dir, script_dir)
 
 
-def init_bp(bp_name, dir_name, provider_type):
+def init_bp(bp_name, dir_name, provider_type, bp_type):
 
     bp_name = bp_name.strip().split()[0].title()
     bp_dir, key_dir, script_dir = make_bp_dirs(dir_name, bp_name)
@@ -166,4 +261,4 @@ def init_bp(bp_name, dir_name, provider_type):
     # create scripts
     create_scripts(script_dir)
 
-    create_bp_file(bp_dir, bp_name, provider_type)
+    create_bp_file(bp_dir, bp_name, provider_type, bp_type)

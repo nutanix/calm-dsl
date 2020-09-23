@@ -43,7 +43,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -74,7 +76,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -105,7 +109,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -136,7 +142,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -167,7 +175,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -198,7 +208,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -267,7 +279,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -298,7 +312,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -329,7 +345,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -360,7 +378,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -391,7 +411,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -422,7 +444,9 @@
                                     "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
-                                "variable_list": []
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
                             }
                         ],
                         "variable_list": []
@@ -458,7 +482,9 @@
                                 "edges": []
                             },
                             "child_tasks_local_reference_list": [],
-                            "variable_list": []
+                            "variable_list": [],
+                            "retries": "",
+                            "timeout_secs": ""
                         }
                     ],
                     "variable_list": []
@@ -483,7 +509,9 @@
                                 "edges": []
                             },
                             "child_tasks_local_reference_list": [],
-                            "variable_list": []
+                            "variable_list": [],
+                            "retries": "",
+                            "timeout_secs": ""
                         }
                     ],
                     "variable_list": []
@@ -536,7 +564,9 @@
                                 "edges": []
                             },
                             "child_tasks_local_reference_list": [],
-                            "variable_list": []
+                            "variable_list": [],
+                            "retries": "",
+                            "timeout_secs": ""
                         }
                     ],
                     "variable_list": []
@@ -561,7 +591,9 @@
                                 "edges": []
                             },
                             "child_tasks_local_reference_list": [],
-                            "variable_list": []
+                            "variable_list": [],
+                            "retries": "",
+                            "timeout_secs": ""
                         }
                     ],
                     "variable_list": []
@@ -632,12 +664,14 @@
             "variable_list": [],
             "action_list": [],
             "readiness_probe": {
-                "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
-                "disable_readiness_probe": false,
-                "delay_secs": "0",
                 "connection_type": "SSH",
                 "connection_port": 22,
-                "connection_protocol": ""
+                "connection_protocol": "",
+                "timeout_secs": "",
+                "delay_secs": "60",
+                "retries": "5",
+                "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
+                "disable_readiness_probe": true
             },
             "editables": {}
         },
@@ -694,12 +728,14 @@
             "variable_list": [],
             "action_list": [],
             "readiness_probe": {
-                "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
-                "disable_readiness_probe": false,
-                "delay_secs": "0",
                 "connection_type": "SSH",
                 "connection_port": 22,
-                "connection_protocol": ""
+                "connection_protocol": "",
+                "timeout_secs": "",
+                "delay_secs": "60",
+                "retries": "5",
+                "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
+                "disable_readiness_probe": true
             },
             "editables": {}
         }
@@ -716,13 +752,13 @@
                 },
                 "value": "passwd"
             },
-            "default": true
+            "default": true,
+            "editables": {}
         }
     ],
     "app_profile_list": [
         {
             "name": "NxProfile",
-            "description": "Sample application profile with variables",
             "deployment_create_list": [
                 {
                     "published_service_local_reference_list": [],
@@ -737,12 +773,16 @@
                         "name": "AHVMedVM"
                     },
                     "depends_on_list": [],
+                    "variable_list": [],
+                    "action_list": [],
                     "min_replicas": "1",
+                    "default_replicas": "",
                     "max_replicas": "1",
                     "type": "GREENFIELD",
                     "name": "MySQLDeployment",
                     "options": {},
-                    "description": "Sample deployment pulling in service and substrate references"
+                    "description": "Sample deployment pulling in service and substrate references",
+                    "editables": {}
                 },
                 {
                     "published_service_local_reference_list": [],
@@ -757,12 +797,16 @@
                         "name": "AHVMedVMForPHP"
                     },
                     "depends_on_list": [],
+                    "variable_list": [],
+                    "action_list": [],
                     "min_replicas": "1",
+                    "default_replicas": "",
                     "max_replicas": "1",
                     "type": "GREENFIELD",
                     "name": "PHPDeployment",
                     "options": {},
-                    "description": "Sample deployment pulling in service and substrate references"
+                    "description": "Sample deployment pulling in service and substrate references",
+                    "editables": {}
                 }
             ],
             "variable_list": [

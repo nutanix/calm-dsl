@@ -3,7 +3,7 @@ from .provider_spec import read_spec
 from .package import PackageType
 from .validator import PropertyValidator
 from .entity import Entity
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 
 # Downloadable Image
@@ -57,9 +57,10 @@ class VmDiskPackageType(PackageType):
                 "description": "",
                 "resources": {
                     "image_type": config["image"].get("type") or ImageType,
-                    "source_uri": config["image"].get("source_uri", ""),
+                    "source_uri": config["image"].get("source_uri") or "",
                     "version": {
                         "product_version": config["product"].get("version")
+                        or ""
                         or ProductVersion,
                         "product_name": config["product"].get("name") or pkg_name,
                     },
@@ -77,16 +78,16 @@ class VmDiskPackageType(PackageType):
                 "checksum_value": config["checksum"].get("value", ""),
             }
 
-        pkg = package(display_name=pkg_name, description=pkg_doc, **kwargs)
+        pkg = package(name=pkg_name, description=pkg_doc, **kwargs)
         # return the compile version of package
         return pkg.compile()
 
     @classmethod
-    def decompile(mcls, cdict):
+    def decompile(mcls, cdict, context=[]):
         """decompile method for downloadble images"""
 
-        name = cdict.get("name", "")
-        description = cdict.get("description", "")
+        name = cdict.get("name") or ""
+        description = cdict.get("description") or ""
 
         options = cdict["options"]
         resources = options.get("resources", {})
@@ -98,19 +99,19 @@ class VmDiskPackageType(PackageType):
                 "type": resources["image_type"],
                 "source": resources["source_uri"],
                 "architecture": resources["architecture"],
-            },
+            }
         }
 
         if resources.get("version", None):
             config["product"] = {
-                "name": resources["version"].get("product_name", ""),
-                "version": resources["version"].get("product_version", ""),
+                "name": resources["version"].get("product_name") or "",
+                "version": resources["version"].get("product_version") or "",
             }
 
         if img_type == "ISO_IMAGE" and resources.get("checksum", None):
             config["checksum"] = {
-                "algorithm": resources["checksum"].get("checksum_algorithm", ""),
-                "value": resources["checksum"].get("checksum_value", ""),
+                "algorithm": resources["checksum"].get("checksum_algorithm") or "",
+                "value": resources["checksum"].get("checksum_value") or "",
             }
 
         config["description"] = description

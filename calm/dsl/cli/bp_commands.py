@@ -1,25 +1,26 @@
 import json
+import time
 import sys
-
 import click
 
 from calm.dsl.api import get_api_client
-from calm.dsl.config import get_config
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.config import get_context
+from calm.dsl.log import get_logging_handle
 
-from .secrets import find_secret, create_secret
-from .utils import highlight_text
+from .utils import Display
 from .main import get, compile, describe, create, launch, delete, decompile, format
 from .bps import (
     get_blueprint_list,
     describe_bp,
     format_blueprint_command,
     compile_blueprint_command,
-    compile_blueprint,
     launch_blueprint_simple,
     delete_blueprint,
     decompile_bp,
+    create_blueprint_from_json,
+    create_blueprint_from_dsl,
 )
+from .apps import watch_app
 
 LOG = get_logging_handle(__name__)
 
@@ -31,7 +32,7 @@ LOG = get_logging_handle(__name__)
 )
 @click.option("--limit", "-l", default=20, help="Number of results to return")
 @click.option(
-    "--offset", "-o", default=0, help="Offset results by the specified amount"
+    "--offset", "-s", default=0, help="Offset results by the specified amount"
 )
 @click.option(
     "--quiet", "-q", is_flag=True, default=False, help="Show only blueprint names."
@@ -79,6 +80,8 @@ def _describe_bp(bp_name, out):
     help="Path of Blueprint file to format",
 )
 def _format_blueprint_command(bp_file):
+    """Formats blueprint file using black"""
+
     format_blueprint_command(bp_file)
 
 
@@ -92,6 +95,13 @@ def _format_blueprint_command(bp_file):
     help="Path of Blueprint file to upload",
 )
 @click.option(
+    "--brownfield_deployments",
+    "-b",
+    "brownfield_deployment_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path of Brownfield Deployment file",
+)
+@click.option(
     "--out",
     "-o",
     "out",
@@ -99,12 +109,12 @@ def _format_blueprint_command(bp_file):
     default="json",
     help="output format",
 )
-def _compile_blueprint_command(bp_file, out):
+def _compile_blueprint_command(bp_file, brownfield_deployment_file, out):
     """Compiles a DSL (Python) blueprint into JSON or YAML"""
-    compile_blueprint_command(bp_file, out)
+    compile_blueprint_command(bp_file, brownfield_deployment_file, out)
 
 
-@decompile.command("bp")
+@decompile.command("bp", experimental=True)
 @click.argument("name", required=False)
 @click.option(
     "--file",
@@ -121,93 +131,9 @@ def _compile_blueprint_command(bp_file, out):
     help="Interactive Mode to provide the value for secrets",
 )
 def _decompile_bp(name, bp_file, with_secrets):
+    """Decompiles blueprint present on server or json file"""
 
     decompile_bp(name, bp_file, with_secrets)
-
-
-def create_blueprint(
-    client, bp_payload, name=None, description=None, categories=None, force_create=False
-):
-
-    bp_payload.pop("status", None)
-
-    credential_list = bp_payload["spec"]["resources"]["credential_definition_list"]
-    for cred in credential_list:
-        if cred["secret"].get("secret", None):
-            secret = cred["secret"].pop("secret")
-
-            try:
-                value = find_secret(secret)
-
-            except ValueError:
-                click.echo(
-                    "\nNo secret corresponding to '{}' found !!!\n".format(secret)
-                )
-                value = click.prompt("Please enter its value", hide_input=True)
-
-                choice = click.prompt(
-                    "\n{}(y/n)".format(highlight_text("Want to store it locally")),
-                    default="n",
-                )
-                if choice[0] == "y":
-                    create_secret(secret, value)
-
-            cred["secret"]["value"] = value
-
-    if name:
-        bp_payload["spec"]["name"] = name
-        bp_payload["metadata"]["name"] = name
-
-    if description:
-        bp_payload["spec"]["description"] = description
-
-    bp_resources = bp_payload["spec"]["resources"]
-    bp_name = bp_payload["spec"]["name"]
-    bp_desc = bp_payload["spec"]["description"]
-
-    categories = bp_payload["metadata"].get("categories", None)
-
-    return client.blueprint.upload_with_secrets(
-        bp_name,
-        bp_desc,
-        bp_resources,
-        categories=categories,
-        force_create=force_create,
-    )
-
-
-def create_blueprint_from_json(
-    client, path_to_json, name=None, description=None, force_create=False
-):
-
-    with open(path_to_json, "r") as f:
-        bp_payload = json.loads(f.read())
-    return create_blueprint(
-        client,
-        bp_payload,
-        name=name,
-        description=description,
-        force_create=force_create,
-    )
-
-
-def create_blueprint_from_dsl(
-    client, bp_file, name=None, description=None, force_create=False
-):
-
-    bp_payload = compile_blueprint(bp_file)
-    if bp_payload is None:
-        err_msg = "User blueprint not found in {}".format(bp_file)
-        err = {"error": err_msg, "code": -1}
-        return None, err
-
-    return create_blueprint(
-        client,
-        bp_payload,
-        name=name,
-        description=description,
-        force_create=force_create,
-    )
 
 
 @create.command("bp")
@@ -277,17 +203,15 @@ def create_blueprint_command(bp_file, name, description, force):
         sys.exit(-1)
 
     LOG.info("Blueprint {} created successfully.".format(bp_name))
-    config = get_config()
-    pc_ip = config["SERVER"]["pc_ip"]
-    pc_port = config["SERVER"]["pc_port"]
+
+    context = get_context()
+    server_config = context.get_server_config()
+    pc_ip = server_config["pc_ip"]
+    pc_port = server_config["pc_port"]
     link = "https://{}:{}/console/#page/explore/calm/blueprints/{}".format(
         pc_ip, pc_port, bp_uuid
     )
-    stdout_dict = {
-        "name": bp_name,
-        "link": link,
-        "state": bp_state,
-    }
+    stdout_dict = {"name": bp_name, "link": link, "state": bp_state}
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
 
@@ -311,7 +235,17 @@ def create_blueprint_command(bp_file, name, description, force):
     "--launch_params",
     "-l",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
-    help="Path to python file containing 'runtime_vars' parameter",
+    help="Path to python file for runtime editables",
+)
+@click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
+@click.option(
+    "--poll-interval",
+    "poll_interval",
+    "-pi",
+    type=int,
+    default=10,
+    show_default=True,
+    help="Give polling interval",
 )
 def launch_blueprint_command(
     blueprint_name,
@@ -319,12 +253,32 @@ def launch_blueprint_command(
     ignore_runtime_variables,
     profile_name,
     launch_params,
+    watch,
+    poll_interval,
     blueprint=None,
 ):
     """Launches a blueprint.
     All runtime variables will be prompted by default. When passing the 'ignore_runtime_editable' flag, no variables will be prompted and all default values will be used.
     The blueprint default values can be overridden by passing a Python file via 'launch_params'. Any variable not defined in the Python file will keep the default value defined in the blueprint. When passing a Python file, no variables will be prompted.
-    """
+
+    \b
+    >: launch_params: Python file consisting of variables 'variable_list' and 'substrate_list'
+    Ex: variable_list = {
+        "value": {"value": <Variable Value>},
+        "context": <Context for variable>
+        "name": "<Variable Name>"
+    }
+    substrate_list = {
+        "value":  {
+            <substrate_editable_data_object>
+        },
+        "name": <Substrate Name>,
+    }
+    Sample context for variables:
+        1. context = "<Profile Name>"    # For variable under profile
+        2. context = "<Service Name>"    # For variable under service"""
+
+    app_name = app_name or "App-{}-{}".format(blueprint_name, int(time.time()))
     launch_blueprint_simple(
         blueprint_name,
         app_name,
@@ -333,6 +287,14 @@ def launch_blueprint_command(
         patch_editables=not ignore_runtime_variables,
         launch_params=launch_params,
     )
+    if watch:
+
+        def display_action(screen):
+            watch_app(app_name, screen)
+            screen.wait_for_input(10.0)
+
+        Display.wrapper(display_action, watch=True)
+        LOG.info("Action runs completed for app {}".format(app_name))
 
 
 @delete.command("bp")

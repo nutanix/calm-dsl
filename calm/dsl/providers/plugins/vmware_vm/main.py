@@ -390,9 +390,7 @@ def create_spec(client):
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     project = res.json()
-    accounts = project["status"]["project_status"]["resources"][
-        "account_reference_list"
-    ]
+    accounts = project["status"]["resources"]["account_reference_list"]
 
     payload = {"filter": "type==vmware"}
     res, err = client.account.list(payload)

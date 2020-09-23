@@ -287,6 +287,31 @@ _Custom Profile Action_
 
 As you can see, Calm provides the ability to directly draw the orange arrows by selecting a task (“Start_App” for example), clicking the small arrow icon, and then selecting the next task (“Start_LB” for example).  This instructs Calm that the “Start_LB” task can only begin executing after the “Start_App” task has successfully completed.  You’re able to draw these orange orchestration arrows in any manner you desire, as long as you do not introduce a circular flow.
 
+## Endpoints
+
+Endpoints are the target resources where the defined tasks in a runbook or blueprint are executed. The endpoints are communicated by
+using IP addresses, host names, port tuple, and different protocol attributes.
+
+An endpoint is either one of the following type.
+
+* **Windows machine**
+* **Linux machine**
+* **HTTP service endpoint**
+
+## Runbooks
+
+Runbook is a framework to automate routine tasks which pan across multiple applications or not tied to any application. A runbook is a collection of tasks that you can define to run sequentially or parallelly at different [endpoints](#endpoints).
+
+You can define the following types of tasks in a runbook -
+
+* **Execute**: Use this task to run shell/powershell and escript(custom python) scripts.
+* **Set Variable**: Use this task to run a script and create variables.
+* **Delay**: Use this task to set a delay interval between two tasks or actions.
+* **HTTP**: Use this task type to do REST calls to an HTTP endpoint.
+* **While Loop**: Use this task type to iterate multiple tasks in a loop till it meets the defined condition.
+* **Decision Task**: Use this task type to define different flows/paths based on the exit condition.
+
+- [Calm Runbooks and API Automation Blog](https://www.nutanix.dev/2020/06/12/nutanix-calm-runbooks-api-automation/)
 
 ## Summary
 

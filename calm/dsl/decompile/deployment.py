@@ -2,7 +2,7 @@ from calm.dsl.decompile.render import render_template
 from calm.dsl.builtins import DeploymentType
 from calm.dsl.decompile.ref import render_ref_template
 from calm.dsl.decompile.ref_dependency import update_deployment_name
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -18,16 +18,11 @@ def render_deployment_template(cls):
 
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__
-    user_attrs["description"] = cls.__doc__ or "{} Deployment description".format(
-        cls.__name__
-    )
+    user_attrs["description"] = cls.__doc__ or ""
 
     # Update deployment name map and gui name
-    gui_display_name = getattr(cls, "display_name", "")
-    if not gui_display_name:
-        gui_display_name = cls.__name__
-
-    elif gui_display_name != cls.__name__:
+    gui_display_name = getattr(cls, "name", "") or cls.__name__
+    if gui_display_name != cls.__name__:
         user_attrs["gui_display_name"] = gui_display_name
 
     # updating ui and dsl name mapping
@@ -46,6 +41,9 @@ def render_deployment_template(cls):
 
     user_attrs["packages"] = ", ".join(package_list)
     user_attrs["dependencies"] = ",".join(depends_on_list)
+
+    if user_attrs.get("editables", {}):
+        user_attrs["editables"] = user_attrs["editables"].get_dict()
 
     text = render_template("deployment.py.jinja2", obj=user_attrs)
     return text.strip()

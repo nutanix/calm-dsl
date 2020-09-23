@@ -3,7 +3,7 @@ from calm.dsl.decompile.task import render_task_template
 from calm.dsl.decompile.parallel_task import render_parallel_task_template
 from calm.dsl.decompile.variable import render_variable_template
 from calm.dsl.builtins import action, ActionType, RefType
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 RUNBOOK_ACTION_MAP = {}
@@ -21,6 +21,7 @@ def render_action_template(cls, entity_context=""):
     entity_context = entity_context + "_Action_" + cls.__name__
 
     runbook = cls.runbook
+    # Note cls.__name__ should be used for call_runbook tasks
     RUNBOOK_ACTION_MAP[runbook.__name__] = cls.__name__
 
     # NOTE Not using main_task_local_reference for now,
@@ -48,13 +49,14 @@ def render_action_template(cls, entity_context=""):
 
     user_attrs = {
         "name": cls.__name__,
-        "description": cls.__doc__ or "{} Action description".format(cls.__name__),
+        "description": cls.__doc__ or "",
         "tasks": tasks,
         "variables": variables,
     }
 
-    if cls.__name__ != cls.name:
-        user_attrs["display_name"] = cls.name
+    gui_display_name = getattr(cls, "name", "") or cls.__name__
+    if gui_display_name != cls.__name__:
+        user_attrs["gui_display_name"] = gui_display_name
 
     text = render_template(schema_file="action.py.jinja2", obj=user_attrs)
     return text.strip()

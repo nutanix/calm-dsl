@@ -118,8 +118,6 @@ def test_json():
     generated_json = TwoBlueprint.json_dumps(pprint=True)
     known_json = open(file_path).read()
 
-    print(generated_json)
-
     assert generated_json == known_json
 
 
@@ -136,9 +134,6 @@ def test_yaml():
     TwoBlueprint.yaml_dump(stream=out)
     generated_yaml = out.getvalue()
     known_yaml = open(file_path).read()
-
-    # TODO - fix dict to yaml
-    print(generated_yaml)
 
     assert generated_yaml == known_yaml
 

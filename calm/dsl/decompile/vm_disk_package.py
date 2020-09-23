@@ -14,5 +14,8 @@ def render_vm_disk_package_template(cls):
         "config": disk_data,
     }
 
+    # Escape new line character. As it is inline parameter for vm_disk_package helper
+    user_attrs["description"] = user_attrs["description"].replace("\n", "\\n")
+
     text = render_template("vm_disk_package.py.jinja2", obj=user_attrs)
     return text.strip()

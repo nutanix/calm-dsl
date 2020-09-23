@@ -21,7 +21,7 @@ class PublishedServiceValidator(
 
 
 def published_service(**kwargs):
-    name = kwargs.get("display_name", None) or kwargs.get("name", None)
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return PublishedServiceType(name, bases, kwargs)
 

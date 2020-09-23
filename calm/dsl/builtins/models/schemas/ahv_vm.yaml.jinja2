@@ -24,6 +24,8 @@ properties:
         default: subnet
       name:
         type: string
+      cluster:
+        type: string
     default: null
   network_function_chain_reference:
     type: object
@@ -183,6 +185,8 @@ properties:
     type: string
     enum: [ON, OFF]
     default: ON
+  account_uuid:
+    type: string
   gpu_list:
     type: array
     x-calm-dsl-display-name: gpus
@@ -203,6 +207,9 @@ properties:
     type: object
     x-calm-dsl-display-name: serial_ports
     x-calm-dsl-type: dict
+  boot_config:
+    type: object
+    x-calm-dsl-type: dict
 
 {%- endmacro %}
 
@@ -214,7 +221,6 @@ type: object
 x-calm-dsl-type: vm_ahv
 properties:
   name:
-    x-calm-dsl-display-name: display_name
     type: string
   categories:
     type: object

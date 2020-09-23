@@ -1,10 +1,4 @@
-from calm.dsl.builtins import (
-    ref,
-    basic_cred,
-    CalmVariable,
-    CalmTask,
-    action,
-)
+from calm.dsl.builtins import ref, basic_cred, CalmVariable, CalmTask, action
 from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import read_provider_spec, read_local_file, read_spec
@@ -15,7 +9,11 @@ CRED_PASSWORD = read_local_file(".tests/password")
 DNS_SERVER = read_local_file(".tests/dns_server")
 
 DefaultCred = basic_cred(
-    CRED_USERNAME, CRED_PASSWORD, name="default cred", default=True
+    CRED_USERNAME,
+    CRED_PASSWORD,
+    name="default cred",
+    default=True,
+    editables={"username": True, "secret": True},
 )
 
 
@@ -55,6 +53,7 @@ class AhvDeployment(Deployment):
 
     packages = [ref(AhvPackage)]
     substrate = ref(AhvSubstrate)
+    editables = {"min_replicas": True, "default_replicas": True, "max_replicas": True}
 
 
 class DefaultProfile(Profile):

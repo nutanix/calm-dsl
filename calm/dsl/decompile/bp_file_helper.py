@@ -126,7 +126,7 @@ def render_bp_file_template(cls, with_secrets=False):
             dependepent_entities[k] = render_deployment_template(v)
 
         elif isinstance(v, SubstrateType):
-            dependepent_entities[k] = render_substrate_template(v)
+            dependepent_entities[k] = render_substrate_template(v, vm_images=vm_images)
 
     blueprint = render_blueprint_template(cls)
     user_attrs.update(

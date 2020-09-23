@@ -7,14 +7,20 @@
 {% import "blueprint.yaml.jinja2" as blueprint %}
 {% import "blueprint_payload.yaml.jinja2" as blueprint_payload %}
 {% import "ref.yaml.jinja2" as ref %}
+{% import "task_input.yaml.jinja2" as task_input %}
 {% import "descriptor.yaml.jinja2" as descriptor %}
 {% import "variable.yaml.jinja2" as variable %}
 {% import "package.yaml.jinja2" as package %}
 {% import "credential.yaml.jinja2" as credential %}
+{% import "endpoint.yaml.jinja2" as endpoint %}
+{% import "endpoint_payload.yaml.jinja2" as endpoint_payload %}
 {% import "task.yaml.jinja2" as task %}
 {% import "runbook.yaml.jinja2" as runbook %}
+{% import "runbook_service.yaml.jinja2" as runbook_service %}
+{% import "runbook_payload.yaml.jinja2" as runbook_payload %}
 {% import "action.yaml.jinja2" as action %}
 {% import "project.yaml.jinja2" as project %}
+{% import "project_payload.yaml.jinja2" as project_payload %}
 {% import "simple_deployment.yaml.jinja2" as simple_deployment %}
 {% import "simple_blueprint.yaml.jinja2" as simple_blueprint %}
 {% import "published_service.yaml.jinja2" as published_service %}
@@ -23,6 +29,13 @@
 {% import "simple_pod_deployment.yaml.jinja2" as simple_pod_deployment %}
 {% import "vm_disk_package.yaml.jinja2" as vm_disk_package %}
 {% import "readiness_probe.yaml.jinja2" as readiness_probe %}
+{% import "metadata.yaml.jinja2" as metadata %}
+{% import "brownfield_vm.yaml.jinja2" as brownfield_vm %}
+{% import "brownfield_deployment.yaml.jinja2" as brownfield_deployment %}
+{% import "environment.yaml.jinja2" as environment %}
+{% import "environment_payload.yaml.jinja2" as environment_payload %}
+{% import "single_vm_blueprint.yaml.jinja2" as single_vm_blueprint %}
+
 
 {% macro Schemas() -%}
 
@@ -38,19 +51,31 @@
 {{ blueprint.BlueprintSchema() }}
 {{ blueprint_payload.BlueprintPayloadSchema() }}
 {{ ref.RefSchema() }}
+{{ task_input.TaskInputSchema() }}
 {{ descriptor.DescriptorSchema() }}
 {{ variable.VariableSchema() }}
 {{ package.PackageSchema() }}
 {{ credential.CredentialSchema() }}
+{{ endpoint.EndpointSchema() }}
+{{ endpoint_payload.EndpointPayloadSchema() }}
 {{ task.TaskSchema() }}
 {{ runbook.RunbookSchema() }}
+{{ runbook_service.RunbookServiceSchema() }}
+{{ runbook_payload.RunbookPayloadSchema() }}
 {{ action.ActionSchema() }}
 {{ project.ProjectSchema() }}
+{{ project_payload.ProjectPayloadSchema() }}
 {{ simple_deployment.SimpleDeploymentSchema() }}
 {{ simple_blueprint.SimpleBlueprintSchema() }}
 {{ ahv_vm.AhvVmSchema() }}
 {{ vm_disk_package.VmDiskPackageSchema() }}
 {{ readiness_probe.ReadinessProbeSchema() }}
+{{ metadata.MetadataSchema() }}
+{{ brownfield_vm.BrownfieldVmSchema() }}
+{{ brownfield_deployment.BrownfieldDeploymentSchema() }}
+{{ environment.EnvironmentSchema() }}
+{{ environment_payload.EnvironmentPayloadSchema() }}
+{{ single_vm_blueprint.SingleVmBlueprintSchema() }}
 
 {%- endmacro %}
 

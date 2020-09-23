@@ -4,7 +4,7 @@ from calm.dsl.decompile.ref import render_ref_template
 from calm.dsl.decompile.variable import render_variable_template
 from calm.dsl.decompile.action import render_action_template
 from calm.dsl.decompile.ref_dependency import update_service_name
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -20,16 +20,11 @@ def render_service_template(cls):
 
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__
-    user_attrs["description"] = cls.__doc__ or "{} Service description".format(
-        cls.__name__
-    )
+    user_attrs["description"] = cls.__doc__ or ""
 
     # Update service name map and gui name
-    gui_display_name = getattr(cls, "display_name", "")
-    if not gui_display_name:
-        gui_display_name = cls.__name__
-
-    elif gui_display_name != cls.__name__:
+    gui_display_name = getattr(cls, "name", "") or cls.__name__
+    if gui_display_name != cls.__name__:
         user_attrs["gui_display_name"] = gui_display_name
 
     # updating ui and dsl name mapping

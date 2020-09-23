@@ -19,7 +19,7 @@ class DeploymentValidator(PropertyValidator, openapi_type="app_blueprint_deploym
 
 
 def deployment(**kwargs):
-    name = kwargs.get("display_name", None) or kwargs.get("name", None)
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return DeploymentType(name, bases, kwargs)
 

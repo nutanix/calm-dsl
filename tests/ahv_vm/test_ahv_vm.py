@@ -1,6 +1,7 @@
 from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC, AhvVmGpu
 from calm.dsl.builtins import basic_cred, ahv_vm_resources
 from calm.dsl.builtins import vm_disk_package, read_local_file
+from calm.dsl.config import get_context
 
 
 AhvVm = ahv_vm_resources()
@@ -43,6 +44,7 @@ class MyAhvVm(AhvVm):
         AhvVmNic.NormalNic.tap(subnet="vlan.0"),
         AhvVmNic.NetworkFunctionNic.tap(),
         AhvVmNic.NetworkFunctionNic(),
+        AhvVmNic("@@{substrate_variable}@@"),
     ]
     boot_type = "UEFI"
 
@@ -65,7 +67,22 @@ class MyAhvVm(AhvVm):
 
 
 def test_json():
+
+    ContextObj = get_context()
+    ContextObj.reset_configuration()
+
     print(MyAhvVm.json_dumps(pprint=True))
+
+
+def test_macro_in_nic():
+    """Tests macro in vm nics"""
+
+    import json
+
+    vm_data = json.loads(MyAhvVm.json_dumps())
+    assert (
+        vm_data["nic_list"][9]["subnet_reference"]["uuid"] == "@@{substrate_variable}@@"
+    )
 
 
 if __name__ == "__main__":

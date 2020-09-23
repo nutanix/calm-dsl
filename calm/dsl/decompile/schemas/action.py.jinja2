@@ -1,6 +1,6 @@
 {%- macro action(obj) -%}
 @action
-def {{obj.name}}({% if obj.display_name -%}display_name="{{obj.display_name}}"{%- endif %}):
+def {{obj.name}}({% if obj.gui_display_name -%}name="{{obj.gui_display_name}}"{%- endif %}):
     {% if obj.description -%}"""{{obj.description}}"""{%- endif %}
 {% if obj.variables or obj.tasks %}
 {%- for variable in obj.variables %}

@@ -1,10 +1,10 @@
-from .entity import EntityType, Entity
+from .entity import EntityType, Entity, EntityTypeBase
 from .validator import PropertyValidator
 
 from .task import dag
 from .action import runbook_create, _action_create
-from calm.dsl.tools import get_logging_handle
 from .runbook import RunbookType
+from calm.dsl.log import get_logging_handle
 
 
 LOG = get_logging_handle(__name__)
@@ -91,9 +91,9 @@ class PackageType(EntityType):
         return cdict
 
     @classmethod
-    def decompile(mcls, cdict):
+    def decompile(mcls, cdict, context=[]):
 
-        cls = super().decompile(cdict)
+        cls = super().decompile(cdict, context=context)
         options = cls.options
         delattr(cls, "options")
 
@@ -132,7 +132,10 @@ class PackageType(EntityType):
                 "description": cls.__doc__,
                 "options": option_data,
             }
-            from .vm_disk_package import VmDiskPackageType
+            types = EntityTypeBase.get_entity_types()
+            VmDiskPackageType = types.get("VmDiskPackage", None)
+            if not VmDiskPackageType:
+                raise ModuleNotFoundError("VmDiskPackage Module not found.")
 
             cls = VmDiskPackageType.decompile(cdict)
         return cls
@@ -153,7 +156,7 @@ class PackageValidator(PropertyValidator, openapi_type="app_package"):
 
 
 def package(**kwargs):
-    name = kwargs.get("display_name", None) or kwargs.get("name", None)
+    name = kwargs.get("name", None)
     bases = (Entity,)
     return PackageType(name, bases, kwargs)
 

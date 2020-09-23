@@ -4,7 +4,7 @@ from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.task import render_task_template
 from calm.dsl.builtins import VariableType, TaskType
 from calm.dsl.decompile.file_handler import get_local_dir
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 SECRET_VAR_FILES = []
@@ -21,6 +21,10 @@ def render_variable_template(cls, entity_context):
 
     user_attrs = cls.get_user_attrs()
     user_attrs["description"] = cls.__doc__ or ""
+
+    # Escape new line character. As it is inline parameter for CalmVariable helper
+    user_attrs["description"] = user_attrs["description"].replace("\n", "\\n")
+
     var_val_type = getattr(cls, "value_type", "STRING")
     var_type = ""
     schema_file = None

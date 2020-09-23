@@ -1,12 +1,13 @@
 import pytest
 import time
 import json
+import sys
 import traceback
 from click.testing import CliRunner
 
 from calm.dsl.cli import main as cli
 from calm.dsl.cli.constants import APPLICATION
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 NON_BUSY_APP_STATES = [
@@ -195,11 +196,16 @@ class TestAppCommands:
     def _wait_for_non_busy_state(self):
         runner = CliRunner()
         result = runner.invoke(cli, ["describe", "app", self.created_app_name])
+        cnt = 0
         while not any(
             [state_str in result.output for state_str in self.non_busy_statuses]
         ):
             time.sleep(5)
             result = runner.invoke(cli, ["describe", "app", self.created_app_name])
+            if cnt > 20:
+                LOG.error("Failed to reach terminal state in 100 seconds")
+                sys.exit(-1)
+            cnt += 1
 
     def _test_run_custom_action(self):
         runner = CliRunner()
