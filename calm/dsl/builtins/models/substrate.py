@@ -105,7 +105,7 @@ class SubstrateType(EntityType):
             if not readiness_probe_dict.get("address", ""):
                 readiness_probe_dict[
                     "address"
-                ] = "@@{platform.networkInterfaces[0].networkIP}@@"
+                ] = "@@{platform.networkInterfaces[0].accessConfigs[0].natIP}@@"
 
         else:
             raise Exception("Un-supported vm type :{}".format(cdict["type"]))
