@@ -98,7 +98,7 @@ class TestVmBlueprints:
 
         runner = CliRunner()
 
-        LOG.info("Compiling bp at {}". format(bp_file_path))
+        LOG.info("Compiling bp at {}".format(bp_file_path))
         result = runner.invoke(
             cli, ["-vv", "compile", "bp", "--file={}".format(bp_file_path)]
         )

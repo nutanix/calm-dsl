@@ -85,14 +85,7 @@ LOG = get_logging_handle(__name__)
     help="Default project name used for entities",
 )
 def initialize_engine(
-    ip,
-    port,
-    username,
-    password,
-    project_name,
-    db_file,
-    local_dir,
-    config_file,
+    ip, port, username, password, project_name, db_file, local_dir, config_file,
 ):
     """
     \b
@@ -136,14 +129,7 @@ def initialize_engine(
 
 
 def set_server_details(
-    ip,
-    port,
-    username,
-    password,
-    project_name,
-    db_file,
-    local_dir,
-    config_file,
+    ip, port, username, password, project_name, db_file, local_dir, config_file,
 ):
 
     if not (ip and port and username and password and project_name):
