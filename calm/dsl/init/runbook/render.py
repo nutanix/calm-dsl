@@ -21,11 +21,7 @@ def render_runbook_template(runbook_name):
     server_config = ContextObj.get_server_config()
     pc_ip = server_config["pc_ip"]
     pc_port = server_config["pc_port"]
-    text = template.render(
-        runbook_name=runbook_name,
-        pc_ip=pc_ip,
-        pc_port=pc_port,
-    )
+    text = template.render(runbook_name=runbook_name, pc_ip=pc_ip, pc_port=pc_port,)
     LOG.info("Success")
 
     return text.strip() + os.linesep
