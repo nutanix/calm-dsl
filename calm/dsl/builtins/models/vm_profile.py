@@ -8,7 +8,6 @@ from .service import service
 from .package import package
 from .ref import ref
 from .action import action as Action
-from .blueprint import blueprint
 from .variable import VariableType as Variable
 from calm.dsl.log import get_logging_handle
 
@@ -53,7 +52,7 @@ class VmProfileType(EntityType):
         )
 
         # create blueprint profile
-        bp_profile = profile(name=profile_name + "Profile", deployments=[bp_dep])
+        bp_profile = profile(name=profile_name, deployments=[bp_dep])
 
         # Traverse over mro dict of class
         cls_data = cls.get_default_attrs()
@@ -70,7 +69,6 @@ class VmProfileType(EntityType):
                     setattr(bp_sub, k, v)
 
                 else:
-                    v.task_target = ref(bp_service)
                     setattr(bp_profile, k, v)
 
             elif isinstance(v, Variable):

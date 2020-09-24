@@ -13,7 +13,7 @@ from black import format_file_in_place, WriteBack, FileMode
 from calm.dsl.builtins import (
     Blueprint,
     SimpleBlueprint,
-    SingleVmBlueprint,
+    VmBlueprint,
     create_blueprint_payload,
     BlueprintType,
     get_valid_identifier,
@@ -223,9 +223,9 @@ def get_blueprint_class_from_module(user_bp_module):
     for item in dir(user_bp_module):
         obj = getattr(user_bp_module, item)
         if isinstance(
-            obj, (type(Blueprint), type(SimpleBlueprint), type(SingleVmBlueprint))
+            obj, (type(Blueprint), type(SimpleBlueprint), type(VmBlueprint))
         ):
-            if obj.__bases__[0] in (Blueprint, SimpleBlueprint, SingleVmBlueprint):
+            if obj.__bases__[0] in (Blueprint, SimpleBlueprint, VmBlueprint):
                 UserBlueprint = obj
 
     return UserBlueprint
@@ -285,11 +285,15 @@ def compile_blueprint(bp_file, brownfield_deployment_file=None):
     if isinstance(UserBlueprint, type(SimpleBlueprint)):
         bp_payload = UserBlueprint.make_bp_dict()
     else:
-        if isinstance(UserBlueprint, type(SingleVmBlueprint)):
+        if isinstance(UserBlueprint, type(VmBlueprint)):
             UserBlueprint = UserBlueprint.make_bp_obj()
             if "categories" not in metadata_payload:
                 metadata_payload["categories"] = {}
-            metadata_payload["categories"]["TemplateType"] = "Vm"
+            
+            if len(UserBlueprint.profiles) == 1:
+                metadata_payload["categories"]["TemplateType"] = "Vm"
+            else:
+                metadata_payload["categories"]["TemplateType"] = "Application"
 
         UserBlueprintPayload, _ = create_blueprint_payload(
             UserBlueprint, metadata=metadata_payload

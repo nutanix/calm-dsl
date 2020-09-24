@@ -75,9 +75,8 @@ class Profile1(VmProfile):
 
 class AhvVmProfile(Profile1):
 
-    provider_type = "VMWARE_VM"
     # VM Spec for Substrate
-    provider_spec = ahv_vm(resources=SingleVmAhvResources, name="MyAhvVm")
+    provider_spec = ahv_vm(resources=SingleVmAhvResources, name="MyAhvVm2")
 
 
 class SampleSingleVmBluerint(VmBlueprint):
@@ -87,9 +86,6 @@ class SampleSingleVmBluerint(VmBlueprint):
     credentials = [Centos]
 
     profiles = [Profile1, AhvVmProfile]
-
-
-template_type = "App"
 
 
 """def test_json():
