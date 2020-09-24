@@ -24,7 +24,7 @@ resources:
       type: ''
       volume_type: GP2
     type: ''
-  image_id: ami-4bf3d731
+  image_id: ami-0affd4508a5d2481b 
   instance_initiated_shutdown_behavior: ''
   instance_profile_name: ecsInstanceRole
   instance_type: t2.medium

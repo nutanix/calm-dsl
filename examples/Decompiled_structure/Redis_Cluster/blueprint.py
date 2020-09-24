@@ -8,36 +8,24 @@ from calm.dsl.builtins import *  # no_qa
 
 # Secret Variables
 BP_CRED_CENTOS_KEY = read_local_file("BP_CRED_CENTOS_KEY")
-Profile_Nutanix_variable_REDIS_CONFIG_PASSWORD = read_local_file(
-    "Profile_Nutanix_variable_REDIS_CONFIG_PASSWORD"
-)
-Profile_AWS_variable_REDIS_CONFIG_PASSWORD = read_local_file(
-    "Profile_AWS_variable_REDIS_CONFIG_PASSWORD"
-)
-Profile_GCP_variable_REDIS_CONFIG_PASSWORD = read_local_file(
-    "Profile_GCP_variable_REDIS_CONFIG_PASSWORD"
-)
-Profile_Azure_variable_REDIS_CONFIG_PASSWORD = read_local_file(
-    "Profile_Azure_variable_REDIS_CONFIG_PASSWORD"
-)
-Profile_VMware_variable_REDIS_CONFIG_PASSWORD = read_local_file(
-    "Profile_VMware_variable_REDIS_CONFIG_PASSWORD"
+Profile_variable_REDIS_CONFIG_PASSWORD = read_local_file(
+    "Profile_variable_REDIS_CONFIG_PASSWORD"
 )
 
 # Credentials
 BP_CRED_CENTOS = basic_cred(
-    "centos", BP_CRED_CENTOS_KEY, name="CENTOS", type="KEY", default=True
+    "centos", BP_CRED_CENTOS_KEY, name="SSHUSER", type="KEY", default=True
 )
 
 
-AHV_CENTOS_77 = vm_disk_package(
-    name="AHV_CENTOS_77",
+AHV_CENTOS_78 = vm_disk_package(
+    name="AHV_CENTOS_78",
     description="",
     config={
         "image": {
-            "name": "CENTOS_77",
+            "name": "CENTOS-7-x86_64-2003",
             "type": "DISK_IMAGE",
-            "source": "http://10.40.64.33/GoldImages/NuCalm/AHV-UVM-Images/CentOS-7-x86_64-2003.qcow2",
+            "source": "http://download.nutanix.com/Calm/CentOS-7-x86_64-2003.qcow2",
             "architecture": "X86_64",
         },
         "product": {"name": "", "version": ""},
@@ -45,14 +33,14 @@ AHV_CENTOS_77 = vm_disk_package(
     },
 )
 
-ESX_CENTOS_77 = vm_disk_package(
-    name="ESX_CENTOS_77",
+ESX_CENTOS_78 = vm_disk_package(
+    name="ESX_CENTOS_78",
     description="",
     config={
         "image": {
-            "name": "CENTOS_77",
+            "name": "CENTOS-7-x86_64-2003",
             "type": "DISK_IMAGE",
-            "source": "http://10.40.64.33/GoldImages/NuCalm/Ova/CentOS-7-x86_64-2003.ova",
+            "source": "http://download.nutanix.com/Calm/CentOS-7-x86_64-2003.ova",
             "architecture": "X86_64",
         },
         "product": {"name": "", "version": ""},
@@ -73,7 +61,7 @@ class vmcalm_array_indexcalm_timeResources(AhvVmResources):
     vCPUs = 2
     cores_per_vCPU = 1
     disks = [
-        AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(AHV_CENTOS_77, bootable=True),
+        AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(AHV_CENTOS_78, bootable=True),
         AhvVmDisk.Disk.Scsi.allocateOnStorageContainer(10),
     ]
     nics = [AhvVmNic.NormalNic.ingress("vlan.0", cluster="Goten-1")]
@@ -83,238 +71,113 @@ class vmcalm_array_indexcalm_timeResources(AhvVmResources):
     )
 
 
-class vmcalm_array_indexcalm_time(AhvVm):
-
-    display_name = "vm-@@{calm_array_index}@@-@@{calm_time}@@"
+class RedisMaster_provider_spec(AhvVm):
+    name = "RedisMaster-@@{calm_random}@@"
     resources = vmcalm_array_indexcalm_timeResources
 
+class RedisSlave_provider_spec(RedisMaster_provider_spec):
+    name = "RedisSlave-@@{calm_random}@@"
 
-class v2mcalm_array_indexcalm_time(AhvVm):
-
-    display_name = "vm-@@{calm_array_index}@@-@@{calm_time}@@"
-    resources = vmcalm_array_indexcalm_timeResources
 
 class RedisMaster(Substrate):
     """RedisMaster Substrate"""
 
     os_type = "Linux"
     provider_type = "AHV_VM"
-    provider_spec = vmcalm_array_indexcalm_time
+    provider_spec = RedisMaster_provider_spec
     provider_spec_editables = read_spec("specs/RedisMaster_create_spec_editables.yaml")
-    readiness_probe = readiness_probe(
-        connection_type="SSH",
-        disabled=False,
-        retries="5",
-        connection_port=22,
-        address="@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
-        delay_secs="0",
-        credential=ref(BP_CRED_CENTOS),
-    )
-
-
-class vmcalm_array_indexcalm_timeResources(AhvVmResources):
-
-    memory = 4
-    vCPUs = 2
-    cores_per_vCPU = 1
-    disks = [
-        AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(AHV_CENTOS_77, bootable=True),
-        AhvVmDisk.Disk.Scsi.allocateOnStorageContainer(10),
-    ]
-    nics = [AhvVmNic.NormalNic.ingress("vlan.0", cluster="Goten-1")]
-
-    guest_customization = AhvVmGC.CloudInit(
-        filename="specs/vmcalm_array_indexcalm_time_cloud_init_data.yaml"
-    )
-
-
-class vmcalm_array_indexcalm_time(AhvVm):
-
-    display_name = "vm-@@{calm_array_index}@@-@@{calm_time}@@"
-    resources = vmcalm_array_indexcalm_timeResources
-
-
-class RedisSlave(Substrate):
+    readiness_probe = readiness_probe(credential=ref(BP_CRED_CENTOS), disabled=False)
+     
+ 
+class RedisSlave(RedisMaster):
     """RedisSlave Substrate"""
-
-    os_type = "Linux"
-    provider_type = "AHV_VM"
-    provider_spec = v2mcalm_array_indexcalm_time
-    provider_spec_editables = read_spec("specs/RedisSlave_create_spec_editables.yaml")
-    readiness_probe = readiness_probe(
-        connection_type="SSH",
-        disabled=False,
-        retries="5",
-        connection_port=22,
-        address="@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
-        delay_secs="0",
-        credential=ref(BP_CRED_CENTOS),
-    )
+    provider_spec = RedisSlave_provider_spec
+    
 
 
-class RedisMasterAWS(Substrate):
+class RedisMasterAWS(RedisMaster):
     """RedisMasterAWS Substrate"""
 
-    os_type = "Linux"
     provider_type = "AWS_VM"
     provider_spec = read_provider_spec("specs/RedisMasterAWS_provider_spec.yaml")
+    provider_spec.spec["name"] = "RedisMaster-@@{calm_random}@@"
     provider_spec_editables = read_spec(
         "specs/RedisMasterAWS_create_spec_editables.yaml"
     )
-    readiness_probe = readiness_probe(
-        connection_type="SSH",
-        disabled=False,
-        retries="5",
-        connection_port=22,
-        address="@@{public_ip_address}@@",
-        delay_secs="60",
-        credential=ref(BP_CRED_CENTOS),
-    )
 
 
-class RedisSlaveAWS(Substrate):
+class RedisSlaveAWS(RedisMasterAWS):
     """RedisSlaveAWS Substrate"""
 
-    os_type = "Linux"
-    provider_type = "AWS_VM"
     provider_spec = read_provider_spec("specs/RedisSlaveAWS_provider_spec.yaml")
+    provider_spec.spec["name"] = "RedisSlave-@@{calm_random}@@"
     provider_spec_editables = read_spec(
         "specs/RedisSlaveAWS_create_spec_editables.yaml"
     )
-    readiness_probe = readiness_probe(
-        connection_type="SSH",
-        disabled=False,
-        retries="5",
-        connection_port=22,
-        address="@@{public_ip_address}@@",
-        delay_secs="60",
-        credential=ref(BP_CRED_CENTOS),
-    )
 
 
-class RedisGCPMaster(Substrate):
+class RedisGCPMaster(RedisMaster):
     """RedisGCPMaster Substrate"""
 
-    os_type = "Linux"
     provider_type = "GCP_VM"
     provider_spec = read_provider_spec("specs/RedisGCPMaster_provider_spec.yaml")
+    provider_spec.spec["resources"]["name"] = "redismaster-@@{calm_random}@@"
     provider_spec_editables = read_spec(
         "specs/RedisGCPMaster_create_spec_editables.yaml"
     )
-    readiness_probe = readiness_probe(
-        connection_type="SSH",
-        disabled=False,
-        retries="5",
-        connection_port=22,
-        address="@@{platform.networkInterfaces[0].accessConfigs[0].natIP}@@",
-        delay_secs="60",
-        credential=ref(BP_CRED_CENTOS),
-    )
 
+    
 
-class RedisGCPSlave(Substrate):
+class RedisGCPSlave(RedisGCPMaster):
     """RedisGCPSlave Substrate"""
-
-    os_type = "Linux"
-    provider_type = "GCP_VM"
     provider_spec = read_provider_spec("specs/RedisGCPSlave_provider_spec.yaml")
+    provider_spec.spec["resources"]["name"] = "redisslave-@@{calm_random}@@"
     provider_spec_editables = read_spec(
         "specs/RedisGCPSlave_create_spec_editables.yaml"
     )
-    readiness_probe = readiness_probe(
-        connection_type="SSH",
-        disabled=False,
-        retries="5",
-        connection_port=22,
-        address="@@{platform.networkInterfaces[0].accessConfigs[0].natIP}@@",
-        delay_secs="60",
-        credential=ref(BP_CRED_CENTOS),
-    )
+   
 
 
-class RedisMasterAzure(Substrate):
+class RedisMasterAzure(RedisMaster):
     """RedisMasterAzure Substrate"""
 
-    os_type = "Linux"
     provider_type = "AZURE_VM"
     provider_spec = read_provider_spec("specs/RedisMasterAzure_provider_spec.yaml")
+    provider_spec.spec["resources"]["vm_name"] = "RedisMaster-@@{calm_random}@@"
     provider_spec_editables = read_spec(
         "specs/RedisMasterAzure_create_spec_editables.yaml"
     )
-    readiness_probe = readiness_probe(
-        connection_type="SSH",
-        disabled=False,
-        retries="5",
-        connection_port=22,
-        address="@@{platform.publicIPAddressList[0]}@@",
-        delay_secs="60",
-        credential=ref(BP_CRED_CENTOS),
-    )
 
-
-class RedisSlaveAzure(Substrate):
+class RedisSlaveAzure(RedisMasterAzure):
     """RedisSlaveAzure Substrate"""
 
-    os_type = "Linux"
-    provider_type = "AZURE_VM"
     provider_spec = read_provider_spec("specs/RedisSlaveAzure_provider_spec.yaml")
+    provider_spec.spec["resources"]["vm_name"] = "RedisSlave-@@{calm_random}@@"
     provider_spec_editables = read_spec(
         "specs/RedisSlaveAzure_create_spec_editables.yaml"
     )
-    readiness_probe = readiness_probe(
-        connection_type="SSH",
-        disabled=False,
-        retries="5",
-        connection_port=22,
-        address="@@{platform.publicIPAddressList[0]}@@",
-        delay_secs="60",
-        credential=ref(BP_CRED_CENTOS),
-    )
-
-
-class RedisMasterVMWare(Substrate):
+    
+class RedisMasterVMWare(RedisMaster):
     """RedisMasterVMWare Substrate"""
 
-    os_type = "Linux"
     provider_type = "VMWARE_VM"
-    provider_spec = read_vmw_spec("specs/RedisMasterVMWare_provider_spec.yaml")
+    provider_spec = read_vmw_spec("specs/RedisMasterVMWare_provider_spec.yaml", vm_template=ESX_CENTOS_78)
+    provider_spec.spec["name"] = "RedisMaster-@@{calm_random}@@"
     provider_spec_editables = read_spec(
         "specs/RedisMasterVMWare_create_spec_editables.yaml"
     )
-    readiness_probe = readiness_probe(
-        connection_type="SSH",
-        disabled=False,
-        retries="5",
-        connection_port=22,
-        address="@@{platform.ipAddressList[0]}@@",
-        delay_secs="60",
-        credential=ref(BP_CRED_CENTOS),
-    )
 
-
-class RedisSlaveVMWare(Substrate):
+class RedisSlaveVMWare(RedisMasterVMWare):
     """RedisSlaveVMWare Substrate"""
 
-    os_type = "Linux"
-    provider_type = "VMWARE_VM"
-    provider_spec = read_vmw_spec("specs/RedisSlaveVMWare_provider_spec.yaml")
+    provider_spec = read_vmw_spec("specs/RedisSlaveVMWare_provider_spec.yaml", vm_template=ESX_CENTOS_78)
+    provider_spec.spec["name"] = "RedisSlave-@@{calm_random}@@"
     provider_spec_editables = read_spec(
         "specs/RedisSlaveVMWare_create_spec_editables.yaml"
     )
-    readiness_probe = readiness_probe(
-        connection_type="SSH",
-        disabled=False,
-        retries="5",
-        connection_port=22,
-        address="@@{platform.ipAddressList[0]}@@",
-        delay_secs="60",
-        credential=ref(BP_CRED_CENTOS),
-    )
-
 
 class Redis_Slave(Service):
     """Redis_Slave Service"""
-
     dependencies = [ref(Redis_Master)]
 
 
@@ -535,7 +398,7 @@ class PackageSlaveVMWare(Package):
 class RedisMasterAHVDeployment(Deployment):
     """RedisAHVDeployment"""
 
-    display_name = "RedisAHVDeployment"
+    name = "RedisAHVDeployment"
     min_replicas = "1"
     max_replicas = "1"
 
@@ -546,7 +409,7 @@ class RedisMasterAHVDeployment(Deployment):
 class RedisMasterAWSDeployment(Deployment):
     """RedisAWSDeployment"""
 
-    display_name = "14ac6f34_deployment"
+    name = "RedisAWSDeployment"
     min_replicas = "1"
     max_replicas = "1"
 
@@ -587,7 +450,7 @@ class RedisMasterVMwareDeployment(Deployment):
 class RedisSlaveAHVDeployment(Deployment):
     """RedisSlaveAHVDeployment"""
 
-    display_name = "RedisSlaveAHVDeployment"
+    name = "RedisSlaveAHVDeployment"
     min_replicas = "2"
     max_replicas = "4"
 
@@ -608,7 +471,7 @@ class RedisSlaveAWSDeployment(Deployment):
 class RedisSlaveGCPDeployment(Deployment):
     """RedisSlaveGCPDeployment"""
 
-    display_name = "RedisSlaveGCPDeployment"
+    name = "RedisSlaveGCPDeployment"
     min_replicas = "2"
     max_replicas = "4"
 
@@ -642,11 +505,11 @@ class Nutanix(Profile):
     deployments = [RedisMasterAHVDeployment, RedisSlaveAHVDeployment]
 
     REDIS_CONFIG_PASSWORD = CalmVariable.Simple.Secret(
-        Profile_Nutanix_variable_REDIS_CONFIG_PASSWORD,
+        Profile_variable_REDIS_CONFIG_PASSWORD,
         label="",
         is_mandatory=False,
         is_hidden=False,
-        runtime=True,
+        runtime=False,
         description="",
     )
 
@@ -685,20 +548,10 @@ class Nutanix(Profile):
         )
 
 
-class AWS(Profile):
+class AWS(Nutanix):
     """AWS Profile"""
 
     deployments = [RedisMasterAWSDeployment, RedisSlaveAWSDeployment]
-
-    REDIS_CONFIG_PASSWORD = CalmVariable.Simple.Secret(
-        Profile_AWS_variable_REDIS_CONFIG_PASSWORD,
-        label="",
-        is_mandatory=False,
-        is_hidden=False,
-        runtime=True,
-        description="",
-    )
-
     @action
     def ScaleOut():
         """This action will scale out Redis slaves by given scale out count
@@ -734,19 +587,10 @@ class AWS(Profile):
         )
 
 
-class GCP(Profile):
+class GCP(Nutanix):
     """GCP Profile"""
 
     deployments = [RedisMasterGCPDeployment, RedisSlaveGCPDeployment]
-
-    REDIS_CONFIG_PASSWORD = CalmVariable.Simple.Secret(
-        Profile_GCP_variable_REDIS_CONFIG_PASSWORD,
-        label="",
-        is_mandatory=False,
-        is_hidden=False,
-        runtime=True,
-        description="",
-    )
 
     @action
     def ScaleOut():
@@ -783,19 +627,10 @@ class GCP(Profile):
         )
 
 
-class Azure(Profile):
+class Azure(Nutanix):
     """Azure Profile"""
 
     deployments = [RedisMasterAzureDeployment, RedisSlaveAzureDeployment]
-
-    REDIS_CONFIG_PASSWORD = CalmVariable.Simple.Secret(
-        Profile_Azure_variable_REDIS_CONFIG_PASSWORD,
-        label="",
-        is_mandatory=False,
-        is_hidden=False,
-        runtime=True,
-        description="",
-    )
 
     @action
     def ScaleOut():
@@ -812,19 +647,10 @@ class Azure(Profile):
         CalmTask.Scaling.scale_in("1", name="Task1", target=ref(RedisSlaveAzureDeployment))
 
 
-class VMware(Profile):
+class VMware(Nutanix):
     """VMware Profile"""
 
     deployments = [RedisMasterVMwareDeployment, RedisSlaveVMwareDeployment]
-
-    REDIS_CONFIG_PASSWORD = CalmVariable.Simple.Secret(
-        Profile_VMware_variable_REDIS_CONFIG_PASSWORD,
-        label="",
-        is_mandatory=False,
-        is_hidden=False,
-        runtime=True,
-        description="",
-    )
 
     @action
     def ScaleOut():
@@ -855,12 +681,12 @@ class Redis_Cluster(Blueprint):
         RedisSlavePackage,
         RedisMasterPackageAWS,
         RedisSlavePackageAWS,
-        AHV_CENTOS_77,
+        AHV_CENTOS_78,
         RedisMasterGCPPackage,
         RedisSlaveGCPPackage,
         PackageMasterAZure,
         PackageSlaveAZure,
-        ESX_CENTOS_77,
+        ESX_CENTOS_78,
         PackageMasterVMWare,
         PackageSlaveVMWare,
     ]

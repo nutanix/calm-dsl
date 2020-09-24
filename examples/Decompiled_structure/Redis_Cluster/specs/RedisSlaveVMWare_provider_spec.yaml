@@ -1,40 +1,45 @@
-clone_is_template: false
-cluster: Sabine59-Cluster
+storage_drs_mode: true
+storage_pod: Test
+template: ESX_CENTOS_78
+type: PROVISION_VMWARE_VM
+
 compute_drs_mode: true
-datastore: ''
+name: RedisMasterVm-@@{calm_random}@@
+storage_pod: QA
 drs_mode: true
+cluster: Sabine59-Cluster
 host: ''
-name: vm-@@{calm_array_index}@@-@@{calm_random}@@
+clone_is_template: false
+template: 50fa1036-0b5f-467d-b9e3-61c957656d15
+datastore: ''
+storage_drs_mode: true
+type: PROVISION_VMWARE_VM
 resources:
-  account_uuid: f0465ada-c048-38cd-899e-2a3bb2251502
+  nic_list:
+  - nic_type: e1000
+    type: ''
+    net_name: key-vim.host.PortGroup-Test Network
+  template_nic_list: []
+  template_controller_list: []
+  num_vcpus_per_socket: 1
+  num_sockets: 2
   controller_list: []
-  disk_list: []
+  memory_size_mib: 2048
+  power_state: poweron
   guest_customization:
+    type: ''
     cloud_init: |-
       #cloud-config
       users:
-        - name: @@{CENTOS.username}@@
+        - name: @@{SSHUSER.username}@@
           ssh-authorized-keys:
-            - @@{CENTOS.public_key}@@
+            - @@{SSHUSER.public_key}@@
           sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    linux_data:
     customization_name: ''
     customization_type: GUEST_OS_LINUX
-    linux_data: null
-    type: ''
-    windows_data: null
-  memory_size_mib: 2048
-  nic_list:
-  - net_name: key-vim.host.PortGroup-vlan.112
-    nic_type: e1000
-    type: ''
-  num_sockets: 2
-  num_vcpus_per_socket: 1
-  power_state: poweron
-  template_controller_list: []
+    windows_data:
   template_disk_list: []
-  template_nic_list: []
   type: ''
-storage_drs_mode: true
-storage_pod: QA
-template: ESX_CENTOS_77
-type: PROVISION_VMWARE_VM
+  account_uuid: f0465ada-c048-38cd-899e-2a3bb2251502
+  disk_list: []

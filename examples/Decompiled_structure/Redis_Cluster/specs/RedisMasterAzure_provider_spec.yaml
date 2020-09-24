@@ -59,11 +59,11 @@ resources:
     image_details:
       offer: CentOS-HPC
       publisher: OpenLogic
-      sku: '6.5'
+      sku: '7.7'
       source_image_id: ''
       source_image_type: Marketplace
       type: ''
-      version: 6.5.20160408
+      version: 7.7.2020031800
     is_managed: true
     os_disk_details:
       caching_type: ReadWrite

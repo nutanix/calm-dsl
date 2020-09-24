@@ -16,9 +16,9 @@ resources:
     disk_type: PERSISTENT
     initializeParams:
       diskName: ''
-      diskSizeGb: -1
+      diskSizeGb: 30
       diskType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/asia-east1-b/diskTypes/pd-ssd
-      sourceImage: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/images/centos-7
+      sourceImage: https://www.googleapis.com/compute/v1/projects/centos-cloud/global/images/centos-7-v20200603
       sourceImageEncryptionKey: {}
       type: ''
     interface: ''
