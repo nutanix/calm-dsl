@@ -1,23 +1,15 @@
 {% import "ref.yaml.jinja2" as ref %}
 
-{% macro SingleVmBlueprint() -%}
+{% macro VmProfile() -%}
 
-title: SingleVmBlueprint
+title: VmProfile
 type: object
-x-calm-dsl-type: app_single_vm_blueprint
+x-calm-dsl-type: app_vm_profile
 properties:
   name:
     type: string
     maxLength: 64
     default: ''
-  description:
-    type: string
-    maxLength: 1000
-    default: ''
-  credentials:
-    type: array
-    items:
-      $ref: '#/components/schemas/Credential'
   os_type:
     type: string
     default: 'Linux'
@@ -52,9 +44,9 @@ properties:
 {%- endmacro %}
 
 
-{% macro SingleVmBlueprintSchema() -%}
+{% macro VmProfileSchema() -%}
 
-SingleVmBlueprint:
-  {{ SingleVmBlueprint()|indent(2) }}
+VmProfile:
+  {{ VmProfile()|indent(2) }}
 
 {%- endmacro %}

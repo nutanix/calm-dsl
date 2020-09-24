@@ -8,7 +8,6 @@ from .service import service
 from .package import package
 from .ref import ref
 from .action import action as Action
-from .blueprint import blueprint
 from .variable import VariableType as Variable
 from calm.dsl.log import get_logging_handle
 
@@ -17,30 +16,26 @@ LOG = get_logging_handle(__name__)
 # Simple Blueprint
 
 
-class SingleVmBlueprintType(EntityType):
-    __schema_name__ = "SingleVmBlueprint"
-    __openapi_type__ = "app_single_vm_blueprint"
+class VmProfileType(EntityType):
+    __schema_name__ = "VmProfile"
+    __openapi_type__ = "app_vm_profile"
     __has_dag_target__ = False
 
     def get_task_target(cls):
         return
 
-    def make_bp_obj(cls):
+    def get_bp_classes(cls):
 
-        bp_name = getattr(cls, "name", None) or cls.__name__
+        profile_name = getattr(cls, "name", None) or cls.__name__
 
-        # create blueprint credentials
-        bp_credentials = cls.credentials
-
-        # create blueprint service
-        bp_service = service(name=bp_name + "Service")
+        bp_service = service(name=profile_name + "Service")
 
         # create blueprint package
-        bp_pkg = package(name=bp_name + "Package", services=[ref(bp_service)])
+        bp_pkg = package(name=profile_name + "Package", services=[ref(bp_service)])
 
         # create blueprint substrate
         bp_sub = substrate(
-            name=bp_name + "Substrate",
+            name=profile_name + "Substrate",
             provider_type=cls.provider_type,
             provider_spec=cls.provider_spec,
             readiness_probe=cls.readiness_probe,
@@ -49,7 +44,7 @@ class SingleVmBlueprintType(EntityType):
 
         # create blueprint deployment
         bp_dep = deployment(
-            name=bp_name + "Deployment",
+            name=profile_name + "Deployment",
             min_replicas=cls.min_replicas,
             max_replicas=cls.max_replicas,
             packages=[ref(bp_pkg)],
@@ -57,10 +52,15 @@ class SingleVmBlueprintType(EntityType):
         )
 
         # create blueprint profile
-        bp_profile = profile(name=bp_name + "Profile", deployments=[bp_dep])
+        bp_profile = profile(name=profile_name, deployments=[bp_dep])
+
+        # Traverse over mro dict of class
+        cls_data = cls.get_default_attrs()
+        for klass in reversed(cls.mro()):
+            cls_data = {**cls_data, **klass.__dict__}
 
         # Separate class action under packages, substrates and profile
-        for k, v in cls.__dict__.items():
+        for k, v in cls_data.items():
             if isinstance(v, Action):
                 if k in ["__install__", "__uninstall__"]:
                     setattr(bp_pkg, k, v)
@@ -69,35 +69,28 @@ class SingleVmBlueprintType(EntityType):
                     setattr(bp_sub, k, v)
 
                 else:
-                    v.task_target = ref(bp_service)
                     setattr(bp_profile, k, v)
 
             elif isinstance(v, Variable):
                 setattr(bp_profile, k, v)
 
-        bp_obj = blueprint(
-            name=cls.__name__,
-            services=[bp_service],
-            packages=[bp_pkg],
-            substrates=[bp_sub],
-            credentials=bp_credentials,
-            profiles=[bp_profile],
-        )
-
-        return bp_obj
+        return {
+            "service": bp_service,
+            "package": bp_pkg,
+            "substrate": bp_sub,
+            "profile": bp_profile,
+        }
 
 
-class SingleBlueprintValidator(
-    PropertyValidator, openapi_type="app_single_vm_blueprint"
-):
+class VmProfileValidator(PropertyValidator, openapi_type="app_vm_profile"):
     __default__ = None
-    __kind__ = SingleVmBlueprintType
+    __kind__ = VmProfileType
 
 
-def single_vm_blueprint(**kwargs):
+def vm_profile(**kwargs):
     name = kwargs.get("name", None)
     bases = (Entity,)
-    return SingleVmBlueprintType(name, bases, kwargs)
+    return VmProfileType(name, bases, kwargs)
 
 
-SingleVmBlueprint = single_vm_blueprint()
+VmProfile = vm_profile()

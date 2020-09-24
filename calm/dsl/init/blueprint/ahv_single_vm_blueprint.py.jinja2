@@ -42,13 +42,13 @@ Useful commands (execute from top-level directory):
 
 import os
 
-from calm.dsl.builtins import SingleVmBlueprint
 from calm.dsl.builtins import CalmVariable as Variable
 from calm.dsl.builtins import CalmTask as Task
 from calm.dsl.builtins import action, basic_cred
 from calm.dsl.builtins import read_local_file
 from calm.dsl.builtins import AhvVmResources, ahv_vm
 from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC
+from calm.dsl.builtins import VmProfile, VmBlueprint
 
 
 # SSH Credentials
@@ -83,10 +83,7 @@ class {{bp_name}}VmResources(AhvVmResources):
     )
 
 
-class {{bp_name}}(SingleVmBlueprint):
-
-    # Credentials for blueprint
-    credentials = [CentosCred]
+class {{bp_name}}Profile(VmProfile):
 
     # Profile Variables
     var1 = Variable.Simple("sample_val1", runtime=True)
@@ -98,6 +95,9 @@ class {{bp_name}}(SingleVmBlueprint):
     # Package Actions
     @action
     def __install__():
+
+        # Package install variable
+        sample_pkg_var = Variable.Simple("Sample package installation")
 
         # Step 1
         Task.Exec.ssh(
@@ -131,6 +131,14 @@ class {{bp_name}}(SingleVmBlueprint):
             name="Task1",
             script='echo "Profile level action using @@{var1}@@ and @@{var2}@@"',
         )
+
+
+class {{bp_name}}(VmBlueprint):
+
+    # Credentials for blueprint
+    credentials = [CentosCred]
+
+    profiles = [{{bp_name}}Profile]
 
 {%- endmacro %}
 

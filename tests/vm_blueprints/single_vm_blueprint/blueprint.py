@@ -1,11 +1,11 @@
 """
-Single Vm deployment interface for Calm DSL
+Single Vm across single profile
+NOTE: Single-Vm Blueprint will be created as result
 
 """
 import os
 
 from calm.dsl.builtins import ref, basic_cred
-from calm.dsl.builtins import SingleVmBlueprint
 from calm.dsl.builtins import read_local_file, readiness_probe
 from calm.dsl.builtins import CalmTask as Task
 from calm.dsl.builtins import CalmVariable as Var
@@ -13,6 +13,7 @@ from calm.dsl.builtins import action
 
 from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC
 from calm.dsl.builtins import AhvVmResources, ahv_vm
+from calm.dsl.builtins import VmProfile, VmBlueprint
 
 
 # Credentials
@@ -29,7 +30,9 @@ class SingleVmAhvResources(AhvVmResources):
     memory = 4
     vCPUs = 2
     cores_per_vCPU = 1
-    disks = [AhvVmDisk.Disk.Scsi.cloneFromImageService("Centos7", bootable=True)]
+    disks = [
+        AhvVmDisk.Disk.Scsi.cloneFromImageService("CentOS-7-Cloud-Init", bootable=True)
+    ]
     nics = [AhvVmNic("vlan.0")]
 
     guest_customization = AhvVmGC.CloudInit(
@@ -45,20 +48,16 @@ class SingleVmAhvResources(AhvVmResources):
     )
 
 
-class SampleSingleVmBluerint(SingleVmBlueprint):
-    """Simple blueprint Spec"""
+class Profile1(VmProfile):
 
-    # Blueprint credentials
-    credentials = [Centos]
+    # Profile variables
+    nameserver = Var(DNS_SERVER, label="Local DNS resolver")
 
     # VM Spec for Substrate
     provider_spec = ahv_vm(resources=SingleVmAhvResources, name="MyAhvVm")
 
-    # Readiness probe for substrate
+    # Readiness probe for substrate (disabled is set to false, for enabling check login)
     readiness_probe = readiness_probe(credential=ref(Centos), disabled=False)
-
-    # Profile variables
-    nameserver = Var(DNS_SERVER, label="Local DNS resolver")
 
     # Only actions under Packages, Substrates and Profiles are allowed
     @action
@@ -76,23 +75,11 @@ class SampleSingleVmBluerint(SingleVmBlueprint):
         Task.Exec.ssh(name="Task9", script='echo "Hello"')
 
 
-def test_json():
+class SampleSingleVmBluerint(VmBlueprint):
+    """Simple blueprint Spec"""
 
-    import sys
+    # Blueprint credentials
+    credentials = [Centos]
 
-    from calm.dsl.config import get_context
-
-    # Setting the recursion limit to max for
-    sys.setrecursionlimit(100000)
-
-    # Resetting context
-    ContextObj = get_context()
-    ContextObj.reset_configuration()
-
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    file_path = os.path.join(dir_path, "test_single_vm_bp_output.json")
-
-    generated_json = SampleSingleVmBluerint.make_bp_obj().json_dumps(pprint=True)
-    known_json = open(file_path).read()
-
-    assert generated_json == known_json
+    # Blueprint profiles
+    profiles = [Profile1]
