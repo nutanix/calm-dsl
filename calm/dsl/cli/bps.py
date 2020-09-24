@@ -222,9 +222,7 @@ def get_blueprint_class_from_module(user_bp_module):
     UserBlueprint = None
     for item in dir(user_bp_module):
         obj = getattr(user_bp_module, item)
-        if isinstance(
-            obj, (type(Blueprint), type(SimpleBlueprint), type(VmBlueprint))
-        ):
+        if isinstance(obj, (type(Blueprint), type(SimpleBlueprint), type(VmBlueprint))):
             if obj.__bases__[0] in (Blueprint, SimpleBlueprint, VmBlueprint):
                 UserBlueprint = obj
 
@@ -289,7 +287,7 @@ def compile_blueprint(bp_file, brownfield_deployment_file=None):
             UserBlueprint = UserBlueprint.make_bp_obj()
             if "categories" not in metadata_payload:
                 metadata_payload["categories"] = {}
-            
+
             if len(UserBlueprint.profiles) == 1:
                 metadata_payload["categories"]["TemplateType"] = "Vm"
             else:

@@ -1,11 +1,11 @@
 """
-Single Vm deployment interface for Calm DSL
+Single Vm across single profile
+NOTE: Single-Vm Blueprint will be created as result
 
 """
 import os
 
 from calm.dsl.builtins import ref, basic_cred
-from calm.dsl.builtins import SingleVmBlueprint
 from calm.dsl.builtins import read_local_file, readiness_probe
 from calm.dsl.builtins import CalmTask as Task
 from calm.dsl.builtins import CalmVariable as Var
@@ -30,7 +30,9 @@ class SingleVmAhvResources(AhvVmResources):
     memory = 4
     vCPUs = 2
     cores_per_vCPU = 1
-    disks = [AhvVmDisk.Disk.Scsi.cloneFromImageService("Centos7", bootable=True)]
+    disks = [
+        AhvVmDisk.Disk.Scsi.cloneFromImageService("CentOS-7-Cloud-Init", bootable=True)
+    ]
     nics = [AhvVmNic("vlan.0")]
 
     guest_customization = AhvVmGC.CloudInit(
@@ -54,7 +56,7 @@ class Profile1(VmProfile):
     # VM Spec for Substrate
     provider_spec = ahv_vm(resources=SingleVmAhvResources, name="MyAhvVm")
 
-    # Readiness probe for substrate
+    # Readiness probe for substrate (disabled is set to false, for enabling check login)
     readiness_probe = readiness_probe(credential=ref(Centos), disabled=False)
 
     # Only actions under Packages, Substrates and Profiles are allowed
@@ -73,22 +75,17 @@ class Profile1(VmProfile):
         Task.Exec.ssh(name="Task9", script='echo "Hello"')
 
 
-class AhvVmProfile(Profile1):
-
-    # VM Spec for Substrate
-    provider_spec = ahv_vm(resources=SingleVmAhvResources, name="MyAhvVm2")
-
-
 class SampleSingleVmBluerint(VmBlueprint):
     """Simple blueprint Spec"""
 
     # Blueprint credentials
     credentials = [Centos]
 
-    profiles = [Profile1, AhvVmProfile]
+    # Blueprint profiles
+    profiles = [Profile1]
 
 
-"""def test_json():
+def test_json():
 
     import sys
 
@@ -102,14 +99,13 @@ class SampleSingleVmBluerint(VmBlueprint):
     ContextObj.reset_configuration()
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    file_path = os.path.join(dir_path, "test_single_vm_bp_output.json")
+    file_path = os.path.join(dir_path, "single_vm_bp_output.json")
 
     generated_json = SampleSingleVmBluerint.make_bp_obj().json_dumps(pprint=True)
     known_json = open(file_path).read()
 
     assert generated_json == known_json
-"""
+
 
 if __name__ == "__main__":
-
-    print(SampleSingleVmBluerint.json_dumps(pprint=True))
+    test_json()
