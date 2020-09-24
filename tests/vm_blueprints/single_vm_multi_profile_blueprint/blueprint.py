@@ -100,29 +100,3 @@ class SampleSingleVmBluerint(VmBlueprint):
 
     # Blueprint profiles
     profiles = [AhvVmSmallProfile, AhvVmLargeProfile]
-
-
-def test_json():
-
-    import sys
-
-    from calm.dsl.config import get_context
-
-    # Setting the recursion limit to max for
-    sys.setrecursionlimit(100000)
-
-    # Resetting context
-    ContextObj = get_context()
-    ContextObj.reset_configuration()
-
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    file_path = os.path.join(dir_path, "single_vm_multi_profile_bp_output.json")
-
-    generated_json = SampleSingleVmBluerint.make_bp_obj().json_dumps(pprint=True)
-    known_json = open(file_path).read()
-
-    assert generated_json == known_json
-
-
-if __name__ == "__main__":
-    test_json()
