@@ -285,13 +285,6 @@ def compile_blueprint(bp_file, brownfield_deployment_file=None):
     else:
         if isinstance(UserBlueprint, type(VmBlueprint)):
             UserBlueprint = UserBlueprint.make_bp_obj()
-            if "categories" not in metadata_payload:
-                metadata_payload["categories"] = {}
-
-            if len(UserBlueprint.profiles) == 1:
-                metadata_payload["categories"]["TemplateType"] = "Vm"
-            else:
-                metadata_payload["categories"]["TemplateType"] = "Application"
 
         UserBlueprintPayload, _ = create_blueprint_payload(
             UserBlueprint, metadata=metadata_payload

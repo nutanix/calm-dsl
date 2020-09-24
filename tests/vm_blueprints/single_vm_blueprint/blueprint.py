@@ -14,6 +14,7 @@ from calm.dsl.builtins import action
 from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC
 from calm.dsl.builtins import AhvVmResources, ahv_vm
 from calm.dsl.builtins import VmProfile, VmBlueprint
+from calm.dsl.builtins import Metadata
 
 
 # Credentials
@@ -83,3 +84,8 @@ class SampleSingleVmBluerint(VmBlueprint):
 
     # Blueprint profiles
     profiles = [Profile1]
+
+
+class SingleVmBpMetadata(Metadata):
+
+    categories = {"TemplateType": "Vm"}
