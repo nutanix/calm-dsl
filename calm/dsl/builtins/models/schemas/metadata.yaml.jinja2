@@ -1,0 +1,48 @@
+{% macro Metadata() -%}
+
+title: Metadata
+type: object
+x-calm-dsl-type: app_metadata
+properties:
+  name:
+    type: string
+  kind:
+    type: string
+  project_reference:
+    type: object
+    x-calm-dsl-type: object
+    x-calm-dsl-display-name: project
+    properties:
+      name:
+        type: string
+      kind:
+        type: string
+      uuid:
+        type: string
+  owner_reference:
+    type: object
+    x-calm-dsl-type: object
+    x-calm-dsl-display-name: owner
+    properties:
+      name:
+        type: string
+      kind:
+        type: string
+      uuid:
+        type: string
+  categories:
+    type: object
+    x-calm-dsl-type: dict
+  spec_version:
+    type: integer
+    default: 1
+  
+{%- endmacro %}
+
+
+{% macro MetadataSchema() -%}
+
+Metadata:
+  {{ Metadata()|indent(2) }}
+
+{%- endmacro %}

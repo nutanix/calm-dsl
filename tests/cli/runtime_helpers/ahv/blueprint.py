@@ -1,10 +1,4 @@
-from calm.dsl.builtins import (
-    ref,
-    basic_cred,
-    CalmVariable,
-    CalmTask,
-    action,
-)
+from calm.dsl.builtins import ref, basic_cred, CalmVariable, CalmTask, action
 from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import read_provider_spec, read_local_file, read_spec
@@ -59,11 +53,7 @@ class AhvDeployment(Deployment):
 
     packages = [ref(AhvPackage)]
     substrate = ref(AhvSubstrate)
-    editables = {
-        "min_replicas": True,
-        "default_replicas": True,
-        "max_replicas": True,
-    }
+    editables = {"min_replicas": True, "default_replicas": True, "max_replicas": True}
 
 
 class DefaultProfile(Profile):

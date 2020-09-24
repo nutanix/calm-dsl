@@ -97,14 +97,14 @@ def SetVariableOnEscript():
 @runbook
 def EscriptOnEndpoint(endpoints=[multiple_linux_endpoint]):
     Task.Exec.escript(
-        name="ExecTask", script='''print "Task is Successful"''', target=endpoints[0],
+        name="ExecTask", script='''print "Task is Successful"''', target=endpoints[0]
     )
 
 
 @runbook
 def PowershellTask(endpoints=[windows_endpoint]):
     Task.Exec.powershell(
-        name="ExecTask", script='''echo "Task is Successful"''', target=endpoints[0],
+        name="ExecTask", script='''echo "Task is Successful"''', target=endpoints[0]
     )
 
 
@@ -121,7 +121,7 @@ def SetVariableOnPowershell(endpoints=[windows_endpoint]):
 @runbook
 def PowershellOnMultipleIPs(endpoints=[multiple_windows_endpoint]):
     Task.Exec.powershell(
-        name="ExecTask", script='''echo "Task is Successful"''', target=endpoints[0],
+        name="ExecTask", script='''echo "Task is Successful"''', target=endpoints[0]
     )
 
 
@@ -140,7 +140,7 @@ def PowershellWithCredOverwrite(
 @runbook
 def ShellTask(endpoints=[linux_endpoint]):
     Task.Exec.ssh(
-        name="ExecTask", script='''echo "Task is Successful"''', target=endpoints[0],
+        name="ExecTask", script='''echo "Task is Successful"''', target=endpoints[0]
     )
 
 
@@ -185,7 +185,7 @@ def SetVariableOnShell(endpoints=[linux_endpoint]):
 @runbook
 def ShellOnMultipleIPs(endpoints=[multiple_linux_endpoint]):
     Task.Exec.ssh(
-        name="ExecTask", script='''echo "Task is Successful"''', target=endpoints[0],
+        name="ExecTask", script='''echo "Task is Successful"''', target=endpoints[0]
     )
 
 

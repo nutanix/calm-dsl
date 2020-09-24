@@ -24,8 +24,8 @@ class TestHTTPTasks:
     @pytest.mark.runbook
     @pytest.mark.regression
     def test_http_task(self):
-        """ test_http_task, test_http_task_outputin_set_variable,
-            test_relative_url_http, test_http_task_without_tls_verify"""
+        """test_http_task, test_http_task_outputin_set_variable,
+        test_relative_url_http, test_http_task_without_tls_verify"""
 
         client = get_api_client()
         rb_name = "test_httptask_" + str(uuid.uuid4())[-10:]
@@ -135,8 +135,8 @@ class TestHTTPTasks:
     @pytest.mark.runbook
     @pytest.mark.regression
     def test_http_without_auth(self):
-        """ test_http_get_task_no_auth, test_http_default_target,
-        test_http_task_with_html_content_type """
+        """test_http_get_task_no_auth, test_http_default_target,
+        test_http_task_with_html_content_type"""
 
         client = get_api_client()
         rb_name = "test_httptask_" + str(uuid.uuid4())[-10:]
@@ -270,11 +270,11 @@ class TestHTTPTasks:
         ],
     )
     def test_http_failure_scenarios(self, Helper):
-        """ test_http_task_failure_status_code_check,
-            test_unsupported_payload_json,
-            test_unsupprted_url_http,
-            test_http_task_with_tls_verify,
-            test_http_task_with_incorrect_auth
+        """test_http_task_failure_status_code_check,
+        test_unsupported_payload_json,
+        test_unsupprted_url_http,
+        test_http_task_with_tls_verify,
+        test_http_task_with_incorrect_auth
         """
         Runbook = Helper[0]
         TaskOutput = Helper[1]
