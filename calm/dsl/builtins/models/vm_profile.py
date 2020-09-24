@@ -55,9 +55,13 @@ class VmProfileType(EntityType):
         # create blueprint profile
         bp_profile = profile(name=profile_name + "Profile", deployments=[bp_dep])
 
-        # TODO add inheritance by traversing mro of cls
+        # Traverse over mro dict of class
+        cls_data = cls.get_default_attrs()
+        for klass in reversed(cls.mro()):
+            cls_data = {**cls_data, **klass.__dict__}
+
         # Separate class action under packages, substrates and profile
-        for k, v in cls.__dict__.items():
+        for k, v in cls_data.items():
             if isinstance(v, Action):
                 if k in ["__install__", "__uninstall__"]:
                     setattr(bp_pkg, k, v)

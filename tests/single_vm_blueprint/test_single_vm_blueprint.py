@@ -73,20 +73,20 @@ class Profile1(VmProfile):
         Task.Exec.ssh(name="Task9", script='echo "Hello"')
 
 
-"""class AhvVmProfile(VmProfile):
+class AhvVmProfile(Profile1):
 
     provider_type = "VMWARE_VM"
     # VM Spec for Substrate
     provider_spec = ahv_vm(resources=SingleVmAhvResources, name="MyAhvVm")
 
-"""
+
 class SampleSingleVmBluerint(VmBlueprint):
     """Simple blueprint Spec"""
 
     # Blueprint credentials
     credentials = [Centos]
 
-    profiles = [Profile1]
+    profiles = [Profile1, AhvVmProfile]
 
 
 template_type = "App"

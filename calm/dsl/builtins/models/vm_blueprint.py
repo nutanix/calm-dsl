@@ -73,9 +73,7 @@ class VmBlueprintType(EntityType):
         return bp_obj.compile()
 
 
-class VmBlueprintValidator(
-    PropertyValidator, openapi_type="app_vm_blueprint"
-):
+class VmBlueprintValidator(PropertyValidator, openapi_type="app_vm_blueprint"):
     __default__ = None
     __kind__ = VmBlueprintType
 
