@@ -49,6 +49,7 @@ from calm.dsl.builtins import read_local_file
 from calm.dsl.builtins import AhvVmResources, ahv_vm
 from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC
 from calm.dsl.builtins import VmProfile, VmBlueprint
+from calm.dsl.builtins import Metadata
 
 
 # SSH Credentials
@@ -140,7 +141,11 @@ class {{bp_name}}(VmBlueprint):
 
     profiles = [{{bp_name}}Profile]
 
-{%- endmacro %}
 
+class {{bp_name}}Metadata(Metadata):
+
+    categories = {"TemplateType": "Vm"}
+
+{%- endmacro %}
 
 {{BlueprintTemplate(bp_name, subnet_name, cluster_name, vm_image)}}
