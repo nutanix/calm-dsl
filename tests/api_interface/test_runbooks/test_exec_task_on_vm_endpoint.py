@@ -9,6 +9,9 @@ from tests.api_interface.test_runbooks.test_files.exec_task import (
     ShellTaskOnLinuxVMAHVDynamicEndpoint2,
     ShellTaskOnLinuxVMAHVDynamicEndpoint3,
 
+    ShellTaskOnLinuxVMVMWareStaticEndpoint,
+    # ShellTaskOnLinuxVMVMWareDynamicEndpoint
+
     #  ShellTaskOnLinuxVMAHVDynamicEndpoint4,
     #  ShellTaskOnLinuxVMVMWareStaticEndpoint,
     #  ShellTaskOnWindowsVMAHVStaticEndpoint,
