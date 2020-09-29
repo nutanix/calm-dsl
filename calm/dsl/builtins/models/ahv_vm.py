@@ -63,7 +63,7 @@ class AhvVmResourcesType(EntityType):
         return cdict
 
     @classmethod
-    def decompile(mcls, cdict, context=[]):
+    def decompile(mcls, cdict, context=[], prefix=""):
         # Check for serial ports
         serial_port_list = cdict.pop("serial_port_list", [])
         serial_port_dict = {}
@@ -75,7 +75,7 @@ class AhvVmResourcesType(EntityType):
         if not cdict.get("guest_customization", None):
             cdict.pop("guest_customization", None)
 
-        return super().decompile(cdict)
+        return super().decompile(cdict, prefix=prefix)
 
 
 class AhvVmResourcesValidator(PropertyValidator, openapi_type="vm_ahv_resources"):

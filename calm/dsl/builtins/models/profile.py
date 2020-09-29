@@ -12,6 +12,15 @@ class ProfileType(EntityType):
     def get_task_target(cls):
         return
 
+    @classmethod
+    def pre_decompile(mcls, cdict, context, prefix=""):
+        cdict = super().pre_decompile(cdict, context, prefix=prefix)
+
+        if "__name__" in cdict:
+            cdict["__name__"] = "{}{}".format(prefix, cdict["__name__"])
+
+        return cdict
+
     def compile(cls):
         cdict = super().compile()
         # description attribute in profile gives bp launch error: https://jira.nutanix.com/browse/CALM-19380

@@ -130,10 +130,16 @@ def _compile_blueprint_command(bp_file, brownfield_deployment_file, out):
     default=False,
     help="Interactive Mode to provide the value for secrets",
 )
-def _decompile_bp(name, bp_file, with_secrets):
+@click.option(
+    "--prefix",
+    "-p",
+    default="",
+    help="Prefix used for appending to entities name(Reserved name cases)",
+)
+def _decompile_bp(name, bp_file, with_secrets, prefix):
     """Decompiles blueprint present on server or json file"""
 
-    decompile_bp(name, bp_file, with_secrets)
+    decompile_bp(name, bp_file, with_secrets, prefix)
 
 
 @create.command("bp")

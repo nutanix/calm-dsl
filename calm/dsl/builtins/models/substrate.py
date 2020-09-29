@@ -212,11 +212,15 @@ class SubstrateType(EntityType):
             )
 
     @classmethod
-    def pre_decompile(mcls, cdict, context=[]):
+    def pre_decompile(mcls, cdict, context=[], prefix=""):
 
         # Handle provider_spec
-        cdict = super().pre_decompile(cdict, context=context)
+        cdict = super().pre_decompile(cdict, context, prefix=prefix)
         cdict["create_spec"] = provider_spec(cdict["create_spec"])
+
+        if "__name__" in cdict:
+            cdict["__name__"] = "{}{}".format(prefix, cdict["__name__"])
+
         return cdict
 
     def get_task_target(cls):

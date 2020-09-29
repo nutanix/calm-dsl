@@ -91,13 +91,24 @@ class PackageType(EntityType):
         return cdict
 
     @classmethod
-    def decompile(mcls, cdict, context=[]):
+    def pre_decompile(mcls, cdict, context, prefix=""):
+        cdict = super().pre_decompile(cdict, context, prefix=prefix)
 
-        cls = super().decompile(cdict, context=context)
+        if "__name__" in cdict:
+            cdict["__name__"] = "{}{}".format(prefix, cdict["__name__"])
+
+        return cdict
+
+    @classmethod
+    def decompile(mcls, cdict, context=[], prefix=""):
+
+        cls = super().decompile(cdict, context=context, prefix=prefix)
         options = cls.options
         delattr(cls, "options")
 
-        option_data = mcls.__validator_dict__["options"][0].decompile(options)
+        option_data = mcls.__validator_dict__["options"][0].decompile(
+            options, prefix=prefix
+        )
 
         package_type = getattr(cls, "type")
         if package_type == "CUSTOM" or package_type == "DEB":
@@ -111,7 +122,9 @@ class PackageType(EntityType):
                         "name": "action_install",
                         "critical": True,
                         "type": "system",
-                        "runbook": RunbookType.decompile(install_runbook),
+                        "runbook": RunbookType.decompile(
+                            install_runbook, prefix=prefix
+                        ),
                     }
                 )
 
@@ -122,7 +135,9 @@ class PackageType(EntityType):
                         "name": "action_uninstall",
                         "critical": True,
                         "type": "system",
-                        "runbook": RunbookType.decompile(uninstall_runbook),
+                        "runbook": RunbookType.decompile(
+                            uninstall_runbook, prefix=prefix
+                        ),
                     }
                 )
 
@@ -137,7 +152,7 @@ class PackageType(EntityType):
             if not VmDiskPackageType:
                 raise ModuleNotFoundError("VmDiskPackage Module not found.")
 
-            cls = VmDiskPackageType.decompile(cdict)
+            cls = VmDiskPackageType.decompile(cdict, prefix=prefix)
         return cls
 
     def get_task_target(cls):
