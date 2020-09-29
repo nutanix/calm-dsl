@@ -1,25 +1,26 @@
 import json
+import time
 import sys
-
 import click
 
 from calm.dsl.api import get_api_client
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 
-from .secrets import find_secret, create_secret
-from .utils import highlight_text
+from .utils import Display
 from .main import get, compile, describe, create, launch, delete, decompile, format
 from .bps import (
     get_blueprint_list,
     describe_bp,
     format_blueprint_command,
     compile_blueprint_command,
-    compile_blueprint,
     launch_blueprint_simple,
     delete_blueprint,
     decompile_bp,
+    create_blueprint_from_json,
+    create_blueprint_from_dsl,
 )
+from .apps import watch_app
 
 LOG = get_logging_handle(__name__)
 
@@ -135,97 +136,6 @@ def _decompile_bp(name, bp_file, with_secrets):
     decompile_bp(name, bp_file, with_secrets)
 
 
-def create_blueprint(
-    client, bp_payload, name=None, description=None, force_create=False
-):
-
-    bp_payload.pop("status", None)
-
-    credential_list = bp_payload["spec"]["resources"]["credential_definition_list"]
-    for cred in credential_list:
-        if cred["secret"].get("secret", None):
-            secret = cred["secret"].pop("secret")
-
-            try:
-                value = find_secret(secret)
-
-            except ValueError:
-                click.echo(
-                    "\nNo secret corresponding to '{}' found !!!\n".format(secret)
-                )
-                value = click.prompt("Please enter its value", hide_input=True)
-
-                choice = click.prompt(
-                    "\n{}(y/n)".format(highlight_text("Want to store it locally")),
-                    default="n",
-                )
-                if choice[0] == "y":
-                    create_secret(secret, value)
-
-            cred["secret"]["value"] = value
-
-    if name:
-        bp_payload["spec"]["name"] = name
-        bp_payload["metadata"]["name"] = name
-
-    if description:
-        bp_payload["spec"]["description"] = description
-
-    bp_resources = bp_payload["spec"]["resources"]
-    bp_name = bp_payload["spec"]["name"]
-    bp_desc = bp_payload["spec"]["description"]
-    bp_metadata = bp_payload["metadata"]
-
-    return client.blueprint.upload_with_secrets(
-        bp_name,
-        bp_desc,
-        bp_resources,
-        bp_metadata=bp_metadata,
-        force_create=force_create,
-    )
-
-
-def create_blueprint_from_json(
-    client, path_to_json, name=None, description=None, force_create=False
-):
-
-    with open(path_to_json, "r") as f:
-        bp_payload = json.loads(f.read())
-    return create_blueprint(
-        client,
-        bp_payload,
-        name=name,
-        description=description,
-        force_create=force_create,
-    )
-
-
-def create_blueprint_from_dsl(
-    client, bp_file, name=None, description=None, force_create=False
-):
-
-    bp_payload = compile_blueprint(bp_file)
-    if bp_payload is None:
-        err_msg = "User blueprint not found in {}".format(bp_file)
-        err = {"error": err_msg, "code": -1}
-        return None, err
-
-    # Brownfield blueprints creation should be blocked using dsl file
-    if bp_payload["spec"]["resources"]["type"] == "BROWNFIELD":
-        LOG.error(
-            "Command not allowed for brownfield blueprints. Please use 'calm create app -f <bp_file_location>' for creating brownfield application"
-        )
-        sys.exit(-1)
-
-    return create_blueprint(
-        client,
-        bp_payload,
-        name=name,
-        description=description,
-        force_create=force_create,
-    )
-
-
 @create.command("bp")
 @click.option(
     "--file",
@@ -293,9 +203,11 @@ def create_blueprint_command(bp_file, name, description, force):
         sys.exit(-1)
 
     LOG.info("Blueprint {} created successfully.".format(bp_name))
-    config = get_config()
-    pc_ip = config["SERVER"]["pc_ip"]
-    pc_port = config["SERVER"]["pc_port"]
+
+    context = get_context()
+    server_config = context.get_server_config()
+    pc_ip = server_config["pc_ip"]
+    pc_port = server_config["pc_port"]
     link = "https://{}:{}/console/#page/explore/calm/blueprints/{}".format(
         pc_ip, pc_port, bp_uuid
     )
@@ -325,12 +237,24 @@ def create_blueprint_command(bp_file, name, description, force):
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path to python file for runtime editables",
 )
+@click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
+@click.option(
+    "--poll-interval",
+    "poll_interval",
+    "-pi",
+    type=int,
+    default=10,
+    show_default=True,
+    help="Give polling interval",
+)
 def launch_blueprint_command(
     blueprint_name,
     app_name,
     ignore_runtime_variables,
     profile_name,
     launch_params,
+    watch,
+    poll_interval,
     blueprint=None,
 ):
     """Launches a blueprint.
@@ -353,6 +277,8 @@ def launch_blueprint_command(
     Sample context for variables:
         1. context = "<Profile Name>"    # For variable under profile
         2. context = "<Service Name>"    # For variable under service"""
+
+    app_name = app_name or "App-{}-{}".format(blueprint_name, int(time.time()))
     launch_blueprint_simple(
         blueprint_name,
         app_name,
@@ -361,6 +287,14 @@ def launch_blueprint_command(
         patch_editables=not ignore_runtime_variables,
         launch_params=launch_params,
     )
+    if watch:
+
+        def display_action(screen):
+            watch_app(app_name, screen)
+            screen.wait_for_input(10.0)
+
+        Display.wrapper(display_action, watch=True)
+        LOG.info("Action runs completed for app {}".format(app_name))
 
 
 @delete.command("bp")

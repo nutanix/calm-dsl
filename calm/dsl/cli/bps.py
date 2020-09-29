@@ -13,6 +13,7 @@ from black import format_file_in_place, WriteBack, FileMode
 from calm.dsl.builtins import (
     Blueprint,
     SimpleBlueprint,
+    VmBlueprint,
     create_blueprint_payload,
     BlueprintType,
     get_valid_identifier,
@@ -21,7 +22,7 @@ from calm.dsl.builtins import (
     init_dsl_metadata_map,
 )
 from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 from calm.dsl.api import get_api_client
 from calm.dsl.decompile.decompile_render import create_bp_dir
 from calm.dsl.decompile.file_handler import get_bp_dir
@@ -32,6 +33,7 @@ from .utils import (
     highlight_text,
     import_var_from_file,
 )
+from .secrets import find_secret, create_secret
 from .constants import BLUEPRINT
 from calm.dsl.tools import get_module_from_file
 from calm.dsl.builtins import Brownfield as BF
@@ -45,7 +47,6 @@ def get_blueprint_list(name, filter_by, limit, offset, quiet, all_items, out):
     """Get the blueprints, optionally filtered by a string"""
 
     client = get_api_client()
-    config = get_config()
 
     params = {"length": limit, "offset": offset}
     filter_query = ""
@@ -64,7 +65,10 @@ def get_blueprint_list(name, filter_by, limit, offset, quiet, all_items, out):
     res, err = client.blueprint.list(params=params)
 
     if err:
-        pc_ip = config["SERVER"]["pc_ip"]
+        context = get_context()
+        server_config = context.get_server_config()
+        pc_ip = server_config["pc_ip"]
+
         LOG.warning("Cannot fetch blueprints from {}".format(pc_ip))
         return
 
@@ -218,8 +222,8 @@ def get_blueprint_class_from_module(user_bp_module):
     UserBlueprint = None
     for item in dir(user_bp_module):
         obj = getattr(user_bp_module, item)
-        if isinstance(obj, (type(Blueprint), type(SimpleBlueprint))):
-            if obj.__bases__[0] in (Blueprint, SimpleBlueprint):
+        if isinstance(obj, (type(Blueprint), type(SimpleBlueprint), type(VmBlueprint))):
+            if obj.__bases__[0] in (Blueprint, SimpleBlueprint, VmBlueprint):
                 UserBlueprint = obj
 
     return UserBlueprint
@@ -279,6 +283,9 @@ def compile_blueprint(bp_file, brownfield_deployment_file=None):
     if isinstance(UserBlueprint, type(SimpleBlueprint)):
         bp_payload = UserBlueprint.make_bp_dict()
     else:
+        if isinstance(UserBlueprint, type(VmBlueprint)):
+            UserBlueprint = UserBlueprint.make_bp_obj()
+
         UserBlueprintPayload, _ = create_blueprint_payload(
             UserBlueprint, metadata=metadata_payload
         )
@@ -296,6 +303,97 @@ def compile_blueprint(bp_file, brownfield_deployment_file=None):
                 del package["action_list"]
 
     return bp_payload
+
+
+def create_blueprint(
+    client, bp_payload, name=None, description=None, force_create=False
+):
+
+    bp_payload.pop("status", None)
+
+    credential_list = bp_payload["spec"]["resources"]["credential_definition_list"]
+    for cred in credential_list:
+        if cred["secret"].get("secret", None):
+            secret = cred["secret"].pop("secret")
+
+            try:
+                value = find_secret(secret)
+
+            except ValueError:
+                click.echo(
+                    "\nNo secret corresponding to '{}' found !!!\n".format(secret)
+                )
+                value = click.prompt("Please enter its value", hide_input=True)
+
+                choice = click.prompt(
+                    "\n{}(y/n)".format(highlight_text("Want to store it locally")),
+                    default="n",
+                )
+                if choice[0] == "y":
+                    create_secret(secret, value)
+
+            cred["secret"]["value"] = value
+
+    if name:
+        bp_payload["spec"]["name"] = name
+        bp_payload["metadata"]["name"] = name
+
+    if description:
+        bp_payload["spec"]["description"] = description
+
+    bp_resources = bp_payload["spec"]["resources"]
+    bp_name = bp_payload["spec"]["name"]
+    bp_desc = bp_payload["spec"]["description"]
+    bp_metadata = bp_payload["metadata"]
+
+    return client.blueprint.upload_with_secrets(
+        bp_name,
+        bp_desc,
+        bp_resources,
+        bp_metadata=bp_metadata,
+        force_create=force_create,
+    )
+
+
+def create_blueprint_from_json(
+    client, path_to_json, name=None, description=None, force_create=False
+):
+
+    with open(path_to_json, "r") as f:
+        bp_payload = json.loads(f.read())
+    return create_blueprint(
+        client,
+        bp_payload,
+        name=name,
+        description=description,
+        force_create=force_create,
+    )
+
+
+def create_blueprint_from_dsl(
+    client, bp_file, name=None, description=None, force_create=False
+):
+
+    bp_payload = compile_blueprint(bp_file)
+    if bp_payload is None:
+        err_msg = "User blueprint not found in {}".format(bp_file)
+        err = {"error": err_msg, "code": -1}
+        return None, err
+
+    # Brownfield blueprints creation should be blocked using dsl file
+    if bp_payload["spec"]["resources"].get("type", "") == "BROWNFIELD":
+        LOG.error(
+            "Command not allowed for brownfield blueprints. Please use 'calm create app -f <bp_file_location>' for creating brownfield application"
+        )
+        sys.exit(-1)
+
+    return create_blueprint(
+        client,
+        bp_payload,
+        name=name,
+        description=description,
+        force_create=force_create,
+    )
 
 
 def decompile_bp(name, bp_file, with_secrets=False):
@@ -365,7 +463,7 @@ def _decompile_bp(bp_payload, with_secrets=False):
             )
         elif sub_type != "AHV_VM":
             LOG.warning(
-                "Decompilation support for providers other than AHV is experimental/best effort"
+                "Decompilation support for providers other than AHV is experimental."
             )
             break
 
@@ -939,9 +1037,10 @@ def poll_launch_status(client, blueprint_uuid, launch_req_id):
         if app_state == "success":
             app_uuid = response["status"]["application_uuid"]
 
-            config = get_config()
-            pc_ip = config["SERVER"]["pc_ip"]
-            pc_port = config["SERVER"]["pc_port"]
+            context = get_context()
+            server_config = context.get_server_config()
+            pc_ip = server_config["pc_ip"]
+            pc_port = server_config["pc_port"]
 
             click.echo("Successfully launched. App uuid is: {}".format(app_uuid))
 

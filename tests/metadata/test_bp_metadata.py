@@ -6,7 +6,8 @@ from click.testing import CliRunner
 
 
 from calm.dsl.cli import main as cli
-from calm.dsl.config import make_file_dir
+from calm.dsl.tools import make_file_dir
+from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -109,6 +110,9 @@ class TestBlueprintMetadata:
         assert (
             bp_payload["metadata"]["project_reference"]["name"] == self.dsl_project_name
         )
+
+        # Restoring the metadata context
+        get_metadata_payload(__file__)
 
     def _update_cache(self):
 

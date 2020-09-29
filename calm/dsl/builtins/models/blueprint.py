@@ -72,7 +72,7 @@ class BlueprintValidator(PropertyValidator, openapi_type="app_blueprint"):
 
 
 def blueprint(**kwargs):
-    name = kwargs.get("name", None)
+    name = kwargs.pop("name", None)
     bases = (Entity,)
     return BlueprintType(name, bases, kwargs)
 

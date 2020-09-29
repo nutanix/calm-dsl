@@ -202,13 +202,21 @@ def _compile_runbook_command(runbook_file, out):
     "input_file",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     required=False,
-    help="Path of input file to get the inputs for runbook",
+    help="Path to python file for runtime editables",
 )
 @click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
 def _run_runbook_command(
     runbook_name, watch, ignore_runtime_variables, runbook_file=None, input_file=None
 ):
-    """Execute the runbook given by name or runbook file"""
+    """Execute the runbook given by name or runbook file. All runtime variables and default target will be prompted by default. When passing the 'ignore_runtime_editable' flag, no variables will be prompted and all default values will be used. The runbook  default values can be  overridden by passing a Python file via 'input_file'. When passing a Python file, no variables will be prompted.
+
+    \b
+    >: input_file: Python file consisting of variables 'variable_list' and 'default_target'
+    Ex: variable_list = {
+        "value": {"value": <Variable Value>},
+        "name": "<Variable Name>"
+    }
+    default_target: <Endpoint Name>"""
 
     run_runbook_command(
         runbook_name,

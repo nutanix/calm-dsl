@@ -3,7 +3,7 @@ import uuid
 
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import RUNLOG
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 from tests.api_interface.test_runbooks.test_files.exec_task import (
     EscriptTask,
     SetVariableOnEscript,
@@ -218,8 +218,9 @@ class TestExecTasks:
             ):
                 exec_tasks.append(entity["metadata"]["uuid"])
 
-        config = get_config()
-        project_name = config["PROJECT"]["name"]
+        ContextObj = get_context()
+        project_config = ContextObj.get_project_config()
+        project_name = project_config["name"]
 
         # Now checking the output of exec task
         for exec_task in exec_tasks:

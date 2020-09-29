@@ -1,4 +1,4 @@
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
@@ -49,7 +49,10 @@ def create_blueprint_payload(UserBlueprint, metadata={}):
         "resources": UserBlueprint,
     }
 
-    config = get_config()
+    ContextObj = get_context()
+    server_config = ContextObj.get_server_config()
+    project_config = ContextObj.get_project_config()
+    config_categories = ContextObj.get_categories_config()
 
     # Set the blueprint name and kind correctly
     metadata["name"] = UserBlueprint.__name__
@@ -57,17 +60,16 @@ def create_blueprint_payload(UserBlueprint, metadata={}):
 
     #  Project will be taken from config if not provided
     if not metadata.get("project_reference", {}):
-        project_name = config["PROJECT"].get("name", "default")
+        project_name = project_config["name"]
         metadata["project_reference"] = Ref.Project(project_name)
 
     #  User will be taken from config if not provided
     if not metadata.get("owner_reference", {}):
-        user_name = config["SERVER"].get("pc_username")
+        user_name = server_config["pc_username"]
         metadata["owner_reference"] = Ref.User(user_name)
 
     #  Categories will be taken from config if not provided
     if not metadata.get("categories", {}):
-        config_categories = dict(config.items("CATEGORIES"))
         metadata["categories"] = config_categories
 
     metadata["kind"] = "blueprint"

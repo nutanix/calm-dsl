@@ -246,10 +246,11 @@ properties:
 {% macro azurePublicIpInfo() -%}
 
 title: Azure Public Ip Information
-type: object
+type: [object, "null"]
 properties:
   ip_allocation_method:
     type: string
+    enum: ["Dynamic", "Static"]
   ip_name:
     type: string
   dns_label:

@@ -8,7 +8,7 @@ from click.testing import CliRunner
 
 from calm.dsl.cli import main as cli
 from calm.dsl.cli.constants import APPLICATION
-from calm.dsl.config import make_file_dir
+from calm.dsl.tools import make_file_dir
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -25,6 +25,7 @@ NON_BUSY_APP_STATES = [
 NON_BUSY_APP_DELETE_STATES = [APPLICATION.STATES.ERROR, APPLICATION.STATES.DELETED]
 
 
+@pytest.mark.slow
 class TestBrownFieldCommands:
     def setup_method(self):
         """Method to instantiate to created_bp_list and created_app_list"""
