@@ -461,28 +461,36 @@ def create_library_task_using_script_file(
     )
 
 
-def create_task(task_file, name, description, out_vars, force):
+def create_task(task_file, name, description, force):
     """Creates a task library item"""
 
     client = get_api_client()
 
     if task_file.endswith(".json"):
-        if out_vars:
-            LOG.error("--out-vars is not allowed for file type (.json)")
-            return
+
         res, err = create_library_task_from_json(
             client, task_file, name=name, description=description, force_create=force
         )
     elif task_file.endswith(".py"):
-        if out_vars:
-            LOG.error("--out-vars is not allowed for file type (.py)")
-            return
 
         res, err = create_library_task_from_dsl(
             client, task_file, name=name, description=description, force_create=force
         )
+    else:
+        LOG.error("Unknown file format {}".format(task_file))
+        return
 
-    elif (
+    if err:
+        LOG.error(err["error"])
+        return
+
+
+def import_task(task_file, name, description, out_vars, force):
+    """Imports a task library item"""
+
+    client = get_api_client()
+
+    if (
         task_file.endswith(".sh")
         or task_file.endswith(".escript")
         or task_file.endswith(".ps1")
