@@ -10,8 +10,8 @@ from calm.dsl.runbooks import ENDPOINT_FILTER, ENDPOINT_PROVIDER
 
 AHV_POWER_ON = read_local_file(".tests/runbook_tests/vm_actions_ahv_on")
 AHV_POWER_OFF = read_local_file(".tests/runbook_tests/vm_actions_ahv_off")
-VMWARE_POWER_ON = read_local_file(".tests/runbook_tests/vm_actions_ahv_on")
-VMWARE_POWER_OFF = read_local_file(".tests/runbook_tests/vm_actions_ahv_off")
+VMWARE_POWER_ON = read_local_file(".tests/runbook_tests/vm_actions_vmware_on")
+VMWARE_POWER_OFF = read_local_file(".tests/runbook_tests/vm_actions_vmware_off")
 
 CRED_USERNAME = read_local_file(".tests/runbook_tests/username")
 CRED_PASSWORD = read_local_file(".tests/runbook_tests/password")
@@ -37,16 +37,16 @@ VMwarePoweredOnVM = Endpoint.Linux.vm(
     filter_type=ENDPOINT_FILTER.STATIC,
     vms=[VM(uuid=VMWARE_POWER_ON)],
     cred=LinuxCred,
-    provider_type=ENDPOINT_PROVIDER.NUTANIX,
-    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
+    provider_type=ENDPOINT_PROVIDER.VMWARE,
+    account=Account.VMWare("vmware"),
 )
 
 VMwarePoweredOffVM = Endpoint.Linux.vm(
     filter_type=ENDPOINT_FILTER.STATIC,
     vms=[VM(uuid=VMWARE_POWER_OFF)],
     cred=LinuxCred,
-    provider_type=ENDPOINT_PROVIDER.NUTANIX,
-    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
+    provider_type=ENDPOINT_PROVIDER.VMWARE,
+    account=Account.VMWare("vmware"),
 )
 
 
