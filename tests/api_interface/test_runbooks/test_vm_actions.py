@@ -6,8 +6,8 @@ from calm.dsl.cli.constants import RUNLOG
 from tests.api_interface.test_runbooks.test_files.vm_actions import (
     AHVPowerOnAction,
     AHVPowerOffAction,
-    # VMwarePowerOnAction,
-    # VMwarePowerOffAction,
+    VMwarePowerOnAction,
+    VMwarePowerOffAction,
 )
 from utils import upload_runbook, poll_runlog_status
 
@@ -17,7 +17,10 @@ class TestVMActions:
     @pytest.mark.regression
     @pytest.mark.parametrize(
         "Runbook, warning_msg",
-        [pytest.param(AHVPowerOffAction, "VM is not in powered ON State")],
+        [
+            pytest.param(AHVPowerOffAction, "VM is not in powered ON State"),
+            pytest.param(VMwarePowerOffAction, "VM is not in powered ON State"),
+        ],
     )
     def test_power_off_action(self, Runbook, warning_msg):
         """
@@ -94,7 +97,7 @@ class TestVMActions:
     @pytest.mark.runbook
     @pytest.mark.regression
     @pytest.mark.parametrize(
-        "Runbook", [AHVPowerOnAction],
+        "Runbook", [AHVPowerOnAction, VMwarePowerOnAction],
     )
     def test_power_on_action(self, Runbook):
         """
