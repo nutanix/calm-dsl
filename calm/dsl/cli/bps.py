@@ -469,6 +469,7 @@ def _decompile_bp(bp_payload, with_secrets=False, prefix=""):
             )
             break
 
+    prefix = get_valid_identifier(prefix)
     bp_cls = BlueprintType.decompile(blueprint, prefix=prefix)
     bp_cls.__name__ = get_valid_identifier(blueprint_name)
     bp_cls.__doc__ = blueprint_description
