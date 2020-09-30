@@ -1026,6 +1026,22 @@ def delay_task(delay_seconds=None, name=None, target=None):
     return _task_create(**kwargs)
 
 
+def vm_operation(name=None, type="VM_OPERATION", target=None):
+    """
+    Defines a vm_operation task i.e. POWERON/ POWEROFF/ RESTART
+    Args:
+        name (str): Name for this task
+        type(str): Task Type
+        target (Ref): Target entity for this task
+    Returns:
+        (Task): VM Operation task
+    """
+    kwargs = {"name": name, "type": type}
+    if target is not None:
+        kwargs["target_any_local_reference"] = _get_target_ref(target)
+    return _task_create(**kwargs)
+
+
 def input_task(timeout=None, name=None, inputs=[]):
     """
     Defines a input task.
@@ -1216,3 +1232,15 @@ class RunbookTask(BaseTask):
     class Confirm:
         def __new__(cls, timeout=500, name=None):
             return confirm_task(timeout=timeout, name=name)
+
+    class VMPowerOn:
+        def __new__(cls, name=None, target=None):
+            return vm_operation(name=name, type="VM_POWERON", target=target)
+
+    class VMPowerOff:
+        def __new__(cls, name=None, target=None):
+            return vm_operation(name=name, type="VM_POWEROFF", target=target)
+
+    class VMRestart:
+        def __new__(cls, name=None, target=None):
+            return vm_operation(name=name, type="VM_RESTART", target=target)
