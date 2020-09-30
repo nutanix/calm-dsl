@@ -36,12 +36,13 @@ class PackageType(EntityType):
         elif getattr(cls, "type") == "CUSTOM":
 
             def make_empty_runbook(action_name):
+                suffix = getattr(cls, "name", "") or cls.__name__
                 user_dag = dag(
-                    name="DAG_Task_for_Package_{}_{}".format(str(cls), action_name),
+                    name="DAG_Task_for_Package_{}_{}".format(suffix, action_name),
                     target=cls.get_task_target(),
                 )
                 return runbook_create(
-                    name="Runbook_for_Package_{}_{}".format(str(cls), action_name),
+                    name="Runbook_for_Package_{}_{}".format(suffix, action_name),
                     main_task_local_reference=user_dag.get_ref(),
                     tasks=[user_dag],
                 )
@@ -102,16 +103,16 @@ class PackageType(EntityType):
     @classmethod
     def decompile(mcls, cdict, context=[], prefix=""):
 
-        cls = super().decompile(cdict, context=context, prefix=prefix)
-        options = cls.options
-        delattr(cls, "options")
-
-        option_data = mcls.__validator_dict__["options"][0].decompile(
-            options, prefix=prefix
-        )
-
-        package_type = getattr(cls, "type")
+        package_type = cdict.get("type", "") or "CUSTOM"
         if package_type == "CUSTOM" or package_type == "DEB":
+            cls = super().decompile(cdict, context=context, prefix=prefix)
+            options = cls.options
+            delattr(cls, "options")
+
+            option_data = mcls.__validator_dict__["options"][0].decompile(
+                options, prefix=prefix
+            )
+
             install_runbook = option_data["install_runbook"]
             uninstall_runbook = option_data["uninstall_runbook"]
 
@@ -142,17 +143,17 @@ class PackageType(EntityType):
                 )
 
         elif package_type == "SUBSTRATE_IMAGE":
-            cdict = {
-                "name": cls.__name__,
-                "description": cls.__doc__,
-                "options": option_data,
+            disk_pkg_data = {
+                "name": cdict["name"],
+                "description": cdict["description"],
+                "options": cdict["options"],
             }
             types = EntityTypeBase.get_entity_types()
             VmDiskPackageType = types.get("VmDiskPackage", None)
             if not VmDiskPackageType:
                 raise ModuleNotFoundError("VmDiskPackage Module not found.")
 
-            cls = VmDiskPackageType.decompile(cdict, prefix=prefix)
+            cls = VmDiskPackageType.decompile(disk_pkg_data, prefix=prefix)
         return cls
 
     def get_task_target(cls):

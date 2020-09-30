@@ -63,6 +63,15 @@ class AhvVmResourcesType(EntityType):
         return cdict
 
     @classmethod
+    def pre_decompile(mcls, cdict, context, prefix=""):
+        cdict = super().pre_decompile(cdict, context, prefix=prefix)
+
+        if "__name__" in cdict:
+            cdict["__name__"] = "{}{}".format(prefix, cdict["__name__"])
+
+        return cdict
+
+    @classmethod
     def decompile(mcls, cdict, context=[], prefix=""):
         # Check for serial ports
         serial_port_list = cdict.pop("serial_port_list", [])
@@ -98,6 +107,15 @@ AhvVmResources = ahv_vm_resources()
 class AhvVmType(ProviderSpecType):
     __schema_name__ = "AhvVm"
     __openapi_type__ = "vm_ahv"
+
+    @classmethod
+    def pre_decompile(mcls, cdict, context, prefix=""):
+        cdict = super().pre_decompile(cdict, context, prefix=prefix)
+
+        if "__name__" in cdict:
+            cdict["__name__"] = "{}{}".format(prefix, cdict["__name__"])
+
+        return cdict
 
 
 class AhvVmValidator(PropertyValidator, openapi_type="vm_ahv"):

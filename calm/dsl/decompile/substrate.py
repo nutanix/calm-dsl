@@ -73,17 +73,16 @@ def render_substrate_template(cls, vm_images=[]):
     # Handle provider_spec for substrate
     provider_spec = cls.provider_spec
     if cls.provider_type == "AHV_VM":
-        boot_config = provider_spec["resources"].get("boot_config", {})
+        # Provider Spec is converted to ahv vm class in substrate decompile method only
+        boot_config = getattr(provider_spec.resources, "boot_config", {})
         if not boot_config:
             LOG.error(
                 "Boot config not present in {} substrate spec".format(cls.__name__)
             )
             sys.exit(-1)
-        vm_cls = AhvVmType.decompile(
-            provider_spec, context=[cls.__schema_name__, gui_display_name]
-        )
-        user_attrs["provider_spec"] = vm_cls.__name__
-        ahv_vm_str = render_ahv_vm(vm_cls, boot_config)
+
+        user_attrs["provider_spec"] = provider_spec.__name__
+        ahv_vm_str = render_ahv_vm(provider_spec, boot_config)
 
     else:
         # creating a file for storing provider_spec

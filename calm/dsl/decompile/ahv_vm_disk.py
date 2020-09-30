@@ -3,6 +3,7 @@ import sys
 from calm.dsl.decompile.render import render_template
 from calm.dsl.store import Cache
 from calm.dsl.log import get_logging_handle
+from calm.dsl.decompile.ref_dependency import get_package_name, get_deployment_name
 
 LOG = get_logging_handle(__name__)
 
@@ -36,6 +37,10 @@ def render_ahv_vm_disk(cls, boot_config):
     if data_source_ref:
         if data_source_ref["kind"] == "app_package":
             user_attrs["name"] = data_source_ref.get("name")
+            user_attrs["name"] = (
+                get_package_name(user_attrs["name"]) or user_attrs["name"]
+            )
+
             operation_type = "cloneFromVMDiskPackage"
 
         elif data_source_ref["kind"] == "image":
