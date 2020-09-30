@@ -85,7 +85,9 @@ class TestDecompile:
         LOG.info("Decompiling Blueprint {}".format(bp_name))
         cli_inputs = [CRED_PASSWORD]
         result = runner.invoke(
-            cli, ["decompile", "bp", bp_name, "--with_secrets"], input="\n".join(cli_inputs)
+            cli,
+            ["decompile", "bp", bp_name, "--with_secrets"],
+            input="\n".join(cli_inputs),
         )
 
         if result.exit_code:
