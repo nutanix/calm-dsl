@@ -212,7 +212,7 @@ class action(metaclass=DescriptorType):
 
         # Note - Server checks for name uniqueness in runbooks across actions
         # Generate unique names using class name and func name.
-        prefix = getattr(cls, "name", "") or cls.__name__ + self.user_func.__name__
+        prefix = (getattr(cls, "name", "") or cls.__name__) + "_" + self.user_func.__name__
         runbook_name = prefix + "_runbook"
         dag_name = prefix + "_dag"
 

@@ -2,7 +2,6 @@ from ruamel import yaml
 import os
 import sys
 
-from calm.dsl.builtins import AhvVmType
 from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.action import render_action_template
 from calm.dsl.decompile.readiness_probe import render_readiness_probe_template

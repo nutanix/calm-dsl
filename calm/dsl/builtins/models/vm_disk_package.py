@@ -1,4 +1,3 @@
-from .package import package
 from .provider_spec import read_spec
 from .package import PackageType
 from .validator import PropertyValidator
@@ -71,6 +70,7 @@ class VmDiskPackageType(PackageType):
                     ),
                 },
             },
+            "description": pkg_doc,
         }
 
         # If image is ISO type, search for checksum data
