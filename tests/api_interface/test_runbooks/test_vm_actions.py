@@ -6,6 +6,8 @@ from calm.dsl.cli.constants import RUNLOG
 from tests.api_interface.test_runbooks.test_files.vm_actions import (
     AHVPowerOnAction,
     AHVPowerOffAction,
+    # VMwarePowerOnAction,
+    # VMwarePowerOffAction,
 )
 from utils import upload_runbook, poll_runlog_status
 
@@ -23,7 +25,7 @@ class TestVMActions:
         """
 
         client = get_api_client()
-        rb_name = "test_warning_vm_endpoint_" + str(uuid.uuid4())[-10:]
+        rb_name = "test_vm_action_" + str(uuid.uuid4())[-10:]
 
         rb = upload_runbook(client, rb_name, Runbook)
         rb_state = rb["status"]["state"]
@@ -88,6 +90,7 @@ class TestVMActions:
             if err:
                 pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
+    @pytest.mark.now
     @pytest.mark.runbook
     @pytest.mark.regression
     @pytest.mark.parametrize(
@@ -99,7 +102,7 @@ class TestVMActions:
         """
 
         client = get_api_client()
-        rb_name = "test_warning_vm_endpoint_" + str(uuid.uuid4())[-10:]
+        rb_name = "test_vm_action_" + str(uuid.uuid4())[-10:]
 
         rb = upload_runbook(client, rb_name, Runbook)
         rb_state = rb["status"]["state"]
@@ -129,41 +132,6 @@ class TestVMActions:
 
         print(">> Runbook Run state: {}\n{}".format(state, reasons))
         assert state == RUNLOG.STATUS.SUCCESS
-
-        # Finding the trl id for the shell tasks  (all runlogs for multiple IPs)
-        shell_tasks = []
-        res, err = client.runbook.list_runlogs(runlog_uuid)
-        if err:
-            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
-        response = res.json()
-        entities = response["entities"]
-        for entity in entities:
-            if (
-                entity["status"]["type"] == "task_runlog"
-                and (
-                    entity["status"]["task_reference"]["name"] == "ShellTask1"
-                    or entity["status"]["task_reference"]["name"] == "ShellTask2"
-                )
-                and runlog_uuid in entity["status"].get("machine_name", "")
-            ):
-                reasons = ""
-                for reason in entity["status"]["reason_list"]:
-                    reasons += reason
-                assert entity["status"]["state"] == RUNLOG.STATUS.WARNING
-                shell_tasks.append(entity["metadata"]["uuid"])
-            elif entity["status"]["type"] == "task_runlog" and runlog_uuid in entity[
-                "status"
-            ].get("machine_name", ""):
-                assert entity["status"]["state"] == RUNLOG.STATUS.SUCCESS
-
-        # Now checking the output of exec tasks
-        for exec_task in shell_tasks:
-            res, err = client.runbook.runlog_output(runlog_uuid, exec_task)
-            if err:
-                pytest.fail("[{}] - {}".format(err["code"], err["error"]))
-            runlog_output = res.json()
-            output_list = runlog_output["status"]["output_list"]
-            assert "Shell Task is Successful" in output_list[0]["output"]
 
         # delete the runbook
         _, err = client.runbook.delete(rb_uuid)
