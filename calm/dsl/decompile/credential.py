@@ -58,3 +58,11 @@ def get_cred_files():
 
     global CRED_FILES
     return CRED_FILES
+
+
+def init_cred_globals():
+    """Reinitialises global vars used for credentials"""
+
+    global CRED_VAR_NAME_MAP, CRED_FILES
+    CRED_VAR_NAME_MAP = {}
+    CRED_FILES = []

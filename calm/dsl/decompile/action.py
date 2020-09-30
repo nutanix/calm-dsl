@@ -140,3 +140,9 @@ def get_task_order(task_list):
             ql -= 1
 
     return res_task_list
+
+
+def init_action_globals():
+
+    global RUNBOOK_ACTION_MAP
+    RUNBOOK_ACTION_MAP = {}

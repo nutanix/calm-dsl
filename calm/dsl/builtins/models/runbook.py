@@ -20,9 +20,9 @@ class RunbookType(EntityType):
         pass
 
     @classmethod
-    def pre_decompile(mcls, cdict, context=[]):
+    def pre_decompile(mcls, cdict, context=[], prefix=""):
 
-        cdict = super().pre_decompile(cdict, context=context)
+        cdict = super().pre_decompile(cdict, context=context, prefix=prefix)
         # Removing additional attributes
         cdict.pop("state", None)
         cdict.pop("message_list", None)

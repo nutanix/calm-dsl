@@ -69,3 +69,14 @@ def update_deployment_name(ui_name, dsl_name):
 
     global DEPLOYMENT_NAME_MAP
     DEPLOYMENT_NAME_MAP[ui_name] = dsl_name
+
+
+def init_ref_dependency_globals():
+
+    global SERVICE_NAME_MAP, PROFILE_NAME_MAP, SUBSTRATE_NAME_MAP, PACKAGE_NAME_MAP, DEPLOYMENT_NAME_MAP
+
+    SERVICE_NAME_MAP = {}
+    PROFILE_NAME_MAP = {}
+    SUBSTRATE_NAME_MAP = {}
+    PACKAGE_NAME_MAP = {}
+    DEPLOYMENT_NAME_MAP = {}

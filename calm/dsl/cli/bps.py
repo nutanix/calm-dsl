@@ -396,7 +396,7 @@ def create_blueprint_from_dsl(
     )
 
 
-def decompile_bp(name, bp_file, with_secrets=False):
+def decompile_bp(name, bp_file, with_secrets=False, prefix=""):
     """helper to decompile blueprint"""
 
     if name and bp_file:
@@ -406,10 +406,12 @@ def decompile_bp(name, bp_file, with_secrets=False):
         sys.exit(-1)
 
     if name:
-        decompile_bp_from_server(name=name, with_secrets=with_secrets)
+        decompile_bp_from_server(name=name, with_secrets=with_secrets, prefix=prefix)
 
     elif bp_file:
-        decompile_bp_from_file(filename=bp_file, with_secrets=with_secrets)
+        decompile_bp_from_file(
+            filename=bp_file, with_secrets=with_secrets, prefix=prefix
+        )
 
     else:
         LOG.error(
@@ -418,7 +420,7 @@ def decompile_bp(name, bp_file, with_secrets=False):
         sys.exit(-1)
 
 
-def decompile_bp_from_server(name, with_secrets=False):
+def decompile_bp_from_server(name, with_secrets=False, prefix=""):
     """decompiles the blueprint by fetching it from server"""
 
     client = get_api_client()
@@ -430,19 +432,19 @@ def decompile_bp_from_server(name, with_secrets=False):
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     res = res.json()
-    _decompile_bp(bp_payload=res, with_secrets=with_secrets)
+    _decompile_bp(bp_payload=res, with_secrets=with_secrets, prefix=prefix)
 
 
-def decompile_bp_from_file(filename, with_secrets=False):
+def decompile_bp_from_file(filename, with_secrets=False, prefix=""):
     """decompile blueprint from local blueprint file"""
 
     # ToDo - Fix this
     bp_payload = json.loads(open(filename).read())
     # bp_payload = read_spec(filename)
-    _decompile_bp(bp_payload=bp_payload, with_secrets=with_secrets)
+    _decompile_bp(bp_payload=bp_payload, with_secrets=with_secrets, prefix=prefix)
 
 
-def _decompile_bp(bp_payload, with_secrets=False):
+def _decompile_bp(bp_payload, with_secrets=False, prefix=""):
     """decompiles the blueprint from payload"""
 
     blueprint = bp_payload["spec"]["resources"]
@@ -467,7 +469,7 @@ def _decompile_bp(bp_payload, with_secrets=False):
             )
             break
 
-    bp_cls = BlueprintType.decompile(blueprint)
+    bp_cls = BlueprintType.decompile(blueprint, prefix=prefix)
     bp_cls.__name__ = get_valid_identifier(blueprint_name)
     bp_cls.__doc__ = blueprint_description
 

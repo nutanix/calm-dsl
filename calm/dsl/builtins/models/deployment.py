@@ -12,6 +12,15 @@ class DeploymentType(EntityType):
     def get_task_target(cls):
         return cls.get_ref()
 
+    @classmethod
+    def pre_decompile(mcls, cdict, context, prefix=""):
+        cdict = super().pre_decompile(cdict, context, prefix=prefix)
+
+        if "__name__" in cdict:
+            cdict["__name__"] = "{}{}".format(prefix, cdict["__name__"])
+
+        return cdict
+
 
 class DeploymentValidator(PropertyValidator, openapi_type="app_blueprint_deployment"):
     __default__ = None

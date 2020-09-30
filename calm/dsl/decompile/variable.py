@@ -191,3 +191,9 @@ def get_secret_variable_files():
     """return the global local files used for secret variables"""
 
     return SECRET_VAR_FILES
+
+
+def init_variable_globals():
+
+    global SECRET_VAR_FILES
+    SECRET_VAR_FILES = []

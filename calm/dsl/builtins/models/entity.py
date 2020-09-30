@@ -382,7 +382,7 @@ class EntityType(EntityTypeBase):
         return cdict
 
     @classmethod
-    def pre_decompile(mcls, cdict, context):
+    def pre_decompile(mcls, cdict, context, prefix=""):
         """Hook to modify cdict based on dsl metadata"""
 
         ui_name = cdict.get("name", None)
@@ -405,7 +405,7 @@ class EntityType(EntityTypeBase):
         return attrs
 
     @classmethod
-    def decompile(mcls, cdict, context=[]):
+    def decompile(mcls, cdict, context=[], prefix=""):
 
         # Pre decompile step to get class names in blueprint file
         schema_name = getattr(mcls, "__schema_name__", None)
@@ -420,7 +420,7 @@ class EntityType(EntityTypeBase):
         elif schema_name and ui_name and schema_name != "Blueprint":
             cur_context.extend([schema_name, ui_name])
 
-        cdict = mcls.pre_decompile(cdict, context=cur_context)
+        cdict = mcls.pre_decompile(cdict, context=cur_context, prefix=prefix)
 
         # Convert attribute names to x-calm-dsl-display-name, if given
         attrs = {}
@@ -460,10 +460,14 @@ class EntityType(EntityTypeBase):
                     new_value = []
                     for val in v:
                         new_value.append(
-                            entity_type.decompile(val, context=cur_context)
+                            entity_type.decompile(
+                                val, context=cur_context, prefix=prefix
+                            )
                         )
                 else:
-                    new_value = entity_type.decompile(v, context=cur_context)
+                    new_value = entity_type.decompile(
+                        v, context=cur_context, prefix=prefix
+                    )
 
                 user_attrs[k] = new_value
 
