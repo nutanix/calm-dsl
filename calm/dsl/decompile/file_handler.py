@@ -65,3 +65,11 @@ def get_specs_dir_key():
 
 def get_scripts_dir_key():
     return SCRIPTS_DIR_KEY
+
+
+def init_file_globals():
+    global LOCAL_DIR, SPECS_DIR, SCRIPTS_DIR, BP_DIR
+    LOCAL_DIR = None
+    SCRIPTS_DIR = None
+    SPECS_DIR = None
+    BP_DIR = None

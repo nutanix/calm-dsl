@@ -8,6 +8,7 @@ from click.testing import CliRunner
 from calm.dsl.cli import main as cli
 from calm.dsl.builtins import read_local_file, get_valid_identifier
 from calm.dsl.decompile.file_handler import get_bp_dir
+from calm.dsl.decompile import init_decompile_context
 from calm.dsl.log import get_logging_handle
 
 from calm.dsl.cli.bps import (
@@ -80,11 +81,11 @@ class TestDecompile:
             )
 
         self.created_bp_list.append(bp_name)
-        # Decompiling the cerated bp and storing secrets in file
+        # Decompiling the created bp and storing secrets in file
         LOG.info("Decompiling Blueprint {}".format(bp_name))
-        input = [CRED_PASSWORD]
+        cli_inputs = [CRED_PASSWORD]
         result = runner.invoke(
-            cli, ["decompile", "bp", bp_name, "--with_secrets"], input="\n".join(input)
+            cli, ["decompile", "bp", bp_name, "--with_secrets"], input="\n".join(cli_inputs)
         )
 
         if result.exit_code:
@@ -137,6 +138,9 @@ class TestDecompile:
         # Deleting old bp directory
         shutil.rmtree(self.bp_dir_list.pop())
 
+        # Resetting context for decompiling
+        init_decompile_context()
+
         self._test_decompile_with_prefix(bp_name)
 
     def _test_decompile_with_prefix(self, bp_name):
@@ -150,11 +154,12 @@ class TestDecompile:
                 bp_name, prefix
             )
         )
-        input = [CRED_PASSWORD]
+
+        cli_inputs = [CRED_PASSWORD]
         result = runner.invoke(
             cli,
             ["decompile", "bp", bp_name, "--with_secrets", "-p", prefix],
-            input="\n".join(input),
+            input="\n".join(cli_inputs),
         )
 
         if result.exit_code:
@@ -193,8 +198,11 @@ class TestDecompile:
 
             for dep in pfl.deployments:
                 assert dep.__name__.startswith(prefix)
-        
+
         LOG.info("Success")
+
+        # Resetting context for decompiling
+        init_decompile_context
 
         # On applying prefix, name of dsl classes will be changed but UI name will be preserved
         # So compiled payload should be same
