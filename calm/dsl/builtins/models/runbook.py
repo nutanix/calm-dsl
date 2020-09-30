@@ -169,11 +169,12 @@ class runbook(metaclass=DescriptorType):
         create_edges(task_list)
         # Note - Server checks for name uniqueness in runbooks across actions
         # Generate unique names using class name and func name.
-        prefix = (
-            cls.__name__ + "_" + self.user_func.__name__
-            if hasattr(cls, "__name__")
+        prefix =(
+            (getattr(cls, "name", "") or getattr(cls, "__name__", "")) + "_" + self.user_func.__name__
+            if hasattr(cls, "__name__") or hasattr(cls, "name")
             else "" + self.user_func.__name__
         )
+
         runbook_name = prefix + "_runbook"
         dag_name = prefix + "_dag"
 
