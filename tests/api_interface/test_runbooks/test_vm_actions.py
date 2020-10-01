@@ -53,7 +53,7 @@ class TestVMActions:
 
         # polling till runbook run gets to terminal state
         state, reasons = poll_runlog_status(
-            client, runlog_uuid, RUNLOG.TERMINAL_STATES, maxWait=360
+            client, runlog_uuid, RUNLOG.TERMINAL_STATES, maxWait=480
         )
 
         print(">> Runbook Run state: {}\n{}".format(state, reasons))
@@ -130,7 +130,7 @@ class TestVMActions:
 
         # polling till runbook run gets to terminal state
         state, reasons = poll_runlog_status(
-            client, runlog_uuid, RUNLOG.TERMINAL_STATES, maxWait=360
+            client, runlog_uuid, RUNLOG.TERMINAL_STATES, maxWait=480
         )
 
         print(">> Runbook Run state: {}\n{}".format(state, reasons))

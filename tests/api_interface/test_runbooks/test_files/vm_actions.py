@@ -53,11 +53,11 @@ VMwarePoweredOffVM = Endpoint.Linux.vm(
 @runbook
 def AHVPowerOnAction(endpoints=[AHVPoweredOffVM]):
     Task.VMPowerOn(name="PowerOnTask", target=endpoints[0])
-    Task.VMRestart(name="RestartTask", target=endpoints[0])
 
 
 @runbook
 def AHVPowerOffAction(endpoints=[AHVPoweredOnVM]):
+    Task.VMRestart(name="RestartTask", target=endpoints[0])
     Task.VMPowerOff(name="PowerOffTask", target=endpoints[0])
     Task.Exec.ssh(
         name="ShellTask",
@@ -69,11 +69,11 @@ def AHVPowerOffAction(endpoints=[AHVPoweredOnVM]):
 @runbook
 def VMwarePowerOnAction(endpoints=[VMwarePoweredOffVM]):
     Task.VMPowerOn(name="PowerOnTask", target=endpoints[0])
-    Task.VMRestart(name="RestartTask", target=endpoints[0])
 
 
 @runbook
 def VMwarePowerOffAction(endpoints=[VMwarePoweredOnVM]):
+    Task.VMRestart(name="RestartTask", target=endpoints[0])
     Task.VMPowerOff(name="PowerOffTask", target=endpoints[0])
     Task.Exec.ssh(
         name="ShellTask",
