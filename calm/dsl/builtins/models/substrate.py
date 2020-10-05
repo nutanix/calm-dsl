@@ -226,6 +226,11 @@ class SubstrateType(EntityType):
 
     @classmethod
     def decompile(mcls, cdict, context=[], prefix=""):
+
+        if cdict["type"] == "K8S_POD":
+            LOG.error("Decompilation support for pod deployments is not available.")
+            sys.exit(-1)
+
         cls = super().decompile(cdict, context=context, prefix=prefix)
 
         provider_spec = cls.provider_spec
