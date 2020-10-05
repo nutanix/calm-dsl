@@ -108,7 +108,7 @@ class Nutanix(Profile):
     deployments = [AHVSnortDeployment]
 
 
-class Snort(Blueprint):
+class SnortBlueprint(Blueprint):
     """Accessibility:
 * Command line"""
 
