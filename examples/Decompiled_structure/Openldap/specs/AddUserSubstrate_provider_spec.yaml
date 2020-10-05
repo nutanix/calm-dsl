@@ -1,0 +1,2 @@
+address: '@@{OpenLDAPServer.address}@@'
+type: PROVISION_EXISTING_MACHINE

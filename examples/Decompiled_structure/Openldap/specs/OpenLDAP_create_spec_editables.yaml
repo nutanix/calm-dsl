@@ -1,0 +1,9 @@
+categories: true
+name: true
+resources:
+  guest_customization: true
+  memory_size_mib: true
+  nic_list: {}
+  num_sockets: true
+  num_vcpus_per_socket: true
+  serial_port_list: {}
