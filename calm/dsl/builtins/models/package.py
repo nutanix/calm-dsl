@@ -1,3 +1,5 @@
+import sys
+
 from .entity import EntityType, Entity, EntityTypeBase
 from .validator import PropertyValidator
 
@@ -154,6 +156,18 @@ class PackageType(EntityType):
                 raise ModuleNotFoundError("VmDiskPackage Module not found.")
 
             cls = VmDiskPackageType.decompile(disk_pkg_data, prefix=prefix)
+
+        elif package_type == "K8S_IMAGE":
+            LOG.error("Decompilation support for pod deployments is not available.")
+            sys.exit(-1)
+
+        else:
+            LOG.debug(
+                "Supported Package Types: ['SUBSTRATE_IMAGE', 'CUSTOM', 'K8S_IMAGE']"
+            )
+            LOG.error("Un-supported package type {}".format(package_type))
+            sys.exit(-1)
+
         return cls
 
     def get_task_target(cls):
