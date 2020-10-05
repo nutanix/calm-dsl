@@ -1,0 +1,13 @@
+categories: true
+name: true
+resources:
+  boot_config: true
+  disk_list: true
+  guest_customization: true
+  memory_size_mib: true
+  nic_list:
+    '0':
+      subnet_reference: true
+  num_sockets: true
+  num_vcpus_per_socket: true
+  serial_port_list: {}

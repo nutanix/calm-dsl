@@ -1,0 +1,2 @@
+address: '@@{SaltStack_Master.address}@@'
+type: PROVISION_EXISTING_MACHINE
