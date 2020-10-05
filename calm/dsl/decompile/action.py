@@ -97,8 +97,8 @@ def get_task_order(task_list):
 
     # store in degree of every task
     for edge in edges:
-        from_task = RefType.decompile(edge["from_task_reference"])
-        to_task = RefType.decompile(edge["to_task_reference"])
+        from_task = edge["from_task_reference"]
+        to_task = edge["to_task_reference"]
         task_indegree_count_map[to_task.name] += 1
         task_edges_map[from_task.name].append(to_task.name)
 

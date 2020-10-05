@@ -30,7 +30,34 @@ class TaskType(EntityType):
         # Removing additional attributes
         cdict.pop("state", None)
         cdict.pop("message_list", None)
+
+        if "__name__" in cdict:
+            cdict["__name__"] = "{}{}".format(prefix, cdict["__name__"])
+
         return cdict
+
+    @classmethod
+    def decompile(mcls, cdict, context=[], prefix=""):
+
+        # If task is of type DAG, decompile references there also
+        if cdict.get("type", "") == "DAG":
+            edges = cdict.get("attrs", {}).get("edges", [])
+            final_edges = []
+            for edge in edges:
+                final_edges.append(
+                    {
+                        "from_task_reference": RefType.decompile(
+                            edge["from_task_reference"], prefix=prefix
+                        ),
+                        "to_task_reference": RefType.decompile(
+                            edge["to_task_reference"], prefix=prefix
+                        ),
+                    }
+                )
+            if final_edges:
+                cdict["attrs"]["edges"] = final_edges
+
+        return super().decompile(cdict, context=context, prefix=prefix)
 
 
 class TaskValidator(PropertyValidator, openapi_type="app_task"):

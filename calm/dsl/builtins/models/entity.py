@@ -6,6 +6,7 @@ import inspect
 from types import MappingProxyType
 import uuid
 import copy
+import keyword
 
 from ruamel.yaml import YAML, resolver, SafeRepresenter
 from calm.dsl.tools import StrictDraft7Validator
@@ -179,7 +180,12 @@ class EntityType(EntityTypeBase):
             name = "_" + schema_name + str(uuid.uuid4())[:8]
         else:
             if name == schema_name:
-                raise TypeError("{} is a reserved name for this entity".format(name))
+                LOG.error("'{}' is a reserved name for this entity".format(name))
+                sys.exit(-1)
+
+            elif keyword.iskeyword(name):
+                LOG.error("'{}' is a reserved python keyword".format(name))
+                sys.exit(-1)
 
         cls = super().__new__(mcls, name, bases, entitydict)
 
@@ -465,6 +471,23 @@ class EntityType(EntityTypeBase):
         # Merging dsl_attrs("__name__", "__doc__" etc.) and user_attrs
         attrs.update(user_attrs)
         name = attrs.get("__name__", ui_name)
+
+        if name == mcls.__schema_name__:
+            LOG.error(
+                "'{}' is a reserved name for this entity. Please use '--prefix/-p' cli option to provide prefix for entity's name.".format(
+                    name
+                )
+            )
+            sys.exit(-1)
+
+        elif keyword.iskeyword(name):
+            LOG.error(
+                "'{}' is a reserved python keyword. Please use '--prefix/-p' cli option to provide prefix for entity's name.".format(
+                    name
+                )
+            )
+            sys.exit(-1)
+
         return mcls(name, (Entity,), attrs)
 
     def json_dumps(cls, pprint=False, sort_keys=False):
