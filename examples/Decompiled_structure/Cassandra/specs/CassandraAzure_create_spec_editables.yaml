@@ -1,0 +1,34 @@
+resources:
+  availability_set_id: true
+  hw_profile:
+    vm_size: true
+  location: true
+  nw_profile:
+    nic_list: true
+  os_profile:
+    linux_config:
+      custom_data: true
+  resource_group: true
+  rg_details:
+    delete_rg_if_empty: true
+    rg_location: true
+    rg_tag_list: true
+  rg_operation: true
+  storage_profile:
+    data_disk_list: true
+    image_details:
+      offer: true
+      publisher: true
+      sku: true
+      source_image_id: true
+      source_image_type: true
+      use_custom_image: true
+      version: true
+    is_managed: true
+    os_disk_details:
+      caching_type: true
+      create_option: true
+      name: true
+      storage_type: true
+  tag_list: true
+  vm_name: true

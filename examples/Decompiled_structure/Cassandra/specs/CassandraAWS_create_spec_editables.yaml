@@ -1,0 +1,21 @@
+name: true
+resources:
+  associate_public_ip_address: true
+  availability_zone: true
+  block_device_map:
+    data_disk_list:
+      '0':
+        size_gb: true
+    root_disk:
+      size_gb: true
+  image_id: true
+  instance_initiated_shutdown_behavior: true
+  instance_profile_name: true
+  instance_type: true
+  key_name: true
+  region: true
+  security_group_list: true
+  subnet_id: true
+  tag_list: true
+  user_data: true
+  vpc_id: true

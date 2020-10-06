@@ -1,0 +1,43 @@
+availability_zone_reference: null
+backup_policy: null
+cluster_reference: null
+name: Cassandra_VM-@@{calm_random}@@
+resources:
+  account_uuid: dbcb9c5c-5d73-e403-12b6-7f07394a98c3
+  associate_public_ip_address: true
+  availability_zone: us-east-1a
+  block_device_map:
+    data_disk_list:
+    - delete_on_termination: true
+      device_name: /dev/sdb
+      iops: 1
+      size_gb: 30
+      snapshot_id: ''
+      type: ''
+      volume_type: STANDARD
+    root_disk:
+      delete_on_termination: true
+      device_name: /dev/sda1
+      iops: 1
+      size_gb: 30
+      snapshot_id: ''
+      type: ''
+      volume_type: GP2
+    type: ''
+  image_id: ami-0affd4508a5d2481b
+  instance_initiated_shutdown_behavior: TERMINATE
+  instance_profile_name: ecsInstanceRole
+  instance_type: m3.medium
+  key_name: calm-blueprints
+  private_ip_address: ''
+  region: us-east-1
+  security_group_list:
+  - security_group_id: sg-963925ed
+    type: ''
+  state: RUNNING
+  subnet_id: subnet-9a9ea2b0
+  tag_list: []
+  type: ''
+  user_data: ''
+  vpc_id: vpc-dcd149bb
+type: PROVISION_AWS_VM

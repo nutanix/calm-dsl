@@ -1,0 +1,26 @@
+cluster: true
+compute_drs_mode: true
+datastore: true
+drs_mode: true
+host: true
+name: true
+resources:
+  controller_list: {}
+  disk_list: true
+  guest_customization:
+    cloud_init: true
+    customization_name: true
+    linux_data:
+      network_settings: true
+    windows_data:
+      network_settings: true
+  memory_size_mib: true
+  nic_list: true
+  num_sockets: true
+  num_vcpus_per_socket: true
+  template_controller_list: true
+  template_disk_list: true
+  template_nic_list: true
+storage_drs_mode: true
+storage_pod: true
+template: true

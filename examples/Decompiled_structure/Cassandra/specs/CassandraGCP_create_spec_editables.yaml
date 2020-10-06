@@ -1,0 +1,39 @@
+resources:
+  blankDisks:
+    '0':
+      autoDelete: true
+      disk_type: true
+      name: true
+      sizeGb: true
+  disks:
+    '0':
+      autoDelete: true
+      initializeParams:
+        diskSizeGb: true
+        diskType: true
+        sourceImage: true
+  guestCustomization:
+    startupScript: true
+  labels: true
+  machineType: true
+  metadata:
+    items: true
+  name: true
+  networkInterfaces:
+    '0':
+      accessConfigs:
+        '0':
+          config_type: true
+          name: true
+      associatePublicIP: true
+      network: true
+      subnetwork: true
+  serviceAccounts:
+    '0':
+      email: true
+      scopes: true
+  sshKeys:
+    '0': true
+  tags:
+    items: true
+  zone: true
