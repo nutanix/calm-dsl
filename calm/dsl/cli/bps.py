@@ -1,6 +1,7 @@
 import time
 import json
 import sys
+import os
 from pprint import pprint
 import pathlib
 
@@ -475,7 +476,11 @@ def _decompile_bp(bp_payload, with_secrets=False, prefix=""):
     bp_cls.__doc__ = blueprint_description
 
     create_bp_dir(bp_cls=bp_cls, with_secrets=with_secrets)
-    click.echo("\nSuccessfully decompiled. Directory location: {}".format(get_bp_dir()))
+    click.echo(
+        "\nSuccessfully decompiled. Directory location: {}. Blueprint location: {}".format(
+            get_bp_dir(), os.path.join(get_bp_dir(), "blueprint.py")
+        )
+    )
 
 
 def compile_blueprint_command(bp_file, brownfield_deployment_file, out):
