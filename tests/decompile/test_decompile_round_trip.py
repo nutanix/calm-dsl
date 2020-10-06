@@ -83,7 +83,7 @@ class TestDecompile:
         self.created_bp_list.append(bp_name)
         # Decompiling the created bp and storing secrets in file
         LOG.info("Decompiling Blueprint {}".format(bp_name))
-        cli_inputs = [CRED_PASSWORD]
+        cli_inputs = [CRED_PASSWORD, CRED_PASSWORD, CRED_PASSWORD]
         result = runner.invoke(
             cli,
             ["decompile", "bp", bp_name, "--with_secrets"],
@@ -157,7 +157,7 @@ class TestDecompile:
             )
         )
 
-        cli_inputs = [CRED_PASSWORD]
+        cli_inputs = [CRED_PASSWORD, CRED_PASSWORD, CRED_PASSWORD]
         result = runner.invoke(
             cli,
             ["decompile", "bp", bp_name, "--with_secrets", "-p", prefix],
