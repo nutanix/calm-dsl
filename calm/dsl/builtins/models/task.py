@@ -43,7 +43,9 @@ class TaskType(EntityType):
 
         cred = attrs.get("login_credential_local_reference", None)
         if cred:
-            attrs["cred"] = RefType.decompile(cred, prefix=prefix)
+            attrs["login_credential_local_reference"] = RefType.decompile(
+                cred, prefix=prefix
+            )
 
         task_type = cdict.get("type", None) or ""
 
