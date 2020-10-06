@@ -112,6 +112,7 @@ class PHPService(Service):
         blah = CalmVariable.Simple("2")  # noqa
         CalmTask.Exec.ssh(name="Task2", script='echo "Hello"')
         CalmTask.Exec.ssh(name="Task3", script='echo "Hello again"')
+        CalmTask.Exec.ssh(name="Task name with space", script='echo "Hello once more"')
 
 
 class PHPPackage(Package):
@@ -212,7 +213,11 @@ class DefaultProfile(Profile):
 class TestDecompile(Blueprint):
     """Calm DSL .NEXT demo"""
 
-    credentials = [basic_cred(CRED_USERNAME, CRED_PASSWORD, default=True)]
+    credentials = [
+        basic_cred(CRED_USERNAME, CRED_PASSWORD),
+        basic_cred(CRED_USERNAME, CRED_PASSWORD, name="cred with space", default=True),
+        basic_cred(CRED_USERNAME, CRED_PASSWORD, name="while"),
+    ]
     services = [MySQLService, PHPService]
     packages = [MySQLPackage, PHPPackage, Era_Disk]
     substrates = [AHVVMforMySQL, AHVVMforPHP]

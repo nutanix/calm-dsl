@@ -29,12 +29,14 @@ def render_bp_file_template(cls, with_secrets=False):
 
     # Find default cred
     default_cred = cls.default_cred
+    default_cred_name = getattr(default_cred, "name", "") or getattr(
+        default_cred, "__name__", ""
+    )
 
     credential_list = []
     for index, cred in enumerate(cls.credentials):
-        if default_cred and cred.__name__ == (
-            getattr(default_cred, "name", "") or default_cred.__name__
-        ):
+        cred_name = getattr(cred, "name", "") or cred.__name__
+        if default_cred_name and cred_name == default_cred_name:
             cred.default = True
         credential_list.append(render_credential_template(cred))
 

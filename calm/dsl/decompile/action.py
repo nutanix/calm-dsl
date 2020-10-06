@@ -21,8 +21,9 @@ def render_action_template(cls, entity_context=""):
     entity_context = entity_context + "_Action_" + cls.__name__
 
     runbook = cls.runbook
+    runbook_name = getattr(runbook, "name", "") or runbook.__name__
     # Note cls.__name__ should be used for call_runbook tasks
-    RUNBOOK_ACTION_MAP[runbook.__name__] = cls.__name__
+    RUNBOOK_ACTION_MAP[runbook_name] = cls.__name__
 
     # NOTE Not using main_task_local_reference for now,
     # bcz type of main task is "DAG"

@@ -39,9 +39,17 @@ class TaskType(EntityType):
     @classmethod
     def decompile(mcls, cdict, context=[], prefix=""):
 
+        attrs = cdict.get("attrs", None) or dict()
+
+        cred = attrs.get("login_credential_local_reference", None)
+        if cred:
+            attrs["cred"] = RefType.decompile(cred, prefix=prefix)
+
+        task_type = cdict.get("type", None) or ""
+
         # If task is of type DAG, decompile references there also
-        if cdict.get("type", "") == "DAG":
-            edges = cdict.get("attrs", {}).get("edges", [])
+        if task_type == "DAG":
+            edges = attrs.get("edges", None) or []
             final_edges = []
             for edge in edges:
                 final_edges.append(
@@ -55,7 +63,14 @@ class TaskType(EntityType):
                     }
                 )
             if final_edges:
-                cdict["attrs"]["edges"] = final_edges
+                attrs["edges"] = final_edges
+
+        elif task_type == "CALL_RUNBOOK":
+            attrs["runbook_reference"] = RefType.decompile(
+                attrs["runbook_reference"], prefix=prefix
+            )
+
+        cdict["attrs"] = attrs
 
         return super().decompile(cdict, context=context, prefix=prefix)
 

@@ -178,7 +178,7 @@ class EntityType(EntityTypeBase):
         if not name:
             # Generate unique name
             name = "_" + schema_name + str(uuid.uuid4())[:8]
-        else:
+        elif mcls.__schema_name__ not in ["Task", "Credential"]:
             if name == schema_name:
                 LOG.error("'{}' is a reserved name for this entity".format(name))
                 sys.exit(-1)
@@ -472,21 +472,22 @@ class EntityType(EntityTypeBase):
         attrs.update(user_attrs)
         name = attrs.get("__name__", ui_name)
 
-        if name == mcls.__schema_name__:
-            LOG.error(
-                "'{}' is a reserved name for this entity. Please use '--prefix/-p' cli option to provide prefix for entity's name.".format(
-                    name
+        if mcls.__schema_name__ not in ["Task", "Credential"]:
+            if name == mcls.__schema_name__:
+                LOG.error(
+                    "'{}' is a reserved name for this entity. Please use '--prefix/-p' cli option to provide prefix for entity's name.".format(
+                        name
+                    )
                 )
-            )
-            sys.exit(-1)
+                sys.exit(-1)
 
-        elif keyword.iskeyword(name):
-            LOG.error(
-                "'{}' is a reserved python keyword. Please use '--prefix/-p' cli option to provide prefix for entity's name.".format(
-                    name
+            elif keyword.iskeyword(name):
+                LOG.error(
+                    "'{}' is a reserved python keyword. Please use '--prefix/-p' cli option to provide prefix for entity's name.".format(
+                        name
+                    )
                 )
-            )
-            sys.exit(-1)
+                sys.exit(-1)
 
         return mcls(name, (Entity,), attrs)
 

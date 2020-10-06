@@ -14,8 +14,8 @@ class RefType(EntityType):
     def pre_decompile(mcls, cdict, context, prefix=""):
         cdict = super().pre_decompile(cdict, context, prefix=prefix)
 
-        if "__name__" in cdict:
-            cdict["__name__"] = "{}{}".format(prefix, cdict["__name__"])
+        # Class name for ref objects should always be taken randomly
+        cdict["__name__"] = None
 
         return cdict
 

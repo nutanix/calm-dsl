@@ -18,7 +18,9 @@ def render_blueprint_template(cls):
 
     credential_list = []
     for cred in cls.credentials:
-        credential_list.append(get_cred_var_name(cred.__name__))
+        credential_list.append(
+            get_cred_var_name(getattr(cred, "name", "") or cred.__name__)
+        )
 
     service_list = []
     for service in cls.services:
