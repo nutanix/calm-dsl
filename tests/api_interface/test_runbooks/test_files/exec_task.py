@@ -14,8 +14,12 @@ AHV_LINUX_ID = read_local_file(".tests/runbook_tests/ahv_linux_id")
 AHV_LINUX_VM_NAME = read_local_file(".tests/runbook_tests/ahv_linux_vm_name")
 AHV_LINUX_VM_NAME_PREFIX = read_local_file(".tests/runbook_tests/ahv_linux_vm_name_prefix")
 # AHV_WINDOWS_ID = read_local_file(".tests/runbook_tests/ahv_windows_id")
+
 VMWARE_LINUX_ID = read_local_file(".tests/runbook_tests/vmware_linux_id")
-# VMWARE_WINDOWS_ID = read_local_file(".tests/runbook_tests/vmware_windows_id")
+VMWARE_WINDOWS_ID = read_local_file(".tests/runbook_tests/vmware_windows_id")
+VMWARE_LINUX_VM_NAME = read_local_file(".tests/runbook_tests/vmware_linux_vm_name")
+VMWARE_LINUX_VM_NAME_PREFIX = read_local_file(".tests/runbook_tests/vmware_linux_vm_name_prefix")
+
 CRED_USERNAME = read_local_file(".tests/runbook_tests/username")
 CRED_WINDOWS_USERNAME = read_local_file(".tests/runbook_tests/windows_username")
 CRED_PASSWORD = read_local_file(".tests/runbook_tests/password")
@@ -75,6 +79,30 @@ linux_vmware_static_vm_endpoint = Endpoint.Linux.vm(
     cred=LinuxCred,
     provider_type=ENDPOINT_PROVIDER.VMWARE,
     account=Account.VMWare("vmware_1"),
+)
+
+linux_vmware_dynamic_vm_endpoint1 = Endpoint.Linux.vm(
+    filter_type=ENDPOINT_FILTER.DYNAMIC,
+    filter="name==" + VMWARE_LINUX_VM_NAME,
+    cred=LinuxCred,
+    account=Account.VMWare("vmware_1"),
+    provider_type=ENDPOINT_PROVIDER.VMWARE,
+)
+
+linux_vmware_dynamic_vm_endpoint2 = Endpoint.Linux.vm(
+    filter_type=ENDPOINT_FILTER.DYNAMIC,
+    filter="name==" + VMWARE_LINUX_VM_NAME_PREFIX + "*",
+    cred=LinuxCred,
+    account=Account.VMWare("vmware_1"),
+    provider_type=ENDPOINT_PROVIDER.VMWARE,
+)
+
+linux_vmware_dynamic_vm_endpoint3 = Endpoint.Linux.vm(
+    filter_type=ENDPOINT_FILTER.DYNAMIC,
+    filter="power_state==poweredOn;name==" + AHV_LINUX_VM_NAME_PREFIX + ".*",
+    cred=LinuxCred,
+    account=Account.VMWare("vmware_1"),
+    provider_type=ENDPOINT_PROVIDER.VMWARE,
 )
 
 linux_endpoint_with_wrong_cred = Endpoint.Linux.ip([linux_ip], cred=WindowsCred)
@@ -185,11 +213,23 @@ def ShellTaskOnLinuxVMVMWareStaticEndpoint(endpoints=[linux_vmware_static_vm_end
         name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0],
     )
 
-# @runbook
-# def ShellTaskOnLinuxVMVMWareDynamicEndpoint(endpoints=[linux_vmware_dynamic_vm_endpoint]):
-#     Task.Exec.ssh(
-#         name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0],
-#     )
+@runbook
+def ShellTaskOnLinuxVMVMWareDynamicEndpoint1(endpoints=[linux_vmware_dynamic_vm_endpoint1]):
+    Task.Exec.ssh(
+        name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0],
+    )
+
+@runbook
+def ShellTaskOnLinuxVMVMWareDynamicEndpoint2(endpoints=[linux_vmware_dynamic_vm_endpoint2]):
+    Task.Exec.ssh(
+        name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0],
+    )
+
+@runbook
+def ShellTaskOnLinuxVMVMWareDynamicEndpoint3(endpoints=[linux_vmware_dynamic_vm_endpoint3]):
+    Task.Exec.ssh(
+        name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0],
+    )
 
 
 @runbook

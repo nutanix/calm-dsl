@@ -10,7 +10,9 @@ from tests.api_interface.test_runbooks.test_files.exec_task import (
     ShellTaskOnLinuxVMAHVDynamicEndpoint3,
 
     ShellTaskOnLinuxVMVMWareStaticEndpoint,
-    # ShellTaskOnLinuxVMVMWareDynamicEndpoint
+    ShellTaskOnLinuxVMVMWareDynamicEndpoint1,
+    ShellTaskOnLinuxVMVMWareDynamicEndpoint2,
+    ShellTaskOnLinuxVMVMWareDynamicEndpoint3,
 
     #  ShellTaskOnLinuxVMAHVDynamicEndpoint4,
     #  ShellTaskOnLinuxVMVMWareStaticEndpoint,
@@ -38,6 +40,18 @@ class TestExecTasksVMEndpoint:
 
             # Dynamic filter power_state equals
             ShellTaskOnLinuxVMAHVDynamicEndpoint3,
+
+            # Static VM IDs for Vmware
+            ShellTaskOnLinuxVMVMWareStaticEndpoint,
+
+            # Dynamic filter name equals
+            ShellTaskOnLinuxVMVMWareDynamicEndpoint1,
+
+            # Dynamic filter name starts with
+            ShellTaskOnLinuxVMVMWareDynamicEndpoint2,
+
+            # Dynamic filter power_state equals
+            ShellTaskOnLinuxVMVMWareDynamicEndpoint3
         ],
     )
     def test_script_run(self, Runbook):
