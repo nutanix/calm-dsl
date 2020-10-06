@@ -4,6 +4,7 @@ from .main import (
     get,
     describe,
     launch,
+    run,
     publish,
     approve,
     update,
@@ -13,33 +14,36 @@ from .main import (
     decompile,
 )
 from .mpis import (
+    get_marketplace_store_items,
     get_marketplace_items,
-    get_marketplace_bps,
+    describe_marketplace_store_item,
     describe_marketplace_item,
-    describe_marketplace_bp,
     launch_marketplace_item,
     launch_marketplace_bp,
     publish_bp_as_new_marketplace_bp,
     publish_bp_as_existing_marketplace_bp,
-    approve_marketplace_bp,
-    publish_marketplace_bp,
-    update_marketplace_bp,
-    delete_marketplace_bp,
-    reject_marketplace_bp,
-    unpublish_marketplace_bp,
+    publish_runbook_as_new_marketplace_item,
+    publish_runbook_as_existing_marketplace_item,
+    approve_marketplace_item,
+    publish_marketplace_item,
+    update_marketplace_item,
+    delete_marketplace_item,
+    reject_marketplace_item,
+    unpublish_marketplace_item,
     decompile_marketplace_bp,
+    execute_marketplace_runbook_command,
 )
-from .constants import MARKETPLACE_BLUEPRINT
+from .constants import MARKETPLACE_ITEM
 
 APP_STATES = [
-    MARKETPLACE_BLUEPRINT.STATES.PENDING,
-    MARKETPLACE_BLUEPRINT.STATES.ACCEPTED,
-    MARKETPLACE_BLUEPRINT.STATES.REJECTED,
-    MARKETPLACE_BLUEPRINT.STATES.PUBLISHED,
+    MARKETPLACE_ITEM.STATES.PENDING,
+    MARKETPLACE_ITEM.STATES.ACCEPTED,
+    MARKETPLACE_ITEM.STATES.REJECTED,
+    MARKETPLACE_ITEM.STATES.PUBLISHED,
 ]
 APP_SOURCES = [
-    MARKETPLACE_BLUEPRINT.SOURCES.GLOBAL,
-    MARKETPLACE_BLUEPRINT.SOURCES.LOCAL,
+    MARKETPLACE_ITEM.SOURCES.GLOBAL,
+    MARKETPLACE_ITEM.SOURCES.LOCAL,
 ]
 
 
@@ -66,9 +70,9 @@ APP_SOURCES = [
     help="Show all marketplace blueprints which are published",
 )
 def _get_marketplace_items(name, quiet, app_family, display_all):
-    """List the marketplace items in marketplace"""
+    """Get marketplace store blueprints"""
 
-    get_marketplace_items(
+    get_marketplace_store_items(
         name=name, quiet=quiet, app_family=app_family, display_all=display_all
     )
 
@@ -100,9 +104,9 @@ def _get_marketplace_items(name, quiet, app_family, display_all):
     help="filter by state of marketplace blueprints",
 )
 def _get_marketplace_bps(name, quiet, app_family, app_states):
-    """List the marketplace blueprints in marketplace manager"""
+    """Get marketplace manager blueprints"""
 
-    get_marketplace_bps(
+    get_marketplace_items(
         name=name, quiet=quiet, app_family=app_family, app_states=app_states
     )
 
@@ -126,9 +130,9 @@ def _get_marketplace_bps(name, quiet, app_family, app_states):
     help="App Source for marketplace item",
 )
 def _describe_marketplace_item(name, out, version, source):
-    """Describe a market place item"""
+    """Describe a marketplace store item"""
 
-    describe_marketplace_item(name=name, out=out, version=version, app_source=source)
+    describe_marketplace_store_item(name=name, out=out, version=version, app_source=source)
 
 
 @describe.command("marketplace_bp")
@@ -157,9 +161,9 @@ def _describe_marketplace_item(name, out, version, source):
     help="State of marketplace blueprint",
 )
 def _describe_marketplace_bp(name, out, version, source, app_state):
-    """Describe a market place blueprint"""
+    """Describe a marketplace manager blueprint"""
 
-    describe_marketplace_bp(
+    describe_marketplace_item(
         name=name, out=out, version=version, app_source=source, app_state=app_state
     )
 
@@ -190,9 +194,9 @@ def _describe_marketplace_bp(name, out, version, source, app_state):
     help="App Source of marketplace blueprint",
 )
 def _launch_marketplace_bp(
-    name, version, project, app_name, profile_name, ignore_runtime_variables, source,
+    name, version, project, app_name, profile_name, ignore_runtime_variables, source
 ):
-    """Launch a marketplace blueprint"""
+    """Launch a marketplace manager blueprint"""
 
     launch_marketplace_bp(
         name=name,
@@ -225,7 +229,7 @@ def _launch_marketplace_bp(
     help="Interactive Mode to provide the value for secrets",
 )
 def _decompile_marketplace_bp(mpi_name, version, project, name, source, with_secrets):
-    """Decompiles marketplace blueprint"""
+    """Decompiles marketplace manager blueprint"""
 
     decompile_marketplace_bp(
         name=mpi_name,
@@ -263,9 +267,9 @@ def _decompile_marketplace_bp(mpi_name, version, project, name, source, with_sec
     help="App Source of marketplace blueprint",
 )
 def _launch_marketplace_item(
-    name, version, project, app_name, profile_name, ignore_runtime_variables, source,
+    name, version, project, app_name, profile_name, ignore_runtime_variables, source
 ):
-    """Launch a marketplace item"""
+    """Launch a marketplace store item"""
 
     launch_marketplace_item(
         name=name,
@@ -404,8 +408,8 @@ def publish_bp(
 def approve_bp(name, version, category, projects=[]):
     """Approves a marketplace manager blueprint"""
 
-    approve_marketplace_bp(
-        bp_name=name, version=version, projects=projects, category=category
+    approve_marketplace_item(
+        name=name, version=version, projects=projects, category=category
     )
 
 
@@ -430,10 +434,10 @@ def approve_bp(name, version, category, projects=[]):
     help="Projects for marketplace blueprint",
 )
 def _publish_marketplace_bp(name, version, category, source, projects=[]):
-    """Publish a marketplace blueprint to marketplace store"""
+    """Publish a marketplace item to marketplace store"""
 
-    publish_marketplace_bp(
-        bp_name=name,
+    publish_marketplace_item(
+        name=name,
         version=version,
         projects=projects,
         category=category,
@@ -465,9 +469,9 @@ def _publish_marketplace_bp(name, version, category, source, projects=[]):
     help="App Source for marketplace blueprint",
 )
 def _update_marketplace_bp(name, version, category, projects, description, source):
-    """Update a marketplace_manager blueprint"""
+    """Update a marketplace manager blueprint"""
 
-    update_marketplace_bp(
+    update_marketplace_item(
         name=name,
         version=version,
         category=category,
@@ -497,9 +501,9 @@ def _update_marketplace_bp(name, version, category, projects, description, sourc
     help="State of marketplace blueprint",
 )
 def _delete_marketplace_bp(name, version, source, app_state):
-    """Delete marketplace manager blueprint"""
+    """Deletes marketplace manager blueprint"""
 
-    delete_marketplace_bp(
+    delete_marketplace_item(
         name=name, version=version, app_source=source, app_state=app_state
     )
 
@@ -512,7 +516,7 @@ def _delete_marketplace_bp(name, version, source, app_state):
 def _reject_marketplace_bp(name, version):
     """Reject marketplace manager blueprint"""
 
-    reject_marketplace_bp(name=name, version=version)
+    reject_marketplace_item(name=name, version=version)
 
 
 @unpublish.command("marketplace_bp")
@@ -528,6 +532,158 @@ def _reject_marketplace_bp(name, version):
     help="App Source of marketplace blueprint",
 )
 def _unpublish_marketplace_bp(name, version, source):
-    """Unpublish marketplace blueprint to marketplace manager blueprint"""
+    """Unpublish marketplace store blueprint"""
 
-    unpublish_marketplace_bp(name=name, version=version, app_source=source)
+    unpublish_marketplace_item(name=name, version=version, app_source=source)
+
+
+@publish.command("runbook")
+@click.argument("runbook_name")
+@click.option("--version", "-v", required=True, help="Version of marketplace runbook")
+@click.option("--name", "-n", default=None, help="Name of marketplace runbook")
+@click.option(
+    "--description", "-d", default="", help="Description for marketplace runbook"
+)
+@click.option(
+    "--with_secrets",
+    "-w",
+    is_flag=True,
+    default=False,
+    help="Preserve secrets while publishing runbooks to marketpalce",
+)
+@click.option(
+    "--with_endpoints",
+    "-w",
+    is_flag=True,
+    default=False,
+    help="Preserve endpoints publishing runbooks to marketpalce",
+)
+@click.option(
+    "--existing_markeplace_runbook",
+    "-e",
+    is_flag=True,
+    default=False,
+    help="Publish as new version of existing marketplace runbook",
+)
+@click.option(
+    "--publish_to_marketplace",
+    "-pm",
+    is_flag=True,
+    default=False,
+    help="Publish the runbook directly to marketplace skipping the steps to approve, etc.",
+)
+@click.option(
+    "--auto_approve",
+    "-aa",
+    is_flag=True,
+    default=False,
+    help="Auto approves the runbook",
+)
+@click.option(
+    "--project",
+    "-p",
+    "projects",
+    multiple=True,
+    help="Projects for marketplace runbook (used for approving runbook)",
+)
+@click.option(
+    "--category",
+    "-c",
+    default=None,
+    help="Category for marketplace runbook (used for approving runbook)",
+)
+@click.option(
+    "--file",
+    "-f",
+    "icon_file",
+    default=None,
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path of app icon image to be uploaded",
+)
+@click.option(
+    "--icon_name", "-i", default=None, help="App icon name for marketpalce runbook"
+)
+def publish_runbook(
+    runbook_name,
+    name,
+    version,
+    description,
+    with_secrets,
+    with_endpoints,
+    existing_markeplace_runbook,
+    publish_to_marketplace,
+    projects=[],
+    category=None,
+    auto_approve=False,
+    icon_name=False,
+    icon_file=None,
+):
+    """Publish a runbook to marketplace manager"""
+
+    if not name:
+        # Using runbook name as the marketplace runbook name if no name provided
+        name = runbook_name
+
+    if not existing_markeplace_runbook:
+        publish_runbook_as_new_marketplace_item(
+            runbook_name=runbook_name,
+            marketplace_item_name=name,
+            version=version,
+            description=description,
+            with_secrets=with_secrets,
+            publish_to_marketplace=publish_to_marketplace,
+            projects=projects,
+            category=category,
+            auto_approve=auto_approve,
+            icon_name=icon_name,
+            icon_file=icon_file,
+        )
+
+    else:
+        publish_runbook_as_existing_marketplace_item(
+            runbook_name=runbook_name,
+            marketplace_item_name=name,
+            version=version,
+            description=description,
+            with_secrets=with_secrets,
+            publish_to_marketplace=publish_to_marketplace,
+            projects=projects,
+            category=category,
+            auto_approve=auto_approve,
+            icon_name=icon_name,
+            icon_file=icon_file,
+        )
+
+
+@run.command("marketplace_runbook")
+@click.argument("name")
+@click.option("--version", "-v", default=None, help="Version of marketplace item")
+@click.option("--project", "-pj", default=None, help="Project for the execution")
+@click.option(
+    "--ignore_runtime_variables",
+    "-i",
+    is_flag=True,
+    default=False,
+    help="Ignore runtime variables and use defaults for runbook execution",
+)
+@click.option(
+    "--source",
+    "-s",
+    default=None,
+    type=click.Choice(APP_SOURCES),
+    help="App Source of marketplace item",
+)
+@click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
+def _run_marketplace_runbook(
+    name, version, project, source, ignore_runtime_variables, watch
+):
+    """Execute a marketplace item of type runbook"""
+
+    execute_marketplace_runbook_command(
+        name=name,
+        version=version,
+        project=project,
+        app_source=source,
+        watch=watch,
+        ignore_runtime_variables=ignore_runtime_variables
+    )

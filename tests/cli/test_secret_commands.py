@@ -49,7 +49,7 @@ class TestSecretCommands:
 
     def test_create_multiple_secret_with_same_name(self):
         """Creating multiple secrets with same name
-            (Negative Test)
+        (Negative Test)
         """
 
         runner = CliRunner()

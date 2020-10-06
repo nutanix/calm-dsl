@@ -68,9 +68,7 @@ def render_ahv_template(template, bp_name):
     return text.strip() + os.linesep
 
 
-template_map = {
-    "AHV_VM": ("ahv_blueprint.py.jinja2", render_ahv_template),
-}
+template_map = {"AHV_VM": ("ahv_blueprint.py.jinja2", render_ahv_template)}
 
 
 def render_blueprint_template(bp_name, provider_type):

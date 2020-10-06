@@ -164,7 +164,7 @@ class GetCallNodes(ast.NodeVisitor):
                         )
                     )
                 statementContext = eval(
-                    compile(ast.Expression(statement_context), "", "eval"), _globals,
+                    compile(ast.Expression(statement_context), "", "eval"), _globals
                 )
                 if (
                     hasattr(statementContext, "__calm_type__")
