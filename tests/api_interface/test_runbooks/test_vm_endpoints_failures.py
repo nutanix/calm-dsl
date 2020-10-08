@@ -64,7 +64,7 @@ class TestVMEndpointsFailureScenarios:
         )
 
         print(">> Runbook Run state: {}\n{}".format(state, reasons))
-        assert state == RUNLOG.STATUS.WARNING
+        assert state == RUNLOG.STATUS.ERROR
 
         # Finding the trl id for the shell and escript task (all runlogs for multiple IPs)
         escript_tasks = []
@@ -83,7 +83,7 @@ class TestVMEndpointsFailureScenarios:
                 for reason in entity["status"]["reason_list"]:
                     reasons += reason
                 assert warning_msg in reasons
-                assert entity["status"]["state"] == RUNLOG.STATUS.WARNING
+                assert entity["status"]["state"] == RUNLOG.STATUS.ERROR
             elif (
                 entity["status"]["type"] == "task_runlog"
                 and entity["status"]["task_reference"]["name"] == "EscriptTask"
