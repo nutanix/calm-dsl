@@ -56,55 +56,55 @@ EndpointWithIPOutsideSubnet = Endpoint.Linux.vm(
 
 @runbook
 def VMEndpointWithIncorrectID(endpoints=[EndpointWithIncorrectId]):
-    Task.Exec.ssh(
-        name="ShellTask",
-        script='''echo "Shell Task is Successful"''',
-        target=endpoints[0],
-    )
     Task.Exec.escript(
         name="EscriptTask",
         script='''print "Escript Task is Successful"''',
+        target=endpoints[0],
+    )
+    Task.Exec.ssh(
+        name="ShellTask",
+        script='''echo "Shell Task is Successful"''',
         target=endpoints[0],
     )
 
 
 @runbook
 def VMEndpointWithNoIP(endpoints=[EndpointWithNoIP]):
-    Task.Exec.ssh(
-        name="ShellTask",
-        script='''echo "Shell Task is Successful"''',
-        target=endpoints[0],
-    )
     Task.Exec.escript(
         name="EscriptTask",
         script='''print "Escript Task is Successful"''',
+        target=endpoints[0],
+    )
+    Task.Exec.ssh(
+        name="ShellTask",
+        script='''echo "Shell Task is Successful"''',
         target=endpoints[0],
     )
 
 
 @runbook
 def VMEndpointWithIPOutsideSubnet(endpoints=[EndpointWithIPOutsideSubnet]):
-    Task.Exec.ssh(
-        name="ShellTask",
-        script='''echo "Shell Task is Successful"''',
-        target=endpoints[0],
-    )
     Task.Exec.escript(
         name="EscriptTask",
         script='''print "Escript Task is Successful"''',
+        target=endpoints[0],
+    )
+    Task.Exec.ssh(
+        name="ShellTask",
+        script='''echo "Shell Task is Successful"''',
         target=endpoints[0],
     )
 
 
 @runbook
 def VMEndpointWithOffState(endpoints=[EndpointWithOffState]):
-    Task.Exec.ssh(
-        name="ShellTask",
-        script='''echo "Shell Task is Successful"''',
-        target=endpoints[0],
-    )
     Task.Exec.escript(
         name="EscriptTask",
         script='''print "Escript Task is Successful"''',
+        target=endpoints[0],
+    )
+    Task.Exec.ssh(
+        name="ShellTask",
+        script='''echo "Shell Task is Successful"''',
         target=endpoints[0],
     )
