@@ -32,7 +32,14 @@ class MySQLService(Service):
 
     @action
     def __create__():
-        "System action for creating an application"
+        """System action for creating an application"""
+
+        CalmTask.Exec.ssh(name="Task1", script="echo 'Service create in ENV=@@{ENV}@@'")
+        MySQLService.__restart__(name="restart")
+
+    @action
+    def __restart__():
+        """System action for restarting an application"""
 
         CalmTask.Exec.ssh(name="Task1", script="echo 'Service create in ENV=@@{ENV}@@'")
 
