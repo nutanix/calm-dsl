@@ -191,38 +191,14 @@ service_definition_list:
       description: ''
       main_task_local_reference:
         kind: app_task
-        name: DAG_Task_for_Service_MySQLService_action_create
-      name: Runbook_for_Service_MySQLService_action_create
+        name: MySQLService___create___dag
+      name: MySQLService___create___runbook
       task_definition_list:
       - attrs:
           edges: []
         child_tasks_local_reference_list: []
         description: ''
-        name: DAG_Task_for_Service_MySQLService_action_create
-        retries: ''
-        target_any_local_reference:
-          kind: app_service
-          name: MySQLService
-        timeout_secs: ''
-        type: DAG
-        variable_list: []
-      variable_list: []
-    type: system
-  - critical: true
-    description: ''
-    name: action_delete
-    runbook:
-      description: ''
-      main_task_local_reference:
-        kind: app_task
-        name: DAG_Task_for_Service_MySQLService_action_delete
-      name: Runbook_for_Service_MySQLService_action_delete
-      task_definition_list:
-      - attrs:
-          edges: []
-        child_tasks_local_reference_list: []
-        description: ''
-        name: DAG_Task_for_Service_MySQLService_action_delete
+        name: MySQLService___create___dag
         retries: ''
         target_any_local_reference:
           kind: app_service
@@ -239,14 +215,14 @@ service_definition_list:
       description: ''
       main_task_local_reference:
         kind: app_task
-        name: DAG_Task_for_Service_MySQLService_action_start
-      name: Runbook_for_Service_MySQLService_action_start
+        name: MySQLService___start___dag
+      name: MySQLService___start___runbook
       task_definition_list:
       - attrs:
           edges: []
         child_tasks_local_reference_list: []
         description: ''
-        name: DAG_Task_for_Service_MySQLService_action_start
+        name: MySQLService___start___dag
         retries: ''
         target_any_local_reference:
           kind: app_service
@@ -263,14 +239,38 @@ service_definition_list:
       description: ''
       main_task_local_reference:
         kind: app_task
-        name: DAG_Task_for_Service_MySQLService_action_stop
-      name: Runbook_for_Service_MySQLService_action_stop
+        name: MySQLService___stop___dag
+      name: MySQLService___stop___runbook
       task_definition_list:
       - attrs:
           edges: []
         child_tasks_local_reference_list: []
         description: ''
-        name: DAG_Task_for_Service_MySQLService_action_stop
+        name: MySQLService___stop___dag
+        retries: ''
+        target_any_local_reference:
+          kind: app_service
+          name: MySQLService
+        timeout_secs: ''
+        type: DAG
+        variable_list: []
+      variable_list: []
+    type: system
+  - critical: true
+    description: ''
+    name: action_delete
+    runbook:
+      description: ''
+      main_task_local_reference:
+        kind: app_task
+        name: MySQLService___delete___dag
+      name: MySQLService___delete___runbook
+      task_definition_list:
+      - attrs:
+          edges: []
+        child_tasks_local_reference_list: []
+        description: ''
+        name: MySQLService___delete___dag
         retries: ''
         target_any_local_reference:
           kind: app_service
@@ -287,14 +287,14 @@ service_definition_list:
       description: ''
       main_task_local_reference:
         kind: app_task
-        name: DAG_Task_for_Service_MySQLService_action_restart
-      name: Runbook_for_Service_MySQLService_action_restart
+        name: MySQLService___restart___dag
+      name: MySQLService___restart___runbook
       task_definition_list:
       - attrs:
           edges: []
         child_tasks_local_reference_list: []
         description: ''
-        name: DAG_Task_for_Service_MySQLService_action_restart
+        name: MySQLService___restart___dag
         retries: ''
         target_any_local_reference:
           kind: app_service
@@ -311,14 +311,14 @@ service_definition_list:
       description: ''
       main_task_local_reference:
         kind: app_task
-        name: DAG_Task_for_Service_MySQLService_action_soft_delete
-      name: Runbook_for_Service_MySQLService_action_soft_delete
+        name: MySQLService___soft_delete___dag
+      name: MySQLService___soft_delete___runbook
       task_definition_list:
       - attrs:
           edges: []
         child_tasks_local_reference_list: []
         description: ''
-        name: DAG_Task_for_Service_MySQLService_action_soft_delete
+        name: MySQLService___soft_delete___dag
         retries: ''
         target_any_local_reference:
           kind: app_service
@@ -349,38 +349,14 @@ service_definition_list:
       description: ''
       main_task_local_reference:
         kind: app_task
-        name: DAG_Task_for_Service_PHPService_action_create
-      name: Runbook_for_Service_PHPService_action_create
+        name: PHPService___create___dag
+      name: PHPService___create___runbook
       task_definition_list:
       - attrs:
           edges: []
         child_tasks_local_reference_list: []
         description: ''
-        name: DAG_Task_for_Service_PHPService_action_create
-        retries: ''
-        target_any_local_reference:
-          kind: app_service
-          name: PHPService
-        timeout_secs: ''
-        type: DAG
-        variable_list: []
-      variable_list: []
-    type: system
-  - critical: true
-    description: ''
-    name: action_delete
-    runbook:
-      description: ''
-      main_task_local_reference:
-        kind: app_task
-        name: DAG_Task_for_Service_PHPService_action_delete
-      name: Runbook_for_Service_PHPService_action_delete
-      task_definition_list:
-      - attrs:
-          edges: []
-        child_tasks_local_reference_list: []
-        description: ''
-        name: DAG_Task_for_Service_PHPService_action_delete
+        name: PHPService___create___dag
         retries: ''
         target_any_local_reference:
           kind: app_service
@@ -397,14 +373,14 @@ service_definition_list:
       description: ''
       main_task_local_reference:
         kind: app_task
-        name: DAG_Task_for_Service_PHPService_action_start
-      name: Runbook_for_Service_PHPService_action_start
+        name: PHPService___start___dag
+      name: PHPService___start___runbook
       task_definition_list:
       - attrs:
           edges: []
         child_tasks_local_reference_list: []
         description: ''
-        name: DAG_Task_for_Service_PHPService_action_start
+        name: PHPService___start___dag
         retries: ''
         target_any_local_reference:
           kind: app_service
@@ -421,14 +397,38 @@ service_definition_list:
       description: ''
       main_task_local_reference:
         kind: app_task
-        name: DAG_Task_for_Service_PHPService_action_stop
-      name: Runbook_for_Service_PHPService_action_stop
+        name: PHPService___stop___dag
+      name: PHPService___stop___runbook
       task_definition_list:
       - attrs:
           edges: []
         child_tasks_local_reference_list: []
         description: ''
-        name: DAG_Task_for_Service_PHPService_action_stop
+        name: PHPService___stop___dag
+        retries: ''
+        target_any_local_reference:
+          kind: app_service
+          name: PHPService
+        timeout_secs: ''
+        type: DAG
+        variable_list: []
+      variable_list: []
+    type: system
+  - critical: true
+    description: ''
+    name: action_delete
+    runbook:
+      description: ''
+      main_task_local_reference:
+        kind: app_task
+        name: PHPService___delete___dag
+      name: PHPService___delete___runbook
+      task_definition_list:
+      - attrs:
+          edges: []
+        child_tasks_local_reference_list: []
+        description: ''
+        name: PHPService___delete___dag
         retries: ''
         target_any_local_reference:
           kind: app_service
@@ -445,14 +445,14 @@ service_definition_list:
       description: ''
       main_task_local_reference:
         kind: app_task
-        name: DAG_Task_for_Service_PHPService_action_restart
-      name: Runbook_for_Service_PHPService_action_restart
+        name: PHPService___restart___dag
+      name: PHPService___restart___runbook
       task_definition_list:
       - attrs:
           edges: []
         child_tasks_local_reference_list: []
         description: ''
-        name: DAG_Task_for_Service_PHPService_action_restart
+        name: PHPService___restart___dag
         retries: ''
         target_any_local_reference:
           kind: app_service
@@ -469,14 +469,14 @@ service_definition_list:
       description: ''
       main_task_local_reference:
         kind: app_task
-        name: DAG_Task_for_Service_PHPService_action_soft_delete
-      name: Runbook_for_Service_PHPService_action_soft_delete
+        name: PHPService___soft_delete___dag
+      name: PHPService___soft_delete___runbook
       task_definition_list:
       - attrs:
           edges: []
         child_tasks_local_reference_list: []
         description: ''
-        name: DAG_Task_for_Service_PHPService_action_soft_delete
+        name: PHPService___soft_delete___dag
         retries: ''
         target_any_local_reference:
           kind: app_service
