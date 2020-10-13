@@ -2,7 +2,7 @@ from .entity import EntityType, Entity
 from .validator import PropertyValidator
 
 from .task import dag
-from .action import runbook_create, _action_create
+from .action import runbook_create, _action_create, action
 
 
 # Service
@@ -81,3 +81,29 @@ def service(**kwargs):
 
 
 Service = service()
+
+
+class Service_with_actions_defined(Service):
+    @action
+    def __create__():
+        pass
+
+    @action
+    def __start__():
+        pass
+
+    @action
+    def __stop__():
+        pass
+
+    @action
+    def __delete__():
+        pass
+
+    @action
+    def __restart__():
+        pass
+
+    @action
+    def __soft_delete__():
+        pass
