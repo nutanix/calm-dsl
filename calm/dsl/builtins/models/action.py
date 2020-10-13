@@ -1,5 +1,6 @@
 import ast
 import inspect
+import sys
 
 from .entity import EntityType, Entity
 from .descriptor import DescriptorType
@@ -197,8 +198,9 @@ class action(metaclass=DescriptorType):
         try:
             node_visitor.visit(node)
         except Exception as ex:
-            self.__exception__ = ex
-            raise
+            LOG.exception(ex)
+            sys.exit(-1)
+
         tasks, variables, task_list = node_visitor.get_objects()
         edges = []
         for from_tasks, to_tasks in zip(task_list, task_list[1:]):
