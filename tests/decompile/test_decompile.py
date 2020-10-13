@@ -9,6 +9,9 @@ CRED_USERNAME = read_local_file(".tests/username")
 CRED_PASSWORD = read_local_file(".tests/password")
 DNS_SERVER = read_local_file(".tests/dns_server")
 
+GLOBAL_BP_CRED = basic_cred(
+    CRED_USERNAME, CRED_PASSWORD, name="cred with space", default=True
+)
 
 Era_Disk = vm_disk_package(
     name="era_disk",
@@ -29,7 +32,14 @@ class MySQLService(Service):
 
     @action
     def __create__():
-        "System action for creating an application"
+        """System action for creating an application"""
+
+        CalmTask.Exec.ssh(name="Task1", script="echo 'Service create in ENV=@@{ENV}@@'")
+        MySQLService.__restart__(name="restart")
+
+    @action
+    def __restart__():
+        """System action for restarting an application"""
 
         CalmTask.Exec.ssh(name="Task1", script="echo 'Service create in ENV=@@{ENV}@@'")
 
@@ -196,7 +206,12 @@ class DefaultProfile(Profile):
     @action
     def test_profile_action(name="test profile action"):
         """Sample description for a profile action"""
-        CalmTask.Exec.ssh(name="Task5", script='echo "Hello"', target=ref(MySQLService))
+        CalmTask.Exec.ssh(
+            name="Task5",
+            script='echo "Hello"',
+            target=ref(MySQLService),
+            cred=ref(GLOBAL_BP_CRED),
+        )
         PHPService.test_action(name="Call Runbook Task")
         with parallel:
             CalmTask.Exec.escript(
@@ -215,7 +230,7 @@ class TestDecompile(Blueprint):
 
     credentials = [
         basic_cred(CRED_USERNAME, CRED_PASSWORD),
-        basic_cred(CRED_USERNAME, CRED_PASSWORD, name="cred with space", default=True),
+        GLOBAL_BP_CRED,
         basic_cred(CRED_USERNAME, CRED_PASSWORD, name="while"),
     ]
     services = [MySQLService, PHPService]

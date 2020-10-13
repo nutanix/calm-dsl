@@ -147,3 +147,10 @@ def init_action_globals():
 
     global RUNBOOK_ACTION_MAP
     RUNBOOK_ACTION_MAP = {}
+
+
+# Used for registering service action runbook earlier before parsing that template
+def update_runbook_action_map(runbook_name, action_name):
+
+    global RUNBOOK_ACTION_MAP
+    RUNBOOK_ACTION_MAP[runbook_name] = action_name
