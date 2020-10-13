@@ -16,7 +16,6 @@ AHV_LINUX_VM_NAME_PREFIX = read_local_file(".tests/runbook_tests/ahv_linux_vm_na
 # AHV_WINDOWS_ID = read_local_file(".tests/runbook_tests/ahv_windows_id")
 
 VMWARE_LINUX_ID = read_local_file(".tests/runbook_tests/vmware_linux_id")
-VMWARE_WINDOWS_ID = read_local_file(".tests/runbook_tests/vmware_windows_id")
 VMWARE_LINUX_VM_NAME = read_local_file(".tests/runbook_tests/vmware_linux_vm_name")
 VMWARE_LINUX_VM_NAME_PREFIX = read_local_file(".tests/runbook_tests/vmware_linux_vm_name_prefix")
 
@@ -99,7 +98,7 @@ linux_vmware_dynamic_vm_endpoint2 = Endpoint.Linux.vm(
 
 linux_vmware_dynamic_vm_endpoint3 = Endpoint.Linux.vm(
     filter_type=ENDPOINT_FILTER.DYNAMIC,
-    filter="power_state==poweredOn;name==" + AHV_LINUX_VM_NAME_PREFIX + ".*",
+    filter="power_state==poweredOn;name==" + VMWARE_LINUX_VM_NAME_PREFIX + ".*",
     cred=LinuxCred,
     account=Account.VMWare("vmware_1"),
     provider_type=ENDPOINT_PROVIDER.VMWARE,
