@@ -8,7 +8,7 @@ import arrow
 import click
 from prettytable import PrettyTable
 
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 from calm.dsl.api import get_api_client
 from calm.dsl.log import get_logging_handle
 from calm.dsl.tools import get_module_from_file
@@ -29,7 +29,8 @@ def get_tasks_list(name, filter_by, limit, offset, quiet, all_items):
     """Get the tasks, optionally filtered by a string"""
 
     client = get_api_client()
-    config = get_config()
+    context = get_context()
+    server_config = context.get_server_config()
 
     params = {"length": limit, "offset": offset}
     filter_query = ""
@@ -49,7 +50,7 @@ def get_tasks_list(name, filter_by, limit, offset, quiet, all_items):
     res, err = client.task.list(params=params)
 
     if err:
-        pc_ip = config["SERVER"]["pc_ip"]
+        pc_ip = server_config["pc_ip"]
         LOG.warning("Cannot fetch tasks from {}".format(pc_ip))
         return
 
@@ -274,8 +275,9 @@ def create_update_library_task(client, task_payload, name=None, force_create=Non
             if err:
                 return None, err
 
-    config = get_config()
-    project_name = config["PROJECT"]["name"]
+    context = get_context()
+    project_config = context.get_project_config()
+    project_name = project_config["name"]
 
     # Fetch project details
     params = {"filter": "name=={}".format(project_name)}
@@ -502,7 +504,7 @@ def import_task(task_file, name, description, out_vars, force):
         elif task_file.endswith(".ps1"):
             script_type = TASKS.SCRIPT_TYPES.POWERSHELL
 
-        if out_vars:
+        if out_vars is not None:
             task_type = TASKS.TASK_TYPES.SET_VARIABLE
         else:
             task_type = TASKS.TASK_TYPES.EXEC
@@ -517,6 +519,11 @@ def import_task(task_file, name, description, out_vars, force):
             description=description,
             force_create=force,
         )
+    elif task_file.endswith(".py") or task_file.endswith(".json"):
+        LOG.error(
+            "Unknown file format. Please use 'calm create library task' command for (.py & .json)."
+        )
+        return
     else:
         LOG.error("Unknown file format {}".format(task_file))
         return
