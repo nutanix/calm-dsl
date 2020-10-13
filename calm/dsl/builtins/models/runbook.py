@@ -20,9 +20,9 @@ class RunbookType(EntityType):
         pass
 
     @classmethod
-    def pre_decompile(mcls, cdict, context=[]):
+    def pre_decompile(mcls, cdict, context=[], prefix=""):
 
-        cdict = super().pre_decompile(cdict, context=context)
+        cdict = super().pre_decompile(cdict, context=context, prefix=prefix)
         # Removing additional attributes
         cdict.pop("state", None)
         cdict.pop("message_list", None)
@@ -170,10 +170,13 @@ class runbook(metaclass=DescriptorType):
         # Note - Server checks for name uniqueness in runbooks across actions
         # Generate unique names using class name and func name.
         prefix = (
-            cls.__name__ + "_" + self.user_func.__name__
-            if hasattr(cls, "__name__")
+            (getattr(cls, "name", "") or getattr(cls, "__name__", ""))
+            + "_"
+            + self.user_func.__name__
+            if hasattr(cls, "__name__") or hasattr(cls, "name")
             else "" + self.user_func.__name__
         )
+
         runbook_name = prefix + "_runbook"
         dag_name = prefix + "_dag"
 

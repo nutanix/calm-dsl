@@ -4,6 +4,7 @@ from .entity import EntityType, Entity, EntityTypeBase, EntityDict
 from .validator import PropertyValidator
 from .readiness_probe import readiness_probe
 from .provider_spec import provider_spec
+from .ahv_vm import AhvVmType
 from .client_attrs import update_dsl_metadata_map, get_dsl_metadata_map
 from .metadata_payload import get_metadata_obj
 
@@ -212,12 +213,41 @@ class SubstrateType(EntityType):
             )
 
     @classmethod
-    def pre_decompile(mcls, cdict, context=[]):
+    def pre_decompile(mcls, cdict, context=[], prefix=""):
 
         # Handle provider_spec
-        cdict = super().pre_decompile(cdict, context=context)
+        cdict = super().pre_decompile(cdict, context, prefix=prefix)
         cdict["create_spec"] = provider_spec(cdict["create_spec"])
+
+        if "__name__" in cdict:
+            cdict["__name__"] = "{}{}".format(prefix, cdict["__name__"])
+
         return cdict
+
+    @classmethod
+    def decompile(mcls, cdict, context=[], prefix=""):
+
+        if cdict["type"] == "K8S_POD":
+            LOG.error("Decompilation support for pod deployments is not available.")
+            sys.exit(-1)
+
+        cls = super().decompile(cdict, context=context, prefix=prefix)
+
+        provider_spec = cls.provider_spec
+        if cls.provider_type == "AHV_VM":
+            boot_config = provider_spec["resources"].get("boot_config", {})
+            if not boot_config:
+                LOG.error(
+                    "Boot config not present in {} substrate spec".format(cls.__name__)
+                )
+                sys.exit(-1)
+
+            context = [cls.__schema_name__, getattr(cls, "name", "") or cls.__name__]
+            vm_cls = AhvVmType.decompile(provider_spec, context=context, prefix=prefix)
+
+            cls.provider_spec = vm_cls
+
+        return cls
 
     def get_task_target(cls):
         return cls.get_ref()

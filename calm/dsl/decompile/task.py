@@ -24,14 +24,14 @@ def render_task_template(cls, entity_context="", RUNBOOK_ACTION_MAP={}):
     user_attrs["name"] = cls.name
 
     target = getattr(cls, "target_any_local_reference", None)
-    if target:
+    if target:  # target will be modified to have correct name(DSL name)
         user_attrs["target"] = render_ref_template(target)
 
     cred = cls.attrs.get("login_credential_local_reference", None)
     if cred:
-        # TODO make it as task decompile functionality
-        cred = RefType.decompile(cred)
-        user_attrs["cred"] = "ref({})".format(get_cred_var_name(cred.__name__))
+        user_attrs["cred"] = "ref({})".format(
+            get_cred_var_name(getattr(cred, "name", "") or cred.__name__)
+        )
 
     if cls.type == "EXEC":
         script_type = cls.attrs["script_type"]
@@ -120,13 +120,11 @@ def render_task_template(cls, entity_context="", RUNBOOK_ACTION_MAP={}):
             schema_file = "task_http_delete.py.jinja2"
 
     elif cls.type == "CALL_RUNBOOK":
-        # TODO shift this working to explicit method for task decompile
-        runbook = RefType.decompile(cls.attrs["runbook_reference"])
-        render_ref_template(target)
-
+        runbook = cls.attrs["runbook_reference"]
+        runbook_name = getattr(runbook, "name", "") or runbook.__name__
         user_attrs = {
             "name": cls.name,
-            "action": RUNBOOK_ACTION_MAP[runbook.__name__],
+            "action": RUNBOOK_ACTION_MAP[runbook_name],
             "target": target.name,
         }
         schema_file = "task_call_runbook.py.jinja2"

@@ -24,17 +24,27 @@ class ServiceType(EntityType):
     def get_task_target(cls):
         return cls.get_ref()
 
+    @classmethod
+    def pre_decompile(mcls, cdict, context, prefix=""):
+        cdict = super().pre_decompile(cdict, context, prefix=prefix)
+
+        if "__name__" in cdict:
+            cdict["__name__"] = "{}{}".format(prefix, cdict["__name__"])
+
+        return cdict
+
     def compile(cls):
 
         cdict = super().compile()
 
         def make_empty_runbook(action_name):
+            suffix = getattr(cls, "name", "") or cls.__name__
             user_dag = dag(
-                name="DAG_Task_for_Service_{}_{}".format(str(cls), action_name),
+                name="DAG_Task_for_Service_{}_{}".format(suffix, action_name),
                 target=cls.get_task_target(),
             )
             return runbook_create(
-                name="Runbook_for_Service_{}_{}".format(str(cls), action_name),
+                name="Runbook_for_Service_{}_{}".format(suffix, action_name),
                 main_task_local_reference=user_dag.get_ref(),
                 tasks=[user_dag],
             )
