@@ -1,4 +1,5 @@
 import ast
+import sys
 import inspect
 
 from .ref import ref
@@ -10,6 +11,9 @@ from .ref import RefType
 from .descriptor import DescriptorType
 from .validator import PropertyValidator
 from .node_visitor import GetCallNodes
+from calm.dsl.log import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 class RunbookType(EntityType):
@@ -127,8 +131,9 @@ class runbook(metaclass=DescriptorType):
         try:
             node_visitor.visit(node)
         except Exception as ex:
-            self.__exception__ = ex
-            raise
+            LOG.exception(ex)
+            sys.exit(-1)
+
         tasks, variables, task_list = node_visitor.get_objects()
         edges = []
         child_tasks = []
