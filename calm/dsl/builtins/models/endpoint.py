@@ -29,8 +29,8 @@ class ENDPOINT_PROVIDER(enum.Enum):
 
 
 PROVIDER_TYPE_MAP = {
-    ENDPOINT_PROVIDER.NUTANIX: "nutanix_pc",
-    ENDPOINT_PROVIDER.VMWARE: "vmware",
+    ENDPOINT_PROVIDER.NUTANIX: "NUTANIX_PC",
+    ENDPOINT_PROVIDER.VMWARE: "VMWARE",
 }
 
 
@@ -122,7 +122,7 @@ def _os_endpoint(
             if not isinstance(vm, VMRefType):
                 raise ValueError("VMs are not of type VMRefType")
         kwargs["attrs"]["vm_references"] = vms
-        kwargs["provider_type"] = PROVIDER_TYPE_MAP.get(provider_type, "nutanix")
+        kwargs["provider_type"] = PROVIDER_TYPE_MAP.get(provider_type, "NUTANIX_PC")
         kwargs["attrs"]["subnet"] = subnet
         kwargs["attrs"]["filter_type"] = ENDPOINT_FILTER_MAP.get(filter_type, "static")
         kwargs["attrs"]["account_reference"] = account
