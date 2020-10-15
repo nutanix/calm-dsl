@@ -83,7 +83,7 @@ def service(**kwargs):
 Service = service()
 
 
-class Service_with_actions_defined(Service):
+class BaseService(Service):
     @action
     def __create__():
         pass

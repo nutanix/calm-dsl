@@ -289,7 +289,14 @@ def _launch_marketplace_item(
     help="Interactive Mode to provide the value for secrets",
 )
 def _decompile_marketplace_bp(mpi_name, version, project, name, source, with_secrets):
-    """Decompiles marketplace manager blueprint"""
+    """Decompiles marketplace manager blueprint
+
+
+    \b
+    Sample command examples:
+    i.) calm decompile marketplace bp "Jenkins" : Command will decompile marketplace blueprint "Jenkins" having latest version
+    ii.) calm decompile marketplace bp "Jenkins" --version "1.0.0": Command will decompile marketplace blueprint "Jenkins" having "1.0.0" version
+    iii.) calm decompile marketplace bp "Jenkins" --name "DSL_JENKINS_BLUEPRINT": Command will decompile marketplace bp "Jenkins" to DSL blueprint having name "DSL_JENKINS_BLUEPRINT" (see the name of blueprint class in decompiled blueprint.py file)"""
 
     decompile_marketplace_bp(
         name=mpi_name,

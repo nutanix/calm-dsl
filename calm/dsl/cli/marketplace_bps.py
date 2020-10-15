@@ -146,6 +146,7 @@ def get_mpis_group_call(
     if group_member_count:
         payload["group_member_count"] = group_member_count
 
+    # TODO Create GroupAPI separately for it.
     Obj = get_resource_api("groups", client.connection)
     res, err = Obj.create(payload=payload)
 
