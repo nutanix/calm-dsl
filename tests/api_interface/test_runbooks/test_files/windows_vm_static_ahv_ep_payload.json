@@ -4,7 +4,7 @@
     "resources": {
       "type": "Windows",
       "value_type": "VM",
-      "provider_type": "nutanix_pc",
+      "provider_type": "NUTANIX_PC",
       "attrs": {
         "vm_references": [{
             "name": "test_vm",

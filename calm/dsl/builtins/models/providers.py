@@ -18,7 +18,7 @@ class Provider:
                 host_pc = True
 
             return {
-                "provider_type": "nutanix_pc",
+                "provider_type": "NUTANIX_PC",
                 "account_reference": account,
                 "external_network_list": subnets if not host_pc else [],
                 "subnet_reference_list": subnets if host_pc else [],
@@ -33,7 +33,7 @@ class Provider:
                 account = Ref.Account(account_name)
 
                 return {
-                    "provider_type": "nutanix_pc",
+                    "provider_type": "NUTANIX_PC",
                     "account_reference": account,
                     "subnet_reference_list": subnets,
                     "default_subnet_reference": subnets[0] if subnets else {},
@@ -43,7 +43,7 @@ class Provider:
             def __new__(cls, account, subnets=[]):
 
                 return {
-                    "provider_type": "nutanix_pc",
+                    "provider_type": "NUTANIX_PC",
                     "account_reference": account,
                     "external_network_list": subnets,
                     "default_subnet_reference": subnets[0] if subnets else {},
@@ -51,20 +51,20 @@ class Provider:
 
     class Aws:
         def __new__(cls, account):
-            return {"provider_type": "aws", "account_reference": account}
+            return {"provider_type": "AWS", "account_reference": account}
 
     class Azure:
         def __new__(cls, account):
-            return {"provider_type": "azure", "account_reference": account}
+            return {"provider_type": "AZURE", "account_reference": account}
 
     class Gcp:
         def __new__(cls, account):
-            return {"provider_type": "gcp", "account_reference": account}
+            return {"provider_type": "GCP", "account_reference": account}
 
     class Vmware:
         def __new__(cls, account):
-            return {"provider_type": "vmware", "account_reference": account}
+            return {"provider_type": "VMWARE", "account_reference": account}
 
     class K8s:
         def __new__(cls, account):
-            return {"provider_type": "k8s", "account_reference": account}
+            return {"provider_type": "K8S", "account_reference": account}
