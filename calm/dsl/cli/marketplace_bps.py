@@ -87,6 +87,7 @@ def get_mpis_group_call(
     group_member_count=0,
     app_source=None,
     app_group_uuid=None,
+    filter_by="",
 ):
     """
     To call groups() api for marketplace items
@@ -101,6 +102,9 @@ def get_mpis_group_call(
 
     if app_family != "All":
         filter += ";category_name==AppFamily;category_value=={}".format(app_family)
+
+    if filter_by:
+        filter = filter + ";(" + filter_by + ")"
 
     if name:
         filter += ";name=={}".format(name)
@@ -142,6 +146,7 @@ def get_mpis_group_call(
     if group_member_count:
         payload["group_member_count"] = group_member_count
 
+    # TODO Create GroupAPI separately for it.
     Obj = get_resource_api("groups", client.connection)
     res, err = Obj.create(payload=payload)
 
@@ -153,7 +158,7 @@ def get_mpis_group_call(
     return res
 
 
-def get_marketplace_items(name, quiet, app_family, display_all):
+def get_marketplace_items(name, quiet, app_family, display_all, filter_by=""):
     """Lists marketplace items"""
 
     group_member_count = 0
@@ -165,6 +170,7 @@ def get_marketplace_items(name, quiet, app_family, display_all):
         app_family=app_family,
         app_states=[MARKETPLACE_BLUEPRINT.STATES.PUBLISHED],
         group_member_count=group_member_count,
+        filter_by=filter_by,
     )
     group_results = res["group_results"]
 
@@ -221,10 +227,12 @@ def get_marketplace_items(name, quiet, app_family, display_all):
     click.echo(table)
 
 
-def get_marketplace_bps(name, quiet, app_family, app_states=[]):
+def get_marketplace_bps(name, quiet, app_family, app_states=[], filter_by=""):
     """ List all the blueprints in marketplace manager"""
 
-    res = get_mpis_group_call(name=name, app_family=app_family, app_states=app_states)
+    res = get_mpis_group_call(
+        name=name, app_family=app_family, app_states=app_states, filter_by=filter_by
+    )
     group_results = res["group_results"]
 
     if quiet:

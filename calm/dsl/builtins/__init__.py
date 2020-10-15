@@ -14,7 +14,7 @@ from .models.task import Task, CalmTask, TaskType
 
 from .models.port import Port, port, PortType
 from .models.service import (
-    Service_with_actions_defined as Service,
+    BaseService as Service,
     service,
     ServiceType,
 )
