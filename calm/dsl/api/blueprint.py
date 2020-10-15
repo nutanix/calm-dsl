@@ -123,7 +123,6 @@ class BlueprintAPI(ResourceAPI):
         # Remove creds before upload
         creds = bp_resources.get("credential_definition_list", []) or []
         secret_map = {}
-        default_creds = []
         for cred in creds:
             name = cred["name"]
             secret_map[name] = cred.pop("secret", {})
@@ -131,23 +130,6 @@ class BlueprintAPI(ResourceAPI):
             # TODO - Fix bug in server: {} != None
             cred["secret"] = {
                 "attrs": {"is_secret_modified": False, "secret_reference": None}
-            }
-            if cred.pop("default"):
-                default_creds.append(cred)
-        """
-        if not default_creds:
-            raise ValueError("No default cred provided")
-        if len(default_creds) > 1:
-            raise ValueError(
-                "Found more than one credential marked as default - {}".format(
-                    ", ".join(cred["name"] for cred in default_creds)
-                )
-            )
-        """
-        if default_creds:
-            bp_resources["default_credential_local_reference"] = {
-                "kind": "app_credential",
-                "name": default_creds[0]["name"],
             }
 
         # Strip secret variable values
