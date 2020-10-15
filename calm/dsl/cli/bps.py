@@ -17,6 +17,7 @@ from calm.dsl.builtins import (
     VmBlueprint,
     create_blueprint_payload,
     BlueprintType,
+    MetadataType,
     get_valid_identifier,
     file_exists,
     get_dsl_metadata_map,
@@ -452,6 +453,14 @@ def _decompile_bp(bp_payload, with_secrets=False, prefix=""):
     blueprint_name = bp_payload["spec"].get("name", "DslBlueprint")
     blueprint_description = bp_payload["spec"].get("description", "")
 
+    blueprint_metadata = bp_payload["metadata"]
+
+    # POP unnecessary keys
+    blueprint_metadata.pop("creation_time", None)
+    blueprint_metadata.pop("last_update_time", None)
+
+    metadata_obj = MetadataType.decompile(blueprint_metadata)
+
     # Copying dsl_name_map to global client_attrs
     if bp_payload["spec"]["resources"]["client_attrs"].get("None", {}):
         init_dsl_metadata_map(bp_payload["spec"]["resources"]["client_attrs"]["None"])
@@ -475,7 +484,7 @@ def _decompile_bp(bp_payload, with_secrets=False, prefix=""):
     bp_cls.__name__ = get_valid_identifier(blueprint_name)
     bp_cls.__doc__ = blueprint_description
 
-    create_bp_dir(bp_cls=bp_cls, with_secrets=with_secrets)
+    create_bp_dir(bp_cls=bp_cls, with_secrets=with_secrets, metadata_obj=metadata_obj)
     click.echo(
         "\nSuccessfully decompiled. Directory location: {}. Blueprint location: {}".format(
             get_bp_dir(), os.path.join(get_bp_dir(), "blueprint.py")

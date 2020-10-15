@@ -10,7 +10,7 @@ from calm.dsl.builtins import Ref, Metadata
 
 CENTOS_KEY = read_local_file("keys/centos")
 CENTOS_PUBLIC_KEY = read_local_file("keys/centos_pub")
-PROJECT_NAME = read_local_file("project_name")
+PROJECT_NAME = "default"
 
 Centos = basic_cred("centos", CENTOS_KEY, name="Centos", type="KEY", default=True)
 
