@@ -50,9 +50,9 @@ class ServiceType(EntityType):
             )
 
         compulsory_actions = list(cls.ALLOWED_SYSTEM_ACTIONS.values())
-        for action in cdict["action_list"]:
-            if action.__name__ in compulsory_actions:
-                compulsory_actions.remove(action.__name__)
+        for action_obj in cdict["action_list"]:
+            if action_obj.__name__ in compulsory_actions:
+                compulsory_actions.remove(action_obj.__name__)
 
         for action_name in compulsory_actions:
             user_action = _action_create(

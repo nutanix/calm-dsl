@@ -12,13 +12,14 @@ from calm.dsl.decompile.profile import render_profile_template
 from calm.dsl.decompile.credential import render_credential_template, get_cred_files
 
 from calm.dsl.decompile.blueprint import render_blueprint_template
+from calm.dsl.decompile.metadata import render_metadata_template
 from calm.dsl.decompile.variable import get_secret_variable_files
 from calm.dsl.decompile.file_handler import get_local_dir
 from calm.dsl.builtins import BlueprintType, ServiceType, PackageType
 from calm.dsl.builtins import DeploymentType, ProfileType, SubstrateType
 
 
-def render_bp_file_template(cls, with_secrets=False):
+def render_bp_file_template(cls, with_secrets=False, metadata_obj=None):
 
     if not isinstance(cls, BlueprintType):
         raise TypeError("{} is not of type {}".format(cls, BlueprintType))
@@ -133,6 +134,10 @@ def render_bp_file_template(cls, with_secrets=False):
             dependepent_entities[k] = render_substrate_template(v, vm_images=vm_images)
 
     blueprint = render_blueprint_template(cls)
+
+    # Rendere blueprint metadata
+    metadata_str = render_metadata_template(metadata_obj)
+
     user_attrs.update(
         {
             "secret_files": secret_files,
@@ -140,6 +145,7 @@ def render_bp_file_template(cls, with_secrets=False):
             "vm_images": downloadable_img_list,
             "dependent_entities": dependepent_entities,
             "blueprint": blueprint,
+            "metadata": metadata_str,
         }
     )
 
