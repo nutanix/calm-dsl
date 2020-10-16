@@ -3,7 +3,7 @@
         "spec_version": 1,
         "kind": "blueprint",
         "name": "SimpleLampBlueprint",
-        "categories": null
+        "categories": {}
     },
     "spec": {
         "name": "SimpleLampBlueprint",
