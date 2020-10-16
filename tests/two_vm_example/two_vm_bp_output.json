@@ -752,7 +752,6 @@
                 },
                 "value": "passwd"
             },
-            "default": true,
             "editables": {}
         }
     ],
@@ -839,5 +838,8 @@
         }
     ],
     "client_attrs": {},
-    "default_credential_local_reference": null
+    "default_credential_local_reference": {
+        "kind": "app_credential",
+        "name": "default"
+    }
 }

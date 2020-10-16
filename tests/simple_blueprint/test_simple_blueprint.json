@@ -1677,14 +1677,14 @@
                     "variable_list": [],
                     "action_list": [],
                     "readiness_probe": {
-                        "address": "",
-                        "disable_readiness_probe": true,
-                        "delay_secs": "60",
                         "connection_type": "SSH",
                         "connection_port": 22,
                         "connection_protocol": "",
+                        "timeout_secs": "",
+                        "delay_secs": "60",
                         "retries": "5",
-                        "timeout_secs": ""
+                        "address": "",
+                        "disable_readiness_probe": true
                     },
                     "editables": {}
                 }
@@ -1701,7 +1701,6 @@
                         },
                         "value": "passwd"
                     },
-                    "default": true,
                     "editables": {}
                 }
             ],
@@ -1968,7 +1967,11 @@
                         }
                     }
                 }
-            ]
+            ],
+            "default_credential_local_reference": {
+                "kind": "app_credential",
+                "name": "default cred"
+            }
         }
     }
 }

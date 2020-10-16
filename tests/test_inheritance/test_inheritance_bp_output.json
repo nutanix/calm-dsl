@@ -2178,7 +2178,6 @@
                 },
                 "value": "-----BEGIN RSA PRIVATE KEY-----\nMIIEogIBAAKCAQEAzefAdd/IexagClNBF7i/r28w5blZZGLtUK9WOlwX3kbdNQ4M\nbLFyCFGxhCgD/T+EawB6kXAo2jEuMKlFGMTi709VAsSBrpW9wn7ti/YvldTVjf+I\n949tHpUMIZb2A9LKpuYgh7FYYh5S66GqREnAQ46ODFFENbU8BP6doBwIbuOVctvM\nejfBgu7IfQL01SDux3LEDVP+9WEo1JkE5mASKJldPgwjM2HpB1rxoxy4lpT+jCIb\norp100vD4zY+IfYQ9+mJQk8Vhrl/Z4l/V3slAHA+5/dmRYkfeVmezsV/ia7gjDAD\nKPA4l4YbLF2b8c6gZgCxj5NrLHQzItqswUpUYwIDAQABAoIBAALbyKEPohsMsDHE\ngHRXBRjnPHC2rIYyFg+sh3rC7t/lRZ/oGdsOcZdU+a0XLcr/wpOxC4KRDI15k6XA\nS9ccBfctjPAUu09/AQXouN0xu0Jjad2RTRz8DuyW7swD6lbDlTr7meWtsXJB79kZ\nQvcKERMUW7t8YKvgNWeaWKTcOW+/Tw1cXwYhL4+1nUowQHKACUVIojvI1MWbS2eK\nLI9X6OjTwKs8Zh/BR3UGRUA7kvjJBEWAeuVElWkKtHYw3oSnwhQEfFAz5aNp8yMt\nTuf0zJowtwpHEZARgzyWtsNb2AINMpF05kCH707K52PLK7wwF83C1CnbaCXC8D58\nwjbFFoUCgYEA5C2CUsr8qXQcMH1s/MJ0cX5CNNbQhrQqIi74uhoQ4e5NzW0g1dne\nryQNkesCjfw3+NzRmuwqwE9FWuLlVmhyeGVdCANU0F7uawsTI0W5bKghL9lbmCo/\nrn9IqpYPLHlVe3RoG4gv9WMvQKBhBzHR9QwYjBgA93u2utaFbgnKtF8CgYEA5wMD\nvJp9uZgI8f+e+0jjm9F+WnqiQ4/u2fSrSNLWFMY7Mk+ERCls8C1hFgvP68GeJLlf\nfbxh16q6WG4BE/CVub5Us1LlTk5o9fACaWgsY8vQ2Kkw4eeWW2xpBIVDAArN/TlR\n57HEq0taIcWOgqQuAVnSmIrHfSmogZqxnlPm/n0CgYBJEPGchXem45FrTZ6qybHz\n7dRRi0A3AlZDn/rxzQr+7gpn77wF/sA6ITdfNHwa71sVC9Dq5RlDf57b3bBGnSea\nugqyWC6+kseR63fzYY5g5u3Jnraf4VeHDyc7yNWPDkN7RulXd6Kz11D4RuMLJL7w\n0zDBG6ajmTAIYE1V0TjhzQKBgAHXCk6URHAX/+o9iPyjZfy1vHXoCCbVnKdrxXl9\nBGuB8LLD41/PnKiFFALi8TMFhcbxGwubVoQrPfS6W5PXFLo4A+CxxlXLVhavZLWG\nOORKmU1Ae70w5QexY1y/2vrDG0TrEfXweoqKvRsLwcjUmfE0z/KbGF+s10TBAK0s\nKejZAoGAVSR1iD62vawranCbe9+ZyQdRD2oKOYNpwgVzcc5i+NCKjXTatabjN2i+\nbFOsvlBIJyEwbYRdycv9ZXnm65y55l96JtqNM2mQDgRNRMCMlgz0gNyUs0zLgp6X\nIkxCuZ8PUq91AcI83W9pdl4XHXBxmin2RUPGC2n/+lFSSrrrksM=\n-----END RSA PRIVATE KEY-----"
             },
-            "default": true,
             "editables": {}
         }
     ],
@@ -2442,5 +2441,8 @@
         }
     ],
     "client_attrs": {},
-    "default_credential_local_reference": null
+    "default_credential_local_reference": {
+        "kind": "app_credential",
+        "name": "Centos"
+    }
 }

@@ -61,8 +61,7 @@ app_profile_list:
     value: 10.0.0.1
 client_attrs: {}
 credential_definition_list:
-- default: true
-  description: ''
+- description: ''
   editables: {}
   name: default
   secret:
@@ -71,7 +70,9 @@ credential_definition_list:
     value: passwd
   type: PASSWORD
   username: root
-default_credential_local_reference: null
+default_credential_local_reference:
+  kind: app_credential
+  name: default
 package_definition_list:
 - description: Example package with variables and link to service
   name: MySQLPackage

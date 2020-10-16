@@ -1,6 +1,5 @@
 from calm.dsl.decompile.render import render_template
 from calm.dsl.builtins import MetadataType
-from calm.dsl.decompile.ref_dependency import update_package_name
 
 
 def render_metadata_template(cls):
