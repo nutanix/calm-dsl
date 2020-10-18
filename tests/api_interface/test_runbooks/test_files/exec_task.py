@@ -90,7 +90,7 @@ linux_vmware_dynamic_vm_endpoint1 = Endpoint.Linux.vm(
 
 linux_vmware_dynamic_vm_endpoint2 = Endpoint.Linux.vm(
     filter_type=ENDPOINT_FILTER.DYNAMIC,
-    filter="name==" + VMWARE_LINUX_VM_NAME_PREFIX + "*",
+    filter="name==" + VMWARE_LINUX_VM_NAME_PREFIX + ".*",
     cred=LinuxCred,
     account=Account.VMWare("vmware_1"),
     provider_type=ENDPOINT_PROVIDER.VMWARE,
