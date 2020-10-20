@@ -127,24 +127,23 @@ def _describe_app(app_name, out):
     required=True,
     help="Watch action run in an app",
 )
+@click.option(
+    "--ignore_runtime_variables",
+    "-i",
+    is_flag=True,
+    default=False,
+    help="Ignore runtime variables and use defaults",
+)
 @click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
-def _run_actions(app_name, action_name, watch):
+def _run_actions(app_name, action_name, watch, ignore_runtime_variables):
     """App lcm actions"""
-    render_actions = display_with_screen(app_name, action_name, watch)
-    Display.wrapper(render_actions, watch)
 
-
-def display_with_screen(app_name, action_name, watch):
-    def render_actions(screen):
-        screen.clear()
-        screen.print_at(
-            "Running action {} for app {}".format(action_name, app_name), 0, 0
-        )
-        screen.refresh()
-        run_actions(screen, app_name, action_name, watch)
-        screen.wait_for_input(10.0)
-
-    return render_actions
+    run_actions(
+        app_name=app_name,
+        action_name=action_name,
+        watch=watch,
+        patch_editables=not ignore_runtime_variables,
+    )
 
 
 @watch.command("action_runlog")

@@ -8,6 +8,7 @@ class ApplicationAPI(ResourceAPI):
 
         self.ACTION_RUN = self.ITEM + "/actions/{}/run"
         self.DOWNLOAD_RUNLOG = self.ITEM + "/app_runlogs/{}/output/download"
+        self.ACTION_VARIABLE = self.ITEM + "/actions/{}/variables"
 
     def run_action(self, app_id, action_id, payload):
         return self.connection._call(
@@ -39,4 +40,10 @@ class ApplicationAPI(ResourceAPI):
         download_url = self.DOWNLOAD_RUNLOG.format(app_id, runlog_id)
         return self.connection._call(
             download_url, method=REQUEST.METHOD.GET, verify=False
+        )
+
+    def action_variables(self, app_id, action_name):
+        action_var_url = self.ACTION_VARIABLE.format(app_id, action_name)
+        return self.connection._call(
+            action_var_url, method=REQUEST.METHOD.GET, verify=False
         )
