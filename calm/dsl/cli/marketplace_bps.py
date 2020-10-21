@@ -13,6 +13,7 @@ from calm.dsl.config import get_context
 from .utils import highlight_text, get_states_filter
 from .bps import launch_blueprint_simple, get_blueprint
 from .projects import get_project
+from .environments import get_environment_by_name_project_uuid, get_environment_by_uuid
 from calm.dsl.log import get_logging_handle
 from .constants import MARKETPLACE_BLUEPRINT
 
@@ -438,6 +439,7 @@ def launch_marketplace_bp(
     name,
     version,
     project,
+    environment,
     app_name=None,
     profile_name=None,
     patch_editables=True,
@@ -463,7 +465,7 @@ def launch_marketplace_bp(
 
     LOG.info("Converting MPI to blueprint")
     bp_payload = convert_mpi_into_blueprint(
-        name=name, version=version, project_name=project, app_source=app_source
+        name=name, version=version, project_name=project, environment_name=environment, app_source=app_source
     )
 
     app_name = app_name or "Mpi-App-{}-{}".format(name, str(uuid.uuid4())[-10:])
@@ -528,6 +530,7 @@ def launch_marketplace_item(
     name,
     version,
     project,
+    environment,
     app_name=None,
     profile_name=None,
     patch_editables=True,
@@ -549,7 +552,7 @@ def launch_marketplace_item(
 
     LOG.info("Converting MPI to blueprint")
     bp_payload = convert_mpi_into_blueprint(
-        name=name, version=version, project_name=project, app_source=app_source
+        name=name, version=version, project_name=project, environment_name=environment, app_source=app_source
     )
 
     app_name = app_name or "Mpi-App-{}-{}".format(name, str(uuid.uuid4())[-10:])
@@ -562,7 +565,7 @@ def launch_marketplace_item(
     LOG.info("App {} creation is successful".format(app_name))
 
 
-def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None):
+def convert_mpi_into_blueprint(name, version, project_name=None, environment_name=None, app_source=None):
 
     client = get_api_client()
     context = get_context()
@@ -581,13 +584,19 @@ def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None
 
     res = res.json()
     environments = res["status"]["resources"]["environment_reference_list"]
+    default_environment_uuid = res["status"]["resources"].get("default_environment_reference", {}).get('uuid')
 
-    # For now only single environment exists
-    if not environments:
-        LOG.error("No environment registered to project '{}'".format(project_name))
-        sys.exit(-1)
+    if environment_name:
+        environment_data = get_environment_by_name_project_uuid(environment_name, project_uuid)
+    elif default_environment_uuid:
+        environment_data = get_environment_by_uuid(default_environment_uuid)
+    else:
+        raise Exception("Project {} doesn't have a default environment.".format(project_name))
 
-    env_uuid = environments[0]["uuid"]
+    env_uuid = environment_data["metadata"]["uuid"]
+    env_name = environment_data["metadata"]["name"]
+    if env_uuid not in environments:
+        raise Exception("Project {} doesn't have an environment with name {}.".format(project_name, env_name))
 
     LOG.info("Fetching MPI details")
     mpi_data = get_mpi_by_name_n_version(
