@@ -15,7 +15,12 @@ from calm.dsl.config import get_context
 
 from .utils import get_name_query, get_states_filter, highlight_text, Display
 from .constants import APPLICATION, RUNLOG, SYSTEM_ACTIONS
-from .bps import launch_blueprint_simple, compile_blueprint, create_blueprint
+from .bps import (
+    launch_blueprint_simple,
+    compile_blueprint,
+    create_blueprint,
+    parse_launch_runtime_vars,
+)
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -596,7 +601,31 @@ def delete_app(app_names, soft=False):
         LOG.info("Action runlog uuid: {}".format(runlog_id))
 
 
-def get_action_runtime_args(app_uuid, action_payload, patch_editables):
+def get_action_var_val_from_launch_params(launch_vars, var_name):
+    """Returns variable value from launch params"""
+
+    filtered_launch_vars = list(
+        filter(
+            lambda e: e["name"] == var_name,
+            launch_vars,
+        )
+    )
+
+    if len(filtered_launch_vars) > 1:
+        LOG.error(
+            "Unable to populate runtime editables: Multiple matches for value of variable '{}'".format(
+                var_name
+            )
+        )
+        sys.exit(-1)
+
+    if len(filtered_launch_vars) == 1:
+        return filtered_launch_vars[0].get("value", {}).get("value", None)
+
+    return None
+
+
+def get_action_runtime_args(app_uuid, action_payload, patch_editables, launch_params):
     """Returns action arguments or variable data """
 
     action_name = action_payload["name"]
@@ -621,6 +650,24 @@ def get_action_runtime_args(app_uuid, action_payload, patch_editables):
     if not (patch_editables and runtime_vars):
         return action_args or []
 
+    # If file is supplied for launch params
+    if launch_params:
+        click.echo("Patching values for runtime variables under action ...")
+
+        launch_runtime_vars = parse_launch_runtime_vars(launch_params=launch_params)
+        for _arg in action_args:
+            var_name = _arg["name"]
+            if var_name in runtime_vars:
+
+                new_val = get_action_var_val_from_launch_params(
+                    launch_vars=launch_runtime_vars, var_name=var_name
+                )
+                if new_val is not None:
+                    _arg["value"] = new_val
+
+        return action_args
+
+    # Else prompt for runtime variable values
     click.echo(
         "Found runtime variables in action. Please provide values for runtime variables"
     )
@@ -657,7 +704,7 @@ def get_action_runtime_args(app_uuid, action_payload, patch_editables):
     return action_args
 
 
-def run_actions(app_name, action_name, watch, patch_editables):
+def run_actions(app_name, action_name, watch, patch_editables, launch_params):
     client = get_api_client()
 
     if action_name.lower() == SYSTEM_ACTIONS.CREATE:
@@ -680,9 +727,12 @@ def run_actions(app_name, action_name, watch, patch_editables):
 
     calm_action_name = "action_" + action_name.lower()
     action_payload = next(
-        action
-        for action in app_spec["resources"]["action_list"]
-        if action["name"] == calm_action_name or action["name"] == action_name
+        (
+            action
+            for action in app_spec["resources"]["action_list"]
+            if action["name"] == calm_action_name or action["name"] == action_name
+        ),
+        None,
     )
     if not action_payload:
         LOG.error("No action found matching name {}".format(action_name))
@@ -691,8 +741,14 @@ def run_actions(app_name, action_name, watch, patch_editables):
     action_id = action_payload["uuid"]
 
     action_args = get_action_runtime_args(
-        app_uuid=app_id, action_payload=action_payload, patch_editables=patch_editables
+        app_uuid=app_id,
+        action_payload=action_payload,
+        patch_editables=patch_editables,
+        launch_params=launch_params,
     )
+    import pdb
+
+    pdb.set_trace()
 
     # Hit action run api (with metadata and minimal spec: [args, target_kind, target_uuid])
     app.pop("status")
