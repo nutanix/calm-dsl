@@ -746,9 +746,6 @@ def run_actions(app_name, action_name, watch, patch_editables, launch_params):
         patch_editables=patch_editables,
         launch_params=launch_params,
     )
-    import pdb
-
-    pdb.set_trace()
 
     # Hit action run api (with metadata and minimal spec: [args, target_kind, target_uuid])
     app.pop("status")
