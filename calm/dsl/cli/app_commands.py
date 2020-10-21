@@ -264,8 +264,7 @@ def restart():
 def start_app(app_name, watch):
     """Starts an application"""
 
-    render_actions = display_with_screen(app_name, "start", watch)
-    Display.wrapper(render_actions, watch)
+    run_actions(app_name=app_name, action_name="start", watch=watch)
 
 
 @stop.command("app")
@@ -274,8 +273,7 @@ def start_app(app_name, watch):
 def stop_app(app_name, watch):
     """Stops an application"""
 
-    render_actions = display_with_screen(app_name, "stop", watch)
-    Display.wrapper(render_actions, watch)
+    run_actions(app_name=app_name, action_name="stop", watch=watch)
 
 
 @restart.command("app")
@@ -284,5 +282,4 @@ def stop_app(app_name, watch):
 def restart_app(app_name, watch):
     """Restarts an application"""
 
-    render_actions = display_with_screen(app_name, "restart", watch)
-    Display.wrapper(render_actions, watch)
+    run_actions(app_name=app_name, action_name="restart", watch=watch)

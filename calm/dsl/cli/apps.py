@@ -708,7 +708,9 @@ def get_action_runtime_args(
     return action_args
 
 
-def run_actions(app_name, action_name, watch, patch_editables, runtime_params_file):
+def run_actions(
+    app_name, action_name, watch, patch_editables=False, runtime_params_file=None
+):
     client = get_api_client()
 
     if action_name.lower() == SYSTEM_ACTIONS.CREATE:

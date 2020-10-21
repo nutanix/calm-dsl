@@ -172,6 +172,9 @@ class TestAppCommands:
 
         self._test_describe_app()
         self._test_run_custom_action()
+        self._test_restart_app()
+        self._test_stop_app()
+        self._test_start_app()
         self._test_dsl_bp_delete()
         self._test_app_delete()
 
@@ -224,6 +227,66 @@ class TestAppCommands:
                 "--app={}".format(self.created_app_name),
             ],
         )
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+        LOG.info("Success")
+
+    def _test_restart_app(self):
+
+        runner = CliRunner()
+        self._wait_for_non_busy_state()
+        LOG.info("Restarting app {}".format(self.created_app_name))
+        result = runner.invoke(cli, ["restart", "app", self.created_app_name])
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+        LOG.info("Success")
+
+    def _test_stop_app(self):
+
+        runner = CliRunner()
+        self._wait_for_non_busy_state()
+        LOG.info("Stopping app {}".format(self.created_app_name))
+        result = runner.invoke(cli, ["stop", "app", self.created_app_name])
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+        LOG.info("Success")
+
+    def _test_start_app(self):
+
+        runner = CliRunner()
+        self._wait_for_non_busy_state()
+        LOG.info("Starting app {}".format(self.created_app_name))
+        result = runner.invoke(cli, ["start", "app", self.created_app_name])
         if result.exit_code:
             cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
             LOG.debug(
