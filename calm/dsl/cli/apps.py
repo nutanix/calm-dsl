@@ -625,7 +625,9 @@ def get_action_var_val_from_launch_params(launch_vars, var_name):
     return None
 
 
-def get_action_runtime_args(app_uuid, action_payload, patch_editables, launch_params):
+def get_action_runtime_args(
+    app_uuid, action_payload, patch_editables, runtime_params_file
+):
     """Returns action arguments or variable data """
 
     action_name = action_payload["name"]
@@ -651,16 +653,18 @@ def get_action_runtime_args(app_uuid, action_payload, patch_editables, launch_pa
         return action_args or []
 
     # If file is supplied for launch params
-    if launch_params:
+    if runtime_params_file:
         click.echo("Patching values for runtime variables under action ...")
 
-        launch_runtime_vars = parse_launch_runtime_vars(launch_params=launch_params)
+        parsed_runtime_vars = parse_launch_runtime_vars(
+            launch_params=runtime_params_file
+        )
         for _arg in action_args:
             var_name = _arg["name"]
             if var_name in runtime_vars:
 
                 new_val = get_action_var_val_from_launch_params(
-                    launch_vars=launch_runtime_vars, var_name=var_name
+                    launch_vars=parsed_runtime_vars, var_name=var_name
                 )
                 if new_val is not None:
                     _arg["value"] = new_val
@@ -704,7 +708,7 @@ def get_action_runtime_args(app_uuid, action_payload, patch_editables, launch_pa
     return action_args
 
 
-def run_actions(app_name, action_name, watch, patch_editables, launch_params):
+def run_actions(app_name, action_name, watch, patch_editables, runtime_params_file):
     client = get_api_client()
 
     if action_name.lower() == SYSTEM_ACTIONS.CREATE:
@@ -744,7 +748,7 @@ def run_actions(app_name, action_name, watch, patch_editables, launch_params):
         app_uuid=app_id,
         action_payload=action_payload,
         patch_editables=patch_editables,
-        launch_params=launch_params,
+        runtime_params_file=runtime_params_file,
     )
 
     # Hit action run api (with metadata and minimal spec: [args, target_kind, target_uuid])

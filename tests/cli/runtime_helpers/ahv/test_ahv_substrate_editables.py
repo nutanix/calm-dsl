@@ -235,11 +235,11 @@ class TestEditables:
         self._wait_for_non_busy_state(app_name)
 
         # Run using --launch_params flag
-        command = "run action {} -a {} --launch_params {}".format(
+        command = "run action {} -a {} --runtime_params {}".format(
             PROFILE_ACTION_NAME, app_name, ACTION_LAUNCH_PARAMS
         )
 
-        LOG.info("Testing --launch_params option for running profile actions")
+        LOG.info("Testing --runtime_params option for running profile actions")
         result = runner.invoke(cli, command)
         if result.exit_code:
             cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
@@ -254,7 +254,7 @@ class TestEditables:
                 )
             )
             pytest.fail(
-                "Failed to run action {} on app {} using --launch_params option".format(
+                "Failed to run action {} on app {} using --runtime_params option".format(
                     PROFILE_ACTION_NAME, app_name
                 )
             )

@@ -135,19 +135,22 @@ def _describe_app(app_name, out):
     help="Ignore runtime variables and use defaults",
 )
 @click.option(
-    "--launch_params",
-    "-l",
+    "--runtime_params",
+    "-r",
+    "runtime_params_file",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     help="Path to python file for runtime editables",
 )
 @click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
-def _run_actions(app_name, action_name, watch, ignore_runtime_variables, launch_params):
+def _run_actions(
+    app_name, action_name, watch, ignore_runtime_variables, runtime_params_file
+):
     """App lcm actions.
     All runtime variables will be prompted by default. When passing the 'ignore_runtime_editable' flag, no variables will be prompted and all default values will be used.
     The action default values can be overridden by passing a Python file via 'launch_params'. Any variable not defined in the Python file will keep the default value defined in the blueprint. When passing a Python file, no variables will be prompted.
 
     \b
-    >: launch_params: Python file consisting of variables 'variable_list'
+    >: runtime_params: Python file consisting of variables 'variable_list'
     Ex: variable_list = [
             {
                 "value": {"value": <Variable Value>},
@@ -161,7 +164,7 @@ def _run_actions(app_name, action_name, watch, ignore_runtime_variables, launch_
         action_name=action_name,
         watch=watch,
         patch_editables=not ignore_runtime_variables,
-        launch_params=launch_params,
+        runtime_params_file=runtime_params_file,
     )
 
 
