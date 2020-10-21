@@ -966,7 +966,20 @@ def launch_blueprint_simple(
                         vm_img_map,
                     )
 
-        variable_list = runtime_editables.get("variable_list", [])
+        bp_runtime_variables = runtime_editables.get("variable_list", [])
+
+        # POP out action variables(Day2 action variables) bcz they cann't be given at bp launch time
+        variable_list = []
+        for _var in bp_runtime_variables:
+            _var_context = _var["context"]
+            context_list = _var_context.split(".")
+
+            # If variable is defined under runbook(action), ignore it
+            if len(context_list) >= 3 and context_list[-3] == "runbook":
+                continue
+
+            variable_list.append(_var)
+
         if variable_list:
             if not launch_params:
                 click.echo("\n\t\t\t", nl=False)
