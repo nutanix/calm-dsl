@@ -121,3 +121,11 @@ class TestDslProjectWithEnv(Project):
         "storage": 2,
         "memory": 1,
     }
+
+
+# NOTE this is used for tests. Environment name is changed to prevent same name for multiple environments
+import uuid
+
+ProjEnvironment.__name__ = "{}_{}".format(
+    ProjEnvironment.__name__, str(uuid.uuid4())[:10]
+)
