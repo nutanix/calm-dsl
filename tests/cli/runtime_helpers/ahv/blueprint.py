@@ -66,16 +66,16 @@ class DefaultProfile(Profile):
     @action
     def test_profile_action():
         """Sample description for a profile action"""
-        var_run = CalmVariable.Simple(
+        var_run = CalmVariable.Simple(  # Noqa
             "mail",
             runtime=True,
         )
-        var_nor = CalmVariable.Simple("efg", runtime=False)
-        var_secret = CalmVariable.Simple.Secret(
+        var_nor = CalmVariable.Simple("efg", runtime=False) # Noqa
+        var_secret = CalmVariable.Simple.Secret(    # Noqa
             "secret_var_val",
             runtime=True,
         )
-        var_with_choices = CalmVariable.WithOptions(
+        var_with_choices = CalmVariable.WithOptions(    # Noqa
             ["mail1", "mail2"],
             default="mail1",
             runtime=True,
