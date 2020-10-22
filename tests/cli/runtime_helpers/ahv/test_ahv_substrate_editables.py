@@ -2,6 +2,7 @@ from click.testing import CliRunner
 import time
 import pytest
 import json
+import sys
 import traceback
 
 from calm.dsl.cli import main as cli
@@ -159,8 +160,13 @@ def _wait_for_non_busy_state(name):
     app_data = json.loads(result.output)
     LOG.info("App State: {}".format(app_data["status"]["state"]))
     LOG.debug("App Terminal states: {}".format(NON_BUSY_APP_STATES))
+    cnt = 0
     while app_data["status"]["state"] not in NON_BUSY_APP_STATES:
         time.sleep(5)
         result = runner.invoke(cli, ["describe", "app", name, "--out=json"])
         app_data = json.loads(result.output)
         LOG.info("App State: {}".format(app_data["status"]["state"]))
+        if cnt > 20:
+            LOG.error("Failed to reach terminal state in 100 seconds")
+            sys.exit(-1)
+        cnt += 1

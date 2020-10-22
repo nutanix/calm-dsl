@@ -7,7 +7,7 @@ from .ref import ref
 from .package import PackageType
 from .metadata_payload import get_metadata_obj
 from calm.dsl.store import Cache
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -27,15 +27,14 @@ class AhvDiskType(EntityType):
         # Pop bootable from cdict
         cdict.pop("bootable", None)
 
-        # Getting the image data ----BEGIN----
-        config = get_config()
-
         # Getting the metadata obj
         metadata_obj = get_metadata_obj()
         project_ref = metadata_obj.get("project_reference") or dict()
 
         # If project not found in metadata, it will take project from config
-        project_name = project_ref.get("name", config["PROJECT"]["name"])
+        context = get_context()
+        project_config = context.get_project_config()
+        project_name = project_ref.get("name") or project_config["name"]
 
         project_cache_data = Cache.get_entity_data(
             entity_type="project", name=project_name

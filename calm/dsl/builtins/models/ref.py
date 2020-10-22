@@ -10,6 +10,15 @@ class RefType(EntityType):
     __schema_name__ = "Ref"
     __openapi_type__ = "app_ref"
 
+    @classmethod
+    def pre_decompile(mcls, cdict, context, prefix=""):
+        cdict = super().pre_decompile(cdict, context, prefix=prefix)
+
+        # Class name for ref objects should always be taken randomly
+        cdict["__name__"] = None
+
+        return cdict
+
 
 class RefValidator(PropertyValidator, openapi_type="app_ref"):
     __default__ = None

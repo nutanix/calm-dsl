@@ -3,7 +3,7 @@ import os
 from .resource import ResourceAPI
 from .connection import REQUEST
 from .util import strip_secrets, patch_secrets
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 from .project import ProjectAPI
 
 
@@ -161,8 +161,9 @@ class RunbookAPI(ResourceAPI):
             runbook_name, runbook_desc, runbook_resources
         )
 
-        config = get_config()
-        project_name = config["PROJECT"]["name"]
+        ContextObj = get_context()
+        project_config = ContextObj.get_project_config()
+        project_name = project_config["name"]
         projectObj = ProjectAPI(self.connection)
 
         # Fetch project details
@@ -304,8 +305,9 @@ class RunbookAPI(ResourceAPI):
             runbook_name, runbook_desc, runbook_resources, spec_version=spec_version
         )
 
-        config = get_config()
-        project_name = config["PROJECT"]["name"]
+        ContextObj = get_context()
+        project_config = ContextObj.get_project_config()
+        project_name = project_config["name"]
         projectObj = ProjectAPI(self.connection)
 
         # Fetch project details

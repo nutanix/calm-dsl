@@ -30,6 +30,8 @@ from calm.dsl.builtins import *  #no_qa
 {% endfor %}
 {{obj.blueprint}}
 
+{% if obj.metadata %}{{obj.metadata}}{%- endif %}
+
 {% endmacro %}
 
 {{bp_file_helper(obj)}}

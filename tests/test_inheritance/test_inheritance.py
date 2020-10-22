@@ -8,6 +8,7 @@ from calm.dsl.builtins import action, ref, basic_cred
 from calm.dsl.builtins import read_local_file
 from calm.dsl.builtins import vm_disk_package, AhvVmDisk, AhvVmNic
 from calm.dsl.builtins import AhvVmGC, AhvVmResources, AhvVm
+from calm.dsl.config import get_context
 
 
 # SSH Credentials
@@ -248,6 +249,14 @@ def test_json():
     """Test the generated json for a single VM
     against known output"""
     import os
+    import sys
+
+    # Setting the recursion limit to max for comparison
+    sys.setrecursionlimit(100000)
+
+    # Resetting context
+    ContextObj = get_context()
+    ContextObj.reset_configuration()
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_path = os.path.join(dir_path, "test_inheritance_bp_output.json")

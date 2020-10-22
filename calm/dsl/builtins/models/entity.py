@@ -6,6 +6,7 @@ import inspect
 from types import MappingProxyType
 import uuid
 import copy
+import keyword
 
 from ruamel.yaml import YAML, resolver, SafeRepresenter
 from calm.dsl.tools import StrictDraft7Validator
@@ -178,9 +179,14 @@ class EntityType(EntityTypeBase):
         if not name:
             # Generate unique name
             name = "_" + schema_name + str(uuid.uuid4())[:8]
-        else:
+        elif mcls.__schema_name__ not in ["Task", "Credential"]:
             if name == schema_name:
-                raise TypeError("{} is a reserved name for this entity".format(name))
+                LOG.error("'{}' is a reserved name for this entity".format(name))
+                sys.exit(-1)
+
+            elif keyword.iskeyword(name):
+                LOG.error("'{}' is a reserved python keyword".format(name))
+                sys.exit(-1)
 
         cls = super().__new__(mcls, name, bases, entitydict)
 
@@ -382,7 +388,7 @@ class EntityType(EntityTypeBase):
         return cdict
 
     @classmethod
-    def pre_decompile(mcls, cdict, context):
+    def pre_decompile(mcls, cdict, context, prefix=""):
         """Hook to modify cdict based on dsl metadata"""
 
         ui_name = cdict.get("name", None)
@@ -405,7 +411,7 @@ class EntityType(EntityTypeBase):
         return attrs
 
     @classmethod
-    def decompile(mcls, cdict, context=[]):
+    def decompile(mcls, cdict, context=[], prefix=""):
 
         # Pre decompile step to get class names in blueprint file
         schema_name = getattr(mcls, "__schema_name__", None)
@@ -420,7 +426,7 @@ class EntityType(EntityTypeBase):
         elif schema_name and ui_name and schema_name != "Blueprint":
             cur_context.extend([schema_name, ui_name])
 
-        cdict = mcls.pre_decompile(cdict, context=cur_context)
+        cdict = mcls.pre_decompile(cdict, context=cur_context, prefix=prefix)
 
         # Convert attribute names to x-calm-dsl-display-name, if given
         attrs = {}
@@ -460,10 +466,14 @@ class EntityType(EntityTypeBase):
                     new_value = []
                     for val in v:
                         new_value.append(
-                            entity_type.decompile(val, context=cur_context)
+                            entity_type.decompile(
+                                val, context=cur_context, prefix=prefix
+                            )
                         )
                 else:
-                    new_value = entity_type.decompile(v, context=cur_context)
+                    new_value = entity_type.decompile(
+                        v, context=cur_context, prefix=prefix
+                    )
 
                 user_attrs[k] = new_value
 
@@ -473,6 +483,24 @@ class EntityType(EntityTypeBase):
         # Merging dsl_attrs("__name__", "__doc__" etc.) and user_attrs
         attrs.update(user_attrs)
         name = attrs.get("__name__", ui_name)
+
+        if mcls.__schema_name__ not in ["Task", "Credential"]:
+            if name == mcls.__schema_name__:
+                LOG.error(
+                    "'{}' is a reserved name for this entity. Please use '--prefix/-p' cli option to provide prefix for entity's name.".format(
+                        name
+                    )
+                )
+                sys.exit(-1)
+
+            elif keyword.iskeyword(name):
+                LOG.error(
+                    "'{}' is a reserved python keyword. Please use '--prefix/-p' cli option to provide prefix for entity's name.".format(
+                        name
+                    )
+                )
+                sys.exit(-1)
+
         return mcls(name, (Entity,), attrs)
 
     def json_dumps(cls, pprint=False, sort_keys=False):

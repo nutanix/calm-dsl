@@ -13,7 +13,11 @@ from .models.action import action, parallel, ActionType
 from .models.task import Task, CalmTask, TaskType
 
 from .models.port import Port, port, PortType
-from .models.service import Service, service, ServiceType
+from .models.service import (
+    BaseService as Service,
+    service,
+    ServiceType,
+)
 from .models.published_service import PublishedService, published_service
 
 from .models.package import Package, package, PackageType
@@ -29,25 +33,6 @@ from .models.utils import (
 from .models.provider_spec import provider_spec, read_provider_spec, read_spec
 from .models.provider_spec import read_ahv_spec, read_vmw_spec
 from .models.readiness_probe import ReadinessProbe, readiness_probe, ReadinessProbeType
-from .models.substrate import Substrate, substrate, SubstrateType
-
-from .models.deployment import Deployment, deployment, DeploymentType
-from .models.pod_deployment import PODDeployment, pod_deployment
-
-from .models.profile import Profile, profile, ProfileType
-
-from .models.blueprint import Blueprint, blueprint, BlueprintType
-
-from .models.simple_deployment import SimpleDeployment
-from .models.simple_blueprint import SimpleBlueprint
-
-from .models.blueprint_payload import create_blueprint_payload
-from .models.project import Project, ProjectType
-from .models.vm_disk_package import (
-    vm_disk_package,
-    ahv_vm_disk_package,
-    VmDiskPackageType,
-)
 
 from .models.ahv_vm_nic import ahv_vm_nic, AhvVmNic, AhvNicType
 from .models.ahv_vm_disk import ahv_vm_disk, AhvVmDisk, AhvDiskType
@@ -62,6 +47,25 @@ from .models.ahv_vm import (
     AhvVmResourcesType,
 )
 
+from .models.substrate import Substrate, substrate, SubstrateType
+from .models.deployment import Deployment, deployment, DeploymentType
+from .models.pod_deployment import PODDeployment, pod_deployment
+
+from .models.profile import Profile, profile, ProfileType
+
+from .models.blueprint import Blueprint, blueprint, BlueprintType
+
+from .models.simple_deployment import SimpleDeployment
+from .models.simple_blueprint import SimpleBlueprint
+
+from .models.blueprint_payload import create_blueprint_payload
+from .models.vm_disk_package import (
+    vm_disk_package,
+    ahv_vm_disk_package,
+    VmDiskPackageType,
+)
+
+
 from .models.client_attrs import (
     init_dsl_metadata_map,
     get_dsl_metadata_map,
@@ -69,9 +73,14 @@ from .models.client_attrs import (
 )
 
 from .models.providers import Provider
+from .models.environment import Environment
+from .models.environment_payload import create_environment_payload
+from .models.project import Project, ProjectType
 from .models.project_payload import create_project_payload
 from .models.brownfield import Brownfield
 
+from .models.vm_profile import VmProfile
+from .models.vm_blueprint import VmBlueprint
 
 __all__ = [
     "Ref",
@@ -162,4 +171,8 @@ __all__ = [
     "Metadata",
     "MetadataType",
     "Brownfield",
+    "Environment",
+    "create_environment_payload",
+    "VmProfile",
+    "VmBlueprint",
 ]

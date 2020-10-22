@@ -7,7 +7,7 @@ import sys
 
 from calm.dsl.cli import main as cli
 from calm.dsl.api import get_api_client, get_resource_api
-from calm.dsl.cli.mpis import (
+from calm.dsl.cli.marketplace_bps import (
     get_app_family_list,
     get_group_data_value,
     get_mpi_by_name_n_version,
@@ -37,7 +37,7 @@ APP_SOURCES = [
 
 
 @pytest.mark.slow
-class TestMPICommands:
+class TestMarketplaceBPCommands:
     def setup_method(self):
         """Method to instantiate to created_bp_list and created_app_list"""
 
@@ -61,66 +61,76 @@ class TestMPICommands:
         self.created_bp_list = []
 
     def test_get_marketplace_items(self):
-        """Tests 'calm get marketplace_items command'"""
+        """Tests 'calm get marketplace items command'"""
 
         runner = CliRunner()
-        LOG.info("Running 'calm get marketplace_items' command")
-        result = runner.invoke(cli, ["get", "marketplace_items"])
+        LOG.info("Running 'calm get marketplace items' command")
+        result = runner.invoke(cli, ["get", "marketplace", "items"])
         if result.exit_code:
             LOG.error(result.output)
-            pytest.fail("MPI list call failed")
+            pytest.fail("Failed to fetch marketplace items")
         LOG.info("Success")
 
         # Test display all flag
-        LOG.info("Running 'calm get marketplace_items --display_all' command")
-        result = runner.invoke(cli, ["get", "marketplace_items", "--display_all"])
+        LOG.info("Running 'calm get marketplace items --display_all' command")
+        result = runner.invoke(cli, ["get", "marketplace", "items", "--display_all"])
         if result.exit_code:
             LOG.error(result.output)
-            pytest.fail("MPI list call with display_all flag failed")
+            pytest.fail("Failed to fetch marketplace items with display_all flag")
         LOG.info("Success")
 
         # Test quiet flag
-        LOG.info("Running 'calm get marketplace_items --quiet' command")
-        result = runner.invoke(cli, ["get", "marketplace_items", "--quiet"])
+        LOG.info("Running 'calm get marketplace items --quiet' command")
+        result = runner.invoke(cli, ["get", "marketplace", "items", "--quiet"])
         if result.exit_code:
             LOG.error(result.output)
-            pytest.fail("MPI list call with quiet flag failed")
+            pytest.fail("Failed to fetch marketplace items with quiet flag")
         LOG.info("Success")
 
         # Test app_family attribute
-        LOG.info("Testing app_family option for  'calm get marketplace_items' command")
+        LOG.info("Testing app_family option for  'calm get marketplace items' command")
         app_family_list = get_app_family_list()
-        input = ["get", "marketplace_items", "--app_family", ""]
+        input = ["get", "marketplace", "items", "--app_family", ""]
         for app_family in app_family_list:
-            input[3] = app_family
+            input[4] = app_family
             result = runner.invoke(cli, input)
             if result.exit_code:
                 LOG.error(result.output)
-                pytest.fail("MPI list call with app_family option failed")
+                pytest.fail("Failed to fetch marketplace items with app_family option")
+        LOG.info("Success")
+
+        # Test filter attribute
+        LOG.info("Running 'calm get marketplace items --filter' command")
+        result = runner.invoke(
+            cli, ["get", "marketplace", "items", "--filter", "version==1.0.0"]
+        )
+        if result.exit_code:
+            LOG.error(result.output)
+            pytest.fail("Failed to fetch marketplace items with 'filter' cli option")
         LOG.info("Success")
 
     def test_get_marketplace_bps(self):
-        """Tests 'calm get marketplace_bps command'"""
+        """Tests 'calm get marketplace bps command'"""
 
         runner = CliRunner()
 
-        LOG.info("Running 'calm get marketplace_bps' command")
-        result = runner.invoke(cli, ["get", "marketplace_bps"])
+        LOG.info("Running 'calm get marketplace bps' command")
+        result = runner.invoke(cli, ["get", "marketplace", "bps"])
         if result.exit_code:
             LOG.error(result.output)
-            pytest.fail("MPI list call failed")
+            pytest.fail("Failed to fetch marketplace bps")
         LOG.info("Success")
 
         # Test quiet flag
-        LOG.info("Running 'calm get marketplace_bps --quiet' command")
-        result = runner.invoke(cli, ["get", "marketplace_bps", "--quiet"])
+        LOG.info("Running 'calm get marketplace bps --quiet' command")
+        result = runner.invoke(cli, ["get", "marketplace", "bps", "--quiet"])
         if result.exit_code:
             LOG.error(result.output)
-            pytest.fail("MPI list call with quiet flag failed")
+            pytest.fail("Failed to fetch marketplace bps with quiet flag")
         LOG.info("Success")
 
         # Test app states option
-        LOG.info("Testing app_state option for  'calm get marketplace_bps' command")
+        LOG.info("Testing app_state option for  'calm get marketplace bps' command")
         app_states = APP_STATES
         app_states = sum(
             [
@@ -130,26 +140,36 @@ class TestMPICommands:
             [],
         )
         for app_state_list in app_states:
-            input = ["get", "marketplace_bps"]
+            input = ["get", "marketplace", "bps"]
             for app_state in app_state_list:
                 input.append("--app_state")
                 input.append(app_state)
             result = runner.invoke(cli, input)
             if result.exit_code:
                 LOG.error(result.ouput)
-                pytest.fail("MPI list call with app_state option failed")
+                pytest.fail("Failed to fetch marketplace bps with app_state option")
         LOG.info("Success")
 
         # Test app_family attribute
-        LOG.info("Testing app_family option for  'calm get marketplace_items' command")
+        LOG.info("Testing app_family option for  'calm get marketplace items' command")
         app_family_list = get_app_family_list()
-        input = ["get", "marketplace_items", "--app_family", ""]
+        input = ["get", "marketplace", "items", "--app_family", ""]
         for app_family in app_family_list:
-            input[3] = app_family
+            input[4] = app_family
             result = runner.invoke(cli, input)
             if result.exit_code:
                 LOG.error(result.output)
-                pytest.fail("MPI list call with app_family option failed")
+                pytest.fail("Failed to fetch marketplace bps with app_family option")
+        LOG.info("Success")
+
+        # Test filter attribute
+        LOG.info("Running 'calm get marketplace bps --filter' command")
+        result = runner.invoke(
+            cli, ["get", "marketplace", "bps", "--filter", "version==1.0.0"]
+        )
+        if result.exit_code:
+            LOG.error(result.output)
+            pytest.fail("Failed to fetch marketplace bps with 'filter' cli option")
         LOG.info("Success")
 
     def test_describe_marketplace_item_with_default_version(self):
@@ -189,7 +209,7 @@ class TestMPICommands:
         runner = CliRunner()
 
         LOG.info("Testing 'calm describe marketplace_item {}' command".format(mpi_name))
-        result = runner.invoke(cli, ["describe", "marketplace_item", mpi_name])
+        result = runner.invoke(cli, ["describe", "marketplace", "item", mpi_name])
         if result.exit_code:
             LOG.error(result.output)
             pytest.fail("MPI list call failed")
@@ -240,7 +260,7 @@ class TestMPICommands:
             )
         )
         result = runner.invoke(
-            cli, ["describe", "marketplace_item", mpi_name, "--version", mpi_version]
+            cli, ["describe", "marketplace", "item", mpi_name, "--version", mpi_version]
         )
         if result.exit_code:
             LOG.error(result.output)
@@ -259,7 +279,7 @@ class TestMPICommands:
         app_states = APP_STATES
         app_sources = APP_SOURCES
 
-        LOG.info("Testing 'calm describe marketplace_bp command'")
+        LOG.info("Testing 'calm describe marketplace bp command'")
         for app_state in app_states:
             for app_source in app_sources:
                 filter_query = ""
@@ -292,7 +312,8 @@ class TestMPICommands:
 
                 command = [
                     "describe",
-                    "marketplace_bp",
+                    "marketplace",
+                    "bp",
                     mpi_name,
                     "--version",
                     mpi_version,
@@ -462,7 +483,8 @@ class TestMPICommands:
         )
         command = [
             "approve",
-            "marketplace_bp",
+            "marketplace",
+            "bp",
             self.marketplace_bp_name,
             "--version",
             self.mpi1_version,
@@ -482,7 +504,8 @@ class TestMPICommands:
         )
         command = [
             "update",
-            "marketplace_bp",
+            "marketplace",
+            "bp",
             self.marketplace_bp_name,
             "--version",
             self.mpi1_version,
@@ -504,7 +527,8 @@ class TestMPICommands:
         )
         command = [
             "publish",
-            "marketplace_bp",
+            "marketplace",
+            "bp",
             self.marketplace_bp_name,
             "--version",
             self.mpi1_version,
@@ -526,7 +550,8 @@ class TestMPICommands:
         )
         command = [
             "publish",
-            "marketplace_bp",
+            "marketplace",
+            "bp",
             self.marketplace_bp_name,
             "--version",
             self.mpi1_version,
@@ -544,7 +569,8 @@ class TestMPICommands:
         LOG.info("Negative Test: Deleting marketplace blueprint in PUBLISHED state")
         command = [
             "delete",
-            "marketplace_bp",
+            "marketplace",
+            "bp",
             self.marketplace_bp_name,
             "--version",
             self.mpi1_version,
@@ -566,7 +592,8 @@ class TestMPICommands:
         )
         command = [
             "unpublish",
-            "marketplace_bp",
+            "marketplace",
+            "bp",
             self.marketplace_bp_name,
             "--version",
             self.mpi1_version,
@@ -586,7 +613,8 @@ class TestMPICommands:
         )
         command = [
             "delete",
-            "marketplace_bp",
+            "marketplace",
+            "bp",
             self.marketplace_bp_name,
             "--version",
             self.mpi1_version,
@@ -606,7 +634,8 @@ class TestMPICommands:
         )
         command = [
             "reject",
-            "marketplace_bp",
+            "marketplace",
+            "bp",
             self.marketplace_bp_name,
             "--version",
             self.mpi2_version,
@@ -622,7 +651,8 @@ class TestMPICommands:
         LOG.info("Deleting marketplace blueprint in REJECTED state")
         command = [
             "delete",
-            "marketplace_bp",
+            "marketplace",
+            "bp",
             self.marketplace_bp_name,
             "--version",
             self.mpi2_version,
@@ -638,7 +668,8 @@ class TestMPICommands:
         LOG.info("Deleting marketplace blueprint in PENDING state")
         command = [
             "delete",
-            "marketplace_bp",
+            "marketplace",
+            "bp",
             self.marketplace_bp_name,
             "--version",
             self.mpi3_with_secrets_version,
@@ -705,7 +736,8 @@ class TestMPICommands:
         )
         command = [
             "launch",
-            "marketplace_bp",
+            "marketplace",
+            "bp",
             self.marketplace_bp_name,
             "--version",
             self.mpi1_version,
@@ -733,7 +765,8 @@ class TestMPICommands:
         )
         command = [
             "approve",
-            "marketplace_bp",
+            "marketplace",
+            "bp",
             self.marketplace_bp_name,
             "--version",
             self.mpi1_version,
@@ -754,7 +787,8 @@ class TestMPICommands:
         )
         command = [
             "launch",
-            "marketplace_bp",
+            "marketplace",
+            "bp",
             self.marketplace_bp_name,
             "--version",
             self.mpi1_version,
@@ -782,7 +816,8 @@ class TestMPICommands:
         )
         command = [
             "publish",
-            "marketplace_bp",
+            "marketplace",
+            "bp",
             self.marketplace_bp_name,
             "--version",
             self.mpi1_version,
@@ -805,7 +840,8 @@ class TestMPICommands:
         )
         command = [
             "launch",
-            "marketplace_item",
+            "marketplace",
+            "item",
             self.marketplace_bp_name,
             "--version",
             self.mpi1_version,
@@ -833,7 +869,8 @@ class TestMPICommands:
         )
         command = [
             "unpublish",
-            "marketplace_bp",
+            "marketplace",
+            "bp",
             self.marketplace_bp_name,
             "--version",
             self.mpi1_version,
@@ -851,7 +888,8 @@ class TestMPICommands:
         )
         command = [
             "delete",
-            "marketplace_bp",
+            "marketplace",
+            "bp",
             self.marketplace_bp_name,
             "--version",
             self.mpi1_version,
@@ -910,7 +948,8 @@ class TestMPICommands:
         )
         command = [
             "unpublish",
-            "marketplace_bp",
+            "marketplace",
+            "bp",
             self.marketplace_bp_name,
             "--version",
             self.mpi1_version,
@@ -928,7 +967,8 @@ class TestMPICommands:
         )
         command = [
             "delete",
-            "marketplace_bp",
+            "marketplace",
+            "bp",
             self.marketplace_bp_name,
             "--version",
             self.mpi1_version,
@@ -988,7 +1028,8 @@ class TestMPICommands:
         )
         command = [
             "delete",
-            "marketplace_bp",
+            "marketplace",
+            "bp",
             self.marketplace_bp_name,
             "--version",
             self.mpi1_version,
@@ -1050,7 +1091,8 @@ class TestMPICommands:
             cli,
             [
                 "delete",
-                "marketplace_bp",
+                "marketplace",
+                "bp",
                 self.marketplace_bp_name,
                 "--version",
                 self.mpi_version,
