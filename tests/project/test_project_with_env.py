@@ -1,6 +1,8 @@
 # Note: In given example, we not added environment reference anywhere.
 # Project create command will pick one Environment module from file and attaches to project
 
+import uuid
+
 from calm.dsl.builtins import Project, read_local_file, readiness_probe
 from calm.dsl.builtins import Provider, Ref
 from calm.dsl.builtins import Substrate, Environment
@@ -124,8 +126,6 @@ class TestDslProjectWithEnv(Project):
 
 
 # NOTE this is used for tests. Environment name is changed to prevent same name for multiple environments
-import uuid
-
 ProjEnvironment.__name__ = "{}_{}".format(
     ProjEnvironment.__name__, str(uuid.uuid4())[:10]
 )
