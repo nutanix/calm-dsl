@@ -791,60 +791,50 @@ def is_launch_runtime_var_action_match(launch_runtime_var_context, context_list)
     return False
 
 
-def parse_launch_runtime_vars(launch_params):
-    """Returns variable_list object from launch_params file"""
+def parse_launch_params_attribute(launch_params, parse_attribute):
+    """Parses launch params and return value of parse_attribute i.e. variable_list, substrate_list, deployment_list, credenetial_list in file"""
 
     if launch_params:
         if file_exists(launch_params) and launch_params.endswith(".py"):
-            return import_var_from_file(launch_params, "variable_list", [])
+            return import_var_from_file(launch_params, parse_attribute, [])
         else:
             LOG.error(
                 "Invalid launch_params passed! Must be a valid and existing.py file!"
             )
             sys.exit(-1)
     return []
+
+
+def parse_launch_runtime_vars(launch_params):
+    """Returns variable_list object from launch_params file"""
+
+    return parse_launch_params_attribute(
+        launch_params=launch_params, parse_attribute="variable_list"
+    )
 
 
 def parse_launch_runtime_substrates(launch_params):
     """Returns substrate_list object from launch_params file"""
 
-    if launch_params:
-        if file_exists(launch_params) and launch_params.endswith(".py"):
-            return import_var_from_file(launch_params, "substrate_list", [])
-        else:
-            LOG.error(
-                "Invalid launch_params passed! Must be a valid and existing.py file!"
-            )
-            sys.exit(-1)
-    return []
+    return parse_launch_params_attribute(
+        launch_params=launch_params, parse_attribute="substrate_list"
+    )
 
 
 def parse_launch_runtime_deployments(launch_params):
     """Returns deployment_list object from launch_params file"""
 
-    if launch_params:
-        if file_exists(launch_params) and launch_params.endswith(".py"):
-            return import_var_from_file(launch_params, "deployment_list", [])
-        else:
-            LOG.error(
-                "Invalid launch_params passed! Must be a valid and existing.py file!"
-            )
-            sys.exit(-1)
-    return []
+    return parse_launch_params_attribute(
+        launch_params=launch_params, parse_attribute="deployment_list"
+    )
 
 
 def parse_launch_runtime_credentials(launch_params):
     """Returns credential_list object from launch_params file"""
 
-    if launch_params:
-        if file_exists(launch_params) and launch_params.endswith(".py"):
-            return import_var_from_file(launch_params, "credential_list", [])
-        else:
-            LOG.error(
-                "Invalid launch_params passed! Must be a valid and existing.py file!"
-            )
-            sys.exit(-1)
-    return []
+    return parse_launch_params_attribute(
+        launch_params=launch_params, parse_attribute="credential_list"
+    )
 
 
 def launch_blueprint_simple(
@@ -981,7 +971,20 @@ def launch_blueprint_simple(
                         vm_img_map,
                     )
 
-        variable_list = runtime_editables.get("variable_list", [])
+        bp_runtime_variables = runtime_editables.get("variable_list", [])
+
+        # POP out action variables(Day2 action variables) bcz they cann't be given at bp launch time
+        variable_list = []
+        for _var in bp_runtime_variables:
+            _var_context = _var["context"]
+            context_list = _var_context.split(".")
+
+            # If variable is defined under runbook(action), ignore it
+            if len(context_list) >= 3 and context_list[-3] == "runbook":
+                continue
+
+            variable_list.append(_var)
+
         if variable_list:
             if not launch_params:
                 click.echo("\n\t\t\t", nl=False)

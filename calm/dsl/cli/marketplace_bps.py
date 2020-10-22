@@ -758,6 +758,7 @@ def publish_bp_as_new_marketplace_bp(
     category=None,
     icon_name=None,
     icon_file=None,
+    all_projects=False,
 ):
 
     # Search whether this marketplace item exists or not
@@ -802,6 +803,7 @@ def publish_bp_as_new_marketplace_bp(
             version=version,
             projects=projects,
             category=category,
+            all_projects=all_projects,
         )
 
         if publish_to_marketplace:
@@ -824,6 +826,7 @@ def publish_bp_as_existing_marketplace_bp(
     category=None,
     icon_name=None,
     icon_file=None,
+    all_projects=False,
 ):
 
     LOG.info(
@@ -899,6 +902,7 @@ def publish_bp_as_existing_marketplace_bp(
             version=version,
             projects=projects,
             category=category,
+            all_projects=all_projects,
         )
 
         if publish_to_marketplace:
@@ -909,7 +913,9 @@ def publish_bp_as_existing_marketplace_bp(
             )
 
 
-def approve_marketplace_bp(bp_name, version=None, projects=[], category=None):
+def approve_marketplace_bp(
+    bp_name, version=None, projects=[], category=None, all_projects=False
+):
 
     client = get_api_client()
     if not version:
@@ -955,16 +961,29 @@ def approve_marketplace_bp(bp_name, version=None, projects=[], category=None):
 
         bp_data["metadata"]["categories"] = {"AppFamily": category}
 
-    for project in projects:
-        project_data = get_project(project)
+    if not bp_data["spec"]["resources"].get("project_reference_list", {}):
+        bp_data["spec"]["resources"]["project_reference_list"] = []
 
-        bp_data["spec"]["resources"]["project_reference_list"].append(
-            {
-                "kind": "project",
-                "name": project,
-                "uuid": project_data["metadata"]["uuid"],
-            }
-        )
+    project_name_uuid_map = client.project.get_name_uuid_map(params={"length": 250})
+    if all_projects:
+        for k, v in project_name_uuid_map.items():
+            bp_data["spec"]["resources"]["project_reference_list"].append(
+                {
+                    "kind": "project",
+                    "name": k,
+                    "uuid": v,
+                }
+            )
+
+    else:
+        for _project in projects:
+            bp_data["spec"]["resources"]["project_reference_list"].append(
+                {
+                    "kind": "project",
+                    "name": _project,
+                    "uuid": project_name_uuid_map[_project],
+                }
+            )
 
     res, err = client.market_place.update(uuid=bp_uuid, payload=bp_data)
     if err:
@@ -979,7 +998,12 @@ def approve_marketplace_bp(bp_name, version=None, projects=[], category=None):
 
 
 def publish_marketplace_bp(
-    bp_name, version=None, projects=[], category=None, app_source=None
+    bp_name,
+    version=None,
+    projects=[],
+    category=None,
+    app_source=None,
+    all_projects=False,
 ):
 
     client = get_api_client()
@@ -1036,19 +1060,29 @@ def publish_marketplace_bp(
 
         bp_data["metadata"]["categories"] = {"AppFamily": category}
 
-    if projects:
+    if projects or all_projects:
         # Clear the stored projects
         bp_data["spec"]["resources"]["project_reference_list"] = []
-        for project in projects:
-            project_data = get_project(project)
+        project_name_uuid_map = client.project.get_name_uuid_map(params={"length": 250})
 
-            bp_data["spec"]["resources"]["project_reference_list"].append(
-                {
-                    "kind": "project",
-                    "name": project,
-                    "uuid": project_data["metadata"]["uuid"],
-                }
-            )
+        if all_projects:
+            for k, v in project_name_uuid_map.items():
+                bp_data["spec"]["resources"]["project_reference_list"].append(
+                    {
+                        "kind": "project",
+                        "name": k,
+                        "uuid": v,
+                    }
+                )
+        else:
+            for _project in projects:
+                bp_data["spec"]["resources"]["project_reference_list"].append(
+                    {
+                        "kind": "project",
+                        "name": _project,
+                        "uuid": project_name_uuid_map[_project],
+                    }
+                )
 
     # Atleast 1 project required for publishing to marketplace
     if not bp_data["spec"]["resources"].get("project_reference_list", None):

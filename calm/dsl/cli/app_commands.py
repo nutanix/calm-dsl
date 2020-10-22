@@ -127,24 +127,45 @@ def _describe_app(app_name, out):
     required=True,
     help="Watch action run in an app",
 )
+@click.option(
+    "--ignore_runtime_variables",
+    "-i",
+    is_flag=True,
+    default=False,
+    help="Ignore runtime variables and use defaults",
+)
+@click.option(
+    "--runtime_params",
+    "-r",
+    "runtime_params_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to python file for runtime editables",
+)
 @click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
-def _run_actions(app_name, action_name, watch):
-    """App lcm actions"""
-    render_actions = display_with_screen(app_name, action_name, watch)
-    Display.wrapper(render_actions, watch)
+def _run_actions(
+    app_name, action_name, watch, ignore_runtime_variables, runtime_params_file
+):
+    """App lcm actions.
+    All runtime variables will be prompted by default. When passing the 'ignore_runtime_editable' flag, no variables will be prompted and all default values will be used.
+    The action default values can be overridden by passing a Python file via 'launch_params'. Any variable not defined in the Python file will keep the default value defined in the blueprint. When passing a Python file, no variables will be prompted.
 
+    \b
+    >: runtime_params: Python file consisting of variables 'variable_list'
+    Ex: variable_list = [
+            {
+                "value": {"value": <Variable Value>},
+                "name": "<Variable Name>"
+            }
+        ]
+    """
 
-def display_with_screen(app_name, action_name, watch):
-    def render_actions(screen):
-        screen.clear()
-        screen.print_at(
-            "Running action {} for app {}".format(action_name, app_name), 0, 0
-        )
-        screen.refresh()
-        run_actions(screen, app_name, action_name, watch)
-        screen.wait_for_input(10.0)
-
-    return render_actions
+    run_actions(
+        app_name=app_name,
+        action_name=action_name,
+        watch=watch,
+        patch_editables=not ignore_runtime_variables,
+        runtime_params_file=runtime_params_file,
+    )
 
 
 @watch.command("action_runlog")
@@ -243,8 +264,7 @@ def restart():
 def start_app(app_name, watch):
     """Starts an application"""
 
-    render_actions = display_with_screen(app_name, "start", watch)
-    Display.wrapper(render_actions, watch)
+    run_actions(app_name=app_name, action_name="start", watch=watch)
 
 
 @stop.command("app")
@@ -253,8 +273,7 @@ def start_app(app_name, watch):
 def stop_app(app_name, watch):
     """Stops an application"""
 
-    render_actions = display_with_screen(app_name, "stop", watch)
-    Display.wrapper(render_actions, watch)
+    run_actions(app_name=app_name, action_name="stop", watch=watch)
 
 
 @restart.command("app")
@@ -263,5 +282,4 @@ def stop_app(app_name, watch):
 def restart_app(app_name, watch):
     """Restarts an application"""
 
-    render_actions = display_with_screen(app_name, "restart", watch)
-    Display.wrapper(render_actions, watch)
+    run_actions(app_name=app_name, action_name="restart", watch=watch)

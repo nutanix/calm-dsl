@@ -29,10 +29,6 @@ class AhvPackage(Package):
     foo = CalmVariable.Simple("bar")
     services = [ref(AhvService)]
 
-    @action
-    def __install__():
-        CalmTask.Exec.ssh(name="Task1", script="echo @@{foo}@@")
-
 
 class AhvSubstrate(Substrate):
     """AHV VM config given by reading a spec file"""
@@ -45,6 +41,8 @@ class AhvSubstrate(Substrate):
         credential=ref(DefaultCred),
         disabled=True,
         editables_list=["connection_port", "retries"],
+        timeout_secs="60",
+        retries="5",
     )
 
 
@@ -68,7 +66,26 @@ class DefaultProfile(Profile):
     @action
     def test_profile_action():
         """Sample description for a profile action"""
+        var_run = CalmVariable.Simple(  # Noqa
+            "mail",
+            runtime=True,
+        )
+        var_nor = CalmVariable.Simple("efg", runtime=False) # Noqa
+        var_secret = CalmVariable.Simple.Secret(    # Noqa
+            "secret_var_val",
+            runtime=True,
+        )
+        var_with_choices = CalmVariable.WithOptions(    # Noqa
+            ["mail1", "mail2"],
+            default="mail1",
+            runtime=True,
+        )
         CalmTask.Exec.ssh(name="Task5", script='echo "Hello"', target=ref(AhvService))
+        CalmTask.Exec.ssh(
+            name="PrintActionVarTask",
+            script="echo @@{var_run}@@\necho @@{var_nor}@@\necho @@{var_secret}@@\necho @@{var_with_choices}@@",
+            target=ref(AhvService),
+        )
 
 
 class TestRuntime(Blueprint):
