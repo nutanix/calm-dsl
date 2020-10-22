@@ -13,7 +13,11 @@ from .models.action import action, parallel, ActionType
 from .models.task import Task, CalmTask, TaskType
 
 from .models.port import Port, port, PortType
-from .models.service import Service, service, ServiceType
+from .models.service import (
+    BaseService as Service,
+    service,
+    ServiceType,
+)
 from .models.published_service import PublishedService, published_service
 
 from .models.package import Package, package, PackageType

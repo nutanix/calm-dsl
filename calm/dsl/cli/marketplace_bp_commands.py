@@ -66,11 +66,22 @@ APP_SOURCES = [
     default=False,
     help="Show all marketplace blueprints which are published",
 )
-def _get_marketplace_items(name, quiet, app_family, display_all):
+@click.option(
+    "--filter",
+    "filter_by",
+    "-fb",
+    default=None,
+    help="Filter marketplace items by this string",
+)
+def _get_marketplace_items(name, quiet, app_family, display_all, filter_by):
     """Get marketplace store blueprints"""
 
     get_marketplace_items(
-        name=name, quiet=quiet, app_family=app_family, display_all=display_all
+        name=name,
+        quiet=quiet,
+        app_family=app_family,
+        display_all=display_all,
+        filter_by=filter_by,
     )
 
 
@@ -100,11 +111,22 @@ def _get_marketplace_items(name, quiet, app_family, display_all):
     multiple=True,
     help="filter by state of marketplace blueprints",
 )
-def _get_marketplace_bps(name, quiet, app_family, app_states):
+@click.option(
+    "--filter",
+    "filter_by",
+    "-fb",
+    default=None,
+    help="Filter marketplace blueprints by this string",
+)
+def _get_marketplace_bps(name, quiet, app_family, app_states, filter_by):
     """Get marketplace manager blueprints"""
 
     get_marketplace_bps(
-        name=name, quiet=quiet, app_family=app_family, app_states=app_states
+        name=name,
+        quiet=quiet,
+        app_family=app_family,
+        app_states=app_states,
+        filter_by=filter_by,
     )
 
 
@@ -267,7 +289,14 @@ def _launch_marketplace_item(
     help="Interactive Mode to provide the value for secrets",
 )
 def _decompile_marketplace_bp(mpi_name, version, project, name, source, with_secrets):
-    """Decompiles marketplace manager blueprint"""
+    """Decompiles marketplace manager blueprint
+
+
+    \b
+    Sample command examples:
+    i.) calm decompile marketplace bp "Jenkins" : Command will decompile marketplace blueprint "Jenkins" having latest version
+    ii.) calm decompile marketplace bp "Jenkins" --version "1.0.0": Command will decompile marketplace blueprint "Jenkins" having "1.0.0" version
+    iii.) calm decompile marketplace bp "Jenkins" --name "DSL_JENKINS_BLUEPRINT": Command will decompile marketplace bp "Jenkins" to DSL blueprint having name "DSL_JENKINS_BLUEPRINT" (see the name of blueprint class in decompiled blueprint.py file)"""
 
     decompile_marketplace_bp(
         name=mpi_name,

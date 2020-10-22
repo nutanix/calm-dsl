@@ -99,6 +99,16 @@ class TestMarketplaceBPCommands:
                 pytest.fail("Failed to fetch marketplace items with app_family option")
         LOG.info("Success")
 
+        # Test filter attribute
+        LOG.info("Running 'calm get marketplace items --filter' command")
+        result = runner.invoke(
+            cli, ["get", "marketplace", "items", "--filter", "version==1.0.0"]
+        )
+        if result.exit_code:
+            LOG.error(result.output)
+            pytest.fail("Failed to fetch marketplace items with 'filter' cli option")
+        LOG.info("Success")
+
     def test_get_marketplace_bps(self):
         """Tests 'calm get marketplace bps command'"""
 
@@ -150,6 +160,16 @@ class TestMarketplaceBPCommands:
             if result.exit_code:
                 LOG.error(result.output)
                 pytest.fail("Failed to fetch marketplace bps with app_family option")
+        LOG.info("Success")
+
+        # Test filter attribute
+        LOG.info("Running 'calm get marketplace bps --filter' command")
+        result = runner.invoke(
+            cli, ["get", "marketplace", "bps", "--filter", "version==1.0.0"]
+        )
+        if result.exit_code:
+            LOG.error(result.output)
+            pytest.fail("Failed to fetch marketplace bps with 'filter' cli option")
         LOG.info("Success")
 
     def test_describe_marketplace_item_with_default_version(self):
