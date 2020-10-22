@@ -70,12 +70,12 @@ class DefaultProfile(Profile):
             "mail",
             runtime=True,
         )
-        var_nor = CalmVariable.Simple("efg", runtime=False) # Noqa
-        var_secret = CalmVariable.Simple.Secret(    # Noqa
+        var_nor = CalmVariable.Simple("efg", runtime=False)  # Noqa
+        var_secret = CalmVariable.Simple.Secret(  # Noqa
             "secret_var_val",
             runtime=True,
         )
-        var_with_choices = CalmVariable.WithOptions(    # Noqa
+        var_with_choices = CalmVariable.WithOptions(  # Noqa
             ["mail1", "mail2"],
             default="mail1",
             runtime=True,
