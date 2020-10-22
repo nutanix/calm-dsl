@@ -158,7 +158,14 @@ def create_call_rb(runbook, target=None, name=None):
 
 
 def _exec_create(
-    script_type, script=None, filename=None, name=None, target=None, target_endpoint=None, cred=None, depth=2
+    script_type,
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    target_endpoint=None,
+    cred=None,
+    depth=2,
 ):
     if script is not None and filename is not None:
         raise ValueError(
@@ -347,7 +354,13 @@ def meta(name=None, child_tasks=None, edges=None, target=None):
 
 
 def exec_task_ssh(
-    script=None, filename=None, name=None, target=None, target_endpoint=None, cred=None, depth=2
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    target_endpoint=None,
+    cred=None,
+    depth=2,
 ):
     return _exec_create(
         "sh",
@@ -374,7 +387,13 @@ def exec_task_escript(script=None, filename=None, name=None, target=None, depth=
 
 
 def exec_task_powershell(
-    script=None, filename=None, name=None, target=None, target_endpoint=None, cred=None, depth=2
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    target_endpoint=None,
+    cred=None,
+    depth=2,
 ):
     return _exec_create(
         "npsscript",
@@ -386,6 +405,7 @@ def exec_task_powershell(
         cred=cred,
         depth=depth,
     )
+
 
 def exec_task_ssh_runbook(
     script=None, filename=None, name=None, target=None, cred=None, depth=2
@@ -400,8 +420,9 @@ def exec_task_ssh_runbook(
         depth=depth,
     )
 
+
 def exec_task_powershell_runbook(
-    script=None, filename=None, name=None, target=None,cred=None, depth=2
+    script=None, filename=None, name=None, target=None, cred=None, depth=2
 ):
     return _exec_create(
         "npsscript",
@@ -412,6 +433,7 @@ def exec_task_powershell_runbook(
         cred=cred,
         depth=depth,
     )
+
 
 def decision_task_ssh(
     script=None, filename=None, name=None, target=None, cred=None, depth=2
