@@ -258,11 +258,8 @@ def create_app(
         LOG.error("User blueprint not found in {}".format(bp_file))
         sys.exit(-1)
 
-    if bp_payload["spec"]["resources"].get("type", "") != "BROWNFIELD":
-        LOG.error(
-            "Command only allowed for brownfield application. Please use 'calm create bp' and 'calm launch bp' for USER applications"
-        )
-        sys.exit(-1)
+    # Get the blueprint type
+    bp_type = bp_payload["spec"]["resources"].get("type", "")
 
     # Create blueprint from dsl file
     bp_name = "Blueprint{}".format(str(uuid.uuid4())[:10])
@@ -296,8 +293,14 @@ def create_app(
         profile_name=profile_name,
         patch_editables=patch_editables,
         launch_params=launch_params,
-        is_brownfield=True,
+        is_brownfield=True if bp_type == "BROWNFIELD" else False,
     )
+
+    if bp_type != "BROWNFIELD":
+        # Delete the blueprint
+        res, err = client.blueprint.delete(bp_uuid)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
 
 class RunlogNode(NodeMixin):
