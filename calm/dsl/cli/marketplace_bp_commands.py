@@ -288,7 +288,16 @@ def _launch_marketplace_item(
     default=False,
     help="Interactive Mode to provide the value for secrets",
 )
-def _decompile_marketplace_bp(mpi_name, version, project, name, source, with_secrets):
+@click.option(
+    "--dir",
+    "-d",
+    "bp_dir",
+    default=None,
+    help="Blueprint directory location used for placing decompiled entities",
+)
+def _decompile_marketplace_bp(
+    mpi_name, version, project, name, source, with_secrets, bp_dir
+):
     """Decompiles marketplace manager blueprint
 
 
@@ -305,6 +314,7 @@ def _decompile_marketplace_bp(mpi_name, version, project, name, source, with_sec
         bp_name=name,
         app_source=None,
         with_secrets=with_secrets,
+        bp_dir=bp_dir,
     )
 
 

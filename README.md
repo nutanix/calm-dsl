@@ -67,7 +67,8 @@ Decompilation is process to consume json data for any entity and convert it back
 - Name of created files are taken from the context of variable/task. For ex: Filename for service action task script: Service_MySQLService_Action___create___Task_Task1
 - Decompile existing server blueprint: `calm decompile bp <bp_name>`. Use `calm decompile bp <bp_name> --with_secrets` to fill the value for secrets used inside blueprint interactively while decompiling blueprint.
 - Decompile bp from existing json file: `calm decompile bp --file <json_file_location>`.
-- Decompile marketplace blueprint: `calm decompile marketplace_bp <bp_name> --version <bp_version>`.
+- Decompile marketplace blueprint: `calm decompile marketplace bp <bp_name> --version <bp_version>`.
+- Decompile bp to a location: `calm decompile bp <bp_name> --dir <bp_dir>`. It will decompile blueprint entities to `bp_dir` location.
 - Note: Decompliation support for providers other than AHV is experimental.
 
 

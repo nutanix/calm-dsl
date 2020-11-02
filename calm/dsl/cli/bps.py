@@ -398,7 +398,7 @@ def create_blueprint_from_dsl(
     )
 
 
-def decompile_bp(name, bp_file, with_secrets=False, prefix=""):
+def decompile_bp(name, bp_file, with_secrets=False, prefix="", bp_dir=None):
     """helper to decompile blueprint"""
 
     if name and bp_file:
@@ -408,11 +408,13 @@ def decompile_bp(name, bp_file, with_secrets=False, prefix=""):
         sys.exit(-1)
 
     if name:
-        decompile_bp_from_server(name=name, with_secrets=with_secrets, prefix=prefix)
+        decompile_bp_from_server(
+            name=name, with_secrets=with_secrets, prefix=prefix, bp_dir=bp_dir
+        )
 
     elif bp_file:
         decompile_bp_from_file(
-            filename=bp_file, with_secrets=with_secrets, prefix=prefix
+            filename=bp_file, with_secrets=with_secrets, prefix=prefix, bp_dir=bp_dir
         )
 
     else:
@@ -422,7 +424,7 @@ def decompile_bp(name, bp_file, with_secrets=False, prefix=""):
         sys.exit(-1)
 
 
-def decompile_bp_from_server(name, with_secrets=False, prefix=""):
+def decompile_bp_from_server(name, with_secrets=False, prefix="", bp_dir=None):
     """decompiles the blueprint by fetching it from server"""
 
     client = get_api_client()
@@ -434,19 +436,23 @@ def decompile_bp_from_server(name, with_secrets=False, prefix=""):
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     res = res.json()
-    _decompile_bp(bp_payload=res, with_secrets=with_secrets, prefix=prefix)
+    _decompile_bp(
+        bp_payload=res, with_secrets=with_secrets, prefix=prefix, bp_dir=bp_dir
+    )
 
 
-def decompile_bp_from_file(filename, with_secrets=False, prefix=""):
+def decompile_bp_from_file(filename, with_secrets=False, prefix="", bp_dir=None):
     """decompile blueprint from local blueprint file"""
 
     # ToDo - Fix this
     bp_payload = json.loads(open(filename).read())
     # bp_payload = read_spec(filename)
-    _decompile_bp(bp_payload=bp_payload, with_secrets=with_secrets, prefix=prefix)
+    _decompile_bp(
+        bp_payload=bp_payload, with_secrets=with_secrets, prefix=prefix, bp_dir=bp_dir
+    )
 
 
-def _decompile_bp(bp_payload, with_secrets=False, prefix=""):
+def _decompile_bp(bp_payload, with_secrets=False, prefix="", bp_dir=None):
     """decompiles the blueprint from payload"""
 
     blueprint = bp_payload["spec"]["resources"]
@@ -484,7 +490,12 @@ def _decompile_bp(bp_payload, with_secrets=False, prefix=""):
     bp_cls.__name__ = get_valid_identifier(blueprint_name)
     bp_cls.__doc__ = blueprint_description
 
-    create_bp_dir(bp_cls=bp_cls, with_secrets=with_secrets, metadata_obj=metadata_obj)
+    create_bp_dir(
+        bp_cls=bp_cls,
+        with_secrets=with_secrets,
+        metadata_obj=metadata_obj,
+        bp_dir=bp_dir,
+    )
     click.echo(
         "\nSuccessfully decompiled. Directory location: {}. Blueprint location: {}".format(
             get_bp_dir(), os.path.join(get_bp_dir(), "blueprint.py")
