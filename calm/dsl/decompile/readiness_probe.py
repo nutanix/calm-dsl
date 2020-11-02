@@ -17,7 +17,9 @@ def render_readiness_probe_template(cls):
     # deal with cred
     cred = user_attrs["credential"]
     if cred:
-        user_attrs["credential"] = "ref({})".format(get_cred_var_name(cred.__name__))
+        user_attrs["credential"] = "ref({})".format(
+            get_cred_var_name(getattr(cred, "name", "") or cred.__name__)
+        )
 
     schema_file = "readiness_probe.py.jinja2"
 

@@ -2,6 +2,7 @@ import uuid
 import click
 import sys
 import json
+import os
 from prettytable import PrettyTable
 
 from calm.dsl.builtins import BlueprintType, get_valid_identifier
@@ -87,6 +88,7 @@ def get_mpis_group_call(
     group_member_count=0,
     app_source=None,
     app_group_uuid=None,
+    filter_by="",
 ):
     """
     To call groups() api for marketplace items
@@ -101,6 +103,9 @@ def get_mpis_group_call(
 
     if app_family != "All":
         filter += ";category_name==AppFamily;category_value=={}".format(app_family)
+
+    if filter_by:
+        filter = filter + ";(" + filter_by + ")"
 
     if name:
         filter += ";name=={}".format(name)
@@ -142,6 +147,7 @@ def get_mpis_group_call(
     if group_member_count:
         payload["group_member_count"] = group_member_count
 
+    # TODO Create GroupAPI separately for it.
     Obj = get_resource_api("groups", client.connection)
     res, err = Obj.create(payload=payload)
 
@@ -153,7 +159,7 @@ def get_mpis_group_call(
     return res
 
 
-def get_marketplace_items(name, quiet, app_family, display_all):
+def get_marketplace_items(name, quiet, app_family, display_all, filter_by=""):
     """Lists marketplace items"""
 
     group_member_count = 0
@@ -165,6 +171,7 @@ def get_marketplace_items(name, quiet, app_family, display_all):
         app_family=app_family,
         app_states=[MARKETPLACE_BLUEPRINT.STATES.PUBLISHED],
         group_member_count=group_member_count,
+        filter_by=filter_by,
     )
     group_results = res["group_results"]
 
@@ -221,10 +228,12 @@ def get_marketplace_items(name, quiet, app_family, display_all):
     click.echo(table)
 
 
-def get_marketplace_bps(name, quiet, app_family, app_states=[]):
+def get_marketplace_bps(name, quiet, app_family, app_states=[], filter_by=""):
     """ List all the blueprints in marketplace manager"""
 
-    res = get_mpis_group_call(name=name, app_family=app_family, app_states=app_states)
+    res = get_mpis_group_call(
+        name=name, app_family=app_family, app_states=app_states, filter_by=filter_by
+    )
     group_results = res["group_results"]
 
     if quiet:
@@ -476,7 +485,9 @@ def launch_marketplace_bp(
     LOG.info("App {} creation is successful".format(app_name))
 
 
-def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_secrets):
+def decompile_marketplace_bp(
+    name, version, app_source, bp_name, project, with_secrets, bp_dir
+):
     """decompiles marketplace blueprint"""
 
     if not version:
@@ -500,6 +511,11 @@ def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_s
     bp_payload = res.json()
     blueprint = bp_payload["spec"]["resources"]
     blueprint_name = get_valid_identifier(bp_name or name)
+
+    if not bp_dir:
+        bp_dir_suffix = bp_name or "mpi_bp_{}_v{}".format(blueprint_name, version)
+        bp_dir = os.path.join(os.getcwd(), bp_dir_suffix)
+
     blueprint_dir = bp_name or "mpi_bp_{}_v{}".format(blueprint_name, version)
     blueprint_description = bp_payload["spec"].get("description", "")
 
@@ -520,8 +536,12 @@ def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_s
     bp_cls.__name__ = blueprint_name
     bp_cls.__doc__ = blueprint_description
 
-    create_bp_dir(bp_cls, blueprint_dir, with_secrets)
-    click.echo("\nSuccessfully decompiled. Directory location: {}".format(get_bp_dir()))
+    create_bp_dir(bp_cls=bp_cls, bp_dir=bp_dir, with_secrets=with_secrets)
+    click.echo(
+        "\nSuccessfully decompiled. Directory location: {}. Blueprint location: {}".format(
+            get_bp_dir(), os.path.join(get_bp_dir(), "blueprint.py")
+        )
+    )
 
 
 def launch_marketplace_item(
@@ -750,6 +770,7 @@ def publish_bp_as_new_marketplace_bp(
     category=None,
     icon_name=None,
     icon_file=None,
+    all_projects=False,
 ):
 
     # Search whether this marketplace item exists or not
@@ -794,6 +815,7 @@ def publish_bp_as_new_marketplace_bp(
             version=version,
             projects=projects,
             category=category,
+            all_projects=all_projects,
         )
 
         if publish_to_marketplace:
@@ -816,6 +838,7 @@ def publish_bp_as_existing_marketplace_bp(
     category=None,
     icon_name=None,
     icon_file=None,
+    all_projects=False,
 ):
 
     LOG.info(
@@ -891,6 +914,7 @@ def publish_bp_as_existing_marketplace_bp(
             version=version,
             projects=projects,
             category=category,
+            all_projects=all_projects,
         )
 
         if publish_to_marketplace:
@@ -901,7 +925,9 @@ def publish_bp_as_existing_marketplace_bp(
             )
 
 
-def approve_marketplace_bp(bp_name, version=None, projects=[], category=None):
+def approve_marketplace_bp(
+    bp_name, version=None, projects=[], category=None, all_projects=False
+):
 
     client = get_api_client()
     if not version:
@@ -947,16 +973,29 @@ def approve_marketplace_bp(bp_name, version=None, projects=[], category=None):
 
         bp_data["metadata"]["categories"] = {"AppFamily": category}
 
-    for project in projects:
-        project_data = get_project(project)
+    if not bp_data["spec"]["resources"].get("project_reference_list", {}):
+        bp_data["spec"]["resources"]["project_reference_list"] = []
 
-        bp_data["spec"]["resources"]["project_reference_list"].append(
-            {
-                "kind": "project",
-                "name": project,
-                "uuid": project_data["metadata"]["uuid"],
-            }
-        )
+    project_name_uuid_map = client.project.get_name_uuid_map(params={"length": 250})
+    if all_projects:
+        for k, v in project_name_uuid_map.items():
+            bp_data["spec"]["resources"]["project_reference_list"].append(
+                {
+                    "kind": "project",
+                    "name": k,
+                    "uuid": v,
+                }
+            )
+
+    else:
+        for _project in projects:
+            bp_data["spec"]["resources"]["project_reference_list"].append(
+                {
+                    "kind": "project",
+                    "name": _project,
+                    "uuid": project_name_uuid_map[_project],
+                }
+            )
 
     res, err = client.market_place.update(uuid=bp_uuid, payload=bp_data)
     if err:
@@ -971,7 +1010,12 @@ def approve_marketplace_bp(bp_name, version=None, projects=[], category=None):
 
 
 def publish_marketplace_bp(
-    bp_name, version=None, projects=[], category=None, app_source=None
+    bp_name,
+    version=None,
+    projects=[],
+    category=None,
+    app_source=None,
+    all_projects=False,
 ):
 
     client = get_api_client()
@@ -1028,19 +1072,29 @@ def publish_marketplace_bp(
 
         bp_data["metadata"]["categories"] = {"AppFamily": category}
 
-    if projects:
+    if projects or all_projects:
         # Clear the stored projects
         bp_data["spec"]["resources"]["project_reference_list"] = []
-        for project in projects:
-            project_data = get_project(project)
+        project_name_uuid_map = client.project.get_name_uuid_map(params={"length": 250})
 
-            bp_data["spec"]["resources"]["project_reference_list"].append(
-                {
-                    "kind": "project",
-                    "name": project,
-                    "uuid": project_data["metadata"]["uuid"],
-                }
-            )
+        if all_projects:
+            for k, v in project_name_uuid_map.items():
+                bp_data["spec"]["resources"]["project_reference_list"].append(
+                    {
+                        "kind": "project",
+                        "name": k,
+                        "uuid": v,
+                    }
+                )
+        else:
+            for _project in projects:
+                bp_data["spec"]["resources"]["project_reference_list"].append(
+                    {
+                        "kind": "project",
+                        "name": _project,
+                        "uuid": project_name_uuid_map[_project],
+                    }
+                )
 
     # Atleast 1 project required for publishing to marketplace
     if not bp_data["spec"]["resources"].get("project_reference_list", None):
