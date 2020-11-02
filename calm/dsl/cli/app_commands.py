@@ -63,6 +63,7 @@ def _create_app(
     \b
     Command consumes a dsl blueprint file and creates a blueprint from it.
     If created blueprint is in ACTIVE state, then it got launched to create an application.
+    Blueprint is deleted after launching it.
     """
 
     create_app(

@@ -2,6 +2,7 @@ import pytest
 import time
 import json
 import sys
+import uuid
 import traceback
 from click.testing import CliRunner
 
@@ -337,6 +338,35 @@ class TestAppCommands:
                 )
             )
         LOG.info("Success")
+
+    def test_app_create(self):
+        runner = CliRunner()
+
+        self.created_app_name = "Application{}".format(str(uuid.uuid4())[:10])
+        LOG.info("Creating App '{}'".format(self.created_app_name))
+        result = runner.invoke(
+            cli,
+            [
+                "create",
+                "app",
+                "--file={}".format(DSL_BP_FILEPATH),
+                "--name={}".format(self.created_app_name),
+            ],
+        )
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+        LOG.info("Success")
+        self._test_app_delete()
 
 
 if __name__ == "__main__":

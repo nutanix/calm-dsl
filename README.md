@@ -40,6 +40,7 @@ Context info includes server, project and log configuration for dsl operations.
 
 ### Application
  - List apps: `calm get apps`. Use `calm get apps -q` to show only application names.
+ - Create app: `calm create app -f <file>`. Command will create blueprint and launch it to get application. Please look at `calm create app -h`.
  - Describe app: `calm describe app <app_name>`. It will print a summary of the application and the current application state. Use `calm describe app <name> 2>/dev/null --out json | jq '.["status"]'` to get fields from the app json. More info on how to use `jq` [here](https://stedolan.github.io/jq/tutorial/).
  - Delete app: `calm delete app <app_name>`. You can delete multiple apps using: `calm get apps -q | xargs -I {} calm delete app {}`.
  - Run action on application: `calm run action <action_name> --app <application_name>`
