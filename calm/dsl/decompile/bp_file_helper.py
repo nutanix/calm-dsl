@@ -107,7 +107,10 @@ def render_bp_file_template(cls, with_secrets=False, metadata_obj=None):
             click.secho("Enter the value to be used in secret files")
         for file_name in secret_files:
             secret_val = click.prompt(
-                "\nValue for {}".format(file_name), default="", show_default=False
+                "\nValue for {}".format(file_name),
+                default="",
+                show_default=False,
+                hide_input=True,
             )
             file_loc = os.path.join(get_local_dir(), file_name)
             with open(file_loc, "w+") as fd:
