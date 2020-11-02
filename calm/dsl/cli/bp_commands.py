@@ -136,10 +136,17 @@ def _compile_blueprint_command(bp_file, brownfield_deployment_file, out):
     default="",
     help="Prefix used for appending to entities name(Reserved name cases)",
 )
-def _decompile_bp(name, bp_file, with_secrets, prefix):
+@click.option(
+    "--dir",
+    "-d",
+    "bp_dir",
+    default=None,
+    help="Blueprint directory location used for placing decompiled entities",
+)
+def _decompile_bp(name, bp_file, with_secrets, prefix, bp_dir):
     """Decompiles blueprint present on server or json file"""
 
-    decompile_bp(name, bp_file, with_secrets, prefix)
+    decompile_bp(name, bp_file, with_secrets, prefix, bp_dir)
 
 
 @create.command("bp")

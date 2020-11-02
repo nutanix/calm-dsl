@@ -2,6 +2,7 @@ import uuid
 import click
 import sys
 import json
+import os
 from prettytable import PrettyTable
 
 from calm.dsl.builtins import BlueprintType, get_valid_identifier
@@ -484,7 +485,9 @@ def launch_marketplace_bp(
     LOG.info("App {} creation is successful".format(app_name))
 
 
-def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_secrets):
+def decompile_marketplace_bp(
+    name, version, app_source, bp_name, project, with_secrets, bp_dir
+):
     """decompiles marketplace blueprint"""
 
     if not version:
@@ -508,6 +511,11 @@ def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_s
     bp_payload = res.json()
     blueprint = bp_payload["spec"]["resources"]
     blueprint_name = get_valid_identifier(bp_name or name)
+
+    if not bp_dir:
+        bp_dir_suffix = bp_name or "mpi_bp_{}_v{}".format(blueprint_name, version)
+        bp_dir = os.path.join(os.getcwd(), bp_dir_suffix)
+
     blueprint_dir = bp_name or "mpi_bp_{}_v{}".format(blueprint_name, version)
     blueprint_description = bp_payload["spec"].get("description", "")
 
@@ -528,7 +536,7 @@ def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_s
     bp_cls.__name__ = blueprint_name
     bp_cls.__doc__ = blueprint_description
 
-    create_bp_dir(bp_cls, blueprint_dir, with_secrets)
+    create_bp_dir(bp_cls=bp_cls, bp_dir=bp_dir, with_secrets=with_secrets)
     click.echo("\nSuccessfully decompiled. Directory location: {}".format(get_bp_dir()))
 
 
