@@ -82,7 +82,6 @@ def render_task_template(cls, entity_context="", RUNBOOK_ACTION_MAP={}):
             schema_file = "task_scaling_scalein.py.jinja2"
     elif cls.type == "HTTP":
         attrs = cls.attrs
-        # TODO add basic_cred creds support. For now default cred used
         user_attrs["headers"] = {}
         user_attrs["secret_headers"] = {}
         user_attrs["status_mapping"] = {}
@@ -99,6 +98,18 @@ def render_task_template(cls, entity_context="", RUNBOOK_ACTION_MAP={}):
             user_attrs["status_mapping"][status["code"]] = (
                 True if status["status"] == "SUCCESS" else False
             )
+
+        # Store auth objects
+        auth_obj = attrs.get("authentication", {})
+        auth_type = auth_obj.get("type", "")
+        if auth_type == "basic_with_cred":
+            auth_cred = auth_obj.get("credential_local_reference", None)
+            if auth_cred:
+                user_attrs["cred"] = "ref({})".format(
+                    get_cred_var_name(
+                        getattr(auth_cred, "name", "") or auth_cred.__name__
+                    )
+                )
 
         user_attrs["response_paths"] = attrs.get("response_paths", {})
         method = attrs["method"]

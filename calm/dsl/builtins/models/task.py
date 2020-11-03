@@ -72,6 +72,19 @@ class TaskType(EntityType):
                 attrs["runbook_reference"], prefix=prefix
             )
 
+        elif task_type == "HTTP":
+
+            auth_obj = attrs.get("authentication", {})
+            auth_type = auth_obj.get("type", "")
+
+            # Note For decompiling, only authentication object of type 'basic_with_cred' works bcz we cann't take secret values at client side
+            if auth_type == "basic_with_cred":
+                auth_cred = auth_obj.get("credential_local_reference", None)
+                if auth_cred:
+                    auth_obj["credential_local_reference"] = RefType.decompile(
+                        auth_cred, prefix=prefix
+                    )
+
         cdict["attrs"] = attrs
 
         return super().decompile(cdict, context=context, prefix=prefix)
@@ -646,7 +659,7 @@ def http_task(
 
         auth_obj = {
             "auth_type": "basic_with_cred",
-            "credential_local_reference": cred_ref
+            "credential_local_reference": cred_ref,
         }
 
     elif credential is not None:
