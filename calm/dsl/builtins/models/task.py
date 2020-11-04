@@ -658,7 +658,7 @@ def http_task(
             )
 
         auth_obj = {
-            "auth_type": "basic_with_cred",
+            "type": "basic_with_cred",
             "credential_local_reference": cred_ref,
         }
 
