@@ -2130,7 +2130,11 @@
                                     "method": "POST",
                                     "url": "https://jsonplaceholder.typicode.com/posts",
                                     "authentication": {
-                                        "auth_type": "none"
+                                        "type": "basic_with_cred",
+                                        "credential_local_reference": {
+                                            "kind": "app_credential",
+                                            "name": "default cred"
+                                        }
                                     },
                                     "connection_timeout": 120,
                                     "tls_verify": true,

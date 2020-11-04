@@ -4,6 +4,8 @@ from itertools import combinations
 import uuid
 import time
 import sys
+import json
+import traceback
 
 from calm.dsl.cli import main as cli
 from calm.dsl.api import get_api_client, get_resource_api
@@ -104,7 +106,17 @@ class TestMarketplaceBPCommands:
             cli, ["get", "marketplace", "items", "--filter", "version==1.0.0"]
         )
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Failed to fetch marketplace items with 'filter' cli option")
         LOG.info("Success")
 
@@ -167,7 +179,17 @@ class TestMarketplaceBPCommands:
             cli, ["get", "marketplace", "bps", "--filter", "version==1.0.0"]
         )
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Failed to fetch marketplace bps with 'filter' cli option")
         LOG.info("Success")
 
@@ -210,7 +232,17 @@ class TestMarketplaceBPCommands:
         LOG.info("Testing 'calm describe marketplace_item {}' command".format(mpi_name))
         result = runner.invoke(cli, ["describe", "marketplace", "item", mpi_name])
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("MPI list call failed")
         LOG.info("Success")
 
@@ -262,7 +294,17 @@ class TestMarketplaceBPCommands:
             cli, ["describe", "marketplace", "item", mpi_name, "--version", mpi_version]
         )
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("MPI list call failed")
         LOG.info("Success")
 
@@ -324,7 +366,20 @@ class TestMarketplaceBPCommands:
                 result = runner.invoke(cli, command)
 
                 if result.exit_code:
-                    LOG.error(result.output)
+                    cli_res_dict = {
+                        "Output": result.output,
+                        "Exception": str(result.exception),
+                    }
+                    LOG.debug(
+                        "Cli Response: {}".format(
+                            json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                        )
+                    )
+                    LOG.debug(
+                        "Traceback: \n{}".format(
+                            "".join(traceback.format_tb(result.exc_info[2]))
+                        )
+                    )
                     pytest.fail("Describe marketplace blueprint command failed")
 
         LOG.info("Success")
@@ -349,7 +404,19 @@ class TestMarketplaceBPCommands:
         )
 
         LOG.debug("Response: {}".format(result.output))
-        assert result.exit_code == 0
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("BP creation failed")
 
     def test_mpi_basic_commands(self):
         """
@@ -398,7 +465,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Publishing of blueprint as new marketplace item failed")
         LOG.info("Success")
 
@@ -421,7 +498,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Publishing of blueprint as existing marketplace_item failed")
         LOG.info("Success")
 
@@ -444,7 +531,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail(
                 "Publishing of blueprint with secrets as existing marketplace_item failed"
             )
@@ -468,7 +565,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code == 0:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail(
                 "Publishing bp with version that already exists in marketplace should not be successful"
             )
@@ -491,7 +598,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Approving of marketplace blueprint failed")
         LOG.info("Success")
 
@@ -514,7 +631,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Updating of marketplace blueprint failed")
         LOG.info("Success")
 
@@ -535,7 +662,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code == 0:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail(
                 "Publishing of marketplace blueprint without projects should fail"
             )
@@ -560,7 +697,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Publishing of marketplace blueprint to marketplace failed")
         LOG.info("Success")
 
@@ -577,7 +724,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code == 0:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail(
                 "Deleting  of marketplace blueprint should fail if bp is in published state"
             )
@@ -600,7 +757,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Unpublishing of marketplace blueprint failed")
         LOG.info("Success")
 
@@ -621,7 +788,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Deletion of marketplace blueprint in ACCEPTED state failed")
         LOG.info("Success")
 
@@ -642,7 +819,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Rejection of marketplace blueprint failed")
         LOG.info("Success")
 
@@ -659,7 +846,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Deletion of marketplace blueprint in REJECTED state failed")
         LOG.info("Success")
 
@@ -676,7 +873,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Deletion of marketplace blueprint in PENDING state failed")
         LOG.info("Success")
 
@@ -721,7 +928,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail(
                 "Publishing of marketplace blueprint as new marketplace item failed"
             )
@@ -753,7 +970,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Launching of marketplace blueprint in PENDING state failed")
         self.created_app_list.append(self.pending_mpbp_app_name)
 
@@ -774,7 +1001,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Approving of marketplace blueprint failed")
         LOG.info("Success")
 
@@ -804,7 +1041,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Launching of marketplace blueprint in ACCEPTED state failed")
         self.created_app_list.append(self.accepted_mpbp_app_name)
 
@@ -827,7 +1074,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Publishing of marketplace blueprint to marketplace failed")
         LOG.info("Success")
 
@@ -857,7 +1114,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Launching of marketplace blueprint in PUBLISHED state failed")
         self.created_app_list.append(self.published_mpbp_app_name)
 
@@ -877,7 +1144,21 @@ class TestMarketplaceBPCommands:
         ]
 
         result = runner.invoke(cli, command)
-        assert result.exit_code == 0
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail(
+                "Unpublishing of marketplace blueprint in PUBLISHED state failed"
+            )
         LOG.info("Success")
 
         # Delete the marketplace blueprint
@@ -896,7 +1177,19 @@ class TestMarketplaceBPCommands:
         ]
 
         result = runner.invoke(cli, command)
-        assert result.exit_code == 0
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Deletion of marketplace blueprint in ACCEPTED state failed")
         LOG.info("Success")
 
     def test_publish_to_marketplace_flag(self):
@@ -929,7 +1222,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Publishing Bp using publish_to_marketplace flag failed")
         LOG.info("Success")
 
@@ -957,7 +1260,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Unpublishing of marketplace blueprint failed")
 
         LOG.info(
@@ -976,7 +1289,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Deletion of marketplace blueprint in ACCEPTED state failed")
 
     def test_auto_approve_flag(self):
@@ -1009,7 +1332,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Publishing Bp using auto_approve flag failed")
         LOG.info("Success")
 
@@ -1037,7 +1370,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Deletion of marketplace blueprint in ACCEPTED state failed")
 
     def test_publish_bp_with_icon(self):
@@ -1068,7 +1411,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Publishing of blueprint as new marketplace item failed")
         LOG.info("Success")
 
@@ -1099,7 +1452,17 @@ class TestMarketplaceBPCommands:
             ],
         )
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Deleting of marketplace blueprint failed")
 
     def test_all_projects_flag_on_publising_bp_with_auto_approve_flag(self):
@@ -1134,7 +1497,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Publishing Bp using all_projects flag failed")
         LOG.info("Success")
 
@@ -1169,7 +1542,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Deletion of marketplace blueprint in ACCEPTED state failed")
 
     def test_all_projects_flag_on_approving_marketplace_bp(self):
@@ -1203,7 +1586,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail(
                 "Publishing of marketplace blueprint as new marketplace item failed"
             )
@@ -1226,7 +1619,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail(
                 "Approving of marketplace blueprint using all_projects flag failed"
             )
@@ -1263,7 +1666,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Deletion of marketplace blueprint in ACCEPTED state failed")
 
     def test_all_projects_flag_on_publishing_marketplace_bp(self):
@@ -1297,7 +1710,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Publishing Bp using auto_approve flag failed")
         LOG.info("Success")
 
@@ -1319,7 +1742,17 @@ class TestMarketplaceBPCommands:
 
         result = runner.invoke(cli, command)
         if result.exit_code:
-            LOG.error(result.output)
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
             pytest.fail("Publishing of marketplace blueprint to marketplace failed")
         LOG.info("Success")
 
@@ -1354,7 +1787,19 @@ class TestMarketplaceBPCommands:
         ]
 
         result = runner.invoke(cli, command)
-        assert result.exit_code == 0
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Unpublishing of marketplace blueprint to marketplace failed")
         LOG.info("Success")
 
         # Delete the marketplace blueprint
@@ -1373,7 +1818,19 @@ class TestMarketplaceBPCommands:
         ]
 
         result = runner.invoke(cli, command)
-        assert result.exit_code == 0
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Deletion of marketplace blueprint failed")
         LOG.info("Success")
 
     def _wait_for_non_busy_state(self, app_name):
@@ -1393,5 +1850,17 @@ class TestMarketplaceBPCommands:
         self._wait_for_non_busy_state(app_name)
         LOG.info("Deleting App {} ".format(app_name))
         result = runner.invoke(cli, ["delete", "app", app_name])
-        assert result.exit_code == 0
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Deletion of application '{}' failed".format(app_name))
         LOG.info("App is deleted successfully")
