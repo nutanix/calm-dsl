@@ -15,7 +15,7 @@ def test_json():
     import os
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    file_path = os.path.join(dir_path, "test_task_library_item.json")
+    file_path = os.path.join(dir_path, "test_task_library.json")
 
     generated_json = Install_IIS.json_dumps(pprint=True)
 
