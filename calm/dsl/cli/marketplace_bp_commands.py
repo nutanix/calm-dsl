@@ -288,7 +288,16 @@ def _launch_marketplace_item(
     default=False,
     help="Interactive Mode to provide the value for secrets",
 )
-def _decompile_marketplace_bp(mpi_name, version, project, name, source, with_secrets):
+@click.option(
+    "--dir",
+    "-d",
+    "bp_dir",
+    default=None,
+    help="Blueprint directory location used for placing decompiled entities",
+)
+def _decompile_marketplace_bp(
+    mpi_name, version, project, name, source, with_secrets, bp_dir
+):
     """Decompiles marketplace manager blueprint
 
 
@@ -305,6 +314,7 @@ def _decompile_marketplace_bp(mpi_name, version, project, name, source, with_sec
         bp_name=name,
         app_source=None,
         with_secrets=with_secrets,
+        bp_dir=bp_dir,
     )
 
 
@@ -367,6 +377,13 @@ def _decompile_marketplace_bp(mpi_name, version, project, name, source, with_sec
 @click.option(
     "--icon_name", "-i", default=None, help="App icon name for marketpalce blueprint"
 )
+@click.option(
+    "--all_projects",
+    "-ap",
+    is_flag=True,
+    default=False,
+    help="Publishes bp to all projects",
+)
 def publish_bp(
     bp_name,
     name,
@@ -380,6 +397,7 @@ def publish_bp(
     auto_approve=False,
     icon_name=False,
     icon_file=None,
+    all_projects=False,
 ):
     """Publish a blueprint to marketplace manager"""
 
@@ -400,6 +418,7 @@ def publish_bp(
             auto_approve=auto_approve,
             icon_name=icon_name,
             icon_file=icon_file,
+            all_projects=all_projects,
         )
 
     else:
@@ -415,6 +434,7 @@ def publish_bp(
             auto_approve=auto_approve,
             icon_name=icon_name,
             icon_file=icon_file,
+            all_projects=all_projects,
         )
 
 
@@ -431,11 +451,22 @@ def publish_bp(
     multiple=True,
     help="Projects for marketplace blueprint",
 )
-def approve_bp(name, version, category, projects=[]):
+@click.option(
+    "--all_projects",
+    "-ap",
+    is_flag=True,
+    default=False,
+    help="Approve bp to all projects",
+)
+def approve_bp(name, version, category, all_projects, projects=[]):
     """Approves a marketplace manager blueprint"""
 
     approve_marketplace_bp(
-        bp_name=name, version=version, projects=projects, category=category
+        bp_name=name,
+        version=version,
+        projects=projects,
+        category=category,
+        all_projects=all_projects,
     )
 
 
@@ -459,7 +490,14 @@ def approve_bp(name, version, category, projects=[]):
     multiple=True,
     help="Projects for marketplace blueprint",
 )
-def _publish_marketplace_bp(name, version, category, source, projects=[]):
+@click.option(
+    "--all_projects",
+    "-ap",
+    is_flag=True,
+    default=False,
+    help="Approve bp to all projects",
+)
+def _publish_marketplace_bp(name, version, category, source, all_projects, projects=[]):
     """Publish a marketplace blueprint to marketplace store"""
 
     publish_marketplace_bp(
@@ -468,6 +506,7 @@ def _publish_marketplace_bp(name, version, category, source, projects=[]):
         projects=projects,
         category=category,
         app_source=source,
+        all_projects=all_projects,
     )
 
 
