@@ -4,6 +4,9 @@ from calm.dsl.builtins import MetadataType
 
 def render_metadata_template(cls):
 
+    if not cls:
+        return
+
     if not isinstance(cls, MetadataType):
         raise TypeError("{} is not of type {}".format(cls, MetadataType))
 

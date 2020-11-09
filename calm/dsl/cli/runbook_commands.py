@@ -208,9 +208,11 @@ def _compile_runbook_command(runbook_file, out):
 def _run_runbook_command(
     runbook_name, watch, ignore_runtime_variables, runbook_file=None, input_file=None
 ):
-    """Execute the runbook given by name or runbook file. All runtime variables and default target will be prompted by default. When passing the 'ignore_runtime_editable' flag, no variables will be prompted and all default values will be used. The runbook  default values can be  overridden by passing a Python file via 'input_file'. When passing a Python file, no variables will be prompted.
+    """Execute the runbook given by name or runbook file. All runtime variables and default target will be prompted by default. When passing the 'ignore_runtime_variables' flag, no variables will be prompted and all default values will be used. The runbook  default values can be  overridden by passing a Python file via 'input_file'. When passing a Python file, no variables will be prompted.
 
     \b
+    >: Runbook will be deleted after single run, if '--file/-f' option is used to supply runbook file.
+
     >: input_file: Python file consisting of variables 'variable_list' and 'default_target'
     Ex: variable_list = {
         "value": {"value": <Variable Value>},

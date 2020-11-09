@@ -40,6 +40,7 @@ Context info includes server, project and log configuration for dsl operations.
 
 ### Application
  - List apps: `calm get apps`. Use `calm get apps -q` to show only application names.
+ - Create app: `calm create app -f <file>`. Command will create blueprint and launch it to get application. Please look at `calm create app -h`.
  - Describe app: `calm describe app <app_name>`. It will print a summary of the application and the current application state. Use `calm describe app <name> 2>/dev/null --out json | jq '.["status"]'` to get fields from the app json. More info on how to use `jq` [here](https://stedolan.github.io/jq/tutorial/).
  - Delete app: `calm delete app <app_name>`. You can delete multiple apps using: `calm get apps -q | xargs -I {} calm delete app {}`.
  - Run action on application: `calm run action <action_name> --app <application_name>`
@@ -67,7 +68,8 @@ Decompilation is process to consume json data for any entity and convert it back
 - Name of created files are taken from the context of variable/task. For ex: Filename for service action task script: Service_MySQLService_Action___create___Task_Task1
 - Decompile existing server blueprint: `calm decompile bp <bp_name>`. Use `calm decompile bp <bp_name> --with_secrets` to fill the value for secrets used inside blueprint interactively while decompiling blueprint.
 - Decompile bp from existing json file: `calm decompile bp --file <json_file_location>`.
-- Decompile marketplace blueprint: `calm decompile marketplace_bp <bp_name> --version <bp_version>`.
+- Decompile marketplace blueprint: `calm decompile marketplace bp <bp_name> --version <bp_version>`.
+- Decompile bp to a location: `calm decompile bp <bp_name> --dir <bp_dir>`. It will decompile blueprint entities to `bp_dir` location.
 - Note: Decompliation support for providers other than AHV is experimental.
 
 ### Runbooks

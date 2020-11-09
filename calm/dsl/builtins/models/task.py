@@ -90,6 +90,19 @@ class TaskType(EntityType):
                 attrs["runbook_reference"], prefix=prefix
             )
 
+        elif task_type == "HTTP":
+
+            auth_obj = attrs.get("authentication", {})
+            auth_type = auth_obj.get("type", "")
+
+            # Note For decompiling, only authentication object of type 'basic_with_cred' works bcz we cann't take secret values at client side
+            if auth_type == "basic_with_cred":
+                auth_cred = auth_obj.get("credential_local_reference", None)
+                if auth_cred:
+                    auth_obj["credential_local_reference"] = RefType.decompile(
+                        auth_cred, prefix=prefix
+                    )
+
         cdict["attrs"] = attrs
 
         return super().decompile(cdict, context=context, prefix=prefix)
@@ -656,6 +669,7 @@ def http_task_get(
     response_paths=None,
     name=None,
     target=None,
+    cred=None,
 ):
     """
 
@@ -666,6 +680,7 @@ def http_task_get(
         headers (dict): Request headers
         secret_headers (dict): Request headers that are to be masked
         credential (Credential): Credential object. Currently only supports basic auth.
+        cred (Credential reference): Used for basic_with_cred authentication
         content_type (string): Request Content-Type (application/json, application/xml, etc.)
         timeout (int): Request timeout in seconds (Default: 120)
         verify (bool): TLS verify (Default: False)
@@ -686,6 +701,7 @@ def http_task_get(
         headers=headers,
         secret_headers=secret_headers,
         credential=credential,
+        cred=cred,
         content_type=content_type,
         timeout=timeout,
         verify=verify,
@@ -713,6 +729,7 @@ def http_task_post(
     response_paths=None,
     name=None,
     target=None,
+    cred=None,
 ):
     """
 
@@ -724,6 +741,7 @@ def http_task_post(
         headers (dict): Request headers
         secret_headers (dict): Request headers that are to be masked
         credential (Credential): Credential object. Currently only supports basic auth.
+        cred (Credential reference): Used for basic_with_cred authentication
         content_type (string): Request Content-Type (application/json, application/xml, etc.)
         timeout (int): Request timeout in seconds (Default: 120)
         verify (bool): TLS verify (Default: False)
@@ -744,6 +762,7 @@ def http_task_post(
         headers=headers,
         secret_headers=secret_headers,
         credential=credential,
+        cred=cred,
         content_type=content_type,
         timeout=timeout,
         verify=verify,
@@ -771,6 +790,7 @@ def http_task_put(
     response_paths=None,
     name=None,
     target=None,
+    cred=None,
 ):
     """
 
@@ -782,6 +802,7 @@ def http_task_put(
         headers (dict): Request headers
         secret_headers (dict): Request headers that are to be masked
         credential (Credential): Credential object. Currently only supports basic auth.
+        cred (Credential reference): Used for basic_with_cred authentication
         content_type (string): Request Content-Type (application/json, application/xml, etc.)
         timeout (int): Request timeout in seconds (Default: 120)
         verify (bool): TLS verify (Default: False)
@@ -802,6 +823,7 @@ def http_task_put(
         headers=headers,
         secret_headers=secret_headers,
         credential=credential,
+        cred=cred,
         content_type=content_type,
         timeout=timeout,
         verify=verify,
@@ -829,6 +851,7 @@ def http_task_delete(
     response_paths=None,
     name=None,
     target=None,
+    cred=None,
 ):
     """
 
@@ -840,6 +863,7 @@ def http_task_delete(
         headers (dict): Request headers
         secret_headers (dict): Request headers that are to be masked
         credential (Credential): Credential object. Currently only supports basic auth.
+        cred (Credential reference): Used for basic_with_cred authentication
         content_type (string): Request Content-Type (application/json, application/xml, etc.)
         timeout (int): Request timeout in seconds (Default: 120)
         verify (bool): TLS verify (Default: False)
@@ -860,6 +884,7 @@ def http_task_delete(
         headers=headers,
         secret_headers=secret_headers,
         credential=credential,
+        cred=cred,
         content_type=content_type,
         timeout=timeout,
         verify=verify,
@@ -910,6 +935,7 @@ def http_task(
     headers=None,
     secret_headers=None,
     credential=None,
+    cred=None,
     content_type=None,
     timeout=120,
     verify=False,
@@ -930,6 +956,7 @@ def http_task(
         headers (dict): Request headers
         secret_headers (dict): Request headers that are to be masked
         credential (Credential): Credential object. Currently only supports basic auth.
+        cred (Credential reference): Used for basic_with_cred authentication
         content_type (string): Request Content-Type (application/json, application/xml, etc.)
         timeout (int): Request timeout in seconds (Default: 120)
         verify (bool): TLS verify (Default: False)
@@ -944,7 +971,22 @@ def http_task(
         (Task): HTTP Task
     """
     auth_obj = {"auth_type": "none"}
-    if credential is not None:
+
+    if cred is not None:
+        cred_ref = _get_target_ref(cred)
+        if getattr(cred_ref, "kind", None) != "app_credential":
+            raise ValueError(
+                "Cred for HTTP task "
+                + (name or "")
+                + " should be reference of credential object"
+            )
+
+        auth_obj = {
+            "type": "basic_with_cred",
+            "credential_local_reference": cred_ref,
+        }
+
+    elif credential is not None:
         if getattr(credential, "__kind__", None) != "app_credential":
             raise ValueError(
                 "Credential for HTTP task "
@@ -1198,6 +1240,7 @@ class BaseTask:
             headers=None,
             secret_headers=None,
             credential=None,
+            cred=None,
             content_type=None,
             timeout=120,
             verify=False,
@@ -1215,6 +1258,7 @@ class BaseTask:
                 headers=headers,
                 secret_headers=secret_headers,
                 credential=credential,
+                cred=cred,
                 content_type=content_type,
                 timeout=timeout,
                 verify=verify,
