@@ -17,60 +17,6 @@ JSON_BP_FILEPATH = "tests/existing_vm_example_with_target_endpoint/test_existing
 
 @pytest.mark.slow
 class TestBpCommands:
-    def test_bps_list(self):
-        runner = CliRunner()
-        result = runner.invoke(cli, ["get", "bps"])
-        if result.exit_code:
-            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
-            LOG.debug(
-                "Cli Response: {}".format(
-                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
-                )
-            )
-            LOG.debug(
-                "Traceback: \n{}".format(
-                    "".join(traceback.format_tb(result.exc_info[2]))
-                )
-            )
-            pytest.fail("BP Get failed")
-        LOG.info("Success")
-
-    def test_bps_list_with_limit_offset(self):
-        runner = CliRunner()
-        result = runner.invoke(cli, ["get", "bps", "--limit=15", "--offset=5"])
-        if result.exit_code:
-            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
-            LOG.debug(
-                "Cli Response: {}".format(
-                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
-                )
-            )
-            LOG.debug(
-                "Traceback: \n{}".format(
-                    "".join(traceback.format_tb(result.exc_info[2]))
-                )
-            )
-            pytest.fail("BP list with limit call failed")
-        LOG.info("Success")
-
-    def test_bps_list_with_name(self):
-        runner = CliRunner()
-        result = runner.invoke(cli, ["get", "bps", "--name=MSSQL"])
-        if result.exit_code:
-            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
-            LOG.debug(
-                "Cli Response: {}".format(
-                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
-                )
-            )
-            LOG.debug(
-                "Traceback: \n{}".format(
-                    "".join(traceback.format_tb(result.exc_info[2]))
-                )
-            )
-            pytest.fail("BP list with name call failed")
-        LOG.info("Success")
-
     def test_compile_bp(self):
         runner = CliRunner()
         LOG.info("Compiling Bp file at {}".format(DSL_BP_FILEPATH))
@@ -121,7 +67,7 @@ class TestBpCommands:
             )
             pytest.fail("BP creation from python file failed")
         LOG.info("Success")
-        self._test_bp_describe()
+        self._test_dsl_bp_delete()
 
     def test_json_bp_create(self):
         runner = CliRunner()
@@ -176,37 +122,6 @@ class TestBpCommands:
                 f.write(old_spec_data)
 
         self._test_json_bp_delete()
-
-    def _test_bp_describe(self):
-        runner = CliRunner()
-        result = runner.invoke(cli, ["describe", "bp", self.created_dsl_bp_name])
-        if result.exit_code:
-            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
-            LOG.debug(
-                "Cli Response: {}".format(
-                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
-                )
-            )
-            LOG.debug(
-                "Traceback: \n{}".format(
-                    "".join(traceback.format_tb(result.exc_info[2]))
-                )
-            )
-        self._test_dsl_bp_delete()
-
-    def test_random_bp_describe(self):
-        runner = CliRunner()
-        LOG.info("Running 'calm describe bp' command")
-        bp_name = "MySQL_ {}".format(int(time.time()))
-        result = runner.invoke(cli, ["describe", "bp", bp_name])
-        LOG.debug("Command output : {}".format(result.output))
-        if result.exit_code != 0:
-            assert result.exception.args[
-                0
-            ] == "No blueprint found with name {} found".format(bp_name)
-        else:
-            assert result.exit_code == 0
-        LOG.info("Success")
 
     def _test_dsl_bp_delete(self):
         runner = CliRunner()
