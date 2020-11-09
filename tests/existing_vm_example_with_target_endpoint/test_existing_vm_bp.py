@@ -97,7 +97,11 @@ class ExistingVM(Substrate):
     @action
     def __pre_create__():
         CalmTask.Exec.escript(name="Pre Create Task", script="print 'Hello!'")
-        CalmTask.Exec.ssh(name="Pre Create on Target Endpoint", filename="scripts/sample_script.sh", target_endpoint=ref(CALM_ENDPOINT))
+        CalmTask.Exec.ssh(
+            name="Pre Create on Target Endpoint",
+            filename="scripts/sample_script.sh",
+            target_endpoint=ref(CALM_ENDPOINT),
+        )
 
 
 class LampDeployment(Deployment):

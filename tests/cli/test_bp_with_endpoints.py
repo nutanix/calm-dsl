@@ -11,8 +11,12 @@ from calm.dsl.log import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-DSL_BP_FILEPATH = "tests/existing_vm_example_with_target_endpoint/test_existing_vm_bp.py"
-JSON_BP_FILEPATH = "tests/existing_vm_example_with_target_endpoint/test_existing_vm_bp.json"
+DSL_BP_FILEPATH = (
+    "tests/existing_vm_example_with_target_endpoint/test_existing_vm_bp.py"
+)
+JSON_BP_FILEPATH = (
+    "tests/existing_vm_example_with_target_endpoint/test_existing_vm_bp.json"
+)
 
 
 @pytest.mark.slow
@@ -41,7 +45,9 @@ class TestBpCommands:
 
     def test_dsl_bp_create(self):
         runner = CliRunner()
-        self.created_dsl_bp_name = "Test_Existing_VM_ENDPOINT_DSL_{}".format(int(time.time()))
+        self.created_dsl_bp_name = "Test_Existing_VM_ENDPOINT_DSL_{}".format(
+            int(time.time())
+        )
         LOG.info("Creating Bp {}".format(self.created_dsl_bp_name))
         result = runner.invoke(
             cli,
