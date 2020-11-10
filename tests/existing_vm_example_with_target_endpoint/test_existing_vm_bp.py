@@ -13,7 +13,7 @@ from calm.dsl.builtins import CalmVariable
 from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import provider_spec, read_local_file
-from calm.dsl.runbooks import CalmEndpoint as Endpoint
+from calm.dsl.builtins import CalmEndpoint
 
 CRED_USERNAME = read_local_file(".tests/username")
 CRED_PASSWORD = read_local_file(".tests/password")
@@ -23,7 +23,7 @@ DNS_SERVER = read_local_file(".tests/dns_server")
 DefaultCred = basic_cred(
     CRED_USERNAME, CRED_PASSWORD, name="default cred", default=True
 )
-CALM_ENDPOINT = Endpoint.use_existing("DND-Endpoint")
+CALM_ENDPOINT = CalmEndpoint.use_existing("DND-Endpoint")
 
 # def test_ping_code():
 #     """Check if we can reach the VM"""
@@ -500,7 +500,6 @@ def test_json():
     generated_json = ExistingVMBlueprint.json_dumps(pprint=True)
 
     known_json = open(file_path).read()
-    print(generated_json)
     assert generated_json == known_json
 
 
