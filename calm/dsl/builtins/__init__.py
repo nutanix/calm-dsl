@@ -78,6 +78,7 @@ from .models.environment_payload import create_environment_payload
 from .models.project import Project, ProjectType
 from .models.project_payload import create_project_payload
 from .models.brownfield import Brownfield
+from .models.endpoint import Endpoint, _endpoint, CalmEndpoint
 
 from .models.vm_profile import VmProfile
 from .models.vm_blueprint import VmBlueprint

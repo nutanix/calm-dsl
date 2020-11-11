@@ -37,6 +37,8 @@ class TaskType(EntityType):
         cdict = super().compile()
         if (cdict.get("target_any_local_reference", None) or None) is None:
             cdict.pop("target_any_local_reference", None)
+        if (cdict.get("exec_target_reference", None) or None) is None:
+            cdict.pop("exec_target_reference", None)
         return cdict
 
     @classmethod
@@ -169,7 +171,14 @@ def create_call_rb(runbook, target=None, name=None):
 
 
 def _exec_create(
-    script_type, script=None, filename=None, name=None, target=None, cred=None, depth=2
+    script_type,
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    target_endpoint=None,
+    cred=None,
+    depth=2,
 ):
     if script is not None and filename is not None:
         raise ValueError(
@@ -199,6 +208,8 @@ def _exec_create(
         kwargs["attrs"]["login_credential_local_reference"] = _get_target_ref(cred)
     if target is not None:
         kwargs["target_any_local_reference"] = _get_target_ref(target)
+    if target_endpoint is not None:
+        kwargs["exec_target_reference"] = _get_target_ref(target_endpoint)
 
     return _task_create(**kwargs)
 
@@ -356,6 +367,60 @@ def meta(name=None, child_tasks=None, edges=None, target=None):
 
 
 def exec_task_ssh(
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    target_endpoint=None,
+    cred=None,
+    depth=2,
+):
+    return _exec_create(
+        "sh",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        target_endpoint=target_endpoint,
+        cred=cred,
+        depth=depth,
+    )
+
+
+def exec_task_escript(script=None, filename=None, name=None, target=None, depth=2):
+    return _exec_create(
+        "static",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        target_endpoint=None,
+        depth=depth,
+    )
+
+
+def exec_task_powershell(
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    target_endpoint=None,
+    cred=None,
+    depth=2,
+):
+    return _exec_create(
+        "npsscript",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        target_endpoint=target_endpoint,
+        cred=cred,
+        depth=depth,
+    )
+
+
+def exec_task_ssh_runbook(
     script=None, filename=None, name=None, target=None, cred=None, depth=2
 ):
     return _exec_create(
@@ -369,18 +434,7 @@ def exec_task_ssh(
     )
 
 
-def exec_task_escript(script=None, filename=None, name=None, target=None, depth=2):
-    return _exec_create(
-        "static",
-        script=script,
-        filename=filename,
-        name=name,
-        target=target,
-        depth=depth,
-    )
-
-
-def exec_task_powershell(
+def exec_task_powershell_runbook(
     script=None, filename=None, name=None, target=None, cred=None, depth=2
 ):
     return _exec_create(
@@ -456,6 +510,7 @@ def set_variable_task_ssh(
     filename=None,
     name=None,
     target=None,
+    target_endpoint=None,
     variables=None,
     depth=3,
     cred=None,
@@ -465,6 +520,7 @@ def set_variable_task_ssh(
         filename=filename,
         name=name,
         target=target,
+        target_endpoint=target_endpoint,
         depth=depth,
         cred=cred,
     )
@@ -485,6 +541,7 @@ def set_variable_task_powershell(
     filename=None,
     name=None,
     target=None,
+    target_endpoint=None,
     variables=None,
     depth=3,
     cred=None,
@@ -494,6 +551,7 @@ def set_variable_task_powershell(
         filename=filename,
         name=name,
         target=target,
+        target_endpoint=target_endpoint,
         depth=depth,
         cred=cred,
     )
@@ -1173,14 +1231,6 @@ class BaseTask:
     def __new__(cls, *args, **kwargs):
         raise TypeError("'{}' is not callable".format(cls.__name__))
 
-    class Exec:
-        def __new__(cls, *args, **kwargs):
-            raise TypeError("'{}' is not callable".format(cls.__name__))
-
-        ssh = exec_task_ssh
-        powershell = exec_task_powershell
-        escript = exec_task_escript
-
     class HTTP:
         def __new__(
             cls,
@@ -1240,6 +1290,14 @@ class CalmTask(BaseTask):
         scale_in = scale_in_task
         scale_out = scale_out_task
 
+    class Exec:
+        def __new__(cls, *args, **kwargs):
+            raise TypeError("'{}' is not callable".format(cls.__name__))
+
+        ssh = exec_task_ssh
+        powershell = exec_task_powershell
+        escript = exec_task_escript
+
 
 class RunbookTask(BaseTask):
     class Decision:
@@ -1249,6 +1307,14 @@ class RunbookTask(BaseTask):
         ssh = decision_task_ssh
         powershell = decision_task_powershell
         escript = decision_task_escript
+
+    class Exec:
+        def __new__(cls, *args, **kwargs):
+            raise TypeError("'{}' is not callable".format(cls.__name__))
+
+        ssh = exec_task_ssh_runbook
+        powershell = exec_task_powershell_runbook
+        escript = exec_task_escript
 
     class Loop:
         def __new__(
