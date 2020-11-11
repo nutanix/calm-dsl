@@ -1,609 +1,609 @@
 app_profile_list:
-- action_list: []
-  deployment_create_list:
   - action_list: []
-    default_replicas: ''
-    depends_on_list: []
-    description: Sample deployment pulling in service and substrate references
-    editables: {}
-    max_replicas: '1'
-    min_replicas: '1'
-    name: MySQLDeployment
-    options: {}
-    package_local_reference_list:
-    - kind: app_package
-      name: MySQLPackage
-    published_service_local_reference_list: []
-    substrate_local_reference:
-      kind: app_substrate
-      name: AHVMedVM
-    type: GREENFIELD
-    variable_list: []
-  - action_list: []
-    default_replicas: ''
-    depends_on_list: []
-    description: Sample deployment pulling in service and substrate references
-    editables: {}
-    max_replicas: '1'
-    min_replicas: '1'
-    name: PHPDeployment
-    options: {}
-    package_local_reference_list:
-    - kind: app_package
-      name: PHPPackage
-    published_service_local_reference_list: []
-    substrate_local_reference:
-      kind: app_substrate
-      name: AHVMedVMForPHP
-    type: GREENFIELD
-    variable_list: []
-  name: NxProfile
-  variable_list:
-  - attrs: {}
-    data_type: BASE
-    description: ''
-    is_hidden: false
-    is_mandatory: false
-    label: ''
-    name: env
-    type: LOCAL
-    val_type: STRING
-    value: dev
-  - attrs: {}
-    data_type: BASE
-    description: ''
-    is_hidden: false
-    is_mandatory: false
-    label: Local DNS resolver
-    name: DNS_Server
-    type: LOCAL
-    val_type: STRING
-    value: 10.0.0.1
+    deployment_create_list:
+      - action_list: []
+        default_replicas: ''
+        depends_on_list: []
+        description: Sample deployment pulling in service and substrate references
+        editables: {}
+        max_replicas: '1'
+        min_replicas: '1'
+        name: MySQLDeployment
+        options: {}
+        package_local_reference_list:
+          - kind: app_package
+            name: MySQLPackage
+        published_service_local_reference_list: []
+        substrate_local_reference:
+          kind: app_substrate
+          name: AHVMedVM
+        type: GREENFIELD
+        variable_list: []
+      - action_list: []
+        default_replicas: ''
+        depends_on_list: []
+        description: Sample deployment pulling in service and substrate references
+        editables: {}
+        max_replicas: '1'
+        min_replicas: '1'
+        name: PHPDeployment
+        options: {}
+        package_local_reference_list:
+          - kind: app_package
+            name: PHPPackage
+        published_service_local_reference_list: []
+        substrate_local_reference:
+          kind: app_substrate
+          name: AHVMedVMForPHP
+        type: GREENFIELD
+        variable_list: []
+    name: NxProfile
+    variable_list:
+      - attrs: {}
+        data_type: BASE
+        description: ''
+        is_hidden: false
+        is_mandatory: false
+        label: ''
+        name: env
+        type: LOCAL
+        val_type: STRING
+        value: dev
+      - attrs: {}
+        data_type: BASE
+        description: ''
+        is_hidden: false
+        is_mandatory: false
+        label: Local DNS resolver
+        name: DNS_Server
+        type: LOCAL
+        val_type: STRING
+        value: 10.0.0.1
 client_attrs: {}
 credential_definition_list:
-- description: ''
-  editables: {}
-  name: default
-  secret:
-    attrs:
-      is_secret_modified: true
-    value: passwd
-  type: PASSWORD
-  username: root
+  - description: ''
+    editables: {}
+    name: default
+    secret:
+      attrs:
+        is_secret_modified: true
+      value: passwd
+    type: PASSWORD
+    username: root
 default_credential_local_reference:
   kind: app_credential
   name: default
 package_definition_list:
-- description: Example package with variables and link to service
-  name: MySQLPackage
-  options:
-    install_runbook:
-      description: ''
-      main_task_local_reference:
-        kind: app_task
-        name: DAG_Task_for_Package_MySQLPackage_action_install
-      name: Runbook_for_Package_MySQLPackage_action_install
-      task_definition_list:
-      - attrs:
-          edges: []
-        child_tasks_local_reference_list: []
+  - description: Example package with variables and link to service
+    name: MySQLPackage
+    options:
+      install_runbook:
         description: ''
-        name: DAG_Task_for_Package_MySQLPackage_action_install
-        retries: ''
-        target_any_local_reference:
-          kind: app_service
-          name: MySQLService
-        timeout_secs: ''
-        type: DAG
+        main_task_local_reference:
+          kind: app_task
+          name: DAG_Task_for_Package_MySQLPackage_action_install
+        name: Runbook_for_Package_MySQLPackage_action_install
+        task_definition_list:
+          - attrs:
+              edges: []
+            child_tasks_local_reference_list: []
+            description: ''
+            name: DAG_Task_for_Package_MySQLPackage_action_install
+            retries: ''
+            target_any_local_reference:
+              kind: app_service
+              name: MySQLService
+            timeout_secs: ''
+            type: DAG
+            variable_list: []
         variable_list: []
-      variable_list: []
-    uninstall_runbook:
-      description: ''
-      main_task_local_reference:
-        kind: app_task
-        name: DAG_Task_for_Package_MySQLPackage_action_uninstall
-      name: Runbook_for_Package_MySQLPackage_action_uninstall
-      task_definition_list:
-      - attrs:
-          edges: []
-        child_tasks_local_reference_list: []
+      uninstall_runbook:
         description: ''
-        name: DAG_Task_for_Package_MySQLPackage_action_uninstall
-        retries: ''
-        target_any_local_reference:
-          kind: app_service
-          name: MySQLService
-        timeout_secs: ''
-        type: DAG
+        main_task_local_reference:
+          kind: app_task
+          name: DAG_Task_for_Package_MySQLPackage_action_uninstall
+        name: Runbook_for_Package_MySQLPackage_action_uninstall
+        task_definition_list:
+          - attrs:
+              edges: []
+            child_tasks_local_reference_list: []
+            description: ''
+            name: DAG_Task_for_Package_MySQLPackage_action_uninstall
+            retries: ''
+            target_any_local_reference:
+              kind: app_service
+              name: MySQLService
+            timeout_secs: ''
+            type: DAG
+            variable_list: []
         variable_list: []
-      variable_list: []
-  service_local_reference_list:
-  - kind: app_service
-    name: MySQLService
-  type: CUSTOM
-  variable_list:
-  - attrs: {}
-    data_type: BASE
-    description: ''
-    is_hidden: false
-    is_mandatory: false
-    label: ''
-    name: ENV
-    type: LOCAL
-    val_type: STRING
-    value: DEV
-  version: ''
-- description: Example PHP package using Package as parent class
-  name: PHPPackage
-  options:
-    install_runbook:
-      description: ''
-      main_task_local_reference:
-        kind: app_task
-        name: DAG_Task_for_Package_PHPPackage_action_install
-      name: Runbook_for_Package_PHPPackage_action_install
-      task_definition_list:
-      - attrs:
-          edges: []
-        child_tasks_local_reference_list: []
+    service_local_reference_list:
+      - kind: app_service
+        name: MySQLService
+    type: CUSTOM
+    variable_list:
+      - attrs: {}
+        data_type: BASE
         description: ''
-        name: DAG_Task_for_Package_PHPPackage_action_install
-        retries: ''
-        target_any_local_reference:
-          kind: app_service
-          name: PHPService
-        timeout_secs: ''
-        type: DAG
-        variable_list: []
-      variable_list: []
-    uninstall_runbook:
-      description: ''
-      main_task_local_reference:
-        kind: app_task
-        name: DAG_Task_for_Package_PHPPackage_action_uninstall
-      name: Runbook_for_Package_PHPPackage_action_uninstall
-      task_definition_list:
-      - attrs:
-          edges: []
-        child_tasks_local_reference_list: []
+        is_hidden: false
+        is_mandatory: false
+        label: ''
+        name: ENV
+        type: LOCAL
+        val_type: STRING
+        value: DEV
+    version: ''
+  - description: Example PHP package using Package as parent class
+    name: PHPPackage
+    options:
+      install_runbook:
         description: ''
-        name: DAG_Task_for_Package_PHPPackage_action_uninstall
-        retries: ''
-        target_any_local_reference:
-          kind: app_service
-          name: PHPService
-        timeout_secs: ''
-        type: DAG
+        main_task_local_reference:
+          kind: app_task
+          name: DAG_Task_for_Package_PHPPackage_action_install
+        name: Runbook_for_Package_PHPPackage_action_install
+        task_definition_list:
+          - attrs:
+              edges: []
+            child_tasks_local_reference_list: []
+            description: ''
+            name: DAG_Task_for_Package_PHPPackage_action_install
+            retries: ''
+            target_any_local_reference:
+              kind: app_service
+              name: PHPService
+            timeout_secs: ''
+            type: DAG
+            variable_list: []
         variable_list: []
-      variable_list: []
-  service_local_reference_list:
-  - kind: app_service
-    name: PHPService
-  type: CUSTOM
-  variable_list: []
-  version: ''
+      uninstall_runbook:
+        description: ''
+        main_task_local_reference:
+          kind: app_task
+          name: DAG_Task_for_Package_PHPPackage_action_uninstall
+        name: Runbook_for_Package_PHPPackage_action_uninstall
+        task_definition_list:
+          - attrs:
+              edges: []
+            child_tasks_local_reference_list: []
+            description: ''
+            name: DAG_Task_for_Package_PHPPackage_action_uninstall
+            retries: ''
+            target_any_local_reference:
+              kind: app_service
+              name: PHPService
+            timeout_secs: ''
+            type: DAG
+            variable_list: []
+        variable_list: []
+    service_local_reference_list:
+      - kind: app_service
+        name: PHPService
+    type: CUSTOM
+    variable_list: []
+    version: ''
 published_service_definition_list: []
 service_definition_list:
-- action_list:
-  - critical: true
-    description: ''
-    name: action_create
-    runbook:
-      description: ''
-      main_task_local_reference:
-        kind: app_task
-        name: MySQLService___create___dag
-      name: MySQLService___create___runbook
-      task_definition_list:
-      - attrs:
-          edges: []
-        child_tasks_local_reference_list: []
+  - action_list:
+      - critical: true
         description: ''
-        name: MySQLService___create___dag
-        retries: ''
-        target_any_local_reference:
-          kind: app_service
-          name: MySQLService
-        timeout_secs: ''
-        type: DAG
-        variable_list: []
-      variable_list: []
-    type: system
-  - critical: true
-    description: ''
-    name: action_start
-    runbook:
-      description: ''
-      main_task_local_reference:
-        kind: app_task
-        name: MySQLService___start___dag
-      name: MySQLService___start___runbook
-      task_definition_list:
-      - attrs:
-          edges: []
-        child_tasks_local_reference_list: []
+        name: action_create
+        runbook:
+          description: ''
+          main_task_local_reference:
+            kind: app_task
+            name: MySQLService___create___dag
+          name: MySQLService___create___runbook
+          task_definition_list:
+            - attrs:
+                edges: []
+              child_tasks_local_reference_list: []
+              description: ''
+              name: MySQLService___create___dag
+              retries: ''
+              target_any_local_reference:
+                kind: app_service
+                name: MySQLService
+              timeout_secs: ''
+              type: DAG
+              variable_list: []
+          variable_list: []
+        type: system
+      - critical: true
         description: ''
-        name: MySQLService___start___dag
-        retries: ''
-        target_any_local_reference:
-          kind: app_service
-          name: MySQLService
-        timeout_secs: ''
-        type: DAG
-        variable_list: []
-      variable_list: []
-    type: system
-  - critical: true
-    description: ''
-    name: action_stop
-    runbook:
-      description: ''
-      main_task_local_reference:
-        kind: app_task
-        name: MySQLService___stop___dag
-      name: MySQLService___stop___runbook
-      task_definition_list:
-      - attrs:
-          edges: []
-        child_tasks_local_reference_list: []
+        name: action_start
+        runbook:
+          description: ''
+          main_task_local_reference:
+            kind: app_task
+            name: MySQLService___start___dag
+          name: MySQLService___start___runbook
+          task_definition_list:
+            - attrs:
+                edges: []
+              child_tasks_local_reference_list: []
+              description: ''
+              name: MySQLService___start___dag
+              retries: ''
+              target_any_local_reference:
+                kind: app_service
+                name: MySQLService
+              timeout_secs: ''
+              type: DAG
+              variable_list: []
+          variable_list: []
+        type: system
+      - critical: true
         description: ''
-        name: MySQLService___stop___dag
-        retries: ''
-        target_any_local_reference:
-          kind: app_service
-          name: MySQLService
-        timeout_secs: ''
-        type: DAG
-        variable_list: []
-      variable_list: []
-    type: system
-  - critical: true
-    description: ''
-    name: action_delete
-    runbook:
-      description: ''
-      main_task_local_reference:
-        kind: app_task
-        name: MySQLService___delete___dag
-      name: MySQLService___delete___runbook
-      task_definition_list:
-      - attrs:
-          edges: []
-        child_tasks_local_reference_list: []
+        name: action_stop
+        runbook:
+          description: ''
+          main_task_local_reference:
+            kind: app_task
+            name: MySQLService___stop___dag
+          name: MySQLService___stop___runbook
+          task_definition_list:
+            - attrs:
+                edges: []
+              child_tasks_local_reference_list: []
+              description: ''
+              name: MySQLService___stop___dag
+              retries: ''
+              target_any_local_reference:
+                kind: app_service
+                name: MySQLService
+              timeout_secs: ''
+              type: DAG
+              variable_list: []
+          variable_list: []
+        type: system
+      - critical: true
         description: ''
-        name: MySQLService___delete___dag
-        retries: ''
-        target_any_local_reference:
-          kind: app_service
-          name: MySQLService
-        timeout_secs: ''
-        type: DAG
-        variable_list: []
-      variable_list: []
-    type: system
-  - critical: true
-    description: ''
-    name: action_restart
-    runbook:
-      description: ''
-      main_task_local_reference:
-        kind: app_task
-        name: MySQLService___restart___dag
-      name: MySQLService___restart___runbook
-      task_definition_list:
-      - attrs:
-          edges: []
-        child_tasks_local_reference_list: []
+        name: action_delete
+        runbook:
+          description: ''
+          main_task_local_reference:
+            kind: app_task
+            name: MySQLService___delete___dag
+          name: MySQLService___delete___runbook
+          task_definition_list:
+            - attrs:
+                edges: []
+              child_tasks_local_reference_list: []
+              description: ''
+              name: MySQLService___delete___dag
+              retries: ''
+              target_any_local_reference:
+                kind: app_service
+                name: MySQLService
+              timeout_secs: ''
+              type: DAG
+              variable_list: []
+          variable_list: []
+        type: system
+      - critical: true
         description: ''
-        name: MySQLService___restart___dag
-        retries: ''
-        target_any_local_reference:
-          kind: app_service
-          name: MySQLService
-        timeout_secs: ''
-        type: DAG
-        variable_list: []
-      variable_list: []
-    type: system
-  - critical: true
-    description: ''
-    name: action_soft_delete
-    runbook:
-      description: ''
-      main_task_local_reference:
-        kind: app_task
-        name: MySQLService___soft_delete___dag
-      name: MySQLService___soft_delete___runbook
-      task_definition_list:
-      - attrs:
-          edges: []
-        child_tasks_local_reference_list: []
+        name: action_restart
+        runbook:
+          description: ''
+          main_task_local_reference:
+            kind: app_task
+            name: MySQLService___restart___dag
+          name: MySQLService___restart___runbook
+          task_definition_list:
+            - attrs:
+                edges: []
+              child_tasks_local_reference_list: []
+              description: ''
+              name: MySQLService___restart___dag
+              retries: ''
+              target_any_local_reference:
+                kind: app_service
+                name: MySQLService
+              timeout_secs: ''
+              type: DAG
+              variable_list: []
+          variable_list: []
+        type: system
+      - critical: true
         description: ''
-        name: MySQLService___soft_delete___dag
-        retries: ''
-        target_any_local_reference:
-          kind: app_service
-          name: MySQLService
-        timeout_secs: ''
-        type: DAG
-        variable_list: []
-      variable_list: []
-    type: system
-  container_spec: {}
-  depends_on_list: []
-  description: Sample mysql service with inline port definition
-  name: MySQLService
-  port_list:
-  - endpoint_name: ''
-    exposed_address: ''
-    exposed_port: ''
-    protocol: SSH
-    target_port: '3306'
-  singleton: false
-  tier: ''
-  variable_list: []
-- action_list:
-  - critical: true
-    description: ''
-    name: action_create
-    runbook:
-      description: ''
-      main_task_local_reference:
-        kind: app_task
-        name: PHPService___create___dag
-      name: PHPService___create___runbook
-      task_definition_list:
-      - attrs:
-          edges: []
-        child_tasks_local_reference_list: []
-        description: ''
-        name: PHPService___create___dag
-        retries: ''
-        target_any_local_reference:
-          kind: app_service
-          name: PHPService
-        timeout_secs: ''
-        type: DAG
-        variable_list: []
-      variable_list: []
-    type: system
-  - critical: true
-    description: ''
-    name: action_start
-    runbook:
-      description: ''
-      main_task_local_reference:
-        kind: app_task
-        name: PHPService___start___dag
-      name: PHPService___start___runbook
-      task_definition_list:
-      - attrs:
-          edges: []
-        child_tasks_local_reference_list: []
-        description: ''
-        name: PHPService___start___dag
-        retries: ''
-        target_any_local_reference:
-          kind: app_service
-          name: PHPService
-        timeout_secs: ''
-        type: DAG
-        variable_list: []
-      variable_list: []
-    type: system
-  - critical: true
-    description: ''
-    name: action_stop
-    runbook:
-      description: ''
-      main_task_local_reference:
-        kind: app_task
-        name: PHPService___stop___dag
-      name: PHPService___stop___runbook
-      task_definition_list:
-      - attrs:
-          edges: []
-        child_tasks_local_reference_list: []
-        description: ''
-        name: PHPService___stop___dag
-        retries: ''
-        target_any_local_reference:
-          kind: app_service
-          name: PHPService
-        timeout_secs: ''
-        type: DAG
-        variable_list: []
-      variable_list: []
-    type: system
-  - critical: true
-    description: ''
-    name: action_delete
-    runbook:
-      description: ''
-      main_task_local_reference:
-        kind: app_task
-        name: PHPService___delete___dag
-      name: PHPService___delete___runbook
-      task_definition_list:
-      - attrs:
-          edges: []
-        child_tasks_local_reference_list: []
-        description: ''
-        name: PHPService___delete___dag
-        retries: ''
-        target_any_local_reference:
-          kind: app_service
-          name: PHPService
-        timeout_secs: ''
-        type: DAG
-        variable_list: []
-      variable_list: []
-    type: system
-  - critical: true
-    description: ''
-    name: action_restart
-    runbook:
-      description: ''
-      main_task_local_reference:
-        kind: app_task
-        name: PHPService___restart___dag
-      name: PHPService___restart___runbook
-      task_definition_list:
-      - attrs:
-          edges: []
-        child_tasks_local_reference_list: []
-        description: ''
-        name: PHPService___restart___dag
-        retries: ''
-        target_any_local_reference:
-          kind: app_service
-          name: PHPService
-        timeout_secs: ''
-        type: DAG
-        variable_list: []
-      variable_list: []
-    type: system
-  - critical: true
-    description: ''
-    name: action_soft_delete
-    runbook:
-      description: ''
-      main_task_local_reference:
-        kind: app_task
-        name: PHPService___soft_delete___dag
-      name: PHPService___soft_delete___runbook
-      task_definition_list:
-      - attrs:
-          edges: []
-        child_tasks_local_reference_list: []
-        description: ''
-        name: PHPService___soft_delete___dag
-        retries: ''
-        target_any_local_reference:
-          kind: app_service
-          name: PHPService
-        timeout_secs: ''
-        type: DAG
-        variable_list: []
-      variable_list: []
-    type: system
-  container_spec: {}
-  depends_on_list:
-  - kind: app_service
+        name: action_soft_delete
+        runbook:
+          description: ''
+          main_task_local_reference:
+            kind: app_task
+            name: MySQLService___soft_delete___dag
+          name: MySQLService___soft_delete___runbook
+          task_definition_list:
+            - attrs:
+                edges: []
+              child_tasks_local_reference_list: []
+              description: ''
+              name: MySQLService___soft_delete___dag
+              retries: ''
+              target_any_local_reference:
+                kind: app_service
+                name: MySQLService
+              timeout_secs: ''
+              type: DAG
+              variable_list: []
+          variable_list: []
+        type: system
+    container_spec: {}
+    depends_on_list: []
+    description: Sample mysql service with inline port definition
     name: MySQLService
-  description: "Sample PHP service using Service as parent class\n    with previously
-    defined port.\n    "
-  name: PHPService
-  port_list:
-  - endpoint_name: ''
-    exposed_address: ''
-    exposed_port: ''
-    protocol: SSH
-    target_port: '80'
-  singleton: false
-  tier: ''
-  variable_list:
-  - attrs: {}
-    data_type: BASE
-    description: ''
-    is_hidden: false
-    is_mandatory: false
-    label: ''
-    name: sample_string_var
-    type: LOCAL
-    val_type: STRING
-    value: hello world!
+    port_list:
+      - endpoint_name: ''
+        exposed_address: ''
+        exposed_port: ''
+        protocol: SSH
+        target_port: '3306'
+    singleton: false
+    tier: ''
+    variable_list: []
+  - action_list:
+      - critical: true
+        description: ''
+        name: action_create
+        runbook:
+          description: ''
+          main_task_local_reference:
+            kind: app_task
+            name: PHPService___create___dag
+          name: PHPService___create___runbook
+          task_definition_list:
+            - attrs:
+                edges: []
+              child_tasks_local_reference_list: []
+              description: ''
+              name: PHPService___create___dag
+              retries: ''
+              target_any_local_reference:
+                kind: app_service
+                name: PHPService
+              timeout_secs: ''
+              type: DAG
+              variable_list: []
+          variable_list: []
+        type: system
+      - critical: true
+        description: ''
+        name: action_start
+        runbook:
+          description: ''
+          main_task_local_reference:
+            kind: app_task
+            name: PHPService___start___dag
+          name: PHPService___start___runbook
+          task_definition_list:
+            - attrs:
+                edges: []
+              child_tasks_local_reference_list: []
+              description: ''
+              name: PHPService___start___dag
+              retries: ''
+              target_any_local_reference:
+                kind: app_service
+                name: PHPService
+              timeout_secs: ''
+              type: DAG
+              variable_list: []
+          variable_list: []
+        type: system
+      - critical: true
+        description: ''
+        name: action_stop
+        runbook:
+          description: ''
+          main_task_local_reference:
+            kind: app_task
+            name: PHPService___stop___dag
+          name: PHPService___stop___runbook
+          task_definition_list:
+            - attrs:
+                edges: []
+              child_tasks_local_reference_list: []
+              description: ''
+              name: PHPService___stop___dag
+              retries: ''
+              target_any_local_reference:
+                kind: app_service
+                name: PHPService
+              timeout_secs: ''
+              type: DAG
+              variable_list: []
+          variable_list: []
+        type: system
+      - critical: true
+        description: ''
+        name: action_delete
+        runbook:
+          description: ''
+          main_task_local_reference:
+            kind: app_task
+            name: PHPService___delete___dag
+          name: PHPService___delete___runbook
+          task_definition_list:
+            - attrs:
+                edges: []
+              child_tasks_local_reference_list: []
+              description: ''
+              name: PHPService___delete___dag
+              retries: ''
+              target_any_local_reference:
+                kind: app_service
+                name: PHPService
+              timeout_secs: ''
+              type: DAG
+              variable_list: []
+          variable_list: []
+        type: system
+      - critical: true
+        description: ''
+        name: action_restart
+        runbook:
+          description: ''
+          main_task_local_reference:
+            kind: app_task
+            name: PHPService___restart___dag
+          name: PHPService___restart___runbook
+          task_definition_list:
+            - attrs:
+                edges: []
+              child_tasks_local_reference_list: []
+              description: ''
+              name: PHPService___restart___dag
+              retries: ''
+              target_any_local_reference:
+                kind: app_service
+                name: PHPService
+              timeout_secs: ''
+              type: DAG
+              variable_list: []
+          variable_list: []
+        type: system
+      - critical: true
+        description: ''
+        name: action_soft_delete
+        runbook:
+          description: ''
+          main_task_local_reference:
+            kind: app_task
+            name: PHPService___soft_delete___dag
+          name: PHPService___soft_delete___runbook
+          task_definition_list:
+            - attrs:
+                edges: []
+              child_tasks_local_reference_list: []
+              description: ''
+              name: PHPService___soft_delete___dag
+              retries: ''
+              target_any_local_reference:
+                kind: app_service
+                name: PHPService
+              timeout_secs: ''
+              type: DAG
+              variable_list: []
+          variable_list: []
+        type: system
+    container_spec: {}
+    depends_on_list:
+      - kind: app_service
+        name: MySQLService
+    description: "Sample PHP service using Service as parent class\n    with previously\
+      \ defined port.\n    "
+    name: PHPService
+    port_list:
+      - endpoint_name: ''
+        exposed_address: ''
+        exposed_port: ''
+        protocol: SSH
+        target_port: '80'
+    singleton: false
+    tier: ''
+    variable_list:
+      - attrs: {}
+        data_type: BASE
+        description: ''
+        is_hidden: false
+        is_mandatory: false
+        label: ''
+        name: sample_string_var
+        type: LOCAL
+        val_type: STRING
+        value: hello world!
 substrate_definition_list:
-- action_list: []
-  create_spec:
-    name: '@@{calm_application_name}@@-@@{calm_array_index}@@'
-    resources:
-      boot_config:
-        boot_device:
-          disk_address:
-            adapter_type: SCSI
-            device_index: 0
-      disk_list:
-      - data_source_reference:
-          kind: image
-          name: Centos7-Base
-          uuid: 78a86047-00dc-409e-a700-7ec3c0f7cfa1
-        device_properties:
-          device_type: DISK
-          disk_address:
-            adapter_type: SCSI
-            device_index: 0
-        disk_size_mib: 0
-      memory_size_mib: 1024
-      nic_list:
-      - network_function_nic_type: INGRESS
-        nic_type: NORMAL_NIC
-        subnet_reference:
-          kind: subnet
-          name: vlan.0
-          uuid: 6a049405-a612-48b6-b098-c922fe024964
-      num_sockets: 1
-      num_vcpus_per_socket: 1
-      power_state: ON
-  description: Medium size AHV VM config given by reading a spec file
-  editables: {}
-  name: AHVMedVM
-  os_type: Linux
-  readiness_probe:
-    address: '@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@'
-    connection_port: 22
-    connection_protocol: ''
-    connection_type: SSH
-    delay_secs: '60'
-    disable_readiness_probe: true
-    retries: '5'
-    timeout_secs: ''
-  type: AHV_VM
-  variable_list: []
-- action_list: []
-  create_spec:
-    name: '@@{calm_application_name}@@-@@{calm_array_index}@@'
-    resources:
-      boot_config:
-        boot_device:
-          disk_address:
-            adapter_type: SCSI
-            device_index: 0
-      disk_list:
-      - data_source_reference:
-          kind: image
-          name: Centos7-Base
-          uuid: 78a86047-00dc-409e-a700-7ec3c0f7cfa1
-        device_properties:
-          device_type: DISK
-          disk_address:
-            adapter_type: SCSI
-            device_index: 0
-        disk_size_mib: 0
-      memory_size_mib: 1024
-      nic_list:
-      - network_function_nic_type: INGRESS
-        nic_type: NORMAL_NIC
-        subnet_reference:
-          kind: subnet
-          name: vlan.0
-          uuid: 6a049405-a612-48b6-b098-c922fe024964
-      num_sockets: 1
-      num_vcpus_per_socket: 1
-      power_state: ON
-  description: Medium size AHV VM config given by reading a spec file
-  editables: {}
-  name: AHVMedVMForPHP
-  os_type: Linux
-  readiness_probe:
-    address: '@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@'
-    connection_port: 22
-    connection_protocol: ''
-    connection_type: SSH
-    delay_secs: '60'
-    disable_readiness_probe: true
-    retries: '5'
-    timeout_secs: ''
-  type: AHV_VM
-  variable_list: []
+  - action_list: []
+    create_spec:
+      name: '@@{calm_application_name}@@-@@{calm_array_index}@@'
+      resources:
+        boot_config:
+          boot_device:
+            disk_address:
+              adapter_type: SCSI
+              device_index: 0
+        disk_list:
+          - data_source_reference:
+              kind: image
+              name: Centos7-Base
+              uuid: 78a86047-00dc-409e-a700-7ec3c0f7cfa1
+            device_properties:
+              device_type: DISK
+              disk_address:
+                adapter_type: SCSI
+                device_index: 0
+            disk_size_mib: 0
+        memory_size_mib: 1024
+        nic_list:
+          - network_function_nic_type: INGRESS
+            nic_type: NORMAL_NIC
+            subnet_reference:
+              kind: subnet
+              name: vlan.0
+              uuid: 6a049405-a612-48b6-b098-c922fe024964
+        num_sockets: 1
+        num_vcpus_per_socket: 1
+        power_state: ON
+    description: Medium size AHV VM config given by reading a spec file
+    editables: {}
+    name: AHVMedVM
+    os_type: Linux
+    readiness_probe:
+      address: '@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@'
+      connection_port: 22
+      connection_protocol: ''
+      connection_type: SSH
+      delay_secs: '60'
+      disable_readiness_probe: true
+      retries: '5'
+      timeout_secs: ''
+    type: AHV_VM
+    variable_list: []
+  - action_list: []
+    create_spec:
+      name: '@@{calm_application_name}@@-@@{calm_array_index}@@'
+      resources:
+        boot_config:
+          boot_device:
+            disk_address:
+              adapter_type: SCSI
+              device_index: 0
+        disk_list:
+          - data_source_reference:
+              kind: image
+              name: Centos7-Base
+              uuid: 78a86047-00dc-409e-a700-7ec3c0f7cfa1
+            device_properties:
+              device_type: DISK
+              disk_address:
+                adapter_type: SCSI
+                device_index: 0
+            disk_size_mib: 0
+        memory_size_mib: 1024
+        nic_list:
+          - network_function_nic_type: INGRESS
+            nic_type: NORMAL_NIC
+            subnet_reference:
+              kind: subnet
+              name: vlan.0
+              uuid: 6a049405-a612-48b6-b098-c922fe024964
+        num_sockets: 1
+        num_vcpus_per_socket: 1
+        power_state: ON
+    description: Medium size AHV VM config given by reading a spec file
+    editables: {}
+    name: AHVMedVMForPHP
+    os_type: Linux
+    readiness_probe:
+      address: '@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@'
+      connection_port: 22
+      connection_protocol: ''
+      connection_type: SSH
+      delay_secs: '60'
+      disable_readiness_probe: true
+      retries: '5'
+      timeout_secs: ''
+    type: AHV_VM
+    variable_list: []
 type: USER

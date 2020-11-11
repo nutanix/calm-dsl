@@ -12,7 +12,7 @@ LOG = get_logging_handle(__name__)
 
 
 DSL_BP_FILEPATH = (
-    "tests/existing_vm_example_with_target_endpoint/test_existing_vm_bp.py"
+    "tests/existing_vm_example_with_target_endpoint/test_existing_vm_bp_with_endpoint_target_task.py"
 )
 JSON_BP_FILEPATH = (
     "tests/existing_vm_example_with_target_endpoint/test_existing_vm_bp.json"
