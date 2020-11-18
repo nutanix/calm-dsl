@@ -75,7 +75,10 @@ class MyAhvVm1Resources(AhvVmResources):
         AhvVmDisk.CdRom.Ide.emptyCdRom(),
         AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(Era_Disk),
     ]
-    nics = [AhvVmNic.DirectNic.ingress("vlan.0")]
+    nics = [
+        AhvVmNic.DirectNic.ingress("vlan.0"),
+        AhvVmNic.NormalNic.ingress("@@{nic_var.uuid}@@"),
+    ]
 
 
 class MyAhvVm1(AhvVm):
@@ -99,6 +102,16 @@ class AHVVMforMySQL(Substrate):
         address="@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
         delay_secs="0",
     )
+
+    @action
+    def __pre_create__():
+
+        CalmTask.SetVariable.escript(
+            name="Pre_create task1",
+            script='nic_var={"uuid": "eab99eb7-302f-4e1a-a1a4-5cc901fb9259"}',
+            target=ref(AHVVMforMySQL),
+            variables=["nic_var"],
+        )
 
 
 class MySQLDeployment(Deployment):
