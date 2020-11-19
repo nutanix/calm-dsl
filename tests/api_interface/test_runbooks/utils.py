@@ -5,7 +5,7 @@ import pytest
 
 import json
 from calm.dsl.cli.constants import MARKETPLACE_ITEM
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 
 
 def change_uuids(bp, context):
@@ -288,7 +288,8 @@ def publish_runbook_to_marketplace_manager(
         response (obj): returns response of the publish api
         err (dict): error of operation
     """
-    config = get_config()
+    context = get_context()
+    server_config = context.get_server_config()
 
     mpi_spec = {
         "spec": {
@@ -297,7 +298,7 @@ def publish_runbook_to_marketplace_manager(
             "resources": {
                 "app_attribute_list": ["FEATURED"],
                 "icon_reference_list": [],
-                "author": config["SERVER"]["pc_username"],
+                "author": server_config["pc_username"],
                 "version": version,
                 "type": MARKETPLACE_ITEM.TYPES.RUNBOOK,
                 "app_group_uuid": app_group_uuid or str(uuid.uuid4()),
