@@ -1,9 +1,12 @@
+import re
+import sys
+
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .utils import read_file, yaml
+from calm.dsl.log import get_logging_handle
 
-import re
-
+LOG = get_logging_handle(__name__)
 
 # AHV Guest Customization
 
@@ -56,22 +59,51 @@ def create_ahv_guest_customization(
 
 
 def cloud_init(filename=None, config={}):
+    """
+    Returns cloud_init guest customization object
+    NOTE: If file content are yaml, macros should not be enclosed in quotes.
+    """
 
     if not config:
         # reading the file
         config = read_file(filename, depth=3)
 
-        # Checking whether macros exists in file
-        if re.search("@@{.*}@@", config):
+        if re.match("\s*\|-", config):
+            config = yaml.safe_load(config)
+
+        # If file content is dict or it do not contains macro(yaml content), then safe load the file
+        if re.match("\s*{", config) or (not re.search("@@{.*}@@", config)):
+            # Converting config to json object
+            config = yaml.safe_load(config)
+
+        else:  # If file content is yaml and it contains macro
             return create_ahv_guest_customization(
                 customization_type="cloud_init", user_data=config
             )
 
-        # If macros doesn't exists, then safe load the yaml file
-        else:
-            config = yaml.safe_load(config)
-
     config = "#cloud-config\n" + yaml.dump(config, default_flow_style=False)
+
+    # Case when a dict config is dumped to yaml, macros do come with quotes
+
+    # Single quote near macro
+    if len(re.findall("'@@{\s*", config)) != len(re.findall("}@@\s*'", config)):
+        LOG.debug("Cloud_Init : {}".format(config))
+        LOG.error("Invalid cloud_init found")
+        sys.exit(-1)
+
+    # Double quotes near mcro
+    if len(re.findall('"@@{\s*', config)) != len(re.findall('}@@\s*"', config)):
+        LOG.debug("Cloud_Init : {}".format(config))
+        LOG.error("Invalid cloud_init found")
+        sys.exit(-1)
+
+    # Remove single quote with macro
+    config = re.sub("'@@{\s*", "@@{", config)
+    config = re.sub("}@@\s*'", "}@@", config)
+
+    # Remove dobut quote wuth macro
+    config = re.sub('"@@{\s*', "@@{", config)
+    config = re.sub('}@@\s*"', "}@@", config)
 
     return create_ahv_guest_customization(
         customization_type="cloud_init", user_data=config
@@ -86,6 +118,8 @@ def fresh_sys_prep_with_domain(
     filename=None,
     unattend_xml="",
 ):
+    """Returns fresh install with domain sysprep guest customization object"""
+
     if not unattend_xml:
         if filename:
             unattend_xml = read_file(filename, depth=3)
@@ -103,6 +137,8 @@ def fresh_sys_prep_with_domain(
 
 
 def fresh_sys_prep_without_domain(filename=None, unattend_xml=""):
+    """Returns fresh install without domain sysprep guest customization object"""
+
     if not unattend_xml:
         if filename:
             unattend_xml = read_file(filename, depth=3)
@@ -127,6 +163,8 @@ def prepared_sys_prep_with_domain(
     filename=None,
     unattend_xml="",
 ):
+    """Returns prepared install with domain sysprep guest customization object"""
+
     if not unattend_xml:
         if filename:
             unattend_xml = read_file(filename, depth=3)
@@ -144,6 +182,8 @@ def prepared_sys_prep_with_domain(
 
 
 def prepared_sys_prep_without_domain(filename=None, unattend_xml=""):
+    """Returns prepared install without domain sysprep guest customization object"""
+
     if not unattend_xml:
         if filename:
             unattend_xml = read_file(filename, depth=3)

@@ -1,4 +1,5 @@
 import ast
+import sys
 import inspect
 
 from .ref import ref
@@ -10,6 +11,9 @@ from .ref import RefType
 from .descriptor import DescriptorType
 from .validator import PropertyValidator
 from .node_visitor import GetCallNodes
+from calm.dsl.log import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 class RunbookType(EntityType):
@@ -20,9 +24,9 @@ class RunbookType(EntityType):
         pass
 
     @classmethod
-    def pre_decompile(mcls, cdict, context=[]):
+    def pre_decompile(mcls, cdict, context=[], prefix=""):
 
-        cdict = super().pre_decompile(cdict, context=context)
+        cdict = super().pre_decompile(cdict, context=context, prefix=prefix)
         # Removing additional attributes
         cdict.pop("state", None)
         cdict.pop("message_list", None)
@@ -68,7 +72,7 @@ class runbook(metaclass=DescriptorType):
         self.action_description = user_func.__doc__ or ""
         self.user_func = user_func
         self.user_runbook = None
-        self.__parsed__ = False
+        self.task_target = None
         if self.__class__ == runbook:
             self.__get__()
 
@@ -84,8 +88,9 @@ class runbook(metaclass=DescriptorType):
         Returns:
             (RunbookType): Generated Runbook class
         """
-        if self.__parsed__:
-            return self.runbook
+        # Get the task target
+        if hasattr(cls, "get_task_target") and getattr(cls, "__has_dag_target__", True):
+            self.task_target = cls.get_task_target() or self.task_target
 
         # Get the source code for the user function.
         # Also replace tabs with 4 spaces.
@@ -120,14 +125,15 @@ class runbook(metaclass=DescriptorType):
 
         node_visitor = GetCallNodes(
             func_globals,
-            target=cls.get_task_target() if hasattr(cls, "get_task_target") else None,
+            target=self.task_target,
             is_runbook=True if self.__class__ == runbook else False,
         )
         try:
             node_visitor.visit(node)
         except Exception as ex:
-            self.__exception__ = ex
-            raise
+            LOG.exception(ex)
+            sys.exit(-1)
+
         tasks, variables, task_list = node_visitor.get_objects()
         edges = []
         child_tasks = []
@@ -169,10 +175,13 @@ class runbook(metaclass=DescriptorType):
         # Note - Server checks for name uniqueness in runbooks across actions
         # Generate unique names using class name and func name.
         prefix = (
-            cls.__name__ + "_" + self.user_func.__name__
-            if hasattr(cls, "__name__")
+            (getattr(cls, "name", "") or getattr(cls, "__name__", ""))
+            + "_"
+            + self.user_func.__name__
+            if hasattr(cls, "__name__") or hasattr(cls, "name")
             else "" + self.user_func.__name__
         )
+
         runbook_name = prefix + "_runbook"
         dag_name = prefix + "_dag"
 
@@ -181,10 +190,7 @@ class runbook(metaclass=DescriptorType):
             name=dag_name,
             child_tasks=child_tasks if self.__class__ == runbook else tasks,
             edges=edges,
-            target=cls.get_task_target()
-            if getattr(cls, "__has_dag_target__", True)
-            and hasattr(cls, "get_task_target")
-            else None,
+            target=self.task_target,
         )
 
         # Modify the user runbook
@@ -251,7 +257,6 @@ class runbook(metaclass=DescriptorType):
 
             self.runbook.credentials = credentials
             self.runbook.endpoints = endpoints
-            self.__parsed__ = True
             return self.runbook
 
         else:

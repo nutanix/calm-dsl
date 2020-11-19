@@ -36,6 +36,204 @@
             ],
             "action_list": [
                 {
+                    "name": "action_create",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "AnimalService___create___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "AnimalService___create___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "AnimalService___create___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "AnimalService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": []
+                    }
+                },
+                {
+                    "name": "action_start",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "AnimalService___start___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "AnimalService___start___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "AnimalService___start___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "AnimalService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": []
+                    }
+                },
+                {
+                    "name": "action_stop",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "AnimalService___stop___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "AnimalService___stop___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "AnimalService___stop___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "AnimalService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": []
+                    }
+                },
+                {
+                    "name": "action_delete",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "AnimalService___delete___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "AnimalService___delete___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "AnimalService___delete___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "AnimalService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": []
+                    }
+                },
+                {
+                    "name": "action_restart",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "AnimalService___restart___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "AnimalService___restart___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "AnimalService___restart___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "AnimalService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": []
+                    }
+                },
+                {
+                    "name": "action_soft_delete",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "AnimalService___soft_delete___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "AnimalService___soft_delete___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "AnimalService___soft_delete___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "AnimalService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": []
+                    }
+                },
+                {
                     "name": "get_sound",
                     "description": "Example animal action",
                     "type": "user",
@@ -80,204 +278,6 @@
                                 "attrs": {
                                     "script_type": "sh",
                                     "script": "echo @@{sound}@@"
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            }
-                        ],
-                        "variable_list": []
-                    }
-                },
-                {
-                    "name": "action_create",
-                    "description": "",
-                    "type": "system",
-                    "critical": true,
-                    "runbook": {
-                        "name": "Runbook_for_Service_AnimalService_action_create",
-                        "description": "",
-                        "main_task_local_reference": {
-                            "kind": "app_task",
-                            "name": "DAG_Task_for_Service_AnimalService_action_create"
-                        },
-                        "task_definition_list": [
-                            {
-                                "name": "DAG_Task_for_Service_AnimalService_action_create",
-                                "description": "",
-                                "type": "DAG",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "AnimalService"
-                                },
-                                "attrs": {
-                                    "edges": []
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            }
-                        ],
-                        "variable_list": []
-                    }
-                },
-                {
-                    "name": "action_delete",
-                    "description": "",
-                    "type": "system",
-                    "critical": true,
-                    "runbook": {
-                        "name": "Runbook_for_Service_AnimalService_action_delete",
-                        "description": "",
-                        "main_task_local_reference": {
-                            "kind": "app_task",
-                            "name": "DAG_Task_for_Service_AnimalService_action_delete"
-                        },
-                        "task_definition_list": [
-                            {
-                                "name": "DAG_Task_for_Service_AnimalService_action_delete",
-                                "description": "",
-                                "type": "DAG",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "AnimalService"
-                                },
-                                "attrs": {
-                                    "edges": []
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            }
-                        ],
-                        "variable_list": []
-                    }
-                },
-                {
-                    "name": "action_start",
-                    "description": "",
-                    "type": "system",
-                    "critical": true,
-                    "runbook": {
-                        "name": "Runbook_for_Service_AnimalService_action_start",
-                        "description": "",
-                        "main_task_local_reference": {
-                            "kind": "app_task",
-                            "name": "DAG_Task_for_Service_AnimalService_action_start"
-                        },
-                        "task_definition_list": [
-                            {
-                                "name": "DAG_Task_for_Service_AnimalService_action_start",
-                                "description": "",
-                                "type": "DAG",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "AnimalService"
-                                },
-                                "attrs": {
-                                    "edges": []
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            }
-                        ],
-                        "variable_list": []
-                    }
-                },
-                {
-                    "name": "action_stop",
-                    "description": "",
-                    "type": "system",
-                    "critical": true,
-                    "runbook": {
-                        "name": "Runbook_for_Service_AnimalService_action_stop",
-                        "description": "",
-                        "main_task_local_reference": {
-                            "kind": "app_task",
-                            "name": "DAG_Task_for_Service_AnimalService_action_stop"
-                        },
-                        "task_definition_list": [
-                            {
-                                "name": "DAG_Task_for_Service_AnimalService_action_stop",
-                                "description": "",
-                                "type": "DAG",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "AnimalService"
-                                },
-                                "attrs": {
-                                    "edges": []
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            }
-                        ],
-                        "variable_list": []
-                    }
-                },
-                {
-                    "name": "action_restart",
-                    "description": "",
-                    "type": "system",
-                    "critical": true,
-                    "runbook": {
-                        "name": "Runbook_for_Service_AnimalService_action_restart",
-                        "description": "",
-                        "main_task_local_reference": {
-                            "kind": "app_task",
-                            "name": "DAG_Task_for_Service_AnimalService_action_restart"
-                        },
-                        "task_definition_list": [
-                            {
-                                "name": "DAG_Task_for_Service_AnimalService_action_restart",
-                                "description": "",
-                                "type": "DAG",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "AnimalService"
-                                },
-                                "attrs": {
-                                    "edges": []
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            }
-                        ],
-                        "variable_list": []
-                    }
-                },
-                {
-                    "name": "action_soft_delete",
-                    "description": "",
-                    "type": "system",
-                    "critical": true,
-                    "runbook": {
-                        "name": "Runbook_for_Service_AnimalService_action_soft_delete",
-                        "description": "",
-                        "main_task_local_reference": {
-                            "kind": "app_task",
-                            "name": "DAG_Task_for_Service_AnimalService_action_soft_delete"
-                        },
-                        "task_definition_list": [
-                            {
-                                "name": "DAG_Task_for_Service_AnimalService_action_soft_delete",
-                                "description": "",
-                                "type": "DAG",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "AnimalService"
-                                },
-                                "attrs": {
-                                    "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
@@ -342,6 +342,204 @@
                 }
             ],
             "action_list": [
+                {
+                    "name": "action_create",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "DogService___create___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "DogService___create___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "DogService___create___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "DogService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": []
+                    }
+                },
+                {
+                    "name": "action_start",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "DogService___start___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "DogService___start___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "DogService___start___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "DogService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": []
+                    }
+                },
+                {
+                    "name": "action_stop",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "DogService___stop___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "DogService___stop___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "DogService___stop___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "DogService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": []
+                    }
+                },
+                {
+                    "name": "action_delete",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "DogService___delete___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "DogService___delete___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "DogService___delete___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "DogService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": []
+                    }
+                },
+                {
+                    "name": "action_restart",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "DogService___restart___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "DogService___restart___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "DogService___restart___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "DogService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": []
+                    }
+                },
+                {
+                    "name": "action_soft_delete",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "DogService___soft_delete___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "DogService___soft_delete___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "DogService___soft_delete___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "DogService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": []
+                    }
+                },
                 {
                     "name": "get_sound",
                     "description": "Example animal action",
@@ -451,204 +649,6 @@
                         ],
                         "variable_list": []
                     }
-                },
-                {
-                    "name": "action_create",
-                    "description": "",
-                    "type": "system",
-                    "critical": true,
-                    "runbook": {
-                        "name": "Runbook_for_Service_DogService_action_create",
-                        "description": "",
-                        "main_task_local_reference": {
-                            "kind": "app_task",
-                            "name": "DAG_Task_for_Service_DogService_action_create"
-                        },
-                        "task_definition_list": [
-                            {
-                                "name": "DAG_Task_for_Service_DogService_action_create",
-                                "description": "",
-                                "type": "DAG",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "DogService"
-                                },
-                                "attrs": {
-                                    "edges": []
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            }
-                        ],
-                        "variable_list": []
-                    }
-                },
-                {
-                    "name": "action_delete",
-                    "description": "",
-                    "type": "system",
-                    "critical": true,
-                    "runbook": {
-                        "name": "Runbook_for_Service_DogService_action_delete",
-                        "description": "",
-                        "main_task_local_reference": {
-                            "kind": "app_task",
-                            "name": "DAG_Task_for_Service_DogService_action_delete"
-                        },
-                        "task_definition_list": [
-                            {
-                                "name": "DAG_Task_for_Service_DogService_action_delete",
-                                "description": "",
-                                "type": "DAG",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "DogService"
-                                },
-                                "attrs": {
-                                    "edges": []
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            }
-                        ],
-                        "variable_list": []
-                    }
-                },
-                {
-                    "name": "action_start",
-                    "description": "",
-                    "type": "system",
-                    "critical": true,
-                    "runbook": {
-                        "name": "Runbook_for_Service_DogService_action_start",
-                        "description": "",
-                        "main_task_local_reference": {
-                            "kind": "app_task",
-                            "name": "DAG_Task_for_Service_DogService_action_start"
-                        },
-                        "task_definition_list": [
-                            {
-                                "name": "DAG_Task_for_Service_DogService_action_start",
-                                "description": "",
-                                "type": "DAG",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "DogService"
-                                },
-                                "attrs": {
-                                    "edges": []
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            }
-                        ],
-                        "variable_list": []
-                    }
-                },
-                {
-                    "name": "action_stop",
-                    "description": "",
-                    "type": "system",
-                    "critical": true,
-                    "runbook": {
-                        "name": "Runbook_for_Service_DogService_action_stop",
-                        "description": "",
-                        "main_task_local_reference": {
-                            "kind": "app_task",
-                            "name": "DAG_Task_for_Service_DogService_action_stop"
-                        },
-                        "task_definition_list": [
-                            {
-                                "name": "DAG_Task_for_Service_DogService_action_stop",
-                                "description": "",
-                                "type": "DAG",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "DogService"
-                                },
-                                "attrs": {
-                                    "edges": []
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            }
-                        ],
-                        "variable_list": []
-                    }
-                },
-                {
-                    "name": "action_restart",
-                    "description": "",
-                    "type": "system",
-                    "critical": true,
-                    "runbook": {
-                        "name": "Runbook_for_Service_DogService_action_restart",
-                        "description": "",
-                        "main_task_local_reference": {
-                            "kind": "app_task",
-                            "name": "DAG_Task_for_Service_DogService_action_restart"
-                        },
-                        "task_definition_list": [
-                            {
-                                "name": "DAG_Task_for_Service_DogService_action_restart",
-                                "description": "",
-                                "type": "DAG",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "DogService"
-                                },
-                                "attrs": {
-                                    "edges": []
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            }
-                        ],
-                        "variable_list": []
-                    }
-                },
-                {
-                    "name": "action_soft_delete",
-                    "description": "",
-                    "type": "system",
-                    "critical": true,
-                    "runbook": {
-                        "name": "Runbook_for_Service_DogService_action_soft_delete",
-                        "description": "",
-                        "main_task_local_reference": {
-                            "kind": "app_task",
-                            "name": "DAG_Task_for_Service_DogService_action_soft_delete"
-                        },
-                        "task_definition_list": [
-                            {
-                                "name": "DAG_Task_for_Service_DogService_action_soft_delete",
-                                "description": "",
-                                "type": "DAG",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "DogService"
-                                },
-                                "attrs": {
-                                    "edges": []
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            }
-                        ],
-                        "variable_list": []
-                    }
                 }
             ],
             "container_spec": {}
@@ -692,6 +692,204 @@
                 }
             ],
             "action_list": [
+                {
+                    "name": "action_create",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "CatService___create___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "CatService___create___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "CatService___create___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "CatService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": []
+                    }
+                },
+                {
+                    "name": "action_start",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "CatService___start___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "CatService___start___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "CatService___start___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "CatService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": []
+                    }
+                },
+                {
+                    "name": "action_stop",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "CatService___stop___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "CatService___stop___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "CatService___stop___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "CatService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": []
+                    }
+                },
+                {
+                    "name": "action_delete",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "CatService___delete___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "CatService___delete___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "CatService___delete___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "CatService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": []
+                    }
+                },
+                {
+                    "name": "action_restart",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "CatService___restart___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "CatService___restart___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "CatService___restart___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "CatService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": []
+                    }
+                },
+                {
+                    "name": "action_soft_delete",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "CatService___soft_delete___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "CatService___soft_delete___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "CatService___soft_delete___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "CatService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": []
+                    }
+                },
                 {
                     "name": "get_sound",
                     "description": "Example animal action",
@@ -737,204 +935,6 @@
                                 "attrs": {
                                     "script_type": "sh",
                                     "script": "echo @@{sound}@@"
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            }
-                        ],
-                        "variable_list": []
-                    }
-                },
-                {
-                    "name": "action_create",
-                    "description": "",
-                    "type": "system",
-                    "critical": true,
-                    "runbook": {
-                        "name": "Runbook_for_Service_CatService_action_create",
-                        "description": "",
-                        "main_task_local_reference": {
-                            "kind": "app_task",
-                            "name": "DAG_Task_for_Service_CatService_action_create"
-                        },
-                        "task_definition_list": [
-                            {
-                                "name": "DAG_Task_for_Service_CatService_action_create",
-                                "description": "",
-                                "type": "DAG",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "CatService"
-                                },
-                                "attrs": {
-                                    "edges": []
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            }
-                        ],
-                        "variable_list": []
-                    }
-                },
-                {
-                    "name": "action_delete",
-                    "description": "",
-                    "type": "system",
-                    "critical": true,
-                    "runbook": {
-                        "name": "Runbook_for_Service_CatService_action_delete",
-                        "description": "",
-                        "main_task_local_reference": {
-                            "kind": "app_task",
-                            "name": "DAG_Task_for_Service_CatService_action_delete"
-                        },
-                        "task_definition_list": [
-                            {
-                                "name": "DAG_Task_for_Service_CatService_action_delete",
-                                "description": "",
-                                "type": "DAG",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "CatService"
-                                },
-                                "attrs": {
-                                    "edges": []
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            }
-                        ],
-                        "variable_list": []
-                    }
-                },
-                {
-                    "name": "action_start",
-                    "description": "",
-                    "type": "system",
-                    "critical": true,
-                    "runbook": {
-                        "name": "Runbook_for_Service_CatService_action_start",
-                        "description": "",
-                        "main_task_local_reference": {
-                            "kind": "app_task",
-                            "name": "DAG_Task_for_Service_CatService_action_start"
-                        },
-                        "task_definition_list": [
-                            {
-                                "name": "DAG_Task_for_Service_CatService_action_start",
-                                "description": "",
-                                "type": "DAG",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "CatService"
-                                },
-                                "attrs": {
-                                    "edges": []
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            }
-                        ],
-                        "variable_list": []
-                    }
-                },
-                {
-                    "name": "action_stop",
-                    "description": "",
-                    "type": "system",
-                    "critical": true,
-                    "runbook": {
-                        "name": "Runbook_for_Service_CatService_action_stop",
-                        "description": "",
-                        "main_task_local_reference": {
-                            "kind": "app_task",
-                            "name": "DAG_Task_for_Service_CatService_action_stop"
-                        },
-                        "task_definition_list": [
-                            {
-                                "name": "DAG_Task_for_Service_CatService_action_stop",
-                                "description": "",
-                                "type": "DAG",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "CatService"
-                                },
-                                "attrs": {
-                                    "edges": []
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            }
-                        ],
-                        "variable_list": []
-                    }
-                },
-                {
-                    "name": "action_restart",
-                    "description": "",
-                    "type": "system",
-                    "critical": true,
-                    "runbook": {
-                        "name": "Runbook_for_Service_CatService_action_restart",
-                        "description": "",
-                        "main_task_local_reference": {
-                            "kind": "app_task",
-                            "name": "DAG_Task_for_Service_CatService_action_restart"
-                        },
-                        "task_definition_list": [
-                            {
-                                "name": "DAG_Task_for_Service_CatService_action_restart",
-                                "description": "",
-                                "type": "DAG",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "CatService"
-                                },
-                                "attrs": {
-                                    "edges": []
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            }
-                        ],
-                        "variable_list": []
-                    }
-                },
-                {
-                    "name": "action_soft_delete",
-                    "description": "",
-                    "type": "system",
-                    "critical": true,
-                    "runbook": {
-                        "name": "Runbook_for_Service_CatService_action_soft_delete",
-                        "description": "",
-                        "main_task_local_reference": {
-                            "kind": "app_task",
-                            "name": "DAG_Task_for_Service_CatService_action_soft_delete"
-                        },
-                        "task_definition_list": [
-                            {
-                                "name": "DAG_Task_for_Service_CatService_action_soft_delete",
-                                "description": "",
-                                "type": "DAG",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "CatService"
-                                },
-                                "attrs": {
-                                    "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
@@ -1011,6 +1011,204 @@
                 }
             ],
             "action_list": [
+                {
+                    "name": "action_create",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "HuskyService___create___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "HuskyService___create___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "HuskyService___create___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "HuskyService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": []
+                    }
+                },
+                {
+                    "name": "action_start",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "HuskyService___start___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "HuskyService___start___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "HuskyService___start___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "HuskyService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": []
+                    }
+                },
+                {
+                    "name": "action_stop",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "HuskyService___stop___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "HuskyService___stop___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "HuskyService___stop___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "HuskyService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": []
+                    }
+                },
+                {
+                    "name": "action_delete",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "HuskyService___delete___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "HuskyService___delete___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "HuskyService___delete___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "HuskyService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": []
+                    }
+                },
+                {
+                    "name": "action_restart",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "HuskyService___restart___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "HuskyService___restart___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "HuskyService___restart___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "HuskyService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": []
+                    }
+                },
+                {
+                    "name": "action_soft_delete",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "HuskyService___soft_delete___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "HuskyService___soft_delete___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "HuskyService___soft_delete___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "HuskyService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": []
+                    }
+                },
                 {
                     "name": "get_sound",
                     "description": "Example animal action",
@@ -1166,204 +1364,6 @@
                                 "attrs": {
                                     "script_type": "sh",
                                     "script": "echo @@{husky_prop}@@"
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            }
-                        ],
-                        "variable_list": []
-                    }
-                },
-                {
-                    "name": "action_create",
-                    "description": "",
-                    "type": "system",
-                    "critical": true,
-                    "runbook": {
-                        "name": "Runbook_for_Service_HuskyService_action_create",
-                        "description": "",
-                        "main_task_local_reference": {
-                            "kind": "app_task",
-                            "name": "DAG_Task_for_Service_HuskyService_action_create"
-                        },
-                        "task_definition_list": [
-                            {
-                                "name": "DAG_Task_for_Service_HuskyService_action_create",
-                                "description": "",
-                                "type": "DAG",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "HuskyService"
-                                },
-                                "attrs": {
-                                    "edges": []
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            }
-                        ],
-                        "variable_list": []
-                    }
-                },
-                {
-                    "name": "action_delete",
-                    "description": "",
-                    "type": "system",
-                    "critical": true,
-                    "runbook": {
-                        "name": "Runbook_for_Service_HuskyService_action_delete",
-                        "description": "",
-                        "main_task_local_reference": {
-                            "kind": "app_task",
-                            "name": "DAG_Task_for_Service_HuskyService_action_delete"
-                        },
-                        "task_definition_list": [
-                            {
-                                "name": "DAG_Task_for_Service_HuskyService_action_delete",
-                                "description": "",
-                                "type": "DAG",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "HuskyService"
-                                },
-                                "attrs": {
-                                    "edges": []
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            }
-                        ],
-                        "variable_list": []
-                    }
-                },
-                {
-                    "name": "action_start",
-                    "description": "",
-                    "type": "system",
-                    "critical": true,
-                    "runbook": {
-                        "name": "Runbook_for_Service_HuskyService_action_start",
-                        "description": "",
-                        "main_task_local_reference": {
-                            "kind": "app_task",
-                            "name": "DAG_Task_for_Service_HuskyService_action_start"
-                        },
-                        "task_definition_list": [
-                            {
-                                "name": "DAG_Task_for_Service_HuskyService_action_start",
-                                "description": "",
-                                "type": "DAG",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "HuskyService"
-                                },
-                                "attrs": {
-                                    "edges": []
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            }
-                        ],
-                        "variable_list": []
-                    }
-                },
-                {
-                    "name": "action_stop",
-                    "description": "",
-                    "type": "system",
-                    "critical": true,
-                    "runbook": {
-                        "name": "Runbook_for_Service_HuskyService_action_stop",
-                        "description": "",
-                        "main_task_local_reference": {
-                            "kind": "app_task",
-                            "name": "DAG_Task_for_Service_HuskyService_action_stop"
-                        },
-                        "task_definition_list": [
-                            {
-                                "name": "DAG_Task_for_Service_HuskyService_action_stop",
-                                "description": "",
-                                "type": "DAG",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "HuskyService"
-                                },
-                                "attrs": {
-                                    "edges": []
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            }
-                        ],
-                        "variable_list": []
-                    }
-                },
-                {
-                    "name": "action_restart",
-                    "description": "",
-                    "type": "system",
-                    "critical": true,
-                    "runbook": {
-                        "name": "Runbook_for_Service_HuskyService_action_restart",
-                        "description": "",
-                        "main_task_local_reference": {
-                            "kind": "app_task",
-                            "name": "DAG_Task_for_Service_HuskyService_action_restart"
-                        },
-                        "task_definition_list": [
-                            {
-                                "name": "DAG_Task_for_Service_HuskyService_action_restart",
-                                "description": "",
-                                "type": "DAG",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "HuskyService"
-                                },
-                                "attrs": {
-                                    "edges": []
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            }
-                        ],
-                        "variable_list": []
-                    }
-                },
-                {
-                    "name": "action_soft_delete",
-                    "description": "",
-                    "type": "system",
-                    "critical": true,
-                    "runbook": {
-                        "name": "Runbook_for_Service_HuskyService_action_soft_delete",
-                        "description": "",
-                        "main_task_local_reference": {
-                            "kind": "app_task",
-                            "name": "DAG_Task_for_Service_HuskyService_action_soft_delete"
-                        },
-                        "task_definition_list": [
-                            {
-                                "name": "DAG_Task_for_Service_HuskyService_action_soft_delete",
-                                "description": "",
-                                "type": "DAG",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "HuskyService"
-                                },
-                                "attrs": {
-                                    "edges": []
                                 },
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
@@ -1923,12 +1923,14 @@
             "variable_list": [],
             "action_list": [],
             "readiness_probe": {
-                "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
-                "disable_readiness_probe": false,
-                "delay_secs": "0",
                 "connection_type": "SSH",
                 "connection_port": 22,
-                "connection_protocol": ""
+                "connection_protocol": "",
+                "timeout_secs": "",
+                "delay_secs": "60",
+                "retries": "5",
+                "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
+                "disable_readiness_probe": true
             },
             "editables": {}
         },
@@ -1998,12 +2000,14 @@
             "variable_list": [],
             "action_list": [],
             "readiness_probe": {
-                "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
-                "disable_readiness_probe": false,
-                "delay_secs": "0",
                 "connection_type": "SSH",
                 "connection_port": 22,
-                "connection_protocol": ""
+                "connection_protocol": "",
+                "timeout_secs": "",
+                "delay_secs": "60",
+                "retries": "5",
+                "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
+                "disable_readiness_probe": true
             },
             "editables": {}
         },
@@ -2073,12 +2077,14 @@
             "variable_list": [],
             "action_list": [],
             "readiness_probe": {
-                "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
-                "disable_readiness_probe": false,
-                "delay_secs": "0",
                 "connection_type": "SSH",
                 "connection_port": 22,
-                "connection_protocol": ""
+                "connection_protocol": "",
+                "timeout_secs": "",
+                "delay_secs": "60",
+                "retries": "5",
+                "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
+                "disable_readiness_probe": true
             },
             "editables": {}
         },
@@ -2148,12 +2154,14 @@
             "variable_list": [],
             "action_list": [],
             "readiness_probe": {
-                "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
-                "disable_readiness_probe": false,
-                "delay_secs": "0",
                 "connection_type": "SSH",
                 "connection_port": 22,
-                "connection_protocol": ""
+                "connection_protocol": "",
+                "timeout_secs": "",
+                "delay_secs": "60",
+                "retries": "5",
+                "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
+                "disable_readiness_probe": true
             },
             "editables": {}
         }
@@ -2170,7 +2178,6 @@
                 },
                 "value": "-----BEGIN RSA PRIVATE KEY-----\nMIIEogIBAAKCAQEAzefAdd/IexagClNBF7i/r28w5blZZGLtUK9WOlwX3kbdNQ4M\nbLFyCFGxhCgD/T+EawB6kXAo2jEuMKlFGMTi709VAsSBrpW9wn7ti/YvldTVjf+I\n949tHpUMIZb2A9LKpuYgh7FYYh5S66GqREnAQ46ODFFENbU8BP6doBwIbuOVctvM\nejfBgu7IfQL01SDux3LEDVP+9WEo1JkE5mASKJldPgwjM2HpB1rxoxy4lpT+jCIb\norp100vD4zY+IfYQ9+mJQk8Vhrl/Z4l/V3slAHA+5/dmRYkfeVmezsV/ia7gjDAD\nKPA4l4YbLF2b8c6gZgCxj5NrLHQzItqswUpUYwIDAQABAoIBAALbyKEPohsMsDHE\ngHRXBRjnPHC2rIYyFg+sh3rC7t/lRZ/oGdsOcZdU+a0XLcr/wpOxC4KRDI15k6XA\nS9ccBfctjPAUu09/AQXouN0xu0Jjad2RTRz8DuyW7swD6lbDlTr7meWtsXJB79kZ\nQvcKERMUW7t8YKvgNWeaWKTcOW+/Tw1cXwYhL4+1nUowQHKACUVIojvI1MWbS2eK\nLI9X6OjTwKs8Zh/BR3UGRUA7kvjJBEWAeuVElWkKtHYw3oSnwhQEfFAz5aNp8yMt\nTuf0zJowtwpHEZARgzyWtsNb2AINMpF05kCH707K52PLK7wwF83C1CnbaCXC8D58\nwjbFFoUCgYEA5C2CUsr8qXQcMH1s/MJ0cX5CNNbQhrQqIi74uhoQ4e5NzW0g1dne\nryQNkesCjfw3+NzRmuwqwE9FWuLlVmhyeGVdCANU0F7uawsTI0W5bKghL9lbmCo/\nrn9IqpYPLHlVe3RoG4gv9WMvQKBhBzHR9QwYjBgA93u2utaFbgnKtF8CgYEA5wMD\nvJp9uZgI8f+e+0jjm9F+WnqiQ4/u2fSrSNLWFMY7Mk+ERCls8C1hFgvP68GeJLlf\nfbxh16q6WG4BE/CVub5Us1LlTk5o9fACaWgsY8vQ2Kkw4eeWW2xpBIVDAArN/TlR\n57HEq0taIcWOgqQuAVnSmIrHfSmogZqxnlPm/n0CgYBJEPGchXem45FrTZ6qybHz\n7dRRi0A3AlZDn/rxzQr+7gpn77wF/sA6ITdfNHwa71sVC9Dq5RlDf57b3bBGnSea\nugqyWC6+kseR63fzYY5g5u3Jnraf4VeHDyc7yNWPDkN7RulXd6Kz11D4RuMLJL7w\n0zDBG6ajmTAIYE1V0TjhzQKBgAHXCk6URHAX/+o9iPyjZfy1vHXoCCbVnKdrxXl9\nBGuB8LLD41/PnKiFFALi8TMFhcbxGwubVoQrPfS6W5PXFLo4A+CxxlXLVhavZLWG\nOORKmU1Ae70w5QexY1y/2vrDG0TrEfXweoqKvRsLwcjUmfE0z/KbGF+s10TBAK0s\nKejZAoGAVSR1iD62vawranCbe9+ZyQdRD2oKOYNpwgVzcc5i+NCKjXTatabjN2i+\nbFOsvlBIJyEwbYRdycv9ZXnm65y55l96JtqNM2mQDgRNRMCMlgz0gNyUs0zLgp6X\nIkxCuZ8PUq91AcI83W9pdl4XHXBxmin2RUPGC2n/+lFSSrrrksM=\n-----END RSA PRIVATE KEY-----"
             },
-            "default": true,
             "editables": {}
         }
     ],
@@ -2434,5 +2441,8 @@
         }
     ],
     "client_attrs": {},
-    "default_credential_local_reference": null
+    "default_credential_local_reference": {
+        "kind": "app_credential",
+        "name": "Centos"
+    }
 }

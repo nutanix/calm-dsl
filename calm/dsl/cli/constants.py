@@ -158,6 +158,23 @@ class MARKETPLACE_ITEM:
         LOCAL = "LOCAL"
 
 
+class TASKS:
+    class TASK_TYPES:
+        EXEC = "EXEC"
+        SET_VARIABLE = "SET_VARIABLE"
+        HTTP = "HTTP"
+
+    class SCRIPT_TYPES:
+        POWERSHELL = "npsscript"
+        SHELL = "sh"
+        ESCRIPT = "static"
+
+    class STATES:
+        ACTIVE = "ACTIVE"
+        DELETED = "DELETED"
+        DRAFT = "DRAFT"
+
+
 class ERGON_TASK:
     class STATUS:
         QUEUED = "QUEUED"

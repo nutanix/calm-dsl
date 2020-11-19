@@ -81,7 +81,7 @@ def test_service_valid_multiple_inheritance():
 
 def test_service_invalid_name():
 
-    with pytest.raises(TypeError):
+    with pytest.raises(SystemExit):
 
         from calm.dsl.builtins import Service
 

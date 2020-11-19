@@ -46,6 +46,9 @@ class AhvVmResourcesType(EntityType):
         if boot_type == "UEFI":
             cdict["boot_config"]["boot_type"] = "UEFI"
 
+        if not cdict["boot_config"]:
+            cdict.pop("boot_config", None)
+
         serial_port_list = []
         for ind, connection_status in cdict["serial_port_list"].items():
             if not isinstance(ind, int):
@@ -63,7 +66,16 @@ class AhvVmResourcesType(EntityType):
         return cdict
 
     @classmethod
-    def decompile(mcls, cdict, context=[]):
+    def pre_decompile(mcls, cdict, context, prefix=""):
+        cdict = super().pre_decompile(cdict, context, prefix=prefix)
+
+        if "__name__" in cdict:
+            cdict["__name__"] = "{}{}".format(prefix, cdict["__name__"])
+
+        return cdict
+
+    @classmethod
+    def decompile(mcls, cdict, context=[], prefix=""):
         # Check for serial ports
         serial_port_list = cdict.pop("serial_port_list", [])
         serial_port_dict = {}
@@ -75,7 +87,7 @@ class AhvVmResourcesType(EntityType):
         if not cdict.get("guest_customization", None):
             cdict.pop("guest_customization", None)
 
-        return super().decompile(cdict)
+        return super().decompile(cdict, prefix=prefix)
 
 
 class AhvVmResourcesValidator(PropertyValidator, openapi_type="vm_ahv_resources"):
@@ -98,6 +110,15 @@ AhvVmResources = ahv_vm_resources()
 class AhvVmType(ProviderSpecType):
     __schema_name__ = "AhvVm"
     __openapi_type__ = "vm_ahv"
+
+    @classmethod
+    def pre_decompile(mcls, cdict, context, prefix=""):
+        cdict = super().pre_decompile(cdict, context, prefix=prefix)
+
+        if "__name__" in cdict:
+            cdict["__name__"] = "{}{}".format(prefix, cdict["__name__"])
+
+        return cdict
 
 
 class AhvVmValidator(PropertyValidator, openapi_type="vm_ahv"):

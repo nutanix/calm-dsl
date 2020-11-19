@@ -7,15 +7,17 @@ from calm.dsl.runbooks import read_local_file
 from calm.dsl.runbooks import runbook
 from calm.dsl.runbooks import RunbookTask as Task, RunbookVariable as Variable
 from calm.dsl.runbooks import CalmEndpoint as Endpoint
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 from utils import read_test_config, change_uuids
 
 AUTH_USERNAME = read_local_file(".tests/runbook_tests/auth_username")
 AUTH_PASSWORD = read_local_file(".tests/runbook_tests/auth_password")
 URL = read_local_file(".tests/runbook_tests/url")
 
-config = get_config()
-TEST_URL = "https://{}:9440/".format(config["SERVER"]["pc_ip"])
+ContextObj = get_context()
+server_config = ContextObj.get_server_config()
+pc_ip = server_config["pc_ip"]
+TEST_URL = "https://{}:9440/".format(pc_ip)
 
 endpoint = Endpoint.HTTP(
     URL, verify=False, auth=Endpoint.Auth(AUTH_USERNAME, AUTH_PASSWORD)

@@ -55,7 +55,7 @@ class ObjectDict(EntityDict):
                 ret[self.display_map[key]] = value
         return ret
 
-    def pre_decompile(mcls, cdict, context):
+    def pre_decompile(mcls, cdict, context, prefix=""):
 
         # Remove NULL and empty string data
         attrs = {}
@@ -65,12 +65,12 @@ class ObjectDict(EntityDict):
 
         return attrs
 
-    def decompile(cls, cdict, context=[]):
+    def decompile(cls, cdict, context=[], prefix=""):
 
         if not cdict:
             return cdict
 
-        cdict = cls.pre_decompile(cdict, context=context)
+        cdict = cls.pre_decompile(cdict, context=context, prefix=prefix)
         attrs = {}
         display_map = copy.deepcopy(cls.display_map)
         display_map = {v: k for k, v in display_map.items()}
@@ -100,10 +100,10 @@ class ObjectDict(EntityDict):
                 if is_array:
                     new_value = []
                     for val in v:
-                        new_value.append(entity_type.decompile(val))
+                        new_value.append(entity_type.decompile(val, prefix=prefix))
 
                 else:
-                    new_value = entity_type.decompile(v)
+                    new_value = entity_type.decompile(v, prefix=prefix)
 
                 attrs[k] = new_value
 

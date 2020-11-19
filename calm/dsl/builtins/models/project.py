@@ -65,6 +65,9 @@ class ProjectType(EntityType):
 
             cdict["resource_domain"] = {"resources": project_resources}
 
+        # pop out unnecessary attibutes
+        cdict.pop("environment_definition_list", None)
+
         return cdict
 
 

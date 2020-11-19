@@ -3,7 +3,7 @@ from jinja2 import Environment, PackageLoader
 
 from calm.dsl.builtins import read_file
 from calm.dsl.log import get_logging_handle
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 
 LOG = get_logging_handle(__name__)
 
@@ -16,11 +16,15 @@ def render_runbook_template(runbook_name):
     env = Environment(loader=loader)
     template = env.get_template(schema_file)
     LOG.info("Rendering runbook template")
-    config = get_config()
+
+    ContextObj = get_context()
+    server_config = ContextObj.get_server_config()
+    pc_ip = server_config["pc_ip"]
+    pc_port = server_config["pc_port"]
     text = template.render(
         runbook_name=runbook_name,
-        pc_ip=config["SERVER"]["pc_ip"],
-        pc_port=config["SERVER"]["pc_port"],
+        pc_ip=pc_ip,
+        pc_port=pc_port,
     )
     LOG.info("Success")
 

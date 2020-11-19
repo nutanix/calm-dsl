@@ -2,13 +2,14 @@ import uuid
 import click
 import sys
 import json
+import os
 from prettytable import PrettyTable
 
 from calm.dsl.builtins import BlueprintType, get_valid_identifier
 from calm.dsl.decompile.decompile_render import create_bp_dir
 from calm.dsl.decompile.file_handler import get_bp_dir
 from calm.dsl.api import get_api_client, get_resource_api
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 
 from .utils import highlight_text, get_states_filter, Display
 from .bps import launch_blueprint_simple, get_blueprint
@@ -91,6 +92,7 @@ def get_mpis_group_call(
     app_source=None,
     app_group_uuid=None,
     type=None,
+    filter_by="",
 ):
     """
     To call groups() api for marketplace items
@@ -105,6 +107,9 @@ def get_mpis_group_call(
 
     if app_family != "All":
         filter += ";category_name==AppFamily;category_value=={}".format(app_family)
+
+    if filter_by:
+        filter = filter + ";(" + filter_by + ")"
 
     if name:
         filter += ";name=={}".format(name)
@@ -150,6 +155,7 @@ def get_mpis_group_call(
     if group_member_count:
         payload["group_member_count"] = group_member_count
 
+    # TODO Create GroupAPI separately for it.
     Obj = get_resource_api("groups", client.connection)
     res, err = Obj.create(payload=payload)
 
@@ -161,7 +167,11 @@ def get_mpis_group_call(
     return res
 
 
-def get_marketplace_store_items(name, quiet, app_family, display_all):
+def get_marketplace_store_items(name, quiet,
+                                app_family,
+                                display_all,
+                                filter_by="",
+                                type=None):
     """Lists marketplace store items"""
 
     group_member_count = 0
@@ -173,6 +183,8 @@ def get_marketplace_store_items(name, quiet, app_family, display_all):
         app_family=app_family,
         app_states=[MARKETPLACE_ITEM.STATES.PUBLISHED],
         group_member_count=group_member_count,
+        filter_by=filter_by,
+        type=type
     )
     group_results = res["group_results"]
 
@@ -230,11 +242,13 @@ def get_marketplace_store_items(name, quiet, app_family, display_all):
     click.echo(table)
 
 
-def get_marketplace_items(name, quiet, app_family, app_states=[]):
+def get_marketplace_items(name, quiet, app_family, app_states=[], filter_by="", type=None):
     """ List all the marketlace items listed in the manager"""
 
     res = get_mpis_group_call(name=name, app_family=app_family,
-                              app_states=app_states, type=MARKETPLACE_ITEM.TYPES.BLUEPRINT)
+                              app_states=app_states,
+                              filter_by=filter_by,
+                              type=type)
     group_results = res["group_results"]
 
     if quiet:
@@ -496,7 +510,9 @@ def launch_marketplace_bp(
     LOG.info("App {} creation is successful".format(app_name))
 
 
-def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_secrets):
+def decompile_marketplace_bp(
+    name, version, app_source, bp_name, project, with_secrets, bp_dir
+):
     """decompiles marketplace blueprint"""
 
     if not version:
@@ -520,6 +536,11 @@ def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_s
     bp_payload = res.json()
     blueprint = bp_payload["spec"]["resources"]
     blueprint_name = get_valid_identifier(bp_name or name)
+
+    if not bp_dir:
+        bp_dir_suffix = bp_name or "mpi_bp_{}_v{}".format(blueprint_name, version)
+        bp_dir = os.path.join(os.getcwd(), bp_dir_suffix)
+
     blueprint_dir = bp_name or "mpi_bp_{}_v{}".format(blueprint_name, version)
     blueprint_description = bp_payload["spec"].get("description", "")
 
@@ -532,7 +553,7 @@ def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_s
             )
         elif sub_type != "AHV_VM":
             LOG.warning(
-                "Decompilation support for providers other than AHV is experimental/best effort"
+                "Decompilation support for providers other than AHV is experimental."
             )
             break
 
@@ -540,8 +561,12 @@ def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_s
     bp_cls.__name__ = blueprint_name
     bp_cls.__doc__ = blueprint_description
 
-    create_bp_dir(bp_cls, blueprint_dir, with_secrets)
-    click.echo("\nSuccessfully decompiled. Directory location: {}".format(get_bp_dir()))
+    create_bp_dir(bp_cls=bp_cls, bp_dir=bp_dir, with_secrets=with_secrets)
+    click.echo(
+        "\nSuccessfully decompiled. Directory location: {}. Blueprint location: {}".format(
+            get_bp_dir(), os.path.join(get_bp_dir(), "blueprint.py")
+        )
+    )
 
 
 def launch_marketplace_item(
@@ -585,9 +610,10 @@ def launch_marketplace_item(
 def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None):
 
     client = get_api_client()
-    config = get_config()
+    context = get_context()
+    project_config = context.get_project_config()
 
-    project_name = project_name or config["PROJECT"]["name"]
+    project_name = project_name or project_config["name"]
     project_data = get_project(project_name)
 
     project_uuid = project_data["metadata"]["uuid"]
@@ -602,6 +628,10 @@ def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None
     environments = res["status"]["resources"]["environment_reference_list"]
 
     # For now only single environment exists
+    if not environments:
+        LOG.error("No environment registered to project '{}'".format(project_name))
+        sys.exit(-1)
+
     env_uuid = environments[0]["uuid"]
 
     LOG.info("Fetching MPI details")
@@ -679,7 +709,9 @@ def publish_bp_to_marketplace_manager(
 ):
 
     client = get_api_client()
-    config = get_config()
+    context = get_context()
+    server_config = context.get_server_config()
+
     bp = get_blueprint(client, bp_name)
     bp_uuid = bp.get("metadata", {}).get("uuid", "")
 
@@ -712,7 +744,7 @@ def publish_bp_to_marketplace_manager(
                 "type": MARKETPLACE_ITEM.TYPES.BLUEPRINT,
                 "app_attribute_list": ["FEATURED"],
                 "icon_reference_list": [],
-                "author": config["SERVER"]["pc_username"],
+                "author": server_config["pc_username"],
                 "version": version,
                 "app_group_uuid": app_group_uuid or str(uuid.uuid4()),
                 "app_blueprint_template": {
@@ -764,6 +796,7 @@ def publish_bp_as_new_marketplace_bp(
     category=None,
     icon_name=None,
     icon_file=None,
+    all_projects=False,
 ):
 
     # Search whether this marketplace item exists or not
@@ -799,14 +832,16 @@ def publish_bp_as_new_marketplace_bp(
 
     if publish_to_marketplace or auto_approve:
         if not projects:
-            config = get_config()
-            projects = [config["PROJECT"]["name"]]
+            context = get_context()
+            project_config = context.get_project_config()
+            projects = [project_config["name"]]
 
         approve_marketplace_item(
             name=marketplace_bp_name,
             version=version,
             projects=projects,
             category=category,
+            all_projects=all_projects,
         )
 
         if publish_to_marketplace:
@@ -829,6 +864,7 @@ def publish_bp_as_existing_marketplace_bp(
     category=None,
     icon_name=None,
     icon_file=None,
+    all_projects=False,
 ):
 
     LOG.info(
@@ -895,14 +931,16 @@ def publish_bp_as_existing_marketplace_bp(
 
     if publish_to_marketplace or auto_approve:
         if not projects:
-            config = get_config()
-            projects = [config["PROJECT"]["name"]]
+            context = get_context()
+            project_config = context.get_project_config()
+            projects = [project_config["name"]]
 
         approve_marketplace_item(
             item_name=marketplace_bp_name,
             version=version,
             projects=projects,
             category=category,
+            all_projects=all_projects,
         )
 
         if publish_to_marketplace:
@@ -913,7 +951,13 @@ def publish_bp_as_existing_marketplace_bp(
             )
 
 
-def approve_marketplace_item(name, version=None, projects=[], category=None):
+def approve_marketplace_item(
+    name,
+    version=None,
+    projects=[],
+    category=None,
+    all_projects=False
+):
 
     client = get_api_client()
     if not version:
@@ -962,16 +1006,29 @@ def approve_marketplace_item(name, version=None, projects=[], category=None):
 
         item_data["metadata"]["categories"] = {"AppFamily": category}
 
-    for project in projects:
-        project_data = get_project(project)
+    if not item_data["spec"]["resources"].get("project_reference_list", {}):
+        item_data["spec"]["resources"]["project_reference_list"] = []
 
-        item_data["spec"]["resources"]["project_reference_list"].append(
-            {
-                "kind": "project",
-                "name": project,
-                "uuid": project_data["metadata"]["uuid"],
-            }
-        )
+    project_name_uuid_map = client.project.get_name_uuid_map(params={"length": 250})
+    if all_projects:
+        for k, v in project_name_uuid_map.items():
+            item_data["spec"]["resources"]["project_reference_list"].append(
+                {
+                    "kind": "project",
+                    "name": k,
+                    "uuid": v,
+                }
+            )
+
+    else:
+        for _project in projects:
+            item_data["spec"]["resources"]["project_reference_list"].append(
+                {
+                    "kind": "project",
+                    "name": _project,
+                    "uuid": project_name_uuid_map[_project],
+                }
+            )
 
     res, err = client.market_place.update(uuid=item_uuid, payload=item_data)
     if err:
@@ -986,7 +1043,12 @@ def approve_marketplace_item(name, version=None, projects=[], category=None):
 
 
 def publish_marketplace_item(
-    name, version=None, projects=[], category=None, app_source=None
+    name,
+    version=None,
+    projects=[],
+    category=None,
+    app_source=None,
+    all_projects=False,
 ):
 
     client = get_api_client()
@@ -1046,19 +1108,29 @@ def publish_marketplace_item(
 
         item_data["metadata"]["categories"] = {"AppFamily": category}
 
-    if projects:
+    if projects or all_projects:
         # Clear the stored projects
         item_data["spec"]["resources"]["project_reference_list"] = []
-        for project in projects:
-            project_data = get_project(project)
+        project_name_uuid_map = client.project.get_name_uuid_map(params={"length": 250})
 
-            item_data["spec"]["resources"]["project_reference_list"].append(
-                {
-                    "kind": "project",
-                    "name": project,
-                    "uuid": project_data["metadata"]["uuid"],
-                }
-            )
+        if all_projects:
+            for k, v in project_name_uuid_map.items():
+                item_data["spec"]["resources"]["project_reference_list"].append(
+                    {
+                        "kind": "project",
+                        "name": k,
+                        "uuid": v,
+                    }
+                )
+        else:
+            for _project in projects:
+                item_data["spec"]["resources"]["project_reference_list"].append(
+                    {
+                        "kind": "project",
+                        "name": _project,
+                        "uuid": project_name_uuid_map[_project],
+                    }
+                )
 
     # Atleast 1 project required for publishing to marketplace
     if not item_data["spec"]["resources"].get("project_reference_list", None):
@@ -1298,7 +1370,9 @@ def publish_runbook_to_marketplace_manager(
 ):
 
     client = get_api_client()
-    config = get_config()
+    context = get_context()
+    server_config = context.get_server_config()
+
     runbook = get_runbook(client, runbook_name)
     runbook_uuid = runbook.get("metadata", {}).get("uuid", "")
 
@@ -1309,7 +1383,7 @@ def publish_runbook_to_marketplace_manager(
             "resources": {
                 "app_attribute_list": ["FEATURED"],
                 "icon_reference_list": [],
-                "author": config["SERVER"]["pc_username"],
+                "author": server_config["pc_username"],
                 "version": version,
                 "type": MARKETPLACE_ITEM.TYPES.RUNBOOK,
                 "app_group_uuid": app_group_uuid or str(uuid.uuid4()),
@@ -1404,8 +1478,9 @@ def publish_runbook_as_new_marketplace_item(
 
     if publish_to_marketplace or auto_approve:
         if not projects:
-            config = get_config()
-            projects = [config["PROJECT"]["name"]]
+            context = get_context()
+            project_config = context.get_project_config()
+            projects = [project_config["name"]]
 
         approve_marketplace_item(
             name=marketplace_item_name,
@@ -1501,8 +1576,9 @@ def publish_runbook_as_existing_marketplace_item(
 
     if publish_to_marketplace or auto_approve:
         if not projects:
-            config = get_config()
-            projects = [config["PROJECT"]["name"]]
+            context = get_context()
+            project_config = context.get_project_config()
+            projects = [project_config["name"]]
 
         approve_marketplace_item(
             name=marketplace_item_name,
@@ -1522,7 +1598,7 @@ def publish_runbook_as_existing_marketplace_item(
 def execute_marketplace_runbook_command(
     name,
     version,
-    project,
+    project_name,
     app_source=None,
     ignore_runtime_variables=False,
     watch=False
@@ -1545,11 +1621,13 @@ def execute_marketplace_runbook_command(
         )
         LOG.info(version)
 
-    config = get_config()
     client = get_api_client()
+    context = get_context()
 
-    project_name = project or config["PROJECT"]["name"]
-    project_data = get_project(client, project_name)
+    project_config = context.get_project_config()
+
+    project_name = project_name or project_config["name"]
+    project_data = get_project(project_name)
 
     project_uuid = project_data["metadata"]["uuid"]
 
@@ -1635,9 +1713,11 @@ def execute_marketplace_runbook(screen, client,
         screen.refresh()
         watch_runbook(runlog_uuid, runbook, screen=screen)
 
-    config = get_config()
-    pc_ip = config["SERVER"]["pc_ip"]
-    pc_port = config["SERVER"]["pc_port"]
+    context = get_context()
+    server_config = context.get_server_config()
+
+    pc_ip = server_config["pc_ip"]
+    pc_port = server_config["pc_port"]
     run_url = "https://{}:{}/console/#page/explore/calm/runbooks/runlogs/{}".format(
         pc_ip, pc_port, runlog_uuid
     )

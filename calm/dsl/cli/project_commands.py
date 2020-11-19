@@ -3,9 +3,8 @@ import sys
 
 from .projects import (
     get_projects,
-    compile_project,
     compile_project_command,
-    create_project,
+    create_project_from_dsl,
     describe_project,
     delete_project,
     update_project_from_dsl,
@@ -41,17 +40,6 @@ def _get_projects(name, filter_by, limit, offset, quiet, out):
     """Get projects, optionally filtered by a string"""
 
     get_projects(name, filter_by, limit, offset, quiet, out)
-
-
-def create_project_from_dsl(project_file, project_name, description=""):
-
-    project_payload = compile_project(project_file)
-    if project_payload is None:
-        err_msg = "Project not found in {}".format(project_file)
-        err = {"error": err_msg, "code": -1}
-        return None, err
-
-    create_project(project_payload, name=project_name, description=description)
 
 
 @compile.command("project")
@@ -179,10 +167,10 @@ def _update_project(
 
     \b
     Usability:
-        a. If project_file is given, command will use file to update project
+        a. If project_file is given, command will use file to update project. Environment updation is not allowed
         b. If project_file is not given , project will be updated based on other cli switches
            i.e. add_user, add_group, remove_user, remove_group
-        c. Project ACPs will be updated asynchronously you remove users/groups from project
+        c. Project ACPs will be updated synchronously you remove users/groups from project
     """
 
     if not (

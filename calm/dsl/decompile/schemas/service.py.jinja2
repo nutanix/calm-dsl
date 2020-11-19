@@ -6,10 +6,10 @@ class {{obj.name}}(Service):
 {% if obj.dependencies or obj.variables or obj.actions %}
     {% if obj.dependencies %}dependencies=[{{obj.dependencies}}]{% endif %}
 {% for variable in obj.variables %}
-{{variable | indent( width=4, indentfirst=True)}}
+{{variable | indent( width=4, first=True)}}
 {% endfor -%}
 {% for action in obj.actions %}
-{{action | indent( width=4, indentfirst=True)}}
+{{action | indent( width=4, first=True)}}
 {% endfor %}
 {% else %}
     pass
