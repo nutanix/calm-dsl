@@ -13,6 +13,8 @@ from .completion_commands import *  # NoQA
 from .init_command import *  # NoQA
 from calm.dsl.api import get_api_client
 from .marketplace_bp_commands import *  # NoQA
+from .marketplace_item_commands import *  # NoQA
+from .marketplace_runbook_commands import *  # NoQA
 from .app_icon_commands import *  # NoQA
 from .user_commands import *  # NoQA
 from .group_commands import *  # NoQA

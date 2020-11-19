@@ -8,7 +8,6 @@ from .marketplace_commands_main import (
     marketplace_update,
     marketplace_delete,
     marketplace_reject,
-    marketplace_unpublish,
     marketplace_run,
     publish,
 )
@@ -22,8 +21,7 @@ from .marketplace import (
     update_marketplace_item,
     delete_marketplace_item,
     reject_marketplace_item,
-    unpublish_marketplace_item,
-    execute_marketplace_runbook_command,
+    execute_marketplace_runbook,
 )
 from .constants import MARKETPLACE_ITEM
 
@@ -275,29 +273,6 @@ def _reject_marketplace_runbook(name, version):
     )
 
 
-@marketplace_unpublish.command("runbook")
-@click.argument("name")
-@click.option(
-    "--version", "-v", required=True, help="Version of marketplace blueprint"
-)  # Required to prevent unwanted unpublish of unknown mpi
-@click.option(
-    "--source",
-    "-s",
-    default=None,
-    type=click.Choice(APP_SOURCES),
-    help="App Source of marketplace blueprint",
-)
-def _unpublish_marketplace_runbook(name, version, source):
-    """Unpublish marketplace store blueprint"""
-
-    unpublish_marketplace_item(
-        name=name,
-        version=version,
-        app_source=source,
-        type=MARKETPLACE_ITEM.TYPES.RUNBOOK
-    )
-
-
 @publish.command("runbook")
 @click.argument("runbook_name")
 @click.option("--version", "-v", required=True, help="Version of marketplace runbook")
@@ -440,7 +415,7 @@ def _run_marketplace_runbook(
 ):
     """Execute a marketplace item of type runbook"""
 
-    execute_marketplace_runbook_command(
+    execute_marketplace_runbook(
         name=name,
         version=version,
         project=project,

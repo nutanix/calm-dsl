@@ -10,7 +10,6 @@ from .marketplace_commands_main import (
     marketplace_update,
     marketplace_delete,
     marketplace_reject,
-    marketplace_unpublish,
     publish,
 )
 from .marketplace import (
@@ -24,7 +23,6 @@ from .marketplace import (
     update_marketplace_item,
     delete_marketplace_item,
     reject_marketplace_item,
-    unpublish_marketplace_item,
     decompile_marketplace_bp,
 )
 from .constants import MARKETPLACE_ITEM
@@ -483,28 +481,5 @@ def _reject_marketplace_bp(name, version):
     reject_marketplace_item(
         name=name,
         version=version,
-        type=MARKETPLACE_ITEM.TYPES.BLUEPRNIT
-    )
-
-
-@marketplace_unpublish.command("bp")
-@click.argument("name")
-@click.option(
-    "--version", "-v", required=True, help="Version of marketplace blueprint"
-)  # Required to prevent unwanted unpublish of unknown mpi
-@click.option(
-    "--source",
-    "-s",
-    default=None,
-    type=click.Choice(APP_SOURCES),
-    help="App Source of marketplace blueprint",
-)
-def _unpublish_marketplace_bp(name, version, source):
-    """Unpublish marketplace store blueprint"""
-
-    unpublish_marketplace_item(
-        name=name,
-        version=version,
-        app_source=source,
         type=MARKETPLACE_ITEM.TYPES.BLUEPRNIT
     )
