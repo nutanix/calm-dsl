@@ -7,7 +7,7 @@ TAG     := $(shell git describe --abbrev=0 --tags --exact-match ${COMMIT} 2>/dev
 dev:
 	# Setup our python3 based virtualenv
 	# This step assumes python3 is installed on your dev machine
-	[ -f venv/bin/python3 ] || (virtualenv -p python3 venv && \
+	[ -f venv/bin/python3 ] || (python3 -m venv venv && \
 		venv/bin/pip3 install --upgrade pip setuptools)
 	venv/bin/pip3 install --use-feature=2020-resolver --no-cache -r requirements.txt -r dev-requirements.txt
 	venv/bin/python3 setup.py develop
@@ -70,7 +70,6 @@ _init_centos:
 	# Install docker
 	which docker || { curl -fsSL https://get.docker.com/ | sh; sudo systemctl start docker; sudo systemctl enable docker; sudo usermod -aG docker $(whoami); }
 
-	rpm -q python3 || sudo yum -y install python3 python3-pip python3-devel
+	rpm -q python3 || sudo yum -y install python3-devel python3-pip python3-venv python3-wheel 
 
-	# Install virtual env
-	sudo pip3 install -U virtualenv==20.0.18
+	sudo pip3 install wheel
