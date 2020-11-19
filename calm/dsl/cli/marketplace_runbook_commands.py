@@ -9,7 +9,7 @@ from .marketplace_commands_main import (
     marketplace_delete,
     marketplace_reject,
     marketplace_unpublish,
-    marketplace_execute,
+    marketplace_run,
     publish,
 )
 from .marketplace import (
@@ -416,7 +416,7 @@ def publish_runbook(
         )
 
 
-@marketplace_execute.command("runbook")
+@marketplace_run.command("runbook")
 @click.argument("name")
 @click.option("--version", "-v", default=None, help="Version of marketplace item")
 @click.option("--project", "-pj", default=None, help="Project for the execution")
