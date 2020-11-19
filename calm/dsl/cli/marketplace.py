@@ -956,7 +956,8 @@ def approve_marketplace_item(
     version=None,
     projects=[],
     category=None,
-    all_projects=False
+    all_projects=False,
+    type=None,
 ):
 
     client = get_api_client()
@@ -1049,6 +1050,7 @@ def publish_marketplace_item(
     category=None,
     app_source=None,
     all_projects=False,
+    type=None,
 ):
 
     client = get_api_client()
@@ -1146,7 +1148,10 @@ def publish_marketplace_item(
 
 
 def update_marketplace_item(
-    name, version, category=None, projects=[], description=None, app_source=None
+    name, version, category=None,
+    projects=[], description=None,
+    app_source=None,
+    type=None,
 ):
     """
     updates the marketplace item
@@ -1218,7 +1223,11 @@ def update_marketplace_item(
     )
 
 
-def delete_marketplace_item(name, version, app_source=None, app_state=None):
+def delete_marketplace_item(
+    name, version,
+    app_source=None, app_state=None,
+    type=None,
+):
 
     client = get_api_client()
 
