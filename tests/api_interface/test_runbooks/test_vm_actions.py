@@ -19,7 +19,7 @@ class TestVMActions:
         "Runbook, warning_msg",
         [
             pytest.param(AHVPowerOffAction, "VM is not in powered ON State"),
-            pytest.param(VMwarePowerOffAction, "VM is not in powered ON State"),
+            # pytest.param(VMwarePowerOffAction, "VM is not in powered ON State"),
         ],
     )
     def test_power_off_action(self, Runbook, warning_msg):
@@ -97,7 +97,10 @@ class TestVMActions:
     @pytest.mark.runbook
     @pytest.mark.regression
     @pytest.mark.parametrize(
-        "Runbook", [AHVPowerOnAction, VMwarePowerOnAction],
+        "Runbook", [
+            AHVPowerOnAction,
+            # VMwarePowerOnAction
+        ],
     )
     def test_power_on_action(self, Runbook):
         """
