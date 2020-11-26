@@ -206,7 +206,7 @@ def HTTPRelativeURLWithMacro(endpoints=[endpoint]):
 def HTTPEndpointWithMultipleURLs(endpoints=[endpoint_with_multiple_urls]):
 
     base = Variable.Simple(  # noqa
-        "https://{}:9440/api/nutanix/v3".format(config["SERVER"]["pc_ip"])
+        "https://{}:9440/api/nutanix/v3".format(server_config["pc_ip"])
     )
     # Creating an endpoint with POST call
     Task.HTTP.post(
