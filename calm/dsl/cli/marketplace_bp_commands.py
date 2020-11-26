@@ -352,12 +352,12 @@ def approve_bp(name, version, category, all_projects, projects=[]):
     """Approves a marketplace manager blueprint"""
 
     approve_marketplace_item(
-        bp_name=name,
+        name=name,
         version=version,
         projects=projects,
         category=category,
         all_projects=all_projects,
-        type=MARKETPLACE_ITEM.TYPES.BLUEPRNIT
+        type=MARKETPLACE_ITEM.TYPES.BLUEPRINT
     )
 
 
@@ -398,7 +398,7 @@ def _publish_marketplace_bp(name, version, category, source, all_projects, proje
         category=category,
         app_source=source,
         all_projects=all_projects,
-        type=MARKETPLACE_ITEM.TYPES.BLUEPRNIT
+        type=MARKETPLACE_ITEM.TYPES.BLUEPRINT
     )
 
 
@@ -435,7 +435,7 @@ def _update_marketplace_bp(name, version, category, projects, description, sourc
         projects=projects,
         description=description,
         app_source=source,
-        type=MARKETPLACE_ITEM.TYPES.BLUEPRNIT
+        type=MARKETPLACE_ITEM.TYPES.BLUEPRINT
     )
 
 
@@ -466,7 +466,7 @@ def _delete_marketplace_bp(name, version, source, app_state):
         version=version,
         app_source=source,
         app_state=app_state,
-        type=MARKETPLACE_ITEM.TYPES.BLUEPRNIT
+        type=MARKETPLACE_ITEM.TYPES.BLUEPRINT
     )
 
 
@@ -481,5 +481,5 @@ def _reject_marketplace_bp(name, version):
     reject_marketplace_item(
         name=name,
         version=version,
-        type=MARKETPLACE_ITEM.TYPES.BLUEPRNIT
+        type=MARKETPLACE_ITEM.TYPES.BLUEPRINT
     )

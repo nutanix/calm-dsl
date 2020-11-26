@@ -154,7 +154,7 @@ def _run_marketplace_item(
     execute_marketplace_runbook(
         name=name,
         version=version,
-        project=project,
+        project_name=project,
         app_source=source,
         watch=watch,
         app_states=[MARKETPLACE_ITEM.STATES.PUBLISHED],

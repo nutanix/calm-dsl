@@ -140,7 +140,7 @@ def approve_runbook(name, version, category, all_projects, projects=[]):
     """Approves a marketplace manager blueprint"""
 
     approve_marketplace_item(
-        runbook_name=name,
+        name=name,
         version=version,
         projects=projects,
         category=category,
@@ -223,7 +223,7 @@ def _update_marketplace_runbook(name, version, category, projects, description, 
         projects=projects,
         description=description,
         app_source=source,
-        type=MARKETPLACE_ITEM.TYPES.BLUEPRNIT
+        type=MARKETPLACE_ITEM.TYPES.RUNBOOK
     )
 
 
@@ -254,7 +254,7 @@ def _delete_marketplace_runbook(name, version, source, app_state):
         version=version,
         app_source=source,
         app_state=app_state,
-        type=MARKETPLACE_ITEM.TYPES.BLUEPRNIT
+        type=MARKETPLACE_ITEM.TYPES.RUNBOOK
     )
 
 
@@ -269,7 +269,7 @@ def _reject_marketplace_runbook(name, version):
     reject_marketplace_item(
         name=name,
         version=version,
-        type=MARKETPLACE_ITEM.TYPES.BLUEPRNIT
+        type=MARKETPLACE_ITEM.TYPES.RUNBOOK
     )
 
 
@@ -418,7 +418,7 @@ def _run_marketplace_runbook(
     execute_marketplace_runbook(
         name=name,
         version=version,
-        project=project,
+        project_name=project,
         app_source=source,
         watch=watch,
         ignore_runtime_variables=ignore_runtime_variables

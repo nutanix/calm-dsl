@@ -430,6 +430,7 @@ def describe_marketplace_item(name, out, version=None,
         + highlight_text(mpi["metadata"]["uuid"])
         + ")"
     )
+    click.echo("Type: " + highlight_text(mpi["status"]["resources"]["type"]))
     click.echo("Description: " + highlight_text(mpi["status"]["description"]))
     click.echo("App State: " + highlight_text(mpi["status"]["resources"]["app_state"]))
     click.echo("Author: " + highlight_text(mpi["status"]["resources"]["author"]))
@@ -951,7 +952,7 @@ def publish_bp_as_existing_marketplace_bp(
             projects = [project_config["name"]]
 
         approve_marketplace_item(
-            item_name=marketplace_bp_name,
+            name=marketplace_bp_name,
             version=version,
             projects=projects,
             category=category,
@@ -960,7 +961,7 @@ def publish_bp_as_existing_marketplace_bp(
 
         if publish_to_marketplace:
             publish_marketplace_item(
-                item_name=marketplace_bp_name,
+                name=marketplace_bp_name,
                 version=version,
                 app_source=MARKETPLACE_ITEM.SOURCES.LOCAL,
             )
