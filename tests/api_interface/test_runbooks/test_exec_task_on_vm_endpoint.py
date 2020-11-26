@@ -42,16 +42,16 @@ class TestExecTasksVMEndpoint:
             ShellTaskOnLinuxVMAHVDynamicEndpoint3,
 
             # Static VM IDs for Vmware
-            ShellTaskOnLinuxVMVMWareStaticEndpoint,
+            # ShellTaskOnLinuxVMVMWareStaticEndpoint,
 
             # Dynamic filter name equals
-            ShellTaskOnLinuxVMVMWareDynamicEndpoint1,
+            # ShellTaskOnLinuxVMVMWareDynamicEndpoint1,
 
             # Dynamic filter name starts with
-            ShellTaskOnLinuxVMVMWareDynamicEndpoint2,
+            # ShellTaskOnLinuxVMVMWareDynamicEndpoint2,
 
             # Dynamic filter power_state equals
-            ShellTaskOnLinuxVMVMWareDynamicEndpoint3
+            # ShellTaskOnLinuxVMVMWareDynamicEndpoint3
         ],
     )
     def test_script_run(self, Runbook):
