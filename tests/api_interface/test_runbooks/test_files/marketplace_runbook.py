@@ -79,6 +79,22 @@ def DslRunbookForMPI(endpoints=[windows_endpoint, linux_endpoint, http_endpoint]
                          script=ssh_code)
 
 
+@runbook
+def DslWhileDecisionRunbookForMPI():
+    "Runbook Service example"
+    var = Variable.Simple("3")  # noqa
+    with Task.Loop("@@{var}@@", name="WhileTask", loop_variable="iteration"):
+        Task.Exec.escript(name="Exec", script='''print "test"''')
+
+    with Task.Decision.escript(script="exit(0)") as d:
+
+        if d.ok:
+            Task.Exec.escript(name="SUCCESS", script="print 'SUCCESS'")
+
+        else:
+            Task.Exec.escript(name="FAILURE", script="print 'FAILURE'")
+
+
 def create_project_endpoints(client, project_name=RBAC_PROJECT):
     linux_payload = read_test_config(file_name="linux_endpoint_payload.json")
     windows_payload = read_test_config(file_name="windows_endpoint_payload.json")
