@@ -31,7 +31,7 @@ class TestAppIconCommands:
         for bp_name, version in self.created_marketplace_bp_list:
             runner = CliRunner()
             result = runner.invoke(
-                cli, ["delete", "marketplace_bp", bp_name, "-v", version]
+                cli, ["delete", "marketplace", "bp", bp_name, "-v", version]
             )
             assert result.exit_code == 0
 

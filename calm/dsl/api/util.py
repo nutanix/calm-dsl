@@ -19,23 +19,6 @@ def strip_secrets(resources, secret_map, secret_variables, object_lists=[], obje
         cred["secret"] = {
             "attrs": {"is_secret_modified": False, "secret_reference": None}
         }
-        if cred.pop("default"):
-            default_creds.append(cred)
-    """
-    if not default_creds:
-        raise ValueError("No default cred provided")
-    if len(default_creds) > 1:
-        raise ValueError(
-            "Found more than one credential marked as default - {}".format(
-                ", ".join(cred["name"] for cred in default_creds)
-            )
-        )
-    """
-    if default_creds:
-        resources["default_credential_local_reference"] = {
-            "kind": "app_credential",
-            "name": default_creds[0]["name"] if default_creds else cred[0]["name"],
-        }
 
     # Remove creds from HTTP endpoints resources
     auth = resources.get("authentication", {}) or {}

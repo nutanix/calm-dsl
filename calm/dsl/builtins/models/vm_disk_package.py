@@ -1,8 +1,8 @@
-from .package import package
 from .provider_spec import read_spec
 from .package import PackageType
 from .validator import PropertyValidator
 from .entity import Entity
+from .utils import get_valid_identifier
 from calm.dsl.log import get_logging_handle
 
 
@@ -47,11 +47,12 @@ class VmDiskPackageType(PackageType):
     def compile(cls):
         config = super().compile()
 
-        pkg_name = config["name"]
+        pkg_name = cls.__name__
         pkg_doc = config["description"]
 
         kwargs = {
             "type": "SUBSTRATE_IMAGE",
+            "name": config["name"],
             "options": {
                 "name": config["image"].get("name") or pkg_name,
                 "description": "",
@@ -69,6 +70,7 @@ class VmDiskPackageType(PackageType):
                     ),
                 },
             },
+            "description": pkg_doc,
         }
 
         # If image is ISO type, search for checksum data
@@ -78,12 +80,13 @@ class VmDiskPackageType(PackageType):
                 "checksum_value": config["checksum"].get("value", ""),
             }
 
-        pkg = package(name=pkg_name, description=pkg_doc, **kwargs)
+        pkg = PackageType(pkg_name, (Entity,), kwargs)
+
         # return the compile version of package
         return pkg.compile()
 
     @classmethod
-    def decompile(mcls, cdict, context=[]):
+    def decompile(mcls, cdict, context=[], prefix=""):
         """decompile method for downloadble images"""
 
         name = cdict.get("name") or ""
@@ -95,10 +98,10 @@ class VmDiskPackageType(PackageType):
         img_type = resources["image_type"]
         config = {
             "image": {
-                "name": options["name"],
-                "type": resources["image_type"],
-                "source": resources["source_uri"],
-                "architecture": resources["architecture"],
+                "name": options.get("name", ""),
+                "type": resources.get("image_type", ""),
+                "source": resources.get("source_uri", ""),
+                "architecture": resources.get("architecture", ""),
             }
         }
 
@@ -117,7 +120,14 @@ class VmDiskPackageType(PackageType):
         config["description"] = description
         config["name"] = name
 
-        cls = mcls(name, (Entity,), config)
+        pkg_name = "{}{}".format(prefix, config["name"])
+        pkg_name = get_valid_identifier(pkg_name)
+
+        # vm_disk_package name should neither be `Package` nor `VmDiskPackage`
+        if pkg_name == PackageType.__schema_name__:
+            raise TypeError("{} is a reserved name for this entity".format(pkg_name))
+
+        cls = mcls(pkg_name, (Entity,), config)
         cls.__doc__ = description
 
         return cls

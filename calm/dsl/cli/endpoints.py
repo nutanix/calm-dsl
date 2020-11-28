@@ -10,7 +10,7 @@ from prettytable import PrettyTable
 from black import format_file_in_place, WriteBack, FileMode
 
 from calm.dsl.runbooks import Endpoint, create_endpoint_payload
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 from calm.dsl.api import get_api_client
 
 from calm.dsl.log import get_logging_handle
@@ -27,7 +27,6 @@ def get_endpoint_list(name, filter_by, limit, offset, quiet, all_items):
     """Get the endpoints, optionally filtered by a string"""
 
     client = get_api_client()
-    config = get_config()
 
     params = {"length": limit, "offset": offset}
     filter_query = ""
@@ -47,7 +46,9 @@ def get_endpoint_list(name, filter_by, limit, offset, quiet, all_items):
     res, err = client.endpoint.list(params=params)
 
     if err:
-        pc_ip = config["SERVER"]["pc_ip"]
+        ContextObj = get_context()
+        server_config = ContextObj.get_server_config()
+        pc_ip = server_config["pc_ip"]
         LOG.warning("Cannot fetch endpoints from {}".format(pc_ip))
         return
 
@@ -139,9 +140,9 @@ def compile_endpoint_command(endpoint_file, out):
         LOG.error("User endpoint not found in {}".format(endpoint_file))
         return
 
-    config = get_config()
-
-    project_name = config["PROJECT"].get("name", "default")
+    ContextObj = get_context()
+    project_config = ContextObj.get_project_config()
+    project_name = project_config["name"]
     project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
 
     if not project_cache_data:
@@ -300,9 +301,11 @@ def create_endpoint_command(endpoint_file, name, description, force):
         sys.exit(-1)
 
     LOG.info("Endpoint {} created successfully.".format(endpoint_name))
-    config = get_config()
-    pc_ip = config["SERVER"]["pc_ip"]
-    pc_port = config["SERVER"]["pc_port"]
+
+    ContextObj = get_context()
+    server_config = ContextObj.get_server_config()
+    pc_ip = server_config["pc_ip"]
+    pc_port = server_config["pc_port"]
     link = "https://{}:{}/console/#page/explore/calm/endpoints/{}".format(
         pc_ip, pc_port, endpoint_uuid
     )

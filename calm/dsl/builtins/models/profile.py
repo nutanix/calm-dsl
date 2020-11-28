@@ -8,10 +8,18 @@ from .validator import PropertyValidator
 class ProfileType(EntityType):
     __schema_name__ = "Profile"
     __openapi_type__ = "app_profile"
-    __has_dag_target__ = False
 
     def get_task_target(cls):
         return
+
+    @classmethod
+    def pre_decompile(mcls, cdict, context, prefix=""):
+        cdict = super().pre_decompile(cdict, context, prefix=prefix)
+
+        if "__name__" in cdict:
+            cdict["__name__"] = "{}{}".format(prefix, cdict["__name__"])
+
+        return cdict
 
     def compile(cls):
         cdict = super().compile()

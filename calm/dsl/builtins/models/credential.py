@@ -10,6 +10,11 @@ class CredentialType(EntityType):
     __schema_name__ = "Credential"
     __openapi_type__ = "app_credential"
 
+    def compile(cls):
+        cdict = super().compile()
+        cdict.pop("default", None)
+        return cdict
+
 
 class CredentialValidator(PropertyValidator, openapi_type="app_credential"):
     __default__ = None

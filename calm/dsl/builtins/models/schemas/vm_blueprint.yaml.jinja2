@@ -1,0 +1,37 @@
+{% macro VmBlueprint() -%}
+
+title: VmBlueprint
+type: object
+x-calm-dsl-type: app_vm_blueprint
+properties:
+  name:
+    type: string
+    maxLength: 64
+    default: ''
+  description:
+    type: string
+    maxLength: 1000
+    default: ''
+  credentials:
+    type: array
+    items:
+      $ref: '#/components/schemas/Credential'
+  type:
+    type: string
+    default: 'USER'
+  vm_profile_definition_list:
+    x-calm-dsl-display-name: profiles
+    description: Profile definitions for blueprint
+    type: array
+    items:
+      $ref: '#/components/schemas/VmProfile'
+
+{%- endmacro %}
+
+
+{% macro VmBlueprintSchema() -%}
+
+VmBlueprint:
+  {{ VmBlueprint()|indent(2) }}
+
+{%- endmacro %}

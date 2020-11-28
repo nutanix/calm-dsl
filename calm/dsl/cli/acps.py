@@ -5,7 +5,7 @@ import uuid
 from prettytable import PrettyTable
 
 from calm.dsl.api import get_api_client, get_resource_api
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Cache
 from calm.dsl.builtins import Ref
@@ -22,7 +22,6 @@ def get_acps(name, project_name, filter_by, limit, offset, quiet, out):
     """ Get the acps, optionally filtered by a string """
 
     client = get_api_client()
-    config = get_config()
 
     params = {"length": 1000}
     project_name_uuid_map = client.project.get_name_uuid_map(params)
@@ -49,7 +48,10 @@ def get_acps(name, project_name, filter_by, limit, offset, quiet, out):
     res, err = client.acp.list(params=params)
 
     if err:
-        pc_ip = config["SERVER"]["pc_ip"]
+        ContextObj = get_context()
+        server_config = ContextObj.get_server_config()
+        pc_ip = server_config["pc_ip"]
+
         LOG.warning("Cannot fetch acps from {}".format(pc_ip))
         return
 

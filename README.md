@@ -17,7 +17,17 @@ Language design is black art, and building upon a well-established language is d
 ### Initialization
  - Setup: `calm init dsl`. Please fill in the right Prism Central (PC) settings.
  - Server status: `calm get server status`. Check if Calm is enabled on PC & Calm version is >=2.9.7.
- - Config: `calm show config`. Default config is stored at `~/.calm/config.ini`. Please see `calm set config --help` to update config file.
+ - Config: `calm show config`. Please see `calm set config --help` to update configuration.
+
+### Calm DSL Context
+Context info includes server, project and log configuration for dsl operations.
+- Flow: Context info is taken from config file passed inline with cli command or environment data or default config file stored mentioned in `~/.calm/init.ini`.
+- Environment variables for server configuration: `CALM_DSL_PC_IP`, `CALM_DSL_PC_PORT`, `CALM_DSL_PC_USERNAME`, `CALM_DSL_PC_PASSWORD`.
+- Environment variable for project configuration: `CALM_DSL_DEFAULT_PROJECT`.
+- Environment variable for log configuration: `CALM_DSL_LOG_LEVEL`.
+- Environment variables for init configuration: `CALM_DSL_CONFIG_FILE_LOCATION`, `CALM_DSL_LOCAL_DIR_LOCATION`, `CALM_DSL_DB_LOCATION`.
+- Config file parameter: `calm --config/-c <config_file_location> ...`
+- Show config in context: `calm show config`.
 
 ### Blueprint
  - First blueprint: `calm init bp`. This will create a folder `HelloBlueprint` with all the necessary files. `HelloBlueprint/blueprint.py` is the main blueprint DSL file. Please read the comments in the beginning of the file for more details about the blueprint.
@@ -26,9 +36,11 @@ Language design is black art, and building upon a well-established language is d
  - List blueprints: `calm get bps`. You can also pass in filters like `calm get bps --name <blueprint_name>` and so on. Please look at `calm get bps --help`.
  - Describe blueprint: `calm describe bp <blueprint_name>`. It will print a summary of the blueprint.
  - Launch blueprint to create Application: `calm launch bp <blueprint_name> --app_name <app_name> -i`
+ - Publish blueprint to marketplace manager: `calm publish bp <bp_name> --version <version> --project <project_name>`. Please look at `calm publish bp --help`.
 
 ### Application
  - List apps: `calm get apps`. Use `calm get apps -q` to show only application names.
+ - Create app: `calm create app -f <file>`. Command will create blueprint and launch it to get application. Please look at `calm create app -h`.
  - Describe app: `calm describe app <app_name>`. It will print a summary of the application and the current application state. Use `calm describe app <name> 2>/dev/null --out json | jq '.["status"]'` to get fields from the app json. More info on how to use `jq` [here](https://stedolan.github.io/jq/tutorial/).
  - Delete app: `calm delete app <app_name>`. You can delete multiple apps using: `calm get apps -q | xargs -I {} calm delete app {}`.
  - Run action on application: `calm run action <action_name> --app <application_name>`
@@ -56,8 +68,9 @@ Decompilation is process to consume json data for any entity and convert it back
 - Name of created files are taken from the context of variable/task. For ex: Filename for service action task script: Service_MySQLService_Action___create___Task_Task1
 - Decompile existing server blueprint: `calm decompile bp <bp_name>`. Use `calm decompile bp <bp_name> --with_secrets` to fill the value for secrets used inside blueprint interactively while decompiling blueprint.
 - Decompile bp from existing json file: `calm decompile bp --file <json_file_location>`.
-- Decompile marketplace blueprint: `calm decompile marketplace_bp <bp_name> --version <bp_version>`.
-- Note: Decompliation support for providers other than AHV are best effort(Experimental).
+- Decompile marketplace blueprint: `calm decompile marketplace bp <bp_name> --version <bp_version>`.
+- Decompile bp to a location: `calm decompile bp <bp_name> --dir <bp_dir>`. It will decompile blueprint entities to `bp_dir` location.
+- Note: Decompliation support for providers other than AHV is experimental.
 
 ### Runbooks
  - First runbook: `calm init runbook`. This will create a folder `HelloRunbook` with all the necessary files. `HelloRunbook/runbook.py` is the main runbook DSL file. Please read the comments in the beginning of the file for more details about the runbook.
@@ -79,7 +92,17 @@ Decompilation is process to consume json data for any entity and convert it back
 ### Initialization
  - Setup: `calm init dsl`. Please fill in the right Prism Central (PC) settings.
  - Server status: `calm get server status`. Check if Calm is enabled on PC & Calm version is >=2.9.7.
- - Config: `calm show config`. Default config is stored at `~/.calm/config.ini`. Please see `calm set config --help` to update config file.
+ - Config: `calm show config`. Please see `calm set config --help` to update configuration.
+
+### Calm DSL Context
+Context information includes server, project and log configuration for dsl operations.
+- Flow: Context info is taken from config file passed inline with cli command or environment data or default config file stored mentioned in `~/.calm/init.ini`.
+- Environment variables for server configuration: `CALM_DSL_PC_IP`, `CALM_DSL_PC_PORT`, `CALM_DSL_PC_USERNAME`, `CALM_DSL_PC_PASSWORD`.
+- Environment variable for project configuration: `CALM_DSL_DEFAULT_PROJECT`.
+- Environment variable for log configuration: `CALM_DSL_LOG_LEVEL`.
+- Environment variables for init configuration: `CALM_DSL_CONFIG_FILE_LOCATION`, `CALM_DSL_LOCAL_DIR_LOCATION`, `CALM_DSL_DB_LOCATION`.
+- Config file parameter: `calm --config/-c <config_file_location> ...`
+- Show config in context: `calm show config`.
 
 ### Roles
 Use `calm get roles` to list all roles in PC. The below roles are relevant for Calm:
