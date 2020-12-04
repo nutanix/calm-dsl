@@ -226,17 +226,15 @@ class SubstrateType(EntityType):
 
     @classmethod
     def decompile(mcls, cdict, context=[], prefix=""):
+
+        if cdict["type"] == "K8S_POD":
+            LOG.error("Decompilation support for pod deployments is not available.")
+            sys.exit(-1)
+
         cls = super().decompile(cdict, context=context, prefix=prefix)
 
         provider_spec = cls.provider_spec
         if cls.provider_type == "AHV_VM":
-            boot_config = provider_spec["resources"].get("boot_config", {})
-            if not boot_config:
-                LOG.error(
-                    "Boot config not present in {} substrate spec".format(cls.__name__)
-                )
-                sys.exit(-1)
-
             context = [cls.__schema_name__, getattr(cls, "name", "") or cls.__name__]
             vm_cls = AhvVmType.decompile(provider_spec, context=context, prefix=prefix)
 

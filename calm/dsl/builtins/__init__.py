@@ -13,7 +13,11 @@ from .models.action import action, parallel, ActionType
 from .models.task import Task, CalmTask, TaskType
 
 from .models.port import Port, port, PortType
-from .models.service import Service, service, ServiceType
+from .models.service import (
+    BaseService as Service,
+    service,
+    ServiceType,
+)
 from .models.published_service import PublishedService, published_service
 
 from .models.package import Package, package, PackageType
@@ -74,6 +78,7 @@ from .models.environment_payload import create_environment_payload
 from .models.project import Project, ProjectType
 from .models.project_payload import create_project_payload
 from .models.brownfield import Brownfield
+from .models.endpoint import Endpoint, _endpoint, CalmEndpoint
 
 from .models.vm_profile import VmProfile
 from .models.vm_blueprint import VmBlueprint

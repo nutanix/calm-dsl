@@ -46,6 +46,9 @@ class AhvVmResourcesType(EntityType):
         if boot_type == "UEFI":
             cdict["boot_config"]["boot_type"] = "UEFI"
 
+        if not cdict["boot_config"]:
+            cdict.pop("boot_config", None)
+
         serial_port_list = []
         for ind, connection_status in cdict["serial_port_list"].items():
             if not isinstance(ind, int):

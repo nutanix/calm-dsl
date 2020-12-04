@@ -27,11 +27,13 @@ def render_ahv_vm_disk(cls, boot_config):
     user_attrs = {}
 
     # Atleast one disk should be bootable
-    if (
-        adapter_type == boot_config["boot_device"]["disk_address"]["adapter_type"]
-        and adapter_index == boot_config["boot_device"]["disk_address"]["device_index"]
-    ):
-        user_attrs["bootable"] = True
+    if boot_config:
+        if (
+            adapter_type == boot_config["boot_device"]["disk_address"]["adapter_type"]
+            and adapter_index
+            == boot_config["boot_device"]["disk_address"]["device_index"]
+        ):
+            user_attrs["bootable"] = True
 
     # find operation_type
     if data_source_ref:

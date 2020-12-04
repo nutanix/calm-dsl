@@ -74,12 +74,6 @@ def render_substrate_template(cls, vm_images=[]):
     if cls.provider_type == "AHV_VM":
         # Provider Spec is converted to ahv vm class in substrate decompile method only
         boot_config = getattr(provider_spec.resources, "boot_config", {})
-        if not boot_config:
-            LOG.error(
-                "Boot config not present in {} substrate spec".format(cls.__name__)
-            )
-            sys.exit(-1)
-
         user_attrs["provider_spec"] = provider_spec.__name__
         ahv_vm_str = render_ahv_vm(provider_spec, boot_config)
 

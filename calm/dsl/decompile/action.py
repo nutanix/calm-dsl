@@ -2,7 +2,7 @@ from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.task import render_task_template
 from calm.dsl.decompile.parallel_task import render_parallel_task_template
 from calm.dsl.decompile.variable import render_variable_template
-from calm.dsl.builtins import action, ActionType, RefType
+from calm.dsl.builtins import action, ActionType
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -21,8 +21,9 @@ def render_action_template(cls, entity_context=""):
     entity_context = entity_context + "_Action_" + cls.__name__
 
     runbook = cls.runbook
+    runbook_name = getattr(runbook, "name", "") or runbook.__name__
     # Note cls.__name__ should be used for call_runbook tasks
-    RUNBOOK_ACTION_MAP[runbook.__name__] = cls.__name__
+    RUNBOOK_ACTION_MAP[runbook_name] = cls.__name__
 
     # NOTE Not using main_task_local_reference for now,
     # bcz type of main task is "DAG"
@@ -97,8 +98,8 @@ def get_task_order(task_list):
 
     # store in degree of every task
     for edge in edges:
-        from_task = RefType.decompile(edge["from_task_reference"])
-        to_task = RefType.decompile(edge["to_task_reference"])
+        from_task = edge["from_task_reference"]
+        to_task = edge["to_task_reference"]
         task_indegree_count_map[to_task.name] += 1
         task_edges_map[from_task.name].append(to_task.name)
 
@@ -146,3 +147,10 @@ def init_action_globals():
 
     global RUNBOOK_ACTION_MAP
     RUNBOOK_ACTION_MAP = {}
+
+
+# Used for registering service action runbook earlier before parsing that template
+def update_runbook_action_map(runbook_name, action_name):
+
+    global RUNBOOK_ACTION_MAP
+    RUNBOOK_ACTION_MAP[runbook_name] = action_name

@@ -329,6 +329,9 @@ def create_project_from_dsl(project_file, project_name, description=""):
 
         update_project(project_uuid=project_uuid, project_payload=project_payload)
 
+        # Reset the context changes
+        ContextObj.reset_configuration()
+
 
 def describe_project(project_name, out):
 

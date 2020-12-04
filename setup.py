@@ -36,6 +36,7 @@ setuptools.setup(
     url="https://nutanix.github.io/calm-dsl/",
     packages=setuptools.find_namespace_packages(include=["calm.*"]),
     namespace_packages=["calm"],
+    setup_requires=["wheel"],
     install_requires=read_file("requirements.txt"),
     tests_require=read_file("dev-requirements.txt"),
     cmdclass={"test": PyTest},

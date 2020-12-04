@@ -42,8 +42,8 @@ substrate_list = [
                         "0": {
                             "data_source_reference": {
                                 "kind": "image",
-                                "name": "AHV_CENTOS_76",
-                                "uuid": "a333ba83-07eb-422d-bf2e-e79c7ea93fa3",
+                                "name": "CentOS-7-Cloud-Init",
+                                "uuid": "c7130256-5acf-4de4-b19a-ce9b7e2ad551",
                             },
                             "disk_size_mib": 0,
                         },
@@ -68,7 +68,7 @@ substrate_list = [
 
 deployment_list = [
     {
-        "value": {"min_replicas": "2", "default_replicas": "3", "max_replicas": "4"},
+        "value": {"min_replicas": "1", "default_replicas": "1", "max_replicas": "2"},
         "context": "DefaultProfile",  # Will be ignored
         "name": "AhvDeployment",
     }

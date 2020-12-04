@@ -2,7 +2,7 @@ from .entity import EntityType, Entity
 from .validator import PropertyValidator
 
 from .task import dag
-from .action import runbook_create, _action_create
+from .action import runbook_create, _action_create, action
 
 
 # Service
@@ -50,9 +50,9 @@ class ServiceType(EntityType):
             )
 
         compulsory_actions = list(cls.ALLOWED_SYSTEM_ACTIONS.values())
-        for action in cdict["action_list"]:
-            if action.__name__ in compulsory_actions:
-                compulsory_actions.remove(action.__name__)
+        for action_obj in cdict["action_list"]:
+            if action_obj.__name__ in compulsory_actions:
+                compulsory_actions.remove(action_obj.__name__)
 
         for action_name in compulsory_actions:
             user_action = _action_create(
@@ -81,3 +81,29 @@ def service(**kwargs):
 
 
 Service = service()
+
+
+class BaseService(Service):
+    @action
+    def __create__():
+        pass
+
+    @action
+    def __start__():
+        pass
+
+    @action
+    def __stop__():
+        pass
+
+    @action
+    def __delete__():
+        pass
+
+    @action
+    def __restart__():
+        pass
+
+    @action
+    def __soft_delete__():
+        pass

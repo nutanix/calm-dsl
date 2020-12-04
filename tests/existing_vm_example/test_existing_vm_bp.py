@@ -408,6 +408,7 @@ class DefaultProfile(Profile):
             "https://jsonplaceholder.typicode.com/posts",
             body=json.dumps({"id": 1, "title": "foo", "body": "bar", "userId": 1}),
             headers={"Content-Type": "application/json"},
+            cred=ref(DefaultCred),
             content_type="application/json",
             verify=True,
             status_mapping={200: True},
@@ -482,6 +483,10 @@ def test_json():
     """Test the generated json for a single VM
     against known output"""
     import os
+    import sys
+
+    # Setting the recursion limit to max for
+    sys.setrecursionlimit(100000)
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_path = os.path.join(dir_path, "test_existing_vm_bp.json")
