@@ -26,6 +26,7 @@ from calm.dsl.builtins import (
 from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
 from calm.dsl.config import get_context
 from calm.dsl.api import get_api_client
+from calm.dsl.store import Cache
 from calm.dsl.decompile.decompile_render import create_bp_dir
 from calm.dsl.decompile.file_handler import get_bp_dir
 
@@ -360,9 +361,41 @@ def create_blueprint(
 def create_blueprint_from_json(
     client, path_to_json, name=None, description=None, force_create=False
 ):
+    """
+    creates blueprint from the bp json supplied.
+    NOTE: Project mentioned in the json file remains unchanged
+    """
 
     with open(path_to_json, "r") as f:
         bp_payload = json.loads(f.read())
+
+    ContextObj = get_context()
+    project_config = ContextObj.get_project_config()
+    configured_project = project_config["name"]
+
+    # If no project is given in payload, it is created with default project
+    bp_project_name = "default"
+
+    if (
+        bp_payload.get("metadata")
+        and bp_payload["metadata"].get("project_reference")
+        and bp_payload["metadata"]["project_reference"].get("uuid")
+    ):
+        bp_project_uuid = bp_payload["metadata"]["project_reference"]["uuid"]
+        if bp_project_uuid:
+            bp_project_data = Cache.get_entity_data_using_uuid(
+                entity_type="project", uuid=bp_project_uuid
+            )
+            if bp_project_data:
+                bp_project_name = bp_project_data["name"]
+
+    if bp_project_name != configured_project:
+        LOG.warning(
+            "Project in supplied json is different from configured project('{}')".format(
+                configured_project
+            )
+        )
+
     return create_blueprint(
         client,
         bp_payload,
