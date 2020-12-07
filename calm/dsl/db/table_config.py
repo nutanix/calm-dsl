@@ -263,7 +263,7 @@ class AhvSubnetsCache(CacheTableBase):
 
     class Meta:
         database = dsl_database
-        primary_key = CompositeKey("name", "uuid")
+        primary_key = CompositeKey("name", "uuid", "account_uuid")
 
 
 class AhvImagesCache(CacheTableBase):
@@ -408,7 +408,7 @@ class AhvImagesCache(CacheTableBase):
 
     class Meta:
         database = dsl_database
-        primary_key = CompositeKey("name", "uuid")
+        primary_key = CompositeKey("name", "uuid", "account_uuid")
 
 
 class AccountCache(CacheTableBase):
