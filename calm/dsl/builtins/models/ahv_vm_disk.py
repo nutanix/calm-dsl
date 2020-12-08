@@ -8,6 +8,7 @@ from .package import PackageType
 from .metadata_payload import get_metadata_obj
 from calm.dsl.store import Cache
 from calm.dsl.config import get_context
+from calm.dsl.constants import CACHE
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -37,7 +38,7 @@ class AhvDiskType(EntityType):
         project_name = project_ref.get("name") or project_config["name"]
 
         project_cache_data = Cache.get_entity_data(
-            entity_type="project", name=project_name
+            entity_type=CACHE.ENTITY.PROJECT, name=project_name
         )
         if not project_cache_data:
             LOG.error(
@@ -63,7 +64,7 @@ class AhvDiskType(EntityType):
             device_type = cdict["device_properties"].get("device_type")
 
             image_cache_data = Cache.get_entity_data(
-                entity_type="ahv_disk_image",
+                entity_type=CACHE.ENTITY.AHV_DISK_IMAGE,
                 name=image_name,
                 image_type=IMAGE_TYPE_MAP[device_type],
                 account_uuid=account_uuid,

@@ -40,8 +40,9 @@ from .secrets import find_secret, create_secret
 from .constants import BLUEPRINT
 from calm.dsl.tools import get_module_from_file
 from calm.dsl.builtins import Brownfield as BF
-from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
+from calm.dsl.constants import CACHE
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -384,7 +385,7 @@ def create_blueprint_from_json(
         bp_project_uuid = bp_payload["metadata"]["project_reference"]["uuid"]
         if bp_project_uuid:
             bp_project_data = Cache.get_entity_data_using_uuid(
-                entity_type="project", uuid=bp_project_uuid
+                entity_type=CACHE.ENTITY.PROJECT, uuid=bp_project_uuid
             )
             if bp_project_data:
                 bp_project_name = bp_project_data["name"]
