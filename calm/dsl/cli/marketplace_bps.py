@@ -14,7 +14,7 @@ from calm.dsl.config import get_context
 from .utils import highlight_text, get_states_filter
 from .bps import launch_blueprint_simple, get_blueprint
 from .projects import get_project
-from .environments import get_environment_by_name_project_uuid, get_environment_by_uuid
+from .environments import get_project_environment, get_environment_by_uuid
 from calm.dsl.log import get_logging_handle
 from .constants import MARKETPLACE_BLUEPRINT
 
@@ -592,32 +592,21 @@ def convert_mpi_into_blueprint(name, version, project_name=None, environment_nam
     project_config = context.get_project_config()
 
     project_name = project_name or project_config["name"]
-    project_data = get_project(project_name)
-
+    environment_data, project_data = get_project_environment(name=environment_name, project_name=project_name)
     project_uuid = project_data["metadata"]["uuid"]
+    environments = project_data["status"]["resources"]["environment_reference_list"]
+    if not environments:
+        raise Exception("Project {} has no environment.".format(project_name))
 
-    LOG.info("Fetching details of project {}".format(project_name))
-    res, err = client.project.read(project_uuid)
-    if err:
-        LOG.error("[{}] - {}".format(err["code"], err["error"]))
-        sys.exit(-1)
+    default_environment_uuid = project_data["status"]["resources"].get("default_environment_reference", {}).get('uuid')
 
-    res = res.json()
-    environments = res["status"]["resources"]["environment_reference_list"]
-    default_environment_uuid = res["status"]["resources"].get("default_environment_reference", {}).get('uuid')
+    if not environment_data:
+        if not default_environment_uuid:
+            raise Exception("Project {} doesn't have a default environment.".format(project_name))
 
-    if environment_name:
-        environment_data = get_environment_by_name_project_uuid(environment_name, project_uuid)
-    elif default_environment_uuid:
         environment_data = get_environment_by_uuid(default_environment_uuid)
-    else:
-        raise Exception("Project {} doesn't have a default environment.".format(project_name))
 
     env_uuid = environment_data["metadata"]["uuid"]
-    env_name = environment_data["metadata"]["name"]
-    if env_uuid not in environments:
-        raise Exception("Project {} doesn't have an environment with name {}.".format(project_name, env_name))
-
     LOG.info("Fetching MPI details")
     mpi_data = get_mpi_by_name_n_version(
         name=name,
@@ -665,7 +654,7 @@ def convert_mpi_into_blueprint(name, version, project_name=None, environment_nam
     }
     bp_spec["api_version"] = "3.0"
 
-    LOG.debug("Creating MPI blueprint")
+    LOG.info("Creating MPI blueprint")
     bp_res, err = client.blueprint.marketplace_launch(bp_spec)
     if err:
         LOG.error("[{}] - {}".format(err["code"], err["error"]))

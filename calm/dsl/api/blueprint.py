@@ -17,6 +17,7 @@ class BlueprintAPI(ResourceAPI):
         self.EXPORT_JSON_WITH_SECRETS = self.ITEM + "/export_json?keep_secrets=true"
         self.EXPORT_FILE = self.ITEM + "/export_file"
         self.BROWNFIELD_VM_LIST = self.PREFIX + "/brownfield_import/vms/list"
+        self.PATCH_WITH_ENVIRONMENT = self.ITEM + "/patch_with_environment"
 
     # TODO https://jira.nutanix.com/browse/CALM-17178
     # Blueprint creation timeout is dependent on payload.
@@ -49,6 +50,14 @@ class BlueprintAPI(ResourceAPI):
     def marketplace_launch(self, payload):
         return self.connection._call(
             self.MARKETPLACE_LAUNCH,
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
+        )
+
+    def patch_with_environment(self, uuid, payload):
+        return self.connection._call(
+            self.PATCH_WITH_ENVIRONMENT.format(uuid),
             verify=False,
             request_json=payload,
             method=REQUEST.METHOD.POST,

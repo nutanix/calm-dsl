@@ -15,6 +15,7 @@ from .bps import (
     format_blueprint_command,
     compile_blueprint_command,
     launch_blueprint_simple,
+    patch_bp_if_required,
     delete_blueprint,
     decompile_bp,
     create_blueprint_from_json,
@@ -230,6 +231,7 @@ def create_blueprint_command(bp_file, name, description, force):
 
 @launch.command("bp")
 @click.argument("blueprint_name")
+@click.option("--environment", "-e", default=None, help="Environment for the application")
 @click.option("--app_name", "-a", default=None, help="Name of your app")
 @click.option(
     "--profile_name",
@@ -262,6 +264,7 @@ def create_blueprint_command(bp_file, name, description, force):
 )
 def launch_blueprint_command(
     blueprint_name,
+    environment,
     app_name,
     ignore_runtime_variables,
     profile_name,
@@ -313,6 +316,8 @@ def launch_blueprint_command(
     """
 
     app_name = app_name or "App-{}-{}".format(blueprint_name, int(time.time()))
+    blueprint_name, blueprint = patch_bp_if_required(environment, blueprint_name, profile_name)
+
     launch_blueprint_simple(
         blueprint_name,
         app_name,
