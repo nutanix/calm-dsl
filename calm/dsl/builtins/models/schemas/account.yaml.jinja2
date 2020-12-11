@@ -1,0 +1,20 @@
+{% macro Account() -%}
+
+title: Account
+type: object
+x-calm-dsl-type: account
+properties:
+  name:
+    type: string
+  resources:
+    $ref: '#/components/schemas/AccountResource'
+
+{%- endmacro %}
+
+
+{% macro AccountSchema() -%}
+
+Account:
+  {{ Account()|indent(2) }}
+
+{%- endmacro %}

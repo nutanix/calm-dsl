@@ -1,0 +1,15 @@
+{% macro AccountData() -%}
+
+title: AccountData
+type: object
+x-calm-dsl-type: account_data 
+
+{%- endmacro -%}
+
+
+{% macro AccountDataSchema() -%}
+
+AccountData:
+  {{ AccountData()|indent(2) }}
+
+{%- endmacro %}

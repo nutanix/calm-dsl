@@ -1,0 +1,22 @@
+{% macro AhvAccountData() -%}
+
+title: AhvAccountData
+type: object
+x-calm-dsl-type: ahv_account_data
+properties:
+  server:
+    type: string
+  username:
+    type: string
+  password:
+    type: string
+
+{%- endmacro %}
+
+
+{% macro AhvAccountDataSchema() -%}
+
+AhvAccountData:
+  {{ AhvAccountData()|indent(2) }}
+
+{%- endmacro %}
