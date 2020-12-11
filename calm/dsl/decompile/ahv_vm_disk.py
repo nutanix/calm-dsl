@@ -1,5 +1,6 @@
 import sys
 
+from calm.dsl.constants import CACHE
 from calm.dsl.decompile.render import render_template
 from calm.dsl.store import Cache
 from calm.dsl.log import get_logging_handle
@@ -50,7 +51,7 @@ def render_ahv_vm_disk(cls, boot_config):
             img_uuid = data_source_ref.get("uuid")
             disk_cache_data = (
                 Cache.get_entity_data_using_uuid(
-                    entity_type="ahv_disk_image", uuid=img_uuid
+                    entity_type=CACHE.ENTITY.AHV_DISK_IMAGE, uuid=img_uuid
                 )
                 or {}
             )
