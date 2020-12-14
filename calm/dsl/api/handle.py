@@ -9,7 +9,7 @@ from .connection import (
 from .blueprint import BlueprintAPI
 from .application import ApplicationAPI
 from .project import ProjectAPI
-from .setting import SettingAPI
+from .account import AccountAPI
 from .marketplace import MarketPlaceAPI
 from .app_icons import AppIconAPI
 from .version import VersionAPI
@@ -34,7 +34,7 @@ class ClientHandle:
         self.project = ProjectAPI(self.connection)
         self.blueprint = BlueprintAPI(self.connection)
         self.application = ApplicationAPI(self.connection)
-        self.account = SettingAPI(self.connection)
+        self.account = AccountAPI(self.connection)
         self.market_place = MarketPlaceAPI(self.connection)
         self.app_icon = AppIconAPI(self.connection)
         self.version = VersionAPI(self.connection)
