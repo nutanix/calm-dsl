@@ -107,27 +107,25 @@ def get_accounts(name, filter_by, limit, offset, quiet, all_items, account_type)
 def get_account(client, account_name):
 
     params = {"filter": "name=={}".format(account_name)}
-    res, err = client.account.list(params=params)
-    if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    res, _ = client.account.list(params=params)
 
     response = res.json()
     entities = response.get("entities", None)
     account = None
     if entities:
         if len(entities) != 1:
-            raise Exception("More than one account found - {}".format(entities))
+            LOG.error("More than one account found - {}".format(entities))
+            sys.exit(-1)
 
         LOG.info("{} found ".format(account_name))
         account = entities[0]
     else:
-        raise Exception("No account having name {} found".format(account_name))
+        LOG.error("No account having name {} found".format(account_name))
+        sys.exit(-1)
 
     account_id = account["metadata"]["uuid"]
     LOG.info("Fetching account details")
-    res, err = client.account.read(account_id)
-    if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    res, _ = client.account.read(account_id)
 
     account = res.json()
     return account
@@ -197,6 +195,14 @@ def create_account(account_file, name):
     else:
         name = account_payload["spec"]["name"]
 
+    # check if any account already exists with given name
+    params = {"filter": "name=={}".format(name)}
+    account_name_uuid_map = client.account.get_name_uuid_map(params=params)
+
+    if account_name_uuid_map:
+        LOG.error("Account with same name '{}' already exists".format(name))
+        sys.exit(-1)
+
     LOG.info("Creating account '{}'".format(name))
     res, err = client.account.create(account_payload)
     if err:
@@ -232,10 +238,35 @@ def delete_account(account_names):
     for account_name in account_names:
         account = get_account(client, account_name)
         account_id = account["metadata"]["uuid"]
-        res, err = client.account.delete(account_id)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        LOG.info("Account {} deleted".format(account_name))
+        res, _ = client.account.delete(
+            account_id
+        )  # err will be handled in connection.py
+        if res.ok:
+            res = res.json()
+            LOG.info(res["description"])
+
+
+def verify_account(account_name):
+    """verifies the account"""
+
+    client = get_api_client()
+
+    # Find account_uuid using list call
+    params = {"filter": "name=={}".format(account_name)}
+    account_name_uuid_map = client.account.get_name_uuid_map(params=params)
+
+    if not account_name_uuid_map:
+        LOG.error("No account with name '{}' found.".format(account_name))
+        sys.exit(-1)
+
+    account_uuid = account_name_uuid_map.get(account_name)
+    res, _ = client.account.verify(
+        account_uuid
+    )  # err is already handled in connection.pyi
+
+    if res.ok:
+        res = res.json()
+        LOG.info(res["description"])
 
 
 def describe_showback_data(spec):
@@ -361,7 +392,8 @@ def describe_gcp_account(client, spec, account_id):
 
     res, err = Obj.list(payload)  # TODO move this to GCP specific method
     if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
 
     public_images = res.json()["entities"]
     image_selfLink_name_map = {}

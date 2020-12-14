@@ -424,3 +424,9 @@ def calmrepl():
 def set():
     """Sets the entities"""
     pass
+
+
+@main.group(cls=FeatureFlagGroup)
+def verify():
+    """Verifies the accounts"""
+    pass

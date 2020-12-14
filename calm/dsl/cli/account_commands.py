@@ -6,8 +6,9 @@ from .accounts import (
     describe_account,
     compile_account_command,
     create_account,
+    verify_account,
 )
-from .main import get, delete, describe, create, compile
+from .main import get, delete, describe, create, compile, verify
 
 
 @get.command("accounts")
@@ -92,3 +93,11 @@ def _compile_account(account_file, out):
     """Creates an account"""
 
     compile_account_command(account_file, out)
+
+
+@verify.command("account")
+@click.argument("account_name")
+def _verify_account(account_name):
+    """Verifies an account"""
+
+    verify_account(account_name)
