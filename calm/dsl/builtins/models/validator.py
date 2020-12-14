@@ -48,11 +48,16 @@ class PropertyValidator(_PropertyValidatorBase, openapi_type=None):
 
         kind = cls.get_kind()
         # Value may be a class or an object
-        # If not an class, check for metaclass for object's class(Ex: Provider Spec)
+        # If value is class, check for metaclass for object's class and parent(Ex: Provider Spec)
+        # If value is dict, check validating using schema props
         if not (
             isinstance(value, kind)
             or isinstance(type(value), kind)
-            or (hasattr(kind, "validate_dict") and (not kind.validate_dict(value)))
+            or (
+                isinstance(value, dict)
+                and hasattr(kind, "validate_dict")
+                and (not kind.validate_dict(value))
+            )
         ):
             raise TypeError("{} is not of type {}".format(value, kind))
 
