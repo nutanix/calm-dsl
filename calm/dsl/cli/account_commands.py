@@ -1,7 +1,13 @@
 import click
 
-from .accounts import get_accounts, delete_account, describe_account
-from .main import get, delete, describe
+from .accounts import (
+    get_accounts,
+    delete_account,
+    describe_account,
+    compile_account_command,
+    create_account,
+)
+from .main import get, delete, describe, create, compile
 
 
 @get.command("accounts")
@@ -47,3 +53,42 @@ def _describe_account(account_name):
     """Describe a account"""
 
     describe_account(account_name)
+
+
+@create.command("account")
+@click.option(
+    "--file",
+    "-f",
+    "account_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    required=True,
+    help="Path to Account file",
+)
+@click.option("--name", "-n", default=None, help="Account name (Optional)")
+def _create_account(account_file, name):
+    """Creates an account"""
+
+    create_account(account_file, name)
+
+
+@compile.command("account")
+@click.option(
+    "--file",
+    "-f",
+    "account_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    required=True,
+    help="Path to Account file",
+)
+@click.option(
+    "--out",
+    "-o",
+    "out",
+    type=click.Choice(["json", "yaml"]),
+    default="json",
+    help="output format",
+)
+def _compile_account(account_file, out):
+    """Creates an account"""
+
+    compile_account_command(account_file, out)

@@ -14,6 +14,15 @@ class AhvAccountDataType(AccountDataType):
 
     __provider_type__ = "nutanix_pc"
 
+    def compile(cls):
+        """returns the compiled payload for ahv account data"""
+
+        cdict = super().compile()
+        password = cdict.pop("password", None)
+        cdict["password"] = {"attrs": {"is_secret_modified": True}, "value": password}
+
+        return cdict
+
 
 class AhvAccountDataValidator(PropertyValidator, openapi_type="ahv_account_data"):
     __default__ = None

@@ -1,12 +1,16 @@
+import json
 import time
 import click
 import arrow
 import sys
 from prettytable import PrettyTable
+from ruamel import yaml
 from distutils.version import LooseVersion as LV
 
 from calm.dsl.api import get_resource_api, get_api_client
+from calm.dsl.tools import get_module_from_file
 from calm.dsl.config import get_context
+from calm.dsl.builtins import Account
 
 from .utils import get_name_query, get_states_filter, highlight_text
 from .constants import ACCOUNT
@@ -129,7 +133,100 @@ def get_account(client, account_name):
     return account
 
 
+def get_account_module_from_file(account_file):
+    """Returns Account module given a user account dsl file (.py)"""
+    return get_module_from_file("calm.dsl.user_account", account_file)
+
+
+def get_account_class_from_module(user_account_module):
+    """Returns account class given a module"""
+
+    UserAccount = None
+    for item in dir(user_account_module):
+        obj = getattr(user_account_module, item)
+        if isinstance(obj, type(Account)):
+            if obj.__bases__[0] == Account:
+                UserAccount = obj
+
+    return UserAccount
+
+
+def compile_account(account_file):
+    """returns compiled payload from dsl account file"""
+
+    user_account_module = get_account_module_from_file(account_file)
+    UserAccount = get_account_class_from_module(user_account_module)
+    if UserAccount is None:
+        LOG.error("User account not found in {}".format(account_file))
+        return
+
+    # create account payload
+    account_payload = {
+        "spec": UserAccount.get_dict(),
+        "metadata": {
+            "name": getattr(UserAccount, "name", "") or UserAccount.__name__,
+            "kind": getattr(UserAccount, "__kind__"),
+        },
+    }
+
+    return account_payload
+
+
+def compile_account_command(account_file, out):
+    """displays the account payload"""
+
+    account_payload = compile_account(account_file)
+
+    if out == "json":
+        click.echo(json.dumps(account_payload, indent=4, separators=(",", ": ")))
+    elif out == "yaml":
+        click.echo(yaml.dump(account_payload, default_flow_style=False))
+    else:
+        LOG.error("Unknown output format {} given".format(out))
+
+
+def create_account(account_file, name):
+    """creates an account"""
+
+    client = get_api_client()
+
+    account_payload = compile_account(account_file=account_file)
+    if name:
+        account_payload["spec"]["name"] = name
+        account_payload["metadata"]["name"] = name
+    else:
+        name = account_payload["spec"]["name"]
+
+    LOG.info("Creating account '{}'".format(name))
+    res, err = client.account.create(account_payload)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    account = res.json()
+    account_state = account["status"]["resources"]["state"]
+    msg_list = account["status"].get("message_list")
+
+    if account_state != ACCOUNT.STATES.ACTIVE:
+        LOG.error("Account went to '{}' state".format(account_state))
+        if msg_list:
+            LOG.error("Api returned following messages: {}".format(msg_list))
+        return
+
+    stdout_dict = {
+        "name": account["metadata"]["name"],
+        "uuid": account["metadata"]["uuid"],
+        "state": account_state,
+    }
+
+    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+    click.echo(
+        '# Hint: You can verify accounts using: calm verify account "{}"'.format(name)
+    )
+
+
 def delete_account(account_names):
+    """deletes an account"""
 
     client = get_api_client()
     for account_name in account_names:

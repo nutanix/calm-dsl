@@ -6,6 +6,7 @@ class AhvData(AhvAccountData):
     server = "ahv_pc_ip"
     username = "username"
     password = "password"
+    port = 9440
 
 
 class AhvAccount(Account):
