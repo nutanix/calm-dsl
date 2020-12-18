@@ -324,7 +324,7 @@ def launch_blueprint_command(
     if watch:
 
         def display_action(screen):
-            watch_app(app_name, screen)
+            watch_app(app_name, screen, poll_interval=poll_interval)
             screen.wait_for_input(10.0)
 
         Display.wrapper(display_action, watch=True)
