@@ -11,8 +11,9 @@ from calm.dsl.decompile.file_handler import get_bp_dir
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.config import get_context
 
-from .utils import highlight_text, get_states_filter
+from .utils import highlight_text, get_states_filter, Display
 from .bps import launch_blueprint_simple, get_blueprint
+from .apps import watch_app
 from .projects import get_project
 from calm.dsl.log import get_logging_handle
 from .constants import MARKETPLACE_BLUEPRINT
@@ -452,6 +453,8 @@ def launch_marketplace_bp(
     patch_editables=True,
     app_source=None,
     launch_params=None,
+    watch=False,
+    poll_interval=10,
 ):
     """
     Launch marketplace blueprints
@@ -485,6 +488,15 @@ def launch_marketplace_bp(
         launch_params=launch_params,
     )
     LOG.info("App {} creation is successful".format(app_name))
+
+    if watch:
+
+        def display_action(screen):
+            watch_app(app_name, screen, poll_interval=poll_interval)
+            screen.wait_for_input(10.0)
+
+        Display.wrapper(display_action, watch=True)
+        LOG.info("Action runs completed for app {}".format(app_name))
 
 
 def decompile_marketplace_bp(
@@ -553,6 +565,8 @@ def launch_marketplace_item(
     patch_editables=True,
     app_source=None,
     launch_params=None,
+    watch=False,
+    poll_interval=10,
 ):
     """
     Launch marketplace items
@@ -582,6 +596,15 @@ def launch_marketplace_item(
         launch_params=launch_params,
     )
     LOG.info("App {} creation is successful".format(app_name))
+
+    if watch:
+
+        def display_action(screen):
+            watch_app(app_name, screen, poll_interval=poll_interval)
+            screen.wait_for_input(10.0)
+
+        Display.wrapper(display_action, watch=True)
+        LOG.info("Action runs completed for app {}".format(app_name))
 
 
 def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None):
