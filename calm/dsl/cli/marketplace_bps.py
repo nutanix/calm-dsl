@@ -451,6 +451,7 @@ def launch_marketplace_bp(
     profile_name=None,
     patch_editables=True,
     app_source=None,
+    launch_params=None,
 ):
     """
     Launch marketplace blueprints
@@ -481,6 +482,7 @@ def launch_marketplace_bp(
         profile_name=profile_name,
         app_name=app_name,
         blueprint=bp_payload,
+        launch_params=launch_params,
     )
     LOG.info("App {} creation is successful".format(app_name))
 
@@ -516,9 +518,7 @@ def decompile_marketplace_bp(
         bp_dir_suffix = bp_name or "mpi_bp_{}_v{}".format(blueprint_name, version)
         bp_dir = os.path.join(os.getcwd(), bp_dir_suffix)
 
-    blueprint_dir = bp_name or "mpi_bp_{}_v{}".format(blueprint_name, version)
     blueprint_description = bp_payload["spec"].get("description", "")
-
     LOG.info("Decompiling marketplace blueprint {}".format(name))
     for sub_obj in blueprint.get("substrate_definition_list"):
         sub_type = sub_obj.get("type", "") or "AHV_VM"
@@ -552,6 +552,7 @@ def launch_marketplace_item(
     profile_name=None,
     patch_editables=True,
     app_source=None,
+    launch_params=None,
 ):
     """
     Launch marketplace items
@@ -578,6 +579,7 @@ def launch_marketplace_item(
         profile_name=profile_name,
         app_name=app_name,
         blueprint=bp_payload,
+        launch_params=launch_params,
     )
     LOG.info("App {} creation is successful".format(app_name))
 

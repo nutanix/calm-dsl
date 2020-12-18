@@ -212,8 +212,21 @@ def _describe_marketplace_bp(name, out, version, source, app_state):
     type=click.Choice(APP_SOURCES),
     help="App Source of marketplace blueprint",
 )
+@click.option(
+    "--launch_params",
+    "-l",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to python file for runtime editables",
+)
 def _launch_marketplace_bp(
-    name, version, project, app_name, profile_name, ignore_runtime_variables, source
+    name,
+    version,
+    project,
+    app_name,
+    profile_name,
+    ignore_runtime_variables,
+    source,
+    launch_params,
 ):
     """Launch a marketplace manager blueprint"""
 
@@ -225,6 +238,7 @@ def _launch_marketplace_bp(
         profile_name=profile_name,
         patch_editables=not ignore_runtime_variables,
         app_source=source,
+        launch_params=launch_params,
     )
 
 
@@ -253,8 +267,21 @@ def _launch_marketplace_bp(
     type=click.Choice(APP_SOURCES),
     help="App Source of marketplace blueprint",
 )
+@click.option(
+    "--launch_params",
+    "-l",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to python file for runtime editables",
+)
 def _launch_marketplace_item(
-    name, version, project, app_name, profile_name, ignore_runtime_variables, source
+    name,
+    version,
+    project,
+    app_name,
+    profile_name,
+    ignore_runtime_variables,
+    source,
+    launch_params,
 ):
     """Launch a marketplace store item"""
 
@@ -266,6 +293,7 @@ def _launch_marketplace_item(
         profile_name=profile_name,
         patch_editables=not ignore_runtime_variables,
         app_source=source,
+        launch_params=launch_params,
     )
 
 
