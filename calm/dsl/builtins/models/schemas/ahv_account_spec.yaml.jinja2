@@ -1,8 +1,8 @@
-{% macro AhvAccountData() -%}
+{% macro AhvAccountSpec() -%}
 
-title: AhvAccountData
+title: AhvAccountSpec
 type: object
-x-calm-dsl-type: ahv_account_data
+x-calm-dsl-type: ahv_account_spec
 properties:
   server:
     type: string
@@ -16,9 +16,9 @@ properties:
 {%- endmacro %}
 
 
-{% macro AhvAccountDataSchema() -%}
+{% macro AhvAccountSpecSchema() -%}
 
-AhvAccountData:
-  {{ AhvAccountData()|indent(2) }}
+AhvAccountSpec:
+  {{ AhvAccountSpec()|indent(2) }}
 
 {%- endmacro %}

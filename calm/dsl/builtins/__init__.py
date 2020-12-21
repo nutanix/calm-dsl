@@ -83,9 +83,9 @@ from .models.vm_profile import VmProfile
 from .models.vm_blueprint import VmBlueprint
 
 # Accounts
-from .models.account import Account, account, AccountResource, account_resource
-from .models.ahv_account import AhvAccountData, ahv_account_data
-from .models.aws_account import AwsAccountData, aws_account_data
+from .models.account import Account, account
+from .models.ahv_account import AhvAccountSpec, ahv_account_spec
+from .models.aws_account import AwsAccountSpec, aws_account_spec
 
 
 __all__ = [
@@ -185,8 +185,8 @@ __all__ = [
     "account",
     "AccountResource",
     "account_resource",
-    "AhvAccountData",
-    "ahv_account_data",
-    "AwsAccountData",
-    "aws_account_data",
+    "AhvAccountSpec",
+    "ahv_account_spec",
+    "AwsAccountSpec",
+    "aws_account_spec",
 ]

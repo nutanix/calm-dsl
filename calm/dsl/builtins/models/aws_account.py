@@ -1,29 +1,29 @@
-from .entity import EntityType, Entity
+from .entity import Entity
 from .validator import PropertyValidator
 from calm.dsl.log import get_logging_handle
 
-from .account import AccountDataType
+from .account import AccountSpecType
 
 
 LOG = get_logging_handle(__name__)
 
 
-class AwsAccountDataType(AccountDataType):
-    __schema_name__ = "AwsAccountData"
-    __openapi_type__ = "aws_account_data"
+class AwsAccountSpecType(AccountSpecType):
+    __schema_name__ = "AwsAccountSpec"
+    __openapi_type__ = "aws_account_spec"
 
     __provider_type__ = "aws"
 
 
-class AwsAccountDataValidator(PropertyValidator, openapi_type="aws_account_data"):
+class AwsAccountDataValidator(PropertyValidator, openapi_type="aws_account_spec"):
     __default__ = None
-    __kind__ = AwsAccountDataType
+    __kind__ = AwsAccountSpecType
 
 
-def aws_account_data(**kwargs):
+def aws_account_spec(**kwargs):
     name = kwargs.get("name", None)
     bases = (Entity,)
-    return AwsAccountDataType(name, bases, kwargs)
+    return AwsAccountSpecType(name, bases, kwargs)
 
 
-AwsAccountData = aws_account_data()
+AwsAccountSpec = aws_account_spec()

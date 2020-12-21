@@ -1,7 +1,7 @@
-from calm.dsl.builtins import Account, AccountResource, AhvAccountData, account_resource
+from calm.dsl.builtins import Account, AhvAccountSpec
 
 
-class AhvData(AhvAccountData):
+class AhvSpec(AhvAccountSpec):
 
     server = "ahv_pc_ip"
     username = "username"
@@ -10,8 +10,9 @@ class AhvData(AhvAccountData):
 
 
 class AhvAccount(Account):
-    name = "Ahv Account"
-    resources = account_resource(type="nutanix_pc", data=AhvData)
+
+    provider_type = "nutanix_pc"  # Replace by constant
+    spec = AhvSpec
 
 
 print(AhvAccount.json_dumps(pprint=True))

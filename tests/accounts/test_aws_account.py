@@ -1,7 +1,7 @@
-from calm.dsl.builtins import Account, AccountResource, AwsAccountData
+from calm.dsl.builtins import Account, AwsAccountSpec
 
 
-class AwsData(AwsAccountData):
+class AwsSpec(AwsAccountSpec):
 
     access_key_id = "aws_access_key"
     secret_access_key = "aws_secret_access_key"
@@ -29,14 +29,9 @@ class AwsData(AwsAccountData):
     ]
 
 
-class AwsAccountResource(AccountResource):
-    type = "aws"  # Replace by constant
-    data = AwsData
-
-
 class AwsAccount(Account):
-    name = "Aws Account"
-    resources = AwsAccountResource
+    provider_type = "aws"
+    spec = AwsSpec
 
 
 print(AwsAccount.json_dumps(pprint=True))

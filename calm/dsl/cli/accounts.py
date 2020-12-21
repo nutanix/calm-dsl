@@ -160,9 +160,12 @@ def compile_account(account_file):
 
     # create account payload
     account_payload = {
-        "spec": UserAccount.get_dict(),
+        "spec": {
+            "name": UserAccount.__name__,
+            "resources": UserAccount.get_dict(),
+        },
         "metadata": {
-            "name": getattr(UserAccount, "name", "") or UserAccount.__name__,
+            "name": UserAccount.__name__,
             "kind": getattr(UserAccount, "__kind__"),
         },
     }

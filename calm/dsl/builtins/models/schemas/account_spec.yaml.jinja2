@@ -1,0 +1,15 @@
+{% macro AccountSpec() -%}
+
+title: AccountSpec
+type: object
+x-calm-dsl-type: account_spec
+
+{%- endmacro -%}
+
+
+{% macro AccountSpecSchema() -%}
+
+AccountSpec:
+  {{ AccountSpec()|indent(2) }}
+
+{%- endmacro %}

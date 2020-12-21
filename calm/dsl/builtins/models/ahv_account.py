@@ -2,20 +2,20 @@ from .entity import Entity
 from .validator import PropertyValidator
 from calm.dsl.log import get_logging_handle
 
-from .account import AccountDataType
+from .account import AccountSpecType
 
 
 LOG = get_logging_handle(__name__)
 
 
-class AhvAccountDataType(AccountDataType):
-    __schema_name__ = "AhvAccountData"
-    __openapi_type__ = "ahv_account_data"
+class AhvAccountSpecType(AccountSpecType):
+    __schema_name__ = "AhvAccountSpec"
+    __openapi_type__ = "ahv_account_spec"
 
     __provider_type__ = "nutanix_pc"
 
     def compile(cls):
-        """returns the compiled payload for ahv account data"""
+        """returns the compiled payload for ahv account spec"""
 
         cdict = super().compile()
         password = cdict.pop("password", None)
@@ -24,15 +24,15 @@ class AhvAccountDataType(AccountDataType):
         return cdict
 
 
-class AhvAccountDataValidator(PropertyValidator, openapi_type="ahv_account_data"):
+class AhvAccountSpecValidator(PropertyValidator, openapi_type="ahv_account_spec"):
     __default__ = None
-    __kind__ = AhvAccountDataType
+    __kind__ = AhvAccountSpecType
 
 
-def ahv_account_data(**kwargs):
+def ahv_account_spec(**kwargs):
     name = kwargs.get("name", None)
     bases = (Entity,)
-    return AhvAccountDataType(name, bases, kwargs)
+    return AhvAccountSpecType(name, bases, kwargs)
 
 
-AhvAccountData = ahv_account_data()
+AhvAccountSpec = ahv_account_spec()

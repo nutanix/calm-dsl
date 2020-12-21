@@ -62,7 +62,7 @@ def get_schema_props(name):
         schema_props = {}
     elif schema_type == "app_provider_spec":
         schema_props = {}
-    elif schema_type == "account_data":
+    elif schema_type == "account_spec":
         schema_props = {}
     elif not schema_props:
         LOG.debug("Schema properties for schema {} is not available".format(name))
