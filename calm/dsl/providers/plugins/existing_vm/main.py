@@ -2,6 +2,7 @@ import click
 from ruamel import yaml
 
 from calm.dsl.providers import get_provider_interface
+from calm.dsl.constants import PROVIDER
 
 
 Provider = get_provider_interface()
@@ -11,7 +12,7 @@ Provider = get_provider_interface()
 class ExistingVmProvider(Provider):
 
     package_name = __name__
-    provider_type = "EXISTING_VM"
+    provider_type = PROVIDER.VM.EXISTING_VM
     spec_template_file = "existing_vm_provider_spec.yaml.jinja2"
 
     @classmethod

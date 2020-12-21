@@ -7,6 +7,7 @@ from calm.dsl.builtins import file_exists
 
 from .entity import EntityType
 from .validator import PropertyValidator
+from calm.dsl.constants import PROVIDER
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -66,7 +67,7 @@ def read_provider_spec(filename):
 def read_ahv_spec(filename, disk_packages={}):
     spec = read_spec(filename, depth=2)
     if disk_packages:
-        Provider = get_provider("AHV_VM")
+        Provider = get_provider(PROVIDER.VM.AHV)
         Provider.update_vm_image_config(spec, disk_packages)
 
     return provider_spec(spec)
@@ -75,7 +76,7 @@ def read_ahv_spec(filename, disk_packages={}):
 def read_vmw_spec(filename, vm_template=None):
     spec = read_spec(filename, depth=2)
     if vm_template:
-        Provider = get_provider("VMWARE_VM")
+        Provider = get_provider(PROVIDER.VM.VMWARE)
         Provider.update_vm_image_config(spec, vm_template)
 
     return provider_spec(spec)

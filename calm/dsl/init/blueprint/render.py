@@ -9,7 +9,7 @@ from calm.dsl.store import Cache
 from calm.dsl.builtins import read_file
 from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
-from calm.dsl.constants import CACHE
+from calm.dsl.constants import CACHE, PROVIDER
 
 LOG = get_logging_handle(__name__)
 
@@ -31,7 +31,7 @@ def render_ahv_template(template, bp_name):
 
     # Fetch Nutanix_PC account registered
     project_accounts = project_cache_data["accounts_data"]
-    account_uuid = project_accounts.get("nutanix_pc", "")
+    account_uuid = project_accounts.get(PROVIDER.ACCOUNT.NUTANIX, "")
     if not account_uuid:
         LOG.error("No nutanix_pc account registered to project {}".format(project_name))
 
@@ -92,7 +92,7 @@ def render_single_vm_bp_ahv_template(template, bp_name):
 
     # Fetch Nutanix_PC account registered
     project_accounts = project_cache_data["accounts_data"]
-    account_uuid = project_accounts.get("nutanix_pc", "")
+    account_uuid = project_accounts.get(PROVIDER.ACCOUNT.NUTANIX, "")
     if not account_uuid:
         LOG.error("No nutanix_pc account registered to project {}".format(project_name))
 
@@ -129,7 +129,7 @@ def render_single_vm_bp_ahv_template(template, bp_name):
     default_subnet = subnet_cache_data["name"]
 
     # Fetch image for vm
-    AhvVmProvider = get_provider("AHV_VM")
+    AhvVmProvider = get_provider(PROVIDER.VM.AHV)
     AhvObj = AhvVmProvider.get_api_obj()
     try:
         res = AhvObj.images(account_uuid=account_uuid)
@@ -167,7 +167,7 @@ def render_single_vm_bp_ahv_template(template, bp_name):
 
 
 template_map = {
-    "AHV_VM": {
+    PROVIDER.VM.AHV: {
         "MULTI_VM": ("ahv_blueprint.py.jinja2", render_ahv_template),
         "SINGLE_VM": (
             "ahv_single_vm_blueprint.py.jinja2",
@@ -183,7 +183,7 @@ def render_blueprint_template(bp_name, provider_type, bp_type):
         print(
             "Provider {} not supported. Using AHV_VM as provider".format(provider_type)
         )
-        provider_type = "AHV_VM"
+        provider_type = PROVIDER.VM.AHV
 
     schema_file, temp_render_helper = template_map.get(provider_type).get(bp_type)
 

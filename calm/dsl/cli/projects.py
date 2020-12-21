@@ -18,6 +18,7 @@ from calm.dsl.tools import get_module_from_file
 from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
 from calm.dsl.store import Cache
+from calm.dsl.constants import PROVIDER
 
 LOG = get_logging_handle(__name__)
 
@@ -420,8 +421,8 @@ def describe_project(project_name, out):
             )
         )
 
-        if account_type == "nutanix_pc" and subnets_list:
-            AhvVmProvider = get_provider("AHV_VM")
+        if account_type == PROVIDER.ACCOUNT.NUTANIX and subnets_list:
+            AhvVmProvider = get_provider(PROVIDER.VM.AHV)
             AhvObj = AhvVmProvider.get_api_obj()
 
             filter_query = "(_entity_id_=={})".format(

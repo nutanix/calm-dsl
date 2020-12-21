@@ -1,4 +1,5 @@
 from calm.dsl.builtins import Account, AhvAccountSpec
+from calm.dsl.constants import PROVIDER
 
 
 class AhvSpec(AhvAccountSpec):
@@ -11,7 +12,7 @@ class AhvSpec(AhvAccountSpec):
 
 class AhvAccount(Account):
 
-    provider_type = "nutanix_pc"  # Replace by constant
+    provider_type = PROVIDER.ACCOUNT.NUTANIX
     spec = AhvSpec
 
 

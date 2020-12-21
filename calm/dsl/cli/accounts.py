@@ -13,6 +13,7 @@ from calm.dsl.config import get_context
 from calm.dsl.builtins import Account
 
 from .utils import get_name_query, get_states_filter, highlight_text
+from calm.dsl.constants import PROVIDER
 from .constants import ACCOUNT
 from calm.dsl.store import Version
 from calm.dsl.log import get_logging_handle
@@ -490,28 +491,28 @@ def describe_account(account_name):
     if account_type == "nutanix":
         describe_nutanix_pe_account(provider_data)
 
-    if account_type == "nutanix_pc":
+    if account_type == PROVIDER.ACCOUNT.NUTANIX:
         describe_nutanix_pc_account(provider_data)
 
-    elif account_type == "aws":
+    elif account_type == PROVIDER.ACCOUNT.AWS:
         describe_aws_account(provider_data)
 
-    elif account_type == "vmware":
+    elif account_type == PROVIDER.ACCOUNT.VMWARE:
         describe_vmware_account(provider_data)
 
-    elif account_type == "gcp":
+    elif account_type == PROVIDER.ACCOUNT.GCP:
         describe_gcp_account(client, provider_data, account_id)
 
     elif account_type == "k8s":
         describe_k8s_account(provider_data)
 
-    elif account_type == "azure":
+    elif account_type == PROVIDER.ACCOUNT.AZURE:
         describe_azure_account(provider_data)
 
     else:
         click.echo("Provider details not present")
 
-    if account_type in ["nutanix", "vmware"]:
+    if account_type in ["nutanix", PROVIDER.ACCOUNT.VMWARE]:
         res, err = client.showback.status()
         if err:
             LOG.error("[{}] - {}".format(err["code"], err["error"]))

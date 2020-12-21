@@ -1,8 +1,9 @@
 from .entity import Entity
 from .validator import PropertyValidator
-from calm.dsl.log import get_logging_handle
-
 from .account import AccountSpecType
+
+from calm.dsl.constants import PROVIDER
+from calm.dsl.log import get_logging_handle
 
 
 LOG = get_logging_handle(__name__)
@@ -12,7 +13,7 @@ class AhvAccountSpecType(AccountSpecType):
     __schema_name__ = "AhvAccountSpec"
     __openapi_type__ = "ahv_account_spec"
 
-    __provider_type__ = "nutanix_pc"
+    __provider_type__ = PROVIDER.ACCOUNT.NUTANIX
 
     def compile(cls):
         """returns the compiled payload for ahv account spec"""

@@ -8,7 +8,7 @@ from .package import PackageType
 from .metadata_payload import get_metadata_obj
 from calm.dsl.store import Cache
 from calm.dsl.config import get_context
-from calm.dsl.constants import CACHE
+from calm.dsl.constants import CACHE, PROVIDER
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -50,7 +50,7 @@ class AhvDiskType(EntityType):
 
         # Fetch Nutanix_PC account registered
         project_accounts = project_cache_data["accounts_data"]
-        account_uuid = project_accounts.get("nutanix_pc", "")
+        account_uuid = project_accounts.get(PROVIDER.ACCOUNT.NUTANIX, "")
 
         if not account_uuid:
             LOG.error(

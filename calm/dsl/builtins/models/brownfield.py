@@ -8,7 +8,7 @@ from .metadata_payload import get_metadata_obj
 from calm.dsl.config import get_context
 from calm.dsl.store import Cache
 from calm.dsl.api import get_api_client
-from calm.dsl.constants import CACHE
+from calm.dsl.constants import CACHE, PROVIDER
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -463,8 +463,8 @@ class BrownfiedVmType(EntityType):
         project_uuid = project_cache_data.get("uuid")
         project_accounts = project_cache_data["accounts_data"]
 
-        if provider_type == "AHV_VM":
-            account_uuid = project_accounts.get("nutanix_pc", "")
+        if provider_type == PROVIDER.VM.AHV:
+            account_uuid = project_accounts.get(PROVIDER.ACCOUNT.NUTANIX, "")
             if not account_uuid:
                 LOG.error(
                     "No ahv account registered in project '{}'".format(project_name)
@@ -479,8 +479,8 @@ class BrownfiedVmType(EntityType):
                 instance_id=cdict["instance_id"],
             )
 
-        elif provider_type == "AWS_VM":
-            account_uuid = project_accounts.get("aws", "")
+        elif provider_type == PROVIDER.VM.AWS:
+            account_uuid = project_accounts.get(PROVIDER.ACCOUNT.AWS, "")
             if not account_uuid:
                 LOG.error(
                     "No aws account registered in project '{}'".format(project_name)
@@ -495,8 +495,8 @@ class BrownfiedVmType(EntityType):
                 instance_id=cdict["instance_id"],
             )
 
-        elif provider_type == "AZURE_VM":
-            account_uuid = project_accounts.get("azure", "")
+        elif provider_type == PROVIDER.VM.AZURE:
+            account_uuid = project_accounts.get(PROVIDER.ACCOUNT.AZURE, "")
             if not account_uuid:
                 LOG.error(
                     "No azure account registered in project '{}'".format(project_name)
@@ -511,8 +511,8 @@ class BrownfiedVmType(EntityType):
                 instance_id=cdict["instance_id"],
             )
 
-        elif provider_type == "VMWARE_VM":
-            account_uuid = project_accounts.get("vmware", "")
+        elif provider_type == PROVIDER.VM.VMWARE:
+            account_uuid = project_accounts.get(PROVIDER.ACCOUNT.VMWARE, "")
             if not account_uuid:
                 LOG.error(
                     "No vmware account registered in project '{}'".format(project_name)
@@ -527,8 +527,8 @@ class BrownfiedVmType(EntityType):
                 instance_id=cdict["instance_id"],
             )
 
-        elif provider_type == "GCP_VM":
-            account_uuid = project_accounts.get("gcp", "")
+        elif provider_type == PROVIDER.VM.GCP:
+            account_uuid = project_accounts.get(PROVIDER.ACCOUNT.GCP, "")
             if not account_uuid:
                 LOG.error(
                     "No gcp account registered in project '{}'".format(project_name)
@@ -616,7 +616,7 @@ class Brownfield:
                 "instance_name": instance_name,
                 "address": ip_address,
                 "instance_id": instance_id,
-                "provider": "AHV_VM",
+                "provider": PROVIDER.VM.AHV,
             }
             return brownfield_vm(**kwargs)
 
@@ -632,7 +632,7 @@ class Brownfield:
                     "instance_name": instance_name,
                     "address": ip_address,
                     "instance_id": instance_id,
-                    "provider": "AHV_VM",
+                    "provider": PROVIDER.VM.AHV,
                 }
                 return brownfield_vm(**kwargs)
 
@@ -648,7 +648,7 @@ class Brownfield:
                     "instance_name": instance_name,
                     "address": ip_address,
                     "instance_id": instance_id,
-                    "provider": "AWS_VM",
+                    "provider": PROVIDER.VM.AWS,
                 }
                 return brownfield_vm(**kwargs)
 
@@ -664,7 +664,7 @@ class Brownfield:
                     "instance_name": instance_name,
                     "address": ip_address,
                     "instance_id": instance_id,
-                    "provider": "AZURE_VM",
+                    "provider": PROVIDER.VM.AZURE,
                 }
                 return brownfield_vm(**kwargs)
 
@@ -680,7 +680,7 @@ class Brownfield:
                     "instance_name": instance_name,
                     "address": ip_address,
                     "instance_id": instance_id,
-                    "provider": "GCP_VM",
+                    "provider": PROVIDER.VM.GCP,
                 }
                 return brownfield_vm(**kwargs)
 
@@ -696,6 +696,6 @@ class Brownfield:
                     "instance_name": instance_name,
                     "address": ip_address,
                     "instance_id": instance_id,
-                    "provider": "VMWARE_VM",
+                    "provider": PROVIDER.VM.VMWARE,
                 }
                 return brownfield_vm(**kwargs)

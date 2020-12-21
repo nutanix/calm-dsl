@@ -9,6 +9,7 @@ from .brownfield_vms import (
     get_brownfield_vmware_vm_list,
 )
 from .utils import FeatureFlagGroup
+from calm.dsl.constants import PROVIDER
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -40,21 +41,29 @@ def brownfield_get():
     "--type",
     "-t",
     "provider_type",
-    type=click.Choice(["AHV_VM", "AWS_VM", "AZURE_VM", "GCP_VM", "VMWARE_VM"]),
-    default="AHV_VM",
+    type=click.Choice(
+        [
+            PROVIDER.VM.AHV,
+            PROVIDER.VM.AWS,
+            PROVIDER.VM.AZURE,
+            PROVIDER.VM.GCP,
+            PROVIDER.VM.VMWARE,
+        ]
+    ),
+    default=PROVIDER.VM.AHV,
     help="Provider type",
 )
 def _get_vm_list(limit, offset, quiet, out, project, provider_type):
     """Get the brownfield vms, optionally filtered by a string"""
 
-    if provider_type == "AHV_VM":
+    if provider_type == PROVIDER.VM.AHV:
         get_brownfield_ahv_vm_list(limit, offset, quiet, out, project)
-    elif provider_type == "AWS_VM":
+    elif provider_type == PROVIDER.VM.AWS:
         get_brownfield_aws_vm_list(limit, offset, quiet, out, project)
-    elif provider_type == "AZURE_VM":
+    elif provider_type == PROVIDER.VM.AZURE:
         get_brownfield_azure_vm_list(limit, offset, quiet, out, project)
-    elif provider_type == "GCP_VM":
+    elif provider_type == PROVIDER.VM.GCP:
         get_brownfield_gcp_vm_list(limit, offset, quiet, out, project)
-    elif provider_type == "VMWARE_VM":
+    elif provider_type == PROVIDER.VM.VMWARE:
         # Has issue with it. Fixed in 2.9.8.1 and 3.0.0 (https://jira.nutanix.com/browse/CALM-18635)
         get_brownfield_vmware_vm_list(limit, offset, quiet, out, project)

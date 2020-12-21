@@ -5,7 +5,7 @@ from .validator import PropertyValidator
 from .metadata_payload import get_metadata_obj
 from calm.dsl.store import Cache
 from calm.dsl.config import get_context
-from calm.dsl.constants import CACHE
+from calm.dsl.constants import CACHE, PROVIDER
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -44,7 +44,7 @@ class AhvNicType(EntityType):
         project_accounts = project_cache_data["accounts_data"]
         project_subnets = project_cache_data["whitelisted_subnets"]
         # Fetch Nutanix_PC account registered
-        account_uuid = project_accounts.get("nutanix_pc", "")
+        account_uuid = project_accounts.get(PROVIDER.ACCOUNT.NUTANIX, "")
 
         subnet_ref = cdict.get("subnet_reference") or dict()
         subnet_name = subnet_ref.get("name", "") or ""

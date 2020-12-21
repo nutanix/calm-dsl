@@ -1,8 +1,9 @@
 from .entity import Entity
 from .validator import PropertyValidator
-from calm.dsl.log import get_logging_handle
-
 from .account import AccountSpecType
+
+from calm.dsl.log import get_logging_handle
+from calm.dsl.constants import PROVIDER
 
 
 LOG = get_logging_handle(__name__)
@@ -12,7 +13,7 @@ class AwsAccountSpecType(AccountSpecType):
     __schema_name__ = "AwsAccountSpec"
     __openapi_type__ = "aws_account_spec"
 
-    __provider_type__ = "aws"
+    __provider_type__ = PROVIDER.ACCOUNT.AWS
 
 
 class AwsAccountDataValidator(PropertyValidator, openapi_type="aws_account_spec"):

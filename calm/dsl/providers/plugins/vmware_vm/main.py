@@ -3,6 +3,7 @@ from ruamel import yaml
 
 from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.providers import get_provider_interface
+from calm.dsl.constants import PROVIDER
 from .constants import VCENTER as vmw
 
 
@@ -11,7 +12,7 @@ Provider = get_provider_interface()
 
 class VCenterVmProvider(Provider):
 
-    provider_type = "VMWARE_VM"
+    provider_type = PROVIDER.VM.VMWARE
     package_name = __name__
     spec_template_file = "vmware_vm_provider_spec.yaml.jinja2"
 

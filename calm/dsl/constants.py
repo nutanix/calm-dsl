@@ -16,3 +16,24 @@ class CACHE:
         DIRECTORY_SERVICE = "directory_service"
         USER_GROUP = "user_group"
         AHV_NETWORK_FUNCTION_CHAIN = "ahv_network_function_chain"
+
+
+class PROVIDER:
+    """Provider constants"""
+
+    class ACCOUNT:
+        NUTANIX = "nutanix_pc"
+        AWS = "aws"
+        VMWARE = "vmware"
+        AZURE = "azure"
+        GCP = "gcp"
+        K8S = "k8s"
+
+    class VM:
+        AHV = "AHV_VM"
+        AWS = "AWS_VM"
+        VMWARE = "VMWARE_VM"
+        AZURE = "AZURE_VM"
+        GCP = "GCP_VM"
+        EXISTING_VM = "EXISTING_VM"
+        K8S_POD = "K8S_POD"

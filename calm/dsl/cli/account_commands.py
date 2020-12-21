@@ -9,6 +9,7 @@ from .accounts import (
     verify_account,
 )
 from .main import get, delete, describe, create, compile, verify
+from calm.dsl.constants import PROVIDER
 
 
 @get.command("accounts")
@@ -32,7 +33,16 @@ from .main import get, delete, describe, create, compile, verify
     default=None,
     multiple=True,
     help="Search for accounts of specific provider",
-    type=click.Choice(["aws", "k8s", "vmware", "azure", "gcp", "nutanix"]),
+    type=click.Choice(
+        [
+            PROVIDER.ACCOUNT.AWS,
+            "k8s",
+            PROVIDER.ACCOUNT.VMWARE,
+            PROVIDER.ACCOUNT.AZURE,
+            PROVIDER.ACCOUNT.GCP,
+            "nutanix",
+        ]
+    ),
 )
 def _get_accounts(name, filter_by, limit, offset, quiet, all_items, account_type):
     """Get accounts, optionally filtered by a string"""

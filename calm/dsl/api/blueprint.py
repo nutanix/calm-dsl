@@ -1,6 +1,8 @@
 from .resource import ResourceAPI
 from .connection import REQUEST
 
+from calm.dsl.constants import PROVIDER
+
 
 class BlueprintAPI(ResourceAPI):
     def __init__(self, connection):
@@ -259,7 +261,7 @@ class BlueprintAPI(ResourceAPI):
         for obj_index, obj in enumerate(
             bp_resources.get("substrate_definition_list", []) or []
         ):
-            if (obj["type"] == "VMWARE_VM") and (obj["os_type"] == "Windows"):
+            if (obj["type"] == PROVIDER.VM.VMWARE) and (obj["os_type"] == "Windows"):
                 strip_vmware_secrets(["substrate_definition_list", obj_index], obj)
 
         upload_payload = self._make_blueprint_payload(

@@ -1,3 +1,4 @@
+from calm.dsl.constants import PROVIDER
 from calm.dsl.builtins import Account, AwsAccountSpec
 
 
@@ -30,7 +31,7 @@ class AwsSpec(AwsAccountSpec):
 
 
 class AwsAccount(Account):
-    provider_type = "aws"
+    provider_type = PROVIDER.ACCOUNT.AWS
     spec = AwsSpec
 
 

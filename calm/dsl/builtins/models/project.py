@@ -1,6 +1,7 @@
 import sys
 
 from .entity import EntityType
+from calm.dsl.constants import PROVIDER
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -36,7 +37,7 @@ class ProjectType(EntityType):
                 )
                 sys.exit(-1)
 
-            if provider_type == "nutanix_pc":
+            if provider_type == PROVIDER.ACCOUNT.NUTANIX:
                 if "subnet_reference_list" in provider_obj:
                     cdict["subnet_reference_list"] = provider_obj[
                         "subnet_reference_list"

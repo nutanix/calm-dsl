@@ -3,6 +3,7 @@ import click
 from prettytable import PrettyTable
 
 from calm.dsl.api import get_api_client, get_resource_api
+from calm.dsl.constants import PROVIDER
 from calm.dsl.log import get_logging_handle
 from .utils import highlight_text
 
@@ -58,7 +59,7 @@ def get_brownfield_ahv_vm_list(limit, offset, quiet, out, project_name):
     # Getting provider account_uuid registered in project
     LOG.info("Fetching project '{}' details".format(project_name))
     project_uuid, account_uuid = get_provider_account_from_project(
-        project_name, "nutanix_pc"
+        project_name, PROVIDER.ACCOUNT.NUTANIX
     )
 
     LOG.info("Fetching account(uuid={}) details".format(account_uuid))
@@ -151,7 +152,9 @@ def get_brownfield_aws_vm_list(limit, offset, quiet, out, project_name):
 
     # Getting provider account_uuid registered in project
     LOG.info("Fetching project '{}' details".format(project_name))
-    project_uuid, account_uuid = get_provider_account_from_project(project_name, "aws")
+    project_uuid, account_uuid = get_provider_account_from_project(
+        project_name, PROVIDER.ACCOUNT.AWS
+    )
 
     LOG.info("Fetching brownfield vms")
     Obj = get_resource_api("blueprints/brownfield_import/vms", client.connection)
@@ -228,7 +231,7 @@ def get_brownfield_azure_vm_list(limit, offset, quiet, out, project_name):
     # Getting provider account_uuid registered in project
     LOG.info("Fetching project '{}' details".format(project_name))
     project_uuid, account_uuid = get_provider_account_from_project(
-        project_name, "azure"
+        project_name, PROVIDER.ACCOUNT.AZURE
     )
 
     LOG.info("Fetching brownfield vms")
@@ -307,7 +310,9 @@ def get_brownfield_gcp_vm_list(limit, offset, quiet, out, project_name):
 
     # Getting provider account_uuid registered in project
     LOG.info("Fetching project '{}' details".format(project_name))
-    project_uuid, account_uuid = get_provider_account_from_project(project_name, "gcp")
+    project_uuid, account_uuid = get_provider_account_from_project(
+        project_name, PROVIDER.ACCOUNT.GCP
+    )
 
     LOG.info("Fetching brownfield vms")
     Obj = get_resource_api("blueprints/brownfield_import/vms", client.connection)
@@ -383,7 +388,9 @@ def get_brownfield_vmware_vm_list(limit, offset, quiet, out, project_name):
 
     # Getting provider account_uuid registered in project
     LOG.info("Fetching project '{}' details".format(project_name))
-    project_uuid, account_uuid = get_provider_account_from_project(project_name, "gcp")
+    project_uuid, account_uuid = get_provider_account_from_project(
+        project_name, PROVIDER.ACCOUNT.GCP
+    )
 
     LOG.info("Fetching brownfield vms")
     Obj = get_resource_api("blueprints/brownfield_import/vms", client.connection)
