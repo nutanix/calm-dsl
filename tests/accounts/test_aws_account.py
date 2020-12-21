@@ -33,6 +33,3 @@ class AwsSpec(AwsAccountSpec):
 class AwsAccount(Account):
     provider_type = PROVIDER.ACCOUNT.AWS
     spec = AwsSpec
-
-
-print(AwsAccount.json_dumps(pprint=True))

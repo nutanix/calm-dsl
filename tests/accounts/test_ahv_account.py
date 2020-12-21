@@ -14,6 +14,3 @@ class AhvAccount(Account):
 
     provider_type = PROVIDER.ACCOUNT.NUTANIX
     spec = AhvSpec
-
-
-print(AhvAccount.json_dumps(pprint=True))

@@ -86,6 +86,8 @@ from .models.vm_blueprint import VmBlueprint
 from .models.account import Account, account
 from .models.ahv_account import AhvAccountSpec, ahv_account_spec
 from .models.aws_account import AwsAccountSpec, aws_account_spec
+from .models.azure_account import AzureAccountSpec, azure_account_spec
+from .models.vmware_account import VmwareAccountSpec, vmware_account_spec
 
 
 __all__ = [
@@ -189,4 +191,8 @@ __all__ = [
     "ahv_account_spec",
     "AwsAccountSpec",
     "aws_account_spec",
+    "AzureAccountSpec",
+    "azure_account_spec",
+    "VmwareAccountSpec",
+    "vmware_account_spec",
 ]
