@@ -143,13 +143,15 @@ def get_validators_with_defaults(schema_props):
     display_map = bidict()
     for name, props in schema_props.items():
         calm_version = Version.get_version("Calm")
-        attribute_min_version = str(props.get("x-min-calm-version", "2.9.0"))
+
+        # dev machines do not follow standard version protocols. Avoid matching there
+        attribute_min_version = str(props.get("x-min-calm-version", ""))
         if not calm_version:
             # Raise warning and set default to 2.9.0
             calm_version = "2.9.0"
 
         # If attribute version is less than calm version, ignore it
-        if LV(attribute_min_version) > LV(calm_version):
+        if attribute_min_version and LV(attribute_min_version) > LV(calm_version):
             continue
 
         ValidatorType, is_array, default = get_validator_details(schema_props, name)
