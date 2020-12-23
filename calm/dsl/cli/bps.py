@@ -1116,9 +1116,6 @@ def launch_blueprint_simple(
         )
         LOG.info("Updated blueprint editables are:\n{}".format(runtime_editables_json))
 
-    import pdb
-
-    pdb.set_trace()
     res, err = client.blueprint.launch(blueprint_uuid, launch_payload)
     if not err:
         LOG.info("Blueprint {} queued for launch".format(blueprint_name))
