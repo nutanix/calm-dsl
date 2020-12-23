@@ -104,7 +104,7 @@ class Cache:
             init_db_handle()
             LOG.info("Updating cache", nl=False)
             sync_tables(tables)
-            click.echo(" [Done]", err=True)
+        click.echo(" [Done]", err=True)
 
     @classmethod
     def sync_table(cls, cache_type):
