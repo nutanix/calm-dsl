@@ -18,6 +18,7 @@ from calm.dsl.tools import get_module_from_file
 from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
 from calm.dsl.store import Cache
+from calm.dsl.constants import CACHE
 
 LOG = get_logging_handle(__name__)
 
@@ -332,6 +333,11 @@ def create_project_from_dsl(project_file, project_name, description=""):
         # Reset the context changes
         ContextObj.reset_configuration()
 
+    # Update projects in cache
+    LOG.info("Updating projects cache ...")
+    Cache.sync_table(cache_type=CACHE.ENTITY.PROJECT)
+    LOG.info("[Done]")
+
 
 def describe_project(project_name, out):
 
@@ -483,8 +489,13 @@ def delete_project(project_names):
             res["status"]["execution_context"]["task_uuid"], poll_interval=4
         )
         if task_state in ERGON_TASK.FAILURE_STATES:
-            raise Exception("Project deletion task went to {} state".format(task_state))
-        click.echo("")
+            LOG.exception("Project deletion task went to {} state".format(task_state))
+            sys.exit(-1)
+
+    # Update projects in cache
+    LOG.info("Updating projects cache ...")
+    Cache.sync_table(cache_type=CACHE.ENTITY.PROJECT)
+    LOG.info("[Done]")
 
 
 def update_project_from_dsl(project_name, project_file):
