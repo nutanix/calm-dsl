@@ -5,7 +5,11 @@ from prettytable import PrettyTable
 
 from calm.dsl.api import get_api_client
 from calm.dsl.builtins import Ref
+from .task_commands import watch_task
+from .constants import ERGON_TASK
 from calm.dsl.config import get_context
+from calm.dsl.store import Cache
+from calm.dsl.constants import CACHE
 from calm.dsl.log import get_logging_handle
 
 from .utils import get_name_query, highlight_text
@@ -84,6 +88,7 @@ def get_groups(name, filter_by, limit, offset, quiet, out):
 
 
 def create_group(name):
+    """creates user-group on pc"""
 
     client = get_api_client()
     group_payload = {
@@ -106,8 +111,22 @@ def create_group(name):
     }
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
+    LOG.info("Polling on user-group creation task")
+    task_state = watch_task(
+        res["status"]["execution_context"]["task_uuid"], poll_interval=5
+    )
+    if task_state in ERGON_TASK.FAILURE_STATES:
+        LOG.exception("User-Group creation task went to {} state".format(task_state))
+        sys.exit(-1)
+
+    # Update user-groups in cache
+    LOG.info("Updating user-groups cache ...")
+    Cache.sync_table(cache_type=CACHE.ENTITY.USER_GROUP)
+    LOG.info("[Done]")
+
 
 def delete_group(group_names):
+    """deletes user-group on pc"""
 
     client = get_api_client()
 
@@ -117,5 +136,18 @@ def delete_group(group_names):
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-        LOG.info("Group '{}' deleted".format(name))
-    LOG.warning("Please update cache.")
+        LOG.info("Polling on user-group deletion task")
+        res = res.json()
+        task_state = watch_task(
+            res["status"]["execution_context"]["task_uuid"], poll_interval=5
+        )
+        if task_state in ERGON_TASK.FAILURE_STATES:
+            LOG.exception(
+                "User-Group deletion task went to {} state".format(task_state)
+            )
+            sys.exit(-1)
+
+    # Update user-groups in cache
+    LOG.info("Updating user-groups cache ...")
+    Cache.sync_table(cache_type=CACHE.ENTITY.USER_GROUP)
+    LOG.info("[Done]")
