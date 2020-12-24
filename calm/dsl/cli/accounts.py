@@ -12,6 +12,8 @@ from .utils import get_name_query, get_states_filter, highlight_text
 from .constants import ACCOUNT
 from calm.dsl.store import Version
 from calm.dsl.log import get_logging_handle
+from calm.dsl.store import Cache
+from calm.dsl.constants import CACHE
 
 LOG = get_logging_handle(__name__)
 
@@ -135,10 +137,21 @@ def delete_account(account_names):
     for account_name in account_names:
         account = get_account(client, account_name)
         account_id = account["metadata"]["uuid"]
-        res, err = client.account.delete(account_id)
+        _, err = client.account.delete(account_id)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
         LOG.info("Account {} deleted".format(account_name))
+
+    # Update account related caches i.e. Account, AhvImage, AhvSubnet
+    LOG.info("Updating accounts cache ...")
+    Cache.sync_table(
+        cache_type=[
+            CACHE.ENTITY.ACCOUNT,
+            CACHE.ENTITY.AHV_DISK_IMAGE,
+            CACHE.ENTITY.AHV_SUBNET,
+        ]
+    )
+    LOG.info("[Done]")
 
 
 def describe_showback_data(spec):

@@ -108,14 +108,21 @@ class Cache:
 
     @classmethod
     def sync_table(cls, cache_type):
+        """sync the cache table provided in cache_type list"""
 
+        if not cache_type:
+            return
+
+        cache_type = [cache_type] if not isinstance(cache_type, list) else cache_type
         cache_table_map = cls.get_cache_tables()
-        if cache_type not in cache_table_map:
-            LOG.error("Invalid cache_type ('{}') provided".format(cache_type))
-            sys.exit(-1)
 
-        cache_table = cache_table_map[cache_type]
-        cache_table.sync()
+        for _ct in cache_type:
+            if _ct not in cache_table_map:
+                LOG.warning("Invalid cache_type ('{}') provided".format(cache_type))
+                continue
+
+            cache_table = cache_table_map[_ct]
+            cache_table.sync()
 
     @classmethod
     def clear_entities(cls):
