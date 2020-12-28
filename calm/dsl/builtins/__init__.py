@@ -88,6 +88,11 @@ from .models.ahv_account import AhvAccountSpec, ahv_account_spec
 from .models.aws_account import AwsAccountSpec, aws_account_spec
 from .models.azure_account import AzureAccountSpec, azure_account_spec
 from .models.vmware_account import VmwareAccountSpec, vmware_account_spec
+from .models.k8s_account import (
+    KubernetesAccountSpec,
+    kubernetes_account_spec,
+    KubernetesAuth,
+)
 
 
 __all__ = [
@@ -195,4 +200,7 @@ __all__ = [
     "azure_account_spec",
     "VmwareAccountSpec",
     "vmware_account_spec",
+    "KubernetesAccountSpec",
+    "kubernetes_account_spec",
+    "KubernetesAuth",
 ]

@@ -38,6 +38,7 @@
 {% import "aws_account_spec.yaml.jinja2" as aws_account_spec %}
 {% import "azure_account_spec.yaml.jinja2" as azure_account_spec %}
 {% import "vmware_account_spec.yaml.jinja2" as vmware_account_spec %}
+{% import "k8s_account_spec.yaml.jinja2" as k8s_account_spec %}
 
 {% macro Schemas() -%}
 
@@ -80,6 +81,7 @@
 {{ aws_account_spec.AwsAccountSpecSchema() }}
 {{ azure_account_spec.AzureAccountSpecSchema() }}
 {{ vmware_account_spec.VmwareAccountSpecSchema() }}
+{{ k8s_account_spec.KubernetesAccountSpecSchema() }}
 
 {%- endmacro %}
 

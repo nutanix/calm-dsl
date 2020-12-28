@@ -27,7 +27,7 @@ class PROVIDER:
         VMWARE = "vmware"
         AZURE = "azure"
         GCP = "gcp"
-        K8S = "k8s"
+        KUBERNETES = "k8s"
 
     class VM:
         AHV = "AHV_VM"
