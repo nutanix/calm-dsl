@@ -1,4 +1,5 @@
 import sys
+import json
 import click
 from prettytable import PrettyTable
 
@@ -87,7 +88,20 @@ def get_brownfield_ahv_vm_list(limit, offset, quiet, out, project_name):
         LOG.error(err)
         sys.exit(-1)
 
-    json_rows = res.json()["entities"]
+    res = res.json()
+    total_matches = res["metadata"]["total_matches"]
+    if total_matches > limit:
+        LOG.warning(
+            "Displaying {} out of {} entities. Please use --limit and --offset option for more results.".format(
+                limit, total_matches
+            )
+        )
+
+    if out == "json":
+        click.echo(json.dumps(res, indent=4, separators=(",", ": ")))
+        return
+
+    json_rows = res["entities"]
     if not json_rows:
         click.echo(
             highlight_text(
@@ -164,7 +178,20 @@ def get_brownfield_aws_vm_list(limit, offset, quiet, out, project_name):
         LOG.error(err)
         sys.exit(-1)
 
-    json_rows = res.json()["entities"]
+    res = res.json()
+    total_matches = res["metadata"]["total_matches"]
+    if total_matches > limit:
+        LOG.warning(
+            "Displaying {} out of {} entities. Please use --limit and --offset option for more results.".format(
+                limit, total_matches
+            )
+        )
+
+    if out == "json":
+        click.echo(json.dumps(res, indent=4, separators=(",", ": ")))
+        return
+
+    json_rows = res["entities"]
     if not json_rows:
         click.echo(
             highlight_text(
@@ -242,7 +269,20 @@ def get_brownfield_azure_vm_list(limit, offset, quiet, out, project_name):
         LOG.error(err)
         sys.exit(-1)
 
-    json_rows = res.json()["entities"]
+    res = res.json()
+    total_matches = res["metadata"]["total_matches"]
+    if total_matches > limit:
+        LOG.warning(
+            "Displaying {} out of {} entities. Please use --limit and --offset option for more results.".format(
+                limit, total_matches
+            )
+        )
+
+    if out == "json":
+        click.echo(json.dumps(res, indent=4, separators=(",", ": ")))
+        return
+
+    json_rows = res["entities"]
     if not json_rows:
         click.echo(
             highlight_text(
@@ -320,7 +360,20 @@ def get_brownfield_gcp_vm_list(limit, offset, quiet, out, project_name):
         LOG.error(err)
         sys.exit(-1)
 
-    json_rows = res.json()["entities"]
+    res = res.json()
+    total_matches = res["metadata"]["total_matches"]
+    if total_matches > limit:
+        LOG.warning(
+            "Displaying {} out of {} entities. Please use --limit and --offset option for more results.".format(
+                limit, total_matches
+            )
+        )
+
+    if out == "json":
+        click.echo(json.dumps(res, indent=4, separators=(",", ": ")))
+        return
+
+    json_rows = res["entities"]
     if not json_rows:
         click.echo(
             highlight_text(
@@ -383,7 +436,9 @@ def get_brownfield_vmware_vm_list(limit, offset, quiet, out, project_name):
 
     # Getting provider account_uuid registered in project
     LOG.info("Fetching project '{}' details".format(project_name))
-    project_uuid, account_uuid = get_provider_account_from_project(project_name, "gcp")
+    project_uuid, account_uuid = get_provider_account_from_project(
+        project_name, "vmware"
+    )
 
     LOG.info("Fetching brownfield vms")
     Obj = get_resource_api("blueprints/brownfield_import/vms", client.connection)
@@ -396,7 +451,20 @@ def get_brownfield_vmware_vm_list(limit, offset, quiet, out, project_name):
         LOG.error(err)
         sys.exit(-1)
 
-    json_rows = res.json()["entities"]
+    res = res.json()
+    total_matches = res["metadata"]["total_matches"]
+    if total_matches > limit:
+        LOG.warning(
+            "Displaying {} out of {} entities. Please use --limit and --offset option for more results.".format(
+                limit, total_matches
+            )
+        )
+
+    if out == "json":
+        click.echo(json.dumps(res, indent=4, separators=(",", ": ")))
+        return
+
+    json_rows = res["entities"]
     if not json_rows:
         click.echo(
             highlight_text(
