@@ -68,11 +68,11 @@ def cloud_init(filename=None, config={}):
         # reading the file
         config = read_file(filename, depth=3)
 
-        if re.match("\s*\|-", config):
+        if re.match(r"\s*\|-", config):
             config = yaml.safe_load(config)
 
         # If file content is dict or it do not contains macro(yaml content), then safe load the file
-        if re.match("\s*{", config) or (not re.search("@@{.*}@@", config)):
+        if re.match(r"\s*{", config) or (not re.search("@@{.*}@@", config)):
             # Converting config to json object
             config = yaml.safe_load(config)
 
@@ -86,24 +86,24 @@ def cloud_init(filename=None, config={}):
     # Case when a dict config is dumped to yaml, macros do come with quotes
 
     # Single quote near macro
-    if len(re.findall("'@@{\s*", config)) != len(re.findall("}@@\s*'", config)):
+    if len(re.findall(r"'@@{\s*", config)) != len(re.findall(r"}@@\s*'", config)):
         LOG.debug("Cloud_Init : {}".format(config))
         LOG.error("Invalid cloud_init found")
         sys.exit(-1)
 
     # Double quotes near mcro
-    if len(re.findall('"@@{\s*', config)) != len(re.findall('}@@\s*"', config)):
+    if len(re.findall(r'"@@{\s*', config)) != len(re.findall(r'}@@\s*"', config)):
         LOG.debug("Cloud_Init : {}".format(config))
         LOG.error("Invalid cloud_init found")
         sys.exit(-1)
 
     # Remove single quote with macro
-    config = re.sub("'@@{\s*", "@@{", config)
-    config = re.sub("}@@\s*'", "}@@", config)
+    config = re.sub(r"'@@{\s*", "@@{", config)
+    config = re.sub(r"}@@\s*'", "}@@", config)
 
     # Remove dobut quote wuth macro
-    config = re.sub('"@@{\s*', "@@{", config)
-    config = re.sub('}@@\s*"', "}@@", config)
+    config = re.sub(r'"@@{\s*', "@@{", config)
+    config = re.sub(r'}@@\s*"', "}@@", config)
 
     return create_ahv_guest_customization(
         customization_type="cloud_init", user_data=config

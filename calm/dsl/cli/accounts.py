@@ -55,7 +55,16 @@ def get_accounts(name, filter_by, limit, offset, quiet, all_items, account_type)
         LOG.warning("Cannot fetch accounts from {}".format(pc_ip))
         return
 
-    json_rows = res.json()["entities"]
+    res = res.json()
+    total_matches = res["metadata"]["total_matches"]
+    if total_matches > limit:
+        LOG.warning(
+            "Displaying {} out of {} entities. Please use --limit and --offset option for more results.".format(
+                limit, total_matches
+            )
+        )
+
+    json_rows = res["entities"]
     if not json_rows:
         click.echo(highlight_text("No account found !!!\n"))
         return
