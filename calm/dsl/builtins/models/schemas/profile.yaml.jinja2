@@ -9,6 +9,9 @@ properties:
   description:
     type: string
   # description attribute in profile gives bp launch error: https://jira.nutanix.com/browse/CALM-19380
+  environment_reference:
+    x-calm-dsl-display-name: environment
+    {{ ref.Ref() | indent(4) }}
   deployment_create_list:
     x-calm-dsl-display-name: deployments
     type: array

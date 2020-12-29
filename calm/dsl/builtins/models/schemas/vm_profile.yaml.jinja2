@@ -10,6 +10,9 @@ properties:
     type: string
     maxLength: 64
     default: ''
+  environment_reference:
+    x-calm-dsl-display-name: environment
+    {{ ref.Ref() | indent(4) }}
   os_type:
     type: string
     default: 'Linux'

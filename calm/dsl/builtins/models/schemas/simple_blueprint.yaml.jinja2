@@ -1,3 +1,5 @@
+{% import "ref.yaml.jinja2" as ref %}
+
 {% macro SimpleBlueprint() -%}
 
 title: SimpleBlueprint
@@ -12,6 +14,9 @@ properties:
     type: string
     maxLength: 1000
     default: ''
+  environment_reference:
+    x-calm-dsl-display-name: environment
+    {{ ref.Ref() | indent(4) }}
   credentials:
     type: array
     items:

@@ -143,6 +143,18 @@ class Ref:
                 )
             return {"kind": "project", "name": name, "uuid": project_cache_data["uuid"]}
 
+    class Environment:
+        def __new__(cls, name, **kwargs):
+
+            key = name
+            environment_cache_data = Cache.get_entity_data(entity_type="environment", name=name, **kwargs)
+            if not environment_cache_data:
+                raise Exception(
+                    "Environment {} not found. Please run: calm update cache".format(name)
+                )
+
+            return {"kind": "environment", "name": name, "uuid": environment_cache_data["uuid"]}
+
     class DirectoryService:
         def __new__(cls, name, **kwargs):
 
