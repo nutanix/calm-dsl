@@ -1,5 +1,3 @@
-{% import "ref.yaml.jinja2" as ref %}
-
 {% macro VmProfile() -%}
 
 title: VmProfile
@@ -11,8 +9,16 @@ properties:
     maxLength: 64
     default: ''
   environment_reference:
+    type: object
+    x-calm-dsl-type: object
     x-calm-dsl-display-name: environment
-    {{ ref.Ref() | indent(4) }}
+    properties:
+      name:
+        type: string
+      kind:
+        type: string
+      uuid:
+        type: string
   os_type:
     type: string
     default: 'Linux'
