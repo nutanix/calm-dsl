@@ -139,7 +139,7 @@ def _launch_marketplace_item(
     watch,
     poll_interval,
 ):
-    """Launch a marketplace store item"""
+    """Launch a marketplace store item of type blueprint"""
 
     launch_marketplace_item(
         name=name,
