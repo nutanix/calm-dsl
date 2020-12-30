@@ -12,17 +12,21 @@ properties:
     type: string
     maxLength: 1000
     default: ''
-  environment_reference:
+  environment:
     type: object
     x-calm-dsl-type: object
     x-calm-dsl-display-name: environment
     properties:
-      name:
-        type: string
       kind:
+        type: string
+      name:
         type: string
       uuid:
         type: string
+  environment_reference_list:
+    type: array
+    items:
+      type: string
   credentials:
     type: array
     items:

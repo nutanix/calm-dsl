@@ -154,8 +154,8 @@ class SubstrateType(EntityType):
                     # Registered accounts
                     project_accounts = project_cache_data["accounts_data"]
                     provider_type = provider_type_map[cdict["type"]]
-                    account_uuid = project_accounts.get(provider_type, "")
-                    if not account_uuid:
+                    account_uuids = project_accounts.get(provider_type, [])
+                    if not account_uuids:
                         LOG.error(
                             "No {} account registered in project '{}'".format(
                                 provider_type, project_name
@@ -164,7 +164,7 @@ class SubstrateType(EntityType):
                         sys.exit(-1)
 
                     # Adding default spec
-                    cdict["create_spec"] = {"resources": {"account_uuid": account_uuid}}
+                    cdict["create_spec"] = {"resources": {"account_uuid": account_uuids[0]}}
 
                     # Template attribute should be present for vmware spec
                     if cdict["type"] == "VMWARE_VM":

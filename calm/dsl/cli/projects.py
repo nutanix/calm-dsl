@@ -276,10 +276,6 @@ def create_project_from_dsl(project_file, project_name, description=""):
         envs = getattr(UserProject, "envs", [])
         UserProject.envs = []
 
-    if len(envs) > 1:
-        LOG.error("Multiple environments in a project are not allowed.")
-        sys.exit(-1)
-
     for _env in envs:
         env_name = _env.__name__
         LOG.info("Searching for existing environments with name '{}'".format(env_name))

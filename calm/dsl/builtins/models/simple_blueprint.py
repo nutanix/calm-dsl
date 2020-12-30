@@ -63,7 +63,7 @@ class SimpleBlueprintType(EntityType):
         credential_definition_list = cdict["credentials"]
 
         # Init Profile
-        pro = profile(name=cls.__name__ + "Profile")
+        pro = profile(name=cls.__name__ + "Profile", environment=cdict.get("environment", {}))
         app_profile = pro.get_dict()
         app_profile["variable_list"] = cdict["variables"]
         app_profile["action_list"] = cdict["action_list"]

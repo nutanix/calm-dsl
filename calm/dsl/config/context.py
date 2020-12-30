@@ -34,6 +34,7 @@ class Context:
         init_config = config_handle.get_init_config()
         self._CONFIG_FILE = init_config["CONFIG"]["location"]
         self._PROJECT = self.project_config.get("name", "")
+        self._ENVIRONMENT_UUID = {}
 
     def reset_configuration(self):
         """Resets the configuration"""
@@ -110,6 +111,21 @@ class Context:
 
         self._PROJECT = project_name
         self.project_config["name"] = project_name
+
+    def unset_environment(self):
+        """remove environment uuid from context"""
+
+        self._ENVIRONMENT_UUID = None
+
+    def set_environment(self, env_uuid):
+        """add environment uuid to context"""
+
+        self._ENVIRONMENT_UUID = env_uuid
+
+    def get_environment(self):
+        """get environment uuid from context"""
+
+        return self._ENVIRONMENT_UUID
 
     def update_config_file_context(self, config_file):
         """Overrides the existing configuration with passed file configuration"""

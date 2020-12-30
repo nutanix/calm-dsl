@@ -87,6 +87,17 @@ properties:
     type: array
     items:
       $ref: '#/components/schemas/Ref'
+  default_environment_reference:
+    x-calm-dsl-display-name: default_environment
+    type: object
+    x-calm-dsl-type: object
+    properties:
+      kind:
+        type: string
+      name:
+        type: string
+      uuid:
+        type: string
   environment_definition_list:
     x-calm-dsl-display-name: envs
     description: Inline definitions of environment in project

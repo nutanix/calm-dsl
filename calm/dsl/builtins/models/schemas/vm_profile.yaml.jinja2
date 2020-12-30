@@ -8,17 +8,21 @@ properties:
     type: string
     maxLength: 64
     default: ''
-  environment_reference:
+  environment:
     type: object
     x-calm-dsl-type: object
     x-calm-dsl-display-name: environment
     properties:
-      name:
-        type: string
       kind:
+        type: string
+      name:
         type: string
       uuid:
         type: string
+  environment_reference_list:
+    type: array
+    items:
+      type: string
   os_type:
     type: string
     default: 'Linux'
