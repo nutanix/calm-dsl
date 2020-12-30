@@ -43,12 +43,7 @@ class ProfileType(EntityType):
         env_uuid = cdict.get("environment", {}).get("uuid")
         env_name = cdict.get("environment", {}).get("name", env_uuid)
 
-        if not env_uuid
-
-            # profile is not linked to an environment. Unset from context.
-            context.unset_environment()
-        else:
-
+        if env_uuid:
             # ensure that the referenced environment is associated to the project this BP belongs to.
             env_cache_data = Cache.get_entity_data_using_uuid(entity_type="environment", uuid=env_uuid)
             env_project = env_cache_data.get("project")
@@ -58,7 +53,6 @@ class ProfileType(EntityType):
                     " project '{}'".format(env_name, cdict.get("name", ""), env_project, project_name))
                 sys.exit(-1)
 
-            context.set_environment(env_uuid)
             cdict["environment_reference_list"] = [env_uuid]
 
         # pop out unnecessary attibutes
