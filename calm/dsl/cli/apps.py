@@ -474,7 +474,7 @@ def watch_action(runlog_uuid, app_name, client, screen, poll_interval=10):
     poll_action(poll_func, get_completion_func(screen), poll_interval)
 
 
-def watch_app(app_name, screen, app=None):
+def watch_app(app_name, screen, app=None, poll_interval=10):
     """Watch an app"""
 
     client = get_api_client()
@@ -583,7 +583,7 @@ def watch_app(app_name, screen, app=None):
             return (is_complete, msg)
         return (False, "")
 
-    poll_action(poll_func, is_complete)
+    poll_action(poll_func, is_complete, poll_interval=poll_interval)
 
 
 def delete_app(app_names, soft=False):

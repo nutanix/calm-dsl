@@ -18,3 +18,5 @@ def validate_version():
                     calm_version, LATEST_VERIFIED_VERSION
                 )
             )
+    else:
+        LOG.warning("Version not found. Please update cache.")

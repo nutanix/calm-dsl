@@ -9,6 +9,7 @@ from calm.dsl.store import Cache
 from calm.dsl.builtins import read_file
 from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
+from calm.dsl.constants import CACHE
 
 LOG = get_logging_handle(__name__)
 
@@ -19,7 +20,9 @@ def render_ahv_template(template, bp_name):
 
     project_config = ContextObj.get_project_config()
     project_name = project_config.get("name") or "default"
-    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
+    project_cache_data = Cache.get_entity_data(
+        entity_type=CACHE.ENTITY.PROJECT, name=project_name
+    )
     if not project_cache_data:
         LOG.error(
             "Project {} not found. Please run: calm update cache".format(project_name)
@@ -40,7 +43,9 @@ def render_ahv_template(template, bp_name):
 
     # Fetch data for first subnet
     subnet_cache_data = Cache.get_entity_data_using_uuid(
-        entity_type="ahv_subnet", uuid=project_subnets[0], account_uuid=account_uuid
+        entity_type=CACHE.ENTITY.AHV_SUBNET,
+        uuid=project_subnets[0],
+        account_uuid=account_uuid,
     )
     if not subnet_cache_data:
         # Case when project have a subnet that is not available in subnets from registered account
@@ -76,7 +81,9 @@ def render_single_vm_bp_ahv_template(template, bp_name):
 
     project_config = ContextObj.get_project_config()
     project_name = project_config.get("name") or "default"
-    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
+    project_cache_data = Cache.get_entity_data(
+        entity_type=CACHE.ENTITY.PROJECT, name=project_name
+    )
     if not project_cache_data:
         LOG.error(
             "Project {} not found. Please run: calm update cache".format(project_name)
@@ -97,7 +104,9 @@ def render_single_vm_bp_ahv_template(template, bp_name):
 
     # Fetch data for first subnet
     subnet_cache_data = Cache.get_entity_data_using_uuid(
-        entity_type="ahv_subnet", uuid=project_subnets[0], account_uuid=account_uuid
+        entity_type=CACHE.ENTITY.AHV_SUBNET,
+        uuid=project_subnets[0],
+        account_uuid=account_uuid,
     )
     if not subnet_cache_data:
         # Case when project have a subnet that is not available in subnets from registered account
