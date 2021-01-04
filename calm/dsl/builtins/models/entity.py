@@ -238,7 +238,7 @@ class EntityType(EntityTypeBase):
                 and name.endswith("__")
                 and not isinstance(value, (VariableType, ActionType, RunbookType))
                 and not isinstance(type(value), DescriptorType)
-            ):
+            ) or name == "__parent__":
                 continue
             user_attrs[name] = getattr(cls, name, value)
 
@@ -342,6 +342,8 @@ class EntityType(EntityTypeBase):
 
         # Fetching actions data inside entity
         for ek, ev in cls.__dict__.items():
+            if ek == "__parent__":  # TODO fix this mess
+                continue
             e_obj = getattr(cls, ek)
             if isinstance(e_obj, ActionType):
                 user_func = ev.user_func
@@ -386,6 +388,26 @@ class EntityType(EntityTypeBase):
         # cdict['__kind__'] = cls.__kind__
 
         return cdict
+
+    def post_compile(cls, cdict):
+        """method sets some properties to dict generated after compile"""
+
+        for _, v in cdict.items():
+            if isinstance(v, list):
+                for ve in v:
+                    if issubclass(type(ve), EntityTypeBase):
+                        ve.__parent__ = cls
+            elif issubclass(type(v), EntityTypeBase):
+                v.__parent__ = cls
+
+        return cdict
+
+    def generate_payload(cls):
+        """generates the payload(dict) for any entity"""
+
+        cls.pre_compile()
+        cdict = cls.compile()
+        return cls.post_compile(cdict)
 
     @classmethod
     def pre_decompile(mcls, cdict, context, prefix=""):
@@ -562,7 +584,7 @@ class EntityJSONEncoder(JSONEncoder):
             return super().default(cls)
 
         # Add single function(wrapper) that can contain pre-post checks
-        return cls.compile()
+        return cls.generate_payload()
 
 
 class EntityJSONDecoder(JSONDecoder):
