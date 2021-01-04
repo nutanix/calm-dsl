@@ -14,6 +14,7 @@ from calm.dsl.builtins import Account
 
 from .utils import get_name_query, get_states_filter, highlight_text
 from calm.dsl.constants import PROVIDER
+from calm.dsl.providers import get_provider
 from .constants import ACCOUNT
 from calm.dsl.store import Version
 from calm.dsl.log import get_logging_handle
@@ -208,6 +209,16 @@ def create_account(account_file, name):
         sys.exit(-1)
 
     LOG.info("Creating account '{}'".format(name))
+
+    account_type = account_payload["spec"]["resources"]["type"]
+    # Some attributes should be sent in update payload
+    gcp_public_images = []
+    if account_type == PROVIDER.ACCOUNT.GCP:
+        gcp_public_images = (
+            account_payload["spec"]["resources"]["data"].pop("public_images", None)
+            or []
+        )
+
     res, err = client.account.create(account_payload)
     if err:
         LOG.error(err)
@@ -215,6 +226,7 @@ def create_account(account_file, name):
 
     account = res.json()
     account_state = account["status"]["resources"]["state"]
+    account_uuid = account["metadata"]["uuid"]
     msg_list = account["status"].get("message_list")
 
     if account_state != ACCOUNT.STATES.ACTIVE:
@@ -223,9 +235,36 @@ def create_account(account_file, name):
             LOG.error("Api returned following messages: {}".format(msg_list))
         return
 
+    account.pop("status", None)
+    if account_type == PROVIDER.ACCOUNT.GCP and gcp_public_images:
+        GcpProvider = get_provider(PROVIDER.VM.GCP)
+        GcpObj = GcpProvider.get_api_obj()
+
+        params = {"filter": "account_uuid=={};public_only==true".format(account_uuid)}
+        res, _ = GcpObj.public_images(params=params)
+        res = res.json()
+
+        update_payload = account
+        update_payload["spec"]["resources"]["data"]["public_images"] = []
+        for _en in res["entities"]:
+            if _en["status"]["resources"]["name"] in gcp_public_images:
+                update_payload["spec"]["resources"]["data"]["public_images"].append(
+                    {
+                        "diskSizeGb": _en["status"]["resources"]["diskSizeGb"],
+                        "selfLink": _en["status"]["resources"]["selfLink"],
+                    }
+                )
+
+        res, err = client.account.update(uuid=account_uuid, payload=update_payload)
+        if err:
+            LOG.error(err)
+            sys.exit(-1)
+        res = res.json()
+        account_state = res["status"]["resources"]["state"]
+
     stdout_dict = {
-        "name": account["metadata"]["name"],
-        "uuid": account["metadata"]["uuid"],
+        "name": name,
+        "uuid": account_uuid,
         "state": account_state,
     }
 

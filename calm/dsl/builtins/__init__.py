@@ -92,6 +92,7 @@ from .models.k8s_account import (
     KubernetesAccountSpec,
     KubernetesAuth,
 )
+from .models.gcp_account import GcpAccountSpec, gcp_account_spec
 
 
 __all__ = [
@@ -201,4 +202,6 @@ __all__ = [
     "vmware_account_spec",
     "KubernetesAccountSpec",
     "KubernetesAuth",
+    "GcpAccountSpec",
+    "gcp_account_spec",
 ]

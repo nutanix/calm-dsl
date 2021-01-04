@@ -144,6 +144,10 @@ class GCP:
 
         return entity_map
 
+    def public_images(self, params):
+        Obj = get_resource_api(gcp.DISK_IMAGES, self.connection)
+        return Obj.list(params=params)
+
     def disk_images(self, account_id, zone):
         """
         Returns gcpImages + gcpSnapshots + configuredPublicImages

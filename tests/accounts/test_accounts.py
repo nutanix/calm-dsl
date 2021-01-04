@@ -21,6 +21,8 @@ class TestAccounts:
             "tests/accounts/test_k8s_client_cert_auth_account.py",
             "tests/accounts/test_k8s_karbon_account.py",
             "tests/accounts/test_vmware_account.py",
+            "tests/accounts/test_gcp_account.py",
+            "tests/accounts/test_gcp_account_with_gke.py"
         ],
     )
     def test_compile(self, account_file):

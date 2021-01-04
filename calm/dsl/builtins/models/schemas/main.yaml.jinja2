@@ -40,6 +40,7 @@
 {% import "vmware_account_spec.yaml.jinja2" as vmware_account_spec %}
 {% import "k8s_vanilla_account_spec.yaml.jinja2" as k8s_vanilla_account_spec %}
 {% import "k8s_karbon_account_spec.yaml.jinja2" as k8s_karbon_account_spec %}
+{% import "gcp_account_spec.yaml.jinja2" as gcp_account_spec %}
 
 {% macro Schemas() -%}
 
@@ -84,6 +85,7 @@
 {{ vmware_account_spec.VmwareAccountSpecSchema() }}
 {{ k8s_vanilla_account_spec.KubernetesVanillaAccountSpecSchema() }}
 {{ k8s_karbon_account_spec.KubernetesKarbonAccountSpecSchema() }}
+{{ gcp_account_spec.GCPAccountSpecSchema() }}
 
 {%- endmacro %}
 

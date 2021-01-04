@@ -39,6 +39,7 @@ def create_ahv_guest_customization(
     credential=None,
 ):
 
+    kwargs = dict()
     if customization_type == "cloud_init":
         kwargs = {"cloud_init": {"user_data": user_data}}
 

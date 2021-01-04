@@ -1,0 +1,53 @@
+{% macro GCPAccountSpec() -%}
+
+title: GcpAccountSpec
+type: object
+x-calm-dsl-type: gcp_account_spec
+properties:
+  private_key:
+    type: string
+  account_type:
+    type: string
+    default: "service_account"
+  private_key_id:
+    type: string
+  token_uri:
+    type: string
+  project_id:
+    type: string
+    default: vanilla
+  auth_uri:
+    type: string
+  auth_provider_x509_cert_url:
+    type: string
+  client_id:
+    type: string
+  client_email:
+    type: string
+  client_x509_cert_url:
+    type: string
+  gke_config:
+    type: object
+    x-calm-dsl-type: object
+    properties:
+      port:
+        type: integer
+      server:
+        type: string
+  regions:
+    type: array
+    items:
+      type: string
+  public_images:
+    type: array
+    items:
+      type: string
+{%- endmacro %}
+
+
+{% macro GCPAccountSpecSchema() -%}
+
+GcpAccountSpec:
+  {{ GCPAccountSpec()|indent(2) }}
+
+{%- endmacro %}
