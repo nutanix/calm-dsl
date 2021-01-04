@@ -37,3 +37,16 @@ class PROVIDER:
         GCP = "GCP_VM"
         EXISTING_VM = "EXISTING_VM"
         K8S_POD = "K8S_POD"
+
+
+class KUBERNETES:
+    """Kubernetes constants"""
+
+    class ACCOUNT:
+        VANILLA = "vanilla"
+        KARBON = "karbon"
+
+    class AUTH:
+        BASIC = "basic"
+        CLIENT_CERTIFICATE = "client_certificate"
+        CA_CERTIFICATE = "ca_certificate"

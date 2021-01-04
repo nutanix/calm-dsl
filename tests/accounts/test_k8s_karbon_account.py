@@ -1,10 +1,10 @@
-from calm.dsl.builtins import Account, KubernetesAccountSpec, KubernetesAuth
-from calm.dsl.constants import PROVIDER
+from calm.dsl.builtins import Account, KubernetesAccountSpec
+from calm.dsl.constants import PROVIDER, KUBERNETES
 
 
 class K8sSpec(KubernetesAccountSpec):
 
-    type = "karbon"
+    account_type = KUBERNETES.ACCOUNT.KARBON
     cluster = "karbon_cluster"
 
 
