@@ -18,6 +18,3 @@ class K8sCaCertAuthAccount(Account):
 
     provider_type = PROVIDER.ACCOUNT.KUBERNETES
     spec = K8sSpec
-
-
-print(K8sCaCertAuthAccount.json_dumps(pprint=True))

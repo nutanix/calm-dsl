@@ -5,9 +5,9 @@ class ResourceAPI:
 
     ROOT = "api/nutanix/v3"
 
-    def __init__(self, connection, resource_type):
+    def __init__(self, connection, resource_type, root=None):
         self.connection = connection
-        self.PREFIX = ResourceAPI.ROOT + "/" + resource_type
+        self.PREFIX = (root or ResourceAPI.ROOT) + "/" + resource_type
         self.LIST = self.PREFIX + "/list"
         self.ITEM = self.PREFIX + "/{}"
 
@@ -98,5 +98,5 @@ class ResourceAPI:
         return uuid_name_map
 
 
-def get_resource_api(resource_type, connection):
-    return ResourceAPI(connection, resource_type)
+def get_resource_api(resource_type, connection, root=None):
+    return ResourceAPI(connection, resource_type, root)

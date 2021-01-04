@@ -23,6 +23,11 @@ class AccountSpecType(EntityType):
             raise TypeError("Provider account data does not have a __provider_type__")
 
         provider_type = getattr(cls, "__provider_type__")
+
+        # Case for multiple k8s accounts
+        if not provider_type:
+            return
+
         cls.subclasses[provider_type] = cls
 
 

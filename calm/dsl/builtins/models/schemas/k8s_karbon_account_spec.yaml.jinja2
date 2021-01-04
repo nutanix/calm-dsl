@@ -1,0 +1,21 @@
+{% macro KubernetesKarbonAccountSpec() -%}
+
+title: KubernetesKarbonAccountSpec
+type: object
+x-calm-dsl-type: kubernetes_karbon_account_spec
+properties:
+  cluster:
+    type: string
+  type:
+    type: string
+    default: karbon
+
+{%- endmacro %}
+
+
+{% macro KubernetesKarbonAccountSpecSchema() -%}
+
+KubernetesKarbonAccountSpec:
+  {{ KubernetesKarbonAccountSpec()|indent(2) }}
+
+{%- endmacro %}

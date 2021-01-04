@@ -1,0 +1,27 @@
+{% macro KubernetesVanillaAccountSpec() -%}
+
+title: KubernetesVanillaAccountSpec
+type: object
+x-calm-dsl-type: kubernetes_vanilla_account_spec
+properties:
+  server:
+    type: string
+  type:
+    type: string
+    default: vanilla
+  port:
+    type: integer
+  authentication:
+    type: object
+    x-calm-dsl-display-name: auth
+    x-calm-dsl-type: dict
+
+{%- endmacro %}
+
+
+{% macro KubernetesVanillaAccountSpecSchema() -%}
+
+KubernetesVanillaAccountSpec:
+  {{ KubernetesVanillaAccountSpec()|indent(2) }}
+
+{%- endmacro %}

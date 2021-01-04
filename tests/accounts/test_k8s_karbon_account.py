@@ -4,13 +4,11 @@ from calm.dsl.constants import PROVIDER
 
 class K8sSpec(KubernetesAccountSpec):
 
-    server = "127.0.0.1"
-    type = "vanilla"
-    port = 9440
-    auth = KubernetesAuth.basic(username="username", password="password")
+    type = "karbon"
+    cluster = "karbon_cluster"
 
 
-class K8sBasicAuthAccount(Account):
+class K8sKarbonAccount(Account):
 
     provider_type = PROVIDER.ACCOUNT.KUBERNETES
     spec = K8sSpec
