@@ -53,11 +53,20 @@ def get_apps(name, filter_by, limit, offset, quiet, all_items, out):
         LOG.warning("Cannot fetch applications from {}".format(pc_ip))
         return
 
+    res = res.json()
+    total_matches = res["metadata"]["total_matches"]
+    if total_matches > limit:
+        LOG.warning(
+            "Displaying {} out of {} entities. Please use --limit and --offset option for more results.".format(
+                limit, total_matches
+            )
+        )
+
     if out == "json":
-        click.echo(json.dumps(res.json(), indent=4, separators=(",", ": ")))
+        click.echo(json.dumps(res, indent=4, separators=(",", ": ")))
         return
 
-    json_rows = res.json()["entities"]
+    json_rows = res["entities"]
     if not json_rows:
         click.echo(highlight_text("No application found !!!\n"))
         return
@@ -474,7 +483,7 @@ def watch_action(runlog_uuid, app_name, client, screen, poll_interval=10):
     poll_action(poll_func, get_completion_func(screen), poll_interval)
 
 
-def watch_app(app_name, screen, app=None):
+def watch_app(app_name, screen, app=None, poll_interval=10):
     """Watch an app"""
 
     client = get_api_client()
@@ -583,7 +592,7 @@ def watch_app(app_name, screen, app=None):
             return (is_complete, msg)
         return (False, "")
 
-    poll_action(poll_func, is_complete)
+    poll_action(poll_func, is_complete, poll_interval=poll_interval)
 
 
 def delete_app(app_names, soft=False):

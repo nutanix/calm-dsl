@@ -295,13 +295,16 @@ class AhvVmProvider(Provider):
                 else:
                     nic_cluster_data[nic_name] = [(cluster_name, nic_uuid)]
 
-            click.echo("Choose from given subnets:")
-            for ind, name in enumerate(nic_cluster_data.keys()):
-                click.echo("\t {}. {}".format(str(ind + 1), name))
-
             for nic_index, nic_data in nic_list.items():
                 click.echo("\n--Nic {} -- ".format(nic_index))
-                nic_uuid = nic_data["subnet_reference"].get("uuid")
+                nic_uuid = (nic_data.get("subnet_reference") or {}).get("uuid")
+                if not nic_uuid:
+                    continue
+
+                click.echo("Choose from given subnets:")
+                for ind, name in enumerate(nic_cluster_data.keys()):
+                    click.echo("\t {}. {}".format(str(ind + 1), name))
+
                 nic_name = subnet_id_name_map.get(nic_uuid, "")
 
                 if nic_uuid.startswith("@@") and nic_uuid.endswith("@@"):

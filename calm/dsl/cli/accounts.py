@@ -18,6 +18,8 @@ from calm.dsl.providers import get_provider
 from .constants import ACCOUNT
 from calm.dsl.store import Version
 from calm.dsl.log import get_logging_handle
+from calm.dsl.store import Cache
+from calm.dsl.constants import CACHE
 
 LOG = get_logging_handle(__name__)
 
@@ -59,7 +61,16 @@ def get_accounts(name, filter_by, limit, offset, quiet, all_items, account_type)
         LOG.warning("Cannot fetch accounts from {}".format(pc_ip))
         return
 
-    json_rows = res.json()["entities"]
+    res = res.json()
+    total_matches = res["metadata"]["total_matches"]
+    if total_matches > limit:
+        LOG.warning(
+            "Displaying {} out of {} entities. Please use --limit and --offset option for more results.".format(
+                limit, total_matches
+            )
+        )
+
+    json_rows = res["entities"]
     if not json_rows:
         click.echo(highlight_text("No account found !!!\n"))
         return
@@ -370,6 +381,17 @@ def verify_account(account_name):
     if res.ok:
         res = res.json()
         LOG.info(res["description"])
+
+    # Update account related caches i.e. Account, AhvImage, AhvSubnet
+    LOG.info("Updating accounts cache ...")
+    Cache.sync_table(
+        cache_type=[
+            CACHE.ENTITY.ACCOUNT,
+            CACHE.ENTITY.AHV_DISK_IMAGE,
+            CACHE.ENTITY.AHV_SUBNET,
+        ]
+    )
+    LOG.info("[Done]")
 
 
 def describe_showback_data(spec):

@@ -21,6 +21,7 @@ from calm.dsl.log import get_logging_handle
 LOG = get_logging_handle(__name__)
 APP_ICON_IMAGE_PATH = "tests/cli/images/test_app_icon.jpg"
 DSL_BP_FILEPATH = "tests/existing_vm_example/test_existing_vm_bp.py"
+DSL_BP_EDITABLE_PARAMS = "tests/existing_vm_example/existing_vm_bp_editable_params.py"
 NON_BUSY_APP_STATES = [
     APPLICATION.STATES.STOPPED,
     APPLICATION.STATES.RUNNING,
@@ -984,6 +985,51 @@ class TestMarketplaceBPCommands:
             pytest.fail("Launching of marketplace blueprint in PENDING state failed")
         self.created_app_list.append(self.pending_mpbp_app_name)
 
+        # Launch the bp in PENDING state using launch_params
+        self.pending_mpbp_lp_app_name = "Test_MPI_APP_LP_{}".format(
+            str(uuid.uuid4())[-10:]
+        )
+        LOG.info(
+            "Launch Bp {} with version {} in PENDING state with launch_params".format(
+                self.marketplace_bp_name, self.mpi1_version
+            )
+        )
+        command = [
+            "launch",
+            "marketplace",
+            "bp",
+            self.marketplace_bp_name,
+            "--version",
+            self.mpi1_version,
+            "--project",
+            "default",
+            "--app_name",
+            self.pending_mpbp_lp_app_name,
+            "--profile_name",
+            "DefaultProfile",
+            "--launch_params",
+            DSL_BP_EDITABLE_PARAMS,
+        ]
+        runner = CliRunner()
+
+        result = runner.invoke(cli, command)
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail(
+                "Launching of marketplace blueprint in PENDING state  with launch_params failed"
+            )
+        self.created_app_list.append(self.pending_mpbp_lp_app_name)
+
         # Approve the blueprint
         LOG.info(
             "Approving marketplace blueprint {} with version {}".format(
@@ -1127,6 +1173,49 @@ class TestMarketplaceBPCommands:
             )
             pytest.fail("Launching of marketplace blueprint in PUBLISHED state failed")
         self.created_app_list.append(self.published_mpbp_app_name)
+
+        # Launching the bp in PUBLISHED state(Marketplace Item) with launch_params
+        self.published_mpbp_lp_app_name = "Test_MPI_APP_LP_{}".format(
+            str(uuid.uuid4())[-10:]
+        )
+        LOG.info(
+            "Launching Marketplace Item {} with version {} with launch_params".format(
+                self.marketplace_bp_name, self.mpi1_version
+            )
+        )
+        command = [
+            "launch",
+            "marketplace",
+            "item",
+            self.marketplace_bp_name,
+            "--version",
+            self.mpi1_version,
+            "--project",
+            "default",
+            "--app_name",
+            self.published_mpbp_lp_app_name,
+            "--profile_name",
+            "DefaultProfile",
+            "--launch_params",
+            DSL_BP_EDITABLE_PARAMS,
+        ]
+        runner = CliRunner()
+
+        result = runner.invoke(cli, command)
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Launching of marketplace blueprint in PUBLISHED state failed")
+        self.created_app_list.append(self.published_mpbp_lp_app_name)
 
         # Unpublish marketplace blueprint from marketplace
         LOG.info(

@@ -275,6 +275,9 @@ def launch_blueprint_command(
     The blueprint default values can be overridden by passing a Python file via 'launch_params'. Any variable not defined in the Python file will keep the default value defined in the blueprint. When passing a Python file, no variables will be prompted.
 
     \b
+    Note: Dynamic variables will not have a default value. User have to select an option during launch.
+
+    \b
     >: launch_params: Python file consisting of variables 'variable_list' and 'substrate_list'
     Ex: variable_list = [
             {
@@ -324,7 +327,7 @@ def launch_blueprint_command(
     if watch:
 
         def display_action(screen):
-            watch_app(app_name, screen)
+            watch_app(app_name, screen, poll_interval=poll_interval)
             screen.wait_for_input(10.0)
 
         Display.wrapper(display_action, watch=True)
