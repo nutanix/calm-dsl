@@ -3,6 +3,7 @@ class AWS:
     VOLUME_TYPES = "aws/volume_types"
     AVAILABILTY_ZONES = "aws/availability_zones"
     MIXED_IMAGES = "aws/mixed_images"
+    IMAGES = "aws/images"
     ROLES = "aws/roles"
     KEY_PAIRS = "aws/key_pairs"
     VPCS = "aws/vpcs"

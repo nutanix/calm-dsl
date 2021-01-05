@@ -118,6 +118,12 @@ class AWS:
 
         return result
 
+    def images(self, payload):
+        """return the response for /images metaapi"""
+
+        Obj = get_resource_api(aws.IMAGES, self.connection)
+        return Obj.list(payload)
+
     def roles(self, account_id, region_name):
 
         payload = {

@@ -15,6 +15,18 @@ class AwsAccountSpecType(AccountSpecType):
 
     __provider_type__ = PROVIDER.ACCOUNT.AWS
 
+    def compile(cls):
+        """returns the compiled payload for aws account spec"""
+
+        cdict = super().compile()
+        password = cdict.pop("secret_access_key", None)
+        cdict["secret_access_key"] = {
+            "attrs": {"is_secret_modified": True},
+            "value": password,
+        }
+
+        return cdict
+
 
 class AwsAccountDataValidator(PropertyValidator, openapi_type="aws_account_spec"):
     __default__ = None

@@ -212,12 +212,21 @@ def create_account(account_file, name):
 
     account_type = account_payload["spec"]["resources"]["type"]
     # Some attributes should be sent in update payload
+
+    # Extract public images from gcp account
     gcp_public_images = []
     if account_type == PROVIDER.ACCOUNT.GCP:
         gcp_public_images = (
             account_payload["spec"]["resources"]["data"].pop("public_images", None)
             or []
         )
+
+    # Extract public images for aws account
+    aws_region_image_map = {}
+    if account_type == PROVIDER.ACCOUNT.AWS:
+        for _en in account_payload["spec"]["resources"]["data"].get("regions", []):
+            aws_region_image_map[_en["name"]] = _en.get("images", [])
+            _en["images"] = []
 
     res, err = client.account.create(account_payload)
     if err:
@@ -252,6 +261,57 @@ def create_account(account_file, name):
                     {
                         "diskSizeGb": _en["status"]["resources"]["diskSizeGb"],
                         "selfLink": _en["status"]["resources"]["selfLink"],
+                    }
+                )
+
+        res, err = client.account.update(uuid=account_uuid, payload=update_payload)
+        if err:
+            LOG.error(err)
+            sys.exit(-1)
+        res = res.json()
+        account_state = res["status"]["resources"]["state"]
+
+    if account_type == PROVIDER.ACCOUNT.AWS and aws_region_image_map:
+        AwsProvider = get_provider(PROVIDER.VM.AWS)
+        AwsObj = AwsProvider.get_api_obj()
+
+        update_payload = account
+        for _en in update_payload["spec"]["resources"]["data"].get("regions", []):
+            region_name = _en["name"]
+
+            _en["images"] = []
+            for _image in aws_region_image_map.get(region_name, []):
+                payload = {
+                    "filter": "account_uuid=={};region=={};public_images==true;public_only==true;image_name=={}".format(
+                        account_uuid, _en["name"], _image
+                    )
+                }
+                res, _ = AwsObj.images(payload)
+                res = res.json()
+
+                if res["metadata"]["total_matches"] == 0:
+                    LOG.warning(
+                        "'{}' image not found in region '{}'".format(
+                            _image, region_name
+                        )
+                    )
+                    continue
+
+                if res["metadata"]["total_matches"] > 1:
+                    LOG.warning(
+                        "More than one images with name '{}' found in region '{}'. Skipping image.".format(
+                            _image, region_name
+                        )
+                    )
+                    continue
+
+                _en["images"].append(
+                    {
+                        "name": _image,
+                        "image_id": res["entities"][0]["status"]["resources"]["id"],
+                        "root_device_name": res["entities"][0]["status"]["resources"][
+                            "root_device_name"
+                        ],
                     }
                 )
 

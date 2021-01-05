@@ -8,23 +8,11 @@ class AwsSpec(AwsAccountSpec):
     secret_access_key = "aws_secret_access_key"
     regions = [
         {
-            "name": "us_east1",  # key
+            "name": "us-east-1",
             "images": [
-                {
-                    "image_id": "ami-07104d8cc199a2836",
-                    "name": "fedora-coreos-30.20190827.dev.1-hvm",  # key
-                    "root_device_name": "/dev/xvda",
-                },
-                {
-                    "image_id": "ami-0f9a9e1765ca51e81",
-                    "name": "fedora-coreos-31.20200331.20.0-hvm",  # key
-                    "root_device_name": "/dev/xvda",
-                },
-                {
-                    "image_id": "ami-0e2c906d7e70265b2",
-                    "name": "fedora-coreos-32.20200605.20.0",  # keys
-                    "root_device_name": "/dev/xvda",
-                },
+                "fedora-coreos-30.20190914.dev.0-hvm",
+                "fedora-coreos-32.20200925.20.1",
+                "fedora-coreos-32.20200506.10.0",
             ],
         }
     ]
