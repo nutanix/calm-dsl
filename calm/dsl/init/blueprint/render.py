@@ -28,24 +28,43 @@ def render_ahv_template(template, bp_name):
 
     # Fetch Nutanix_PC account registered
     project_accounts = project_cache_data["accounts_data"]
-    account_uuid = project_accounts.get("nutanix_pc", "")
-    if not account_uuid:
+    account_uuids = project_accounts.get("nutanix_pc", [])
+    if not account_uuids:
         LOG.error("No nutanix_pc account registered to project {}".format(project_name))
 
+    # Fetch data for first account
+    account_cache_data = Cache.get_entity_data_using_uuid(
+        entity_type="account", uuid=account_uuids[0]
+    )
+    if not account_cache_data:
+        LOG.error(
+            "Account (uuid={}) not found. Please update cache".format(account_uuids[0])
+        )
+        sys.exit(-1)
+
+    account_uuid = account_cache_data["uuid"]
+    account_name = account_cache_data["name"]
+
     # Fetch whitelisted subnets
-    project_subnets = project_cache_data["whitelisted_subnets"]
-    if not project_subnets:
+    whitelisted_subnets = project_cache_data["whitelisted_subnets"]
+    if not whitelisted_subnets:
         LOG.error("No subnets registered to project {}".format(project_name))
+        sys.exit(-1)
+
+    account_subnets = whitelisted_subnets.get(account_uuid, [])
+    if not account_subnets:
+        LOG.error("No subnets registered to project {} for Nutanix PC account {}.".
+                  format(project_name, account_name))
         sys.exit(-1)
 
     # Fetch data for first subnet
     subnet_cache_data = Cache.get_entity_data_using_uuid(
-        entity_type="ahv_subnet", uuid=project_subnets[0], account_uuid=account_uuid
+        entity_type="ahv_subnet", uuid=account_subnets[0], account_uuid=account_uuid
     )
     if not subnet_cache_data:
         # Case when project have a subnet that is not available in subnets from registered account
         context_data = {
-            "Project Whitelisted Subnets": project_subnets,
+            "Project Whitelisted Subnets": account_subnets,
             "Account UUID": account_uuid,
             "Project Name": project_name,
         }
@@ -61,7 +80,7 @@ def render_ahv_template(template, bp_name):
 
     cluster_name = subnet_cache_data["cluster"]
     default_subnet = subnet_cache_data["name"]
-
+    LOG.info("Using Nutanix PC account {}, cluster {}, subnet {}".format(account_name, cluster_name, default_subnet))
     LOG.info("Rendering ahv template")
     text = template.render(
         bp_name=bp_name, subnet_name=default_subnet, cluster_name=cluster_name
@@ -85,24 +104,43 @@ def render_single_vm_bp_ahv_template(template, bp_name):
 
     # Fetch Nutanix_PC account registered
     project_accounts = project_cache_data["accounts_data"]
-    account_uuid = project_accounts.get("nutanix_pc", "")
-    if not account_uuid:
+    account_uuids = project_accounts.get("nutanix_pc", [])
+    if not account_uuids:
         LOG.error("No nutanix_pc account registered to project {}".format(project_name))
 
+    # Fetch data for first account
+    account_cache_data = Cache.get_entity_data_using_uuid(
+        entity_type="account", uuid=account_uuids[0]
+    )
+    if not account_cache_data:
+        LOG.error(
+            "Account (uuid={}) not found. Please update cache".format(account_uuids[0])
+        )
+        sys.exit(-1)
+
+    account_uuid = account_cache_data["uuid"]
+    account_name = account_cache_data["name"]
+
     # Fetch whitelisted subnets
-    project_subnets = project_cache_data["whitelisted_subnets"]
-    if not project_subnets:
+    whitelisted_subnets = project_cache_data["whitelisted_subnets"]
+    if not whitelisted_subnets:
         LOG.error("No subnets registered to project {}".format(project_name))
+        sys.exit(-1)
+
+    account_subnets = whitelisted_subnets.get(account_uuid, [])
+    if not account_subnets:
+        LOG.error("No subnets registered to project {} for Nutanix PC account {}.".
+                  format(project_name, account_name))
         sys.exit(-1)
 
     # Fetch data for first subnet
     subnet_cache_data = Cache.get_entity_data_using_uuid(
-        entity_type="ahv_subnet", uuid=project_subnets[0], account_uuid=account_uuid
+        entity_type="ahv_subnet", uuid=account_subnets[0], account_uuid=account_uuid
     )
     if not subnet_cache_data:
         # Case when project have a subnet that is not available in subnets from registered account
         context_data = {
-            "Project Whitelisted Subnets": project_subnets,
+            "Project Whitelisted Subnets": account_subnets,
             "Account UUID": account_uuid,
             "Project Name": project_name,
         }
@@ -146,6 +184,7 @@ def render_single_vm_bp_ahv_template(template, bp_name):
         LOG.error("No Disk image found on account(uuid='{}')".format(account_uuid))
         sys.exit(-1)
 
+    LOG.info("Using Nutanix PC account {}, cluster {}, subnet {}".format(account_name, cluster_name, default_subnet))
     LOG.info("Rendering ahv template")
     text = template.render(
         bp_name=bp_name,
