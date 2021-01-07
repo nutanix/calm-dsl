@@ -89,8 +89,8 @@ Decompilation is process to consume json data for any entity and convert it back
 ### Task Library
  - List task library items: `calm get library tasks`. Use `calm get library tasks -q` to show only task library names.
  - Create task library item: `calm create library task -f <file>`. Command will create task under library. Please look at `calm create library task -h`.
- - Describe app: `calm describe library task <task_name>`. It will print a summary of the task and the current state. Use `calm describe library task <name> 2>/dev/null --out json | jq '.["status"]'` to get fields from the task json. More info on how to use `jq` [here](https://stedolan.github.io/jq/tutorial/).
- - Delete task library item: `calm delete library task <task_name>`. You can delete multiple apps using: `calm get library tasks -q | xargs -I {} calm delete library task {}`.
+ - Describe task library item: `calm describe library task <task_name>`. It will print a summary of the task and the current state. Use `calm describe library task <name> 2>/dev/null --out json | jq '.["status"]'` to get fields from the task json. More info on how to use `jq` [here](https://stedolan.github.io/jq/tutorial/).
+ - Delete task library item: `calm delete library task <task_name>`. You can delete multiple task library items using: `calm get library tasks -q | xargs -I {} calm delete library task {}`.
  - Import script files as task library item: `calm import library task -f <files_name>(.json, .sh, .escript, .ps1)`. Create task under library by passing scripts shell, powershell etc.
 
 
