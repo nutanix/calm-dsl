@@ -417,6 +417,7 @@ class AccountCache(CacheTableBase):
     uuid = CharField()
     provider_type = CharField()
     is_host = BooleanField(default=False)  # Used for Ntnx accounts only
+    data = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
     def get_detail_dict(self, *args, **kwargs):
@@ -425,6 +426,7 @@ class AccountCache(CacheTableBase):
             "uuid": self.uuid,
             "provider_type": self.provider_type,
             "is_host": self.is_host,
+            "data": json.loads(self.data),
             "last_update_time": self.last_update_time,
         }
 
@@ -467,9 +469,14 @@ class AccountCache(CacheTableBase):
             sys.exit(-1)
 
         is_host = kwargs.get("is_host", False)
+        data = kwargs.get("data", "{}")
 
         super().create(
-            name=name, uuid=uuid, provider_type=provider_type, is_host=is_host
+            name=name,
+            uuid=uuid,
+            provider_type=provider_type,
+            is_host=is_host,
+            data=data,
         )
 
     @classmethod
@@ -488,6 +495,7 @@ class AccountCache(CacheTableBase):
         res = res.json()
         for entity in res["entities"]:
             provider_type = entity["status"]["resources"]["type"]
+            data = {}
             query_obj = {
                 "name": entity["status"]["name"],
                 "uuid": entity["metadata"]["uuid"],
@@ -497,6 +505,16 @@ class AccountCache(CacheTableBase):
             if provider_type == "nutanix_pc":
                 query_obj["is_host"] = entity["status"]["resources"]["data"]["host_pc"]
 
+                # store cluster accounts for PC account
+                for pe_acc in (
+                    entity["status"]["resources"]
+                    .get("data", {})
+                    .get("cluster_account_reference_list", [])
+                ):
+                    group = data.setdefault("clusters", {})
+                    group[pe_acc["uuid"]] = pe_acc.get("name")
+
+            query_obj["data"] = json.dumps(data)
             cls.create_entry(**query_obj)
 
     @classmethod
@@ -613,8 +631,12 @@ class ProjectCache(CacheTableBase):
             uuid = entity["metadata"]["uuid"]
 
             account_list = entity["status"]["resources"]["account_reference_list"]
-            subnets_ref_list = entity["status"]["resources"].get("subnet_reference_list", [])
-            external_subnets_ref_list = entity["status"]["resources"].get("external_network_list", [])
+            subnets_ref_list = entity["status"]["resources"].get(
+                "subnet_reference_list", []
+            )
+            external_subnets_ref_list = entity["status"]["resources"].get(
+                "external_network_list", []
+            )
             account_map = {}
             for account in account_list:
                 account_uuid = account["uuid"]
@@ -631,8 +653,11 @@ class ProjectCache(CacheTableBase):
 
                 # for PC accounts add subnets to subnet_to_account_map. Will use it to populate whitelisted_subnets
                 if account_type == "nutanix_pc":
-                    project_network_list = subnets_ref_list if account_uuid == local_nutanix_pc_account_uuid else \
-                        external_subnets_ref_list
+                    project_network_list = (
+                        subnets_ref_list
+                        if account_uuid == local_nutanix_pc_account_uuid
+                        else external_subnets_ref_list
+                    )
                     subnet_uuids = [item["uuid"] for item in project_network_list]
                     if not subnet_uuids:
                         continue
@@ -642,9 +667,14 @@ class ProjectCache(CacheTableBase):
                     filter_query = "(_entity_id_=={})".format(
                         ",_entity_id_==".join(subnet_uuids)
                     )
-                    LOG.debug("fetching following subnets {} for nutanix_pc account_uuid {}".format(subnet_uuids,
-                                                                                                account_uuid))
-                    res = AhvObj.subnets(account_uuid=account_uuid, filter_query=filter_query)
+                    LOG.debug(
+                        "fetching following subnets {} for nutanix_pc account_uuid {}".format(
+                            subnet_uuids, account_uuid
+                        )
+                    )
+                    res = AhvObj.subnets(
+                        account_uuid=account_uuid, filter_query=filter_query
+                    )
                     for row in res["entities"]:
                         subnet_to_account_map[row["metadata"]["uuid"]] = account_uuid
 
@@ -768,7 +798,9 @@ class EnvironmentCache(CacheTableBase):
         env_uuid_to_project_map = {}
         for entity in res["entities"]:
             project_name = entity["status"]["name"]
-            project_environments = entity["status"]["resources"].get("environment_reference_list", [])
+            project_environments = entity["status"]["resources"].get(
+                "environment_reference_list", []
+            )
             for env in project_environments:
                 env_uuid_to_project_map[env["uuid"]] = project_name
 
@@ -788,7 +820,9 @@ class EnvironmentCache(CacheTableBase):
             if not project_name:
                 continue
 
-            infra_inclusion_list = entity["status"]["resources"].get("infra_inclusion_list", [])
+            infra_inclusion_list = entity["status"]["resources"].get(
+                "infra_inclusion_list", []
+            )
             account_map = {}
             for infra in infra_inclusion_list:
                 account_type = infra["type"]
@@ -850,6 +884,7 @@ class EnvironmentCache(CacheTableBase):
     class Meta:
         database = dsl_database
         primary_key = CompositeKey("name", "uuid")
+
 
 class UsersCache(CacheTableBase):
     __cache_type__ = "user"

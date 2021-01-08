@@ -26,12 +26,16 @@ class ProjectType(EntityType):
                 if "subnet_reference_list" in provider_obj:
                     if cdict.get("subnet_reference_list") is None:
                         cdict["subnet_reference_list"] = []
-                    cdict["subnet_reference_list"].extend(provider_obj["subnet_reference_list"])
+                    cdict["subnet_reference_list"].extend(
+                        provider_obj["subnet_reference_list"]
+                    )
 
                 elif "external_network_list" in provider_obj:
                     if cdict.get("external_network_list") is None:
                         cdict["external_network_list"] = []
-                    cdict["external_network_list"].extend(provider_obj["external_network_list"])
+                    cdict["external_network_list"].extend(
+                        provider_obj["external_network_list"]
+                    )
 
                 if "default_subnet_reference" in provider_obj:
                     cdict["default_subnet_reference"] = provider_obj[

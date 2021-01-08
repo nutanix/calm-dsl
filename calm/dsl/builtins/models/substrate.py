@@ -164,7 +164,9 @@ class SubstrateType(EntityType):
                         sys.exit(-1)
 
                     # Adding default spec
-                    cdict["create_spec"] = {"resources": {"account_uuid": account_uuids[0]}}
+                    cdict["create_spec"] = {
+                        "resources": {"account_uuid": account_uuids[0]}
+                    }
 
                     # Template attribute should be present for vmware spec
                     if cdict["type"] == "VMWARE_VM":
@@ -183,6 +185,41 @@ class SubstrateType(EntityType):
             cdict["editables"]["readiness_probe"] = {
                 k: True for k in readiness_probe_editables
             }
+
+        # In case we have read provider_spec from a yaml file, validate that we have consistent values for
+        # Substrate.account (if present) and account_uuid in provider_spec (if present).
+        # The account_uuid mentioned in provider_spec yaml should be a registered PE under the Substrate.account PC
+        pc_account_ref = cdict.pop("account_reference", None)
+        if pc_account_ref:
+            try:
+                pe_account_uuid = cdict["create_spec"]["resources"]["account_uuid"]
+            except (AttributeError, TypeError):
+                pass
+            else:
+                if pe_account_uuid:
+                    account_cache_data = Cache.get_entity_data_using_uuid(
+                        entity_type="account", uuid=pc_account_ref["uuid"]
+                    )
+                    if not account_cache_data:
+                        LOG.error(
+                            "Account (uuid={}) not found. Please update cache".format(
+                                pc_account_ref["uuid"]
+                            )
+                        )
+                        sys.exit(-1)
+
+                    if (
+                        not account_cache_data.get("data", {})
+                        .get("clusters", {})
+                        .get(pe_account_uuid)
+                    ):
+                        LOG.error(
+                            "cluster account_uuid (uuid={}) used in the provider spec is not found to be registered"
+                            " under the Nutanix PC account {}. Please update cache".format(
+                                pe_account_uuid, account_cache_data["name"]
+                            )
+                        )
+                        sys.exit(-1)
 
         cdict["readiness_probe"] = readiness_probe_dict
 

@@ -19,6 +19,17 @@ properties:
   os_type:
     type: string
     default: 'Linux'
+  account_reference:
+    type: object
+    x-calm-dsl-type: object
+    x-calm-dsl-display-name: account
+    properties:
+      kind:
+        type: string
+      name:
+        type: string
+      uuid:
+        type: string
   create_spec:
     x-calm-dsl-display-name: provider_spec
     type: object

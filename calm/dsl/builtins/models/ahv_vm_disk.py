@@ -5,10 +5,9 @@ from .validator import PropertyValidator
 from .ref import ref
 
 from .package import PackageType
-from .metadata_payload import get_metadata_obj
 from calm.dsl.store import Cache
-from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
+from .helper import ahv as ahv_helper
 
 LOG = get_logging_handle(__name__)
 
@@ -27,35 +26,11 @@ class AhvDiskType(EntityType):
         # Pop bootable from cdict
         cdict.pop("bootable", None)
 
-        # Getting the metadata obj
-        metadata_obj = get_metadata_obj()
-        project_ref = metadata_obj.get("project_reference") or dict()
-
-        # If project not found in metadata, it will take project from config
-        context = get_context()
-        project_config = context.get_project_config()
-        project_name = project_ref.get("name") or project_config["name"]
-
-        project_cache_data = Cache.get_entity_data(
-            entity_type="project", name=project_name
+        environment, environment_whitelist = ahv_helper.get_profile_environment(cls)
+        project, project_whitelist = ahv_helper.get_project_with_pc_account()
+        pc_account = ahv_helper.get_pc_account(
+            cls, environment, project, environment_whitelist, project_whitelist
         )
-        if not project_cache_data:
-            LOG.error(
-                "Project {} not found. Please run: calm update cache".format(
-                    project_name
-                )
-            )
-            sys.exit(-1)
-
-        # Fetch Nutanix_PC account registered
-        project_accounts = project_cache_data["accounts_data"]
-        account_uuid = project_accounts.get("nutanix_pc", "")
-
-        if not account_uuid:
-            LOG.error(
-                "No nutanix account registered to project {}".format(project_name)
-            )
-            sys.exit(-1)
 
         image_ref = cdict.get("data_source_reference") or dict()
         if image_ref and image_ref["kind"] == "image":
@@ -66,12 +41,12 @@ class AhvDiskType(EntityType):
                 entity_type="ahv_disk_image",
                 name=image_name,
                 image_type=IMAGE_TYPE_MAP[device_type],
-                account_uuid=account_uuid,
+                account_uuid=pc_account["uuid"],
             )
             if not image_cache_data:
                 LOG.debug(
                     "Ahv Disk Image (name = '{}') not found in registered nutanix_pc account (uuid = '{}') in project (name = '{}')".format(
-                        image_name, account_uuid, project_name
+                        image_name, pc_account["uuid"], project["name"]
                     )
                 )
                 LOG.error(

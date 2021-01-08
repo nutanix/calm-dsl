@@ -53,8 +53,11 @@ def render_ahv_template(template, bp_name):
 
     account_subnets = whitelisted_subnets.get(account_uuid, [])
     if not account_subnets:
-        LOG.error("No subnets registered to project {} for Nutanix PC account {}.".
-                  format(project_name, account_name))
+        LOG.error(
+            "No subnets registered to project {} for Nutanix PC account {}.".format(
+                project_name, account_name
+            )
+        )
         sys.exit(-1)
 
     # Fetch data for first subnet
@@ -80,7 +83,11 @@ def render_ahv_template(template, bp_name):
 
     cluster_name = subnet_cache_data["cluster"]
     default_subnet = subnet_cache_data["name"]
-    LOG.info("Using Nutanix PC account {}, cluster {}, subnet {}".format(account_name, cluster_name, default_subnet))
+    LOG.info(
+        "Using Nutanix PC account {}, cluster {}, subnet {}".format(
+            account_name, cluster_name, default_subnet
+        )
+    )
     LOG.info("Rendering ahv template")
     text = template.render(
         bp_name=bp_name, subnet_name=default_subnet, cluster_name=cluster_name
@@ -129,8 +136,11 @@ def render_single_vm_bp_ahv_template(template, bp_name):
 
     account_subnets = whitelisted_subnets.get(account_uuid, [])
     if not account_subnets:
-        LOG.error("No subnets registered to project {} for Nutanix PC account {}.".
-                  format(project_name, account_name))
+        LOG.error(
+            "No subnets registered to project {} for Nutanix PC account {}.".format(
+                project_name, account_name
+            )
+        )
         sys.exit(-1)
 
     # Fetch data for first subnet
@@ -184,7 +194,11 @@ def render_single_vm_bp_ahv_template(template, bp_name):
         LOG.error("No Disk image found on account(uuid='{}')".format(account_uuid))
         sys.exit(-1)
 
-    LOG.info("Using Nutanix PC account {}, cluster {}, subnet {}".format(account_name, cluster_name, default_subnet))
+    LOG.info(
+        "Using Nutanix PC account {}, cluster {}, subnet {}".format(
+            account_name, cluster_name, default_subnet
+        )
+    )
     LOG.info("Rendering ahv template")
     text = template.render(
         bp_name=bp_name,

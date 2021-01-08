@@ -111,7 +111,11 @@ def get_project_environment(name=None, uuid=None, project_name=None, project_uui
 
     if uuid is None:
         params = {"filter": "name=={};project_reference=={}".format(name, project_uuid)}
-        LOG.info("Searching for the environment {} under project {}".format(name, project_name))
+        LOG.info(
+            "Searching for the environment {} under project {}".format(
+                name, project_name
+            )
+        )
         res, err = client.environment.list(params=params)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -119,13 +123,19 @@ def get_project_environment(name=None, uuid=None, project_name=None, project_uui
         response = res.json()
         entities = response.get("entities")
         if not entities:
-            raise Exception("No environment with name {} found in project {}".format(name, project_name))
+            raise Exception(
+                "No environment with name {} found in project {}".format(
+                    name, project_name
+                )
+            )
 
         environment = entities[0]
         uuid = environment["metadata"]["uuid"]
 
     if not project_environments.get(uuid):
-        raise Exception("No environment with name {} found in project {}".format(name, project_name))
+        raise Exception(
+            "No environment with name {} found in project {}".format(name, project_name)
+        )
 
     LOG.info("Environment {} found ".format(name))
 

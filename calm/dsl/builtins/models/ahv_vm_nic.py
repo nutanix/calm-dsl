@@ -2,9 +2,8 @@ import sys
 
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
-from .metadata_payload import get_metadata_obj
 from calm.dsl.store import Cache
-from calm.dsl.config import get_context
+from .helper import ahv as ahv_helper
 
 from calm.dsl.log import get_logging_handle
 
@@ -21,30 +20,20 @@ class AhvNicType(EntityType):
 
         cdict = super().compile()
 
-        # Getting the metadata obj
-        metadata_obj = get_metadata_obj()
-        project_ref = metadata_obj.get("project_reference") or dict()
-
-        # If project not found in metadata, it will take project from config
-        context = get_context()
-        project_config = context.get_project_config()
-        project_name = project_ref.get("name") or project_config["name"]
-
-        project_cache_data = Cache.get_entity_data(
-            entity_type="project", name=project_name
+        environment, environment_whitelist = ahv_helper.get_profile_environment(cls)
+        project, project_whitelist = ahv_helper.get_project_with_pc_account()
+        pc_account = ahv_helper.get_pc_account(
+            cls, environment, project, environment_whitelist, project_whitelist
         )
-        if not project_cache_data:
+
+        # don't proceed if environment has no subnets whitelisted for this PC account
+        if environment and not environment_whitelist.get(pc_account["uuid"]):
             LOG.error(
-                "Project {} not found. Please run: calm update cache".format(
-                    project_name
+                "Environment {}, Nutanix PC account {} has no subnets whitelisted.".format(
+                    environment["name"], pc_account["name"]
                 )
             )
             sys.exit(-1)
-
-        project_accounts = project_cache_data["accounts_data"]
-        project_subnets = project_cache_data["whitelisted_subnets"]
-        # Fetch Nutanix_PC account registered
-        account_uuid = project_accounts.get("nutanix_pc", "")
 
         subnet_ref = cdict.get("subnet_reference") or dict()
         subnet_name = subnet_ref.get("name", "") or ""
@@ -61,13 +50,14 @@ class AhvNicType(EntityType):
                 entity_type="ahv_subnet",
                 name=subnet_name,
                 cluster=cluster_name,
-                account_uuid=account_uuid,
+                account_uuid=pc_account["uuid"],
             )
 
             if not subnet_cache_data:
                 LOG.debug(
-                    "Ahv Subnet (name = '{}') not found in registered nutanix_pc account (uuid = '{}') in project (name = '{}')".format(
-                        subnet_name, account_uuid, project_name
+                    "Ahv Subnet (name = '{}') not found in registered Nutanix PC account (uuid = '{}') "
+                    "in project (name = '{}')".format(
+                        subnet_name, pc_account["uuid"], project["name"]
                     )
                 )
                 LOG.error(
@@ -78,10 +68,19 @@ class AhvNicType(EntityType):
                 sys.exit(-1)
 
             subnet_uuid = subnet_cache_data.get("uuid", "")
-            if subnet_uuid not in project_subnets:
+            if environment and subnet_uuid not in environment_whitelist.get(
+                pc_account["uuid"], []
+            ):
+                LOG.error(
+                    "Subnet {} is not whitelisted in environment {}".format(
+                        subnet_name, environment["name"])
+                    )
+                )
+                sys.exit(-1)
+            elif subnet_uuid not in project_whitelist.get(pc_account["uuid"], []):
                 LOG.error(
                     "Subnet {} is not whitelisted in project {}".format(
-                        subnet_name, project_name
+                        subnet_name, project["name"]
                     )
                 )
                 sys.exit(-1)
@@ -102,7 +101,7 @@ class AhvNicType(EntityType):
             if not nfc_cache_data:
                 LOG.debug(
                     "Ahv Network Function Chain (name = '{}') not found in registered nutanix_pc account (uuid = '{}') in project (name = '{}')".format(
-                        nfc_name, account_uuid, project_name
+                        nfc_name, pc_account["uuid"], project["name"]
                     )
                 )
                 LOG.error(

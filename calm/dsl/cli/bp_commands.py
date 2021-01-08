@@ -231,7 +231,9 @@ def create_blueprint_command(bp_file, name, description, force):
 
 @launch.command("bp")
 @click.argument("blueprint_name")
-@click.option("--environment", "-e", default=None, help="Environment for the application")
+@click.option(
+    "--environment", "-e", default=None, help="Environment for the application"
+)
 @click.option("--app_name", "-a", default=None, help="Name of your app")
 @click.option(
     "--profile_name",
@@ -316,7 +318,9 @@ def launch_blueprint_command(
     """
 
     app_name = app_name or "App-{}-{}".format(blueprint_name, int(time.time()))
-    blueprint_name, blueprint = patch_bp_if_required(environment, blueprint_name, profile_name)
+    blueprint_name, blueprint = patch_bp_if_required(
+        environment, blueprint_name, profile_name
+    )
 
     launch_blueprint_simple(
         blueprint_name,

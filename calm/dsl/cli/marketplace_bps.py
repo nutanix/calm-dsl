@@ -474,7 +474,11 @@ def launch_marketplace_bp(
 
     LOG.info("Converting MPI to blueprint")
     bp_payload = convert_mpi_into_blueprint(
-        name=name, version=version, project_name=project, environment_name=environment, app_source=app_source
+        name=name,
+        version=version,
+        project_name=project,
+        environment_name=environment,
+        app_source=app_source,
     )
 
     app_name = app_name or "Mpi-App-{}-{}".format(name, str(uuid.uuid4())[-10:])
@@ -572,7 +576,11 @@ def launch_marketplace_item(
 
     LOG.info("Converting MPI to blueprint")
     bp_payload = convert_mpi_into_blueprint(
-        name=name, version=version, project_name=project, environment_name=environment, app_source=app_source
+        name=name,
+        version=version,
+        project_name=project,
+        environment_name=environment,
+        app_source=app_source,
     )
 
     app_name = app_name or "Mpi-App-{}-{}".format(name, str(uuid.uuid4())[-10:])
@@ -585,24 +593,34 @@ def launch_marketplace_item(
     LOG.info("App {} creation is successful".format(app_name))
 
 
-def convert_mpi_into_blueprint(name, version, project_name=None, environment_name=None, app_source=None):
+def convert_mpi_into_blueprint(
+    name, version, project_name=None, environment_name=None, app_source=None
+):
 
     client = get_api_client()
     context = get_context()
     project_config = context.get_project_config()
 
     project_name = project_name or project_config["name"]
-    environment_data, project_data = get_project_environment(name=environment_name, project_name=project_name)
+    environment_data, project_data = get_project_environment(
+        name=environment_name, project_name=project_name
+    )
     project_uuid = project_data["metadata"]["uuid"]
     environments = project_data["status"]["resources"]["environment_reference_list"]
     if not environments:
         raise Exception("Project {} has no environment.".format(project_name))
 
-    default_environment_uuid = project_data["status"]["resources"].get("default_environment_reference", {}).get('uuid')
+    default_environment_uuid = (
+        project_data["status"]["resources"]
+        .get("default_environment_reference", {})
+        .get("uuid")
+    )
 
     if not environment_data:
         if not default_environment_uuid:
-            raise Exception("Project {} doesn't have a default environment.".format(project_name))
+            raise Exception(
+                "Project {} doesn't have a default environment.".format(project_name)
+            )
 
         environment_data = get_environment_by_uuid(default_environment_uuid)
 

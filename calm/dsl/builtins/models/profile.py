@@ -32,7 +32,7 @@ class ProfileType(EntityType):
         cdict = super().compile()
         # description attribute in profile gives bp launch error: https://jira.nutanix.com/browse/CALM-19380
         cdict.pop("description", None)
-        
+
         # Get project from metadata or context
         metadata_obj = get_metadata_obj()
         project_ref = metadata_obj.get("project_reference", {})
@@ -45,19 +45,24 @@ class ProfileType(EntityType):
 
         if env_uuid:
             # ensure that the referenced environment is associated to the project this BP belongs to.
-            env_cache_data = Cache.get_entity_data_using_uuid(entity_type="environment", uuid=env_uuid)
+            env_cache_data = Cache.get_entity_data_using_uuid(
+                entity_type="environment", uuid=env_uuid
+            )
             env_project = env_cache_data.get("project")
             if env_project and project_name != env_project:
                 LOG.error(
                     "Environment '{}' referenced by profile '{}' belongs to project '{}'. Use an environment from"
-                    " project '{}'".format(env_name, cdict.get("name", ""), env_project, project_name))
+                    " project '{}'".format(
+                        env_name, cdict.get("name", ""), env_project, project_name
+                    )
+                )
                 sys.exit(-1)
 
             cdict["environment_reference_list"] = [env_uuid]
 
         # pop out unnecessary attibutes
         cdict.pop("environment", None)
-        
+
         return cdict
 
 

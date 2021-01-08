@@ -28,9 +28,15 @@ class EnvironmentType(EntityType):
         context = get_context()
         project_config = context.get_project_config()
         project_name = project_ref.get("name", project_config["name"])
-        project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
+        project_cache_data = Cache.get_entity_data(
+            entity_type="project", name=project_name
+        )
         if not project_cache_data:
-            LOG.error("Project {} not found. Please run: calm update cache".format(project_name))
+            LOG.error(
+                "Project {} not found. Please run: calm update cache".format(
+                    project_name
+                )
+            )
             sys.exit(-1)
 
         infra = cdict.get("infra_inclusion_list", [])
@@ -38,18 +44,27 @@ class EnvironmentType(EntityType):
             infra_account_uuid = row["account_reference"].get("uuid", "")
             infra_acc = row["account_reference"].get("name", infra_account_uuid)
             infra_type = row["type"]
-            if infra_account_uuid not in project_cache_data["accounts_data"].get(infra_type, []):
-                LOG.error("Environment uses {} account {} which is not added to project {}.".
-                          format(infra_type, infra_acc, project_name))
+            if infra_account_uuid not in project_cache_data["accounts_data"].get(
+                infra_type, []
+            ):
+                LOG.error(
+                    "Environment uses {} account {} which is not added to project {}.".format(
+                        infra_type, infra_acc, project_name
+                    )
+                )
                 sys.exit(-1)
             if infra_type == "nutanix_pc":
                 infra_account_subnets = row.get("subnet_references", [])
                 for sub in infra_account_subnets:
                     infra_sub_uuid = sub.get("uuid", "")
                     infra_sub = sub.get("name", infra_sub_uuid)
-                    if infra_sub_uuid not in project_cache_data["whitelisted_subnets"].get(infra_account_uuid, []):
-                        LOG.error("Environment uses subnet {} for nutanix_pc account {} which is not added to "
-                                  "project {}.".format(infra_sub, infra_acc, project_name))
+                    if infra_sub_uuid not in project_cache_data[
+                        "whitelisted_subnets"
+                    ].get(infra_account_uuid, []):
+                        LOG.error(
+                            "Environment uses subnet {} for nutanix_pc account {} which is not added to "
+                            "project {}.".format(infra_sub, infra_acc, project_name)
+                        )
                         sys.exit(-1)
 
         # NOTE Only one substrate per (provider_type, os_type) tuple can exist

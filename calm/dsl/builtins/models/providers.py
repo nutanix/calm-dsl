@@ -17,14 +17,17 @@ class Provider:
                 host_pc = True
 
             if not default_subnet and subnets:
-                default_subnet = subnets[0
-                ]
+                default_subnet = subnets[0]
             if is_environment is True:
                 return {
                     "type": "nutanix_pc",
                     "account_reference": account,
                     "subnet_references": subnets,
-                    "default_subnet_reference": default_subnet if default_subnet else subnets[0] if subnets else {},
+                    "default_subnet_reference": default_subnet
+                    if default_subnet
+                    else subnets[0]
+                    if subnets
+                    else {},
                 }
 
             return {
@@ -32,7 +35,11 @@ class Provider:
                 "account_reference": account,
                 "external_network_list": subnets if not host_pc else [],
                 "subnet_reference_list": subnets if host_pc else [],
-                "default_subnet_reference": default_subnet if default_subnet else subnets[0] if subnets else {},
+                "default_subnet_reference": default_subnet
+                if default_subnet
+                else subnets[0]
+                if subnets
+                else {},
             }
 
         class Local_Az:
