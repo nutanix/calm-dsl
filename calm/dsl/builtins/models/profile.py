@@ -2,10 +2,9 @@ import sys
 
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
-from .metadata_payload import get_metadata_obj
-from calm.dsl.config import get_context
 from calm.dsl.store import Cache
 from calm.dsl.log import get_logging_handle
+from .helper import common as common_helper
 
 LOG = get_logging_handle(__name__)
 
@@ -34,11 +33,8 @@ class ProfileType(EntityType):
         cdict.pop("description", None)
 
         # Get project from metadata or context
-        metadata_obj = get_metadata_obj()
-        project_ref = metadata_obj.get("project_reference", {})
-        context = get_context()
-        project_config = context.get_project_config()
-        project_name = project_ref.get("name", project_config["name"])
+        project_cache_data = common_helper.get_project()
+        project_name = project_cache_data["name"]
 
         env_uuid = cdict.get("environment", {}).get("uuid")
         env_name = cdict.get("environment", {}).get("name", env_uuid)

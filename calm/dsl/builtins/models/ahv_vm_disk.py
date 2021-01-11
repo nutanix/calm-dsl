@@ -8,7 +8,7 @@ from .package import PackageType
 from calm.dsl.store import Cache
 from calm.dsl.constants import CACHE
 from calm.dsl.log import get_logging_handle
-from .helper import ahv as ahv_helper
+from .helper import common as common_helper
 
 LOG = get_logging_handle(__name__)
 
@@ -27,9 +27,9 @@ class AhvDiskType(EntityType):
         # Pop bootable from cdict
         cdict.pop("bootable", None)
 
-        environment, environment_whitelist = ahv_helper.get_profile_environment(cls)
-        project, project_whitelist = ahv_helper.get_project_with_pc_account()
-        pc_account = ahv_helper.get_pc_account(
+        environment, environment_whitelist = common_helper.get_profile_environment(cls)
+        project, project_whitelist = common_helper.get_project_with_pc_account()
+        pc_account = common_helper.get_pc_account(
             cls, environment, project, environment_whitelist, project_whitelist
         )
 
