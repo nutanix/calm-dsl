@@ -265,7 +265,7 @@ class BlueprintAPI(ResourceAPI):
         for obj_index, obj in enumerate(
             bp_resources.get("substrate_definition_list", []) or []
         ):
-            if (obj["type"] == PROVIDER.VM.VMWARE) and (obj["os_type"] == "Windows"):
+            if (obj["type"] == VM.VMWARE) and (obj["os_type"] == "Windows"):
                 strip_vmware_secrets(["substrate_definition_list", obj_index], obj)
 
         upload_payload = self._make_blueprint_payload(

@@ -44,7 +44,7 @@ class AhvNicType(EntityType):
         project_accounts = project_cache_data["accounts_data"]
         project_subnets = project_cache_data["whitelisted_subnets"]
         # Fetch Nutanix_PC account registered
-        account_uuid = project_accounts.get(PROVIDER.ACCOUNT.NUTANIX, "")
+        account_uuid = project_accounts.get(PROVIDER.NUTANIX.PC, "")
 
         subnet_ref = cdict.get("subnet_reference") or dict()
         subnet_name = subnet_ref.get("name", "") or ""

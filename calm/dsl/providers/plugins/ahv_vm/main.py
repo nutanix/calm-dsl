@@ -12,7 +12,7 @@ from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.providers import get_provider_interface
 from calm.dsl.tools import StrictDraft7Validator
 from calm.dsl.log import get_logging_handle
-from calm.dsl.constants import PROVIDER
+from calm.dsl.constants import VM
 
 from .constants import AHV as AhvConstants
 
@@ -23,7 +23,7 @@ Provider = get_provider_interface()
 # Implements Provider interface for AHV_VM
 class AhvVmProvider(Provider):
 
-    provider_type = PROVIDER.VM.AHV
+    provider_type = VM.AHV
     package_name = __name__
     spec_template_file = "ahv_vm_provider_spec.yaml.jinja2"
 

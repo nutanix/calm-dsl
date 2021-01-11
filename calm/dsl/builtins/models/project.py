@@ -37,7 +37,7 @@ class ProjectType(EntityType):
                 )
                 sys.exit(-1)
 
-            if provider_type == PROVIDER.ACCOUNT.NUTANIX:
+            if provider_type == PROVIDER.NUTANIX.PC:
                 if "subnet_reference_list" in provider_obj:
                     cdict["subnet_reference_list"] = provider_obj[
                         "subnet_reference_list"

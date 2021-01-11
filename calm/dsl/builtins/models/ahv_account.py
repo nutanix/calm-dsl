@@ -13,7 +13,7 @@ class AhvAccountSpecType(AccountSpecType):
     __schema_name__ = "AhvAccountSpec"
     __openapi_type__ = "ahv_account_spec"
 
-    __provider_type__ = PROVIDER.ACCOUNT.NUTANIX
+    __provider_type__ = PROVIDER.NUTANIX.PC
 
     def compile(cls):
         """returns the compiled payload for ahv account spec"""

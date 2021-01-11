@@ -226,7 +226,7 @@ def create_account(account_file, name):
 
     # Extract public images from gcp account
     gcp_public_images = []
-    if account_type == PROVIDER.ACCOUNT.GCP:
+    if account_type == PROVIDER.GCP:
         gcp_public_images = (
             account_payload["spec"]["resources"]["data"].pop("public_images", None)
             or []
@@ -234,7 +234,7 @@ def create_account(account_file, name):
 
     # Extract public images for aws account
     aws_region_image_map = {}
-    if account_type == PROVIDER.ACCOUNT.AWS:
+    if account_type == PROVIDER.AWS.EC2:
         for _en in account_payload["spec"]["resources"]["data"].get("regions", []):
             aws_region_image_map[_en["name"]] = _en.get("images", [])
             _en["images"] = []
@@ -256,8 +256,8 @@ def create_account(account_file, name):
         return
 
     account.pop("status", None)
-    if account_type == PROVIDER.ACCOUNT.GCP and gcp_public_images:
-        GcpProvider = get_provider(PROVIDER.VM.GCP)
+    if account_type == PROVIDER.GCP and gcp_public_images:
+        GcpProvider = get_provider(VM.GCP)
         GcpObj = GcpProvider.get_api_obj()
 
         params = {"filter": "account_uuid=={};public_only==true".format(account_uuid)}
@@ -282,8 +282,8 @@ def create_account(account_file, name):
         res = res.json()
         account_state = res["status"]["resources"]["state"]
 
-    if account_type == PROVIDER.ACCOUNT.AWS and aws_region_image_map:
-        AwsProvider = get_provider(PROVIDER.VM.AWS)
+    if account_type == PROVIDER.AWS.EC2 and aws_region_image_map:
+        AwsProvider = get_provider(VM.AWS)
         AwsObj = AwsProvider.get_api_obj()
 
         update_payload = account
@@ -612,28 +612,28 @@ def describe_account(account_name):
     if account_type == "nutanix":
         describe_nutanix_pe_account(provider_data)
 
-    if account_type == PROVIDER.ACCOUNT.NUTANIX:
+    if account_type == PROVIDER.NUTANIX.PC:
         describe_nutanix_pc_account(provider_data)
 
-    elif account_type == PROVIDER.ACCOUNT.AWS:
+    elif account_type == PROVIDER.AWS.EC2:
         describe_aws_account(provider_data)
 
-    elif account_type == PROVIDER.ACCOUNT.VMWARE:
+    elif account_type == PROVIDER.VMWARE:
         describe_vmware_account(provider_data)
 
-    elif account_type == PROVIDER.ACCOUNT.GCP:
+    elif account_type == PROVIDER.GCP:
         describe_gcp_account(client, provider_data, account_id)
 
     elif account_type == "k8s":
         describe_k8s_account(provider_data)
 
-    elif account_type == PROVIDER.ACCOUNT.AZURE:
+    elif account_type == PROVIDER.AZURE:
         describe_azure_account(provider_data)
 
     else:
         click.echo("Provider details not present")
 
-    if account_type in ["nutanix", PROVIDER.ACCOUNT.VMWARE]:
+    if account_type in ["nutanix", PROVIDER.VMWARE]:
         res, err = client.showback.status()
         if err:
             LOG.error("[{}] - {}".format(err["code"], err["error"]))

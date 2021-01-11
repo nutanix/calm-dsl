@@ -16,7 +16,7 @@ from .bps import launch_blueprint_simple, get_blueprint
 from .apps import watch_app
 from .projects import get_project
 from calm.dsl.log import get_logging_handle
-from calm.dsl.constants import PROVIDER
+from calm.dsl.constants import VM
 from .constants import MARKETPLACE_BLUEPRINT
 
 LOG = get_logging_handle(__name__)
@@ -534,12 +534,12 @@ def decompile_marketplace_bp(
     blueprint_description = bp_payload["spec"].get("description", "")
     LOG.info("Decompiling marketplace blueprint {}".format(name))
     for sub_obj in blueprint.get("substrate_definition_list"):
-        sub_type = sub_obj.get("type", "") or PROVIDER.VM.AHV
+        sub_type = sub_obj.get("type", "") or VM.AHV
         if sub_type == "K8S_POD":
             raise NotImplementedError(
                 "Decompilation for k8s pod is not supported right now"
             )
-        elif sub_type != PROVIDER.VM.AHV:
+        elif sub_type != VM.AHV:
             LOG.warning(
                 "Decompilation support for providers other than AHV is experimental."
             )

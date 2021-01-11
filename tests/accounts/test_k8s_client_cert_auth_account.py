@@ -1,18 +1,17 @@
-from calm.dsl.builtins import Account, KubernetesAccountSpec, KubernetesAuth
-from calm.dsl.constants import PROVIDER, KUBERNETES
+from calm.dsl.builtins import Account, VanillaAccountSpec, Auth
+from calm.dsl.constants import PROVIDER
 
 
-class K8sSpec(KubernetesAccountSpec):
+class K8sSpec(VanillaAccountSpec):
 
     server = "127.0.0.1"
-    account_type = KUBERNETES.ACCOUNT.VANILLA
     port = 9440
-    auth = KubernetesAuth.client_certificate(
+    auth = Auth.Kubernetes.client_certificate(
         client_key="client_key", client_certificate="client_certificate"
     )
 
 
 class K8sClientCertAccount(Account):
 
-    provider_type = PROVIDER.ACCOUNT.KUBERNETES
+    provider_type = PROVIDER.KUBERNETES.VANILLA
     spec = K8sSpec

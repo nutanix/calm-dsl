@@ -21,32 +21,40 @@ class CACHE:
 class PROVIDER:
     """Provider constants"""
 
-    class ACCOUNT:
-        NUTANIX = "nutanix_pc"
-        AWS = "aws"
-        VMWARE = "vmware"
-        AZURE = "azure"
-        GCP = "gcp"
-        KUBERNETES = "k8s"
+    class NUTANIX:
+        PC = "nutanix_pc"
+        KARBON = "kubernetes_karbon"
+    
+    class AWS:
+        EC2 = "aws"
+        C2S = "aws_govcloud"
+    
+    AZURE = "azure"
 
-    class VM:
-        AHV = "AHV_VM"
-        AWS = "AWS_VM"
-        VMWARE = "VMWARE_VM"
-        AZURE = "AZURE_VM"
-        GCP = "GCP_VM"
-        EXISTING_VM = "EXISTING_VM"
-        K8S_POD = "K8S_POD"
+    VMWARE = "vmware"
+
+    class KUBERNETES:
+        VANILLA = "kubernetes_vanilla"
+    
+    GCP = "gcp"
 
 
-class KUBERNETES:
-    """Kubernetes constants"""
+class VM:
+    """VM Constants"""
 
-    class ACCOUNT:
-        VANILLA = "vanilla"
-        KARBON = "karbon"
+    AHV = "AHV_VM"
+    AWS = "AWS_VM"
+    VMWARE = "VMWARE_VM"
+    AZURE = "AZURE_VM"
+    GCP = "GCP_VM"
+    EXISTING_VM = "EXISTING_VM"
+    K8S_POD = "K8S_POD"
 
-    class AUTH:
+
+class AUTH:
+    """auth constants"""
+
+    class KUBERNETES:
         BASIC = "basic"
         CLIENT_CERTIFICATE = "client_certificate"
         CA_CERTIFICATE = "ca_certificate"

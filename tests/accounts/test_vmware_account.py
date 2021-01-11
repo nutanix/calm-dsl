@@ -13,5 +13,5 @@ class VmwareSpec(VmwareAccountSpec):
 
 class VmwareAccount(Account):
 
-    provider_type = PROVIDER.ACCOUNT.VMWARE
+    provider_type = PROVIDER.VMWARE
     spec = VmwareSpec

@@ -9,7 +9,7 @@ from .client_attrs import update_dsl_metadata_map, get_dsl_metadata_map
 from .metadata_payload import get_metadata_obj
 
 from calm.dsl.config import get_context
-from calm.dsl.constants import CACHE, PROVIDER
+from calm.dsl.constants import CACHE, PROVIDER, VM
 from calm.dsl.store import Cache
 from calm.dsl.log import get_logging_handle
 
@@ -75,35 +75,35 @@ class SubstrateType(EntityType):
                 readiness_probe_dict["connection_protocol"] = "http"
 
         # Fill out address for readiness probe if not given
-        if cdict["type"] == PROVIDER.VM.AHV:
+        if cdict["type"] == VM.AHV:
             if not readiness_probe_dict.get("address", ""):
                 readiness_probe_dict[
                     "address"
                 ] = "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@"
 
-        elif cdict["type"] == PROVIDER.VM.EXISTING_VM:
+        elif cdict["type"] == VM.EXISTING_VM:
             if not readiness_probe_dict.get("address", ""):
                 readiness_probe_dict["address"] = "@@{ip_address}@@"
 
-        elif cdict["type"] == PROVIDER.VM.AWS:
+        elif cdict["type"] == VM.AWS:
             if not readiness_probe_dict.get("address", ""):
                 readiness_probe_dict["address"] = "@@{public_ip_address}@@"
 
-        elif cdict["type"] == PROVIDER.VM.K8S_POD:  # Never used (Omit after discussion)
+        elif cdict["type"] == VM.K8S_POD:  # Never used (Omit after discussion)
             readiness_probe_dict["address"] = ""
             cdict.pop("editables", None)
 
-        elif cdict["type"] == PROVIDER.VM.AZURE:
+        elif cdict["type"] == VM.AZURE:
             if not readiness_probe_dict.get("address", ""):
                 readiness_probe_dict[
                     "address"
                 ] = "@@{platform.publicIPAddressList[0]}@@"
 
-        elif cdict["type"] == PROVIDER.VM.VMWARE:
+        elif cdict["type"] == VM.VMWARE:
             if not readiness_probe_dict.get("address", ""):
                 readiness_probe_dict["address"] = "@@{platform.ipAddressList[0]}@@"
 
-        elif cdict["type"] == PROVIDER.VM.GCP:
+        elif cdict["type"] == VM.GCP:
             if not readiness_probe_dict.get("address", ""):
                 readiness_probe_dict[
                     "address"
@@ -117,15 +117,15 @@ class SubstrateType(EntityType):
 
             # TODO shift them to constants file
             provider_type_map = {
-                PROVIDER.VM.AWS: PROVIDER.ACCOUNT.AWS,
-                PROVIDER.VM.VMWARE: PROVIDER.ACCOUNT.VMWARE,
-                PROVIDER.VM.AHV: PROVIDER.ACCOUNT.NUTANIX,  # Accounts of type nutanix are not used after 2.9
-                PROVIDER.VM.AZURE: PROVIDER.ACCOUNT.AZURE,
-                PROVIDER.VM.GCP: PROVIDER.ACCOUNT.GCP,
+                VM.AWS: PROVIDER.AWS.EC2,
+                VM.VMWARE: PROVIDER.VMWARE,
+                VM.AHV: PROVIDER.NUTANIX.PC,  # Accounts of type nutanix are not used after 2.9
+                VM.AZURE: PROVIDER.AZURE,
+                VM.GCP: PROVIDER.GCP,
             }
 
             if cdict["type"] in provider_type_map:
-                if cdict["type"] == PROVIDER.VM.AHV:
+                if cdict["type"] == VM.AHV:
                     # UI expects defaults. Jira: https://jira.nutanix.com/browse/CALM-20134
                     if not cdict.get("create_spec"):
                         cdict["create_spec"] = {"resources": {"nic_list": []}}
@@ -168,7 +168,7 @@ class SubstrateType(EntityType):
                     cdict["create_spec"] = {"resources": {"account_uuid": account_uuid}}
 
                     # Template attribute should be present for vmware spec
-                    if cdict["type"] == PROVIDER.VM.VMWARE:
+                    if cdict["type"] == VM.VMWARE:
                         cdict["create_spec"]["template"] = ""
 
         # Modifying the editable object
@@ -235,7 +235,7 @@ class SubstrateType(EntityType):
         cls = super().decompile(cdict, context=context, prefix=prefix)
 
         provider_spec = cls.provider_spec
-        if cls.provider_type == PROVIDER.VM.AHV:
+        if cls.provider_type == VM.AHV:
             context = [cls.__schema_name__, getattr(cls, "name", "") or cls.__name__]
             vm_cls = AhvVmType.decompile(provider_spec, context=context, prefix=prefix)
 

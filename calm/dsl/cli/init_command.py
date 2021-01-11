@@ -16,7 +16,7 @@ from calm.dsl.api import get_resource_api, get_client_handle_obj
 from calm.dsl.store import Cache
 from calm.dsl.init import init_bp
 from calm.dsl.providers import get_provider_types
-from calm.dsl.constants import PROVIDER
+from calm.dsl.constants import VM
 
 from .main import init, set
 from calm.dsl.log import get_logging_handle
@@ -226,7 +226,7 @@ def sync_cache():
     "-t",
     "provider_type",
     type=click.Choice(get_provider_types()),
-    default=PROVIDER.VM.AHV,
+    default=VM.AHV,
     help="Provider type",
 )
 @click.option(

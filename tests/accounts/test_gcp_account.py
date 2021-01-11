@@ -26,5 +26,5 @@ class GcpSpec(GcpAccountSpec):
 
 class GcpAccount(Account):
 
-    provider_type = PROVIDER.ACCOUNT.GCP
+    provider_type = PROVIDER.GCP
     spec = GcpSpec

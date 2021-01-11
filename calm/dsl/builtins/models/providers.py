@@ -19,7 +19,7 @@ class Provider:
                 host_pc = True
 
             return {
-                "provider_type": PROVIDER.ACCOUNT.NUTANIX,
+                "provider_type": PROVIDER.NUTANIX.PC,
                 "account_reference": account,
                 "external_network_list": subnets if not host_pc else [],
                 "subnet_reference_list": subnets if host_pc else [],
@@ -34,7 +34,7 @@ class Provider:
                 account = Ref.Account(account_name)
 
                 return {
-                    "provider_type": PROVIDER.ACCOUNT.NUTANIX,
+                    "provider_type": PROVIDER.NUTANIX.PC,
                     "account_reference": account,
                     "subnet_reference_list": subnets,
                     "default_subnet_reference": subnets[0] if subnets else {},
@@ -44,7 +44,7 @@ class Provider:
             def __new__(cls, account, subnets=[]):
 
                 return {
-                    "provider_type": PROVIDER.ACCOUNT.NUTANIX,
+                    "provider_type": PROVIDER.NUTANIX.PC,
                     "account_reference": account,
                     "external_network_list": subnets,
                     "default_subnet_reference": subnets[0] if subnets else {},
@@ -52,23 +52,23 @@ class Provider:
 
     class Aws:
         def __new__(cls, account):
-            return {"provider_type": PROVIDER.ACCOUNT.AWS, "account_reference": account}
+            return {"provider_type": PROVIDER.AWS.EC2, "account_reference": account}
 
     class Azure:
         def __new__(cls, account):
             return {
-                "provider_type": PROVIDER.ACCOUNT.AZURE,
+                "provider_type": PROVIDER.AZURE,
                 "account_reference": account,
             }
 
     class Gcp:
         def __new__(cls, account):
-            return {"provider_type": PROVIDER.ACCOUNT.GCP, "account_reference": account}
+            return {"provider_type": PROVIDER.GCP, "account_reference": account}
 
     class Vmware:
         def __new__(cls, account):
             return {
-                "provider_type": PROVIDER.ACCOUNT.VMWARE,
+                "provider_type": PROVIDER.VMWARE,
                 "account_reference": account,
             }
 

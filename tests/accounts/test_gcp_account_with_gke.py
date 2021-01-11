@@ -8,7 +8,7 @@ from calm.dsl.constants import PROVIDER
 GCP_ACCOUNT_SETTINGS = json.loads(read_local_file("gcp_service_account.json"))
 
 
-class GcpSpec(GcpAccountSpec):
+class GcpGkeSpec(GcpAccountSpec):
 
     private_key = GCP_ACCOUNT_SETTINGS["private_key"]
     private_key_id = GCP_ACCOUNT_SETTINGS["private_key_id"]
@@ -30,5 +30,5 @@ class GcpSpec(GcpAccountSpec):
 
 class GcpAccount(Account):
 
-    provider_type = PROVIDER.ACCOUNT.GCP
-    spec = GcpSpec
+    provider_type = PROVIDER.GCP
+    spec = GcpGkeSpec

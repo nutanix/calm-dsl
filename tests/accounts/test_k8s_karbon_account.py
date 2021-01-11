@@ -1,14 +1,13 @@
-from calm.dsl.builtins import Account, KubernetesAccountSpec
-from calm.dsl.constants import PROVIDER, KUBERNETES
+from calm.dsl.builtins import Account, KarbonAccountSpec
+from calm.dsl.constants import PROVIDER
 
 
-class K8sSpec(KubernetesAccountSpec):
+class K8sSpec(KarbonAccountSpec):
 
-    account_type = KUBERNETES.ACCOUNT.KARBON
     cluster = "karbon_cluster"
 
 
 class K8sKarbonAccount(Account):
 
-    provider_type = PROVIDER.ACCOUNT.KUBERNETES
+    provider_type = PROVIDER.NUTANIX.KARBON
     spec = K8sSpec

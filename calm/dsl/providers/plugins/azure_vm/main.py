@@ -3,7 +3,7 @@ from ruamel import yaml
 
 from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.providers import get_provider_interface
-from calm.dsl.constants import PROVIDER
+from calm.dsl.constants import VM
 from .constants import AZURE as azure
 
 
@@ -12,7 +12,7 @@ Provider = get_provider_interface()
 
 class AzureVmProvider(Provider):
 
-    provider_type = PROVIDER.VM.AZURE
+    provider_type = VM.AZURE
     package_name = __name__
     spec_template_file = "azure_vm_provider_spec.yaml.jinja2"
 

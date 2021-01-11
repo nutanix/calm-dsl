@@ -1,16 +1,16 @@
-from calm.dsl.builtins import Account, KubernetesAccountSpec, KubernetesAuth
-from calm.dsl.constants import PROVIDER, KUBERNETES
+from calm.dsl.builtins import Account, VanillaAccountSpec
+from calm.dsl.constants import PROVIDER
+from calm.dsl.builtins import Auth
 
 
-class K8sSpec(KubernetesAccountSpec):
+class K8sSpec(VanillaAccountSpec):
 
     server = "127.0.0.1"
-    account_type = KUBERNETES.ACCOUNT.VANILLA
     port = 9440
-    auth = KubernetesAuth.basic(username="username", password="password")
+    auth = Auth.Kubernetes.basic(username="username", password="password")
 
 
 class K8sBasicAuthAccount(Account):
 
-    provider_type = PROVIDER.ACCOUNT.KUBERNETES
+    provider_type = PROVIDER.KUBERNETES.VANILLA
     spec = K8sSpec

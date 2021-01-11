@@ -41,7 +41,7 @@ from .constants import BLUEPRINT
 from calm.dsl.tools import get_module_from_file
 from calm.dsl.builtins import Brownfield as BF
 from calm.dsl.providers import get_provider
-from calm.dsl.constants import CACHE, PROVIDER
+from calm.dsl.constants import CACHE, VM
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -517,10 +517,10 @@ def _decompile_bp(bp_payload, with_secrets=False, prefix="", bp_dir=None):
     LOG.info("Decompiling blueprint {}".format(blueprint_name))
 
     for sub_obj in blueprint.get("substrate_definition_list"):
-        sub_type = sub_obj.get("type", "") or PROVIDER.VM.AHV
+        sub_type = sub_obj.get("type", "") or VM.AHV
         if sub_type == "K8S_POD":
             raise NotImplementedError("Decompilation for k8s pod is not supported.")
-        elif sub_type != PROVIDER.VM.AHV:
+        elif sub_type != VM.AHV:
             LOG.warning(
                 "Decompilation support for providers other than AHV is experimental."
             )

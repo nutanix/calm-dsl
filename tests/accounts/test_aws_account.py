@@ -19,5 +19,5 @@ class AwsSpec(AwsAccountSpec):
 
 
 class AwsAccount(Account):
-    provider_type = PROVIDER.ACCOUNT.AWS
+    provider_type = PROVIDER.AWS.EC2
     spec = AwsSpec

@@ -1,10 +1,10 @@
 import sys
 
-from .entity import Entity, EntityType
+from .entity import Entity
 from .validator import PropertyValidator
 from .account import AccountSpecType
 
-from calm.dsl.constants import PROVIDER, KUBERNETES
+from calm.dsl.constants import PROVIDER, KUBERNETES, VM
 from calm.dsl.providers import get_provider
 from calm.dsl.log import get_logging_handle
 
@@ -15,7 +15,7 @@ LOG = get_logging_handle(__name__)
 # K8S vanilla account
 
 
-class KubernetesVanillaAccountSpecType(EntityType):
+class KubernetesVanillaAccountSpecType(AccountSpecType):
     __schema_name__ = "KubernetesVanillaAccountSpec"
     __openapi_type__ = "kubernetes_vanilla_account_spec"
 
@@ -27,17 +27,26 @@ class KubernetesVanillaAccountSpecValidator(
     __kind__ = KubernetesVanillaAccountSpecType
 
 
+def kubernetes_vanilla_account_spec(**kwargs):
+    name = kwargs.get("name", None)
+    bases = (Entity,)
+    return KubernetesVanillaAccountSpecType(name, bases, kwargs)
+
+
+VanillaAccountSpec = kubernetes_vanilla_account_spec()
+    
+
 # K8S karbon account spec
 
 
-class KubernetesKarbonAccountSpecType(EntityType):
+class KubernetesKarbonAccountSpecType(AccountSpecType):
     __schema_name__ = "KubernetesKarbonAccountSpec"
     __openapi_type__ = "kubernetes_karbon_account_spec"
 
     def compile(cls):
         cdict = super().compile()
 
-        K8sProvider = get_provider(PROVIDER.VM.K8S_POD)
+        K8sProvider = get_provider(VM.K8S_POD)
         K8sObj = K8sProvider.get_api_obj()
 
         res, err = K8sObj.karbon_clusters()
@@ -71,37 +80,13 @@ class KubernetesKarbonAccountSpecValidator(
     __kind__ = KubernetesKarbonAccountSpecType
 
 
-# KubernetesAccountSpec class
-
-
-class KubernetesAccountSpecType(AccountSpecType):
-
-    __provider_type__ = PROVIDER.ACCOUNT.KUBERNETES
-
-    k8s_subclasses = {
-        KUBERNETES.ACCOUNT.VANILLA: KubernetesVanillaAccountSpecType,
-        KUBERNETES.ACCOUNT.KARBON: KubernetesKarbonAccountSpecType,
-    }
-
-    def compile(cls):
-
-        _type = getattr(cls, "account_type", KUBERNETES.ACCOUNT.VANILLA)
-        _mcls = cls.k8s_subclasses.get(_type, None)
-        if not _mcls:
-            LOG.error("Unknown kubernetes spec type '{}' given.".format(_type))
-            sys.exit(-1)
-
-        _cls = _mcls(None, (Entity,), cls.get_all_attrs())
-        return _cls.compile()
-
-
-def kubernetes_account_spec(**kwargs):
+def kubernetes_karbon_account_spec(**kwargs):
     name = kwargs.get("name", None)
     bases = (Entity,)
-    return KubernetesAccountSpecType(name, bases, kwargs)
+    return KubernetesKarbonAccountSpecType(name, bases, kwargs)
 
 
-KubernetesAccountSpec = kubernetes_account_spec()
+KarbonAccountSpec = kubernetes_karbon_account_spec()
 
 
 # Kubernetes Auth
@@ -116,7 +101,7 @@ def basic_auth(username, password):
             },
             "value": password,
         },
-        "type": KUBERNETES.AUTH.BASIC,
+        "type": AUTH.KUBERNETES.BASIC,
     }
 
 
@@ -134,7 +119,7 @@ def client_certificate_auth(client_key, client_certificate):
             },
             "value": client_key,
         },
-        "type": KUBERNETES.AUTH.CLIENT_CERTIFICATE,
+        "type": AUTH.KUBERNETES.CLIENT_CERTIFICATE,
     }
 
 
@@ -158,7 +143,7 @@ def ca_ceritificate_auth(client_key, client_certificate, ca_certificate):
             },
             "value": ca_certificate,
         },
-        "type": KUBERNETES.AUTH.CA_CERTIFICATE,
+        "type": AUTH.KUBERNETES.CA_CERTIFICATE,
     }
 
 

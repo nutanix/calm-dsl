@@ -60,7 +60,7 @@ def get_brownfield_ahv_vm_list(limit, offset, quiet, out, project_name):
     # Getting provider account_uuid registered in project
     LOG.info("Fetching project '{}' details".format(project_name))
     project_uuid, account_uuid = get_provider_account_from_project(
-        project_name, PROVIDER.ACCOUNT.NUTANIX
+        project_name, PROVIDER.NUTANIX.PC
     )
 
     LOG.info("Fetching account(uuid={}) details".format(account_uuid))
@@ -167,7 +167,7 @@ def get_brownfield_aws_vm_list(limit, offset, quiet, out, project_name):
     # Getting provider account_uuid registered in project
     LOG.info("Fetching project '{}' details".format(project_name))
     project_uuid, account_uuid = get_provider_account_from_project(
-        project_name, PROVIDER.ACCOUNT.AWS
+        project_name, PROVIDER.AWS.EC2
     )
 
     LOG.info("Fetching brownfield vms")
@@ -258,7 +258,7 @@ def get_brownfield_azure_vm_list(limit, offset, quiet, out, project_name):
     # Getting provider account_uuid registered in project
     LOG.info("Fetching project '{}' details".format(project_name))
     project_uuid, account_uuid = get_provider_account_from_project(
-        project_name, PROVIDER.ACCOUNT.AZURE
+        project_name, PROVIDER.AZURE
     )
 
     LOG.info("Fetching brownfield vms")
@@ -351,7 +351,7 @@ def get_brownfield_gcp_vm_list(limit, offset, quiet, out, project_name):
     # Getting provider account_uuid registered in project
     LOG.info("Fetching project '{}' details".format(project_name))
     project_uuid, account_uuid = get_provider_account_from_project(
-        project_name, PROVIDER.ACCOUNT.GCP
+        project_name, PROVIDER.GCP
     )
 
     LOG.info("Fetching brownfield vms")
@@ -442,7 +442,7 @@ def get_brownfield_vmware_vm_list(limit, offset, quiet, out, project_name):
     # Getting provider account_uuid registered in project
     LOG.info("Fetching project '{}' details".format(project_name))
     project_uuid, account_uuid = get_provider_account_from_project(
-        project_name, PROVIDER.ACCOUNT.VMWARE
+        project_name, PROVIDER.VMWARE
     )
 
     LOG.info("Fetching brownfield vms")

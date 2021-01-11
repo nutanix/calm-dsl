@@ -1,5 +1,6 @@
 from calm.dsl.providers import get_provider_interface
 from calm.dsl.api import get_resource_api, get_api_client
+from calm.dsl.constants import VM
 
 Provider = get_provider_interface()
 
@@ -7,7 +8,7 @@ Provider = get_provider_interface()
 # Implements Provider interface for K8S_POD
 class K8sProvider(Provider):
 
-    provider_type = "K8S_POD"
+    provider_type = VM.K8S_POD
     package_name = __name__
     spec_template_file = "k8s_provider_spec.yaml.jinja2"
 

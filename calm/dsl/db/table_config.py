@@ -19,7 +19,7 @@ from prettytable import PrettyTable
 from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
-from calm.dsl.constants import CACHE, PROVIDER
+from calm.dsl.constants import CACHE, PROVIDER, VM
 
 LOG = get_logging_handle(__name__)
 # Proxy database
@@ -173,7 +173,7 @@ class AhvSubnetsCache(CacheTableBase):
         payload = {"length": 250, "filter": "state==VERIFIED;type==nutanix_pc"}
         account_name_uuid_map = client.account.get_name_uuid_map(payload)
 
-        AhvVmProvider = get_provider(PROVIDER.VM.AHV)
+        AhvVmProvider = get_provider(VM.AHV)
         AhvObj = AhvVmProvider.get_api_obj()
 
         for e_name, e_uuid in account_name_uuid_map.items():
@@ -332,7 +332,7 @@ class AhvImagesCache(CacheTableBase):
         payload = {"length": 250, "filter": "state==VERIFIED;type==nutanix_pc"}
         account_name_uuid_map = client.account.get_name_uuid_map(payload)
 
-        AhvVmProvider = get_provider(PROVIDER.VM.AHV)
+        AhvVmProvider = get_provider(VM.AHV)
         AhvObj = AhvVmProvider.get_api_obj()
 
         for e_name, e_uuid in account_name_uuid_map.items():
@@ -495,7 +495,7 @@ class AccountCache(CacheTableBase):
                 "provider_type": entity["status"]["resources"]["type"],
             }
 
-            if provider_type == PROVIDER.ACCOUNT.NUTANIX:
+            if provider_type == PROVIDER.NUTANIX.PC:
                 query_obj["is_host"] = entity["status"]["resources"]["data"]["host_pc"]
 
             cls.create_entry(**query_obj)

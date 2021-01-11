@@ -88,11 +88,11 @@ from .models.ahv_account import AhvAccountSpec, ahv_account_spec
 from .models.aws_account import AwsAccountSpec, aws_account_spec
 from .models.azure_account import AzureAccountSpec, azure_account_spec
 from .models.vmware_account import VmwareAccountSpec, vmware_account_spec
-from .models.k8s_account import (
-    KubernetesAccountSpec,
-    KubernetesAuth,
-)
+from .models.k8s_karbon_account import KarbonAccountSpec, karbon_account_spec
+from .models.k8s_vanilla_account import VanillaAccountSpec, vanilla_account_spec
 from .models.gcp_account import GcpAccountSpec, gcp_account_spec
+
+from .models.provider_auth import Auth
 
 
 __all__ = [
@@ -200,8 +200,11 @@ __all__ = [
     "azure_account_spec",
     "VmwareAccountSpec",
     "vmware_account_spec",
-    "KubernetesAccountSpec",
-    "KubernetesAuth",
     "GcpAccountSpec",
     "gcp_account_spec",
+    "KarbonAccountSpec",
+    "karbon_account_spec",
+    "VanillaAccountSpec",
+    "vanilla_account_spec",
+    "Auth"
 ]

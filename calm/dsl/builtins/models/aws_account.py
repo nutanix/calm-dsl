@@ -13,7 +13,7 @@ class AwsAccountSpecType(AccountSpecType):
     __schema_name__ = "AwsAccountSpec"
     __openapi_type__ = "aws_account_spec"
 
-    __provider_type__ = PROVIDER.ACCOUNT.AWS
+    __provider_type__ = PROVIDER.AWS.EC2
 
     def compile(cls):
         """returns the compiled payload for aws account spec"""

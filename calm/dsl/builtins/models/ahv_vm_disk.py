@@ -50,7 +50,7 @@ class AhvDiskType(EntityType):
 
         # Fetch Nutanix_PC account registered
         project_accounts = project_cache_data["accounts_data"]
-        account_uuid = project_accounts.get(PROVIDER.ACCOUNT.NUTANIX, "")
+        account_uuid = project_accounts.get(PROVIDER.NUTANIX.PC, "")
 
         if not account_uuid:
             LOG.error(

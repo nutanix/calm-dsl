@@ -13,7 +13,7 @@ class AzureAccountSpecType(AccountSpecType):
     __schema_name__ = "AzureAccountSpec"
     __openapi_type__ = "azure_account_spec"
 
-    __provider_type__ = PROVIDER.ACCOUNT.AZURE
+    __provider_type__ = PROVIDER.AZURE
 
     def compile(cls):
         """returns the compiled payload for azure account spec"""

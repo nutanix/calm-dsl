@@ -13,7 +13,7 @@ class VmwareAccountSpecType(AccountSpecType):
     __schema_name__ = "VmwareAccountSpec"
     __openapi_type__ = "vmware_account_spec"
 
-    __provider_type__ = PROVIDER.ACCOUNT.VMWARE
+    __provider_type__ = PROVIDER.VMWARE
 
     def compile(cls):
         """returns the compiled payload for azure account spec"""

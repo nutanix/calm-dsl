@@ -8,7 +8,7 @@ from calm.dsl.decompile.file_handler import get_specs_dir, get_specs_dir_key
 from calm.dsl.builtins import SubstrateType, get_valid_identifier
 from calm.dsl.decompile.ahv_vm import render_ahv_vm
 from calm.dsl.decompile.ref_dependency import update_substrate_name
-from calm.dsl.constants import PROVIDER
+from calm.dsl.constants import VM
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -71,7 +71,7 @@ def render_substrate_template(cls, vm_images=[]):
 
     # Handle provider_spec for substrate
     provider_spec = cls.provider_spec
-    if cls.provider_type == PROVIDER.VM.AHV:
+    if cls.provider_type == VM.AHV:
         # Provider Spec is converted to ahv vm class in substrate decompile method only
         boot_config = getattr(provider_spec.resources, "boot_config", {})
         user_attrs["provider_spec"] = provider_spec.__name__
@@ -104,7 +104,7 @@ def render_substrate_template(cls, vm_images=[]):
     user_attrs["actions"] = action_list
 
     substrate_text = render_template(schema_file="substrate.py.jinja2", obj=user_attrs)
-    if cls.provider_type == PROVIDER.VM.AHV:
+    if cls.provider_type == VM.AHV:
         # Append definition for ahv vm class on top of substrate class
         substrate_text = "{}\n{}".format(ahv_vm_str, substrate_text)
 
@@ -117,7 +117,7 @@ def get_provider_spec_string(spec, filename, provider_type, vm_images):
     dsl_file_location_alias = "os.path.join('{}', '{}')".format(
         get_specs_dir_key(), filename
     )
-    if provider_type == PROVIDER.VM.AHV:
+    if provider_type == VM.AHV:
         disk_list = spec["resources"]["disk_list"]
 
         disk_ind_img_map = {}
@@ -141,7 +141,7 @@ def get_provider_spec_string(spec, filename, provider_type, vm_images):
             dsl_file_location_alias, disk_pkg_string
         )
 
-    elif provider_type == PROVIDER.VM.VMWARE:
+    elif provider_type == VM.VMWARE:
         spec_template = get_valid_identifier(spec["template"])
 
         if spec_template in vm_images:

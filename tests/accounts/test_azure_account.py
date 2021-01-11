@@ -13,5 +13,5 @@ class AzureSpec(AzureAccountSpec):
 
 class AzureAccount(Account):
 
-    provider_type = PROVIDER.ACCOUNT.AZURE
+    provider_type = PROVIDER.AZURE
     spec = AzureSpec

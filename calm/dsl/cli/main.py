@@ -13,7 +13,7 @@ from calm.dsl.providers import get_provider, get_provider_types
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.log import get_logging_handle
 from calm.dsl.config import get_context
-from calm.dsl.constants import PROVIDER
+from calm.dsl.constants import VM
 from calm.dsl.store import Cache
 
 from .version_validator import validate_version
@@ -92,7 +92,7 @@ def validate():
     "-t",
     "provider_type",
     type=click.Choice(get_provider_types()),
-    default=PROVIDER.VM.AHV,
+    default=VM.AHV,
     help="Provider type",
 )
 def validate_provider_spec(spec_file, provider_type):
@@ -361,7 +361,7 @@ def watch():
     "provider_type",
     "-t",
     type=click.Choice(get_provider_types()),
-    default=PROVIDER.VM.AHV,
+    default=VM.AHV,
     help="Provider type",
 )
 def create_provider_spec(provider_type):

@@ -35,11 +35,11 @@ from calm.dsl.constants import PROVIDER
     help="Search for accounts of specific provider",
     type=click.Choice(
         [
-            PROVIDER.ACCOUNT.AWS,
+            PROVIDER.AWS.EC2,
             "k8s",
-            PROVIDER.ACCOUNT.VMWARE,
-            PROVIDER.ACCOUNT.AZURE,
-            PROVIDER.ACCOUNT.GCP,
+            PROVIDER.VMWARE,
+            PROVIDER.AZURE,
+            PROVIDER.GCP,
             "nutanix",
         ]
     ),

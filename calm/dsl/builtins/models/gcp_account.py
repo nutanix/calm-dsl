@@ -13,7 +13,7 @@ class GcpAccountSpecType(AccountSpecType):
     __schema_name__ = "GcpAccountSpec"
     __openapi_type__ = "gcp_account_spec"
 
-    __provider_type__ = PROVIDER.ACCOUNT.GCP
+    __provider_type__ = PROVIDER.GCP
 
     def compile(cls):
         """returns the compiled payload for ahv account spec"""
