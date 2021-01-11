@@ -215,6 +215,22 @@ def _describe_marketplace_bp(name, out, version, source, app_state):
     type=click.Choice(APP_SOURCES),
     help="App Source of marketplace blueprint",
 )
+@click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
+@click.option(
+    "--poll-interval",
+    "poll_interval",
+    "-pi",
+    type=int,
+    default=10,
+    show_default=True,
+    help="Give polling interval",
+)
+@click.option(
+    "--launch_params",
+    "-l",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to python file for runtime editables",
+)
 def _launch_marketplace_bp(
     name,
     version,
@@ -224,6 +240,9 @@ def _launch_marketplace_bp(
     profile_name,
     ignore_runtime_variables,
     source,
+    launch_params,
+    watch,
+    poll_interval,
 ):
     """Launch a marketplace manager blueprint"""
 
@@ -236,6 +255,9 @@ def _launch_marketplace_bp(
         profile_name=profile_name,
         patch_editables=not ignore_runtime_variables,
         app_source=source,
+        launch_params=launch_params,
+        watch=watch,
+        poll_interval=poll_interval,
     )
 
 
@@ -267,6 +289,22 @@ def _launch_marketplace_bp(
     type=click.Choice(APP_SOURCES),
     help="App Source of marketplace blueprint",
 )
+@click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
+@click.option(
+    "--poll-interval",
+    "poll_interval",
+    "-pi",
+    type=int,
+    default=10,
+    show_default=True,
+    help="Give polling interval",
+)
+@click.option(
+    "--launch_params",
+    "-l",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to python file for runtime editables",
+)
 def _launch_marketplace_item(
     name,
     version,
@@ -276,6 +314,9 @@ def _launch_marketplace_item(
     profile_name,
     ignore_runtime_variables,
     source,
+    launch_params,
+    watch,
+    poll_interval,
 ):
     """Launch a marketplace store item"""
 
@@ -288,6 +329,9 @@ def _launch_marketplace_item(
         profile_name=profile_name,
         patch_editables=not ignore_runtime_variables,
         app_source=source,
+        launch_params=launch_params,
+        watch=watch,
+        poll_interval=poll_interval,
     )
 
 

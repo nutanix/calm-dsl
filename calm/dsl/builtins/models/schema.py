@@ -1,8 +1,10 @@
 """ Schema should be according to OpenAPI 3 format with x-calm-dsl-type extension"""
 
 import json
+import sys
 from copy import deepcopy
 from io import StringIO
+from distutils.version import LooseVersion as LV
 
 from ruamel import yaml
 from jinja2 import Environment, PackageLoader
@@ -10,6 +12,7 @@ import jsonref
 from bidict import bidict
 
 from .validator import get_property_validators
+from calm.dsl.store import Version
 from calm.dsl.log import get_logging_handle
 
 
@@ -139,6 +142,18 @@ def get_validators_with_defaults(schema_props):
     defaults = {}
     display_map = bidict()
     for name, props in schema_props.items():
+        calm_version = Version.get_version("Calm")
+
+        # dev machines do not follow standard version protocols. Avoid matching there
+        attribute_min_version = str(props.get("x-min-calm-version", ""))
+        if not calm_version:
+            # Raise warning and set default to 2.9.0
+            calm_version = "2.9.0"
+
+        # If attribute version is less than calm version, ignore it
+        if attribute_min_version and LV(attribute_min_version) > LV(calm_version):
+            continue
+
         ValidatorType, is_array, default = get_validator_details(schema_props, name)
         attr_name = props.get("x-calm-dsl-display-name", name)
         validators[attr_name] = (ValidatorType, is_array)

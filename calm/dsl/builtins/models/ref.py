@@ -1,6 +1,7 @@
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from calm.dsl.store import Cache
+from calm.dsl.constants import CACHE
 
 
 # Ref
@@ -49,7 +50,7 @@ class Ref:
             account_uuid = kwargs.get("account_uuid")
 
             subnet_cache_data = Cache.get_entity_data(
-                entity_type="ahv_subnet",
+                entity_type=CACHE.ENTITY.AHV_SUBNET,
                 name=name,
                 cluster=cluster,
                 account_uuid=account_uuid,
@@ -70,7 +71,7 @@ class Ref:
             directory = kwargs.get("directory") or ""
             display_name = kwargs.get("display_name") or ""
             user_cache_data = Cache.get_entity_data(
-                entity_type="user",
+                entity_type=CACHE.ENTITY.USER,
                 name=name,
                 directory=directory,
                 display_name=display_name,
@@ -89,7 +90,7 @@ class Ref:
             directory = kwargs.get("directory") or ""
             display_name = kwargs.get("display_name") or ""
             user_group_cache_data = Cache.get_entity_data(
-                entity_type="user_group",
+                entity_type=CACHE.ENTITY.USER_GROUP,
                 name=name,
                 directory=directory,
                 display_name=display_name,
@@ -113,7 +114,7 @@ class Ref:
 
             provider_type = kwargs.get("provider_type") or ""
             account_cache_data = Cache.get_entity_data(
-                entity_type="account", name=name, provider_type=provider_type
+                entity_type=CACHE.ENTITY.ACCOUNT, name=name, provider_type=provider_type
             )
 
             if not account_cache_data:
@@ -126,7 +127,9 @@ class Ref:
     class Role:
         def __new__(cls, name, **kwargs):
 
-            role_cache_data = Cache.get_entity_data(entity_type="role", name=name)
+            role_cache_data = Cache.get_entity_data(
+                entity_type=CACHE.ENTITY.ROLE, name=name
+            )
             if not role_cache_data:
                 raise Exception(
                     "Role {} not found. Please run: calm update cache".format(name)
@@ -136,7 +139,9 @@ class Ref:
     class Project:
         def __new__(cls, name, **kwargs):
 
-            project_cache_data = Cache.get_entity_data(entity_type="project", name=name)
+            project_cache_data = Cache.get_entity_data(
+                entity_type=CACHE.ENTITY.PROJECT, name=name
+            )
             if not project_cache_data:
                 raise Exception(
                     "Project {} not found. Please run: calm update cache".format(name)
@@ -167,7 +172,7 @@ class Ref:
         def __new__(cls, name, **kwargs):
 
             ds_cache_data = Cache.get_entity_data(
-                entity_type="directory_service", name=name
+                entity_type=CACHE.ENTITY.DIRECTORY_SERVICE, name=name
             )
             if not ds_cache_data:
                 raise Exception(

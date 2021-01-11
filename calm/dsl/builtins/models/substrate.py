@@ -9,6 +9,7 @@ from .client_attrs import update_dsl_metadata_map, get_dsl_metadata_map
 from .metadata_payload import get_metadata_obj
 
 from calm.dsl.config import get_context
+from calm.dsl.constants import CACHE
 from calm.dsl.store import Cache
 from calm.dsl.log import get_logging_handle
 
@@ -141,7 +142,7 @@ class SubstrateType(EntityType):
                     project_name = project_ref.get("name", project_config["name"])
 
                     project_cache_data = Cache.get_entity_data(
-                        entity_type="project", name=project_name
+                        entity_type=CACHE.ENTITY.PROJECT, name=project_name
                     )
                     if not project_cache_data:
                         LOG.error(

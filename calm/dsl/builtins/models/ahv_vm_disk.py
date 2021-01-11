@@ -6,6 +6,7 @@ from .ref import ref
 
 from .package import PackageType
 from calm.dsl.store import Cache
+from calm.dsl.constants import CACHE
 from calm.dsl.log import get_logging_handle
 from .helper import ahv as ahv_helper
 
@@ -38,7 +39,7 @@ class AhvDiskType(EntityType):
             device_type = cdict["device_properties"].get("device_type")
 
             image_cache_data = Cache.get_entity_data(
-                entity_type="ahv_disk_image",
+                entity_type=CACHE.ENTITY.AHV_DISK_IMAGE,
                 name=image_name,
                 image_type=IMAGE_TYPE_MAP[device_type],
                 account_uuid=pc_account["uuid"],

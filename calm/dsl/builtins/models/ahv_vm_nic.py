@@ -4,7 +4,8 @@ from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from calm.dsl.store import Cache
 from .helper import ahv as ahv_helper
-
+from calm.dsl.config import get_context
+from calm.dsl.constants import CACHE
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -47,7 +48,7 @@ class AhvNicType(EntityType):
         elif subnet_name:
             cluster_name = subnet_ref.get("cluster", "")
             subnet_cache_data = Cache.get_entity_data(
-                entity_type="ahv_subnet",
+                entity_type=CACHE.ENTITY.AHV_SUBNET,
                 name=subnet_name,
                 cluster=cluster_name,
                 account_uuid=pc_account["uuid"],
@@ -95,7 +96,7 @@ class AhvNicType(EntityType):
         nfc_name = nfc_ref.get("name", "")
         if nfc_name:
             nfc_cache_data = Cache.get_entity_data(
-                entity_type="ahv_network_function_chain", name=nfc_name
+                entity_type=CACHE.ENTITY.AHV_NETWORK_FUNCTION_CHAIN, name=nfc_name
             )
 
             if not nfc_cache_data:

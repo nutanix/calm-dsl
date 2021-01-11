@@ -2,6 +2,7 @@ import sys
 
 from calm.dsl.decompile.render import render_template
 from calm.dsl.store import Cache
+from calm.dsl.constants import CACHE
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -24,7 +25,7 @@ def render_ahv_vm_nic(cls):
         user_attrs["subnet_name"] = subnet_uuid
     else:
         subnet_cache_data = Cache.get_entity_data_using_uuid(
-            entity_type="ahv_subnet", uuid=subnet_uuid
+            entity_type=CACHE.ENTITY.AHV_SUBNET, uuid=subnet_uuid
         )
         if not subnet_cache_data:
             LOG.error("Subnet with uuid '{}' not found".format(subnet_uuid))

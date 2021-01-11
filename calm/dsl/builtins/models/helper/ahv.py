@@ -3,6 +3,7 @@ from ..metadata_payload import get_metadata_obj
 from calm.dsl.store import Cache
 from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
+from calm.dsl.constants import CACHE
 
 LOG = get_logging_handle(__name__)
 
@@ -57,7 +58,7 @@ def get_profile_environment(cls):
 
     if environment:
         environment_cache_data = Cache.get_entity_data_using_uuid(
-            entity_type="environment", uuid=environment["uuid"]
+            entity_type=CACHE.ENTITY.ENVIRONMENT, uuid=environment["uuid"]
         )
         if not environment_cache_data:
             LOG.error(
@@ -107,7 +108,7 @@ def get_project():
     project_config = context.get_project_config()
     project_name = project_ref.get("name") or project_config["name"]
 
-    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
+    project_cache_data = Cache.get_entity_data(entity_type=CACHE.ENTITY.PROJECT, name=project_name)
     if not project_cache_data:
         LOG.error(
             "Project {} not found. Please run: calm update cache".format(project_name)
@@ -150,7 +151,7 @@ def get_pc_account(cls, environment, project, environment_whitelist, project_whi
             pc_account_uuid = next(iter(project_whitelist))
 
     account_cache_data = Cache.get_entity_data_using_uuid(
-        entity_type="account", uuid=pc_account_uuid
+        entity_type=CACHE.ENTITY.ACCOUNT, uuid=pc_account_uuid
     )
     if not account_cache_data:
         LOG.error(
