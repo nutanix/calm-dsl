@@ -62,4 +62,3 @@ def karbon_account_spec(**kwargs):
 
 
 KarbonAccountSpec = karbon_account_spec()
-

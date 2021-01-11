@@ -61,7 +61,12 @@ class AccountType(EntityType):
         ValidatorType = get_property_validators().get(pva_openapi_type)
         ValidatorType.validate(cls.spec, False)
 
-        return super().compile()
+        cdict = super().compile()
+
+        if cdict["type"] in ["kubernetes_karbon", "kubernetes_vanilla"]:
+            cdict["type"] = "kubernetes"
+
+        return cdict
 
 
 class AccountValidator(PropertyValidator, openapi_type="account"):

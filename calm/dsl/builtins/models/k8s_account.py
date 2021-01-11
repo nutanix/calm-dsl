@@ -34,7 +34,7 @@ def kubernetes_vanilla_account_spec(**kwargs):
 
 
 VanillaAccountSpec = kubernetes_vanilla_account_spec()
-    
+
 
 # K8S karbon account spec
 

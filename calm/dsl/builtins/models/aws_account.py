@@ -9,7 +9,7 @@ from calm.dsl.constants import PROVIDER
 LOG = get_logging_handle(__name__)
 
 
-class AwsAccountSpecType(AccountSpecType):
+class AwsEc2AccountSpecType(AccountSpecType):
     __schema_name__ = "AwsAccountSpec"
     __openapi_type__ = "aws_account_spec"
 
@@ -28,15 +28,15 @@ class AwsAccountSpecType(AccountSpecType):
         return cdict
 
 
-class AwsAccountDataValidator(PropertyValidator, openapi_type="aws_account_spec"):
+class AwsEc2AccountSpecValidator(PropertyValidator, openapi_type="aws_account_spec"):
     __default__ = None
-    __kind__ = AwsAccountSpecType
+    __kind__ = AwsEc2AccountSpecType
 
 
-def aws_account_spec(**kwargs):
+def aws_ec2_account_spec(**kwargs):
     name = kwargs.get("name", None)
     bases = (Entity,)
-    return AwsAccountSpecType(name, bases, kwargs)
+    return AwsEc2AccountSpecType(name, bases, kwargs)
 
 
-AwsAccountSpec = aws_account_spec()
+AwsEc2AccountSpec = aws_ec2_account_spec()

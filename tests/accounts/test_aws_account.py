@@ -1,8 +1,8 @@
 from calm.dsl.constants import PROVIDER
-from calm.dsl.builtins import Account, AwsAccountSpec
+from calm.dsl.builtins import Account, AwsEc2AccountSpec
 
 
-class AwsSpec(AwsAccountSpec):
+class AwsSpec(AwsEc2AccountSpec):
 
     access_key_id = "aws_access_key"
     secret_access_key = "aws_secret_access_key"

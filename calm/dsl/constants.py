@@ -24,18 +24,18 @@ class PROVIDER:
     class NUTANIX:
         PC = "nutanix_pc"
         KARBON = "kubernetes_karbon"
-    
+
     class AWS:
         EC2 = "aws"
         C2S = "aws_govcloud"
-    
+
     AZURE = "azure"
 
     VMWARE = "vmware"
 
     class KUBERNETES:
         VANILLA = "kubernetes_vanilla"
-    
+
     GCP = "gcp"
 
 
