@@ -73,7 +73,7 @@ class AhvNicType(EntityType):
             ):
                 LOG.error(
                     "Subnet {} is not whitelisted in environment {}".format(
-                        subnet_name, environment["name"])
+                        subnet_name, environment["name"]
                     )
                 )
                 sys.exit(-1)

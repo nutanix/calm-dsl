@@ -1107,7 +1107,9 @@ def delete_blueprint(blueprint_names):
         LOG.info("Blueprint {} deleted".format(blueprint_name))
 
 
-def create_patched_blueprint(blueprint, project_data, environment_data, profile_name=None):
+def create_patched_blueprint(
+    blueprint, project_data, environment_data, profile_name=None
+):
     """Patch the blueprint with the given environment to create a new blueprint"""
     client = get_api_client()
     org_bp_name = blueprint["metadata"]["name"]
@@ -1120,24 +1122,17 @@ def create_patched_blueprint(blueprint, project_data, environment_data, profile_
         "api_version": "3.0",
         "metadata": {
             "kind": "blueprint",
-            "project_reference": {
-                "kind": "project",
-                "uuid": project_uuid
-            }
+            "project_reference": {"kind": "project", "uuid": project_uuid},
         },
         "spec": {
-            "environment_profile_pairs": [{
-                "environment": {
-                    "uuid": env_uuid
-                },
-                "app_profile": {
-                    "name": profile_name
-                },
-            }],
-            "new_blueprint": {
-                "name": new_bp_name
-            }
-        }
+            "environment_profile_pairs": [
+                {
+                    "environment": {"uuid": env_uuid},
+                    "app_profile": {"name": profile_name},
+                }
+            ],
+            "new_blueprint": {"name": new_bp_name},
+        },
     }
 
     LOG.info("Creating Patched blueprint")
@@ -1157,12 +1152,14 @@ def create_patched_blueprint(blueprint, project_data, environment_data, profile_
 
 def patch_bp_if_required(environment_name=None, blueprint_name=None, profile_name=None):
     """Patch the blueprint with the given environment to create a new blueprint if the requested app profile
-     is not already linked to the given environment"""
+    is not already linked to the given environment"""
     if environment_name:
         client = get_api_client()
         bp = get_blueprint(client, blueprint_name)
         project_uuid = bp["metadata"]["project_reference"]["uuid"]
-        environment_data, project_data = get_project_environment(name=environment_name, project_uuid=project_uuid)
+        environment_data, project_data = get_project_environment(
+            name=environment_name, project_uuid=project_uuid
+        )
         env_uuid = environment_data["metadata"]["uuid"]
 
         res, err = client.blueprint.read(bp["metadata"]["uuid"])
@@ -1183,9 +1180,13 @@ def patch_bp_if_required(environment_name=None, blueprint_name=None, profile_nam
         if not found_profile:
             raise Exception("No profile found with name {}".format(profile_name))
 
-        ref_env_uuid = next(iter(app_profile.get("environment_reference_list", [])), None)
+        ref_env_uuid = next(
+            iter(app_profile.get("environment_reference_list", [])), None
+        )
         if ref_env_uuid != env_uuid:
-            new_blueprint = create_patched_blueprint(bp, project_data, environment_data, profile_name)
+            new_blueprint = create_patched_blueprint(
+                bp, project_data, environment_data, profile_name
+            )
             return new_blueprint["metadata"]["name"], new_blueprint
 
     return blueprint_name, None
