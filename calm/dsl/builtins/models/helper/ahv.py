@@ -108,7 +108,9 @@ def get_project():
     project_config = context.get_project_config()
     project_name = project_ref.get("name") or project_config["name"]
 
-    project_cache_data = Cache.get_entity_data(entity_type=CACHE.ENTITY.PROJECT, name=project_name)
+    project_cache_data = Cache.get_entity_data(
+        entity_type=CACHE.ENTITY.PROJECT, name=project_name
+    )
     if not project_cache_data:
         LOG.error(
             "Project {} not found. Please run: calm update cache".format(project_name)
