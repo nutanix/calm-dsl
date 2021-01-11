@@ -32,7 +32,7 @@ class ObjectDict(EntityDict):
         super().__setitem__(name, value)
 
     def get_dict(self):
-        ret = {}
+        ret = {} 
         if not self.__items_set__:
             return ret
         for key, value in self.defaults.items():

@@ -567,7 +567,9 @@ class EntityType(EntityTypeBase):
             "name": getattr(cls, "name", "") or cls.__name__,
             "kind": kind or getattr(cls, "__kind__"),
         }
-        return ref(None, (Entity,), attrs)
+        _cls = ref(None, (Entity,), attrs)
+        _cls.__self__ = cls
+        return _cls
 
     def get_dict(cls):
         return json.loads(cls.json_dumps())
