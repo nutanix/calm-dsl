@@ -14,7 +14,8 @@ class TestAccounts:
         "account_file",
         [
             "tests/accounts/test_ahv_account.py",
-            "tests/accounts/test_aws_account.py",
+            "tests/accounts/test_aws_c2s_account.py",
+            "tests/accounts/test_aws_ec2_account.py",
             "tests/accounts/test_azure_account.py",
             "tests/accounts/test_k8s_basic_auth_account.py",
             "tests/accounts/test_k8s_ca_cert_auth_account.py",

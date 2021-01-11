@@ -64,7 +64,7 @@ class AccountType(EntityType):
         cdict = super().compile()
 
         if cdict["type"] in ["kubernetes_karbon", "kubernetes_vanilla"]:
-            cdict["type"] = "kubernetes"
+            cdict["type"] = "k8s"
 
         return cdict
 

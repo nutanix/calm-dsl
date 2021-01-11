@@ -1,0 +1,36 @@
+{% macro AwsC2sAccountSpec() -%}
+
+title: AwsC2sAccountSpec
+type: object
+x-calm-dsl-type: aws_account_spec
+properties:
+  regions:
+    type: array
+    items:
+      type: object
+      x-calm-dsl-type: object
+      properties:
+        name:
+          type: string
+  c2s_account_address:
+    type: string
+  client_certificate:
+    type: string
+  client_key:
+    type: string
+  role:
+    type: string
+  mission:
+    type: string
+  agency:
+    type: string
+
+{%- endmacro %}
+
+
+{% macro AwsC2sAccountSpecSchema() -%}
+
+AwsC2sAccountSpec:
+  {{ AwsC2sAccountSpec()|indent(2) }}
+
+{%- endmacro %}

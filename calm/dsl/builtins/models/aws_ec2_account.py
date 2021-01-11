@@ -10,8 +10,8 @@ LOG = get_logging_handle(__name__)
 
 
 class AwsEc2AccountSpecType(AccountSpecType):
-    __schema_name__ = "AwsAccountSpec"
-    __openapi_type__ = "aws_account_spec"
+    __schema_name__ = "AwsEc2AccountSpec"
+    __openapi_type__ = "aws_ec2_account_spec"
 
     __provider_type__ = PROVIDER.AWS.EC2
 
@@ -28,7 +28,9 @@ class AwsEc2AccountSpecType(AccountSpecType):
         return cdict
 
 
-class AwsEc2AccountSpecValidator(PropertyValidator, openapi_type="aws_account_spec"):
+class AwsEc2AccountSpecValidator(
+    PropertyValidator, openapi_type="aws_ec2_account_spec"
+):
     __default__ = None
     __kind__ = AwsEc2AccountSpecType
 

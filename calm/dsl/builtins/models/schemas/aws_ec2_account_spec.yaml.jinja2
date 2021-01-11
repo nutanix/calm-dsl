@@ -1,8 +1,8 @@
-{% macro AwsAccountSpec() -%}
+{% macro AwsEc2AccountSpec() -%}
 
-title: AwsAccountSpec
+title: AwsEc2AccountSpec
 type: object
-x-calm-dsl-type: aws_account_spec
+x-calm-dsl-type: aws_ec2_account_spec
 properties:
   regions:
     type: array
@@ -24,9 +24,9 @@ properties:
 {%- endmacro %}
 
 
-{% macro AwsAccountSpecSchema() -%}
+{% macro AwsEc2AccountSpecSchema() -%}
 
-AwsAccountSpec:
-  {{ AwsAccountSpec()|indent(2) }}
+AwsEc2AccountSpec:
+  {{ AwsEc2AccountSpec()|indent(2) }}
 
 {%- endmacro %}

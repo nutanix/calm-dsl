@@ -1,3 +1,5 @@
+import sys
+
 from .entity import Entity
 from .validator import PropertyValidator
 from .account import AccountSpecType
@@ -24,6 +26,20 @@ class AzureAccountSpecType(AccountSpecType):
             "attrs": {"is_secret_modified": True},
             "value": client_key,
         }
+
+        # TODO remove from here
+        if cdict["cloud_environment"] not in [
+            "PublicCloud",
+            "GermanCloud",
+            "ChinaCloud",
+            "USGovernmentCloud",
+        ]:
+            LOG.error(
+                "Invalid cloud environment '{}' given.".format(
+                    cdict["cloud_environment"]
+                )
+            )
+            sys.exit(-1)
 
         return cdict
 

@@ -35,7 +35,8 @@
 {% import "account.yaml.jinja2" as account %}
 {% import "account_spec.yaml.jinja2" as account_spec %}
 {% import "ahv_account_spec.yaml.jinja2" as ahv_account_spec %}
-{% import "aws_account_spec.yaml.jinja2" as aws_account_spec %}
+{% import "aws_ec2_account_spec.yaml.jinja2" as aws_ec2_account_spec %}
+{% import "aws_c2s_account_spec.yaml.jinja2" as aws_c2s_account_spec %}
 {% import "azure_account_spec.yaml.jinja2" as azure_account_spec %}
 {% import "vmware_account_spec.yaml.jinja2" as vmware_account_spec %}
 {% import "k8s_vanilla_account_spec.yaml.jinja2" as k8s_vanilla_account_spec %}
@@ -80,7 +81,8 @@
 {{ account.AccountSchema() }}
 {{ account_spec.AccountSpecSchema() }}
 {{ ahv_account_spec.AhvAccountSpecSchema() }}
-{{ aws_account_spec.AwsAccountSpecSchema() }}
+{{ aws_ec2_account_spec.AwsEc2AccountSpecSchema() }}
+{{ aws_c2s_account_spec.AwsC2sAccountSpecSchema() }}
 {{ azure_account_spec.AzureAccountSpecSchema() }}
 {{ vmware_account_spec.VmwareAccountSpecSchema() }}
 {{ k8s_vanilla_account_spec.KubernetesVanillaAccountSpecSchema() }}

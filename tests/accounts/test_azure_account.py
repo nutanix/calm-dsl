@@ -7,7 +7,7 @@ class AzureSpec(AzureAccountSpec):
     subscription_id = "azure_subscription_id"
     tenant_id = "azure_tenant_id"
     client_id = "azure_client_id"
-    cloud_environment = "Public Environment"
+    cloud_environment = "PublicCloud"
     client_key = "azure_client_key"
 
 

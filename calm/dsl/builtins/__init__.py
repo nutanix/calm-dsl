@@ -85,7 +85,8 @@ from .models.vm_blueprint import VmBlueprint
 # Accounts
 from .models.account import Account, account
 from .models.ahv_account import AhvAccountSpec, ahv_account_spec
-from .models.aws_account import AwsEc2AccountSpec, aws_ec2_account_spec
+from .models.aws_ec2_account import AwsEc2AccountSpec, aws_ec2_account_spec
+from .models.aws_c2s_account import AwsC2sAccountSpec, aws_c2s_account_spec
 from .models.azure_account import AzureAccountSpec, azure_account_spec
 from .models.vmware_account import VmwareAccountSpec, vmware_account_spec
 from .models.k8s_karbon_account import KarbonAccountSpec, karbon_account_spec
@@ -196,6 +197,8 @@ __all__ = [
     "ahv_account_spec",
     "AwsEc2AccountSpec",
     "aws_ec2_account_spec",
+    "AwsC2sAccountSpec",
+    "aws_c2s_account_spec",
     "AzureAccountSpec",
     "azure_account_spec",
     "VmwareAccountSpec",

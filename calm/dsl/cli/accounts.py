@@ -19,7 +19,7 @@ from .constants import ACCOUNT
 from calm.dsl.store import Version
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Cache
-from calm.dsl.constants import CACHE
+from calm.dsl.constants import CACHE, VM
 
 LOG = get_logging_handle(__name__)
 
