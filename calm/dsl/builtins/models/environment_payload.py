@@ -1,8 +1,13 @@
+import sys
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .environment import EnvironmentType
+from calm.dsl.config import get_context
+from calm.dsl.log import get_logging_handle
+from calm.dsl.store import Cache
+from calm.dsl.constants import CACHE
 
-
+LOG = get_logging_handle(__name__)
 # Blueprint Payload
 
 
@@ -32,7 +37,7 @@ def create_environment_payload(UserEnvironment):
     err = {"error": "", "code": -1}
 
     if UserEnvironment is None:
-        err["error"] = "Given project is empty."
+        err["error"] = "Given environment is empty."
         return None, err
 
     if not isinstance(UserEnvironment, EnvironmentType):
@@ -45,10 +50,24 @@ def create_environment_payload(UserEnvironment):
         "resources": UserEnvironment,
     }
 
+    ContextObj = get_context()
+    project_config = ContextObj.get_project_config()
+    project_cache_data = Cache.get_entity_data(
+        entity_type=CACHE.ENTITY.PROJECT, name=project_config["name"]
+    )
+    if not project_cache_data:
+        LOG.error("Project {} not found.".format(project_config["name"]))
+        sys.exit(-1)
+
     metadata = {
         "spec_version": 1,
         "kind": "environment",
         "name": UserEnvironment.__name__,
+        "project_reference": {
+            "kind": "project",
+            "name": project_cache_data["name"],
+            "uuid": project_cache_data["uuid"],
+        },
     }
 
     UserEnvironmentPayload = _environment_payload()

@@ -17,11 +17,10 @@ class ProjectType(EntityType):
         cdict = super().compile()
 
         cdict["account_reference_list"] = []
-
         # Populate accounts
         provider_list = cdict.pop("provider_list", [])
         for provider_obj in provider_list:
-            provider_type = provider_obj["provider_type"]
+            provider_type = provider_obj["type"]
             if provider_type == "nutanix_pc":
                 if "subnet_reference_list" in provider_obj:
                     if cdict.get("subnet_reference_list") is None:
@@ -57,6 +56,10 @@ class ProjectType(EntityType):
 
         # pop out unnecessary attibutes
         cdict.pop("environment_definition_list", None)
+        # empty dict is not accepted for default_environment_reference
+        default_env = cdict.get("default_environment_reference")
+        if default_env is not None and not default_env:
+            cdict.pop("default_environment_reference", None)
 
         return cdict
 

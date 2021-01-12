@@ -13,6 +13,7 @@ properties:
     type: object
     x-calm-dsl-type: object
     x-calm-dsl-display-name: environment
+    x-calm-dsl-min-version: 3.2.0
     properties:
       kind:
         type: string
@@ -22,6 +23,7 @@ properties:
         type: string
   environment_reference_list:
     type: array
+    x-calm-dsl-min-version: 3.2.0
     items:
       type: string
   deployment_create_list:

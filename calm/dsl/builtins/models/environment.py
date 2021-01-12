@@ -53,9 +53,12 @@ class EnvironmentType(EntityType):
                     )
                 )
                 sys.exit(-1)
+
             if infra_type == "nutanix_pc":
-                infra_account_subnets = row.get("subnet_references", [])
-                for sub in infra_account_subnets:
+                row["subnet_references"] = row.get(
+                    "subnet_reference_list", []
+                ) + row.get("external_network_list", [])
+                for sub in row["subnet_references"]:
                     infra_sub_uuid = sub.get("uuid", "")
                     infra_sub = sub.get("name", infra_sub_uuid)
                     if infra_sub_uuid not in project_cache_data[
@@ -66,6 +69,9 @@ class EnvironmentType(EntityType):
                             "project {}.".format(infra_sub, infra_acc, project_name)
                         )
                         sys.exit(-1)
+
+                row.pop("subnet_reference_list", None)
+                row.pop("external_network_list", None)
 
         # NOTE Only one substrate per (provider_type, os_type) tuple can exist
         sub_set = set()

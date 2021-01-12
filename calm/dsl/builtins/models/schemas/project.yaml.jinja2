@@ -6,7 +6,7 @@ title: Provider Data
 type: object
 x-calm-dsl-type: object
 properties:
-  provider_type:
+  type:
     type: string
   account_reference:
     type: object
@@ -89,15 +89,8 @@ properties:
       $ref: '#/components/schemas/Ref'
   default_environment_reference:
     x-calm-dsl-display-name: default_environment
-    type: object
-    x-calm-dsl-type: object
-    properties:
-      kind:
-        type: string
-      name:
-        type: string
-      uuid:
-        type: string
+    x-calm-dsl-min-version: 3.2.0
+    {{ ref.Ref() | indent(4) }}
   environment_definition_list:
     x-calm-dsl-display-name: envs
     description: Inline definitions of environment in project

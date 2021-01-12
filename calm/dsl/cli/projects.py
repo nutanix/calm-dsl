@@ -276,6 +276,15 @@ def create_project_from_dsl(project_file, project_name, description=""):
         envs = getattr(UserProject, "envs", [])
         UserProject.envs = []
 
+    default_environment_name = ""
+    if (
+        hasattr(UserProject, "default_environment")
+        and UserProject.default_environment is not None
+    ):
+        default_environment = getattr(UserProject, "default_environment", None)
+        UserProject.default_environment = {}
+        default_environment_name = default_environment.__name__
+
     for _env in envs:
         env_name = _env.__name__
         LOG.info("Searching for existing environments with name '{}'".format(env_name))
@@ -308,21 +317,36 @@ def create_project_from_dsl(project_file, project_name, description=""):
         ContextObj = get_context()
         ContextObj.update_project_context(project_name=project_name)
 
+        default_environment_ref = {}
+
         # Create environment
         env_ref_list = []
         for env_obj in envs:
             env_res_data = create_environment_from_dsl_class(env_obj)
-            env_ref_list.append({"kind": "environment", "uuid": env_res_data["uuid"]})
+            env_ref = {"kind": "environment", "uuid": env_res_data["uuid"]}
+            env_ref_list.append(env_ref)
+            if (
+                default_environment_name
+                and env_res_data["name"] == default_environment_name
+            ):
+                default_environment_ref = env_ref
 
         LOG.info("Updating project '{}' for adding environment".format(project_name))
         project_payload = get_project(project_uuid=project_uuid)
 
-        # NOTE Single environment is supported. So not extending existing list
         project_payload.pop("status", None)
         project_payload["spec"]["resources"][
             "environment_reference_list"
         ] = env_ref_list
 
+        default_environment_ref = default_environment_ref or {
+            "kind": "environment",
+            "uuid": env_ref_list[0]["uuid"],
+        }
+
+        project_payload["spec"]["resources"][
+            "default_environment_reference"
+        ] = default_environment_ref
         update_project(project_uuid=project_uuid, project_payload=project_payload)
 
         # Reset the context changes

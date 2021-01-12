@@ -19,12 +19,12 @@ class RefType(EntityType):
         cdict["__name__"] = None
 
         return cdict
-    
+
     def get_user_attrs(cls):
         """returns user attrs for ref class"""
 
         attrs = super().get_user_attrs()
-        attrs.pop("__self__", None)     # Not a user attr for reference object
+        attrs.pop("__self__", None)  # Not a user attr for reference object
 
         return attrs
 
