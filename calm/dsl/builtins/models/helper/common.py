@@ -77,7 +77,7 @@ def get_profile_environment(cls):
 
 def get_project_with_pc_account():
     """get project from metadata/config along with whitelisted accounts and subnets"""
-    project_cache_data = get_project()
+    project_cache_data = get_cur_context_project()
     project_name = project_cache_data["name"]
     project_pc_accounts = project_cache_data.get("accounts_data", {}).get(
         "nutanix_pc", []
@@ -98,8 +98,11 @@ def get_project_with_pc_account():
     )
 
 
-def get_project():
-    """get project details from metadata/config. fallback in this order: metadata -> config"""
+def get_cur_context_project():
+    """
+    Returns project in current context i.e. from metadata/config
+    fallback in this order: metadata(defined in dsl file) -> config
+    """
     metadata_obj = get_metadata_obj()
     project_ref = metadata_obj.get("project_reference") or dict()
 

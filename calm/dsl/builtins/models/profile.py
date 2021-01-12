@@ -33,7 +33,7 @@ class ProfileType(EntityType):
         cdict.pop("description", None)
 
         # Get project from metadata or context
-        project_cache_data = common_helper.get_project()
+        project_cache_data = common_helper.get_cur_context_project()
         project_name = project_cache_data["name"]
 
         env_uuid = cdict.get("environment", {}).get("uuid")
