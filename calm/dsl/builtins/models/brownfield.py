@@ -9,7 +9,7 @@ from .helper import common as common_helper
 from calm.dsl.config import get_context
 from calm.dsl.store import Cache
 from calm.dsl.api import get_api_client
-from calm.dsl.constants import CACHE
+from calm.dsl.constants import CACHE, PROVIDER_ACCOUNT_TYPE_MAP
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -474,15 +474,6 @@ class BrownfiedVmType(EntityType):
     def get_account_uuid(cls):
         """returns the account_uuid configured for given brwonfield vm"""
 
-        # TODO shift them to constants file
-        provider_type_map = {
-            "AWS_VM": "aws",
-            "VMWARE_VM": "vmware",
-            "AHV_VM": "nutanix_pc",  # Accounts of type nutanix are not used after 2.9
-            "AZURE_VM": "azure",
-            "GCP_VM": "gcp",
-        }
-
         project_cache_data = common_helper.get_cur_context_project()
         environment_cache_data = cls.get_profile_environment()
         cls_substrate = cls.get_substrate()
@@ -495,7 +486,7 @@ class BrownfiedVmType(EntityType):
         if not account_uuid:
             if environment_cache_data:
                 accounts = environment_cache_data["accounts_data"].get(
-                    provider_type_map[provider_type], []
+                    PROVIDER_ACCOUNT_TYPE_MAP[provider_type], []
                 )
                 if not accounts:
                     LOG.error(
@@ -505,7 +496,7 @@ class BrownfiedVmType(EntityType):
 
             else:
                 accounts = project_cache_data["accounts_data"].get(
-                    provider_type_map[provider_type], []
+                    PROVIDER_ACCOUNT_TYPE_MAP[provider_type], []
                 )
                 if not accounts:
                     LOG.error(

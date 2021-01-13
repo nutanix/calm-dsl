@@ -17,3 +17,12 @@ class CACHE:
         USER_GROUP = "user_group"
         AHV_NETWORK_FUNCTION_CHAIN = "ahv_network_function_chain"
         ENVIRONMENT = "environment"
+
+
+PROVIDER_ACCOUNT_TYPE_MAP = {
+    "AWS_VM": "aws",
+    "VMWARE_VM": "vmware",
+    "AHV_VM": "nutanix_pc",
+    "AZURE_VM": "azure",
+    "GCP_VM": "gcp",
+}
