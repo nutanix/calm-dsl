@@ -1,0 +1,100 @@
+{
+    "spec": {
+        "name": "SingleVMBlueprint",
+        "description": "",
+        "resources": {
+            "type": "USER",
+            "service_definition_list": [],
+            "package_definition_list": [],
+            "substrate_definition_list": [
+                {
+                    "name": "Substrate",
+                    "description": "",
+                    "type": "AHV_VM",
+                    "os_type": "Linux",
+                    "create_spec": {
+                        "name": "@@{calm_application_name}@@-@@{calm_array_index}@@",
+                        "resources": {
+                            "boot_config": {
+                                "boot_device": {
+                                    "disk_address": {
+                                        "adapter_type": "SCSI",
+                                        "device_index": 0
+                                    }
+                                }
+                            },
+                            "disk_list": [
+                                {
+                                    "data_source_reference": {
+                                        "kind": "image",
+                                        "name": "Centos7",
+                                        "uuid": "294fa133-be65-4393-aae8-e3b10a0b4293"
+                                    },
+                                    "device_properties": {
+                                        "device_type": "DISK",
+                                        "disk_address": {
+                                            "adapter_type": "SCSI",
+                                            "device_index": 0
+                                        }
+                                    },
+                                    "disk_size_mib": 10240
+                                }
+                            ],
+                            "memory_size_mib": 1024,
+                            "nic_list": [
+                                {
+                                    "network_function_nic_type": "INGRESS",
+                                    "nic_type": "NORMAL_NIC",
+                                    "subnet_reference": {
+                                        "kind": "subnet",
+                                        "uuid": "c37571b5-51d2-4340-8db0-d62c89ce3c9e"
+                                    }
+                                }
+                            ],
+                            "num_sockets": 1,
+                            "num_vcpus_per_socket": 1,
+                            "power_state": "ON"
+                        }
+                    },
+                    "variable_list": [],
+                    "action_list": [],
+                    "readiness_probe": {
+                        "disable_readiness_probe": true,
+                        "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@"
+                    }
+                }
+            ],
+            "credential_definition_list": [],
+            "app_profile_list": [
+                {
+                    "name": "Profile",
+                    "deployment_create_list": [
+                        {
+                            "package_local_reference_list": [],
+                            "substrate_local_reference": {
+                                "kind": "app_substrate",
+                                "name": "Substrate"
+                            },
+                            "min_replicas": "1",
+                            "max_replicas": "1",
+                            "type": "GREENFIELD",
+                            "name": "Deployment"
+                        }
+                    ],
+                    "variable_list": [],
+                    "action_list": []
+                }
+            ],
+            "client_attrs": {}
+        }
+    },
+    "api_version": "3.0",
+    "metadata": {
+        "spec_version": 1,
+        "kind": "blueprint",
+        "name": "SingleVMBlueprint",
+        "categories": {
+            "TemplateType": "Vm"
+        }
+    }
+}
