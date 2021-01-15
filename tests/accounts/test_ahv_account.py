@@ -12,5 +12,5 @@ class AhvSpec(AhvAccountSpec):
 
 class AhvAccount(Account):
 
-    provider_type = PROVIDER.NUTANIX.PC
+    provider_type = PROVIDER.NUTANIX
     spec = AhvSpec

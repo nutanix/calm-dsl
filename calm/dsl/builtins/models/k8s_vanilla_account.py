@@ -1,10 +1,10 @@
-from calm.dsl.constants import PROVIDER
 import sys
 
 from .entity import Entity
 from .validator import PropertyValidator
 from .account import AccountSpecType
 
+from calm.dsl.constants import PROVIDER, PROVIDER_RESOURCE
 from calm.dsl.log import get_logging_handle
 
 
@@ -18,7 +18,8 @@ class KubernetesVanillaAccountSpecType(AccountSpecType):
     __schema_name__ = "KubernetesVanillaAccountSpec"
     __openapi_type__ = "kubernetes_vanilla_account_spec"
 
-    __provider_type__ = PROVIDER.KUBERNETES.VANILLA
+    __provider_type__ = PROVIDER.KUBERNETES
+    __resource_type__ = PROVIDER_RESOURCE.KUBERNETES.VANILLA
 
 
 class KubernetesVanillaAccountSpecValidator(

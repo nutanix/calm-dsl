@@ -4,7 +4,7 @@ from .entity import Entity
 from .validator import PropertyValidator
 from .account import AccountSpecType
 
-from calm.dsl.constants import PROVIDER
+from calm.dsl.constants import PROVIDER, PROVIDER_RESOURCE
 from calm.dsl.log import get_logging_handle
 
 
@@ -16,6 +16,7 @@ class AzureAccountSpecType(AccountSpecType):
     __openapi_type__ = "azure_account_spec"
 
     __provider_type__ = PROVIDER.AZURE
+    __resource_type__ = PROVIDER_RESOURCE.AZURE.VM
 
     def compile(cls):
         """returns the compiled payload for azure account spec"""

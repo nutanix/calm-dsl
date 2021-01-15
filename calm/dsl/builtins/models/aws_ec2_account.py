@@ -3,7 +3,7 @@ from .validator import PropertyValidator
 from .account import AccountSpecType
 
 from calm.dsl.log import get_logging_handle
-from calm.dsl.constants import PROVIDER
+from calm.dsl.constants import PROVIDER, PROVIDER_RESOURCE
 
 
 LOG = get_logging_handle(__name__)
@@ -13,7 +13,8 @@ class AwsEc2AccountSpecType(AccountSpecType):
     __schema_name__ = "AwsEc2AccountSpec"
     __openapi_type__ = "aws_ec2_account_spec"
 
-    __provider_type__ = PROVIDER.AWS.EC2
+    __provider_type__ = PROVIDER.AWS
+    __resource_type__ = PROVIDER_RESOURCE.AWS.EC2
 
     def compile(cls):
         """returns the compiled payload for aws account spec"""

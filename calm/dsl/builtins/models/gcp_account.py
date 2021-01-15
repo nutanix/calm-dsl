@@ -2,7 +2,7 @@ from .entity import Entity
 from .validator import PropertyValidator
 from .account import AccountSpecType
 
-from calm.dsl.constants import PROVIDER
+from calm.dsl.constants import PROVIDER, PROVIDER_RESOURCE
 from calm.dsl.log import get_logging_handle
 
 
@@ -13,7 +13,8 @@ class GcpAccountSpecType(AccountSpecType):
     __schema_name__ = "GcpAccountSpec"
     __openapi_type__ = "gcp_account_spec"
 
-    __provider_type__ = PROVIDER.GCP
+    __provider_type__ = PROVIDER.GCLOUD
+    __resource_type__ = PROVIDER_RESOURCE.GCLOUD.GCP
 
     def compile(cls):
         """returns the compiled payload for ahv account spec"""

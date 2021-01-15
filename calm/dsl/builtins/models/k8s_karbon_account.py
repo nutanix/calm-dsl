@@ -4,7 +4,7 @@ from .entity import Entity
 from .validator import PropertyValidator
 from .account import AccountSpecType
 
-from calm.dsl.constants import VM, PROVIDER
+from calm.dsl.constants import VM, PROVIDER, PROVIDER_RESOURCE
 from calm.dsl.providers import get_provider
 from calm.dsl.log import get_logging_handle
 
@@ -16,7 +16,8 @@ class KubernetesKarbonAccountSpecType(AccountSpecType):
     __schema_name__ = "KubernetesKarbonAccountSpec"
     __openapi_type__ = "kubernetes_karbon_account_spec"
 
-    __provider_type__ = PROVIDER.NUTANIX.KARBON
+    __provider_type__ = PROVIDER.NUTANIX
+    __resource_type__ = PROVIDER_RESOURCE.NUTANIX.KARBON
 
     def compile(cls):
         cdict = super().compile()
