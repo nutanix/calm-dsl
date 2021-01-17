@@ -18,5 +18,5 @@ class AwsSpec(AwsC2sAccountSpec):
 
 
 class AwsC2sAccount(Account):
-    provider_type = PROVIDER.AWS.C2S
+    provider_type = PROVIDER.AWS_C2S
     spec = AwsSpec

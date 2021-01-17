@@ -44,6 +44,7 @@ class KubernetesKarbonAccountSpecType(AccountSpecType):
 
         if not cluster_uuid:
             LOG.error("Invalid karbon cluster '{}' given.".format(cluster_name))
+            sys.exit(-1)
 
         cdict["cluster_uuid"] = cluster_uuid
         return cdict

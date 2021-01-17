@@ -9,5 +9,6 @@ class K8sSpec(KarbonAccountSpec):
 
 class K8sKarbonAccount(Account):
 
-    provider_type = PROVIDER.NUTANIX.KARBON
+    provider_type = PROVIDER.NUTANIX
+    resource_type = "KARBON"
     spec = K8sSpec

@@ -13,7 +13,7 @@ class AwsC2sAccountSpecType(AccountSpecType):
     __schema_name__ = "AwsC2sAccountSpec"
     __openapi_type__ = "aws_c2s_account_spec"
 
-    __provider_type__ = PROVIDER.AWS
+    __provider_type__ = PROVIDER.AWS_C2S
     __resource_type__ = PROVIDER_RESOURCE.AWS_C2S.EC2
 
     def compile(cls):

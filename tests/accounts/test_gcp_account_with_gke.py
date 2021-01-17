@@ -30,5 +30,5 @@ class GcpGkeSpec(GcpAccountSpec):
 
 class GcpAccount(Account):
 
-    provider_type = PROVIDER.GCP
+    provider_type = PROVIDER.GCLOUD
     spec = GcpGkeSpec

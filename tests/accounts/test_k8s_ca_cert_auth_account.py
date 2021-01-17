@@ -15,5 +15,5 @@ class K8sSpec(VanillaAccountSpec):
 
 class K8sCaCertAuthAccount(Account):
 
-    provider_type = PROVIDER.KUBERNETES.VANILLA
+    provider_type = PROVIDER.KUBERNETES
     spec = K8sSpec
