@@ -36,12 +36,12 @@ class ProfileType(EntityType):
         project_cache_data = common_helper.get_cur_context_project()
         project_name = project_cache_data["name"]
 
-        environments = cdict.get("environment_reference_list", [])
+        environments = cdict.pop("environment_reference_list", [])
         if len(environments) > 1:
             LOG.error("Multiple environments are not allowed in a profile.")
             sys.exit(-1)
-        
-        environments = [ _e["uuid"] for _e in environments]
+
+        environments = [_e["uuid"] for _e in environments]
         env_uuid = environments[0] if len(environments) > 0 else None
 
         if env_uuid:

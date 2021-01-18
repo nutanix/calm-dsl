@@ -615,7 +615,9 @@ class ProjectCache(CacheTableBase):
             a_uuid = entity["metadata"]["uuid"]
             a_type = entity["status"]["resources"]["type"]
             account_uuid_type_map[a_uuid] = a_type
-            if a_type == "nutanix_pc" and entity["status"]["name"] == "NTNX_LOCAL_AZ":
+            if a_type == "nutanix_pc" and entity["status"]["resources"]["data"].get(
+                "host_pc", False
+            ):
                 local_nutanix_pc_account_uuid = a_uuid
 
         Obj = get_resource_api("projects", client.connection)
@@ -673,9 +675,17 @@ class ProjectCache(CacheTableBase):
                             subnet_uuids, account_uuid
                         )
                     )
-                    res = AhvObj.subnets(
-                        account_uuid=account_uuid, filter_query=filter_query
-                    )
+                    try:
+                        res = AhvObj.subnets(
+                            account_uuid=account_uuid, filter_query=filter_query
+                        )
+                    except Exception:
+                        LOG.warning(
+                            "Unable to fetch subnets for Nutanix_PC Account(uuid={})".format(
+                                account_uuid
+                            )
+                        )
+                        continue
                     for row in res["entities"]:
                         subnet_to_account_map[row["metadata"]["uuid"]] = account_uuid
 

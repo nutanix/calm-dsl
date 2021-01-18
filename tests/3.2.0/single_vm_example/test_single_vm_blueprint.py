@@ -18,7 +18,7 @@ class SingleVmBlueprint(SimpleBlueprint):
     """Single VM blueprint"""
 
     deployments = [VmDeployment]
-    environment = Ref.Environment(name="test_env_1", project="default")
+    environments = [Ref.Environment(name="env1", project="dsl_project")]
 
 
 def test_single_vm_bp():

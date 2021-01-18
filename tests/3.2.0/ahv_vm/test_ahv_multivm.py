@@ -149,9 +149,7 @@ class AhvVmProfile(Profile):
     foo2 = CalmVariable.Simple("bar2", runtime=True)
 
     deployments = [AhvVmDeployment]
-    environments = [
-        Ref.Environment(name="env1", project="dsl_project")
-    ]
+    environments = [Ref.Environment(name="env1", project="dsl_project")]
 
     @action
     def test_profile_action():
@@ -167,9 +165,7 @@ class AhvVmProfile2(Profile):
     foo2 = CalmVariable.Simple("bar2", runtime=True)
 
     deployments = [AhvVmDeployment2]
-    environments = [
-        Ref.Environment(name="env1", project="dsl_project")
-    ]
+    environments = [Ref.Environment(name="env1", project="dsl_project")]
 
     @action
     def test_profile_action():
