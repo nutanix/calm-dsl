@@ -5,9 +5,6 @@ from calm.dsl.builtins import vm_disk_package, read_local_file
 from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import CalmVariable, CalmTask, action
-from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
-from calm.dsl.config import get_context
-
 
 CENTOS_KEY = read_local_file("keys/centos")
 CENTOS_PUBLIC_KEY = read_local_file("keys/centos_pub")
@@ -152,7 +149,9 @@ class AhvVmProfile(Profile):
     foo2 = CalmVariable.Simple("bar2", runtime=True)
 
     deployments = [AhvVmDeployment]
-    environment = Ref.Environment(name="test_env8b78ff6788", project="default")
+    environments = [
+        Ref.Environment(name="env1", project="dsl_project")
+    ]
 
     @action
     def test_profile_action():
@@ -168,7 +167,9 @@ class AhvVmProfile2(Profile):
     foo2 = CalmVariable.Simple("bar2", runtime=True)
 
     deployments = [AhvVmDeployment2]
-    environment = Ref.Environment(name="test_env8b78ff6788", project="default")
+    environments = [
+        Ref.Environment(name="env1", project="dsl_project")
+    ]
 
     @action
     def test_profile_action():
@@ -184,34 +185,3 @@ class AhvBlueprint(Blueprint):
     # packages = [AhvVmPackage, AhvVmPackage2, Era_Disk, Virtio_CdRom]
     substrates = [AhvVmSubstrate, AhvVmSubstrate2]
     profiles = [AhvVmProfile, AhvVmProfile2]
-
-
-def test_multivm_with_diff_bootconfig():
-    """
-    Tests in case of multi-vm blueprint, correct disk is set to bootable
-    """
-
-    # Ahv Helpers uses Metadata Context, It should the context(if any) defined in this file only
-    get_metadata_payload(__file__)
-    ContextObj = get_context()
-    ContextObj.reset_configuration()
-
-    spec = AhvBlueprint.get_dict()
-    substrate_list = spec["substrate_definition_list"]
-
-    # From AhvBlueprint class
-    # substrate_list[0] = AhvVmSubstrate and substrate_list[1] = AhvVmSubstrate2
-
-    # In AhvVmSubstrate -> MyAhvVm (vm_cls)
-    # Check SCSI disk with device_index = 2 is bootable
-    ahv_vm_substrate_spec = substrate_list[0]
-    assert ahv_vm_substrate_spec["create_spec"]["resources"]["boot_config"] == {
-        "boot_device": {"disk_address": {"device_index": 2, "adapter_type": "SCSI"}}
-    }
-
-    # In AhvVmSubstrate2 -> MyAhvVm2 (vm_cls)
-    # Check PCI disk with device_index = 0 is bootable
-    ahv_vm_substrate2_spec = substrate_list[1]
-    assert ahv_vm_substrate2_spec["create_spec"]["resources"]["boot_config"] == {
-        "boot_device": {"disk_address": {"device_index": 0, "adapter_type": "PCI"}}
-    }

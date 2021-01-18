@@ -9,23 +9,20 @@ properties:
   description:
     type: string
   # description attribute in profile gives bp launch error: https://jira.nutanix.com/browse/CALM-19380
-  environment:
-    type: object
-    x-calm-dsl-type: object
-    x-calm-dsl-display-name: environment
-    x-calm-dsl-min-version: 3.2.0
-    properties:
-      kind:
-        type: string
-      name:
-        type: string
-      uuid:
-        type: string
   environment_reference_list:
     type: array
     x-calm-dsl-min-version: 3.2.0
+    x-calm-dsl-display-name: environments
     items:
-      type: string
+      type: object
+      x-calm-dsl-type: object
+      properties:
+        kind:
+          type: string
+        name:
+          type: string
+        uuid:
+          type: string
   deployment_create_list:
     x-calm-dsl-display-name: deployments
     type: array

@@ -99,9 +99,9 @@ class DefaultProfile(Profile):
 
     deployments = [MySQLDeployment, PHPDeployment]
 
-    environment = Ref.Environment(
-        name="Default Environment", project="project all providers"
-    )
+    environments = [
+        Ref.Environment(name="Default Environment", project="project all providers")
+    ]
 
     @action
     def test_profile_action():

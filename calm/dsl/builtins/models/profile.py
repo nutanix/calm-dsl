@@ -36,8 +36,13 @@ class ProfileType(EntityType):
         project_cache_data = common_helper.get_cur_context_project()
         project_name = project_cache_data["name"]
 
-        env_uuid = cdict.get("environment", {}).get("uuid")
-        env_name = cdict.get("environment", {}).get("name", env_uuid)
+        environments = cdict.get("environment_reference_list", [])
+        if len(environments) > 1:
+            LOG.error("Multiple environments are not allowed in a profile.")
+            sys.exit(-1)
+        
+        environments = [ _e["uuid"] for _e in environments]
+        env_uuid = environments[0] if len(environments) > 0 else None
 
         if env_uuid:
             # ensure that the referenced environment is associated to the project this BP belongs to.
@@ -45,6 +50,7 @@ class ProfileType(EntityType):
                 entity_type="environment", uuid=env_uuid
             )
             env_project = env_cache_data.get("project")
+            env_name = env_cache_data.get("name")
             if env_project and project_name != env_project:
                 LOG.error(
                     "Environment '{}' referenced by profile '{}' belongs to project '{}'. Use an environment from"
@@ -54,10 +60,7 @@ class ProfileType(EntityType):
                 )
                 sys.exit(-1)
 
-            cdict["environment_reference_list"] = [env_uuid]
-
-        # pop out unnecessary attibutes
-        cdict.pop("environment", None)
+            cdict["environment_reference_list"] = environments
 
         return cdict
 
