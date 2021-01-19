@@ -4,7 +4,8 @@
 # subclass to already be present in PropertyValidatorBase's context. Moving
 # the import for these below the entities will cause a TypeError.
 
-from .models.ref import Ref, ref, RefType
+from .models.ref import ref, RefType
+from .models.calm_ref import Ref
 from .models.metadata import Metadata, MetadataType
 from .models.credential import basic_cred, secret_cred, CredentialType
 from .models.variable import Variable, setvar, CalmVariable, VariableType

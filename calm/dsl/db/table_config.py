@@ -877,7 +877,6 @@ class EnvironmentCache(CacheTableBase):
 
         try:
             entity = super().get(**query_obj)
-            print(entity)
             return entity.get_detail_dict()
 
         except DoesNotExist:

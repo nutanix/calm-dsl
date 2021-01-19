@@ -64,8 +64,9 @@ class SimpleBlueprintType(EntityType):
 
         pfl_kwargs = {"name": cls.__name__ + "Profile"}
 
-        if "environment_reference_list" in cdict:
-            pfl_kwargs["environments"] = cdict.get("environment_reference_list")
+        environments = getattr(cls, "environments", None)
+        if pfl_kwargs:
+            pfl_kwargs["environments"] = environments
 
         # Init Profile
         pro = profile(**pfl_kwargs)

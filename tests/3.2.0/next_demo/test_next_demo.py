@@ -100,7 +100,7 @@ class DefaultProfile(Profile):
     deployments = [MySQLDeployment, PHPDeployment]
 
     environments = [
-        Ref.Environment(name="Default Environment", project="project all providers")
+        Ref.Environment(name="env1"),
     ]
 
     @action
@@ -126,7 +126,7 @@ class NextDslBlueprint(Blueprint):
 
 class BpMetadata(Metadata):
 
-    project = Ref.Project("project all providers")
+    project = Ref.Project("dsl_project")
 
 
 def main():

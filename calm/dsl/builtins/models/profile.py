@@ -2,9 +2,8 @@ import sys
 
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
-from calm.dsl.store import Cache
 from calm.dsl.log import get_logging_handle
-from .helper import common as common_helper
+
 
 LOG = get_logging_handle(__name__)
 
@@ -32,34 +31,16 @@ class ProfileType(EntityType):
         # description attribute in profile gives bp launch error: https://jira.nutanix.com/browse/CALM-19380
         cdict.pop("description", None)
 
-        # Get project from metadata or context
-        project_cache_data = common_helper.get_cur_context_project()
-        project_name = project_cache_data["name"]
-
         environments = cdict.pop("environment_reference_list", [])
         if len(environments) > 1:
             LOG.error("Multiple environments are not allowed in a profile.")
             sys.exit(-1)
 
+        # Compile env first
+        environments = [_e.get_dict() for _e in environments]
         environments = [_e["uuid"] for _e in environments]
-        env_uuid = environments[0] if len(environments) > 0 else None
 
-        if env_uuid:
-            # ensure that the referenced environment is associated to the project this BP belongs to.
-            env_cache_data = Cache.get_entity_data_using_uuid(
-                entity_type="environment", uuid=env_uuid
-            )
-            env_project = env_cache_data.get("project")
-            env_name = env_cache_data.get("name")
-            if env_project and project_name != env_project:
-                LOG.error(
-                    "Environment '{}' referenced by profile '{}' belongs to project '{}'. Use an environment from"
-                    " project '{}'".format(
-                        env_name, cdict.get("name", ""), env_project, project_name
-                    )
-                )
-                sys.exit(-1)
-
+        if environments:
             cdict["environment_reference_list"] = environments
 
         return cdict

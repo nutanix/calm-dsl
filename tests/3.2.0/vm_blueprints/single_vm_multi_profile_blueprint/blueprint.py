@@ -60,7 +60,7 @@ class AhvVmSmallProfile(VmProfile):
     # Readiness probe for substrate (disabled is set to false, for enabling check login)
     readiness_probe = readiness_probe(credential=ref(Centos), disabled=False)
 
-    environment = Ref.Environment(name="test_env_1", project="default")
+    environments = [Ref.Environment(name="env1")]
 
     # Only actions under Packages, Substrates and Profiles are allowed
     @action

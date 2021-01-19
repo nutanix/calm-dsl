@@ -15,14 +15,7 @@ properties:
     x-calm-dsl-display-name: environments
     items:
       type: object
-      x-calm-dsl-type: object
-      properties:
-        kind:
-          type: string
-        name:
-          type: string
-        uuid:
-          type: string
+      x-calm-dsl-type: app_calm_ref
   deployment_create_list:
     x-calm-dsl-display-name: deployments
     type: array

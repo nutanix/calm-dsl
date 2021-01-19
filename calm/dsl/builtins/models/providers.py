@@ -1,4 +1,4 @@
-from .ref import Ref
+from .calm_ref import Ref
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
