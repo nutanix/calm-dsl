@@ -2,10 +2,10 @@ import sys
 
 from .entity import EntityType
 from .validator import PropertyValidator
-from .metadata_payload import get_metadata_obj
-from calm.dsl.config import get_context
+from .helper import common as common_helper
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Cache
+from calm.dsl.constants import PROVIDER_ACCOUNT_TYPE_MAP
 
 LOG = get_logging_handle(__name__)
 
@@ -23,21 +23,8 @@ class EnvironmentType(EntityType):
         substrates = cdict.get("substrate_definition_list", [])
 
         # ensure that infra_inclusion_list only contains items whitelisted in the project
-        metadata_obj = get_metadata_obj()
-        project_ref = metadata_obj.get("project_reference", {})
-        context = get_context()
-        project_config = context.get_project_config()
-        project_name = project_ref.get("name", project_config["name"])
-        project_cache_data = Cache.get_entity_data(
-            entity_type="project", name=project_name
-        )
-        if not project_cache_data:
-            LOG.error(
-                "Project {} not found. Please run: calm update cache".format(
-                    project_name
-                )
-            )
-            sys.exit(-1)
+        project_cache_data = common_helper.get_cur_context_project()
+        project_name = project_cache_data.get("name")
 
         infra = cdict.get("infra_inclusion_list", [])
         for row in infra:
@@ -48,7 +35,7 @@ class EnvironmentType(EntityType):
                 infra_type, []
             ):
                 LOG.error(
-                    "Environment uses {} account {} which is not added to project {}.".format(
+                    "Environment uses {} account '{}' which is not added to project {}.".format(
                         infra_type, infra_acc, project_name
                     )
                 )
@@ -87,6 +74,30 @@ class EnvironmentType(EntityType):
 
             else:
                 sub_set.add(_sub_tuple)
+
+        return cdict
+
+    def post_compile(cls, cdict):
+        cdict = super().post_compile(cdict)
+
+        # Substrate should use account defined in the environment only
+        inv_dict = {v: k for k, v in PROVIDER_ACCOUNT_TYPE_MAP.items()}
+        infra_type_account_map = {}
+        infra = cdict.get("infra_inclusion_list", [])
+        for row in infra:
+            account_ref = row["account_reference"]
+            account_uuid = account_ref.get("uuid")
+
+            account_cache_data = Cache.get_entity_data_using_uuid(uuid=account_uuid)
+            provider_type = account_cache_data.get("provider_type")
+
+            infra_type_account_map[inv_dict[provider_type]] = account_ref
+
+        if infra_type_account_map:
+            substrates = cdict.get("substrate_definition_list", [])
+            for sub in substrates:
+                provider_type = getattr(sub, "provider_type")
+                sub.account = infra_type_account_map[provider_type]
 
         return cdict
 
