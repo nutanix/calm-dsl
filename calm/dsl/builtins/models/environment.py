@@ -27,40 +27,50 @@ class EnvironmentType(EntityType):
         project_cache_data = common_helper.get_cur_context_project()
         project_name = project_cache_data.get("name")
 
+        # environment_infra_list
+        environment_infra_list = []
+
         infra = cdict.get("infra_inclusion_list", [])
-        for row in infra:
-            row = row.get_dict()
-            infra_account_uuid = row["account_reference"].get("uuid", "")
-            infra_acc = row["account_reference"].get("name", infra_account_uuid)
-            infra_type = row["type"]
-            if infra_account_uuid not in project_cache_data["accounts_data"].get(
+        for provider_obj in infra:
+            provider_data = provider_obj.get_dict()
+
+            # Check if given account is filtered in project
+            infra_account = provider_data["account_reference"]
+            infra_account_name = infra_account["name"]
+            infra_account_uuid = infra_account["uuid"]
+            infra_type = provider_obj.type
+            if infra_account["uuid"] not in project_cache_data["accounts_data"].get(
                 infra_type, []
             ):
                 LOG.error(
                     "Environment uses {} account '{}' which is not added to project {}.".format(
-                        infra_type, infra_acc, project_name
+                        infra_type, infra_account_name, project_name
                     )
                 )
                 sys.exit(-1)
 
-            if infra_type == "nutanix_pc":
-                row["subnet_references"] = row.get(
-                    "subnet_reference_list", []
-                ) + row.get("external_network_list", [])
-                for sub in row["subnet_references"]:
-                    infra_sub_uuid = sub.get("uuid", "")
-                    infra_sub = sub.get("name", infra_sub_uuid)
-                    if infra_sub_uuid not in project_cache_data[
-                        "whitelisted_subnets"
-                    ].get(infra_account_uuid, []):
+            if infra_type != "nutanix_pc":
+                provider_data.pop("subnet_reference_list", None)
+                provider_data.pop("external_network_list", None)
+                provider_data.pop("default_subnet_reference", None)
+            
+            else:
+                provider_data["subnet_references"] = provider_data.get("subnet_reference_list", []) + provider_data.get("external_network_list", [])
+                provider_data.pop("subnet_reference_list", None)
+                provider_data.pop("external_network_list", None)
+
+                for sub in provider_data["subnet_references"]:
+                    if sub["uuid"] not in project_cache_data["whitelisted_subnets"].get(infra_account_uuid, []):
                         LOG.error(
                             "Environment uses subnet {} for nutanix_pc account {} which is not added to "
-                            "project {}.".format(infra_sub, infra_acc, project_name)
+                            "project {}.".format(sub["name"], infra_account_name, project_name)
                         )
                         sys.exit(-1)
 
-                row.pop("subnet_reference_list", None)
-                row.pop("external_network_list", None)
+            
+            environment_infra_list.append(provider_data)
+
+        cdict["infra_inclusion_list"] = environment_infra_list
 
         # NOTE Only one substrate per (provider_type, os_type) tuple can exist
         sub_set = set()
@@ -87,7 +97,6 @@ class EnvironmentType(EntityType):
         infra_type_account_map = {}
         infra = cdict.get("infra_inclusion_list", [])
         for row in infra:
-            row = row.get_dict()
             account_ref = row["account_reference"]
             account_uuid = account_ref.get("uuid")
 

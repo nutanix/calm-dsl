@@ -17,37 +17,34 @@ class ProjectType(EntityType):
         cdict = super().compile()
 
         cdict["account_reference_list"] = []
+        cdict["subnet_reference_list"] = []
+        cdict["external_network_list"] = []
+        cdict["default_subnet_reference"] = {}
         # Populate accounts
         provider_list = cdict.pop("provider_list", [])
         for provider_obj in provider_list:
-            provider_obj = provider_obj.get_dict()
-            provider_type = provider_obj["type"]
-            if provider_type == "nutanix_pc":
-                if "subnet_reference_list" in provider_obj:
-                    if cdict.get("subnet_reference_list") is None:
-                        cdict["subnet_reference_list"] = []
+            provider_data = provider_obj.get_dict()
+
+            if provider_obj.type == "nutanix_pc":
+                if "subnet_reference_list" in provider_data:
                     cdict["subnet_reference_list"].extend(
-                        provider_obj["subnet_reference_list"]
-                    )
-
-                if "external_network_list" in provider_obj:
-                    if cdict.get("external_network_list") is None:
-                        cdict["external_network_list"] = []
-                    for _network in provider_obj["external_network_list"]:
-                        _network.pop("kind", None)  # Kind is not expected for external network list
-                        cdict["external_network_list"].append(
-                            _network
+                            provider_data["subnet_reference_list"]
                         )
-
-                # TODO check for account_type, default is blocked for remote_pc after 3.2
-                if "default_subnet_reference" in provider_obj and not cdict.get(
-                    "default_subnet_reference"
-                ):
-                    cdict["default_subnet_reference"] = provider_obj[
-                        "default_subnet_reference"
-                    ]
-
-            cdict["account_reference_list"].append(provider_obj["account_reference"])
+                
+                if "external_network_list" in provider_data:
+                    for _network in provider_data["external_network_list"]:
+                        _network.pop("kind", None)
+                        cdict["external_network_list"].append(_network)
+                    
+                
+                if "default_subnet_reference" in provider_data and not cdict["default_subnet_reference"]:
+                    cdict["default_subnet_reference"] = provider_data["default_subnet_reference"]
+                        
+                
+            if "account_reference" in provider_data:
+                cdict["account_reference_list"].append(
+                        provider_data["account_reference"]
+                    )
 
         quotas = cdict.pop("quotas", None)
         if quotas:
