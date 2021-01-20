@@ -92,9 +92,7 @@ class ProjEnvironment(Environment):
     providers = [
         Provider.Ntnx(
             account=Ref.Account("NTNX_LOCAL_AZ"),
-            subnets=[
-                Ref.Subnet(name="vlan1211")
-            ],
+            subnets=[Ref.Subnet(name="vlan1211")],
         ),
         Provider.Aws(account=Ref.Account("aws_cloudb9540")),
         Provider.Azure(account=Ref.Account("azure_cloudfdbb0")),

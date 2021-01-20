@@ -53,21 +53,26 @@ class EnvironmentType(EntityType):
                 provider_data.pop("subnet_reference_list", None)
                 provider_data.pop("external_network_list", None)
                 provider_data.pop("default_subnet_reference", None)
-            
+
             else:
-                provider_data["subnet_references"] = provider_data.get("subnet_reference_list", []) + provider_data.get("external_network_list", [])
+                provider_data["subnet_references"] = provider_data.get(
+                    "subnet_reference_list", []
+                ) + provider_data.get("external_network_list", [])
                 provider_data.pop("subnet_reference_list", None)
                 provider_data.pop("external_network_list", None)
 
                 for sub in provider_data["subnet_references"]:
-                    if sub["uuid"] not in project_cache_data["whitelisted_subnets"].get(infra_account_uuid, []):
+                    if sub["uuid"] not in project_cache_data["whitelisted_subnets"].get(
+                        infra_account_uuid, []
+                    ):
                         LOG.error(
                             "Environment uses subnet {} for nutanix_pc account {} which is not added to "
-                            "project {}.".format(sub["name"], infra_account_name, project_name)
+                            "project {}.".format(
+                                sub["name"], infra_account_name, project_name
+                            )
                         )
                         sys.exit(-1)
 
-            
             environment_infra_list.append(provider_data)
 
         cdict["infra_inclusion_list"] = environment_infra_list
@@ -100,7 +105,9 @@ class EnvironmentType(EntityType):
             account_ref = row["account_reference"]
             account_uuid = account_ref.get("uuid")
 
-            account_cache_data = Cache.get_entity_data_using_uuid(entity_type=CACHE.ENTITY.ACCOUNT, uuid=account_uuid)
+            account_cache_data = Cache.get_entity_data_using_uuid(
+                entity_type=CACHE.ENTITY.ACCOUNT, uuid=account_uuid
+            )
             provider_type = account_cache_data.get("provider_type")
 
             infra_type_account_map[inv_dict[provider_type]] = account_ref

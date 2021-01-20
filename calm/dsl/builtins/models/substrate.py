@@ -53,7 +53,7 @@ class SubstrateType(EntityType):
                 for cls_deployment in cls_profile.deployments:
                     if cls_deployment.substrate.name != str(cls):
                         continue
-        
+
                     environment = getattr(cls_profile, "environment", {})
                     if environment:
                         LOG.debug(
@@ -69,7 +69,7 @@ class SubstrateType(EntityType):
         pc_account_uuid = getattr(cls, "account", {}).get("uuid")
         if pc_account_uuid:
             return
-        
+
         # If substrate is defined in blueprint file
         cls_bp = common_helper._walk_to_parent_with_given_type(cls, "BlueprintType")
         if cls_bp:
@@ -78,7 +78,7 @@ class SubstrateType(EntityType):
                 for cls_deployment in cls_profile.deployments:
                     if cls_deployment.substrate.name != str(cls):
                         continue
-                    
+
                     environment = getattr(cls_profile, "environment", {})
                     if environment:
                         LOG.debug(
@@ -100,7 +100,9 @@ class SubstrateType(EntityType):
                     )
                     sys.exit(-1)
 
-                accounts = environment_cache_data.get("accounts_data", {}).get("nutanix_pc", [])
+                accounts = environment_cache_data.get("accounts_data", {}).get(
+                    "nutanix_pc", []
+                )
                 if not accounts:
                     LOG.error(
                         "Environment {} has no Nutanix PC account.".format(
@@ -108,7 +110,7 @@ class SubstrateType(EntityType):
                         )
                     )
                     sys.exit(-1)
-                
+
                 pc_account_uuid = accounts[0]["uuid"]
 
         # If substrate defined inside environment
@@ -120,7 +122,7 @@ class SubstrateType(EntityType):
                     account = _pdr.account_reference
                     pc_account_uuid = account["uuid"]
                     break
-        
+
         return pc_account_uuid
 
     def compile(cls):

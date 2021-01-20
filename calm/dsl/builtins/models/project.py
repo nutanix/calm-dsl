@@ -28,23 +28,26 @@ class ProjectType(EntityType):
             if provider_obj.type == "nutanix_pc":
                 if "subnet_reference_list" in provider_data:
                     cdict["subnet_reference_list"].extend(
-                            provider_data["subnet_reference_list"]
-                        )
-                
+                        provider_data["subnet_reference_list"]
+                    )
+
                 if "external_network_list" in provider_data:
                     for _network in provider_data["external_network_list"]:
                         _network.pop("kind", None)
                         cdict["external_network_list"].append(_network)
-                    
-                
-                if "default_subnet_reference" in provider_data and not cdict["default_subnet_reference"]:
-                    cdict["default_subnet_reference"] = provider_data["default_subnet_reference"]
-                        
-                
+
+                if (
+                    "default_subnet_reference" in provider_data
+                    and not cdict["default_subnet_reference"]
+                ):
+                    cdict["default_subnet_reference"] = provider_data[
+                        "default_subnet_reference"
+                    ]
+
             if "account_reference" in provider_data:
                 cdict["account_reference_list"].append(
-                        provider_data["account_reference"]
-                    )
+                    provider_data["account_reference"]
+                )
 
         quotas = cdict.pop("quotas", None)
         if quotas:

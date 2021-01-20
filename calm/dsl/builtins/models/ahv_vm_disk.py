@@ -27,8 +27,12 @@ class AhvDiskType(EntityType):
         # Pop bootable from cdict
         cdict.pop("bootable", None)
 
-        cls_substrate = common_helper._walk_to_parent_with_given_type(cls, "SubstrateType")
-        account_uuid = cls_substrate.get_referenced_account_uuid() if cls_substrate else ""
+        cls_substrate = common_helper._walk_to_parent_with_given_type(
+            cls, "SubstrateType"
+        )
+        account_uuid = (
+            cls_substrate.get_referenced_account_uuid() if cls_substrate else ""
+        )
 
         # Fetch nutanix account in project
         project, project_whitelist = common_helper.get_project_with_pc_account()

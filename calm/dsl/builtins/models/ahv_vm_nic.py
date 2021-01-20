@@ -21,8 +21,12 @@ class AhvNicType(EntityType):
 
         cdict = super().compile()
 
-        cls_substrate = common_helper._walk_to_parent_with_given_type(cls, "SubstrateType")
-        account_uuid = cls_substrate.get_referenced_account_uuid() if cls_substrate else ""
+        cls_substrate = common_helper._walk_to_parent_with_given_type(
+            cls, "SubstrateType"
+        )
+        account_uuid = (
+            cls_substrate.get_referenced_account_uuid() if cls_substrate else ""
+        )
 
         # Fetch nutanix account in project
         project, project_whitelist = common_helper.get_project_with_pc_account()
@@ -63,18 +67,26 @@ class AhvNicType(EntityType):
 
             subnet_uuid = subnet_cache_data.get("uuid", "")
 
-            cls_env = common_helper._walk_to_parent_with_given_type(cls, "EnvironmentType")
+            cls_env = common_helper._walk_to_parent_with_given_type(
+                cls, "EnvironmentType"
+            )
             if cls_env:
                 infra = getattr(cls_env, "providers", [])
                 for _pdr in infra:
                     if _pdr.type == "nutanix_pc":
                         subnet_references = getattr(_pdr, "subnet_reference_list", [])
-                        subnet_references.extend(getattr(_pdr, "external_network_list", []))
+                        subnet_references.extend(
+                            getattr(_pdr, "external_network_list", [])
+                        )
                         sr_list = [_sr.get_dict()["uuid"] for _sr in subnet_references]
                         if subnet_uuid not in sr_list:
-                            LOG.error("Subnet '{}' not whitelisted in environment '{}'". format(subnet_name, str(cls_env)))
+                            LOG.error(
+                                "Subnet '{}' not whitelisted in environment '{}'".format(
+                                    subnet_name, str(cls_env)
+                                )
+                            )
                             sys.exit(-1)
-            
+
             else:
                 pfl_env = cls_substrate.get_profile_environment()
                 if pfl_env:
@@ -89,7 +101,9 @@ class AhvNicType(EntityType):
                         )
                         sys.exit(-1)
 
-                    env_accounts = environment_cache_data.get("accounts_data", {}).get("nutanix_pc", [])
+                    env_accounts = environment_cache_data.get("accounts_data", {}).get(
+                        "nutanix_pc", []
+                    )
                     if subnet_uuid not in env_accounts.get(account_uuid, []):
                         LOG.error(
                             "Subnet {} is not whitelisted in environment {}".format(
