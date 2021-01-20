@@ -20,6 +20,7 @@ class ProjectType(EntityType):
         # Populate accounts
         provider_list = cdict.pop("provider_list", [])
         for provider_obj in provider_list:
+            provider_obj = provider_obj.get_dict()
             provider_type = provider_obj["type"]
             if provider_type == "nutanix_pc":
                 if "subnet_reference_list" in provider_obj:
@@ -29,14 +30,19 @@ class ProjectType(EntityType):
                         provider_obj["subnet_reference_list"]
                     )
 
-                elif "external_network_list" in provider_obj:
+                if "external_network_list" in provider_obj:
                     if cdict.get("external_network_list") is None:
                         cdict["external_network_list"] = []
-                    cdict["external_network_list"].extend(
-                        provider_obj["external_network_list"]
-                    )
+                    for _network in provider_obj["external_network_list"]:
+                        _network.pop("kind", None)  # Kind is not expected for external network list
+                        cdict["external_network_list"].append(
+                            _network
+                        )
 
-                if "default_subnet_reference" in provider_obj:
+                # TODO check for account_type, default is blocked for remote_pc after 3.2
+                if "default_subnet_reference" in provider_obj and not cdict.get(
+                    "default_subnet_reference"
+                ):
                     cdict["default_subnet_reference"] = provider_obj[
                         "default_subnet_reference"
                     ]

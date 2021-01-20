@@ -310,7 +310,9 @@ def create_project_from_dsl(project_file, project_name, description=""):
 
     if envs:
         # Update project in cache
+        LOG.info("Updating projects cache")
         Cache.sync_table("project")
+        LOG.info("[Done]")
 
         # As ahv helpers in environment should use account from project accounts
         # updating the context

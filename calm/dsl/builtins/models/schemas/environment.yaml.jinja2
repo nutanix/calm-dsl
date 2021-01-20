@@ -1,60 +1,3 @@
-{% macro EnvironmentProviderData() -%}
-
-title: Environment Provider Data
-type: object
-x-calm-dsl-type: object
-properties:
-  type:
-    type: string
-  account_reference:
-    type: object
-    x-calm-dsl-type: object
-    properties:
-      kind:
-        type: string
-      name:
-        type: string
-      uuid:
-        type: string
-  subnet_reference_list:
-    type: array
-    items:
-      type: object
-      x-calm-dsl-type: object
-      properties:
-        kind:
-          type: string
-        name:
-          type: string
-        uuid:
-          type: string
-  external_network_list:
-    type: array
-    items:
-      type: object
-      x-calm-dsl-type: object
-      properties:
-        kind:
-          type: string
-        name:
-          type: string
-        uuid:
-          type: string
-  default_subnet_reference:
-    type: object
-    x-calm-dsl-type: object
-    properties:
-      kind:
-        type: string
-      name:
-        type: string
-      uuid:
-        type: string
-required:
-  - account_reference
-  - type
-{%- endmacro %}
-
 {% macro Environment() -%}
 
 title: Environment
@@ -79,7 +22,7 @@ properties:
     description: Accounts and resources under this environment.
     type: array
     items:
-      {{ EnvironmentProviderData() | indent(6) }}
+      $ref: '#/components/schemas/AccountProvider'
 
 {%- endmacro %}
 

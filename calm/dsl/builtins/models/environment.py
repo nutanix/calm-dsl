@@ -5,6 +5,7 @@ from .validator import PropertyValidator
 from .helper import common as common_helper
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Cache
+from calm.dsl.constants import CACHE
 from calm.dsl.constants import PROVIDER_ACCOUNT_TYPE_MAP
 
 LOG = get_logging_handle(__name__)
@@ -28,6 +29,7 @@ class EnvironmentType(EntityType):
 
         infra = cdict.get("infra_inclusion_list", [])
         for row in infra:
+            row = row.get_dict()
             infra_account_uuid = row["account_reference"].get("uuid", "")
             infra_acc = row["account_reference"].get("name", infra_account_uuid)
             infra_type = row["type"]
@@ -85,10 +87,11 @@ class EnvironmentType(EntityType):
         infra_type_account_map = {}
         infra = cdict.get("infra_inclusion_list", [])
         for row in infra:
+            row = row.get_dict()
             account_ref = row["account_reference"]
             account_uuid = account_ref.get("uuid")
 
-            account_cache_data = Cache.get_entity_data_using_uuid(uuid=account_uuid)
+            account_cache_data = Cache.get_entity_data_using_uuid(entity_type=CACHE.ENTITY.ACCOUNT, uuid=account_uuid)
             provider_type = account_cache_data.get("provider_type")
 
             infra_type_account_map[inv_dict[provider_type]] = account_ref

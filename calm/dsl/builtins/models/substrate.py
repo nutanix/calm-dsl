@@ -1,3 +1,4 @@
+from os import environ
 import sys
 
 from .entity import EntityType, Entity, EntityTypeBase, EntityDict
@@ -7,6 +8,7 @@ from .provider_spec import provider_spec
 from .ahv_vm import AhvVmType
 from .client_attrs import update_dsl_metadata_map, get_dsl_metadata_map
 from .metadata_payload import get_metadata_obj
+from .helper import common as common_helper
 
 from calm.dsl.config import get_context
 from calm.dsl.constants import CACHE
@@ -40,6 +42,86 @@ class SubstrateType(EntityType):
         "__pre_create__": "pre_action_create",
         "__post_delete__": "post_action_delete",
     }
+
+    def get_profile_environment(cls):
+        """returns the profile environment, if substrate has been defined in blueprint file"""
+
+        cls_bp = common_helper._walk_to_parent_with_given_type(cls, "BlueprintType")
+        environment = {}
+        if cls_bp:
+            for cls_profile in cls_bp.profiles:
+                for cls_deployment in cls_profile.deployments:
+                    if cls_deployment.substrate.name != str(cls):
+                        continue
+        
+                    environment = getattr(cls_profile, "environment", {})
+                    if environment:
+                        LOG.debug(
+                            "Found environment {} associated to app-profile {}".format(
+                                environment.get("name"), cls_profile
+                            )
+                        )
+                    break
+        return environment
+
+    def get_referenced_account_uuid(cls):
+
+        pc_account_uuid = getattr(cls, "account", {}).get("uuid")
+        if pc_account_uuid:
+            return
+        
+        # If substrate is defined in blueprint file
+        cls_bp = common_helper._walk_to_parent_with_given_type(cls, "BlueprintType")
+        if cls_bp:
+            environment = {}
+            for cls_profile in cls_bp.profiles:
+                for cls_deployment in cls_profile.deployments:
+                    if cls_deployment.substrate.name != str(cls):
+                        continue
+                    
+                    environment = getattr(cls_profile, "environment", {})
+                    if environment:
+                        LOG.debug(
+                            "Found environment {} associated to app-profile {}".format(
+                                environment.get("name"), cls_profile
+                            )
+                        )
+                    break
+
+            if environment:
+                environment_cache_data = Cache.get_entity_data_using_uuid(
+                    entity_type=CACHE.ENTITY.ENVIRONMENT, uuid=environment["uuid"]
+                )
+                if not environment_cache_data:
+                    LOG.error(
+                        "Environment {} not found. Please run: calm update cache".format(
+                            environment["name"]
+                        )
+                    )
+                    sys.exit(-1)
+
+                accounts = environment_cache_data.get("accounts_data", {}).get("nutanix_pc", [])
+                if not accounts:
+                    LOG.error(
+                        "Environment {} has no Nutanix PC account.".format(
+                            environment_cache_data.get("name", "")
+                        )
+                    )
+                    sys.exit(-1)
+                
+                pc_account_uuid = accounts[0]["uuid"]
+
+        # If substrate defined inside environment
+        cls_env = common_helper._walk_to_parent_with_given_type(cls, "EnvironmentType")
+        if cls_env:
+            infra = getattr(cls_env, "providers", [])
+            for _pdr in infra:
+                if _pdr.type == "nutanix_pc":
+                    account = _pdr.account_reference
+                    pc_account_uuid = account["uuid"]
+                    break
+        
+        return pc_account_uuid
 
     def compile(cls):
 

@@ -45,9 +45,23 @@ class Ref:
         raise TypeError("'{}' is not callable".format(cls.__name__))
 
     class Subnet:
-        def __new__(cls, name, **kwargs):
+        def __new__(cls, **kwargs):
+
+            kwargs["__ref_cls__"] = cls
+            return _calm_ref(**kwargs)
+
+        def compile(cls, name, **kwargs):
+
             cluster = kwargs.get("cluster")
             account_uuid = kwargs.get("account_uuid")
+
+            try:
+                provider_obj = cls.__parent__
+                subnet_account = provider_obj.account_reference.get_dict()
+                account_uuid = subnet_account.get("uuid")
+
+            except Exception:
+                pass
 
             subnet_cache_data = Cache.get_entity_data(
                 entity_type=CACHE.ENTITY.AHV_SUBNET,

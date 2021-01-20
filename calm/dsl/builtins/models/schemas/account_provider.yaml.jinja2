@@ -1,0 +1,41 @@
+{% macro AccountProvider() -%}
+
+title: Account Provider
+type: object
+x-calm-dsl-type: app_account_provider
+properties:
+  type:
+    type: string
+  account_reference:
+    type: object
+    x-calm-dsl-type: object
+    properties:
+      kind:
+        type: string
+      name:
+        type: string
+      uuid:
+        type: string
+  subnet_reference_list:
+    type: array
+    items:
+      type: object
+      x-calm-dsl-type: app_calm_ref
+  external_network_list:
+    type: array
+    items:
+      type: object
+      x-calm-dsl-type: app_calm_ref   
+  default_subnet_reference:
+    type: object
+    x-calm-dsl-type: app_calm_ref
+  
+{%- endmacro %}
+
+
+{% macro AccountProviderSchema() -%}
+
+AccountProvider:
+  {{ AccountProvider() | indent(2) }}
+
+{%- endmacro %}

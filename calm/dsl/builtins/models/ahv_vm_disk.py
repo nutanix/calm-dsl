@@ -27,11 +27,13 @@ class AhvDiskType(EntityType):
         # Pop bootable from cdict
         cdict.pop("bootable", None)
 
-        environment, environment_whitelist = common_helper.get_profile_environment(cls)
+        cls_substrate = common_helper._walk_to_parent_with_given_type(cls, "SubstrateType")
+        account_uuid = cls_substrate.get_referenced_account_uuid() if cls_substrate else ""
+
+        # Fetch nutanix account in project
         project, project_whitelist = common_helper.get_project_with_pc_account()
-        pc_account = common_helper.get_pc_account(
-            cls, environment, project, environment_whitelist, project_whitelist
-        )
+        if not account_uuid:
+            account_uuid = list(project_whitelist.keys())[0]
 
         image_ref = cdict.get("data_source_reference") or dict()
         if image_ref and image_ref["kind"] == "image":
@@ -42,12 +44,12 @@ class AhvDiskType(EntityType):
                 entity_type=CACHE.ENTITY.AHV_DISK_IMAGE,
                 name=image_name,
                 image_type=IMAGE_TYPE_MAP[device_type],
-                account_uuid=pc_account["uuid"],
+                account_uuid=account_uuid,
             )
             if not image_cache_data:
                 LOG.debug(
                     "Ahv Disk Image (name = '{}') not found in registered nutanix_pc account (uuid = '{}') in project (name = '{}')".format(
-                        image_name, pc_account["uuid"], project["name"]
+                        image_name, account_uuid, project["name"]
                     )
                 )
                 LOG.error(

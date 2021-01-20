@@ -24,7 +24,7 @@ class MyAhvLinuxVmResources(AhvVmResources):
     disks = [
         AhvVmDisk.Disk.Scsi.cloneFromImageService("Centos7HadoopMaster", bootable=True),
     ]
-    nics = [AhvVmNic("vlan1211", cluster="auto_cluster_prod_1a0945f4e00b")]
+    nics = [AhvVmNic("vlan1211")]
 
     guest_customization = AhvVmGC.CloudInit(
         config={
@@ -62,7 +62,7 @@ class MyAhvWindowsVmResources(AhvVmResources):
     disks = [
         AhvVmDisk.Disk.Scsi.cloneFromImageService("WindowsServer2016", bootable=True),
     ]
-    nics = [AhvVmNic("vlan1211", cluster="auto_cluster_prod_1a0945f4e00b")]
+    nics = [AhvVmNic("vlan1211")]
 
     guest_customization = AhvVmGC.Sysprep.FreshScript(
         filename="scripts/sysprep_script.xml"
@@ -93,17 +93,13 @@ class ProjEnvironment(Environment):
         Provider.Ntnx(
             account=Ref.Account("NTNX_LOCAL_AZ"),
             subnets=[
-                Ref.Subnet(name="vlan1211", cluster="auto_cluster_prod_1a0945f4e00b")
+                Ref.Subnet(name="vlan1211")
             ],
-            default_subnet=Ref.Subnet(
-                name="vlan1211", cluster="auto_cluster_prod_1a0945f4e00b"
-            ),
         ),
-        Provider.Aws(account=Ref.Account("aws_cloud1626f83b79")),
-        Provider.Azure(account=Ref.Account("azure_clouddd69c6a540")),
-        Provider.Gcp(account=Ref.Account("gcp_cloud3dfe4c6f29")),
-        Provider.Vmware(account=Ref.Account("vmware_cloud22c3125c4f")),
-        Provider.K8s(account=Ref.Account("k8_cloudf91c1da916")),
+        Provider.Aws(account=Ref.Account("aws_cloudb9540")),
+        Provider.Azure(account=Ref.Account("azure_cloudfdbb0")),
+        Provider.Gcp(account=Ref.Account("gcp_cloudd9361")),
+        Provider.Vmware(account=Ref.Account("vmware_cloudb624a")),
     ]
 
 
@@ -113,15 +109,16 @@ class TestDslProjectWithEnv14(Project):
     providers = [
         Provider.Ntnx(
             account=Ref.Account("NTNX_LOCAL_AZ"),
-            subnets=[
-                Ref.Subnet(name="vlan1211", cluster="auto_cluster_prod_1a0945f4e00b")
-            ],
+            subnets=[Ref.Subnet(name="vlan1211")],
         ),
-        Provider.Aws(account=Ref.Account("aws_cloud1626f83b79")),
-        Provider.Azure(account=Ref.Account("azure_clouddd69c6a540")),
-        Provider.Gcp(account=Ref.Account("gcp_cloud3dfe4c6f29")),
-        Provider.Vmware(account=Ref.Account("vmware_cloud22c3125c4f")),
-        Provider.K8s(account=Ref.Account("k8_cloudf91c1da916")),
+        Provider.Ntnx(
+            account=Ref.Account("multipc_account4a0db9311a"),
+            subnets=[Ref.Subnet(name="vlan1211")],
+        ),
+        Provider.Aws(account=Ref.Account("aws_cloudb9540")),
+        Provider.Azure(account=Ref.Account("azure_cloudfdbb0")),
+        Provider.Gcp(account=Ref.Account("gcp_cloudd9361")),
+        Provider.Vmware(account=Ref.Account("vmware_cloudb624a")),
     ]
 
     users = []

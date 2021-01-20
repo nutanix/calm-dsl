@@ -37,6 +37,7 @@
 {% import "vm_profile.yaml.jinja2" as vm_profile %}
 {% import "vm_blueprint.yaml.jinja2" as vm_blueprint %}
 {% import "calm_ref.yaml.jinja2" as calm_ref %}
+{% import "account_provider.yaml.jinja2" as account_provider %}
 
 
 {% macro Schemas() -%}
@@ -80,6 +81,7 @@
 {{ vm_profile.VmProfileSchema() }}
 {{ vm_blueprint.VmBlueprintSchema() }}
 {{ calm_ref.CalmRefSchema() }}
+{{ account_provider.AccountProviderSchema() }}
 
 {%- endmacro %}
 
