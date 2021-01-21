@@ -14,7 +14,7 @@ from calm.dsl.config import get_context
 from .utils import highlight_text, get_states_filter, Display
 from .bps import launch_blueprint_simple, get_blueprint
 from .apps import watch_app
-from .projects import get_project
+from calm.dsl.builtins.models.helper.common import get_project
 from .environments import get_project_environment, get_environment_by_uuid
 from calm.dsl.log import get_logging_handle
 from .constants import MARKETPLACE_BLUEPRINT

@@ -4,7 +4,6 @@ from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from calm.dsl.store import Cache
 from .helper import common as common_helper
-from calm.dsl.config import get_context
 from calm.dsl.constants import CACHE
 from calm.dsl.log import get_logging_handle
 

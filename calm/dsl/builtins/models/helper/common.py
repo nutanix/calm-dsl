@@ -1,5 +1,6 @@
 import sys
 from ..metadata_payload import get_metadata_obj
+from calm.dsl.api import get_api_client
 from calm.dsl.store import Cache
 from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
@@ -66,3 +67,44 @@ def get_cur_context_project():
         sys.exit(-1)
 
     return project_cache_data
+
+
+def get_project(name=None, project_uuid=""):
+
+    if not (name or project_uuid):
+        LOG.error("One of name or uuid must be provided")
+        sys.exit(-1)
+
+    client = get_api_client()
+    if not project_uuid:
+        params = {"filter": "name=={}".format(name)}
+
+        LOG.info("Searching for the project {}".format(name))
+        res, err = client.project.list(params=params)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        response = res.json()
+        entities = response.get("entities", None)
+        project = None
+        if entities:
+            if len(entities) != 1:
+                raise Exception("More than one project found - {}".format(entities))
+
+            LOG.info("Project {} found ".format(name))
+            project = entities[0]
+        else:
+            raise Exception("No project found with name {} found".format(name))
+
+        project_uuid = project["metadata"]["uuid"]
+        LOG.info("Fetching details of project {}".format(name))
+
+    else:
+        LOG.info("Fetching details of project (uuid='{}')".format(project_uuid))
+
+    res, err = client.project.read(project_uuid)  # for getting additional fields
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    project = res.json()
+    return project
