@@ -458,7 +458,7 @@ class TestExecTasks:
                     base_url_in_output = True
 
             assert base_url_in_output
-            assert str(endpoint_used["attrs"]["tls_verify"]) in output_list[0]["output"]
+            assert str(endpoint_used["attrs"]["tls_verify"]).upper() in (output_list[0]["output"]).upper()
             assert (
                 str(endpoint_used["attrs"]["retry_interval"])
                 in output_list[0]["output"]
