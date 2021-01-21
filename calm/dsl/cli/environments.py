@@ -49,6 +49,13 @@ def create_environment(env_payload):
 def create_environment_from_dsl_class(env_class):
 
     env_payload = None
+
+    infra = getattr(env_class, "providers", [])
+    if not infra:
+        LOG.warning(
+            "From Calm v3.2, providers(infra) will be required to use environment for blueprints/marketplace usage"
+        )
+
     UserEnvPayload, _ = create_environment_payload(env_class)
     env_payload = UserEnvPayload.get_dict()
 

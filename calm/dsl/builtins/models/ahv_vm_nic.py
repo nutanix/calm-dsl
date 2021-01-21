@@ -67,6 +67,7 @@ class AhvNicType(EntityType):
 
             subnet_uuid = subnet_cache_data.get("uuid", "")
 
+            # If substrate defined under environment model
             cls_env = common_helper._walk_to_parent_with_given_type(
                 cls, "EnvironmentType"
             )
@@ -87,6 +88,7 @@ class AhvNicType(EntityType):
                             )
                             sys.exit(-1)
 
+            # If substrate defined under blueprint model
             else:
                 pfl_env = cls_substrate.get_profile_environment()
                 if pfl_env:

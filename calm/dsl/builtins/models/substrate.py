@@ -1,5 +1,5 @@
-from os import environ
 import sys
+from distutils.version import LooseVersion as LV
 
 from .entity import EntityType, Entity, EntityTypeBase, EntityDict
 from .validator import PropertyValidator
@@ -11,8 +11,9 @@ from .metadata_payload import get_metadata_obj
 from .helper import common as common_helper
 
 from calm.dsl.config import get_context
-from calm.dsl.constants import CACHE
+from calm.dsl.constants import CACHE, PROVIDER_ACCOUNT_TYPE_MAP
 from calm.dsl.store import Cache
+from calm.dsl.store import Version
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -65,10 +66,40 @@ class SubstrateType(EntityType):
         return environment
 
     def get_referenced_account_uuid(cls):
+        """
+            SUBSTRATE GIVEN UNDER BLUEPRINT
+        If calm-version < v3.2.0:
+            1. account_reference is not available at substrate-level, So need to read from project only
+        If calm-version >= 3.2.0:
+            1. account_reference is available at substrate-level
+                1.a: If env is given at profile-level, then account must be whitelisted in environment
+                1.b: If env is not given at profile-level, then account must be whitelisted in project
+            2. If account_reference is not available at substrate-level
+                2.a: If env is given at profile-level, return provider account in env
+                2.b: If env is not given at profile-level, return provider account in project
 
-        pc_account_uuid = getattr(cls, "account", {}).get("uuid")
-        if pc_account_uuid:
-            return
+            SUBSTRATE GIVEN UNDER ENVIRONMENT
+        If calm-version < v3.2.0:
+            1. account_reference is not available at substrate-level, So need to read from project only
+        If calm-version >= 3.2.0:
+            1. account_reference is available at substrate-level
+                1. account must be filtered at environment
+            2. If account_reference is not available at substrate-level
+                2.a: return provider account whitelisted in environment
+
+        """
+
+        provider_account = getattr(cls, "account", {})
+        calm_version = Version.get_version("Calm")
+        provider_type = getattr(cls, "provider_type")
+        provider_account_type = PROVIDER_ACCOUNT_TYPE_MAP.get(provider_type, "")
+
+        # Fetching project data
+        project_cache_data = common_helper.get_cur_context_project()
+        project_name = project_cache_data.get("name")
+        project_accounts = project_cache_data.get("accounts_data", {}).get(
+            provider_account_type, []
+        )
 
         # If substrate is defined in blueprint file
         cls_bp = common_helper._walk_to_parent_with_given_type(cls, "BlueprintType")
@@ -88,6 +119,7 @@ class SubstrateType(EntityType):
                         )
                     break
 
+            # If environment is given at profile level
             if environment:
                 environment_cache_data = Cache.get_entity_data_using_uuid(
                     entity_type=CACHE.ENTITY.ENVIRONMENT, uuid=environment["uuid"]
@@ -101,29 +133,97 @@ class SubstrateType(EntityType):
                     sys.exit(-1)
 
                 accounts = environment_cache_data.get("accounts_data", {}).get(
-                    "nutanix_pc", []
+                    provider_account_type, []
                 )
                 if not accounts:
                     LOG.error(
-                        "Environment {} has no Nutanix PC account.".format(
-                            environment_cache_data.get("name", "")
+                        "Environment '{}' has no '{}' account.".format(
+                            environment_cache_data.get("name", ""),
+                            provider_account_type,
                         )
                     )
                     sys.exit(-1)
 
-                pc_account_uuid = accounts[0]["uuid"]
+                # If account given at substrate, it should be whitelisted in environment
+                if provider_account and provider_account["uuid"] != accounts[0]["uuid"]:
+                    LOG.error(
+                        "Account '{}' not filtered in environment '{}'".format(
+                            provider_account["name"],
+                            environment_cache_data.get("name", ""),
+                        )
+                    )
+                    sys.exit(-1)
+
+                # If provider_account is not given, then fetch from env
+                elif not provider_account:
+                    provider_account = {
+                        "name": accounts[0]["name"],
+                        "uuid": accounts[0]["uuid"],
+                    }
+
+            # If environment is not given at profile level
+            else:
+                # if provider_account is given, it should be part of project
+                if not project_accounts:
+                    LOG.error(
+                        "No '{}' account registered to project '{}'".format(
+                            provider_account_type, project_name
+                        )
+                    )
+                    sys.exit(-1)
+
+                if (
+                    provider_account
+                    and provider_account["uuid"] not in project_accounts
+                ):
+                    LOG.error(
+                        "Account '{}' not filtered in project '{}'".format(
+                            provider_account["name"], project_name
+                        )
+                    )
+                    sys.exit(-1)
+
+                # Else take first account in project
+                elif not provider_account:
+                    provider_account["uuid"] = project_accounts[0]
 
         # If substrate defined inside environment
         cls_env = common_helper._walk_to_parent_with_given_type(cls, "EnvironmentType")
         if cls_env:
             infra = getattr(cls_env, "providers", [])
+            whitelisted_account = {}
             for _pdr in infra:
-                if _pdr.type == "nutanix_pc":
-                    account = _pdr.account_reference
-                    pc_account_uuid = account["uuid"]
+                if _pdr.type == PROVIDER_ACCOUNT_TYPE_MAP[provider_type]:
+                    whitelisted_account = _pdr.account_reference.get_dict()
                     break
 
-        return pc_account_uuid
+            if LV(calm_version) >= LV("3.2.0"):
+                if provider_account and provider_account[
+                    "uuid"
+                ] != whitelisted_account.get("uuid", ""):
+                    LOG.error(
+                        "Account '{}' not filtered in environment '{}'".format(
+                            provider_account["name"], str(cls_env)
+                        )
+                    )
+                    sys.exit(-1)
+
+                elif not whitelisted_account:
+                    LOG.error(
+                        "No account is filtered in environment '{}'".format(
+                            str(cls_env)
+                        )
+                    )
+                    sys.exit(-1)
+
+                elif not provider_account:
+                    provider_account = whitelisted_account
+
+            # If version is less than 3.2.0, then it should use account from poroject only
+            else:
+                provider_account["uuid"] = project_accounts[0]
+
+        return provider_account.get("uuid", "")
 
     def compile(cls):
 
