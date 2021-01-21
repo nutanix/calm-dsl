@@ -1,3 +1,4 @@
+from inspect import getargs
 import time
 import click
 import arrow
@@ -275,6 +276,53 @@ def create_project_from_dsl(project_file, project_name, description=""):
     if hasattr(UserProject, "envs"):
         envs = getattr(UserProject, "envs", [])
         UserProject.envs = []
+
+    # Adding environment infra to project
+    for env in envs:
+        providers = getattr(env, "providers", [])
+        for env_pdr in providers:
+            env_pdr_account = env_pdr.account_reference.get_dict()
+            _a_found = False
+            for proj_pdr in getattr(UserProject, "providers", []):
+                proj_pdr_account = proj_pdr.account_reference.get_dict()
+                if env_pdr_account["name"] == proj_pdr_account["name"]:
+                    _a_found = True
+
+                    # If env account subnets not present in project, then add them by default
+                    if proj_pdr.type == "nutanix_pc":
+                        env_pdr_subnets = env_pdr.subnet_reference_list
+                        env_pdr_ext_subnets = env_pdr.external_network_list
+
+                        proj_pdr_subnets = proj_pdr.subnet_reference_list
+                        proj_pdr_ext_subnets = proj_pdr.external_network_list
+
+                        for _s in env_pdr_subnets:
+                            _s_uuid = _s.get_dict()["uuid"]
+                            _s_found = False
+
+                            for _ps in proj_pdr_subnets:
+                                if _ps.get_dict()["uuid"] == _s_uuid:
+                                    _s_found = True
+                                    break
+
+                            if not _s_found:
+                                proj_pdr.subnet_reference_list.append(_s)
+
+                        for _s in env_pdr_ext_subnets:
+                            _s_uuid = _s.get_dict()["uuid"]
+                            _s_found = False
+
+                            for _ps in proj_pdr_ext_subnets:
+                                if _ps.get_dict()["uuid"] == _s_uuid:
+                                    _s_found = True
+                                    break
+
+                            if not _s_found:
+                                proj_pdr.external_network_list.append(_s)
+
+            # If environment account not available in project add it to project
+            if not _a_found:
+                UserProject.providers.append(env_pdr)
 
     default_environment_name = ""
     if (
