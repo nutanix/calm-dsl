@@ -1,6 +1,5 @@
 from ruamel import yaml
 import os
-import sys
 
 from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.action import render_action_template

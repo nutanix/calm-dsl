@@ -1,7 +1,6 @@
 """ Schema should be according to OpenAPI 3 format with x-calm-dsl-type extension"""
 
 import json
-import sys
 from copy import deepcopy
 from io import StringIO
 from distutils.version import LooseVersion as LV

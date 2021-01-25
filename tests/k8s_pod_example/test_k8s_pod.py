@@ -135,7 +135,7 @@ class K8SBlueprint(Blueprint):
     """Calm Kubernetes POD Support demo"""
 
     credentials = [basic_cred(CRED_USERNAME, CRED_PASSWORD, default=True)]
-    services = [MySQLService, PHPService]
+    services = [MySQLService, PHPService, RedisService, DiscourseService, MailService]
     packages = [MySQLPackage, PHPPackage]
     substrates = [AHVVMforMySQL, AHVVMforPHP]
     profiles = [DefaultProfile]

@@ -20,6 +20,7 @@ from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
 from calm.dsl.builtins.models.helper.common import get_project
 from calm.dsl.store import Cache
+from calm.dsl.constants import CACHE
 
 LOG = get_logging_handle(__name__)
 
@@ -52,11 +53,20 @@ def get_projects(name, filter_by, limit, offset, quiet, out):
         LOG.warning("Cannot fetch projects from {}".format(pc_ip))
         return
 
+    res = res.json()
+    total_matches = res["metadata"]["total_matches"]
+    if total_matches > limit:
+        LOG.warning(
+            "Displaying {} out of {} entities. Please use --limit and --offset option for more results.".format(
+                limit, total_matches
+            )
+        )
+
     if out == "json":
-        click.echo(json.dumps(res.json(), indent=4, separators=(",", ": ")))
+        click.echo(json.dumps(res, indent=4, separators=(",", ": ")))
         return
 
-    json_rows = res.json()["entities"]
+    json_rows = res["entities"]
     if not json_rows:
         click.echo(highlight_text("No project found !!!\n"))
         return
@@ -362,6 +372,11 @@ def create_project_from_dsl(project_file, project_name, description=""):
         # Reset the context changes
         ContextObj.reset_configuration()
 
+    # Update projects in cache
+    LOG.info("Updating projects cache ...")
+    Cache.sync_table(cache_type=CACHE.ENTITY.PROJECT)
+    LOG.info("[Done]")
+
 
 def describe_project(project_name, out):
 
@@ -513,8 +528,13 @@ def delete_project(project_names):
             res["status"]["execution_context"]["task_uuid"], poll_interval=4
         )
         if task_state in ERGON_TASK.FAILURE_STATES:
-            raise Exception("Project deletion task went to {} state".format(task_state))
-        click.echo("")
+            LOG.exception("Project deletion task went to {} state".format(task_state))
+            sys.exit(-1)
+
+    # Update projects in cache
+    LOG.info("Updating projects cache ...")
+    Cache.sync_table(cache_type=CACHE.ENTITY.PROJECT)
+    LOG.info("[Done]")
 
 
 def update_project_from_dsl(project_name, project_file):

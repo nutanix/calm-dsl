@@ -57,8 +57,8 @@ class AhvDiskType(EntityType):
                     )
                 )
                 LOG.error(
-                    "Ahv Disk Image {} not found. Please run: calm update cache".format(
-                        image_name
+                    "Ahv Disk Image {} of type {} not found. Please run: calm update cache".format(
+                        image_name, IMAGE_TYPE_MAP[device_type]
                     )
                 )
                 sys.exit(-1)

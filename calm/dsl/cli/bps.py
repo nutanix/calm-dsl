@@ -78,11 +78,20 @@ def get_blueprint_list(name, filter_by, limit, offset, quiet, all_items, out):
         LOG.warning("Cannot fetch blueprints from {}".format(pc_ip))
         return
 
+    res = res.json()
+    total_matches = res["metadata"]["total_matches"]
+    if total_matches > limit:
+        LOG.warning(
+            "Displaying {} out of {} entities. Please use --limit and --offset option for more results.".format(
+                limit, total_matches
+            )
+        )
+
     if out == "json":
-        click.echo(json.dumps(res.json(), indent=4, separators=(",", ": ")))
+        click.echo(json.dumps(res, indent=4, separators=(",", ": ")))
         return
 
-    json_rows = res.json()["entities"]
+    json_rows = res["entities"]
     if not json_rows:
         click.echo(highlight_text("No blueprint found !!!\n"))
         return
@@ -625,65 +634,70 @@ def get_blueprint_runtime_editables(client, blueprint):
     return response.get("resources", [])
 
 
-def get_field_values(
-    entity_dict,
-    context,
-    path=None,
-    hide_input=False,
-    prompt=True,
-    launch_runtime_vars=None,
-    bp_data=None,
-):
-    path = path or ""
-    for field, value in entity_dict.items():
-        if isinstance(value, dict):
-            get_field_values(
-                entity_dict[field],
-                context,
-                path=path + "." + field,
-                bp_data=bp_data,
-                hide_input=hide_input,
-                prompt=prompt,
-                launch_runtime_vars=launch_runtime_vars,
+def get_variable_value(variable, bp_data, launch_runtime_vars):
+    """return variable value from launch_params/cli_prompt"""
+
+    var_context = variable["context"]
+    var_name = variable.get("name", "")
+
+    # If launch_runtime_vars is given, return variable vlaue from it
+    if launch_runtime_vars:
+        return get_val_launch_runtime_var(
+            launch_runtime_vars=launch_runtime_vars,
+            field="value",  # Only 'value' attribute is editable
+            path=var_name,
+            context=var_context,
+        )
+
+    # Fetch the options for value of dynamic variables
+    if variable["type"] in ["HTTP_LOCAL", "EXEC_LOCAL", "HTTP_SECRET", "EXEC_SECRET"]:
+        choices, err = get_variable_value_options(
+            bp_uuid=bp_data["metadata"]["uuid"], var_uuid=variable["uuid"]
+        )
+        if err:
+            click.echo("")
+            LOG.warning(
+                "Exception occured while fetching value of variable '{}': {}".format(
+                    var_name, err
+                )
             )
-        else:
-            new_val = None
-            if prompt:
-                var_data = get_variable_data(
-                    bp_data=bp_data,
-                    context_data=bp_data,
-                    var_context=context,
-                    var_name=path,
-                )
 
-                options = var_data.get("options", {})
-                choices = options.get("choices", [])
+        # Stripping out new line character from options
+        choices = [_c.strip() for _c in choices]
 
-                click.echo("")
-                if choices:
-                    click.echo("Choose from given choices: ")
-                    for choice in choices:
-                        click.echo("\t{}".format(highlight_text(repr(choice))))
+    else:
+        # Extract options for predefined variables from bp payload
+        var_data = get_variable_data(
+            bp_data=bp_data["status"]["resources"],
+            context_data=bp_data["status"]["resources"],
+            var_context=var_context,
+            var_name=var_name,
+        )
+        choices = var_data.get("options", {}).get("choices", [])
 
-                new_val = click.prompt(
-                    "Value for {} in {} [{}]".format(
-                        path + "." + field, context, highlight_text(repr(value))
-                    ),
-                    default=value,
-                    show_default=False,
-                    hide_input=hide_input,
-                )
+    click.echo("")
+    if choices:
+        click.echo("Choose from given choices: ")
+        for choice in choices:
+            click.echo("\t{}".format(highlight_text(repr(choice))))
 
-            else:
-                new_val = get_val_launch_runtime_var(
-                    launch_runtime_vars, field, path, context
-                )
+    # CASE for `type` in ['SECRET', 'EXEC_SECRET', 'HTTP_SECRET']
+    hide_input = variable.get("type").split("_")[-1] == "SECRET"
+    var_default_val = variable["value"].get("value", None)
+    new_val = click.prompt(
+        "Value for '{}' in {} [{}]".format(
+            var_name, var_context, highlight_text(repr(var_default_val))
+        ),
+        default=var_default_val,
+        show_default=False,
+        hide_input=hide_input,
+    )
 
-            if new_val:
-                entity_dict[field] = type(value)(new_val)
+    return new_val
 
 
 def get_variable_data(bp_data, context_data, var_context, var_name):
+    """return variable data from blueprint payload"""
 
     context_map = {
         "app_profile": "app_profile_list",
@@ -884,6 +898,41 @@ def parse_launch_runtime_credentials(launch_params):
     )
 
 
+def get_variable_value_options(bp_uuid, var_uuid, poll_interval=10):
+    """returns dynamic variable values and api exception if occured"""
+
+    client = get_api_client()
+    res, _ = client.blueprint.variable_values(uuid=bp_uuid, var_uuid=var_uuid)
+
+    var_task_data = res.json()
+
+    # req_id and trl_id are necessary
+    req_id = var_task_data["request_id"]
+    trl_id = var_task_data["trl_id"]
+
+    # Poll till completion of epsilon task
+    maxWait = 5 * 60
+    count = 0
+    while count < maxWait:
+        res, err = client.blueprint.variable_values_from_trlid(
+            uuid=bp_uuid, var_uuid=var_uuid, req_id=req_id, trl_id=trl_id
+        )
+
+        # If there is exception during variable api call, it would be silently ignored
+        if err:
+            return list(), err
+
+        var_val_data = res.json()
+        if var_val_data["state"] == "SUCCESS":
+            return var_val_data["values"], None
+
+        count += poll_interval
+        time.sleep(poll_interval)
+
+    LOG.error("Waited for 5 minutes for dynamic variable evaludation")
+    sys.exit(-1)
+
+
 def launch_blueprint_simple(
     blueprint_name=None,
     app_name=None,
@@ -1036,19 +1085,20 @@ def launch_blueprint_simple(
             if not launch_params:
                 click.echo("\n\t\t\t", nl=False)
                 click.secho("VARIABLE LIST DATA", underline=True, bold=True)
+
+            # NOTE: We are expecting only value in variables is editable (Ideal case)
+            # If later any attribute added to editables, pls change here accordingly
+            LOG.warning(
+                "Values fetched from API/ESCRIPT will not have a default. User will have to select an option at launch."
+            )
             for variable in variable_list:
-                context = variable["context"]
-                editables = variable["value"]
-                hide_input = variable.get("type") == "SECRET"
-                get_field_values(
-                    editables,
-                    context,
-                    path=variable.get("name", ""),
-                    bp_data=bp_data["status"]["resources"],
-                    hide_input=hide_input,
-                    prompt=prompt_cli,
+                new_val = get_variable_value(
+                    variable=variable,
+                    bp_data=bp_data,
                     launch_runtime_vars=launch_runtime_vars,
                 )
+                if new_val:
+                    variable["value"]["value"] = new_val
 
         deployment_list = runtime_editables.get("deployment_list", [])
         # deployment can be only supplied via non-interactive way for now
