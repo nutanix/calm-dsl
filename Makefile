@@ -70,6 +70,7 @@ _init_centos:
 	# Install docker
 	which docker || { curl -fsSL https://get.docker.com/ | sh; sudo systemctl start docker; sudo systemctl enable docker; sudo usermod -aG docker $(whoami); }
 
-	rpm -q python3 || sudo yum -y install python3-devel python3-pip python3-venv python3-wheel 
+	rpm -q python3 || sudo yum -y install python3-devel python3-pip python3-venv python3-wheel
+	sudo ln -s /bin/pip3.6 /bin/pip3
 
 	sudo pip3 install wheel
