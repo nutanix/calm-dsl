@@ -1,3 +1,5 @@
+import json
+
 from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC
 from calm.dsl.builtins import ref, basic_cred, AhvVmResources, AhvVm
 from calm.dsl.builtins import vm_disk_package, read_local_file
@@ -5,10 +7,17 @@ from calm.dsl.builtins import vm_disk_package, read_local_file
 from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import CalmVariable, CalmTask, action
+from calm.dsl.builtins import Metadata, Ref
 
 
 CENTOS_KEY = read_local_file("keys/centos")
 CENTOS_PUBLIC_KEY = read_local_file("keys/centos_pub")
+
+# projects
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+PROJECT = DSL_CONFIG["PROJECTS"]["PROJECT1"]
+PROJECT_NAME = PROJECT["NAME"]
+NETWORK1 = DSL_CONFIG["AHV"]["NETWORK"]["VLAN1211"]
 
 Centos = basic_cred("centos", CENTOS_KEY, name="Centos", type="KEY", default=True)
 
@@ -46,7 +55,7 @@ class MyAhvVmResources(AhvVmResources):
     vCPUs = 2
     cores_per_vCPU = 1
     disks = [AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(Era_Disk, bootable=True)]
-    nics = [AhvVmNic("vlan.0")]
+    nics = [AhvVmNic(NETWORK1)]
 
     guest_customization = AhvVmGC.CloudInit(
         config={
@@ -105,3 +114,8 @@ class AhvBlueprint(Blueprint):
     packages = [AhvVmPackage, Era_Disk]
     substrates = [AhvVmSubstrate]
     profiles = [AhvVmProfile]
+
+
+class BpMetadata(Metadata):
+
+    project = Ref.Project(PROJECT_NAME)
