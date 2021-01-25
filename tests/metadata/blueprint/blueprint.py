@@ -1,3 +1,5 @@
+import json
+
 from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC
 from calm.dsl.builtins import ref, basic_cred, AhvVmResources, AhvVm
 from calm.dsl.builtins import vm_disk_package, read_local_file
@@ -11,6 +13,10 @@ from calm.dsl.builtins import Ref, Metadata
 CENTOS_KEY = read_local_file("keys/centos")
 CENTOS_PUBLIC_KEY = read_local_file("keys/centos_pub")
 PROJECT_NAME = read_local_file("project_name")
+
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+NTNX_LOCAL_ACCOUNT = DSL_CONFIG["ACCOUNTS"]["NTNX_LOCAL_AZ"]
+SUBNET_NAME = NTNX_LOCAL_ACCOUNT["SUBNETS"][0]["NAME"]
 
 Centos = basic_cred("centos", CENTOS_KEY, name="Centos", type="KEY", default=True)
 
@@ -48,7 +54,7 @@ class MyAhvVmResources(AhvVmResources):
     vCPUs = 2
     cores_per_vCPU = 1
     disks = [AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(Era_Disk, bootable=True)]
-    nics = [AhvVmNic("vlan.0")]
+    nics = [AhvVmNic(SUBNET_NAME)]
 
     guest_customization = AhvVmGC.CloudInit(
         config={

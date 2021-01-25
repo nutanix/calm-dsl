@@ -15,9 +15,10 @@ from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import provider_spec, read_local_file
 from calm.dsl.builtins import CalmEndpoint
 
-CRED_USERNAME = read_local_file(".tests/username")
-CRED_PASSWORD = read_local_file(".tests/password")
-TEST_PC_IP = read_local_file(".tests/test_pc_ip")
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+TEST_PC_IP = DSL_CONFIG["EXISTING_MACHINE"]["IP_1"]
+CRED_USERNAME = DSL_CONFIG["EXISTING_MACHINE"]["CREDS"]["LINUX"]["USERNAME"]
+CRED_PASSWORD = DSL_CONFIG["EXISTING_MACHINE"]["CREDS"]["LINUX"]["PASSWORD"]
 DNS_SERVER = read_local_file(".tests/dns_server")
 
 DefaultCred = basic_cred(
@@ -497,8 +498,19 @@ def test_json():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_path = os.path.join(dir_path, "test_existing_vm_bp.json")
 
-    generated_json = ExistingVMBlueprint.json_dumps(pprint=True)
+    # Change data to dummy
+    TEST_PC_IP = DSL_CONFIG["EXISTING_MACHINE"]["DUMMY_DATA"]["IP_1"]
+    CRED_USERNAME = DSL_CONFIG["EXISTING_MACHINE"]["DUMMY_DATA"]["CREDS"]["LINUX"][
+        "USERNAME"
+    ]
+    CRED_PASSWORD = DSL_CONFIG["EXISTING_MACHINE"]["DUMMY_DATA"]["CREDS"]["LINUX"][
+        "PASSWORD"
+    ]
+    ExistingVMBlueprint.substrates[0].provider_spec["address"] = TEST_PC_IP
+    ExistingVMBlueprint.credentials[0].username = CRED_USERNAME
+    ExistingVMBlueprint.credentials[0].secret["value"] = CRED_PASSWORD
 
+    generated_json = ExistingVMBlueprint.json_dumps(pprint=True)
     known_json = open(file_path).read()
     assert generated_json == known_json
 

@@ -42,10 +42,11 @@ class ProjectType(EntityType):
                         "subnet_reference_list"
                     ]
 
-                elif "external_network_list" in provider_obj:
-                    cdict["external_network_list"] = provider_obj[
-                        "external_network_list"
-                    ]
+                if "external_network_list" in provider_obj:
+                    cdict["external_network_list"] = []
+                    for _network in provider_obj["external_network_list"]:
+                        _network.pop("kind", None)
+                        cdict["external_network_list"].append(_network)
 
                 if "default_subnet_reference" in provider_obj:
                     cdict["default_subnet_reference"] = provider_obj[

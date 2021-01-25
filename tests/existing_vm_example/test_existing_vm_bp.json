@@ -805,7 +805,7 @@
             "type": "EXISTING_VM",
             "os_type": "Linux",
             "create_spec": {
-                "address": "10.46.34.230",
+                "address": "1.1.1.1",
                 "type": "PROVISION_EXISTING_MACHINE"
             },
             "variable_list": [],
@@ -888,12 +888,12 @@
             "name": "default cred",
             "description": "",
             "type": "PASSWORD",
-            "username": "root",
+            "username": "username",
             "secret": {
                 "attrs": {
                     "is_secret_modified": true
                 },
-                "value": "passwd"
+                "value": "password"
             },
             "editables": {}
         }
@@ -2063,9 +2063,9 @@
                                     "authentication": {
                                         "auth_type": "basic",
                                         "basic_auth": {
-                                            "username": "root",
+                                            "username": "username",
                                             "password": {
-                                                "value": "passwd",
+                                                "value": "password",
                                                 "attrs": {
                                                     "is_secret_modified": true
                                                 }
