@@ -55,7 +55,7 @@ class VmProfileType(EntityType):
         pfl_kwargs = {"name": profile_name, "deployments": [bp_dep]}
 
         environments = getattr(cls, "environments", None)
-        if pfl_kwargs:
+        if environments:
             pfl_kwargs["environments"] = environments
 
         bp_profile = profile(**pfl_kwargs)

@@ -2,7 +2,8 @@
 # each module inside __all__ variable, else `from calm.dsl.runbooks import *`
 # will not import those modules.
 
-from calm.dsl.builtins.models.ref import Ref, ref, RefType
+from calm.dsl.builtins.models.ref import ref, RefType
+from calm.dsl.builtins.models.calm_ref import Ref
 from calm.dsl.builtins.models.metadata import Metadata, MetadataType
 from calm.dsl.builtins.models.credential import basic_cred, secret_cred, CredentialType
 

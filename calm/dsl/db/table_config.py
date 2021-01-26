@@ -417,6 +417,7 @@ class AccountCache(CacheTableBase):
     name = CharField()
     uuid = CharField()
     provider_type = CharField()
+    state = CharField()
     is_host = BooleanField(default=False)  # Used for Ntnx accounts only
     data = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
@@ -426,6 +427,7 @@ class AccountCache(CacheTableBase):
             "name": self.name,
             "uuid": self.uuid,
             "provider_type": self.provider_type,
+            "state": self.state,
             "is_host": self.is_host,
             "data": json.loads(self.data),
             "last_update_time": self.last_update_time,
@@ -446,7 +448,7 @@ class AccountCache(CacheTableBase):
             return
 
         table = PrettyTable()
-        table.field_names = ["NAME", "provider_type", "UUID", "LAST UPDATED"]
+        table.field_names = ["NAME", "PROVIDER_TYPE", "UUID", "STATE", "LAST UPDATED"]
         for entity in cls.select():
             entity_data = entity.get_detail_dict()
             last_update_time = arrow.get(
@@ -457,6 +459,7 @@ class AccountCache(CacheTableBase):
                     highlight_text(entity_data["name"]),
                     highlight_text(entity_data["provider_type"]),
                     highlight_text(entity_data["uuid"]),
+                    highlight_text(entity_data["state"]),
                     highlight_text(last_update_time),
                 ]
             )
@@ -471,6 +474,7 @@ class AccountCache(CacheTableBase):
 
         is_host = kwargs.get("is_host", False)
         data = kwargs.get("data", "{}")
+        state = kwargs.get("state", "")
 
         super().create(
             name=name,
@@ -478,6 +482,7 @@ class AccountCache(CacheTableBase):
             provider_type=provider_type,
             is_host=is_host,
             data=data,
+            state=state
         )
 
     @classmethod
@@ -488,7 +493,7 @@ class AccountCache(CacheTableBase):
         cls.clear()
 
         client = get_api_client()
-        payload = {"length": 250, "filter": "state==VERIFIED;type!=nutanix"}
+        payload = {"length": 250, "filter": "(state==ACTIVE,state==VERIFIED);type!=nutanix"}
         res, err = client.account.list(payload)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -501,6 +506,7 @@ class AccountCache(CacheTableBase):
                 "name": entity["status"]["name"],
                 "uuid": entity["metadata"]["uuid"],
                 "provider_type": entity["status"]["resources"]["type"],
+                "state": entity["status"]["resources"]["state"]
             }
 
             if provider_type == "nutanix_pc":
@@ -625,19 +631,19 @@ class ProjectCache(CacheTableBase):
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-        # populating a map to lookup the account to which a subnet belongs
-        subnet_to_account_map = dict()
-
         res = res.json()
         for entity in res["entities"]:
-            name = entity["status"]["name"]
+            # populating a map to lookup the account to which a subnet belongs
+            subnet_to_account_map = dict()
+
+            name = entity["spec"]["name"]
             uuid = entity["metadata"]["uuid"]
 
-            account_list = entity["status"]["resources"]["account_reference_list"]
-            subnets_ref_list = entity["status"]["resources"].get(
+            account_list = entity["spec"]["resources"]["account_reference_list"]
+            subnets_ref_list = entity["spec"]["resources"].get(
                 "subnet_reference_list", []
             )
-            external_subnets_ref_list = entity["status"]["resources"].get(
+            external_subnets_ref_list = entity["spec"]["resources"].get(
                 "external_network_list", []
             )
             account_map = {}
