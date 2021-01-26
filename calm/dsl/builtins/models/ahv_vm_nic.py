@@ -87,8 +87,8 @@ class AhvNicType(EntityType):
                             )
                             sys.exit(-1)
 
-            # If substrate defined under blueprint model
-            else:
+            # If provider_spec is defined under substrate and substrate is defined under blueprint model
+            elif cls_substrate:
                 pfl_env = cls_substrate.get_profile_environment()
                 if pfl_env:
                     environment_cache_data = Cache.get_entity_data_using_uuid(

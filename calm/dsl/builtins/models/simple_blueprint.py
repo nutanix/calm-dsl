@@ -65,7 +65,7 @@ class SimpleBlueprintType(EntityType):
         pfl_kwargs = {"name": cls.__name__ + "Profile"}
 
         environments = getattr(cls, "environments", None)
-        if pfl_kwargs:
+        if environments:
             pfl_kwargs["environments"] = environments
 
         # Init Profile

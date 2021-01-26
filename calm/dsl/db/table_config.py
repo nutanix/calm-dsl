@@ -482,7 +482,7 @@ class AccountCache(CacheTableBase):
             provider_type=provider_type,
             is_host=is_host,
             data=data,
-            state=state
+            state=state,
         )
 
     @classmethod
@@ -493,7 +493,10 @@ class AccountCache(CacheTableBase):
         cls.clear()
 
         client = get_api_client()
-        payload = {"length": 250, "filter": "(state==ACTIVE,state==VERIFIED);type!=nutanix"}
+        payload = {
+            "length": 250,
+            "filter": "(state==ACTIVE,state==VERIFIED);type!=nutanix",
+        }
         res, err = client.account.list(payload)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -506,7 +509,7 @@ class AccountCache(CacheTableBase):
                 "name": entity["status"]["name"],
                 "uuid": entity["metadata"]["uuid"],
                 "provider_type": entity["status"]["resources"]["type"],
-                "state": entity["status"]["resources"]["state"]
+                "state": entity["status"]["resources"]["state"],
             }
 
             if provider_type == "nutanix_pc":
