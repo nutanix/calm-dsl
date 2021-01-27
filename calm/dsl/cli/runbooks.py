@@ -15,6 +15,7 @@ from calm.dsl.runbooks import runbook, create_runbook_payload
 from calm.dsl.config import get_context
 from calm.dsl.api import get_api_client
 from calm.dsl.log import get_logging_handle
+from calm.dsl.constants import CACHE
 from calm.dsl.store import Cache
 from calm.dsl.tools import get_module_from_file
 from .utils import (
@@ -151,7 +152,9 @@ def compile_runbook_command(runbook_file, out):
     ContextObj = get_context()
     project_config = ContextObj.get_project_config()
     project_name = project_config["name"]
-    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
+    project_cache_data = Cache.get_entity_data(
+        entity_type=CACHE.ENTITY.PROJECT, name=project_name
+    )
 
     if not project_cache_data:
         LOG.error(

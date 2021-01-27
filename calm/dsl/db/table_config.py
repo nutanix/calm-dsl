@@ -19,6 +19,7 @@ from prettytable import PrettyTable
 from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
+from calm.dsl.constants import CACHE
 
 LOG = get_logging_handle(__name__)
 # Proxy database
@@ -103,7 +104,7 @@ class CacheTableBase(BaseModel):
 
 
 class AhvSubnetsCache(CacheTableBase):
-    __cache_type__ = "ahv_subnet"
+    __cache_type__ = CACHE.ENTITY.AHV_SUBNET
     name = CharField()
     uuid = CharField()
     cluster = CharField()
@@ -267,7 +268,7 @@ class AhvSubnetsCache(CacheTableBase):
 
 
 class AhvImagesCache(CacheTableBase):
-    __cache_type__ = "ahv_disk_image"
+    __cache_type__ = CACHE.ENTITY.AHV_DISK_IMAGE
     name = CharField()
     image_type = CharField()
     uuid = CharField()
@@ -412,7 +413,7 @@ class AhvImagesCache(CacheTableBase):
 
 
 class AccountCache(CacheTableBase):
-    __cache_type__ = "account"
+    __cache_type__ = CACHE.ENTITY.ACCOUNT
     name = CharField()
     uuid = CharField()
     provider_type = CharField()
@@ -530,7 +531,7 @@ class AccountCache(CacheTableBase):
 
 
 class ProjectCache(CacheTableBase):
-    __cache_type__ = "project"
+    __cache_type__ = CACHE.ENTITY.PROJECT
     name = CharField()
     uuid = CharField()
     accounts_data = CharField()
@@ -677,7 +678,7 @@ class ProjectCache(CacheTableBase):
 
 
 class UsersCache(CacheTableBase):
-    __cache_type__ = "user"
+    __cache_type__ = CACHE.ENTITY.USER
     name = CharField()
     uuid = CharField()
     display_name = CharField()
@@ -814,7 +815,7 @@ class UsersCache(CacheTableBase):
 
 
 class RolesCache(CacheTableBase):
-    __cache_type__ = "role"
+    __cache_type__ = CACHE.ENTITY.ROLE
     name = CharField()
     uuid = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
@@ -905,7 +906,7 @@ class RolesCache(CacheTableBase):
 
 
 class DirectoryServiceCache(CacheTableBase):
-    __cache_type__ = "directory_service"
+    __cache_type__ = CACHE.ENTITY.DIRECTORY_SERVICE
     name = CharField()
     uuid = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
@@ -996,7 +997,7 @@ class DirectoryServiceCache(CacheTableBase):
 
 
 class UserGroupCache(CacheTableBase):
-    __cache_type__ = "user_group"
+    __cache_type__ = CACHE.ENTITY.USER_GROUP
     name = CharField()
     uuid = CharField()
     display_name = CharField()
@@ -1142,7 +1143,7 @@ class UserGroupCache(CacheTableBase):
 
 
 class AhvNetworkFunctionChain(CacheTableBase):
-    __cache_type__ = "ahv_network_function_chain"
+    __cache_type__ = CACHE.ENTITY.AHV_NETWORK_FUNCTION_CHAIN
     name = CharField()
     uuid = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
