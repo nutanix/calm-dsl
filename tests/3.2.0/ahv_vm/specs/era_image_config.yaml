@@ -1,9 +1,0 @@
-image:
-  name : Era
-  type : DISK_IMAGE
-  source : http://download.nutanix.com/era/1.1.1/ERA-Server-build-1.1.1-340d9db1118eac81219bec98507d4982045d8799.qcow2
-  architecture : X86_64
-
-product:
-  name : Era
-  version : 1.0

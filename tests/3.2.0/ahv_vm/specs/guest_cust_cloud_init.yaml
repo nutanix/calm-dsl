@@ -1,6 +1,0 @@
-#cloud-config
-users:
-  - name: @@{CENTOS_KEY.username}@@
-    ssh-authorized-keys:
-      - @@{CENTOS_KEY.public_key}@@
-    sudo: ['ALL=(ALL) NOPASSWD:ALL']
