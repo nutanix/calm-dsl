@@ -639,13 +639,16 @@ class ProjectCache(CacheTableBase):
             # populating a map to lookup the account to which a subnet belongs
             subnet_to_account_map = dict()
 
-            name = entity["spec"]["name"]
+            name = entity["status"]["name"]
             uuid = entity["metadata"]["uuid"]
 
-            account_list = entity["spec"]["resources"]["account_reference_list"]
-            subnets_ref_list = entity["spec"]["resources"].get(
+            account_list = entity["status"]["resources"].get(
+                "account_reference_list", []
+            )
+            subnets_ref_list = entity["status"]["resources"].get(
                 "subnet_reference_list", []
             )
+            # Use spec dict in entity-payload for external subnets
             external_subnets_ref_list = entity["spec"]["resources"].get(
                 "external_network_list", []
             )

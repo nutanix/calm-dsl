@@ -20,7 +20,7 @@ from .environments import get_environment_list, delete_environment
 @click.option(
     "--quiet", "-q", is_flag=True, default=False, help="Show only environments names."
 )
-@click.option("--project", "-p", "project_name", help="Project name", required=True)
+@click.option("--project", "-p", "project_name", help="Project name")
 @click.option(
     "--out",
     "-o",
