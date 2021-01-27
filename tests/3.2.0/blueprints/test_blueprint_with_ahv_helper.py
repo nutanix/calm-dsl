@@ -1,6 +1,8 @@
+import json
+
 from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC
-from calm.dsl.builtins import ref, basic_cred, AhvVmResources, AhvVm, Ref
-from calm.dsl.builtins import vm_disk_package, read_local_file
+from calm.dsl.builtins import ref, AhvVmResources, AhvVm, Ref, Metadata
+from calm.dsl.builtins import vm_disk_package, read_local_file, basic_cred
 
 from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
@@ -8,6 +10,17 @@ from calm.dsl.builtins import CalmVariable, CalmTask, action
 
 CENTOS_KEY = read_local_file("keys/centos")
 CENTOS_PUBLIC_KEY = read_local_file("keys/centos_pub")
+
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+CENTOS_HM = DSL_CONFIG["AHV"]["IMAGES"]["DISK"]["CENTOS_HADOOP_MASTER"]
+NETWORK1 = DSL_CONFIG["AHV"]["NETWORK"]["VLAN1211"]  # TODO change network constants
+
+# project constants
+PROJECT = DSL_CONFIG["PROJECTS"]["PROJECT1"]
+PROJECT_NAME = PROJECT["NAME"]
+ENV_NAME = PROJECT["ENVIRONMENTS"][0]["NAME"]
+ACCOUNT_NAME = PROJECT["ACCOUNTS"]["NUTANIX_PC"][0]["NAME"]
+
 
 Centos = basic_cred("centos", CENTOS_KEY, name="Centos", type="KEY", default=True)
 
@@ -58,9 +71,9 @@ class MyAhvVmResources(AhvVmResources):
     vCPUs = 2
     cores_per_vCPU = 1
     disks = [
-        AhvVmDisk("Centos7HadoopMaster"),
+        AhvVmDisk(CENTOS_HM),
     ]
-    nics = [AhvVmNic("vlan1211")]
+    nics = [AhvVmNic(NETWORK1)]
 
     guest_customization = AhvVmGC.CloudInit(
         config={
@@ -87,6 +100,7 @@ class AhvVmSubstrate(Substrate):
     """AHV VM config given by reading a spec file"""
 
     provider_spec = MyAhvVm
+    account = Ref.Account(ACCOUNT_NAME)
 
 
 class MyAhvVmResources2(AhvVmResources):
@@ -95,10 +109,10 @@ class MyAhvVmResources2(AhvVmResources):
     vCPUs = 2
     cores_per_vCPU = 1
     disks = [
-        AhvVmDisk("Centos7HadoopMaster"),
+        AhvVmDisk(CENTOS_HM),
         AhvVmDisk.CdRom.Ide.emptyCdRom(),
     ]
-    nics = [AhvVmNic("vlan1211")]
+    nics = [AhvVmNic(NETWORK1)]
 
     guest_customization = AhvVmGC.CloudInit(
         config={
@@ -124,7 +138,7 @@ class AhvVmSubstrate2(Substrate):
     """AHV VM config given by reading a spec file"""
 
     provider_spec = MyAhvVm2
-    account = Ref.Account("NTNX_LOCAL_AZ")
+    account = Ref.Account(ACCOUNT_NAME)
 
 
 class AhvVmDeployment(Deployment):
@@ -149,7 +163,7 @@ class AhvVmProfile(Profile):
     foo2 = CalmVariable.Simple("bar2", runtime=True)
 
     deployments = [AhvVmDeployment]
-    environments = [Ref.Environment(name="env1")]
+    environments = [Ref.Environment(name=ENV_NAME)]
 
     @action
     def test_profile_action():
@@ -165,7 +179,7 @@ class AhvVmProfile2(Profile):
     foo2 = CalmVariable.Simple("bar2", runtime=True)
 
     deployments = [AhvVmDeployment2]
-    environments = [Ref.Environment(name="env1")]
+    environments = [Ref.Environment(name=ENV_NAME)]
 
     @action
     def test_profile_action():
@@ -177,7 +191,12 @@ class AhvBlueprint(Blueprint):
     """Sample Bp that used ahv_vm_helpers"""
 
     credentials = [Centos]
-    # services = [AhvVmService]
-    # packages = [AhvVmPackage, AhvVmPackage2, Era_Disk, Virtio_CdRom]
+    services = [AhvVmService]
+    packages = [AhvVmPackage, AhvVmPackage2, Era_Disk, Virtio_CdRom]
     substrates = [AhvVmSubstrate, AhvVmSubstrate2]
     profiles = [AhvVmProfile, AhvVmProfile2]
+
+
+class BpMetadata(Metadata):
+
+    project = Ref.Project(PROJECT_NAME)

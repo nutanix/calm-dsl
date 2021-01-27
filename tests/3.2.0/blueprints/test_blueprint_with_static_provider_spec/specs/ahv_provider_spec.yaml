@@ -8,7 +8,7 @@ resources:
   disk_list:
   - data_source_reference:
       kind: image
-      name: Centos7
+      name: Centos7HadoopMaster
       uuid: 294fa133-be65-4393-aae8-e3b10a0b4293
     device_properties:
       device_type: DISK

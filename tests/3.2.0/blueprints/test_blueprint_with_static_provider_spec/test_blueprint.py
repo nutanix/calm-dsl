@@ -1,7 +1,4 @@
-"""
-Calm DSL .NEXT demo
-
-"""
+import json
 
 from calm.dsl.builtins import (
     ref,
@@ -20,6 +17,13 @@ from calm.dsl.builtins import read_provider_spec, read_local_file
 CRED_USERNAME = read_local_file(".tests/username")
 CRED_PASSWORD = read_local_file(".tests/password")
 DNS_SERVER = read_local_file(".tests/dns_server")
+
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+
+# project constants
+PROJECT = DSL_CONFIG["PROJECTS"]["PROJECT1"]
+PROJECT_NAME = PROJECT["NAME"]
+ENV_NAME = PROJECT["ENVIRONMENTS"][0]["NAME"]
 
 
 class MySQLService(Service):
@@ -100,7 +104,7 @@ class DefaultProfile(Profile):
     deployments = [MySQLDeployment, PHPDeployment]
 
     environments = [
-        Ref.Environment(name="env1"),
+        Ref.Environment(name=ENV_NAME),
     ]
 
     @action
@@ -126,7 +130,7 @@ class NextDslBlueprint(Blueprint):
 
 class BpMetadata(Metadata):
 
-    project = Ref.Project("dsl_project")
+    project = Ref.Project(PROJECT_NAME)
 
 
 def main():

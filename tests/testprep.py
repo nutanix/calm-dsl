@@ -1,5 +1,6 @@
 import json
 import os
+
 from calm.dsl.api import get_api_client, get_resource_api
 
 
@@ -139,6 +140,63 @@ def add_directory_service_user_groups(config):
     config["USER_GROUPS"] = ds_groups
 
 
+def add_project_details(config):
+
+    client = get_api_client()
+
+    for _, project_config in config["PROJECTS"].items():
+        project_name = project_config["NAME"]
+
+        payload = {
+            "length": 200,
+            "offset": 0,
+            "filter": "name=={}".format(project_name),
+        }
+        project_name_uuid_map = client.project.get_name_uuid_map(payload)
+
+        if not project_name_uuid_map:
+            print("Project {} not found".format(project_name))
+            continue
+
+        project_uuid = project_name_uuid_map[project_name]
+        project_config["UUID"] = project_uuid
+
+        res, _ = client.project.read(project_uuid)
+        project_data = res.json()
+
+        # Attach project accounts here
+        project_config["ACCOUNTS"] = {}
+
+        payload = {"length": 250, "offset": 0}
+        account_uuid_name_map = client.account.get_uuid_name_map(payload)
+        account_uuid_type_map = client.account.get_uuid_type_map(payload)
+
+        for _account in project_data["status"]["resources"].get(
+            "account_reference_list", []
+        ):
+            _account_uuid = _account["uuid"]
+            _account_type = account_uuid_type_map[_account_uuid].upper()
+            _account_name = account_uuid_name_map[_account_uuid]
+            if _account_type not in project_config["ACCOUNTS"]:
+                project_config["ACCOUNTS"][_account_type] = []
+
+            project_config["ACCOUNTS"][_account_type].append(
+                {"NAME": _account_name, "UUID": _account_uuid}
+            )
+
+        payload = {
+            "length": 200,
+            "offset": 0,
+            "filter": "project_reference=={}".format(project_uuid),
+        }
+        env_name_uuid_map = client.environment.get_name_uuid_map(payload) or dict()
+
+        # From 3.2, it is envs are required for testing
+        project_config["ENVIRONMENTS"] = []
+        for e_k, e_v in env_name_uuid_map.items():
+            project_config["ENVIRONMENTS"].append({"NAME": e_k, "UUID": e_v})
+
+
 f = open(dsl_config_file_location, "r")
 config = json.loads(f.read())
 f.close()
@@ -146,6 +204,7 @@ f.close()
 add_account_details(config)
 add_directory_service_users(config)
 add_directory_service_user_groups(config)
+add_project_details(config)
 
 f = open(dsl_config_file_location, "w")
 f.write(json.dumps(config, indent=4))
