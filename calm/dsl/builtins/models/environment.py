@@ -75,7 +75,9 @@ class EnvironmentType(EntityType):
 
             environment_infra_list.append(provider_data)
 
-        cdict["infra_inclusion_list"] = environment_infra_list
+        # environment infra added in 3.2.0
+        if environment_infra_list:
+            cdict["infra_inclusion_list"] = environment_infra_list
 
         # NOTE Only one substrate per (provider_type, os_type) tuple can exist
         sub_set = set()

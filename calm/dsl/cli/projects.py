@@ -4,6 +4,7 @@ import click
 import arrow
 import json
 import sys
+from distutils.version import LooseVersion as LV
 from prettytable import PrettyTable
 from ruamel import yaml
 
@@ -19,7 +20,7 @@ from calm.dsl.tools import get_module_from_file
 from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
 from calm.dsl.builtins.models.helper.common import get_project
-from calm.dsl.store import Cache
+from calm.dsl.store import Cache, Version
 from calm.dsl.constants import CACHE
 
 LOG = get_logging_handle(__name__)
@@ -364,9 +365,13 @@ def create_project_from_dsl(project_file, project_name, description=""):
             "uuid": env_ref_list[0]["uuid"],
         }
 
-        project_payload["spec"]["resources"][
-            "default_environment_reference"
-        ] = default_environment_ref
+        # default_environment_reference added in 3.2
+        calm_version = Version.get_version("Calm")
+        if LV(calm_version) >= LV("3.2.0"):
+            project_payload["spec"]["resources"][
+                "default_environment_reference"
+            ] = default_environment_ref
+
         update_project(project_uuid=project_uuid, project_payload=project_payload)
 
         # Reset the context changes

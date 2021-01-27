@@ -633,23 +633,25 @@ def convert_mpi_into_blueprint(
     project_uuid = project_data["metadata"]["uuid"]
     environments = project_data["status"]["resources"]["environment_reference_list"]
     if not environments:
-        raise Exception("Project {} has no environment.".format(project_name))
+        LOG.error("No environment registered to project '{}'".format(project_name))
+        sys.exit(-1)
 
+    # Added in 3.2
     default_environment_uuid = (
         project_data["status"]["resources"]
         .get("default_environment_reference", {})
         .get("uuid")
     )
 
-    if not environment_data:
-        if not default_environment_uuid:
-            raise Exception(
-                "Project {} doesn't have a default environment.".format(project_name)
-            )
+    # If there is no default environment, select first one
+    default_environment_uuid = default_environment_uuid or environments[0]["uuid"]
 
-        environment_data = get_environment_by_uuid(default_environment_uuid)
+    env_uuid = ""
+    if environment_data:  # if user supplies environment
+        env_uuid = environment_data["metadata"]["uuid"]
+    else:
+        env_uuid = default_environment_uuid
 
-    env_uuid = environment_data["metadata"]["uuid"]
     LOG.info("Fetching MPI details")
     mpi_data = get_mpi_by_name_n_version(
         name=name,

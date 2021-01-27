@@ -1,10 +1,12 @@
 import sys
+from distutils.version import LooseVersion as LV
+
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .environment import EnvironmentType
 from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
-from calm.dsl.store import Cache
+from calm.dsl.store import Cache, Version
 from calm.dsl.constants import CACHE
 
 LOG = get_logging_handle(__name__)
@@ -63,12 +65,15 @@ def create_environment_payload(UserEnvironment):
         "spec_version": 1,
         "kind": "environment",
         "name": UserEnvironment.__name__,
-        "project_reference": {
+    }
+
+    calm_version = Version.get_version("Calm")
+    if LV(calm_version) >= LV("3.2.0"):
+        metadata["project_reference"] = {
             "kind": "project",
             "name": project_cache_data["name"],
             "uuid": project_cache_data["uuid"],
-        },
-    }
+        }
 
     UserEnvironmentPayload = _environment_payload()
     UserEnvironmentPayload.metadata = metadata
