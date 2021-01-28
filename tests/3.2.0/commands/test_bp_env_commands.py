@@ -1,5 +1,3 @@
-from tests.cli.test_app_commands import DSL_BP_FILEPATH
-import pytest
 import json
 import uuid
 import time
@@ -7,10 +5,8 @@ import traceback
 from click.testing import CliRunner
 
 from calm.dsl.cli import main as cli
-from calm.dsl.cli.bps import get_blueprint
 from calm.dsl.builtins import read_local_file
 from calm.dsl.config import get_context
-from calm.dsl.api import get_api_client
 from calm.dsl.log import get_logging_handle
 from calm.dsl.cli.constants import APPLICATION
 
@@ -143,7 +139,7 @@ class TestBpCommands:
         self._create_bp()
         created_app_name = "TestAppLaunch_{}".format(created_dsl_bp_name)
         LOG.info(
-            "Launching Bp {} with environment".format(created_dsl_bp_name, ENV_NAME)
+            "Launching Bp {} with environment {}".format(created_dsl_bp_name, ENV_NAME)
         )
         result = runner.invoke(
             cli,

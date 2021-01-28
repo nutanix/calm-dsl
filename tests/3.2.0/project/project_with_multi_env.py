@@ -1,7 +1,6 @@
 # Note: In given example, we not added environment reference anywhere.
 # Project create command will pick one Environment module from file and attaches to project
 
-import uuid
 import json
 
 from calm.dsl.builtins import Project, read_local_file, readiness_probe

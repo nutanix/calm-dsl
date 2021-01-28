@@ -64,7 +64,7 @@ class ProjectType(EntityType):
         cdict.pop("environment_definition_list", None)
         # empty dict is not accepted for default_environment_reference
         default_env = cdict.get("default_environment_reference")
-        if default_env is not None and not default_env:
+        if not default_env:
             cdict.pop("default_environment_reference", None)
 
         return cdict

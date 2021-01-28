@@ -375,7 +375,7 @@ class SubstrateType(EntityType):
         # Substrate.account (if present) and account_uuid in provider_spec (if present).
         # The account_uuid mentioned in provider_spec yaml should be a registered PE under the Substrate.account PC
         pc_account_ref = cdict.pop("account_reference", None)
-        if pc_account_ref:
+        if pc_account_ref and cdict["type"]=="AHV_VM":
             try:
                 pe_account_uuid = cdict["create_spec"]["resources"]["account_uuid"]
             except (AttributeError, TypeError):
