@@ -3,7 +3,6 @@ import json
 from calm.dsl.builtins import (
     ref,
     basic_cred,
-    secret_cred,
     CalmVariable,
     CalmTask,
     action,
@@ -119,8 +118,6 @@ class NextDslBlueprint(Blueprint):
 
     credentials = [
         basic_cred(CRED_USERNAME, CRED_PASSWORD, default=True),
-        secret_cred("root2", secret="admin_pass", name="secret1"),
-        secret_cred("root3", secret="foo", name="secret2"),
     ]
     services = [MySQLService, PHPService]
     packages = [MySQLPackage, PHPPackage]

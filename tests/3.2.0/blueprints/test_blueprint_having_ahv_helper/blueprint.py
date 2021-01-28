@@ -12,7 +12,7 @@ CENTOS_KEY = read_local_file("keys/centos")
 CENTOS_PUBLIC_KEY = read_local_file("keys/centos_pub")
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
-CENTOS_HM = DSL_CONFIG["AHV"]["IMAGES"]["DISK"]["CENTOS_HADOOP_MASTER"]
+CENTOS_CI = DSL_CONFIG["AHV"]["IMAGES"]["DISK"]["CENTOS_7_CLOUD_INIT"]
 NETWORK1 = DSL_CONFIG["AHV"]["NETWORK"]["VLAN1211"]  # TODO change network constants
 
 # project constants
@@ -71,7 +71,7 @@ class MyAhvVmResources(AhvVmResources):
     vCPUs = 2
     cores_per_vCPU = 1
     disks = [
-        AhvVmDisk(CENTOS_HM),
+        AhvVmDisk(CENTOS_CI),
     ]
     nics = [AhvVmNic(NETWORK1)]
 
@@ -109,7 +109,7 @@ class MyAhvVmResources2(AhvVmResources):
     vCPUs = 2
     cores_per_vCPU = 1
     disks = [
-        AhvVmDisk(CENTOS_HM),
+        AhvVmDisk(CENTOS_CI),
         AhvVmDisk.CdRom.Ide.emptyCdRom(),
     ]
     nics = [AhvVmNic(NETWORK1)]

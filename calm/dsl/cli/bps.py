@@ -991,7 +991,8 @@ def launch_blueprint_simple(
 
                 break
         if not profile:
-            raise Exception("No profile found with name {}".format(profile_name))
+            LOG.error("No profile found with name {}".format(profile_name))
+            sys.exit(-1)
 
     runtime_editables = profile.pop("runtime_editables", [])
 
