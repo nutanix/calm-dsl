@@ -10,6 +10,7 @@ from utils import upload_runbook, poll_runlog_status, read_test_config
 class TestRunbooks:
     @pytest.mark.runbook
     @pytest.mark.epsilon
+    @pytest.mark.skip
     @pytest.mark.regression
     @pytest.mark.parametrize("Runbook", [DslInputRunbook])
     def test_input_task_in_runbook(self, Runbook):

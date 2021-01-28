@@ -10,6 +10,7 @@ from utils import upload_runbook, poll_runlog_status
 
 class TestRunbooks:
     @pytest.mark.runbook
+    @pytest.mark.skip
     @pytest.mark.ces
     @pytest.mark.regression
     @pytest.mark.parametrize("Runbook", [DslConfirmRunbook])
