@@ -1,5 +1,4 @@
 import json
-from tests.ahv_vm.test_ahv_multivm import CENTOS_CI
 
 from calm.dsl.builtins import AhvVmDisk, AhvVmNic
 from calm.dsl.builtins import AhvVmResources, AhvVm

@@ -378,7 +378,7 @@ class SubstrateType(EntityType):
         if pc_account_ref and cdict["type"] == "AHV_VM":
             try:
                 pe_account_uuid = cdict["create_spec"]["resources"]["account_uuid"]
-            except (AttributeError, TypeError):
+            except (AttributeError, TypeError, KeyError):
                 pass
             else:
                 if pe_account_uuid:
