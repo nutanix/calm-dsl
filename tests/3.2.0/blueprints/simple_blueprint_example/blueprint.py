@@ -6,8 +6,8 @@ from calm.dsl.builtins import read_local_file, basic_cred
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 
-CENTOS_KEY = read_local_file("keys/centos")
-CENTOS_PUBLIC_KEY = read_local_file("keys/centos_pub")
+CENTOS_KEY = read_local_file(".tests/keys/centos")
+CENTOS_PUBLIC_KEY = read_local_file(".tests/keys/centos_pub")
 
 # project constants
 PROJECT = DSL_CONFIG["PROJECTS"]["PROJECT1"]

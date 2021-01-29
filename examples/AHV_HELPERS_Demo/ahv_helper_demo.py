@@ -8,7 +8,7 @@ from calm.dsl.builtins import CalmVariable, CalmTask, action
 from calm.dsl.builtins import read_local_file
 
 
-CENTOS_PASSWORD = read_local_file("password")
+CENTOS_PASSWORD = read_local_file(".tests/password")
 CENTOS_KEY = read_local_file("private_key")
 
 DefaultCred = basic_cred("centos", CENTOS_PASSWORD, name="CENTOS")

@@ -47,8 +47,8 @@ K8S_ACCOUNT_NAME = K8S_ACCOUNT["NAME"]
 USER = DSL_CONFIG["USERS"][0]
 USER_NAME = USER["NAME"]
 
-CENTOS_KEY = read_local_file("keys/centos")
-CENTOS_PUBLIC_KEY = read_local_file("keys/centos_pub")
+CENTOS_KEY = read_local_file(".tests/keys/centos")
+CENTOS_PUBLIC_KEY = read_local_file(".tests/keys/centos_pub")
 
 Centos = basic_cred("centos", CENTOS_KEY, name="Centos", type="KEY", default=True)
 

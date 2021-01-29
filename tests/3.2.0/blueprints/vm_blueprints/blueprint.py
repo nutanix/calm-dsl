@@ -18,8 +18,8 @@ from calm.dsl.builtins import VmProfile, VmBlueprint
 
 
 # Credentials
-CENTOS_KEY = read_local_file("keys/centos")
-CENTOS_PUBLIC_KEY = read_local_file("keys/centos_pub")
+CENTOS_KEY = read_local_file(".tests/keys/centos")
+CENTOS_PUBLIC_KEY = read_local_file(".tests/keys/centos_pub")
 Centos = basic_cred("centos", CENTOS_KEY, name="Centos", type="KEY", default=True)
 
 DNS_SERVER = read_local_file(".tests/dns_server")

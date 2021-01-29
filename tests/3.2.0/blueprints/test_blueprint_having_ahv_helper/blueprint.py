@@ -8,8 +8,8 @@ from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import CalmVariable, CalmTask, action
 
-CENTOS_KEY = read_local_file("keys/centos")
-CENTOS_PUBLIC_KEY = read_local_file("keys/centos_pub")
+CENTOS_KEY = read_local_file(".tests/keys/centos")
+CENTOS_PUBLIC_KEY = read_local_file(".tests/keys/centos_pub")
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 CENTOS_CI = DSL_CONFIG["AHV"]["IMAGES"]["DISK"]["CENTOS_7_CLOUD_INIT"]
