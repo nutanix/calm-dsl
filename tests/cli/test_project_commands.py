@@ -280,8 +280,9 @@ class TestProjectCommands:
             pytest.fail("Project delete call failed")
         LOG.info("Success")
 
-    @pytest.mark.skipif(LV(CALM_VERSION) >= LV("3.2.0"),
-                    reason="Env creation changed in 3.2.0")
+    @pytest.mark.skipif(
+        LV(CALM_VERSION) >= LV("3.2.0"), reason="Env creation changed in 3.2.0"
+    )
     def test_project_with_env_create_and_delete(self):
         """
         Describe and update flow are already checked in `test_project_crud`
