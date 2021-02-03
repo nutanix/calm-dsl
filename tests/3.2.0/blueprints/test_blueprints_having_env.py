@@ -137,7 +137,7 @@ class TestBlueprint:
         for _profile in bp_data["status"]["resources"].get("app_profile_list", []):
             _envs = _profile.get("environment_reference_list", [])
             assert len(_envs) == 1
-            for _e in _envs:
-                assert _e["uuid"] == ENV_UUID
+            for _e_uuid in _envs:
+                assert _e_uuid == ENV_UUID
 
         LOG.info("Success")

@@ -297,6 +297,10 @@ def compile_blueprint(bp_file, brownfield_deployment_file=None):
     bp_payload = None
     if isinstance(UserBlueprint, type(SimpleBlueprint)):
         bp_payload = UserBlueprint.make_bp_dict()
+        if "project_reference" in metadata_payload:
+            bp_payload["metadata"]["project_reference"] = metadata_payload[
+                "project_reference"
+            ]
     else:
         if isinstance(UserBlueprint, type(VmBlueprint)):
             UserBlueprint = UserBlueprint.make_bp_obj()
