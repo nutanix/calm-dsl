@@ -13,14 +13,14 @@ from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
-SIMPLE_BLUEPRINT = "tests/3.2.0/blueprints/simple_blueprint_example/blueprint.py"
+SIMPLE_BLUEPRINT = "tests/3_2_0/blueprints/simple_blueprint_example/blueprint.py"
 AHV_HELPER_BLUEPRINT = (
-    "tests/3.2.0/blueprints/test_blueprint_having_ahv_helper/blueprint.py"
+    "tests/3_2_0/blueprints/test_blueprint_having_ahv_helper/blueprint.py"
 )
 STATIC_PROVIDER_SPEC_BLUEPRINT = (
-    "tests/3.2.0/blueprints/test_blueprint_with_static_provider_spec/blueprint.py"
+    "tests/3_2_0/blueprints/test_blueprint_with_static_provider_spec/blueprint.py"
 )
-VM_BLUEPRINT = "tests/3.2.0/blueprints/vm_blueprints/blueprint.py"
+VM_BLUEPRINT = "tests/3_2_0/blueprints/vm_blueprints/blueprint.py"
 
 # projects
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))

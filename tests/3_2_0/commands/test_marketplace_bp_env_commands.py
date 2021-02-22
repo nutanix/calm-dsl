@@ -13,7 +13,7 @@ from calm.dsl.cli.constants import APPLICATION
 
 LOG = get_logging_handle(__name__)
 
-DSL_BP_FILEPATH = "tests/3.2.0/blueprints/test_blueprint_having_ahv_helper/blueprint.py"
+DSL_BP_FILEPATH = "tests/3_2_0/blueprints/test_blueprint_having_ahv_helper/blueprint.py"
 NON_BUSY_APP_STATES = [
     APPLICATION.STATES.STOPPED,
     APPLICATION.STATES.RUNNING,

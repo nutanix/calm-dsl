@@ -12,7 +12,7 @@ from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
-DSL_PROJECT_PATH = "tests/3.2.0/project/project_with_multi_env.py"
+DSL_PROJECT_PATH = "tests/3_2_0/project/project_with_multi_env.py"
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 CENTOS_CI = DSL_CONFIG["AHV"]["IMAGES"]["DISK"]["CENTOS_7_CLOUD_INIT"]
