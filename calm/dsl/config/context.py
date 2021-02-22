@@ -110,13 +110,13 @@ class Context:
         """Overrides the existing project configuration"""
 
         self._PROJECT = project_name
-        LOG.debug("Updating project in dsl context to {}". format(project_name))
+        LOG.debug("Updating project in dsl context to {}".format(project_name))
         self.project_config["name"] = project_name
 
     def update_config_file_context(self, config_file):
         """Overrides the existing configuration with passed file configuration"""
 
-        LOG.debug("Updating config file in dsl context to {}". format(config_file))
+        LOG.debug("Updating config file in dsl context to {}".format(config_file))
         self._CONFIG_FILE = config_file
         cxt_config_handle = get_config_handle(self._CONFIG_FILE)
         self.server_config.update(cxt_config_handle.get_server_config())

@@ -6,6 +6,7 @@ from click.testing import CliRunner
 
 from calm.dsl.cli import main as cli
 from calm.dsl.builtins import read_local_file
+from calm.dsl.builtins.models.metadata_payload import reset_metadata_obj
 from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 from calm.dsl.cli.constants import APPLICATION
@@ -66,6 +67,9 @@ class TestBpCommands:
 
         self.created_bp_list = []
         self.created_app_list = []
+
+        # Resetting metadata object
+        reset_metadata_obj()
 
     def _create_bp(self):
         runner = CliRunner()
