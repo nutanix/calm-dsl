@@ -45,7 +45,7 @@ def _get_vm_list(limit, offset, quiet, out, project, provider_type, account):
 
     \b
     >: If there are multiple accounts per provider_type in project, user need to supply the account name
-       other than provider type
+       other than provider type (added in 3.2.0)
 
     """
 

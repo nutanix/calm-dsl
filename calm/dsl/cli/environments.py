@@ -210,7 +210,7 @@ def get_environment_list(name, filter_by, limit, offset, quiet, out, project_nam
                 highlight_text(row["state"]),
                 highlight_text(time.ctime(creation_time)),
                 "{}".format(arrow.get(last_update_time).humanize()),
-                highlight_text(row["uuid"]),
+                highlight_text(row.get("uuid", "")),
             ]
         )
     click.echo(table)

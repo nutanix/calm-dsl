@@ -4,7 +4,7 @@ from .main import get, delete
 from .environments import get_environment_list, delete_environment
 
 
-@get.command("environments")
+@get.command("environments", feature_min_version="3.2.0")
 @click.option("--name", "-n", default=None, help="Search for environments by name")
 @click.option(
     "--filter",
@@ -35,7 +35,7 @@ def _get_environment_list(name, filter_by, limit, offset, quiet, out, project_na
     get_environment_list(name, filter_by, limit, offset, quiet, out, project_name)
 
 
-@delete.command("environment")
+@delete.command("environment", feature_min_version="3.2.0")
 @click.argument("environment_name")
 @click.option("--project", "-p", "project_name", help="Project name", required=True)
 def _delete_environment(environment_name, project_name):

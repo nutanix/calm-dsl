@@ -2,6 +2,7 @@ import pytest
 import json
 import uuid
 import traceback
+from distutils.version import LooseVersion as LV
 from click.testing import CliRunner
 
 from calm.dsl.cli import main as cli
@@ -10,6 +11,7 @@ from calm.dsl.builtins import read_local_file
 from calm.dsl.builtins.models.metadata_payload import reset_metadata_obj
 from calm.dsl.config import get_context
 from calm.dsl.api import get_api_client
+from calm.dsl.store import Version
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -29,7 +31,14 @@ DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 PROJECT = DSL_CONFIG["PROJECTS"]["PROJECT1"]
 ENV_UUID = PROJECT["ENVIRONMENTS"][0]["UUID"]
 
+# calm_version
+CALM_VERSION = Version.get_version("Calm")
 
+
+@pytest.mark.skipif(
+    LV(CALM_VERSION) < LV("3.2.0"),
+    reason="Tests are for env changes introduced in 3.2.0",
+)
 class TestBlueprint:
     def setup_method(self):
         """Method to instantiate to created_bp_list and reset context"""

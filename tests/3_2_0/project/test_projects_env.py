@@ -2,17 +2,21 @@ import pytest
 import json
 import uuid
 import traceback
+from distutils.version import LooseVersion as LV
 from click.testing import CliRunner
 
 from calm.dsl.cli import main as cli
 from calm.dsl.builtins import read_local_file
 from calm.dsl.builtins.models.helper.common import get_project
 from calm.dsl.api import get_api_client
+from calm.dsl.store import Version
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
 DSL_PROJECT_PATH = "tests/3_2_0/project/project_with_multi_env.py"
+ENV_1_NAME = "ProjEnvironment1"
+ENV_2_NAME = "ProjEnvironment2"
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 CENTOS_CI = DSL_CONFIG["AHV"]["IMAGES"]["DISK"]["CENTOS_7_CLOUD_INIT"]
@@ -49,8 +53,27 @@ K8S_ACCOUNT_UUID = K8S_ACCOUNT["UUID"]
 USER = DSL_CONFIG["USERS"][0]
 USER_UUID = USER["UUID"]
 
+# calm_version
+CALM_VERSION = Version.get_version("Calm")
 
+
+@pytest.mark.skipif(
+    LV(CALM_VERSION) < LV("3.2.0"),
+    reason="Tests are for env changes introduced in 3.2.0",
+)
 class TestProjectEnv:
+    def setup_method(self):
+        """Method to instantiate variable for projects to be deleted"""
+
+        self.project_deleted = False
+        self.project_name = None
+
+    def teardown_method(self):
+        """Method to delete project if not deleted during tests"""
+
+        if self.project_name and (not self.project_deleted):
+            self._test_delete_project()
+
     def test_env_infra_presence_in_compiled_payload(self):
         """test to check env infra presence in project compiled payload"""
 
@@ -127,6 +150,10 @@ class TestProjectEnv:
 
         self._test_env_data()
 
+        self._test_get_environments()
+
+        self._test_delete_environment()
+
         self._test_delete_project()
 
     def _test_project_data(self):
@@ -176,13 +203,13 @@ class TestProjectEnv:
             res = res.json()
             env_str = json.dumps(res)
 
-            if res["status"]["name"] == "ProjEnvironment1":
+            if res["status"]["name"] == ENV_1_NAME:
                 assert NTNX_ACCOUNT_1_UUID in env_str
                 assert NTNX_ACCOUNT_1_SUBNET_1_UUID in env_str
                 assert AWS_ACCOUNT_UUID in env_str
                 assert AZURE_ACCOUNT_UUID in env_str
 
-            elif res["status"]["name"] == "ProjEnvironment1":
+            elif res["status"]["name"] == ENV_2_NAME:
                 assert NTNX_ACCOUNT_2_UUID in env_str
                 assert NTNX_ACCOUNT_2_SUBNET_1_UUID in env_str
                 assert GCP_ACCOUNT_UUID in env_str
@@ -216,6 +243,12 @@ class TestProjectEnv:
         """tests deletion of project"""
 
         runner = CliRunner()
+
+        # Project should not be deleted if deleted in test.
+        # if deletion of project fails here, it will allso fail at testdown method
+        # so assigning it to true before starting deletion of project
+        self.project_deleted = True
+
         LOG.info("Deleting Project using file at {}".format(DSL_PROJECT_PATH))
         result = runner.invoke(cli, ["delete", "project", self.project_name])
 
@@ -232,3 +265,49 @@ class TestProjectEnv:
                 )
             )
             pytest.fail("Project deletion command failed")
+
+    def _test_get_environments(self):
+        """tests listing of environments command"""
+
+        runner = CliRunner()
+        LOG.info("Listing environments for project {}".format(self.project_name))
+        result = runner.invoke(
+            cli, ["get", "environments", "--project", self.project_name]
+        )
+
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Environments get command failed")
+
+    def _test_delete_environment(self):
+        """tests deletion of environment"""
+
+        runner = CliRunner()
+        LOG.info("Deleting Environment {}".format(ENV_2_NAME))
+        result = runner.invoke(
+            cli, ["delete", "environment", ENV_2_NAME, "--project", self.project_name]
+        )
+
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Environment deletion command failed")
