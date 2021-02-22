@@ -320,7 +320,7 @@ def create_project_from_dsl(project_file, project_name, description=""):
             if res["metadata"]["total_matches"]:
                 LOG.error("Environment with name '{}' already exists".format(env_name))
 
-        LOG.info("No existing environment found with name '{}'".format(env_name))
+            LOG.info("No existing environment found with name '{}'".format(env_name))
 
     # Creation of project
     project_payload = compile_project_dsl_class(UserProject)
@@ -520,12 +520,14 @@ def delete_project(project_names):
     client = get_api_client()
     params = {"length": 1000}
     project_name_uuid_map = client.project.get_name_uuid_map(params)
+    projects_deleted = False
     for project_name in project_names:
         project_id = project_name_uuid_map.get(project_name, "")
         if not project_id:
             LOG.warning("Project {} not found.".format(project_name))
             continue
 
+        projects_deleted = True
         LOG.info("Deleting project '{}'".format(project_name))
         res, err = client.project.delete(project_id)
         if err:
@@ -539,10 +541,11 @@ def delete_project(project_names):
             LOG.exception("Project deletion task went to {} state".format(task_state))
             sys.exit(-1)
 
-    # Update projects in cache
-    LOG.info("Updating projects cache ...")
-    Cache.sync_table(cache_type=CACHE.ENTITY.PROJECT)
-    LOG.info("[Done]")
+    # Update projects in cache if any project has been deleted
+    if projects_deleted:
+        LOG.info("Updating projects cache ...")
+        Cache.sync_table(cache_type=CACHE.ENTITY.PROJECT)
+        LOG.info("[Done]")
 
 
 def update_project_from_dsl(project_name, project_file):

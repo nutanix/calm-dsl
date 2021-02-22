@@ -1,7 +1,9 @@
 import sys
+from distutils.version import LooseVersion as LV
 
 from .entity import EntityType
 from calm.dsl.log import get_logging_handle
+from calm.dsl.store import Version
 
 LOG = get_logging_handle(__name__)
 
@@ -20,6 +22,10 @@ class ProjectType(EntityType):
         cdict["subnet_reference_list"] = []
         cdict["external_network_list"] = []
         cdict["default_subnet_reference"] = {}
+
+        CALM_VERSION = Version.get_version("Calm")
+        default_subnet_reference = None
+
         # Populate accounts
         provider_list = cdict.pop("provider_list", [])
         for provider_obj in provider_list:
@@ -36,13 +42,14 @@ class ProjectType(EntityType):
                         _network.pop("kind", None)
                         cdict["external_network_list"].append(_network)
 
-                if (
-                    "default_subnet_reference" in provider_data
-                    and not cdict["default_subnet_reference"]
-                ):
-                    cdict["default_subnet_reference"] = provider_data[
-                        "default_subnet_reference"
-                    ]
+                if "default_subnet_reference" in provider_data:
+                    # From 3.2, only subnets from local account can be marked as default
+                    if provider_data.get("subnet_reference_list") or LV(
+                        CALM_VERSION
+                    ) < LV("3.2.0"):
+                        cdict["default_subnet_reference"] = provider_data[
+                            "default_subnet_reference"
+                        ]
 
             if "account_reference" in provider_data:
                 cdict["account_reference_list"].append(
@@ -67,6 +74,8 @@ class ProjectType(EntityType):
         if not default_env:
             cdict.pop("default_environment_reference", None)
 
+        if not cdict.get("default_subnet_reference"):
+            cdict.pop("default_subnet_reference", None)
         return cdict
 
 
