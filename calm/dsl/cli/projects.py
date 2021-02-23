@@ -138,6 +138,7 @@ def compile_project_dsl_class(project_class):
     if hasattr(project_class, "envs"):
         envs = getattr(project_class, "envs", [])
         project_class.envs = []
+        project_class.default_environment = {}
 
     # Adding environment infra to project
     for env in envs:
@@ -303,6 +304,9 @@ def create_project_from_dsl(project_file, project_name, description=""):
         default_environment = getattr(UserProject, "default_environment", None)
         UserProject.default_environment = {}
         default_environment_name = default_environment.__name__
+
+    if envs and not default_environment_name:
+        default_environment_name = envs[0].__name__
 
     calm_version = Version.get_version("Calm")
     if LV(calm_version) < LV("3.2.0"):

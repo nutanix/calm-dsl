@@ -184,17 +184,16 @@ def add_project_details(config):
                 {"NAME": _account_name, "UUID": _account_uuid}
             )
 
-        payload = {
-            "length": 200,
-            "offset": 0,
-            "filter": "project_reference=={}".format(project_uuid),
-        }
-        env_name_uuid_map = client.environment.get_name_uuid_map(payload) or dict()
-
         # From 3.2, it is envs are required for testing
         project_config["ENVIRONMENTS"] = []
-        for e_k, e_v in env_name_uuid_map.items():
-            project_config["ENVIRONMENTS"].append({"NAME": e_k, "UUID": e_v})
+        for _env in project_data["status"]["resources"].get(
+            "environment_reference_list", []
+        ):
+            res, _ = client.environment.read(_env.get("uuid"))
+            res = res.json()
+            project_config["ENVIRONMENTS"].append(
+                {"NAME": res["status"]["name"], "UUID": res["metadata"]["uuid"]}
+            )
 
 
 f = open(dsl_config_file_location, "r")
