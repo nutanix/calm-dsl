@@ -520,7 +520,7 @@ def get_runbook_dynamic_variable_values(runbook_uuid, var_uuid):
     client = get_api_client()
 
     # Get request and trl id
-    res, err = client.runbook.variable_values(runbook_uuid, var_uuid=var_uuid)
+    res, err = client.market_place.variable_values(runbook_uuid, var_uuid=var_uuid)
     if err:
         pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
@@ -528,7 +528,7 @@ def get_runbook_dynamic_variable_values(runbook_uuid, var_uuid):
     var_payload = {"requestId": res["request_id"], "trlId": res["trl_id"]}
     count = 0
     while count < 10:
-        res, err = client.runbook.variable_values(
+        res, err = client.market_place.variable_values(
             runbook_uuid, var_uuid=var_uuid, payload=var_payload
         )
         if err:
