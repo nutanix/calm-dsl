@@ -30,6 +30,7 @@ class RunbookAPI(ResourceAPI):
         self.EXPORT_JSON_WITH_SECRETS = self.ITEM + "/export_json?keep_secrets=true"
         self.MARKETPLACE_EXECUTE = self.PREFIX + "/marketplace_execute"
         self.MARKETPLACE_CLONE = self.PREFIX + "/marketplace_clone"
+        self.VARIABLE_VALUES = self.ITEM + "/variables/{}/values"
 
     def upload(self, payload):
         return self.connection._call(
@@ -416,4 +417,10 @@ class RunbookAPI(ResourceAPI):
             verify=False,
             request_json=payload,
             method=REQUEST.METHOD.POST,
+        )
+
+    def variable_values(self, uuid, var_uuid, payload={}):
+        url = self.VARIABLE_VALUES.format(uuid, var_uuid)
+        return self.connection._call(
+            url, verify=False, method=REQUEST.METHOD.POST, request_json=payload
         )
