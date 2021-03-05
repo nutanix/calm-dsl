@@ -19,8 +19,6 @@ class Version:
         """Returns the version of entity present"""
 
         db = get_db_handle()
-        if name == "Calm":
-            return "3.2.2"
         try:
             entity = db.version_table.get(db.version_table.name == name)
             return entity.version
