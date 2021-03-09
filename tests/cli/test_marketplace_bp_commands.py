@@ -15,6 +15,7 @@ from calm.dsl.cli.marketplace_bps import (
     get_mpi_by_name_n_version,
 )
 from calm.dsl.cli.utils import get_states_filter
+from calm.dsl.builtins import read_local_file
 from calm.dsl.cli.constants import APPLICATION, MARKETPLACE_BLUEPRINT
 from calm.dsl.log import get_logging_handle
 
@@ -37,6 +38,11 @@ APP_SOURCES = [
     MARKETPLACE_BLUEPRINT.SOURCES.GLOBAL,
     MARKETPLACE_BLUEPRINT.SOURCES.LOCAL,
 ]
+
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+# projects
+PROJECT = DSL_CONFIG["PROJECTS"]["PROJECT1"]
+PROJECT_NAME = PROJECT["NAME"]
 
 
 class TestMarketplaceBPCommands:
@@ -693,7 +699,7 @@ class TestMarketplaceBPCommands:
             "--version",
             self.mpi1_version,
             "--project",
-            "default",
+            PROJECT_NAME,
         ]
 
         result = runner.invoke(cli, command)
@@ -960,7 +966,7 @@ class TestMarketplaceBPCommands:
             "--version",
             self.mpi1_version,
             "--project",
-            "default",
+            PROJECT_NAME,
             "--app_name",
             self.pending_mpbp_app_name,
             "--profile_name",
@@ -1002,7 +1008,7 @@ class TestMarketplaceBPCommands:
             "--version",
             self.mpi1_version,
             "--project",
-            "default",
+            PROJECT_NAME,
             "--app_name",
             self.pending_mpbp_lp_app_name,
             "--profile_name",
@@ -1076,7 +1082,7 @@ class TestMarketplaceBPCommands:
             "--version",
             self.mpi1_version,
             "--project",
-            "default",
+            PROJECT_NAME,
             "--app_name",
             self.accepted_mpbp_app_name,
             "--profile_name",
@@ -1115,7 +1121,7 @@ class TestMarketplaceBPCommands:
             "--version",
             self.mpi1_version,
             "--project",
-            "default",
+            PROJECT_NAME,
         ]
 
         result = runner.invoke(cli, command)
@@ -1149,7 +1155,7 @@ class TestMarketplaceBPCommands:
             "--version",
             self.mpi1_version,
             "--project",
-            "default",
+            PROJECT_NAME,
             "--app_name",
             self.published_mpbp_app_name,
             "--profile_name",
@@ -1191,7 +1197,7 @@ class TestMarketplaceBPCommands:
             "--version",
             self.mpi1_version,
             "--project",
-            "default",
+            PROJECT_NAME,
             "--app_name",
             self.published_mpbp_lp_app_name,
             "--profile_name",

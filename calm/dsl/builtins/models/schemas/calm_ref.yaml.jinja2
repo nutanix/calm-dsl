@@ -1,0 +1,15 @@
+{% macro CalmRef() -%}
+
+title: CalmRef
+type: object
+x-calm-dsl-type: app_calm_ref
+
+{%- endmacro -%}
+
+
+{% macro CalmRefSchema() -%}
+
+CalmRef:
+  {{ CalmRef()|indent(2) }}
+
+{%- endmacro %}

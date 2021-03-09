@@ -4,7 +4,7 @@ from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .blueprint import BlueprintType
 from .simple_blueprint import SimpleBlueprintType
-from .ref import Ref
+from .calm_ref import Ref
 
 
 # Blueprint Payload

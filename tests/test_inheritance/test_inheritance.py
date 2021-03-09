@@ -13,8 +13,8 @@ from calm.dsl.config import get_context
 
 # SSH Credentials
 CENTOS_USER = "centos"
-CENTOS_KEY = read_local_file(os.path.join("keys", "centos"))
-CENTOS_PUBLIC_KEY = read_local_file(os.path.join("keys", "centos_pub"))
+CENTOS_KEY = read_local_file(os.path.join(".tests", "keys", "centos"))
+CENTOS_PUBLIC_KEY = read_local_file(os.path.join(".tests", "keys", "centos_pub"))
 CentosCred = basic_cred(
     CENTOS_USER, CENTOS_KEY, name="Centos", type="KEY", default=True
 )
