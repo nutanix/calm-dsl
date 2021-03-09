@@ -1,5 +1,6 @@
+# Environment Changes
 
-# CLI commands
+## CLI commands
 
 - `calm launch bp --environment “<environment name>”`: The blueprint will be patched with the given environment to create a new blueprint and the application will be launched with the patched Blueprint.
 
@@ -14,9 +15,9 @@
 - `calm delete environment <environment_name> -p <project>`: It will delete environment attached to given project
 
 
-# Builtin-Models
+## Builtin-Models
 
-## Profile Model
+### Profile Model
 
 Added `environments` attribute is added which specify the environment used for the given profile. If not supplied, profile will be created with `All Project Accounts` 
 
@@ -31,7 +32,7 @@ class DefaultProfile(Profile):
         exec_ssh(name="Task5", script='echo "Hello"', target=ref(MySQLService))
 ```
 
-## Substrate Model
+### Substrate Model
 
 Added account attribute at substrate level. Users can select account from multiple accounts whitelisted in the project. If account is not provided, it will:
 - select account from environment if environment is given at profile level
@@ -45,7 +46,7 @@ class AhvSubstrate(Substrate):
     account = Ref.Account(name=account_name)
 ```
 
-## VmProfile Model
+### VmProfile Model
 
 Added `environments` attribute is added which specify the environment used for the given profile. If not supplied, profile will be created with `All Project Accounts` 
 
@@ -57,7 +58,7 @@ class AhvVmSmalProfile(VmProfile):
     environments = [Ref.Environment(name=ENV_NAME)]
 ```
 
-## SimpleBlueprint Model
+### SimpleBlueprint Model
 
 Added `environments` attribute is added which specify the environment used for the given profile. If not supplied, profile will be created with `All Project Accounts` 
 
@@ -69,7 +70,7 @@ class SampleSimpleBlueprint(SimpleBlueprint):
     environments = [Ref.Environment(name=ENV_NAME)]
 ```
 
-## Environment Model
+### Environment Model
 
 Added `providers` attribute that will attach infra to the environment. Providers attribute is the same as the project model has.
 
@@ -96,7 +97,7 @@ class ProjEnvironment(Environment):
     ]
 ```
 
-## Project Model
+### Project Model
 
 Added `default_environment` that will be the reference to default environment in the project
 
