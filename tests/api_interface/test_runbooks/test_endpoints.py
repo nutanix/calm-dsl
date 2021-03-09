@@ -330,15 +330,14 @@ class TestEndpoints:
         endpoint = copy.deepcopy(change_uuids(EndpointPayload, {}))
 
         # set values and credentials to empty
-        endpoint["spec"]["name"] = "ep-\u018e-name-\xf1" + str(uuid.uuid4())[-10:]
-
+        endpoint["spec"]["name"] = "ep-$.-name1" + str(uuid.uuid4())[-10:]
         # Endpoint Create
         res, err = client.endpoint.create(endpoint)
         if not err:
             pytest.fail("Endpoint created successfully with unsupported name formats")
         assert err.get("code", 0) == 422
         assert (
-            "Name can contain only alphanumeric, underscores, hyphens and spaces"
+            "Name can contain only unicode characters, underscores, hyphens and spaces"
             in res.text
         )
 
@@ -358,7 +357,7 @@ class TestEndpoints:
             pytest.fail("Endpoint updated successfully with unsupported name formats")
         assert err.get("code", 0) == 422
         assert (
-            "Names can only start with alphanumeric characters or underscore (_)"
+            "Names can only start with unicode characters or underscore (_)"
             in res.text
         )
 
