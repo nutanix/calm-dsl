@@ -12,12 +12,16 @@ linux_ip = read_local_file(".tests/runbook_tests/vm_ip")
 windows_ip = read_local_file(".tests/runbook_tests/windows_vm_ip")
 AHV_LINUX_ID = read_local_file(".tests/runbook_tests/ahv_linux_id")
 AHV_LINUX_VM_NAME = read_local_file(".tests/runbook_tests/ahv_linux_vm_name")
-AHV_LINUX_VM_NAME_PREFIX = read_local_file(".tests/runbook_tests/ahv_linux_vm_name_prefix")
+AHV_LINUX_VM_NAME_PREFIX = read_local_file(
+    ".tests/runbook_tests/ahv_linux_vm_name_prefix"
+)
 # AHV_WINDOWS_ID = read_local_file(".tests/runbook_tests/ahv_windows_id")
 
 VMWARE_LINUX_ID = read_local_file(".tests/runbook_tests/vmware_linux_id")
 VMWARE_LINUX_VM_NAME = read_local_file(".tests/runbook_tests/vmware_linux_vm_name")
-VMWARE_LINUX_VM_NAME_PREFIX = read_local_file(".tests/runbook_tests/vmware_linux_vm_name_prefix")
+VMWARE_LINUX_VM_NAME_PREFIX = read_local_file(
+    ".tests/runbook_tests/vmware_linux_vm_name_prefix"
+)
 
 CRED_USERNAME = read_local_file(".tests/runbook_tests/username")
 CRED_WINDOWS_USERNAME = read_local_file(".tests/runbook_tests/windows_username")
@@ -28,7 +32,9 @@ HTTP_AUTH_PASSWORD = read_local_file(".tests/runbook_tests/auth_password")
 HTTP_URL = read_local_file(".tests/runbook_tests/url")
 
 http_endpoint = Endpoint.HTTP(
-    HTTP_URL, verify=False, auth=Endpoint.Auth(HTTP_AUTH_USERNAME, HTTP_AUTH_PASSWORD),
+    HTTP_URL,
+    verify=False,
+    auth=Endpoint.Auth(HTTP_AUTH_USERNAME, HTTP_AUTH_PASSWORD),
 )
 
 LinuxCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
@@ -182,52 +188,78 @@ def ShellTask(endpoints=[linux_endpoint]):
 @runbook
 def ShellTaskOnLinuxVMAHVStaticEndpoint(endpoints=[linux_ahv_static_vm_endpoint]):
     Task.Exec.ssh(
-        name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0],
+        name="ExecTask",
+        script='''echo "Task is successful"''',
+        target=endpoints[0],
     )
+
 
 @runbook
 def ShellTaskOnLinuxVMAHVDynamicEndpoint1(endpoints=[linux_ahv_dynamic_vm_endpoint1]):
     Task.Exec.ssh(
-        name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0],
+        name="ExecTask",
+        script='''echo "Task is successful"''',
+        target=endpoints[0],
     )
 
 
 @runbook
 def ShellTaskOnLinuxVMAHVDynamicEndpoint2(endpoints=[linux_ahv_dynamic_vm_endpoint2]):
     Task.Exec.ssh(
-        name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0],
+        name="ExecTask",
+        script='''echo "Task is successful"''',
+        target=endpoints[0],
     )
 
 
 @runbook
 def ShellTaskOnLinuxVMAHVDynamicEndpoint3(endpoints=[linux_ahv_dynamic_vm_endpoint3]):
     Task.Exec.ssh(
-        name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0],
+        name="ExecTask",
+        script='''echo "Task is successful"''',
+        target=endpoints[0],
     )
 
 
 @runbook
 def ShellTaskOnLinuxVMVMWareStaticEndpoint(endpoints=[linux_vmware_static_vm_endpoint]):
     Task.Exec.ssh(
-        name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0],
+        name="ExecTask",
+        script='''echo "Task is successful"''',
+        target=endpoints[0],
     )
 
-@runbook
-def ShellTaskOnLinuxVMVMWareDynamicEndpoint1(endpoints=[linux_vmware_dynamic_vm_endpoint1]):
-    Task.Exec.ssh(
-        name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0],
-    )
 
 @runbook
-def ShellTaskOnLinuxVMVMWareDynamicEndpoint2(endpoints=[linux_vmware_dynamic_vm_endpoint2]):
+def ShellTaskOnLinuxVMVMWareDynamicEndpoint1(
+    endpoints=[linux_vmware_dynamic_vm_endpoint1],
+):
     Task.Exec.ssh(
-        name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0],
+        name="ExecTask",
+        script='''echo "Task is successful"''',
+        target=endpoints[0],
     )
 
+
 @runbook
-def ShellTaskOnLinuxVMVMWareDynamicEndpoint3(endpoints=[linux_vmware_dynamic_vm_endpoint3]):
+def ShellTaskOnLinuxVMVMWareDynamicEndpoint2(
+    endpoints=[linux_vmware_dynamic_vm_endpoint2],
+):
     Task.Exec.ssh(
-        name="ExecTask", script='''echo "Task is successful"''', target=endpoints[0],
+        name="ExecTask",
+        script='''echo "Task is successful"''',
+        target=endpoints[0],
+    )
+
+
+@runbook
+def ShellTaskOnLinuxVMVMWareDynamicEndpoint3(
+    endpoints=[linux_vmware_dynamic_vm_endpoint3],
+):
+    Task.Exec.ssh(
+        name="ExecTask",
+        script='''echo "Task is successful"''',
+        target=endpoints[0],
     )
 
 
@@ -284,6 +316,7 @@ def MacroOnPowershell(endpoints=[windows_endpoint]):
         name="ExecTask",
         script='''echo "@@{calm_runbook_name}@@, @@{calm_runbook_uuid}@@ @@{calm_project_name}@@ @@{calm_jwt}@@ @@{calm_date}@@"''',
     )
+
 
 @runbook
 def MacroOnEscript():

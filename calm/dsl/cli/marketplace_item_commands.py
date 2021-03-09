@@ -5,14 +5,14 @@ from .marketplace_commands_main import (
     marketplace_describe,
     marketplace_launch,
     marketplace_run,
-    marketplace_unpublish
+    marketplace_unpublish,
 )
 from .marketplace import (
     get_marketplace_store_items,
     unpublish_marketplace_item,
     describe_marketplace_store_item,
     execute_marketplace_runbook,
-    launch_marketplace_item
+    launch_marketplace_item,
 )
 from .constants import MARKETPLACE_ITEM
 
@@ -43,7 +43,9 @@ APP_SOURCES = [
 def _describe_marketplace_item(name, out, version, source):
     """Describe a marketplace store item"""
 
-    describe_marketplace_store_item(name=name, out=out, version=version, app_source=source)
+    describe_marketplace_store_item(
+        name=name, out=out, version=version, app_source=source
+    )
 
 
 @marketplace_get.command("items")
@@ -79,7 +81,8 @@ def _get_marketplace_items(name, quiet, app_family, display_all, filter_by):
     """Get marketplace store items"""
 
     get_marketplace_store_items(
-        name=name, quiet=quiet,
+        name=name,
+        quiet=quiet,
         app_family=app_family,
         display_all=display_all,
         filter_by=filter_by,
@@ -191,7 +194,7 @@ def _run_marketplace_item(
         app_source=source,
         watch=watch,
         app_states=[MARKETPLACE_ITEM.STATES.PUBLISHED],
-        ignore_runtime_variables=ignore_runtime_variables
+        ignore_runtime_variables=ignore_runtime_variables,
     )
 
 

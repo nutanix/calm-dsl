@@ -97,7 +97,8 @@ class TestVMActions:
     @pytest.mark.runbook
     @pytest.mark.regression
     @pytest.mark.parametrize(
-        "Runbook", [
+        "Runbook",
+        [
             AHVPowerOnAction,
             # VMwarePowerOnAction
         ],

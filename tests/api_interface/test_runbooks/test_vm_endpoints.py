@@ -20,7 +20,6 @@ WindowsVMDynamicAHVEpPayload = read_test_config(
 
 
 class TestVMEndpoints:
-
     @pytest.mark.runbook
     @pytest.mark.regression
     @pytest.mark.parametrize(
@@ -133,7 +132,8 @@ class TestVMEndpoints:
         assert ep_state == "DELETED"
 
     @pytest.mark.parametrize(
-        "EndpointPayload", [WindowsVMDynamicAHVEpPayload],
+        "EndpointPayload",
+        [WindowsVMDynamicAHVEpPayload],
     )
     def test_vm_endpoint_dynamic_crud(self, EndpointPayload):
         """Endpoint for VM crud"""

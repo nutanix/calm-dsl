@@ -308,7 +308,7 @@ def publish_runbook_to_marketplace_manager(
                     "source_runbook_reference": {
                         "uuid": runbook_uuid,
                         "kind": "runbook",
-                    }
+                    },
                 },
             },
         },
@@ -327,8 +327,7 @@ def publish_runbook_to_marketplace_manager(
     return client.market_place.create(mpi_spec)
 
 
-def change_marketplace_state(client, mpi_uuid, new_state,
-                             project_list=None):
+def change_marketplace_state(client, mpi_uuid, new_state, project_list=None):
     """
     Change state of MPI and list of project it is shared it
     Args:
@@ -361,13 +360,11 @@ def change_marketplace_state(client, mpi_uuid, new_state,
                 raise Exception("No project with name {} exists".format(project))
 
             project_id = entities[0]["metadata"]["uuid"]
-            project_reference_list.append({
-                "name": project,
-                "uuid": project_id,
-                "kind": "project"
-            })
+            project_reference_list.append(
+                {"name": project, "uuid": project_id, "kind": "project"}
+            )
 
-        mpi_data['spec']['resources']['project_reference_list'] = project_reference_list
+        mpi_data["spec"]["resources"]["project_reference_list"] = project_reference_list
 
     res, err = client.market_place.update(uuid=mpi_uuid, payload=mpi_data)
     if err:
@@ -390,19 +387,13 @@ def clone_marketplace_runbook(client, mpi_uuid, runbook_name, project_name):
     """
     payload = {
         "api_version": "3.0",
-        "metadata": {
-            "name": runbook_name,
-            "kind": "runbook"
-        },
+        "metadata": {"name": runbook_name, "kind": "runbook"},
         "spec": {
             "name": runbook_name,
             "resources": {
-                "marketplace_reference": {
-                    "uuid": mpi_uuid,
-                    "kind": "marketplace_item"
-                }
-            }
-        }
+                "marketplace_reference": {"uuid": mpi_uuid, "kind": "marketplace_item"}
+            },
+        },
     }
 
     if project_name:
@@ -410,19 +401,23 @@ def clone_marketplace_runbook(client, mpi_uuid, runbook_name, project_name):
         if not project_id:
             raise Exception("No project with name {} exists".format(project_name))
 
-        payload['metadata']['project_reference'] = {
+        payload["metadata"]["project_reference"] = {
             "name": project_name,
             "uuid": project_id,
-            "kind": "project"
+            "kind": "project",
         }
 
     return client.runbook.marketplace_clone(payload)
 
 
-def execute_marketplace_runbook(client, mpi_uuid, project_name,
-                                default_endpoint_uuid=None,
-                                endpoints_mapping=None,
-                                args=None):
+def execute_marketplace_runbook(
+    client,
+    mpi_uuid,
+    project_name,
+    default_endpoint_uuid=None,
+    endpoints_mapping=None,
+    args=None,
+):
     """
     Execute MPI runbook in the given project
     Args:
@@ -447,31 +442,28 @@ def execute_marketplace_runbook(client, mpi_uuid, project_name,
             "project_reference": {
                 "name": project_name,
                 "uuid": project_id,
-                "kind": "project"
+                "kind": "project",
             },
-            "kind": "runbook"
+            "kind": "runbook",
         },
         "spec": {
             "resources": {
-                "marketplace_reference": {
-                    "uuid": mpi_uuid,
-                    "kind": "marketplace_item"
-                }
+                "marketplace_reference": {"uuid": mpi_uuid, "kind": "marketplace_item"}
             }
-        }
+        },
     }
 
     if args:
-        payload['spec']['resources']['args'] = args
+        payload["spec"]["resources"]["args"] = args
 
     if default_endpoint_uuid:
-        payload['spec']['resources']['default_target_reference'] = {
+        payload["spec"]["resources"]["default_target_reference"] = {
             "uuid": default_endpoint_uuid,
-            "kind": "app_endpoint"
+            "kind": "app_endpoint",
         }
 
     if endpoints_mapping:
-        payload['spec']['resources']['endpoints_mapping'] = endpoints_mapping
+        payload["spec"]["resources"]["endpoints_mapping"] = endpoints_mapping
 
     return client.runbook.marketplace_execute(payload)
 
@@ -508,14 +500,14 @@ def validate_error_message(err, expected_message):
         error (dict): error
         expected_message (str): expected error message
     """
-    message_list = err.get('message_list', [])
+    message_list = err.get("message_list", [])
     found = False
     for message in message_list:
-        if expected_message in message['message'].lower():
+        if expected_message in message["message"].lower():
             found = True
             break
 
     if not found:
-        pytest.fail("Unable to found err {} in errors {}".format(
-            expected_message,
-            message_list))
+        pytest.fail(
+            "Unable to found err {} in errors {}".format(expected_message, message_list)
+        )

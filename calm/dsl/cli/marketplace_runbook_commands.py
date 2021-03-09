@@ -79,7 +79,7 @@ def _get_marketplace_runbooks(name, quiet, app_family, app_states, filter_by):
         app_family=app_family,
         app_states=app_states,
         filter_by=filter_by,
-        type=MARKETPLACE_ITEM.TYPES.RUNBOOK
+        type=MARKETPLACE_ITEM.TYPES.RUNBOOK,
     )
 
 
@@ -145,7 +145,7 @@ def approve_runbook(name, version, category, all_projects, projects=[]):
         projects=projects,
         category=category,
         all_projects=all_projects,
-        type=MARKETPLACE_ITEM.TYPES.RUNBOOK
+        type=MARKETPLACE_ITEM.TYPES.RUNBOOK,
     )
 
 
@@ -176,7 +176,9 @@ def approve_runbook(name, version, category, all_projects, projects=[]):
     default=False,
     help="Approve runbook to all projects",
 )
-def _publish_marketplace_runbook(name, version, category, source, all_projects, projects=[]):
+def _publish_marketplace_runbook(
+    name, version, category, source, all_projects, projects=[]
+):
     """Publish a marketplace blueprint to marketplace store"""
 
     publish_marketplace_item(
@@ -186,7 +188,7 @@ def _publish_marketplace_runbook(name, version, category, source, all_projects, 
         category=category,
         app_source=source,
         all_projects=all_projects,
-        type=MARKETPLACE_ITEM.TYPES.RUNBOOK
+        type=MARKETPLACE_ITEM.TYPES.RUNBOOK,
     )
 
 
@@ -223,7 +225,7 @@ def _update_marketplace_runbook(name, version, category, projects, description, 
         projects=projects,
         description=description,
         app_source=source,
-        type=MARKETPLACE_ITEM.TYPES.RUNBOOK
+        type=MARKETPLACE_ITEM.TYPES.RUNBOOK,
     )
 
 
@@ -254,7 +256,7 @@ def _delete_marketplace_runbook(name, version, source, app_state):
         version=version,
         app_source=source,
         app_state=app_state,
-        type=MARKETPLACE_ITEM.TYPES.RUNBOOK
+        type=MARKETPLACE_ITEM.TYPES.RUNBOOK,
     )
 
 
@@ -267,9 +269,7 @@ def _reject_marketplace_runbook(name, version):
     """Reject marketplace manager blueprint"""
 
     reject_marketplace_item(
-        name=name,
-        version=version,
-        type=MARKETPLACE_ITEM.TYPES.RUNBOOK
+        name=name, version=version, type=MARKETPLACE_ITEM.TYPES.RUNBOOK
     )
 
 
@@ -421,5 +421,5 @@ def _run_marketplace_runbook(
         project_name=project,
         app_source=source,
         watch=watch,
-        ignore_runtime_variables=ignore_runtime_variables
+        ignore_runtime_variables=ignore_runtime_variables,
     )

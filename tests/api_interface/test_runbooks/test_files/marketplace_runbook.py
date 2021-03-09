@@ -7,9 +7,13 @@ import pytest
 
 from calm.dsl.runbooks import read_local_file
 from calm.dsl.runbooks import runbook
-from calm.dsl.runbooks import RunbookTask as Task, RunbookVariable as Variable, basic_cred
+from calm.dsl.runbooks import (
+    RunbookTask as Task,
+    RunbookVariable as Variable,
+    basic_cred,
+)
 from calm.dsl.runbooks import CalmEndpoint as Endpoint
-from utils import (read_test_config, change_uuids, get_project_id_from_name)
+from utils import read_test_config, change_uuids, get_project_id_from_name
 
 
 linux_ip = read_local_file(".tests/runbook_tests/vm_ip")
@@ -71,12 +75,9 @@ def DslRunbookForMPI(endpoints=[windows_endpoint, linux_endpoint, http_endpoint]
 
     Task.Exec.escript(name="ES_Task", script=escript_code)
 
-    Task.Exec.ssh(name="SSH_Task",
-                  script=ssh_code,
-                  target=endpoints[1])
+    Task.Exec.ssh(name="SSH_Task", script=ssh_code, target=endpoints[1])
 
-    Task.Exec.powershell(name="PowerShell_Task",
-                         script=ssh_code)
+    Task.Exec.powershell(name="PowerShell_Task", script=ssh_code)
 
 
 @runbook
@@ -101,28 +102,37 @@ def create_project_endpoints(client, project_name=RBAC_PROJECT):
     http_payload = read_test_config(file_name="http_endpoint_payload.json")
 
     # Fix payload with correct data
-    endpoint_resource = linux_payload['spec']['resources']
-    endpoint_resource['attrs']['values'] = [linux_ip]
-    endpoint_resource['attrs']['credential_definition_list'][0]['username'] = CRED_USERNAME
-    endpoint_resource['attrs']['credential_definition_list'][0]['secret']['value'] = CRED_PASSWORD
+    endpoint_resource = linux_payload["spec"]["resources"]
+    endpoint_resource["attrs"]["values"] = [linux_ip]
+    endpoint_resource["attrs"]["credential_definition_list"][0][
+        "username"
+    ] = CRED_USERNAME
+    endpoint_resource["attrs"]["credential_definition_list"][0]["secret"][
+        "value"
+    ] = CRED_PASSWORD
 
-    endpoint_resource = windows_payload['spec']['resources']
-    endpoint_resource['attrs']['values'] = [windows_ip]
-    endpoint_resource['attrs']['credential_definition_list'][0]['username'] = CRED_WINDOWS_USERNAME
-    endpoint_resource['attrs']['credential_definition_list'][0]['secret']['value'] = CRED_PASSWORD
+    endpoint_resource = windows_payload["spec"]["resources"]
+    endpoint_resource["attrs"]["values"] = [windows_ip]
+    endpoint_resource["attrs"]["credential_definition_list"][0][
+        "username"
+    ] = CRED_WINDOWS_USERNAME
+    endpoint_resource["attrs"]["credential_definition_list"][0]["secret"][
+        "value"
+    ] = CRED_PASSWORD
 
     project_uuid = get_project_id_from_name(client, project_name)
     project_endpoints = {}
     if project_uuid:
         for endpoint_payload in [linux_payload, windows_payload, http_payload]:
             endpoint = change_uuids(endpoint_payload, {})
-            endpoint['metadata']['project_reference'] = {
+            endpoint["metadata"]["project_reference"] = {
                 "kind": "project",
                 "uuid": project_uuid,
-                "name": project_name
+                "name": project_name,
             }
-            endpoint['spec']['name'] = "Endpoint_{}_{}".format(project_name,
-                                                               str(uuid.uuid4())[-10:])
+            endpoint["spec"]["name"] = "Endpoint_{}_{}".format(
+                project_name, str(uuid.uuid4())[-10:]
+            )
             # Endpoint Create
             res, err = client.endpoint.create(endpoint)
             if err:
@@ -132,8 +142,12 @@ def create_project_endpoints(client, project_name=RBAC_PROJECT):
             ep_state = ep["status"]["state"]
             ep_uuid = ep["metadata"]["uuid"]
             ep_name = ep["spec"]["name"]
-            ep_type = ep['spec']['resources']['type']
-            print(">> Endpoint created with name {} is in state: {}".format(ep_name, ep_state))
+            ep_type = ep["spec"]["resources"]["type"]
+            print(
+                ">> Endpoint created with name {} is in state: {}".format(
+                    ep_name, ep_state
+                )
+            )
             project_endpoints[ep_type] = (ep_name, ep_uuid)
 
     return project_name, project_endpoints
