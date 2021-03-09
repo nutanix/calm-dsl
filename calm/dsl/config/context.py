@@ -1,3 +1,4 @@
+import os
 import sys
 
 from .env_config import EnvConfig
@@ -41,9 +42,21 @@ class Context:
         LOG.debug("Resetting configuration in dsl context")
         self.initialize_configuration()
 
+    def validate_init_config(self):
+        """validates the init config"""
+
+        config_handle = get_config_handle()
+        init_config = config_handle.get_init_config()
+
+        if self._CONFIG_FILE == init_config["CONFIG"]["location"]:
+            if not os.path.exists(self._CONFIG_FILE):
+                LOG.error("Invalid config file location '{}'".format(self._CONFIG_FILE))
+                sys.exit(-1)
+
     def get_server_config(self):
         """returns server configuration"""
 
+        self.validate_init_config()
         config = self.server_config
         if not config.get("pc_ip"):
             LOG.error(
