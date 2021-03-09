@@ -12,6 +12,7 @@ from .runbook import RunbookAPI
 from .library_tasks import TaskLibraryApi
 from .application import ApplicationAPI
 from .project import ProjectAPI
+from .environment import EnvironmentAPI
 from .setting import SettingAPI
 from .marketplace import MarketPlaceAPI
 from .app_icons import AppIconAPI
@@ -35,6 +36,7 @@ class ClientHandle:
 
         # Note - add entity api classes here
         self.project = ProjectAPI(self.connection)
+        self.environment = EnvironmentAPI(self.connection)
         self.blueprint = BlueprintAPI(self.connection)
         self.endpoint = EndpointAPI(self.connection)
         self.runbook = RunbookAPI(self.connection)

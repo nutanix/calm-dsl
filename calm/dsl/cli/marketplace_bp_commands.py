@@ -191,6 +191,9 @@ def _describe_marketplace_bp(name, out, version, source, app_state):
 @click.argument("name")
 @click.option("--version", "-v", default=None, help="Version of marketplace blueprint")
 @click.option("--project", "-pj", default=None, help="Project for the application")
+@click.option(
+    "--environment", "-e", default=None, help="Environment for the application"
+)
 @click.option("--app_name", "-a", default=None, help="Name of your app")
 @click.option(
     "--profile_name",
@@ -232,6 +235,7 @@ def _launch_marketplace_bp(
     name,
     version,
     project,
+    environment,
     app_name,
     profile_name,
     ignore_runtime_variables,
@@ -246,6 +250,7 @@ def _launch_marketplace_bp(
         name=name,
         version=version,
         project=project,
+        environment=environment,
         app_name=app_name,
         profile_name=profile_name,
         patch_editables=not ignore_runtime_variables,
@@ -260,6 +265,9 @@ def _launch_marketplace_bp(
 @click.argument("name")
 @click.option("--version", "-v", default=None, help="Version of marketplace blueprint")
 @click.option("--project", "-pj", default=None, help="Project for the application")
+@click.option(
+    "--environment", "-e", default=None, help="Environment for the application"
+)
 @click.option("--app_name", "-a", default=None, help="Name of app")
 @click.option(
     "--profile_name",
@@ -301,6 +309,7 @@ def _launch_marketplace_item(
     name,
     version,
     project,
+    environment,
     app_name,
     profile_name,
     ignore_runtime_variables,
@@ -315,6 +324,7 @@ def _launch_marketplace_item(
         name=name,
         version=version,
         project=project,
+        environment=environment,
         app_name=app_name,
         profile_name=profile_name,
         patch_editables=not ignore_runtime_variables,

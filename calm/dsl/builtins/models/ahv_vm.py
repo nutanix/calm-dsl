@@ -19,8 +19,7 @@ class AhvVmResourcesType(EntityType):
         boot_config = {}
         disk_list = cdict.get("disk_list", [])
         for disk in disk_list:
-            disk_data = disk.get_dict()
-            device_prop = disk_data["device_properties"]
+            device_prop = disk.device_properties.get_dict()
             adapter_type = device_prop["disk_address"]["adapter_type"]
 
             device_prop["disk_address"]["device_index"] = ADAPTER_INDEX_MAP[

@@ -11,7 +11,7 @@ from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import read_provider_spec, read_local_file
 
 
-CENTOS_PASSWD = read_local_file("passwd")
+CENTOS_PASSWD = read_local_file(".tests/password")
 
 
 class Master(Service):

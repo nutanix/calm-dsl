@@ -22,8 +22,8 @@ NETWORK1 = DSL_CONFIG["AHV"]["NETWORK"]["VLAN1211"]  # TODO change network const
 PROJECT = DSL_CONFIG["PROJECTS"]["PROJECT1"]
 PROJECT_NAME = PROJECT["NAME"]
 
-CENTOS_KEY = read_local_file("keys/centos")
-CENTOS_PUBLIC_KEY = read_local_file("keys/centos_pub")
+CENTOS_KEY = read_local_file(".tests/keys/centos")
+CENTOS_PUBLIC_KEY = read_local_file(".tests/keys/centos_pub")
 DefaultCred = basic_cred("centos", CENTOS_KEY, name="Centos", type="KEY", default=True)
 
 Era_Disk = vm_disk_package(

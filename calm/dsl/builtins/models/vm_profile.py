@@ -52,7 +52,13 @@ class VmProfileType(EntityType):
         )
 
         # create blueprint profile
-        bp_profile = profile(name=profile_name, deployments=[bp_dep])
+        pfl_kwargs = {"name": profile_name, "deployments": [bp_dep]}
+
+        environments = getattr(cls, "environments", None)
+        if environments:
+            pfl_kwargs["environments"] = environments
+
+        bp_profile = profile(**pfl_kwargs)
 
         # Traverse over mro dict of class
         cls_data = cls.get_default_attrs()

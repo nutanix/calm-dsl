@@ -1,8 +1,39 @@
+import json
+
 from calm.dsl.builtins import read_local_file
+from calm.dsl.store import Cache
+from calm.dsl.constants import CACHE
 
 
 CRED_USERNAME = read_local_file(".tests/username")
 CRED_PASSWORD = read_local_file(".tests/password")
+
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+CENTOS_HM = DSL_CONFIG["AHV"]["IMAGES"]["DISK"]["CENTOS_HADOOP_MASTER"]
+NETWORK1 = DSL_CONFIG["AHV"]["NETWORK"]["VLAN1211"]  # TODO change network constants
+
+# projects
+PROJECT = DSL_CONFIG["PROJECTS"]["PROJECT1"]
+PROJECT_NAME = PROJECT["NAME"]
+
+NTNX_ACCOUNT = PROJECT["ACCOUNTS"]["NUTANIX_PC"][0]
+NTNX_ACCOUNT_NAME = PROJECT["ACCOUNTS"]["NUTANIX_PC"][0]["NAME"]
+NTNX_ACCOUNT_UUID = PROJECT["ACCOUNTS"]["NUTANIX_PC"][0]["UUID"]
+
+image_cache_data = Cache.get_entity_data(
+    entity_type=CACHE.ENTITY.AHV_DISK_IMAGE,
+    name=CENTOS_HM,
+    image_type="DISK_IMAGE",
+    account_uuid=NTNX_ACCOUNT_UUID,
+)
+CENTOS_HM_UUID = image_cache_data.get("uuid", "")
+
+subnet_cache_data = Cache.get_entity_data(
+    entity_type=CACHE.ENTITY.AHV_SUBNET,
+    name=NETWORK1,
+    account_uuid=NTNX_ACCOUNT_UUID,
+)
+NETWORK1_UUID = subnet_cache_data.get("uuid", "")
 
 variable_list = [
     {"value": {"value": "foo1_new_val"}, "context": "DefaultProfile", "name": "foo1"},
@@ -19,8 +50,8 @@ substrate_list = [
                         "0": {
                             "subnet_reference": {
                                 "kind": "subnet",
-                                "name": "",
-                                "uuid": "c37571b5-51d2-4340-8db0-d62c89ce3c9e",
+                                "name": NETWORK1,
+                                "uuid": NETWORK1_UUID,
                             }
                         }
                     },
@@ -42,8 +73,8 @@ substrate_list = [
                         "0": {
                             "data_source_reference": {
                                 "kind": "image",
-                                "name": "CentOS-7-Cloud-Init",
-                                "uuid": "c7130256-5acf-4de4-b19a-ce9b7e2ad551",
+                                "name": CENTOS_HM,
+                                "uuid": CENTOS_HM_UUID,
                             },
                             "disk_size_mib": 0,
                         },
@@ -51,7 +82,7 @@ substrate_list = [
                             "data_source_reference": None,
                             "device_properties": {
                                 "device_type": "DISK",
-                                "disk_address": {"adapter_type": "SCSI"},
+                                "disk_address": {"adapter_type": "PCI"},
                             },
                             "disk_size_mib": 10240,
                         },

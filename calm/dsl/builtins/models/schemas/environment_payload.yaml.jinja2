@@ -34,6 +34,18 @@ properties:
       kind:
         type: string
         default: environment
+      project_reference:
+        type: object
+        x-calm-dsl-type: object
+        x-calm-dsl-display-name: project
+        properties:
+          name:
+            type: string
+          kind:
+            type: string
+          uuid:
+            type: string
+
 
 {%- endmacro %}
 
