@@ -90,6 +90,9 @@ def _get_marketplace_items(name, quiet, app_family, display_all, filter_by):
 @click.argument("name")
 @click.option("--version", "-v", default=None, help="Version of marketplace blueprint")
 @click.option("--project", "-pj", default=None, help="Project for the application")
+@click.option(
+    "--environment", "-e", default=None, help="Environment for the application"
+)
 @click.option("--app_name", "-a", default=None, help="Name of app")
 @click.option(
     "--profile_name",
@@ -131,6 +134,7 @@ def _launch_marketplace_item(
     name,
     version,
     project,
+    environment,
     app_name,
     profile_name,
     ignore_runtime_variables,
@@ -145,6 +149,7 @@ def _launch_marketplace_item(
         name=name,
         version=version,
         project=project,
+        environment=environment,
         app_name=app_name,
         profile_name=profile_name,
         patch_editables=not ignore_runtime_variables,
@@ -193,17 +198,17 @@ def _run_marketplace_item(
 @marketplace_unpublish.command("item")
 @click.argument("name")
 @click.option(
-    "--version", "-v", required=True, help="Version of marketplace blueprint"
+    "--version", "-v", required=True, help="Version of marketplace item"
 )  # Required to prevent unwanted unpublish of unknown mpi
 @click.option(
     "--source",
     "-s",
     default=None,
     type=click.Choice(APP_SOURCES),
-    help="App Source of marketplace blueprint",
+    help="App Source of marketplace item",
 )
 def _unpublish_marketplace_bp(name, version, source):
-    """Unpublish marketplace store blueprint"""
+    """Unpublish marketplace store item"""
 
     unpublish_marketplace_item(
         name=name,

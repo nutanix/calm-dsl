@@ -11,6 +11,7 @@ from .marketplace_commands_main import (
     marketplace_delete,
     marketplace_reject,
     publish,
+    marketplace_unpublish,
 )
 from .marketplace import (
     get_marketplace_items,
@@ -24,6 +25,7 @@ from .marketplace import (
     delete_marketplace_item,
     reject_marketplace_item,
     decompile_marketplace_bp,
+    unpublish_marketplace_bp,
 )
 from .constants import MARKETPLACE_ITEM
 
@@ -81,7 +83,7 @@ def _get_marketplace_bps(name, quiet, app_family, app_states, filter_by):
         app_family=app_family,
         app_states=app_states,
         filter_by=filter_by,
-        type=MARKETPLACE_ITEM.TYPES.BLUEPRINT
+        type=MARKETPLACE_ITEM.TYPES.BLUEPRINT,
     )
 
 
@@ -390,7 +392,7 @@ def approve_bp(name, version, category, all_projects, projects=[]):
         projects=projects,
         category=category,
         all_projects=all_projects,
-        type=MARKETPLACE_ITEM.TYPES.BLUEPRINT
+        type=MARKETPLACE_ITEM.TYPES.BLUEPRINT,
     )
 
 
@@ -431,7 +433,7 @@ def _publish_marketplace_bp(name, version, category, source, all_projects, proje
         category=category,
         app_source=source,
         all_projects=all_projects,
-        type=MARKETPLACE_ITEM.TYPES.BLUEPRINT
+        type=MARKETPLACE_ITEM.TYPES.BLUEPRINT,
     )
 
 
@@ -468,7 +470,7 @@ def _update_marketplace_bp(name, version, category, projects, description, sourc
         projects=projects,
         description=description,
         app_source=source,
-        type=MARKETPLACE_ITEM.TYPES.BLUEPRINT
+        type=MARKETPLACE_ITEM.TYPES.BLUEPRINT,
     )
 
 
@@ -499,7 +501,7 @@ def _delete_marketplace_bp(name, version, source, app_state):
         version=version,
         app_source=source,
         app_state=app_state,
-        type=MARKETPLACE_ITEM.TYPES.BLUEPRINT
+        type=MARKETPLACE_ITEM.TYPES.BLUEPRINT,
     )
 
 
@@ -512,7 +514,23 @@ def _reject_marketplace_bp(name, version):
     """Reject marketplace manager blueprint"""
 
     reject_marketplace_item(
-        name=name,
-        version=version,
-        type=MARKETPLACE_ITEM.TYPES.BLUEPRINT
+        name=name, version=version, type=MARKETPLACE_ITEM.TYPES.BLUEPRINT
     )
+
+
+@marketplace_unpublish.command("bp")
+@click.argument("name")
+@click.option(
+    "--version", "-v", required=True, help="Version of marketplace blueprint"
+)  # Required to prevent unwanted unpublish of unknown mpi
+@click.option(
+    "--source",
+    "-s",
+    default=None,
+    type=click.Choice(APP_SOURCES),
+    help="App Source of marketplace blueprint",
+)
+def _unpublish_marketplace_bp(name, version, source):
+    """Unpublish marketplace store blueprint"""
+
+    unpublish_marketplace_bp(name=name, version=version, app_source=source)

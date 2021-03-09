@@ -1435,6 +1435,42 @@ def unpublish_marketplace_item(name, version, app_source=None):
     )
 
 
+def unpublish_marketplace_bp(name, version, app_source=None):
+    """unpublishes marketplace blueprint"""
+
+    if not version:
+        # Search for published blueprints, only those can be unpublished
+        LOG.info(
+            "Fetching latest version of published Marketplace Item {} ".format(
+                name
+            )
+        )
+        version = get_mpi_latest_version(
+            name=name,
+            app_states=[MARKETPLACE_ITEM.STATES.PUBLISHED],
+            app_source=app_source,
+        )
+        LOG.info(version)
+    
+    LOG.info(
+        "Fetching details of published marketplace blueprint {} with version {}".format(
+            name, version
+        )
+    )
+    mpi_item = get_mpi_by_name_n_version(
+        name=name,
+        version=version,
+        app_states=[MARKETPLACE_ITEM.STATES.PUBLISHED],
+        app_source=app_source,
+    )
+
+    if mpi_item["status"]["resources"]["type"] != "blueprint":
+        LOG.error("Marketplace blueprint {} with version {} not found". format(name, version))
+        sys.exit(-1)
+    
+    unpublish_marketplace_item(name=name, version=version, app_source=app_source)
+
+
 def publish_runbook_to_marketplace_manager(
     runbook_name,
     marketplace_item_name,
