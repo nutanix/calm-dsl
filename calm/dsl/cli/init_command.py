@@ -9,6 +9,7 @@ from calm.dsl.config import (
     get_default_config_file,
     get_default_db_file,
     get_default_local_dir,
+    init_context,
 )
 from calm.dsl.db import init_db_handle
 from calm.dsl.api import get_resource_api, get_client_handle_obj
@@ -178,6 +179,15 @@ def set_server_details(
     service_enablement_status = result["service_enablement_status"]
     LOG.info(service_enablement_status)
 
+    LOG.info("Verifying the project details")
+    project_name_uuid_map = client.project.get_name_uuid_map(
+        params={"filter": "name=={}".format(project_name)}
+    )
+    if not project_name_uuid_map:
+        LOG.error("Project '{}' not found !!!".format(project_name))
+        sys.exit(-1)
+    LOG.info("Project '{}' verified successfully".format(project_name))
+
     # Writing configuration to file
     set_dsl_config(
         host=host,
@@ -193,8 +203,7 @@ def set_server_details(
 
     # Updating context for using latest config data
     LOG.info("Updating context for using latest config file data")
-    config_obj = get_context()
-    config_obj.update_config_file_context(config_file=config_file)
+    init_context()
 
 
 def init_db():
@@ -313,12 +322,19 @@ def _set_config(
     config_file,
     local_dir,
 ):
-    """writes the configuration to config files i.e. config.ini and init.ini"""
+    """writes the configuration to config files i.e. config.ini and init.ini
+
+    \b
+    Note: Cache will be updated if supplied host is different from configured host.
+    """
 
     # Fetching context object
     ContextObj = get_context()
 
     server_config = ContextObj.get_server_config()
+
+    # Update cache if there is change in host ip
+    update_cache = host != server_config["pc_ip"] if host else False
     host = host or server_config["pc_ip"]
     username = username or server_config["pc_username"]
     port = port or server_config["pc_port"]
@@ -326,6 +342,30 @@ def _set_config(
 
     project_config = ContextObj.get_project_config()
     project_name = project_name or project_config.get("name") or "default"
+
+    LOG.info("Checking if Calm is enabled on Server")
+
+    # Get temporary client handle
+    client = get_client_handle_obj(host, port, auth=(username, password))
+    Obj = get_resource_api("services/nucalm/status", client.connection)
+    res, err = Obj.read()
+
+    if err:
+        click.echo("[Fail]")
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    result = json.loads(res.content)
+    service_enablement_status = result["service_enablement_status"]
+    LOG.info(service_enablement_status)
+
+    LOG.info("Verifying the project details")
+    project_name_uuid_map = client.project.get_name_uuid_map(
+        params={"filter": "name=={}".format(project_name)}
+    )
+    if not project_name_uuid_map:
+        LOG.error("Project '{}' not found !!!".format(project_name))
+        sys.exit(-1)
+    LOG.info("Project '{}' verified successfully".format(project_name))
 
     log_config = ContextObj.get_log_config()
     log_level = log_level or log_config.get("level") or "INFO"
@@ -350,3 +390,9 @@ def _set_config(
         local_dir=local_dir,
         config_file=config_file,
     )
+    LOG.info("Configuration changed successfully")
+
+    # Updating context for using latest config data
+    init_context()
+    if update_cache:
+        sync_cache()

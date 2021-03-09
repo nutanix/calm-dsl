@@ -176,4 +176,7 @@ __all__ = [
     "create_environment_payload",
     "VmProfile",
     "VmBlueprint",
+    "Endpoint",
+    "_endpoint",
+    "CalmEndpoint",
 ]

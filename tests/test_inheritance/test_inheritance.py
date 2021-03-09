@@ -71,7 +71,7 @@ class AnimalVmResources(AhvVmResources):
     vCPUs = 2
     cores_per_vCPU = 1
     disks = [AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(CentosPackage, bootable=True)]
-    nics = [AhvVmNic.DirectNic.ingress("vlan.0")]
+    nics = [AhvVmNic.DirectNic.ingress("@@{substrate_variable}@@")]
 
     guest_customization = AhvVmGC.CloudInit(
         config={

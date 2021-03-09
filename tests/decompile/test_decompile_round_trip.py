@@ -9,6 +9,7 @@ from calm.dsl.cli import main as cli
 from calm.dsl.builtins import read_local_file, get_valid_identifier
 from calm.dsl.decompile.file_handler import get_bp_dir
 from calm.dsl.decompile import init_decompile_context
+from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 
 from calm.dsl.cli.bps import (
@@ -59,6 +60,9 @@ class TestDecompile:
             )
         bp_json = json.loads(result.output)
 
+        # Fetch project used for compilation
+        project_name = bp_json["metadata"]["project_reference"].get("name")
+
         # Creating BP
         bp_name = "Test_BP_{}".format(str(uuid.uuid4()))
         LOG.info(
@@ -79,6 +83,10 @@ class TestDecompile:
                     "".join(traceback.format_tb(result.exc_info[2]))
                 )
             )
+
+        # Update project in context to be used for decompilation
+        ContextObj = get_context()
+        ContextObj.update_project_context(project_name=project_name)
 
         self.created_bp_list.append(bp_name)
         # Decompiling the created bp and storing secrets in file
@@ -260,3 +268,7 @@ class TestDecompile:
         LOG.info("Comparing original and decompiled blueprint json")
         assert bp_json == decompiled_bp_json
         LOG.info("Success")
+
+        # Reseting context
+        ContextObj = get_context()
+        ContextObj.reset_configuration()

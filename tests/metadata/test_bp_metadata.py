@@ -12,7 +12,7 @@ from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
-DSL_PROJECT_PATH = "tests/project/test_project_in_pc.py"
+DSL_PROJECT_PATH = "tests/project/project_ntnx_local_account.py"
 DSL_BP_FILEPATH = "tests/metadata/blueprint/blueprint.py"
 LOCAL_PROJECTNAME_FILE = "tests/metadata/blueprint/.local/project_name"
 

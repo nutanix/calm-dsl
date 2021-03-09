@@ -1872,8 +1872,7 @@
                             "nic_type": "DIRECT_NIC",
                             "subnet_reference": {
                                 "kind": "subnet",
-                                "name": "vlan.0",
-                                "uuid": "c37571b5-51d2-4340-8db0-d62c89ce3c9e"
+                                "uuid": "@@{substrate_variable}@@"
                             },
                             "network_function_chain_reference": null,
                             "mac_address": "",
@@ -1949,8 +1948,7 @@
                             "nic_type": "DIRECT_NIC",
                             "subnet_reference": {
                                 "kind": "subnet",
-                                "name": "vlan.0",
-                                "uuid": "c37571b5-51d2-4340-8db0-d62c89ce3c9e"
+                                "uuid": "@@{substrate_variable}@@"
                             },
                             "network_function_chain_reference": null,
                             "mac_address": "",
@@ -2026,8 +2024,7 @@
                             "nic_type": "DIRECT_NIC",
                             "subnet_reference": {
                                 "kind": "subnet",
-                                "name": "vlan.0",
-                                "uuid": "c37571b5-51d2-4340-8db0-d62c89ce3c9e"
+                                "uuid": "@@{substrate_variable}@@"
                             },
                             "network_function_chain_reference": null,
                             "mac_address": "",
@@ -2103,8 +2100,7 @@
                             "nic_type": "DIRECT_NIC",
                             "subnet_reference": {
                                 "kind": "subnet",
-                                "name": "vlan.0",
-                                "uuid": "c37571b5-51d2-4340-8db0-d62c89ce3c9e"
+                                "uuid": "@@{substrate_variable}@@"
                             },
                             "network_function_chain_reference": null,
                             "mac_address": "",
