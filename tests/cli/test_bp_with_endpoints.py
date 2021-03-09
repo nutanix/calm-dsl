@@ -3,9 +3,12 @@ import time
 import os
 import json
 import traceback
+from distutils.version import LooseVersion as LV
 from click.testing import CliRunner
 
 from calm.dsl.cli import main as cli
+from calm.dsl.api import get_api_client
+from calm.dsl.store import Version
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -15,10 +18,50 @@ DSL_BP_FILEPATH = "tests/existing_vm_example_with_target_endpoint/test_existing_
 JSON_BP_FILEPATH = (
     "tests/existing_vm_example_with_target_endpoint/test_existing_vm_bp.json"
 )
+DSL_EP_PATH = "tests/cli/endpoints/linux_endpoint.py"
+CALM_ENDPOINT_NAME = "DND-Endpoint"
+
+# calm_version
+CALM_VERSION = Version.get_version("Calm")
 
 
 @pytest.mark.slow
+@pytest.mark.skipif(
+    LV(CALM_VERSION) < LV("3.0.0"), reason="Endpoints in bp is supported from 3.0.0"
+)
 class TestBpCommands:
+    def setup_method(self):
+        """Method to create endpoint"""
+
+        client = get_api_client()
+        self.endpoint = CALM_ENDPOINT_NAME
+
+        # Check if there is existing endpoint with this name
+        payload = {"filter": "name=={}".format(self.endpoint)}
+        res, _ = client.endpoint.list(payload)
+        res = res.json()
+
+        if res["metadata"]["total_matches"] > 0:
+            return
+
+        # If there is no endpoint, create one
+        LOG.info("Creating Endpoint {}".format(self.endpoint))
+        runner = CliRunner()
+        result = runner.invoke(
+            cli, ["create", "endpoint", "-f", DSL_EP_PATH, "-n", self.endpoint]
+        )
+        assert result.exit_code == 0
+        LOG.info("Success")
+
+    def teardown_method(self):
+        """Method to delete endpoint"""
+
+        LOG.info("Deleting Endpoint {}".format(self.endpoint))
+        runner = CliRunner()
+        result = runner.invoke(cli, ["delete", "endpoint", self.endpoint])
+        assert result.exit_code == 0
+        LOG.info("Success")
+
     def test_compile_bp(self):
         runner = CliRunner()
         LOG.info("Compiling Bp file at {}".format(DSL_BP_FILEPATH))

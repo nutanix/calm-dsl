@@ -15,9 +15,10 @@ from .utils import highlight_text, get_states_filter, Display
 from .bps import launch_blueprint_simple, get_blueprint
 from .runbooks import get_runbook, poll_action, watch_runbook
 from .apps import watch_app
-from .projects import get_project
 from .runlog import get_runlog_status
 from .endpoints import get_endpoint
+from calm.dsl.builtins.models.helper.common import get_project
+from .environments import get_project_environment
 from calm.dsl.log import get_logging_handle
 from .constants import MARKETPLACE_ITEM
 
@@ -485,6 +486,7 @@ def launch_marketplace_bp(
     name,
     version,
     project,
+    environment,
     app_name=None,
     profile_name=None,
     patch_editables=True,
@@ -514,7 +516,11 @@ def launch_marketplace_bp(
 
     LOG.info("Converting MPI to blueprint")
     bp_payload = convert_mpi_into_blueprint(
-        name=name, version=version, project_name=project, app_source=app_source
+        name=name,
+        version=version,
+        project_name=project,
+        environment_name=environment,
+        app_source=app_source,
     )
 
     app_name = app_name or "Mpi-App-{}-{}".format(name, str(uuid.uuid4())[-10:])
@@ -599,6 +605,7 @@ def launch_marketplace_item(
     name,
     version,
     project,
+    environment,
     app_name=None,
     profile_name=None,
     patch_editables=True,
@@ -624,7 +631,11 @@ def launch_marketplace_item(
 
     LOG.info("Converting MPI to blueprint")
     bp_payload = convert_mpi_into_blueprint(
-        name=name, version=version, project_name=project, app_source=app_source
+        name=name,
+        version=version,
+        project_name=project,
+        environment_name=environment,
+        app_source=app_source,
     )
 
     app_name = app_name or "Mpi-App-{}-{}".format(name, str(uuid.uuid4())[-10:])
@@ -647,32 +658,39 @@ def launch_marketplace_item(
         LOG.info("Action runs completed for app {}".format(app_name))
 
 
-def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None):
+def convert_mpi_into_blueprint(
+    name, version, project_name=None, environment_name=None, app_source=None
+):
 
     client = get_api_client()
     context = get_context()
     project_config = context.get_project_config()
 
     project_name = project_name or project_config["name"]
-    project_data = get_project(project_name)
-
+    environment_data, project_data = get_project_environment(
+        name=environment_name, project_name=project_name
+    )
     project_uuid = project_data["metadata"]["uuid"]
-
-    LOG.info("Fetching details of project {}".format(project_name))
-    res, err = client.project.read(project_uuid)
-    if err:
-        LOG.error("[{}] - {}".format(err["code"], err["error"]))
-        sys.exit(-1)
-
-    res = res.json()
-    environments = res["status"]["resources"]["environment_reference_list"]
-
-    # For now only single environment exists
+    environments = project_data["status"]["resources"]["environment_reference_list"]
     if not environments:
         LOG.error("No environment registered to project '{}'".format(project_name))
         sys.exit(-1)
 
-    env_uuid = environments[0]["uuid"]
+    # Added in 3.2
+    default_environment_uuid = (
+        project_data["status"]["resources"]
+        .get("default_environment_reference", {})
+        .get("uuid")
+    )
+
+    # If there is no default environment, select first one
+    default_environment_uuid = default_environment_uuid or environments[0]["uuid"]
+
+    env_uuid = ""
+    if environment_data:  # if user supplies environment
+        env_uuid = environment_data["metadata"]["uuid"]
+    else:
+        env_uuid = default_environment_uuid
 
     LOG.info("Fetching MPI details")
     mpi_data = get_mpi_by_name_n_version(
@@ -722,7 +740,7 @@ def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None
     }
     bp_spec["api_version"] = "3.0"
 
-    LOG.debug("Creating MPI blueprint")
+    LOG.info("Creating MPI blueprint")
     bp_res, err = client.blueprint.marketplace_launch(bp_spec)
     if err:
         LOG.error("[{}] - {}".format(err["code"], err["error"]))

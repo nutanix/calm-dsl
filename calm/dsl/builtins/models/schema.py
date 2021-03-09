@@ -61,6 +61,8 @@ def get_schema_props(name):
         schema_props = {}
     elif schema_type == "app_provider_spec":
         schema_props = {}
+    elif schema_type == "app_calm_ref":
+        schema_props = {}
     elif not schema_props:
         LOG.debug("Schema properties for schema {} is not available".format(name))
         raise TypeError("Invalid schema name {} given".format(name))
@@ -144,7 +146,7 @@ def get_validators_with_defaults(schema_props):
         calm_version = Version.get_version("Calm")
 
         # dev machines do not follow standard version protocols. Avoid matching there
-        attribute_min_version = str(props.get("x-min-calm-version", ""))
+        attribute_min_version = str(props.get("x-calm-dsl-min-version", ""))
         if not calm_version:
             # Raise warning and set default to 2.9.0
             calm_version = "2.9.0"

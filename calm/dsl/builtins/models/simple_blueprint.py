@@ -62,8 +62,14 @@ class SimpleBlueprintType(EntityType):
 
         credential_definition_list = cdict["credentials"]
 
+        pfl_kwargs = {"name": cls.__name__ + "Profile"}
+
+        environments = getattr(cls, "environments", None)
+        if environments:
+            pfl_kwargs["environments"] = environments
+
         # Init Profile
-        pro = profile(name=cls.__name__ + "Profile")
+        pro = profile(**pfl_kwargs)
         app_profile = pro.get_dict()
         app_profile["variable_list"] = cdict["variables"]
         app_profile["action_list"] = cdict["action_list"]

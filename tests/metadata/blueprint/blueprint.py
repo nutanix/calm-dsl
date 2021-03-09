@@ -10,8 +10,8 @@ from calm.dsl.builtins import CalmVariable, CalmTask, action
 from calm.dsl.builtins import Ref, Metadata
 
 
-CENTOS_KEY = read_local_file("keys/centos")
-CENTOS_PUBLIC_KEY = read_local_file("keys/centos_pub")
+CENTOS_KEY = read_local_file(".tests/keys/centos")
+CENTOS_PUBLIC_KEY = read_local_file(".tests/keys/centos_pub")
 PROJECT_NAME = read_local_file("project_name")
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
