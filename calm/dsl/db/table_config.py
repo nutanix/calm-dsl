@@ -176,7 +176,7 @@ class AhvSubnetsCache(CacheTableBase):
         AhvVmProvider = get_provider("AHV_VM")
         AhvObj = AhvVmProvider.get_api_obj()
 
-        for e_name, e_uuid in account_name_uuid_map.items():
+        for _, e_uuid in account_name_uuid_map.items():
             try:
                 res = AhvObj.subnets(account_uuid=e_uuid)
             except Exception:
@@ -187,7 +187,7 @@ class AhvSubnetsCache(CacheTableBase):
                 )
                 continue
 
-            for entity in res["entities"]:
+            for entity in res.get("entities", []):
                 name = entity["status"]["name"]
                 uuid = entity["metadata"]["uuid"]
                 cluster_ref = entity["status"]["cluster_reference"]
@@ -335,7 +335,7 @@ class AhvImagesCache(CacheTableBase):
         AhvVmProvider = get_provider("AHV_VM")
         AhvObj = AhvVmProvider.get_api_obj()
 
-        for e_name, e_uuid in account_name_uuid_map.items():
+        for _, e_uuid in account_name_uuid_map.items():
             try:
                 res = AhvObj.images(account_uuid=e_uuid)
             except Exception:
@@ -346,7 +346,7 @@ class AhvImagesCache(CacheTableBase):
                 )
                 continue
 
-            for entity in res["entities"]:
+            for entity in res.get("entities", []):
                 name = entity["status"]["name"]
                 uuid = entity["metadata"]["uuid"]
                 # TODO add proper validation for karbon images
@@ -502,7 +502,7 @@ class AccountCache(CacheTableBase):
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
         res = res.json()
-        for entity in res["entities"]:
+        for entity in res.get("entities", []):
             provider_type = entity["status"]["resources"]["type"]
             data = {}
             query_obj = {

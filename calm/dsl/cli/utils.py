@@ -54,7 +54,7 @@ class Display:
     @classmethod
     def wrapper(cls, func, watch=False):
         if watch and os.isatty(sys.stdout.fileno()):
-            Screen.wrapper(func, height=1000, catch_interrupt=True)
+            Screen.wrapper(func, height=1000)
         else:
             func(display)
 
