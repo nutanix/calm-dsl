@@ -2,10 +2,10 @@
 Calm Runbook Sample for running http tasks
 """
 from calm.dsl.runbooks import read_local_file
-from calm.dsl.runbooks import runbook
+from calm.dsl.runbooks import runbook, Ref
 from calm.dsl.runbooks import RunbookTask as Task, basic_cred
 from calm.dsl.runbooks import CalmEndpoint as Endpoint
-from calm.dsl.runbooks import CalmAccount as Account, VM
+from calm.dsl.runbooks import VM
 from calm.dsl.runbooks import ENDPOINT_FILTER, ENDPOINT_PROVIDER
 
 linux_ip = read_local_file(".tests/runbook_tests/vm_ip")
@@ -48,7 +48,7 @@ linux_ahv_static_vm_endpoint = Endpoint.Linux.vm(
     vms=[VM(uuid=AHV_LINUX_ID)],
     cred=LinuxCred,
     provider_type=ENDPOINT_PROVIDER.NUTANIX,
-    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
+    account=Ref.Account("NTNX_LOCAL_AZ"),
 )
 
 # Linux AHV VM Endpoint with Dynamic filter name equals filter
@@ -56,7 +56,7 @@ linux_ahv_dynamic_vm_endpoint1 = Endpoint.Linux.vm(
     filter_type=ENDPOINT_FILTER.DYNAMIC,
     filter="name==" + AHV_LINUX_VM_NAME,
     cred=LinuxCred,
-    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
+    account=Ref.Account("NTNX_LOCAL_AZ"),
     provider_type=ENDPOINT_PROVIDER.NUTANIX,
 )
 
@@ -65,7 +65,7 @@ linux_ahv_dynamic_vm_endpoint2 = Endpoint.Linux.vm(
     filter_type=ENDPOINT_FILTER.DYNAMIC,
     filter="name==" + AHV_LINUX_VM_NAME_PREFIX + ".*",
     cred=LinuxCred,
-    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
+    account=Ref.Account("NTNX_LOCAL_AZ"),
     provider_type=ENDPOINT_PROVIDER.NUTANIX,
 )
 
@@ -74,7 +74,7 @@ linux_ahv_dynamic_vm_endpoint3 = Endpoint.Linux.vm(
     filter_type=ENDPOINT_FILTER.DYNAMIC,
     filter="power_state==on;name==" + AHV_LINUX_VM_NAME_PREFIX + ".*",
     cred=LinuxCred,
-    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
+    account=Ref.Account("NTNX_LOCAL_AZ"),
     provider_type=ENDPOINT_PROVIDER.NUTANIX,
 )
 
@@ -83,14 +83,14 @@ linux_vmware_static_vm_endpoint = Endpoint.Linux.vm(
     vms=[VM(uuid=VMWARE_LINUX_ID)],
     cred=LinuxCred,
     provider_type=ENDPOINT_PROVIDER.VMWARE,
-    account=Account.VMWare("vmware_1"),
+    account=Ref.Account("vmware_1"),
 )
 
 linux_vmware_dynamic_vm_endpoint1 = Endpoint.Linux.vm(
     filter_type=ENDPOINT_FILTER.DYNAMIC,
     filter="name==" + VMWARE_LINUX_VM_NAME,
     cred=LinuxCred,
-    account=Account.VMWare("vmware_1"),
+    account=Ref.Account("vmware_1"),
     provider_type=ENDPOINT_PROVIDER.VMWARE,
 )
 
@@ -98,7 +98,7 @@ linux_vmware_dynamic_vm_endpoint2 = Endpoint.Linux.vm(
     filter_type=ENDPOINT_FILTER.DYNAMIC,
     filter="name==" + VMWARE_LINUX_VM_NAME_PREFIX + ".*",
     cred=LinuxCred,
-    account=Account.VMWare("vmware_1"),
+    account=Ref.Account("vmware_1"),
     provider_type=ENDPOINT_PROVIDER.VMWARE,
 )
 
@@ -106,7 +106,7 @@ linux_vmware_dynamic_vm_endpoint3 = Endpoint.Linux.vm(
     filter_type=ENDPOINT_FILTER.DYNAMIC,
     filter="power_state==poweredOn;name==" + VMWARE_LINUX_VM_NAME_PREFIX + ".*",
     cred=LinuxCred,
-    account=Account.VMWare("vmware_1"),
+    account=Ref.Account("vmware_1"),
     provider_type=ENDPOINT_PROVIDER.VMWARE,
 )
 
