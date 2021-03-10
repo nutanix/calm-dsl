@@ -13,7 +13,6 @@ from calm.dsl.builtins.models.utils import (
     read_env,
 )
 
-from calm.dsl.builtins.models.vm_ref import VM
 from calm.dsl.builtins.models.variable import RunbookVariable
 from calm.dsl.builtins.models.task import RunbookTask, Status
 from calm.dsl.builtins.models.runbook import Runbook, runbook, runbook_json, branch
@@ -33,7 +32,6 @@ from calm.dsl.builtins.models.runbook_payload import create_runbook_payload
 
 
 __all__ = [
-    "VM",
     "Ref",
     "ref",
     "RefType",

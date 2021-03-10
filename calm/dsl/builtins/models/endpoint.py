@@ -2,7 +2,6 @@ import enum
 import uuid
 
 from .entity import EntityType, Entity
-from .vm_ref import VMRefType
 from .validator import PropertyValidator
 from .credential import CredentialType
 
@@ -118,9 +117,6 @@ def _os_endpoint(
     }
 
     if value_type == "VM":
-        for vm in vms:
-            if not isinstance(vm, VMRefType):
-                raise ValueError("VMs are not of type VMRefType")
         kwargs["attrs"]["vm_references"] = vms
         kwargs["provider_type"] = PROVIDER_TYPE_MAP.get(provider_type, "NUTANIX_PC")
         kwargs["attrs"]["subnet"] = subnet

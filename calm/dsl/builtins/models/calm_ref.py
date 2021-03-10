@@ -207,3 +207,17 @@ class Ref:
                 "name": name,
                 "uuid": ds_cache_data["uuid"],
             }
+
+    class Vm:
+        def __new__(cls, name="", **kwargs):
+
+            vm_uuid = kwargs.get("uuid", "")
+            if not vm_uuid:
+                LOG.error("UUID is required property")
+                sys.exit(-1)
+
+            return {
+                "kind": "vm",
+                "name": name,
+                "uuid": vm_uuid
+            }
