@@ -1,6 +1,8 @@
 import pytest
 import uuid
+from distutils.version import LooseVersion as LV
 
+from calm.dsl.store import Version
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import RUNLOG
 from tests.api_interface.test_runbooks.test_files.exec_task import (
@@ -21,7 +23,14 @@ from tests.api_interface.test_runbooks.test_files.exec_task import (
 )
 from utils import upload_runbook, poll_runlog_status
 
+# calm_version
+CALM_VERSION = Version.get_version("Calm")
 
+
+@pytest.mark.skipif(
+    LV(CALM_VERSION) < LV("3.2.0"),
+    reason="Tests are for env changes introduced in 3.2.0",
+)
 class TestExecTasksVMEndpoint:
     @pytest.mark.runbook
     @pytest.mark.regression

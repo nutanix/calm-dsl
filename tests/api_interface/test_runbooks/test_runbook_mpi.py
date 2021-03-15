@@ -1,6 +1,8 @@
 import pytest
 import uuid
+from distutils.version import LooseVersion as LV
 
+from calm.dsl.store import Version
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import RUNLOG, MARKETPLACE_ITEM
 
@@ -19,7 +21,14 @@ from utils import (
     validate_error_message,
 )
 
+# calm_version
+CALM_VERSION = Version.get_version("Calm")
 
+
+@pytest.mark.skipif(
+    LV(CALM_VERSION) < LV("3.2.0"),
+    reason="Tests are for env changes introduced in 3.2.0",
+)
 class TestMarketplaceRunbook:
     @classmethod
     def setup_class(cls):

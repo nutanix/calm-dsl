@@ -1,6 +1,8 @@
 import pytest
 import os
+from distutils.version import LooseVersion as LV
 
+from calm.dsl.store import Version
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import ENDPOINT
 from utils import read_test_config, change_uuids
@@ -18,7 +20,14 @@ WindowsVMDynamicAHVEpPayload = read_test_config(
     file_name="windows_vm_dynamic_ahv_ep_payload.json"
 )
 
+# calm_version
+CALM_VERSION = Version.get_version("Calm")
 
+
+@pytest.mark.skipif(
+    LV(CALM_VERSION) < LV("3.2.0"),
+    reason="Tests are for env changes introduced in 3.2.0",
+)
 class TestVMEndpoints:
     @pytest.mark.runbook
     @pytest.mark.regression
