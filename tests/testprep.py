@@ -146,11 +146,7 @@ def add_project_details(config):
     config_projects = config.get("PROJECTS", {})
 
     if not config_projects:
-        config["PROJECTS"] = {
-            "PROJECT1": {
-                "NAME": "default"
-            }
-        }
+        config["PROJECTS"] = {"PROJECT1": {"NAME": "default"}}
 
     for _, project_config in config["PROJECTS"].items():
         project_name = project_config["NAME"]
@@ -207,7 +203,9 @@ def add_project_details(config):
 config = {}
 if os.path.exists(dsl_config_file_location):
     f = open(dsl_config_file_location, "r")
-    config = json.loads(f.read())
+    data = f.read()
+    if data:
+        config = json.loads(data)
     f.close()
 
 add_account_details(config)
