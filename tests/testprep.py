@@ -179,6 +179,10 @@ def add_project_details(config):
             "account_reference_list", []
         ):
             _account_uuid = _account["uuid"]
+
+            # Some deleted keys may also be present
+            if _account_uuid not in account_uuid_type_map:
+                continue
             _account_type = account_uuid_type_map[_account_uuid].upper()
             _account_name = account_uuid_name_map[_account_uuid]
             if _account_type not in project_config["ACCOUNTS"]:
