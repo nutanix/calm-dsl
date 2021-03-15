@@ -1,6 +1,8 @@
 """
  Calm Runbooks with VM endpoints
 """
+import json
+
 from calm.dsl.runbooks import read_local_file
 from calm.dsl.runbooks import runbook, Ref
 from calm.dsl.runbooks import RunbookTask as Task, basic_cred
@@ -15,6 +17,10 @@ VMWARE_POWER_OFF = read_local_file(".tests/runbook_tests/vm_actions_vmware_off")
 CRED_USERNAME = read_local_file(".tests/runbook_tests/username")
 CRED_PASSWORD = read_local_file(".tests/runbook_tests/password")
 LinuxCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
+
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+ACCOUNTS = DSL_CONFIG["ACCOUNTS"]
+VMWARE_ACCOUNT_NAME = ACCOUNTS["VMWARE"][0]["NAME"]
 
 AHVPoweredOnVM = Endpoint.Linux.vm(
     filter_type=ENDPOINT_FILTER.STATIC,
@@ -37,7 +43,7 @@ VMwarePoweredOnVM = Endpoint.Linux.vm(
     vms=[Ref.Vm(uuid=VMWARE_POWER_ON)],
     cred=LinuxCred,
     provider_type=ENDPOINT_PROVIDER.VMWARE,
-    account=Ref.Account("vmware"),
+    account=Ref.Account(VMWARE_ACCOUNT_NAME),
 )
 
 VMwarePoweredOffVM = Endpoint.Linux.vm(
@@ -45,7 +51,7 @@ VMwarePoweredOffVM = Endpoint.Linux.vm(
     vms=[Ref.Vm(uuid=VMWARE_POWER_OFF)],
     cred=LinuxCred,
     provider_type=ENDPOINT_PROVIDER.VMWARE,
-    account=Ref.Account("vmware"),
+    account=Ref.Account(VMWARE_ACCOUNT_NAME),
 )
 
 

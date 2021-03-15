@@ -1,6 +1,8 @@
 """
 Calm Runbook Sample for running http tasks
 """
+import json
+
 from calm.dsl.runbooks import read_local_file
 from calm.dsl.runbooks import runbook, Ref
 from calm.dsl.runbooks import RunbookTask as Task, basic_cred
@@ -29,6 +31,10 @@ CRED_PASSWORD = read_local_file(".tests/runbook_tests/password")
 HTTP_AUTH_USERNAME = read_local_file(".tests/runbook_tests/auth_username")
 HTTP_AUTH_PASSWORD = read_local_file(".tests/runbook_tests/auth_password")
 HTTP_URL = read_local_file(".tests/runbook_tests/url")
+
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+ACCOUNTS = DSL_CONFIG["ACCOUNTS"]
+VMWARE_ACCOUNT_NAME = ACCOUNTS["VMWARE"][0]["NAME"]
 
 http_endpoint = Endpoint.HTTP(
     HTTP_URL,
@@ -82,14 +88,14 @@ linux_vmware_static_vm_endpoint = Endpoint.Linux.vm(
     vms=[Ref.Vm(uuid=VMWARE_LINUX_ID)],
     cred=LinuxCred,
     provider_type=ENDPOINT_PROVIDER.VMWARE,
-    account=Ref.Account("vmware_1"),
+    account=Ref.Account(VMWARE_ACCOUNT_NAME),
 )
 
 linux_vmware_dynamic_vm_endpoint1 = Endpoint.Linux.vm(
     filter_type=ENDPOINT_FILTER.DYNAMIC,
     filter="name==" + VMWARE_LINUX_VM_NAME,
     cred=LinuxCred,
-    account=Ref.Account("vmware_1"),
+    account=Ref.Account(VMWARE_ACCOUNT_NAME),
     provider_type=ENDPOINT_PROVIDER.VMWARE,
 )
 
@@ -97,7 +103,7 @@ linux_vmware_dynamic_vm_endpoint2 = Endpoint.Linux.vm(
     filter_type=ENDPOINT_FILTER.DYNAMIC,
     filter="name==" + VMWARE_LINUX_VM_NAME_PREFIX + ".*",
     cred=LinuxCred,
-    account=Ref.Account("vmware_1"),
+    account=Ref.Account(VMWARE_ACCOUNT_NAME),
     provider_type=ENDPOINT_PROVIDER.VMWARE,
 )
 
@@ -105,7 +111,7 @@ linux_vmware_dynamic_vm_endpoint3 = Endpoint.Linux.vm(
     filter_type=ENDPOINT_FILTER.DYNAMIC,
     filter="power_state==poweredOn;name==" + VMWARE_LINUX_VM_NAME_PREFIX + ".*",
     cred=LinuxCred,
-    account=Ref.Account("vmware_1"),
+    account=Ref.Account(VMWARE_ACCOUNT_NAME),
     provider_type=ENDPOINT_PROVIDER.VMWARE,
 )
 
