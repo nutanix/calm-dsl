@@ -143,6 +143,14 @@ def add_directory_service_user_groups(config):
 def add_project_details(config):
 
     client = get_api_client()
+    config_projects = config.get("PROJECTS", {})
+
+    if not config_projects:
+        config["PROJECTS"] = {
+            "PROJECT1": {
+                "NAME": "default"
+            }
+        }
 
     for _, project_config in config["PROJECTS"].items():
         project_name = project_config["NAME"]
@@ -196,9 +204,11 @@ def add_project_details(config):
             )
 
 
-f = open(dsl_config_file_location, "r")
-config = json.loads(f.read())
-f.close()
+config = {}
+if os.path.exists(dsl_config_file_location):
+    f = open(dsl_config_file_location, "r")
+    config = json.loads(f.read())
+    f.close()
 
 add_account_details(config)
 add_directory_service_users(config)
