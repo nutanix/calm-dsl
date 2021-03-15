@@ -6,7 +6,7 @@ from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.credential import get_cred_var_name
 from calm.dsl.decompile.file_handler import get_specs_dir, get_specs_dir_key
 from calm.dsl.builtins import RefType
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -51,7 +51,7 @@ def render_ahv_vm_gc(cls, vm_name_prefix=""):
         if is_domain and sys_prep.get("domain_credential_reference"):
             cred = RefType.decompile(sys_prep["domain_credential_reference"])
             user_attrs["credential"] = "ref({})".format(
-                get_cred_var_name(cred.__name__)
+                get_cred_var_name(getattr(cred, "name", "") or cred.__name__)
             )
 
         if install_type == "FRESH":

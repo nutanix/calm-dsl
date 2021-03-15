@@ -1,16 +1,29 @@
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 
-from .connection import get_connection, update_connection, REQUEST, Connection
+from .connection import (
+    get_connection_obj,
+    get_connection_handle,
+    update_connection_handle,
+    REQUEST,
+)
 from .blueprint import BlueprintAPI
 from .endpoint import EndpointAPI
 from .runbook import RunbookAPI
+from .library_tasks import TaskLibraryApi
 from .application import ApplicationAPI
 from .project import ProjectAPI
+from .environment import EnvironmentAPI
 from .setting import SettingAPI
 from .marketplace import MarketPlaceAPI
 from .app_icons import AppIconAPI
 from .version import VersionAPI
 from .showback import ShowbackAPI
+from .user import UserAPI
+from .user_group import UserGroupAPI
+from .role import RoleAPI
+from .directory_service import DirectoryServiceAPI
+from .access_control_policy import AccessControlPolicyAPI
+from .environment import EnvironmentAPI
 
 
 class ClientHandle:
@@ -23,63 +36,76 @@ class ClientHandle:
 
         # Note - add entity api classes here
         self.project = ProjectAPI(self.connection)
+        self.environment = EnvironmentAPI(self.connection)
         self.blueprint = BlueprintAPI(self.connection)
         self.endpoint = EndpointAPI(self.connection)
         self.runbook = RunbookAPI(self.connection)
+        self.task = TaskLibraryApi(self.connection)
         self.application = ApplicationAPI(self.connection)
         self.account = SettingAPI(self.connection)
         self.market_place = MarketPlaceAPI(self.connection)
         self.app_icon = AppIconAPI(self.connection)
         self.version = VersionAPI(self.connection)
         self.showback = ShowbackAPI(self.connection)
+        self.user = UserAPI(self.connection)
+        self.group = UserGroupAPI(self.connection)
+        self.role = RoleAPI(self.connection)
+        self.directory_service = DirectoryServiceAPI(self.connection)
+        self.acp = AccessControlPolicyAPI(self.connection)
+        self.environment = EnvironmentAPI(self.connection)
 
 
-_CLIENT_HANDLE = None
-
-
-def get_client_handle(
-    host,
-    port,
-    auth_type=REQUEST.AUTH_TYPE.BASIC,
-    scheme=REQUEST.SCHEME.HTTPS,
-    auth=None,
-    temp=False,  # This flag is used to generate temp handle
-):
-    global _CLIENT_HANDLE
-    if temp:
-        connection = Connection(host, port, auth_type, scheme, auth)
-        handle = ClientHandle(connection)
-        handle._connect()
-        return handle
-
-    else:
-        if not _CLIENT_HANDLE:
-            update_client_handle(host, port, auth_type, scheme, auth)
-        return _CLIENT_HANDLE
-
-
-def update_client_handle(
+def get_client_handle_obj(
     host,
     port,
     auth_type=REQUEST.AUTH_TYPE.BASIC,
     scheme=REQUEST.SCHEME.HTTPS,
     auth=None,
 ):
-    global _CLIENT_HANDLE
-    update_connection(host, port, auth_type, scheme=scheme, auth=auth)
-    connection = get_connection(host, port, auth_type, scheme, auth)
-    _CLIENT_HANDLE = ClientHandle(connection)
-    _CLIENT_HANDLE._connect()
-    return _CLIENT_HANDLE
+    """returns object of ClientHandle class"""
+
+    connection = get_connection_obj(host, port, auth_type, scheme, auth)
+    handle = ClientHandle(connection)
+    handle._connect()
+    return handle
+
+
+_API_CLIENT_HANDLE = None
+
+
+def update_api_client(
+    host,
+    port,
+    auth_type=REQUEST.AUTH_TYPE.BASIC,
+    scheme=REQUEST.SCHEME.HTTPS,
+    auth=None,
+):
+    """updates global api client object (_API_CLIENT_HANDLE) """
+
+    global _API_CLIENT_HANDLE
+
+    update_connection_handle(host, port, auth_type, scheme=scheme, auth=auth)
+    connection = get_connection_handle(host, port, auth_type, scheme, auth)
+    _API_CLIENT_HANDLE = ClientHandle(connection)
+    _API_CLIENT_HANDLE._connect()
+
+    return _API_CLIENT_HANDLE
 
 
 def get_api_client():
+    """returns global api client object (_API_CLIENT_HANDLE) """
 
-    config = get_config()
+    global _API_CLIENT_HANDLE
 
-    pc_ip = config["SERVER"].get("pc_ip")
-    pc_port = config["SERVER"].get("pc_port")
-    username = config["SERVER"].get("pc_username")
-    password = config["SERVER"].get("pc_password")
+    if not _API_CLIENT_HANDLE:
+        context = get_context()
+        server_config = context.get_server_config()
 
-    return get_client_handle(pc_ip, pc_port, auth=(username, password))
+        pc_ip = server_config.get("pc_ip")
+        pc_port = server_config.get("pc_port")
+        username = server_config.get("pc_username")
+        password = server_config.get("pc_password")
+
+        update_api_client(host=pc_ip, port=pc_port, auth=(username, password))
+
+    return _API_CLIENT_HANDLE

@@ -1,8 +1,6 @@
 from ruamel import yaml
 import os
-import sys
 
-from calm.dsl.builtins import AhvVmType
 from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.action import render_action_template
 from calm.dsl.decompile.readiness_probe import render_readiness_probe_template
@@ -10,7 +8,7 @@ from calm.dsl.decompile.file_handler import get_specs_dir, get_specs_dir_key
 from calm.dsl.builtins import SubstrateType, get_valid_identifier
 from calm.dsl.decompile.ahv_vm import render_ahv_vm
 from calm.dsl.decompile.ref_dependency import update_substrate_name
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -73,17 +71,10 @@ def render_substrate_template(cls, vm_images=[]):
     # Handle provider_spec for substrate
     provider_spec = cls.provider_spec
     if cls.provider_type == "AHV_VM":
-        boot_config = provider_spec["resources"].get("boot_config", {})
-        if not boot_config:
-            LOG.error(
-                "Boot config not present in {} substrate spec".format(cls.__name__)
-            )
-            sys.exit(-1)
-        vm_cls = AhvVmType.decompile(
-            provider_spec, context=[cls.__schema_name__, gui_display_name]
-        )
-        user_attrs["provider_spec"] = vm_cls.__name__
-        ahv_vm_str = render_ahv_vm(vm_cls, boot_config)
+        # Provider Spec is converted to ahv vm class in substrate decompile method only
+        boot_config = getattr(provider_spec.resources, "boot_config", {})
+        user_attrs["provider_spec"] = provider_spec.__name__
+        ahv_vm_str = render_ahv_vm(provider_spec, boot_config)
 
     else:
         # creating a file for storing provider_spec

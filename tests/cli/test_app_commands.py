@@ -1,12 +1,14 @@
 import pytest
 import time
 import json
+import sys
+import uuid
 import traceback
 from click.testing import CliRunner
 
 from calm.dsl.cli import main as cli
 from calm.dsl.cli.constants import APPLICATION
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 NON_BUSY_APP_STATES = [
@@ -171,6 +173,9 @@ class TestAppCommands:
 
         self._test_describe_app()
         self._test_run_custom_action()
+        self._test_restart_app()
+        self._test_stop_app()
+        self._test_start_app()
         self._test_dsl_bp_delete()
         self._test_app_delete()
 
@@ -195,11 +200,16 @@ class TestAppCommands:
     def _wait_for_non_busy_state(self):
         runner = CliRunner()
         result = runner.invoke(cli, ["describe", "app", self.created_app_name])
+        cnt = 0
         while not any(
             [state_str in result.output for state_str in self.non_busy_statuses]
         ):
             time.sleep(5)
             result = runner.invoke(cli, ["describe", "app", self.created_app_name])
+            if cnt > 20:
+                LOG.error("Failed to reach terminal state in 100 seconds")
+                sys.exit(-1)
+            cnt += 1
 
     def _test_run_custom_action(self):
         runner = CliRunner()
@@ -218,6 +228,66 @@ class TestAppCommands:
                 "--app={}".format(self.created_app_name),
             ],
         )
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+        LOG.info("Success")
+
+    def _test_restart_app(self):
+
+        runner = CliRunner()
+        self._wait_for_non_busy_state()
+        LOG.info("Restarting app {}".format(self.created_app_name))
+        result = runner.invoke(cli, ["restart", "app", self.created_app_name])
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+        LOG.info("Success")
+
+    def _test_stop_app(self):
+
+        runner = CliRunner()
+        self._wait_for_non_busy_state()
+        LOG.info("Stopping app {}".format(self.created_app_name))
+        result = runner.invoke(cli, ["stop", "app", self.created_app_name])
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+        LOG.info("Success")
+
+    def _test_start_app(self):
+
+        runner = CliRunner()
+        self._wait_for_non_busy_state()
+        LOG.info("Starting app {}".format(self.created_app_name))
+        result = runner.invoke(cli, ["start", "app", self.created_app_name])
         if result.exit_code:
             cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
             LOG.debug(
@@ -268,6 +338,35 @@ class TestAppCommands:
                 )
             )
         LOG.info("Success")
+
+    def test_app_create(self):
+        runner = CliRunner()
+
+        self.created_app_name = "Application{}".format(str(uuid.uuid4())[:10])
+        LOG.info("Creating App '{}'".format(self.created_app_name))
+        result = runner.invoke(
+            cli,
+            [
+                "create",
+                "app",
+                "--file={}".format(DSL_BP_FILEPATH),
+                "--name={}".format(self.created_app_name),
+            ],
+        )
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+        LOG.info("Success")
+        self._test_app_delete()
 
 
 if __name__ == "__main__":

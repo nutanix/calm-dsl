@@ -1,7 +1,7 @@
 from calm.dsl.decompile.render import render_template
 from calm.dsl.builtins import ReadinessProbeType
 from calm.dsl.decompile.credential import get_cred_var_name
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -17,7 +17,9 @@ def render_readiness_probe_template(cls):
     # deal with cred
     cred = user_attrs["credential"]
     if cred:
-        user_attrs["credential"] = "ref({})".format(get_cred_var_name(cred.__name__))
+        user_attrs["credential"] = "ref({})".format(
+            get_cred_var_name(getattr(cred, "name", "") or cred.__name__)
+        )
 
     schema_file = "readiness_probe.py.jinja2"
 

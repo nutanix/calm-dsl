@@ -1,0 +1,25 @@
+{
+    "spec": {
+      "name": "Install IIS",
+      "description": "",
+      "resources": {
+        "type": "EXEC",
+        "variable_list": [],
+        "attrs": {
+          "script": "Write-Output \"Installing IIS including Management tools\"\n\nInstall-WindowsFeature -name Web-Server -IncludeManagementTools\n",
+          "script_type": "npsscript"
+        }
+      }
+    },
+    "metadata": {
+      "spec_version": 1,
+      "name": "Install IIS",
+      "kind": "app_task",
+      "project_reference": {
+        "kind": "project",
+        "uuid": "c3b009a2-e808-4ce1-82f5-e5225287cffe",
+        "name": "default"
+      }
+    },
+    "api_version": "3.0"
+  }

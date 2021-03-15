@@ -6,10 +6,11 @@ import inspect
 from types import MappingProxyType
 import uuid
 import copy
+import keyword
 
 from ruamel.yaml import YAML, resolver, SafeRepresenter
 from calm.dsl.tools import StrictDraft7Validator
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 from .schema import get_schema_details
 from .utils import get_valid_identifier
 from .client_attrs import update_dsl_metadata_map, get_dsl_metadata_map
@@ -20,8 +21,7 @@ LOG = get_logging_handle(__name__)
 class EntityDict(OrderedDict):
     @staticmethod
     def pre_validate(vdict, name, value):
-        """hook to change values before validation, typecast, etc
-        """
+        """hook to change values before validation, typecast, etc"""
         return value
 
     @classmethod
@@ -179,9 +179,14 @@ class EntityType(EntityTypeBase):
         if not name:
             # Generate unique name
             name = "_" + schema_name + str(uuid.uuid4())[:8]
-        else:
+        elif mcls.__schema_name__ not in ["Task", "Credential"]:
             if name == schema_name:
-                raise TypeError("{} is a reserved name for this entity".format(name))
+                LOG.error("'{}' is a reserved name for this entity".format(name))
+                sys.exit(-1)
+
+            elif keyword.iskeyword(name):
+                LOG.error("'{}' is a reserved python keyword".format(name))
+                sys.exit(-1)
 
         cls = super().__new__(mcls, name, bases, entitydict)
 
@@ -233,7 +238,7 @@ class EntityType(EntityTypeBase):
                 and name.endswith("__")
                 and not isinstance(value, (VariableType, ActionType, RunbookType))
                 and not isinstance(type(value), DescriptorType)
-            ):
+            ) or name == "__parent__":
                 continue
             user_attrs[name] = getattr(cls, name, value)
 
@@ -337,6 +342,8 @@ class EntityType(EntityTypeBase):
 
         # Fetching actions data inside entity
         for ek, ev in cls.__dict__.items():
+            if ek == "__parent__":  # TODO fix this mess
+                continue
             e_obj = getattr(cls, ek)
             if isinstance(e_obj, ActionType):
                 user_func = ev.user_func
@@ -382,8 +389,28 @@ class EntityType(EntityTypeBase):
 
         return cdict
 
+    def post_compile(cls, cdict):
+        """method sets some properties to dict generated after compile"""
+
+        for _, v in cdict.items():
+            if isinstance(v, list):
+                for ve in v:
+                    if issubclass(type(ve), EntityTypeBase):
+                        ve.__parent__ = cls
+            elif issubclass(type(v), EntityTypeBase):
+                v.__parent__ = cls
+
+        return cdict
+
+    def generate_payload(cls):
+        """generates the payload(dict) for any entity"""
+
+        cls.pre_compile()
+        cdict = cls.compile()
+        return cls.post_compile(cdict)
+
     @classmethod
-    def pre_decompile(mcls, cdict, context):
+    def pre_decompile(mcls, cdict, context, prefix=""):
         """Hook to modify cdict based on dsl metadata"""
 
         ui_name = cdict.get("name", None)
@@ -406,7 +433,7 @@ class EntityType(EntityTypeBase):
         return attrs
 
     @classmethod
-    def decompile(mcls, cdict, context=[]):
+    def decompile(mcls, cdict, context=[], prefix=""):
 
         # Pre decompile step to get class names in blueprint file
         schema_name = getattr(mcls, "__schema_name__", None)
@@ -421,7 +448,7 @@ class EntityType(EntityTypeBase):
         elif schema_name and ui_name and schema_name != "Blueprint":
             cur_context.extend([schema_name, ui_name])
 
-        cdict = mcls.pre_decompile(cdict, context=cur_context)
+        cdict = mcls.pre_decompile(cdict, context=cur_context, prefix=prefix)
 
         # Convert attribute names to x-calm-dsl-display-name, if given
         attrs = {}
@@ -461,10 +488,14 @@ class EntityType(EntityTypeBase):
                     new_value = []
                     for val in v:
                         new_value.append(
-                            entity_type.decompile(val, context=cur_context)
+                            entity_type.decompile(
+                                val, context=cur_context, prefix=prefix
+                            )
                         )
                 else:
-                    new_value = entity_type.decompile(v, context=cur_context)
+                    new_value = entity_type.decompile(
+                        v, context=cur_context, prefix=prefix
+                    )
 
                 user_attrs[k] = new_value
 
@@ -474,6 +505,24 @@ class EntityType(EntityTypeBase):
         # Merging dsl_attrs("__name__", "__doc__" etc.) and user_attrs
         attrs.update(user_attrs)
         name = attrs.get("__name__", ui_name)
+
+        if mcls.__schema_name__ not in ["Task", "Credential"]:
+            if name == mcls.__schema_name__:
+                LOG.error(
+                    "'{}' is a reserved name for this entity. Please use '--prefix/-p' cli option to provide prefix for entity's name.".format(
+                        name
+                    )
+                )
+                sys.exit(-1)
+
+            elif keyword.iskeyword(name):
+                LOG.error(
+                    "'{}' is a reserved python keyword. Please use '--prefix/-p' cli option to provide prefix for entity's name.".format(
+                        name
+                    )
+                )
+                sys.exit(-1)
+
         return mcls(name, (Entity,), attrs)
 
     def json_dumps(cls, pprint=False, sort_keys=False):
@@ -518,7 +567,9 @@ class EntityType(EntityTypeBase):
             "name": getattr(cls, "name", "") or cls.__name__,
             "kind": kind or getattr(cls, "__kind__"),
         }
-        return ref(None, (Entity,), attrs)
+        _cls = ref(None, (Entity,), attrs)
+        _cls.__self__ = cls
+        return _cls
 
     def get_dict(cls):
         return json.loads(cls.json_dumps())
@@ -535,7 +586,7 @@ class EntityJSONEncoder(JSONEncoder):
             return super().default(cls)
 
         # Add single function(wrapper) that can contain pre-post checks
-        return cls.compile()
+        return cls.generate_payload()
 
 
 class EntityJSONDecoder(JSONDecoder):

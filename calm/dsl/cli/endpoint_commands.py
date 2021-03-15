@@ -1,6 +1,6 @@
 import click
 
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 from .main import compile, get, describe, delete, create, format
 from .endpoints import (

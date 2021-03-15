@@ -3,7 +3,7 @@ from calm.dsl.builtins import ProfileType
 from calm.dsl.decompile.action import render_action_template
 from calm.dsl.decompile.variable import render_variable_template
 from calm.dsl.decompile.ref_dependency import update_profile_name
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 

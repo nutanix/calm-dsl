@@ -19,23 +19,6 @@ def strip_secrets(resources, secret_map, secret_variables, object_lists=[], obje
         cred["secret"] = {
             "attrs": {"is_secret_modified": False, "secret_reference": None}
         }
-        if cred.pop("default"):
-            default_creds.append(cred)
-    """
-    if not default_creds:
-        raise ValueError("No default cred provided")
-    if len(default_creds) > 1:
-        raise ValueError(
-            "Found more than one credential marked as default - {}".format(
-                ", ".join(cred["name"] for cred in default_creds)
-            )
-        )
-    """
-    if default_creds:
-        resources["default_credential_local_reference"] = {
-            "kind": "app_credential",
-            "name": default_creds[0]["name"] if default_creds else cred[0]["name"],
-        }
 
     # Remove creds from HTTP endpoints resources
     auth = resources.get("authentication", {}) or {}
@@ -90,10 +73,7 @@ def strip_secrets(resources, secret_map, secret_variables, object_lists=[], obje
                         )
                     )
                     auth["basic_auth"]["password"] = {
-                        "attrs": {
-                            "is_secret_modified": False,
-                            "secret_reference": None,
-                        }
+                        "attrs": {"is_secret_modified": False, "secret_reference": None}
                     }
                     if not (task.get("attrs", {}) or {}).get("headers", []) or []:
                         continue
@@ -130,7 +110,7 @@ def strip_secrets(resources, secret_map, secret_variables, object_lists=[], obje
                 if not (task.get("attrs", {}) or {}).get("headers", []) or []:
                     continue
                 strip_entity_secret_variables(
-                    path_list, task["attrs"], field_name="headers",
+                    path_list, task["attrs"], field_name="headers"
                 )
 
     def strip_authentication_secret_variables(path_list, obj):
@@ -138,11 +118,11 @@ def strip_secrets(resources, secret_map, secret_variables, object_lists=[], obje
         if auth.get("auth_type", None) == "basic":
             secret_variables.append(
                 (
-                    path_list + ["authentication", "basic_auth", "password",],
+                    path_list + ["authentication", "basic_auth", "password"],
                     auth["password"].pop("value"),
                 )
             )
-            auth["password"] = {"attrs": {"is_secret_modified": False,}}
+            auth["password"] = {"attrs": {"is_secret_modified": False}}
 
     def strip_all_secret_variables(path_list, obj):
         strip_entity_secret_variables(path_list, obj)

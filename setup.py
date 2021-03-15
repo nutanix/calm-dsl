@@ -27,15 +27,16 @@ class PyTest(TestCommand):
 
 setuptools.setup(
     name="calm.dsl",
-    version="0.9.0-alpha",
+    version=read_file("CalmVersion"),
     author="Nutanix",
     author_email="nucalm@nutanix.com",
     description="Calm DSL for blueprints",
     long_description=read_file("README.md"),
     long_description_content_type="text/markdown",
-    url="https://github.com/nutanix/calm-dsl",
+    url="https://nutanix.github.io/calm-dsl/",
     packages=setuptools.find_namespace_packages(include=["calm.*"]),
     namespace_packages=["calm"],
+    setup_requires=["wheel"],
     install_requires=read_file("requirements.txt"),
     tests_require=read_file("dev-requirements.txt"),
     cmdclass={"test": PyTest},

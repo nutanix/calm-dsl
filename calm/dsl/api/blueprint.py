@@ -1,7 +1,6 @@
 from .resource import ResourceAPI
 from .connection import REQUEST
 from .util import strip_secrets, patch_secrets
-from calm.dsl.config import get_config
 from .project import ProjectAPI
 
 
@@ -17,6 +16,12 @@ class BlueprintAPI(ResourceAPI):
         self.EXPORT_JSON = self.ITEM + "/export_json"
         self.EXPORT_JSON_WITH_SECRETS = self.ITEM + "/export_json?keep_secrets=true"
         self.EXPORT_FILE = self.ITEM + "/export_file"
+        self.BROWNFIELD_VM_LIST = self.PREFIX + "/brownfield_import/vms/list"
+        self.PATCH_WITH_ENVIRONMENT = self.ITEM + "/patch_with_environment"
+        self.VARIABLE_VALUES = self.ITEM + "/variables/{}/values"
+        self.VARIABLE_VALUES_WITH_TRLID = (
+            self.VARIABLE_VALUES + "?requestId={}&trlId={}"
+        )
 
     # TODO https://jira.nutanix.com/browse/CALM-17178
     # Blueprint creation timeout is dependent on payload.
@@ -54,6 +59,14 @@ class BlueprintAPI(ResourceAPI):
             method=REQUEST.METHOD.POST,
         )
 
+    def patch_with_environment(self, uuid, payload):
+        return self.connection._call(
+            self.PATCH_WITH_ENVIRONMENT.format(uuid),
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
+        )
+
     def poll_launch(self, blueprint_id, request_id):
         return self.connection._call(
             self.LAUNCH_POLL.format(blueprint_id, request_id),
@@ -66,8 +79,21 @@ class BlueprintAPI(ResourceAPI):
             self.BP_EDITABLES.format(bp_uuid), verify=False, method=REQUEST.METHOD.GET
         )
 
+    def brownfield_vms(self, payload):
+        # Adding refresh cache for call. As redis expiry is 10 mins.
+        payload["filter"] += ";refresh_cache==True"
+        return self.connection._call(
+            self.BROWNFIELD_VM_LIST,
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
+        )
+
     @staticmethod
-    def _make_blueprint_payload(bp_name, bp_desc, bp_resources, categories=None):
+    def _make_blueprint_payload(bp_name, bp_desc, bp_resources, bp_metadata=None):
+
+        if not bp_metadata:
+            bp_metadata = {"spec_version": 1, "name": bp_name, "kind": "blueprint"}
 
         bp_payload = {
             "spec": {
@@ -75,17 +101,14 @@ class BlueprintAPI(ResourceAPI):
                 "description": bp_desc or "",
                 "resources": bp_resources,
             },
-            "metadata": {"spec_version": 1, "name": bp_name, "kind": "blueprint"},
+            "metadata": bp_metadata,
             "api_version": "3.0",
         }
-
-        if categories:
-            bp_payload["categories"] = categories
 
         return bp_payload
 
     def upload_with_secrets(
-        self, bp_name, bp_desc, bp_resources, categories=None, force_create=False
+        self, bp_name, bp_desc, bp_resources, bp_metadata=None, force_create=False
     ):
 
         # check if bp with the given name already exists
@@ -163,32 +186,12 @@ class BlueprintAPI(ResourceAPI):
             if (obj["type"] == "VMWARE_VM") and (obj["os_type"] == "Windows"):
                 strip_vmware_secrets(["substrate_definition_list", obj_index], obj)
 
-        upload_payload = self._make_blueprint_payload(bp_name, bp_desc, bp_resources)
+        upload_payload = self._make_blueprint_payload(
+            bp_name, bp_desc, bp_resources, bp_metadata
+        )
 
-        config = get_config()
-        project_name = config["PROJECT"]["name"]
-        projectObj = ProjectAPI(self.connection)
-
-        # Fetch project details
-        params = {"filter": "name=={}".format(project_name)}
-        res, err = projectObj.list(params=params)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        response = res.json()
-        entities = response.get("entities", None)
-        if not entities:
-            raise Exception("No project with name {} exists".format(project_name))
-
-        project_id = entities[0]["metadata"]["uuid"]
-
-        # Setting project reference
-        upload_payload["metadata"]["project_reference"] = {
-            "kind": "project",
-            "uuid": project_id,
-            "name": project_name,
-        }
-
+        # TODO strip categories and add at updating time
+        bp_categories = upload_payload["metadata"].pop("categories", {})
         res, err = self.upload(upload_payload)
 
         if err:
@@ -200,13 +203,8 @@ class BlueprintAPI(ResourceAPI):
 
         patch_secrets(bp["spec"]["resources"], secret_map, secret_variables)
 
-        # TODO - insert categories during update as /import_json fails if categories are given!
-        # Populating the categories at runtime
-        config_categories = dict(config.items("CATEGORIES"))
-        if categories:
-            config_categories.update(categories)
-
-        bp["metadata"]["categories"] = config_categories
+        # Adding categories at PUT call to blueprint
+        bp["metadata"]["categories"] = bp_categories
 
         # Update blueprint
         update_payload = bp
@@ -225,4 +223,16 @@ class BlueprintAPI(ResourceAPI):
     def export_file(self, uuid):
         return self.connection._call(
             self.EXPORT_FILE.format(uuid), verify=False, method=REQUEST.METHOD.GET
+        )
+
+    def variable_values(self, uuid, var_uuid):
+        url = self.VARIABLE_VALUES.format(uuid, var_uuid)
+        return self.connection._call(
+            url, verify=False, method=REQUEST.METHOD.GET, ignore_error=True
+        )
+
+    def variable_values_from_trlid(self, uuid, var_uuid, req_id, trl_id):
+        url = self.VARIABLE_VALUES_WITH_TRLID.format(uuid, var_uuid, req_id, trl_id)
+        return self.connection._call(
+            url, verify=False, method=REQUEST.METHOD.GET, ignore_error=True
         )

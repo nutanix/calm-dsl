@@ -3,7 +3,7 @@
         "spec_version": 1,
         "kind": "blueprint",
         "name": "SimpleLampBlueprint",
-        "categories": null
+        "categories": {}
     },
     "spec": {
         "name": "SimpleLampBlueprint",
@@ -1588,7 +1588,7 @@
                         "delay_secs": "60",
                         "retries": "5",
                         "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
-                        "disable_readiness_probe": false
+                        "disable_readiness_probe": true
                     },
                     "editables": {}
                 },
@@ -1651,7 +1651,7 @@
                         "delay_secs": "60",
                         "retries": "5",
                         "address": "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
-                        "disable_readiness_probe": false
+                        "disable_readiness_probe": true
                     },
                     "editables": {}
                 },
@@ -1677,12 +1677,14 @@
                     "variable_list": [],
                     "action_list": [],
                     "readiness_probe": {
-                        "address": "",
-                        "disable_readiness_probe": false,
-                        "delay_secs": "60",
                         "connection_type": "SSH",
                         "connection_port": 22,
-                        "retries": "5"
+                        "connection_protocol": "",
+                        "timeout_secs": "",
+                        "delay_secs": "60",
+                        "retries": "5",
+                        "address": "",
+                        "disable_readiness_probe": true
                     },
                     "editables": {}
                 }
@@ -1699,7 +1701,6 @@
                         },
                         "value": "passwd"
                     },
-                    "default": true,
                     "editables": {}
                 }
             ],
@@ -1966,7 +1967,11 @@
                         }
                     }
                 }
-            ]
+            ],
+            "default_credential_local_reference": {
+                "kind": "app_credential",
+                "name": "default cred"
+            }
         }
     }
 }

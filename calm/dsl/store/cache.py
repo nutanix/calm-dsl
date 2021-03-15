@@ -3,9 +3,9 @@ import sys
 import traceback
 from peewee import OperationalError, IntegrityError
 
-from ..db import get_db_handle, init_db_handle
 from .version import Version
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.db import get_db_handle, init_db_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -104,7 +104,25 @@ class Cache:
             init_db_handle()
             LOG.info("Updating cache", nl=False)
             sync_tables(tables)
-            click.echo(" [Done]", err=True)
+        click.echo(" [Done]", err=True)
+
+    @classmethod
+    def sync_table(cls, cache_type):
+        """sync the cache table provided in cache_type list"""
+
+        if not cache_type:
+            return
+
+        cache_type = [cache_type] if not isinstance(cache_type, list) else cache_type
+        cache_table_map = cls.get_cache_tables()
+
+        for _ct in cache_type:
+            if _ct not in cache_table_map:
+                LOG.warning("Invalid cache_type ('{}') provided".format(cache_type))
+                continue
+
+            cache_table = cache_table_map[_ct]
+            cache_table.sync()
 
     @classmethod
     def clear_entities(cls):

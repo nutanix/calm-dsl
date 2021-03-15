@@ -1,7 +1,7 @@
 import pytest
 
 from calm.dsl.cli.main import get_api_client
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 

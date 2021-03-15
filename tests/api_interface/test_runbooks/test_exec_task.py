@@ -3,7 +3,7 @@ import uuid
 
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import RUNLOG
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 from tests.api_interface.test_runbooks.test_files.exec_task import (
     EscriptTask,
     SetVariableOnEscript,
@@ -45,17 +45,17 @@ class TestExecTasks:
         ],
     )
     def test_script_run(self, Runbook):
-        """ test_access_set_variable_in_next_task, test_escript_task,
-            test_script_type_escript_execute_task_on_endpoint_with_multiple_ips,
-            test_rb_run_with_script_type_powershell_setVariable_task,
-            test__script_type_powershell_execute_task,
-            test_powershell_on_default_target,
-            test_script_type_powershell_execute_task_on_endpoint_with_multiple_ips,
-            test_script_credential_overwrite for powershell task,
-            test_rb_run_with_script_type_shell_setVariable_task,
-            test_script_type_shell_execute_task,
-            test_shell_on_default_target,
-            test_script_credential_overwrite for shell task"""
+        """test_access_set_variable_in_next_task, test_escript_task,
+        test_script_type_escript_execute_task_on_endpoint_with_multiple_ips,
+        test_rb_run_with_script_type_powershell_setVariable_task,
+        test__script_type_powershell_execute_task,
+        test_powershell_on_default_target,
+        test_script_type_powershell_execute_task_on_endpoint_with_multiple_ips,
+        test_script_credential_overwrite for powershell task,
+        test_rb_run_with_script_type_shell_setVariable_task,
+        test_script_type_shell_execute_task,
+        test_shell_on_default_target,
+        test_script_credential_overwrite for shell task"""
 
         client = get_api_client()
         rb_name = "test_exectask_" + str(uuid.uuid4())[-10:]
@@ -218,8 +218,9 @@ class TestExecTasks:
             ):
                 exec_tasks.append(entity["metadata"]["uuid"])
 
-        config = get_config()
-        project_name = config["PROJECT"]["name"]
+        ContextObj = get_context()
+        project_config = ContextObj.get_project_config()
+        project_name = project_config["name"]
 
         # Now checking the output of exec task
         for exec_task in exec_tasks:

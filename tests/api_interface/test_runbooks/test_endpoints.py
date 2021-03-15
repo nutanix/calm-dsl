@@ -5,7 +5,7 @@ import uuid
 
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import ENDPOINT
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 from utils import change_uuids, read_test_config
 
 LinuxEndpointPayload = read_test_config(file_name="linux_endpoint_payload.json")
@@ -286,10 +286,12 @@ class TestEndpoints:
     @pytest.mark.endpoint
     @pytest.mark.regression
     def test_endpoint_list_with_project_reference(self):
-        config = get_config()
+
         client = get_api_client()
 
-        project_name = config["PROJECT"]["name"]
+        ContextObj = get_context()
+        project_config = ContextObj.get_project_config()
+        project_name = project_config["name"]
         # Fetch project details
         project_params = {"filter": "name=={}".format(project_name)}
         res, err = client.project.list(params=project_params)
@@ -319,7 +321,7 @@ class TestEndpoints:
     @pytest.mark.endpoint
     @pytest.mark.regression
     @pytest.mark.parametrize("EndpointPayload", [LinuxEndpointPayload])
-    def test_endpoint_validation_and_type_update(self, EndpointPayload):
+    def test_endpoint_name_validation(self, EndpointPayload):
         """
         test_endpoint_name_validations
         """

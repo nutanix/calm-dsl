@@ -3,7 +3,7 @@ import os
 from calm.dsl.decompile.render import render_template
 from calm.dsl.builtins import CredentialType
 from calm.dsl.decompile.file_handler import get_local_dir
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 from calm.dsl.builtins import get_valid_identifier
 
 LOG = get_logging_handle(__name__)
@@ -19,7 +19,6 @@ def render_credential_template(cls):
         raise TypeError("{} is not of type {}".format(cls, CredentialType))
 
     user_attrs = cls.get_user_attrs()
-    user_attrs["name"] = cls.__name__
     user_attrs["description"] = cls.__doc__
 
     var_name = "BP_CRED_{}".format(get_valid_identifier(cls.__name__))
@@ -58,3 +57,11 @@ def get_cred_files():
 
     global CRED_FILES
     return CRED_FILES
+
+
+def init_cred_globals():
+    """Reinitialises global vars used for credentials"""
+
+    global CRED_VAR_NAME_MAP, CRED_FILES
+    CRED_VAR_NAME_MAP = {}
+    CRED_FILES = []

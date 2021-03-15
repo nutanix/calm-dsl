@@ -1,0 +1,42 @@
+{% import "ref.yaml.jinja2" as ref %}
+{% import "brownfield_vm.yaml.jinja2" as brownfield_vm %}
+
+{% macro BrownfieldDeployment() -%}
+
+title: BrownfieldDeployment
+type: object
+x-calm-dsl-type: app_brownfield_deployment
+properties:
+  published_service_local_reference_list:
+    x-calm-dsl-display-name: published_services
+    type: array
+    items:
+      $ref: '#/components/schemas/Ref'
+  package_local_reference_list:
+    x-calm-dsl-display-name: packages
+    type: array
+    items:
+      $ref: '#/components/schemas/Ref'
+  substrate_local_reference:
+    x-calm-dsl-display-name: substrate
+    {{ ref.Ref() | indent(4) }}
+  name:
+    type: string
+  brownfield_instance_list:
+    x-calm-dsl-display-name: instances
+    type: array
+    items:
+      $ref: '#/components/schemas/BrownfieldVm'
+  type:
+    type: string
+    default: BROWNFIELD
+
+{%- endmacro %}
+
+
+{% macro BrownfieldDeploymentSchema() -%}
+
+BrownfieldDeployment:
+  {{ BrownfieldDeployment()|indent(2) }}
+
+{%- endmacro %}
