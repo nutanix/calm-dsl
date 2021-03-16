@@ -214,16 +214,13 @@ class VCenter:
             name_cardinality_map[name] = entity["status"]["resources"]["cardinality"]
             for tag in entity["status"]["resources"]["tags"]:
                 key = str(entity["status"]["resources"]["name"] + ":" + tag["name"])
-                name_tag_id_map[key]= {
-                    "id": tag["id"], 
+                name_tag_id_map[key] = {
+                    "id": tag["id"],
                     "name": entity["status"]["resources"]["name"],
-                    "tag_name": tag["name"]
+                    "tag_name": tag["name"],
                 }
 
-        return {
-            "tag_list": name_tag_id_map,
-            "cardinality_list": name_cardinality_map
-        }
+        return {"tag_list": name_tag_id_map, "cardinality_list": name_cardinality_map}
 
     def file_paths(
         self,
@@ -377,7 +374,8 @@ class VCenter:
         }
 
         return response
- 
+
+
 def highlight_text(text, **kwargs):
     """Highlight text in our standard format"""
     return click.style("{}".format(text), fg="blue", bold=False, **kwargs)
@@ -886,7 +884,8 @@ def create_spec(client):
     # Add vmware tags
     if LV(CALM_VERSION) >= LV("3.2.0"):
         choice = click.prompt(
-            "\n{}(y/n)".format(highlight_text("Do you want to add any tags?")), default="n"
+            "\n{}(y/n)".format(highlight_text("Do you want to add any tags?")),
+            default="n",
         )
         if choice[0] == "y":
             tags_map = Obj.tags(account_id)
@@ -908,7 +907,9 @@ def create_spec(client):
                         )
 
                 while True:
-                    res = click.prompt("\nEnter the index of Category: Tag pair", default=1)
+                    res = click.prompt(
+                        "\nEnter the index of Category: Tag pair", default=1
+                    )
                     if (res > len(tag_names)) or (res <= 0):
                         click.echo("Invalid index !!! ")
 
@@ -916,11 +917,17 @@ def create_spec(client):
                         selected_tag = tag_names[res - 1]
                         selected_tag_id = tag_names_id[selected_tag]["id"]
                         selected_category = tag_names_id[selected_tag]["name"]
-                        spec["resources"]["tag_list"].append({'tag_id': selected_tag_id})
+                        spec["resources"]["tag_list"].append(
+                            {"tag_id": selected_tag_id}
+                        )
                         click.echo("{} selected".format(highlight_text(selected_tag)))
                         tag_names.pop(res - 1)
                         if cardinality_list[selected_tag.split(":")[0]] == "SINGLE":
-                            tag_names = [x for x in tag_names if not tag_names_id[x]["name"] == selected_category]
+                            tag_names = [
+                                x
+                                for x in tag_names
+                                if not tag_names_id[x]["name"] == selected_category
+                            ]
 
                         break
 
@@ -930,7 +937,6 @@ def create_spec(client):
                 )
                 if choice[0] == "n":
                     break
-
 
     VCenterVmProvider.validate_spec(spec)
 
