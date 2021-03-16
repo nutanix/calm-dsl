@@ -126,3 +126,31 @@ class SampleProject(Project):
     envs = [ProjEnvironment1, ProjEnvironment2]
     default_environment = ref(ProjEnvironment1)
 ```
+
+### Endpoint Model
+
+Create a Endpoint using the `CalmEndpoint` model. This model supports creation of Linux, Windows, HTTP endpoint types, whereas Linux, Windows endpoint supports IP, VM endpoint. Following are the examples of creating different styles of endpoint:
+
+Example 1: Creating a Linux VM Endpoint of Static Filter type
+```
+LinuxCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
+
+vm_endpoint = Endpoint.Linux.vm(
+    filter_type=ENDPOINT_FILTER.STATIC,
+    vms=[VM(uuid="85a5a955-9cd6-4d48-a965-411e69127242")],
+    cred=LinuxCred,
+    provider_type=ENDPOINT_PROVIDER.NUTANIX,
+    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
+)
+```
+
+Example 2: Creating a Linux VM Endpoint of Dynamic Filter type
+```
+linux_ahv_dynamic_vm_endpoint1 = Endpoint.Linux.vm(
+    filter_type=ENDPOINT_FILTER.DYNAMIC,
+    filter="name==vm_name1",
+    cred=LinuxCred,
+    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
+    provider_type=ENDPOINT_PROVIDER.NUTANIX,
+)
+```
