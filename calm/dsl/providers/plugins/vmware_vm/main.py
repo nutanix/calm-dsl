@@ -570,6 +570,59 @@ def create_spec(client):
                 click.echo("{} selected".format(highlight_text(template_name)))
                 break
 
+    # Check if user want to supply vmware folder path
+    if LV(CALM_VERSION) >= LV("3.2.0"):
+        spec["folder"] = {}
+        choice = click.prompt(
+            "\n{}(y/n)".format(
+                highlight_text(
+                    "Do you want to specify a destination folder for the VM to be placed in?"
+                )
+            ),
+            default="n",
+        )
+
+        if choice[0] == "y":
+
+            choice = click.prompt(
+                "\n{}(y/n)".format(
+                    highlight_text(
+                        "Do you want to use existing folder in the platform to deploy the new VM?"
+                    )
+                ),
+                default="n",
+            )
+            if choice[0] == "y":
+                existing_path = click.prompt(
+                    "\nEnter the path to the existing folder in the platform. Use '/' to separate folder names along the path."
+                )
+                spec["folder"]["existing_path"] = existing_path
+
+            choice = click.prompt(
+                "\n{}(y/n)".format(
+                    highlight_text(
+                        "Do you want to create new folder or path for the VM? If existing folder path is specified, new path will be created under the existing path."
+                    )
+                ),
+                default="n",
+            )
+            if choice[0] == "y":
+                new_path = click.prompt(
+                    "\nEnter the new folder to be created. For creating a directory structure, use: Folder1/Folder2/Folder3. For simply creating a new folder, just specify the folder name."
+                )
+                spec["folder"]["new_path"] = new_path
+
+                delete_empty_folder = click.prompt(
+                    "\n{}(y/n)".format(
+                        highlight_text(
+                            "Do you want the newly created folder/path to be deleted during application deletion if it does not contain any other resource?"
+                        )
+                    ),
+                    default="n",
+                )
+                delete_empty_folder = True if delete_empty_folder[0] == "y" else False
+                spec["folder"]["delete_empty_folder"] = delete_empty_folder
+
     # VM Configuration
     vm_name = "vm-@@{calm_unique_hash}@@-@@{calm_array_index}@@"
     spec["name"] = click.prompt("\nEnter instance name", default=vm_name)
