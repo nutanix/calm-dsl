@@ -198,6 +198,30 @@ class VCenter:
 
         return name_id_map
 
+    def tags(self, account_id):
+        obj = get_resource_api(vmw.TAGS, self.connection)
+        payload = {"filter": "account_uuid=={}".format(account_id)}
+        res, err = obj.list(payload)
+
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        name_tag_id_map = {}
+        name_cardinality_map = {}
+        for entity in res.get("entities"):
+            name = entity["status"]["resources"]["name"]
+            name_cardinality_map[name] = entity["status"]["resources"]["cardinality"]
+            for tag in entity["status"]["resources"]["tags"]:
+                key = str(entity["status"]["resources"]["name"] + ":" + tag["name"])
+                name_tag_id_map[key] = {
+                    "id": tag["id"],
+                    "name": entity["status"]["resources"]["name"],
+                    "tag_name": tag["name"],
+                }
+
+        return {"tag_list": name_tag_id_map, "cardinality_list": name_cardinality_map}
+
     def file_paths(
         self,
         account_id,
@@ -856,6 +880,65 @@ def create_spec(client):
             }
 
             spec["resources"]["template_nic_list"].append(network)
+
+    # Add vmware tags
+    if LV(CALM_VERSION) >= LV("3.2.0"):
+        choice = click.prompt(
+            "\n{}(y/n)".format(highlight_text("Do you want to add any tags?")),
+            default="n",
+        )
+        if choice[0] == "y":
+            tags_map = Obj.tags(account_id)
+            tag_names = list(tags_map["tag_list"].keys())
+            tag_names_id = tags_map["tag_list"]
+            spec["resources"]["tag_list"] = list()
+            cardinality_list = tags_map["cardinality_list"]
+
+            while True:
+                if not tag_names:
+                    click.echo(highlight_text("\nNo tags available."))
+                    break
+
+                else:
+                    click.echo("\nChoose from given Category: Tag pairs: ")
+                    for ind, name in enumerate(tag_names):
+                        click.echo(
+                            "\t {}. {}".format(str(ind + 1), highlight_text(name))
+                        )
+
+                while True:
+                    res = click.prompt(
+                        "\nEnter the index of Category: Tag pair", default=1
+                    )
+                    if (res > len(tag_names)) or (res <= 0):
+                        click.echo("Invalid index !!! ")
+
+                    else:
+                        selected_tag = tag_names[res - 1]
+                        selected_tag_id = tag_names_id[selected_tag]["id"]
+                        selected_category = tag_names_id[selected_tag]["name"]
+                        spec["resources"]["tag_list"].append(
+                            {"tag_id": selected_tag_id}
+                        )
+                        click.echo("{} selected".format(highlight_text(selected_tag)))
+                        tag_names.pop(res - 1)
+                        if cardinality_list[selected_tag.split(":")[0]] == "SINGLE":
+                            tag_names = [
+                                x
+                                for x in tag_names
+                                if not tag_names_id[x]["name"] == selected_category
+                            ]
+
+                        break
+
+                choice = click.prompt(
+                    "\n{}(y/n)".format(highlight_text("Do you want to add more tags?")),
+                    default="n",
+                )
+                if choice[0] == "n":
+                    break
+
+    VCenterVmProvider.validate_spec(spec)
 
     click.secho("\nControllers", underline=True)
 
