@@ -159,9 +159,12 @@ class CustomLogging:
         """
 
         logger = self.get_logger()
+        exc_info = False
         if self.show_trace:
-            kwargs["stack_info"] = sys.exc_info()
-        return logger.exception(self.__add_caller_info(msg), *args, **kwargs)
+            exc_info = True
+        return logger.exception(
+            self.__add_caller_info(msg), exc_info=exc_info, *args, **kwargs
+        )
 
     def critical(self, msg, *args, **kwargs):
         """

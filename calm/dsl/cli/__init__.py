@@ -2,6 +2,7 @@ from .main import main
 from .bp_commands import *  # NoQA
 from .app_commands import *  # NoQA
 from .runbook_commands import *  # NoQA
+from .library_tasks_commands import *  # NoQA
 from .endpoint_commands import *  # NoQA
 from .config_commands import *  # NoQA
 from .account_commands import *  # NoQA
@@ -20,5 +21,6 @@ from .directory_service_commands import *  # NoQA
 from .acp_commands import *  # NoQA
 from .task_commands import *  # NoQA
 from .brownfield_commands import *  # NoQA
+from .environment_commands import *  # NoQA
 
 __all__ = ["main", "get_api_client"]

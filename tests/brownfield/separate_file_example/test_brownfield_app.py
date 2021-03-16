@@ -208,10 +208,7 @@ class TestBrownFieldCommands:
     )
     @pytest.mark.parametrize("project", ["default"])
     def test_get_brownfield_vms(self, vm_type, project):
-        """
-        Test get command on brownfield vms
-        Note: Test will fail for provider = VMWARE_VM for version less than 2.9.8.1 and 3.0.0 (https://jira.nutanix.com/browse/CALM-18635)
-        """
+        """Test get command on brownfield vms"""
 
         runner = CliRunner()
         LOG.info("Testing 'calm get brownfield vms --type {}' command".format(vm_type))

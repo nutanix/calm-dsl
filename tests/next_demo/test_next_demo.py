@@ -3,6 +3,8 @@ Calm DSL .NEXT demo
 
 """
 
+import json
+
 from calm.dsl.builtins import (
     ref,
     basic_cred,
@@ -15,8 +17,11 @@ from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import read_provider_spec, read_local_file
 
-CRED_USERNAME = read_local_file(".tests/username")
-CRED_PASSWORD = read_local_file(".tests/password")
+
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+
+CRED_USERNAME = DSL_CONFIG["AHV"]["CREDS"]["LINUX"]["USERNAME"]
+CRED_PASSWORD = DSL_CONFIG["AHV"]["CREDS"]["LINUX"]["PASSWORD"]
 DNS_SERVER = read_local_file(".tests/dns_server")
 
 

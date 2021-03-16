@@ -6,6 +6,7 @@ import inspect
 from types import MappingProxyType
 import uuid
 import copy
+import keyword
 
 from ruamel.yaml import YAML, resolver, SafeRepresenter
 from calm.dsl.tools import StrictDraft7Validator
@@ -178,9 +179,14 @@ class EntityType(EntityTypeBase):
         if not name:
             # Generate unique name
             name = "_" + schema_name + str(uuid.uuid4())[:8]
-        else:
+        elif mcls.__schema_name__ not in ["Task", "Credential"]:
             if name == schema_name:
-                raise TypeError("{} is a reserved name for this entity".format(name))
+                LOG.error("'{}' is a reserved name for this entity".format(name))
+                sys.exit(-1)
+
+            elif keyword.iskeyword(name):
+                LOG.error("'{}' is a reserved python keyword".format(name))
+                sys.exit(-1)
 
         cls = super().__new__(mcls, name, bases, entitydict)
 
@@ -232,7 +238,7 @@ class EntityType(EntityTypeBase):
                 and name.endswith("__")
                 and not isinstance(value, (VariableType, ActionType, RunbookType))
                 and not isinstance(type(value), DescriptorType)
-            ):
+            ) or name == "__parent__":
                 continue
             user_attrs[name] = getattr(cls, name, value)
 
@@ -336,6 +342,8 @@ class EntityType(EntityTypeBase):
 
         # Fetching actions data inside entity
         for ek, ev in cls.__dict__.items():
+            if ek == "__parent__":  # TODO fix this mess
+                continue
             e_obj = getattr(cls, ek)
             if isinstance(e_obj, ActionType):
                 user_func = ev.user_func
@@ -380,6 +388,26 @@ class EntityType(EntityTypeBase):
         # cdict['__kind__'] = cls.__kind__
 
         return cdict
+
+    def post_compile(cls, cdict):
+        """method sets some properties to dict generated after compile"""
+
+        for _, v in cdict.items():
+            if isinstance(v, list):
+                for ve in v:
+                    if issubclass(type(ve), EntityTypeBase):
+                        ve.__parent__ = cls
+            elif issubclass(type(v), EntityTypeBase):
+                v.__parent__ = cls
+
+        return cdict
+
+    def generate_payload(cls):
+        """generates the payload(dict) for any entity"""
+
+        cls.pre_compile()
+        cdict = cls.compile()
+        return cls.post_compile(cdict)
 
     @classmethod
     def pre_decompile(mcls, cdict, context, prefix=""):
@@ -477,6 +505,24 @@ class EntityType(EntityTypeBase):
         # Merging dsl_attrs("__name__", "__doc__" etc.) and user_attrs
         attrs.update(user_attrs)
         name = attrs.get("__name__", ui_name)
+
+        if mcls.__schema_name__ not in ["Task", "Credential"]:
+            if name == mcls.__schema_name__:
+                LOG.error(
+                    "'{}' is a reserved name for this entity. Please use '--prefix/-p' cli option to provide prefix for entity's name.".format(
+                        name
+                    )
+                )
+                sys.exit(-1)
+
+            elif keyword.iskeyword(name):
+                LOG.error(
+                    "'{}' is a reserved python keyword. Please use '--prefix/-p' cli option to provide prefix for entity's name.".format(
+                        name
+                    )
+                )
+                sys.exit(-1)
+
         return mcls(name, (Entity,), attrs)
 
     def json_dumps(cls, pprint=False, sort_keys=False):
@@ -521,7 +567,9 @@ class EntityType(EntityTypeBase):
             "name": getattr(cls, "name", "") or cls.__name__,
             "kind": kind or getattr(cls, "__kind__"),
         }
-        return ref(None, (Entity,), attrs)
+        _cls = ref(None, (Entity,), attrs)
+        _cls.__self__ = cls
+        return _cls
 
     def get_dict(cls):
         return json.loads(cls.json_dumps())
@@ -538,7 +586,7 @@ class EntityJSONEncoder(JSONEncoder):
             return super().default(cls)
 
         # Add single function(wrapper) that can contain pre-post checks
-        return cls.compile()
+        return cls.generate_payload()
 
 
 class EntityJSONDecoder(JSONDecoder):

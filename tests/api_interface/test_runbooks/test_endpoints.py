@@ -321,7 +321,7 @@ class TestEndpoints:
     @pytest.mark.endpoint
     @pytest.mark.regression
     @pytest.mark.parametrize("EndpointPayload", [LinuxEndpointPayload])
-    def test_endpoint_validation_and_type_update(self, EndpointPayload):
+    def test_endpoint_name_validation(self, EndpointPayload):
         """
         test_endpoint_name_validations
         """

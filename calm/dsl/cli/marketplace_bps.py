@@ -2,6 +2,7 @@ import uuid
 import click
 import sys
 import json
+import os
 from prettytable import PrettyTable
 
 from calm.dsl.builtins import BlueprintType, get_valid_identifier
@@ -10,9 +11,11 @@ from calm.dsl.decompile.file_handler import get_bp_dir
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.config import get_context
 
-from .utils import highlight_text, get_states_filter
+from .utils import highlight_text, get_states_filter, Display
 from .bps import launch_blueprint_simple, get_blueprint
-from .projects import get_project
+from .apps import watch_app
+from calm.dsl.builtins.models.helper.common import get_project
+from .environments import get_project_environment, get_environment_by_uuid
 from calm.dsl.log import get_logging_handle
 from .constants import MARKETPLACE_BLUEPRINT
 
@@ -87,6 +90,7 @@ def get_mpis_group_call(
     group_member_count=0,
     app_source=None,
     app_group_uuid=None,
+    filter_by="",
 ):
     """
     To call groups() api for marketplace items
@@ -101,6 +105,9 @@ def get_mpis_group_call(
 
     if app_family != "All":
         filter += ";category_name==AppFamily;category_value=={}".format(app_family)
+
+    if filter_by:
+        filter = filter + ";(" + filter_by + ")"
 
     if name:
         filter += ";name=={}".format(name)
@@ -142,6 +149,7 @@ def get_mpis_group_call(
     if group_member_count:
         payload["group_member_count"] = group_member_count
 
+    # TODO Create GroupAPI separately for it.
     Obj = get_resource_api("groups", client.connection)
     res, err = Obj.create(payload=payload)
 
@@ -153,7 +161,7 @@ def get_mpis_group_call(
     return res
 
 
-def get_marketplace_items(name, quiet, app_family, display_all):
+def get_marketplace_items(name, quiet, app_family, display_all, filter_by=""):
     """Lists marketplace items"""
 
     group_member_count = 0
@@ -165,6 +173,7 @@ def get_marketplace_items(name, quiet, app_family, display_all):
         app_family=app_family,
         app_states=[MARKETPLACE_BLUEPRINT.STATES.PUBLISHED],
         group_member_count=group_member_count,
+        filter_by=filter_by,
     )
     group_results = res["group_results"]
 
@@ -221,10 +230,12 @@ def get_marketplace_items(name, quiet, app_family, display_all):
     click.echo(table)
 
 
-def get_marketplace_bps(name, quiet, app_family, app_states=[]):
+def get_marketplace_bps(name, quiet, app_family, app_states=[], filter_by=""):
     """ List all the blueprints in marketplace manager"""
 
-    res = get_mpis_group_call(name=name, app_family=app_family, app_states=app_states)
+    res = get_mpis_group_call(
+        name=name, app_family=app_family, app_states=app_states, filter_by=filter_by
+    )
     group_results = res["group_results"]
 
     if quiet:
@@ -438,10 +449,14 @@ def launch_marketplace_bp(
     name,
     version,
     project,
+    environment,
     app_name=None,
     profile_name=None,
     patch_editables=True,
     app_source=None,
+    launch_params=None,
+    watch=False,
+    poll_interval=10,
 ):
     """
     Launch marketplace blueprints
@@ -463,7 +478,11 @@ def launch_marketplace_bp(
 
     LOG.info("Converting MPI to blueprint")
     bp_payload = convert_mpi_into_blueprint(
-        name=name, version=version, project_name=project, app_source=app_source
+        name=name,
+        version=version,
+        project_name=project,
+        environment_name=environment,
+        app_source=app_source,
     )
 
     app_name = app_name or "Mpi-App-{}-{}".format(name, str(uuid.uuid4())[-10:])
@@ -472,11 +491,23 @@ def launch_marketplace_bp(
         profile_name=profile_name,
         app_name=app_name,
         blueprint=bp_payload,
+        launch_params=launch_params,
     )
     LOG.info("App {} creation is successful".format(app_name))
 
+    if watch:
 
-def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_secrets):
+        def display_action(screen):
+            watch_app(app_name, screen, poll_interval=poll_interval)
+            screen.wait_for_input(10.0)
+
+        Display.wrapper(display_action, watch=True)
+        LOG.info("Action runs completed for app {}".format(app_name))
+
+
+def decompile_marketplace_bp(
+    name, version, app_source, bp_name, project, with_secrets, bp_dir
+):
     """decompiles marketplace blueprint"""
 
     if not version:
@@ -500,9 +531,12 @@ def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_s
     bp_payload = res.json()
     blueprint = bp_payload["spec"]["resources"]
     blueprint_name = get_valid_identifier(bp_name or name)
-    blueprint_dir = bp_name or "mpi_bp_{}_v{}".format(blueprint_name, version)
-    blueprint_description = bp_payload["spec"].get("description", "")
 
+    if not bp_dir:
+        bp_dir_suffix = bp_name or "mpi_bp_{}_v{}".format(blueprint_name, version)
+        bp_dir = os.path.join(os.getcwd(), bp_dir_suffix)
+
+    blueprint_description = bp_payload["spec"].get("description", "")
     LOG.info("Decompiling marketplace blueprint {}".format(name))
     for sub_obj in blueprint.get("substrate_definition_list"):
         sub_type = sub_obj.get("type", "") or "AHV_VM"
@@ -520,18 +554,26 @@ def decompile_marketplace_bp(name, version, app_source, bp_name, project, with_s
     bp_cls.__name__ = blueprint_name
     bp_cls.__doc__ = blueprint_description
 
-    create_bp_dir(bp_cls, blueprint_dir, with_secrets)
-    click.echo("\nSuccessfully decompiled. Directory location: {}".format(get_bp_dir()))
+    create_bp_dir(bp_cls=bp_cls, bp_dir=bp_dir, with_secrets=with_secrets)
+    click.echo(
+        "\nSuccessfully decompiled. Directory location: {}. Blueprint location: {}".format(
+            get_bp_dir(), os.path.join(get_bp_dir(), "blueprint.py")
+        )
+    )
 
 
 def launch_marketplace_item(
     name,
     version,
     project,
+    environment,
     app_name=None,
     profile_name=None,
     patch_editables=True,
     app_source=None,
+    launch_params=None,
+    watch=False,
+    poll_interval=10,
 ):
     """
     Launch marketplace items
@@ -549,7 +591,11 @@ def launch_marketplace_item(
 
     LOG.info("Converting MPI to blueprint")
     bp_payload = convert_mpi_into_blueprint(
-        name=name, version=version, project_name=project, app_source=app_source
+        name=name,
+        version=version,
+        project_name=project,
+        environment_name=environment,
+        app_source=app_source,
     )
 
     app_name = app_name or "Mpi-App-{}-{}".format(name, str(uuid.uuid4())[-10:])
@@ -558,36 +604,53 @@ def launch_marketplace_item(
         profile_name=profile_name,
         app_name=app_name,
         blueprint=bp_payload,
+        launch_params=launch_params,
     )
     LOG.info("App {} creation is successful".format(app_name))
 
+    if watch:
 
-def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None):
+        def display_action(screen):
+            watch_app(app_name, screen, poll_interval=poll_interval)
+            screen.wait_for_input(10.0)
+
+        Display.wrapper(display_action, watch=True)
+        LOG.info("Action runs completed for app {}".format(app_name))
+
+
+def convert_mpi_into_blueprint(
+    name, version, project_name=None, environment_name=None, app_source=None
+):
 
     client = get_api_client()
     context = get_context()
     project_config = context.get_project_config()
 
     project_name = project_name or project_config["name"]
-    project_data = get_project(project_name)
-
+    environment_data, project_data = get_project_environment(
+        name=environment_name, project_name=project_name
+    )
     project_uuid = project_data["metadata"]["uuid"]
-
-    LOG.info("Fetching details of project {}".format(project_name))
-    res, err = client.project.read(project_uuid)
-    if err:
-        LOG.error("[{}] - {}".format(err["code"], err["error"]))
-        sys.exit(-1)
-
-    res = res.json()
-    environments = res["status"]["resources"]["environment_reference_list"]
-
-    # For now only single environment exists
+    environments = project_data["status"]["resources"]["environment_reference_list"]
     if not environments:
         LOG.error("No environment registered to project '{}'".format(project_name))
         sys.exit(-1)
 
-    env_uuid = environments[0]["uuid"]
+    # Added in 3.2
+    default_environment_uuid = (
+        project_data["status"]["resources"]
+        .get("default_environment_reference", {})
+        .get("uuid")
+    )
+
+    # If there is no default environment, select first one
+    default_environment_uuid = default_environment_uuid or environments[0]["uuid"]
+
+    env_uuid = ""
+    if environment_data:  # if user supplies environment
+        env_uuid = environment_data["metadata"]["uuid"]
+    else:
+        env_uuid = default_environment_uuid
 
     LOG.info("Fetching MPI details")
     mpi_data = get_mpi_by_name_n_version(
@@ -636,7 +699,7 @@ def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None
     }
     bp_spec["api_version"] = "3.0"
 
-    LOG.debug("Creating MPI blueprint")
+    LOG.info("Creating MPI blueprint")
     bp_res, err = client.blueprint.marketplace_launch(bp_spec)
     if err:
         LOG.error("[{}] - {}".format(err["code"], err["error"]))
@@ -750,6 +813,7 @@ def publish_bp_as_new_marketplace_bp(
     category=None,
     icon_name=None,
     icon_file=None,
+    all_projects=False,
 ):
 
     # Search whether this marketplace item exists or not
@@ -794,6 +858,7 @@ def publish_bp_as_new_marketplace_bp(
             version=version,
             projects=projects,
             category=category,
+            all_projects=all_projects,
         )
 
         if publish_to_marketplace:
@@ -816,6 +881,7 @@ def publish_bp_as_existing_marketplace_bp(
     category=None,
     icon_name=None,
     icon_file=None,
+    all_projects=False,
 ):
 
     LOG.info(
@@ -891,6 +957,7 @@ def publish_bp_as_existing_marketplace_bp(
             version=version,
             projects=projects,
             category=category,
+            all_projects=all_projects,
         )
 
         if publish_to_marketplace:
@@ -901,7 +968,9 @@ def publish_bp_as_existing_marketplace_bp(
             )
 
 
-def approve_marketplace_bp(bp_name, version=None, projects=[], category=None):
+def approve_marketplace_bp(
+    bp_name, version=None, projects=[], category=None, all_projects=False
+):
 
     client = get_api_client()
     if not version:
@@ -947,16 +1016,29 @@ def approve_marketplace_bp(bp_name, version=None, projects=[], category=None):
 
         bp_data["metadata"]["categories"] = {"AppFamily": category}
 
-    for project in projects:
-        project_data = get_project(project)
+    if not bp_data["spec"]["resources"].get("project_reference_list", {}):
+        bp_data["spec"]["resources"]["project_reference_list"] = []
 
-        bp_data["spec"]["resources"]["project_reference_list"].append(
-            {
-                "kind": "project",
-                "name": project,
-                "uuid": project_data["metadata"]["uuid"],
-            }
-        )
+    project_name_uuid_map = client.project.get_name_uuid_map(params={"length": 250})
+    if all_projects:
+        for k, v in project_name_uuid_map.items():
+            bp_data["spec"]["resources"]["project_reference_list"].append(
+                {
+                    "kind": "project",
+                    "name": k,
+                    "uuid": v,
+                }
+            )
+
+    else:
+        for _project in projects:
+            bp_data["spec"]["resources"]["project_reference_list"].append(
+                {
+                    "kind": "project",
+                    "name": _project,
+                    "uuid": project_name_uuid_map[_project],
+                }
+            )
 
     res, err = client.market_place.update(uuid=bp_uuid, payload=bp_data)
     if err:
@@ -971,7 +1053,12 @@ def approve_marketplace_bp(bp_name, version=None, projects=[], category=None):
 
 
 def publish_marketplace_bp(
-    bp_name, version=None, projects=[], category=None, app_source=None
+    bp_name,
+    version=None,
+    projects=[],
+    category=None,
+    app_source=None,
+    all_projects=False,
 ):
 
     client = get_api_client()
@@ -1028,19 +1115,29 @@ def publish_marketplace_bp(
 
         bp_data["metadata"]["categories"] = {"AppFamily": category}
 
-    if projects:
+    if projects or all_projects:
         # Clear the stored projects
         bp_data["spec"]["resources"]["project_reference_list"] = []
-        for project in projects:
-            project_data = get_project(project)
+        project_name_uuid_map = client.project.get_name_uuid_map(params={"length": 250})
 
-            bp_data["spec"]["resources"]["project_reference_list"].append(
-                {
-                    "kind": "project",
-                    "name": project,
-                    "uuid": project_data["metadata"]["uuid"],
-                }
-            )
+        if all_projects:
+            for k, v in project_name_uuid_map.items():
+                bp_data["spec"]["resources"]["project_reference_list"].append(
+                    {
+                        "kind": "project",
+                        "name": k,
+                        "uuid": v,
+                    }
+                )
+        else:
+            for _project in projects:
+                bp_data["spec"]["resources"]["project_reference_list"].append(
+                    {
+                        "kind": "project",
+                        "name": _project,
+                        "uuid": project_name_uuid_map[_project],
+                    }
+                )
 
     # Atleast 1 project required for publishing to marketplace
     if not bp_data["spec"]["resources"].get("project_reference_list", None):

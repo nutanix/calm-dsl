@@ -8,6 +8,7 @@ from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Cache
+from calm.dsl.constants import CACHE
 from calm.dsl.builtins import Ref
 
 from .constants import ACP
@@ -55,11 +56,20 @@ def get_acps(name, project_name, filter_by, limit, offset, quiet, out):
         LOG.warning("Cannot fetch acps from {}".format(pc_ip))
         return
 
+    res = res.json()
+    total_matches = res["metadata"]["total_matches"]
+    if total_matches > limit:
+        LOG.warning(
+            "Displaying {} out of {} entities. Please use --limit and --offset option for more results.".format(
+                limit, total_matches
+            )
+        )
+
     if out == "json":
-        click.echo(json.dumps(res.json(), indent=4, separators=(",", ": ")))
+        click.echo(json.dumps(res, indent=4, separators=(",", ": ")))
         return
 
-    json_rows = res.json()["entities"]
+    json_rows = res["entities"]
     if not json_rows:
         click.echo(highlight_text("No acp found !!!\n"))
         return
@@ -172,7 +182,7 @@ def create_acp(role, project, acp_users, acp_groups, name):
         )
         sys.exit(-1)
 
-    role_cache_data = Cache.get_entity_data(entity_type="role", name=role)
+    role_cache_data = Cache.get_entity_data(entity_type=CACHE.ENTITY.ROLE, name=role)
     role_uuid = role_cache_data["uuid"]
 
     # Check if there is an existing acp with given (project-role) tuple
@@ -208,7 +218,7 @@ def create_acp(role, project, acp_users, acp_groups, name):
     cluster_uuids = []
     for subnet_uuid in whitelisted_subnets:
         subnet_cache_data = Cache.get_entity_data_using_uuid(
-            entity_type="ahv_subnet", uuid=subnet_uuid
+            entity_type=CACHE.ENTITY.AHV_SUBNET, uuid=subnet_uuid
         )
 
         cluster_uuids.append(subnet_cache_data["cluster_uuid"])
@@ -411,7 +421,7 @@ def describe_acp(acp_name, project_name, out):
 
     if acp_role:
         role_data = Cache.get_entity_data_using_uuid(
-            entity_type="role", uuid=acp_role["uuid"]
+            entity_type=CACHE.ENTITY.ROLE, uuid=acp_role["uuid"]
         )
         if not role_data:
             LOG.error(

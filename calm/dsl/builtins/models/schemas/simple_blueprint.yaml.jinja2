@@ -12,6 +12,13 @@ properties:
     type: string
     maxLength: 1000
     default: ''
+  environment_reference_list:
+    type: array
+    x-calm-dsl-min-version: 3.2.0
+    x-calm-dsl-display-name: environments
+    items:
+      type: object
+      x-calm-dsl-type: app_calm_ref
   credentials:
     type: array
     items:

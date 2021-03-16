@@ -1,6 +1,11 @@
 import importlib.util
 import os
+import sys
 import errno
+
+from calm.dsl.log import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 def make_file_dir(path, is_dir=False):
@@ -24,6 +29,10 @@ def get_module_from_file(module_name, file):
 
     spec = importlib.util.spec_from_file_location(module_name, file)
     user_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(user_module)
+    try:
+        spec.loader.exec_module(user_module)
+    except Exception as exp:
+        LOG.exception(exp)
+        sys.exit(-1)
 
     return user_module

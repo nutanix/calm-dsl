@@ -119,16 +119,3 @@ class SimpleLampBlueprint(SimpleBlueprint):
 
         # Call other actions
         PHPDeployment.test_action(name="Task10")
-
-
-def test_json():
-
-    import json
-    import os
-
-    generated_json = SimpleLampBlueprint.make_bp_dict()
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    file_path = os.path.join(dir_path, "test_simple_blueprint.json")
-    known_json = json.loads(open(file_path).read())
-
-    assert generated_json == known_json

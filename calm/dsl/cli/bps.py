@@ -1,6 +1,8 @@
 import time
 import json
 import sys
+import os
+import uuid
 from pprint import pprint
 import pathlib
 
@@ -16,6 +18,7 @@ from calm.dsl.builtins import (
     VmBlueprint,
     create_blueprint_payload,
     BlueprintType,
+    MetadataType,
     get_valid_identifier,
     file_exists,
     get_dsl_metadata_map,
@@ -24,6 +27,7 @@ from calm.dsl.builtins import (
 from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
 from calm.dsl.config import get_context
 from calm.dsl.api import get_api_client
+from calm.dsl.store import Cache
 from calm.dsl.decompile.decompile_render import create_bp_dir
 from calm.dsl.decompile.file_handler import get_bp_dir
 
@@ -35,10 +39,12 @@ from .utils import (
 )
 from .secrets import find_secret, create_secret
 from .constants import BLUEPRINT
+from .environments import get_project_environment
 from calm.dsl.tools import get_module_from_file
 from calm.dsl.builtins import Brownfield as BF
-from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
+from calm.dsl.constants import CACHE
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -72,11 +78,20 @@ def get_blueprint_list(name, filter_by, limit, offset, quiet, all_items, out):
         LOG.warning("Cannot fetch blueprints from {}".format(pc_ip))
         return
 
+    res = res.json()
+    total_matches = res["metadata"]["total_matches"]
+    if total_matches > limit:
+        LOG.warning(
+            "Displaying {} out of {} entities. Please use --limit and --offset option for more results.".format(
+                limit, total_matches
+            )
+        )
+
     if out == "json":
-        click.echo(json.dumps(res.json(), indent=4, separators=(",", ": ")))
+        click.echo(json.dumps(res, indent=4, separators=(",", ": ")))
         return
 
-    json_rows = res.json()["entities"]
+    json_rows = res["entities"]
     if not json_rows:
         click.echo(highlight_text("No blueprint found !!!\n"))
         return
@@ -282,6 +297,10 @@ def compile_blueprint(bp_file, brownfield_deployment_file=None):
     bp_payload = None
     if isinstance(UserBlueprint, type(SimpleBlueprint)):
         bp_payload = UserBlueprint.make_bp_dict()
+        if "project_reference" in metadata_payload:
+            bp_payload["metadata"]["project_reference"] = metadata_payload[
+                "project_reference"
+            ]
     else:
         if isinstance(UserBlueprint, type(VmBlueprint)):
             UserBlueprint = UserBlueprint.make_bp_obj()
@@ -358,9 +377,41 @@ def create_blueprint(
 def create_blueprint_from_json(
     client, path_to_json, name=None, description=None, force_create=False
 ):
+    """
+    creates blueprint from the bp json supplied.
+    NOTE: Project mentioned in the json file remains unchanged
+    """
 
     with open(path_to_json, "r") as f:
         bp_payload = json.loads(f.read())
+
+    ContextObj = get_context()
+    project_config = ContextObj.get_project_config()
+    configured_project = project_config["name"]
+
+    # If no project is given in payload, it is created with default project
+    bp_project_name = "default"
+
+    if (
+        bp_payload.get("metadata")
+        and bp_payload["metadata"].get("project_reference")
+        and bp_payload["metadata"]["project_reference"].get("uuid")
+    ):
+        bp_project_uuid = bp_payload["metadata"]["project_reference"]["uuid"]
+        if bp_project_uuid:
+            bp_project_data = Cache.get_entity_data_using_uuid(
+                entity_type=CACHE.ENTITY.PROJECT, uuid=bp_project_uuid
+            )
+            if bp_project_data:
+                bp_project_name = bp_project_data["name"]
+
+    if bp_project_name != configured_project:
+        LOG.warning(
+            "Project in supplied json is different from configured project('{}')".format(
+                configured_project
+            )
+        )
+
     return create_blueprint(
         client,
         bp_payload,
@@ -396,7 +447,7 @@ def create_blueprint_from_dsl(
     )
 
 
-def decompile_bp(name, bp_file, with_secrets=False, prefix=""):
+def decompile_bp(name, bp_file, with_secrets=False, prefix="", bp_dir=None):
     """helper to decompile blueprint"""
 
     if name and bp_file:
@@ -406,11 +457,13 @@ def decompile_bp(name, bp_file, with_secrets=False, prefix=""):
         sys.exit(-1)
 
     if name:
-        decompile_bp_from_server(name=name, with_secrets=with_secrets, prefix=prefix)
+        decompile_bp_from_server(
+            name=name, with_secrets=with_secrets, prefix=prefix, bp_dir=bp_dir
+        )
 
     elif bp_file:
         decompile_bp_from_file(
-            filename=bp_file, with_secrets=with_secrets, prefix=prefix
+            filename=bp_file, with_secrets=with_secrets, prefix=prefix, bp_dir=bp_dir
         )
 
     else:
@@ -420,7 +473,7 @@ def decompile_bp(name, bp_file, with_secrets=False, prefix=""):
         sys.exit(-1)
 
 
-def decompile_bp_from_server(name, with_secrets=False, prefix=""):
+def decompile_bp_from_server(name, with_secrets=False, prefix="", bp_dir=None):
     """decompiles the blueprint by fetching it from server"""
 
     client = get_api_client()
@@ -432,24 +485,36 @@ def decompile_bp_from_server(name, with_secrets=False, prefix=""):
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     res = res.json()
-    _decompile_bp(bp_payload=res, with_secrets=with_secrets, prefix=prefix)
+    _decompile_bp(
+        bp_payload=res, with_secrets=with_secrets, prefix=prefix, bp_dir=bp_dir
+    )
 
 
-def decompile_bp_from_file(filename, with_secrets=False, prefix=""):
+def decompile_bp_from_file(filename, with_secrets=False, prefix="", bp_dir=None):
     """decompile blueprint from local blueprint file"""
 
     # ToDo - Fix this
     bp_payload = json.loads(open(filename).read())
     # bp_payload = read_spec(filename)
-    _decompile_bp(bp_payload=bp_payload, with_secrets=with_secrets, prefix=prefix)
+    _decompile_bp(
+        bp_payload=bp_payload, with_secrets=with_secrets, prefix=prefix, bp_dir=bp_dir
+    )
 
 
-def _decompile_bp(bp_payload, with_secrets=False, prefix=""):
+def _decompile_bp(bp_payload, with_secrets=False, prefix="", bp_dir=None):
     """decompiles the blueprint from payload"""
 
     blueprint = bp_payload["spec"]["resources"]
     blueprint_name = bp_payload["spec"].get("name", "DslBlueprint")
     blueprint_description = bp_payload["spec"].get("description", "")
+
+    blueprint_metadata = bp_payload["metadata"]
+
+    # POP unnecessary keys
+    blueprint_metadata.pop("creation_time", None)
+    blueprint_metadata.pop("last_update_time", None)
+
+    metadata_obj = MetadataType.decompile(blueprint_metadata)
 
     # Copying dsl_name_map to global client_attrs
     if bp_payload["spec"]["resources"]["client_attrs"].get("None", {}):
@@ -474,8 +539,17 @@ def _decompile_bp(bp_payload, with_secrets=False, prefix=""):
     bp_cls.__name__ = get_valid_identifier(blueprint_name)
     bp_cls.__doc__ = blueprint_description
 
-    create_bp_dir(bp_cls=bp_cls, with_secrets=with_secrets)
-    click.echo("\nSuccessfully decompiled. Directory location: {}".format(get_bp_dir()))
+    create_bp_dir(
+        bp_cls=bp_cls,
+        with_secrets=with_secrets,
+        metadata_obj=metadata_obj,
+        bp_dir=bp_dir,
+    )
+    click.echo(
+        "\nSuccessfully decompiled. Directory location: {}. Blueprint location: {}".format(
+            get_bp_dir(), os.path.join(get_bp_dir(), "blueprint.py")
+        )
+    )
 
 
 def compile_blueprint_command(bp_file, brownfield_deployment_file, out):
@@ -564,65 +638,70 @@ def get_blueprint_runtime_editables(client, blueprint):
     return response.get("resources", [])
 
 
-def get_field_values(
-    entity_dict,
-    context,
-    path=None,
-    hide_input=False,
-    prompt=True,
-    launch_runtime_vars=None,
-    bp_data=None,
-):
-    path = path or ""
-    for field, value in entity_dict.items():
-        if isinstance(value, dict):
-            get_field_values(
-                entity_dict[field],
-                context,
-                path=path + "." + field,
-                bp_data=bp_data,
-                hide_input=hide_input,
-                prompt=prompt,
-                launch_runtime_vars=launch_runtime_vars,
+def get_variable_value(variable, bp_data, launch_runtime_vars):
+    """return variable value from launch_params/cli_prompt"""
+
+    var_context = variable["context"]
+    var_name = variable.get("name", "")
+
+    # If launch_runtime_vars is given, return variable vlaue from it
+    if launch_runtime_vars:
+        return get_val_launch_runtime_var(
+            launch_runtime_vars=launch_runtime_vars,
+            field="value",  # Only 'value' attribute is editable
+            path=var_name,
+            context=var_context,
+        )
+
+    # Fetch the options for value of dynamic variables
+    if variable["type"] in ["HTTP_LOCAL", "EXEC_LOCAL", "HTTP_SECRET", "EXEC_SECRET"]:
+        choices, err = get_variable_value_options(
+            bp_uuid=bp_data["metadata"]["uuid"], var_uuid=variable["uuid"]
+        )
+        if err:
+            click.echo("")
+            LOG.warning(
+                "Exception occured while fetching value of variable '{}': {}".format(
+                    var_name, err
+                )
             )
-        else:
-            new_val = None
-            if prompt:
-                var_data = get_variable_data(
-                    bp_data=bp_data,
-                    context_data=bp_data,
-                    var_context=context,
-                    var_name=path,
-                )
 
-                options = var_data.get("options", {})
-                choices = options.get("choices", [])
+        # Stripping out new line character from options
+        choices = [_c.strip() for _c in choices]
 
-                click.echo("")
-                if choices:
-                    click.echo("Choose from given choices: ")
-                    for choice in choices:
-                        click.echo("\t{}".format(highlight_text(repr(choice))))
+    else:
+        # Extract options for predefined variables from bp payload
+        var_data = get_variable_data(
+            bp_data=bp_data["status"]["resources"],
+            context_data=bp_data["status"]["resources"],
+            var_context=var_context,
+            var_name=var_name,
+        )
+        choices = var_data.get("options", {}).get("choices", [])
 
-                new_val = click.prompt(
-                    "Value for {} in {} [{}]".format(
-                        path + "." + field, context, highlight_text(repr(value))
-                    ),
-                    default=value,
-                    show_default=False,
-                    hide_input=hide_input,
-                )
+    click.echo("")
+    if choices:
+        click.echo("Choose from given choices: ")
+        for choice in choices:
+            click.echo("\t{}".format(highlight_text(repr(choice))))
 
-            else:
-                new_val = get_val_launch_runtime_var(
-                    launch_runtime_vars, field, path, context
-                )
+    # CASE for `type` in ['SECRET', 'EXEC_SECRET', 'HTTP_SECRET']
+    hide_input = variable.get("type").split("_")[-1] == "SECRET"
+    var_default_val = variable["value"].get("value", None)
+    new_val = click.prompt(
+        "Value for '{}' in {} [{}]".format(
+            var_name, var_context, highlight_text(repr(var_default_val))
+        ),
+        default=var_default_val,
+        show_default=False,
+        hide_input=hide_input,
+    )
 
-            if new_val:
-                entity_dict[field] = type(value)(new_val)
+    return new_val
 
 
 def get_variable_data(bp_data, context_data, var_context, var_name):
+    """return variable data from blueprint payload"""
 
     context_map = {
         "app_profile": "app_profile_list",
@@ -777,60 +856,85 @@ def is_launch_runtime_var_action_match(launch_runtime_var_context, context_list)
     return False
 
 
-def parse_launch_runtime_vars(launch_params):
-    """Returns variable_list object from launch_params file"""
+def parse_launch_params_attribute(launch_params, parse_attribute):
+    """Parses launch params and return value of parse_attribute i.e. variable_list, substrate_list, deployment_list, credenetial_list in file"""
 
     if launch_params:
         if file_exists(launch_params) and launch_params.endswith(".py"):
-            return import_var_from_file(launch_params, "variable_list", [])
+            return import_var_from_file(launch_params, parse_attribute, [])
         else:
             LOG.error(
                 "Invalid launch_params passed! Must be a valid and existing.py file!"
             )
             sys.exit(-1)
     return []
+
+
+def parse_launch_runtime_vars(launch_params):
+    """Returns variable_list object from launch_params file"""
+
+    return parse_launch_params_attribute(
+        launch_params=launch_params, parse_attribute="variable_list"
+    )
 
 
 def parse_launch_runtime_substrates(launch_params):
     """Returns substrate_list object from launch_params file"""
 
-    if launch_params:
-        if file_exists(launch_params) and launch_params.endswith(".py"):
-            return import_var_from_file(launch_params, "substrate_list", [])
-        else:
-            LOG.error(
-                "Invalid launch_params passed! Must be a valid and existing.py file!"
-            )
-            sys.exit(-1)
-    return []
+    return parse_launch_params_attribute(
+        launch_params=launch_params, parse_attribute="substrate_list"
+    )
 
 
 def parse_launch_runtime_deployments(launch_params):
     """Returns deployment_list object from launch_params file"""
 
-    if launch_params:
-        if file_exists(launch_params) and launch_params.endswith(".py"):
-            return import_var_from_file(launch_params, "deployment_list", [])
-        else:
-            LOG.error(
-                "Invalid launch_params passed! Must be a valid and existing.py file!"
-            )
-            sys.exit(-1)
-    return []
+    return parse_launch_params_attribute(
+        launch_params=launch_params, parse_attribute="deployment_list"
+    )
 
 
 def parse_launch_runtime_credentials(launch_params):
     """Returns credential_list object from launch_params file"""
 
-    if launch_params:
-        if file_exists(launch_params) and launch_params.endswith(".py"):
-            return import_var_from_file(launch_params, "credential_list", [])
-        else:
-            LOG.error(
-                "Invalid launch_params passed! Must be a valid and existing.py file!"
-            )
-            sys.exit(-1)
-    return []
+    return parse_launch_params_attribute(
+        launch_params=launch_params, parse_attribute="credential_list"
+    )
+
+
+def get_variable_value_options(bp_uuid, var_uuid, poll_interval=10):
+    """returns dynamic variable values and api exception if occured"""
+
+    client = get_api_client()
+    res, _ = client.blueprint.variable_values(uuid=bp_uuid, var_uuid=var_uuid)
+
+    var_task_data = res.json()
+
+    # req_id and trl_id are necessary
+    req_id = var_task_data["request_id"]
+    trl_id = var_task_data["trl_id"]
+
+    # Poll till completion of epsilon task
+    maxWait = 5 * 60
+    count = 0
+    while count < maxWait:
+        res, err = client.blueprint.variable_values_from_trlid(
+            uuid=bp_uuid, var_uuid=var_uuid, req_id=req_id, trl_id=trl_id
+        )
+
+        # If there is exception during variable api call, it would be silently ignored
+        if err:
+            return list(), err
+
+        var_val_data = res.json()
+        if var_val_data["state"] == "SUCCESS":
+            return var_val_data["values"], None
+
+        count += poll_interval
+        time.sleep(poll_interval)
+
+    LOG.error("Waited for 5 minutes for dynamic variable evaludation")
+    sys.exit(-1)
 
 
 def launch_blueprint_simple(
@@ -891,7 +995,8 @@ def launch_blueprint_simple(
 
                 break
         if not profile:
-            raise Exception("No profile found with name {}".format(profile_name))
+            LOG.error("No profile found with name {}".format(profile_name))
+            sys.exit(-1)
 
     runtime_editables = profile.pop("runtime_editables", [])
 
@@ -967,24 +1072,38 @@ def launch_blueprint_simple(
                         vm_img_map,
                     )
 
-        variable_list = runtime_editables.get("variable_list", [])
+        bp_runtime_variables = runtime_editables.get("variable_list", [])
+
+        # POP out action variables(Day2 action variables) bcz they cann't be given at bp launch time
+        variable_list = []
+        for _var in bp_runtime_variables:
+            _var_context = _var["context"]
+            context_list = _var_context.split(".")
+
+            # If variable is defined under runbook(action), ignore it
+            if len(context_list) >= 3 and context_list[-3] == "runbook":
+                continue
+
+            variable_list.append(_var)
+
         if variable_list:
             if not launch_params:
                 click.echo("\n\t\t\t", nl=False)
                 click.secho("VARIABLE LIST DATA", underline=True, bold=True)
+
+            # NOTE: We are expecting only value in variables is editable (Ideal case)
+            # If later any attribute added to editables, pls change here accordingly
+            LOG.warning(
+                "Values fetched from API/ESCRIPT will not have a default. User will have to select an option at launch."
+            )
             for variable in variable_list:
-                context = variable["context"]
-                editables = variable["value"]
-                hide_input = variable.get("type") == "SECRET"
-                get_field_values(
-                    editables,
-                    context,
-                    path=variable.get("name", ""),
-                    bp_data=bp_data["status"]["resources"],
-                    hide_input=hide_input,
-                    prompt=prompt_cli,
+                new_val = get_variable_value(
+                    variable=variable,
+                    bp_data=bp_data,
                     launch_runtime_vars=launch_runtime_vars,
                 )
+                if new_val:
+                    variable["value"]["value"] = new_val
 
         deployment_list = runtime_editables.get("deployment_list", [])
         # deployment can be only supplied via non-interactive way for now
@@ -1075,3 +1194,88 @@ def delete_blueprint(blueprint_names):
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
         LOG.info("Blueprint {} deleted".format(blueprint_name))
+
+
+def create_patched_blueprint(
+    blueprint, project_data, environment_data, profile_name=None
+):
+    """Patch the blueprint with the given environment to create a new blueprint"""
+    client = get_api_client()
+    org_bp_name = blueprint["metadata"]["name"]
+    org_bp_uuid = blueprint["metadata"]["uuid"]
+    project_uuid = project_data["metadata"]["uuid"]
+    env_uuid = environment_data["metadata"]["uuid"]
+
+    new_bp_name = "{}-{}".format(org_bp_name, str(uuid.uuid4())[:8])
+    request_spec = {
+        "api_version": "3.0",
+        "metadata": {
+            "kind": "blueprint",
+            "project_reference": {"kind": "project", "uuid": project_uuid},
+        },
+        "spec": {
+            "environment_profile_pairs": [
+                {
+                    "environment": {"uuid": env_uuid},
+                    "app_profile": {"name": profile_name},
+                }
+            ],
+            "new_blueprint": {"name": new_bp_name},
+        },
+    }
+
+    LOG.info("Creating Patched blueprint")
+    bp_res, err = client.blueprint.patch_with_environment(org_bp_uuid, request_spec)
+    if err:
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
+
+    bp_res = bp_res.json()
+    bp_status = bp_res["status"]["state"]
+    if bp_status != "ACTIVE":
+        LOG.error("Blueprint went to {} state".format(bp_status))
+        sys.exit(-1)
+
+    return bp_res
+
+
+def patch_bp_if_required(environment_name=None, blueprint_name=None, profile_name=None):
+    """Patch the blueprint with the given environment to create a new blueprint if the requested app profile
+    is not already linked to the given environment"""
+    if environment_name:
+        client = get_api_client()
+        bp = get_blueprint(client, blueprint_name)
+        project_uuid = bp["metadata"]["project_reference"]["uuid"]
+        environment_data, project_data = get_project_environment(
+            name=environment_name, project_uuid=project_uuid
+        )
+        env_uuid = environment_data["metadata"]["uuid"]
+
+        res, err = client.blueprint.read(bp["metadata"]["uuid"])
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        bp = res.json()
+        app_profiles = bp["spec"]["resources"]["app_profile_list"]
+        if profile_name is None:
+            profile_name = app_profiles[0]["name"]
+
+        found_profile = None
+        for app_profile in app_profiles:
+            if app_profile["name"] == profile_name:
+                found_profile = app_profile
+                break
+
+        if not found_profile:
+            raise Exception("No profile found with name {}".format(profile_name))
+
+        ref_env_uuid = next(
+            iter(app_profile.get("environment_reference_list", [])), None
+        )
+        if ref_env_uuid != env_uuid:
+            new_blueprint = create_patched_blueprint(
+                bp, project_data, environment_data, profile_name
+            )
+            return new_blueprint["metadata"]["name"], new_blueprint
+
+    return blueprint_name, None

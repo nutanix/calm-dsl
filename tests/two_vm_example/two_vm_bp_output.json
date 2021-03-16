@@ -24,48 +24,15 @@
                     "type": "system",
                     "critical": true,
                     "runbook": {
-                        "name": "Runbook_for_Service_MySQLService_action_create",
+                        "name": "MySQLService___create___runbook",
                         "description": "",
                         "main_task_local_reference": {
                             "kind": "app_task",
-                            "name": "DAG_Task_for_Service_MySQLService_action_create"
+                            "name": "MySQLService___create___dag"
                         },
                         "task_definition_list": [
                             {
-                                "name": "DAG_Task_for_Service_MySQLService_action_create",
-                                "description": "",
-                                "type": "DAG",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "MySQLService"
-                                },
-                                "attrs": {
-                                    "edges": []
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            }
-                        ],
-                        "variable_list": []
-                    }
-                },
-                {
-                    "name": "action_delete",
-                    "description": "",
-                    "type": "system",
-                    "critical": true,
-                    "runbook": {
-                        "name": "Runbook_for_Service_MySQLService_action_delete",
-                        "description": "",
-                        "main_task_local_reference": {
-                            "kind": "app_task",
-                            "name": "DAG_Task_for_Service_MySQLService_action_delete"
-                        },
-                        "task_definition_list": [
-                            {
-                                "name": "DAG_Task_for_Service_MySQLService_action_delete",
+                                "name": "MySQLService___create___dag",
                                 "description": "",
                                 "type": "DAG",
                                 "target_any_local_reference": {
@@ -90,15 +57,15 @@
                     "type": "system",
                     "critical": true,
                     "runbook": {
-                        "name": "Runbook_for_Service_MySQLService_action_start",
+                        "name": "MySQLService___start___runbook",
                         "description": "",
                         "main_task_local_reference": {
                             "kind": "app_task",
-                            "name": "DAG_Task_for_Service_MySQLService_action_start"
+                            "name": "MySQLService___start___dag"
                         },
                         "task_definition_list": [
                             {
-                                "name": "DAG_Task_for_Service_MySQLService_action_start",
+                                "name": "MySQLService___start___dag",
                                 "description": "",
                                 "type": "DAG",
                                 "target_any_local_reference": {
@@ -123,15 +90,48 @@
                     "type": "system",
                     "critical": true,
                     "runbook": {
-                        "name": "Runbook_for_Service_MySQLService_action_stop",
+                        "name": "MySQLService___stop___runbook",
                         "description": "",
                         "main_task_local_reference": {
                             "kind": "app_task",
-                            "name": "DAG_Task_for_Service_MySQLService_action_stop"
+                            "name": "MySQLService___stop___dag"
                         },
                         "task_definition_list": [
                             {
-                                "name": "DAG_Task_for_Service_MySQLService_action_stop",
+                                "name": "MySQLService___stop___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "MySQLService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": []
+                    }
+                },
+                {
+                    "name": "action_delete",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "MySQLService___delete___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "MySQLService___delete___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "MySQLService___delete___dag",
                                 "description": "",
                                 "type": "DAG",
                                 "target_any_local_reference": {
@@ -156,15 +156,15 @@
                     "type": "system",
                     "critical": true,
                     "runbook": {
-                        "name": "Runbook_for_Service_MySQLService_action_restart",
+                        "name": "MySQLService___restart___runbook",
                         "description": "",
                         "main_task_local_reference": {
                             "kind": "app_task",
-                            "name": "DAG_Task_for_Service_MySQLService_action_restart"
+                            "name": "MySQLService___restart___dag"
                         },
                         "task_definition_list": [
                             {
-                                "name": "DAG_Task_for_Service_MySQLService_action_restart",
+                                "name": "MySQLService___restart___dag",
                                 "description": "",
                                 "type": "DAG",
                                 "target_any_local_reference": {
@@ -189,15 +189,15 @@
                     "type": "system",
                     "critical": true,
                     "runbook": {
-                        "name": "Runbook_for_Service_MySQLService_action_soft_delete",
+                        "name": "MySQLService___soft_delete___runbook",
                         "description": "",
                         "main_task_local_reference": {
                             "kind": "app_task",
-                            "name": "DAG_Task_for_Service_MySQLService_action_soft_delete"
+                            "name": "MySQLService___soft_delete___dag"
                         },
                         "task_definition_list": [
                             {
-                                "name": "DAG_Task_for_Service_MySQLService_action_soft_delete",
+                                "name": "MySQLService___soft_delete___dag",
                                 "description": "",
                                 "type": "DAG",
                                 "target_any_local_reference": {
@@ -260,48 +260,15 @@
                     "type": "system",
                     "critical": true,
                     "runbook": {
-                        "name": "Runbook_for_Service_PHPService_action_create",
+                        "name": "PHPService___create___runbook",
                         "description": "",
                         "main_task_local_reference": {
                             "kind": "app_task",
-                            "name": "DAG_Task_for_Service_PHPService_action_create"
+                            "name": "PHPService___create___dag"
                         },
                         "task_definition_list": [
                             {
-                                "name": "DAG_Task_for_Service_PHPService_action_create",
-                                "description": "",
-                                "type": "DAG",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "PHPService"
-                                },
-                                "attrs": {
-                                    "edges": []
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            }
-                        ],
-                        "variable_list": []
-                    }
-                },
-                {
-                    "name": "action_delete",
-                    "description": "",
-                    "type": "system",
-                    "critical": true,
-                    "runbook": {
-                        "name": "Runbook_for_Service_PHPService_action_delete",
-                        "description": "",
-                        "main_task_local_reference": {
-                            "kind": "app_task",
-                            "name": "DAG_Task_for_Service_PHPService_action_delete"
-                        },
-                        "task_definition_list": [
-                            {
-                                "name": "DAG_Task_for_Service_PHPService_action_delete",
+                                "name": "PHPService___create___dag",
                                 "description": "",
                                 "type": "DAG",
                                 "target_any_local_reference": {
@@ -326,15 +293,15 @@
                     "type": "system",
                     "critical": true,
                     "runbook": {
-                        "name": "Runbook_for_Service_PHPService_action_start",
+                        "name": "PHPService___start___runbook",
                         "description": "",
                         "main_task_local_reference": {
                             "kind": "app_task",
-                            "name": "DAG_Task_for_Service_PHPService_action_start"
+                            "name": "PHPService___start___dag"
                         },
                         "task_definition_list": [
                             {
-                                "name": "DAG_Task_for_Service_PHPService_action_start",
+                                "name": "PHPService___start___dag",
                                 "description": "",
                                 "type": "DAG",
                                 "target_any_local_reference": {
@@ -359,15 +326,48 @@
                     "type": "system",
                     "critical": true,
                     "runbook": {
-                        "name": "Runbook_for_Service_PHPService_action_stop",
+                        "name": "PHPService___stop___runbook",
                         "description": "",
                         "main_task_local_reference": {
                             "kind": "app_task",
-                            "name": "DAG_Task_for_Service_PHPService_action_stop"
+                            "name": "PHPService___stop___dag"
                         },
                         "task_definition_list": [
                             {
-                                "name": "DAG_Task_for_Service_PHPService_action_stop",
+                                "name": "PHPService___stop___dag",
+                                "description": "",
+                                "type": "DAG",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "PHPService"
+                                },
+                                "attrs": {
+                                    "edges": []
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            }
+                        ],
+                        "variable_list": []
+                    }
+                },
+                {
+                    "name": "action_delete",
+                    "description": "",
+                    "type": "system",
+                    "critical": true,
+                    "runbook": {
+                        "name": "PHPService___delete___runbook",
+                        "description": "",
+                        "main_task_local_reference": {
+                            "kind": "app_task",
+                            "name": "PHPService___delete___dag"
+                        },
+                        "task_definition_list": [
+                            {
+                                "name": "PHPService___delete___dag",
                                 "description": "",
                                 "type": "DAG",
                                 "target_any_local_reference": {
@@ -392,15 +392,15 @@
                     "type": "system",
                     "critical": true,
                     "runbook": {
-                        "name": "Runbook_for_Service_PHPService_action_restart",
+                        "name": "PHPService___restart___runbook",
                         "description": "",
                         "main_task_local_reference": {
                             "kind": "app_task",
-                            "name": "DAG_Task_for_Service_PHPService_action_restart"
+                            "name": "PHPService___restart___dag"
                         },
                         "task_definition_list": [
                             {
-                                "name": "DAG_Task_for_Service_PHPService_action_restart",
+                                "name": "PHPService___restart___dag",
                                 "description": "",
                                 "type": "DAG",
                                 "target_any_local_reference": {
@@ -425,15 +425,15 @@
                     "type": "system",
                     "critical": true,
                     "runbook": {
-                        "name": "Runbook_for_Service_PHPService_action_soft_delete",
+                        "name": "PHPService___soft_delete___runbook",
                         "description": "",
                         "main_task_local_reference": {
                             "kind": "app_task",
-                            "name": "DAG_Task_for_Service_PHPService_action_soft_delete"
+                            "name": "PHPService___soft_delete___dag"
                         },
                         "task_definition_list": [
                             {
-                                "name": "DAG_Task_for_Service_PHPService_action_soft_delete",
+                                "name": "PHPService___soft_delete___dag",
                                 "description": "",
                                 "type": "DAG",
                                 "target_any_local_reference": {
@@ -752,7 +752,6 @@
                 },
                 "value": "passwd"
             },
-            "default": true,
             "editables": {}
         }
     ],
@@ -839,5 +838,8 @@
         }
     ],
     "client_attrs": {},
-    "default_credential_local_reference": null
+    "default_credential_local_reference": {
+        "kind": "app_credential",
+        "name": "default"
+    }
 }

@@ -37,6 +37,8 @@ class TaskType(EntityType):
         cdict = super().compile()
         if (cdict.get("target_any_local_reference", None) or None) is None:
             cdict.pop("target_any_local_reference", None)
+        if (cdict.get("exec_target_reference", None) or None) is None:
+            cdict.pop("exec_target_reference", None)
         return cdict
 
     @classmethod
@@ -46,7 +48,64 @@ class TaskType(EntityType):
         # Removing additional attributes
         cdict.pop("state", None)
         cdict.pop("message_list", None)
+
+        if "__name__" in cdict:
+            cdict["__name__"] = "{}{}".format(prefix, cdict["__name__"])
+
         return cdict
+
+    @classmethod
+    def decompile(mcls, cdict, context=[], prefix=""):
+
+        attrs = cdict.get("attrs", None) or dict()
+
+        cred = attrs.get("login_credential_local_reference", None)
+        if cred:
+            attrs["login_credential_local_reference"] = RefType.decompile(
+                cred, prefix=prefix
+            )
+
+        task_type = cdict.get("type", None) or ""
+
+        # If task is of type DAG, decompile references there also
+        if task_type == "DAG":
+            edges = attrs.get("edges", None) or []
+            final_edges = []
+            for edge in edges:
+                final_edges.append(
+                    {
+                        "from_task_reference": RefType.decompile(
+                            edge["from_task_reference"], prefix=prefix
+                        ),
+                        "to_task_reference": RefType.decompile(
+                            edge["to_task_reference"], prefix=prefix
+                        ),
+                    }
+                )
+            if final_edges:
+                attrs["edges"] = final_edges
+
+        elif task_type == "CALL_RUNBOOK":
+            attrs["runbook_reference"] = RefType.decompile(
+                attrs["runbook_reference"], prefix=prefix
+            )
+
+        elif task_type == "HTTP":
+
+            auth_obj = attrs.get("authentication", {})
+            auth_type = auth_obj.get("type", "")
+
+            # Note For decompiling, only authentication object of type 'basic_with_cred' works bcz we cann't take secret values at client side
+            if auth_type == "basic_with_cred":
+                auth_cred = auth_obj.get("credential_local_reference", None)
+                if auth_cred:
+                    auth_obj["credential_local_reference"] = RefType.decompile(
+                        auth_cred, prefix=prefix
+                    )
+
+        cdict["attrs"] = attrs
+
+        return super().decompile(cdict, context=context, prefix=prefix)
 
 
 class TaskValidator(PropertyValidator, openapi_type="app_task"):
@@ -112,7 +171,14 @@ def create_call_rb(runbook, target=None, name=None):
 
 
 def _exec_create(
-    script_type, script=None, filename=None, name=None, target=None, cred=None, depth=2
+    script_type,
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    target_endpoint=None,
+    cred=None,
+    depth=2,
 ):
     if script is not None and filename is not None:
         raise ValueError(
@@ -142,6 +208,8 @@ def _exec_create(
         kwargs["attrs"]["login_credential_local_reference"] = _get_target_ref(cred)
     if target is not None:
         kwargs["target_any_local_reference"] = _get_target_ref(target)
+    if target_endpoint is not None:
+        kwargs["exec_target_reference"] = _get_target_ref(target_endpoint)
 
     return _task_create(**kwargs)
 
@@ -299,6 +367,60 @@ def meta(name=None, child_tasks=None, edges=None, target=None):
 
 
 def exec_task_ssh(
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    target_endpoint=None,
+    cred=None,
+    depth=2,
+):
+    return _exec_create(
+        "sh",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        target_endpoint=target_endpoint,
+        cred=cred,
+        depth=depth,
+    )
+
+
+def exec_task_escript(script=None, filename=None, name=None, target=None, depth=2):
+    return _exec_create(
+        "static",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        target_endpoint=None,
+        depth=depth,
+    )
+
+
+def exec_task_powershell(
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    target_endpoint=None,
+    cred=None,
+    depth=2,
+):
+    return _exec_create(
+        "npsscript",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        target_endpoint=target_endpoint,
+        cred=cred,
+        depth=depth,
+    )
+
+
+def exec_task_ssh_runbook(
     script=None, filename=None, name=None, target=None, cred=None, depth=2
 ):
     return _exec_create(
@@ -312,18 +434,7 @@ def exec_task_ssh(
     )
 
 
-def exec_task_escript(script=None, filename=None, name=None, target=None, depth=2):
-    return _exec_create(
-        "static",
-        script=script,
-        filename=filename,
-        name=name,
-        target=target,
-        depth=depth,
-    )
-
-
-def exec_task_powershell(
+def exec_task_powershell_runbook(
     script=None, filename=None, name=None, target=None, cred=None, depth=2
 ):
     return _exec_create(
@@ -399,6 +510,7 @@ def set_variable_task_ssh(
     filename=None,
     name=None,
     target=None,
+    target_endpoint=None,
     variables=None,
     depth=3,
     cred=None,
@@ -408,6 +520,7 @@ def set_variable_task_ssh(
         filename=filename,
         name=name,
         target=target,
+        target_endpoint=target_endpoint,
         depth=depth,
         cred=cred,
     )
@@ -428,6 +541,7 @@ def set_variable_task_powershell(
     filename=None,
     name=None,
     target=None,
+    target_endpoint=None,
     variables=None,
     depth=3,
     cred=None,
@@ -437,6 +551,7 @@ def set_variable_task_powershell(
         filename=filename,
         name=name,
         target=target,
+        target_endpoint=target_endpoint,
         depth=depth,
         cred=cred,
     )
@@ -554,6 +669,7 @@ def http_task_get(
     response_paths=None,
     name=None,
     target=None,
+    cred=None,
 ):
     """
 
@@ -564,6 +680,7 @@ def http_task_get(
         headers (dict): Request headers
         secret_headers (dict): Request headers that are to be masked
         credential (Credential): Credential object. Currently only supports basic auth.
+        cred (Credential reference): Used for basic_with_cred authentication
         content_type (string): Request Content-Type (application/json, application/xml, etc.)
         timeout (int): Request timeout in seconds (Default: 120)
         verify (bool): TLS verify (Default: False)
@@ -584,6 +701,7 @@ def http_task_get(
         headers=headers,
         secret_headers=secret_headers,
         credential=credential,
+        cred=cred,
         content_type=content_type,
         timeout=timeout,
         verify=verify,
@@ -611,6 +729,7 @@ def http_task_post(
     response_paths=None,
     name=None,
     target=None,
+    cred=None,
 ):
     """
 
@@ -622,6 +741,7 @@ def http_task_post(
         headers (dict): Request headers
         secret_headers (dict): Request headers that are to be masked
         credential (Credential): Credential object. Currently only supports basic auth.
+        cred (Credential reference): Used for basic_with_cred authentication
         content_type (string): Request Content-Type (application/json, application/xml, etc.)
         timeout (int): Request timeout in seconds (Default: 120)
         verify (bool): TLS verify (Default: False)
@@ -642,6 +762,7 @@ def http_task_post(
         headers=headers,
         secret_headers=secret_headers,
         credential=credential,
+        cred=cred,
         content_type=content_type,
         timeout=timeout,
         verify=verify,
@@ -669,6 +790,7 @@ def http_task_put(
     response_paths=None,
     name=None,
     target=None,
+    cred=None,
 ):
     """
 
@@ -680,6 +802,7 @@ def http_task_put(
         headers (dict): Request headers
         secret_headers (dict): Request headers that are to be masked
         credential (Credential): Credential object. Currently only supports basic auth.
+        cred (Credential reference): Used for basic_with_cred authentication
         content_type (string): Request Content-Type (application/json, application/xml, etc.)
         timeout (int): Request timeout in seconds (Default: 120)
         verify (bool): TLS verify (Default: False)
@@ -700,6 +823,7 @@ def http_task_put(
         headers=headers,
         secret_headers=secret_headers,
         credential=credential,
+        cred=cred,
         content_type=content_type,
         timeout=timeout,
         verify=verify,
@@ -727,6 +851,7 @@ def http_task_delete(
     response_paths=None,
     name=None,
     target=None,
+    cred=None,
 ):
     """
 
@@ -738,6 +863,7 @@ def http_task_delete(
         headers (dict): Request headers
         secret_headers (dict): Request headers that are to be masked
         credential (Credential): Credential object. Currently only supports basic auth.
+        cred (Credential reference): Used for basic_with_cred authentication
         content_type (string): Request Content-Type (application/json, application/xml, etc.)
         timeout (int): Request timeout in seconds (Default: 120)
         verify (bool): TLS verify (Default: False)
@@ -758,6 +884,7 @@ def http_task_delete(
         headers=headers,
         secret_headers=secret_headers,
         credential=credential,
+        cred=cred,
         content_type=content_type,
         timeout=timeout,
         verify=verify,
@@ -808,6 +935,7 @@ def http_task(
     headers=None,
     secret_headers=None,
     credential=None,
+    cred=None,
     content_type=None,
     timeout=120,
     verify=False,
@@ -828,6 +956,7 @@ def http_task(
         headers (dict): Request headers
         secret_headers (dict): Request headers that are to be masked
         credential (Credential): Credential object. Currently only supports basic auth.
+        cred (Credential reference): Used for basic_with_cred authentication
         content_type (string): Request Content-Type (application/json, application/xml, etc.)
         timeout (int): Request timeout in seconds (Default: 120)
         verify (bool): TLS verify (Default: False)
@@ -842,7 +971,22 @@ def http_task(
         (Task): HTTP Task
     """
     auth_obj = {"auth_type": "none"}
-    if credential is not None:
+
+    if cred is not None:
+        cred_ref = _get_target_ref(cred)
+        if getattr(cred_ref, "kind", None) != "app_credential":
+            raise ValueError(
+                "Cred for HTTP task "
+                + (name or "")
+                + " should be reference of credential object"
+            )
+
+        auth_obj = {
+            "type": "basic_with_cred",
+            "credential_local_reference": cred_ref,
+        }
+
+    elif credential is not None:
         if getattr(credential, "__kind__", None) != "app_credential":
             raise ValueError(
                 "Credential for HTTP task "
@@ -1087,14 +1231,6 @@ class BaseTask:
     def __new__(cls, *args, **kwargs):
         raise TypeError("'{}' is not callable".format(cls.__name__))
 
-    class Exec:
-        def __new__(cls, *args, **kwargs):
-            raise TypeError("'{}' is not callable".format(cls.__name__))
-
-        ssh = exec_task_ssh
-        powershell = exec_task_powershell
-        escript = exec_task_escript
-
     class HTTP:
         def __new__(
             cls,
@@ -1104,6 +1240,7 @@ class BaseTask:
             headers=None,
             secret_headers=None,
             credential=None,
+            cred=None,
             content_type=None,
             timeout=120,
             verify=False,
@@ -1121,6 +1258,7 @@ class BaseTask:
                 headers=headers,
                 secret_headers=secret_headers,
                 credential=credential,
+                cred=cred,
                 content_type=content_type,
                 timeout=timeout,
                 verify=verify,
@@ -1152,6 +1290,14 @@ class CalmTask(BaseTask):
         scale_in = scale_in_task
         scale_out = scale_out_task
 
+    class Exec:
+        def __new__(cls, *args, **kwargs):
+            raise TypeError("'{}' is not callable".format(cls.__name__))
+
+        ssh = exec_task_ssh
+        powershell = exec_task_powershell
+        escript = exec_task_escript
+
 
 class RunbookTask(BaseTask):
     class Decision:
@@ -1161,6 +1307,14 @@ class RunbookTask(BaseTask):
         ssh = decision_task_ssh
         powershell = decision_task_powershell
         escript = decision_task_escript
+
+    class Exec:
+        def __new__(cls, *args, **kwargs):
+            raise TypeError("'{}' is not callable".format(cls.__name__))
+
+        ssh = exec_task_ssh_runbook
+        powershell = exec_task_powershell_runbook
+        escript = exec_task_escript
 
     class Loop:
         def __new__(
