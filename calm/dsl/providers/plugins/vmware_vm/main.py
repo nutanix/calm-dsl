@@ -883,51 +883,53 @@ def create_spec(client):
 
             spec["resources"]["template_nic_list"].append(network)
 
-    choice = click.prompt(
-        "\n{}(y/n)".format(highlight_text("Do you want to add any tags?")), default="n"
-    )
-    if choice[0] == "y":
-        tags_map = Obj.tags(account_id)
-        tag_names = list(tags_map["tag_list"].keys())
-        tag_names_id = tags_map["tag_list"]
-        spec["resources"]["tag_list"] = list()
-        cardinality_list = tags_map["cardinality_list"]
-
-        while True:
-            if not tag_names:
-                click.echo(highlight_text("\nNo tags available."))
-                break
-
-            else:
-                click.echo("\nChoose from given Category: Tag pairs: ")
-                for ind, name in enumerate(tag_names):
-                    click.echo(
-                        "\t {}. {}".format(str(ind + 1), highlight_text(name))
-                    )
+    # Add vmware tags
+    if LV(CALM_VERSION) >= LV("3.2.0"):
+        choice = click.prompt(
+            "\n{}(y/n)".format(highlight_text("Do you want to add any tags?")), default="n"
+        )
+        if choice[0] == "y":
+            tags_map = Obj.tags(account_id)
+            tag_names = list(tags_map["tag_list"].keys())
+            tag_names_id = tags_map["tag_list"]
+            spec["resources"]["tag_list"] = list()
+            cardinality_list = tags_map["cardinality_list"]
 
             while True:
-                res = click.prompt("\nEnter the index of Category: Tag pair", default=1)
-                if (res > len(tag_names)) or (res <= 0):
-                    click.echo("Invalid index !!! ")
-
-                else:
-                    selected_tag = tag_names[res - 1]
-                    selected_tag_id = tag_names_id[selected_tag]["id"]
-                    selected_category = tag_names_id[selected_tag]["name"]
-                    spec["resources"]["tag_list"].append({'tag_id': selected_tag_id})
-                    click.echo("{} selected".format(highlight_text(selected_tag)))
-                    tag_names.pop(res - 1)
-                    if cardinality_list[selected_tag.split(":")[0]] == "SINGLE":
-                        tag_names = [x for x in tag_names if not tag_names_id[x]["name"] == selected_category]
-
+                if not tag_names:
+                    click.echo(highlight_text("\nNo tags available."))
                     break
 
-            choice = click.prompt(
-                "\n{}(y/n)".format(highlight_text("Do you want to add more tags?")),
-                default="n",
-            )
-            if choice[0] == "n":
-                break
+                else:
+                    click.echo("\nChoose from given Category: Tag pairs: ")
+                    for ind, name in enumerate(tag_names):
+                        click.echo(
+                            "\t {}. {}".format(str(ind + 1), highlight_text(name))
+                        )
+
+                while True:
+                    res = click.prompt("\nEnter the index of Category: Tag pair", default=1)
+                    if (res > len(tag_names)) or (res <= 0):
+                        click.echo("Invalid index !!! ")
+
+                    else:
+                        selected_tag = tag_names[res - 1]
+                        selected_tag_id = tag_names_id[selected_tag]["id"]
+                        selected_category = tag_names_id[selected_tag]["name"]
+                        spec["resources"]["tag_list"].append({'tag_id': selected_tag_id})
+                        click.echo("{} selected".format(highlight_text(selected_tag)))
+                        tag_names.pop(res - 1)
+                        if cardinality_list[selected_tag.split(":")[0]] == "SINGLE":
+                            tag_names = [x for x in tag_names if not tag_names_id[x]["name"] == selected_category]
+
+                        break
+
+                choice = click.prompt(
+                    "\n{}(y/n)".format(highlight_text("Do you want to add more tags?")),
+                    default="n",
+                )
+                if choice[0] == "n":
+                    break
 
 
     VCenterVmProvider.validate_spec(spec)
