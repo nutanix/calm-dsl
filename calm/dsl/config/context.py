@@ -56,22 +56,6 @@ class Context:
     def get_server_config(self):
         """returns server configuration"""
 
-        self.validate_init_config()
-        config = self.server_config
-        if not config.get("pc_ip"):
-            LOG.error(
-                "Host IP not found. Please provide it in config file or set environment variable 'CALM_DSL_PC_IP'"
-            )
-            sys.exit(-1)
-
-        if self._CONFIG_FILE == init_config["CONFIG"]["location"]:
-            if not os.path.exists(self._CONFIG_FILE):
-                LOG.error("Invalid config file location '{}'".format(self._CONFIG_FILE))
-                sys.exit(-1)
-
-    def get_server_config(self):
-        """returns server configuration"""
-
         config = self.server_config
         try:  # if all server variables are present either in env or some other way, not required to validate config file
             if not config.get("pc_ip"):
