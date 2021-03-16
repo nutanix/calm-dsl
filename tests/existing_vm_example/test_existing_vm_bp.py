@@ -1,6 +1,5 @@
 """
 Exsiting machine example.
-Uses DND_Harry_CentosVM (10.51.152.238)
 
 """
 
@@ -14,10 +13,12 @@ from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import provider_spec, read_local_file
 
-CRED_USERNAME = read_local_file(".tests/username")
-CRED_PASSWORD = read_local_file(".tests/password")
-TEST_PC_IP = read_local_file(".tests/test_pc_ip")
 DNS_SERVER = read_local_file(".tests/dns_server")
+
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+TEST_PC_IP = DSL_CONFIG["EXISTING_MACHINE"]["IP_1"]
+CRED_USERNAME = DSL_CONFIG["EXISTING_MACHINE"]["CREDS"]["LINUX"]["USERNAME"]
+CRED_PASSWORD = DSL_CONFIG["EXISTING_MACHINE"]["CREDS"]["LINUX"]["PASSWORD"]
 
 DefaultCred = basic_cred(
     CRED_USERNAME, CRED_PASSWORD, name="default cred", default=True
@@ -408,6 +409,7 @@ class DefaultProfile(Profile):
             "https://jsonplaceholder.typicode.com/posts",
             body=json.dumps({"id": 1, "title": "foo", "body": "bar", "userId": 1}),
             headers={"Content-Type": "application/json"},
+            cred=ref(DefaultCred),
             content_type="application/json",
             verify=True,
             status_mapping={200: True},
@@ -482,9 +484,25 @@ def test_json():
     """Test the generated json for a single VM
     against known output"""
     import os
+    import sys
+
+    # Setting the recursion limit to max for
+    sys.setrecursionlimit(100000)
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_path = os.path.join(dir_path, "test_existing_vm_bp.json")
+
+    # Change data to dummy
+    TEST_PC_IP = DSL_CONFIG["EXISTING_MACHINE"]["DUMMY_DATA"]["IP_1"]
+    CRED_USERNAME = DSL_CONFIG["EXISTING_MACHINE"]["DUMMY_DATA"]["CREDS"]["LINUX"][
+        "USERNAME"
+    ]
+    CRED_PASSWORD = DSL_CONFIG["EXISTING_MACHINE"]["DUMMY_DATA"]["CREDS"]["LINUX"][
+        "PASSWORD"
+    ]
+    ExistingVMBlueprint.substrates[0].provider_spec["address"] = TEST_PC_IP
+    ExistingVMBlueprint.credentials[0].username = CRED_USERNAME
+    ExistingVMBlueprint.credentials[0].secret["value"] = CRED_PASSWORD
 
     generated_json = ExistingVMBlueprint.json_dumps(pprint=True)
 

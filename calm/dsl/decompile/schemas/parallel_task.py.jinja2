@@ -1,7 +1,7 @@
 {%- macro parallel_task(obj) -%}
 with parallel():
 {%- for task in obj.tasks %}
-{{task | indent( width=4, indentfirst=True)}}
+{{task | indent( width=4, first=True)}}
 {%- endfor %}
 {%- endmacro %}
 

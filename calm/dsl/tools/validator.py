@@ -34,10 +34,8 @@ class validation_error(_Error):
         pschema = yaml.dump(self.schema, default_flow_style=False)
         pinstance = yaml.dump(self.instance, default_flow_style=False)
 
-        return (
-            self.message
-            + textwrap.dedent(
-                """
+        return self.message + textwrap.dedent(
+            """
 
             Failed validating %s at %s:
             %s
@@ -45,16 +43,14 @@ class validation_error(_Error):
             By %r validator in %s at %s:
             %s
             """.rstrip()
-            )
-            % (
-                self._word_for_instance_in_error_message,
-                _utils.format_as_index(self.relative_path),
-                pinstance,
-                self.validator,
-                self._word_for_schema_in_error_message,
-                _utils.format_as_index(list(self.relative_schema_path)[:-1]),
-                pschema,
-            )
+        ) % (
+            self._word_for_instance_in_error_message,
+            _utils.format_as_index(self.relative_path),
+            pinstance,
+            self.validator,
+            self._word_for_schema_in_error_message,
+            _utils.format_as_index(list(self.relative_schema_path)[:-1]),
+            pschema,
         )
 
     __str__ = __unicode__
@@ -77,7 +73,7 @@ def extend_validator(ValidatorClass):
 
             if property in properties:
                 for error in validator.descend(
-                    value, properties[property], path=property, schema_path=property,
+                    value, properties[property], path=property, schema_path=property
                 ):
                     yield error
 

@@ -10,18 +10,15 @@ from prettytable import PrettyTable
 from black import format_file_in_place, WriteBack, FileMode
 
 from calm.dsl.runbooks import Endpoint, create_endpoint_payload
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 from calm.dsl.api import get_api_client
 
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
+from calm.dsl.tools import get_module_from_file
 
-from .utils import (
-    get_name_query,
-    highlight_text,
-    get_states_filter,
-    get_module_from_file,
-)
+from .utils import get_name_query, highlight_text, get_states_filter
 from .constants import ENDPOINT
+from calm.dsl.constants import CACHE
 from calm.dsl.store import Cache
 
 LOG = get_logging_handle(__name__)
@@ -31,7 +28,6 @@ def get_endpoint_list(name, filter_by, limit, offset, quiet, all_items):
     """Get the endpoints, optionally filtered by a string"""
 
     client = get_api_client()
-    config = get_config()
 
     params = {"length": limit, "offset": offset}
     filter_query = ""
@@ -51,7 +47,9 @@ def get_endpoint_list(name, filter_by, limit, offset, quiet, all_items):
     res, err = client.endpoint.list(params=params)
 
     if err:
-        pc_ip = config["SERVER"]["pc_ip"]
+        ContextObj = get_context()
+        server_config = ContextObj.get_server_config()
+        pc_ip = server_config["pc_ip"]
         LOG.warning("Cannot fetch endpoints from {}".format(pc_ip))
         return
 
@@ -143,10 +141,10 @@ def compile_endpoint_command(endpoint_file, out):
         LOG.error("User endpoint not found in {}".format(endpoint_file))
         return
 
-    config = get_config()
-
-    project_name = config["PROJECT"].get("name", "default")
-    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
+    ContextObj = get_context()
+    project_config = ContextObj.get_project_config()
+    project_name = project_config["name"]
+    project_cache_data = Cache.get_entity_data(CACHE.ENTITY.PROJECT, name=project_name)
 
     if not project_cache_data:
         LOG.error(
@@ -212,7 +210,7 @@ def create_endpoint(
     endpoint_desc = endpoint_payload["spec"]["description"]
 
     return client.endpoint.upload_with_secrets(
-        endpoint_name, endpoint_desc, endpoint_resources, force_create=force_create,
+        endpoint_name, endpoint_desc, endpoint_resources, force_create=force_create
     )
 
 
@@ -304,18 +302,16 @@ def create_endpoint_command(endpoint_file, name, description, force):
         sys.exit(-1)
 
     LOG.info("Endpoint {} created successfully.".format(endpoint_name))
-    config = get_config()
-    pc_ip = config["SERVER"]["pc_ip"]
-    pc_port = config["SERVER"]["pc_port"]
+
+    ContextObj = get_context()
+    server_config = ContextObj.get_server_config()
+    pc_ip = server_config["pc_ip"]
+    pc_port = server_config["pc_port"]
     link = "https://{}:{}/console/#page/explore/calm/endpoints/{}".format(
         pc_ip, pc_port, endpoint_uuid
     )
 
-    stdout_dict = {
-        "name": endpoint_name,
-        "link": link,
-        "state": endpoint_state,
-    }
+    stdout_dict = {"name": endpoint_name, "link": link, "state": endpoint_state}
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
 

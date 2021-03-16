@@ -16,12 +16,13 @@ import json
 import urllib3
 import sys
 
-from requests import Session as NonRetrySession
+from requests import Session as Session
 from requests_toolbelt import MultipartEncoder
 from requests.adapters import HTTPAdapter
 from requests.exceptions import ConnectTimeout
+from requests.packages.urllib3.util.retry import Retry
 
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 urllib3.disable_warnings()
 LOG = get_logging_handle(__name__)
@@ -90,8 +91,8 @@ class Connection:
         base_url="",
         response_processor=None,
         session_headers=None,
-        retries_enabled=False,
-        **kwargs
+        retries_enabled=True,
+        **kwargs,
     ):
         """Generic client to connect to server.
 
@@ -136,20 +137,36 @@ class Connection:
         Raises:
         """
 
-        # TODO: Add retries
-        # if self.retries_enabled:
-        #     self.session = RetrySession()
-        # else:
-        self.session = NonRetrySession()
+        if self.retries_enabled:
+            retry_strategy = Retry(
+                total=3,
+                status_forcelist=[429, 500, 502, 503, 504],
+                method_whitelist=[
+                    "GET",
+                    "PUT",
+                    "DELETE",
+                    "POST",
+                ],
+            )
+            http_adapter = HTTPAdapter(
+                pool_block=bool(self._pool_block),
+                pool_connections=int(self._pool_connections),
+                pool_maxsize=int(self._pool_maxsize),
+                max_retries=retry_strategy,
+            )
+
+        else:
+            http_adapter = HTTPAdapter(
+                pool_block=bool(self._pool_block),
+                pool_connections=int(self._pool_connections),
+                pool_maxsize=int(self._pool_maxsize),
+            )
+
+        self.session = Session()
         if self.auth and self.auth_type == REQUEST.AUTH_TYPE.BASIC:
             self.session.auth = self.auth
         self.session.headers.update({"Content-Type": "application/json"})
 
-        http_adapter = HTTPAdapter(
-            pool_block=bool(self._pool_block),
-            pool_connections=int(self._pool_connections),
-            pool_maxsize=int(self._pool_maxsize),
-        )
         self.session.mount("http://", http_adapter)
         self.session.mount("https://", http_adapter)
         self.base_url = build_url(self.host, self.port, scheme=self.scheme)
@@ -305,7 +322,19 @@ class Connection:
 _CONNECTION = None
 
 
-def get_connection(
+def get_connection_obj(
+    host,
+    port,
+    auth_type=REQUEST.AUTH_TYPE.BASIC,
+    scheme=REQUEST.SCHEME.HTTPS,
+    auth=None,
+):
+    """Returns object of Connection class"""
+
+    return Connection(host, port, auth_type, scheme, auth)
+
+
+def get_connection_handle(
     host,
     port,
     auth_type=REQUEST.AUTH_TYPE.BASIC,
@@ -328,11 +357,11 @@ def get_connection(
     """
     global _CONNECTION
     if not _CONNECTION:
-        update_connection(host, port, auth_type, scheme, auth)
+        update_connection_handle(host, port, auth_type, scheme, auth)
     return _CONNECTION
 
 
-def update_connection(
+def update_connection_handle(
     host,
     port,
     auth_type=REQUEST.AUTH_TYPE.BASIC,

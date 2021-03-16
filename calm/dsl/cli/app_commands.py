@@ -2,7 +2,7 @@ import click
 
 from calm.dsl.api import get_api_client
 
-from .main import main, get, describe, delete, run, watch, download
+from .main import main, get, describe, delete, run, watch, download, create
 from .utils import Display, FeatureFlagGroup
 from .apps import (
     get_apps,
@@ -12,10 +12,67 @@ from .apps import (
     watch_app,
     delete_app,
     download_runlog,
+    create_app,
 )
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
+
+
+@create.command("app")
+@click.option(
+    "--file",
+    "-f",
+    "bp_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    required=True,
+    help="Path of Blueprint file to upload",
+)
+@click.option(
+    "--brownfield_deployments",
+    "-b",
+    "brownfield_deployment_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path of Brownfield Deployment file",
+)
+@click.option(
+    "--name", "-n", "app_name", default=None, help="Application name (Optional)"
+)
+@click.option(
+    "--ignore_runtime_variables",
+    "-i",
+    is_flag=True,
+    default=False,
+    help="Ignore runtime variables and use defaults while launching blueprint",
+)
+@click.option(
+    "--launch_params",
+    "-l",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to python file for runtime editables",
+)
+def _create_app(
+    app_name,
+    bp_file,
+    brownfield_deployment_file,
+    ignore_runtime_variables,
+    launch_params,
+):
+    """Creates an application.
+
+    \b
+    Command consumes a dsl blueprint file and creates a blueprint from it.
+    If created blueprint is in ACTIVE state, then it got launched to create an application.
+    Blueprint is deleted after launching it.
+    """
+
+    create_app(
+        app_name=app_name,
+        bp_file=bp_file,
+        patch_editables=not ignore_runtime_variables,
+        launch_params=launch_params,
+        brownfield_deployment_file=brownfield_deployment_file,
+    )
 
 
 @get.command("apps")
@@ -25,7 +82,7 @@ LOG = get_logging_handle(__name__)
 )
 @click.option("--limit", "-l", default=20, help="Number of results to return")
 @click.option(
-    "--offset", "-o", default=0, help="Offset results by the specified amount"
+    "--offset", "-s", default=0, help="Offset results by the specified amount"
 )
 @click.option(
     "--quiet", "-q", is_flag=True, default=False, help="Show only application names"
@@ -71,24 +128,45 @@ def _describe_app(app_name, out):
     required=True,
     help="Watch action run in an app",
 )
+@click.option(
+    "--ignore_runtime_variables",
+    "-i",
+    is_flag=True,
+    default=False,
+    help="Ignore runtime variables and use defaults",
+)
+@click.option(
+    "--runtime_params",
+    "-r",
+    "runtime_params_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to python file for runtime editables",
+)
 @click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
-def _run_actions(app_name, action_name, watch):
-    """App lcm actions"""
-    render_actions = display_with_screen(app_name, action_name, watch)
-    Display.wrapper(render_actions, watch)
+def _run_actions(
+    app_name, action_name, watch, ignore_runtime_variables, runtime_params_file
+):
+    """App lcm actions.
+    All runtime variables will be prompted by default. When passing the 'ignore_runtime_editable' flag, no variables will be prompted and all default values will be used.
+    The action default values can be overridden by passing a Python file via 'launch_params'. Any variable not defined in the Python file will keep the default value defined in the blueprint. When passing a Python file, no variables will be prompted.
 
+    \b
+    >: runtime_params: Python file consisting of variables 'variable_list'
+    Ex: variable_list = [
+            {
+                "value": {"value": <Variable Value>},
+                "name": "<Variable Name>"
+            }
+        ]
+    """
 
-def display_with_screen(app_name, action_name, watch):
-    def render_actions(screen):
-        screen.clear()
-        screen.print_at(
-            "Running action {} for app {}".format(action_name, app_name), 0, 0
-        )
-        screen.refresh()
-        run_actions(screen, app_name, action_name, watch)
-        screen.wait_for_input(10.0)
-
-    return render_actions
+    run_actions(
+        app_name=app_name,
+        action_name=action_name,
+        watch=watch,
+        patch_editables=not ignore_runtime_variables,
+        runtime_params_file=runtime_params_file,
+    )
 
 
 @watch.command("action_runlog")
@@ -187,8 +265,7 @@ def restart():
 def start_app(app_name, watch):
     """Starts an application"""
 
-    render_actions = display_with_screen(app_name, "start", watch)
-    Display.wrapper(render_actions, watch)
+    run_actions(app_name=app_name, action_name="start", watch=watch)
 
 
 @stop.command("app")
@@ -197,8 +274,7 @@ def start_app(app_name, watch):
 def stop_app(app_name, watch):
     """Stops an application"""
 
-    render_actions = display_with_screen(app_name, "stop", watch)
-    Display.wrapper(render_actions, watch)
+    run_actions(app_name=app_name, action_name="stop", watch=watch)
 
 
 @restart.command("app")
@@ -207,5 +283,4 @@ def stop_app(app_name, watch):
 def restart_app(app_name, watch):
     """Restarts an application"""
 
-    render_actions = display_with_screen(app_name, "restart", watch)
-    Display.wrapper(render_actions, watch)
+    run_actions(app_name=app_name, action_name="restart", watch=watch)

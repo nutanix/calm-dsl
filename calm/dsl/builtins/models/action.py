@@ -4,12 +4,9 @@ from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .task import create_call_rb
 from .runbook import runbook, runbook_create
-from calm.dsl.tools import get_logging_handle
 
 # Action - Since action, runbook and DAG task are heavily coupled together,
 # the action type behaves as all three.
-
-LOG = get_logging_handle(__name__)
 
 
 class ActionType(EntityType):
@@ -67,9 +64,6 @@ class action(runbook):
         if cls is None:
             return self
 
-        if self.__parsed__:
-            return self.user_action
-
         super(action, self).__get__(instance, cls)
 
         # System action names
@@ -104,7 +98,6 @@ class action(runbook):
                 "runbook": self.user_runbook,
             }
         )
-        self.__parsed__ = True
 
         return self.user_action
 

@@ -5,8 +5,8 @@ import json
 
 from ruamel import yaml
 import re
-from calm.dsl.tools import get_logging_handle
-from calm.dsl.config import get_init_data
+from calm.dsl.log import get_logging_handle
+from calm.dsl.config import get_context
 
 LOG = get_logging_handle(__name__)
 
@@ -117,8 +117,9 @@ def read_local_file(filename):
 
     # If not exists read from home directory
     if not file_exists(abs_file_path):
-        init_obj = get_init_data()
-        file_path = os.path.join(init_obj["LOCAL_DIR"].get("location"), filename)
+        ContextObj = get_context()
+        init_data = ContextObj.get_init_config()
+        file_path = os.path.join(init_data["LOCAL_DIR"]["location"], filename)
         return read_file(file_path, 0).rstrip()  # To remove \n, use rstrip
 
     return read_file(file_path, depth=2)

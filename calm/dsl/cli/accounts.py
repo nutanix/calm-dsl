@@ -6,12 +6,14 @@ from prettytable import PrettyTable
 from distutils.version import LooseVersion as LV
 
 from calm.dsl.api import get_resource_api, get_api_client
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 
 from .utils import get_name_query, get_states_filter, highlight_text
 from .constants import ACCOUNT
 from calm.dsl.store import Version
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
+from calm.dsl.store import Cache
+from calm.dsl.constants import CACHE
 
 LOG = get_logging_handle(__name__)
 
@@ -20,7 +22,6 @@ def get_accounts(name, filter_by, limit, offset, quiet, all_items, account_type)
     """ Get the accounts, optionally filtered by a string """
 
     client = get_api_client()
-    config = get_config()
     calm_version = Version.get_version("Calm")
 
     params = {"length": limit, "offset": offset}
@@ -47,11 +48,23 @@ def get_accounts(name, filter_by, limit, offset, quiet, all_items, account_type)
     res, err = client.account.list(params)
 
     if err:
-        pc_ip = config["SERVER"]["pc_ip"]
+        ContextObj = get_context()
+        server_config = ContextObj.get_server_config()
+        pc_ip = server_config["pc_ip"]
+
         LOG.warning("Cannot fetch accounts from {}".format(pc_ip))
         return
 
-    json_rows = res.json()["entities"]
+    res = res.json()
+    total_matches = res["metadata"]["total_matches"]
+    if total_matches > limit:
+        LOG.warning(
+            "Displaying {} out of {} entities. Please use --limit and --offset option for more results.".format(
+                limit, total_matches
+            )
+        )
+
+    json_rows = res["entities"]
     if not json_rows:
         click.echo(highlight_text("No account found !!!\n"))
         return
@@ -79,13 +92,17 @@ def get_accounts(name, filter_by, limit, offset, quiet, all_items, account_type)
 
         creation_time = int(metadata["creation_time"]) // 1000000
         last_update_time = int(metadata["last_update_time"]) // 1000000
+        if "owner_reference" in metadata:
+            owner_reference_name = metadata["owner_reference"]["name"]
+        else:
+            owner_reference_name = "-"
 
         table.add_row(
             [
                 highlight_text(row["name"]),
                 highlight_text(row["resources"]["type"]),
                 highlight_text(row["resources"]["state"]),
-                highlight_text(metadata["owner_reference"]["name"]),
+                highlight_text(owner_reference_name),
                 highlight_text(time.ctime(creation_time)),
                 "{}".format(arrow.get(last_update_time).humanize()),
                 highlight_text(metadata["uuid"]),
@@ -129,10 +146,21 @@ def delete_account(account_names):
     for account_name in account_names:
         account = get_account(client, account_name)
         account_id = account["metadata"]["uuid"]
-        res, err = client.account.delete(account_id)
+        _, err = client.account.delete(account_id)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
         LOG.info("Account {} deleted".format(account_name))
+
+    # Update account related caches i.e. Account, AhvImage, AhvSubnet
+    LOG.info("Updating accounts cache ...")
+    Cache.sync_table(
+        cache_type=[
+            CACHE.ENTITY.ACCOUNT,
+            CACHE.ENTITY.AHV_DISK_IMAGE,
+            CACHE.ENTITY.AHV_SUBNET,
+        ]
+    )
+    LOG.info("[Done]")
 
 
 def describe_showback_data(spec):
@@ -160,11 +188,13 @@ def describe_nutanix_pe_account(spec):
 
 def describe_nutanix_pc_account(provider_data):
 
-    config = get_config()
     client = get_api_client()
+    ContextObj = get_context()
+    server_config = ContextObj.get_server_config()
+
     pc_port = provider_data["port"]
     host_pc = provider_data["host_pc"]
-    pc_ip = provider_data["server"] if not host_pc else config["SERVER"]["pc_ip"]
+    pc_ip = provider_data["server"] if not host_pc else server_config["pc_ip"]
 
     click.echo("Is Host PC: {}".format(highlight_text(host_pc)))
     click.echo("PC IP: {}".format(highlight_text(pc_ip)))

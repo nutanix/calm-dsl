@@ -1,5 +1,5 @@
 NAME    := ntnx/calm-dsl
-VERSION := $(shell git describe --abbrev=0 --tags 2>/dev/null || echo v0.9.0-alpha)
+VERSION := $(shell git describe --abbrev=0 --tags 2>/dev/null || cat CalmVersion)
 COMMIT  := $(shell git rev-parse --short HEAD)
 TAG     := $(shell git describe --abbrev=0 --tags --exact-match ${COMMIT} 2>/dev/null \
 		|| echo ${VERSION}.$(shell date +"%Y.%m.%d").commit.${COMMIT})
@@ -7,9 +7,9 @@ TAG     := $(shell git describe --abbrev=0 --tags --exact-match ${COMMIT} 2>/dev
 dev:
 	# Setup our python3 based virtualenv
 	# This step assumes python3 is installed on your dev machine
-	[ -f venv/bin/python3 ] || (virtualenv -p python3 venv && \
+	[ -f venv/bin/python3 ] || (python3 -m venv venv && \
 		venv/bin/pip3 install --upgrade pip setuptools)
-	venv/bin/pip3 install --no-cache -r requirements.txt -r dev-requirements.txt
+	venv/bin/pip3 install --use-feature=2020-resolver --no-cache -r requirements.txt -r dev-requirements.txt
 	venv/bin/python3 setup.py develop
 
 test: dev
@@ -53,7 +53,7 @@ docker: dist
 		docker tag ${NAME}:${TAG} ${NAME}:latest
 
 black:
-	black --exclude '/(\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|venv|_build|buck-out|build|dist|examples)/' .
+	black .
 
 run:
 	docker run -it ${NAME}
@@ -70,7 +70,6 @@ _init_centos:
 	# Install docker
 	which docker || { curl -fsSL https://get.docker.com/ | sh; sudo systemctl start docker; sudo systemctl enable docker; sudo usermod -aG docker $(whoami); }
 
-	rpm -q python36 || sudo yum -y install python36 python-pip python3-devel
+	rpm -q python3 || sudo yum -y install python3-devel python3-pip python3-venv python3-wheel 
 
-	# Install virtual env
-	sudo pip install -U virtualenv==20.0.18
+	sudo pip3 install wheel

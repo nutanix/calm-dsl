@@ -2,9 +2,9 @@ from calm.dsl.decompile.render import render_template
 from calm.dsl.builtins import ServiceType
 from calm.dsl.decompile.ref import render_ref_template
 from calm.dsl.decompile.variable import render_variable_template
-from calm.dsl.decompile.action import render_action_template
+from calm.dsl.decompile.action import render_action_template, update_runbook_action_map
 from calm.dsl.decompile.ref_dependency import update_service_name
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -40,10 +40,24 @@ def render_service_template(cls):
 
     action_list = []
     system_actions = {v: k for k, v in ServiceType.ALLOWED_SYSTEM_ACTIONS.items()}
+
     for entity in user_attrs.get("actions", []):
         if entity.__name__ in list(system_actions.keys()):
             entity.name = system_actions[entity.__name__]
             entity.__name__ = system_actions[entity.__name__]
+
+        # Registering service action runbooks earlier as they can be called by service tasks also. Ex:
+        # class SampleService
+        #   def __create__():
+        #       PHPService.__restart__()
+
+        action_runbook = entity.runbook
+        action_runbook_name = (
+            getattr(action_runbook, "name", "") or action_runbook.__name__
+        )
+        update_runbook_action_map(action_runbook_name, entity.__name__)
+
+    for entity in user_attrs.get("actions", []):
         rendered_txt = render_action_template(entity, entity_context)
         if rendered_txt:
             action_list.append(rendered_txt)

@@ -8,13 +8,11 @@ x-calm-dsl-type: app_readiness_probe
 properties:
   connection_type:
     type: string
-    default: SSH
     enum:
     - SSH
     - POWERSHELL
   connection_port:
     type: integer
-    default: 22
   connection_protocol:
     type: string
   login_credential_local_reference:
@@ -32,7 +30,7 @@ properties:
     type: string
   disable_readiness_probe:
     x-calm-dsl-display-name: disabled
-    default: false
+    default: true
     type: boolean
   editables_list:
     type: array

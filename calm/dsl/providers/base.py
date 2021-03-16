@@ -6,7 +6,7 @@ from ruamel import yaml
 from jinja2 import Environment, PackageLoader
 import jsonref
 from calm.dsl.tools import StrictDraft7Validator
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 

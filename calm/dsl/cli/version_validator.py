@@ -1,7 +1,7 @@
 from distutils.version import LooseVersion as LV
 
 from calm.dsl.store import Version
-from calm.dsl.tools import get_logging_handle
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 LATEST_VERIFIED_VERSION = "2.9.7"
@@ -18,3 +18,5 @@ def validate_version():
                     calm_version, LATEST_VERIFIED_VERSION
                 )
             )
+    else:
+        LOG.warning("Version not found. Please update cache.")

@@ -3,8 +3,9 @@ import sys
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from calm.dsl.store import Cache
-from calm.dsl.config import get_config
-from calm.dsl.tools import get_logging_handle
+from .helper import common as common_helper
+from calm.dsl.constants import CACHE
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -14,6 +15,146 @@ LOG = get_logging_handle(__name__)
 class AhvNicType(EntityType):
     __schema_name__ = "AhvNic"
     __openapi_type__ = "vm_ahv_nic"
+
+    def compile(cls):
+
+        cdict = super().compile()
+
+        cls_substrate = common_helper._walk_to_parent_with_given_type(
+            cls, "SubstrateType"
+        )
+        account_uuid = (
+            cls_substrate.get_referenced_account_uuid() if cls_substrate else ""
+        )
+
+        # Fetch nutanix account in project
+        project, project_whitelist = common_helper.get_project_with_pc_account()
+        if not account_uuid:
+            account_uuid = list(project_whitelist.keys())[0]
+
+        subnet_ref = cdict.get("subnet_reference") or dict()
+        subnet_name = subnet_ref.get("name", "") or ""
+
+        if subnet_name.startswith("@@{") and subnet_name.endswith("}@@"):
+            cdict["subnet_reference"] = {
+                "kind": "subnet",
+                "uuid": subnet_name,
+            }
+
+        elif subnet_name:
+            cluster_name = subnet_ref.get("cluster", "")
+            subnet_cache_data = Cache.get_entity_data(
+                entity_type=CACHE.ENTITY.AHV_SUBNET,
+                name=subnet_name,
+                cluster=cluster_name,
+                account_uuid=account_uuid,
+            )
+
+            if not subnet_cache_data:
+                LOG.debug(
+                    "Ahv Subnet (name = '{}') not found in registered Nutanix PC account (uuid = '{}') "
+                    "in project (name = '{}')".format(
+                        subnet_name, account_uuid, project["name"]
+                    )
+                )
+                LOG.error(
+                    "AHV Subnet {} not found. Please run: calm update cache".format(
+                        subnet_name
+                    )
+                )
+                sys.exit(-1)
+
+            subnet_uuid = subnet_cache_data.get("uuid", "")
+
+            # If substrate defined under environment model
+            cls_env = common_helper._walk_to_parent_with_given_type(
+                cls, "EnvironmentType"
+            )
+            if cls_env:
+                infra = getattr(cls_env, "providers", [])
+                for _pdr in infra:
+                    if _pdr.type == "nutanix_pc":
+                        subnet_references = getattr(_pdr, "subnet_reference_list", [])
+                        subnet_references.extend(
+                            getattr(_pdr, "external_network_list", [])
+                        )
+                        sr_list = [_sr.get_dict()["uuid"] for _sr in subnet_references]
+                        if subnet_uuid not in sr_list:
+                            LOG.error(
+                                "Subnet '{}' not whitelisted in environment '{}'".format(
+                                    subnet_name, str(cls_env)
+                                )
+                            )
+                            sys.exit(-1)
+
+            # If provider_spec is defined under substrate and substrate is defined under blueprint model
+            elif cls_substrate:
+                pfl_env = cls_substrate.get_profile_environment()
+                if pfl_env:
+                    environment_cache_data = Cache.get_entity_data_using_uuid(
+                        entity_type=CACHE.ENTITY.ENVIRONMENT, uuid=pfl_env["uuid"]
+                    )
+                    if not environment_cache_data:
+                        LOG.error(
+                            "Environment {} not found. Please run: calm update cache".format(
+                                pfl_env["name"]
+                            )
+                        )
+                        sys.exit(-1)
+
+                    env_accounts = environment_cache_data.get("accounts_data", {}).get(
+                        "nutanix_pc", []
+                    )
+                    if subnet_uuid not in env_accounts.get(account_uuid, []):
+                        LOG.error(
+                            "Subnet {} is not whitelisted in environment {}".format(
+                                subnet_name, str(pfl_env)
+                            )
+                        )
+                        sys.exit(-1)
+
+                elif subnet_uuid not in project_whitelist.get(account_uuid, []):
+                    LOG.error(
+                        "Subnet {} is not whitelisted in project {}".format(
+                            subnet_name, project["name"]
+                        )
+                    )
+                    sys.exit(-1)
+
+            cdict["subnet_reference"] = {
+                "kind": "subnet",
+                "name": subnet_name,
+                "uuid": subnet_uuid,
+            }
+
+        nfc_ref = cdict.get("network_function_chain_reference") or dict()
+        nfc_name = nfc_ref.get("name", "")
+        if nfc_name:
+            nfc_cache_data = Cache.get_entity_data(
+                entity_type=CACHE.ENTITY.AHV_NETWORK_FUNCTION_CHAIN, name=nfc_name
+            )
+
+            if not nfc_cache_data:
+                LOG.debug(
+                    "Ahv Network Function Chain (name = '{}') not found in registered nutanix_pc account (uuid = '{}') in project (name = '{}')".format(
+                        nfc_name, account_uuid, project["name"]
+                    )
+                )
+                LOG.error(
+                    "AHV Network Function Chain {} not found. Please run: calm update cache".format(
+                        nfc_name
+                    )
+                )
+                sys.exit(-1)
+
+            nfc_uuid = nfc_cache_data.get("uuid", "")
+            cdict["network_function_chain_reference"] = {
+                "name": nfc_name,
+                "uuid": nfc_uuid,
+                "kind": "network_function_chain",
+            }
+
+        return cdict
 
 
 class AhvNicValidator(PropertyValidator, openapi_type="vm_ahv_nic"):
@@ -39,66 +180,17 @@ def create_ahv_nic(
 
     kwargs = {}
 
-    # Get project details
-    config = get_config()
-    project_name = config["PROJECT"]["name"]
-    project_cache_data = Cache.get_entity_data(entity_type="project", name=project_name)
-
-    if not project_cache_data:
-        LOG.error(
-            "Project {} not found. Please run: calm update cache".format(project_name)
-        )
-        sys.exit(-1)
-
-    project_accounts = project_cache_data["accounts_data"]
-    project_subnets = project_cache_data["whitelisted_subnets"]
-    # Fetch Nutanix_PC account registered
-    account_uuid = project_accounts.get("nutanix_pc", "")
-
-    if not account_uuid:
-        LOG.error("No nutanix account registered to project {}".format(project_name))
-        sys.exit(-1)
-
     if subnet:
-        subnet_cache_data = Cache.get_entity_data(
-            entity_type="ahv_subnet",
-            name=subnet,
-            cluster=cluster,
-            account_uuid=account_uuid,
-        )
-
-        if not subnet_cache_data:
-            raise Exception(
-                "AHV Subnet {} not found. Please run: calm update cache".format(subnet)
-            )
-
-        subnet_uuid = subnet_cache_data.get("uuid", "")
-        if subnet_uuid not in project_subnets:
-            LOG.error(
-                "Subnet {} is not whitelisted in project {}".format(
-                    subnet, project_name
-                )
-            )
-            sys.exit(-1)
-
-        kwargs["subnet_reference"] = {"name": subnet, "uuid": subnet_uuid}
+        # Cluster name is used to find subnet uuid at compile time
+        kwargs["subnet_reference"] = {
+            "name": subnet,
+            "kind": "subnet",
+            "cluster": cluster,
+        }
 
     if network_function_chain:
-        nfc_cache_data = Cache.get_entity_data(
-            entity_type="ahv_network_function_chain", name=network_function_chain
-        )
-
-        if not nfc_cache_data:
-            raise Exception(
-                "AHV Network Function Chain {} not found. Please run: calm update cache".format(
-                    network_function_chain
-                )
-            )
-
-        nfc_uuid = nfc_cache_data.get("uuid", "")
         kwargs["network_function_chain_reference"] = {
             "name": network_function_chain,
-            "uuid": nfc_uuid,
             "kind": "network_function_chain",
         }
 

@@ -10,7 +10,7 @@ class {{obj.name}}(Substrate):
     readiness_probe = {{obj.readiness_probe}}
     {% if obj.readiness_probe_cred -%}readiness_probe["credential"] =  {{obj.readiness_probe_cred}}{%- endif %}
 {% for action in obj.actions %}
-{{action | indent( width=4, indentfirst=True)}}
+{{action | indent( width=4, first=True)}}
 {% endfor %}
 {%- endmacro %}
 

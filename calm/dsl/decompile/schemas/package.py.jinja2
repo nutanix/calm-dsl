@@ -8,7 +8,7 @@ class {{obj.name}}(Package):
     {{variable}}
 {% endfor -%}
 {% for action in obj.actions %}
-{{action | indent( width=4, indentfirst=True)}}
+{{action | indent( width=4, first=True)}}
 {% endfor %}
 {%- endmacro %}
 

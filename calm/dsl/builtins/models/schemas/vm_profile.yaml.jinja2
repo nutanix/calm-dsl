@@ -1,0 +1,57 @@
+{% macro VmProfile() -%}
+
+title: VmProfile
+type: object
+x-calm-dsl-type: app_vm_profile
+properties:
+  name:
+    type: string
+    maxLength: 64
+    default: ''
+  environment_reference_list:
+    type: array
+    x-calm-dsl-min-version: 3.2.0
+    x-calm-dsl-display-name: environments
+    items:
+      type: object
+      x-calm-dsl-type: app_calm_ref
+  os_type:
+    type: string
+    default: 'Linux'
+  provider_type:
+    type: string
+    default: 'AHV_VM'
+  provider_spec:
+    type: object
+    x-calm-dsl-type: app_provider_spec
+  readiness_probe:
+    $ref: '#/components/schemas/ReadinessProbe'
+  min_replicas:
+    description: Minimum replicas for the deployment.
+    type: string
+    default: "1"
+  max_replicas:
+    description: Maximum replicas for the deployment.
+    type: string
+    default: "1"
+  variables:
+    type: array
+    description: Profile variables
+    items:
+      $ref: '#/components/schemas/Variable'
+  action_list:
+    x-calm-dsl-display-name: actions
+    description: Profile, Package and Substrate actions
+    type: array
+    items:
+      $ref: '#/components/schemas/Action'
+
+{%- endmacro %}
+
+
+{% macro VmProfileSchema() -%}
+
+VmProfile:
+  {{ VmProfile()|indent(2) }}
+
+{%- endmacro %}

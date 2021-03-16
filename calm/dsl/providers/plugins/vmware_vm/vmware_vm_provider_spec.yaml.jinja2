@@ -2,7 +2,7 @@
 {% macro VcenterNicInfo() -%}
 
 title: VCenter NICs
-type: object
+type: [object, "null"]
 properties:
   nic_type:
     type: string
@@ -17,7 +17,7 @@ properties:
 {% macro VcenterTemplateNicInfo() -%}
 
 title: VCenter Template NIC
-type: object
+type: [object, "null"]
 properties:
   nic_type:
     type: string
@@ -38,7 +38,7 @@ properties:
 {% macro VcenterVdiskInfo() -%}
 
 title: VCenter Disk
-type: object
+type: [object, "null"]
 properties:
   disk_type:
     type: string
@@ -70,7 +70,7 @@ properties:
 {% macro VcenterTemplateDiskInfo() -%}
 
 title: VCenter Template DISK
-type: object
+type: [object, "null"]
 properties:
   disk_type:
     type: string
@@ -108,7 +108,7 @@ properties:
 {% macro VcenterVControllerInfo() -%}
 
 title: VCenter Controller
-type: object
+type: [object, "null"]
 properties:
   controller_type:
     type: string
@@ -126,7 +126,7 @@ properties:
 {% macro VcenterTemplateControllerInfo() -%}
 
 title: VCenter Template Controller
-type: object
+type: [object, "null"]
 properties:
   controller_type:
     type: string
@@ -146,7 +146,7 @@ properties:
 {% macro VcenterNetworkSetting() -%}
 
 title: Guest Customization Network Settings
-type: object
+type: [object, "null"]
 properties:
   name:
     type: string
@@ -249,16 +249,16 @@ properties:
   type:
     type: string
   password:
-    type: object
+    type: [object, "null"]
     properties:
       attrs:
-        type: object
+        type: [object, "null"]
         properties:
           is_secret_modified:
             type: boolean
             default: False
           secret_reference:
-            type: object
+            type: [object, "null"]
             default: {}
           type:
             type: string
@@ -267,16 +267,16 @@ properties:
       type:
         type: string
   domain_password:
-    type: object
+    type: [object, "null"]
     properties:
       attrs:
-        type: object
+        type: [object, "null"]
         properties:
           is_secret_modified:
             type: boolean
             default: False
           secret_reference:
-            type: object
+            type: [object, "null"]
             default: {}
           type:
             type: string
@@ -291,7 +291,7 @@ properties:
 {% macro VcenterGuestCustomization() -%}
 
 title:  VMWARE Guest Customization
-type: object
+type: [object, "null"]
 properties:
   customization_type:
     type: string
@@ -326,16 +326,20 @@ properties:
 {% macro VcenterVMResource() -%}
 
 title: VMWARE Resources
-type: object
+type: [object, "null"]
 properties:
   account_uuid:
     type: string
+  cpu_hot_add:
+    type: boolean
   num_vcpus_per_socket:
     type: integer
     default: 0
   num_sockets:
     type: integer
     default: 0
+  memory_hot_plug:
+    type: boolean
   memory_size_mib:
     type: integer
     default: 0
@@ -381,7 +385,7 @@ properties:
 {% macro VMWCreateSpec() -%}
 
 title: VMWare CreateSpec
-type: object
+type: [object, "null"]
 properties:
   name:
     type: string
@@ -390,6 +394,12 @@ properties:
     enum: [PROVISION_VMWARE_VM, '']
     default: PROVISION_VMWARE_VM
   drs_mode:
+    type: boolean
+    default: False
+  compute_drs_mode:
+    type: boolean
+    default: False
+  storage_drs_mode:
     type: boolean
     default: False
   cluster:
