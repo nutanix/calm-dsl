@@ -312,6 +312,17 @@ properties:
 {%- endmacro %}
 
 
+{% macro VcenterTags() -%}
+
+title:  VMWARE Tags
+type: object
+properties:
+  tag_id:
+    type: string
+
+{%- endmacro %}
+
+
 {% macro VcenterVMResource() -%}
 
 title: VMWARE Resources
@@ -353,6 +364,10 @@ properties:
     type: array
     items:
       {{ VcenterTemplateNicInfo() | indent(6) }}
+  tag_list:
+    type: array
+    items:
+      {{ VcenterTags() | indent(6) }}
   template_disk_list:
     type: array
     items:
