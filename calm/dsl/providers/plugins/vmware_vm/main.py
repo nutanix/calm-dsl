@@ -200,7 +200,7 @@ class VCenter:
 
     def tags(self, account_id):
         obj = get_resource_api(vmw.TAGS, self.connection)
-        payload = {"filter": "account_uuid=={};".format(account_id)}
+        payload = {"filter": "account_uuid=={}".format(account_id)}
         res, err = obj.list(payload)
 
         if err:
