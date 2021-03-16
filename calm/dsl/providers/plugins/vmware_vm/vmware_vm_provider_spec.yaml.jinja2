@@ -311,6 +311,30 @@ properties:
 
 {%- endmacro %}
 
+{% macro VcenterFolder() -%}
+
+title:  VMWARE Folder
+type: object
+properties:
+  existing_path:
+    type: string
+  new_path:
+    type: string
+  delete_empty_folder:
+    type: boolean
+
+{%- endmacro %}
+
+{% macro VcenterTags() -%}
+
+title:  VMWARE Tags
+type: object
+properties:
+  tag_id:
+    type: string
+
+{%- endmacro %}
+
 
 {% macro VcenterTags() -%}
 
@@ -415,6 +439,8 @@ properties:
   clone_is_template:
     type: boolean
     default: False
+  folder:
+    {{ VcenterFolder() | indent(4) }}
   resources:
     {{ VcenterVMResource() | indent(4) }}
 
