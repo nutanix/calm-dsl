@@ -633,6 +633,15 @@ def launch_marketplace_item(
     If version not there search in published blueprints
     """
 
+    client = get_api_client()
+    params = {
+        "filter": "name=={};type=={}".format(name, MARKETPLACE_ITEM.TYPES.BLUEPRINT)
+    }
+    mp_item_map = client.market_place.get_name_uuid_map(params=params)
+    if not mp_item_map:
+        LOG.error("No marketplace blueprint found with name {}".format(name))
+        sys.exit(-1)
+
     if not version:
         LOG.info("Fetching latest version of Marketplace Item {} ".format(name))
         version = get_mpi_latest_version(
@@ -1741,9 +1750,18 @@ def execute_marketplace_runbook(
     app_states=[],
 ):
     """
-    Launch marketplace blueprints
-    If version not there search in published, pendingm, accepted blueprints
+    Execute marketplace runbooks
+    If version not there search in published, pending, accepted runbooks
     """
+
+    client = get_api_client()
+    params = {
+        "filter": "name=={};type=={}".format(name, MARKETPLACE_ITEM.TYPES.RUNBOOK)
+    }
+    mp_item_map = client.market_place.get_name_uuid_map(params=params)
+    if not mp_item_map:
+        LOG.error("No marketplace runbook found with name {}".format(name))
+        sys.exit(-1)
 
     if not app_states:
         app_states = [
