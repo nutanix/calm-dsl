@@ -6,6 +6,7 @@ import pytest
 import json
 from calm.dsl.cli.constants import MARKETPLACE_ITEM
 from calm.dsl.config import get_context
+from calm.dsl.api import get_api_client
 
 
 def change_uuids(bp, context):
@@ -511,3 +512,23 @@ def validate_error_message(err, expected_message):
         pytest.fail(
             "Unable to found err {} in errors {}".format(expected_message, message_list)
         )
+
+
+def get_vmware_account_from_datacenter(datacenter="Sabine59-DC"):
+    """
+    Returns the datacenter attached to given datacenter.
+    Default datacenter = Sabine59-DC
+    """
+
+    client = get_api_client()
+    res, err = client.account.list(params={"filter": "type==vmware;state==VERIFIED"})
+    if err:
+        pytest.fail(err)
+
+    res = res.json()
+    vmw_account_name = ""
+    for entity in res["entities"]:
+        if entity["status"]["resources"]["data"].get("datacenter", "") == datacenter:
+            vmw_account_name = entity["status"]["name"]
+
+    return vmw_account_name

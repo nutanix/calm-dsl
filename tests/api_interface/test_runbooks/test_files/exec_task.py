@@ -8,6 +8,7 @@ from calm.dsl.runbooks import runbook, Ref
 from calm.dsl.runbooks import RunbookTask as Task, basic_cred
 from calm.dsl.runbooks import CalmEndpoint as Endpoint
 from calm.dsl.runbooks import ENDPOINT_FILTER, ENDPOINT_PROVIDER
+from ..utils import get_vmware_account_from_datacenter
 
 linux_ip = read_local_file(".tests/runbook_tests/vm_ip")
 windows_ip = read_local_file(".tests/runbook_tests/windows_vm_ip")
@@ -32,9 +33,7 @@ HTTP_AUTH_USERNAME = read_local_file(".tests/runbook_tests/auth_username")
 HTTP_AUTH_PASSWORD = read_local_file(".tests/runbook_tests/auth_password")
 HTTP_URL = read_local_file(".tests/runbook_tests/url")
 
-DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
-ACCOUNTS = DSL_CONFIG["ACCOUNTS"]
-VMWARE_ACCOUNT_NAME = ACCOUNTS["VMWARE"][0]["NAME"]
+VMWARE_ACCOUNT_NAME = get_vmware_account_from_datacenter()
 
 http_endpoint = Endpoint.HTTP(
     HTTP_URL,

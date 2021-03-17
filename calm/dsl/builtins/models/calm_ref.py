@@ -216,8 +216,4 @@ class Ref:
                 LOG.error("UUID is required property")
                 sys.exit(-1)
 
-            return {
-                "kind": "vm",
-                "name": name,
-                "uuid": vm_uuid
-            }
+            return {"kind": "vm", "name": name, "uuid": vm_uuid}

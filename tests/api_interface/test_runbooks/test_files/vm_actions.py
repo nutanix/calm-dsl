@@ -8,6 +8,7 @@ from calm.dsl.runbooks import runbook, Ref
 from calm.dsl.runbooks import RunbookTask as Task, basic_cred
 from calm.dsl.runbooks import CalmEndpoint as Endpoint
 from calm.dsl.runbooks import ENDPOINT_FILTER, ENDPOINT_PROVIDER
+from ..utils import get_vmware_account_from_datacenter
 
 AHV_POWER_ON = read_local_file(".tests/runbook_tests/vm_actions_ahv_on")
 AHV_POWER_OFF = read_local_file(".tests/runbook_tests/vm_actions_ahv_off")
@@ -18,9 +19,7 @@ CRED_USERNAME = read_local_file(".tests/runbook_tests/username")
 CRED_PASSWORD = read_local_file(".tests/runbook_tests/password")
 LinuxCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
 
-DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
-ACCOUNTS = DSL_CONFIG["ACCOUNTS"]
-VMWARE_ACCOUNT_NAME = ACCOUNTS["VMWARE"][0]["NAME"]
+VMWARE_ACCOUNT_NAME = get_vmware_account_from_datacenter()
 
 AHVPoweredOnVM = Endpoint.Linux.vm(
     filter_type=ENDPOINT_FILTER.STATIC,
