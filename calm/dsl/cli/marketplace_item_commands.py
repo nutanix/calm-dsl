@@ -68,7 +68,7 @@ def _describe_marketplace_item(name, out, version, source):
     "-d",
     is_flag=True,
     default=False,
-    help="Show all marketplace blueprints which are published",
+    help="Show all marketplace items which are published",
 )
 @click.option(
     "--filter",
@@ -210,7 +210,7 @@ def _run_marketplace_item(
     type=click.Choice(APP_SOURCES),
     help="App Source of marketplace item",
 )
-def _unpublish_marketplace_bp(name, version, source):
+def _unpublish_marketplace_item(name, version, source):
     """Unpublish marketplace store item"""
 
     unpublish_marketplace_item(

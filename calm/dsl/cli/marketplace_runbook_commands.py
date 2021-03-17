@@ -40,20 +40,20 @@ APP_SOURCES = [
 # TODO Add limit and offset
 @marketplace_get.command("runbooks")
 @click.option(
-    "--name", "-n", default=None, help="Filter by name of marketplace blueprints"
+    "--name", "-n", default=None, help="Filter by name of marketplace runbooks"
 )
 @click.option(
     "--quiet",
     "-q",
     is_flag=True,
     default=False,
-    help="Show only marketplace blueprint names",
+    help="Show only marketplace runbooks names",
 )
 @click.option(
     "--app_family",
     "-f",
     default="All",
-    help="Filter by app family category of marketplace blueprints",
+    help="Filter by app family category of marketplace runbooks",
 )
 @click.option(
     "--app_state",
@@ -61,17 +61,17 @@ APP_SOURCES = [
     "app_states",
     type=click.Choice(APP_STATES),
     multiple=True,
-    help="filter by state of marketplace blueprints",
+    help="filter by state of marketplace runbooks",
 )
 @click.option(
     "--filter",
     "filter_by",
     "-fb",
     default=None,
-    help="Filter marketplace blueprints by this string",
+    help="Filter marketplace runbooks by this string",
 )
 def _get_marketplace_runbooks(name, quiet, app_family, app_states, filter_by):
-    """Get marketplace manager blueprints"""
+    """Get marketplace manager runbooks"""
 
     get_marketplace_items(
         name=name,
@@ -93,23 +93,23 @@ def _get_marketplace_runbooks(name, quiet, app_family, app_states, filter_by):
     default="text",
     help="output format.",
 )
-@click.option("--version", "-v", default=None, help="Version of marketplace blueprint")
+@click.option("--version", "-v", default=None, help="Version of marketplace runbooks")
 @click.option(
     "--source",
     "-s",
     default=None,
     type=click.Choice(APP_SOURCES),
-    help="App Source of marketplace blueprint",
+    help="App Source of marketplace runbook",
 )
 @click.option(
     "--app_state",
     "-a",
     default=None,
     type=click.Choice(APP_STATES),
-    help="State of marketplace blueprint",
+    help="State of marketplace runbook",
 )
 def _describe_marketplace_runbook(name, out, version, source, app_state):
-    """Describe a marketplace manager blueprint"""
+    """Describe a marketplace manager runbook"""
 
     describe_marketplace_item(
         name=name, out=out, version=version, app_source=source, app_state=app_state
@@ -118,26 +118,26 @@ def _describe_marketplace_runbook(name, out, version, source, app_state):
 
 @marketplace_approve.command("runbook")
 @click.argument("name", nargs=1)
-@click.option("--version", "-v", default=None, help="Version of marketplace blueprint")
+@click.option("--version", "-v", default=None, help="Version of marketplace runbook")
 @click.option(
-    "--category", "-c", default=None, help="Category for marketplace blueprint"
+    "--category", "-c", default=None, help="Category for marketplace runbook"
 )
 @click.option(
     "--project",
     "-p",
     "projects",
     multiple=True,
-    help="Projects for marketplace blueprint",
+    help="Projects for marketplace runbook",
 )
 @click.option(
     "--all_projects",
     "-ap",
     is_flag=True,
     default=False,
-    help="Approve runbook to all projects",
+    help="Approve runbook to all runbook",
 )
 def approve_runbook(name, version, category, all_projects, projects=[]):
-    """Approves a marketplace manager blueprint"""
+    """Approves a marketplace manager runbook"""
 
     approve_marketplace_item(
         name=name,
@@ -151,23 +151,23 @@ def approve_runbook(name, version, category, all_projects, projects=[]):
 
 @marketplace_publish.command("runbook")
 @click.argument("name", nargs=1)
-@click.option("--version", "-v", default=None, help="Version of marketplace blueprint")
+@click.option("--version", "-v", default=None, help="Version of marketplace runbook")
 @click.option(
-    "--category", "-c", default=None, help="Category for marketplace blueprint"
+    "--category", "-c", default=None, help="Category for marketplace runbook"
 )
 @click.option(
     "--source",
     "-s",
     default=None,
     type=click.Choice(APP_SOURCES),
-    help="App Source for marketplace blueprint",
+    help="App Source for marketplace runbook",
 )
 @click.option(
     "--project",
     "-p",
     "projects",
     multiple=True,
-    help="Projects for marketplace blueprint",
+    help="Projects for marketplace runbook",
 )
 @click.option(
     "--all_projects",
@@ -179,7 +179,7 @@ def approve_runbook(name, version, category, all_projects, projects=[]):
 def _publish_marketplace_runbook(
     name, version, category, source, all_projects, projects=[]
 ):
-    """Publish a marketplace blueprint to marketplace store"""
+    """Publish a marketplace runbook to marketplace store"""
 
     publish_marketplace_item(
         name=name,
@@ -195,28 +195,28 @@ def _publish_marketplace_runbook(
 @marketplace_update.command("runbook")
 @click.argument("name", nargs=1)
 @click.option(
-    "--version", "-v", required=True, help="Version of marketplace blueprint"
+    "--version", "-v", required=True, help="Version of marketplace runbook"
 )  # Required to prevent unwanted update of published mpi
 @click.option(
-    "--category", "-c", default=None, help="Category for marketplace blueprint"
+    "--category", "-c", default=None, help="Category for marketplace runbook"
 )
 @click.option(
     "--project",
     "-p",
     "projects",
     multiple=True,
-    help="Projects for marketplace blueprint",
+    help="Projects for marketplace runbook",
 )
-@click.option("--description", "-d", help="Description for marketplace blueprint")
+@click.option("--description", "-d", help="Description for marketplace runbook")
 @click.option(
     "--source",
     "-s",
     default=None,
     type=click.Choice(APP_SOURCES),
-    help="App Source for marketplace blueprint",
+    help="App Source for marketplace runbook",
 )
 def _update_marketplace_runbook(name, version, category, projects, description, source):
-    """Update a marketplace manager blueprint"""
+    """Update a marketplace manager runbook"""
 
     update_marketplace_item(
         name=name,
@@ -232,24 +232,24 @@ def _update_marketplace_runbook(name, version, category, projects, description, 
 @marketplace_delete.command("runbook")
 @click.argument("name")
 @click.option(
-    "--version", "-v", required=True, help="Version of marketplace blueprint"
+    "--version", "-v", required=True, help="Version of marketplace runbook"
 )  # Required to prevent unwanted delete of unknown mpi
 @click.option(
     "--source",
     "-s",
     default=None,
     type=click.Choice(APP_SOURCES),
-    help="App Source of marketplace blueprint",
+    help="App Source of marketplace runbook",
 )
 @click.option(
     "--app_state",
     "-a",
     default=None,
     type=click.Choice(APP_STATES),
-    help="State of marketplace blueprint",
+    help="State of marketplace runbook",
 )
 def _delete_marketplace_runbook(name, version, source, app_state):
-    """Deletes marketplace manager blueprint"""
+    """Deletes marketplace manager runbook"""
 
     delete_marketplace_item(
         name=name,
@@ -263,10 +263,10 @@ def _delete_marketplace_runbook(name, version, source, app_state):
 @marketplace_reject.command("runbook")
 @click.argument("name")
 @click.option(
-    "--version", "-v", required=True, help="Version of marketplace blueprint"
+    "--version", "-v", required=True, help="Version of marketplace runbook"
 )  # Required to prevent unwanted rejection of unknown mpi
 def _reject_marketplace_runbook(name, version):
-    """Reject marketplace manager blueprint"""
+    """Reject marketplace manager runbook"""
 
     reject_marketplace_item(
         name=name, version=version, type=MARKETPLACE_ITEM.TYPES.RUNBOOK
@@ -285,14 +285,14 @@ def _reject_marketplace_runbook(name, version):
     "-w",
     is_flag=True,
     default=False,
-    help="Preserve secrets while publishing runbooks to marketpalce",
+    help="Preserve secrets while publishing runbooks to marketplace",
 )
 @click.option(
     "--with_endpoints",
     "-w",
     is_flag=True,
     default=False,
-    help="Preserve endpoints publishing runbooks to marketpalce",
+    help="Preserve endpoints publishing runbooks to marketplace",
 )
 @click.option(
     "--existing_markeplace_runbook",
@@ -337,7 +337,7 @@ def _reject_marketplace_runbook(name, version):
     help="Path of app icon image to be uploaded",
 )
 @click.option(
-    "--icon_name", "-i", default=None, help="App icon name for marketpalce runbook"
+    "--icon_name", "-i", default=None, help="App icon name for marketplace runbook"
 )
 def publish_runbook(
     runbook_name,
