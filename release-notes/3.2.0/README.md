@@ -126,3 +126,35 @@ class SampleProject(Project):
     envs = [ProjEnvironment1, ProjEnvironment2]
     default_environment = ref(ProjEnvironment1)
 ```
+
+# Runbook Changes
+
+## CLI commands
+
+- `calm describe marketplace item`: It will print the summary of marketplace items (blueprint/runbook).
+
+- `calm get marketplace items`: It will list available marketplace items (blueprint/runbook).
+
+- `calm run marketplace item`: It will execute marketplace item of type runbook.
+
+- `calm unpublish marketplace item`: It will unpublish marketplace item (blueprint/runbook).
+
+- `calm get marketplace runbooks`: It will list available marketplace manager runbooks.
+
+- `calm describe marketplace runbook`: It will print the summary of marketplace manager runbook.
+
+- `calm approve marketplace runbook`: It will approve marketplace manager runbook.
+
+- `calm publish marketplace runbook`: It will publish marketplace manager runbook to marketplace store.
+
+- `calm update marketplace runbook`: It will update marketplace manager runbook.
+
+- `calm delete marketplace runbook`: It will delete marketplace manager runbook.
+
+- `calm reject marketplace runbook`: It will reject marketplace manager runbook.
+
+- `calm publish runbook`: It will publish runbook to marketplace manager.
+
+- `calm run marketplace runbook`: It will execute marketplace manager runbook.
+
+## Builtin-Models
