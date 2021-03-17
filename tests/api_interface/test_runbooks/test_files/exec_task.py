@@ -8,7 +8,7 @@ from calm.dsl.runbooks import runbook, Ref
 from calm.dsl.runbooks import RunbookTask as Task, basic_cred
 from calm.dsl.runbooks import CalmEndpoint as Endpoint
 from calm.dsl.runbooks import ENDPOINT_FILTER, ENDPOINT_PROVIDER
-from ..utils import get_vmware_account_from_datacenter
+from calm.dsl.builtins.models.helper.common import get_vmware_account_from_datacenter
 
 linux_ip = read_local_file(".tests/runbook_tests/vm_ip")
 windows_ip = read_local_file(".tests/runbook_tests/windows_vm_ip")

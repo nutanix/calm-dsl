@@ -119,9 +119,7 @@ def _describe_marketplace_runbook(name, out, version, source, app_state):
 @marketplace_approve.command("runbook")
 @click.argument("name", nargs=1)
 @click.option("--version", "-v", default=None, help="Version of marketplace runbook")
-@click.option(
-    "--category", "-c", default=None, help="Category for marketplace runbook"
-)
+@click.option("--category", "-c", default=None, help="Category for marketplace runbook")
 @click.option(
     "--project",
     "-p",
@@ -152,9 +150,7 @@ def approve_runbook(name, version, category, all_projects, projects=[]):
 @marketplace_publish.command("runbook")
 @click.argument("name", nargs=1)
 @click.option("--version", "-v", default=None, help="Version of marketplace runbook")
-@click.option(
-    "--category", "-c", default=None, help="Category for marketplace runbook"
-)
+@click.option("--category", "-c", default=None, help="Category for marketplace runbook")
 @click.option(
     "--source",
     "-s",
@@ -197,9 +193,7 @@ def _publish_marketplace_runbook(
 @click.option(
     "--version", "-v", required=True, help="Version of marketplace runbook"
 )  # Required to prevent unwanted update of published mpi
-@click.option(
-    "--category", "-c", default=None, help="Category for marketplace runbook"
-)
+@click.option("--category", "-c", default=None, help="Category for marketplace runbook")
 @click.option(
     "--project",
     "-p",
