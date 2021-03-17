@@ -24,6 +24,9 @@ class ProfileType(EntityType):
         if "__name__" in cdict:
             cdict["__name__"] = "{}{}".format(prefix, cdict["__name__"])
 
+        # TODO add support for decompilation of profile environment
+        cdict.pop("environment_reference_list", None)
+
         return cdict
 
     def compile(cls):
