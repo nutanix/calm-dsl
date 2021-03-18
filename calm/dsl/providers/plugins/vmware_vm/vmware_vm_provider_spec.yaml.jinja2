@@ -311,6 +311,30 @@ properties:
 
 {%- endmacro %}
 
+{% macro VcenterFolder() -%}
+
+title:  VMWARE Folder
+type: object
+properties:
+  existing_path:
+    type: string
+  new_path:
+    type: string
+  delete_empty_folder:
+    type: boolean
+
+{%- endmacro %}
+
+{% macro VcenterTags() -%}
+
+title:  VMWARE Tags
+type: object
+properties:
+  tag_id:
+    type: string
+
+{%- endmacro %}
+
 
 {% macro VcenterVMResource() -%}
 
@@ -319,12 +343,16 @@ type: [object, "null"]
 properties:
   account_uuid:
     type: string
+  cpu_hot_add:
+    type: boolean
   num_vcpus_per_socket:
     type: integer
     default: 0
   num_sockets:
     type: integer
     default: 0
+  memory_hot_plug:
+    type: boolean
   memory_size_mib:
     type: integer
     default: 0
@@ -349,6 +377,10 @@ properties:
     type: array
     items:
       {{ VcenterTemplateNicInfo() | indent(6) }}
+  tag_list:
+    type: array
+    items:
+      {{ VcenterTags() | indent(6) }}
   template_disk_list:
     type: array
     items:
@@ -396,6 +428,8 @@ properties:
   clone_is_template:
     type: boolean
     default: False
+  folder:
+    {{ VcenterFolder() | indent(4) }}
   resources:
     {{ VcenterVMResource() | indent(4) }}
 
