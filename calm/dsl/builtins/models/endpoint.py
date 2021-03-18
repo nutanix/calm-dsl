@@ -127,6 +127,10 @@ def _os_endpoint(
 
         provider_type = account_data["provider_type"]
 
+        if provider_type not in ["nutanix_pc", "vmware"]:
+            LOG.error("Provider {} not supported for endpoints". format(provider_type))
+            sys.exit(-1)
+
         # If filter string is given, filter type will be set to dynamic
         filter_type = "dynamic" if filter else "static"
 

@@ -161,24 +161,49 @@ class SampleProject(Project):
 
 ### Endpoint Model
 
-Create a Endpoint using the `CalmEndpoint` model. This model supports creation of Linux, Windows, HTTP endpoint types, whereas Linux, Windows endpoint supports IP, VM endpoint. Following are the examples of creating different styles of endpoint:
+In Calm v3.2, support for vm endpoints is added. User can use existing `CalmEndpoint` model to create vm endpoints for linux and windows os. 
+- As of now we suport for vm endpoints for `vmware` and `nutanix` provider
+- If `filter` parameter is given, dynamic endpoint will be created else static endpoint will be created
 
-Example 1: Creating a Linux VM Endpoint of Static Filter type
+Sample examples:
+
+- Creating a Linux VM Endpoint of Static Filter type
+
 ```
-LinuxCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
-
 vm_endpoint = Endpoint.Linux.vm(
-    vms=[Ref.Vm(uuid="85a5a955-9cd6-4d48-a965-411e69127242")],
+    vms=[Ref.Vm(name="vm_name", uuid="vm_uuid")],
     cred=LinuxCred,
     account=Ref.Account("NTNX_LOCAL_AZ"),
 )
 ```
 
-Example 2: Creating a Linux VM Endpoint of Dynamic Filter type
+- Creating a Linux VM Endpoint of Dynamic Filter type
+
 ```
 linux_ahv_dynamic_vm_endpoint1 = Endpoint.Linux.vm(
     filter="name==vm_name1",
     cred=LinuxCred,
+    subnet=255.255.255.255/1",
     account=Ref.Account("NTNX_LOCAL_AZ"),
+)
+```
+
+- Creating a Windows VM Endpoint of Static Filter type
+
+```
+vm_endpoint = Endpoint.Windows.vm(
+    vms=[Ref.Vm(name="vm_name", uuid="vm_uuid")],
+    cred=WindowsCred,
+    account=Ref.Account("NTNX_LOCAL_AZ"),
+)
+```
+
+- Creating a Windows VM Endpoint of Dynamic Filter type
+
+```
+windows_vmware_dynamic_vm_endpoint1 = Endpoint.Windows.vm(
+    filter="name==vm_name1",
+    cred=WindowsCred,
+    account=Ref.Account("Vmware_Account"),
 )
 ```
