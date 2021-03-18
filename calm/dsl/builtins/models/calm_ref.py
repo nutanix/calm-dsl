@@ -1,4 +1,5 @@
 import sys
+import uuid
 
 from .entity import Entity, EntityType
 from .validator import PropertyValidator
@@ -228,7 +229,7 @@ class Ref:
 
             vm_uuid = kwargs.get("uuid", "")
 
-            if not name:
+            if name:
                 params = {"filter": "name=={}".format(name), "length": 250}
                 res, err = client.account.vms_list(account_uuid, params)
                 if err:
@@ -252,7 +253,7 @@ class Ref:
             # TODO add valdiations on suppiled uuid
             vm_ref = {"uuid": vm_uuid, "kind": "vm"}
 
-            if name:
-                vm_ref["name"] = name
+            # name is required parameter, else api will fail
+            vm_ref["name"] = name if name else "_VM_NAME_{}". format(str(uuid.uuid4())[:10])
 
             return vm_ref
