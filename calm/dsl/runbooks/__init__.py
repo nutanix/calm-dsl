@@ -22,8 +22,6 @@ from calm.dsl.builtins.models.endpoint import (
     Endpoint,
     _endpoint,
     CalmEndpoint,
-    ENDPOINT_FILTER,
-    ENDPOINT_PROVIDER,
 )
 
 from calm.dsl.builtins.models.runbook_service import RunbookService
@@ -54,8 +52,6 @@ __all__ = [
     "Endpoint",
     "_endpoint",
     "CalmEndpoint",
-    "ENDPOINT_FILTER",
-    "ENDPOINT_PROVIDER",
     "RunbookService",
     "create_endpoint_payload",
     "create_runbook_payload",

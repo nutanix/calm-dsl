@@ -5,7 +5,6 @@ Calm VM Endpoint Example with Static Filter
 from calm.dsl.runbooks import read_local_file
 from calm.dsl.runbooks import basic_cred, Ref
 from calm.dsl.runbooks import CalmEndpoint as Endpoint
-from calm.dsl.runbooks import ENDPOINT_FILTER, ENDPOINT_PROVIDER
 
 CRED_USERNAME = read_local_file(".tests/runbook_tests/username")
 CRED_PASSWORD = read_local_file(".tests/runbook_tests/password")
@@ -14,10 +13,8 @@ LinuxCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
 
 
 AHVStaticVMEndpoint = Endpoint.Linux.vm(
-    filter_type=ENDPOINT_FILTER.STATIC,
     vms=[Ref.Vm(name="hitesh1")],
     cred=LinuxCred,
-    provider_type=ENDPOINT_PROVIDER.NUTANIX,
     account=Ref.Account("NTNX_LOCAL_AZ"),
 )
 

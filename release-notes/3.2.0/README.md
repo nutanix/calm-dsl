@@ -168,10 +168,8 @@ Example 1: Creating a Linux VM Endpoint of Static Filter type
 LinuxCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
 
 vm_endpoint = Endpoint.Linux.vm(
-    filter_type=ENDPOINT_FILTER.STATIC,
     vms=[Ref.Vm(uuid="85a5a955-9cd6-4d48-a965-411e69127242")],
     cred=LinuxCred,
-    provider_type=ENDPOINT_PROVIDER.NUTANIX,
     account=Ref.Account("NTNX_LOCAL_AZ"),
 )
 ```
@@ -179,10 +177,8 @@ vm_endpoint = Endpoint.Linux.vm(
 Example 2: Creating a Linux VM Endpoint of Dynamic Filter type
 ```
 linux_ahv_dynamic_vm_endpoint1 = Endpoint.Linux.vm(
-    filter_type=ENDPOINT_FILTER.DYNAMIC,
     filter="name==vm_name1",
     cred=LinuxCred,
     account=Ref.Account("NTNX_LOCAL_AZ"),
-    provider_type=ENDPOINT_PROVIDER.NUTANIX,
 )
 ```

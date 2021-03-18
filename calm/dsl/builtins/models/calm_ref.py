@@ -215,7 +215,7 @@ class Ref:
             kwargs["__ref_cls__"] = cls
             return _calm_ref(**kwargs)
 
-        def compile(cls, name, **kwargs):
+        def compile(cls, name="", **kwargs):
             """cls = CalmRef object"""
 
             client = get_api_client()
@@ -226,25 +226,33 @@ class Ref:
             except Exception as exp:
                 pass
 
-            params = {"filter": "name=={}".format(name), "length": 250}
-            res, err = client.account.vms_list(account_uuid, params)
-            if err:
-                LOG.error(err)
-                sys.exit(-1)
-
             vm_uuid = kwargs.get("uuid", "")
 
-            res = res.json()
-            if res["metadata"]["total_matches"] == 0:
-                LOG.error("No vm with name '{}' found".format(name))
-                sys.exit(-1)
+            if not name:
+                params = {"filter": "name=={}".format(name), "length": 250}
+                res, err = client.account.vms_list(account_uuid, params)
+                if err:
+                    LOG.error(err)
+                    sys.exit(-1)
 
-            elif res["metadata"]["total_matches"] > 1 and not vm_uuid:
-                LOG.error("Multiple vms with same name found. Please provide vm uuid")
-                sys.exit(-1)
+                res = res.json()
+                if res["metadata"]["total_matches"] == 0:
+                    LOG.error("No vm with name '{}' found".format(name))
+                    sys.exit(-1)
 
-            elif not vm_uuid:
-                vm_uuid = res["entities"][0]["status"]["uuid"]
+                elif res["metadata"]["total_matches"] > 1 and not vm_uuid:
+                    LOG.error(
+                        "Multiple vms with same name found. Please provide vm uuid"
+                    )
+                    sys.exit(-1)
+
+                elif not vm_uuid:
+                    vm_uuid = res["entities"][0]["status"]["uuid"]
 
             # TODO add valdiations on suppiled uuid
-            return {"name": name, "uuid": vm_uuid, "kind": "vm"}
+            vm_ref = {"uuid": vm_uuid, "kind": "vm"}
+
+            if name:
+                vm_ref["name"] = name
+
+            return vm_ref

@@ -1,36 +1,18 @@
 import enum
 import uuid
+import sys
 
 from .entity import EntityType, Entity, EntityTypeBase
 from .validator import DictValidator, PropertyValidator
 from .credential import CredentialType
+from calm.dsl.store import Cache
+from calm.dsl.constants import CACHE
+from calm.dsl.log import get_logging_handle
 
+
+LOG = get_logging_handle(__name__)
 
 # Endpoint
-
-
-class ENDPOINT_FILTER(enum.Enum):
-
-    STATIC = 1
-    DYNAMIC = 2
-
-
-ENDPOINT_FILTER_MAP = {
-    ENDPOINT_FILTER.STATIC: "static",
-    ENDPOINT_FILTER.DYNAMIC: "dynamic",
-}
-
-
-class ENDPOINT_PROVIDER(enum.Enum):
-
-    NUTANIX = 1
-    VMWARE = 2
-
-
-PROVIDER_TYPE_MAP = {
-    ENDPOINT_PROVIDER.NUTANIX: "NUTANIX_PC",
-    ENDPOINT_PROVIDER.VMWARE: "VMWARE",
-}
 
 
 class EndpointType(EntityType):
@@ -116,11 +98,9 @@ def _os_endpoint(
     vms=[],
     name=None,
     ep_type="Linux",
-    provider_type=ENDPOINT_PROVIDER.NUTANIX,
     port=22,
     connection_protocol=None,
     cred=None,
-    filter_type=ENDPOINT_FILTER.STATIC,
     subnet=None,
     filter=None,
     account=None,
@@ -133,12 +113,29 @@ def _os_endpoint(
     }
 
     if value_type == "VM":
+        if not account:
+            LOG.error("Account is compulsory for endpoint")
+            sys.exit(-1)
+
+        account_name = account["name"]
+        account_data = Cache.get_entity_data(
+            entity_type=CACHE.ENTITY.ACCOUNT, name=account_name
+        )
+        if not account_data:
+            LOG.error("Account {} not found".format(account_name))
+            sys.exit(-1)
+
+        provider_type = account_data["provider_type"]
+
+        # If filter string is given, filter type will be set to dynamic
+        filter_type = "dynamic" if filter else "static"
+
         kwargs["attrs"]["vm_references"] = vms
-        kwargs["provider_type"] = PROVIDER_TYPE_MAP.get(provider_type, "NUTANIX_PC")
+        kwargs["provider_type"] = provider_type.upper()
         kwargs["attrs"]["subnet"] = subnet
-        kwargs["attrs"]["filter_type"] = ENDPOINT_FILTER_MAP.get(filter_type, "static")
+        kwargs["attrs"]["filter_type"] = filter_type
         kwargs["attrs"]["account_reference"] = account
-        if filter_type == ENDPOINT_FILTER.DYNAMIC:
+        if filter_type == "dynamic":
             kwargs["attrs"]["filter"] = filter
 
     if connection_protocol:
@@ -180,8 +177,6 @@ def windows_endpoint_ip(
 
 def linux_endpoint_vm(
     vms=[],
-    provider_type=ENDPOINT_PROVIDER.NUTANIX,
-    filter_type=ENDPOINT_FILTER.STATIC,
     filter=None,
     name=None,
     port=22,
@@ -195,8 +190,6 @@ def linux_endpoint_vm(
         vms=vms,
         name=name,
         ep_type="Linux",
-        provider_type=provider_type,
-        filter_type=filter_type,
         filter=filter,
         port=port,
         subnet=subnet,
@@ -208,8 +201,6 @@ def linux_endpoint_vm(
 def windows_endpoint_vm(
     vms=[],
     name=None,
-    provider_type=ENDPOINT_PROVIDER.NUTANIX,
-    filter_type=ENDPOINT_FILTER.STATIC,
     filter=None,
     connection_protocol="HTTP",
     port=None,
@@ -234,12 +225,10 @@ def windows_endpoint_vm(
         [],
         vms=vms,
         ep_type="Windows",
-        provider_type=provider_type,
         connection_protocol=connection_protocol,
         name=name,
         port=port,
         cred=cred,
-        filter_type=filter_type,
         filter=filter,
         subnet=subnet,
         account=account,

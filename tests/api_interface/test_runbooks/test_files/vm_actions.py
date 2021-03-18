@@ -7,7 +7,6 @@ from calm.dsl.runbooks import read_local_file
 from calm.dsl.runbooks import runbook, Ref
 from calm.dsl.runbooks import RunbookTask as Task, basic_cred
 from calm.dsl.runbooks import CalmEndpoint as Endpoint
-from calm.dsl.runbooks import ENDPOINT_FILTER, ENDPOINT_PROVIDER
 from calm.dsl.builtins.models.helper.common import get_vmware_account_from_datacenter
 
 AHV_POWER_ON = read_local_file(".tests/runbook_tests/vm_actions_ahv_on")
@@ -22,34 +21,26 @@ LinuxCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
 VMWARE_ACCOUNT_NAME = get_vmware_account_from_datacenter()
 
 AHVPoweredOnVM = Endpoint.Linux.vm(
-    filter_type=ENDPOINT_FILTER.STATIC,
     vms=[Ref.Vm(uuid=AHV_POWER_ON)],
     cred=LinuxCred,
-    provider_type=ENDPOINT_PROVIDER.NUTANIX,
     account=Ref.Account("NTNX_LOCAL_AZ"),
 )
 
 AHVPoweredOffVM = Endpoint.Linux.vm(
-    filter_type=ENDPOINT_FILTER.STATIC,
     vms=[Ref.Vm(uuid=AHV_POWER_OFF)],
     cred=LinuxCred,
-    provider_type=ENDPOINT_PROVIDER.NUTANIX,
     account=Ref.Account("NTNX_LOCAL_AZ"),
 )
 
 VMwarePoweredOnVM = Endpoint.Linux.vm(
-    filter_type=ENDPOINT_FILTER.STATIC,
     vms=[Ref.Vm(uuid=VMWARE_POWER_ON)],
     cred=LinuxCred,
-    provider_type=ENDPOINT_PROVIDER.VMWARE,
     account=Ref.Account(VMWARE_ACCOUNT_NAME),
 )
 
 VMwarePoweredOffVM = Endpoint.Linux.vm(
-    filter_type=ENDPOINT_FILTER.STATIC,
     vms=[Ref.Vm(uuid=VMWARE_POWER_OFF)],
     cred=LinuxCred,
-    provider_type=ENDPOINT_PROVIDER.VMWARE,
     account=Ref.Account(VMWARE_ACCOUNT_NAME),
 )
 
