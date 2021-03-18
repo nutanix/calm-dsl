@@ -12,7 +12,10 @@ dev:
 	venv/bin/pip3 install --use-feature=2020-resolver --no-cache -r requirements.txt -r dev-requirements.txt
 	venv/bin/python3 setup.py develop
 
-test: dev
+test-bed: dev
+	venv/bin/python3 tests/testprep.py
+
+test: test-bed
 	venv/bin/calm update cache
 	venv/bin/py.test -v -rsx --durations 10 -m "not slow" --ignore=examples/
 

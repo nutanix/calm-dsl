@@ -16,6 +16,13 @@ properties:
     type: array
     items:
       $ref: '#/components/schemas/Credential'
+  infra_inclusion_list:
+    x-calm-dsl-min-version: 3.2.0
+    x-calm-dsl-display-name: providers
+    description: Accounts and resources under this environment.
+    type: array
+    items:
+      $ref: '#/components/schemas/AccountProvider'
 
 {%- endmacro %}
 

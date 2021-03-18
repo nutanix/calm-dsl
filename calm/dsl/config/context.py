@@ -1,3 +1,4 @@
+import os
 import sys
 
 from .env_config import EnvConfig
@@ -38,11 +39,24 @@ class Context:
     def reset_configuration(self):
         """Resets the configuration"""
 
+        LOG.debug("Resetting configuration in dsl context")
         self.initialize_configuration()
+
+    def validate_init_config(self):
+        """validates the init config"""
+
+        config_handle = get_config_handle()
+        init_config = config_handle.get_init_config()
+
+        if self._CONFIG_FILE == init_config["CONFIG"]["location"]:
+            if not os.path.exists(self._CONFIG_FILE):
+                LOG.error("Invalid config file location '{}'".format(self._CONFIG_FILE))
+                sys.exit(-1)
 
     def get_server_config(self):
         """returns server configuration"""
 
+        self.validate_init_config()
         config = self.server_config
         if not config.get("pc_ip"):
             LOG.error(
@@ -109,11 +123,13 @@ class Context:
         """Overrides the existing project configuration"""
 
         self._PROJECT = project_name
+        LOG.debug("Updating project in dsl context to {}".format(project_name))
         self.project_config["name"] = project_name
 
     def update_config_file_context(self, config_file):
         """Overrides the existing configuration with passed file configuration"""
 
+        LOG.debug("Updating config file in dsl context to {}".format(config_file))
         self._CONFIG_FILE = config_file
         cxt_config_handle = get_config_handle(self._CONFIG_FILE)
         self.server_config.update(cxt_config_handle.get_server_config())

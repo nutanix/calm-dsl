@@ -17,6 +17,11 @@ class BlueprintAPI(ResourceAPI):
         self.EXPORT_JSON_WITH_SECRETS = self.ITEM + "/export_json?keep_secrets=true"
         self.EXPORT_FILE = self.ITEM + "/export_file"
         self.BROWNFIELD_VM_LIST = self.PREFIX + "/brownfield_import/vms/list"
+        self.PATCH_WITH_ENVIRONMENT = self.ITEM + "/patch_with_environment"
+        self.VARIABLE_VALUES = self.ITEM + "/variables/{}/values"
+        self.VARIABLE_VALUES_WITH_TRLID = (
+            self.VARIABLE_VALUES + "?requestId={}&trlId={}"
+        )
 
     # TODO https://jira.nutanix.com/browse/CALM-17178
     # Blueprint creation timeout is dependent on payload.
@@ -49,6 +54,14 @@ class BlueprintAPI(ResourceAPI):
     def marketplace_launch(self, payload):
         return self.connection._call(
             self.MARKETPLACE_LAUNCH,
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
+        )
+
+    def patch_with_environment(self, uuid, payload):
+        return self.connection._call(
+            self.PATCH_WITH_ENVIRONMENT.format(uuid),
             verify=False,
             request_json=payload,
             method=REQUEST.METHOD.POST,
@@ -210,4 +223,16 @@ class BlueprintAPI(ResourceAPI):
     def export_file(self, uuid):
         return self.connection._call(
             self.EXPORT_FILE.format(uuid), verify=False, method=REQUEST.METHOD.GET
+        )
+
+    def variable_values(self, uuid, var_uuid):
+        url = self.VARIABLE_VALUES.format(uuid, var_uuid)
+        return self.connection._call(
+            url, verify=False, method=REQUEST.METHOD.GET, ignore_error=True
+        )
+
+    def variable_values_from_trlid(self, uuid, var_uuid, req_id, trl_id):
+        url = self.VARIABLE_VALUES_WITH_TRLID.format(uuid, var_uuid, req_id, trl_id)
+        return self.connection._call(
+            url, verify=False, method=REQUEST.METHOD.GET, ignore_error=True
         )

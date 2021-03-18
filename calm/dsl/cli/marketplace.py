@@ -15,9 +15,10 @@ from .utils import highlight_text, get_states_filter, Display
 from .bps import launch_blueprint_simple, get_blueprint
 from .runbooks import get_runbook, poll_action, watch_runbook
 from .apps import watch_app
-from .projects import get_project
 from .runlog import get_runlog_status
 from .endpoints import get_endpoint
+from calm.dsl.builtins.models.helper.common import get_project
+from .environments import get_project_environment
 from calm.dsl.log import get_logging_handle
 from .constants import MARKETPLACE_ITEM
 
@@ -168,11 +169,9 @@ def get_mpis_group_call(
     return res
 
 
-def get_marketplace_store_items(name, quiet,
-                                app_family,
-                                display_all,
-                                filter_by="",
-                                type=None):
+def get_marketplace_store_items(
+    name, quiet, app_family, display_all, filter_by="", type=None
+):
     """Lists marketplace store items"""
 
     group_member_count = 0
@@ -185,7 +184,7 @@ def get_marketplace_store_items(name, quiet,
         app_states=[MARKETPLACE_ITEM.STATES.PUBLISHED],
         group_member_count=group_member_count,
         filter_by=filter_by,
-        type=type
+        type=type,
     )
     group_results = res["group_results"]
 
@@ -243,13 +242,18 @@ def get_marketplace_store_items(name, quiet,
     click.echo(table)
 
 
-def get_marketplace_items(name, quiet, app_family, app_states=[], filter_by="", type=None):
+def get_marketplace_items(
+    name, quiet, app_family, app_states=[], filter_by="", type=None
+):
     """ List all the marketlace items listed in the manager"""
 
-    res = get_mpis_group_call(name=name, app_family=app_family,
-                              app_states=app_states,
-                              filter_by=filter_by,
-                              type=type)
+    res = get_mpis_group_call(
+        name=name,
+        app_family=app_family,
+        app_states=app_states,
+        filter_by=filter_by,
+        type=type,
+    )
     group_results = res["group_results"]
 
     if quiet:
@@ -318,13 +322,14 @@ def get_marketplace_items(name, quiet, app_family, app_states=[], filter_by="", 
     click.echo(table)
 
 
-def get_mpi_latest_version(name, app_source=None,
-                           app_states=[], type=None):
+def get_mpi_latest_version(name, app_source=None, app_states=[], type=None):
 
     res = get_mpis_group_call(
-        name=name, app_states=app_states,
-        group_member_count=1, app_source=app_source,
-        type=type
+        name=name,
+        app_states=app_states,
+        group_member_count=1,
+        app_source=app_source,
+        type=type,
     )
     group_results = res["group_results"]
 
@@ -396,25 +401,26 @@ def describe_marketplace_store_item(name, out, version=None, app_source=None):
     )
 
 
-def describe_marketplace_item(name, out, version=None,
-                              app_source=None, app_state=None,
-                              type=None):
+def describe_marketplace_item(
+    name, out, version=None, app_source=None, app_state=None, type=None
+):
     """describes the marketplace blueprint"""
 
     app_states = [app_state] if app_state else []
     if not version:
         LOG.info("Fetching latest version of Marketplace Item {} ".format(name))
         version = get_mpi_latest_version(
-            name=name, app_source=app_source, app_states=app_states,
-            type=type
+            name=name, app_source=app_source, app_states=app_states, type=type
         )
         LOG.info(version)
 
     LOG.info("Fetching details of Marketplace Item {}".format(name))
     mpi = get_mpi_by_name_n_version(
-        name=name, version=version,
-        app_states=app_states, app_source=app_source,
-        type=type
+        name=name,
+        version=version,
+        app_states=app_states,
+        app_source=app_source,
+        type=type,
     )
 
     if out == "json":
@@ -455,9 +461,11 @@ def describe_marketplace_item(name, out, version=None,
 
     click.echo("Change Log: " + highlight_text(change_log))
     click.echo("Version: " + highlight_text(mpi["status"]["resources"]["version"]))
-    click.echo("App Source: " + highlight_text(mpi["status"]["resources"]["app_source"]))
+    click.echo(
+        "App Source: " + highlight_text(mpi["status"]["resources"]["app_source"])
+    )
 
-    mpi_type = mpi["status"]["resources"]['type']
+    mpi_type = mpi["status"]["resources"]["type"]
 
     if mpi_type == MARKETPLACE_ITEM.TYPES.BLUEPRINT:
         blueprint_template = mpi["status"]["resources"]["app_blueprint_template"]
@@ -475,9 +483,15 @@ def describe_marketplace_item(name, out, version=None,
                 )
             )
     else:
-        published_with_endpoint = mpi["status"]["resources"]["runbook_template_info"]["is_published_with_endpoints"]
-        published_with_secret = mpi["status"]["resources"]["runbook_template_info"]["is_published_with_secrets"]
-        click.echo("Published with Endpoints: " + highlight_text(published_with_endpoint))
+        published_with_endpoint = mpi["status"]["resources"]["runbook_template_info"][
+            "is_published_with_endpoints"
+        ]
+        published_with_secret = mpi["status"]["resources"]["runbook_template_info"][
+            "is_published_with_secrets"
+        ]
+        click.echo(
+            "Published with Endpoints: " + highlight_text(published_with_endpoint)
+        )
         click.echo("Published with Secrets:: " + highlight_text(published_with_secret))
 
 
@@ -485,6 +499,7 @@ def launch_marketplace_bp(
     name,
     version,
     project,
+    environment,
     app_name=None,
     profile_name=None,
     patch_editables=True,
@@ -508,13 +523,17 @@ def launch_marketplace_bp(
                 MARKETPLACE_ITEM.STATES.PUBLISHED,
                 MARKETPLACE_ITEM.STATES.PENDING,
             ],
-            type=MARKETPLACE_ITEM.TYPES.BLUEPRINT
+            type=MARKETPLACE_ITEM.TYPES.BLUEPRINT,
         )
         LOG.info(version)
 
     LOG.info("Converting MPI to blueprint")
     bp_payload = convert_mpi_into_blueprint(
-        name=name, version=version, project_name=project, app_source=app_source
+        name=name,
+        version=version,
+        project_name=project,
+        environment_name=environment,
+        app_source=app_source,
     )
 
     app_name = app_name or "Mpi-App-{}-{}".format(name, str(uuid.uuid4())[-10:])
@@ -544,8 +563,9 @@ def decompile_marketplace_bp(
 
     if not version:
         LOG.info("Fetching latest version of Marketplace Blueprint {} ".format(name))
-        version = get_mpi_latest_version(name=name, app_source=app_source,
-                                         type=MARKETPLACE_ITEM.TYPES.BLUEPRINT)
+        version = get_mpi_latest_version(
+            name=name, app_source=app_source, type=MARKETPLACE_ITEM.TYPES.BLUEPRINT
+        )
         LOG.info(version)
 
     LOG.info("Converting MPI into blueprint")
@@ -599,6 +619,7 @@ def launch_marketplace_item(
     name,
     version,
     project,
+    environment,
     app_name=None,
     profile_name=None,
     patch_editables=True,
@@ -612,19 +633,32 @@ def launch_marketplace_item(
     If version not there search in published blueprints
     """
 
+    client = get_api_client()
+    params = {
+        "filter": "name=={};type=={}".format(name, MARKETPLACE_ITEM.TYPES.BLUEPRINT)
+    }
+    mp_item_map = client.market_place.get_name_uuid_map(params=params)
+    if not mp_item_map:
+        LOG.error("No marketplace blueprint found with name {}".format(name))
+        sys.exit(-1)
+
     if not version:
         LOG.info("Fetching latest version of Marketplace Item {} ".format(name))
         version = get_mpi_latest_version(
             name=name,
             app_source=app_source,
             app_states=[MARKETPLACE_ITEM.STATES.PUBLISHED],
-            type=MARKETPLACE_ITEM.TYPES.BLUEPRINT
+            type=MARKETPLACE_ITEM.TYPES.BLUEPRINT,
         )
         LOG.info(version)
 
     LOG.info("Converting MPI to blueprint")
     bp_payload = convert_mpi_into_blueprint(
-        name=name, version=version, project_name=project, app_source=app_source
+        name=name,
+        version=version,
+        project_name=project,
+        environment_name=environment,
+        app_source=app_source,
     )
 
     app_name = app_name or "Mpi-App-{}-{}".format(name, str(uuid.uuid4())[-10:])
@@ -647,32 +681,39 @@ def launch_marketplace_item(
         LOG.info("Action runs completed for app {}".format(app_name))
 
 
-def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None):
+def convert_mpi_into_blueprint(
+    name, version, project_name=None, environment_name=None, app_source=None
+):
 
     client = get_api_client()
     context = get_context()
     project_config = context.get_project_config()
 
     project_name = project_name or project_config["name"]
-    project_data = get_project(project_name)
-
+    environment_data, project_data = get_project_environment(
+        name=environment_name, project_name=project_name
+    )
     project_uuid = project_data["metadata"]["uuid"]
-
-    LOG.info("Fetching details of project {}".format(project_name))
-    res, err = client.project.read(project_uuid)
-    if err:
-        LOG.error("[{}] - {}".format(err["code"], err["error"]))
-        sys.exit(-1)
-
-    res = res.json()
-    environments = res["status"]["resources"]["environment_reference_list"]
-
-    # For now only single environment exists
+    environments = project_data["status"]["resources"]["environment_reference_list"]
     if not environments:
         LOG.error("No environment registered to project '{}'".format(project_name))
         sys.exit(-1)
 
-    env_uuid = environments[0]["uuid"]
+    # Added in 3.2
+    default_environment_uuid = (
+        project_data["status"]["resources"]
+        .get("default_environment_reference", {})
+        .get("uuid")
+    )
+
+    # If there is no default environment, select first one
+    default_environment_uuid = default_environment_uuid or environments[0]["uuid"]
+
+    env_uuid = ""
+    if environment_data:  # if user supplies environment
+        env_uuid = environment_data["metadata"]["uuid"]
+    else:
+        env_uuid = default_environment_uuid
 
     LOG.info("Fetching MPI details")
     mpi_data = get_mpi_by_name_n_version(
@@ -722,7 +763,7 @@ def convert_mpi_into_blueprint(name, version, project_name=None, app_source=None
     }
     bp_spec["api_version"] = "3.0"
 
-    LOG.debug("Creating MPI blueprint")
+    LOG.info("Creating MPI blueprint")
     bp_res, err = client.blueprint.marketplace_launch(bp_spec)
     if err:
         LOG.error("[{}] - {}".format(err["code"], err["error"]))
@@ -1006,7 +1047,8 @@ def approve_marketplace_item(
         # Search for pending items, Only those items can be approved
         LOG.info("Fetching latest version of Marketplace Item {} ".format(name))
         version = get_mpi_latest_version(
-            name=name, app_states=[MARKETPLACE_ITEM.STATES.PENDING],
+            name=name,
+            app_states=[MARKETPLACE_ITEM.STATES.PENDING],
             type=type,
         )
         LOG.info(version)
@@ -1027,7 +1069,9 @@ def approve_marketplace_item(
     item_type = item["status"]["resources"]["type"]
 
     if item_type == MARKETPLACE_ITEM.TYPES.BLUEPRINT:
-        item_status = item["status"]["resources"]["app_blueprint_template"]["status"]["state"]
+        item_status = item["status"]["resources"]["app_blueprint_template"]["status"][
+            "state"
+        ]
         if item_status != "ACTIVE":
             LOG.error("Item is in {} state. Unable to approve it".format(item_status))
             sys.exit(-1)
@@ -1100,15 +1144,13 @@ def publish_marketplace_item(
     if not version:
         # Search for accepted items, only those items can be published
         LOG.info(
-            "Fetching latest version of accepted Marketplace Item {} ".format(
-                name
-            )
+            "Fetching latest version of accepted Marketplace Item {} ".format(name)
         )
         version = get_mpi_latest_version(
             name=name,
             app_states=[MARKETPLACE_ITEM.STATES.ACCEPTED],
             app_source=app_source,
-            type=type
+            type=type,
         )
         LOG.info(version)
 
@@ -1128,7 +1170,9 @@ def publish_marketplace_item(
     item_type = item["status"]["resources"]["type"]
 
     if item_type == MARKETPLACE_ITEM.TYPES.BLUEPRINT:
-        item_status = item["status"]["resources"]["app_blueprint_template"]["status"]["state"]
+        item_status = item["status"]["resources"]["app_blueprint_template"]["status"][
+            "state"
+        ]
         if item_status != "ACTIVE":
             LOG.error(
                 "Item is in {} state. Unable to publish it to marketplace".format(
@@ -1193,8 +1237,11 @@ def publish_marketplace_item(
 
 
 def update_marketplace_item(
-    name, version, category=None,
-    projects=[], description=None,
+    name,
+    version,
+    category=None,
+    projects=[],
+    description=None,
     app_source=None,
     type=None,
 ):
@@ -1206,9 +1253,7 @@ def update_marketplace_item(
     client = get_api_client()
 
     LOG.info(
-        "Fetching details of marketplace item {} with version {}".format(
-            name, version
-        )
+        "Fetching details of marketplace item {} with version {}".format(name, version)
     )
     mpi_data = get_mpi_by_name_n_version(
         name=name,
@@ -1270,8 +1315,10 @@ def update_marketplace_item(
 
 
 def delete_marketplace_item(
-    name, version,
-    app_source=None, app_state=None,
+    name,
+    version,
+    app_source=None,
+    app_state=None,
     type=None,
 ):
 
@@ -1297,9 +1344,11 @@ def delete_marketplace_item(
         )
     )
     mpi_data = get_mpi_by_name_n_version(
-        name=name, version=version,
-        app_source=app_source, app_states=app_states,
-        type=type
+        name=name,
+        version=version,
+        app_source=app_source,
+        app_states=app_states,
+        type=type,
     )
     item_uuid = mpi_data["metadata"]["uuid"]
 
@@ -1321,11 +1370,10 @@ def reject_marketplace_item(name, version, type=None):
     client = get_api_client()
     if not version:
         # Search for pending items, Only those items can be rejected
-        LOG.info(
-            "Fetching latest version of pending Marketplace Item {} ".format(name)
-        )
+        LOG.info("Fetching latest version of pending Marketplace Item {} ".format(name))
         version = get_mpi_latest_version(
-            name=name, app_states=[MARKETPLACE_ITEM.STATES.PENDING],
+            name=name,
+            app_states=[MARKETPLACE_ITEM.STATES.PENDING],
             type=type,
         )
         LOG.info(version)
@@ -1337,7 +1385,8 @@ def reject_marketplace_item(name, version, type=None):
         )
     )
     item = get_mpi_by_name_n_version(
-        name=name, version=version,
+        name=name,
+        version=version,
         app_states=[MARKETPLACE_ITEM.STATES.PENDING],
         type=type,
     )
@@ -1371,9 +1420,7 @@ def unpublish_marketplace_item(name, version, app_source=None):
     if not version:
         # Search for published items, only those can be unpublished
         LOG.info(
-            "Fetching latest version of published Marketplace Item {} ".format(
-                name
-            )
+            "Fetching latest version of published Marketplace Item {} ".format(name)
         )
         version = get_mpi_latest_version(
             name=name,
@@ -1417,6 +1464,42 @@ def unpublish_marketplace_item(name, version, app_source=None):
     )
 
 
+def unpublish_marketplace_bp(name, version, app_source=None):
+    """unpublishes marketplace blueprint"""
+
+    if not version:
+        # Search for published blueprints, only those can be unpublished
+        LOG.info(
+            "Fetching latest version of published Marketplace Item {} ".format(name)
+        )
+        version = get_mpi_latest_version(
+            name=name,
+            app_states=[MARKETPLACE_ITEM.STATES.PUBLISHED],
+            app_source=app_source,
+        )
+        LOG.info(version)
+
+    LOG.info(
+        "Fetching details of published marketplace blueprint {} with version {}".format(
+            name, version
+        )
+    )
+    mpi_item = get_mpi_by_name_n_version(
+        name=name,
+        version=version,
+        app_states=[MARKETPLACE_ITEM.STATES.PUBLISHED],
+        app_source=app_source,
+    )
+
+    if mpi_item["status"]["resources"]["type"] != "blueprint":
+        LOG.error(
+            "Marketplace blueprint {} with version {} not found".format(name, version)
+        )
+        sys.exit(-1)
+
+    unpublish_marketplace_item(name=name, version=version, app_source=app_source)
+
+
 def publish_runbook_to_marketplace_manager(
     runbook_name,
     marketplace_item_name,
@@ -1453,8 +1536,8 @@ def publish_runbook_to_marketplace_manager(
                     "source_runbook_reference": {
                         "uuid": runbook_uuid,
                         "kind": "runbook",
-                        "name": runbook_name
-                    }
+                        "name": runbook_name,
+                    },
                 },
             },
         },
@@ -1597,7 +1680,9 @@ def publish_runbook_as_existing_marketplace_item(
     # Search whether given version of marketplace items already exists or not
     # Rejected MPIs with same name and version can exist
     LOG.info(
-        "Fetching existing versions of Marketplace Item {}".format(marketplace_item_name)
+        "Fetching existing versions of Marketplace Item {}".format(
+            marketplace_item_name
+        )
     )
     res = get_mpis_group_call(
         app_group_uuid=app_group_uuid,
@@ -1665,9 +1750,18 @@ def execute_marketplace_runbook(
     app_states=[],
 ):
     """
-        Launch marketplace blueprints
-        If version not there search in published, pendingm, accepted blueprints
+    Execute marketplace runbooks
+    If version not there search in published, pending, accepted runbooks
     """
+
+    client = get_api_client()
+    params = {
+        "filter": "name=={};type=={}".format(name, MARKETPLACE_ITEM.TYPES.RUNBOOK)
+    }
+    mp_item_map = client.market_place.get_name_uuid_map(params=params)
+    if not mp_item_map:
+        LOG.error("No marketplace runbook found with name {}".format(name))
+        sys.exit(-1)
 
     if not app_states:
         app_states = [
@@ -1705,30 +1799,24 @@ def execute_marketplace_runbook(
         type=MARKETPLACE_ITEM.TYPES.RUNBOOK,
     )
 
-    mpi_type = mpi_data["status"]["resources"]['type']
+    mpi_type = mpi_data["status"]["resources"]["type"]
     if mpi_type != MARKETPLACE_ITEM.TYPES.RUNBOOK:
         LOG.error("Selected marketplace item is not of type runbook")
         return
 
-    mpi_uuid = mpi_data['metadata']['uuid']
+    mpi_uuid = mpi_data["metadata"]["uuid"]
     payload = {
         "api_version": "3.0",
         "metadata": {
             "kind": "runbook",
-            "project_reference": {
-                "uuid": project_uuid,
-                "kind": "project"
-            }
+            "project_reference": {"uuid": project_uuid, "kind": "project"},
         },
         "spec": {
             "resources": {
                 "args": [],
-                "marketplace_reference": {
-                    "kind": "marketplace_item",
-                    "uuid": mpi_uuid
-                }
+                "marketplace_reference": {"kind": "marketplace_item", "uuid": mpi_uuid},
             }
-        }
+        },
     }
 
     patch_runbook_endpoints(client, mpi_data, payload)
@@ -1738,16 +1826,13 @@ def execute_marketplace_runbook(
     def render_runbook(screen):
         screen.clear()
         screen.refresh()
-        execute_marketplace_runbook_renderer(
-            screen, client, watch, payload=payload
-        )
+        execute_marketplace_runbook_renderer(screen, client, watch, payload=payload)
         screen.wait_for_input(10.0)
 
     Display.wrapper(render_runbook, watch)
 
 
-def execute_marketplace_runbook_renderer(screen, client,
-                                         watch, payload={}):
+def execute_marketplace_runbook_renderer(screen, client, watch, payload={}):
 
     res, err = client.runbook.marketplace_execute(payload)
     if not err:
@@ -1791,10 +1876,10 @@ def execute_marketplace_runbook_renderer(screen, client,
 
 
 def patch_runbook_endpoints(client, mpi_data, payload):
-    template_info = mpi_data['status']['resources'].get('runbook_template_info', {})
-    runbook = template_info.get('runbook_template', {})
+    template_info = mpi_data["status"]["resources"].get("runbook_template_info", {})
+    runbook = template_info.get("runbook_template", {})
 
-    if template_info.get('is_published_with_endpoints', False):
+    if template_info.get("is_published_with_endpoints", False):
         # No patching of endpoints required as runbook is published with endpoints
         return payload
 
@@ -1803,29 +1888,31 @@ def patch_runbook_endpoints(client, mpi_data, payload):
     if default_target:
         endpoint = get_endpoint(client, default_target)
         endpoint_id = endpoint.get("metadata", {}).get("uuid", "")
-        payload["spec"]['resources']["default_target_reference"] = {
+        payload["spec"]["resources"]["default_target_reference"] = {
             "kind": "app_endpoint",
             "uuid": endpoint_id,
             "name": default_target,
         }
 
-    tasks = runbook['spec']['resources']['runbook']['task_definition_list']
+    tasks = runbook["spec"]["resources"]["runbook"]["task_definition_list"]
     used_endpoints = []
     for task in tasks:
-        target_name = task.get('target_any_local_reference', {}).get('name', '')
+        target_name = task.get("target_any_local_reference", {}).get("name", "")
         if target_name:
             used_endpoints.append(target_name)
 
     endpoints_description_map = {}
-    for ep_info in runbook['spec']['resources'].get('endpoints_information', []):
-        ep_name = ep_info.get('endpoint_reference', {}).get('name', '')
-        ep_description = ep_info.get('description', '')
+    for ep_info in runbook["spec"]["resources"].get("endpoints_information", []):
+        ep_name = ep_info.get("endpoint_reference", {}).get("name", "")
+        ep_description = ep_info.get("description", "")
         if ep_name and ep_description:
             endpoints_description_map[ep_name] = ep_description
 
     if used_endpoints:
-        LOG.info("Please select an endpoint belonging to the selected project for every endpoint used in the marketplace\
-              /item.")
+        LOG.info(
+            "Please select an endpoint belonging to the selected project for every endpoint used in the marketplace\
+              /item."
+        )
     endpoints_mapping = {}
     for used_endpoint in used_endpoints:
         des = endpoints_description_map.get(used_endpoint, used_endpoint)
@@ -1835,14 +1922,18 @@ def patch_runbook_endpoints(client, mpi_data, payload):
             endpoint_id = endpoint.get("metadata", {}).get("uuid", "")
             endpoints_mapping[used_endpoint] = endpoint_id
 
-    payload['spec']['resources']['endpoints_mapping'] = endpoints_mapping
+    payload["spec"]["resources"]["endpoints_mapping"] = endpoints_mapping
 
 
 def patch_runbook_runtime_editables(client, mpi_data, payload):
 
-    runbook = mpi_data['status']['resources'].get('runbook_template_info', {}).get('runbook_template', {})
+    runbook = (
+        mpi_data["status"]["resources"]
+        .get("runbook_template_info", {})
+        .get("runbook_template", {})
+    )
     variable_list = runbook["spec"]["resources"]["runbook"].get("variable_list", [])
-    args = payload.get('spec', {}).get('resources', {}).get('args', [])
+    args = payload.get("spec", {}).get("resources", {}).get("args", [])
 
     for variable in variable_list:
         if variable.get("editables", {}).get("value", False):
@@ -1859,5 +1950,5 @@ def patch_runbook_runtime_editables(client, mpi_data, payload):
                     }
                 )
 
-    payload['spec']['resources']['args'] = args
+    payload["spec"]["resources"]["args"] = args
     return payload

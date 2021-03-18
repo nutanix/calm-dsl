@@ -8,8 +8,8 @@ from calm.dsl.builtins import CalmVariable, CalmTask, action
 from calm.dsl.builtins import Brownfield as BF
 
 
-CENTOS_KEY = read_local_file("keys/centos")
-CENTOS_PUBLIC_KEY = read_local_file("keys/centos_pub")
+CENTOS_KEY = read_local_file(".tests/keys/centos")
+CENTOS_PUBLIC_KEY = read_local_file(".tests/keys/centos_pub")
 INSTANCE_NAME = read_local_file("brownfield_instance_name")
 
 Centos = basic_cred("centos", CENTOS_KEY, name="Centos", type="KEY", default=True)

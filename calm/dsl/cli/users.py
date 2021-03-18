@@ -6,9 +6,13 @@ from prettytable import PrettyTable
 from calm.dsl.api import get_api_client
 from calm.dsl.config import get_context
 from calm.dsl.builtins import Ref
+from calm.dsl.store import Cache
+from calm.dsl.constants import CACHE
 from calm.dsl.log import get_logging_handle
 
 from .utils import get_name_query, highlight_text
+from .task_commands import watch_task
+from .constants import ERGON_TASK
 
 
 LOG = get_logging_handle(__name__)
@@ -41,11 +45,20 @@ def get_users(name, filter_by, limit, offset, quiet, out):
         LOG.warning("Cannot fetch users from {}".format(pc_ip))
         return
 
+    res = res.json()
+    total_matches = res["metadata"]["total_matches"]
+    if total_matches > limit:
+        LOG.warning(
+            "Displaying {} out of {} entities. Please use --limit and --offset option for more results.".format(
+                limit, total_matches
+            )
+        )
+
     if out == "json":
-        click.echo(json.dumps(res.json(), indent=4, separators=(",", ": ")))
+        click.echo(json.dumps(res, indent=4, separators=(",", ": ")))
         return
 
-    json_rows = res.json()["entities"]
+    json_rows = res["entities"]
     if not json_rows:
         click.echo(highlight_text("No user found !!!\n"))
         return
@@ -114,6 +127,19 @@ def create_user(name, directory_service):
     }
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
+    LOG.info("Polling on user creation task")
+    task_state = watch_task(
+        res["status"]["execution_context"]["task_uuid"], poll_interval=5
+    )
+    if task_state in ERGON_TASK.FAILURE_STATES:
+        LOG.exception("User creation task went to {} state".format(task_state))
+        sys.exit(-1)
+
+    # Update users in cache
+    LOG.info("Updating users cache ...")
+    Cache.sync_table(cache_type=CACHE.ENTITY.USER)
+    LOG.info("[Done]")
+
 
 def delete_user(user_names):
 
@@ -131,5 +157,16 @@ def delete_user(user_names):
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-        LOG.info("User {} deleted".format(name))
-    LOG.warning("Please update cache.")
+        LOG.info("Polling on user deletion task")
+        res = res.json()
+        task_state = watch_task(
+            res["status"]["execution_context"]["task_uuid"], poll_interval=5
+        )
+        if task_state in ERGON_TASK.FAILURE_STATES:
+            LOG.exception("User deletion task went to {} state".format(task_state))
+            sys.exit(-1)
+
+    # Update users in cache
+    LOG.info("Updating users cache ...")
+    Cache.sync_table(cache_type=CACHE.ENTITY.USER)
+    LOG.info("[Done]")
