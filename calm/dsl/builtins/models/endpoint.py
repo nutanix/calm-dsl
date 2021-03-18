@@ -1,8 +1,8 @@
 import enum
 import uuid
 
-from .entity import EntityType, Entity
-from .validator import PropertyValidator
+from .entity import EntityType, Entity, EntityTypeBase
+from .validator import DictValidator, PropertyValidator
 from .credential import CredentialType
 
 
@@ -43,6 +43,22 @@ class EndpointType(EntityType):
             cdict.pop("provider_type", "")
         if (cdict.get("value_type", "")) == "":
             cdict.pop("value_type", "")
+        return cdict
+
+    def post_compile(cls, cdict):
+        cdict = super().post_compile(cdict)
+
+        # Setting the parent to attrs
+        attrs = cdict.get("attrs", {})
+
+        for _, v in attrs.items():
+            if isinstance(v, list):
+                for ve in v:
+                    if issubclass(type(ve), EntityTypeBase):
+                        ve.__parent__ = cls
+            elif issubclass(type(v), EntityTypeBase):
+                v.__parent__ = cls
+
         return cdict
 
     def __call__(*args, **kwargs):

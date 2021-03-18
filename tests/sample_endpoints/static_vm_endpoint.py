@@ -15,7 +15,7 @@ LinuxCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
 
 AHVStaticVMEndpoint = Endpoint.Linux.vm(
     filter_type=ENDPOINT_FILTER.STATIC,
-    vms=[Ref.Vm(uuid=AHV_LINUX_ID, name="ahv_vm")],
+    vms=[Ref.Vm(name="hitesh1")],
     cred=LinuxCred,
     provider_type=ENDPOINT_PROVIDER.NUTANIX,
     account=Ref.Account("NTNX_LOCAL_AZ"),
