@@ -254,6 +254,8 @@ class Ref:
             vm_ref = {"uuid": vm_uuid, "kind": "vm"}
 
             # name is required parameter, else api will fail
-            vm_ref["name"] = name if name else "_VM_NAME_{}". format(str(uuid.uuid4())[:10])
+            vm_ref["name"] = (
+                name if name else "_VM_NAME_{}".format(str(uuid.uuid4())[:10])
+            )
 
             return vm_ref
