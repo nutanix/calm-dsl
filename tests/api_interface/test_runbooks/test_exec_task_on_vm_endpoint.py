@@ -1,6 +1,8 @@
 import pytest
 import uuid
+from distutils.version import LooseVersion as LV
 
+from calm.dsl.store import Version
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import RUNLOG
 from tests.api_interface.test_runbooks.test_files.exec_task import (
@@ -8,12 +10,10 @@ from tests.api_interface.test_runbooks.test_files.exec_task import (
     ShellTaskOnLinuxVMAHVDynamicEndpoint1,
     ShellTaskOnLinuxVMAHVDynamicEndpoint2,
     ShellTaskOnLinuxVMAHVDynamicEndpoint3,
-
     ShellTaskOnLinuxVMVMWareStaticEndpoint,
     ShellTaskOnLinuxVMVMWareDynamicEndpoint1,
     ShellTaskOnLinuxVMVMWareDynamicEndpoint2,
     ShellTaskOnLinuxVMVMWareDynamicEndpoint3,
-
     #  ShellTaskOnLinuxVMAHVDynamicEndpoint4,
     #  ShellTaskOnLinuxVMVMWareStaticEndpoint,
     #  ShellTaskOnWindowsVMAHVStaticEndpoint,
@@ -23,33 +23,34 @@ from tests.api_interface.test_runbooks.test_files.exec_task import (
 )
 from utils import upload_runbook, poll_runlog_status
 
+# calm_version
+CALM_VERSION = Version.get_version("Calm")
 
+
+@pytest.mark.skipif(
+    LV(CALM_VERSION) < LV("3.2.0"),
+    reason="Tests are for env changes introduced in 3.2.0",
+)
 class TestExecTasksVMEndpoint:
     @pytest.mark.runbook
     @pytest.mark.regression
     @pytest.mark.parametrize(
-        "Runbook", [
+        "Runbook",
+        [
             # Static VM IDs
             ShellTaskOnLinuxVMAHVStaticEndpoint,
-
             # Dynamic filter name equals
             ShellTaskOnLinuxVMAHVDynamicEndpoint1,
-
             # Dynamic filter name starts with
             ShellTaskOnLinuxVMAHVDynamicEndpoint2,
-
             # Dynamic filter power_state equals
             ShellTaskOnLinuxVMAHVDynamicEndpoint3,
-
             # Static VM IDs for Vmware
             # ShellTaskOnLinuxVMVMWareStaticEndpoint,
-
             # Dynamic filter name equals
             # ShellTaskOnLinuxVMVMWareDynamicEndpoint1,
-
             # Dynamic filter name starts with
             # ShellTaskOnLinuxVMVMWareDynamicEndpoint2,
-
             # Dynamic filter power_state equals
             # ShellTaskOnLinuxVMVMWareDynamicEndpoint3
         ],

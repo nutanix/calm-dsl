@@ -18,6 +18,15 @@ DEFAULT_LOCAL_DIR_LOCATION = os.path.join(os.path.expanduser("~"), ".calm", ".lo
 class InitConfigHandle:
     def __init__(self):
 
+        self.initialize_configuration()
+
+    def initialize_configuration(self):
+        """initializes the confguration for context
+        Priority (Decreases from 1 -> 2):
+        1.) Environment Variables
+        2.) Config file stored in init.ini
+        """
+
         init_file = INIT_FILE_LOCATION
         init_config = configparser.ConfigParser()
         init_config.optionxform = str
@@ -66,8 +75,7 @@ class InitConfigHandle:
 
         return self._CONFIG
 
-    @classmethod
-    def update_init_config(cls, config_file, db_file, local_dir):
+    def update_init_config(self, config_file, db_file, local_dir):
         """updates the init file data"""
 
         # create required directories
@@ -80,12 +88,15 @@ class InitConfigHandle:
         make_file_dir(init_file)
 
         LOG.debug("Rendering init template")
-        text = cls._render_init_template(config_file, db_file, local_dir)
+        text = self._render_init_template(config_file, db_file, local_dir)
 
         # Write init configuration
         LOG.debug("Writing configuration to '{}'".format(init_file))
         with open(init_file, "w") as fd:
             fd.write(text)
+
+        # reinitialize latest configuration
+        self.initialize_configuration()
 
     @staticmethod
     def _render_init_template(

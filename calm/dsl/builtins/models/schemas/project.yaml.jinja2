@@ -1,62 +1,5 @@
 {% import "ref.yaml.jinja2" as ref %}
 
-{% macro ProviderData() -%}
-
-title: Provider Data
-type: object
-x-calm-dsl-type: object
-properties:
-  provider_type:
-    type: string
-  account_reference:
-    type: object
-    x-calm-dsl-type: object
-    properties:
-      kind:
-        type: string
-      name:
-        type: string
-      uuid:
-        type: string
-  subnet_reference_list:
-    type: array
-    items:
-      type: object
-      x-calm-dsl-type: object
-      properties:
-        kind:
-          type: string
-        name:
-          type: string
-        uuid:
-          type: string
-  external_network_list:
-    type: array
-    items:
-      type: object
-      x-calm-dsl-type: object
-      properties:
-        kind:
-          type: string
-        name:
-          type: string
-        uuid:
-          type: string   
-  default_subnet_reference:
-    type: object
-    x-calm-dsl-type: object
-    properties:
-      kind:
-        type: string
-      name:
-        type: string
-      uuid:
-        type: string
-  
-{%- endmacro %}
-
-
-
 {% macro ProjectSpec() -%}
 
 title: Project Spec
@@ -67,8 +10,7 @@ properties:
     x-calm-dsl-display-name: providers
     type: array
     items:
-      {{ ProviderData() | indent(6) }}
-  
+      $ref: '#/components/schemas/AccountProvider'
   user_reference_list:
     x-calm-dsl-display-name: users
     type: array
@@ -87,6 +29,10 @@ properties:
     type: array
     items:
       $ref: '#/components/schemas/Ref'
+  default_environment_reference:
+    x-calm-dsl-display-name: default_environment
+    x-calm-dsl-min-version: 3.2.0
+    {{ ref.Ref() | indent(4) }}
   environment_definition_list:
     x-calm-dsl-display-name: envs
     description: Inline definitions of environment in project

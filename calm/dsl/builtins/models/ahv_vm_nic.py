@@ -2,9 +2,8 @@ import sys
 
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
-from .metadata_payload import get_metadata_obj
 from calm.dsl.store import Cache
-from calm.dsl.config import get_context
+from .helper import common as common_helper
 from calm.dsl.constants import CACHE
 from calm.dsl.log import get_logging_handle
 
@@ -21,30 +20,17 @@ class AhvNicType(EntityType):
 
         cdict = super().compile()
 
-        # Getting the metadata obj
-        metadata_obj = get_metadata_obj()
-        project_ref = metadata_obj.get("project_reference") or dict()
-
-        # If project not found in metadata, it will take project from config
-        context = get_context()
-        project_config = context.get_project_config()
-        project_name = project_ref.get("name") or project_config["name"]
-
-        project_cache_data = Cache.get_entity_data(
-            entity_type=CACHE.ENTITY.PROJECT, name=project_name
+        cls_substrate = common_helper._walk_to_parent_with_given_type(
+            cls, "SubstrateType"
         )
-        if not project_cache_data:
-            LOG.error(
-                "Project {} not found. Please run: calm update cache".format(
-                    project_name
-                )
-            )
-            sys.exit(-1)
+        account_uuid = (
+            cls_substrate.get_referenced_account_uuid() if cls_substrate else ""
+        )
 
-        project_accounts = project_cache_data["accounts_data"]
-        project_subnets = project_cache_data["whitelisted_subnets"]
-        # Fetch Nutanix_PC account registered
-        account_uuid = project_accounts.get("nutanix_pc", "")
+        # Fetch nutanix account in project
+        project, project_whitelist = common_helper.get_project_with_pc_account()
+        if not account_uuid:
+            account_uuid = list(project_whitelist.keys())[0]
 
         subnet_ref = cdict.get("subnet_reference") or dict()
         subnet_name = subnet_ref.get("name", "") or ""
@@ -66,8 +52,9 @@ class AhvNicType(EntityType):
 
             if not subnet_cache_data:
                 LOG.debug(
-                    "Ahv Subnet (name = '{}') not found in registered nutanix_pc account (uuid = '{}') in project (name = '{}')".format(
-                        subnet_name, account_uuid, project_name
+                    "Ahv Subnet (name = '{}') not found in registered Nutanix PC account (uuid = '{}') "
+                    "in project (name = '{}')".format(
+                        subnet_name, account_uuid, project["name"]
                     )
                 )
                 LOG.error(
@@ -78,13 +65,61 @@ class AhvNicType(EntityType):
                 sys.exit(-1)
 
             subnet_uuid = subnet_cache_data.get("uuid", "")
-            if subnet_uuid not in project_subnets:
-                LOG.error(
-                    "Subnet {} is not whitelisted in project {}".format(
-                        subnet_name, project_name
+
+            # If substrate defined under environment model
+            cls_env = common_helper._walk_to_parent_with_given_type(
+                cls, "EnvironmentType"
+            )
+            if cls_env:
+                infra = getattr(cls_env, "providers", [])
+                for _pdr in infra:
+                    if _pdr.type == "nutanix_pc":
+                        subnet_references = getattr(_pdr, "subnet_reference_list", [])
+                        subnet_references.extend(
+                            getattr(_pdr, "external_network_list", [])
+                        )
+                        sr_list = [_sr.get_dict()["uuid"] for _sr in subnet_references]
+                        if subnet_uuid not in sr_list:
+                            LOG.error(
+                                "Subnet '{}' not whitelisted in environment '{}'".format(
+                                    subnet_name, str(cls_env)
+                                )
+                            )
+                            sys.exit(-1)
+
+            # If provider_spec is defined under substrate and substrate is defined under blueprint model
+            elif cls_substrate:
+                pfl_env = cls_substrate.get_profile_environment()
+                if pfl_env:
+                    environment_cache_data = Cache.get_entity_data_using_uuid(
+                        entity_type=CACHE.ENTITY.ENVIRONMENT, uuid=pfl_env["uuid"]
                     )
-                )
-                sys.exit(-1)
+                    if not environment_cache_data:
+                        LOG.error(
+                            "Environment {} not found. Please run: calm update cache".format(
+                                pfl_env["name"]
+                            )
+                        )
+                        sys.exit(-1)
+
+                    env_accounts = environment_cache_data.get("accounts_data", {}).get(
+                        "nutanix_pc", []
+                    )
+                    if subnet_uuid not in env_accounts.get(account_uuid, []):
+                        LOG.error(
+                            "Subnet {} is not whitelisted in environment {}".format(
+                                subnet_name, str(pfl_env)
+                            )
+                        )
+                        sys.exit(-1)
+
+                elif subnet_uuid not in project_whitelist.get(account_uuid, []):
+                    LOG.error(
+                        "Subnet {} is not whitelisted in project {}".format(
+                            subnet_name, project["name"]
+                        )
+                    )
+                    sys.exit(-1)
 
             cdict["subnet_reference"] = {
                 "kind": "subnet",
@@ -102,7 +137,7 @@ class AhvNicType(EntityType):
             if not nfc_cache_data:
                 LOG.debug(
                     "Ahv Network Function Chain (name = '{}') not found in registered nutanix_pc account (uuid = '{}') in project (name = '{}')".format(
-                        nfc_name, account_uuid, project_name
+                        nfc_name, account_uuid, project["name"]
                     )
                 )
                 LOG.error(

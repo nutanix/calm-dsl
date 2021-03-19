@@ -15,6 +15,7 @@ from .bps import (
     format_blueprint_command,
     compile_blueprint_command,
     launch_blueprint_simple,
+    patch_bp_if_required,
     delete_blueprint,
     decompile_bp,
     create_blueprint_from_json,
@@ -230,6 +231,9 @@ def create_blueprint_command(bp_file, name, description, force):
 
 @launch.command("bp")
 @click.argument("blueprint_name")
+@click.option(
+    "--environment", "-e", default=None, help="Environment for the application"
+)
 @click.option("--app_name", "-a", default=None, help="Name of your app")
 @click.option(
     "--profile_name",
@@ -262,6 +266,7 @@ def create_blueprint_command(bp_file, name, description, force):
 )
 def launch_blueprint_command(
     blueprint_name,
+    environment,
     app_name,
     ignore_runtime_variables,
     profile_name,
@@ -273,6 +278,9 @@ def launch_blueprint_command(
     """Launches a blueprint.
     All runtime variables will be prompted by default. When passing the 'ignore_runtime_variables' flag, no variables will be prompted and all default values will be used.
     The blueprint default values can be overridden by passing a Python file via 'launch_params'. Any variable not defined in the Python file will keep the default value defined in the blueprint. When passing a Python file, no variables will be prompted.
+
+    \b
+    Note: Dynamic variables will not have a default value. User have to select an option during launch.
 
     \b
     >: launch_params: Python file consisting of variables 'variable_list' and 'substrate_list'
@@ -313,6 +321,10 @@ def launch_blueprint_command(
     """
 
     app_name = app_name or "App-{}-{}".format(blueprint_name, int(time.time()))
+    blueprint_name, blueprint = patch_bp_if_required(
+        environment, blueprint_name, profile_name
+    )
+
     launch_blueprint_simple(
         blueprint_name,
         app_name,

@@ -36,6 +36,7 @@ Context info includes server, project and log configuration for dsl operations.
  - List blueprints: `calm get bps`. You can also pass in filters like `calm get bps --name <blueprint_name>` and so on. Please look at `calm get bps --help`.
  - Describe blueprint: `calm describe bp <blueprint_name>`. It will print a summary of the blueprint.
  - Launch blueprint to create Application: `calm launch bp <blueprint_name> --app_name <app_name> -i`
+ - Launch blueprint using environment configuration: `calm launch bp <blueprint_name> --app_name <app_name> --environment <env_name>`
  - Publish blueprint to marketplace manager: `calm publish bp <bp_name> --version <version> --project <project_name>`. Please look at `calm publish bp --help`.
 
 ### Application
@@ -53,7 +54,7 @@ Context info includes server, project and log configuration for dsl operations.
 
 ### Brownfield Application
 - Two ways to declare brownfield deployments in dsl: User can define brownfield deployments in blueprint [file](https://github.com/nutanix/calm-dsl/blob/release/2.9/examples/Brownfield/inline_example/blueprint.py) OR he can declare brownfield deployments in separate [file](https://github.com/nutanix/calm-dsl/blob/release/2.9/examples/Brownfield/separate_file_example/brownfield_deployments.py) and pass it as cli parameter while creating brownfield application.
-- List Brownfield vms: `calm get brownfield vms --project <project_name> --type [AHV_VM|AWS_VM|AZURE_VM|GCP_VM|VMWARE_VM]`.
+- List Brownfield vms: `calm get brownfield vms --project <project_name> --type [AHV_VM|AWS_VM|AZURE_VM|GCP_VM|VMWARE_VM]`. Please use `--account` cli option, if project has multiple accounts for a provider type.
 - Compile Blueprint: `calm compile bp -f <blueprint_file_location> -b <brownfield_deployments_file_location>`.
 - Create Brownfield Application: `calm create app -f <bluprint_file_location> -b <brownfield_deployments_file_location> -n <app_name> -i`.
 
@@ -85,6 +86,13 @@ Decompilation is process to consume json data for any entity and convert it back
  - Resume runbook execution: `calm resume runbook_execution <runlog_id>`. It will play/resume the paused runbook execution.
  - Abort runbook execution: `calm abort runbook_execution <runlog_id>`. It will abort the runbook execution.
  - Please look [here](docs/01-Calm-Terminology#runbooks) for more details.
+
+### Task Library
+ - List task library items: `calm get library tasks`. Use `calm get library tasks -q` to show only task library names.
+ - Create task library item: `calm create library task -f <file>`. Command will create task under library. Please look at `calm create library task -h`.
+ - Describe task library item: `calm describe library task <task_name>`. It will print a summary of the task and the current state. Use `calm describe library task <name> 2>/dev/null --out json | jq '.["status"]'` to get fields from the task json. More info on how to use `jq` [here](https://stedolan.github.io/jq/tutorial/).
+ - Delete task library item: `calm delete library task <task_name>`. You can delete multiple task library items using: `calm get library tasks -q | xargs -I {} calm delete library task {}`.
+ - Import script files as task library item: `calm import library task -f <files_name>(.json, .sh, .escript, .ps1)`. Create task under library by passing scripts shell, powershell etc.
 
 
 ## Getting started for Admins

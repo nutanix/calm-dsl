@@ -1,25 +1,46 @@
-from calm.dsl.builtins import *  # noqa
+# Do not use `from calm.dsl.builtins import *`, As we need to include
+# each module inside __all__ variable, else `from calm.dsl.runbooks import *`
+# will not import those modules.
 
-from calm.dsl.builtins.models.vm_ref import VM
+from calm.dsl.builtins.models.ref import ref, RefType
+from calm.dsl.builtins.models.calm_ref import Ref
+from calm.dsl.builtins.models.metadata import Metadata, MetadataType
+from calm.dsl.builtins.models.credential import basic_cred, secret_cred, CredentialType
+
+from calm.dsl.builtins.models.utils import (
+    read_file,
+    read_local_file,
+    read_env,
+)
+
 from calm.dsl.builtins.models.variable import RunbookVariable
 from calm.dsl.builtins.models.task import RunbookTask, Status
 from calm.dsl.builtins.models.runbook import Runbook, runbook, runbook_json, branch
+from calm.dsl.builtins.models.action import parallel
 
 from calm.dsl.builtins.models.endpoint import (
     Endpoint,
     _endpoint,
     CalmEndpoint,
-    ENDPOINT_FILTER,
-    ENDPOINT_PROVIDER,
 )
 
 from calm.dsl.builtins.models.runbook_service import RunbookService
 from calm.dsl.builtins.models.endpoint_payload import create_endpoint_payload
 from calm.dsl.builtins.models.runbook_payload import create_runbook_payload
-from calm.dsl.builtins.models.account import CalmAccount
+
 
 __all__ = [
-    "VM",
+    "Ref",
+    "ref",
+    "RefType",
+    "basic_cred",
+    "secret_cred",
+    "CredentialType",
+    "Metadata",
+    "MetadataType",
+    "read_file",
+    "read_local_file",
+    "read_env",
     "RunbookVariable",
     "RunbookTask",
     "Status",
@@ -27,13 +48,11 @@ __all__ = [
     "runbook",
     "runbook_json",
     "branch",
+    "parallel",
     "Endpoint",
     "_endpoint",
     "CalmEndpoint",
-    "ENDPOINT_FILTER",
-    "ENDPOINT_PROVIDER",
     "RunbookService",
     "create_endpoint_payload",
     "create_runbook_payload",
-    "CalmAccount",
 ]

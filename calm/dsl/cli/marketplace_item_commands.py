@@ -5,14 +5,14 @@ from .marketplace_commands_main import (
     marketplace_describe,
     marketplace_launch,
     marketplace_run,
-    marketplace_unpublish
+    marketplace_unpublish,
 )
 from .marketplace import (
     get_marketplace_store_items,
     unpublish_marketplace_item,
     describe_marketplace_store_item,
     execute_marketplace_runbook,
-    launch_marketplace_item
+    launch_marketplace_item,
 )
 from .constants import MARKETPLACE_ITEM
 
@@ -43,7 +43,9 @@ APP_SOURCES = [
 def _describe_marketplace_item(name, out, version, source):
     """Describe a marketplace store item"""
 
-    describe_marketplace_store_item(name=name, out=out, version=version, app_source=source)
+    describe_marketplace_store_item(
+        name=name, out=out, version=version, app_source=source
+    )
 
 
 @marketplace_get.command("items")
@@ -66,7 +68,7 @@ def _describe_marketplace_item(name, out, version, source):
     "-d",
     is_flag=True,
     default=False,
-    help="Show all marketplace blueprints which are published",
+    help="Show all marketplace items which are published",
 )
 @click.option(
     "--filter",
@@ -79,7 +81,8 @@ def _get_marketplace_items(name, quiet, app_family, display_all, filter_by):
     """Get marketplace store items"""
 
     get_marketplace_store_items(
-        name=name, quiet=quiet,
+        name=name,
+        quiet=quiet,
         app_family=app_family,
         display_all=display_all,
         filter_by=filter_by,
@@ -90,6 +93,9 @@ def _get_marketplace_items(name, quiet, app_family, display_all, filter_by):
 @click.argument("name")
 @click.option("--version", "-v", default=None, help="Version of marketplace blueprint")
 @click.option("--project", "-pj", default=None, help="Project for the application")
+@click.option(
+    "--environment", "-e", default=None, help="Environment for the application"
+)
 @click.option("--app_name", "-a", default=None, help="Name of app")
 @click.option(
     "--profile_name",
@@ -131,6 +137,7 @@ def _launch_marketplace_item(
     name,
     version,
     project,
+    environment,
     app_name,
     profile_name,
     ignore_runtime_variables,
@@ -145,6 +152,7 @@ def _launch_marketplace_item(
         name=name,
         version=version,
         project=project,
+        environment=environment,
         app_name=app_name,
         profile_name=profile_name,
         patch_editables=not ignore_runtime_variables,
@@ -186,24 +194,24 @@ def _run_marketplace_item(
         app_source=source,
         watch=watch,
         app_states=[MARKETPLACE_ITEM.STATES.PUBLISHED],
-        ignore_runtime_variables=ignore_runtime_variables
+        ignore_runtime_variables=ignore_runtime_variables,
     )
 
 
 @marketplace_unpublish.command("item")
 @click.argument("name")
 @click.option(
-    "--version", "-v", required=True, help="Version of marketplace blueprint"
+    "--version", "-v", required=True, help="Version of marketplace item"
 )  # Required to prevent unwanted unpublish of unknown mpi
 @click.option(
     "--source",
     "-s",
     default=None,
     type=click.Choice(APP_SOURCES),
-    help="App Source of marketplace blueprint",
+    help="App Source of marketplace item",
 )
-def _unpublish_marketplace_bp(name, version, source):
-    """Unpublish marketplace store blueprint"""
+def _unpublish_marketplace_item(name, version, source):
+    """Unpublish marketplace store item"""
 
     unpublish_marketplace_item(
         name=name,

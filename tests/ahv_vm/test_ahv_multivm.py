@@ -1,3 +1,5 @@
+import json
+
 from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC
 from calm.dsl.builtins import ref, basic_cred, AhvVmResources, AhvVm
 from calm.dsl.builtins import vm_disk_package, read_local_file
@@ -5,14 +7,24 @@ from calm.dsl.builtins import vm_disk_package, read_local_file
 from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import CalmVariable, CalmTask, action
+from calm.dsl.builtins import Metadata, Ref
 from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
 from calm.dsl.config import get_context
 
 
-CENTOS_KEY = read_local_file("keys/centos")
-CENTOS_PUBLIC_KEY = read_local_file("keys/centos_pub")
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+CENTOS_HM = DSL_CONFIG["AHV"]["IMAGES"]["DISK"]["CENTOS_HADOOP_MASTER"]
+CENTOS_CI = DSL_CONFIG["AHV"]["IMAGES"]["DISK"]["CENTOS_7_CLOUD_INIT"]
+SQL_SERVER_IMAGE = DSL_CONFIG["AHV"]["IMAGES"]["CD_ROM"]["SQL_SERVER_2014_x64"]
+NETWORK1 = DSL_CONFIG["AHV"]["NETWORK"]["VLAN1211"]  # TODO change network constants
 
-Centos = basic_cred("centos", CENTOS_KEY, name="Centos", type="KEY", default=True)
+# projects
+PROJECT = DSL_CONFIG["PROJECTS"]["PROJECT1"]
+PROJECT_NAME = PROJECT["NAME"]
+
+CENTOS_KEY = read_local_file(".tests/keys/centos")
+CENTOS_PUBLIC_KEY = read_local_file(".tests/keys/centos_pub")
+DefaultCred = basic_cred("centos", CENTOS_KEY, name="Centos", type="KEY", default=True)
 
 Era_Disk = vm_disk_package(
     name="era_disk",
@@ -61,18 +73,18 @@ class MyAhvVmResources(AhvVmResources):
     vCPUs = 2
     cores_per_vCPU = 1
     disks = [
-        AhvVmDisk("Centos7"),
-        AhvVmDisk.CdRom("SQLServer2014SP2-FullSlipstream-x64"),
-        AhvVmDisk.CdRom.Sata("SQLServer2014SP2-FullSlipstream-x64"),
-        AhvVmDisk.CdRom.Ide("SQLServer2014SP2-FullSlipstream-x64"),
-        AhvVmDisk.Disk.Scsi.cloneFromImageService("AHV_CENTOS_76"),
+        AhvVmDisk(CENTOS_HM),
+        AhvVmDisk.CdRom(SQL_SERVER_IMAGE),
+        AhvVmDisk.CdRom.Sata(SQL_SERVER_IMAGE),
+        AhvVmDisk.CdRom.Ide(SQL_SERVER_IMAGE),
+        AhvVmDisk.Disk.Scsi.cloneFromImageService(CENTOS_CI),
         AhvVmDisk.Disk.Pci.allocateOnStorageContainer(12),
         AhvVmDisk.CdRom.Sata.emptyCdRom(),
         AhvVmDisk.CdRom.Ide.emptyCdRom(),
         AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(Era_Disk, bootable=True),
         AhvVmDisk.CdRom.Sata.cloneFromVMDiskPackage(Virtio_CdRom),
     ]
-    nics = [AhvVmNic("vlan.0"), AhvVmNic.DirectNic.egress("vlan.0")]
+    nics = [AhvVmNic(NETWORK1), AhvVmNic.DirectNic.egress(NETWORK1)]
 
     guest_customization = AhvVmGC.CloudInit(
         config={
@@ -107,11 +119,11 @@ class MyAhvVmResources2(AhvVmResources):
     vCPUs = 2
     cores_per_vCPU = 1
     disks = [
-        AhvVmDisk("Centos7"),
-        AhvVmDisk.Disk.Pci.cloneFromImageService("AHV_CENTOS_76", bootable=True),
+        AhvVmDisk(CENTOS_HM),
+        AhvVmDisk.Disk.Pci.cloneFromImageService(CENTOS_CI, bootable=True),
         AhvVmDisk.CdRom.Ide.emptyCdRom(),
     ]
-    nics = [AhvVmNic("vlan.0"), AhvVmNic.DirectNic.egress("vlan.0")]
+    nics = [AhvVmNic(NETWORK1), AhvVmNic.DirectNic.egress(NETWORK1)]
 
     guest_customization = AhvVmGC.CloudInit(
         config={
@@ -186,11 +198,16 @@ class AhvVmProfile2(Profile):
 class AhvBlueprint(Blueprint):
     """Sample Bp that used ahv_vm_helpers"""
 
-    credentials = [Centos]
+    credentials = [DefaultCred]
     services = [AhvVmService]
     packages = [AhvVmPackage, AhvVmPackage2, Era_Disk, Virtio_CdRom]
     substrates = [AhvVmSubstrate, AhvVmSubstrate2]
     profiles = [AhvVmProfile, AhvVmProfile2]
+
+
+class BpMetadata(Metadata):
+
+    project = Ref.Project(PROJECT_NAME)
 
 
 def test_multivm_with_diff_bootconfig():

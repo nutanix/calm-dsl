@@ -7,6 +7,7 @@ import traceback
 
 from calm.dsl.cli import main as cli
 from calm.dsl.cli.constants import APPLICATION
+from calm.dsl.builtins import read_local_file
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -19,6 +20,10 @@ NON_BUSY_APP_STATES = [
     APPLICATION.STATES.RUNNING,
     APPLICATION.STATES.ERROR,
 ]
+
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+CENTOS_HM = DSL_CONFIG["AHV"]["IMAGES"]["DISK"]["CENTOS_HADOOP_MASTER"]
+NETWORK1 = DSL_CONFIG["AHV"]["NETWORK"]["VLAN1211"]  # TODO change network constants
 
 
 class TestEditables:
@@ -85,9 +90,9 @@ class TestEditables:
             "y",  # Add category
             "6",  # Index of category (AppFamily:DevOps)
             "n",  # Add more category
-            "vlan.0",  # Nic name
+            NETWORK1,  # Nic name
             "CLONE_FROM_IMAGE",  # Opertaion
-            "CentOS-7-Cloud-Init",  # Image name
+            CENTOS_HM,  # Image name
             "DISK",  # Device Type of 2nd disk
             "PCI",  # Device Bus
             "ALLOCATE_STORAGE_CONTAINER",  # Operation
