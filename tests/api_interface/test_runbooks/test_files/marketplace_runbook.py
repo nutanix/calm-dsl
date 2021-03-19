@@ -81,6 +81,16 @@ def DslRunbookForMPI(endpoints=[windows_endpoint, linux_endpoint, http_endpoint]
 
 
 @runbook
+def DslRunbookDynamicVariable():
+    """Runbook example with dynamic variables"""
+
+    escript_var = Variable.WithOptions.FromTask.int(
+        Task.Exec.escript(script="print '123'")
+    )
+    Task.Exec.escript(name="ES_Task", script='print "Hello @@{escript_var}@@"')
+
+
+@runbook
 def DslWhileDecisionRunbookForMPI():
     "Runbook Service example"
     var = Variable.Simple("3")  # noqa

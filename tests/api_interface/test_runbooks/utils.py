@@ -512,3 +512,34 @@ def validate_error_message(err, expected_message):
         pytest.fail(
             "Unable to found err {} in errors {}".format(expected_message, message_list)
         )
+
+
+def get_runbook_dynamic_variable_values(runbook_uuid, var_uuid):
+    """dynamic variable response"""
+
+    client = get_api_client()
+
+    # Get request and trl id
+    res, err = client.market_place.variable_values(runbook_uuid, var_uuid=var_uuid)
+    if err:
+        pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+    res = res.json()
+    var_payload = {"requestId": res["request_id"], "trlId": res["trl_id"]}
+    count = 0
+    while count < 10:
+        res, err = client.market_place.variable_values(
+            runbook_uuid, var_uuid=var_uuid, payload=var_payload
+        )
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        var_state = res["state"]
+        if var_state == "SUCCESS":
+            return res["values"]
+        count += 1
+        print(">> Dynamic variable state: {}".format(var_state))
+        time.sleep(10)
+
+    return []

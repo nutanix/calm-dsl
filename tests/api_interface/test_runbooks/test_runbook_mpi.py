@@ -10,6 +10,7 @@ from calm.dsl.cli.constants import RUNLOG, MARKETPLACE_ITEM
 from test_files.marketplace_runbook import (
     DslRunbookForMPI,
     DslWhileDecisionRunbookForMPI,
+    DslRunbookDynamicVariable,
 )
 from utils import (
     publish_runbook_to_marketplace_manager,
@@ -19,6 +20,7 @@ from utils import (
     upload_runbook,
     poll_runlog_status,
     validate_error_message,
+    get_runbook_dynamic_variable_values,
 )
 
 # calm_version
@@ -27,7 +29,7 @@ CALM_VERSION = Version.get_version("Calm")
 
 @pytest.mark.skipif(
     LV(CALM_VERSION) < LV("3.2.0"),
-    reason="Tests are for env changes introduced in 3.2.0",
+    reason="Marketplce runbook changes introduced in 3.2",
 )
 class TestMarketplaceRunbook:
     @classmethod
@@ -1253,3 +1255,135 @@ class TestMarketplaceRunbook:
             _, err = client.endpoint.delete(endpoint["uuid"])
             if err:
                 pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+    @pytest.mark.runbook
+    @pytest.mark.regression
+    @pytest.mark.skipif(
+        LV(CALM_VERSION) < LV("3.2.2"),
+        reason="marketplace_variable_values api introduced in 3.2.2",
+    )
+    def test_mpi_dynamic_variables(self):
+        """test whether dynamic variables works fine marketplace runbook"""
+
+        client = get_api_client()
+        rb_name = "test_dynamic_var_" + str(uuid.uuid4())[-10:]
+
+        rb = upload_runbook(client, rb_name, DslRunbookDynamicVariable)
+        rb_state = rb["status"]["state"]
+        rb_uuid = rb["metadata"]["uuid"]
+        print(">> Runbook state: {}".format(rb_state))
+        assert rb_state == "ACTIVE"
+        assert rb_name == rb["spec"]["name"]
+        assert rb_name == rb["metadata"]["name"]
+
+        mpi_name = "test_execute_dynamic_var_" + str(uuid.uuid4())[-10:]
+        version = "1.0.0"
+        print(">> Publishing mpi {} - {}".format(mpi_name, version))
+
+        mpi, err = publish_runbook_to_marketplace_manager(
+            client, rb_uuid, mpi_name, version, with_endpoints=True, with_secrets=True
+        )
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        mpi_data = mpi.json()
+
+        mpi_state = mpi_data["status"]["resources"]["app_state"]
+        print(">> MPI state: {}".format(mpi_state))
+        assert mpi_state == MARKETPLACE_ITEM.STATES.PENDING
+        assert mpi_name == mpi_data["spec"]["name"]
+        assert mpi_name == mpi_data["metadata"]["name"]
+
+        mpi_uuid = mpi_data["metadata"]["uuid"]
+        mpi_data = change_marketplace_state(
+            client, mpi_uuid, MARKETPLACE_ITEM.STATES.ACCEPTED
+        )
+        mpi_state = mpi_data["status"]["resources"]["app_state"]
+        print(">> MPI state: {}".format(mpi_state))
+        assert mpi_state == MARKETPLACE_ITEM.STATES.ACCEPTED
+
+        mpi_data = change_marketplace_state(
+            client,
+            mpi_uuid,
+            MARKETPLACE_ITEM.STATES.PUBLISHED,
+            project_list=["default"],
+        )
+        mpi_state = mpi_data["status"]["resources"]["app_state"]
+        print(">> MPI state: {}".format(mpi_state))
+        assert mpi_state == MARKETPLACE_ITEM.STATES.PUBLISHED
+
+        # Tests variable values api
+        dynamic_var = mpi_data["status"]["resources"]["runbook_template_info"][
+            "runbook_template"
+        ]["spec"]["resources"]["runbook"]["variable_list"][0]
+        var_uuid = dynamic_var["uuid"]
+        var_name = dynamic_var["name"]
+
+        # Get variable output
+        var_values = get_runbook_dynamic_variable_values(mpi_uuid, var_uuid)
+        var_value = var_values[0]
+        assert int(var_value) == 123
+
+        endpoints_mapping = {}
+        default_endpoint_uuid = None
+        res, err = execute_marketplace_runbook(
+            client,
+            mpi_uuid,
+            default_endpoint_uuid=default_endpoint_uuid,
+            endpoints_mapping=endpoints_mapping,
+            project_name="default",
+            args=[{"name": var_name, "value": var_value}],
+        )
+
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        runlog_uuid = res["status"]["runlog_uuid"]
+
+        # polling till runbook run gets to terminal state
+        state, reasons = poll_runlog_status(
+            client, runlog_uuid, RUNLOG.TERMINAL_STATES, maxWait=360
+        )
+
+        print(">> Runbook Run state: {}\n{}".format(state, reasons))
+        assert state == RUNLOG.STATUS.SUCCESS
+
+        res, err = client.runbook.list_runlogs(runlog_uuid)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        response = res.json()
+        entities = response["entities"]
+        escript_task_runlog_uuid = ""
+        for entity in entities:
+            if (
+                entity["status"]["type"] == "task_runlog"
+                and entity["status"]["task_reference"]["name"] == "ES_Task"
+            ):
+                escript_task_runlog_uuid = entity["metadata"]["uuid"]
+
+        res, err = client.runbook.runlog_output(runlog_uuid, escript_task_runlog_uuid)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        runlog_output = res.json()
+        output_list = runlog_output["status"]["output_list"]
+        assert "Hello 123" in output_list[0]["output"]
+
+        mpi_data = change_marketplace_state(
+            client, mpi_uuid, MARKETPLACE_ITEM.STATES.ACCEPTED
+        )
+        mpi_state = mpi_data["status"]["resources"]["app_state"]
+        print(">> MPI state: {}".format(mpi_state))
+        assert mpi_state == MARKETPLACE_ITEM.STATES.ACCEPTED
+
+        # DELETE MPI
+        res, err = client.market_place.delete(uuid=mpi_uuid)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        _, err = client.runbook.delete(rb_uuid)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        else:
+            print("runbook {} deleted".format(rb_name))
