@@ -18,7 +18,6 @@ from prettytable import PrettyTable
 
 from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.log import get_logging_handle
-from calm.dsl.providers import get_provider
 from calm.dsl.constants import CACHE
 
 LOG = get_logging_handle(__name__)
@@ -72,6 +71,15 @@ class CacheTableBase(BaseModel):
 
     def get_detail_dict(self):
         raise NotImplementedError("get_detail_dict helper not implemented")
+
+    @classmethod
+    def get_provider_plugin(self, provider_type="AHV_VM"):
+        """returns the provider plugin"""
+
+        # Not a top-level import because of : https://github.com/ideadevice/calm-dsl/issues/33
+        from calm.dsl.providers import get_provider
+
+        return get_provider(provider_type)
 
     @classmethod
     def get_cache_tables(cls):
@@ -173,7 +181,7 @@ class AhvSubnetsCache(CacheTableBase):
         payload = {"length": 250, "filter": "state==VERIFIED;type==nutanix_pc"}
         account_name_uuid_map = client.account.get_name_uuid_map(payload)
 
-        AhvVmProvider = get_provider("AHV_VM")
+        AhvVmProvider = cls.get_provider_plugin("AHV_VM")
         AhvObj = AhvVmProvider.get_api_obj()
 
         for _, e_uuid in account_name_uuid_map.items():
@@ -332,7 +340,7 @@ class AhvImagesCache(CacheTableBase):
         payload = {"length": 250, "filter": "state==VERIFIED;type==nutanix_pc"}
         account_name_uuid_map = client.account.get_name_uuid_map(payload)
 
-        AhvVmProvider = get_provider("AHV_VM")
+        AhvVmProvider = cls.get_provider_plugin("AHV_VM")
         AhvObj = AhvVmProvider.get_api_obj()
 
         for _, e_uuid in account_name_uuid_map.items():
@@ -677,8 +685,9 @@ class ProjectCache(CacheTableBase):
                     if not subnet_uuids:
                         continue
 
-                    AhvVmProvider = get_provider("AHV_VM")
+                    AhvVmProvider = cls.get_provider_plugin("AHV_VM")
                     AhvObj = AhvVmProvider.get_api_obj()
+
                     filter_query = "(_entity_id_=={})".format(
                         ",_entity_id_==".join(subnet_uuids)
                     )
