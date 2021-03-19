@@ -2,7 +2,11 @@ import os
 import time
 import uuid
 import pytest
+
 import json
+from calm.dsl.cli.constants import MARKETPLACE_ITEM
+from calm.dsl.config import get_context
+from calm.dsl.api import get_api_client
 
 
 def change_uuids(bp, context):
@@ -255,3 +259,287 @@ def poll_run_script_output(
         time.sleep(poll_interval)
 
     return state
+
+
+def publish_runbook_to_marketplace_manager(
+    client,
+    runbook_uuid,
+    marketplace_item_name,
+    version,
+    description="",
+    with_secrets=False,
+    with_endpoints=False,
+    app_group_uuid=None,
+    app_icon_uuid=None,
+    icon_file=None,
+):
+    """
+    This routine publish the runbook to the marketplace
+    Args:
+        client (obj): client object
+        runbook_uuid (str): runbook id
+        marketplace_item_name (str): name of marketplace item
+        version (str): version for marketplace item
+        description (str): description of marketplace item
+        with_secrets (str): publish with secrets
+        with_endpoints (str): publish with endpoints
+        app_group_uuid (str): group uuid in case publishing new verion
+        icon_file (str): icon file details
+    Returns:
+        response (obj): returns response of the publish api
+        err (dict): error of operation
+    """
+    context = get_context()
+    server_config = context.get_server_config()
+
+    mpi_spec = {
+        "spec": {
+            "name": marketplace_item_name,
+            "description": description,
+            "resources": {
+                "app_attribute_list": ["FEATURED"],
+                "icon_reference_list": [],
+                "author": server_config["pc_username"],
+                "version": version,
+                "type": MARKETPLACE_ITEM.TYPES.RUNBOOK,
+                "app_group_uuid": app_group_uuid or str(uuid.uuid4()),
+                "runbook_template_info": {
+                    "is_published_with_secrets": with_secrets,
+                    "is_published_with_endpoints": with_endpoints,
+                    "source_runbook_reference": {
+                        "uuid": runbook_uuid,
+                        "kind": "runbook",
+                    },
+                },
+            },
+        },
+        "api_version": "3.0",
+        "metadata": {"kind": "marketplace_item"},
+    }
+
+    if app_icon_uuid:
+        mpi_spec["spec"]["resources"]["icon_reference_list"] = [
+            {
+                "icon_type": "ICON",
+                "icon_reference": {"kind": "file_item", "uuid": app_icon_uuid},
+            }
+        ]
+
+    return client.market_place.create(mpi_spec)
+
+
+def change_marketplace_state(client, mpi_uuid, new_state, project_list=None):
+    """
+    Change state of MPI and list of project it is shared it
+    Args:
+        client (obj): client object
+        mpi_uuid (str): UUID of MPI
+        new_state (str): New state of mpi
+        project_list (list): list of project names
+    Returns:
+        response (obj): returns response of the update API
+    """
+
+    res, err = client.market_place.read(mpi_uuid)
+    if err:
+        pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+    mpi_data = res.json()
+    mpi_data.pop("status", None)
+    mpi_data["spec"]["resources"]["app_state"] = new_state
+    if project_list is not None:
+        project_reference_list = []
+        for project in project_list:
+            project_params = {"filter": "name=={}".format(project)}
+            res, err = client.project.list(params=project_params)
+            if err:
+                pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+            response = res.json()
+            entities = response.get("entities", None)
+            if not entities:
+                raise Exception("No project with name {} exists".format(project))
+
+            project_id = entities[0]["metadata"]["uuid"]
+            project_reference_list.append(
+                {"name": project, "uuid": project_id, "kind": "project"}
+            )
+
+        mpi_data["spec"]["resources"]["project_reference_list"] = project_reference_list
+
+    res, err = client.market_place.update(uuid=mpi_uuid, payload=mpi_data)
+    if err:
+        pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+    return res.json()
+
+
+def clone_marketplace_runbook(client, mpi_uuid, runbook_name, project_name):
+    """
+    Clone MPI runbook in the given project
+    Args:
+        client (obj): client object
+        mpi_uuid (str): UUID of MPI
+        runbook_name (str): Nmme of runbook
+        project_name (str): project name
+    Returns:
+        response (obj): returns response of the clone API
+        err (dict): error of operation
+    """
+    payload = {
+        "api_version": "3.0",
+        "metadata": {"name": runbook_name, "kind": "runbook"},
+        "spec": {
+            "name": runbook_name,
+            "resources": {
+                "marketplace_reference": {"uuid": mpi_uuid, "kind": "marketplace_item"}
+            },
+        },
+    }
+
+    if project_name:
+        project_id = get_project_id_from_name(client, project_name)
+        if not project_id:
+            raise Exception("No project with name {} exists".format(project_name))
+
+        payload["metadata"]["project_reference"] = {
+            "name": project_name,
+            "uuid": project_id,
+            "kind": "project",
+        }
+
+    return client.runbook.marketplace_clone(payload)
+
+
+def execute_marketplace_runbook(
+    client,
+    mpi_uuid,
+    project_name,
+    default_endpoint_uuid=None,
+    endpoints_mapping=None,
+    args=None,
+):
+    """
+    Execute MPI runbook in the given project
+    Args:
+        client (obj): client object
+        mpi_uuid (str): UUID of MPI
+        project_name (str): project name
+        default_endpoint_uuid (str): default endpoint uuid that need to be used
+        endpoints_mapping (dict): current endpoint and new endpoint mapping
+        args (listt): list if runtime variables
+    Returns:
+        response (obj): returns response of the clone API
+        err (dict): error of operation
+    """
+
+    project_id = get_project_id_from_name(client, project_name)
+    if not project_id:
+        raise Exception("No project with name {} exists".format(project_name))
+
+    payload = {
+        "api_version": "3.0",
+        "metadata": {
+            "project_reference": {
+                "name": project_name,
+                "uuid": project_id,
+                "kind": "project",
+            },
+            "kind": "runbook",
+        },
+        "spec": {
+            "resources": {
+                "marketplace_reference": {"uuid": mpi_uuid, "kind": "marketplace_item"}
+            }
+        },
+    }
+
+    if args:
+        payload["spec"]["resources"]["args"] = args
+
+    if default_endpoint_uuid:
+        payload["spec"]["resources"]["default_target_reference"] = {
+            "uuid": default_endpoint_uuid,
+            "kind": "app_endpoint",
+        }
+
+    if endpoints_mapping:
+        payload["spec"]["resources"]["endpoints_mapping"] = endpoints_mapping
+
+    return client.runbook.marketplace_execute(payload)
+
+
+def get_project_id_from_name(client, project_name):
+    """
+    Helper function to get project if from name
+    Args:
+        client (obj): client object
+        project_name (str): project name
+    Returns:
+        str: returns project name
+    """
+
+    project_params = {"filter": "name=={}".format(project_name)}
+    res, err = client.project.list(params=project_params)
+    if err:
+        pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+    response = res.json()
+    project_entities = response.get("entities", None)
+    project_id = None
+
+    if project_entities:
+        project_id = project_entities[0]["metadata"]["uuid"]
+
+    return project_id
+
+
+def validate_error_message(err, expected_message):
+    """
+    Helper function to validate error messages with expected error
+    Args:
+        error (dict): error
+        expected_message (str): expected error message
+    """
+    message_list = err.get("message_list", [])
+    found = False
+    for message in message_list:
+        if expected_message in message["message"].lower():
+            found = True
+            break
+
+    if not found:
+        pytest.fail(
+            "Unable to found err {} in errors {}".format(expected_message, message_list)
+        )
+
+
+def get_runbook_dynamic_variable_values(runbook_uuid, var_uuid):
+    """dynamic variable response"""
+
+    client = get_api_client()
+
+    # Get request and trl id
+    res, err = client.market_place.variable_values(runbook_uuid, var_uuid=var_uuid)
+    if err:
+        pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+    res = res.json()
+    var_payload = {"requestId": res["request_id"], "trlId": res["trl_id"]}
+    count = 0
+    while count < 10:
+        res, err = client.market_place.variable_values(
+            runbook_uuid, var_uuid=var_uuid, payload=var_payload
+        )
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        var_state = res["state"]
+        if var_state == "SUCCESS":
+            return res["values"]
+        count += 1
+        print(">> Dynamic variable state: {}".format(var_state))
+        time.sleep(10)
+
+    return []

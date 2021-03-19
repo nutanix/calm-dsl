@@ -29,6 +29,10 @@
             "spec": {
                 "args": [
                     {
+                        "name": "var2",
+                        "value": "no"
+                    },
+                    {
                         "name": "firstname",
                         "value": "Mr X"
                     },
@@ -39,6 +43,6 @@
                 ]
             }
         },
-        "expected_output": "Hello Mr X LASTNAME\n"
+        "expected_output": "xxxx\nyes\nxx\nxx\nHello Mr X LASTNAME\n"
     }
 }

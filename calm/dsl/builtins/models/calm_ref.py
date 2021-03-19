@@ -1,4 +1,5 @@
 import sys
+import uuid
 
 from .entity import Entity, EntityType
 from .validator import PropertyValidator
@@ -6,6 +7,7 @@ from .helper import common as common_helper
 
 from calm.dsl.store import Cache
 from calm.dsl.constants import CACHE
+from calm.dsl.api.handle import get_api_client
 from calm.dsl.log import get_logging_handle
 
 
@@ -207,3 +209,53 @@ class Ref:
                 "name": name,
                 "uuid": ds_cache_data["uuid"],
             }
+
+    class Vm:
+        def __new__(cls, **kwargs):
+
+            kwargs["__ref_cls__"] = cls
+            return _calm_ref(**kwargs)
+
+        def compile(cls, name="", **kwargs):
+            """cls = CalmRef object"""
+
+            client = get_api_client()
+            account_uuid = ""
+            try:
+                account_ref = cls.__parent__.attrs.get("account_reference", {})
+                account_uuid = account_ref.get("uuid", "")
+            except Exception as exp:
+                pass
+
+            vm_uuid = kwargs.get("uuid", "")
+
+            if name:
+                params = {"filter": "name=={}".format(name), "length": 250}
+                res, err = client.account.vms_list(account_uuid, params)
+                if err:
+                    LOG.error(err)
+                    sys.exit(-1)
+
+                res = res.json()
+                if res["metadata"]["total_matches"] == 0:
+                    LOG.error("No vm with name '{}' found".format(name))
+                    sys.exit(-1)
+
+                elif res["metadata"]["total_matches"] > 1 and not vm_uuid:
+                    LOG.error(
+                        "Multiple vms with same name found. Please provide vm uuid"
+                    )
+                    sys.exit(-1)
+
+                elif not vm_uuid:
+                    vm_uuid = res["entities"][0]["status"]["uuid"]
+
+            # TODO add valdiations on suppiled uuid
+            vm_ref = {"uuid": vm_uuid, "kind": "vm"}
+
+            # name is required parameter, else api will fail
+            vm_ref["name"] = (
+                name if name else "_VM_NAME_{}".format(str(uuid.uuid4())[:10])
+            )
+
+            return vm_ref

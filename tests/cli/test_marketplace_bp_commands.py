@@ -9,14 +9,14 @@ import traceback
 
 from calm.dsl.cli import main as cli
 from calm.dsl.api import get_api_client, get_resource_api
-from calm.dsl.cli.marketplace_bps import (
+from calm.dsl.cli.marketplace import (
     get_app_family_list,
     get_group_data_value,
     get_mpi_by_name_n_version,
 )
 from calm.dsl.cli.utils import get_states_filter
 from calm.dsl.builtins import read_local_file
-from calm.dsl.cli.constants import APPLICATION, MARKETPLACE_BLUEPRINT
+from calm.dsl.cli.constants import APPLICATION, MARKETPLACE_ITEM
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -29,14 +29,14 @@ NON_BUSY_APP_STATES = [
     APPLICATION.STATES.ERROR,
 ]
 APP_STATES = [
-    MARKETPLACE_BLUEPRINT.STATES.PENDING,
-    MARKETPLACE_BLUEPRINT.STATES.ACCEPTED,
-    MARKETPLACE_BLUEPRINT.STATES.REJECTED,
-    MARKETPLACE_BLUEPRINT.STATES.PUBLISHED,
+    MARKETPLACE_ITEM.STATES.PENDING,
+    MARKETPLACE_ITEM.STATES.ACCEPTED,
+    MARKETPLACE_ITEM.STATES.REJECTED,
+    MARKETPLACE_ITEM.STATES.PUBLISHED,
 ]
 APP_SOURCES = [
-    MARKETPLACE_BLUEPRINT.SOURCES.GLOBAL,
-    MARKETPLACE_BLUEPRINT.SOURCES.LOCAL,
+    MARKETPLACE_ITEM.SOURCES.GLOBAL,
+    MARKETPLACE_ITEM.SOURCES.LOCAL,
 ]
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
@@ -1334,10 +1334,10 @@ class TestMarketplaceBPCommands:
         mpi_data = get_mpi_by_name_n_version(
             name=self.marketplace_bp_name,
             version=self.mpi1_version,
-            app_source=MARKETPLACE_BLUEPRINT.SOURCES.LOCAL,
+            app_source=MARKETPLACE_ITEM.SOURCES.LOCAL,
         )
         bp_state = mpi_data["status"]["resources"]["app_state"]
-        assert bp_state == MARKETPLACE_BLUEPRINT.STATES.PUBLISHED
+        assert bp_state == MARKETPLACE_ITEM.STATES.PUBLISHED
 
         LOG.info(
             "Unpublishing marketplace blueprint {} with version {}".format(
@@ -1444,10 +1444,10 @@ class TestMarketplaceBPCommands:
         mpi_data = get_mpi_by_name_n_version(
             name=self.marketplace_bp_name,
             version=self.mpi1_version,
-            app_source=MARKETPLACE_BLUEPRINT.SOURCES.LOCAL,
+            app_source=MARKETPLACE_ITEM.SOURCES.LOCAL,
         )
         bp_state = mpi_data["status"]["resources"]["app_state"]
-        assert bp_state == MARKETPLACE_BLUEPRINT.STATES.ACCEPTED
+        assert bp_state == MARKETPLACE_ITEM.STATES.ACCEPTED
 
         LOG.info(
             "Deleting marketplace blueprint {} with version {} in ACCEPTED state".format(
@@ -1609,7 +1609,7 @@ class TestMarketplaceBPCommands:
         mpi_data = get_mpi_by_name_n_version(
             name=self.marketplace_bp_name,
             version=self.mpi1_version,
-            app_source=MARKETPLACE_BLUEPRINT.SOURCES.LOCAL,
+            app_source=MARKETPLACE_ITEM.SOURCES.LOCAL,
         )
 
         project_name_uuid_map = client.project.get_name_uuid_map({"length": 250})
@@ -1733,7 +1733,7 @@ class TestMarketplaceBPCommands:
         mpi_data = get_mpi_by_name_n_version(
             name=self.marketplace_bp_name,
             version=self.mpi1_version,
-            app_source=MARKETPLACE_BLUEPRINT.SOURCES.LOCAL,
+            app_source=MARKETPLACE_ITEM.SOURCES.LOCAL,
         )
 
         project_name_uuid_map = client.project.get_name_uuid_map({"length": 250})
@@ -1854,7 +1854,7 @@ class TestMarketplaceBPCommands:
         mpi_data = get_mpi_by_name_n_version(
             name=self.marketplace_bp_name,
             version=self.mpi1_version,
-            app_source=MARKETPLACE_BLUEPRINT.SOURCES.LOCAL,
+            app_source=MARKETPLACE_ITEM.SOURCES.LOCAL,
         )
 
         project_name_uuid_map = client.project.get_name_uuid_map({"length": 250})
