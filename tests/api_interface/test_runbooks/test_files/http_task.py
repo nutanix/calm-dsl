@@ -27,6 +27,10 @@ endpoint_with_tls_verify = Endpoint.HTTP(
 )
 endpoint_with_incorrect_auth = Endpoint.HTTP(URL, verify=False)
 endpoint_without_auth = Endpoint.HTTP(TEST_URL)
+endpoint_with_multiple_urls = Endpoint.HTTP(
+    ["@@{base}@@/endpoints", "@@{base}@@/blueprints", "@@{base}@@/runbooks"],
+    auth=Endpoint.Auth(AUTH_USERNAME, AUTH_PASSWORD),
+)
 
 
 def get_http_task_runbook():
@@ -195,4 +199,20 @@ def HTTPRelativeURLWithMacro(endpoints=[endpoint]):
         content_type="application/json",
         status_mapping={200: True},
         target=endpoints[0],
+    )
+
+
+@runbook
+def HTTPEndpointWithMultipleURLs(endpoints=[endpoint_with_multiple_urls]):
+
+    base = Variable.Simple(  # noqa
+        "https://{}:9440/api/nutanix/v3".format(server_config["pc_ip"])
+    )
+    # Creating an endpoint with POST call
+    Task.HTTP.post(
+        name="HTTPTask",
+        relative_url="/list",
+        body=json.dumps({}),
+        content_type="application/json",
+        status_mapping={200: True},
     )

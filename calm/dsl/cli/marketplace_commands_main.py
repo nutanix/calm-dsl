@@ -9,6 +9,7 @@ from .main import (
     reject,
     unpublish,
     decompile,
+    run,
 )
 from .utils import FeatureFlagGroup
 
@@ -73,4 +74,10 @@ def marketplace_reject():
 @unpublish.group("marketplace", cls=FeatureFlagGroup)
 def marketplace_unpublish():
     """Unpublish marketplace entities"""
+    pass
+
+
+@run.group("marketplace", cls=FeatureFlagGroup)
+def marketplace_run():
+    """Run marketplace entities"""
     pass

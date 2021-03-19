@@ -1,9 +1,16 @@
+import enum
 import uuid
+import sys
 
-from .entity import EntityType, Entity
-from .validator import PropertyValidator
+from .entity import EntityType, Entity, EntityTypeBase
+from .validator import DictValidator, PropertyValidator
 from .credential import CredentialType
+from calm.dsl.store import Cache
+from calm.dsl.constants import CACHE
+from calm.dsl.log import get_logging_handle
 
+
+LOG = get_logging_handle(__name__)
 
 # Endpoint
 
@@ -11,6 +18,30 @@ from .credential import CredentialType
 class EndpointType(EntityType):
     __schema_name__ = "Endpoint"
     __openapi_type__ = "app_endpoint"
+
+    def compile(cls):
+        cdict = super().compile()
+        if (cdict.get("provider_type", "")) == "":
+            cdict.pop("provider_type", "")
+        if (cdict.get("value_type", "")) == "":
+            cdict.pop("value_type", "")
+        return cdict
+
+    def post_compile(cls, cdict):
+        cdict = super().post_compile(cdict)
+
+        # Setting the parent to attrs
+        attrs = cdict.get("attrs", {})
+
+        for _, v in attrs.items():
+            if isinstance(v, list):
+                for ve in v:
+                    if issubclass(type(ve), EntityTypeBase):
+                        ve.__parent__ = cls
+            elif issubclass(type(v), EntityTypeBase):
+                v.__parent__ = cls
+
+        return cdict
 
     def __call__(*args, **kwargs):
         pass
@@ -45,8 +76,9 @@ def _http_endpoint(
     kwargs = {
         "name": name,
         "type": "HTTP",
+        "value_type": "IP",
         "attrs": {
-            "urls": [url],
+            "urls": [url] if isinstance(url, str) else url,
             "retry_count": retries + 1,
             "retry_interval": retry_interval,
             "connection_timeout": timeout,
@@ -60,20 +92,56 @@ def _http_endpoint(
     return _endpoint_create(**kwargs)
 
 
-def _exec_create(
+def _os_endpoint(
     value_type,
-    ip_list,
+    value_list=[],
+    vms=[],
     name=None,
     ep_type="Linux",
     port=22,
     connection_protocol=None,
     cred=None,
+    subnet=None,
+    filter=None,
+    account=None,
 ):
     kwargs = {
         "name": name,
         "type": ep_type,
-        "attrs": {"values": ip_list, "value_type": value_type, "port": port},
+        "value_type": value_type,
+        "attrs": {"values": value_list, "port": port},
     }
+
+    if value_type == "VM":
+        if not account:
+            LOG.error("Account is compulsory for endpoint")
+            sys.exit(-1)
+
+        account_name = account["name"]
+        account_data = Cache.get_entity_data(
+            entity_type=CACHE.ENTITY.ACCOUNT, name=account_name
+        )
+        if not account_data:
+            LOG.error("Account {} not found".format(account_name))
+            sys.exit(-1)
+
+        provider_type = account_data["provider_type"]
+
+        if provider_type not in ["nutanix_pc", "vmware"]:
+            LOG.error("Provider {} not supported for endpoints".format(provider_type))
+            sys.exit(-1)
+
+        # If filter string is given, filter type will be set to dynamic
+        filter_type = "dynamic" if filter else "static"
+
+        kwargs["attrs"]["vm_references"] = vms
+        kwargs["provider_type"] = provider_type.upper()
+        kwargs["attrs"]["subnet"] = subnet
+        kwargs["attrs"]["filter_type"] = filter_type
+        kwargs["attrs"]["account_reference"] = account
+        if filter_type == "dynamic":
+            kwargs["attrs"]["filter"] = filter
+
     if connection_protocol:
         kwargs["attrs"]["connection_protocol"] = connection_protocol
     if cred is not None and isinstance(cred, CredentialType):
@@ -83,7 +151,7 @@ def _exec_create(
 
 
 def linux_endpoint_ip(value, name=None, port=22, os_type="Linux", cred=None):
-    return _exec_create("IP", value, ep_type="Linux", name=name, port=port, cred=cred)
+    return _os_endpoint("IP", value, ep_type="Linux", name=name, port=port, cred=cred)
 
 
 def windows_endpoint_ip(
@@ -100,7 +168,7 @@ def windows_endpoint_ip(
             port = 5985
         else:
             port = 5986
-    return _exec_create(
+    return _os_endpoint(
         "IP",
         value,
         ep_type="Windows",
@@ -108,6 +176,66 @@ def windows_endpoint_ip(
         name=name,
         port=port,
         cred=cred,
+    )
+
+
+def linux_endpoint_vm(
+    vms=[],
+    filter=None,
+    name=None,
+    port=22,
+    subnet="",
+    cred=None,
+    account=None,
+):
+    return _os_endpoint(
+        "VM",
+        [],
+        vms=vms,
+        name=name,
+        ep_type="Linux",
+        filter=filter,
+        port=port,
+        subnet=subnet,
+        cred=cred,
+        account=account,
+    )
+
+
+def windows_endpoint_vm(
+    vms=[],
+    name=None,
+    filter=None,
+    connection_protocol="HTTP",
+    port=None,
+    cred=None,
+    subnet="",
+    account=None,
+):
+
+    connection_protocol = connection_protocol.lower()
+    if connection_protocol not in ["http", "https"]:
+        raise TypeError(
+            "Connection Protocol ({}) should be HTTP/HTTPS".format(connection_protocol)
+        )
+
+    if port is None:
+        if connection_protocol == "http":
+            port = 5985
+        else:
+            port = 5986
+    return _os_endpoint(
+        "VM",
+        [],
+        vms=vms,
+        ep_type="Windows",
+        connection_protocol=connection_protocol,
+        name=name,
+        port=port,
+        cred=cred,
+        filter=filter,
+        subnet=subnet,
+        account=account,
     )
 
 
@@ -137,12 +265,14 @@ class CalmEndpoint:
             raise TypeError("'{}' is not callable".format(cls.__name__))
 
         ip = linux_endpoint_ip
+        vm = linux_endpoint_vm
 
     class Windows:
         def __new__(cls, *args, **kwargs):
             raise TypeError("'{}' is not callable".format(cls.__name__))
 
         ip = windows_endpoint_ip
+        vm = windows_endpoint_vm
 
     class HTTP:
         def __new__(cls, *args, **kwargs):

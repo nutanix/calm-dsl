@@ -161,7 +161,7 @@ class TestEndpoints:
         validations = ""
         for message in ep["status"]["message_list"]:
             validations += message["message"]
-        assert "Endpoint should have atleast one IP" in validations
+        assert "Endpoint should have atleast one value(IP or VM IDs)" in validations
         cred = ep["status"]["resources"]["attrs"]["credential_definition_list"][0]
         assert len(ep["status"]["message_list"]) > 0
         for message in cred["message_list"]:
@@ -214,7 +214,7 @@ class TestEndpoints:
         endpoint = copy.deepcopy(change_uuids(EndpointPayload, {}))
 
         # setting url to empty
-        endpoint["spec"]["resources"]["attrs"]["urls"][0] = ""
+        endpoint["spec"]["resources"]["attrs"]["urls"] = []
 
         # Endpoint Create
         res, err = client.endpoint.create(endpoint)
@@ -321,7 +321,7 @@ class TestEndpoints:
     @pytest.mark.endpoint
     @pytest.mark.regression
     @pytest.mark.parametrize("EndpointPayload", [LinuxEndpointPayload])
-    def test_endpoint_name_validation(self, EndpointPayload):
+    def test_endpoint_validation_and_type_update2(self, EndpointPayload):
         """
         test_endpoint_name_validations
         """

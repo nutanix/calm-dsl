@@ -12,7 +12,10 @@ dev:
 	venv/bin/pip3 install --use-feature=2020-resolver --no-cache -r requirements.txt -r dev-requirements.txt
 	venv/bin/python3 setup.py develop
 
-test: dev
+test-bed: dev
+	venv/bin/python3 tests/testprep.py
+
+test: test-bed
 	venv/bin/calm update cache
 	venv/bin/py.test -v -rsx --durations 10 -m "not slow" --ignore=examples/
 
@@ -70,6 +73,7 @@ _init_centos:
 	# Install docker
 	which docker || { curl -fsSL https://get.docker.com/ | sh; sudo systemctl start docker; sudo systemctl enable docker; sudo usermod -aG docker $(whoami); }
 
-	rpm -q python3 || sudo yum -y install python3-devel python3-pip python3-venv python3-wheel 
+	rpm -q python3 || sudo yum -y install python3-devel python3-pip python3-venv python3-wheel
+	sudo ln -sf /bin/pip3.6 /bin/pip3
 
 	sudo pip3 install wheel

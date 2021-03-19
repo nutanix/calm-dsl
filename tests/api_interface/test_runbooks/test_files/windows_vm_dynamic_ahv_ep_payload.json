@@ -1,0 +1,47 @@
+{
+  "spec": {
+    "name": "windows_dynamic_ahv_ep_1",
+    "resources": {
+      "type": "Windows",
+      "value_type": "VM",
+      "provider_type": "NUTANIX_PC",
+      "attrs": {
+        "connection_protocol": "http",
+        "port": 5985,
+        "credential_definition_list": [
+            {
+		        "username": "root",
+            	"uuid": "63d922fd-f9e1-4c68-b355-dc3570ae17c1",
+                "name": "endpoint_cred_db8e1cf1",
+                "secret": {
+                    "attrs": {
+                        "is_secret_modified": true
+                    },
+                    "value": "nutanix/4u"
+                },
+                "type": "PASSWORD",
+                "description": ""
+            }
+        ],
+        "login_credential_reference": {
+            "kind": "app_credential",
+            "name": "endpoint_cred_db8e1cf1",
+            "uuid": "63d922fd-f9e1-4c68-b355-dc3570ae17c1"
+        },
+        "account_reference": {
+            "kind": "account",
+            "name": "Vmware 1"
+        },
+        "filter_type": "dynamic",
+        "filter": "name==vm*",
+        "subnet": "10.0.0.0/8"
+      }
+    }
+  },
+  "api_version": "3.0",
+  "metadata": {
+    "kind": "endpoint",
+    "name": "windows_dynamic_ahv_ep_1",
+    "uuid": "7a43bc56-4259-4ace-8b36-772262c7513e"
+  }
+}

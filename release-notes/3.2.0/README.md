@@ -127,30 +127,83 @@ class SampleProject(Project):
     default_environment = ref(ProjEnvironment1)
 ```
 
+# Runbook Changes
+
+## CLI commands
+
+- `calm describe marketplace item`: It will print the summary of marketplace items (blueprint/runbook).
+
+- `calm get marketplace items`: It will list available marketplace items (blueprint/runbook).
+
+- `calm run marketplace item`: It will execute marketplace item of type runbook.
+
+- `calm unpublish marketplace item`: It will unpublish marketplace item (blueprint/runbook).
+
+- `calm get marketplace runbooks`: It will list available marketplace manager runbooks.
+
+- `calm describe marketplace runbook`: It will print the summary of marketplace manager runbook.
+
+- `calm approve marketplace runbook`: It will approve marketplace manager runbook.
+
+- `calm publish marketplace runbook`: It will publish marketplace manager runbook to marketplace store.
+
+- `calm update marketplace runbook`: It will update marketplace manager runbook.
+
+- `calm delete marketplace runbook`: It will delete marketplace manager runbook.
+
+- `calm reject marketplace runbook`: It will reject marketplace manager runbook.
+
+- `calm publish runbook`: It will publish runbook to marketplace manager.
+
+- `calm run marketplace runbook`: It will execute marketplace manager runbook.
+
+## Builtin-Models
+
 ### Endpoint Model
 
-Create a Endpoint using the `CalmEndpoint` model. This model supports creation of Linux, Windows, HTTP endpoint types, whereas Linux, Windows endpoint supports IP, VM endpoint. Following are the examples of creating different styles of endpoint:
+In Calm v3.2, support for vm endpoints is added. User can use existing `CalmEndpoint` model to create vm endpoints for linux and windows os. 
+- As of now we suport for vm endpoints for `vmware` and `nutanix` provider
+- If `filter` parameter is given, dynamic endpoint will be created else static endpoint will be created
 
-Example 1: Creating a Linux VM Endpoint of Static Filter type
+Sample examples:
+
+- Creating a Linux VM Endpoint of Static Filter type
+
 ```
-LinuxCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
-
 vm_endpoint = Endpoint.Linux.vm(
-    filter_type=ENDPOINT_FILTER.STATIC,
-    vms=[VM(uuid="85a5a955-9cd6-4d48-a965-411e69127242")],
+    vms=[Ref.Vm(name="vm_name", uuid="vm_uuid")],
     cred=LinuxCred,
-    provider_type=ENDPOINT_PROVIDER.NUTANIX,
-    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
+    account=Ref.Account("NTNX_LOCAL_AZ"),
 )
 ```
 
-Example 2: Creating a Linux VM Endpoint of Dynamic Filter type
+- Creating a Linux VM Endpoint of Dynamic Filter type
+
 ```
 linux_ahv_dynamic_vm_endpoint1 = Endpoint.Linux.vm(
-    filter_type=ENDPOINT_FILTER.DYNAMIC,
     filter="name==vm_name1",
     cred=LinuxCred,
-    account=Account.NutanixPC("NTNX_LOCAL_AZ"),
-    provider_type=ENDPOINT_PROVIDER.NUTANIX,
+    subnet=255.255.255.255/1",
+    account=Ref.Account("NTNX_LOCAL_AZ"),
+)
+```
+
+- Creating a Windows VM Endpoint of Static Filter type
+
+```
+vm_endpoint = Endpoint.Windows.vm(
+    vms=[Ref.Vm(name="vm_name", uuid="vm_uuid")],
+    cred=WindowsCred,
+    account=Ref.Account("NTNX_LOCAL_AZ"),
+)
+```
+
+- Creating a Windows VM Endpoint of Dynamic Filter type
+
+```
+windows_vmware_dynamic_vm_endpoint1 = Endpoint.Windows.vm(
+    filter="name==vm_name1",
+    cred=WindowsCred,
+    account=Ref.Account("Vmware_Account"),
 )
 ```

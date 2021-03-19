@@ -1,0 +1,51 @@
+{
+  "spec": {
+    "name": "windows_static_ahv_ep_1",
+    "resources": {
+      "type": "Windows",
+      "value_type": "VM",
+      "provider_type": "NUTANIX_PC",
+      "attrs": {
+        "vm_references": [{
+            "name": "test_vm",
+            "kind": "vm",
+            "uuid": "a265e505-1044-4d42-875b-40d2432a3f75"
+        }],
+        "connection_protocol": "http",
+        "port": 5985,
+        "credential_definition_list": [
+            {
+		        "username": "root",
+            	"uuid": "b248f749-aef0-47ee-ae04-515993464d0b",
+                "name": "endpoint_cred_ede56b84",
+                "secret": {
+                    "attrs": {
+                        "is_secret_modified": true
+                    },
+                    "value": "nutanix/4u"
+                },
+                "type": "PASSWORD",
+                "description": ""
+            }
+        ],
+        "login_credential_reference": {
+            "kind": "app_credential",
+            "name": "endpoint_cred_ede56b84",
+            "uuid": "b248f749-aef0-47ee-ae04-515993464d0b"
+        },
+        "account_reference": {
+            "kind": "account",
+            "name": "Vmware 1"
+        },
+        "filter_type": "static",
+        "subnet": "10.0.0.0/8"
+      }
+    }
+  },
+  "api_version": "3.0",
+  "metadata": {
+    "kind": "endpoint",
+    "name": "windows_static_ahv_ep_1",
+    "uuid": "d1eef780-50eb-46b2-b20c-1aa735f22869"
+  }
+}

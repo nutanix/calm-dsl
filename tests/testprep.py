@@ -143,6 +143,10 @@ def add_directory_service_user_groups(config):
 def add_project_details(config):
 
     client = get_api_client()
+    config_projects = config.get("PROJECTS", {})
+
+    if not config_projects:
+        config["PROJECTS"] = {"PROJECT1": {"NAME": "default"}}
 
     for _, project_config in config["PROJECTS"].items():
         project_name = project_config["NAME"]
@@ -175,6 +179,10 @@ def add_project_details(config):
             "account_reference_list", []
         ):
             _account_uuid = _account["uuid"]
+
+            # Some deleted keys may also be present
+            if _account_uuid not in account_uuid_type_map:
+                continue
             _account_type = account_uuid_type_map[_account_uuid].upper()
             _account_name = account_uuid_name_map[_account_uuid]
             if _account_type not in project_config["ACCOUNTS"]:
@@ -196,9 +204,13 @@ def add_project_details(config):
             )
 
 
-f = open(dsl_config_file_location, "r")
-config = json.loads(f.read())
-f.close()
+config = {}
+if os.path.exists(dsl_config_file_location):
+    f = open(dsl_config_file_location, "r")
+    data = f.read()
+    if data:
+        config = json.loads(data)
+    f.close()
 
 add_account_details(config)
 add_directory_service_users(config)
