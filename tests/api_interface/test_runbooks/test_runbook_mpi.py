@@ -29,7 +29,7 @@ CALM_VERSION = Version.get_version("Calm")
 
 @pytest.mark.skipif(
     LV(CALM_VERSION) < LV("3.2.0"),
-    reason="Tests are for env changes introduced in 3.2.0",
+    reason="Marketplce runbook changes introduced in 3.2",
 )
 class TestMarketplaceRunbook:
     @classmethod
@@ -1258,6 +1258,10 @@ class TestMarketplaceRunbook:
 
     @pytest.mark.runbook
     @pytest.mark.regression
+    @pytest.mark.skipif(
+        LV(CALM_VERSION) < LV("3.2.2"),
+        reason="marketplace_variable_values api introduced in 3.2.2",
+    )
     def test_mpi_dynamic_variables(self):
         """test whether dynamic variables works fine marketplace runbook"""
 
