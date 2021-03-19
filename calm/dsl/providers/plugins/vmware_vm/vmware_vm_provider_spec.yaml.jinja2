@@ -314,7 +314,7 @@ properties:
 {% macro VcenterFolder() -%}
 
 title:  VMWARE Folder
-type: object
+type: [object, "null"]
 properties:
   existing_path:
     type: string
@@ -328,13 +328,14 @@ properties:
 {% macro VcenterTags() -%}
 
 title:  VMWARE Tags
-type: object
+type: [object, "null"]
 properties:
   tag_id:
     type: string
+  type:
+    type: string
 
 {%- endmacro %}
-
 
 {% macro VcenterVMResource() -%}
 
