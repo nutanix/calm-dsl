@@ -3,7 +3,9 @@ import click
 import sys
 import json
 import os
+
 from prettytable import PrettyTable
+from distutils.version import LooseVersion as LV
 
 from calm.dsl.builtins import BlueprintType, get_valid_identifier
 from calm.dsl.decompile.decompile_render import create_bp_dir
@@ -20,6 +22,7 @@ from .endpoints import get_endpoint
 from calm.dsl.builtins.models.helper.common import get_project
 from .environments import get_project_environment
 from calm.dsl.log import get_logging_handle
+from calm.dsl.store import Version
 from .constants import MARKETPLACE_ITEM
 
 LOG = get_logging_handle(__name__)
@@ -122,7 +125,8 @@ def get_mpis_group_call(
     if app_group_uuid:
         filter += ";app_group_uuid=={}".format(app_group_uuid)
 
-    if type:
+    CALM_VERSION = Version.get_version("Calm")
+    if type and LV(CALM_VERSION) >= LV("3.2.0"):
         filter += ";type=={}".format(type)
 
     payload = {
@@ -358,7 +362,8 @@ def get_mpi_by_name_n_version(name, version, app_states=[], app_source=None, typ
     if app_source:
         filter += ";app_source=={}".format(app_source)
 
-    if type:
+    CALM_VERSION = Version.get_version("Calm")
+    if type and LV(CALM_VERSION) >= LV("3.2.0"):
         filter += ";type=={}".format(type)
 
     payload = {"length": 250, "filter": filter}
@@ -389,7 +394,9 @@ def get_mpi_by_name_n_version(name, version, app_states=[], app_source=None, typ
     return res
 
 
-def describe_marketplace_store_item(name, out, version=None, app_source=None):
+def describe_marketplace_store_item(
+    name, out, version=None, app_source=None, type=None
+):
     """describes the marketplace blueprint related to marketplace item"""
 
     describe_marketplace_item(
@@ -398,13 +405,16 @@ def describe_marketplace_store_item(name, out, version=None, app_source=None):
         version=version,
         app_source=app_source,
         app_state=MARKETPLACE_ITEM.STATES.PUBLISHED,
+        type=type,
     )
 
 
 def describe_marketplace_item(
     name, out, version=None, app_source=None, app_state=None, type=None
 ):
-    """describes the marketplace blueprint"""
+    """describes the marketplace item"""
+
+    CALM_VERSION = Version.get_version("Calm")
 
     app_states = [app_state] if app_state else []
     if not version:
@@ -437,7 +447,10 @@ def describe_marketplace_item(
         + highlight_text(mpi["metadata"]["uuid"])
         + ")"
     )
-    click.echo("Type: " + highlight_text(mpi["status"]["resources"]["type"]))
+
+    if LV(CALM_VERSION) >= LV("3.2.0"):
+        click.echo("Type: " + highlight_text(mpi["status"]["resources"]["type"]))
+
     click.echo("Description: " + highlight_text(mpi["status"]["description"]))
     click.echo("App State: " + highlight_text(mpi["status"]["resources"]["app_state"]))
     click.echo("Author: " + highlight_text(mpi["status"]["resources"]["author"]))
@@ -465,7 +478,9 @@ def describe_marketplace_item(
         "App Source: " + highlight_text(mpi["status"]["resources"]["app_source"])
     )
 
-    mpi_type = mpi["status"]["resources"]["type"]
+    mpi_type = MARKETPLACE_ITEM.TYPES.BLUEPRINT
+    if LV(CALM_VERSION) >= LV("3.2.0"):
+        mpi_type = mpi["status"]["resources"]["type"]
 
     if mpi_type == MARKETPLACE_ITEM.TYPES.BLUEPRINT:
         blueprint_template = mpi["status"]["resources"]["app_blueprint_template"]
@@ -634,13 +649,16 @@ def launch_marketplace_item(
     """
 
     client = get_api_client()
-    params = {
-        "filter": "name=={};type=={}".format(name, MARKETPLACE_ITEM.TYPES.BLUEPRINT)
-    }
-    mp_item_map = client.market_place.get_name_uuid_map(params=params)
-    if not mp_item_map:
-        LOG.error("No marketplace blueprint found with name {}".format(name))
-        sys.exit(-1)
+
+    CALM_VERSION = Version.get_version("Calm")
+    if LV(CALM_VERSION) >= LV("3.2.0"):
+        params = {
+            "filter": "name=={};type=={}".format(name, MARKETPLACE_ITEM.TYPES.BLUEPRINT)
+        }
+        mp_item_map = client.market_place.get_name_uuid_map(params=params)
+        if not mp_item_map:
+            LOG.error("No marketplace blueprint found with name {}".format(name))
+            sys.exit(-1)
 
     if not version:
         LOG.info("Fetching latest version of Marketplace Item {} ".format(name))
@@ -823,7 +841,6 @@ def publish_bp_to_marketplace_manager(
             "name": marketplace_bp_name,
             "description": description,
             "resources": {
-                "type": MARKETPLACE_ITEM.TYPES.BLUEPRINT,
                 "app_attribute_list": ["FEATURED"],
                 "icon_reference_list": [],
                 "author": server_config["pc_username"],
@@ -838,6 +855,10 @@ def publish_bp_to_marketplace_manager(
         "api_version": "3.0",
         "metadata": {"kind": "marketplace_item"},
     }
+
+    CALM_VERSION = Version.get_version("Calm")
+    if LV(CALM_VERSION) >= LV("3.2.0"):
+        bp_template["spec"]["resources"]["type"] = MARKETPLACE_ITEM.TYPES.BLUEPRINT
 
     if icon_name:
         if icon_file:
@@ -891,6 +912,7 @@ def publish_bp_as_new_marketplace_bp(
         name=marketplace_bp_name,
         group_member_count=1,
         app_source=MARKETPLACE_ITEM.SOURCES.LOCAL,
+        type=MARKETPLACE_ITEM.TYPES.BLUEPRINT,
     )
     group_count = res["filtered_group_count"]
 
@@ -958,6 +980,7 @@ def publish_bp_as_existing_marketplace_bp(
         name=marketplace_bp_name,
         group_member_count=1,
         app_source=MARKETPLACE_ITEM.SOURCES.LOCAL,
+        type=MARKETPLACE_ITEM.TYPES.BLUEPRINT,
     )
     group_results = res["group_results"]
     if not group_results:
@@ -1066,7 +1089,10 @@ def approve_marketplace_item(
         type=type,
     )
     item_uuid = item["metadata"]["uuid"]
-    item_type = item["status"]["resources"]["type"]
+    item_type = MARKETPLACE_ITEM.TYPES.BLUEPRINT
+    CALM_VERSION = Version.get_version("Calm")
+    if LV(CALM_VERSION) >= LV("3.2.0"):
+        item_type = item["status"]["resources"]["type"]
 
     if item_type == MARKETPLACE_ITEM.TYPES.BLUEPRINT:
         item_status = item["status"]["resources"]["app_blueprint_template"]["status"][
@@ -1167,7 +1193,10 @@ def publish_marketplace_item(
         type=type,
     )
     item_uuid = item["metadata"]["uuid"]
-    item_type = item["status"]["resources"]["type"]
+    item_type = MARKETPLACE_ITEM.TYPES.BLUEPRINT
+    CALM_VERSION = Version.get_version("Calm")
+    if LV(CALM_VERSION) >= LV("3.2.0"):
+        item_type = item["status"]["resources"]["type"]
 
     if item_type == MARKETPLACE_ITEM.TYPES.BLUEPRINT:
         item_status = item["status"]["resources"]["app_blueprint_template"]["status"][
@@ -1414,7 +1443,7 @@ def reject_marketplace_item(name, version, type=None):
     )
 
 
-def unpublish_marketplace_item(name, version, app_source=None):
+def unpublish_marketplace_item(name, version, app_source=None, type=None):
 
     client = get_api_client()
     if not version:
@@ -1426,6 +1455,7 @@ def unpublish_marketplace_item(name, version, app_source=None):
             name=name,
             app_states=[MARKETPLACE_ITEM.STATES.PUBLISHED],
             app_source=app_source,
+            type=type,
         )
         LOG.info(version)
 
@@ -1439,6 +1469,7 @@ def unpublish_marketplace_item(name, version, app_source=None):
         version=version,
         app_states=[MARKETPLACE_ITEM.STATES.PUBLISHED],
         app_source=app_source,
+        type=type,
     )
     item_uuid = item["metadata"]["uuid"]
 
@@ -1476,6 +1507,7 @@ def unpublish_marketplace_bp(name, version, app_source=None):
             name=name,
             app_states=[MARKETPLACE_ITEM.STATES.PUBLISHED],
             app_source=app_source,
+            type=MARKETPLACE_ITEM.TYPES.BLUEPRINT,
         )
         LOG.info(version)
 
@@ -1489,15 +1521,26 @@ def unpublish_marketplace_bp(name, version, app_source=None):
         version=version,
         app_states=[MARKETPLACE_ITEM.STATES.PUBLISHED],
         app_source=app_source,
+        type=MARKETPLACE_ITEM.TYPES.BLUEPRINT,
     )
 
-    if mpi_item["status"]["resources"]["type"] != "blueprint":
+    item_type = MARKETPLACE_ITEM.TYPES.BLUEPRINT
+    CALM_VERSION = Version.get_version("Calm")
+    if LV(CALM_VERSION) >= LV("3.2.0"):
+        item_type = mpi_item["status"]["resources"]["type"]
+
+    if item_type != "blueprint":
         LOG.error(
             "Marketplace blueprint {} with version {} not found".format(name, version)
         )
         sys.exit(-1)
 
-    unpublish_marketplace_item(name=name, version=version, app_source=app_source)
+    unpublish_marketplace_item(
+        name=name,
+        version=version,
+        app_source=app_source,
+        type=MARKETPLACE_ITEM.TYPES.BLUEPRINT,
+    )
 
 
 def publish_runbook_to_marketplace_manager(

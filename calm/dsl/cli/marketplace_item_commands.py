@@ -163,7 +163,7 @@ def _launch_marketplace_item(
     )
 
 
-@marketplace_run.command("item")
+@marketplace_run.command("item", feature_min_version="3.2.0")
 @click.argument("name")
 @click.option("--version", "-v", default=None, help="Version of marketplace item")
 @click.option("--project", "-pj", default=None, help="Project for the execution")

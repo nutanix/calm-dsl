@@ -8,7 +8,10 @@ from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import CalmVariable, CalmTask, action
 from calm.dsl.builtins import Metadata, Ref
-from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
+from calm.dsl.builtins.models.metadata_payload import (
+    get_metadata_payload,
+    reset_metadata_obj,
+)
 from calm.dsl.config import get_context
 
 
@@ -239,3 +242,6 @@ def test_multivm_with_diff_bootconfig():
     assert ahv_vm_substrate2_spec["create_spec"]["resources"]["boot_config"] == {
         "boot_device": {"disk_address": {"device_index": 0, "adapter_type": "PCI"}}
     }
+
+    # reset metadata obj
+    reset_metadata_obj()

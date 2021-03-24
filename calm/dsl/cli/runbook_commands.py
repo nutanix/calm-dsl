@@ -155,6 +155,8 @@ def _describe_runbook(runbook_name, out):
     help="Path of Runbook file to format",
 )
 def _format_runbook_command(runbook_file):
+    """black formats the runbook file"""
+
     format_runbook_command(runbook_file)
 
 

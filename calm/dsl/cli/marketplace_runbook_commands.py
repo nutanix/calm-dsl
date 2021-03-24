@@ -38,7 +38,7 @@ APP_SOURCES = [
 
 
 # TODO Add limit and offset
-@marketplace_get.command("runbooks")
+@marketplace_get.command("runbooks", feature_min_version="3.2.0")
 @click.option(
     "--name", "-n", default=None, help="Filter by name of marketplace runbooks"
 )
@@ -83,7 +83,7 @@ def _get_marketplace_runbooks(name, quiet, app_family, app_states, filter_by):
     )
 
 
-@marketplace_describe.command("runbook")
+@marketplace_describe.command("runbook", feature_min_version="3.2.0")
 @click.argument("name")
 @click.option(
     "--out",
@@ -116,7 +116,7 @@ def _describe_marketplace_runbook(name, out, version, source, app_state):
     )
 
 
-@marketplace_approve.command("runbook")
+@marketplace_approve.command("runbook", feature_min_version="3.2.0")
 @click.argument("name", nargs=1)
 @click.option("--version", "-v", default=None, help="Version of marketplace runbook")
 @click.option("--category", "-c", default=None, help="Category for marketplace runbook")
@@ -147,7 +147,7 @@ def approve_runbook(name, version, category, all_projects, projects=[]):
     )
 
 
-@marketplace_publish.command("runbook")
+@marketplace_publish.command("runbook", feature_min_version="3.2.0")
 @click.argument("name", nargs=1)
 @click.option("--version", "-v", default=None, help="Version of marketplace runbook")
 @click.option("--category", "-c", default=None, help="Category for marketplace runbook")
@@ -188,7 +188,7 @@ def _publish_marketplace_runbook(
     )
 
 
-@marketplace_update.command("runbook")
+@marketplace_update.command("runbook", feature_min_version="3.2.0")
 @click.argument("name", nargs=1)
 @click.option(
     "--version", "-v", required=True, help="Version of marketplace runbook"
@@ -223,7 +223,7 @@ def _update_marketplace_runbook(name, version, category, projects, description, 
     )
 
 
-@marketplace_delete.command("runbook")
+@marketplace_delete.command("runbook", feature_min_version="3.2.0")
 @click.argument("name")
 @click.option(
     "--version", "-v", required=True, help="Version of marketplace runbook"
@@ -254,7 +254,7 @@ def _delete_marketplace_runbook(name, version, source, app_state):
     )
 
 
-@marketplace_reject.command("runbook")
+@marketplace_reject.command("runbook", feature_min_version="3.2.0")
 @click.argument("name")
 @click.option(
     "--version", "-v", required=True, help="Version of marketplace runbook"
@@ -267,7 +267,7 @@ def _reject_marketplace_runbook(name, version):
     )
 
 
-@publish.command("runbook")
+@publish.command("runbook", feature_min_version="3.2.0")
 @click.argument("runbook_name")
 @click.option("--version", "-v", required=True, help="Version of marketplace runbook")
 @click.option("--name", "-n", default=None, help="Name of marketplace runbook")
@@ -385,7 +385,7 @@ def publish_runbook(
         )
 
 
-@marketplace_run.command("runbook")
+@marketplace_run.command("runbook", feature_min_version="3.2.0")
 @click.argument("name")
 @click.option("--version", "-v", default=None, help="Version of marketplace item")
 @click.option("--project", "-pj", default=None, help="Project for the execution")
