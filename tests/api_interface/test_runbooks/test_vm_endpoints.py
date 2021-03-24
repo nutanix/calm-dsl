@@ -46,6 +46,7 @@ class TestVMEndpoints:
         endpoint = change_uuids(EndpointPayload, {})
 
         # Endpoint Create
+        print(">> Creating endpoint")
         res, err = client.endpoint.create(endpoint)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
@@ -57,6 +58,7 @@ class TestVMEndpoints:
         assert ep_state == "ACTIVE"
 
         # Endpoint Read
+        print(">> Reading endpoint (uuid={})".format(ep_uuid))
         res, err = client.endpoint.read(id=ep_uuid)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
@@ -78,6 +80,7 @@ class TestVMEndpoints:
         else:
             pytest.fail("Invalid type {} of the endpoint".format(ep_type))
 
+        print(">> Updating endpoint (uuid={})".format(ep_uuid))
         res, err = client.endpoint.update(ep_uuid, ep)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
@@ -101,9 +104,11 @@ class TestVMEndpoints:
             pytest.fail("Invalid type {} of the endpoint".format(ep_type))
 
         # download the endpoint
+        print(">> Downloading endpoint (uuid={})".format(ep_uuid))
         file_path = client.endpoint.export_file(ep_uuid, passphrase="test_passphrase")
 
         # upload the endpoint
+        print(">> Uploading endpoint (uuid={})".format(ep_uuid))
         res, err = client.endpoint.import_file(
             file_path,
             ep_name + "-uploaded",
@@ -118,6 +123,7 @@ class TestVMEndpoints:
         assert uploaded_ep_state == "ACTIVE"
 
         # delete uploaded endpoint
+        print(">> Deleting uploaded endpoint (uuid={})".format(uploaded_ep_uuid))
         _, err = client.endpoint.delete(uploaded_ep_uuid)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
@@ -128,6 +134,7 @@ class TestVMEndpoints:
         os.remove(file_path)
 
         # delete the endpoint
+        print(">> Deleting endpoint (uuid={})".format(ep_uuid))
         _, err = client.endpoint.delete(ep_uuid)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
@@ -147,10 +154,10 @@ class TestVMEndpoints:
     def test_vm_endpoint_dynamic_crud(self, EndpointPayload):
         """Endpoint for VM crud"""
         client = get_api_client()
-        # endpoint = change_uuids(EndpointPayload, {})
-        endpoint = EndpointPayload
+        endpoint = change_uuids(EndpointPayload, {})
 
         # Endpoint Create
+        print(">> Creating endpoint")
         res, err = client.endpoint.create(endpoint)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
@@ -162,6 +169,7 @@ class TestVMEndpoints:
         assert ep_state == "ACTIVE"
 
         # Endpoint Read
+        print(">> Reading endpoint (uuid={})".format(ep_uuid))
         res, err = client.endpoint.read(id=ep_uuid)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
@@ -187,6 +195,7 @@ class TestVMEndpoints:
         else:
             pytest.fail("Invalid type {} of the endpoint".format(ep_type))
 
+        print(">> Updating endpoint (uuid={})".format(ep_uuid))
         res, err = client.endpoint.update(ep_uuid, ep)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
@@ -206,9 +215,11 @@ class TestVMEndpoints:
             pytest.fail("Invalid type {} of the endpoint".format(ep_type))
 
         # download the endpoint
+        print(">> Downloading endpoint (uuid={})".format(ep_uuid))
         file_path = client.endpoint.export_file(ep_uuid, passphrase="test_passphrase")
 
         # upload the endpoint
+        print(">> Uploading endpoint (uuid={})".format(ep_uuid))
         res, err = client.endpoint.import_file(
             file_path,
             ep_name + "-uploaded",
@@ -223,6 +234,7 @@ class TestVMEndpoints:
         assert uploaded_ep_state == "ACTIVE"
 
         # delete uploaded endpoint
+        print(">> Deleting uploaded endpoint (uuid={})".format(uploaded_ep_uuid))
         _, err = client.endpoint.delete(uploaded_ep_uuid)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
@@ -233,6 +245,7 @@ class TestVMEndpoints:
         os.remove(file_path)
 
         # delete the endpoint
+        print(">> Deleting endpoint (uuid={})".format(ep_uuid))
         _, err = client.endpoint.delete(ep_uuid)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))

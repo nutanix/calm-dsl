@@ -33,7 +33,7 @@
                 "type": "EXEC",
                 "attrs": {
                     "script_type": "static",
-                    "script": "print \"Hello @@{firstname}@@ @@{lastname}@@\"\n"
+                    "script": "\nprint \"@@{var1}@@\"\nif \"@@{var1}@@\" == \"test\":\n    print \"yes\"\nelse:\n    print \"no\"\nprint \"@@{var2}@@\"\nif \"@@{var2}@@\" == \"test\":\n    print \"yes\"\nelse:\n    print \"no\"\nprint \"Hello @@{firstname}@@ @@{lastname}@@\"\n"
                 },
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
@@ -42,6 +42,33 @@
             }
         ],
         "variable_list": [
+            {
+                "name": "var1",
+                "description": "",
+                "type": "SECRET",
+                "label": "",
+                "attrs": {},
+                "val_type": "STRING",
+                "value": "test",
+                "data_type": "BASE",
+                "is_hidden": false,
+                "is_mandatory": false
+            },
+            {
+                "name": "var2",
+                "description": "",
+                "type": "SECRET",
+                "label": "",
+                "attrs": {},
+                "val_type": "STRING",
+                "value": "test",
+                "data_type": "BASE",
+                "editables": {
+                    "value": true
+                },
+                "is_hidden": false,
+                "is_mandatory": false
+            },
             {
                 "name": "firstname",
                 "description": "",

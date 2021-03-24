@@ -5,7 +5,7 @@ from distutils.version import LooseVersion as LV
 from calm.dsl.store import Version
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import RUNLOG
-from tests.api_interface.test_runbooks.test_files.exec_task import (
+from tests.api_interface.test_runbooks.test_files.exec_task import (  # NOQA
     ShellTaskOnLinuxVMAHVStaticEndpoint,
     ShellTaskOnLinuxVMAHVDynamicEndpoint1,
     ShellTaskOnLinuxVMAHVDynamicEndpoint2,

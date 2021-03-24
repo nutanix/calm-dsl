@@ -213,8 +213,8 @@ def get_brownfield_vmware_vm_list(entity_rows):
         vcpus = st_resources["config.hardware.numCPU"]
         sockets = st_resources["config.hardware.numCoresPerSocket"]
         memory = int(st_resources["config.hardware.memoryMB"]) // 1024
-        guest_family = st_resources["guest.guestFamily"]
-        template = st_resources["config.template"]
+        guest_family = st_resources.get("guest.guestFamily", "")
+        template = st_resources.get("config.template", False)
 
         table.add_row(
             [

@@ -1,8 +1,6 @@
 """
  Calm Runbooks with VM endpoints
 """
-import json
-
 from calm.dsl.runbooks import read_local_file
 from calm.dsl.runbooks import runbook, Ref
 from calm.dsl.runbooks import RunbookTask as Task, basic_cred
