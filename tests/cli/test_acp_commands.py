@@ -7,6 +7,7 @@ from click.testing import CliRunner
 
 from calm.dsl.cli import main as cli
 from calm.dsl.builtins import read_local_file
+from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -20,6 +21,11 @@ DSL_PROJECT_PATH = "tests/project/test_project_in_pc.py"
 
 class TestACPCommands:
     def setup_method(self):
+
+        # Reset the context changes
+        ContextObj = get_context()
+        ContextObj.reset_configuration()
+
         runner = CliRunner()
         self.dsl_project_name = "Test_DSL_Project_{}".format(str(uuid.uuid4()))
         result = runner.invoke(
@@ -47,6 +53,10 @@ class TestACPCommands:
             pytest.fail("Project creation from python file failed")
 
     def teardown_method(self):
+
+        # Reset the context changes
+        ContextObj = get_context()
+        ContextObj.reset_configuration()
 
         runner = CliRunner()
         result = runner.invoke(cli, ["delete", "project", self.dsl_project_name])

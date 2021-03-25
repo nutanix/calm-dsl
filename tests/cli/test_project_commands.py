@@ -9,6 +9,7 @@ from click.testing import CliRunner
 from calm.dsl.cli import main as cli
 from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
 from calm.dsl.builtins import read_local_file
+from calm.dsl.config import get_context
 from calm.dsl.store import Version
 from calm.dsl.log import get_logging_handle
 
@@ -26,6 +27,16 @@ CALM_VERSION = Version.get_version("Calm")
 
 
 class TestProjectCommands:
+    def setup_method(self):
+        """"Reset the context changes"""
+        ContextObj = get_context()
+        ContextObj.reset_configuration()
+
+    def teardown_method(self):
+        """"Reset the context changes"""
+        ContextObj = get_context()
+        ContextObj.reset_configuration()
+
     def test_projects_list(self):
         runner = CliRunner()
         result = runner.invoke(cli, ["get", "projects"])
