@@ -10,6 +10,7 @@ from calm.dsl.builtins import read_local_file
 from calm.dsl.builtins.models.helper.common import get_project
 from calm.dsl.api import get_api_client
 from calm.dsl.store import Version
+from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -68,8 +69,16 @@ class TestProjectEnv:
         self.project_deleted = False
         self.project_name = None
 
+        # Reset the context changes
+        ContextObj = get_context()
+        ContextObj.reset_configuration()
+
     def teardown_method(self):
         """Method to delete project if not deleted during tests"""
+
+        # Reset the context changes
+        ContextObj = get_context()
+        ContextObj.reset_configuration()
 
         if self.project_name and (not self.project_deleted):
             self._test_delete_project()
