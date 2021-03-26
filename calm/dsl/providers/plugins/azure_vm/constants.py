@@ -3,6 +3,7 @@ class AZURE:
     VERSION = "v1"
     URL = "azure_rm/{}".format(VERSION)
     AVAILABILTY_SETS = "{}/availability_sets".format(URL)
+    AVAILABILITY_ZONES = "{}/availability_zones".format(URL)
     SECURITY_GROUPS = "{}/security_groups".format(URL)
     VIRTUAL_NETWORKS = "{}/virtual_networks".format(URL)
     SUBNETS = "{}/subnets".format(URL)
