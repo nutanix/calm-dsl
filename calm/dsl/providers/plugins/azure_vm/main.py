@@ -1,8 +1,10 @@
 import click
 from ruamel import yaml
+from distutils.version import LooseVersion as LV
 
 from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.providers import get_provider_interface
+from calm.dsl.store import Version
 from .constants import AZURE as azure
 
 
@@ -103,7 +105,7 @@ class Azure:
                 zones = entity["status"]["resources"]["zones"]
                 for zone in zones:
                     name_value_map[zone["name"]] = zone["value"]
-                        
+
         return name_value_map
 
     def hardware_profiles(self, account_id, location):
@@ -290,6 +292,7 @@ def highlight_text(text, **kwargs):
 
 def create_spec(client):
 
+    CALM_VERSION = Version.get_version("Calm")
     spec = {}
     Obj = Azure(client.connection)
 
@@ -443,68 +446,145 @@ def create_spec(client):
                 spec["resources"]["location"] = location
                 break
 
-    #Add availability option
-    choice = click.prompt(
-        "\n{}(y/n)".format(highlight_text("Want to select availability options")), default="n"
-    )
-    if choice[0] == "y":
-        availability_options = ["Availability Sets", "Availability Zones"]
-        click.echo("\nChoose from given availability options")
-        for ind, name in enumerate(availability_options):
+    if LV(CALM_VERSION) < LV("3.2.0"):
+        # Add availabililty set
+        choice = click.prompt(
+            "\n{}(y/n)".format(highlight_text("Want to add a availabilty set")),
+            default="n",
+        )
+        if choice[0] == "y":
+            availability_sets = Obj.availability_sets(account_id, resource_group)
+            avl_set_list = list(availability_sets.keys())
+
+            if not avl_set_list:
+                click.echo("\n{}".format(highlight_text("No availability_set present")))
+
+            else:
+                click.echo("\nChoose from given availabilty set")
+                for ind, name in enumerate(avl_set_list):
+                    click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
+
+                while True:
+                    res = click.prompt(
+                        "\nEnter the index of availabilty set", default=1
+                    )
+                    if (res > len(avl_set_list)) or (res <= 0):
+                        click.echo("Invalid index !!! ")
+
+                    else:
+                        avl_set = avl_set_list[res - 1]
+                        spec["resources"]["availability_set_id"] = availability_sets[
+                            avl_set
+                        ]
+                        click.echo("{} selected".format(highlight_text(avl_set)))
+                        break
+
+    else:
+        # Add availability option
+        choice = click.prompt(
+            "\n{}(y/n)".format(highlight_text("Want to select availability options")),
+            default="n",
+        )
+        if choice[0] == "y":
+            availability_options = ["Availability Sets", "Availability Zones"]
+            click.echo("\nChoose from given availability options")
+            for ind, name in enumerate(availability_options):
                 click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
-        while True:
-            res = click.prompt("\nEnter the index of option", default=1)
-            if (res > len(availability_options)) or (res <= 0):
+            while True:
+                res = click.prompt("\nEnter the index of option", default=1)
+                if (res > len(availability_options)) or (res <= 0):
                     click.echo("Invalid index !!! ")
-            
-            else:
-                spec["resources"]["availability_option"] = availability_options[res-1].replace(" ", "") 
-                click.echo("{} selected".format(highlight_text(availability_options[res-1])))
-                if res == 1:
-                    availability_sets = Obj.availability_sets(account_id, spec["resources"]["resource_group"])
-                    avl_set_list = list(availability_sets.keys())
 
-                    if not avl_set_list:
-                        click.echo("\n{}".format(highlight_text("No availability_set present")))
-
-                    else:
-                        click.echo("\nChoose from given availabilty set")
-                        for ind, name in enumerate(avl_set_list):
-                            click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
-
-                        while True:
-                            res = click.prompt("\nEnter the index of availabilty set", default=1)
-                            if (res > len(avl_set_list)) or (res <= 0):
-                                click.echo("Invalid index !!! ")
-
-                            else:
-                                avl_set = avl_set_list[res - 1]
-                                spec["resources"]["availability_set_id"] = availability_sets[
-                                    avl_set
-                                ]
-                                click.echo("{} selected".format(highlight_text(avl_set)))
-                                break
-                    
                 else:
-                    availability_zones = Obj.availability_zones(account_id, spec["resources"]["resource_group"], spec["resources"]["location"])
-                    if not availability_zones:
-                        click.echo("\n{}".format(highlight_text("Selected location does not support Availability Zones")))
+                    spec["resources"]["availability_option"] = availability_options[
+                        res - 1
+                    ].replace(" ", "")
+                    click.echo(
+                        "{} selected".format(
+                            highlight_text(availability_options[res - 1])
+                        )
+                    )
+                    if res == 1:
+                        availability_sets = Obj.availability_sets(
+                            account_id, spec["resources"]["resource_group"]
+                        )
+                        avl_set_list = list(availability_sets.keys())
+
+                        if not avl_set_list:
+                            click.echo(
+                                "\n{}".format(
+                                    highlight_text("No availability_set present")
+                                )
+                            )
+
+                        else:
+                            click.echo("\nChoose from given availabilty set")
+                            for ind, name in enumerate(avl_set_list):
+                                click.echo(
+                                    "\t {}. {}".format(
+                                        str(ind + 1), highlight_text(name)
+                                    )
+                                )
+
+                            while True:
+                                res = click.prompt(
+                                    "\nEnter the index of availabilty set", default=1
+                                )
+                                if (res > len(avl_set_list)) or (res <= 0):
+                                    click.echo("Invalid index !!! ")
+
+                                else:
+                                    avl_set = avl_set_list[res - 1]
+                                    spec["resources"][
+                                        "availability_set_id"
+                                    ] = availability_sets[avl_set]
+                                    click.echo(
+                                        "{} selected".format(highlight_text(avl_set))
+                                    )
+                                    break
+
                     else:
-                        click.echo("\nChoose from the given zones")
-                        zones = list(availability_zones.keys())
-                        for ind, name in enumerate(zones):
-                            click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
-                    
-                        while True:
-                            res = click.prompt("\nEnter the index of zone", default=1)
-                            if (res > len(availability_zones)) or (res <= 0):
-                                click.echo("Invalid index !!! ")
-                            else:
-                                click.echo("{} selected".format(highlight_text(zones[res-1])))
-                                spec["resources"]["availability_zone"] = availability_zones[zones[res-1]]
-                                break
-                break
+                        availability_zones = Obj.availability_zones(
+                            account_id,
+                            spec["resources"]["resource_group"],
+                            spec["resources"]["location"],
+                        )
+                        if not availability_zones:
+                            click.echo(
+                                "\n{}".format(
+                                    highlight_text(
+                                        "Selected location does not support Availability Zones"
+                                    )
+                                )
+                            )
+                        else:
+                            click.echo("\nChoose from the given zones")
+                            zones = list(availability_zones.keys())
+                            for ind, name in enumerate(zones):
+                                click.echo(
+                                    "\t {}. {}".format(
+                                        str(ind + 1), highlight_text(name)
+                                    )
+                                )
+
+                            while True:
+                                res = click.prompt(
+                                    "\nEnter the index of zone", default=1
+                                )
+                                if (res > len(availability_zones)) or (res <= 0):
+                                    click.echo("Invalid index !!! ")
+                                else:
+                                    click.echo(
+                                        "{} selected".format(
+                                            highlight_text(zones[res - 1])
+                                        )
+                                    )
+                                    spec["resources"][
+                                        "availability_zone"
+                                    ] = availability_zones[zones[res - 1]]
+                                    break
+                    break
 
     hardware_profiles = Obj.hardware_profiles(account_id, location)
     if not hardware_profiles:
