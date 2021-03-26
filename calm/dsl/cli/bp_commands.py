@@ -55,6 +55,25 @@ def _get_blueprint_list(name, filter_by, limit, offset, quiet, all_items, out):
     get_blueprint_list(name, filter_by, limit, offset, quiet, all_items, out)
 
 
+def _get_nested_messages(path, obj, message_list):
+    """Get nested message list objects from the blueprint"""
+    if isinstance(obj, list):
+        for index, sub_obj in enumerate(obj):
+            _get_nested_messages(path, sub_obj, message_list)
+    elif isinstance(obj, dict):
+        name = obj.get("name", "")
+        if name:
+            path = path + ("." if path else "") + name
+        for key in obj:
+            sub_obj = obj[key]
+            if key == "message_list":
+                for message in sub_obj:
+                    message["path"] = path
+                    message_list.append(message)
+                continue
+            _get_nested_messages(path, sub_obj, message_list)
+
+
 @describe.command("bp")
 @click.argument("bp_name")
 @click.option(
@@ -199,7 +218,9 @@ def create_blueprint_command(bp_file, name, description, force):
     LOG.debug("Blueprint {} has state: {}".format(bp_name, bp_state))
 
     if bp_state != "ACTIVE":
-        msg_list = bp_status.get("message_list", [])
+        msg_list = []
+        _get_nested_messages("", bp_status, msg_list)
+
         if not msg_list:
             LOG.error("Blueprint {} created with errors.".format(bp_name))
             LOG.debug(json.dumps(bp_status))
@@ -207,11 +228,15 @@ def create_blueprint_command(bp_file, name, description, force):
 
         msgs = []
         for msg_dict in msg_list:
-            msgs.append(msg_dict.get("message", ""))
+            msg = ""
+            path = msg_dict.get("path", "")
+            if path:
+                msg = path + ": "
+            msgs.append(msg + msg_dict.get("message", ""))
 
         LOG.error(
-            "Blueprint {} created with {} error(s): {}".format(
-                bp_name, len(msg_list), msgs
+            "Blueprint {} created with {} error(s): \n{}".format(
+                bp_name, len(msg_list), "\n".join(msgs)
             )
         )
         sys.exit(-1)
