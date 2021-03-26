@@ -11,12 +11,12 @@ from prettytable import PrettyTable
 # TODO - move providers to separate file
 from calm.dsl.providers import get_provider, get_provider_types
 from calm.dsl.api import get_api_client, get_resource_api
-from calm.dsl.tools import simple_verbosity_option, show_trace_option
 from calm.dsl.log import get_logging_handle
-from calm.dsl.config import update_config_file_location
+from calm.dsl.config import get_context
 from calm.dsl.store import Cache
 
 from .version_validator import validate_version
+from .click_options import simple_verbosity_option, show_trace_option
 from .utils import FeatureFlagGroup, highlight_text
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
@@ -73,7 +73,8 @@ def main(ctx, config_file, sync):
         LOG.debug("Could not validate version")
         pass
     if config_file:
-        update_config_file_location(config_file=config_file)
+        ContextObj = get_context()
+        ContextObj.update_config_file_context(config_file=config_file)
     if sync:
         Cache.sync()
 
@@ -448,4 +449,40 @@ def calmrepl():
 @main.group(cls=FeatureFlagGroup)
 def set():
     """Sets the entities"""
+    pass
+
+
+@main.group("import", cls=FeatureFlagGroup)
+def calm_import():
+    """Import entities in Calm (task library) """
+    pass
+
+
+@get.group("library")
+def library_get():
+    """Get Library entities"""
+    pass
+
+
+@create.group("library")
+def library_create():
+    """Create Library entities"""
+    pass
+
+
+@calm_import.group("library")
+def library_import():
+    """Import Library entities"""
+    pass
+
+
+@describe.group("library")
+def library_describe():
+    """Describe Library entities"""
+    pass
+
+
+@delete.group("library")
+def library_delete():
+    """Delete Library entities"""
     pass

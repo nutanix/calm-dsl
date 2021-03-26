@@ -11,12 +11,16 @@ from prettytable import PrettyTable
 from anytree import NodeMixin, RenderTree
 
 from calm.dsl.api import get_api_client
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 
 from .utils import get_name_query, get_states_filter, highlight_text, Display
 from .constants import APPLICATION, RUNLOG, SYSTEM_ACTIONS
-from .bp_commands import create_blueprint
-from .bps import launch_blueprint_simple, compile_blueprint
+from .bps import (
+    launch_blueprint_simple,
+    compile_blueprint,
+    create_blueprint,
+    parse_launch_runtime_vars,
+)
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -24,7 +28,6 @@ LOG = get_logging_handle(__name__)
 
 def get_apps(name, filter_by, limit, offset, quiet, all_items, out):
     client = get_api_client()
-    config = get_config()
 
     params = {"length": limit, "offset": offset}
     filter_query = ""
@@ -43,15 +46,27 @@ def get_apps(name, filter_by, limit, offset, quiet, all_items, out):
     res, err = client.application.list(params=params)
 
     if err:
-        pc_ip = config["SERVER"]["pc_ip"]
+        ContextObj = get_context()
+        server_config = ContextObj.get_server_config()
+        pc_ip = server_config["pc_ip"]
+
         LOG.warning("Cannot fetch applications from {}".format(pc_ip))
         return
 
+    res = res.json()
+    total_matches = res["metadata"]["total_matches"]
+    if total_matches > limit:
+        LOG.warning(
+            "Displaying {} out of {} entities. Please use --limit and --offset option for more results.".format(
+                limit, total_matches
+            )
+        )
+
     if out == "json":
-        click.echo(json.dumps(res.json(), indent=4, separators=(",", ": ")))
+        click.echo(json.dumps(res, indent=4, separators=(",", ": ")))
         return
 
-    json_rows = res.json()["entities"]
+    json_rows = res["entities"]
     if not json_rows:
         click.echo(highlight_text("No application found !!!\n"))
         return
@@ -252,11 +267,8 @@ def create_app(
         LOG.error("User blueprint not found in {}".format(bp_file))
         sys.exit(-1)
 
-    if bp_payload["spec"]["resources"].get("type", "") != "BROWNFIELD":
-        LOG.error(
-            "Command only allowed for brownfield application. Please use 'calm create bp' and 'calm launch bp' for USER applications"
-        )
-        sys.exit(-1)
+    # Get the blueprint type
+    bp_type = bp_payload["spec"]["resources"].get("type", "")
 
     # Create blueprint from dsl file
     bp_name = "Blueprint{}".format(str(uuid.uuid4())[:10])
@@ -290,8 +302,14 @@ def create_app(
         profile_name=profile_name,
         patch_editables=patch_editables,
         launch_params=launch_params,
-        is_brownfield=True,
+        is_brownfield=True if bp_type == "BROWNFIELD" else False,
     )
+
+    if bp_type != "BROWNFIELD":
+        # Delete the blueprint
+        res, err = client.blueprint.delete(bp_uuid)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
 
 class RunlogNode(NodeMixin):
@@ -465,7 +483,7 @@ def watch_action(runlog_uuid, app_name, client, screen, poll_interval=10):
     poll_action(poll_func, get_completion_func(screen), poll_interval)
 
 
-def watch_app(app_name, screen, app=None):
+def watch_app(app_name, screen, app=None, poll_interval=10):
     """Watch an app"""
 
     client = get_api_client()
@@ -574,7 +592,7 @@ def watch_app(app_name, screen, app=None):
             return (is_complete, msg)
         return (False, "")
 
-    poll_action(poll_func, is_complete)
+    poll_action(poll_func, is_complete, poll_interval=poll_interval)
 
 
 def delete_app(app_names, soft=False):
@@ -595,7 +613,116 @@ def delete_app(app_names, soft=False):
         LOG.info("Action runlog uuid: {}".format(runlog_id))
 
 
-def run_actions(screen, app_name, action_name, watch):
+def get_action_var_val_from_launch_params(launch_vars, var_name):
+    """Returns variable value from launch params"""
+
+    filtered_launch_vars = list(
+        filter(
+            lambda e: e["name"] == var_name,
+            launch_vars,
+        )
+    )
+
+    if len(filtered_launch_vars) > 1:
+        LOG.error(
+            "Unable to populate runtime editables: Multiple matches for value of variable '{}'".format(
+                var_name
+            )
+        )
+        sys.exit(-1)
+
+    if len(filtered_launch_vars) == 1:
+        return filtered_launch_vars[0].get("value", {}).get("value", None)
+
+    return None
+
+
+def get_action_runtime_args(
+    app_uuid, action_payload, patch_editables, runtime_params_file
+):
+    """Returns action arguments or variable data """
+
+    action_name = action_payload["name"]
+
+    runtime_vars = {}
+    runbook_vars = action_payload["runbook"].get("variable_list", None) or []
+    for _var in runbook_vars:
+        editable_dict = _var.get("editables", None) or {}
+        if editable_dict.get("value", False):
+            runtime_vars[_var["name"]] = _var
+
+    client = get_api_client()
+    res, err = client.application.action_variables(
+        app_id=app_uuid, action_name=action_name
+    )
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    action_args = res.json()
+
+    # If no need to patch editable or there is not runtime var, return action args received from api
+    if not (patch_editables and runtime_vars):
+        return action_args or []
+
+    # If file is supplied for launch params
+    if runtime_params_file:
+        click.echo("Patching values for runtime variables under action ...")
+
+        parsed_runtime_vars = parse_launch_runtime_vars(
+            launch_params=runtime_params_file
+        )
+        for _arg in action_args:
+            var_name = _arg["name"]
+            if var_name in runtime_vars:
+
+                new_val = get_action_var_val_from_launch_params(
+                    launch_vars=parsed_runtime_vars, var_name=var_name
+                )
+                if new_val is not None:
+                    _arg["value"] = new_val
+
+        return action_args
+
+    # Else prompt for runtime variable values
+    click.echo(
+        "Found runtime variables in action. Please provide values for runtime variables"
+    )
+
+    for _arg in action_args:
+        if _arg["name"] in runtime_vars:
+
+            _var = runtime_vars[_arg["name"]]
+            options = _var.get("options", {})
+            choices = options.get("choices", [])
+            click.echo("")
+            if choices:
+                click.echo("Choose from given choices: ")
+                for choice in choices:
+                    click.echo("\t{}".format(highlight_text(repr(choice))))
+
+            default_val = _arg["value"]
+            is_secret = _var.get("type") == "SECRET"
+
+            new_val = click.prompt(
+                "Value for variable '{}' [{}]".format(
+                    _arg["name"],
+                    highlight_text(default_val if not is_secret else "*****"),
+                ),
+                default=default_val,
+                show_default=False,
+                hide_input=is_secret,
+                type=click.Choice(choices) if choices else type(default_val),
+                show_choices=False,
+            )
+
+            _arg["value"] = new_val
+
+    return action_args
+
+
+def run_actions(
+    app_name, action_name, watch, patch_editables=False, runtime_params_file=None
+):
     client = get_api_client()
 
     if action_name.lower() == SYSTEM_ACTIONS.CREATE:
@@ -612,23 +739,39 @@ def run_actions(screen, app_name, action_name, watch):
         )  # Because Soft Delete also requries the differernt API workflow
         return
 
-    app = _get_app(client, app_name, screen=screen)
+    app = _get_app(client, app_name)
     app_spec = app["spec"]
     app_id = app["metadata"]["uuid"]
 
     calm_action_name = "action_" + action_name.lower()
-    action = next(
-        action
-        for action in app_spec["resources"]["action_list"]
-        if action["name"] == calm_action_name or action["name"] == action_name
+    action_payload = next(
+        (
+            action
+            for action in app_spec["resources"]["action_list"]
+            if action["name"] == calm_action_name or action["name"] == action_name
+        ),
+        None,
     )
-    if not action:
-        raise Exception("No action found matching name {}".format(action_name))
-    action_id = action["uuid"]
+    if not action_payload:
+        LOG.error("No action found matching name {}".format(action_name))
+        sys.exit(-1)
+
+    action_id = action_payload["uuid"]
+
+    action_args = get_action_runtime_args(
+        app_uuid=app_id,
+        action_payload=action_payload,
+        patch_editables=patch_editables,
+        runtime_params_file=runtime_params_file,
+    )
 
     # Hit action run api (with metadata and minimal spec: [args, target_kind, target_uuid])
     app.pop("status")
-    app["spec"] = {"args": [], "target_kind": "Application", "target_uuid": app_id}
+    app["spec"] = {
+        "args": action_args,
+        "target_kind": "Application",
+        "target_uuid": app_id,
+    }
     res, err = client.application.run_action(app_id, action_id, app)
 
     if err:
@@ -636,13 +779,42 @@ def run_actions(screen, app_name, action_name, watch):
 
     response = res.json()
     runlog_uuid = response["status"]["runlog_uuid"]
-    screen.clear()
-    screen.print_at(
-        "Got Action Runlog uuid: {}. Fetching runlog tree ...".format(runlog_uuid), 0, 0
+    click.echo(
+        "Action is triggered. Got Action Runlog uuid: {}".format(
+            highlight_text(runlog_uuid)
+        )
     )
-    screen.refresh()
+
     if watch:
-        watch_action(runlog_uuid, app_name, client, screen=screen)
+
+        def display_action(screen):
+            screen.clear()
+            screen.print_at(
+                "Fetching runlog tree for action '{}'".format(action_name), 0, 0
+            )
+            screen.refresh()
+            watch_action(
+                runlog_uuid,
+                app_name,
+                get_api_client(),
+                screen,
+            )
+            screen.wait_for_input(10.0)
+
+        Display.wrapper(display_action, watch=True)
+
+    else:
+        click.echo("")
+        click.echo(
+            "# Hint1: You can run action in watch mode using: calm run action {} --app {} --watch".format(
+                action_name, app_name
+            )
+        )
+        click.echo(
+            "# Hint2: You can watch action runlog on the app using: calm watch action_runlog {} --app {}".format(
+                runlog_uuid, app_name
+            )
+        )
 
 
 def poll_action(poll_func, completion_func, poll_interval=10):

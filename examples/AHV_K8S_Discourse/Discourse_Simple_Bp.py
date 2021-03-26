@@ -12,9 +12,9 @@ from calm.dsl.builtins import CalmVariable as Var
 from calm.dsl.builtins import action
 
 
-SSH_USERNAME = read_local_file("username")
-SSH_PASSWORD = read_local_file("password")
-DISCOURSE_PASSWORD = read_local_file("discourse_password")
+SSH_USERNAME = read_local_file(".tests/username")
+SSH_PASSWORD = read_local_file(".tests/password")
+DISCOURSE_PASSWORD = read_local_file(".tests/discourse_password")
 
 DefaultCred = basic_cred(SSH_USERNAME, SSH_PASSWORD, name="CENTOS", default=True)
 

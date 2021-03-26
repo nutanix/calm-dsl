@@ -2,6 +2,7 @@ import sys
 
 from calm.dsl.decompile.render import render_template
 from calm.dsl.store import Cache
+from calm.dsl.constants import CACHE
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -18,20 +19,22 @@ def render_ahv_vm_nic(cls):
     nic_type = cls.nic_type
     network_function_nic_type = cls.network_function_nic_type
 
-    subnet_uuid = subnet_ref.get("uuid", "")
-    subnet_cache_data = Cache.get_entity_data_using_uuid(
-        entity_type="ahv_subnet", uuid=subnet_uuid
-    )
-
     user_attrs = {}
-    if not subnet_cache_data:
-        LOG.error("Subnet with uuid '{}' not found".format(subnet_uuid))
-        sys.exit(-1)
+    subnet_uuid = subnet_ref.get("uuid", "")
+    if subnet_uuid.startswith("@@{") and subnet_uuid.endswith("}@@"):
+        user_attrs["subnet_name"] = subnet_uuid
+    else:
+        subnet_cache_data = Cache.get_entity_data_using_uuid(
+            entity_type=CACHE.ENTITY.AHV_SUBNET, uuid=subnet_uuid
+        )
+        if not subnet_cache_data:
+            LOG.error("Subnet with uuid '{}' not found".format(subnet_uuid))
+            sys.exit(-1)
 
-    user_attrs["subnet_name"] = subnet_cache_data["name"]
-    user_attrs["cluster_name"] = subnet_cache_data["cluster"]
+        user_attrs["subnet_name"] = subnet_cache_data["name"]
+        user_attrs["cluster_name"] = subnet_cache_data["cluster"]
+
     schema_file = ""
-
     if nic_type == "NORMAL_NIC":
         if network_function_nic_type == "INGRESS":
             schema_file = "ahv_normal_ingress_nic.py.jinja2"

@@ -1,8 +1,10 @@
 import sys
 
+from calm.dsl.constants import CACHE
 from calm.dsl.decompile.render import render_template
 from calm.dsl.store import Cache
 from calm.dsl.log import get_logging_handle
+from calm.dsl.decompile.ref_dependency import get_package_name
 
 LOG = get_logging_handle(__name__)
 
@@ -26,16 +28,22 @@ def render_ahv_vm_disk(cls, boot_config):
     user_attrs = {}
 
     # Atleast one disk should be bootable
-    if (
-        adapter_type == boot_config["boot_device"]["disk_address"]["adapter_type"]
-        and adapter_index == boot_config["boot_device"]["disk_address"]["device_index"]
-    ):
-        user_attrs["bootable"] = True
+    if boot_config:
+        if (
+            adapter_type == boot_config["boot_device"]["disk_address"]["adapter_type"]
+            and adapter_index
+            == boot_config["boot_device"]["disk_address"]["device_index"]
+        ):
+            user_attrs["bootable"] = True
 
     # find operation_type
     if data_source_ref:
         if data_source_ref["kind"] == "app_package":
             user_attrs["name"] = data_source_ref.get("name")
+            user_attrs["name"] = (
+                get_package_name(user_attrs["name"]) or user_attrs["name"]
+            )
+
             operation_type = "cloneFromVMDiskPackage"
 
         elif data_source_ref["kind"] == "image":
@@ -43,7 +51,7 @@ def render_ahv_vm_disk(cls, boot_config):
             img_uuid = data_source_ref.get("uuid")
             disk_cache_data = (
                 Cache.get_entity_data_using_uuid(
-                    entity_type="ahv_disk_image", uuid=img_uuid
+                    entity_type=CACHE.ENTITY.AHV_DISK_IMAGE, uuid=img_uuid
                 )
                 or {}
             )

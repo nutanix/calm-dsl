@@ -3,7 +3,7 @@ import os
 from .resource import ResourceAPI
 from .connection import REQUEST
 from .util import strip_secrets, patch_secrets
-from calm.dsl.config import get_config
+from calm.dsl.config import get_context
 from .project import ProjectAPI
 
 
@@ -28,6 +28,9 @@ class RunbookAPI(ResourceAPI):
         self.IMPORT_FILE = self.PREFIX + "/import_file"
         self.EXPORT_JSON = self.ITEM + "/export_json"
         self.EXPORT_JSON_WITH_SECRETS = self.ITEM + "/export_json?keep_secrets=true"
+        self.MARKETPLACE_EXECUTE = self.PREFIX + "/marketplace_execute"
+        self.MARKETPLACE_CLONE = self.PREFIX + "/marketplace_clone"
+        self.VARIABLE_VALUES = self.ITEM + "/variables/{}/values"
 
     def upload(self, payload):
         return self.connection._call(
@@ -161,8 +164,9 @@ class RunbookAPI(ResourceAPI):
             runbook_name, runbook_desc, runbook_resources
         )
 
-        config = get_config()
-        project_name = config["PROJECT"]["name"]
+        ContextObj = get_context()
+        project_config = ContextObj.get_project_config()
+        project_name = project_config["name"]
         projectObj = ProjectAPI(self.connection)
 
         # Fetch project details
@@ -304,8 +308,9 @@ class RunbookAPI(ResourceAPI):
             runbook_name, runbook_desc, runbook_resources, spec_version=spec_version
         )
 
-        config = get_config()
-        project_name = config["PROJECT"]["name"]
+        ContextObj = get_context()
+        project_config = ContextObj.get_project_config()
+        project_name = project_config["name"]
         projectObj = ProjectAPI(self.connection)
 
         # Fetch project details
@@ -397,3 +402,25 @@ class RunbookAPI(ResourceAPI):
     def export_json_with_secrets(self, uuid):
         url = self.EXPORT_JSON_WITH_SECRETS.format(uuid)
         return self.connection._call(url, verify=False, method=REQUEST.METHOD.GET)
+
+    def marketplace_execute(self, payload):
+        return self.connection._call(
+            self.MARKETPLACE_EXECUTE,
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
+        )
+
+    def marketplace_clone(self, payload):
+        return self.connection._call(
+            self.MARKETPLACE_CLONE,
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
+        )
+
+    def variable_values(self, uuid, var_uuid, payload={}):
+        url = self.VARIABLE_VALUES.format(uuid, var_uuid)
+        return self.connection._call(
+            url, verify=False, method=REQUEST.METHOD.POST, request_json=payload
+        )

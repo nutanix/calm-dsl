@@ -1,8 +1,10 @@
 import click
 from ruamel import yaml
+from distutils.version import LooseVersion as LV
 
 from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.providers import get_provider_interface
+from calm.dsl.store import Version
 from .constants import VCENTER as vmw
 
 
@@ -196,6 +198,30 @@ class VCenter:
 
         return name_id_map
 
+    def tags(self, account_id):
+        obj = get_resource_api(vmw.TAGS, self.connection)
+        payload = {"filter": "account_uuid=={}".format(account_id)}
+        res, err = obj.list(payload)
+
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        name_tag_id_map = {}
+        name_cardinality_map = {}
+        for entity in res.get("entities"):
+            name = entity["status"]["resources"]["name"]
+            name_cardinality_map[name] = entity["status"]["resources"]["cardinality"]
+            for tag in entity["status"]["resources"]["tags"]:
+                key = str(entity["status"]["resources"]["name"] + ":" + tag["name"])
+                name_tag_id_map[key] = {
+                    "id": tag["id"],
+                    "name": entity["status"]["resources"]["name"],
+                    "tag_name": tag["name"],
+                }
+
+        return {"tag_list": name_tag_id_map, "cardinality_list": name_cardinality_map}
+
     def file_paths(
         self,
         account_id,
@@ -357,6 +383,7 @@ def highlight_text(text, **kwargs):
 
 def create_spec(client):
 
+    CALM_VERSION = Version.get_version("Calm")
     spec = {}
     Obj = VCenter(client.connection)
 
@@ -543,32 +570,97 @@ def create_spec(client):
                 click.echo("{} selected".format(highlight_text(template_name)))
                 break
 
+    # Check if user want to supply vmware folder path
+    if LV(CALM_VERSION) >= LV("3.2.0"):
+        spec["folder"] = {}
+        choice = click.prompt(
+            "\n{}(y/n)".format(
+                highlight_text(
+                    "Do you want to specify a destination folder for the VM to be placed in?"
+                )
+            ),
+            default="n",
+        )
+
+        if choice[0] == "y":
+
+            choice = click.prompt(
+                "\n{}(y/n)".format(
+                    highlight_text(
+                        "Do you want to use existing folder in the platform to deploy the new VM?"
+                    )
+                ),
+                default="n",
+            )
+            if choice[0] == "y":
+                existing_path = click.prompt(
+                    "\nEnter the path to the existing folder in the platform. Use '/' to separate folder names along the path."
+                )
+                spec["folder"]["existing_path"] = existing_path
+
+            choice = click.prompt(
+                "\n{}(y/n)".format(
+                    highlight_text(
+                        "Do you want to create new folder or path for the VM? If existing folder path is specified, new path will be created under the existing path."
+                    )
+                ),
+                default="n",
+            )
+            if choice[0] == "y":
+                new_path = click.prompt(
+                    "\nEnter the new folder to be created. For creating a directory structure, use: Folder1/Folder2/Folder3. For simply creating a new folder, just specify the folder name."
+                )
+                spec["folder"]["new_path"] = new_path
+
+                delete_empty_folder = click.prompt(
+                    "\n{}(y/n)".format(
+                        highlight_text(
+                            "Do you want the newly created folder/path to be deleted during application deletion if it does not contain any other resource?"
+                        )
+                    ),
+                    default="n",
+                )
+                delete_empty_folder = True if delete_empty_folder[0] == "y" else False
+                spec["folder"]["delete_empty_folder"] = delete_empty_folder
+
     # VM Configuration
     vm_name = "vm-@@{calm_unique_hash}@@-@@{calm_array_index}@@"
     spec["name"] = click.prompt("\nEnter instance name", default=vm_name)
 
     spec["resources"] = {}
-    
-    # Enable CPU Hot Add
-    choice = click.prompt(
-        "\n{}\n{}(y/n)".format("Want to enable cpu hot add?", 
-        highlight_text("Warning: Support for CPU Hot Add depends upon the Guest OS of the VM"
-        "\nHot updating the CPU will fail if not supported by the Guest OS.")), default="n"
-    )
-    spec["resources"]["cpu_hot_add"] = choice[0] == "y"
-    
+
+    if LV(CALM_VERSION) >= LV("3.2.0"):
+        # Enable CPU Hot Add
+        choice = click.prompt(
+            "\n{}\n{}(y/n)".format(
+                "Want to enable cpu hot add?",
+                highlight_text(
+                    "Warning: Support for CPU Hot Add depends upon the Guest OS of the VM"
+                    "\nHot updating the CPU will fail if not supported by the Guest OS."
+                ),
+            ),
+            default="n",
+        )
+        spec["resources"]["cpu_hot_add"] = choice[0] == "y"
+
     spec["resources"]["num_sockets"] = click.prompt("\nEnter no. of vCPUs", default=1)
     spec["resources"]["num_vcpus_per_socket"] = click.prompt(
         "\nCores per vCPU", default=1
     )
 
-    # Enable Memory Hot Plug
-    choice = click.prompt(
-       "\n{}\n{}(y/n)".format("Want to enable memory hot add?", 
-        highlight_text("Warning: Support for Memory Hot Plug depends upon the Guest OS of the VM"
-        "\nHot updating the memory will fail if not supported by the Guest OS.")), default="n"
-    )
-    spec["resources"]["memory_hot_plug"] = choice[0] == "y"
+    if LV(CALM_VERSION) >= LV("3.2.0"):
+        # Enable Memory Hot Plug
+        choice = click.prompt(
+            "\n{}\n{}(y/n)".format(
+                "Want to enable memory hot add?",
+                highlight_text(
+                    "Warning: Support for Memory Hot Plug depends upon the Guest OS of the VM"
+                    "\nHot updating the memory will fail if not supported by the Guest OS."
+                ),
+            ),
+            default="n",
+        )
+        spec["resources"]["memory_hot_plug"] = choice[0] == "y"
 
     spec["resources"]["memory_size_mib"] = (
         click.prompt("\nMemory(in GiB)", default=1)
@@ -841,6 +933,65 @@ def create_spec(client):
             }
 
             spec["resources"]["template_nic_list"].append(network)
+
+    # Add vmware tags
+    if LV(CALM_VERSION) >= LV("3.2.0"):
+        choice = click.prompt(
+            "\n{}(y/n)".format(highlight_text("Do you want to add any tags?")),
+            default="n",
+        )
+        if choice[0] == "y":
+            tags_map = Obj.tags(account_id)
+            tag_names = list(tags_map["tag_list"].keys())
+            tag_names_id = tags_map["tag_list"]
+            spec["resources"]["tag_list"] = list()
+            cardinality_list = tags_map["cardinality_list"]
+
+            while True:
+                if not tag_names:
+                    click.echo(highlight_text("\nNo tags available."))
+                    break
+
+                else:
+                    click.echo("\nChoose from given Category: Tag pairs: ")
+                    for ind, name in enumerate(tag_names):
+                        click.echo(
+                            "\t {}. {}".format(str(ind + 1), highlight_text(name))
+                        )
+
+                while True:
+                    res = click.prompt(
+                        "\nEnter the index of Category: Tag pair", default=1
+                    )
+                    if (res > len(tag_names)) or (res <= 0):
+                        click.echo("Invalid index !!! ")
+
+                    else:
+                        selected_tag = tag_names[res - 1]
+                        selected_tag_id = tag_names_id[selected_tag]["id"]
+                        selected_category = tag_names_id[selected_tag]["name"]
+                        spec["resources"]["tag_list"].append(
+                            {"tag_id": selected_tag_id}
+                        )
+                        click.echo("{} selected".format(highlight_text(selected_tag)))
+                        tag_names.pop(res - 1)
+                        if cardinality_list[selected_tag.split(":")[0]] == "SINGLE":
+                            tag_names = [
+                                x
+                                for x in tag_names
+                                if not tag_names_id[x]["name"] == selected_category
+                            ]
+
+                        break
+
+                choice = click.prompt(
+                    "\n{}(y/n)".format(highlight_text("Do you want to add more tags?")),
+                    default="n",
+                )
+                if choice[0] == "n":
+                    break
+
+    VCenterVmProvider.validate_spec(spec)
 
     click.secho("\nControllers", underline=True)
 

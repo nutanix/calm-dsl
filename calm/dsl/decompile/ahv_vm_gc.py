@@ -51,7 +51,7 @@ def render_ahv_vm_gc(cls, vm_name_prefix=""):
         if is_domain and sys_prep.get("domain_credential_reference"):
             cred = RefType.decompile(sys_prep["domain_credential_reference"])
             user_attrs["credential"] = "ref({})".format(
-                get_cred_var_name(cred.__name__)
+                get_cred_var_name(getattr(cred, "name", "") or cred.__name__)
             )
 
         if install_type == "FRESH":

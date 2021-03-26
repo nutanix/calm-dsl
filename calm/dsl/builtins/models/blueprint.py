@@ -63,6 +63,16 @@ class BlueprintType(EntityType):
                 LOG.error("Multiple profiles are not allowed in brownfield application")
                 sys.exit(-1)
 
+        default_cred = cdict.pop("default_credential_local_reference", None)
+        if not default_cred:
+            for cred in cdict.get("credential_definition_list") or []:
+                if cred.default:
+                    default_cred = cred.get_ref()
+                    break
+
+        if default_cred:
+            cdict["default_credential_local_reference"] = default_cred
+
         return cdict
 
 
@@ -72,7 +82,7 @@ class BlueprintValidator(PropertyValidator, openapi_type="app_blueprint"):
 
 
 def blueprint(**kwargs):
-    name = kwargs.get("name", None)
+    name = kwargs.pop("name", None)
     bases = (Entity,)
     return BlueprintType(name, bases, kwargs)
 

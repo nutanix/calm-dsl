@@ -1,0 +1,7 @@
+{% macro metadata(obj) -%}
+class BpMetadata(Metadata):
+
+    {% if obj.categories %}categories={{obj.categories}}{% endif %}
+{%- endmacro %}
+
+{{ metadata(obj) }}

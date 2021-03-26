@@ -62,6 +62,10 @@ class ENDPOINT:
         WINDOWS = "Windows"
         LINUX = "Linux"
 
+    class VALUE_TYPES:
+        VM = "VM"
+        IP = "IP"
+
 
 class BLUEPRINT:
     class STATES:
@@ -138,7 +142,11 @@ class SYSTEM_ACTIONS:
     SOFT_DELETE = "soft_delete"
 
 
-class MARKETPLACE_BLUEPRINT:
+class MARKETPLACE_ITEM:
+    class TYPES:
+        BLUEPRINT = "blueprint"
+        RUNBOOK = "runbook"
+
     class STATES:
         PENDING = "PENDING"
         ACCEPTED = "ACCEPTED"
@@ -148,6 +156,23 @@ class MARKETPLACE_BLUEPRINT:
     class SOURCES:
         GLOBAL = "GLOBAL_STORE"
         LOCAL = "LOCAL"
+
+
+class TASKS:
+    class TASK_TYPES:
+        EXEC = "EXEC"
+        SET_VARIABLE = "SET_VARIABLE"
+        HTTP = "HTTP"
+
+    class SCRIPT_TYPES:
+        POWERSHELL = "npsscript"
+        SHELL = "sh"
+        ESCRIPT = "static"
+
+    class STATES:
+        ACTIVE = "ACTIVE"
+        DELETED = "DELETED"
+        DRAFT = "DRAFT"
 
 
 class ERGON_TASK:

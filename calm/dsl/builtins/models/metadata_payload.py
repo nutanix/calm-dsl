@@ -8,6 +8,7 @@ from calm.dsl.tools import get_module_from_file
 _MetadataPayload = dict()
 
 
+# TODO change it to class
 def get_metadata_module_from_file(dsl_file):
     """Returns module given a file (.py)"""
 
@@ -28,6 +29,9 @@ def get_metadata_class_from_module(user_module):
 
 
 def get_metadata_payload(dsl_file):
+    """
+    returns the metadata payload from the dsl_file
+    """
 
     global _MetadataPayload
     user_metadata_module = get_metadata_module_from_file(dsl_file)
@@ -40,6 +44,13 @@ def get_metadata_payload(dsl_file):
     # updating global object
     _MetadataPayload = payload
     return payload
+
+
+def reset_metadata_obj():
+    """resets metadata object"""
+
+    global _MetadataPayload
+    _MetadataPayload = dict()
 
 
 def get_metadata_obj():

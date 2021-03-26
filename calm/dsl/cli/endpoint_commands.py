@@ -94,6 +94,8 @@ def _describe_endpoint(endpoint_name, out):
     help="Path of Endpoint file to format",
 )
 def _format_endpoint_command(endpoint_file):
+    """black formats the endpoint file"""
+
     format_endpoint_command(endpoint_file)
 
 

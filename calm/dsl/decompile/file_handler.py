@@ -10,9 +10,8 @@ SCRIPTS_DIR_KEY = "scripts"
 SPECS_DIR_KEY = "specs"
 
 
-def make_bp_dirs(dir_name, bp_dir_name):
+def make_bp_dirs(bp_dir):
 
-    bp_dir = os.path.join(dir_name, bp_dir_name)
     if not os.path.isdir(bp_dir):
         os.makedirs(bp_dir)
 
@@ -31,10 +30,10 @@ def make_bp_dirs(dir_name, bp_dir_name):
     return (bp_dir, local_dir, spec_dir, scripts_dir)
 
 
-def init_bp_dir(dir_name, bp_dir_name):
+def init_bp_dir(bp_dir):
 
     global LOCAL_DIR, SCRIPTS_DIR, SPECS_DIR, BP_DIR
-    BP_DIR, LOCAL_DIR, SPECS_DIR, SCRIPTS_DIR = make_bp_dirs(dir_name, bp_dir_name)
+    BP_DIR, LOCAL_DIR, SPECS_DIR, SCRIPTS_DIR = make_bp_dirs(bp_dir)
 
     return (BP_DIR, LOCAL_DIR, SPECS_DIR, SCRIPTS_DIR)
 
@@ -65,3 +64,11 @@ def get_specs_dir_key():
 
 def get_scripts_dir_key():
     return SCRIPTS_DIR_KEY
+
+
+def init_file_globals():
+    global LOCAL_DIR, SPECS_DIR, SCRIPTS_DIR, BP_DIR
+    LOCAL_DIR = None
+    SCRIPTS_DIR = None
+    SPECS_DIR = None
+    BP_DIR = None

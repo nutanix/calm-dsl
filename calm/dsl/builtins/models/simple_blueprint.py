@@ -48,6 +48,13 @@ class SimpleBlueprintType(EntityType):
         # Removing pod deployments from the deployments
         setattr(cls, "deployments", normal_deployments)
 
+        # Get default credential from credential list
+        default_cred = None
+        for cred in cls.credentials:
+            if cred.default:
+                default_cred = cred.get_ref()
+                break
+
         # Get simple blueprint dictionary
         cdict = cls.get_dict()
 
@@ -55,8 +62,14 @@ class SimpleBlueprintType(EntityType):
 
         credential_definition_list = cdict["credentials"]
 
+        pfl_kwargs = {"name": cls.__name__ + "Profile"}
+
+        environments = getattr(cls, "environments", None)
+        if environments:
+            pfl_kwargs["environments"] = environments
+
         # Init Profile
-        pro = profile(name=cls.__name__ + "Profile")
+        pro = profile(**pfl_kwargs)
         app_profile = pro.get_dict()
         app_profile["variable_list"] = cdict["variables"]
         app_profile["action_list"] = cdict["action_list"]
@@ -191,6 +204,11 @@ class SimpleBlueprintType(EntityType):
             "published_service_definition_list": published_service_definition_list,
         }
 
+        if default_cred:
+            blueprint_resources[
+                "default_credential_local_reference"
+            ] = default_cred.get_dict()
+
         spec = {
             "name": cls.__name__,
             "description": cls.__doc__ or "",
@@ -201,7 +219,7 @@ class SimpleBlueprintType(EntityType):
             "spec_version": 1,
             "kind": "blueprint",
             "name": cls.__name__,
-            "categories": categories,
+            "categories": categories or {},
         }
 
         blueprint = {"metadata": metadata, "spec": spec}

@@ -15,6 +15,7 @@ from tests.api_interface.test_runbooks.test_files.http_task import (
     HTTPTaskWithIncorrectAuth,
     HTTPHeadersWithMacro,
     HTTPRelativeURLWithMacro,
+    HTTPEndpointWithMultipleURLs,
 )
 from utils import upload_runbook, poll_runlog_status
 
@@ -225,6 +226,7 @@ class TestHTTPTasks:
             if (
                 entity["status"]["type"] == "task_runlog"
                 and entity["status"]["task_reference"]["name"] == "HTTPTask"
+                and runlog_uuid in entity["status"].get("machine_name", "")
             ):
                 http_task = entity["metadata"]["uuid"]
 
@@ -342,8 +344,10 @@ class TestHTTPTasks:
                 pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
     @pytest.mark.regression
+    @pytest.mark.runbook
     @pytest.mark.parametrize(
-        "Runbook", [HTTPHeadersWithMacro, HTTPRelativeURLWithMacro]
+        "Runbook",
+        [HTTPHeadersWithMacro, HTTPRelativeURLWithMacro, HTTPEndpointWithMultipleURLs],
     )
     def test_macros_in_http_header(self, Runbook):
         """ test_macros_in_http_header, test_variable_in_relative_url """

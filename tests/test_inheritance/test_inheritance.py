@@ -8,12 +8,13 @@ from calm.dsl.builtins import action, ref, basic_cred
 from calm.dsl.builtins import read_local_file
 from calm.dsl.builtins import vm_disk_package, AhvVmDisk, AhvVmNic
 from calm.dsl.builtins import AhvVmGC, AhvVmResources, AhvVm
+from calm.dsl.config import get_context
 
 
 # SSH Credentials
 CENTOS_USER = "centos"
-CENTOS_KEY = read_local_file(os.path.join("keys", "centos"))
-CENTOS_PUBLIC_KEY = read_local_file(os.path.join("keys", "centos_pub"))
+CENTOS_KEY = read_local_file(os.path.join(".tests", "keys", "centos"))
+CENTOS_PUBLIC_KEY = read_local_file(os.path.join(".tests", "keys", "centos_pub"))
 CentosCred = basic_cred(
     CENTOS_USER, CENTOS_KEY, name="Centos", type="KEY", default=True
 )
@@ -70,7 +71,7 @@ class AnimalVmResources(AhvVmResources):
     vCPUs = 2
     cores_per_vCPU = 1
     disks = [AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(CentosPackage, bootable=True)]
-    nics = [AhvVmNic.DirectNic.ingress("vlan.0")]
+    nics = [AhvVmNic.DirectNic.ingress("@@{substrate_variable}@@")]
 
     guest_customization = AhvVmGC.CloudInit(
         config={
@@ -248,6 +249,14 @@ def test_json():
     """Test the generated json for a single VM
     against known output"""
     import os
+    import sys
+
+    # Setting the recursion limit to max for comparison
+    sys.setrecursionlimit(100000)
+
+    # Resetting context
+    ContextObj = get_context()
+    ContextObj.reset_configuration()
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_path = os.path.join(dir_path, "test_inheritance_bp_output.json")
