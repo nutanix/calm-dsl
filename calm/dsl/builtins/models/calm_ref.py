@@ -30,6 +30,11 @@ class CalmRefType(EntityType):
         user_attrs = cls.get_user_attrs()
         return ref_cls.compile(cls, **user_attrs)
 
+    def __getitem__(cls, key):
+        """return the vale in compiled class payload"""
+        data = cls.compile()
+        return data[key]
+
 
 class CalmRefValidator(PropertyValidator, openapi_type="app_calm_ref"):
     __default__ = None
@@ -128,9 +133,17 @@ class Ref:
     class Account:
         def __new__(cls, name, **kwargs):
 
+            kwargs["__ref_cls__"] = cls
+            kwargs["name"] = name
+            return _calm_ref(**kwargs)
+
+        def compile(cls, name, **kwargs):
+
             provider_type = kwargs.get("provider_type") or ""
             account_cache_data = Cache.get_entity_data(
-                entity_type=CACHE.ENTITY.ACCOUNT, name=name, provider_type=provider_type
+                entity_type=CACHE.ENTITY.ACCOUNT,
+                name=name,
+                provider_type=provider_type,
             )
 
             if not account_cache_data:
