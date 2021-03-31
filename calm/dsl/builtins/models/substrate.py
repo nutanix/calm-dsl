@@ -223,7 +223,7 @@ class SubstrateType(EntityType):
             else:
                 provider_account["uuid"] = project_accounts[0]
 
-        return provider_account.get("uuid", "")
+        return provider_account["uuid"]
 
     def compile(cls):
 
