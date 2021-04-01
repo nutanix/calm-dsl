@@ -11,6 +11,7 @@ from calm.dsl.builtins.models.helper.common import get_project
 from calm.dsl.api import get_api_client
 from calm.dsl.store import Version
 from calm.dsl.config import get_context
+from calm.dsl.builtins.models.metadata_payload import reset_metadata_obj
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -73,6 +74,9 @@ class TestProjectEnv:
         ContextObj = get_context()
         ContextObj.reset_configuration()
 
+        # Resetting metadata object
+        reset_metadata_obj()
+
     def teardown_method(self):
         """Method to delete project if not deleted during tests"""
 
@@ -82,6 +86,9 @@ class TestProjectEnv:
 
         if self.project_name and (not self.project_deleted):
             self._test_delete_project()
+
+        # Resetting metadata object
+        reset_metadata_obj()
 
     def test_env_infra_presence_in_compiled_payload(self):
         """test to check env infra presence in project compiled payload"""
