@@ -50,6 +50,14 @@ class Cache:
             )
             sys.exit(-1)
 
+        if not res:
+            kwargs["name"] = name
+            LOG.debug(
+                "Unsuccessful db query from {} table for following params {}".format(
+                    entity_type, kwargs
+                )
+            )
+
         return res
 
     @classmethod
@@ -75,6 +83,14 @@ class Cache:
                 "Cache error occurred. Please update cache using 'calm update cache' command"
             )
             sys.exit(-1)
+
+        if not res:
+            kwargs["uuid"] = uuid
+            LOG.debug(
+                "Unsuccessful db query from {} table for following params {}".format(
+                    entity_type, kwargs
+                )
+            )
 
         return res
 
