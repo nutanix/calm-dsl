@@ -30,7 +30,7 @@ def test_bp_list():
 
 
 @pytest.mark.slow
-def test_next_demo_bp_upload(Blueprint=Blueprint):
+def _test_next_demo_bp_upload(Blueprint=Blueprint):
 
     client = get_api_client()
 
@@ -78,7 +78,7 @@ def test_next_demo_bp_upload(Blueprint=Blueprint):
 
 
 @pytest.mark.slow
-def test_next_demo_bp_launch(Blueprint=Blueprint):
+def _test_next_demo_bp_launch(Blueprint=Blueprint):
 
     launch_blueprint_simple(str(Blueprint), patch_editables=False)
 
@@ -91,8 +91,8 @@ def test_session_close():
 
 def main():
     test_bp_list()
-    test_next_demo_bp_upload()
-    test_next_demo_bp_launch()
+    _test_next_demo_bp_upload()
+    _test_next_demo_bp_launch()
     test_session_close()
 
 
