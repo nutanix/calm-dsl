@@ -7,7 +7,7 @@ from distutils.version import LooseVersion as LV
 from click.testing import CliRunner
 
 from calm.dsl.cli import main as cli
-from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
+from calm.dsl.builtins.models.metadata_payload import reset_metadata_obj
 from calm.dsl.builtins import read_local_file
 from calm.dsl.config import get_context
 from calm.dsl.store import Version
@@ -29,13 +29,23 @@ CALM_VERSION = Version.get_version("Calm")
 class TestProjectCommands:
     def setup_method(self):
         """"Reset the context changes"""
+
+        # Resetting context
         ContextObj = get_context()
         ContextObj.reset_configuration()
 
+        # Resetting metadata object
+        reset_metadata_obj()
+
     def teardown_method(self):
         """"Reset the context changes"""
+
+        # Resetting context
         ContextObj = get_context()
         ContextObj.reset_configuration()
+
+        # Resetting metadata object
+        reset_metadata_obj()
 
     def test_projects_list(self):
         runner = CliRunner()
@@ -329,6 +339,3 @@ class TestProjectCommands:
         LOG.info("Success")
 
         self._test_project_delete()
-
-        # Restoring the metadata context
-        get_metadata_payload(__file__)

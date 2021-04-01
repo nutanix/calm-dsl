@@ -185,7 +185,7 @@ class SubstrateType(EntityType):
 
                 # Else take first account in project
                 elif not provider_account:
-                    provider_account = {"uuid":project_accounts[0], "kind": "account"}
+                    provider_account = {"uuid": project_accounts[0], "kind": "account"}
 
         # If substrate defined inside environment
         cls_env = common_helper._walk_to_parent_with_given_type(cls, "EnvironmentType")
@@ -221,7 +221,7 @@ class SubstrateType(EntityType):
 
             # If version is less than 3.2.0, then it should use account from poroject only
             else:
-                provider_account = {"uuid":project_accounts[0], "kind": "account"}
+                provider_account = {"uuid": project_accounts[0], "kind": "account"}
 
         return provider_account["uuid"]
 

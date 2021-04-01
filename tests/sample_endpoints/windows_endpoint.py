@@ -14,11 +14,3 @@ Cred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
 DslWindowsEndpoint = Endpoint.Windows.ip(
     [VM_IP], connection_protocol="HTTPS", cred=Cred
 )
-
-
-def main():
-    print(DslWindowsEndpoint.json_dumps(pprint=True))
-
-
-if __name__ == "__main__":
-    main()
