@@ -138,7 +138,8 @@ def compile_project_dsl_class(project_class):
     if hasattr(project_class, "envs"):
         envs = getattr(project_class, "envs", [])
         project_class.envs = []
-        project_class.default_environment = {}
+        if hasattr(project_class, "default_environment"):
+            project_class.default_environment = {}
 
     # Adding environment infra to project
     for env in envs:
