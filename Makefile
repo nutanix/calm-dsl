@@ -9,7 +9,7 @@ dev:
 	# This step assumes python3 is installed on your dev machine
 	[ -f venv/bin/python3 ] || (python3 -m venv venv && \
 		venv/bin/pip3 install --upgrade pip setuptools)
-	venv/bin/pip3 install --use-feature=2020-resolver --no-cache -r requirements.txt -r dev-requirements.txt
+	venv/bin/pip3 install --no-cache -r requirements.txt -r dev-requirements.txt
 	venv/bin/python3 setup.py develop
 
 test-bed: dev
