@@ -34,7 +34,7 @@ jobs:
       run: |
         make docker
     - name: Publish docker image
-      if: github.event_name == 'push'
+      if: ${{ github.event_name == 'push' && github.repository == 'nutanix/calm-dsl'}}
       run: |
         docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
         docker push ntnx/calm-dsl
