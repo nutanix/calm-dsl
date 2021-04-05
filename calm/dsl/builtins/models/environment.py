@@ -3,6 +3,7 @@ import sys
 from .entity import EntityType
 from .validator import PropertyValidator
 from .helper import common as common_helper
+from .calm_ref import Ref
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Cache
 from calm.dsl.constants import CACHE
@@ -110,9 +111,10 @@ class EnvironmentType(EntityType):
             account_cache_data = Cache.get_entity_data_using_uuid(
                 entity_type=CACHE.ENTITY.ACCOUNT, uuid=account_uuid
             )
+            account_name = account_cache_data.get("name")
             provider_type = account_cache_data.get("provider_type")
 
-            infra_type_account_map[inv_dict[provider_type]] = account_ref
+            infra_type_account_map[inv_dict[provider_type]] = Ref.Account(account_name)
 
         if infra_type_account_map:
             substrates = cdict.get("substrate_definition_list", [])
