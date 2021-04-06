@@ -13,15 +13,13 @@ from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.config import get_context
 
 from .utils import get_name_query, highlight_text
-from .task_commands import watch_task
-from .constants import ERGON_TASK
 from .environments import create_environment_from_dsl_class
 from calm.dsl.tools import get_module_from_file
 from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
 from calm.dsl.builtins.models.helper.common import get_project
 from calm.dsl.store import Cache, Version
-from calm.dsl.constants import CACHE
+from calm.dsl.constants import CACHE, PROJECT_TASK
 
 LOG = get_logging_handle(__name__)
 
@@ -112,6 +110,39 @@ def get_projects(name, filter_by, limit, offset, quiet, out):
             ]
         )
     click.echo(table)
+
+
+def watch_project_task(project_uuid, task_uuid, poll_interval=4):
+    """poll project tasks"""
+
+    client = get_api_client()
+    cnt = 0
+    while True:
+        LOG.info("Fetching status of project task (uuid={})".format(task_uuid))
+        res, err = client.project.read_pending_task(project_uuid, task_uuid)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        status = res["status"]["state"]
+        LOG.info(status)
+
+        if status in PROJECT_TASK.TERMINAL_STATES:
+            message_list = res["status"].get("message_list")
+            if status != PROJECT_TASK.STATUS.SUCCESS and message_list:
+                LOG.error(message_list)
+            return status
+
+        time.sleep(poll_interval)
+        cnt += 1
+        if cnt == 10:
+            break
+
+    LOG.info(
+        "Task couldn't reached to terminal state in {} seconds. Exiting...".format(
+            poll_interval * 10
+        )
+    )
 
 
 def get_project_module_from_file(project_file):
@@ -243,11 +274,14 @@ def create_project(project_payload, name="", description=""):
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
     LOG.info("Polling on project creation task")
-    task_state = watch_task(
-        project["status"]["execution_context"]["task_uuid"], poll_interval=4
+    task_state = watch_project_task(
+        project["metadata"]["uuid"],
+        project["status"]["execution_context"]["task_uuid"],
+        poll_interval=4,
     )
-    if task_state in ERGON_TASK.FAILURE_STATES:
-        raise Exception("Project creation task went to {} state".format(task_state))
+    if task_state in PROJECT_TASK.FAILURE_STATES:
+        LOG.exception("Project creation task went to {} state".format(task_state))
+        sys.exit(-1)
 
     return stdout_dict
 
@@ -271,9 +305,12 @@ def update_project(project_uuid, project_payload):
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
     LOG.info("Polling on project updation task")
-    task_state = watch_task(project["status"]["execution_context"]["task_uuid"])
-    if task_state in ERGON_TASK.FAILURE_STATES:
-        raise Exception("Project creation task went to {} state".format(task_state))
+    task_state = watch_project_task(
+        project["metadata"]["uuid"], project["status"]["execution_context"]["task_uuid"]
+    )
+    if task_state in PROJECT_TASK.FAILURE_STATES:
+        LOG.exception("Project creation task went to {} state".format(task_state))
+        sys.exit(-1)
 
     return stdout_dict
 
@@ -537,12 +574,13 @@ def delete_project(project_names):
         res, err = client.project.delete(project_id)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
         LOG.info("Polling on project deletion task")
         res = res.json()
-        task_state = watch_task(
-            res["status"]["execution_context"]["task_uuid"], poll_interval=4
+        task_state = watch_project_task(
+            project_id, res["status"]["execution_context"]["task_uuid"], poll_interval=4
         )
-        if task_state in ERGON_TASK.FAILURE_STATES:
+        if task_state in PROJECT_TASK.FAILURE_STATES:
             LOG.exception("Project deletion task went to {} state".format(task_state))
             sys.exit(-1)
 
@@ -634,10 +672,10 @@ def update_project_from_dsl(project_name, project_file):
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
     LOG.info("Polling on project creation task")
-    task_state = watch_task(
-        res["status"]["execution_context"]["task_uuid"], poll_interval=4
+    task_state = watch_project_task(
+        project_uuid, res["status"]["execution_context"]["task_uuid"], poll_interval=4
     )
-    if task_state not in ERGON_TASK.FAILURE_STATES:
+    if task_state not in PROJECT_TASK.FAILURE_STATES:
         # Remove project removed user and groups from acps
         if acp_remove_user_list or acp_remove_group_list:
             LOG.info("Updating project acps")
@@ -647,7 +685,8 @@ def update_project_from_dsl(project_name, project_file):
                 remove_group_list=acp_remove_group_list,
             )
     else:
-        raise Exception("Project updation task went to {} state".format(task_state))
+        LOG.exception("Project updation task went to {} state".format(task_state))
+        sys.exit(-1)
 
 
 def update_project_using_cli_switches(
@@ -756,10 +795,10 @@ def update_project_using_cli_switches(
 
     # Remove project removed user and groups from acps
     LOG.info("Polling on project updation task")
-    task_state = watch_task(
-        res["status"]["execution_context"]["task_uuid"], poll_interval=4
+    task_state = watch_project_task(
+        project_uuid, res["status"]["execution_context"]["task_uuid"], poll_interval=4
     )
-    if task_state not in ERGON_TASK.FAILURE_STATES:
+    if task_state not in PROJECT_TASK.FAILURE_STATES:
         if acp_remove_user_list or acp_remove_group_list:
             LOG.info("Updating project acps")
             remove_users_from_project_acps(
@@ -768,7 +807,8 @@ def update_project_using_cli_switches(
                 remove_group_list=acp_remove_group_list,
             )
     else:
-        raise Exception("Project updation task went to {} state".format(task_state))
+        LOG.exception("Project updation task went to {} state".format(task_state))
+        sys.exit(-1)
 
 
 def remove_users_from_project_acps(project_uuid, remove_user_list, remove_group_list):
@@ -807,4 +847,6 @@ def remove_users_from_project_acps(project_uuid, remove_user_list, remove_group_
 
     res = res.json()
     LOG.info("Polling on task for updating project ACPS")
-    watch_task(res["status"]["execution_context"]["task_uuid"], poll_interval=4)
+    watch_project_task(
+        project_uuid, res["status"]["execution_context"]["task_uuid"], poll_interval=4
+    )

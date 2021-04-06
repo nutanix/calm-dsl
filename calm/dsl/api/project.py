@@ -8,6 +8,7 @@ class ProjectAPI(ResourceAPI):
 
         self.CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/calm_projects"
         self.CALM_PROJECTS_ITEM = self.CALM_PROJECTS_PREFIX + "/{}"
+        self.CALM_PROJECTS_PENDING_TASKS = self.CALM_PROJECTS_ITEM + "/pending_tasks/{}"
 
     def create(self, payload):
 
@@ -35,4 +36,11 @@ class ProjectAPI(ResourceAPI):
             self.CALM_PROJECTS_ITEM.format(uuid),
             verify=False,
             method=REQUEST.METHOD.DELETE,
+        )
+
+    def read_pending_task(self, uuid, task_uuid):
+        return self.connection._call(
+            self.CALM_PROJECTS_PENDING_TASKS.format(uuid, task_uuid),
+            verify=False,
+            method=REQUEST.METHOD.GET,
         )
