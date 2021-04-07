@@ -596,6 +596,7 @@ def format_blueprint_command(bp_file):
         LOG.info("Blueprint {} left unchanged.".format(path))
 
 
+# TODO added read api call inside it. Remove it from othert places
 def get_blueprint(client, name, all=False, is_brownfield=False):
 
     # find bp
@@ -621,7 +622,12 @@ def get_blueprint(client, name, all=False, is_brownfield=False):
         blueprint = entities[0]
     else:
         raise Exception("No blueprint found with name {} found".format(name))
-    return blueprint
+
+    res, err = client.blueprint.read(blueprint["metadata"]["uuid"])
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    return res.json()
 
 
 def get_blueprint_runtime_editables(client, blueprint):
@@ -945,6 +951,7 @@ def launch_blueprint_simple(
     patch_editables=True,
     launch_params=None,
     is_brownfield=False,
+    brownfield_deployment_file=None,
 ):
     client = get_api_client()
 
@@ -972,12 +979,15 @@ def launch_blueprint_simple(
         else:
             blueprint = get_blueprint(client, blueprint_name)
 
-    blueprint_uuid = blueprint.get("metadata", {}).get("uuid", "")
+    bp_metadata = blueprint.get("metadata", {})
+    bp_status_data = blueprint.get("status", {})
+
+    blueprint_uuid = bp_metadata.get("uuid", "")
     blueprint_name = blueprint_name or blueprint.get("metadata", {}).get("name", "")
 
-    project_ref = blueprint["metadata"].get("project_reference", {})
+    project_ref = bp_metadata.get("project_reference", {})
     project_uuid = project_ref.get("uuid")
-    bp_status = blueprint["status"]["state"]
+    bp_status = bp_status_data["state"]
     if bp_status != "ACTIVE":
         LOG.error("Blueprint is in {} state. Unable to launch it".format(bp_status))
         sys.exit(-1)
@@ -997,6 +1007,55 @@ def launch_blueprint_simple(
         if not profile:
             LOG.error("No profile found with name {}".format(profile_name))
             sys.exit(-1)
+
+    runtime_bf_deployment_list = []
+    if brownfield_deployment_file:
+        bp_metadata = blueprint.get("metadata", {})
+        project_uuid = bp_metadata.get("project_reference", {}).get("uuid", "")
+
+        # Set bp project in dsl context
+        ContextObj = get_context()
+        project_config = ContextObj.get_project_config()
+        project_name = project_config["name"]
+
+        if project_uuid:
+            project_data = Cache.get_entity_data_using_uuid(
+                entity_type=CACHE.ENTITY.PROJECT, uuid=project_uuid
+            )
+            bp_project = project_data.get("name")
+
+            if bp_project and bp_project != project_name:
+                project_name = bp_project
+                ContextObj.update_project_context(project_name=project_name)
+
+        bf_deployments = get_brownfield_deployment_classes(brownfield_deployment_file)
+
+        # Get bp_deployments name-uuid map
+        bp_profile_data = {}
+        for _profile in bp_status_data["resources"]["app_profile_list"]:
+            if _profile["name"] == profile["app_profile_reference"]["name"]:
+                bp_profile_data = _profile
+
+        bp_dep_name_uuid_map = {}
+        for _dep in bp_profile_data.get("deployment_create_list", []):
+            bp_dep_name_uuid_map[_dep["name"]] = _dep["uuid"]
+
+        for _bf_dep in bf_deployments:
+            _bf_dep = _bf_dep.get_dict()
+
+            if _bf_dep["name"] in list(bp_dep_name_uuid_map.keys()):
+                runtime_bf_deployment_list.append(
+                    {
+                        "uuid": bp_dep_name_uuid_map[_bf_dep["name"]],
+                        "name": _bf_dep["name"],
+                        "value": {
+                            "brownfield_instance_list": _bf_dep.get(
+                                "brownfield_instance_list"
+                            )
+                            or []
+                        },
+                    }
+                )
 
     runtime_editables = profile.pop("runtime_editables", [])
 
@@ -1133,6 +1192,28 @@ def launch_blueprint_simple(
             runtime_editables, indent=4, separators=(",", ": ")
         )
         LOG.info("Updated blueprint editables are:\n{}".format(runtime_editables_json))
+
+    if runtime_bf_deployment_list:
+        bf_dep_names = [bfd["name"] for bfd in runtime_bf_deployment_list]
+        runtime_deployments = launch_payload["spec"]["runtime_editables"].get(
+            "deployment_list", []
+        )
+        for _rd in runtime_deployments:
+            if _rd["name"] not in bf_dep_names:
+                runtime_bf_deployment_list.append(_rd)
+
+        launch_payload["spec"]["runtime_editables"][
+            "deployment_list"
+        ] = runtime_bf_deployment_list
+
+        runtime_bf_deployment_list_json = json.dumps(
+            runtime_bf_deployment_list, indent=4, separators=(",", ": ")
+        )
+        LOG.info(
+            "Updated blueprint deployment editables are:\n{}".format(
+                runtime_bf_deployment_list_json
+            )
+        )
 
     res, err = client.blueprint.launch(blueprint_uuid, launch_payload)
     if not err:

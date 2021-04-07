@@ -289,6 +289,13 @@ def create_blueprint_command(bp_file, name, description, force):
     show_default=True,
     help="Give polling interval",
 )
+@click.option(
+    "--brownfield_deployments",
+    "-b",
+    "brownfield_deployment_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path of Brownfield Deployment file (Added in 3.3)",
+)
 def launch_blueprint_command(
     blueprint_name,
     environment,
@@ -299,6 +306,7 @@ def launch_blueprint_command(
     watch,
     poll_interval,
     blueprint=None,
+    brownfield_deployment_file=None,
 ):
     """Launches a blueprint.
     All runtime variables will be prompted by default. When passing the 'ignore_runtime_variables' flag, no variables will be prompted and all default values will be used.
@@ -343,6 +351,9 @@ def launch_blueprint_command(
     Sample context for variables:
         1. context = "<Profile Name>"    # For variable under profile
         2. context = "<Service Name>"    # For variable under service
+
+    \b
+    >: brownfield_deployments: Python file containing brownfield deployments
     """
 
     app_name = app_name or "App-{}-{}".format(blueprint_name, int(time.time()))
@@ -357,6 +368,7 @@ def launch_blueprint_command(
         profile_name=profile_name,
         patch_editables=not ignore_runtime_variables,
         launch_params=launch_params,
+        brownfield_deployment_file=brownfield_deployment_file,
     )
     if watch:
 
