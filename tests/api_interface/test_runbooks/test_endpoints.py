@@ -332,9 +332,11 @@ class TestEndpoints:
         endpoint = copy.deepcopy(change_uuids(EndpointPayload, {}))
 
         # set values and credentials to empty
-        CALM_VERSION =  Version.get_version("Calm")
+        CALM_VERSION = Version.get_version("Calm")
         if LV(CALM_VERSION) < LV("3.3.0"):
-            message = "Name can contain only alphanumeric, underscores, hyphens and spaces"
+            message = (
+                "Name can contain only alphanumeric, underscores, hyphens and spaces"
+            )
         else:
             message = "Name can contain only unicode characters, underscores, hyphens and spaces"
 
@@ -344,10 +346,7 @@ class TestEndpoints:
         if not err:
             pytest.fail("Endpoint created successfully with unsupported name formats")
         assert err.get("code", 0) == 422
-        assert (
-            message
-            in res.text
-        )
+        assert message in res.text
 
         endpoint["spec"]["name"] = "endpoint_" + str(uuid.uuid4())[-10:]
         res, err = client.endpoint.create(endpoint)
@@ -362,16 +361,16 @@ class TestEndpoints:
         ep["spec"]["name"] = "-test_ep_name_" + str(uuid.uuid4())[-10:]
 
         if LV(CALM_VERSION) < LV("3.3.0"):
-            message = "Names can only start with alphanumeric characters or underscore (_)"
+            message = (
+                "Names can only start with alphanumeric characters or underscore (_)"
+            )
         else:
             message = "Names can only start with unicode characters or underscore (_)"
         res, err = client.endpoint.update(ep_uuid, ep)
         if not err:
             pytest.fail("Endpoint updated successfully with unsupported name formats")
         assert err.get("code", 0) == 422
-        assert (
-            message in res.text
-        )
+        assert message in res.text
 
         # delete the endpoint
         _, err = client.endpoint.delete(ep_uuid)
