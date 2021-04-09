@@ -1030,24 +1030,55 @@ def launch_blueprint_simple(
 
         bf_deployments = get_brownfield_deployment_classes(brownfield_deployment_file)
 
-        # Get bp_deployments name-uuid map
         bp_profile_data = {}
         for _profile in bp_status_data["resources"]["app_profile_list"]:
             if _profile["name"] == profile["app_profile_reference"]["name"]:
                 bp_profile_data = _profile
 
+        # Get substrate-account map
+        bp_subs_uuid_account_uuid_map = {}
+        for _sub in bp_status_data["resources"]["substrate_definition_list"]:
+            if _sub.get("type", "") == "EXISTING_VM":
+                bp_subs_uuid_account_uuid_map[_sub["uuid"]] = ""
+                continue
+
+            account_uuid = _sub["create_spec"]["resources"]["account_uuid"]
+
+            if _sub.get("type", "") == "AHV_VM":
+                account_data = Cache.get_entity_data_using_uuid(
+                    entity_type=CACHE.ENTITY.ACCOUNT, uuid=account_uuid
+                )
+                # replace pe account uuid by pc account uuid
+                account_uuid = account_data["data"]["pc_account_uuid"]
+
+            bp_subs_uuid_account_uuid_map[_sub["uuid"]] = account_uuid
+
+        # Get dep name-uuid map and dep-account_uuid map
         bp_dep_name_uuid_map = {}
+        bp_dep_name_account_uuid_map = {}
         for _dep in bp_profile_data.get("deployment_create_list", []):
             bp_dep_name_uuid_map[_dep["name"]] = _dep["uuid"]
 
+            _dep_sub_uuid = _dep["substrate_local_reference"]["uuid"]
+            bp_dep_name_account_uuid_map[_dep["name"]] = bp_subs_uuid_account_uuid_map[
+                _dep_sub_uuid
+            ]
+
+        # Compile brownfield deployment after attaching valid account to instance
         for _bf_dep in bf_deployments:
+            _bf_dep_name = getattr(_bf_dep, "name", "") or _bf_dep.__name__
+
+            # Attaching correct account to brownfield instances
+            for _inst in _bf_dep.instances:
+                _inst.account_uuid = bp_dep_name_account_uuid_map[_bf_dep_name]
+
             _bf_dep = _bf_dep.get_dict()
 
-            if _bf_dep["name"] in list(bp_dep_name_uuid_map.keys()):
+            if _bf_dep_name in list(bp_dep_name_uuid_map.keys()):
                 runtime_bf_deployment_list.append(
                     {
-                        "uuid": bp_dep_name_uuid_map[_bf_dep["name"]],
-                        "name": _bf_dep["name"],
+                        "uuid": bp_dep_name_uuid_map[_bf_dep_name],
+                        "name": _bf_dep_name,
                         "value": {
                             "brownfield_instance_list": _bf_dep.get(
                                 "brownfield_instance_list"

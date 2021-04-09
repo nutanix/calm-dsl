@@ -483,7 +483,10 @@ class BrownfiedVmType(EntityType):
         cls_substrate = cls.get_substrate()
 
         provider_type = cls.provider
-        account_uuid = ""
+
+        # account_uuid is attached to brownfield instances if a
+        # blueprint is launched with runtime brownfield deployments
+        account_uuid = getattr(cls, "account_uuid", "")
         if cls_substrate:
             account_uuid = getattr(cls_substrate, "account", {}).get("uuid")
 
