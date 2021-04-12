@@ -22,6 +22,7 @@ from .bps import (
     create_blueprint_from_dsl,
 )
 from .apps import watch_app
+from .utils import FeatureDslOption
 
 LOG = get_logging_handle(__name__)
 
@@ -293,7 +294,7 @@ def create_blueprint_command(bp_file, name, description, force):
     "--brownfield_deployments",
     "-b",
     "brownfield_deployment_file",
-    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    type=FeatureDslOption(feature_min_version="3.3.0"),
     help="Path of Brownfield Deployment file (Added in 3.3)",
 )
 def launch_blueprint_command(

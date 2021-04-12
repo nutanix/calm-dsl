@@ -130,3 +130,30 @@ class FeatureFlagGroup(FeatureFlagMixin, DYMMixin, click.Group):
     which can be used to set minimum calm version for command"""
 
     pass
+
+
+class FeatureDslOption(click.ParamType):
+
+    name = "feature-dsl-option"
+
+    def __init__(self, feature_min_version=""):
+        self.feature_min_version = feature_min_version
+
+    def convert(self, value, param, ctx):
+
+        if self.feature_min_version:
+            calm_version = Version.get_version("Calm")
+            if not calm_version:
+                LOG.error("Calm version not found. Please update cache")
+                sys.exit(-1)
+
+            if LV(calm_version) < LV(self.feature_min_version):
+                LOG.error(
+                    "Cli option '{}' not supported. Please upgrade to Calm v_{}".format(
+                        param.name, self.feature_min_version
+                    )
+                )
+                sys.exit(-1)
+
+        # Add validation for file types etc.
+        return value
