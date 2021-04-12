@@ -1,3 +1,4 @@
+from re import sub
 import time
 import json
 import sys
@@ -190,17 +191,38 @@ def describe_bp(blueprint_name, out):
         profile_name = profile["name"]
         click.echo("\t" + highlight_text(profile_name))
 
-        substrate_ids = [
-            dep.get("substrate_local_reference", {}).get("uuid")
-            for dep in profile.get("deployment_create_list", [])
-        ]
-        substrate_types = [
-            sub.get("type")
-            for sub in bp_resources.get("substrate_definition_list")
-            if sub.get("uuid") in substrate_ids
-        ]
-        click.echo("\tSubstrates[{}]:".format(highlight_text(len(substrate_types))))
-        click.echo("\t\t{}".format(highlight_text(", ".join(substrate_types))))
+        bp_deployments = profile.get("deployment_create_list", [])
+        click.echo("\tDeployments[{}]:".format(highlight_text(len(bp_deployments))))
+        for dep in bp_deployments:
+            click.echo("\t\t{}".format(highlight_text(dep["name"])))
+
+            dep_substrate = None
+            for sub in bp_resources.get("substrate_definition_list"):
+                if sub.get("uuid") == dep.get("substrate_local_reference", {}).get(
+                    "uuid"
+                ):
+                    dep_substrate = sub
+
+            sub_type = dep_substrate.get("type", "")
+            account = None
+            if sub_type != "EXISTING_VM":
+                account_uuid = dep_substrate["create_spec"]["resources"]["account_uuid"]
+                account_cache_data = Cache.get_entity_data_using_uuid(
+                    entity_type=CACHE.ENTITY.ACCOUNT, uuid=account_uuid
+                )
+                if sub_type == "AHV_VM":
+                    account_uuid = account_cache_data["data"]["pc_account_uuid"]
+                    account_cache_data = Cache.get_entity_data_using_uuid(
+                        entity_type=CACHE.ENTITY.ACCOUNT, uuid=account_uuid
+                    )
+
+                account = account_cache_data["name"]
+
+            click.echo("\t\tSubstrate:")
+            click.echo("\t\t\t{}".format(highlight_text(dep_substrate["name"])))
+            click.echo("\t\t\tType: {}".format(highlight_text(sub_type)))
+            if account:
+                click.echo("\t\t\tAccount: {}".format(highlight_text(account)))
 
         click.echo("\tActions[{}]:".format(highlight_text(len(profile["action_list"]))))
         for action in profile["action_list"]:
