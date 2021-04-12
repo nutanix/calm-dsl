@@ -142,9 +142,7 @@ class TestBlueprint:
         self.created_bp_list.append(created_dsl_bp_name)
 
         # Get the blueprint
-        bp_data = get_blueprint(client, name=created_dsl_bp_name)
-        res, _ = client.blueprint.read(bp_data["metadata"]["uuid"])
-        bp_data = res.json()
+        bp_data = get_blueprint(name=created_dsl_bp_name)
 
         LOG.info("Asserting env data in blueprint")
         for _profile in bp_data["status"]["resources"].get("app_profile_list", []):

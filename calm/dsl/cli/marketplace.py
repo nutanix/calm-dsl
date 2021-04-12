@@ -812,7 +812,7 @@ def publish_bp_to_marketplace_manager(
     context = get_context()
     server_config = context.get_server_config()
 
-    bp = get_blueprint(client, bp_name)
+    bp = get_blueprint(bp_name)
     bp_uuid = bp.get("metadata", {}).get("uuid", "")
 
     LOG.info("Fetching blueprint details")

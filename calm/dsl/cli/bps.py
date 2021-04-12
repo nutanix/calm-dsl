@@ -152,13 +152,7 @@ def describe_bp(blueprint_name, out):
     """Displays blueprint data"""
 
     client = get_api_client()
-    bp = get_blueprint(client, blueprint_name, all=True)
-
-    res, err = client.blueprint.read(bp["metadata"]["uuid"])
-    if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-    bp = res.json()
+    bp = get_blueprint(blueprint_name, all=True)
 
     if out == "json":
         bp.pop("status", None)
@@ -477,7 +471,7 @@ def decompile_bp_from_server(name, with_secrets=False, prefix="", bp_dir=None):
     """decompiles the blueprint by fetching it from server"""
 
     client = get_api_client()
-    blueprint = get_blueprint(client, name)
+    blueprint = get_blueprint(name)
     bp_uuid = blueprint["metadata"]["uuid"]
 
     res, err = client.blueprint.export_file(bp_uuid)
@@ -596,10 +590,10 @@ def format_blueprint_command(bp_file):
         LOG.info("Blueprint {} left unchanged.".format(path))
 
 
-# TODO added read api call inside it. Remove it from othert places
-def get_blueprint(client, name, all=False, is_brownfield=False):
+def get_blueprint_uuid(name, all=False, is_brownfield=False):
+    """returns blueprint uuid if present else raises error"""
 
-    # find bp
+    client = get_api_client()
     params = {"filter": "name=={}".format(name)}
     if not all:
         params["filter"] += ";state!=DELETED"
@@ -616,14 +610,24 @@ def get_blueprint(client, name, all=False, is_brownfield=False):
     blueprint = None
     if entities:
         if len(entities) != 1:
-            raise Exception("More than one blueprint found - {}".format(entities))
+            LOG.error("More than one blueprint found - {}".format(entities))
+            sys.exit(-1)
 
         LOG.info("{} found ".format(name))
         blueprint = entities[0]
     else:
-        raise Exception("No blueprint found with name {} found".format(name))
+        LOG.error("No blueprint found with name {} found".format(name))
+        sys.exit(-1)
 
-    res, err = client.blueprint.read(blueprint["metadata"]["uuid"])
+    return blueprint["metadata"]["uuid"]
+
+
+def get_blueprint(name, all=False, is_brownfield=False):
+    """returns blueprint get call data"""
+
+    client = get_api_client()
+    bp_uuid = get_blueprint_uuid(name=name, all=all, is_brownfield=is_brownfield)
+    res, err = client.blueprint.read(bp_uuid)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -974,10 +978,7 @@ def launch_blueprint_simple(
         LOG.info("No existing application found with name {}".format(app_name))
 
     if not blueprint:
-        if is_brownfield:
-            blueprint = get_blueprint(client, blueprint_name, is_brownfield=True)
-        else:
-            blueprint = get_blueprint(client, blueprint_name)
+        blueprint = get_blueprint(blueprint_name, is_brownfield=is_brownfield)
 
     bp_metadata = blueprint.get("metadata", {})
     bp_status_data = blueprint.get("status", {})
@@ -1300,11 +1301,11 @@ def delete_blueprint(blueprint_names):
     client = get_api_client()
 
     for blueprint_name in blueprint_names:
-        blueprint = get_blueprint(client, blueprint_name)
-        blueprint_id = blueprint["metadata"]["uuid"]
-        res, err = client.blueprint.delete(blueprint_id)
+        bp_uuid = get_blueprint_uuid(blueprint_name)
+        _, err = client.blueprint.delete(bp_uuid)
         if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+            LOG.error("[{}] - {}".format(err["code"], err["error"]))
+            sys.exit(-1)
         LOG.info("Blueprint {} deleted".format(blueprint_name))
 
 
@@ -1355,19 +1356,13 @@ def patch_bp_if_required(environment_name=None, blueprint_name=None, profile_nam
     """Patch the blueprint with the given environment to create a new blueprint if the requested app profile
     is not already linked to the given environment"""
     if environment_name:
-        client = get_api_client()
-        bp = get_blueprint(client, blueprint_name)
+        bp = get_blueprint(blueprint_name)
         project_uuid = bp["metadata"]["project_reference"]["uuid"]
         environment_data, project_data = get_project_environment(
             name=environment_name, project_uuid=project_uuid
         )
         env_uuid = environment_data["metadata"]["uuid"]
 
-        res, err = client.blueprint.read(bp["metadata"]["uuid"])
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        bp = res.json()
         app_profiles = bp["spec"]["resources"]["app_profile_list"]
         if profile_name is None:
             profile_name = app_profiles[0]["name"]
