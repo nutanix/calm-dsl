@@ -199,6 +199,39 @@ properties:
 {%- endmacro %}
 
 
+{% macro VcenterWindowsSysprep() -%}
+
+title:  VMWARE Windoes Guest Customization Sysprep
+type: [object, "null"]
+properties:
+  unattend_xml:
+    type: string
+  is_domain:
+    type: boolean
+  domain:
+    type: string
+  dns_ip:
+    type: string
+  dns_search_path:
+    type: string
+  domain_credential_reference:
+    type: [object, "null"]
+    properties:
+      uuid:
+        type: string
+      kind:
+        type: string
+        default: subnet
+      name:
+        type: string
+      type:
+        type: string
+  type:
+    type: string
+
+{%- endmacro %}
+
+
 {% macro VcenterWindowsSpecInfo() -%}
 
 title: Guest Customization Windows data
@@ -284,6 +317,8 @@ properties:
         type: string
       type:
         type: string
+  sysprep:
+    {{ VcenterWindowsSysprep() | indent(4) }}
 
 {%- endmacro %}
 
@@ -322,6 +357,8 @@ properties:
     type: string
   delete_empty_folder:
     type: boolean
+  type:
+    type: string
 
 {%- endmacro %}
 
