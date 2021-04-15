@@ -147,10 +147,11 @@ class FeatureDslOption(click.ParamType):
                 LOG.error("Calm version not found. Please update cache")
                 sys.exit(-1)
 
+            # TODO add the pc version to warning also
             if LV(calm_version) < LV(self.feature_min_version):
                 LOG.error(
-                    "Cli option '{}' not supported. Please upgrade to Calm v_{}".format(
-                        param.name, self.feature_min_version
+                    "Calm {} does not support '{}' option. Please upgrade server to Calm {}".format(
+                        calm_version, param.name, self.feature_min_version
                     )
                 )
                 sys.exit(-1)
