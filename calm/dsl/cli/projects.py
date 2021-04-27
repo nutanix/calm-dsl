@@ -1,8 +1,10 @@
+from inspect import getargs
 import time
 import click
 import arrow
 import json
 import sys
+from distutils.version import LooseVersion as LV
 from prettytable import PrettyTable
 from ruamel import yaml
 
@@ -11,14 +13,14 @@ from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.config import get_context
 
 from .utils import get_name_query, highlight_text
-from .task_commands import watch_task
-from .constants import ERGON_TASK
 from .environments import create_environment_from_dsl_class
 from calm.dsl.tools import get_module_from_file
 from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
-from calm.dsl.store import Cache
-from calm.dsl.constants import PROVIDER, CACHE, VM
+
+from calm.dsl.constants import PROVIDER, CACHE, VM, PROJECT_TASK
+from calm.dsl.builtins.models.helper.common import get_project
+from calm.dsl.store import Cache, Version
 
 LOG = get_logging_handle(__name__)
 
@@ -111,45 +113,37 @@ def get_projects(name, filter_by, limit, offset, quiet, out):
     click.echo(table)
 
 
-def get_project(name=None, project_uuid=""):
-
-    if not (name or project_uuid):
-        LOG.error("One of name or uuid must be provided")
-        sys.exit(-1)
+def watch_project_task(project_uuid, task_uuid, poll_interval=4):
+    """poll project tasks"""
 
     client = get_api_client()
-    if not project_uuid:
-        params = {"filter": "name=={}".format(name)}
-
-        LOG.info("Searching for the project {}".format(name))
-        res, err = client.project.list(params=params)
+    cnt = 0
+    while True:
+        LOG.info("Fetching status of project task (uuid={})".format(task_uuid))
+        res, err = client.project.read_pending_task(project_uuid, task_uuid)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-        response = res.json()
-        entities = response.get("entities", None)
-        project = None
-        if entities:
-            if len(entities) != 1:
-                raise Exception("More than one project found - {}".format(entities))
+        res = res.json()
+        status = res["status"]["state"]
+        LOG.info(status)
 
-            LOG.info("Project {} found ".format(name))
-            project = entities[0]
-        else:
-            raise Exception("No project found with name {} found".format(name))
+        if status in PROJECT_TASK.TERMINAL_STATES:
+            message_list = res["status"].get("message_list")
+            if status != PROJECT_TASK.STATUS.SUCCESS and message_list:
+                LOG.error(message_list)
+            return status
 
-        project_uuid = project["metadata"]["uuid"]
-        LOG.info("Fetching details of project {}".format(name))
+        time.sleep(poll_interval)
+        cnt += 1
+        if cnt == 10:
+            break
 
-    else:
-        LOG.info("Fetching details of project (uuid='{}')".format(project_uuid))
-
-    res, err = client.project.read(project_uuid)  # for getting additional fields
-    if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-    project = res.json()
-    return project
+    LOG.info(
+        "Task couldn't reached to terminal state in {} seconds. Exiting...".format(
+            poll_interval * 10
+        )
+    )
 
 
 def get_project_module_from_file(project_file):
@@ -172,6 +166,60 @@ def get_project_class_from_module(user_project_module):
 
 def compile_project_dsl_class(project_class):
 
+    envs = []
+    if hasattr(project_class, "envs"):
+        envs = getattr(project_class, "envs", [])
+        project_class.envs = []
+        if hasattr(project_class, "default_environment"):
+            project_class.default_environment = {}
+
+    # Adding environment infra to project
+    for env in envs:
+        providers = getattr(env, "providers", [])
+        for env_pdr in providers:
+            env_pdr_account = env_pdr.account_reference.get_dict()
+            _a_found = False
+            for proj_pdr in getattr(project_class, "providers", []):
+                proj_pdr_account = proj_pdr.account_reference.get_dict()
+                if env_pdr_account["name"] == proj_pdr_account["name"]:
+                    _a_found = True
+
+                    # If env account subnets not present in project, then add them by default
+                    if proj_pdr.type == "nutanix_pc":
+                        env_pdr_subnets = env_pdr.subnet_reference_list
+                        env_pdr_ext_subnets = env_pdr.external_network_list
+
+                        proj_pdr_subnets = proj_pdr.subnet_reference_list
+                        proj_pdr_ext_subnets = proj_pdr.external_network_list
+
+                        for _s in env_pdr_subnets:
+                            _s_uuid = _s.get_dict()["uuid"]
+                            _s_found = False
+
+                            for _ps in proj_pdr_subnets:
+                                if _ps.get_dict()["uuid"] == _s_uuid:
+                                    _s_found = True
+                                    break
+
+                            if not _s_found:
+                                proj_pdr.subnet_reference_list.append(_s)
+
+                        for _s in env_pdr_ext_subnets:
+                            _s_uuid = _s.get_dict()["uuid"]
+                            _s_found = False
+
+                            for _ps in proj_pdr_ext_subnets:
+                                if _ps.get_dict()["uuid"] == _s_uuid:
+                                    _s_found = True
+                                    break
+
+                            if not _s_found:
+                                proj_pdr.external_network_list.append(_s)
+
+            # If environment account not available in project add it to project
+            if not _a_found:
+                project_class.providers.append(env_pdr)
+
     project_payload = None
     UserProjectPayload, _ = create_project_payload(project_class)
     project_payload = UserProjectPayload.get_dict()
@@ -186,10 +234,6 @@ def compile_project_command(project_file, out):
     if UserProject is None:
         LOG.error("User project not found in {}".format(project_file))
         return
-
-    # Environment definitions are not part of project
-    if hasattr(UserProject, "envs"):
-        UserProject.envs = []
 
     project_payload = compile_project_dsl_class(UserProject)
 
@@ -231,11 +275,14 @@ def create_project(project_payload, name="", description=""):
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
     LOG.info("Polling on project creation task")
-    task_state = watch_task(
-        project["status"]["execution_context"]["task_uuid"], poll_interval=4
+    task_state = watch_project_task(
+        project["metadata"]["uuid"],
+        project["status"]["execution_context"]["task_uuid"],
+        poll_interval=4,
     )
-    if task_state in ERGON_TASK.FAILURE_STATES:
-        raise Exception("Project creation task went to {} state".format(task_state))
+    if task_state in PROJECT_TASK.FAILURE_STATES:
+        LOG.exception("Project creation task went to {} state".format(task_state))
+        sys.exit(-1)
 
     return stdout_dict
 
@@ -259,9 +306,12 @@ def update_project(project_uuid, project_payload):
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
     LOG.info("Polling on project updation task")
-    task_state = watch_task(project["status"]["execution_context"]["task_uuid"])
-    if task_state in ERGON_TASK.FAILURE_STATES:
-        raise Exception("Project creation task went to {} state".format(task_state))
+    task_state = watch_project_task(
+        project["metadata"]["uuid"], project["status"]["execution_context"]["task_uuid"]
+    )
+    if task_state in PROJECT_TASK.FAILURE_STATES:
+        LOG.exception("Project creation task went to {} state".format(task_state))
+        sys.exit(-1)
 
     return stdout_dict
 
@@ -284,26 +334,36 @@ def create_project_from_dsl(project_file, project_name, description=""):
     envs = []
     if hasattr(UserProject, "envs"):
         envs = getattr(UserProject, "envs", [])
-        UserProject.envs = []
 
-    if len(envs) > 1:
-        LOG.error("Multiple environments in a project are not allowed.")
-        sys.exit(-1)
+    default_environment_name = ""
+    if (
+        hasattr(UserProject, "default_environment")
+        and UserProject.default_environment is not None
+    ):
+        default_environment = getattr(UserProject, "default_environment", None)
+        UserProject.default_environment = {}
+        default_environment_name = default_environment.__name__
 
-    for _env in envs:
-        env_name = _env.__name__
-        LOG.info("Searching for existing environments with name '{}'".format(env_name))
-        res, err = client.environment.list({"filter": "name=={}".format(env_name)})
-        if err:
-            LOG.error(err)
-            sys.exit(-1)
+    if envs and not default_environment_name:
+        default_environment_name = envs[0].__name__
 
-        res = res.json()
-        if res["metadata"]["total_matches"]:
-            LOG.error("Environment with name '{}' already exists".format(env_name))
-            sys.exit(-1)
+    calm_version = Version.get_version("Calm")
+    if LV(calm_version) < LV("3.2.0"):
+        for _env in envs:
+            env_name = _env.__name__
+            LOG.info(
+                "Searching for existing environments with name '{}'".format(env_name)
+            )
+            res, err = client.environment.list({"filter": "name=={}".format(env_name)})
+            if err:
+                LOG.error(err)
+                sys.exit(-1)
 
-        LOG.info("No existing environment found with name '{}'".format(env_name))
+            res = res.json()
+            if res["metadata"]["total_matches"]:
+                LOG.error("Environment with name '{}' already exists".format(env_name))
+
+            LOG.info("No existing environment found with name '{}'".format(env_name))
 
     # Creation of project
     project_payload = compile_project_dsl_class(UserProject)
@@ -315,27 +375,48 @@ def create_project_from_dsl(project_file, project_name, description=""):
 
     if envs:
         # Update project in cache
+        LOG.info("Updating projects cache")
         Cache.sync_table("project")
+        LOG.info("[Done]")
 
         # As ahv helpers in environment should use account from project accounts
         # updating the context
         ContextObj = get_context()
         ContextObj.update_project_context(project_name=project_name)
 
+        default_environment_ref = {}
+
         # Create environment
         env_ref_list = []
         for env_obj in envs:
             env_res_data = create_environment_from_dsl_class(env_obj)
-            env_ref_list.append({"kind": "environment", "uuid": env_res_data["uuid"]})
+            env_ref = {"kind": "environment", "uuid": env_res_data["uuid"]}
+            env_ref_list.append(env_ref)
+            if (
+                default_environment_name
+                and env_res_data["name"] == default_environment_name
+            ):
+                default_environment_ref = env_ref
 
         LOG.info("Updating project '{}' for adding environment".format(project_name))
         project_payload = get_project(project_uuid=project_uuid)
 
-        # NOTE Single environment is supported. So not extending existing list
         project_payload.pop("status", None)
         project_payload["spec"]["resources"][
             "environment_reference_list"
         ] = env_ref_list
+
+        default_environment_ref = default_environment_ref or {
+            "kind": "environment",
+            "uuid": env_ref_list[0]["uuid"],
+        }
+
+        # default_environment_reference added in 3.2
+        calm_version = Version.get_version("Calm")
+        if LV(calm_version) >= LV("3.2.0"):
+            project_payload["spec"]["resources"][
+                "default_environment_reference"
+            ] = default_environment_ref
 
         update_project(project_uuid=project_uuid, project_payload=project_payload)
 
@@ -482,29 +563,33 @@ def delete_project(project_names):
     client = get_api_client()
     params = {"length": 1000}
     project_name_uuid_map = client.project.get_name_uuid_map(params)
+    projects_deleted = False
     for project_name in project_names:
         project_id = project_name_uuid_map.get(project_name, "")
         if not project_id:
             LOG.warning("Project {} not found.".format(project_name))
             continue
 
+        projects_deleted = True
         LOG.info("Deleting project '{}'".format(project_name))
         res, err = client.project.delete(project_id)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
         LOG.info("Polling on project deletion task")
         res = res.json()
-        task_state = watch_task(
-            res["status"]["execution_context"]["task_uuid"], poll_interval=4
+        task_state = watch_project_task(
+            project_id, res["status"]["execution_context"]["task_uuid"], poll_interval=4
         )
-        if task_state in ERGON_TASK.FAILURE_STATES:
+        if task_state in PROJECT_TASK.FAILURE_STATES:
             LOG.exception("Project deletion task went to {} state".format(task_state))
             sys.exit(-1)
 
-    # Update projects in cache
-    LOG.info("Updating projects cache ...")
-    Cache.sync_table(cache_type=CACHE.ENTITY.PROJECT)
-    LOG.info("[Done]")
+    # Update projects in cache if any project has been deleted
+    if projects_deleted:
+        LOG.info("Updating projects cache ...")
+        Cache.sync_table(cache_type=CACHE.ENTITY.PROJECT)
+        LOG.info("[Done]")
 
 
 def update_project_from_dsl(project_name, project_file):
@@ -588,10 +673,10 @@ def update_project_from_dsl(project_name, project_file):
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
     LOG.info("Polling on project creation task")
-    task_state = watch_task(
-        res["status"]["execution_context"]["task_uuid"], poll_interval=4
+    task_state = watch_project_task(
+        project_uuid, res["status"]["execution_context"]["task_uuid"], poll_interval=4
     )
-    if task_state not in ERGON_TASK.FAILURE_STATES:
+    if task_state not in PROJECT_TASK.FAILURE_STATES:
         # Remove project removed user and groups from acps
         if acp_remove_user_list or acp_remove_group_list:
             LOG.info("Updating project acps")
@@ -601,7 +686,8 @@ def update_project_from_dsl(project_name, project_file):
                 remove_group_list=acp_remove_group_list,
             )
     else:
-        raise Exception("Project updation task went to {} state".format(task_state))
+        LOG.exception("Project updation task went to {} state".format(task_state))
+        sys.exit(-1)
 
 
 def update_project_using_cli_switches(
@@ -710,10 +796,10 @@ def update_project_using_cli_switches(
 
     # Remove project removed user and groups from acps
     LOG.info("Polling on project updation task")
-    task_state = watch_task(
-        res["status"]["execution_context"]["task_uuid"], poll_interval=4
+    task_state = watch_project_task(
+        project_uuid, res["status"]["execution_context"]["task_uuid"], poll_interval=4
     )
-    if task_state not in ERGON_TASK.FAILURE_STATES:
+    if task_state not in PROJECT_TASK.FAILURE_STATES:
         if acp_remove_user_list or acp_remove_group_list:
             LOG.info("Updating project acps")
             remove_users_from_project_acps(
@@ -722,7 +808,8 @@ def update_project_using_cli_switches(
                 remove_group_list=acp_remove_group_list,
             )
     else:
-        raise Exception("Project updation task went to {} state".format(task_state))
+        LOG.exception("Project updation task went to {} state".format(task_state))
+        sys.exit(-1)
 
 
 def remove_users_from_project_acps(project_uuid, remove_user_list, remove_group_list):
@@ -761,4 +848,6 @@ def remove_users_from_project_acps(project_uuid, remove_user_list, remove_group_
 
     res = res.json()
     LOG.info("Polling on task for updating project ACPS")
-    watch_task(res["status"]["execution_context"]["task_uuid"], poll_interval=4)
+    watch_project_task(
+        project_uuid, res["status"]["execution_context"]["task_uuid"], poll_interval=4
+    )

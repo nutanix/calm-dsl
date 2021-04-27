@@ -1,8 +1,10 @@
 import sys
+from distutils.version import LooseVersion as LV
 
 from .entity import EntityType
 from calm.dsl.constants import PROVIDER
 from calm.dsl.log import get_logging_handle
+from calm.dsl.store import Version
 
 LOG = get_logging_handle(__name__)
 
@@ -18,42 +20,42 @@ class ProjectType(EntityType):
         cdict = super().compile()
 
         cdict["account_reference_list"] = []
+        cdict["subnet_reference_list"] = []
+        cdict["external_network_list"] = []
+        cdict["default_subnet_reference"] = {}
+
+        CALM_VERSION = Version.get_version("Calm")
+        default_subnet_reference = None
 
         # Populate accounts
-        registered_providers = []
         provider_list = cdict.pop("provider_list", [])
         for provider_obj in provider_list:
+            provider_data = provider_obj.get_dict()
 
-            # Only single account per provider is allowed
-            provider_type = provider_obj["provider_type"]
-
-            if provider_obj["provider_type"] not in registered_providers:
-                registered_providers.append(provider_obj["provider_type"])
-            else:
-                LOG.error(
-                    "Multiple accounts of same provider({}) found".format(
-                        provider_obj["provider_type"]
+            if provider_obj.type == "nutanix_pc":
+                if "subnet_reference_list" in provider_data:
+                    cdict["subnet_reference_list"].extend(
+                        provider_data["subnet_reference_list"]
                     )
+
+                if "external_network_list" in provider_data:
+                    for _network in provider_data["external_network_list"]:
+                        _network.pop("kind", None)
+                        cdict["external_network_list"].append(_network)
+
+                if "default_subnet_reference" in provider_data:
+                    # From 3.2, only subnets from local account can be marked as default
+                    if provider_data.get("subnet_reference_list") or LV(
+                        CALM_VERSION
+                    ) < LV("3.2.0"):
+                        cdict["default_subnet_reference"] = provider_data[
+                            "default_subnet_reference"
+                        ]
+
+            if "account_reference" in provider_data:
+                cdict["account_reference_list"].append(
+                    provider_data["account_reference"]
                 )
-                sys.exit(-1)
-
-            if provider_type == PROVIDER.NUTANIX.PC:
-                if "subnet_reference_list" in provider_obj:
-                    cdict["subnet_reference_list"] = provider_obj[
-                        "subnet_reference_list"
-                    ]
-
-                elif "external_network_list" in provider_obj:
-                    cdict["external_network_list"] = provider_obj[
-                        "external_network_list"
-                    ]
-
-                if "default_subnet_reference" in provider_obj:
-                    cdict["default_subnet_reference"] = provider_obj[
-                        "default_subnet_reference"
-                    ]
-
-            cdict["account_reference_list"].append(provider_obj["account_reference"])
 
         quotas = cdict.pop("quotas", None)
         if quotas:
@@ -68,7 +70,13 @@ class ProjectType(EntityType):
 
         # pop out unnecessary attibutes
         cdict.pop("environment_definition_list", None)
+        # empty dict is not accepted for default_environment_reference
+        default_env = cdict.get("default_environment_reference")
+        if not default_env:
+            cdict.pop("default_environment_reference", None)
 
+        if not cdict.get("default_subnet_reference"):
+            cdict.pop("default_subnet_reference", None)
         return cdict
 
 

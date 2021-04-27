@@ -2,6 +2,7 @@ import time
 import json
 import sys
 import os
+import uuid
 from pprint import pprint
 import pathlib
 
@@ -38,6 +39,7 @@ from .utils import (
 )
 from .secrets import find_secret, create_secret
 from .constants import BLUEPRINT
+from .environments import get_project_environment
 from calm.dsl.tools import get_module_from_file
 from calm.dsl.builtins import Brownfield as BF
 from calm.dsl.providers import get_provider
@@ -295,6 +297,10 @@ def compile_blueprint(bp_file, brownfield_deployment_file=None):
     bp_payload = None
     if isinstance(UserBlueprint, type(SimpleBlueprint)):
         bp_payload = UserBlueprint.make_bp_dict()
+        if "project_reference" in metadata_payload:
+            bp_payload["metadata"]["project_reference"] = metadata_payload[
+                "project_reference"
+            ]
     else:
         if isinstance(UserBlueprint, type(VmBlueprint)):
             UserBlueprint = UserBlueprint.make_bp_obj()
@@ -855,9 +861,10 @@ def parse_launch_params_attribute(launch_params, parse_attribute):
         if file_exists(launch_params) and launch_params.endswith(".py"):
             return import_var_from_file(launch_params, parse_attribute, [])
         else:
-            LOG.warning(
-                "Invalid launch_params passed! Must be a valid and existing.py file! Ignoring..."
+            LOG.error(
+                "Invalid launch_params passed! Must be a valid and existing.py file!"
             )
+            sys.exit(-1)
     return []
 
 
@@ -986,7 +993,8 @@ def launch_blueprint_simple(
 
                 break
         if not profile:
-            raise Exception("No profile found with name {}".format(profile_name))
+            LOG.error("No profile found with name {}".format(profile_name))
+            sys.exit(-1)
 
     runtime_editables = profile.pop("runtime_editables", [])
 
@@ -1008,6 +1016,7 @@ def launch_blueprint_simple(
         click.echo("Blueprint editables are:\n{}".format(runtime_editables_json))
 
         # Check user input
+        prompt_cli = bool(not launch_params)
         launch_runtime_vars = parse_launch_runtime_vars(launch_params)
         launch_runtime_substrates = parse_launch_runtime_substrates(launch_params)
         launch_runtime_deployments = parse_launch_runtime_deployments(launch_params)
@@ -1183,3 +1192,88 @@ def delete_blueprint(blueprint_names):
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
         LOG.info("Blueprint {} deleted".format(blueprint_name))
+
+
+def create_patched_blueprint(
+    blueprint, project_data, environment_data, profile_name=None
+):
+    """Patch the blueprint with the given environment to create a new blueprint"""
+    client = get_api_client()
+    org_bp_name = blueprint["metadata"]["name"]
+    org_bp_uuid = blueprint["metadata"]["uuid"]
+    project_uuid = project_data["metadata"]["uuid"]
+    env_uuid = environment_data["metadata"]["uuid"]
+
+    new_bp_name = "{}-{}".format(org_bp_name, str(uuid.uuid4())[:8])
+    request_spec = {
+        "api_version": "3.0",
+        "metadata": {
+            "kind": "blueprint",
+            "project_reference": {"kind": "project", "uuid": project_uuid},
+        },
+        "spec": {
+            "environment_profile_pairs": [
+                {
+                    "environment": {"uuid": env_uuid},
+                    "app_profile": {"name": profile_name},
+                }
+            ],
+            "new_blueprint": {"name": new_bp_name},
+        },
+    }
+
+    LOG.info("Creating Patched blueprint")
+    bp_res, err = client.blueprint.patch_with_environment(org_bp_uuid, request_spec)
+    if err:
+        LOG.error("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
+
+    bp_res = bp_res.json()
+    bp_status = bp_res["status"]["state"]
+    if bp_status != "ACTIVE":
+        LOG.error("Blueprint went to {} state".format(bp_status))
+        sys.exit(-1)
+
+    return bp_res
+
+
+def patch_bp_if_required(environment_name=None, blueprint_name=None, profile_name=None):
+    """Patch the blueprint with the given environment to create a new blueprint if the requested app profile
+    is not already linked to the given environment"""
+    if environment_name:
+        client = get_api_client()
+        bp = get_blueprint(client, blueprint_name)
+        project_uuid = bp["metadata"]["project_reference"]["uuid"]
+        environment_data, project_data = get_project_environment(
+            name=environment_name, project_uuid=project_uuid
+        )
+        env_uuid = environment_data["metadata"]["uuid"]
+
+        res, err = client.blueprint.read(bp["metadata"]["uuid"])
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        bp = res.json()
+        app_profiles = bp["spec"]["resources"]["app_profile_list"]
+        if profile_name is None:
+            profile_name = app_profiles[0]["name"]
+
+        found_profile = None
+        for app_profile in app_profiles:
+            if app_profile["name"] == profile_name:
+                found_profile = app_profile
+                break
+
+        if not found_profile:
+            raise Exception("No profile found with name {}".format(profile_name))
+
+        ref_env_uuid = next(
+            iter(app_profile.get("environment_reference_list", [])), None
+        )
+        if ref_env_uuid != env_uuid:
+            new_blueprint = create_patched_blueprint(
+                bp, project_data, environment_data, profile_name
+            )
+            return new_blueprint["metadata"]["name"], new_blueprint
+
+    return blueprint_name, None

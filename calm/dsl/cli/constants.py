@@ -15,6 +15,9 @@ class RUNLOG:
         SYS_ABORTED = "SYS_ABORTED"
         ALREADY_RUN = "ALREADY_RUN"
         TIMEOUT = "TIMEOUT"
+        INPUT = "INPUT"
+        CONFIRM = "CONFIRM"
+        PAUSED = "PAUSED"
 
     TERMINAL_STATES = [
         STATUS.SUCCESS,
@@ -37,6 +40,31 @@ class RUNLOG:
         STATUS.SYS_ERROR,
         STATUS.SYS_ABORTED,
     ]
+
+
+class RUNBOOK:
+    class STATES:
+        ACTIVE = "ACTIVE"
+        DELETED = "DELETED"
+        DRAFT = "DRAFT"
+        ERROR = "ERROR"
+
+
+class ENDPOINT:
+    class STATES:
+        ACTIVE = "ACTIVE"
+        DELETED = "DELETED"
+        DRAFT = "DRAFT"
+        ERROR = "ERROR"
+
+    class TYPES:
+        HTTP = "HTTP"
+        WINDOWS = "Windows"
+        LINUX = "Linux"
+
+    class VALUE_TYPES:
+        VM = "VM"
+        IP = "IP"
 
 
 class BLUEPRINT:
@@ -82,6 +110,29 @@ class ACCOUNT:
         VMWARE = "vmware"
 
 
+class SINGLE_INPUT:
+    class TYPE:
+        TEXT = "text"
+        PASSWORD = "password"
+        CHECKBOX = "checkbox"
+        SELECT = "select"
+        SELECTMULTIPLE = "selectmultiple"
+        DATE = "date"
+        TIME = "time"
+        DATETIME = "datetime"
+
+    VALID_TYPES = [
+        TYPE.TEXT,
+        TYPE.PASSWORD,
+        TYPE.CHECKBOX,
+        TYPE.SELECT,
+        TYPE.SELECTMULTIPLE,
+        TYPE.DATE,
+        TYPE.TIME,
+        TYPE.DATETIME,
+    ]
+
+
 class SYSTEM_ACTIONS:
     CREATE = "create"
     START = "start"
@@ -91,7 +142,11 @@ class SYSTEM_ACTIONS:
     SOFT_DELETE = "soft_delete"
 
 
-class MARKETPLACE_BLUEPRINT:
+class MARKETPLACE_ITEM:
+    class TYPES:
+        BLUEPRINT = "blueprint"
+        RUNBOOK = "runbook"
+
     class STATES:
         PENDING = "PENDING"
         ACCEPTED = "ACCEPTED"
@@ -101,6 +156,23 @@ class MARKETPLACE_BLUEPRINT:
     class SOURCES:
         GLOBAL = "GLOBAL_STORE"
         LOCAL = "LOCAL"
+
+
+class TASKS:
+    class TASK_TYPES:
+        EXEC = "EXEC"
+        SET_VARIABLE = "SET_VARIABLE"
+        HTTP = "HTTP"
+
+    class SCRIPT_TYPES:
+        POWERSHELL = "npsscript"
+        SHELL = "sh"
+        ESCRIPT = "static"
+
+    class STATES:
+        ACTIVE = "ACTIVE"
+        DELETED = "DELETED"
+        DRAFT = "DRAFT"
 
 
 class ERGON_TASK:

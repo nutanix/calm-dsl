@@ -7,12 +7,13 @@ from click.testing import CliRunner
 
 from calm.dsl.cli import main as cli
 from calm.dsl.tools import make_file_dir
-from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
+from calm.dsl.config import get_context
+from calm.dsl.builtins.models.metadata_payload import reset_metadata_obj
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
-DSL_PROJECT_PATH = "tests/project/test_project_in_pc.py"
+DSL_PROJECT_PATH = "tests/project/project_ntnx_local_account.py"
 DSL_BP_FILEPATH = "tests/metadata/blueprint/blueprint.py"
 LOCAL_PROJECTNAME_FILE = "tests/metadata/blueprint/.local/project_name"
 
@@ -20,6 +21,13 @@ LOCAL_PROJECTNAME_FILE = "tests/metadata/blueprint/.local/project_name"
 class TestBlueprintMetadata:
     def setup_method(self):
         """Method to create project"""
+
+        # Resetting context
+        ContextObj = get_context()
+        ContextObj.reset_configuration()
+
+        # Resetting metadata object
+        reset_metadata_obj()
 
         runner = CliRunner()
         self.dsl_project_name = "Test_DSL_Project_{}".format(str(uuid.uuid4()))
@@ -47,11 +55,15 @@ class TestBlueprintMetadata:
             )
             pytest.fail("Project creation from python file failed")
 
-        LOG.info("Updating cache to add project details")
-        self._update_cache()
-
     def teardown_method(self):
         """Method to delete created project in setup method"""
+
+        # Resetting context
+        ContextObj = get_context()
+        ContextObj.reset_configuration()
+
+        # Resetting metadata object
+        reset_metadata_obj()
 
         runner = CliRunner()
         result = runner.invoke(cli, ["delete", "project", self.dsl_project_name])
@@ -68,9 +80,6 @@ class TestBlueprintMetadata:
                 )
             )
             pytest.fail("Project deletion failed")
-
-        LOG.info("Updating cache to remove project details")
-        self._update_cache()
 
     def test_metadata_in_blueprint(self):
         """
@@ -110,24 +119,3 @@ class TestBlueprintMetadata:
         assert (
             bp_payload["metadata"]["project_reference"]["name"] == self.dsl_project_name
         )
-
-        # Restoring the metadata context
-        get_metadata_payload(__file__)
-
-    def _update_cache(self):
-
-        runner = CliRunner()
-        result = runner.invoke(cli, ["update", "cache"])
-        if result.exit_code:
-            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
-            LOG.debug(
-                "Cli Response: {}".format(
-                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
-                )
-            )
-            LOG.debug(
-                "Traceback: \n{}".format(
-                    "".join(traceback.format_tb(result.exc_info[2]))
-                )
-            )
-            pytest.fail("Cache update command failed")

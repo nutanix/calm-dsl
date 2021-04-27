@@ -52,12 +52,13 @@ class EntityDict(OrderedDict):
             if not (
                 ("variables" in vdict and isinstance(value, (VariableType,)))
                 or ("actions" in vdict and isinstance(type(value), DescriptorType))
+                or ("runbook" in vdict and isinstance(type(value), DescriptorType))
             ):
                 LOG.debug("Validating object: {}".format(vdict))
                 raise
 
-            # Validate and set variable/action
-            # get validator for variables/action
+            # Validate and set variable/action/runbook
+            # get validator for variables/action/runbook
             if isinstance(value, VariableType):
                 ValidatorType, _ = vdict["variables"]
                 # Set name attribute in variable
@@ -227,6 +228,7 @@ class EntityType(EntityTypeBase):
     def get_user_attrs(cls):
         types = EntityTypeBase.get_entity_types()
         ActionType = types.get("Action", None)
+        RunbookType = types.get("Runbook", None)
         VariableType = types.get("Variable", None)
         DescriptorType = types.get("Descriptor", None)
         user_attrs = {}
@@ -234,9 +236,9 @@ class EntityType(EntityTypeBase):
             if (
                 name.startswith("__")
                 and name.endswith("__")
-                and not isinstance(value, (VariableType, ActionType))
+                and not isinstance(value, (VariableType, ActionType, RunbookType))
                 and not isinstance(type(value), DescriptorType)
-            ):
+            ) or name == "__parent__":
                 continue
             user_attrs[name] = getattr(cls, name, value)
 
@@ -260,7 +262,11 @@ class EntityType(EntityTypeBase):
             return
 
         vdict = getattr(mcls, "__validator_dict__")
-        if "variables" not in vdict and "actions" not in vdict:
+        if (
+            "variables" not in vdict
+            and "actions" not in vdict
+            and "runbook" not in vdict
+        ):
             return
 
         # Variables and actions have [] as defaults.
@@ -275,6 +281,7 @@ class EntityType(EntityTypeBase):
         ActionType = types.get("Action", None)
         VariableType = types.get("Variable", None)
         DescriptorType = types.get("Descriptor", None)
+        RunbookType = types.get("Runbook", None)
 
         # Update list of variables with given class-level variables
         del_keys = []
@@ -284,6 +291,11 @@ class EntityType(EntityTypeBase):
                     attr_name = "actions"
                 elif isinstance(value, VariableType):
                     attr_name = "variables"
+                elif isinstance(value, RunbookType):
+                    attr_name = "runbook"
+                    attrs[attr_name] = value
+                    del_keys.append(key)
+                    continue
                 elif isinstance(value.__class__, DescriptorType):
                     exception = getattr(value, "__exception__", None)
                     if exception:
@@ -330,6 +342,8 @@ class EntityType(EntityTypeBase):
 
         # Fetching actions data inside entity
         for ek, ev in cls.__dict__.items():
+            if ek == "__parent__":  # TODO fix this mess
+                continue
             e_obj = getattr(cls, ek)
             if isinstance(e_obj, ActionType):
                 user_func = ev.user_func
@@ -374,6 +388,26 @@ class EntityType(EntityTypeBase):
         # cdict['__kind__'] = cls.__kind__
 
         return cdict
+
+    def post_compile(cls, cdict):
+        """method sets some properties to dict generated after compile"""
+
+        for _, v in cdict.items():
+            if isinstance(v, list):
+                for ve in v:
+                    if issubclass(type(ve), EntityTypeBase):
+                        ve.__parent__ = cls
+            elif issubclass(type(v), EntityTypeBase):
+                v.__parent__ = cls
+
+        return cdict
+
+    def generate_payload(cls):
+        """generates the payload(dict) for any entity"""
+
+        cls.pre_compile()
+        cdict = cls.compile()
+        return cls.post_compile(cdict)
 
     @classmethod
     def pre_decompile(mcls, cdict, context, prefix=""):
@@ -533,7 +567,9 @@ class EntityType(EntityTypeBase):
             "name": getattr(cls, "name", "") or cls.__name__,
             "kind": kind or getattr(cls, "__kind__"),
         }
-        return ref(None, (Entity,), attrs)
+        _cls = ref(None, (Entity,), attrs)
+        _cls.__self__ = cls
+        return _cls
 
     def get_dict(cls):
         return json.loads(cls.json_dumps())
@@ -550,7 +586,7 @@ class EntityJSONEncoder(JSONEncoder):
             return super().default(cls)
 
         # Add single function(wrapper) that can contain pre-post checks
-        return cls.compile()
+        return cls.generate_payload()
 
 
 class EntityJSONDecoder(JSONDecoder):

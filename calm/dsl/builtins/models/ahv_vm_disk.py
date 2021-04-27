@@ -5,11 +5,11 @@ from .validator import PropertyValidator
 from .ref import ref
 
 from .package import PackageType
-from .metadata_payload import get_metadata_obj
 from calm.dsl.store import Cache
 from calm.dsl.config import get_context
 from calm.dsl.constants import CACHE, PROVIDER
 from calm.dsl.log import get_logging_handle
+from .helper import common as common_helper
 
 LOG = get_logging_handle(__name__)
 
@@ -28,35 +28,17 @@ class AhvDiskType(EntityType):
         # Pop bootable from cdict
         cdict.pop("bootable", None)
 
-        # Getting the metadata obj
-        metadata_obj = get_metadata_obj()
-        project_ref = metadata_obj.get("project_reference") or dict()
-
-        # If project not found in metadata, it will take project from config
-        context = get_context()
-        project_config = context.get_project_config()
-        project_name = project_ref.get("name") or project_config["name"]
-
-        project_cache_data = Cache.get_entity_data(
-            entity_type=CACHE.ENTITY.PROJECT, name=project_name
+        cls_substrate = common_helper._walk_to_parent_with_given_type(
+            cls, "SubstrateType"
         )
-        if not project_cache_data:
-            LOG.error(
-                "Project {} not found. Please run: calm update cache".format(
-                    project_name
-                )
-            )
-            sys.exit(-1)
+        account_uuid = (
+            cls_substrate.get_referenced_account_uuid() if cls_substrate else ""
+        )
 
-        # Fetch Nutanix_PC account registered
-        project_accounts = project_cache_data["accounts_data"]
-        account_uuid = project_accounts.get(PROVIDER.NUTANIX.PC, "")
-
+        # Fetch nutanix account in project
+        project, project_whitelist = common_helper.get_project_with_pc_account()
         if not account_uuid:
-            LOG.error(
-                "No nutanix account registered to project {}".format(project_name)
-            )
-            sys.exit(-1)
+            account_uuid = list(project_whitelist.keys())[0]
 
         image_ref = cdict.get("data_source_reference") or dict()
         if image_ref and image_ref["kind"] == "image":
@@ -72,12 +54,12 @@ class AhvDiskType(EntityType):
             if not image_cache_data:
                 LOG.debug(
                     "Ahv Disk Image (name = '{}') not found in registered nutanix_pc account (uuid = '{}') in project (name = '{}')".format(
-                        image_name, account_uuid, project_name
+                        image_name, account_uuid, project["name"]
                     )
                 )
                 LOG.error(
-                    "Ahv Disk Image {} not found. Please run: calm update cache".format(
-                        image_name
+                    "Ahv Disk Image {} of type {} not found. Please run: calm update cache".format(
+                        image_name, IMAGE_TYPE_MAP[device_type]
                     )
                 )
                 sys.exit(-1)

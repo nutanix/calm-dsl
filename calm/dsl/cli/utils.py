@@ -54,7 +54,7 @@ class Display:
     @classmethod
     def wrapper(cls, func, watch=False):
         if watch and os.isatty(sys.stdout.fileno()):
-            Screen.wrapper(func)
+            Screen.wrapper(func, height=1000)
         else:
             func(display)
 
@@ -67,7 +67,7 @@ class Display:
     def wait_for_input(self, *args):
         pass
 
-    def print_at(self, text, x, *args):
+    def print_at(self, text, x, *args, **kwargs):
         click.echo("{}{}".format((" " * x), text))
 
 
@@ -102,6 +102,7 @@ class FeatureFlagMixin:
             return super(FeatureFlagMixin, self).invoke(ctx)
 
         cmd_name = ctx.protected_args[0]
+
         feature_min_version = self.feature_version_map.get(cmd_name, "")
         if feature_min_version:
             calm_version = Version.get_version("Calm")

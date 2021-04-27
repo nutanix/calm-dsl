@@ -3,10 +3,14 @@ import json
 import uuid
 import click
 import traceback
+from distutils.version import LooseVersion as LV
 from click.testing import CliRunner
 
 from calm.dsl.cli import main as cli
-from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
+from calm.dsl.builtins.models.metadata_payload import reset_metadata_obj
+from calm.dsl.builtins import read_local_file
+from calm.dsl.config import get_context
+from calm.dsl.store import Version
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -14,8 +18,35 @@ LOG = get_logging_handle(__name__)
 DSL_PROJECT_PATH = "tests/project/test_project_in_pc.py"
 DSL_PROJECT_WITH_ENV_PATH = "tests/project/test_project_with_env.py"
 
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+USER = DSL_CONFIG["USERS"][0]
+USER_NAME = USER["NAME"]
+
+# calm_version
+CALM_VERSION = Version.get_version("Calm")
+
 
 class TestProjectCommands:
+    def setup_method(self):
+        """"Reset the context changes"""
+
+        # Resetting context
+        ContextObj = get_context()
+        ContextObj.reset_configuration()
+
+        # Resetting metadata object
+        reset_metadata_obj()
+
+    def teardown_method(self):
+        """"Reset the context changes"""
+
+        # Resetting context
+        ContextObj = get_context()
+        ContextObj.reset_configuration()
+
+        # Resetting metadata object
+        reset_metadata_obj()
+
     def test_projects_list(self):
         runner = CliRunner()
         result = runner.invoke(cli, ["get", "projects"])
@@ -187,7 +218,7 @@ class TestProjectCommands:
 
     def _test_update_project_using_cli_switches(self):
         """
-        Adds user `sspuser10@systest.nutanix.com` to given project.
+        Adds user to given project.
         (User must be prsent in db)
         """
 
@@ -200,7 +231,7 @@ class TestProjectCommands:
                 "project",
                 self.dsl_project_name,
                 "--add_user",
-                "sspuser10@systest.nutanix.com",
+                USER_NAME,
             ],
         )
         if result.exit_code:
@@ -220,7 +251,7 @@ class TestProjectCommands:
 
     def _test_update_project_using_dsl_file(self):
         """
-        Removes user `sspuser10@systest.nutanix.com` to given project.
+        Removes user from given project.
         (User must be prsent in db)
         """
 
@@ -270,6 +301,9 @@ class TestProjectCommands:
             pytest.fail("Project delete call failed")
         LOG.info("Success")
 
+    @pytest.mark.skipif(
+        LV(CALM_VERSION) >= LV("3.2.0"), reason="Env creation changed in 3.2.0"
+    )
     def test_project_with_env_create_and_delete(self):
         """
         Describe and update flow are already checked in `test_project_crud`
@@ -305,6 +339,3 @@ class TestProjectCommands:
         LOG.info("Success")
 
         self._test_project_delete()
-
-        # Restoring the metadata context
-        get_metadata_payload(__file__)

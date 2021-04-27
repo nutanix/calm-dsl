@@ -1,13 +1,27 @@
+import json
+
 from calm.dsl.builtins import ref, basic_cred, CalmVariable, CalmTask, action, parallel
 from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import read_local_file, vm_disk_package
 from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmResources, AhvVm
+from calm.dsl.builtins import Metadata, Ref
 from calm.dsl.builtins import readiness_probe
 
 CRED_USERNAME = read_local_file(".tests/username")
 CRED_PASSWORD = read_local_file(".tests/password")
 DNS_SERVER = read_local_file(".tests/dns_server")
+
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+CENTOS_HADOOP_MASTER = DSL_CONFIG["AHV"]["IMAGES"]["DISK"]["CENTOS_HADOOP_MASTER"]
+CENTOS_7_CLOUD_INIT = DSL_CONFIG["AHV"]["IMAGES"]["DISK"]["CENTOS_7_CLOUD_INIT"]
+SQL_SERVER_2014_x64 = DSL_CONFIG["AHV"]["IMAGES"]["CD_ROM"]["SQL_SERVER_2014_x64"]
+
+# projects
+PROJECT = DSL_CONFIG["PROJECTS"]["PROJECT1"]
+PROJECT_NAME = PROJECT["NAME"]
+
+NETWORK1 = DSL_CONFIG["AHV"]["NETWORK"]["VLAN1211"]
 
 GLOBAL_BP_CRED = basic_cred(
     CRED_USERNAME, CRED_PASSWORD, name="cred with space", default=True
@@ -62,21 +76,17 @@ class MyAhvVm1Resources(AhvVmResources):
     vCPUs = 2
     cores_per_vCPU = 1
     disks = [
-        AhvVmDisk.Disk.Scsi.cloneFromImageService("Centos7", bootable=True),
-        AhvVmDisk.CdRom.Sata.cloneFromImageService(
-            "SQLServer2014SP2-FullSlipstream-x64"
-        ),
-        AhvVmDisk.CdRom.Ide.cloneFromImageService(
-            "SQLServer2014SP2-FullSlipstream-x64"
-        ),
-        AhvVmDisk.Disk.Scsi.cloneFromImageService("AHV_CENTOS_76"),
+        AhvVmDisk.Disk.Scsi.cloneFromImageService(CENTOS_7_CLOUD_INIT, bootable=True),
+        AhvVmDisk.CdRom.Sata.cloneFromImageService(SQL_SERVER_2014_x64),
+        AhvVmDisk.CdRom.Ide.cloneFromImageService(SQL_SERVER_2014_x64),
+        AhvVmDisk.Disk.Scsi.cloneFromImageService(CENTOS_HADOOP_MASTER),
         AhvVmDisk.Disk.Pci.allocateOnStorageContainer(12),
         AhvVmDisk.CdRom.Sata.emptyCdRom(),
         AhvVmDisk.CdRom.Ide.emptyCdRom(),
         AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(Era_Disk),
     ]
     nics = [
-        AhvVmNic.DirectNic.ingress("vlan.0"),
+        AhvVmNic.DirectNic.ingress(NETWORK1),
         AhvVmNic.NormalNic.ingress("@@{nic_var.uuid}@@"),
     ]
 
@@ -151,26 +161,11 @@ class PHPPackage(Package):
         CalmTask.Exec.ssh(name="Task4", script="echo @@{foo}@@")
 
 
-class MyAhvVm2Resources(AhvVmResources):
+class MyAhvVm2Resources(MyAhvVm1Resources):
 
-    memory = 4
+    memory = 2
     vCPUs = 2
-    cores_per_vCPU = 1
-    disks = [
-        AhvVmDisk.Disk.Scsi.cloneFromImageService("Centos7", bootable=True),
-        AhvVmDisk.CdRom.Sata.cloneFromImageService(
-            "SQLServer2014SP2-FullSlipstream-x64"
-        ),
-        AhvVmDisk.CdRom.Ide.cloneFromImageService(
-            "SQLServer2014SP2-FullSlipstream-x64"
-        ),
-        AhvVmDisk.Disk.Scsi.cloneFromImageService("AHV_CENTOS_76"),
-        AhvVmDisk.Disk.Pci.allocateOnStorageContainer(12),
-        AhvVmDisk.CdRom.Sata.emptyCdRom(),
-        AhvVmDisk.CdRom.Ide.emptyCdRom(),
-        AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(Era_Disk),
-    ]
-    nics = [AhvVmNic.DirectNic.ingress("vlan.0")]
+    cores_per_vCPU = 2
 
 
 class MyAhvVm2(AhvVm):
@@ -250,3 +245,8 @@ class TestDecompile(Blueprint):
     packages = [MySQLPackage, PHPPackage, Era_Disk]
     substrates = [AHVVMforMySQL, AHVVMforPHP]
     profiles = [DefaultProfile]
+
+
+class BpMetadata(Metadata):
+
+    project = Ref.Project(PROJECT_NAME)

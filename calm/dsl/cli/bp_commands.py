@@ -15,6 +15,7 @@ from .bps import (
     format_blueprint_command,
     compile_blueprint_command,
     launch_blueprint_simple,
+    patch_bp_if_required,
     delete_blueprint,
     decompile_bp,
     create_blueprint_from_json,
@@ -52,6 +53,25 @@ def _get_blueprint_list(name, filter_by, limit, offset, quiet, all_items, out):
     """Get the blueprints, optionally filtered by a string"""
 
     get_blueprint_list(name, filter_by, limit, offset, quiet, all_items, out)
+
+
+def _get_nested_messages(path, obj, message_list):
+    """Get nested message list objects from the blueprint"""
+    if isinstance(obj, list):
+        for index, sub_obj in enumerate(obj):
+            _get_nested_messages(path, sub_obj, message_list)
+    elif isinstance(obj, dict):
+        name = obj.get("name", "")
+        if name:
+            path = path + ("." if path else "") + name
+        for key in obj:
+            sub_obj = obj[key]
+            if key == "message_list":
+                for message in sub_obj:
+                    message["path"] = path
+                    message_list.append(message)
+                continue
+            _get_nested_messages(path, sub_obj, message_list)
 
 
 @describe.command("bp")
@@ -198,7 +218,9 @@ def create_blueprint_command(bp_file, name, description, force):
     LOG.debug("Blueprint {} has state: {}".format(bp_name, bp_state))
 
     if bp_state != "ACTIVE":
-        msg_list = bp_status.get("message_list", [])
+        msg_list = []
+        _get_nested_messages("", bp_status, msg_list)
+
         if not msg_list:
             LOG.error("Blueprint {} created with errors.".format(bp_name))
             LOG.debug(json.dumps(bp_status))
@@ -206,11 +228,15 @@ def create_blueprint_command(bp_file, name, description, force):
 
         msgs = []
         for msg_dict in msg_list:
-            msgs.append(msg_dict.get("message", ""))
+            msg = ""
+            path = msg_dict.get("path", "")
+            if path:
+                msg = path + ": "
+            msgs.append(msg + msg_dict.get("message", ""))
 
         LOG.error(
-            "Blueprint {} created with {} error(s): {}".format(
-                bp_name, len(msg_list), msgs
+            "Blueprint {} created with {} error(s): \n{}".format(
+                bp_name, len(msg_list), "\n".join(msgs)
             )
         )
         sys.exit(-1)
@@ -230,6 +256,9 @@ def create_blueprint_command(bp_file, name, description, force):
 
 @launch.command("bp")
 @click.argument("blueprint_name")
+@click.option(
+    "--environment", "-e", default=None, help="Environment for the application"
+)
 @click.option("--app_name", "-a", default=None, help="Name of your app")
 @click.option(
     "--profile_name",
@@ -262,6 +291,7 @@ def create_blueprint_command(bp_file, name, description, force):
 )
 def launch_blueprint_command(
     blueprint_name,
+    environment,
     app_name,
     ignore_runtime_variables,
     profile_name,
@@ -316,6 +346,10 @@ def launch_blueprint_command(
     """
 
     app_name = app_name or "App-{}-{}".format(blueprint_name, int(time.time()))
+    blueprint_name, blueprint = patch_bp_if_required(
+        environment, blueprint_name, profile_name
+    )
+
     launch_blueprint_simple(
         blueprint_name,
         app_name,

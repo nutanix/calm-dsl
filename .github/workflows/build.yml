@@ -19,9 +19,7 @@ jobs:
       with:
         python-version: 3.7
     - name: black
-      uses: lgeiger/black-action@v1.0.1
-      with:
-        args: . --check --exclude '/(\.eggs|\.git|\.hg|\.mypy_cache|\.nox|\.tox|venv|_build|buck-out|build|dist|examples)/'
+      uses: psf/black@20.8b1 # Exclude list is not honored - https://github.com/psf/black/issues/1584
     - name: Setup env
       run: |
         python -m pip install --upgrade pip
@@ -36,7 +34,7 @@ jobs:
       run: |
         make docker
     - name: Publish docker image
-      if: github.event_name == 'push'
+      if: ${{ github.event_name == 'push' && github.repository == 'nutanix/calm-dsl'}}
       run: |
         docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
         docker push ntnx/calm-dsl

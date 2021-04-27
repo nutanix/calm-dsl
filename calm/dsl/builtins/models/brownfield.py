@@ -5,10 +5,11 @@ from .validator import PropertyValidator
 from .deployment import DeploymentType
 from .metadata_payload import get_metadata_obj
 
+from .helper import common as common_helper
 from calm.dsl.config import get_context
 from calm.dsl.store import Cache
 from calm.dsl.api import get_api_client
-from calm.dsl.constants import CACHE, PROVIDER, VM
+from calm.dsl.constants import CACHE, PROVIDER, VM, PROVIDER_ACCOUNT_TYPE_MAP
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -436,41 +437,90 @@ class BrownfiedVmType(EntityType):
     __schema_name__ = "BrownfieldVm"
     __openapi_type__ = "app_brownfield_vm"
 
+    def get_profile_environment(cls):
+        """
+        returns the env configuration if present at brownfield vm's profile
+        """
+
+        environment = {}
+        cls_profile = common_helper._walk_to_parent_with_given_type(cls, "ProfileType")
+        environment = getattr(cls_profile, "environment", {})
+        if environment:
+            LOG.debug(
+                "Found environment {} associated to app-profile {}".format(
+                    environment.get("name"), cls_profile
+                )
+            )
+        else:
+            LOG.debug(
+                "No environment associated to the app-profile {}".format(cls_profile)
+            )
+
+        if environment:
+            environment = Cache.get_entity_data_using_uuid(
+                entity_type=CACHE.ENTITY.ENVIRONMENT, uuid=environment["uuid"]
+            )
+
+        return environment
+
+    def get_substrate(cls):
+        """return substrate attached to brownfield vm's deployment"""
+
+        cls_deployment = common_helper._walk_to_parent_with_given_type(
+            cls, "BrownfieldDeploymentType"
+        )
+        return cls_deployment.substrate.__self__
+
+    def get_account_uuid(cls):
+        """returns the account_uuid configured for given brwonfield vm"""
+
+        project_cache_data = common_helper.get_cur_context_project()
+        environment_cache_data = cls.get_profile_environment()
+        cls_substrate = cls.get_substrate()
+
+        provider_type = cls.provider
+        account_uuid = ""
+        if cls_substrate:
+            account = getattr(cls_substrate, "account", dict()) or dict()
+            if account:
+                account_uuid = account["uuid"]
+
+        if not account_uuid:
+            if environment_cache_data:
+                accounts = environment_cache_data["accounts_data"].get(
+                    PROVIDER_ACCOUNT_TYPE_MAP[provider_type], []
+                )
+                if not accounts:
+                    LOG.error(
+                        "No {} account regsitered in environment".format(provider_type)
+                    )
+                    sys.exit(-1)
+
+            else:
+                accounts = project_cache_data["accounts_data"].get(
+                    PROVIDER_ACCOUNT_TYPE_MAP[provider_type], []
+                )
+                if not accounts:
+                    LOG.error(
+                        "No {} account regsitered in environment".format(provider_type)
+                    )
+                    sys.exit(-1)
+
+            account_uuid = accounts[0]
+
+        return account_uuid
+
     def compile(cls):
+
         cdict = super().compile()
         provider_type = cdict.pop("provider")
 
-        # Getting the metadata obj
-        metadata_obj = get_metadata_obj()
-        project_ref = metadata_obj.get("project_reference") or dict()
-
-        # If project not found in metadata, it will take project from config
-        ContextObj = get_context()
-        project_config = ContextObj.get_project_config()
-        project_name = project_ref.get("name") or project_config["name"]
-
-        project_cache_data = Cache.get_entity_data(
-            entity_type=CACHE.ENTITY.PROJECT, name=project_name
-        )
-        if not project_cache_data:
-            LOG.error(
-                "Project {} not found. Please run: calm update cache".format(
-                    project_name
-                )
-            )
-            sys.exit(-1)
+        project_cache_data = common_helper.get_cur_context_project()
+        account_uuid = cls.get_account_uuid()
 
         project_uuid = project_cache_data.get("uuid")
-        project_accounts = project_cache_data["accounts_data"]
 
         if provider_type == VM.AHV:
-            account_uuid = project_accounts.get(PROVIDER.NUTANIX.PC, "")
-            if not account_uuid:
-                LOG.error(
-                    "No ahv account registered in project '{}'".format(project_name)
-                )
-                sys.exit(-1)
-
             cdict = get_ahv_bf_vm_data(
                 project_uuid=project_uuid,
                 account_uuid=account_uuid,
@@ -480,13 +530,6 @@ class BrownfiedVmType(EntityType):
             )
 
         elif provider_type == VM.AWS:
-            account_uuid = project_accounts.get(PROVIDER.AWS.EC2, "")
-            if not account_uuid:
-                LOG.error(
-                    "No aws account registered in project '{}'".format(project_name)
-                )
-                sys.exit(-1)
-
             cdict = get_aws_bf_vm_data(
                 project_uuid=project_uuid,
                 account_uuid=account_uuid,
@@ -496,13 +539,6 @@ class BrownfiedVmType(EntityType):
             )
 
         elif provider_type == VM.AZURE:
-            account_uuid = project_accounts.get(PROVIDER.AZURE, "")
-            if not account_uuid:
-                LOG.error(
-                    "No azure account registered in project '{}'".format(project_name)
-                )
-                sys.exit(-1)
-
             cdict = get_azure_bf_vm_data(
                 project_uuid=project_uuid,
                 account_uuid=account_uuid,
@@ -512,13 +548,6 @@ class BrownfiedVmType(EntityType):
             )
 
         elif provider_type == VM.VMWARE:
-            account_uuid = project_accounts.get(PROVIDER.VMWARE, "")
-            if not account_uuid:
-                LOG.error(
-                    "No vmware account registered in project '{}'".format(project_name)
-                )
-                sys.exit(-1)
-
             cdict = get_vmware_bf_vm_data(
                 project_uuid=project_uuid,
                 account_uuid=account_uuid,
@@ -528,13 +557,6 @@ class BrownfiedVmType(EntityType):
             )
 
         elif provider_type == VM.GCP:
-            account_uuid = project_accounts.get(PROVIDER.GCP, "")
-            if not account_uuid:
-                LOG.error(
-                    "No gcp account registered in project '{}'".format(project_name)
-                )
-                sys.exit(-1)
-
             cdict = get_gcp_bf_vm_data(
                 project_uuid=project_uuid,
                 account_uuid=account_uuid,

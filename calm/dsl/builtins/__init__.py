@@ -4,7 +4,8 @@
 # subclass to already be present in PropertyValidatorBase's context. Moving
 # the import for these below the entities will cause a TypeError.
 
-from .models.ref import Ref, ref, RefType
+from .models.ref import ref, RefType
+from .models.calm_ref import Ref
 from .models.metadata import Metadata, MetadataType
 from .models.credential import basic_cred, secret_cred, CredentialType
 from .models.variable import Variable, setvar, CalmVariable, VariableType
@@ -78,6 +79,7 @@ from .models.environment_payload import create_environment_payload
 from .models.project import Project, ProjectType
 from .models.project_payload import create_project_payload
 from .models.brownfield import Brownfield
+from .models.endpoint import Endpoint, _endpoint, CalmEndpoint
 
 from .models.vm_profile import VmProfile
 from .models.vm_blueprint import VmBlueprint
@@ -210,4 +212,7 @@ __all__ = [
     "VanillaAccountSpec",
     "vanilla_account_spec",
     "Auth",
+    "Endpoint",
+    "_endpoint",
+    "CalmEndpoint",
 ]

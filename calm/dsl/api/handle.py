@@ -7,9 +7,13 @@ from .connection import (
     REQUEST,
 )
 from .blueprint import BlueprintAPI
+from .endpoint import EndpointAPI
+from .runbook import RunbookAPI
+from .library_tasks import TaskLibraryApi
 from .application import ApplicationAPI
 from .project import ProjectAPI
 from .account import AccountAPI
+from .environment import EnvironmentAPI
 from .marketplace import MarketPlaceAPI
 from .app_icons import AppIconAPI
 from .version import VersionAPI
@@ -32,7 +36,11 @@ class ClientHandle:
 
         # Note - add entity api classes here
         self.project = ProjectAPI(self.connection)
+        self.environment = EnvironmentAPI(self.connection)
         self.blueprint = BlueprintAPI(self.connection)
+        self.endpoint = EndpointAPI(self.connection)
+        self.runbook = RunbookAPI(self.connection)
+        self.task = TaskLibraryApi(self.connection)
         self.application = ApplicationAPI(self.connection)
         self.account = AccountAPI(self.connection)
         self.market_place = MarketPlaceAPI(self.connection)

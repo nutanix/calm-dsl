@@ -1,3 +1,5 @@
+import json
+
 from calm.dsl.builtins import (
     Blueprint,
     Profile,
@@ -11,11 +13,14 @@ from calm.dsl.builtins import (
 )
 from calm.dsl.builtins import CalmTask, CalmVariable, action, parallel, provider_spec
 
-DEFAULT_CRED_USERNAME = read_local_file(".tests/default_cred_username")
-DEFAULT_CRED_PASSWORD = read_local_file(".tests/default_cred_password")
-ROOT_CRED_USERNAME = read_local_file(".tests/root_cred_username")
-ROOT_CRED_PASSWORD = read_local_file(".tests/root_cred_password")
-EXISTING_VM_IP = read_local_file(".tests/existing_machine_ip")
+
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+EXISTING_VM_IP = DSL_CONFIG["EXISTING_MACHINE"]["IP_1"]
+DEFAULT_CRED_USERNAME = DSL_CONFIG["EXISTING_MACHINE"]["CREDS"]["LINUX"]["USERNAME"]
+DEFAULT_CRED_PASSWORD = DSL_CONFIG["EXISTING_MACHINE"]["CREDS"]["LINUX"]["PASSWORD"]
+ROOT_CRED_USERNAME = DSL_CONFIG["EXISTING_MACHINE"]["CREDS"]["LINUX"]["PASSWORD"]
+ROOT_CRED_PASSWORD = DSL_CONFIG["EXISTING_MACHINE"]["CREDS"]["LINUX"]["PASSWORD"]
+
 DNS_SERVER = read_local_file(".tests/dns_server")
 
 DefaultCred = basic_cred(

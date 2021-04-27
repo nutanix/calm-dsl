@@ -4,6 +4,7 @@ NOTE: Single-Vm Blueprint will be created as result
 
 """
 import os
+import json
 
 from calm.dsl.builtins import ref, basic_cred
 from calm.dsl.builtins import read_local_file, readiness_probe
@@ -14,15 +15,23 @@ from calm.dsl.builtins import action
 from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC
 from calm.dsl.builtins import AhvVmResources, ahv_vm
 from calm.dsl.builtins import VmProfile, VmBlueprint
-from calm.dsl.builtins import Metadata
+from calm.dsl.builtins import Metadata, Ref
 
 
 # Credentials
-CENTOS_KEY = read_local_file("keys/centos")
-CENTOS_PUBLIC_KEY = read_local_file("keys/centos_pub")
+CENTOS_KEY = read_local_file(".tests/keys/centos")
+CENTOS_PUBLIC_KEY = read_local_file(".tests/keys/centos_pub")
 Centos = basic_cred("centos", CENTOS_KEY, name="Centos", type="KEY", default=True)
 
 DNS_SERVER = read_local_file(".tests/dns_server")
+
+# projects
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+CENTOS_7_CLOUD_INIT = DSL_CONFIG["AHV"]["IMAGES"]["DISK"]["CENTOS_7_CLOUD_INIT"]
+NETWORK1 = DSL_CONFIG["AHV"]["NETWORK"]["VLAN1211"]
+
+PROJECT = DSL_CONFIG["PROJECTS"]["PROJECT1"]
+PROJECT_NAME = PROJECT["NAME"]
 
 
 class SingleVmAhvResources(AhvVmResources):
@@ -32,9 +41,9 @@ class SingleVmAhvResources(AhvVmResources):
     vCPUs = 2
     cores_per_vCPU = 1
     disks = [
-        AhvVmDisk.Disk.Scsi.cloneFromImageService("CentOS-7-Cloud-Init", bootable=True)
+        AhvVmDisk.Disk.Scsi.cloneFromImageService(CENTOS_7_CLOUD_INIT, bootable=True)
     ]
-    nics = [AhvVmNic("vlan.0")]
+    nics = [AhvVmNic(NETWORK1)]
 
     guest_customization = AhvVmGC.CloudInit(
         config={
@@ -88,4 +97,5 @@ class SampleSingleVmBluerint(VmBlueprint):
 
 class SingleVmBpMetadata(Metadata):
 
+    project = Ref.Project(PROJECT_NAME)
     categories = {"TemplateType": "Vm"}

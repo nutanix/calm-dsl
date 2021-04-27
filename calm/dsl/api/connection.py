@@ -230,7 +230,7 @@ class Connection:
                 base_headers.update(headers)
 
             if method == REQUEST.METHOD.POST:
-                if files:
+                if files is not None:
                     request_json.update(files)
                     m = MultipartEncoder(fields=request_json)
                     res = self.session.post(
@@ -316,7 +316,6 @@ class Connection:
                     json.dumps(err, indent=4, separators=(",", ": "))
                 )
             )
-            sys.exit(-1)
         return res, err
 
 

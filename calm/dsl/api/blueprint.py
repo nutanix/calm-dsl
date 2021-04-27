@@ -1,5 +1,7 @@
 from .resource import ResourceAPI
 from .connection import REQUEST
+from .util import strip_secrets, patch_secrets
+from .project import ProjectAPI
 
 from calm.dsl.constants import PROVIDER
 
@@ -17,6 +19,7 @@ class BlueprintAPI(ResourceAPI):
         self.EXPORT_JSON_WITH_SECRETS = self.ITEM + "/export_json?keep_secrets=true"
         self.EXPORT_FILE = self.ITEM + "/export_file"
         self.BROWNFIELD_VM_LIST = self.PREFIX + "/brownfield_import/vms/list"
+        self.PATCH_WITH_ENVIRONMENT = self.ITEM + "/patch_with_environment"
         self.VARIABLE_VALUES = self.ITEM + "/variables/{}/values"
         self.VARIABLE_VALUES_WITH_TRLID = (
             self.VARIABLE_VALUES + "?requestId={}&trlId={}"
@@ -53,6 +56,14 @@ class BlueprintAPI(ResourceAPI):
     def marketplace_launch(self, payload):
         return self.connection._call(
             self.MARKETPLACE_LAUNCH,
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
+        )
+
+    def patch_with_environment(self, uuid, payload):
+        return self.connection._call(
+            self.PATCH_WITH_ENVIRONMENT.format(uuid),
             verify=False,
             request_json=payload,
             method=REQUEST.METHOD.POST,
@@ -126,108 +137,17 @@ class BlueprintAPI(ResourceAPI):
                 if err:
                     return None, err
 
-        # Remove creds before upload
-        creds = bp_resources.get("credential_definition_list", []) or []
         secret_map = {}
-        for cred in creds:
-            name = cred["name"]
-            secret_map[name] = cred.pop("secret", {})
-            # Explicitly set defaults so that secret is not created at server
-            # TODO - Fix bug in server: {} != None
-            cred["secret"] = {
-                "attrs": {"is_secret_modified": False, "secret_reference": None}
-            }
-
-        # Strip secret variable values
-        # TODO: Refactor and/or clean this up later
         secret_variables = []
-
-        def strip_entity_secret_variables(path_list, obj, field_name="variable_list"):
-            for var_idx, variable in enumerate(obj.get(field_name, []) or []):
-                if variable["type"] == "SECRET":
-                    secret_variables.append(
-                        (path_list + [field_name, var_idx], variable.pop("value"))
-                    )
-                    variable["attrs"] = {
-                        "is_secret_modified": False,
-                        "secret_reference": None,
-                    }
-
-        def strip_action_secret_varaibles(path_list, obj):
-            for action_idx, action in enumerate(obj.get("action_list", []) or []):
-                runbook = action.get("runbook", {}) or {}
-                if not runbook:
-                    return
-                strip_entity_secret_variables(
-                    path_list + ["action_list", action_idx, "runbook"], runbook
-                )
-                tasks = runbook.get("task_definition_list", []) or []
-                for task_idx, task in enumerate(tasks):
-                    if task.get("type", None) != "HTTP":
-                        continue
-                    auth = (task.get("attrs", {}) or {}).get("authentication", {}) or {}
-                    if auth.get("auth_type", None) == "basic":
-                        secret_variables.append(
-                            (
-                                path_list
-                                + [
-                                    "action_list",
-                                    action_idx,
-                                    "runbook",
-                                    "task_definition_list",
-                                    task_idx,
-                                    "attrs",
-                                    "authentication",
-                                    "basic_auth",
-                                    "password",
-                                ],
-                                auth["basic_auth"]["password"].pop("value"),
-                            )
-                        )
-                        auth["basic_auth"]["password"] = {
-                            "attrs": {
-                                "is_secret_modified": False,
-                                "secret_reference": None,
-                            }
-                        }
-                        if not (task.get("attrs", {}) or {}).get("headers", []) or []:
-                            continue
-                        strip_entity_secret_variables(
-                            path_list
-                            + [
-                                "action_list",
-                                action_idx,
-                                "runbook",
-                                "task_definition_list",
-                                task_idx,
-                                "attrs",
-                            ],
-                            task["attrs"],
-                            field_name="headers",
-                        )
-
-        def strip_all_secret_variables(path_list, obj):
-            strip_entity_secret_variables(path_list, obj)
-            strip_action_secret_varaibles(path_list, obj)
-
         object_lists = [
             "service_definition_list",
             "package_definition_list",
             "substrate_definition_list",
             "app_profile_list",
         ]
-        for object_list in object_lists:
-            for obj_idx, obj in enumerate(bp_resources.get(object_list, []) or []):
-                strip_all_secret_variables([object_list, obj_idx], obj)
-
-                # Currently, deployment actions and variables are unsupported.
-                # Uncomment the following lines if and when the API does support them.
-                # if object_list == "app_profile_list":
-                #     for dep_idx, dep in enumerate(obj["deployment_create_list"]):
-                #         strip_all_secret_variables(
-                #             [object_list, obj_idx, "deployment_create_list", dep_idx],
-                #             dep,
-                #         )
+        strip_secrets(
+            bp_resources, secret_map, secret_variables, object_lists=object_lists
+        )
 
         # Handling vmware secrets
         def strip_vmware_secrets(path_list, obj):
@@ -283,18 +203,7 @@ class BlueprintAPI(ResourceAPI):
         bp = res.json()
         del bp["status"]
 
-        # Add secrets back
-        creds = bp["spec"]["resources"]["credential_definition_list"]
-        for cred in creds:
-            name = cred["name"]
-            cred["secret"] = secret_map[name]
-
-        for path, secret in secret_variables:
-            variable = bp["spec"]["resources"]
-            for sub_path in path:
-                variable = variable[sub_path]
-            variable["attrs"] = {"is_secret_modified": True}
-            variable["value"] = secret
+        patch_secrets(bp["spec"]["resources"], secret_map, secret_variables)
 
         # Adding categories at PUT call to blueprint
         bp["metadata"]["categories"] = bp_categories

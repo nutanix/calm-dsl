@@ -1,121 +1,19 @@
 import sys
 import json
 import click
+import json
 from prettytable import PrettyTable
 
 from calm.dsl.api import get_api_client, get_resource_api
-from calm.dsl.constants import PROVIDER
+from calm.dsl.constants import PROVIDER_ACCOUNT_TYPE_MAP
 from calm.dsl.log import get_logging_handle
 from .utils import highlight_text
 
 LOG = get_logging_handle(__name__)
 
 
-def get_provider_account_from_project(project_name, provider_type):
-    """
-    Returns tuple containing project_uuid and account_uuid of provider_account registered in project
-    i.e (project_uuid, account_uuid)
-    """
-
-    client = get_api_client()
-
-    # Getting the account uuid map
-    params = {"length": 250, "filter": "state!=DELETED;type=={}".format(provider_type)}
-    account_uuid_type_map = client.account.get_uuid_type_map(params)
-    provider_account_uuids = list(account_uuid_type_map.keys())
-
-    params = {"length": 250, "filter": "name=={}".format(project_name)}
-    res, err = client.project.list(params)
-    if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-    res = res.json()
-    if res["metadata"]["total_matches"] == 0:
-        LOG.error("Project {} not found".format(project_name))
-        sys.exit(-1)
-
-    pj_data = res["entities"][0]
-    account_list = pj_data["status"]["resources"]["account_reference_list"]
-    project_uuid = pj_data["metadata"]["uuid"]
-    account_uuid = ""
-    for account in account_list:
-        if account["uuid"] in provider_account_uuids:
-            account_uuid = account["uuid"]
-
-    # If provider acount not found raise error
-    if not account_uuid:
-        LOG.error(
-            "No {} account registered to project {}".format(provider_type, project_name)
-        )
-        sys.exit(-1)
-    else:
-        return (project_uuid, account_uuid)
-
-
-def get_brownfield_ahv_vm_list(limit, offset, quiet, out, project_name):
-    """returns ahv brownfield vms"""
-
-    client = get_api_client()
-
-    # Getting provider account_uuid registered in project
-    LOG.info("Fetching project '{}' details".format(project_name))
-    project_uuid, account_uuid = get_provider_account_from_project(
-        project_name, PROVIDER.NUTANIX.PC
-    )
-
-    LOG.info("Fetching account(uuid={}) details".format(account_uuid))
-    res, err = client.account.read(account_uuid)
-    if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-    res = res.json()
-    clusters = res["status"]["resources"]["data"].get(
-        "cluster_account_reference_list", []
-    )
-    if not clusters:
-        LOG.error("No cluster found in ahv account (uuid='{}')".format(account_uuid))
-        sys.exit(-1)
-
-    cluster_uuid = clusters[0]["uuid"]
-
-    LOG.info("Fetching brownfield vms")
-    Obj = get_resource_api("blueprints/brownfield_import/vms", client.connection)
-    filter_query = "project_uuid=={};account_uuid=={}".format(
-        project_uuid, cluster_uuid
-    )
-    params = {"length": limit, "offset": offset, "filter": filter_query}
-    res, err = Obj.list(params=params)
-    if err:
-        LOG.error(err)
-        sys.exit(-1)
-
-    res = res.json()
-    total_matches = res["metadata"]["total_matches"]
-    if total_matches > limit:
-        LOG.warning(
-            "Displaying {} out of {} entities. Please use --limit and --offset option for more results.".format(
-                limit, total_matches
-            )
-        )
-
-    if out == "json":
-        click.echo(json.dumps(res, indent=4, separators=(",", ": ")))
-        return
-
-    json_rows = res["entities"]
-    if not json_rows:
-        click.echo(
-            highlight_text(
-                "No ahv_vm on account(uuid={}) found !!!\n".format(account_uuid)
-            )
-        )
-        return
-
-    if quiet:
-        for _row in json_rows:
-            row = _row["status"]
-            click.echo(highlight_text(row["name"]))
-        return
+def get_brownfield_ahv_vm_list(entity_rows):
+    """displays ahv brownfield vms"""
 
     table = PrettyTable()
     table.field_names = [
@@ -129,7 +27,7 @@ def get_brownfield_ahv_vm_list(limit, offset, quiet, out, project_name):
         "ID",
     ]
 
-    for row in json_rows:
+    for row in entity_rows:
 
         # Status section
         st_resources = row["status"]["resources"]
@@ -159,57 +57,8 @@ def get_brownfield_ahv_vm_list(limit, offset, quiet, out, project_name):
     click.echo(table)
 
 
-def get_brownfield_aws_vm_list(limit, offset, quiet, out, project_name):
-    """returns aws brownfield vms"""
-
-    client = get_api_client()
-
-    # Getting provider account_uuid registered in project
-    LOG.info("Fetching project '{}' details".format(project_name))
-    project_uuid, account_uuid = get_provider_account_from_project(
-        project_name, PROVIDER.AWS.EC2
-    )
-
-    LOG.info("Fetching brownfield vms")
-    Obj = get_resource_api("blueprints/brownfield_import/vms", client.connection)
-    filter_query = "project_uuid=={};account_uuid=={}".format(
-        project_uuid, account_uuid
-    )
-    params = {"length": limit, "offset": offset, "filter": filter_query}
-    res, err = Obj.list(params=params)
-    if err:
-        LOG.error(err)
-        sys.exit(-1)
-
-    res = res.json()
-    total_matches = res["metadata"]["total_matches"]
-    if total_matches > limit:
-        LOG.warning(
-            "Displaying {} out of {} entities. Please use --limit and --offset option for more results.".format(
-                limit, total_matches
-            )
-        )
-
-    if out == "json":
-        click.echo(json.dumps(res, indent=4, separators=(",", ": ")))
-        return
-
-    json_rows = res["entities"]
-    if not json_rows:
-        click.echo(
-            highlight_text(
-                "No aws brownfield vm on account(uuid={}) found !!!\n".format(
-                    account_uuid
-                )
-            )
-        )
-        return
-
-    if quiet:
-        for _row in json_rows:
-            row = _row["status"]
-            click.echo(highlight_text(row["name"]))
-        return
+def get_brownfield_aws_vm_list(entity_rows):
+    """displays aws brownfield vms"""
 
     table = PrettyTable()
     table.field_names = [
@@ -222,7 +71,7 @@ def get_brownfield_aws_vm_list(limit, offset, quiet, out, project_name):
         "ID",
     ]
 
-    for row in json_rows:
+    for row in entity_rows:
 
         # Status section
         st_resources = row["status"]["resources"]
@@ -250,57 +99,8 @@ def get_brownfield_aws_vm_list(limit, offset, quiet, out, project_name):
     click.echo(table)
 
 
-def get_brownfield_azure_vm_list(limit, offset, quiet, out, project_name):
-    """returns azure brownfield vms"""
-
-    client = get_api_client()
-
-    # Getting provider account_uuid registered in project
-    LOG.info("Fetching project '{}' details".format(project_name))
-    project_uuid, account_uuid = get_provider_account_from_project(
-        project_name, PROVIDER.AZURE
-    )
-
-    LOG.info("Fetching brownfield vms")
-    Obj = get_resource_api("blueprints/brownfield_import/vms", client.connection)
-    filter_query = "project_uuid=={};account_uuid=={}".format(
-        project_uuid, account_uuid
-    )
-    params = {"length": limit, "offset": offset, "filter": filter_query}
-    res, err = Obj.list(params=params)
-    if err:
-        LOG.error(err)
-        sys.exit(-1)
-
-    res = res.json()
-    total_matches = res["metadata"]["total_matches"]
-    if total_matches > limit:
-        LOG.warning(
-            "Displaying {} out of {} entities. Please use --limit and --offset option for more results.".format(
-                limit, total_matches
-            )
-        )
-
-    if out == "json":
-        click.echo(json.dumps(res, indent=4, separators=(",", ": ")))
-        return
-
-    json_rows = res["entities"]
-    if not json_rows:
-        click.echo(
-            highlight_text(
-                "No azure brownfield vm on account(uuid={}) found !!!\n".format(
-                    account_uuid
-                )
-            )
-        )
-        return
-
-    if quiet:
-        for _row in json_rows:
-            row = _row["status"]
-            click.echo(highlight_text(row["name"]))
-        return
+def get_brownfield_azure_vm_list(entity_rows):
+    """displays azure brownfield vms"""
 
     table = PrettyTable()
     table.field_names = [
@@ -313,7 +113,7 @@ def get_brownfield_azure_vm_list(limit, offset, quiet, out, project_name):
         "ID",
     ]
 
-    for row in json_rows:
+    for row in entity_rows:
 
         # Status section
         st_resources = row["status"]["resources"]
@@ -343,57 +143,8 @@ def get_brownfield_azure_vm_list(limit, offset, quiet, out, project_name):
     click.echo(table)
 
 
-def get_brownfield_gcp_vm_list(limit, offset, quiet, out, project_name):
-    """returns gcp brownfield vms"""
-
-    client = get_api_client()
-
-    # Getting provider account_uuid registered in project
-    LOG.info("Fetching project '{}' details".format(project_name))
-    project_uuid, account_uuid = get_provider_account_from_project(
-        project_name, PROVIDER.GCP
-    )
-
-    LOG.info("Fetching brownfield vms")
-    Obj = get_resource_api("blueprints/brownfield_import/vms", client.connection)
-    filter_query = "project_uuid=={};account_uuid=={}".format(
-        project_uuid, account_uuid
-    )
-    params = {"length": limit, "offset": offset, "filter": filter_query}
-    res, err = Obj.list(params=params)
-    if err:
-        LOG.error(err)
-        sys.exit(-1)
-
-    res = res.json()
-    total_matches = res["metadata"]["total_matches"]
-    if total_matches > limit:
-        LOG.warning(
-            "Displaying {} out of {} entities. Please use --limit and --offset option for more results.".format(
-                limit, total_matches
-            )
-        )
-
-    if out == "json":
-        click.echo(json.dumps(res, indent=4, separators=(",", ": ")))
-        return
-
-    json_rows = res["entities"]
-    if not json_rows:
-        click.echo(
-            highlight_text(
-                "No azure brownfield vm on account(uuid={}) found !!!\n".format(
-                    account_uuid
-                )
-            )
-        )
-        return
-
-    if quiet:
-        for _row in json_rows:
-            row = _row["status"]
-            click.echo(highlight_text(row["name"]))
-        return
+def get_brownfield_gcp_vm_list(entity_rows):
+    """displays gcp brownfield vms"""
 
     table = PrettyTable()
     table.field_names = [
@@ -406,7 +157,7 @@ def get_brownfield_gcp_vm_list(limit, offset, quiet, out, project_name):
         "ID",
     ]
 
-    for row in json_rows:
+    for row in entity_rows:
 
         # Status section
         st_resources = row["status"]["resources"]
@@ -434,57 +185,8 @@ def get_brownfield_gcp_vm_list(limit, offset, quiet, out, project_name):
     click.echo(table)
 
 
-def get_brownfield_vmware_vm_list(limit, offset, quiet, out, project_name):
-    """returns vmware brownfield vms"""
-
-    client = get_api_client()
-
-    # Getting provider account_uuid registered in project
-    LOG.info("Fetching project '{}' details".format(project_name))
-    project_uuid, account_uuid = get_provider_account_from_project(
-        project_name, PROVIDER.VMWARE
-    )
-
-    LOG.info("Fetching brownfield vms")
-    Obj = get_resource_api("blueprints/brownfield_import/vms", client.connection)
-    filter_query = "project_uuid=={};account_uuid=={}".format(
-        project_uuid, account_uuid
-    )
-    params = {"length": limit, "offset": offset, "filter": filter_query}
-    res, err = Obj.list(params=params)
-    if err:
-        LOG.error(err)
-        sys.exit(-1)
-
-    res = res.json()
-    total_matches = res["metadata"]["total_matches"]
-    if total_matches > limit:
-        LOG.warning(
-            "Displaying {} out of {} entities. Please use --limit and --offset option for more results.".format(
-                limit, total_matches
-            )
-        )
-
-    if out == "json":
-        click.echo(json.dumps(res, indent=4, separators=(",", ": ")))
-        return
-
-    json_rows = res["entities"]
-    if not json_rows:
-        click.echo(
-            highlight_text(
-                "No vmware brownfield vm on account(uuid={}) found !!!\n".format(
-                    account_uuid
-                )
-            )
-        )
-        return
-
-    if quiet:
-        for _row in json_rows:
-            row = _row["status"]
-            click.echo(highlight_text(row["name"]))
-        return
+def get_brownfield_vmware_vm_list(entity_rows):
+    """displays vmware brownfield vms"""
 
     table = PrettyTable()
     table.field_names = [
@@ -499,7 +201,7 @@ def get_brownfield_vmware_vm_list(limit, offset, quiet, out, project_name):
         "ID",
     ]
 
-    for row in json_rows:
+    for row in entity_rows:
 
         # Status section
         st_resources = row["status"]["resources"]
@@ -511,8 +213,8 @@ def get_brownfield_vmware_vm_list(limit, offset, quiet, out, project_name):
         vcpus = st_resources["config.hardware.numCPU"]
         sockets = st_resources["config.hardware.numCoresPerSocket"]
         memory = int(st_resources["config.hardware.memoryMB"]) // 1024
-        guest_family = st_resources["guest.guestFamily"]
-        template = st_resources["config.template"]
+        guest_family = st_resources.get("guest.guestFamily", "")
+        template = st_resources.get("config.template", False)
 
         table.add_row(
             [
@@ -529,3 +231,133 @@ def get_brownfield_vmware_vm_list(limit, offset, quiet, out, project_name):
         )
 
     click.echo(table)
+
+
+def get_brownfield_account_details(project_name, provider_type, account_name):
+    """returns object containing project uuid and account uuid"""
+
+    client = get_api_client()
+
+    # Getting the account uuid map
+    account_type = PROVIDER_ACCOUNT_TYPE_MAP[provider_type]
+    params = {"length": 250, "filter": "state!=DELETED;type=={}".format(account_type)}
+    if account_name:
+        params["filter"] += ";name=={}".format(account_name)
+
+    account_uuid_name_map = client.account.get_uuid_name_map(params)
+    provider_account_uuids = list(account_uuid_name_map.keys())
+
+    LOG.info("Fetching project '{}' details".format(project_name))
+    params = {"length": 250, "filter": "name=={}".format(project_name)}
+    res, err = client.project.list(params)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    res = res.json()
+    if res["metadata"]["total_matches"] == 0:
+        LOG.error("Project {} not found".format(project_name))
+        sys.exit(-1)
+
+    pj_data = res["entities"][0]
+    whitelisted_accounts = [
+        account["uuid"]
+        for account in pj_data["status"]["resources"].get("account_reference_list", [])
+    ]
+
+    project_uuid = pj_data["metadata"]["uuid"]
+    account_uuid = ""
+    for _account_uuid in whitelisted_accounts:
+        if _account_uuid in provider_account_uuids:
+            account_uuid = _account_uuid
+            break
+
+    if not account_uuid:
+        LOG.error("No account with given details found in project")
+        sys.exit(-1)
+
+    account_name = account_uuid_name_map[account_uuid]
+    LOG.info("Using account '{}' for listing brownfield vms".format(account_name))
+
+    if provider_type == "AHV_VM":
+        LOG.info("Fetching account '{}' details".format(account_name))
+        res, err = client.account.read(account_uuid)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        clusters = res["status"]["resources"]["data"].get(
+            "cluster_account_reference_list", []
+        )
+        if not clusters:
+            LOG.error(
+                "No cluster found in ahv account (uuid='{}')".format(account_uuid)
+            )
+            sys.exit(-1)
+
+        # Use clustrer uuid for AHV account
+        account_uuid = clusters[0]["uuid"]
+
+    return {
+        "project": {"name": project_name, "uuid": project_uuid},
+        "account": {"name": account_name, "uuid": account_uuid},
+    }
+
+
+def get_brownfield_vms(
+    limit, offset, quiet, out, project_name, provider_type, account_name
+):
+    """displays brownfield vms for a provider"""
+
+    client = get_api_client()
+
+    account_detail = get_brownfield_account_details(
+        project_name=project_name,
+        provider_type=provider_type,
+        account_name=account_name,
+    )
+    project_uuid = account_detail["project"]["uuid"]
+    account_name = account_detail["account"]["name"]
+    account_uuid = account_detail["account"]["uuid"]
+
+    LOG.info("Fetching brownfield vms")
+    Obj = get_resource_api("blueprints/brownfield_import/vms", client.connection)
+    filter_query = "project_uuid=={};account_uuid=={}".format(
+        project_uuid, account_uuid
+    )
+    params = {"length": limit, "offset": offset, "filter": filter_query}
+    res, err = Obj.list(params=params)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    if out == "json":
+        click.echo(json.dumps(res.json(), indent=4, separators=(",", ": ")))
+        return
+
+    json_rows = res.json()["entities"]
+    if not json_rows:
+        click.echo(
+            highlight_text(
+                "No brownfield {} found on account '{}' !!!\n".format(
+                    provider_type, account_name
+                )
+            )
+        )
+        return
+
+    if quiet:
+        for _row in json_rows:
+            row = _row["status"]
+            click.echo(highlight_text(row["name"]))
+        return
+
+    if provider_type == "AHV_VM":
+        get_brownfield_ahv_vm_list(json_rows)
+    elif provider_type == "AWS_VM":
+        get_brownfield_aws_vm_list(json_rows)
+    elif provider_type == "AZURE_VM":
+        get_brownfield_azure_vm_list(json_rows)
+    elif provider_type == "GCP_VM":
+        get_brownfield_gcp_vm_list(json_rows)
+    elif provider_type == "VMWARE_VM":
+        get_brownfield_vmware_vm_list(json_rows)

@@ -121,4 +121,13 @@ class TestVmBlueprints:
         generated_json["client_attrs"] = {}
         known_json = json.loads(open(bp_output_file_path).read())
 
+        # Replaces ahv images and nic & uuids
+        for ind, sub in enumerate(known_json["substrate_definition_list"]):
+            sub["create_spec"]["resources"]["nic_list"] = generated_json[
+                "substrate_definition_list"
+            ][ind]["create_spec"]["resources"]["nic_list"]
+            sub["create_spec"]["resources"]["disk_list"] = generated_json[
+                "substrate_definition_list"
+            ][ind]["create_spec"]["resources"]["disk_list"]
+
         assert generated_json == known_json

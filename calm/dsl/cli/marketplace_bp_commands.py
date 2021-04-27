@@ -10,79 +10,35 @@ from .marketplace_commands_main import (
     marketplace_update,
     marketplace_delete,
     marketplace_reject,
-    marketplace_unpublish,
     publish,
+    marketplace_unpublish,
 )
-from .marketplace_bps import (
+from .marketplace import (
     get_marketplace_items,
-    get_marketplace_bps,
     describe_marketplace_item,
-    describe_marketplace_bp,
-    launch_marketplace_item,
     launch_marketplace_bp,
     publish_bp_as_new_marketplace_bp,
     publish_bp_as_existing_marketplace_bp,
-    approve_marketplace_bp,
-    publish_marketplace_bp,
-    update_marketplace_bp,
-    delete_marketplace_bp,
-    reject_marketplace_bp,
-    unpublish_marketplace_bp,
+    approve_marketplace_item,
+    publish_marketplace_item,
+    update_marketplace_item,
+    delete_marketplace_item,
+    reject_marketplace_item,
     decompile_marketplace_bp,
+    unpublish_marketplace_bp,
 )
-from .constants import MARKETPLACE_BLUEPRINT
+from .constants import MARKETPLACE_ITEM
 
 APP_STATES = [
-    MARKETPLACE_BLUEPRINT.STATES.PENDING,
-    MARKETPLACE_BLUEPRINT.STATES.ACCEPTED,
-    MARKETPLACE_BLUEPRINT.STATES.REJECTED,
-    MARKETPLACE_BLUEPRINT.STATES.PUBLISHED,
+    MARKETPLACE_ITEM.STATES.PENDING,
+    MARKETPLACE_ITEM.STATES.ACCEPTED,
+    MARKETPLACE_ITEM.STATES.REJECTED,
+    MARKETPLACE_ITEM.STATES.PUBLISHED,
 ]
 APP_SOURCES = [
-    MARKETPLACE_BLUEPRINT.SOURCES.GLOBAL,
-    MARKETPLACE_BLUEPRINT.SOURCES.LOCAL,
+    MARKETPLACE_ITEM.SOURCES.GLOBAL,
+    MARKETPLACE_ITEM.SOURCES.LOCAL,
 ]
-
-
-@marketplace_get.command("items")
-@click.option("--name", "-n", default=None, help="Filter by name of marketplace items")
-@click.option(
-    "--quiet",
-    "-q",
-    is_flag=True,
-    default=False,
-    help="Show only marketplace item names",
-)
-@click.option(
-    "--app_family",
-    "-f",
-    default="All",
-    help="Filter by app family category of marketplace item",
-)
-@click.option(
-    "--display_all",
-    "-d",
-    is_flag=True,
-    default=False,
-    help="Show all marketplace blueprints which are published",
-)
-@click.option(
-    "--filter",
-    "filter_by",
-    "-fb",
-    default=None,
-    help="Filter marketplace items by this string",
-)
-def _get_marketplace_items(name, quiet, app_family, display_all, filter_by):
-    """Get marketplace store blueprints"""
-
-    get_marketplace_items(
-        name=name,
-        quiet=quiet,
-        app_family=app_family,
-        display_all=display_all,
-        filter_by=filter_by,
-    )
 
 
 # TODO Add limit and offset
@@ -121,37 +77,14 @@ def _get_marketplace_items(name, quiet, app_family, display_all, filter_by):
 def _get_marketplace_bps(name, quiet, app_family, app_states, filter_by):
     """Get marketplace manager blueprints"""
 
-    get_marketplace_bps(
+    get_marketplace_items(
         name=name,
         quiet=quiet,
         app_family=app_family,
         app_states=app_states,
         filter_by=filter_by,
+        type=MARKETPLACE_ITEM.TYPES.BLUEPRINT,
     )
-
-
-@marketplace_describe.command("item")
-@click.argument("name")
-@click.option(
-    "--out",
-    "-o",
-    "out",
-    type=click.Choice(["text", "json"]),
-    default="text",
-    help="output format",
-)
-@click.option("--version", "-v", default=None, help="Version of marketplace item")
-@click.option(
-    "--source",
-    "-s",
-    default=None,
-    type=click.Choice(APP_SOURCES),
-    help="App Source for marketplace item",
-)
-def _describe_marketplace_item(name, out, version, source):
-    """Describe a marketplace store item"""
-
-    describe_marketplace_item(name=name, out=out, version=version, app_source=source)
 
 
 @marketplace_describe.command("bp")
@@ -182,7 +115,7 @@ def _describe_marketplace_item(name, out, version, source):
 def _describe_marketplace_bp(name, out, version, source, app_state):
     """Describe a marketplace manager blueprint"""
 
-    describe_marketplace_bp(
+    describe_marketplace_item(
         name=name, out=out, version=version, app_source=source, app_state=app_state
     )
 
@@ -191,6 +124,9 @@ def _describe_marketplace_bp(name, out, version, source, app_state):
 @click.argument("name")
 @click.option("--version", "-v", default=None, help="Version of marketplace blueprint")
 @click.option("--project", "-pj", default=None, help="Project for the application")
+@click.option(
+    "--environment", "-e", default=None, help="Environment for the application"
+)
 @click.option("--app_name", "-a", default=None, help="Name of your app")
 @click.option(
     "--profile_name",
@@ -232,6 +168,7 @@ def _launch_marketplace_bp(
     name,
     version,
     project,
+    environment,
     app_name,
     profile_name,
     ignore_runtime_variables,
@@ -246,75 +183,7 @@ def _launch_marketplace_bp(
         name=name,
         version=version,
         project=project,
-        app_name=app_name,
-        profile_name=profile_name,
-        patch_editables=not ignore_runtime_variables,
-        app_source=source,
-        launch_params=launch_params,
-        watch=watch,
-        poll_interval=poll_interval,
-    )
-
-
-@marketplace_launch.command("item")
-@click.argument("name")
-@click.option("--version", "-v", default=None, help="Version of marketplace blueprint")
-@click.option("--project", "-pj", default=None, help="Project for the application")
-@click.option("--app_name", "-a", default=None, help="Name of app")
-@click.option(
-    "--profile_name",
-    "-p",
-    default=None,
-    help="Name of app profile to be used for blueprint launch",
-)
-@click.option(
-    "--ignore_runtime_variables",
-    "-i",
-    is_flag=True,
-    default=False,
-    help="Ignore runtime variables and use defaults for blueprint launch",
-)
-@click.option(
-    "--source",
-    "-s",
-    default=None,
-    type=click.Choice(APP_SOURCES),
-    help="App Source of marketplace blueprint",
-)
-@click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
-@click.option(
-    "--poll-interval",
-    "poll_interval",
-    "-pi",
-    type=int,
-    default=10,
-    show_default=True,
-    help="Give polling interval",
-)
-@click.option(
-    "--launch_params",
-    "-l",
-    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
-    help="Path to python file for runtime editables",
-)
-def _launch_marketplace_item(
-    name,
-    version,
-    project,
-    app_name,
-    profile_name,
-    ignore_runtime_variables,
-    source,
-    launch_params,
-    watch,
-    poll_interval,
-):
-    """Launch a marketplace store item"""
-
-    launch_marketplace_item(
-        name=name,
-        version=version,
-        project=project,
+        environment=environment,
         app_name=app_name,
         profile_name=profile_name,
         patch_editables=not ignore_runtime_variables,
@@ -517,12 +386,13 @@ def publish_bp(
 def approve_bp(name, version, category, all_projects, projects=[]):
     """Approves a marketplace manager blueprint"""
 
-    approve_marketplace_bp(
-        bp_name=name,
+    approve_marketplace_item(
+        name=name,
         version=version,
         projects=projects,
         category=category,
         all_projects=all_projects,
+        type=MARKETPLACE_ITEM.TYPES.BLUEPRINT,
     )
 
 
@@ -556,13 +426,14 @@ def approve_bp(name, version, category, all_projects, projects=[]):
 def _publish_marketplace_bp(name, version, category, source, all_projects, projects=[]):
     """Publish a marketplace blueprint to marketplace store"""
 
-    publish_marketplace_bp(
-        bp_name=name,
+    publish_marketplace_item(
+        name=name,
         version=version,
         projects=projects,
         category=category,
         app_source=source,
         all_projects=all_projects,
+        type=MARKETPLACE_ITEM.TYPES.BLUEPRINT,
     )
 
 
@@ -592,13 +463,14 @@ def _publish_marketplace_bp(name, version, category, source, all_projects, proje
 def _update_marketplace_bp(name, version, category, projects, description, source):
     """Update a marketplace manager blueprint"""
 
-    update_marketplace_bp(
+    update_marketplace_item(
         name=name,
         version=version,
         category=category,
         projects=projects,
         description=description,
         app_source=source,
+        type=MARKETPLACE_ITEM.TYPES.BLUEPRINT,
     )
 
 
@@ -624,8 +496,12 @@ def _update_marketplace_bp(name, version, category, projects, description, sourc
 def _delete_marketplace_bp(name, version, source, app_state):
     """Deletes marketplace manager blueprint"""
 
-    delete_marketplace_bp(
-        name=name, version=version, app_source=source, app_state=app_state
+    delete_marketplace_item(
+        name=name,
+        version=version,
+        app_source=source,
+        app_state=app_state,
+        type=MARKETPLACE_ITEM.TYPES.BLUEPRINT,
     )
 
 
@@ -637,7 +513,9 @@ def _delete_marketplace_bp(name, version, source, app_state):
 def _reject_marketplace_bp(name, version):
     """Reject marketplace manager blueprint"""
 
-    reject_marketplace_bp(name=name, version=version)
+    reject_marketplace_item(
+        name=name, version=version, type=MARKETPLACE_ITEM.TYPES.BLUEPRINT
+    )
 
 
 @marketplace_unpublish.command("bp")

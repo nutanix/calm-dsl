@@ -1,3 +1,4 @@
+import enum
 import uuid
 import os
 import sys
@@ -5,10 +6,25 @@ import sys
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .ref import RefType
+from .task_input import TaskInputType
 from .variable import CalmVariable
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
+
+
+class Status(enum.Enum):
+
+    SUCCESS = 1
+    FAILURE = 2
+    DONT_CARE = 3
+
+
+EXIT_CONDITION_MAP = {
+    Status.SUCCESS: "on_success",
+    Status.FAILURE: "on_failure",
+    Status.DONT_CARE: "dont_care",
+}
 
 # Task
 
@@ -21,6 +37,8 @@ class TaskType(EntityType):
         cdict = super().compile()
         if (cdict.get("target_any_local_reference", None) or None) is None:
             cdict.pop("target_any_local_reference", None)
+        if (cdict.get("exec_target_reference", None) or None) is None:
+            cdict.pop("exec_target_reference", None)
         return cdict
 
     @classmethod
@@ -153,9 +171,15 @@ def create_call_rb(runbook, target=None, name=None):
 
 
 def _exec_create(
-    script_type, script=None, filename=None, name=None, target=None, cred=None, depth=2
+    script_type,
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    target_endpoint=None,
+    cred=None,
+    depth=2,
 ):
-
     if script is not None and filename is not None:
         raise ValueError(
             "Only one of script or filename should be given for exec task "
@@ -178,6 +202,43 @@ def _exec_create(
     kwargs = {
         "name": name,
         "type": "EXEC",
+        "attrs": {"script_type": script_type, "script": script},
+    }
+    if cred is not None:
+        kwargs["attrs"]["login_credential_local_reference"] = _get_target_ref(cred)
+    if target is not None:
+        kwargs["target_any_local_reference"] = _get_target_ref(target)
+    if target_endpoint is not None:
+        kwargs["exec_target_reference"] = _get_target_ref(target_endpoint)
+
+    return _task_create(**kwargs)
+
+
+def _decision_create(
+    script_type, script=None, filename=None, name=None, target=None, cred=None, depth=2
+):
+    if script is not None and filename is not None:
+        raise ValueError(
+            "Only one of script or filename should be given for decision task "
+            + (name or "")
+        )
+
+    if filename is not None:
+        file_path = os.path.join(
+            os.path.dirname(sys._getframe(depth).f_globals.get("__file__")), filename
+        )
+
+        with open(file_path, "r") as scriptf:
+            script = scriptf.read()
+
+    if script is None:
+        raise ValueError(
+            "One of script or filename is required for decision task " + (name or "")
+        )
+
+    kwargs = {
+        "name": name,
+        "type": "DECISION",
         "attrs": {"script_type": script_type, "script": script},
     }
     if cred is not None:
@@ -228,7 +289,138 @@ def dag(name=None, child_tasks=None, edges=None, target=None):
     return _task_create(**kwargs)
 
 
+def parallel_task(name=None, child_tasks=[], attrs={}):
+    """
+    Create a PARALLEL task
+    Args:
+        name (str): Name for the task
+        child_tasks (list [Task]): Child tasks within this dag
+        attrs (dict): Task's attrs
+    Returns:
+        (Task): PARALLEL task
+    """
+
+    # This follows UI naming convention for runbooks
+    name = name or str(uuid.uuid4())[:8] + "_parallel"
+    kwargs = {
+        "name": name,
+        "child_tasks_local_reference_list": [
+            task.get_ref() for task in child_tasks or []
+        ],
+        "type": "PARALLEL",
+    }
+
+    return _task_create(**kwargs)
+
+
+def while_loop(name=None, child_tasks=[], attrs={}):
+    """
+    Create a WHILE LOOP
+    Args:
+        name (str): Name for the task
+        child_tasks (list [Task]): Child tasks within this dag
+        attrs (dict): Task's attrs
+    Returns:
+        (Task): WHILE task
+    """
+
+    # This follows UI naming convention for runbooks
+    name = name or str(uuid.uuid4())[:8] + "_while_loop"
+    kwargs = {
+        "name": name,
+        "child_tasks_local_reference_list": [
+            task.get_ref() for task in child_tasks or []
+        ],
+        "type": "WHILE_LOOP",
+        "attrs": attrs,
+    }
+
+    return _task_create(**kwargs)
+
+
+def meta(name=None, child_tasks=None, edges=None, target=None):
+    """
+    Create a META task
+    Args:
+        name (str): Name for the task
+        child_tasks (list [Task]): Child tasks within this dag
+        edges (list [tuple (Ref, Ref)]): List of tuples of ref(Task).
+                                         Each element denotes an edge from
+                                         first task to the second.
+        target (Ref): Target entity reference
+    Returns:
+        (Task): DAG task
+    """
+    # This follows UI naming convention for runbooks
+    name = name or str(uuid.uuid4())[:8] + "_meta"
+    kwargs = {
+        "name": name,
+        "child_tasks_local_reference_list": [
+            task.get_ref() for task in child_tasks or []
+        ],
+        "type": "META",
+    }
+    if target:
+        kwargs["target_any_local_reference"] = target
+
+    return _task_create(**kwargs)
+
+
 def exec_task_ssh(
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    target_endpoint=None,
+    cred=None,
+    depth=2,
+):
+    return _exec_create(
+        "sh",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        target_endpoint=target_endpoint,
+        cred=cred,
+        depth=depth,
+    )
+
+
+def exec_task_escript(script=None, filename=None, name=None, target=None, depth=2):
+    return _exec_create(
+        "static",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        target_endpoint=None,
+        depth=depth,
+    )
+
+
+def exec_task_powershell(
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    target_endpoint=None,
+    cred=None,
+    depth=2,
+):
+    return _exec_create(
+        "npsscript",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        target_endpoint=target_endpoint,
+        cred=cred,
+        depth=depth,
+    )
+
+
+def exec_task_ssh_runbook(
     script=None, filename=None, name=None, target=None, cred=None, depth=2
 ):
     return _exec_create(
@@ -242,22 +434,53 @@ def exec_task_ssh(
     )
 
 
-def exec_task_escript(script=None, filename=None, name=None, target=None, depth=2):
-    return _exec_create(
-        "static",
-        script=script,
-        filename=filename,
-        name=name,
-        target=target,
-        depth=depth,
-    )
-
-
-def exec_task_powershell(
+def exec_task_powershell_runbook(
     script=None, filename=None, name=None, target=None, cred=None, depth=2
 ):
     return _exec_create(
         "npsscript",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        cred=cred,
+        depth=depth,
+    )
+
+
+def decision_task_ssh(
+    script=None, filename=None, name=None, target=None, cred=None, depth=2
+):
+    return _decision_create(
+        "sh",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        cred=cred,
+        depth=depth,
+    )
+
+
+def decision_task_powershell(
+    script=None, filename=None, name=None, target=None, cred=None, depth=2
+):
+    return _decision_create(
+        "npsscript",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        cred=cred,
+        depth=depth,
+    )
+
+
+def decision_task_escript(
+    script=None, filename=None, name=None, target=None, cred=None, depth=2
+):
+    return _decision_create(
+        "static",
         script=script,
         filename=filename,
         name=name,
@@ -287,6 +510,7 @@ def set_variable_task_ssh(
     filename=None,
     name=None,
     target=None,
+    target_endpoint=None,
     variables=None,
     depth=3,
     cred=None,
@@ -296,6 +520,7 @@ def set_variable_task_ssh(
         filename=filename,
         name=name,
         target=target,
+        target_endpoint=target_endpoint,
         depth=depth,
         cred=cred,
     )
@@ -316,6 +541,7 @@ def set_variable_task_powershell(
     filename=None,
     name=None,
     target=None,
+    target_endpoint=None,
     variables=None,
     depth=3,
     cred=None,
@@ -325,10 +551,107 @@ def set_variable_task_powershell(
         filename=filename,
         name=name,
         target=target,
+        target_endpoint=target_endpoint,
         depth=depth,
         cred=cred,
     )
     return _set_variable_create(task, variables)
+
+
+def http_task_on_endpoint(
+    method,
+    relative_url=None,
+    body=None,
+    headers=None,
+    secret_headers=None,
+    content_type=None,
+    status_mapping=None,
+    response_paths=None,
+    name=None,
+    target=None,
+):
+    """
+
+    Defines a HTTP Task on http endpoint target.
+
+    Args:
+        method (str): HTTP method ("GET", "POST", "PUT", "DELETE", ..)
+        headers (dict): Request headers
+        secret_headers (dict): Request headers that are to be masked
+        content_type (string): Request Content-Type (application/json, application/xml, etc.)
+        status_mapping (dict): Mapping of  Response status code (int) to
+                               task status (True: success, False: Failure)
+        response_paths (dict): Mapping of variable name (str) to path in response (str)
+        name (str): Task name
+        target (Ref): Target entity that this task runs under.
+    Returns:
+        (Task): HTTP Task
+    """
+    return http_task(
+        method,
+        "",  # As url is present is target endpoint
+        body=body,
+        relative_url=relative_url,
+        headers=headers,
+        secret_headers=secret_headers,
+        content_type=content_type,
+        status_mapping=status_mapping,
+        response_paths=response_paths,
+        name=name,
+        target=target,
+    )
+
+
+def http_task_get_on_endpoint(**kwargs):
+    """
+
+    Defines a HTTP GET Task on http endpoint target.
+
+    Args:
+        kwargs (Ref): keyword arguments for http task on endpoint
+    Returns:
+        (Task): HTTP Task
+    """
+    return http_task_on_endpoint("GET", **kwargs)
+
+
+def http_task_post_on_endpoint(**kwargs):
+    """
+
+    Defines a HTTP POST Task on http endpoint target.
+
+    Args:
+        kwargs (Ref): keyword arguments for http task on endpoint
+    Returns:
+        (Task): HTTP Task
+    """
+    return http_task_on_endpoint("POST", **kwargs)
+
+
+def http_task_put_on_endpoint(**kwargs):
+    """
+
+    Defines a HTTP PUT Task on http endpoint target.
+
+    Args:
+        kwargs (Ref): keyword arguments for http task on endpoint
+    Returns:
+        (Task): HTTP Task
+    """
+    return http_task_on_endpoint("PUT", **kwargs)
+
+
+def http_task_delete_on_endpoint(**kwargs):
+    """
+
+    Defines a HTTP GET Task on http endpoint target.
+
+    Args:
+        kwargs (Ref): keyword arguments for http task on endpoint
+    Returns:
+        (Task): HTTP Task
+    """
+    return http_task_on_endpoint("DELETE", **kwargs)
 
 
 def http_task_get(
@@ -607,6 +930,7 @@ def _header_variables_from_dict(headers, secret=False):
 def http_task(
     method,
     url,
+    relative_url=None,
     body=None,
     headers=None,
     secret_headers=None,
@@ -698,6 +1022,9 @@ def http_task(
             "retry_interval": retry_interval,
         },
     }
+
+    if relative_url is not None:
+        kwargs["attrs"]["relative_url"] = relative_url
 
     if body is not None:
         kwargs["attrs"]["request_body"] = body
@@ -847,17 +1174,78 @@ def delay_task(delay_seconds=None, name=None, target=None):
     return _task_create(**kwargs)
 
 
-class CalmTask:
+def vm_operation(name=None, type="VM_OPERATION", target=None):
+    """
+    Defines a vm_operation task i.e. POWERON/ POWEROFF/ RESTART
+    Args:
+        name (str): Name for this task
+        type(str): Task Type
+        target (Ref): Target entity for this task
+    Returns:
+        (Task): VM Operation task
+    """
+    kwargs = {"name": name, "type": type}
+    if target is not None:
+        kwargs["target_any_local_reference"] = _get_target_ref(target)
+    return _task_create(**kwargs)
+
+
+def input_task(timeout=None, name=None, inputs=[]):
+    """
+    Defines a input task.
+    Args:
+        timeout(int): Task timeout in seconds
+        name (str): Name for this task
+        inputs (list): list of inputs for the task
+    Returns:
+        (Task): Delay task
+    """
+    if not isinstance(timeout, int):
+        raise TypeError(
+            "timeout is expected to be an integer, got {}".format(type(timeout))
+        )
+    kwargs = {
+        "name": name,
+        "type": "INPUT",
+        "attrs": {"task_timeout": timeout, "inputs": []},
+    }
+    for task_input in inputs:
+        if not isinstance(task_input, TaskInputType):
+            raise TypeError(
+                "All inputs is expected to be an TaskInputType, got {}".format(
+                    type(task_input)
+                )
+            )
+        kwargs["attrs"]["inputs"].append(
+            {
+                "name": task_input.name,
+                "input_type": task_input.input_type,
+                "options": task_input.options,
+            }
+        )
+    return _task_create(**kwargs)
+
+
+def confirm_task(timeout=None, name=None):
+    """
+    Defines a confirm task.
+    Args:
+        timeout(int): Task timeout in seconds
+        name (str): Name for this task
+    Returns:
+        (Task): Delay task
+    """
+    if not isinstance(timeout, int):
+        raise TypeError(
+            "timeout is expected to be an integer, got {}".format(type(timeout))
+        )
+    kwargs = {"name": name, "type": "CONFIRM", "attrs": {"task_timeout": timeout}}
+    return _task_create(**kwargs)
+
+
+class BaseTask:
     def __new__(cls, *args, **kwargs):
         raise TypeError("'{}' is not callable".format(cls.__name__))
-
-    class Exec:
-        def __new__(cls, *args, **kwargs):
-            raise TypeError("'{}' is not callable".format(cls.__name__))
-
-        ssh = exec_task_ssh
-        powershell = exec_task_powershell
-        escript = exec_task_escript
 
     class HTTP:
         def __new__(
@@ -908,10 +1296,109 @@ class CalmTask:
         powershell = set_variable_task_powershell
         escript = set_variable_task_escript
 
+    class Delay:
+        def __new__(cls, delay_seconds=None, name=None, target=None):
+            return delay_task(delay_seconds=delay_seconds, name=name, target=target)
+
+
+class CalmTask(BaseTask):
     class Scaling:
         scale_in = scale_in_task
         scale_out = scale_out_task
 
-    class Delay:
-        def __new__(cls, delay_seconds=None, name=None, target=None):
-            return delay_task(delay_seconds=delay_seconds, name=name, target=target)
+    class Exec:
+        def __new__(cls, *args, **kwargs):
+            raise TypeError("'{}' is not callable".format(cls.__name__))
+
+        ssh = exec_task_ssh
+        powershell = exec_task_powershell
+        escript = exec_task_escript
+
+
+class RunbookTask(BaseTask):
+    class Decision:
+        def __new__(cls, *args, **kwargs):
+            raise TypeError("'{}' is not callable".format(cls.__name__))
+
+        ssh = decision_task_ssh
+        powershell = decision_task_powershell
+        escript = decision_task_escript
+
+    class Exec:
+        def __new__(cls, *args, **kwargs):
+            raise TypeError("'{}' is not callable".format(cls.__name__))
+
+        ssh = exec_task_ssh_runbook
+        powershell = exec_task_powershell_runbook
+        escript = exec_task_escript
+
+    class Loop:
+        def __new__(
+            cls,
+            iterations,
+            name=None,
+            child_tasks=[],
+            loop_variable="iteration",
+            exit_condition=Status.DONT_CARE,
+        ):
+            attrs = {"iterations": str(iterations), "loop_variable": loop_variable}
+            exit_code = EXIT_CONDITION_MAP.get(exit_condition, None)
+            if exit_code:
+                attrs["exit_condition_type"] = exit_code
+            else:
+                raise ValueError(
+                    "Valid Exit Conditions for loop are 'Status.SUCCESS/Status.FAILURE/Status.DONT_CARE'."
+                )
+            return while_loop(name=name, child_tasks=child_tasks, attrs=attrs)
+
+    class HTTP:
+        def __new__(
+            cls,
+            method,
+            relative_url=None,
+            body=None,
+            headers=None,
+            secret_headers=None,
+            content_type=None,
+            status_mapping=None,
+            response_paths=None,
+            name=None,
+            target=None,
+        ):
+            return http_task_on_endpoint(
+                method,
+                relative_url=relative_url,
+                body=body,
+                headers=headers,
+                secret_headers=secret_headers,
+                content_type=content_type,
+                status_mapping=status_mapping,
+                response_paths=response_paths,
+                name=name,
+                target=target,
+            )
+
+        get = http_task_get_on_endpoint
+        post = http_task_post_on_endpoint
+        put = http_task_put_on_endpoint
+        delete = http_task_delete_on_endpoint
+
+    class Input:
+        def __new__(cls, timeout=500, name=None, inputs=[]):
+            return input_task(timeout=timeout, name=name, inputs=inputs)
+
+    class Confirm:
+        def __new__(cls, timeout=500, name=None):
+            return confirm_task(timeout=timeout, name=name)
+
+    class VMPowerOn:
+        def __new__(cls, name=None, target=None):
+            return vm_operation(name=name, type="VM_POWERON", target=target)
+
+    class VMPowerOff:
+        def __new__(cls, name=None, target=None):
+            return vm_operation(name=name, type="VM_POWEROFF", target=target)
+
+    class VMRestart:
+        def __new__(cls, name=None, target=None):
+            return vm_operation(name=name, type="VM_RESTART", target=target)

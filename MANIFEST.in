@@ -4,3 +4,5 @@ include calm/dsl/init/blueprint/*.py.jinja2
 include calm/dsl/init/blueprint/scripts/*.sh
 recursive-include calm/dsl/providers/plugins *
 include calm/dsl/decompile/schemas/*.py.jinja2
+include calm/dsl/init/runbook/*.py.jinja2
+include calm/dsl/init/runbook/scripts/*.*

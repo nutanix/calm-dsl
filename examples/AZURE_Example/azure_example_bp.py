@@ -4,7 +4,7 @@ from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import read_provider_spec, read_local_file
 
 
-AZURE_VM_PASSWD = read_local_file("passwd")
+AZURE_VM_PASSWD = read_local_file(".tests/password")
 
 
 class SampleService(Service):

@@ -1,0 +1,50 @@
+{
+  "spec": {
+    "name": "linux_static_ahv_ep_1",
+    "resources": {
+      "type": "Linux",
+      "value_type": "VM",
+      "provider_type": "NUTANIX_PC",
+      "attrs": {
+        "vm_references": [{
+            "kind": "vm",
+            "name": "test_vm",
+            "uuid": "a265e505-1044-4d42-875b-40d2432a3f75"
+        }],
+        "port": 22,
+        "credential_definition_list": [
+            {
+		        "username": "root",
+            	"uuid": "79410ee9-5db3-460f-af71-195bdcdba9bc",
+                "name": "endpoint_cred_8f14ceb1",
+                "secret": {
+                    "attrs": {
+                        "is_secret_modified": true
+                    },
+                    "value": "nutanix/4u"
+                },
+                "type": "PASSWORD",
+                "description": ""
+            }
+        ],
+        "login_credential_reference": {
+            "kind": "app_credential",
+            "name": "endpoint_cred_8f14ceb1",
+            "uuid": "79410ee9-5db3-460f-af71-195bdcdba9bc"
+        },
+        "account_reference": {
+            "kind": "account",
+            "name": "NTNX_LOCAL_AZ"
+        },
+        "filter_type": "static",
+        "subnet": "10.0.0.0/8"
+      }
+    }
+  },
+  "api_version": "3.0",
+  "metadata": {
+    "kind": "endpoint",
+    "name": "linux_static_ahv_ep_1",
+    "uuid": "9e6fd4b2-6bab-4e3a-848f-d0a011057523"
+  }
+}

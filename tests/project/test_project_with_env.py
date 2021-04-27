@@ -2,6 +2,7 @@
 # Project create command will pick one Environment module from file and attaches to project
 
 import uuid
+import json
 
 from calm.dsl.builtins import Project, read_local_file, readiness_probe
 from calm.dsl.builtins import Provider, Ref
@@ -10,10 +11,38 @@ from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC
 from calm.dsl.builtins import basic_cred, AhvVmResources, AhvVm
 
 
-CENTOS_KEY = read_local_file("keys/centos")
-CENTOS_PUBLIC_KEY = read_local_file("keys/centos_pub")
+CENTOS_KEY = read_local_file(".tests/keys/centos")
+CENTOS_PUBLIC_KEY = read_local_file(".tests/keys/centos_pub")
 
 Centos = basic_cred("centos", CENTOS_KEY, name="Centos", type="KEY", default=True)
+
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+ACCOUNTS = DSL_CONFIG["ACCOUNTS"]
+
+NTNX_ACCOUNT = ACCOUNTS["NUTANIX_PC"][0]
+NTNX_ACCOUNT_NAME = NTNX_ACCOUNT["NAME"]
+NTNX_SUBNET = NTNX_ACCOUNT["SUBNETS"][0]["NAME"]
+NTNX_SUBNET_CLUSTER = NTNX_ACCOUNT["SUBNETS"][0]["CLUSTER"]
+CENTOS_CI = DSL_CONFIG["AHV"]["IMAGES"]["DISK"]["CENTOS_7_CLOUD_INIT"]
+SQL_SERVER_IMAGE = DSL_CONFIG["AHV"]["IMAGES"]["CD_ROM"]["SQL_SERVER_2014_x64"]
+
+AWS_ACCOUNT = ACCOUNTS["AWS"][0]
+AWS_ACCOUNT_NAME = AWS_ACCOUNT["NAME"]
+
+AZURE_ACCOUNT = ACCOUNTS["AZURE"][0]
+AZURE_ACCOUNT_NAME = AZURE_ACCOUNT["NAME"]
+
+GCP_ACCOUNT = ACCOUNTS["GCP"][0]
+GCP_ACCOUNT_NAME = GCP_ACCOUNT["NAME"]
+
+VMWARE_ACCOUNT = ACCOUNTS["VMWARE"][0]
+VMWARE_ACCOUNT_NAME = VMWARE_ACCOUNT["NAME"]
+
+K8S_ACCOUNT = ACCOUNTS["K8S"][0]
+K8S_ACCOUNT_NAME = K8S_ACCOUNT["NAME"]
+
+USER = DSL_CONFIG["USERS"][0]
+USER_NAME = USER["NAME"]
 
 
 class MyAhvLinuxVmResources(AhvVmResources):
@@ -22,9 +51,9 @@ class MyAhvLinuxVmResources(AhvVmResources):
     vCPUs = 2
     cores_per_vCPU = 1
     disks = [
-        AhvVmDisk.Disk.Scsi.cloneFromImageService("Centos7", bootable=True),
+        AhvVmDisk.Disk.Scsi.cloneFromImageService(CENTOS_CI, bootable=True),
     ]
-    nics = [AhvVmNic("vlan.0")]
+    nics = [AhvVmNic(NTNX_SUBNET, cluster=NTNX_SUBNET_CLUSTER)]
 
     guest_customization = AhvVmGC.CloudInit(
         config={
@@ -60,11 +89,9 @@ class MyAhvWindowsVmResources(AhvVmResources):
     vCPUs = 2
     cores_per_vCPU = 1
     disks = [
-        AhvVmDisk.Disk.Scsi.cloneFromImageService(
-            "WindowsServer2016.qcow2", bootable=True
-        ),
+        AhvVmDisk.Disk.Scsi.cloneFromImageService(CENTOS_CI, bootable=True),
     ]
-    nics = [AhvVmNic("vlan.0")]
+    nics = [AhvVmNic(NTNX_SUBNET, cluster=NTNX_SUBNET_CLUSTER)]
 
     guest_customization = AhvVmGC.Sysprep.FreshScript(
         filename="scripts/sysprep_script.xml"
@@ -93,30 +120,24 @@ class ProjEnvironment(Environment):
     credentials = [Centos]
 
 
-class TestDslProjectWithEnv(Project):
+class TestDslProjectWithEnv1(Project):
     """Sample DSL Project with environments"""
 
     providers = [
         Provider.Ntnx(
-            account=Ref.Account("NTNX_LOCAL_AZ"),
-            subnets=[Ref.Subnet(name="vlan.0", cluster="calmdev1")],
+            account=Ref.Account(NTNX_ACCOUNT_NAME),
+            subnets=[Ref.Subnet(name=NTNX_SUBNET, cluster=NTNX_SUBNET_CLUSTER)],
         ),
-        Provider.Aws(account=Ref.Account("AWS account")),
-        Provider.Azure(account=Ref.Account("AZURE_account")),
-        Provider.Gcp(account=Ref.Account("GCP Account")),
-        Provider.Vmware(account=Ref.Account("Vmware Account")),
-        Provider.K8s(account=Ref.Account("K8S_account_basic_auth")),
+        Provider.Aws(account=Ref.Account(AWS_ACCOUNT_NAME)),
+        Provider.Azure(account=Ref.Account(AZURE_ACCOUNT_NAME)),
+        Provider.Gcp(account=Ref.Account(GCP_ACCOUNT_NAME)),
+        Provider.Vmware(account=Ref.Account(VMWARE_ACCOUNT_NAME)),
+        Provider.K8s(account=Ref.Account(K8S_ACCOUNT_NAME)),
     ]
 
-    users = [
-        Ref.User(name="sspuser1@systest.nutanix.com"),
-    ]
+    users = [Ref.User(name=USER_NAME)]
 
     envs = [ProjEnvironment]
-
-    groups = [
-        Ref.Group(name="cn=sspgroup1,ou=pc,dc=systest,dc=nutanix,dc=com"),
-    ]
 
     quotas = {
         "vcpus": 1,
