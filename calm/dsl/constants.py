@@ -93,60 +93,58 @@ class PROVIDER_RESOURCE:
     class NUTANIX:
         VM = "VM"
         KARBON = "KARBON"
-    
+
     class AWS:
         EC2 = "EC2"
-    
+
     class AWS_C2S:
         EC2 = "EC2"
-    
+
     class GCLOUD:
         GCP = "GCP"
-    
+
     class AZURE:
         VM = "VM"
-    
+
     class VMWARE:
         VM = "VM"
-    
+
     class KUBERNETES:
         VANILLA = "VANILLA"
 
     __default__ = {
-        PROVIDER.NUTANIX : NUTANIX.VM,
-        PROVIDER.AWS : AWS.EC2,
-        PROVIDER.AWS_C2S : AWS_C2S.EC2,
-        PROVIDER.GCLOUD : GCLOUD.GCP,
-        PROVIDER.AZURE : AZURE.VM,
-        PROVIDER.VMWARE : VMWARE.VM,
-        PROVIDER.KUBERNETES: KUBERNETES.VANILLA
+        PROVIDER.NUTANIX: NUTANIX.VM,
+        PROVIDER.AWS: AWS.EC2,
+        PROVIDER.AWS_C2S: AWS_C2S.EC2,
+        PROVIDER.GCLOUD: GCLOUD.GCP,
+        PROVIDER.AZURE: AZURE.VM,
+        PROVIDER.VMWARE: VMWARE.VM,
+        PROVIDER.KUBERNETES: KUBERNETES.VANILLA,
     }
 
 
 # Used for conversion of (provider_type, resource_type) to calm_account_type
 ACCOUNT_TYPE_MAP = {
-    PROVIDER.NUTANIX : {
-        PROVIDER_RESOURCE.NUTANIX.VM : "nutanix_pc",
-        PROVIDER_RESOURCE.NUTANIX.KARBON : "kubernetes",
+    PROVIDER.NUTANIX: {
+        PROVIDER_RESOURCE.NUTANIX.VM: "nutanix_pc",
+        PROVIDER_RESOURCE.NUTANIX.KARBON: "kubernetes",
     },
-    PROVIDER.AWS : {
-        PROVIDER_RESOURCE.AWS.EC2 : "aws",
+    PROVIDER.AWS: {
+        PROVIDER_RESOURCE.AWS.EC2: "aws",
     },
     PROVIDER.AWS_C2S: {
-        PROVIDER_RESOURCE.AWS_C2S.EC2 : "aws_govcloud",
+        PROVIDER_RESOURCE.AWS_C2S.EC2: "aws_govcloud",
     },
     PROVIDER.AZURE: {
-        PROVIDER_RESOURCE.AZURE.VM : "azure",
+        PROVIDER_RESOURCE.AZURE.VM: "azure",
     },
     PROVIDER.VMWARE: {
-        PROVIDER_RESOURCE.VMWARE.VM : "vmware",
+        PROVIDER_RESOURCE.VMWARE.VM: "vmware",
     },
     PROVIDER.GCLOUD: {
-        PROVIDER_RESOURCE.GCLOUD.GCP : "gcp",
+        PROVIDER_RESOURCE.GCLOUD.GCP: "gcp",
     },
-    PROVIDER.KUBERNETES: {
-        PROVIDER_RESOURCE.KUBERNETES.VANILLA: "kubernetes"
-    }
+    PROVIDER.KUBERNETES: {PROVIDER_RESOURCE.KUBERNETES.VANILLA: "kubernetes"},
 }
 
 

@@ -35,8 +35,7 @@ from calm.dsl.constants import PROVIDER
     help="Search for accounts of specific provider",
     type=click.Choice(
         [
-            "aws"
-            "aws_c2s",
+            "aws" "aws_c2s",
             "k8s",
             "vmware",
             "azure",

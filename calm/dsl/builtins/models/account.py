@@ -32,7 +32,7 @@ class AccountSpecType(EntityType):
 
         if provider_type not in cls.subclasses:
             cls.subclasses[provider_type] = {}
-        
+
         cls.subclasses[provider_type][resource_type] = cls
 
 
@@ -62,11 +62,15 @@ class AccountType(EntityType):
 
         if not resource_type:
             resource_type = PROVIDER_RESOURCE.__default__[provider_type]
-        
+
         if resource_type not in _spec_classes[provider_type]:
-            LOG.error("Resource Type '{}' for Provider '{}' not registered".format(resource_type, provider_type))
+            LOG.error(
+                "Resource Type '{}' for Provider '{}' not registered".format(
+                    resource_type, provider_type
+                )
+            )
             sys.exit(-1)
-        
+
         provider_spec_account = _spec_classes[provider_type][resource_type]
 
         pva_openapi_type = getattr(provider_spec_account, "__openapi_type__")
