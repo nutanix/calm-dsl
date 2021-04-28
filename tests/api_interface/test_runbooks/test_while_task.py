@@ -15,7 +15,7 @@ class TestWhileTasks:
     @pytest.mark.runbook
     @pytest.mark.regression
     def test_while_task_order(self):
-        """ test_while_loop_tasks_order """
+        """test_while_loop_tasks_order"""
 
         client = get_api_client()
         rb_name = "test_whiletask_" + str(uuid.uuid4())[-10:]
@@ -95,7 +95,7 @@ class TestWhileTasks:
     @pytest.mark.runbook
     @pytest.mark.regression
     def test_while_task_loop_variable(self):
-        """ test_while_loop_task_loop_variable """
+        """test_while_loop_task_loop_variable"""
 
         client = get_api_client()
         rb_name = "test_while_loop_var_" + str(uuid.uuid4())[-10:]
@@ -140,7 +140,7 @@ class TestWhileTasks:
     @pytest.mark.runbook
     @pytest.mark.regression
     def test_macro_in_while_iteration(self):
-        """ test_while_macro_in_iteration_count"""
+        """test_while_macro_in_iteration_count"""
 
         client = get_api_client()
         rb_name = "test_while_macro_" + str(uuid.uuid4())[-10:]

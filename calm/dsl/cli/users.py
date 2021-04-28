@@ -19,7 +19,7 @@ LOG = get_logging_handle(__name__)
 
 
 def get_users(name, filter_by, limit, offset, quiet, out):
-    """ Get the users, optionally filtered by a string """
+    """Get the users, optionally filtered by a string"""
 
     client = get_api_client()
 

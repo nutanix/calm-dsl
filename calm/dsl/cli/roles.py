@@ -13,7 +13,7 @@ LOG = get_logging_handle(__name__)
 
 
 def get_roles(name, filter_by, limit, offset, quiet, out):
-    """ Get the roles, optionally filtered by a string """
+    """Get the roles, optionally filtered by a string"""
 
     client = get_api_client()
     ContextObj = get_context()

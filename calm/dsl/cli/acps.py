@@ -20,7 +20,7 @@ LOG = get_logging_handle(__name__)
 
 
 def get_acps(name, project_name, filter_by, limit, offset, quiet, out):
-    """ Get the acps, optionally filtered by a string """
+    """Get the acps, optionally filtered by a string"""
 
     client = get_api_client()
 

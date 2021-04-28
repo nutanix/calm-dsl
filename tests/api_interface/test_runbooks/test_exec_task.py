@@ -176,7 +176,7 @@ class TestExecTasks:
         "Runbook", [MacroOnShell, MacroOnPowershell, MacroOnEscript]
     )
     def test_macro_in_script(self, Runbook):
-        """ test_macro_in_script """
+        """test_macro_in_script"""
 
         client = get_api_client()
         rb_name = "test_exectask_" + str(uuid.uuid4())[-10:]
@@ -264,7 +264,7 @@ class TestExecTasks:
         ],
     )
     def test_os_endpoint_macro_in_script(self, Runbook):
-        """ test_macro_in_script """
+        """test_macro_in_script"""
 
         client = get_api_client()
         rb_name = "test_exectask_" + str(uuid.uuid4())[-10:]
@@ -375,7 +375,7 @@ class TestExecTasks:
     @pytest.mark.runbook
     @pytest.mark.regression
     def test_http_endpoint_macro_in_script(self):
-        """ test_macro_in_script """
+        """test_macro_in_script"""
 
         client = get_api_client()
         rb_name = "test_exectask_" + str(uuid.uuid4())[-10:]

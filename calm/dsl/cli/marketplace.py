@@ -249,7 +249,7 @@ def get_marketplace_store_items(
 def get_marketplace_items(
     name, quiet, app_family, app_states=[], filter_by="", type=None
 ):
-    """ List all the marketlace items listed in the manager"""
+    """List all the marketlace items listed in the manager"""
 
     res = get_mpis_group_call(
         name=name,

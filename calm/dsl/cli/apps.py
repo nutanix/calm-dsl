@@ -640,7 +640,7 @@ def get_action_var_val_from_launch_params(launch_vars, var_name):
 def get_action_runtime_args(
     app_uuid, action_payload, patch_editables, runtime_params_file
 ):
-    """Returns action arguments or variable data """
+    """Returns action arguments or variable data"""
 
     action_name = action_payload["name"]
 

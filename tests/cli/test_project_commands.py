@@ -28,7 +28,7 @@ CALM_VERSION = Version.get_version("Calm")
 
 class TestProjectCommands:
     def setup_method(self):
-        """"Reset the context changes"""
+        """ "Reset the context changes"""
 
         # Resetting context
         ContextObj = get_context()
@@ -38,7 +38,7 @@ class TestProjectCommands:
         reset_metadata_obj()
 
     def teardown_method(self):
-        """"Reset the context changes"""
+        """ "Reset the context changes"""
 
         # Resetting context
         ContextObj = get_context()

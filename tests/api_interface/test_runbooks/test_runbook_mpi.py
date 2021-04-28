@@ -1131,7 +1131,7 @@ class TestMarketplaceRunbook:
     @pytest.mark.runbook
     @pytest.mark.regression
     def test_mpi_while_decision(self):
-        """ test_while_macro_in_iteration_count"""
+        """test_while_macro_in_iteration_count"""
 
         client = get_api_client()
         rb_name = "test_while_macro_" + str(uuid.uuid4())[-10:]

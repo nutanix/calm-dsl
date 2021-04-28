@@ -12,7 +12,7 @@ class TestDecisionTasks:
     @pytest.mark.ces
     @pytest.mark.regression
     def test_decision_task(self):
-        """ test_desision_task """
+        """test_desision_task"""
 
         client = get_api_client()
         rb_name = "test_decisiontask_" + str(uuid.uuid4())[-10:]

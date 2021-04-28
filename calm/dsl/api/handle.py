@@ -80,7 +80,7 @@ def update_api_client(
     scheme=REQUEST.SCHEME.HTTPS,
     auth=None,
 ):
-    """updates global api client object (_API_CLIENT_HANDLE) """
+    """updates global api client object (_API_CLIENT_HANDLE)"""
 
     global _API_CLIENT_HANDLE
 
@@ -93,7 +93,7 @@ def update_api_client(
 
 
 def get_api_client():
-    """returns global api client object (_API_CLIENT_HANDLE) """
+    """returns global api client object (_API_CLIENT_HANDLE)"""
 
     global _API_CLIENT_HANDLE
 
