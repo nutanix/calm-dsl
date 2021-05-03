@@ -14,7 +14,7 @@ class TestRunbooks:
     @pytest.mark.regression
     @pytest.mark.parametrize("Runbook", [DslInputRunbook])
     def test_input_task_in_runbook(self, Runbook):
-        """ test_input_task """
+        """test_input_task"""
 
         client = get_api_client()
         rb_name = "test_runbook_" + str(uuid.uuid4())[-10:]

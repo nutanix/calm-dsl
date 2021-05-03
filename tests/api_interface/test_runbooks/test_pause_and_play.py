@@ -14,7 +14,7 @@ class TestRunbooks:
     @pytest.mark.regression
     @pytest.mark.parametrize("Runbook", [DslSimpleRunbook])
     def test_rb_pause_and_play(self, Runbook):
-        """ test_pause_and_play """
+        """test_pause_and_play"""
 
         client = get_api_client()
         rb_name = "test_runbook_" + str(uuid.uuid4())[-10:]

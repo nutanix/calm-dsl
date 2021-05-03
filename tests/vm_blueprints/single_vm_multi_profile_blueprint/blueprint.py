@@ -59,7 +59,7 @@ class SmallAhvVmResources(AhvVmResources):
 
 
 class AhvVmSmallProfile(VmProfile):
-    """ Small Ahv Vm Profile"""
+    """Small Ahv Vm Profile"""
 
     # Profile variables
     nameserver = Var(DNS_SERVER, label="Local DNS resolver")
@@ -88,7 +88,7 @@ class AhvVmSmallProfile(VmProfile):
 
 # NOTE: Inheriting `AhvVmSmallProfile` class to inherit disks and nics
 class LargeAhvVmResources(SmallAhvVmResources):
-    """ Vm Ahv Resources """
+    """Vm Ahv Resources"""
 
     memory = 4
     vCPUs = 2
@@ -97,7 +97,7 @@ class LargeAhvVmResources(SmallAhvVmResources):
 
 # NOTE: Inheriting `AhvVmSmallProfile` class to inherit variables and actions
 class AhvVmLargeProfile(AhvVmSmallProfile):
-    """ Large Ahv Vm  Profile """
+    """Large Ahv Vm  Profile"""
 
     provider_spec = ahv_vm(resources=LargeAhvVmResources, name="LargeAhvVm")
 

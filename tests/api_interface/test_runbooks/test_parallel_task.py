@@ -11,7 +11,7 @@ class TestParallelTasks:
     @pytest.mark.runbook
     @pytest.mark.regression
     def test_parallel_task(self):
-        """ test_parallel_tasks """
+        """test_parallel_tasks"""
 
         client = get_api_client()
         rb_name = "test_paralleltasks_" + str(uuid.uuid4())[-10:]

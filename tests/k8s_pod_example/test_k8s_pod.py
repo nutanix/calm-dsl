@@ -52,7 +52,7 @@ class DiscourseService(Service):
 
 
 class K8SDeployment1(PODDeployment):
-    """ Sample K8S Deployment """
+    """Sample K8S Deployment"""
 
     containers = [RedisService, DiscourseService]
     deployment_spec = read_spec("specs/deployment1.yaml")
@@ -108,7 +108,7 @@ class MailService(Service):
 
 
 class K8SDeployment2(PODDeployment):
-    """ Sample K8S Deployment """
+    """Sample K8S Deployment"""
 
     containers = [MailService]
     deployment_spec = read_spec("specs/deployment2.yaml")

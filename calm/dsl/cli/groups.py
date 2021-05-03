@@ -19,7 +19,7 @@ LOG = get_logging_handle(__name__)
 
 
 def get_groups(name, filter_by, limit, offset, quiet, out):
-    """ Get the groups, optionally filtered by a string """
+    """Get the groups, optionally filtered by a string"""
 
     client = get_api_client()
 

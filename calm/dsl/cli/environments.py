@@ -124,7 +124,7 @@ def get_project_environment(name=None, uuid=None, project_name=None, project_uui
 
 
 def get_environment_by_uuid(environment_uuid):
-    """ Fetch the environment with the given name under the given project """
+    """Fetch the environment with the given name under the given project"""
     LOG.info("Fetching details of environment (uuid='{}')".format(environment_uuid))
     client = get_api_client()
     res, err = client.environment.read(environment_uuid)

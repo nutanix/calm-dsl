@@ -64,7 +64,7 @@ class MySQLDeployment(SimpleDeployment):
 
 
 class K8SDeployment1(SimpleDeployment):
-    """ K8SDeployment Description"""
+    """K8SDeployment Description"""
 
     deployment_spec = read_spec("specs/deployment1.yaml")
     service_spec = read_spec("specs/service1.yaml")
