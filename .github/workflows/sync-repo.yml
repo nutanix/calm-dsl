@@ -1,0 +1,26 @@
+name: Sync Private Repo
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: [ubuntu-latest]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        repository: ideadevice/calm-dsl
+        ref: master
+    - name: Git remote add
+      run: git remote add upstream https://github.com/nutanix/calm-dsl
+    - name: Git push disable upstream
+      run: git remote set-url --push upstream DISABLE
+    - name: Print remote
+      run: git remote -v
+    - name: Git Fetch upstream
+      run: git fetch --all --prune --unshallow
+    - name: Git Rebase
+      run: git rebase upstream/master
+    - name: Git Push
+      run: git push origin/master
