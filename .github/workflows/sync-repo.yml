@@ -22,6 +22,12 @@ jobs:
     - name: Git Fetch upstream
       run: git fetch --all --prune --unshallow
     - name: Git Merge
-      run: git merge upstream/master
-    - name: Git Push
-      run: git push origin master
+      run:  |
+        git merge upstream/master --allow-unrelated-histories
+        git fetch --unshallow origin
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.DSL_AUTH_TOKEN }}
+        repository: ideadevice/calm-dsl
+        branch: master
