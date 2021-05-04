@@ -12,6 +12,7 @@ jobs:
       with:
         repository: ideadevice/calm-dsl
         ref: master
+        token: ${{ secrets.DSL_AUTH_TOKEN }}
     - name: Git remote add
       run: git remote add upstream https://github.com/nutanix/calm-dsl
     - name: Git push disable upstream
