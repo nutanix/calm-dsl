@@ -24,4 +24,4 @@ jobs:
     - name: Git Rebase
       run: git rebase upstream/master
     - name: Git Push
-      run: git push origin/master
+      run: git push origin master
