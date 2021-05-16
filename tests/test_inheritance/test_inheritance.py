@@ -265,11 +265,3 @@ def test_json():
     known_json = open(file_path).read()
 
     assert generated_json == known_json
-
-
-def main():
-    print(TestInheritance.json_dumps(pprint=True))
-
-
-if __name__ == "__main__":
-    main()

@@ -508,11 +508,3 @@ def test_json():
 
     known_json = open(file_path).read()
     assert generated_json == known_json
-
-
-def main():
-    print(ExistingVMBlueprint.json_dumps(pprint=True), end="")
-
-
-if __name__ == "__main__":
-    main()

@@ -121,11 +121,3 @@ class NextDslBlueprint(Blueprint):
     packages = [MySQLPackage, PHPPackage]
     substrates = [AHVVMforMySQL, AHVVMforPHP]
     profiles = [DefaultProfile]
-
-
-def main():
-    print(NextDslBlueprint.json_dumps(pprint=True))
-
-
-if __name__ == "__main__":
-    main()
