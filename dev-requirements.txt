@@ -2,7 +2,9 @@ j2cli[yaml]==0.3.10
 ipython==7.16.1
 pytest>=4.2.0,<=5.3.5
 pytest-sugar==0.9.4
+pytest-html==3.1.1
 pytest-cov==2.11.1
+pytest-csv==2.0.2
 autopep8==1.5.7
 flake8==3.9.2
 pyflakes==2.3.1
