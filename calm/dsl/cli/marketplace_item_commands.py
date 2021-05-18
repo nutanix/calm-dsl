@@ -146,7 +146,51 @@ def _launch_marketplace_item(
     watch,
     poll_interval,
 ):
-    """Launch a marketplace store item of type blueprint"""
+    """Launch a marketplace store item of type blueprint
+    All runtime variables will be prompted by default. When passing the 'ignore_runtime_variables' flag, no variables will be prompted and all default values will be used.
+    The marketplace-blueprint default values can be overridden by passing a Python file via 'launch_params'. Any variable not defined in the Python file will keep the default
+    value defined in the blueprint. When passing a Python file, no variables will be prompted.
+
+    \b
+    Note: Dynamic variables will not have a default value. User have to select an option during launch.
+
+    \b
+    >: launch_params: Python file consisting of variables 'variable_list' and 'substrate_list'
+    Ex: variable_list = [
+            {
+                "value": {"value": <Variable Value>},
+                "context": <Context for variable>
+                "name": "<Variable Name>"
+            }
+        ]
+        substrate_list = [
+            {
+                "value":  {
+                    <substrate_editable_data_object>
+                },
+                "name": <Substrate Name>,
+            }
+        ]
+        deployment_list = [
+            {
+                "value":  {
+                    <deployment_editable_data_object>
+                },
+                "name": <Deployment Name>,
+            }
+        ]
+        credential_list = [
+            {
+                "value":  {
+                    <credential_editable_data_object>
+                },
+                "name": <Credential Name>,
+            }
+        ]
+    Sample context for variables:
+        1. context = "<Profile Name>"    # For variable under profile
+        2. context = "<Service Name>"    # For variable under service
+    """
 
     launch_marketplace_item(
         name=name,
