@@ -62,7 +62,7 @@ def _get_nested_messages(path, obj, message_list):
             _get_nested_messages(path, sub_obj, message_list)
     elif isinstance(obj, dict):
         name = obj.get("name", "")
-        if name:
+        if name and isinstance(name, str):
             path = path + ("." if path else "") + name
         for key in obj:
             sub_obj = obj[key]
