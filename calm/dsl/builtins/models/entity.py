@@ -3,7 +3,7 @@ import json
 from json import JSONEncoder, JSONDecoder
 import sys
 import inspect
-from types import MappingProxyType
+from types import MappingProxyType, new_class
 import uuid
 import copy
 import keyword
@@ -324,6 +324,32 @@ class EntityType(EntityTypeBase):
         ncls = type(cls)(cls.__name__, cls.__bases__, ncls_ns)
 
         return ncls.get_user_attrs()
+
+    def clone(cls):
+        """returns the clone (deepcopy) of the original class"""
+
+        ncls_ns = cls.get_default_attrs()
+        for klass in reversed(cls.mro()):
+            if hasattr(klass, "get_user_attrs") and callable(
+                getattr(klass, "get_user_attrs")
+            ):
+                ncls_ns = {**ncls_ns, **klass.__dict__}
+
+        for k, v in ncls_ns.items():
+            if isinstance(v, list):
+                nv = []
+                for _k in v:
+                    if hasattr(_k, "clone") and callable(getattr(_k, "clone")):
+                        nv.append(_k.clone())
+                    else:
+                        nv.append(_k)
+                ncls_ns[k] = nv
+
+            elif hasattr(v, "clone") and callable(getattr(v, "clone")):
+                ncls_ns[k] = v.clone()
+
+        ncls = type(cls)(cls.__name__, cls.__bases__, ncls_ns)
+        return ncls
 
     def pre_compile(cls):
         """Hook to construct dsl metadata map"""
