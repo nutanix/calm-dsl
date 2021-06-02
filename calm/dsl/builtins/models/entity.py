@@ -3,7 +3,7 @@ import json
 from json import JSONEncoder, JSONDecoder
 import sys
 import inspect
-from types import MappingProxyType, new_class
+from types import MappingProxyType
 import uuid
 import copy
 import keyword
