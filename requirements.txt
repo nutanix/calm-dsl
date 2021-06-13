@@ -20,5 +20,5 @@ pycryptodome==3.9.0
 scrypt==0.8.13
 schema==0.7.1
 colorlog==5.0.1
-black==20.8b1
+black==21.4b1
 importlib-metadata==4.0.1
