@@ -93,6 +93,8 @@ class SubstrateType(EntityType):
         calm_version = Version.get_version("Calm")
         provider_type = getattr(cls, "provider_type")
         provider_account_type = PROVIDER_ACCOUNT_TYPE_MAP.get(provider_type, "")
+        if not provider_account_type:
+            return ""
 
         # Fetching project data
         project_cache_data = common_helper.get_cur_context_project()
@@ -100,6 +102,13 @@ class SubstrateType(EntityType):
         project_accounts = project_cache_data.get("accounts_data", {}).get(
             provider_account_type, []
         )
+        if not project_accounts:
+            LOG.error(
+                "No '{}' account registered to project '{}'".format(
+                    provider_account_type, project_name
+                )
+            )
+            sys.exit(-1)
 
         # If substrate is defined in blueprint file
         cls_bp = common_helper._walk_to_parent_with_given_type(cls, "BlueprintType")
@@ -219,9 +228,10 @@ class SubstrateType(EntityType):
                 elif not provider_account:
                     provider_account = whitelisted_account
 
-            # If version is less than 3.2.0, then it should use account from poroject only
-            else:
-                provider_account = {"uuid": project_accounts[0], "kind": "account"}
+        # If version is less than 3.2.0, then it should use account from poroject only, OR
+        # If no account is supplied, will take 0th account in project (in both case of blueprint/environment)
+        if not provider_account:
+            provider_account = {"uuid": project_accounts[0], "kind": "account"}
 
         return provider_account["uuid"]
 
@@ -420,7 +430,7 @@ class SubstrateType(EntityType):
                         sys.exit(-1)
 
         # Add account uuid for non-ahv providers
-        if cdict["type"] not in ["EXISTING_VM", "AHV_VM"]:
+        if cdict["type"] not in ["EXISTING_VM", "AHV_VM", "K8S_POD"]:
             cdict["create_spec"]["resources"]["account_uuid"] = substrate_account_uuid
 
         cdict.pop("account_reference", None)
