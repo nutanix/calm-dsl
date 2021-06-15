@@ -374,38 +374,56 @@ class SubstrateType(EntityType):
         # In case we have read provider_spec from a yaml file, validate that we have consistent values for
         # Substrate.account (if present) and account_uuid in provider_spec (if present).
         # The account_uuid mentioned in provider_spec yaml should be a registered PE under the Substrate.account PC
-        pc_account_ref = cdict.pop("account_reference", None)
-        if pc_account_ref and cdict["type"] == "AHV_VM":
-            try:
-                pe_account_uuid = cdict["create_spec"]["resources"]["account_uuid"]
-            except (AttributeError, TypeError, KeyError):
-                pass
-            else:
-                if pe_account_uuid:
-                    account_cache_data = Cache.get_entity_data_using_uuid(
-                        entity_type="account", uuid=pc_account_ref["uuid"]
-                    )
-                    if not account_cache_data:
-                        LOG.error(
-                            "Account (uuid={}) not found. Please update cache".format(
-                                pc_account_ref["uuid"]
-                            )
-                        )
-                        sys.exit(-1)
 
+        substrate_account_uuid = cls.get_referenced_account_uuid()
+        spec_account_uuid = ""
+        try:
+            spec_account_uuid = cdict["create_spec"]["resources"]["account_uuid"]
+        except (AttributeError, TypeError, KeyError):
+            pass
+
+        if substrate_account_uuid:
+            account_cache_data = Cache.get_entity_data_using_uuid(
+                entity_type="account", uuid=substrate_account_uuid
+            )
+            if not account_cache_data:
+                LOG.error(
+                    "Account (uuid={}) not found. Please update cache".format(
+                        substrate_account_uuid
+                    )
+                )
+                sys.exit(-1)
+            account_name = account_cache_data["name"]
+
+            if spec_account_uuid:
+                if cdict["type"] == "AHV_VM":
                     if (
                         not account_cache_data.get("data", {})
                         .get("clusters", {})
-                        .get(pe_account_uuid)
+                        .get(spec_account_uuid)
                     ):
                         LOG.error(
                             "cluster account_uuid (uuid={}) used in the provider spec is not found to be registered"
                             " under the Nutanix PC account {}. Please update cache".format(
-                                pe_account_uuid, account_cache_data["name"]
+                                spec_account_uuid, account_name
                             )
                         )
                         sys.exit(-1)
 
+                elif cdict["type"] != "EXISTING_VM":
+                    if spec_account_uuid != substrate_account_uuid:
+                        LOG.error(
+                            "Account '{}'(uuid='{}') not matched with account_uuid used in provider-spec (uuid={})".format(
+                                account_name, substrate_account_uuid, spec_account_uuid
+                            )
+                        )
+                        sys.exit(-1)
+
+        # Add account uuid for non-ahv providers
+        if cdict["type"] not in ["EXISTING_VM", "AHV_VM"]:
+            cdict["create_spec"]["resources"]["account_uuid"] = substrate_account_uuid
+
+        cdict.pop("account_reference", None)
         cdict["readiness_probe"] = readiness_probe_dict
 
         return cdict
