@@ -235,10 +235,11 @@ def create_blueprint_command(bp_file, name, description, force):
             msgs.append(msg + msg_dict.get("message", ""))
 
         LOG.error(
-            "Blueprint {} created with {} error(s): \n{}".format(
-                bp_name, len(msg_list), "\n".join(msgs)
+            "Blueprint {} created with {} error(s):".format(
+                bp_name, len(msg_list)
             )
         )
+        click.echo("\n".join(msgs))
         sys.exit(-1)
 
     LOG.info("Blueprint {} created successfully.".format(bp_name))
