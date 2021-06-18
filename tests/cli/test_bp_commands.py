@@ -16,12 +16,8 @@ DSL_BP_FILEPATH = "tests/existing_vm_example/test_existing_vm_bp.py"
 JSON_BP_FILEPATH = "tests/existing_vm_example/test_existing_vm_bp.json"
 
 BLUEPRINT_ERROR_MSG = {
-    "AHV": {
-        "DISK_NOT_ADDED": "Atleast one of the disk is required"
-    },
-    "VMW": {
-        "NON_INTEGER_MEMORY": "memory_size_mib should be an integer (minimum 1)"
-    }
+    "AHV": {"DISK_NOT_ADDED": "Atleast one of the disk is required"},
+    "VMW": {"NON_INTEGER_MEMORY": "memory_size_mib should be an integer (minimum 1)"},
 }
 
 
@@ -279,9 +275,9 @@ class TestBpCommands:
                 "create",
                 "bp",
                 "--file={}".format(bp_dsl_file),
-                "--name={}".format(dsl_bp_name)
+                "--name={}".format(dsl_bp_name),
             ],
-            catch_exceptions=True
+            catch_exceptions=True,
         )
         if not result.exit_code:
             cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
@@ -297,9 +293,10 @@ class TestBpCommands:
             )
             pytest.fail("Blueprint got created with validation errors")
 
-        assert BLUEPRINT_ERROR_MSG["AHV"]['DISK_NOT_ADDED'] in result.output and\
-               BLUEPRINT_ERROR_MSG["VMW"]['NON_INTEGER_MEMORY'] in result.output, \
-            "failed to get blueprint error reason on cli"
+        assert (
+            BLUEPRINT_ERROR_MSG["AHV"]["DISK_NOT_ADDED"] in result.output
+            and BLUEPRINT_ERROR_MSG["VMW"]["NON_INTEGER_MEMORY"] in result.output
+        ), "failed to get blueprint error reason on cli"
 
 
 if __name__ == "__main__":

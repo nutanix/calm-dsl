@@ -1,7 +1,13 @@
-
 from calm.dsl.builtins import ref, basic_cred, read_local_file, read_provider_spec
 from calm.dsl.builtins import AhvVmResources, AhvVm
-from calm.dsl.builtins import Substrate, Deployment, Service, Package, Profile, Blueprint
+from calm.dsl.builtins import (
+    Substrate,
+    Deployment,
+    Service,
+    Package,
+    Profile,
+    Blueprint,
+)
 
 
 CRED_USERNAME = read_local_file(".tests/username")
@@ -10,7 +16,7 @@ DefaultCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="credential", defaul
 
 
 class AHVService(Service):
-    name = 'AHVService'
+    name = "AHVService"
 
 
 class AHVPackage(Package):
@@ -39,7 +45,7 @@ class AHVDeployment(Deployment):
 
 
 class VMWService(Service):
-    name = 'VMWService'
+    name = "VMWService"
 
 
 class VMWPackage(Package):
@@ -63,6 +69,7 @@ class DefaultProfile(Profile):
 
 class AHVBlueprint(Blueprint):
     """Blueprint"""
+
     credentials = [DefaultCred]
     services = [AHVService, VMWService]
     packages = [AHVPackage, VMWPackage]
