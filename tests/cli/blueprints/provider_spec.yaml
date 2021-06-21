@@ -1,0 +1,29 @@
+clone_is_template: false
+compute_drs_mode: false
+datastore: ds:///vmfs/volumes/f6a8bff3-a29c7b8e/
+drs_mode: false
+folder: {}
+host: 00000000-0000-0000-0000-ac1f6bba7912
+name: vm-@@{calm_unique_hash}@@-@@{calm_array_index}@@
+resources:
+  controller_list: []
+  cpu_hot_add: false
+  disk_list: []
+  guest_customization:
+    customization_type: GUEST_OS_LINUX
+  memory_hot_plug: false
+  memory_size_mib: 0
+  nic_list: []
+  num_sockets: 1
+  num_vcpus_per_socket: 1
+  power_state: poweron
+  template_controller_list: []
+  template_disk_list: []
+  template_nic_list:
+  - is_deleted: false
+    key: 4000
+    net_name: key-vim.host.PortGroup-vlan.112
+    nic_type: e1000
+storage_drs_mode: false
+template: 502fbb61-ce57-10a6-be06-16b67b6f3245
+type: PROVISION_VMWARE_VM
