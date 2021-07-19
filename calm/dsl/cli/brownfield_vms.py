@@ -3,6 +3,7 @@ import json
 import click
 import json
 from prettytable import PrettyTable
+from distutils.version import LooseVersion as LV
 
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.constants import PROVIDER_ACCOUNT_TYPE_MAP
@@ -194,7 +195,7 @@ def get_vmware_vm_data_with_version_filtering(vm_data):
     instance_id = vm_data["instance_id"]
     instance_name = vm_data["instance_name"]
 
-    if CALM_VERSION >= "3.3.0":
+    if LV(CALM_VERSION) >= LV("3.3.0"):
         hostname = vm_data["guest_hostname"]
         address = ",".join(vm_data["guest_ipaddress"])
         vcpus = vm_data["cpu"]
