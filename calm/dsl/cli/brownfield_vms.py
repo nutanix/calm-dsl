@@ -3,10 +3,12 @@ import json
 import click
 import json
 from prettytable import PrettyTable
+from distutils.version import LooseVersion as LV
 
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.constants import PROVIDER_ACCOUNT_TYPE_MAP
 from calm.dsl.log import get_logging_handle
+from calm.dsl.store import Version
 from .utils import highlight_text
 
 LOG = get_logging_handle(__name__)
@@ -185,6 +187,45 @@ def get_brownfield_gcp_vm_list(entity_rows):
     click.echo(table)
 
 
+def get_vmware_vm_data_with_version_filtering(vm_data):
+    """returns instance_data_according_to_version_filter"""
+
+    CALM_VERSION = Version.get_version("Calm")
+
+    instance_id = vm_data["instance_id"]
+    instance_name = vm_data["instance_name"]
+
+    if LV(CALM_VERSION) >= LV("3.3.0"):
+        hostname = vm_data["guest_hostname"]
+        address = ",".join(vm_data["guest_ipaddress"])
+        vcpus = vm_data["cpu"]
+        sockets = vm_data["num_vcpus_per_socket"]
+        memory = int(vm_data["memory"]) // 1024
+        guest_family = vm_data.get("guest_family", "")
+        template = vm_data.get("is_template", False)
+
+    else:
+        hostname = vm_data["guest.hostName"]
+        address = ",".join(vm_data["guest.ipAddress"])
+        vcpus = vm_data["config.hardware.numCPU"]
+        sockets = vm_data["config.hardware.numCoresPerSocket"]
+        memory = int(vm_data["config.hardware.memoryMB"]) // 1024
+        guest_family = vm_data.get("guest.guestFamily", "")
+        template = vm_data.get("config.template", False)
+
+    return (
+        instance_id,
+        instance_name,
+        hostname,
+        address,
+        vcpus,
+        sockets,
+        memory,
+        guest_family,
+        template,
+    )
+
+
 def get_brownfield_vmware_vm_list(entity_rows):
     """displays vmware brownfield vms"""
 
@@ -205,16 +246,17 @@ def get_brownfield_vmware_vm_list(entity_rows):
 
         # Status section
         st_resources = row["status"]["resources"]
-
-        instance_id = st_resources["instance_id"]
-        instance_name = st_resources["instance_name"]
-        hostname = st_resources["guest.hostName"]
-        address = ",".join(st_resources["guest.ipAddress"])
-        vcpus = st_resources["config.hardware.numCPU"]
-        sockets = st_resources["config.hardware.numCoresPerSocket"]
-        memory = int(st_resources["config.hardware.memoryMB"]) // 1024
-        guest_family = st_resources.get("guest.guestFamily", "")
-        template = st_resources.get("config.template", False)
+        (
+            instance_id,
+            instance_name,
+            hostname,
+            address,
+            vcpus,
+            sockets,
+            memory,
+            guest_family,
+            template,
+        ) = get_vmware_vm_data_with_version_filtering(st_resources)
 
         table.add_row(
             [
