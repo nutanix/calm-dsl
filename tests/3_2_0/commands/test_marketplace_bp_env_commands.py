@@ -46,6 +46,9 @@ class TestBpCommands:
         ContextObj = get_context()
         ContextObj.reset_configuration()
 
+        # Resetting metadata object
+        reset_metadata_obj()
+
         self.created_bp_list = []
         self.created_app_list = []
 
@@ -63,6 +66,13 @@ class TestBpCommands:
     def teardown_method(self):
         """Method to delete creates bps and apps during tests"""
 
+        # Resetting context
+        ContextObj = get_context()
+        ContextObj.reset_configuration()
+
+        # Resetting metadata object
+        reset_metadata_obj()
+
         for bp_name in self.created_bp_list:
             LOG.info("Deleting Blueprint {}".format(bp_name))
             runner = CliRunner()
@@ -78,9 +88,6 @@ class TestBpCommands:
 
         self.created_bp_list = []
         self.created_app_list = []
-
-        # Resetting metadata context
-        reset_metadata_obj()
 
     def _create_bp(self):
         runner = CliRunner()

@@ -12,11 +12,3 @@ VM_IP = read_local_file(".tests/runbook_tests/vm_ip")
 
 Cred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
 DslLinuxEndpoint = Endpoint.Linux.ip([VM_IP], cred=Cred)
-
-
-def main():
-    print(DslLinuxEndpoint.json_dumps(pprint=True))
-
-
-if __name__ == "__main__":
-    main()

@@ -254,7 +254,7 @@ class AhvSubnetsCache(CacheTableBase):
             return entity.get_detail_dict()
 
         except DoesNotExist:
-            return None
+            return dict()
 
     @classmethod
     def get_entity_data_using_uuid(cls, uuid, **kwargs):
@@ -268,7 +268,7 @@ class AhvSubnetsCache(CacheTableBase):
             return entity.get_detail_dict()
 
         except DoesNotExist:
-            return None
+            return dict()
 
     class Meta:
         database = dsl_database
@@ -399,7 +399,7 @@ class AhvImagesCache(CacheTableBase):
             return entity.get_detail_dict()
 
         except DoesNotExist:
-            return None
+            return dict()
 
     @classmethod
     def get_entity_data_using_uuid(cls, uuid, **kwargs):
@@ -413,7 +413,7 @@ class AhvImagesCache(CacheTableBase):
             return entity.get_detail_dict()
 
         except DoesNotExist:
-            return None
+            return dict()
 
     class Meta:
         database = dsl_database
@@ -554,7 +554,7 @@ class AccountCache(CacheTableBase):
             entity = super().get(**query_obj)
             return entity.get_detail_dict()
         except DoesNotExist:
-            return None
+            return dict()
 
     @classmethod
     def get_entity_data_using_uuid(cls, uuid, **kwargs):
@@ -563,7 +563,7 @@ class AccountCache(CacheTableBase):
             return entity.get_detail_dict()
 
         except DoesNotExist:
-            return None
+            return dict()
 
     class Meta:
         database = dsl_database
@@ -752,7 +752,7 @@ class ProjectCache(CacheTableBase):
             return entity.get_detail_dict()
 
         except DoesNotExist:
-            return None
+            return dict()
 
     @classmethod
     def get_entity_data_using_uuid(cls, uuid, **kwargs):
@@ -761,7 +761,7 @@ class ProjectCache(CacheTableBase):
             return entity.get_detail_dict()
 
         except DoesNotExist:
-            return None
+            return dict()
 
     class Meta:
         database = dsl_database
@@ -906,7 +906,7 @@ class EnvironmentCache(CacheTableBase):
             return entity.get_detail_dict()
 
         except DoesNotExist:
-            return None
+            return dict()
 
     @classmethod
     def get_entity_data_using_uuid(cls, uuid, **kwargs):
@@ -915,7 +915,7 @@ class EnvironmentCache(CacheTableBase):
             return entity.get_detail_dict()
 
         except DoesNotExist:
-            return None
+            return dict()
 
     class Meta:
         database = dsl_database
@@ -1043,7 +1043,7 @@ class UsersCache(CacheTableBase):
             return entity.get_detail_dict()
 
         except DoesNotExist:
-            return None
+            return dict()
 
     @classmethod
     def get_entity_data_using_uuid(cls, uuid, **kwargs):
@@ -1052,7 +1052,7 @@ class UsersCache(CacheTableBase):
             return entity.get_detail_dict()
 
         except DoesNotExist:
-            return None
+            return dict()
 
     class Meta:
         database = dsl_database
@@ -1134,7 +1134,7 @@ class RolesCache(CacheTableBase):
             return entity.get_detail_dict()
 
         except DoesNotExist:
-            return None
+            return dict()
 
     @classmethod
     def get_entity_data_using_uuid(cls, uuid, **kwargs):
@@ -1143,7 +1143,7 @@ class RolesCache(CacheTableBase):
             return entity.get_detail_dict()
 
         except DoesNotExist:
-            return None
+            return dict()
 
     class Meta:
         database = dsl_database
@@ -1225,7 +1225,7 @@ class DirectoryServiceCache(CacheTableBase):
             return entity.get_detail_dict()
 
         except DoesNotExist:
-            return None
+            return dict()
 
     @classmethod
     def get_entity_data_using_uuid(cls, uuid, **kwargs):
@@ -1234,7 +1234,7 @@ class DirectoryServiceCache(CacheTableBase):
             return entity.get_detail_dict()
 
         except DoesNotExist:
-            return None
+            return dict()
 
     class Meta:
         database = dsl_database
@@ -1371,7 +1371,7 @@ class UserGroupCache(CacheTableBase):
             return entity.get_detail_dict()
 
         except DoesNotExist:
-            return None
+            return dict()
 
     @classmethod
     def get_entity_data_using_uuid(cls, uuid, **kwargs):
@@ -1380,7 +1380,7 @@ class UserGroupCache(CacheTableBase):
             return entity.get_detail_dict()
 
         except DoesNotExist:
-            return None
+            return dict()
 
     class Meta:
         database = dsl_database
@@ -1459,7 +1459,7 @@ class AhvNetworkFunctionChain(CacheTableBase):
             return entity.get_detail_dict()
 
         except DoesNotExist:
-            return None
+            return dict()
 
     class Meta:
         database = dsl_database

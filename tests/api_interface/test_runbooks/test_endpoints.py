@@ -2,10 +2,12 @@ import pytest
 import copy
 import os
 import uuid
+from distutils.version import LooseVersion as LV
 
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import ENDPOINT
 from calm.dsl.config import get_context
+from calm.dsl.store import Version
 from utils import change_uuids, read_test_config
 
 LinuxEndpointPayload = read_test_config(file_name="linux_endpoint_payload.json")
@@ -330,17 +332,21 @@ class TestEndpoints:
         endpoint = copy.deepcopy(change_uuids(EndpointPayload, {}))
 
         # set values and credentials to empty
-        endpoint["spec"]["name"] = "ep-\u018e-name-\xf1" + str(uuid.uuid4())[-10:]
+        CALM_VERSION = Version.get_version("Calm")
+        if LV(CALM_VERSION) < LV("3.3.0"):
+            message = (
+                "Name can contain only alphanumeric, underscores, hyphens and spaces"
+            )
+        else:
+            message = "Name can contain only unicode characters, underscores, hyphens and spaces"
 
+        endpoint["spec"]["name"] = "ep-$.-name1" + str(uuid.uuid4())[-10:]
         # Endpoint Create
         res, err = client.endpoint.create(endpoint)
         if not err:
             pytest.fail("Endpoint created successfully with unsupported name formats")
         assert err.get("code", 0) == 422
-        assert (
-            "Name can contain only alphanumeric, underscores, hyphens and spaces"
-            in res.text
-        )
+        assert message in res.text
 
         endpoint["spec"]["name"] = "endpoint_" + str(uuid.uuid4())[-10:]
         res, err = client.endpoint.create(endpoint)
@@ -353,14 +359,18 @@ class TestEndpoints:
 
         del ep["status"]
         ep["spec"]["name"] = "-test_ep_name_" + str(uuid.uuid4())[-10:]
+
+        if LV(CALM_VERSION) < LV("3.3.0"):
+            message = (
+                "Names can only start with alphanumeric characters or underscore (_)"
+            )
+        else:
+            message = "Names can only start with unicode characters or underscore (_)"
         res, err = client.endpoint.update(ep_uuid, ep)
         if not err:
             pytest.fail("Endpoint updated successfully with unsupported name formats")
         assert err.get("code", 0) == 422
-        assert (
-            "Names can only start with alphanumeric characters or underscore (_)"
-            in res.text
-        )
+        assert message in res.text
 
         # delete the endpoint
         _, err = client.endpoint.delete(ep_uuid)

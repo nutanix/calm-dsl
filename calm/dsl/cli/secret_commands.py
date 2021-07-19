@@ -32,7 +32,7 @@ def _create_secret(name, value):
     "--quiet", "-q", is_flag=True, default=False, help="Show only sceret names."
 )
 def _get_secrets(quiet):
-    """Get secrets """
+    """Get secrets"""
 
     get_secrets(quiet)
 

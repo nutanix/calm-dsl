@@ -298,13 +298,13 @@ def compile():
 
 @main.group(cls=FeatureFlagGroup)
 def decompile():
-    """"""
+    """ """
     pass
 
 
 @main.group(cls=FeatureFlagGroup)
 def create():
-    """Create entities in Calm (blueprint, project, endpoint, runbook) """
+    """Create entities in Calm (blueprint, project, endpoint, runbook)"""
     pass
 
 
@@ -454,7 +454,7 @@ def set():
 
 @main.group("import", cls=FeatureFlagGroup)
 def calm_import():
-    """Import entities in Calm (task library) """
+    """Import entities in Calm (task library)"""
     pass
 
 

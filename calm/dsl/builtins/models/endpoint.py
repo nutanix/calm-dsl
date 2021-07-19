@@ -1,12 +1,14 @@
 import enum
 import uuid
 import sys
+from distutils.version import LooseVersion as LV
 
 from .entity import EntityType, Entity, EntityTypeBase
 from .validator import DictValidator, PropertyValidator
 from .credential import CredentialType
 from calm.dsl.store import Cache
 from calm.dsl.constants import CACHE
+from calm.dsl.store import Version
 from calm.dsl.log import get_logging_handle
 
 
@@ -25,6 +27,33 @@ class EndpointType(EntityType):
             cdict.pop("provider_type", "")
         if (cdict.get("value_type", "")) == "":
             cdict.pop("value_type", "")
+
+        CALM_VERSION = Version.get_version("Calm")
+        if LV(CALM_VERSION) < LV("3.2.0"):
+            value_type = cdict.pop("value_type")
+            cdict["attrs"]["value_type"] = value_type
+
+        else:
+            value_type = cdict.get("value_type", "IP")
+            if value_type == "VM":
+                account = cdict["attrs"]["account_reference"]
+                account_name = account["name"]
+                account_data = Cache.get_entity_data(
+                    entity_type=CACHE.ENTITY.ACCOUNT, name=account_name
+                )
+                if not account_data:
+                    LOG.error("Account {} not found".format(account_name))
+                    sys.exit(-1)
+
+                provider_type = account_data["provider_type"]
+                if provider_type not in ["nutanix_pc", "vmware"]:
+                    LOG.error(
+                        "Provider {} not supported for endpoints".format(provider_type)
+                    )
+                    sys.exit(-1)
+
+                cdict["provider_type"] = provider_type.upper()
+
         return cdict
 
     def post_compile(cls, cdict):
@@ -114,28 +143,13 @@ def _os_endpoint(
 
     if value_type == "VM":
         if not account:
-            LOG.error("Account is compulsory for endpoint")
-            sys.exit(-1)
-
-        account_name = account["name"]
-        account_data = Cache.get_entity_data(
-            entity_type=CACHE.ENTITY.ACCOUNT, name=account_name
-        )
-        if not account_data:
-            LOG.error("Account {} not found".format(account_name))
-            sys.exit(-1)
-
-        provider_type = account_data["provider_type"]
-
-        if provider_type not in ["nutanix_pc", "vmware"]:
-            LOG.error("Provider {} not supported for endpoints".format(provider_type))
+            LOG.error("Account is compulsory for vm endpoints")
             sys.exit(-1)
 
         # If filter string is given, filter type will be set to dynamic
         filter_type = "dynamic" if filter else "static"
 
         kwargs["attrs"]["vm_references"] = vms
-        kwargs["provider_type"] = provider_type.upper()
         kwargs["attrs"]["subnet"] = subnet
         kwargs["attrs"]["filter_type"] = filter_type
         kwargs["attrs"]["account_reference"] = account

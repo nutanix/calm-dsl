@@ -2,7 +2,7 @@ import json
 
 from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC
 from calm.dsl.builtins import ref, basic_cred, AhvVmResources, AhvVm
-from calm.dsl.builtins import vm_disk_package, read_local_file
+from calm.dsl.builtins import read_local_file
 
 from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
@@ -15,21 +15,12 @@ CENTOS_PUBLIC_KEY = read_local_file(".tests/keys/centos_pub")
 
 # projects
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+CENTOS_CI = DSL_CONFIG["AHV"]["IMAGES"]["DISK"]["CENTOS_7_CLOUD_INIT"]
 PROJECT = DSL_CONFIG["PROJECTS"]["PROJECT1"]
 PROJECT_NAME = PROJECT["NAME"]
 NETWORK1 = DSL_CONFIG["AHV"]["NETWORK"]["VLAN1211"]
 
 Centos = basic_cred("centos", CENTOS_KEY, name="Centos", type="KEY", default=True)
-
-Era_Disk = vm_disk_package(
-    name="era_disk",
-    config={
-        # By default image type is set to DISK_IMAGE
-        "image": {
-            "source": "http://download.nutanix.com/era/1.1.1/ERA-Server-build-1.1.1-340d9db1118eac81219bec98507d4982045d8799.qcow2"
-        }
-    },
-)
 
 
 class AhvVmService(Service):
@@ -51,10 +42,10 @@ class AhvVmPackage(Package):
 
 class MyAhvVmResources(AhvVmResources):
 
-    memory = 4
-    vCPUs = 2
+    memory = 2
+    vCPUs = 1
     cores_per_vCPU = 1
-    disks = [AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(Era_Disk, bootable=True)]
+    disks = [AhvVmDisk.Disk.Scsi(CENTOS_CI, bootable=True)]
     nics = [AhvVmNic(NETWORK1)]
 
     guest_customization = AhvVmGC.CloudInit(
@@ -111,7 +102,7 @@ class AhvBlueprint(Blueprint):
 
     credentials = [Centos]
     services = [AhvVmService]
-    packages = [AhvVmPackage, Era_Disk]
+    packages = [AhvVmPackage]
     substrates = [AhvVmSubstrate]
     profiles = [AhvVmProfile]
 

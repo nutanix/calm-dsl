@@ -31,7 +31,7 @@ class PODDeploymentType(DeploymentType):
         return super().get_ref(kind=DeploymentType.__openapi_type__)
 
     def extract_deployment(cls, is_simple_deployment=False):
-        """ extract service, packages etc. from service and deployment spec"""
+        """extract service, packages etc. from service and deployment spec"""
 
         service_definition_list = []
         package_definition_list = []

@@ -15,7 +15,7 @@ class BlueprintType(EntityType):
 
     def compile(cls):
         def unzip_pod_deployments(cdict):
-            """ Unzip pod deployment if exists """
+            """Unzip pod deployment if exists"""
 
             for profile in cdict["app_profile_list"]:
                 deployments = getattr(profile, "deployments", [])

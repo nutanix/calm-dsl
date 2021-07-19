@@ -97,6 +97,28 @@ class ResourceAPI:
 
         return uuid_name_map
 
+    def list_all(self, api_limit=250):
+        """returns the list of entities"""
+
+        final_list = []
+        offset = 0
+        while True:
+            response, err = self.list(params={"length": api_limit, "offset": offset})
+            if not err:
+                response = response.json()
+            else:
+                raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+            final_list.extend(response["entities"])
+
+            total_matches = response["metadata"]["total_matches"]
+            if total_matches <= (api_limit + offset):
+                break
+
+            offset += api_limit
+
+        return final_list
+
 
 def get_resource_api(resource_type, connection):
     return ResourceAPI(connection, resource_type)

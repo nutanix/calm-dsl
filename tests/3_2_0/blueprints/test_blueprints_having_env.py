@@ -47,10 +47,20 @@ class TestBlueprint:
         ContextObj = get_context()
         ContextObj.reset_configuration()
 
+        # Resetting metadata object
+        reset_metadata_obj()
+
         self.created_bp_list = []
 
     def teardown_method(self):
         """Method to delete creates bps and apps during tests"""
+
+        # Resetting context
+        ContextObj = get_context()
+        ContextObj.reset_configuration()
+
+        # Resetting metadata object
+        reset_metadata_obj()
 
         for bp_name in self.created_bp_list:
             LOG.info("Deleting Blueprint {}".format(bp_name))
@@ -59,9 +69,6 @@ class TestBlueprint:
             assert result.exit_code == 0
 
         self.created_bp_list = []
-
-        # Resetting metadata object/context
-        reset_metadata_obj()
 
     @pytest.mark.parametrize(
         "bp_file_path",

@@ -153,13 +153,3 @@ def test_json_loads():
 
     assert new_json_data == json_data
 """
-
-
-def main():
-    print(TwoBlueprint.json_dumps(pprint=True))
-
-
-if __name__ == "__main__":
-    test_json()
-    # test_yaml()
-    # main()

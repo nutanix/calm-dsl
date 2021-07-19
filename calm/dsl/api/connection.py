@@ -316,6 +316,7 @@ class Connection:
                     json.dumps(err, indent=4, separators=(",", ": "))
                 )
             )
+
         return res, err
 
 

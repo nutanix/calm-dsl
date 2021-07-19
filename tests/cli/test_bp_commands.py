@@ -4,6 +4,7 @@ import os
 import json
 import traceback
 from click.testing import CliRunner
+import uuid
 
 from calm.dsl.cli import main as cli
 from calm.dsl.log import get_logging_handle
@@ -13,6 +14,11 @@ LOG = get_logging_handle(__name__)
 
 DSL_BP_FILEPATH = "tests/existing_vm_example/test_existing_vm_bp.py"
 JSON_BP_FILEPATH = "tests/existing_vm_example/test_existing_vm_bp.json"
+
+BLUEPRINT_ERROR_MSG = {
+    "AHV": {"DISK_NOT_ADDED": "Atleast one of the disk is required"},
+    "VMW": {"NON_INTEGER_MEMORY": "memory_size_mib should be an integer (minimum 1)"},
+}
 
 
 @pytest.mark.slow
@@ -243,6 +249,54 @@ class TestBpCommands:
                 )
             )
         LOG.info("Success")
+
+    def test_blueprint_draft_reason_cli(self):
+        """
+        Metadata:
+         Summary: This test verifies whether the draft state blueprint reason is shown on cli or not
+         Priority: $P1
+         Components: [BLUEPRINTS]
+         Requirements: [CALM-14018]
+         Steps:
+           - 1) Create a bp using DSL.
+           - 2) Add AHV service and don't add any boot disk
+           - 3) Add vmware service and assign memory to zero
+           - 4) Save the blueprint
+           - 5) Validate the cli response
+           - ExpectedResults
+             - Api response for blueprint going to draft state must be shown on cli.
+        """
+        bp_dsl_file = "tests/cli/blueprints/bp_with_platform_validation_errors.py"
+        dsl_bp_name = "blueprint_draft_state_{}".format(str(uuid.uuid4())[-10:])
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            [
+                "create",
+                "bp",
+                "--file={}".format(bp_dsl_file),
+                "--name={}".format(dsl_bp_name),
+            ],
+            catch_exceptions=True,
+        )
+        if not result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Blueprint got created with validation errors")
+
+        assert (
+            BLUEPRINT_ERROR_MSG["AHV"]["DISK_NOT_ADDED"] in result.output
+            and BLUEPRINT_ERROR_MSG["VMW"]["NON_INTEGER_MEMORY"] in result.output
+        ), "failed to get blueprint error reason on cli"
 
 
 if __name__ == "__main__":

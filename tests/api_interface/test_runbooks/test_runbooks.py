@@ -24,7 +24,7 @@ class TestRunbooks:
     @pytest.mark.runbook
     @pytest.mark.regression
     def test_runbooks_list(self):
-        """ test_runbook_list """
+        """test_runbook_list"""
 
         client = get_api_client()
 
@@ -243,7 +243,7 @@ class TestRunbooks:
     @pytest.mark.ces
     @pytest.mark.regression
     def test_runbook_abort(self):
-        """ test_runbook_run_abort """
+        """test_runbook_run_abort"""
 
         client = get_api_client()
         rb_name = "Test_" + str(uuid.uuid4())[-10:]

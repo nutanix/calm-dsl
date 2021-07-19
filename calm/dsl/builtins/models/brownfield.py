@@ -488,7 +488,9 @@ class BrownfiedVmType(EntityType):
         # blueprint is launched with runtime brownfield deployments
         account_uuid = getattr(cls, "account_uuid", "")
         if cls_substrate:
-            account_uuid = getattr(cls_substrate, "account", {}).get("uuid")
+            account = getattr(cls_substrate, "account", dict()) or dict()
+            if account:
+                account_uuid = account["uuid"]
 
         if not account_uuid:
             if environment_cache_data:

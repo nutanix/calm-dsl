@@ -21,16 +21,9 @@ properties:
     default: 'Linux'
   account_reference:
     type: object
-    x-calm-dsl-type: object
+    x-calm-dsl-type: app_calm_ref
     x-calm-dsl-display-name: account
     x-calm-dsl-min-version: 3.2.0
-    properties:
-      kind:
-        type: string
-      name:
-        type: string
-      uuid:
-        type: string
   create_spec:
     x-calm-dsl-display-name: provider_spec
     type: object

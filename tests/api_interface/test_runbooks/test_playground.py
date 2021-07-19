@@ -11,7 +11,7 @@ class TestPlayground:
     @pytest.mark.runbook
     @pytest.mark.regression
     def test_http_playground(self):
-        """ test_http_playground """
+        """test_http_playground"""
 
         client = get_api_client()
         rb_name = "test_runbook_" + str(uuid.uuid4())[-10:]

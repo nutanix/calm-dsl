@@ -18,7 +18,7 @@ class TestRunbooks:
         [("SUCCESS", [RUNLOG.STATUS.SUCCESS]), ("FAILURE", RUNLOG.FAILURE_STATES)],
     )
     def test_rb_confirm(self, Runbook, Helper):
-        """ test_confirm_task """
+        """test_confirm_task"""
 
         client = get_api_client()
         rb_name = "test_runbook_" + str(uuid.uuid4())[-10:]

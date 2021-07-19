@@ -63,7 +63,7 @@ def _get_nested_messages(path, obj, message_list):
             _get_nested_messages(path, sub_obj, message_list)
     elif isinstance(obj, dict):
         name = obj.get("name", "")
-        if name:
+        if name and isinstance(name, str):
             path = path + ("." if path else "") + name
         for key in obj:
             sub_obj = obj[key]
@@ -236,10 +236,9 @@ def create_blueprint_command(bp_file, name, description, force):
             msgs.append(msg + msg_dict.get("message", ""))
 
         LOG.error(
-            "Blueprint {} created with {} error(s): \n{}".format(
-                bp_name, len(msg_list), "\n".join(msgs)
-            )
+            "Blueprint {} created with {} error(s):".format(bp_name, len(msg_list))
         )
+        click.echo("\n".join(msgs))
         sys.exit(-1)
 
     LOG.info("Blueprint {} created successfully.".format(bp_name))

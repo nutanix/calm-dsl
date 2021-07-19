@@ -1,0 +1,34 @@
+name: Sync Private Repo
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    if: ${{ github.repository == 'nutanix/calm-dsl' }}
+    runs-on: [ubuntu-latest]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        repository: ideadevice/calm-dsl
+        ref: master
+        token: ${{ secrets.DSL_AUTH_TOKEN }}
+    - name: Git remote add
+      run: git remote add upstream https://github.com/nutanix/calm-dsl
+    - name: Git push disable upstream
+      run: git remote set-url --push upstream DISABLE
+    - name: Print remote
+      run: git remote -v
+    - name: Git Fetch upstream
+      run: git fetch --all --prune --unshallow
+    - name: Git Merge
+      run:  |
+        git merge upstream/master --allow-unrelated-histories
+        git fetch --unshallow origin
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.DSL_AUTH_TOKEN }}
+        repository: ideadevice/calm-dsl
+        branch: master

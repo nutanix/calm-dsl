@@ -7,6 +7,7 @@ from click.testing import CliRunner
 
 from calm.dsl.cli import main as cli
 from calm.dsl.tools import make_file_dir
+from calm.dsl.config import get_context
 from calm.dsl.builtins.models.metadata_payload import reset_metadata_obj
 from calm.dsl.log import get_logging_handle
 
@@ -21,7 +22,11 @@ class TestBlueprintMetadata:
     def setup_method(self):
         """Method to create project"""
 
-        # Reset metadata context
+        # Resetting context
+        ContextObj = get_context()
+        ContextObj.reset_configuration()
+
+        # Resetting metadata object
         reset_metadata_obj()
 
         runner = CliRunner()
@@ -53,7 +58,11 @@ class TestBlueprintMetadata:
     def teardown_method(self):
         """Method to delete created project in setup method"""
 
-        # Reset metadata context
+        # Resetting context
+        ContextObj = get_context()
+        ContextObj.reset_configuration()
+
+        # Resetting metadata object
         reset_metadata_obj()
 
         runner = CliRunner()

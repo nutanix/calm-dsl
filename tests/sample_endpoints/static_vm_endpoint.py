@@ -17,11 +17,3 @@ AHVStaticVMEndpoint = Endpoint.Linux.vm(
     cred=LinuxCred,
     account=Ref.Account("NTNX_LOCAL_AZ"),
 )
-
-
-def main():
-    print(AHVStaticVMEndpoint.json_dumps(pprint=True))
-
-
-if __name__ == "__main__":
-    main()

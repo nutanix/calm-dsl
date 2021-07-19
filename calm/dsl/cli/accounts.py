@@ -19,7 +19,7 @@ LOG = get_logging_handle(__name__)
 
 
 def get_accounts(name, filter_by, limit, offset, quiet, all_items, account_type):
-    """ Get the accounts, optionally filtered by a string """
+    """Get the accounts, optionally filtered by a string"""
 
     client = get_api_client()
     calm_version = Version.get_version("Calm")

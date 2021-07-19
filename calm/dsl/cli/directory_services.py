@@ -13,7 +13,7 @@ LOG = get_logging_handle(__name__)
 
 
 def get_directory_services(name, filter_by, limit, offset, quiet, out):
-    """ Get the directory services, optionally filtered by a string """
+    """Get the directory services, optionally filtered by a string"""
 
     client = get_api_client()
 

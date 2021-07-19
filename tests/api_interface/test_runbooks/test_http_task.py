@@ -184,7 +184,7 @@ class TestHTTPTasks:
     @pytest.mark.runbook
     @pytest.mark.regression
     def test_http_incorrect_response_code(self):
-        """ test_expected_response_check_with_different_val_than_expected_val_http """
+        """test_expected_response_check_with_different_val_than_expected_val_http"""
 
         client = get_api_client()
         rb_name = "test_httptask_" + str(uuid.uuid4())[-10:]
@@ -350,7 +350,7 @@ class TestHTTPTasks:
         [HTTPHeadersWithMacro, HTTPRelativeURLWithMacro, HTTPEndpointWithMultipleURLs],
     )
     def test_macros_in_http_header(self, Runbook):
-        """ test_macros_in_http_header, test_variable_in_relative_url """
+        """test_macros_in_http_header, test_variable_in_relative_url"""
 
         client = get_api_client()
         rb_name = "test_httptask_" + str(uuid.uuid4())[-10:]
