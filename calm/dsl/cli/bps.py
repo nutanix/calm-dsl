@@ -639,7 +639,7 @@ def get_blueprint_uuid(name, all=False, is_brownfield=False):
         blueprint = entities[0]
     else:
         LOG.error("No blueprint found with name {} found".format(name))
-        sys.exit(-1)
+        sys.exit("No blueprint found with name {} found".format(name))
 
     return blueprint["metadata"]["uuid"]
 
