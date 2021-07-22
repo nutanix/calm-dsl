@@ -117,7 +117,6 @@ class TestBlueprint:
         """tests creation of blueprint"""
 
         runner = CliRunner()
-        client = get_api_client()
         created_dsl_bp_name = "Test_Single_VM_DSL_{}".format(str(uuid.uuid4())[-10:])
 
         LOG.info("Creating Bp {}".format(created_dsl_bp_name))
