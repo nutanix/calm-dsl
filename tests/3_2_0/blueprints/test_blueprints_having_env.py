@@ -10,7 +10,6 @@ from calm.dsl.cli.bps import get_blueprint
 from calm.dsl.builtins import read_local_file
 from calm.dsl.builtins.models.metadata_payload import reset_metadata_obj
 from calm.dsl.config import get_context
-from calm.dsl.api import get_api_client
 from calm.dsl.store import Version
 from calm.dsl.log import get_logging_handle
 
