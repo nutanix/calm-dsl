@@ -8,8 +8,10 @@ from prettytable import PrettyTable
 
 from calm.dsl.config import get_context
 from calm.dsl.api import get_api_client
-from calm.dsl.builtins import create_environment_payload
+from calm.dsl.builtins import create_environment_payload, Environment
+from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
 from calm.dsl.builtins.models.helper.common import get_project
+from calm.dsl.tools import get_module_from_file
 from calm.dsl.api import get_api_client
 from calm.dsl.log import get_logging_handle
 
@@ -59,20 +61,120 @@ def create_environment(env_payload):
     return stdout_dict
 
 
-def create_environment_from_dsl_class(env_class):
+def create_environment_from_dsl_class(env_cls, env_name="", metadata=dict()):
+    """
+    Helper creates an environment from dsl environment class
+    Args:
+        env_cls (Environment object): class for environment
+        env_name (str): Environment name (Optional)
+        metadata (dict): Metadata object
+    Returns:
+        response (object): Response object containing environment object details
+    """
 
     env_payload = None
 
-    infra = getattr(env_class, "providers", [])
+    infra = getattr(env_cls, "providers", [])
     if not infra:
         LOG.warning(
             "From Calm v3.2, providers(infra) will be required to use environment for blueprints/marketplace usage"
         )
 
-    UserEnvPayload, _ = create_environment_payload(env_class)
+    UserEnvPayload, _ = create_environment_payload(env_cls, metadata=metadata)
     env_payload = UserEnvPayload.get_dict()
 
+    if env_name:
+        env_payload["spec"]["name"] = env_name
+        env_payload["metadata"]["name"] = env_name
+
     return create_environment(env_payload)
+
+
+def update_project_envs(project_name, env_uuids=[]):
+    """
+    Update project with the environment reference list if not present
+    Args:
+        project_name(str): Name of project
+        env_uuids(list): list of environment uuids
+    Returns: None
+    """
+
+    if not env_uuids:
+        return
+
+    project_payload = get_project(project_name)
+    project_payload.pop("status", None)
+
+    env_list = project_payload["spec"]["resources"].get(
+        "environment_reference_list", []
+    )
+    for _eu in env_uuids:
+        env_list.append({"kind": "environment", "uuid": _eu})
+
+    project_uuid = project_payload["metadata"]["uuid"]
+    project_payload["spec"]["resources"]["environment_reference_list"] = env_list
+
+    # TODO remove this infunction imports
+    from .projects import update_project
+
+    return update_project(project_uuid, project_payload)
+
+
+def get_environment_module_from_file(env_file):
+    """Returns Environment module given a user environment dsl file (.py)"""
+    return get_module_from_file("calm.dsl.user_environment", env_file)
+
+
+def get_env_class_from_module(user_env_module):
+    """Returns environment class given a module"""
+
+    UserEnvironment = None
+    for item in dir(user_env_module):
+        obj = getattr(user_env_module, item)
+        if isinstance(obj, type(Environment)):
+            if obj.__bases__[0] == Environment:
+                UserEnvironment = obj
+
+    return UserEnvironment
+
+
+def create_environment_from_dsl_file(env_file, env_name):
+    """
+    Helper creates an environment from dsl file (for calm_version >= 3.2)
+    Args:
+        env_file (str): Location for environment python file
+        env_name (str): Environment name
+    Returns:
+        response (object): Response object containing environment object details
+    """
+
+    # Constructing metadata payload
+    # Note: This should be constructed before loading env module. As metadata will be used while getting environment payload i
+    metadata = get_metadata_payload(env_file)
+
+    project_name = metadata.get("project_reference", {}).get("name", "")
+    if not project_name:
+        ContextObj = get_context()
+        project_config = ContextObj.get_project_config()
+        project_name = project_config["name"]
+
+    user_env_module = get_environment_module_from_file(env_file)
+    UserEnvironment = get_env_class_from_module(user_env_module)
+    if UserEnvironment is None:
+        LOG.error("User environment not found in {}".format(env_file))
+        return
+
+    env_std_out = create_environment_from_dsl_class(
+        env_cls=UserEnvironment, env_name=env_name, metadata=metadata
+    )
+
+    LOG.info("Updating project for environment configuration")
+    update_project_envs(project_name, [env_std_out.get("uuid")])
+    LOG.info("Project updated successfully")
+
+    # TODO Update this environment entry in dsl cache
+
+    return env_std_out
 
 
 def get_project_environment(name=None, uuid=None, project_name=None, project_uuid=None):

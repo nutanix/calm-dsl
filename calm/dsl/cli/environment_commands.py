@@ -1,7 +1,15 @@
 import click
 
-from .main import get, delete
-from .environments import get_environment_list, delete_environment
+from .main import get, delete, create
+from .environments import (
+    create_environment_from_dsl_file,
+    get_environment_list,
+    delete_environment,
+)
+
+from calm.dsl.log import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 @get.command("environments", feature_min_version="3.2.0")
@@ -42,3 +50,29 @@ def _delete_environment(environment_name, project_name):
     """Deletes a environment"""
 
     delete_environment(environment_name, project_name)
+
+
+@create.command("environment", feature_min_version="3.2.0")
+@click.option(
+    "--file",
+    "-f",
+    "env_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    required=True,
+    help="Path of environment file to create",
+)
+@click.option(
+    "--name", "-n", "env_name", default=None, help="Environment name (Optional)"
+)
+def _create_environment(env_file, env_name):
+    """
+    Creates a environment
+    By default, environment will be created in configured project
+    Project can be changed using metadata object in environment py file
+    """
+
+    if env_file.endswith(".py"):
+        create_environment_from_dsl_file(env_file, env_name)
+    else:
+        LOG.error("Unknown file format {}".format(env_file))
+        return

@@ -309,7 +309,7 @@ def update_project(project_uuid, project_payload):
         project["metadata"]["uuid"], project["status"]["execution_context"]["task_uuid"]
     )
     if task_state in PROJECT_TASK.FAILURE_STATES:
-        LOG.exception("Project creation task went to {} state".format(task_state))
+        LOG.exception("Project updation task went to {} state".format(task_state))
         sys.exit(-1)
 
     return stdout_dict
