@@ -84,7 +84,6 @@ class SampleDslEnvironment(Environment):
             ],
         ),
         Provider.Aws(account=Ref.Account(AWS_ACCOUNT_NAME)),
-        Provider.Azure(account=Ref.Account(AZURE_ACCOUNT_NAME)),
         Provider.Gcp(account=Ref.Account(GCP_ACCOUNT_NAME)),
         Provider.Vmware(account=Ref.Account(VMWARE_ACCOUNT_NAME)),
     ]

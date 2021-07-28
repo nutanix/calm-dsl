@@ -254,6 +254,7 @@ def update_environment_from_dsl_file(env_name, env_file, project_name):
 
     env_new_payload = compile_environment_dsl_class(UserEnvironment)
 
+    # Overriding exsiting substrates and credentials (new-ones)
     env_data_to_upload["spec"]["resources"][
         "substrate_definition_list"
     ] = env_new_payload["spec"]["resources"]["substrate_definition_list"]
