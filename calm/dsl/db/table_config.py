@@ -109,6 +109,18 @@ class CacheTableBase(BaseModel):
     @classmethod
     def get_entity_data_using_uuid(cls, uuid, **kwargs):
         raise NotImplementedError("get_entity_data_using_uuid helper not implemented")
+    
+    @classmethod
+    def add_one(cls, uuid, **kwargs):
+        raise NotImplementedError("add_one helper not implemented")
+    
+    @classmethod
+    def delete_one(cls, uuid, **kwargs):
+        raise NotImplementedError("delete_one helper not implemented")
+
+    @classmethod
+    def update_one(cls, uuid, **kwargs):
+        raise NotImplementedError("update_one helper not implemented")
 
 
 class AhvSubnetsCache(CacheTableBase):
@@ -711,9 +723,6 @@ class ProjectCache(CacheTableBase):
                         subnet_to_account_map[row["metadata"]["uuid"]] = account_uuid
 
             accounts_data = json.dumps(account_map)
-
-            subnets_ref_list = entity["status"]["resources"]["subnet_reference_list"]
-
             whitelisted_subnets = dict()
             for subnet_uuid, account_uuid in subnet_to_account_map.items():
                 if not whitelisted_subnets.get(account_uuid):
@@ -757,6 +766,124 @@ class ProjectCache(CacheTableBase):
 
         except DoesNotExist:
             return dict()
+
+    @classmethod
+    def get_project_data(cls, uuid):
+        """returns project data for project uuid"""
+
+        # update by latest data
+        client = get_api_client()
+
+        payload = {"length": 200, "offset": 0, "filter": "state!=DELETED;type!=nutanix"}
+        account_uuid_type_map = client.account.get_uuid_type_map(payload)
+
+        ntnx_local_az_data = AccountCache.get_entity_data("NTNX_LOCAL_AZ")
+        local_nutanix_pc_account_uuid = ntnx_local_az_data.get("uuid", "")
+
+        res, err = client.project.read(uuid)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        project_data = res.json()
+        project_name = project_data["spec"]["name"]
+        account_list = project_data["spec"]["resources"].get(
+            "account_reference_list", []
+        )
+        subnets_ref_list = project_data["spec"]["resources"].get(
+            "subnet_reference_list", []
+        )
+        # Use spec dict in entity-payload for external subnets
+        external_subnets_ref_list = project_data["spec"]["resources"].get(
+            "external_network_list", []
+        )   
+
+        account_map = dict()
+        subnet_to_account_map = dict()
+        for _acc in account_list:
+            account_uuid = _acc["uuid"]
+            account_type = account_uuid_type_map[account_uuid]
+            if account_type not in account_map:
+                account_map[account_type] = [account_uuid]
+            else:
+                account_map[account_type].append(account_uuid)
+
+            if account_type == "nutanix_pc":
+                project_network_list = (
+                    subnets_ref_list
+                    if account_uuid == local_nutanix_pc_account_uuid
+                    else external_subnets_ref_list
+                )
+                subnet_uuids = [item["uuid"] for item in project_network_list]
+                if not subnet_uuids:
+                    continue
+
+                AhvVmProvider = cls.get_provider_plugin("AHV_VM")
+                AhvObj = AhvVmProvider.get_api_obj()
+
+                filter_query = "(_entity_id_=={})".format(
+                    ",_entity_id_==".join(subnet_uuids)
+                )
+                LOG.debug(
+                    "fetching following subnets {} for nutanix_pc account_uuid {}".format(
+                        subnet_uuids, account_uuid
+                    )
+                )
+                try:
+                    res = AhvObj.subnets(
+                        account_uuid=account_uuid, filter_query=filter_query
+                    )
+                except Exception:
+                    LOG.warning(
+                        "Unable to fetch subnets for Nutanix_PC Account(uuid={})".format(
+                            account_uuid
+                        )
+                    )
+                    continue
+                for row in res["entities"]:
+                    subnet_to_account_map[row["metadata"]["uuid"]] = account_uuid
+
+        accounts_data = json.dumps(account_map)
+        whitelisted_subnets = dict()
+        for subnet_uuid, account_uuid in subnet_to_account_map.items():
+            if not whitelisted_subnets.get(account_uuid):
+                whitelisted_subnets[account_uuid] = []
+            whitelisted_subnets[account_uuid].append(subnet_uuid)
+
+        whitelisted_subnets = json.dumps(whitelisted_subnets)
+
+        return {
+            "name": project_name,
+            "uuid": uuid,
+            "accounts_data": accounts_data,
+            "whitelisted_subnets": whitelisted_subnets
+        }
+
+    @classmethod
+    def add_one(cls, uuid, **kwargs):
+        """adds one entry to project table"""
+
+        db_data = cls.get_project_data(uuid, **kwargs)
+        cls.create_entry(**db_data)
+
+    @classmethod
+    def delete_one(cls, uuid, **kwargs):
+        """deletes one entity from project"""
+
+        obj = cls.get(cls.uuid==uuid)
+        obj.delete_instance()
+
+    @classmethod
+    def update_one(cls, uuid, **kwargs):
+        """updates single entry to project table"""
+
+        db_data = cls.get_project_data(uuid, **kwargs)
+        q = cls.update(
+                {
+                    cls.accounts_data : db_data["accounts_data"],
+                    cls.whitelisted_subnets : db_data["whitelisted_subnets"]
+                }
+            ).where(cls.uuid == uuid)
+        q.execute()
 
     class Meta:
         database = dsl_database
