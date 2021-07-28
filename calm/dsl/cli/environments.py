@@ -5,6 +5,7 @@ import json
 import time
 import arrow
 from prettytable import PrettyTable
+from ruamel import yaml
 
 from calm.dsl.config import get_context
 from calm.dsl.api import get_api_client
@@ -83,6 +84,40 @@ def compile_environment_dsl_class(env_cls, metadata=dict()):
     # TODO check if credential ref is working in readiness_probe and other places
 
     return env_payload
+
+
+def compile_environment_command(env_file, project_name, out):
+    """
+    Compiles a DSL (Python) environment into JSON or YAML
+    Args:
+        env_file (str): Location for environment python file
+        project_name (str): Project name
+        out (str): Output format
+    Returns:
+        stdout (object): environment payload
+    """
+
+    # Update project on context
+    ContextObj = get_context()
+    ContextObj.update_project_context(project_name=project_name)
+
+    user_env_module = get_environment_module_from_file(env_file)
+    UserEnvironment = get_env_class_from_module(user_env_module)
+    if UserEnvironment is None:
+        LOG.error("User environment not found in {}".format(env_file))
+        return
+
+    env_payload = compile_environment_dsl_class(UserEnvironment)
+
+    # Reset context
+    ContextObj.reset_configuration()
+
+    if out == "json":
+        click.echo(json.dumps(env_payload, indent=4, separators=(",", ": ")))
+    elif out == "yaml":
+        click.echo(yaml.dump(env_payload, default_flow_style=False))
+    else:
+        LOG.error("Unknown output format {} given".format(out))
 
 
 def create_environment_from_dsl_class(env_cls, env_name="", metadata=dict()):
@@ -177,6 +212,9 @@ def create_environment_from_dsl_file(env_file, env_name, project_name):
     env_std_out = create_environment_from_dsl_class(
         env_cls=UserEnvironment, env_name=env_name
     )
+
+    # Reset context
+    ContextObj.reset_configuration()
 
     LOG.info("Updating project for environment configuration")
     update_project_envs(project_name, [env_std_out.get("uuid")])
