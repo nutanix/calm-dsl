@@ -10,10 +10,10 @@ from ruamel import yaml
 from calm.dsl.config import get_context
 from calm.dsl.api import get_api_client
 from calm.dsl.builtins import create_environment_payload, Environment
-from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
 from calm.dsl.builtins.models.helper.common import get_project
 from calm.dsl.tools import get_module_from_file
-from calm.dsl.api import get_api_client
+from calm.dsl.store import Cache
+from calm.dsl.constants import CACHE
 from calm.dsl.log import get_logging_handle
 
 from .utils import (
@@ -221,7 +221,10 @@ def create_environment_from_dsl_file(env_file, env_name, project_name):
     LOG.info("Project updated successfully")
 
     click.echo(json.dumps(env_std_out, indent=4, separators=(",", ": ")))
-    # TODO Update this environment entry in dsl cache
+
+    LOG.info("Updating environments cache ...")
+    Cache.sync_table(cache_type=CACHE.ENTITY.ENVIRONMENT)
+    LOG.info("[Done]")
 
 
 def update_environment_from_dsl_file(env_name, env_file, project_name):
@@ -284,6 +287,10 @@ def update_environment_from_dsl_file(env_name, env_file, project_name):
         "uuid": res["metadata"]["uuid"],
     }
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+
+    LOG.info("Updating environments cache ...")
+    Cache.sync_table(cache_type=CACHE.ENTITY.ENVIRONMENT)
+    LOG.info("[Done]")
 
 
 def get_project_environment(name=None, uuid=None, project_name=None, project_uuid=None):
@@ -463,3 +470,7 @@ def delete_environment(environment_name, project_name):
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
     LOG.info("Environment {} deleted".format(environment_name))
+
+    LOG.info("Updating environments cache ...")
+    Cache.sync_table(cache_type=CACHE.ENTITY.ENVIRONMENT)
+    LOG.info("[Done]")

@@ -767,7 +767,7 @@ class EnvironmentCache(CacheTableBase):
     __cache_type__ = "environment"
     name = CharField()
     uuid = CharField()
-    project = CharField()
+    project_uuid = CharField()
     accounts_data = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
@@ -775,7 +775,7 @@ class EnvironmentCache(CacheTableBase):
         return {
             "name": self.name,
             "uuid": self.uuid,
-            "project": self.project,
+            "project_uuid": self.project_uuid,
             "accounts_data": json.loads(self.accounts_data),
             "last_update_time": self.last_update_time,
         }
@@ -794,7 +794,7 @@ class EnvironmentCache(CacheTableBase):
             return
 
         table = PrettyTable()
-        table.field_names = ["NAME", "UUID", "PROJECT", "LAST UPDATED"]
+        table.field_names = ["NAME", "UUID", "PROJECT_UUID", "LAST UPDATED"]
         for entity in cls.select():
             entity_data = entity.get_detail_dict()
             last_update_time = arrow.get(
@@ -804,7 +804,7 @@ class EnvironmentCache(CacheTableBase):
                 [
                     highlight_text(entity_data["name"]),
                     highlight_text(entity_data["uuid"]),
-                    highlight_text(entity_data.get("project", "")),
+                    highlight_text(entity_data.get("project_uuid", "")),
                     highlight_text(last_update_time),
                 ]
             )
@@ -819,37 +819,16 @@ class EnvironmentCache(CacheTableBase):
         # update by latest data
         client = get_api_client()
 
-        payload = {"length": 250, "offset": 0}
-        res, err = client.project.list(payload)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        res = res.json()
-
-        # populating a map to lookup the project to which an environment belongs
-        env_uuid_to_project_map = {}
-        for entity in res["entities"]:
-            project_name = entity["status"]["name"]
-            project_environments = entity["status"]["resources"].get(
-                "environment_reference_list", []
-            )
-            for env in project_environments:
-                env_uuid_to_project_map[env["uuid"]] = project_name
-
-        # paginate to cache more environment?
-        Obj = get_resource_api("environments", client.connection)
-        res, err = Obj.list({"length": 250})
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        res = res.json()
-        for entity in res["entities"]:
+        env_list = client.environment.list_all()
+        for entity in env_list:
             name = entity["status"]["name"]
             uuid = entity["metadata"]["uuid"]
-            project_name = env_uuid_to_project_map.get(uuid)
+            project_uuid = (
+                entity["metadata"].get("project_reference", {}).get("uuid", "")
+            )
 
             # ignore environments that are not associated to a project
-            if not project_name:
+            if not project_uuid:
                 continue
 
             infra_inclusion_list = entity["status"]["resources"].get(
@@ -877,7 +856,7 @@ class EnvironmentCache(CacheTableBase):
                 name=name,
                 uuid=uuid,
                 accounts_data=accounts_data,
-                project=project_name,
+                project_uuid=project_uuid,
             )
 
     @classmethod
@@ -886,15 +865,15 @@ class EnvironmentCache(CacheTableBase):
             name=name,
             uuid=uuid,
             accounts_data=kwargs.get("accounts_data", "{}"),
-            project=kwargs.get("project", ""),
+            project_uuid=kwargs.get("project_uuid", ""),
         )
 
     @classmethod
     def get_entity_data(cls, name, **kwargs):
         query_obj = {"name": name}
-        project = kwargs.get("project", "")
-        if project:
-            query_obj["project"] = project
+        project_uuid = kwargs.get("project_uuid", "")
+        if project_uuid:
+            query_obj["project_uuid"] = project_uuid
 
         try:
             entity = super().get(**query_obj)
