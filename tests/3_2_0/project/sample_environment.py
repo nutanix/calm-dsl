@@ -1,7 +1,7 @@
 import json
 
 from calm.dsl.builtins import read_local_file, basic_cred, ahv_vm
-from calm.dsl.builtins import Provider, Ref, Metadata
+from calm.dsl.builtins import Provider, Ref
 from calm.dsl.builtins import Substrate, Environment, readiness_probe
 from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC, AhvVmResources
 
@@ -88,9 +88,3 @@ class SampleDslEnvironment(Environment):
         Provider.Gcp(account=Ref.Account(GCP_ACCOUNT_NAME)),
         Provider.Vmware(account=Ref.Account(VMWARE_ACCOUNT_NAME)),
     ]
-
-
-class EnvMetadata(Metadata):
-    """Metadata used for environment"""
-
-    project = Ref.Project("SampleDslProject")

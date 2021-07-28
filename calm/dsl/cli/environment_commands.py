@@ -5,7 +5,7 @@ from .environments import (
     create_environment_from_dsl_file,
     get_environment_list,
     delete_environment,
-    update_environment_from_dsl_file
+    update_environment_from_dsl_file,
 )
 
 from calm.dsl.log import get_logging_handle
@@ -65,23 +65,20 @@ def _delete_environment(environment_name, project_name):
 @click.option(
     "--name", "-n", "env_name", default=None, help="Environment name (Optional)"
 )
-def _create_environment(env_file, env_name):
+@click.option("--project", "-p", "project_name", help="Project name", required=True)
+def _create_environment(env_file, env_name, project_name):
     """
     Creates a environment to existing project.
-
-    \b
-    By default, environment will be created in configured project
-    Project can be changed using metadata object in environment py file
     """
 
     if env_file.endswith(".py"):
-        create_environment_from_dsl_file(env_file, env_name)
+        create_environment_from_dsl_file(env_file, env_name, project_name)
     else:
         LOG.error("Unknown file format {}".format(env_file))
         return
 
 
-@update.command("environment")
+@update.command("environment", feature_min_version="3.2.0")
 @click.argument("env_name")
 @click.option("--project", "-p", "project_name", help="Project name", required=True)
 @click.option(
