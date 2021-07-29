@@ -35,10 +35,6 @@ class AhvVmPackage(Package):
     foo = CalmVariable.Simple("bar")
     services = [ref(AhvVmService)]
 
-    @action
-    def __install__():
-        CalmTask.Exec.ssh(name="Task1", script="echo @@{foo}@@")
-
 
 class MyAhvVmResources(AhvVmResources):
 
@@ -77,7 +73,7 @@ class AhvVmSubstrate(Substrate):
         connection_type="SSH",
         disabled=True,
         editables_list=["connection_port", "retries"],
-        timeout_secs="300",
+        delay_secs="60",
         retries="5",
     )
 
