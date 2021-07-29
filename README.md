@@ -146,7 +146,7 @@ Use `calm get roles` to list all roles in PC. The below roles are relevant for C
 - Compile environment: `calm compile environment --file <env_file_location> --project <project_name>`. Command will print the compiled environment JSON.
 - Create environment to existing project: `calm create environment --file <env_file_location> --project <project_name> --name <environmet_name>`.
 - Update environment: `calm update environment <environment_name> --file <env_file_location> --project <project_name>`.
-- List environments: `calm get environments`. Get projects, optionally filtered by a string
+- List environments: `calm get environments --project <project_name>`. Get environments of project.
 - Delete environmet: `calm delete environment <environment_name> --project <project_name>`.
 
 ### Access Control Policies
