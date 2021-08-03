@@ -38,6 +38,8 @@ class CustomLogging:
     ERROR = logging.ERROR
     CRITICAL = logging.CRITICAL
 
+    IS_RP_ENABLED = False
+
     def __init__(self, name):
         """
         Build CustomLogger based on logging module
@@ -71,6 +73,8 @@ class CustomLogging:
         # filename = stack[2][1]
         # func = stack[2][3]
         ln = stack[2][2]
+        if CustomLogging.IS_RP_ENABLED:
+            ln = "{}-{}:{}". format(stack[2][1], stack[2][3], stack[2][2])        
 
         return ":{}] {}".format(ln, msg)
 
