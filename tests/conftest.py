@@ -1,7 +1,6 @@
 import sys
 import pytest
 import logging
-
 from pytest_reportportal import RPLogger, RPLogHandler
 
 from calm.dsl.log import CustomLogging, get_logging_handle
@@ -25,6 +24,9 @@ def rp_logger(request):
         rp_handler = RPLogHandler(request.node.config.py_test_service)
         CustomLogging.IS_RP_ENABLED = True
 
+        # Set verbose logs to DEBUG
+        CustomLogging.set_verbose_level(lvl=CustomLogging.DEBUG)
+
         # Skipping logs via peewee db-orm
         logger = logging.getLogger('peewee')
         logger.addHandler(logging.StreamHandler())
@@ -34,16 +36,3 @@ def rp_logger(request):
 
     rp_handler.setLevel(logging.DEBUG)
     return logger
-
-
-def fix_logging_level_for_loggers(lvl=10):
-    """
-    helper fixes logging level for all loggers
-    Every object of CustomLogging will have this level
-    """
-
-    # Set to debug mode
-    CustomLogging.set_verbose_level(lvl=lvl)
-
-
-fix_logging_level_for_loggers()
