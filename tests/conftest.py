@@ -4,6 +4,7 @@ import logging
 from pytest_reportportal import RPLogger, RPLogHandler
 
 from calm.dsl.log import CustomLogging, get_logging_handle
+
 LOG = get_logging_handle(__name__)
 
 
@@ -19,7 +20,7 @@ def rp_logger(request):
 
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
-    if hasattr(request.node.config, 'py_test_service'):
+    if hasattr(request.node.config, "py_test_service"):
         logging.setLoggerClass(RPLogger)
         rp_handler = RPLogHandler(request.node.config.py_test_service)
         CustomLogging.IS_RP_ENABLED = True
@@ -28,7 +29,7 @@ def rp_logger(request):
         CustomLogging.set_verbose_level(lvl=CustomLogging.DEBUG)
 
         # Skipping logs via peewee db-orm
-        logger = logging.getLogger('peewee')
+        logger = logging.getLogger("peewee")
         logger.addHandler(logging.StreamHandler())
         logger.setLevel(logging.ERROR)
     else:
