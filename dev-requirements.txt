@@ -14,5 +14,7 @@ pytest-icdiff==0.5
 pytest-xdist==1.29.0
 pytest-gitignore==1.3
 pytest-rerunfailures==4.1.0
+pytest-reportportal==1.0.9
+reportportal-client==3.2.3
 #python-language-server[all]
 #pyls
