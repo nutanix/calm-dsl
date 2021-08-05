@@ -1,4 +1,3 @@
-import sys
 from distutils.version import LooseVersion as LV
 
 from .entity import EntityType
@@ -24,7 +23,6 @@ class ProjectType(EntityType):
         cdict["default_subnet_reference"] = {}
 
         CALM_VERSION = Version.get_version("Calm")
-        default_subnet_reference = None
 
         # Populate accounts
         provider_list = cdict.pop("provider_list", [])

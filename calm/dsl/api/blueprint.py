@@ -1,7 +1,6 @@
 from .resource import ResourceAPI
 from .connection import REQUEST
 from .util import strip_secrets, patch_secrets
-from .project import ProjectAPI
 
 
 class BlueprintAPI(ResourceAPI):
