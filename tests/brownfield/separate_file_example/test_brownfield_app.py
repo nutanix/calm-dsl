@@ -154,8 +154,8 @@ class TestBrownFieldCommands:
         app_json = json.loads(result.output)
         app_state = app_json["status"]["state"]
         if app_state != APPLICATION.STATES.RUNNING:
-            LOG.error("App went to {} state".format(app_state))
-            sys.exit(-1)
+            LOG.error(result.output)
+            pytest.fail("App went to {} state".format(app_state))
 
         vm_ip = app_json["status"]["resources"]["deployment_list"][0][
             "substrate_configuration"
@@ -296,8 +296,8 @@ class TestBrownFieldCommands:
         app_json = json.loads(result.output)
         app_state = app_json["status"]["state"]
         if app_state != APPLICATION.STATES.RUNNING:
-            LOG.error("App went to {} state".format(app_state))
-            sys.exit(-1)
+            LOG.error(result.output)
+            pytest.fail("App went to {} state".format(app_state))
 
         vm_ip = app_json["status"]["resources"]["deployment_list"][0][
             "substrate_configuration"
@@ -364,8 +364,8 @@ class TestBrownFieldCommands:
         app_json = json.loads(result.output)
         app_state = app_json["status"]["state"]
         if app_state != APPLICATION.STATES.RUNNING:
-            LOG.error("App went to {} state".format(app_state))
-            sys.exit(-1)
+            LOG.error(result.output)
+            pytest.fail("App went to {} state".format(app_state))
 
         new_vm_ip = app_json["status"]["resources"]["deployment_list"][0][
             "substrate_configuration"
