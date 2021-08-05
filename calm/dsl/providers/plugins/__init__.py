@@ -19,6 +19,8 @@ def _import_plugins(name=__name__):
 
     results = {}
     for loader, name, is_pkg in pkgutil.walk_packages(package.__path__):
+        if not is_pkg:
+            continue
         full_name = package.__name__ + "." + name
         results[full_name] = importlib.import_module(full_name)
     return results

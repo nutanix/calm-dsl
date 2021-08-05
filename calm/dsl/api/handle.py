@@ -23,7 +23,6 @@ from .user_group import UserGroupAPI
 from .role import RoleAPI
 from .directory_service import DirectoryServiceAPI
 from .access_control_policy import AccessControlPolicyAPI
-from .environment import EnvironmentAPI
 
 
 class ClientHandle:
