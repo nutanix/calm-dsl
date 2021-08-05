@@ -469,7 +469,11 @@ class BrownfiedVmType(EntityType):
         cls_deployment = common_helper._walk_to_parent_with_given_type(
             cls, "BrownfieldDeploymentType"
         )
-        return cls_deployment.substrate.__self__
+
+        if cls_deployment and getattr(cls_deployment, "substrate", None):
+            return cls_deployment.substrate.__self__
+
+        return None
 
     def get_account_uuid(cls):
         """returns the account_uuid configured for given brwonfield vm"""
@@ -479,7 +483,10 @@ class BrownfiedVmType(EntityType):
         cls_substrate = cls.get_substrate()
 
         provider_type = cls.provider
-        account_uuid = ""
+
+        # account_uuid is attached to brownfield instances if a
+        # blueprint is launched with runtime brownfield deployments
+        account_uuid = getattr(cls, "account_uuid", "")
         if cls_substrate:
             account = getattr(cls_substrate, "account", dict()) or dict()
             if account:

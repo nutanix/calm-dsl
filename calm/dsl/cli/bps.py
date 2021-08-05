@@ -1,3 +1,4 @@
+from re import sub
 import time
 import json
 import sys
@@ -152,13 +153,7 @@ def describe_bp(blueprint_name, out):
     """Displays blueprint data"""
 
     client = get_api_client()
-    bp = get_blueprint(client, blueprint_name, all=True)
-
-    res, err = client.blueprint.read(bp["metadata"]["uuid"])
-    if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-    bp = res.json()
+    bp = get_blueprint(blueprint_name, all=True)
 
     if out == "json":
         bp.pop("status", None)
@@ -196,17 +191,38 @@ def describe_bp(blueprint_name, out):
         profile_name = profile["name"]
         click.echo("\t" + highlight_text(profile_name))
 
-        substrate_ids = [
-            dep.get("substrate_local_reference", {}).get("uuid")
-            for dep in profile.get("deployment_create_list", [])
-        ]
-        substrate_types = [
-            sub.get("type")
-            for sub in bp_resources.get("substrate_definition_list")
-            if sub.get("uuid") in substrate_ids
-        ]
-        click.echo("\tSubstrates[{}]:".format(highlight_text(len(substrate_types))))
-        click.echo("\t\t{}".format(highlight_text(", ".join(substrate_types))))
+        bp_deployments = profile.get("deployment_create_list", [])
+        click.echo("\tDeployments[{}]:".format(highlight_text(len(bp_deployments))))
+        for dep in bp_deployments:
+            click.echo("\t\t{}".format(highlight_text(dep["name"])))
+
+            dep_substrate = None
+            for sub in bp_resources.get("substrate_definition_list"):
+                if sub.get("uuid") == dep.get("substrate_local_reference", {}).get(
+                    "uuid"
+                ):
+                    dep_substrate = sub
+
+            sub_type = dep_substrate.get("type", "")
+            account = None
+            if sub_type != "EXISTING_VM":
+                account_uuid = dep_substrate["create_spec"]["resources"]["account_uuid"]
+                account_cache_data = Cache.get_entity_data_using_uuid(
+                    entity_type=CACHE.ENTITY.ACCOUNT, uuid=account_uuid
+                )
+                if sub_type == "AHV_VM":
+                    account_uuid = account_cache_data["data"]["pc_account_uuid"]
+                    account_cache_data = Cache.get_entity_data_using_uuid(
+                        entity_type=CACHE.ENTITY.ACCOUNT, uuid=account_uuid
+                    )
+
+                account = account_cache_data["name"]
+
+            click.echo("\t\tSubstrate:")
+            click.echo("\t\t\t{}".format(highlight_text(dep_substrate["name"])))
+            click.echo("\t\t\tType: {}".format(highlight_text(sub_type)))
+            if account:
+                click.echo("\t\t\tAccount: {}".format(highlight_text(account)))
 
         click.echo("\tActions[{}]:".format(highlight_text(len(profile["action_list"]))))
         for action in profile["action_list"]:
@@ -477,7 +493,7 @@ def decompile_bp_from_server(name, with_secrets=False, prefix="", bp_dir=None):
     """decompiles the blueprint by fetching it from server"""
 
     client = get_api_client()
-    blueprint = get_blueprint(client, name)
+    blueprint = get_blueprint(name)
     bp_uuid = blueprint["metadata"]["uuid"]
 
     res, err = client.blueprint.export_file(bp_uuid)
@@ -596,9 +612,10 @@ def format_blueprint_command(bp_file):
         LOG.info("Blueprint {} left unchanged.".format(path))
 
 
-def get_blueprint(client, name, all=False, is_brownfield=False):
+def get_blueprint_uuid(name, all=False, is_brownfield=False):
+    """returns blueprint uuid if present else raises error"""
 
-    # find bp
+    client = get_api_client()
     params = {"filter": "name=={}".format(name)}
     if not all:
         params["filter"] += ";state!=DELETED"
@@ -615,13 +632,28 @@ def get_blueprint(client, name, all=False, is_brownfield=False):
     blueprint = None
     if entities:
         if len(entities) != 1:
-            raise Exception("More than one blueprint found - {}".format(entities))
+            LOG.error("More than one blueprint found - {}".format(entities))
+            sys.exit(-1)
 
         LOG.info("{} found ".format(name))
         blueprint = entities[0]
     else:
-        raise Exception("No blueprint found with name {} found".format(name))
-    return blueprint
+        LOG.error("No blueprint found with name {} found".format(name))
+        sys.exit("No blueprint found with name {} found".format(name))
+
+    return blueprint["metadata"]["uuid"]
+
+
+def get_blueprint(name, all=False, is_brownfield=False):
+    """returns blueprint get call data"""
+
+    client = get_api_client()
+    bp_uuid = get_blueprint_uuid(name=name, all=all, is_brownfield=is_brownfield)
+    res, err = client.blueprint.read(bp_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    return res.json()
 
 
 def get_blueprint_runtime_editables(client, blueprint):
@@ -945,6 +977,7 @@ def launch_blueprint_simple(
     patch_editables=True,
     launch_params=None,
     is_brownfield=False,
+    brownfield_deployment_file=None,
 ):
     client = get_api_client()
 
@@ -967,17 +1000,17 @@ def launch_blueprint_simple(
         LOG.info("No existing application found with name {}".format(app_name))
 
     if not blueprint:
-        if is_brownfield:
-            blueprint = get_blueprint(client, blueprint_name, is_brownfield=True)
-        else:
-            blueprint = get_blueprint(client, blueprint_name)
+        blueprint = get_blueprint(blueprint_name, is_brownfield=is_brownfield)
 
-    blueprint_uuid = blueprint.get("metadata", {}).get("uuid", "")
+    bp_metadata = blueprint.get("metadata", {})
+    bp_status_data = blueprint.get("status", {})
+
+    blueprint_uuid = bp_metadata.get("uuid", "")
     blueprint_name = blueprint_name or blueprint.get("metadata", {}).get("name", "")
 
-    project_ref = blueprint["metadata"].get("project_reference", {})
+    project_ref = bp_metadata.get("project_reference", {})
     project_uuid = project_ref.get("uuid")
-    bp_status = blueprint["status"]["state"]
+    bp_status = bp_status_data["state"]
     if bp_status != "ACTIVE":
         LOG.error("Blueprint is in {} state. Unable to launch it".format(bp_status))
         sys.exit(-1)
@@ -997,6 +1030,86 @@ def launch_blueprint_simple(
         if not profile:
             LOG.error("No profile found with name {}".format(profile_name))
             sys.exit(-1)
+
+    runtime_bf_deployment_list = []
+    if brownfield_deployment_file:
+        bp_metadata = blueprint.get("metadata", {})
+        project_uuid = bp_metadata.get("project_reference", {}).get("uuid", "")
+
+        # Set bp project in dsl context
+        ContextObj = get_context()
+        project_config = ContextObj.get_project_config()
+        project_name = project_config["name"]
+
+        if project_uuid:
+            project_data = Cache.get_entity_data_using_uuid(
+                entity_type=CACHE.ENTITY.PROJECT, uuid=project_uuid
+            )
+            bp_project = project_data.get("name")
+
+            if bp_project and bp_project != project_name:
+                project_name = bp_project
+                ContextObj.update_project_context(project_name=project_name)
+
+        bf_deployments = get_brownfield_deployment_classes(brownfield_deployment_file)
+
+        bp_profile_data = {}
+        for _profile in bp_status_data["resources"]["app_profile_list"]:
+            if _profile["name"] == profile["app_profile_reference"]["name"]:
+                bp_profile_data = _profile
+
+        # Get substrate-account map
+        bp_subs_uuid_account_uuid_map = {}
+        for _sub in bp_status_data["resources"]["substrate_definition_list"]:
+            if _sub.get("type", "") == "EXISTING_VM":
+                bp_subs_uuid_account_uuid_map[_sub["uuid"]] = ""
+                continue
+
+            account_uuid = _sub["create_spec"]["resources"]["account_uuid"]
+
+            if _sub.get("type", "") == "AHV_VM":
+                account_data = Cache.get_entity_data_using_uuid(
+                    entity_type=CACHE.ENTITY.ACCOUNT, uuid=account_uuid
+                )
+                # replace pe account uuid by pc account uuid
+                account_uuid = account_data["data"]["pc_account_uuid"]
+
+            bp_subs_uuid_account_uuid_map[_sub["uuid"]] = account_uuid
+
+        # Get dep name-uuid map and dep-account_uuid map
+        bp_dep_name_uuid_map = {}
+        bp_dep_name_account_uuid_map = {}
+        for _dep in bp_profile_data.get("deployment_create_list", []):
+            bp_dep_name_uuid_map[_dep["name"]] = _dep["uuid"]
+
+            _dep_sub_uuid = _dep["substrate_local_reference"]["uuid"]
+            bp_dep_name_account_uuid_map[_dep["name"]] = bp_subs_uuid_account_uuid_map[
+                _dep_sub_uuid
+            ]
+
+        # Compile brownfield deployment after attaching valid account to instance
+        for _bf_dep in bf_deployments:
+            _bf_dep_name = getattr(_bf_dep, "name", "") or _bf_dep.__name__
+
+            # Attaching correct account to brownfield instances
+            for _inst in _bf_dep.instances:
+                _inst.account_uuid = bp_dep_name_account_uuid_map[_bf_dep_name]
+
+            _bf_dep = _bf_dep.get_dict()
+
+            if _bf_dep_name in list(bp_dep_name_uuid_map.keys()):
+                runtime_bf_deployment_list.append(
+                    {
+                        "uuid": bp_dep_name_uuid_map[_bf_dep_name],
+                        "name": _bf_dep_name,
+                        "value": {
+                            "brownfield_instance_list": _bf_dep.get(
+                                "brownfield_instance_list"
+                            )
+                            or []
+                        },
+                    }
+                )
 
     runtime_editables = profile.pop("runtime_editables", [])
 
@@ -1134,6 +1247,28 @@ def launch_blueprint_simple(
         )
         LOG.info("Updated blueprint editables are:\n{}".format(runtime_editables_json))
 
+    if runtime_bf_deployment_list:
+        bf_dep_names = [bfd["name"] for bfd in runtime_bf_deployment_list]
+        runtime_deployments = launch_payload["spec"]["runtime_editables"].get(
+            "deployment_list", []
+        )
+        for _rd in runtime_deployments:
+            if _rd["name"] not in bf_dep_names:
+                runtime_bf_deployment_list.append(_rd)
+
+        launch_payload["spec"]["runtime_editables"][
+            "deployment_list"
+        ] = runtime_bf_deployment_list
+
+        runtime_bf_deployment_list_json = json.dumps(
+            runtime_bf_deployment_list, indent=4, separators=(",", ": ")
+        )
+        LOG.info(
+            "Updated blueprint deployment editables are:\n{}".format(
+                runtime_bf_deployment_list_json
+            )
+        )
+
     res, err = client.blueprint.launch(blueprint_uuid, launch_payload)
     if not err:
         LOG.info("Blueprint {} queued for launch".format(blueprint_name))
@@ -1188,11 +1323,11 @@ def delete_blueprint(blueprint_names):
     client = get_api_client()
 
     for blueprint_name in blueprint_names:
-        blueprint = get_blueprint(client, blueprint_name)
-        blueprint_id = blueprint["metadata"]["uuid"]
-        res, err = client.blueprint.delete(blueprint_id)
+        bp_uuid = get_blueprint_uuid(blueprint_name)
+        _, err = client.blueprint.delete(bp_uuid)
         if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+            LOG.error("[{}] - {}".format(err["code"], err["error"]))
+            sys.exit(-1)
         LOG.info("Blueprint {} deleted".format(blueprint_name))
 
 
@@ -1243,19 +1378,13 @@ def patch_bp_if_required(environment_name=None, blueprint_name=None, profile_nam
     """Patch the blueprint with the given environment to create a new blueprint if the requested app profile
     is not already linked to the given environment"""
     if environment_name:
-        client = get_api_client()
-        bp = get_blueprint(client, blueprint_name)
+        bp = get_blueprint(blueprint_name)
         project_uuid = bp["metadata"]["project_reference"]["uuid"]
         environment_data, project_data = get_project_environment(
             name=environment_name, project_uuid=project_uuid
         )
         env_uuid = environment_data["metadata"]["uuid"]
 
-        res, err = client.blueprint.read(bp["metadata"]["uuid"])
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        bp = res.json()
         app_profiles = bp["spec"]["resources"]["app_profile_list"]
         if profile_name is None:
             profile_name = app_profiles[0]["name"]

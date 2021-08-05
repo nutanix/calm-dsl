@@ -2,7 +2,7 @@ import json
 
 from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC
 from calm.dsl.builtins import ref, basic_cred, AhvVmResources, AhvVm
-from calm.dsl.builtins import read_local_file
+from calm.dsl.builtins import read_local_file, readiness_probe
 
 from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
@@ -73,6 +73,13 @@ class AhvVmSubstrate(Substrate):
     """AHV VM config given by reading a spec file"""
 
     provider_spec = MyAhvVm
+    readiness_probe = readiness_probe(
+        connection_type="SSH",
+        disabled=False,
+        editables_list=["connection_port", "retries"],
+        delay_secs="60",
+        retries="5",
+    )
 
 
 class AhvVmDeployment(Deployment):

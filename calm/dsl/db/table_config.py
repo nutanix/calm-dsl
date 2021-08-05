@@ -503,7 +503,7 @@ class AccountCache(CacheTableBase):
         client = get_api_client()
         payload = {
             "length": 250,
-            "filter": "(state==ACTIVE,state==VERIFIED);type!=nutanix",
+            "filter": "(state==ACTIVE,state==VERIFIED)",
         }
         res, err = client.account.list(payload)
         if err:
@@ -531,6 +531,11 @@ class AccountCache(CacheTableBase):
                 ):
                     group = data.setdefault("clusters", {})
                     group[pe_acc["uuid"]] = pe_acc.get("name")
+
+            elif provider_type == "nutanix":
+                data["pc_account_uuid"] = entity["status"]["resources"]["data"][
+                    "pc_account_uuid"
+                ]
 
             query_obj["data"] = json.dumps(data)
             cls.create_entry(**query_obj)

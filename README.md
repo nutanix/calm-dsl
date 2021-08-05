@@ -57,6 +57,7 @@ Context info includes server, project and log configuration for dsl operations.
 - List Brownfield vms: `calm get brownfield vms --project <project_name> --type [AHV_VM|AWS_VM|AZURE_VM|GCP_VM|VMWARE_VM]`. Please use `--account` cli option, if project has multiple accounts for a provider type.
 - Compile Blueprint: `calm compile bp -f <blueprint_file_location> -b <brownfield_deployments_file_location>`.
 - Create Brownfield Application: `calm create app -f <bluprint_file_location> -b <brownfield_deployments_file_location> -n <app_name> -i`.
+- Create Brownfield Application using existing blueprint: `calm launch bp <bp_name> -b <brownfield_deployments_file_location> -n <app_name>`. Command will launch existing blueprint to create brownfield application (3.3.0 onwards). Look at sample file [here](examples/Brownfield/separate_file_example/brownfield_deployments.py).
 
 ### Decompiling Blueprints (`.json`->`.py`)
 Decompilation is process to consume json data for any entity and convert it back to dsl python helpers/classes. Currently, decompile is supported for converting blueprint json to python files. Summary of support for blueprint decompilation(Experimental feature):
