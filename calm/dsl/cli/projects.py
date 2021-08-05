@@ -309,7 +309,7 @@ def update_project(project_uuid, project_payload):
         project["metadata"]["uuid"], project["status"]["execution_context"]["task_uuid"]
     )
     if task_state in PROJECT_TASK.FAILURE_STATES:
-        LOG.exception("Project creation task went to {} state".format(task_state))
+        LOG.exception("Project updation task went to {} state".format(task_state))
         sys.exit(-1)
 
     return stdout_dict
@@ -423,8 +423,9 @@ def create_project_from_dsl(project_file, project_name, description=""):
         ContextObj.reset_configuration()
 
     # Update projects in cache
-    LOG.info("Updating projects cache ...")
+    LOG.info("Updating projects and environments cache ...")
     Cache.sync_table(cache_type=CACHE.ENTITY.PROJECT)
+    Cache.sync_table(cache_type=CACHE.ENTITY.ENVIRONMENT)
     LOG.info("[Done]")
 
 
@@ -586,8 +587,9 @@ def delete_project(project_names):
 
     # Update projects in cache if any project has been deleted
     if projects_deleted:
-        LOG.info("Updating projects cache ...")
+        LOG.info("Updating projects and environment cache ...")
         Cache.sync_table(cache_type=CACHE.ENTITY.PROJECT)
+        Cache.sync_table(cache_type=CACHE.ENTITY.ENVIRONMENT)
         LOG.info("[Done]")
 
 
@@ -671,7 +673,7 @@ def update_project_from_dsl(project_name, project_file):
 
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
-    LOG.info("Polling on project creation task")
+    LOG.info("Polling on project updation task")
     task_state = watch_project_task(
         project_uuid, res["status"]["execution_context"]["task_uuid"], poll_interval=4
     )
@@ -687,6 +689,10 @@ def update_project_from_dsl(project_name, project_file):
     else:
         LOG.exception("Project updation task went to {} state".format(task_state))
         sys.exit(-1)
+
+    LOG.info("Updating projects cache ...")
+    Cache.sync_table(cache_type=CACHE.ENTITY.PROJECT)
+    LOG.info("[Done]")
 
 
 def update_project_using_cli_switches(
