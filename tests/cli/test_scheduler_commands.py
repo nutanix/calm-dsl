@@ -38,7 +38,7 @@ CALM_VERSION = Version.get_version("Calm")
 
 
 @pytest.mark.skipif(
-    LV(CALM_VERSION) >= LV("3.4.0"), reason="Scheduler FEAT is for v3.4.0"
+    LV(CALM_VERSION) < LV("3.4.0"), reason="Scheduler FEAT is for v3.4.0"
 )
 class TestSchedulerCommands:
     @pytest.mark.scheduler
