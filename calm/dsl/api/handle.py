@@ -26,6 +26,7 @@ from .access_control_policy import AccessControlPolicyAPI
 from .app_protection_policy import AppProtectionPolicyAPI
 from .vm_recovery_point import VmRecoveryPointAPI
 from .nutanix_task import TaskAPI
+from .job import JobAPI
 
 
 class ClientHandle:
@@ -58,6 +59,7 @@ class ClientHandle:
         self.app_protection_policy = AppProtectionPolicyAPI(self.connection)
         self.vm_recovery_point = VmRecoveryPointAPI(self.connection)
         self.nutanix_task = TaskAPI(self.connection)
+        self.job = JobAPI(self.connection)
 
 
 def get_client_handle_obj(

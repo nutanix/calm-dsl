@@ -93,6 +93,7 @@ from .models.endpoint import Endpoint, _endpoint, CalmEndpoint
 
 from .models.vm_profile import VmProfile
 from .models.vm_blueprint import VmBlueprint
+from .models.job import Job
 
 __all__ = [
     "Ref",
@@ -194,4 +195,5 @@ __all__ = [
     "AppProtection",
     "AhvVmRecoveryResources",
     "ahv_vm_recovery_spec",
+    "Job",
 ]

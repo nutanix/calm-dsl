@@ -1,0 +1,33 @@
+{% macro SchedulerJob() -%}
+
+title: Job
+type: object
+x-calm-dsl-type: scheduler_job
+properties:
+  name:
+    type: string
+  description:
+    type: string
+  type:
+    type: string
+  schedule_info:
+    type: object
+    x-calm-dsl-type: job_schedule_info
+  skip_concurrent_execution:
+    x-calm-dsl-display-name: skip_exec
+    type: boolean
+  executable:
+    type: object
+    x-calm-dsl-type: executable_resources
+  state:
+    type: string
+
+{%- endmacro %}
+
+{% macro SchedulerJobSchema() -%}
+
+Job:
+  {{ SchedulerJob()|indent(2) }}
+
+
+{%- endmacro %}

@@ -1,0 +1,28 @@
+{% macro ScheduleInfo() -%}
+type: object
+x-calm-dsl-type: job_schedule_info
+properties:
+    schedule:
+      description: job schedule in cron format
+      type: string
+    expiry_time:
+      description: expiration time for jobs after which they wont be executed
+      type: string
+    execution_time:
+      description: execution time for one time job
+      type: string
+    start_time:
+      description: start time for recurring job
+      type: string
+    time_zone:
+      description: time zone for job
+      type: string
+{%- endmacro %}
+
+{% macro JobScheduleInfoSchema() -%}
+
+JobScheduleInfo:
+  {{ ScheduleInfo()|indent(2) }}
+
+
+{%- endmacro %}
