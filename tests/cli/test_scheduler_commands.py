@@ -4,6 +4,9 @@ import uuid
 import pytest
 import os as os_lib
 
+from distutils.version import LooseVersion as LV
+from calm.dsl.store import Version
+
 from calm.dsl.log import get_logging_handle
 from calm.dsl.cli import runbooks
 from calm.dsl.cli import scheduler
@@ -30,7 +33,13 @@ DSL_INVALID_SCHEDULER_FILE = [
 ]
 DSL_RUNBOOK_FILE = "default_target_runbook.py"
 
+# calm_version
+CALM_VERSION = Version.get_version("Calm")
 
+
+@pytest.mark.skipif(
+    LV(CALM_VERSION) >= LV("3.4.0"), reason="Scheduler FEAT is for v3.4.0"
+)
 class TestSchedulerCommands:
     @pytest.mark.scheduler
     @pytest.mark.parametrize("dsl_file", DSL_SCHEDULER_FILE)
