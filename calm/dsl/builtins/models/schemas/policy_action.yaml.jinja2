@@ -1,0 +1,27 @@
+{% macro PolicyAction() -%}
+title: PolicyAction
+type: object
+x-calm-dsl-type: policy_action
+properties:
+  action_type_reference:
+    type: object
+    x-calm-dsl-type: object
+    x-calm-dsl-display-name: action_type
+    properties:
+      kind:
+        type: string
+      name:
+        type: string
+      uuid:
+        type: string
+  attrs:
+    type: object
+    x-calm-dsl-type: dict
+    description: Attrs for the action.
+{%- endmacro %}
+{% macro PolicyActionSchema() -%}
+
+PolicyAction:
+  {{ PolicyAction()|indent(2) }}
+
+{%- endmacro %}

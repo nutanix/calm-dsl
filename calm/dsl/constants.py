@@ -20,6 +20,9 @@ class CACHE:
         USER_GROUP = "user_group"
         AHV_NETWORK_FUNCTION_CHAIN = "ahv_network_function_chain"
         ENVIRONMENT = "environment"
+        POLICY_EVENT = "policy_event"
+        POLICY_ACTION_TYPE = "policy_action_type"
+        POLICY_ATTRIBUTES = "policy_attributes"
 
 
 PROVIDER_ACCOUNT_TYPE_MAP = {
@@ -67,3 +70,33 @@ class NETWORK_GROUP_TUNNEL_TASK:
         STATUS.FAILURE,
     ]
     FAILURE_STATES = [STATUS.ABORTED, STATUS.FAILURE]
+
+
+class POLICY:
+    """Policy related constants"""
+
+    MIN_SUPPORTED_VERSION = "3.1.0"
+
+    class APPROVER_SET:
+        """Types of approver set for approval policy"""
+
+        ANY = "ANY"
+        ALL = "ALL"
+
+    class EVENT:
+        """Types of events supported in policy"""
+
+        class APP:
+            LAUNCH = "LAUNCH"
+            DAY_TWO_OPERATION = "DAY_TWO_OPERATION"
+            PRE_CREATE = "PRE_CREATE"
+
+        class RUNBOOK:
+            EXECUTE = "EXECUTE"
+
+    class ACTION_TYPE:
+        """Supported Action Types"""
+
+        APPROVAL = "APPROVAL"
+        QUOTA_CHECK = "QUOTA_CHECK"
+        EMAIL = "EMAIL"

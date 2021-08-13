@@ -4,6 +4,7 @@ import traceback
 from peewee import OperationalError, IntegrityError
 from distutils.version import LooseVersion as LV
 
+from calm.dsl.config import get_context
 from .version import Version
 from calm.dsl.config import get_context
 from calm.dsl.db import get_db_handle, init_db_handle
@@ -24,11 +25,13 @@ class Cache:
 
         db = get_db_handle()
         db_tables = db.registered_tables
+        
+        # Get context
+        context = get_context()
 
         # Get calm version from api only if necessary
-        calm_version = CALM_VERSION
+        calm_version = Version.get_version("Calm")
         if sync_version or (not calm_version):
-            context = get_context()
             server_config = context.get_server_config()
             client = get_client_handle_obj(
                 server_config["pc_ip"],
@@ -41,14 +44,31 @@ class Cache:
                 sys.exit(err["error"])
             calm_version = res.content.decode("utf-8")
 
+        policy_config = context.get_policy_config()
+        approval_policy_config = context.get_approval_policy_config()
         cache_tables = {}
 
         for table in db_tables:
             if hasattr(table, "__cache_type__") and (
                 LV(calm_version) >= LV(table.feature_min_version)
             ):
-                cache_tables[table.__cache_type__] = table
+                if table.is_approval_policy_required:
+                    # if approval policy is required check policy and approval_policy status
+                    if (
+                        policy_config.get("policy_status", "False") == "True"
+                        and approval_policy_config.get(
+                            "approval_policy_status", "False"
+                        )
+                        == "True"
+                    ):
+                        cache_tables[table.__cache_type__] = table
+                elif table.is_policy_required:
+                    if policy_config.get("policy_status", "False") == "True":
+                        cache_tables[table.__cache_type__] = table
+                else:
+                    cache_tables[table.__cache_type__] = table
         return cache_tables
+
 
     @classmethod
     def get_entity_data(cls, entity_type, name, **kwargs):

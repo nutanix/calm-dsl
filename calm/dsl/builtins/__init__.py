@@ -114,6 +114,10 @@ from .models.network_group_tunnel_vm_spec import (
 from .models.network_group_tunnel import NetworkGroupTunnelType, NetworkGroupTunnel
 from .models.network_group_tunnel_payload import NetworkGroupTunnelPayloadType
 
+from .models.policy_condition import PolicyCondition
+from .models.approver_set import PolicyApproverSet, create_policy_approver_set
+from .models.policy_action import PolicyAction, _policy_action_payload
+from .models.policy import Policy, CalmPolicy
 
 __all__ = [
     "Ref",
@@ -223,4 +227,11 @@ __all__ = [
     "AhvVmRecoveryResources",
     "ahv_vm_recovery_spec",
     "Job",
+    "PolicyCondition",
+    "PolicyAction",
+    "_policy_action_payload",
+    "create_policy_approver_set",
+    "PolicyApproverSet",
+    "CalmPolicy",
+    "Policy",
 ]

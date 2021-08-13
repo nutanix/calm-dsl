@@ -31,6 +31,8 @@ class Context:
         self.log_config = config_handle.get_log_config()
         self.categories_config = config_handle.get_categories_config()
         self.connection_config = config_handle.get_connection_config()
+        self.policy_config = config_handle.get_policy_config()
+
         # Override with env data
         self.server_config.update(EnvConfig.get_server_config())
         self.project_config.update(EnvConfig.get_project_config())
@@ -116,6 +118,12 @@ class Context:
             config["connection_timeout"] = DEFAILT_CONNECTION_TIMEOUT
         if "read_timeout" not in config:
             config["read_timeout"] = DEFAULT_READ_TIMEOUT
+
+    def get_policy_config(self):
+        """returns policy configuration"""
+        config = self.policy_config
+        if not config.get("policy_status"):
+            config["policy_status"] = False
 
         return config
 

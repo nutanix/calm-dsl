@@ -1,0 +1,53 @@
+{% macro Policy() -%}
+
+title: Policy Spec
+type: object
+x-calm-dsl-type: policy
+properties:
+    event_reference:
+        type: string
+        x-calm-dsl-display-name: event
+    condition_list:
+        x-calm-dsl-display-name: conditions
+        type: array
+        items:
+            $ref: '#/components/schemas/PolicyCondition'
+    action_list:
+        description: Actions for this policy
+        x-calm-dsl-display-name: actions
+        type: array
+        items:
+            $ref: '#/components/schemas/PolicyAction'
+    action_reference_list:
+        description: Action references for this policy
+        type: array
+        items:
+            type: object
+            x-calm-dsl-type: object
+            properties:
+                kind:
+                    type: string
+                name:
+                    type: string
+                uuid:
+                    type: string
+    category_list:
+        type: object
+        x-calm-dsl-type: dict
+        description: Categories for the policy. This allows assigning the policy to specific entities
+    enabled:
+        type: boolean
+        default: false
+        description: |
+          If this is false then policy will not be applied. To use this policy this value has to be set to True.
+    priority:
+        type: integer
+        description: Priority of this policy
+
+{%- endmacro %}
+{% macro PolicySchema() -%}
+
+Policy:
+  {{ Policy()|indent(2) }}
+
+{%- endmacro %}

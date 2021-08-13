@@ -500,3 +500,40 @@ class Ref:
             }
 
             return tunnel_ref
+    class PolicyEvent:
+        def __new__(cls, name, **kwargs):
+
+            ds_cache_data = Cache.get_entity_data(
+                entity_type=CACHE.ENTITY.POLICY_EVENT, name=name
+            )
+            if not ds_cache_data:
+                LOG.error(
+                    "Policy Event {} not found. Please run: calm update cache".format(
+                        name
+                    )
+                )
+                sys.exit("Policy Event name={} not found".format(name))
+            return {
+                "kind": "policy_event",
+                "name": name,
+                "uuid": ds_cache_data["uuid"],
+            }
+
+    class PolicyActionType:
+        def __new__(cls, name, **kwargs):
+
+            ds_cache_data = Cache.get_entity_data(
+                entity_type=CACHE.ENTITY.POLICY_ACTION_TYPE, name=name
+            )
+            if not ds_cache_data:
+                LOG.error(
+                    "Policy action type {} not found. Please run: calm update cache".format(
+                        name
+                    )
+                )
+                sys.exit("Policy action type name={} not found.".format(name))
+            return {
+                "kind": "policy_action_type",
+                "name": name,
+                "uuid": ds_cache_data["uuid"],
+            }

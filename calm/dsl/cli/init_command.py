@@ -2,6 +2,7 @@ import click
 import os
 import json
 import sys
+from distutils.version import LooseVersion as LV
 
 from calm.dsl.config import (
     get_context,
@@ -17,11 +18,15 @@ from calm.dsl.api import get_resource_api, get_client_handle_obj
 from calm.dsl.store import Cache
 from calm.dsl.init import init_bp, init_runbook
 from calm.dsl.providers import get_provider_types
+from calm.dsl.store import Version
+from calm.dsl.constants import POLICY
 
 from .main import init, set
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
+
+CALM_VERSION = Version.get_version("Calm")
 
 
 @init.command("dsl")
@@ -186,6 +191,23 @@ def set_server_details(
     service_enablement_status = result["service_enablement_status"]
     LOG.info(service_enablement_status)
 
+    # get policy status
+    if LV(CALM_VERSION) >= LV(POLICY.MIN_SUPPORTED_VERSION):
+        Obj = get_resource_api("features/policy", client.connection, calm_api=True)
+        res, err = Obj.read()
+
+        if err:
+            click.echo("[Fail]")
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        result = json.loads(res.content)
+        policy_status = (
+            result.get("status", {}).get("feature_status", {}).get("is_enabled", False)
+        )
+        LOG.info("Policy enabled={}".format(policy_status))
+    else:
+        LOG.debug("Policy is not supported")
+        policy_status = False
+
     LOG.info("Verifying the project details")
     project_name_uuid_map = client.project.get_name_uuid_map(
         params={"filter": "name=={}".format(project_name)}
@@ -209,6 +231,7 @@ def set_server_details(
         retries_enabled=retries_enabled,
         connection_timeout=connection_timeout,
         read_timeout=read_timeout,
+        policy_status=policy_status,
     )
 
     # Updating context for using latest config data
@@ -404,6 +427,23 @@ def _set_config(
     service_enablement_status = result["service_enablement_status"]
     LOG.info(service_enablement_status)
 
+    # get policy status
+    if LV(CALM_VERSION) >= LV(POLICY.MIN_SUPPORTED_VERSION):
+        Obj = get_resource_api("features/policy", client.connection, calm_api=True)
+        res, err = Obj.read()
+
+        if err:
+            click.echo("[Fail]")
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        result = json.loads(res.content)
+        policy_status = (
+            result.get("status", {}).get("feature_status", {}).get("is_enabled", False)
+        )
+        LOG.info("Policy enabled={}".format(policy_status))
+    else:
+        LOG.debug("Policy is not supported")
+        policy_status = False
+
     LOG.info("Verifying the project details")
     project_name_uuid_map = client.project.get_name_uuid_map(
         params={"filter": "name=={}".format(project_name)}
@@ -445,6 +485,7 @@ def _set_config(
         retries_enabled=retries_enabled,
         connection_timeout=connection_timeout,
         read_timeout=read_timeout,
+        policy_status=policy_status,
     )
     LOG.info("Configuration changed successfully")
 

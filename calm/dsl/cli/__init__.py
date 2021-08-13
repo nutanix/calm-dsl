@@ -28,5 +28,6 @@ from .protection_policy_commands import *  # NoQA
 from .vm_recovery_point_commands import *  # NoQA
 from .scheduler_commands import *  # NoQA
 from .network_group_commands import *  # NoQA
+from .policy_commands import *  # NoQA
 
 __all__ = ["main", "get_api_client"]

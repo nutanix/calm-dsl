@@ -899,6 +899,7 @@ class AhvSubnetsCache(CacheTableBase):
 class AhvImagesCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.AHV_DISK_IMAGE
     feature_min_version = "2.7.0"
+    is_policy_required = False
     name = CharField()
     image_type = CharField()
     uuid = CharField()
@@ -1042,9 +1043,162 @@ class AhvImagesCache(CacheTableBase):
         primary_key = CompositeKey("name", "uuid", "account_uuid")
 
 
+class AccountCache(CacheTableBase):
+    __cache_type__ = CACHE.ENTITY.ACCOUNT
+    feature_min_version = "2.7.0"
+    is_policy_required = False
+    name = CharField()
+    uuid = CharField()
+    provider_type = CharField()
+    state = CharField()
+    is_host = BooleanField(default=False)  # Used for Ntnx accounts only
+    data = CharField()
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self, *args, **kwargs):
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "provider_type": self.provider_type,
+            "state": self.state,
+            "is_host": self.is_host,
+            "data": json.loads(self.data),
+            "last_update_time": self.last_update_time,
+        }
+
+    @classmethod
+    def clear(cls):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = ["NAME", "PROVIDER_TYPE", "UUID", "STATE", "LAST UPDATED"]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["provider_type"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(entity_data["state"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        provider_type = kwargs.get("provider_type", "")
+        if not provider_type:
+            LOG.error("Provider type not supplied for fetching user {}".format(name))
+            sys.exit(-1)
+
+        is_host = kwargs.get("is_host", False)
+        data = kwargs.get("data", "{}")
+        state = kwargs.get("state", "")
+
+        super().create(
+            name=name,
+            uuid=uuid,
+            provider_type=provider_type,
+            is_host=is_host,
+            data=data,
+            state=state,
+        )
+
+    @classmethod
+    def sync(cls):
+        """sync the table from server"""
+
+        # clear old data
+        cls.clear()
+
+        client = get_api_client()
+        payload = {
+            "length": 250,
+            "filter": "(state==ACTIVE,state==VERIFIED)",
+        }
+        res, err = client.account.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        for entity in res.get("entities", []):
+            provider_type = entity["status"]["resources"]["type"]
+            data = {}
+            query_obj = {
+                "name": entity["status"]["name"],
+                "uuid": entity["metadata"]["uuid"],
+                "provider_type": entity["status"]["resources"]["type"],
+                "state": entity["status"]["resources"]["state"],
+            }
+
+            if provider_type == "nutanix_pc":
+                query_obj["is_host"] = entity["status"]["resources"]["data"]["host_pc"]
+
+                # store cluster accounts for PC account
+                for pe_acc in (
+                    entity["status"]["resources"]
+                    .get("data", {})
+                    .get("cluster_account_reference_list", [])
+                ):
+                    group = data.setdefault("clusters", {})
+                    group[pe_acc["uuid"]] = pe_acc.get("name")
+
+            elif provider_type == "nutanix":
+                data["pc_account_uuid"] = entity["status"]["resources"]["data"][
+                    "pc_account_uuid"
+                ]
+
+            query_obj["data"] = json.dumps(data)
+            cls.create_entry(**query_obj)
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        query_obj = {"name": name}
+
+        provider_type = kwargs.get("provider_type", "")
+        if provider_type:
+            query_obj["provider_type"] = provider_type
+
+        try:
+            # The get() method is shorthand for selecting with a limit of 1
+            # If more than one row is found, the first row returned by the database cursor
+            entity = super().get(**query_obj)
+            return entity.get_detail_dict()
+        except DoesNotExist:
+            return dict()
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
+        try:
+            entity = super().get(cls.uuid == uuid)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return dict()
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("name", "uuid")
+
+
 class ProjectCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.PROJECT
     feature_min_version = "2.7.0"
+    is_policy_required = False
     name = CharField()
     uuid = CharField()
     accounts_data = CharField()
@@ -1501,6 +1655,7 @@ class ProjectCache(CacheTableBase):
 class EnvironmentCache(CacheTableBase):
     __cache_type__ = "environment"
     feature_min_version = "2.7.0"
+    is_policy_required = False
     name = CharField()
     uuid = CharField()
     project_uuid = CharField()
@@ -1791,6 +1946,7 @@ class EnvironmentCache(CacheTableBase):
 class UsersCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.USER
     feature_min_version = "2.7.0"
+    is_policy_required = False
     name = CharField()
     uuid = CharField()
     display_name = CharField()
@@ -1982,6 +2138,7 @@ class UsersCache(CacheTableBase):
 class RolesCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.ROLE
     feature_min_version = "2.7.0"
+    is_policy_required = False
     name = CharField()
     uuid = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
@@ -2103,6 +2260,7 @@ class RolesCache(CacheTableBase):
 class DirectoryServiceCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.DIRECTORY_SERVICE
     feature_min_version = "2.7.0"
+    is_policy_required = False
     name = CharField()
     uuid = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
@@ -2195,6 +2353,7 @@ class DirectoryServiceCache(CacheTableBase):
 class UserGroupCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.USER_GROUP
     feature_min_version = "2.7.0"
+    is_policy_required = False
     name = CharField()
     uuid = CharField()
     display_name = CharField()
@@ -2403,6 +2562,7 @@ class UserGroupCache(CacheTableBase):
 class AhvNetworkFunctionChain(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.AHV_NETWORK_FUNCTION_CHAIN
     feature_min_version = "2.7.0"
+    is_policy_required = False
     name = CharField()
     uuid = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())

@@ -30,6 +30,10 @@ from .vm_recovery_point import VmRecoveryPointAPI
 from .nutanix_task import TaskAPI
 from .network_group import NetworkGroupAPI
 from .resource_type import ResourceTypeAPI
+from .policy_action_type import PolicyActionTypeAPI
+from .policy_event import PolicyEventAPI
+from .policy_attributes import PolicyAttributesAPI
+from .policy import PolicyAPI
 
 
 class ClientHandle:
@@ -66,6 +70,10 @@ class ClientHandle:
         self.nutanix_task = TaskAPI(self.connection)
         self.network_group = NetworkGroupAPI(self.connection)
         self.resource_types = ResourceTypeAPI(self.connection)
+        self.policy_action_types = PolicyActionTypeAPI(self.connection)
+        self.policy_event = PolicyEventAPI(self.connection)
+        self.policy_attributes = PolicyAttributesAPI(self.connection)
+        self.policy = PolicyAPI(self.connection)
 
 
 def get_client_handle_obj(

@@ -127,7 +127,7 @@ class ResourceAPI:
             final_list.extend(response["entities"])
 
             total_matches = response["metadata"]["total_matches"]
-            if total_matches <= (length + offset):
+            if int(total_matches) <= (api_limit + offset):
                 break
 
             offset += length

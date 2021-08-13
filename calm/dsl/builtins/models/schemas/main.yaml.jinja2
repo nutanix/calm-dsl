@@ -46,6 +46,11 @@
 {% import "jobscheduleinfo.yaml.jinja2" as job_schedule %}
 {% import "network_group_tunnel.yaml.jinja2" as network_group_tunnel %}
 {% import "network_group_tunnel_payload.yaml.jinja2" as network_group_tunnel_payload %}
+{% import "policy_action.yaml.jinja2" as policy_action %}
+{% import "policy_condition.yaml.jinja2" as policy_condition %}
+{% import "policy.yaml.jinja2" as policy %}
+{% import "approver_set.yaml.jinja2" as approver_set %}
+{% import "policy_payload.yaml.jinja2" as policy_payload %}
 {% macro Schemas() -%}
 
 {{ config_attrs.AhvDiskRulesetSchema() }}
@@ -101,6 +106,11 @@
 {{ network_group_tunnel.NetworkGroupTunnelSchema() }}
 {{ network_group_tunnel_payload.NetworkGroupTunnelPayloadSchema() }}
 {{ network_group_tunnel_payload.NetworkGroupTunnelVMPayloadSchema() }}
+{{ policy_condition.PolicyConditionSchema() }}
+{{ policy_action.PolicyActionSchema() }}
+{{ policy.PolicySchema() }}
+{{ approver_set.ApproverSetSchema() }}
+{{ policy_payload.PolicyPayloadSchema() }}
 {%- endmacro %}
 
 
