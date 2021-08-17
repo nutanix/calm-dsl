@@ -110,13 +110,16 @@ class TwoBlueprint(Blueprint):
 def test_json():
     """Test the generated json for a single VM
     against known output"""
+    import json
     import os
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_path = os.path.join(dir_path, "two_vm_bp_output.json")
 
-    generated_json = TwoBlueprint.json_dumps(pprint=True)
-    known_json = open(file_path).read()
+    generated_json = json.loads(TwoBlueprint.json_dumps(pprint=True))
+    generated_json["app_profile_list"][0].pop("snapshot_config_list", None)
+    generated_json["app_profile_list"][0].pop("restore_config_list", None)
+    known_json = json.load(open(file_path))
 
     assert generated_json == known_json
 

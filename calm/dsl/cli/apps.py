@@ -720,6 +720,76 @@ def get_action_runtime_args(
     return action_args
 
 
+def get_snapshot_name_arg(config, config_task_id):
+    default_value = next(
+        (
+            var["value"]
+            for var in config["variable_list"]
+            if var["name"] == "snapshot_name"
+        ),
+        "",
+    )
+    val = click.prompt(
+        "Value for Snapshot Name [{}]".format(highlight_text(repr(default_value))),
+        default=default_value,
+        show_default=False,
+    )
+    return {"name": "snapshot_name", "value": val, "task_uuid": config_task_id}
+
+
+def get_recovery_point_group_arg(config, config_task_id, recovery_groups):
+    choices = {}
+    for i, rg in enumerate(recovery_groups):
+        choices[i + 1] = {
+            "label": "{}. {} [Created On: {} Expires On: {}]".format(
+                i + 1,
+                rg["status"]["name"],
+                time.strftime(
+                    "%Y-%m-%d %H:%M:%S",
+                    time.gmtime(
+                        rg["status"]["recovery_point_info_list"][0]["creation_time"]
+                        // 1000000
+                    ),
+                ),
+                time.strftime(
+                    "%Y-%m-%d %H:%M:%S",
+                    time.gmtime(
+                        rg["status"]["recovery_point_info_list"][0]["expiration_time"]
+                        // 1000000
+                    ),
+                ),
+            ),
+            "uuid": rg["status"]["uuid"],
+        }
+    if not choices:
+        LOG.error(
+            "No recovery group found. Please take a snapshot before running restore action"
+        )
+        sys.exit(-1)
+    default_idx = 1
+
+    click.echo("Choose from given choices: ")
+    for choice in choices.values():
+        click.echo("\t{}".format(highlight_text(repr(choice["label"]))))
+    selected_val = click.prompt(
+        "Selected Recovery Group [{}]".format(highlight_text(repr(default_idx))),
+        default=default_idx,
+        show_default=False,
+    )
+    if selected_val not in choices:
+        LOG.error(
+            "Invalid value {}, not present in choices: {}".format(
+                selected_val, choices.keys()
+            )
+        )
+        sys.exit(-1)
+    return {
+        "name": "recovery_point_group_uuid",
+        "value": choices[selected_val]["uuid"],
+        "task_uuid": config_task_id,
+    }
+
+
 def run_actions(
     app_name, action_name, watch, patch_editables=False, runtime_params_file=None
 ):
@@ -766,7 +836,40 @@ def run_actions(
     )
 
     # Hit action run api (with metadata and minimal spec: [args, target_kind, target_uuid])
-    app.pop("status")
+    status = app.pop("status")
+    config_list = status["resources"]["snapshot_config_list"]
+    config_list.extend(status["resources"]["restore_config_list"])
+    for task in action_payload["runbook"]["task_definition_list"]:
+        if task["type"] == "CALL_CONFIG":
+            config = next(
+                config
+                for config in config_list
+                if config["uuid"] == task["attrs"]["config_spec_reference"]["uuid"]
+            )
+            if config["type"] == "AHV_SNAPSHOT":
+                action_args.append(get_snapshot_name_arg(config, task["uuid"]))
+            elif config["type"] == "AHV_RESTORE":
+                substrate_id = next(
+                    (
+                        dep["substrate_configuration"]["uuid"]
+                        for dep in status["resources"]["deployment_list"]
+                        if dep["uuid"]
+                        == config["attrs_list"][0]["target_any_local_reference"]["uuid"]
+                    ),
+                    None,
+                )
+                api_filter = ""
+                if substrate_id:
+                    api_filter = "substrate_reference==" + substrate_id
+                res, err = client.application.get_recovery_groups(app_id, api_filter)
+                if err:
+                    raise Exception("[{}] - {}".format(err["code"], err["error"]))
+                action_args.append(
+                    get_recovery_point_group_arg(
+                        config, task["uuid"], res.json()["entities"]
+                    )
+                )
+
     app["spec"] = {
         "args": action_args,
         "target_kind": "Application",

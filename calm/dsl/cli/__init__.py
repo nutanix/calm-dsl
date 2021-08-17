@@ -24,5 +24,6 @@ from .acp_commands import *  # NoQA
 from .task_commands import *  # NoQA
 from .brownfield_commands import *  # NoQA
 from .environment_commands import *  # NoQA
+from .protection_policy_commands import *  # NoQA
 
 __all__ = ["main", "get_api_client"]

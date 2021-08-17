@@ -44,6 +44,7 @@ from .environments import get_project_environment
 from calm.dsl.tools import get_module_from_file
 from calm.dsl.builtins import Brownfield as BF
 from calm.dsl.providers import get_provider
+from calm.dsl.providers.plugins.ahv_vm.main import AhvNew
 from calm.dsl.constants import CACHE
 from calm.dsl.log import get_logging_handle
 
@@ -934,6 +935,13 @@ def parse_launch_runtime_credentials(launch_params):
     )
 
 
+def parse_launch_runtime_configs(launch_params, config_type):
+    """Returns snapshot or restore config_list obj frorm launch_params file"""
+    return parse_launch_params_attribute(
+        launch_params=launch_params, parse_attribute=config_type + "_config_list"
+    )
+
+
 def get_variable_value_options(bp_uuid, var_uuid, poll_interval=10):
     """returns dynamic variable values and api exception if occured"""
 
@@ -967,6 +975,251 @@ def get_variable_value_options(bp_uuid, var_uuid, poll_interval=10):
 
     LOG.error("Waited for 5 minutes for dynamic variable evaludation")
     sys.exit(-1)
+
+
+def get_protection_policy_rule(
+    protection_policy_uuid,
+    protection_rule_uuid,
+    snapshot_config_uuid,
+    app_profile,
+    protection_policies,
+    subnet_cluster_map,
+    substrate_list,
+):
+    """returns protection policy, protection rule tuple from cli_prompt"""
+
+    snapshot_config = next(
+        (
+            config
+            for config in app_profile["snapshot_config_list"]
+            if config["uuid"] == snapshot_config_uuid
+        ),
+        None,
+    )
+    if not snapshot_config:
+        LOG.err(
+            "No snapshot config with uuid {} found in App Profile {}".format(
+                snapshot_config_id, app_profile["name"]
+            )
+        )
+        sys.exit("Snapshot config {} not found".format(snapshot_config_id))
+    is_local_snapshot = (
+        snapshot_config["attrs_list"][0]["snapshot_location_type"].lower() == "local"
+    )
+    config_target = snapshot_config["attrs_list"][0]["target_any_local_reference"]
+    target_substrate_reference = next(
+        (
+            deployment["substrate_local_reference"]
+            for deployment in app_profile["deployment_create_list"]
+            if deployment["uuid"] == config_target["uuid"]
+        ),
+        None,
+    )
+    if not target_substrate_reference:
+        LOG.error(
+            "No deployment with uuid {} found under app profile {}".format(
+                config_target, app_profile["name"]
+            )
+        )
+        sys.exit("Deployment {} not found".format(config_target))
+    target_subnet_uuid = next(
+        (
+            substrate["create_spec"]["resources"]["nic_list"][0]["subnet_reference"][
+                "uuid"
+            ]
+            for substrate in substrate_list
+            if substrate["uuid"] == target_substrate_reference["uuid"]
+        ),
+        None,
+    )
+    if not target_subnet_uuid:
+        LOG.error(
+            "No substrate {} with uuid {} found".format(
+                target_substrate_reference.get("name", ""),
+                target_substrate_reference["uuid"],
+            )
+        )
+        sys.exit("Substrate {} not found".format(target_substrate_reference["uuid"]))
+
+    default_policy = ""
+    policy_choices = {}
+    for policy in protection_policies:
+        if (
+            is_local_snapshot and policy["resources"]["rule_type"].lower() != "remote"
+        ) or (
+            not is_local_snapshot
+            and policy["resources"]["rule_type"].lower() != "local"
+        ):
+            policy_choices[policy["name"]] = policy
+        if (not default_policy and policy["resources"]["is_default"]) or (
+            protection_policy_uuid == policy["uuid"]
+        ):
+            default_policy = policy["name"]
+    if not policy_choices:
+        LOG.error(
+            "No protection policy found under this project. Please add one from the UI"
+        )
+        sys.exit("No protection policy found")
+    if not default_policy or default_policy not in policy_choices:
+        default_policy = list(policy_choices.keys())[0]
+    click.echo("")
+    click.echo("Choose from given choices: ")
+    for choice in policy_choices.keys():
+        click.echo("\t{}".format(highlight_text(repr(choice))))
+
+    selected_policy_name = click.prompt(
+        "Protection Policy for '{}' [{}]".format(
+            snapshot_config["name"], highlight_text(repr(default_policy))
+        ),
+        default=default_policy,
+        show_default=False,
+    )
+    if selected_policy_name not in policy_choices:
+        LOG.error(
+            "Invalid value '{}' for protection policy".format(selected_policy_name)
+        )
+        sys.exit("Invalid protection policy")
+    selected_policy = policy_choices[selected_policy_name]
+    ordered_site_list = selected_policy["resources"]["ordered_availability_site_list"]
+    cluster_uuid = [
+        sc["cluster_uuid"]
+        for sc in subnet_cluster_map
+        if sc["subnet_uuid"] == target_subnet_uuid
+    ]
+    if not cluster_uuid:
+        LOG.error(
+            "Cannot find the cluster associated with the subnet {} with uuid {}".format(
+                target_subnet_reference["name"], target_subnet_uuid
+            )
+        )
+        sys.exit("Cluster not found")
+    cluster_uuid = cluster_uuid[0]
+    cluster_idx = -1
+    for i, site in enumerate(ordered_site_list):
+        if (
+            site["infra_inclusion_list"]["cluster_references"][0]["uuid"]
+            == cluster_uuid
+        ):
+            cluster_idx = i
+            break
+    if cluster_idx < 0:
+        LOG.error(
+            "Unable to find cluster with uuid {} in protection policy {}".format(
+                cluster_uuid, selected_policy_name
+            )
+        )
+        sys.exit("Cluster not found")
+    both_rules_present = selected_policy["resources"]["rule_type"].lower() == "both"
+
+    def get_target_cluster_name(target_cluster_idx):
+        target_cluster_uuid = ordered_site_list[target_cluster_idx][
+            "infra_inclusion_list"
+        ]["cluster_references"][0]["uuid"]
+        target_cluster_name = next(
+            (
+                sc["cluster_name"]
+                for sc in subnet_cluster_map
+                if sc["cluster_uuid"] == target_cluster_uuid
+            ),
+            None,
+        )
+        if not target_cluster_name:
+            LOG.error(
+                "Unable to find the cluster with uuid {}".format(target_cluster_uuid)
+            )
+            sys.exit("Cluster not found")
+        return target_cluster_name
+
+    default_rule_idx, i = 1, 1
+    rule_choices = {}
+    for rule in selected_policy["resources"]["app_protection_rule_list"]:
+        source_cluster_idx = rule["first_availability_site_index"]
+        if source_cluster_idx == cluster_idx:
+            expiry, categories = {}, ""
+            if both_rules_present:
+                if (
+                    is_local_snapshot
+                    and source_cluster_idx == rule["second_availability_site_index"]
+                ):
+                    expiry = rule["local_snapshot_retention_policy"][
+                        "snapshot_expiry_policy"
+                    ]
+                elif (
+                    not is_local_snapshot
+                    and source_cluster_idx != rule["second_availability_site_index"]
+                ):
+                    categories = ", ".join(
+                        [
+                            "{}:{}".format(k, v[0])
+                            for k, v in rule["category_filter"]["params"].items()
+                        ]
+                    )
+                    expiry = rule["remote_snapshot_retention_policy"][
+                        "snapshot_expiry_policy"
+                    ]
+            else:
+                if is_local_snapshot:
+                    expiry = rule["local_snapshot_retention_policy"][
+                        "snapshot_expiry_policy"
+                    ]
+                else:
+                    categories = ", ".join(
+                        [
+                            "{}:{}".format(k, v[0])
+                            for k, v in rule["category_filter"]["params"].items()
+                        ]
+                    )
+                    expiry = rule["remote_snapshot_retention_policy"][
+                        "snapshot_expiry_policy"
+                    ]
+            if expiry:
+                target_cluster_name = get_target_cluster_name(
+                    rule["second_availability_site_index"]
+                )
+                if rule["uuid"] == protection_rule_uuid:
+                    default_rule_idx = i
+                label = (
+                    "{}. Snapshot expires in {} {}. Target cluster: {}. Categories: {}".format(
+                        i,
+                        expiry["multiple"],
+                        expiry["interval_type"].lower(),
+                        target_cluster_name,
+                        categories,
+                    )
+                    if categories
+                    else "{}. Snapshot expires in {} {}. Target cluster: {}".format(
+                        i,
+                        expiry["multiple"],
+                        expiry["interval_type"].lower(),
+                        target_cluster_name,
+                    )
+                )
+                rule_choices[i] = {"label": label, "rule": rule}
+                i += 1
+
+    if not rule_choices:
+        LOG.error(
+            "No matching protection rules found under protection policy {}. Please add the rules using UI to continue".format(
+                selected_policy_name
+            )
+        )
+        sys.exit("No protection rules found")
+    click.echo("")
+    click.echo("Choose from given choices: ")
+    for choice in rule_choices.values():
+        click.echo("\t{}".format(highlight_text(repr(choice["label"]))))
+
+    selected_rule = click.prompt(
+        "Protection Rule for '{}' [{}]".format(
+            snapshot_config["name"], highlight_text(repr(default_rule_idx))
+        ),
+        default=default_rule_idx,
+        show_default=False,
+    )
+    if selected_rule not in rule_choices:
+        LOG.error("Invalid value '{}' for protection rule".format(selected_rule))
+        sys.exit("Invalid protection rule")
+    return selected_policy, rule_choices[selected_rule]["rule"]
 
 
 def launch_blueprint_simple(
@@ -1136,6 +1389,9 @@ def launch_blueprint_simple(
         launch_runtime_substrates = parse_launch_runtime_substrates(launch_params)
         launch_runtime_deployments = parse_launch_runtime_deployments(launch_params)
         launch_runtime_credentials = parse_launch_runtime_credentials(launch_params)
+        launch_runtime_snapshot_configs = parse_launch_runtime_configs(
+            launch_params, "snapshot"
+        )
 
         res, err = client.blueprint.read(blueprint_uuid)
         if err:
@@ -1241,6 +1497,163 @@ def launch_blueprint_simple(
                 )
                 if new_val:
                     credential["value"] = new_val
+
+        snapshot_config_list = runtime_editables.get("snapshot_config_list", [])
+        restore_config_list = runtime_editables.get("restore_config_list", [])
+        restore_config_map = {config["uuid"]: config for config in restore_config_list}
+
+        if snapshot_config_list and restore_config_list:
+            click.echo("\n\t\t\t", nl=False)
+            click.secho("SNAPSHOT CONFIG LIST DATA", underline=True, bold=True)
+            app_profile = next(
+                (
+                    _profile
+                    for _profile in bp_data["status"]["resources"]["app_profile_list"]
+                    if _profile["uuid"] == profile["app_profile_reference"]["uuid"]
+                ),
+                None,
+            )
+            if not app_profile:
+                LOG.error(
+                    "App Profile {} with uuid {} not found".format(
+                        profile.get("app_profile_reference", {}).get("name", ""),
+                        profile.get("app_profile_reference", {}).get("uuid", ""),
+                    )
+                )
+                sys.exit(-1)
+            env_uuids = app_profile["environment_reference_list"]
+            if not env_uuids:
+                LOG.error(
+                    "Cannot launch a blueprint with snapshot-restore configs without selecting an environment"
+                )
+                sys.exit("No environment selected")
+            substrate_list = bp_data["status"]["resources"]["substrate_definition_list"]
+
+            for snapshot_config in snapshot_config_list:
+                if launch_runtime_snapshot_configs:
+                    _config = next(
+                        (
+                            config
+                            for config in launch_runtime_snapshot_configs
+                            if config["name"] == snapshot_config["name"]
+                        ),
+                        None,
+                    )
+                    if _config:
+                        snapshot_config["value"] = _config["value"]
+                res, err = client.blueprint.protection_policies(
+                    blueprint_uuid,
+                    app_profile["uuid"],
+                    snapshot_config["uuid"],
+                    env_uuids[0],
+                )
+                if err:
+                    LOG.error("[{}] - {}".format(err["code"], err["error"]))
+                    sys.exit("Unable to retrieve protection policies")
+                protection_policies = [p["status"] for p in res.json()["entities"]]
+                res, err = client.environment.list()
+                if err:
+                    LOG.error("[{}] - {}".format(err["code"], err["error"]))
+                    sys.exit("Unable to retrieve environments")
+                infra_list = next(
+                    (
+                        env["status"]["resources"]["infra_inclusion_list"]
+                        for env in res.json()["entities"]
+                        if env["metadata"]["uuid"] == env_uuids[0]
+                    ),
+                    None,
+                )
+                if not infra_list:
+                    LOG.error("Cannot find accounts associated with the environment")
+                    sys.exit("Unable to retrieve accounts")
+                ntnx_acc = next(
+                    (acc for acc in infra_list if acc["type"] == "nutanix_pc"), None
+                )
+                if not ntnx_acc:
+                    LOG.error(
+                        "No nutanix account found associated with the environment"
+                    )
+                    sys.exit("No nutanix account found in environment")
+                ahv_new = AhvNew(client.connection)
+                filter_query = (
+                    "("
+                    + ",".join(
+                        [
+                            "_entity_id_==" + subnet["uuid"]
+                            for subnet in ntnx_acc["subnet_references"]
+                        ]
+                    )
+                    + ")"
+                )
+                subnets = ahv_new.subnets(
+                    filter_query=filter_query,
+                    account_uuid=ntnx_acc["account_reference"]["uuid"],
+                )
+                subnet_cluster_map = {
+                    subnet["metadata"]["uuid"]: {
+                        "cluster_name": subnet["status"]["cluster_reference"]["name"],
+                        "cluster_uuid": subnet["status"]["cluster_reference"]["uuid"],
+                        "subnet_name": subnet["status"]["name"],
+                    }
+                    for subnet in subnets["entities"]
+                }
+                subnet_cluster_map = [
+                    {
+                        "cluster_name": subnet["status"]["cluster_reference"]["name"],
+                        "cluster_uuid": subnet["status"]["cluster_reference"]["uuid"],
+                        "subnet_name": subnet["status"]["name"],
+                        "subnet_uuid": subnet["metadata"]["uuid"],
+                    }
+                    for subnet in subnets["entities"]
+                ]
+                protection_policy = snapshot_config["value"]["attrs_list"][0][
+                    "app_protection_policy_reference"
+                ]
+                protection_rule = snapshot_config["value"]["attrs_list"][0][
+                    "app_protection_rule_reference"
+                ]
+
+                protection_policy, protection_rule = get_protection_policy_rule(
+                    protection_policy,
+                    protection_rule,
+                    snapshot_config["uuid"],
+                    app_profile,
+                    protection_policies,
+                    subnet_cluster_map,
+                    substrate_list,
+                )
+
+                snapshot_config_obj = next(
+                    (
+                        config
+                        for config in app_profile["snapshot_config_list"]
+                        if config["uuid"] == snapshot_config["uuid"]
+                    ),
+                    None,
+                )
+                if not snapshot_config_obj:
+                    LOG.err(
+                        "No snapshot config with uuid {} found in App Profile {}".format(
+                            snapshot_config["uuid"], app_profile["name"]
+                        )
+                    )
+                    sys.exit("Invalid snapshot config")
+                updated_value = {
+                    "attrs_list": [
+                        {
+                            "app_protection_rule_reference": protection_rule["uuid"],
+                            "app_protection_policy_reference": protection_policy[
+                                "uuid"
+                            ],
+                        }
+                    ]
+                }
+                snapshot_config["value"] = updated_value
+                restore_config_id = snapshot_config_obj["config_reference_list"][0][
+                    "uuid"
+                ]
+                restore_config = restore_config_map[restore_config_id]
+                restore_config["value"] = updated_value
 
         runtime_editables_json = json.dumps(
             runtime_editables, indent=4, separators=(",", ": ")

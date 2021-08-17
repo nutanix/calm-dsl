@@ -9,6 +9,7 @@ class ApplicationAPI(ResourceAPI):
         self.ACTION_RUN = self.ITEM + "/actions/{}/run"
         self.DOWNLOAD_RUNLOG = self.ITEM + "/app_runlogs/{}/output/download"
         self.ACTION_VARIABLE = self.ITEM + "/actions/{}/variables"
+        self.RECOVERY_GROUPS_LIST = self.ITEM + "/recovery_groups/list"
 
     def run_action(self, app_id, action_id, payload):
         return self.connection._call(
@@ -46,4 +47,14 @@ class ApplicationAPI(ResourceAPI):
         action_var_url = self.ACTION_VARIABLE.format(app_id, action_name)
         return self.connection._call(
             action_var_url, method=REQUEST.METHOD.GET, verify=False
+        )
+
+    def get_recovery_groups(self, app_id, api_filter, length=250, offset=0):
+        payload = {"filter": api_filter, "length": length, "offset": offset}
+        recovery_groups_url = self.RECOVERY_GROUPS_LIST.format(app_id)
+        return self.connection._call(
+            recovery_groups_url,
+            request_json=payload,
+            verify=False,
+            method=REQUEST.METHOD.POST,
         )

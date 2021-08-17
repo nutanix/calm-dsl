@@ -17,6 +17,7 @@ import sys
 from prettytable import PrettyTable
 
 from calm.dsl.api import get_resource_api, get_api_client
+from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 from calm.dsl.constants import CACHE
 
@@ -1443,6 +1444,119 @@ class AhvNetworkFunctionChain(CacheTableBase):
     class Meta:
         database = dsl_database
         primary_key = CompositeKey("name", "uuid")
+
+
+class AppProtectionPolicyCache(CacheTableBase):
+    __cache_type__ = "app_protection_policy"
+    name = CharField()
+    uuid = CharField()
+    rule_name = CharField()
+    rule_uuid = CharField()
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self, *args, **kwargs):
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "rule_name": self.rule_name,
+            "rule_uuid": self.rule_uuid,
+            "last_update_time": self.last_update_time,
+        }
+
+    @classmethod
+    def clear(cls):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = ["NAME", "UUID", "RULE_NAME", "RULE_UUID", "LAST UPDATED"]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(entity_data["rule_name"]),
+                    highlight_text(entity_data["rule_uuid"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def sync(cls):
+        # clear old data
+        cls.clear()
+
+        # update by latest data
+        client = get_api_client()
+        Obj = get_resource_api(
+            "app_protection_policies", client.connection, calm_api=True
+        )
+        entities = Obj.list_all()
+
+        for entity in entities:
+            name = entity["status"]["name"]
+            uuid = entity["metadata"]["uuid"]
+            project_reference = entity["metadata"].get("project_reference", None)
+            context_obj = get_context()
+            project_config = context_obj.get_project_config()
+            if (
+                project_reference
+                and project_reference.get("name", "") == project_config["name"]
+            ):
+                for rule in entity["status"]["resources"]["app_protection_rule_list"]:
+                    rule_name = rule["name"]
+                    rule_uuid = rule["uuid"]
+                    cls.create_entry(
+                        name=name, uuid=uuid, rule_name=rule_name, rule_uuid=rule_uuid
+                    )
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        rule_name = kwargs.get("rule_name", "")
+        rule_uuid = kwargs.get("rule_uuid", "")
+        if not rule_uuid:
+            LOG.error(
+                "Protection Rule UUID not supplied for Protection Policy {}".format(
+                    name
+                )
+            )
+            sys.exit("Missing rule_uuid for protection policy")
+        super().create(name=name, uuid=uuid, rule_name=rule_name, rule_uuid=rule_uuid)
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        rule_uuid = kwargs.get("rule_uuid", "")
+        rule_name = kwargs.get("rule_name", "")
+        query_obj = {"name": name}
+        if rule_name:
+            query_obj["rule_name"] = rule_name
+        elif rule_uuid:
+            query_obj["rule_uuid"] = rule_uuid
+
+        try:
+            entity = super().get(**query_obj)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return None
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("name", "uuid", "rule_uuid")
 
 
 class VersionTable(BaseModel):

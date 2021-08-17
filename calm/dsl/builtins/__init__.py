@@ -52,6 +52,9 @@ from .models.substrate import Substrate, substrate, SubstrateType
 from .models.deployment import Deployment, deployment, DeploymentType
 from .models.pod_deployment import PODDeployment, pod_deployment
 
+from .models.app_protection import AppProtection
+from .models.config_spec import ConfigSpecType
+
 from .models.profile import Profile, profile, ProfileType
 
 from .models.blueprint import Blueprint, blueprint, BlueprintType
@@ -180,4 +183,5 @@ __all__ = [
     "Endpoint",
     "_endpoint",
     "CalmEndpoint",
+    "AppProtection",
 ]

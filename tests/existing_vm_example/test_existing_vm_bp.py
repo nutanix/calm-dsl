@@ -504,7 +504,9 @@ def test_json():
     ExistingVMBlueprint.credentials[0].username = CRED_USERNAME
     ExistingVMBlueprint.credentials[0].secret["value"] = CRED_PASSWORD
 
-    generated_json = ExistingVMBlueprint.json_dumps(pprint=True)
+    generated_json = json.loads(ExistingVMBlueprint.json_dumps(pprint=True))
+    generated_json["app_profile_list"][0].pop("snapshot_config_list", None)
+    generated_json["app_profile_list"][0].pop("restore_config_list", None)
 
-    known_json = open(file_path).read()
+    known_json = json.load(open(file_path))
     assert generated_json == known_json

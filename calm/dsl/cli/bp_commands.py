@@ -348,6 +348,16 @@ def launch_blueprint_command(
                 "name": <Credential Name>,
             }
         ]
+        snapshot_config_list = [
+            {
+                "value":  {
+                    "attrs_list": [
+                        <attrs_list_editables>
+                    ]
+                },
+                "name": <Snapshot Config Name>,
+            }
+        ]
     Sample context for variables:
         1. context = "<Profile Name>"    # For variable under profile
         2. context = "<Service Name>"    # For variable under service

@@ -248,6 +248,7 @@ class TestInheritance(Blueprint):
 def test_json():
     """Test the generated json for a single VM
     against known output"""
+    import json
     import os
     import sys
 
@@ -261,7 +262,9 @@ def test_json():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_path = os.path.join(dir_path, "test_inheritance_bp_output.json")
 
-    generated_json = TestInheritance.json_dumps(pprint=True)
-    known_json = open(file_path).read()
+    generated_json = json.loads(TestInheritance.json_dumps(pprint=True))
+    generated_json["app_profile_list"][0].pop("snapshot_config_list", None)
+    generated_json["app_profile_list"][0].pop("restore_config_list", None)
+    known_json = json.load(open(file_path))
 
     assert generated_json == known_json

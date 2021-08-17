@@ -90,6 +90,9 @@ class TaskType(EntityType):
                 attrs["runbook_reference"], prefix=prefix
             )
 
+        elif task_type == "CALL_CONFIG":
+            attrs["config_spec_reference"] = attrs["config_spec_reference"]["name"]
+
         elif task_type == "HTTP":
 
             auth_obj = attrs.get("authentication", {})
@@ -170,6 +173,17 @@ def create_call_rb(runbook, target=None, name=None):
     return _task_create(**kwargs)
 
 
+def create_call_config(target, config, name):
+    kwargs = {
+        "name": name
+        or "Call_Config_task_for_{}__{}".format(target.name, str(uuid.uuid4())[:8]),
+        "type": "CALL_CONFIG",
+        "attrs": {"config_spec_reference": _get_target_ref(config)},
+    }
+    kwargs["target_any_local_reference"] = _get_target_ref(target)
+    return _task_create(**kwargs)
+
+
 def _exec_create(
     script_type,
     script=None,
@@ -190,7 +204,6 @@ def _exec_create(
         file_path = os.path.join(
             os.path.dirname(sys._getframe(depth).f_globals.get("__file__")), filename
         )
-
         with open(file_path, "r") as scriptf:
             script = scriptf.read()
 
@@ -1313,6 +1326,15 @@ class CalmTask(BaseTask):
         ssh = exec_task_ssh
         powershell = exec_task_powershell
         escript = exec_task_escript
+
+    class ConfigExec:
+        def __new__(cls, config, name=None):
+            target = config.__self__.attrs_list[0]["target_any_local_reference"]
+            if not target:
+                raise Exception(
+                    "Config's target has to be specified for it be used in ConfigExec Task"
+                )
+            return create_call_config(target, config, name)
 
 
 class RunbookTask(BaseTask):
