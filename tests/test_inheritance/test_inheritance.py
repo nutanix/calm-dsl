@@ -1,4 +1,5 @@
 import os
+import json
 
 from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
@@ -262,9 +263,13 @@ def test_json():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_path = os.path.join(dir_path, "test_inheritance_bp_output.json")
 
+    # Change dynamic values in known json and remove account_uuid from generated_json
     generated_json = json.loads(TestInheritance.json_dumps(pprint=True))
+    known_json = json.loads(open(file_path).read())
+
     generated_json["app_profile_list"][0].pop("snapshot_config_list", None)
     generated_json["app_profile_list"][0].pop("restore_config_list", None)
-    known_json = json.load(open(file_path))
+    for _sd in generated_json["substrate_definition_list"]:
+        _sd["create_spec"]["resources"].pop("account_uuid", None)
 
-    assert generated_json == known_json
+    assert sorted(known_json.items()) == sorted(generated_json.items())

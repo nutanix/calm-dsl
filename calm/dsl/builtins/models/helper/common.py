@@ -130,3 +130,74 @@ def get_vmware_account_from_datacenter(datacenter="Sabine59-DC"):
             vmw_account_name = entity["status"]["name"]
 
     return vmw_account_name
+
+
+def is_macro(var):
+    """returns true if given var is macro"""
+    return var.startswith("@@{") and var.endswith("}@@")
+
+
+def get_pe_account_uuid_using_pc_account_uuid_and_subnet_uuid(
+    pc_account_uuid, subnet_uuid
+):
+    """
+    returns pe account uuid using pc account uuid and subnet_uuid
+    """
+
+    subnet_cache_data = Cache.get_entity_data_using_uuid(
+        entity_type=CACHE.ENTITY.AHV_SUBNET,
+        uuid=subnet_uuid,
+        account_uuid=pc_account_uuid,
+    )
+    if not subnet_cache_data:
+        LOG.error(
+            "AHV Subnet (uuid='{}') not found. Please check subnet or update cache".format(
+                subnet_uuid
+            )
+        )
+        sys.exit("Ahv Subnet {} not found".format(subnet_uuid))
+
+    # As for nutanix accounts, cluster name is account name
+    subnet_cluster_name = subnet_cache_data["cluster"]
+
+    pc_account_cache = Cache.get_entity_data_using_uuid(
+        entity_type=CACHE.ENTITY.ACCOUNT, uuid=pc_account_uuid
+    )
+    pc_clusters = pc_account_cache["data"].get("clusters", {})
+    pc_clusters_rev = {v: k for k, v in pc_clusters.items()}
+
+    return pc_clusters_rev.get(subnet_cluster_name, "")
+
+
+def get_pe_account_uuid_using_pc_account_uuid_and_nic_data(
+    pc_account_uuid, subnet_name, cluster_name
+):
+    """
+    returns pe account uuid using pc account uuid and subnet_name and cluster_name
+    """
+
+    subnet_cache_data = Cache.get_entity_data(
+        entity_type=CACHE.ENTITY.AHV_SUBNET,
+        name=subnet_name,
+        cluster=cluster_name,
+        account_uuid=pc_account_uuid,
+    )
+
+    if not subnet_cache_data:
+        LOG.error(
+            "Ahv Subnet (name = '{}') not found in registered Nutanix PC account (uuid = '{}') ".format(
+                subnet_name, pc_account_uuid
+            )
+        )
+        sys.exit("AHV Subnet {} not found".format(subnet_name))
+
+    # As for nutanix accounts, cluster name is account name
+    subnet_cluster_name = subnet_cache_data["cluster"]
+
+    pc_account_cache = Cache.get_entity_data_using_uuid(
+        entity_type=CACHE.ENTITY.ACCOUNT, uuid=pc_account_uuid
+    )
+    pc_clusters = pc_account_cache["data"].get("clusters", {})
+    pc_clusters_rev = {v: k for k, v in pc_clusters.items()}
+
+    return pc_clusters_rev.get(subnet_cluster_name, "")

@@ -100,11 +100,22 @@ class TestSnapshotRestoreBlueprint:
             pytest.fail("BP compile command failed")
 
         generated_json = json.loads(result.output)
-        generated_json_spec = generated_json["spec"]
-        generated_json_spec["resources"].pop("client_attrs", None)
-        generated_json_spec["resources"]["substrate_definition_list"][0]["create_spec"][
+        generated_json = generated_json["spec"]
+        generated_json["resources"].pop("client_attrs", None)
+        generated_json["resources"]["substrate_definition_list"][0]["create_spec"][
             "resources"
         ]["nic_list"][0].pop("subnet_reference", None)
-        known_json = json.loads(open(BP_OUT_PATH).read())
 
-        assert generated_json_spec == known_json
+        # Assert whether account_uuid is present in generated_json
+        sub_account_uuid = generated_json["resources"]["substrate_definition_list"][0][
+            "create_spec"
+        ]["resources"]["account_uuid"]
+        assert sub_account_uuid != ""
+
+        # Replace correct account uuid in known_json
+        known_json = json.loads(open(BP_OUT_PATH).read())
+        known_json["resources"]["substrate_definition_list"][0]["create_spec"][
+            "resources"
+        ]["account_uuid"] = sub_account_uuid
+
+        assert sorted(known_json.items()) == sorted(generated_json.items())

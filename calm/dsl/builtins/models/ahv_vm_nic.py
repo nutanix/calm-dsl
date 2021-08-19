@@ -52,17 +52,11 @@ class AhvNicType(EntityType):
 
             if not subnet_cache_data:
                 LOG.debug(
-                    "Ahv Subnet (name = '{}') not found in registered Nutanix PC account (uuid = '{}') "
-                    "in project (name = '{}')".format(
-                        subnet_name, account_uuid, project["name"]
+                    "Ahv Subnet (name = '{}') not found in registered Nutanix PC account (uuid = '{}') ".format(
+                        subnet_name, account_uuid
                     )
                 )
-                LOG.error(
-                    "AHV Subnet {} not found. Please run: calm update cache".format(
-                        subnet_name
-                    )
-                )
-                sys.exit(-1)
+                sys.exit("AHV Subnet {} not found.".format(subnet_name))
 
             subnet_uuid = subnet_cache_data.get("uuid", "")
 

@@ -5,7 +5,7 @@ from .entity import EntityType, Entity, EntityTypeBase, EntityDict
 from .validator import PropertyValidator
 from .readiness_probe import readiness_probe
 from .provider_spec import provider_spec
-from .ahv_vm import AhvVmType
+from .ahv_vm import AhvVm, AhvVmType
 from .client_attrs import update_dsl_metadata_map, get_dsl_metadata_map
 from .metadata_payload import get_metadata_obj
 from .helper import common as common_helper
@@ -428,6 +428,55 @@ class SubstrateType(EntityType):
                             )
                         )
                         sys.exit(-1)
+
+            else:
+                # if account_uuid is not available add it
+                if cdict["type"] == "AHV_VM":
+
+                    # default is first cluster account
+                    account_uuid = list(account_cache_data["data"]["clusters"].keys())[
+                        0
+                    ]
+
+                    _cs = cdict["create_spec"]
+                    if isinstance(_cs, AhvVmType):
+                        # NOTE: We cann't get subnet_uuid here, as it involved parent reference
+                        subnet_name = ""
+                        cluster_name = ""
+                        _nics = _cs.resources.nics
+                        for _nic in _nics:
+                            _nic_dict = _nic.subnet_reference.get_dict()
+                            if not common_helper.is_macro(_nic_dict["name"]):
+                                subnet_name = _nic_dict["name"]
+                                cluster_name = _nic_dict["cluster"]
+                                break
+
+                        if subnet_name:
+                            account_uuid = common_helper.get_pe_account_uuid_using_pc_account_uuid_and_nic_data(
+                                pc_account_uuid=substrate_account_uuid,
+                                subnet_name=subnet_name,
+                                cluster_name=cluster_name,
+                            )
+
+                        # Assigning the pe account uuid to ahv vm resources
+                        _cs.resources.account_uuid = account_uuid
+
+                    else:
+                        subnet_uuid = ""
+                        _nics = _cs.get("resources", {}).get("nic_list", [])
+                        for _nic in _nics:
+                            _nu = _nic["subnet_reference"].get("uuid", "")
+                            if _nu and not common_helper.is_macro(_nu):
+                                subnet_uuid = _nu
+                                break
+
+                        if subnet_uuid:
+                            account_uuid = common_helper.get_pe_account_uuid_using_pc_account_uuid_and_subnet_uuid(
+                                pc_account_uuid=substrate_account_uuid,
+                                subnet_uuid=subnet_uuid,
+                            )
+
+                        cdict["create_spec"]["resources"]["account_uuid"] = account_uuid
 
         # Add account uuid for non-ahv providers
         if cdict["type"] not in ["EXISTING_VM", "AHV_VM", "K8S_POD"]:
