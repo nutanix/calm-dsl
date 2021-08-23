@@ -4,6 +4,7 @@ from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Cache
 
 from .config_spec import snapshot_config_create, restore_config_create
+from .helper import common as common_helper
 
 LOG = get_logging_handle(__name__)
 
@@ -16,11 +17,14 @@ class AppProtection:
         def __new__(cls, name, **kwargs):
             rule_name = kwargs.get("rule_name", None)
             rule_uuid = kwargs.get("rule_uuid", None)
+            project_cache_data = common_helper.get_cur_context_project()
+            project_name = project_cache_data.get("name")
             protection_policy_cache_data = Cache.get_entity_data(
                 entity_type="app_protection_policy",
                 name=name,
                 rule_name=rule_name,
                 rule_uuid=rule_uuid,
+                project_name=project_name,
             )
 
             if not protection_policy_cache_data:

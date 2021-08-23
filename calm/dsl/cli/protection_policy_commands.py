@@ -12,6 +12,7 @@ LOG = get_logging_handle(__name__)
 @click.option(
     "--offset", "-o", default=0, help="Offset results by the specified amount"
 )
+@click.option("--project", "-p", help="Project name")
 @click.option(
     "--quiet",
     "-q",
@@ -19,6 +20,6 @@ LOG = get_logging_handle(__name__)
     default=False,
     help="Show only names of protection rules and corresponding policy",
 )
-def protection_policy_list(limit, offset, quiet):
+def protection_policy_list(limit, offset, project, quiet):
     """Get all protection policies"""
-    get_protection_policies(limit, offset, quiet)
+    get_protection_policies(limit, offset, project, quiet)

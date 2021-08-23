@@ -8,6 +8,7 @@ from peewee import (
     BooleanField,
     CompositeKey,
     DoesNotExist,
+    IntegerField,
 )
 import datetime
 import click
@@ -1456,6 +1457,9 @@ class AppProtectionPolicyCache(CacheTableBase):
     uuid = CharField()
     rule_name = CharField()
     rule_uuid = CharField()
+    rule_expiry = IntegerField()
+    rule_type = CharField()
+    project_name = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
     def get_detail_dict(self, *args, **kwargs):
@@ -1464,6 +1468,9 @@ class AppProtectionPolicyCache(CacheTableBase):
             "uuid": self.uuid,
             "rule_name": self.rule_name,
             "rule_uuid": self.rule_uuid,
+            "rule_expiry": self.rule_expiry,
+            "rule_type": self.rule_type,
+            "project_name": self.project_name,
             "last_update_time": self.last_update_time,
         }
 
@@ -1482,9 +1489,19 @@ class AppProtectionPolicyCache(CacheTableBase):
             return
 
         table = PrettyTable()
-        table.field_names = ["NAME", "UUID", "RULE_NAME", "RULE_UUID", "LAST UPDATED"]
+        table.field_names = [
+            "NAME",
+            "UUID",
+            "RULE NAME",
+            "RULE TYPE",
+            "EXPIRY (DAYS)",
+            "PROJECT",
+            "LAST UPDATED",
+        ]
         for entity in cls.select():
             entity_data = entity.get_detail_dict()
+            if not entity_data["rule_expiry"]:
+                entity_data["rule_expiry"] = "-"
             last_update_time = arrow.get(
                 entity_data["last_update_time"].astimezone(datetime.timezone.utc)
             ).humanize()
@@ -1493,7 +1510,9 @@ class AppProtectionPolicyCache(CacheTableBase):
                     highlight_text(entity_data["name"]),
                     highlight_text(entity_data["uuid"]),
                     highlight_text(entity_data["rule_name"]),
-                    highlight_text(entity_data["rule_uuid"]),
+                    highlight_text(entity_data["rule_type"]),
+                    highlight_text(entity_data["rule_expiry"]),
+                    highlight_text(entity_data["project_name"]),
                     highlight_text(last_update_time),
                 ]
             )
@@ -1514,24 +1533,39 @@ class AppProtectionPolicyCache(CacheTableBase):
         for entity in entities:
             name = entity["status"]["name"]
             uuid = entity["metadata"]["uuid"]
-            project_reference = entity["metadata"].get("project_reference", None)
-            context_obj = get_context()
-            project_config = context_obj.get_project_config()
-            if (
-                project_reference
-                and project_reference.get("name", "") == project_config["name"]
-            ):
-                for rule in entity["status"]["resources"]["app_protection_rule_list"]:
-                    rule_name = rule["name"]
-                    rule_uuid = rule["uuid"]
-                    cls.create_entry(
-                        name=name, uuid=uuid, rule_name=rule_name, rule_uuid=rule_uuid
-                    )
+            project_reference = entity["metadata"].get("project_reference", {})
+            for rule in entity["status"]["resources"]["app_protection_rule_list"]:
+                expiry = 0
+                rule_type = ""
+                if rule.get("remote_snapshot_retention_policy", {}):
+                    rule_type = "Remote"
+                    expiry = rule["remote_snapshot_retention_policy"][
+                        "snapshot_expiry_policy"
+                    ]["multiple"]
+                elif rule.get("local_snapshot_retention_policy", {}):
+                    rule_type = "Local"
+                    expiry = rule["local_snapshot_retention_policy"][
+                        "snapshot_expiry_policy"
+                    ]["multiple"]
+                rule_name = rule["name"]
+                rule_uuid = rule["uuid"]
+                cls.create_entry(
+                    name=name,
+                    uuid=uuid,
+                    rule_name=rule_name,
+                    rule_uuid=rule_uuid,
+                    project_name=project_reference.get("name", ""),
+                    rule_expiry=expiry,
+                    rule_type=rule_type,
+                )
 
     @classmethod
     def create_entry(cls, name, uuid, **kwargs):
         rule_name = kwargs.get("rule_name", "")
         rule_uuid = kwargs.get("rule_uuid", "")
+        rule_expiry = kwargs.get("rule_expiry", 0)
+        rule_type = kwargs.get("rule_type", "")
+        project_name = kwargs.get("project_name", "")
         if not rule_uuid:
             LOG.error(
                 "Protection Rule UUID not supplied for Protection Policy {}".format(
@@ -1539,13 +1573,21 @@ class AppProtectionPolicyCache(CacheTableBase):
                 )
             )
             sys.exit("Missing rule_uuid for protection policy")
-        super().create(name=name, uuid=uuid, rule_name=rule_name, rule_uuid=rule_uuid)
+        super().create(
+            name=name,
+            uuid=uuid,
+            rule_name=rule_name,
+            rule_uuid=rule_uuid,
+            rule_expiry=rule_expiry,
+            rule_type=rule_type,
+            project_name=project_name,
+        )
 
     @classmethod
     def get_entity_data(cls, name, **kwargs):
         rule_uuid = kwargs.get("rule_uuid", "")
         rule_name = kwargs.get("rule_name", "")
-        query_obj = {"name": name}
+        query_obj = {"name": name, "project_name": kwargs.get("project_name", "")}
         if rule_name:
             query_obj["rule_name"] = rule_name
         elif rule_uuid:
