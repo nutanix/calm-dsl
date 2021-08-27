@@ -191,8 +191,7 @@ class TestSchedulerCommands:
 
         assert "Please specify a name for the schedule" in msgs
 
-    @pytest.mark.xfail(reason="Feature in review")
-    @pytest.mark.scheduler_run
+    @pytest.mark.scheduler
     @pytest.mark.parametrize("dsl_file", ["job_list.py"])
     def test_job_list(self, dsl_file):
         """
@@ -225,8 +224,7 @@ class TestSchedulerCommands:
                 "Job List API did not return the job which was created as part of the test"
             )
 
-    @pytest.mark.xfail(reason="Feature in review")
-    @pytest.mark.scheduler_run
+    @pytest.mark.scheduler
     @pytest.mark.parametrize("dsl_file", ["job_describe.py"])
     def test_job_describe(self, dsl_file):
         """
@@ -258,8 +256,7 @@ class TestSchedulerCommands:
         LOG.info(job_response)
         assert job_response["resources"]["name"] == job_name
 
-    @pytest.mark.xfail(reason="Feature in review")
-    @pytest.mark.scheduler_run
+    @pytest.mark.scheduler
     @pytest.mark.parametrize(
         "dsl_file, dsl_runbook_file",
         [
