@@ -586,7 +586,7 @@ def get_job_instances_command(job_name, out, filter_by, limit, offset, all_items
 
     if not json_rows:
         click.echo(highlight_text("No job instances found !!!\n"))
-        LOG.error("response:{}".format(res.json()))
+        LOG.debug("response:{}".format(res.json()))
         return "[]"
 
     if out == "json":
