@@ -1539,14 +1539,18 @@ class AppProtectionPolicyCache(CacheTableBase):
                 rule_type = ""
                 if rule.get("remote_snapshot_retention_policy", {}):
                     rule_type = "Remote"
-                    expiry = rule["remote_snapshot_retention_policy"][
-                        "snapshot_expiry_policy"
-                    ]["multiple"]
+                    expiry = (
+                        rule["remote_snapshot_retention_policy"]
+                        .get("snapshot_expiry_policy", {})
+                        .get("multiple", "")
+                    )
                 elif rule.get("local_snapshot_retention_policy", {}):
                     rule_type = "Local"
-                    expiry = rule["local_snapshot_retention_policy"][
-                        "snapshot_expiry_policy"
-                    ]["multiple"]
+                    expiry = (
+                        rule["local_snapshot_retention_policy"]
+                        .get("snapshot_expiry_policy", {})
+                        .get("multiple", "")
+                    )
                 rule_name = rule["name"]
                 rule_uuid = rule["uuid"]
                 cls.create_entry(
