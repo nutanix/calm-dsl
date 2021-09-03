@@ -25,15 +25,21 @@ def add_account_details(config):
     accounts = {}
     for a_entity in a_entities:
         account_type = a_entity["status"]["resources"]["type"].upper()
+        account_name = a_entity["status"]["name"]
         if account_type not in accounts:
             accounts[account_type] = []
 
         account_data = {
-            "NAME": a_entity["status"]["name"],
+            "NAME": account_name,
             "UUID": a_entity["metadata"]["uuid"],
         }
 
         if account_type == "NUTANIX_PC":
+            if not (
+                account_name == "NTNX_LOCAL_AZ"
+                or account_name.startswith("multipc_account")
+            ):
+                continue
             account_data["SUBNETS"] = []
             Obj = get_resource_api("nutanix/v1/subnets", client.connection)
             payload = {"filter": "account_uuid=={}".format(account_data["UUID"])}
