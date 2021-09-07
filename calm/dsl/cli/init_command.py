@@ -26,8 +26,6 @@ from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
-CALM_VERSION = Version.get_version("Calm")
-
 
 @init.command("dsl")
 @click.option(
@@ -191,8 +189,15 @@ def set_server_details(
     service_enablement_status = result["service_enablement_status"]
     LOG.info(service_enablement_status)
 
+    res, err = client.version.get_calm_version()
+    if err:
+        LOG.error("Failed to get version")
+        click.echo("[Fail]")
+        sys.exit(err["error"])
+    calm_version = res.content.decode("utf-8")
+
     # get policy status
-    if LV(CALM_VERSION) >= LV(POLICY.MIN_SUPPORTED_VERSION):
+    if LV(calm_version) >= LV(POLICY.MIN_SUPPORTED_VERSION):
         Obj = get_resource_api("features/policy", client.connection, calm_api=True)
         res, err = Obj.read()
 
@@ -426,9 +431,15 @@ def _set_config(
     result = json.loads(res.content)
     service_enablement_status = result["service_enablement_status"]
     LOG.info(service_enablement_status)
+    res, err = client.version.get_calm_version()
+    if err:
+        LOG.error("Failed to get version")
+        click.echo("[Fail]")
+        sys.exit(err["error"])
+    calm_version = res.content.decode("utf-8")
 
     # get policy status
-    if LV(CALM_VERSION) >= LV(POLICY.MIN_SUPPORTED_VERSION):
+    if LV(calm_version) >= LV(POLICY.MIN_SUPPORTED_VERSION):
         Obj = get_resource_api("features/policy", client.connection, calm_api=True)
         res, err = Obj.read()
 

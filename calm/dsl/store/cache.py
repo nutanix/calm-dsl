@@ -13,8 +13,6 @@ from calm.dsl.api import get_client_handle_obj
 
 LOG = get_logging_handle(__name__)
 
-CALM_VERSION = Version.get_version("Calm")
-
 
 class Cache:
     """Cache class Implementation"""
@@ -47,7 +45,6 @@ class Cache:
         policy_config = context.get_policy_config()
         approval_policy_config = context.get_approval_policy_config()
         cache_tables = {}
-
         for table in db_tables:
             if hasattr(table, "__cache_type__") and (
                 LV(calm_version) >= LV(table.feature_min_version)
