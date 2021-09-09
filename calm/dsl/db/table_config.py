@@ -200,7 +200,9 @@ class AhvSubnetsCache(CacheTableBase):
             for entity in res.get("entities", []):
                 name = entity["status"]["name"]
                 uuid = entity["metadata"]["uuid"]
-                cluster_ref = entity["status"]["cluster_reference"]
+                cluster_ref = entity["status"].get("cluster_reference", {})
+                if not cluster_ref:
+                    continue
                 cluster_name = cluster_ref.get("name", "")
                 cluster_uuid = cluster_ref.get("uuid", "")
 
