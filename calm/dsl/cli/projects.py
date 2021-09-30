@@ -267,7 +267,7 @@ def create_project(project_payload, name="", description=""):
 
     project = res.json()
     stdout_dict = {
-        "name": project["metadata"]["name"],
+        "name": project["spec"]["name"],
         "uuid": project["metadata"]["uuid"],
         "execution_context": project["status"]["execution_context"],
     }
@@ -298,7 +298,7 @@ def update_project(project_uuid, project_payload):
 
     project = res.json()
     stdout_dict = {
-        "name": project["metadata"]["name"],
+        "name": project["spec"]["name"],
         "uuid": project["metadata"]["uuid"],
         "execution_context": project["status"]["execution_context"],
     }
@@ -666,7 +666,7 @@ def update_project_from_dsl(project_name, project_file):
 
     res = res.json()
     stdout_dict = {
-        "name": res["metadata"]["name"],
+        "name": res["spec"]["name"],
         "uuid": res["metadata"]["uuid"],
         "execution_context": res["status"]["execution_context"],
     }
@@ -792,7 +792,7 @@ def update_project_using_cli_switches(
 
     res = res.json()
     stdout_dict = {
-        "name": res["metadata"]["name"],
+        "name": res["spec"]["name"],
         "uuid": res["metadata"]["uuid"],
         "execution_context": res["status"]["execution_context"],
     }

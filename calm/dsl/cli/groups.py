@@ -69,6 +69,14 @@ def get_groups(name, filter_by, limit, offset, quiet, out):
             name = row["resources"]["directory_service_user_group"][
                 "distinguished_name"
             ]
+
+            # For user-groups having caps in the name
+            try:
+                name = _row["spec"]["resources"]["directory_service_user_group"][
+                    "distinguished_name"
+                ]
+            except Exception:
+                pass
             click.echo(highlight_text(name))
         return
 
@@ -79,13 +87,18 @@ def get_groups(name, filter_by, limit, offset, quiet, out):
         row = _row["status"]
         metadata = _row["metadata"]
 
+        # For user-groups having caps in the name
+        name = row["resources"]["directory_service_user_group"]["distinguished_name"]
+        try:
+            name = _row["spec"]["resources"]["directory_service_user_group"][
+                "distinguished_name"
+            ]
+        except Exception:
+            pass
+
         table.add_row(
             [
-                highlight_text(
-                    row["resources"]["directory_service_user_group"][
-                        "distinguished_name"
-                    ]
-                ),
+                highlight_text(name),
                 highlight_text(row["resources"].get("display_name", "")),
                 highlight_text(row["resources"]["user_group_type"]),
                 highlight_text(row["state"]),
