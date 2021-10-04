@@ -6,7 +6,7 @@ class ProjectAPI(ResourceAPI):
     def __init__(self, connection):
         super().__init__(connection, resource_type="projects")
 
-        self.CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/calm_projects"
+        self.CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/projects"
         self.CALM_PROJECTS_ITEM = self.CALM_PROJECTS_PREFIX + "/{}"
         self.CALM_PROJECTS_PENDING_TASKS = self.CALM_PROJECTS_ITEM + "/pending_tasks/{}"
         self.CALM_PROJECTS_USAGE = self.CALM_PROJECTS_ITEM + "/usage"

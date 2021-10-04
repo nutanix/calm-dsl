@@ -685,7 +685,7 @@ def update_project_from_dsl(project_name, project_file, no_cache_update=False):
     project_payload = compile_project_dsl_class(UserProject)
 
     LOG.info("Fetching project '{}' details".format(project_name))
-    params = {"length": 1000, "filter": "name=={}".format(project_name)}
+    params = {"length": 250, "filter": "name=={}".format(project_name)}
     project_name_uuid_map = client.project.get_name_uuid_map(params)
     project_uuid = project_name_uuid_map.get(project_name, "")
 
@@ -903,7 +903,7 @@ def update_project_using_cli_switches(
     client = get_api_client()
 
     LOG.info("Fetching project '{}' details".format(project_name))
-    params = {"length": 1000, "filter": "name=={}".format(project_name)}
+    params = {"length": 250, "filter": "name=={}".format(project_name)}
     project_name_uuid_map = client.project.get_name_uuid_map(params)
     project_uuid = project_name_uuid_map.get(project_name, "")
 
