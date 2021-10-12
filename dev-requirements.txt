@@ -1,3 +1,4 @@
+backports.zoneinfo==0.2.1
 j2cli[yaml]==0.3.10
 ipython==7.16.3
 pytest>=4.2.0,<=5.3.5

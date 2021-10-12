@@ -5,12 +5,15 @@ import calendar
 import arrow
 import click
 from prettytable import PrettyTable
+from datetime import datetime
+from backports.zoneinfo import ZoneInfo
 
 
 from calm.dsl.api import get_api_client
 from calm.dsl.builtins import Job
 from calm.dsl.builtins.models import job
 from calm.dsl.cli import runbooks
+from calm.dsl.cli import apps
 from calm.dsl.config import get_context
 from calm.dsl.constants import CACHE
 from calm.dsl.log import get_logging_handle
@@ -23,7 +26,7 @@ from .utils import (
     get_states_filter,
     import_var_from_file,
 )
-from .constants import JOBS, JOBINSTANCES
+from .constants import JOBS, JOBINSTANCES, SYSTEM_ACTIONS
 
 LOG = get_logging_handle(__name__)
 
@@ -48,14 +51,14 @@ def create_job_command(job_file, name, description, force):
         return err["error"]
 
     job = res.json()
-    LOG.info(job)
+
     job_uuid = job["metadata"]["uuid"]
     job_name = job["metadata"]["name"]
     job_state = job["resources"]["state"]
     LOG.debug("Job {} has uuid: {}".format(job_name, job_uuid))
 
     if job_state != "ACTIVE":
-        msg_list = job.get("resources").get("messages", [])
+        msg_list = job.get("resources").get("message_list", [])
         if not msg_list:
             LOG.error("Job {} created with errors.".format(job_name))
             LOG.debug(json.dumps(job))
@@ -89,7 +92,7 @@ def create_job_command(job_file, name, description, force):
 #     )
 
 
-def exec_runbook(runbook_name, endpoint_name=None):
+def exec_runbook(runbook_name, patch_editables=True):
     # Get runbook uuid  from name
     client = get_api_client()
     runbook = runbooks.get_runbook(client, runbook_name, all=True)
@@ -101,87 +104,167 @@ def exec_runbook(runbook_name, endpoint_name=None):
     runbook = res.json()
 
     runbook_uuid = runbook["metadata"]["uuid"]
-
-    # Get Variable List
-    runtime_args = []
-    runbook_resources = runbook.get("spec").get("resources", {})
-    variable_list = runbook_resources.get("runbook").get("variable_list", {})
-    for variable in variable_list:
-        if variable.get("editables", {}).get("value", False):
-            new_val = input(
-                "Value for Variable {} in Runbook (default value={}) (choices={}): ".format(
-                    variable.get("name"),
-                    variable.get("value", ""),
-                    variable.get("options").get("choices", ""),
-                )
-            )
-            if new_val:
-                runtime_args.append(
-                    {
-                        "name": variable.get("name"),
-                        "value": type(variable.get("value"))(new_val),
-                    }
-                )
-
-    for runtime_arg in runtime_args:
-        for variable in variable_list:
-            if variable["name"] == runtime_arg["name"]:
-                variable["value"] = runtime_arg["value"]
-
-    ### Get Endpoint UUID
-    ### Get Default endpoint in runbook if endpoint name is not provided by user.
-    default_endpoint = runbook_resources.get("default_target_reference", {}).get(
-        "name", "-"
+    if not patch_editables:
+        payload = {}
+    else:
+        payload = runbooks.patch_runbook_runtime_editables(client, runbook)
+    return job._create_job_executable_payload(
+        "runbook", runbook_uuid, "RUNBOOK_RUN", payload, None
     )
-    if endpoint_name == "":
-        endpoint_name = default_endpoint
 
-    if endpoint_name is None:
-        endpoint_name = input(
-            "Endpoint target for the Runbook Run (default target={}): ".format(
-                default_endpoint
-            )
-        )
 
-        if endpoint_name == "":
-            endpoint_name = default_endpoint
-
-    endpoint = runbooks.get_endpoint(client, endpoint_name, all=True)
-
-    res, err = client.endpoint.read(endpoint["metadata"]["uuid"])
+def exec_app_action(
+    app_name, action_name, patch_editables=True, runtime_params_file=False
+):
+    # Get app uuid  from name
+    client = get_api_client()
+    app = apps._get_app(client, app_name, all=True)
+    res, err = client.application.read(app["metadata"]["uuid"])
     if err:
         LOG.error("[{}] - {}".format(err["code"], err["error"]))
         sys.exit(err["error"])
 
-    endpoint = res.json()
+    app = res.json()
+    app_spec = app["spec"]
+    app_id = app["metadata"]["uuid"]
+    calm_action_name = "action_" + action_name.lower()
+    action_payload = next(
+        (
+            action
+            for action in app_spec["resources"]["action_list"]
+            if action["name"] == calm_action_name or action["name"] == action_name
+        ),
+        None,
+    )
+    if not action_payload:
+        LOG.error("No action found matching name {}".format(action_name))
+        sys.exit(-1)
 
-    endpoint_uuid = endpoint["metadata"]["uuid"]
+    action_args = apps.get_action_runtime_args(
+        app_uuid=app_id,
+        action_payload=action_payload,
+        patch_editables=patch_editables,
+        runtime_params_file=runtime_params_file,
+    )
 
-    variable_list = json.dumps(variable_list)
+    action_id = action_payload["uuid"]
+
+    if action_name.lower() == SYSTEM_ACTIONS.CREATE:
+        click.echo(
+            "The Create Action is triggered automatically when you deploy a blueprint. It cannot be run separately."
+        )
+        return
+    if action_name.lower() == SYSTEM_ACTIONS.DELETE:
+        return job._create_job_executable_payload(
+            "app", app_id, "APP_ACTION_DELETE", app, action_id
+        )
+    if action_name.lower() == SYSTEM_ACTIONS.SOFT_DELETE:
+        return job._create_job_executable_payload(
+            "app", app_id, "APP_ACTION_SOFT_DELETE", app, action_id
+        )
+
+    # Hit action run api (with metadata and minimal spec: [args, target_kind, target_uuid])
+    status = app.pop("status")
+    config_list = status["resources"]["snapshot_config_list"]
+    config_list.extend(status["resources"]["restore_config_list"])
+    for task in action_payload["runbook"]["task_definition_list"]:
+        if task["type"] == "CALL_CONFIG":
+            config = next(
+                config
+                for config in config_list
+                if config["uuid"] == task["attrs"]["config_spec_reference"]["uuid"]
+            )
+            if config["type"] == "AHV_SNAPSHOT":
+                action_args.append(apps.get_snapshot_name_arg(config, task["uuid"]))
+            elif config["type"] == "AHV_RESTORE":
+                substrate_id = next(
+                    (
+                        dep["substrate_configuration"]["uuid"]
+                        for dep in status["resources"]["deployment_list"]
+                        if dep["uuid"]
+                        == config["attrs_list"][0]["target_any_local_reference"]["uuid"]
+                    ),
+                    None,
+                )
+                api_filter = ""
+                if substrate_id:
+                    api_filter = "substrate_reference==" + substrate_id
+                res, err = client.application.get_recovery_groups(app_id, api_filter)
+                if err:
+                    raise Exception("[{}] - {}".format(err["code"], err["error"]))
+                action_args.append(
+                    apps.get_recovery_point_group_arg(
+                        config, task["uuid"], res.json()["entities"]
+                    )
+                )
+
+    app["spec"] = {
+        "args": action_args,
+        "target_kind": "Application",
+        "target_uuid": app_id,
+    }
 
     return job._create_job_executable_payload(
-        "runbook", runbook_uuid, "RUNBOOK_RUN", endpoint_uuid, variable_list
+        "app", app_id, "APP_ACTION_RUN", app, action_id
     )
 
 
-def set_one_time_schedule_info(utc_execution_time, time_zone="UTC"):
-    execution_time_timestamp = time.strptime(utc_execution_time, "%Y-%m-%dT%H:%M:%SZ")
-    unix__execution_time_utc = calendar.timegm(execution_time_timestamp)
-
-    return job._create_one_time_job_schedule_payload(
-        unix__execution_time_utc, time_zone
+def set_one_time_schedule_info(start_time, time_zone):
+    # Get User timezone
+    user_tz = ZoneInfo(time_zone)
+    # Convert datetime string to datetime object
+    datetime_obj = datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
+    # Append timezone to datetime object
+    datetime_obj_with_tz = datetime(
+        datetime_obj.year,
+        datetime_obj.month,
+        datetime_obj.day,
+        datetime_obj.hour,
+        datetime_obj.minute,
+        datetime_obj.second,
+        tzinfo=user_tz,
     )
+    # Convert to Epoch
+    seconds_since_epoch = int(datetime_obj_with_tz.timestamp())
+
+    return job._create_one_time_job_schedule_payload(seconds_since_epoch, time_zone)
 
 
-def set_recurring_schedule_info(schedule, start_time, expiry_time, time_zone="UTC"):
-    expiry_timestamp = time.strptime(expiry_time, "%Y-%m-%dT%H:%M:%SZ")
-    unix__expiry_time = calendar.timegm(expiry_timestamp)
+def set_recurring_schedule_info(schedule, start_time, expiry_time, time_zone):
+    # Get User timezone
+    user_tz = ZoneInfo(time_zone)
+    # Convert datetime string to datetime object
+    datetime_obj = datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
+    # Append timezone to datetime object
+    datetime_obj_with_tz = datetime(
+        datetime_obj.year,
+        datetime_obj.month,
+        datetime_obj.day,
+        datetime_obj.hour,
+        datetime_obj.minute,
+        datetime_obj.second,
+        tzinfo=user_tz,
+    )
+    # Convert to Epoch
+    seconds_since_epoch_start_time = int(datetime_obj_with_tz.timestamp())
 
-    start_timestamp = time.strptime(start_time, "%Y-%m-%dT%H:%M:%SZ")
-    unix__start_time = calendar.timegm(start_timestamp)
+    datetime_obj = datetime.strptime(expiry_time, "%Y-%m-%d %H:%M:%S")
+    datetime_obj_with_tz = datetime(
+        datetime_obj.year,
+        datetime_obj.month,
+        datetime_obj.day,
+        datetime_obj.hour,
+        datetime_obj.minute,
+        datetime_obj.second,
+        tzinfo=user_tz,
+    )
+    seconds_since_epoch_expiry_time = int(datetime_obj_with_tz.timestamp())
 
     return job._create_recurring_job_schedule_payload(
-        schedule, unix__expiry_time, unix__start_time, time_zone
+        schedule,
+        seconds_since_epoch_expiry_time,
+        seconds_since_epoch_start_time,
+        time_zone,
     )
 
 
@@ -191,6 +274,7 @@ class JobScheduler:
             raise TypeError("'{}' is not callable".format(cls.__name__))
 
         runbook = exec_runbook
+        app_action = exec_app_action
 
     class ScheduleInfo:
         def __new__(cls, *args, **kwargs):
@@ -642,3 +726,20 @@ def get_job_instances_command(job_name, out, filter_by, limit, offset, all_items
             ]
         )
     click.echo(table)
+
+
+def delete_job(job_names):
+    """Delete jobs"""
+    client = get_api_client()
+
+    for job_name in job_names:
+
+        job_get_res = get_job(client, job_name, all=True)
+
+        job_uuid = job_get_res["metadata"]["uuid"]
+
+        _, err = client.job.delete(job_uuid)
+        if err:
+            LOG.error("[{}] - {}".format(err["code"], err["error"]))
+            sys.exit(-1)
+        LOG.info("Job {} deleted".format(job_name))

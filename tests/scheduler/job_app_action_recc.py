@@ -17,11 +17,12 @@ time_zone = "Asia/Kolkata"
 
 
 class JobRecurring(Job):
-    """Recurring Job for Executing a Runbook"""
+    """Recurring Job for Executing an App Action"""
 
+    name = "job_app_action_recc"
     schedule_info = JobScheduler.ScheduleInfo.recurring(
         "*/2 * * * *", start_date, expiry_date, time_zone
     )
-    executable = JobScheduler.Exec.runbook(
-        "job_recurring_every_two_minute_decision_task", False
+    executable = JobScheduler.Exec.app_action(
+        "job_app_action_recc", "sample_profile_action"
     )

@@ -4,11 +4,10 @@ from datetime import datetime, timedelta
 from calm.dsl.builtins import Job
 from calm.dsl.cli.scheduler import JobScheduler
 
-start_time = datetime.now() + timedelta(seconds=120)
-start_time = str(start_time.strftime("%Y-%m-%dT%H:%M:%SZ"))
-
-expiry_time = datetime.now() + timedelta(seconds=600)
-expiry_time = str(expiry_time.strftime("%Y-%m-%dT%H:%M:%SZ"))
+start_date_time = "2050-10-08 16:17:15"
+expiry_date_time = "2050-10-09 00:17:00"
+cron = "52 15 * * *"
+time_zone = "America/Jamaica"
 
 
 class JobInvalidRecurringSpec(Job):
@@ -16,6 +15,6 @@ class JobInvalidRecurringSpec(Job):
 
     name = "test_unicode_кызмат_" + str(uuid.uuid4())
     schedule_info = JobScheduler.ScheduleInfo.recurring(
-        "15 1 1 * *", start_time, expiry_time
+        cron, start_date_time, expiry_date_time, time_zone
     )
-    executable = JobScheduler.Exec.runbook("job_unicode", "")
+    executable = JobScheduler.Exec.runbook("job_unicode", False)

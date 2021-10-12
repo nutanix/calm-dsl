@@ -7,11 +7,14 @@ start_date = datetime.now() + timedelta(seconds=10)
 start_date = (
     str(start_date.strftime("%Y-%m-%dT%H:%M:%SZ")).replace("T", " ").replace("Z", "")
 )
+
 time_zone = "Asia/Kolkata"
 
 
 class JobOneTimeSpec(Job):
-    """One Time Job for Executing a Runbook"""
+    """One Time Job for Executing an App Action"""
 
     schedule_info = JobScheduler.ScheduleInfo.oneTime(start_date, time_zone)
-    executable = JobScheduler.Exec.runbook("one_time_scheduler", False)
+    executable = JobScheduler.Exec.app_action(
+        "job_app_action_onetime", "sample_profile_action"
+    )

@@ -1,5 +1,4 @@
-import time
-import calendar
+import json
 
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
@@ -38,6 +37,13 @@ class JobExecutable(EntityType):
     __schema_name__ = "JobExecutable"
     __openapi_type__ = "executable_resources"
 
+    def compile(cls):
+        cdict = super().compile()
+        if cdict.get("action").get("type") == "RUNBOOK_RUN":
+            cdict["action"]["spec"].pop("uuid", None)
+
+        return cdict
+
 
 class JobExecuableValidator(PropertyValidator, openapi_type="executable_resources"):
     __default__ = None
@@ -54,7 +60,7 @@ JobExec = _jobexecutable_payload()
 
 
 def _create_job_executable_payload(
-    entity_type, entity_uuid, action_type, payload_uuid, variable_list
+    entity_type, entity_uuid, action_type, payload, action_uuid=None
 ):
 
     payload = {
@@ -64,17 +70,39 @@ def _create_job_executable_payload(
         },
         "action": {
             "type": action_type,
-            "spec": {
-                "payload": '{"spec":{"args":'
-                + str(variable_list)
-                + ',"default_target_reference":{"kind":"app_endpoint","name":"endpoint1","uuid":"'
-                + payload_uuid
-                + '"}}}'
-            },
+            "spec": {"payload": str(json.dumps(payload))},
         },
     }
 
+    if (
+        action_type == "APP_ACTION_RUN"
+        or action_type == "APP_ACTION_DELETE"
+        or action_type == "APP_ACTION_SOFT_DELETE"
+    ):
+        payload["action"]["spec"]["uuid"] = action_uuid
+
     return _jobexecutable_payload(**payload)
+
+
+# def _create_job_executable_payload_for_app_action(
+#     entity_type, entity_uuid, action_type, action_uuid, payload
+# ):
+#
+#     payload = {
+#         "entity": {
+#             "type": entity_type,
+#             "uuid": entity_uuid,
+#         },
+#         "action": {
+#             "type": action_type,
+#             "spec": {
+#                 "uuid": action_uuid,
+#                 "payload": str(json.dumps(payload))
+#             },
+#         },
+#     }
+#
+#     return _jobexecutable_payload(**payload)
 
 
 # create payload for One Time job

@@ -8,7 +8,7 @@ from distutils.version import LooseVersion as LV
 from calm.dsl.store import Version
 
 from calm.dsl.log import get_logging_handle
-from calm.dsl.cli import runbooks
+from calm.dsl.cli import runbooks, bps
 from calm.dsl.cli import scheduler
 from calm.dsl.config import get_context
 from calm.dsl.constants import CACHE
@@ -32,6 +32,7 @@ DSL_INVALID_SCHEDULER_FILE = [
     "start_greater_expiry_date_recurring.py",
 ]
 DSL_RUNBOOK_FILE = "default_target_runbook.py"
+DSL_BP_FILE = "example_blueprint.py"
 
 # calm_version
 CALM_VERSION = Version.get_version("Calm")
@@ -41,6 +42,48 @@ CALM_VERSION = Version.get_version("Calm")
     LV(CALM_VERSION) < LV("3.4.0"), reason="Scheduler FEAT is for v3.4.0"
 )
 class TestSchedulerCommands:
+    @pytest.mark.scheduler
+    @pytest.mark.parametrize(
+        "dsl_file", ["job_app_action_recc.py", "job_app_action_onetime.py"]
+    )
+    def test_job_create_app_action(self, dsl_file):
+        """
+        Test for job create
+        """
+        current_path = os_lib.path.dirname(os_lib.path.realpath(__file__))
+        dsl_file = os_lib.path.dirname(current_path) + "/scheduler/" + dsl_file
+        LOG.info("Scheduler py file used {}".format(dsl_file))
+        # Create blueprint
+        current_path = os_lib.path.dirname(os_lib.path.realpath(__file__))
+        dsl_file_name = dsl_file[dsl_file.rfind("/") :].replace("/", "")
+        bp_name = dsl_file_name[: dsl_file_name.find(".")]
+
+        bp_file = os_lib.path.dirname(current_path) + "/scheduler/" + DSL_BP_FILE
+        client = get_api_client()
+        bps.create_blueprint_from_dsl(client, bp_file, bp_name, force_create=True)
+        # Launch Blueprint
+        bps.launch_blueprint_simple(bp_name, app_name=bp_name, patch_editables=False)
+
+        jobname = "test_job_scheduler" + str(uuid.uuid4())
+        result = scheduler.create_job_command(dsl_file, jobname, None, False)
+        assert result.get("resources").get("state") == "ACTIVE"
+
+        time.sleep(140)
+        result = json.loads(
+            scheduler.get_job_instances_command(jobname, "json", None, 20, 0, False)
+        )
+
+        # If the job in One Time
+        if "one_time_scheduler" in dsl_file:
+            assert len(result) == 1
+            state = result[0]["resources"]["state"]
+            assert state != JOBINSTANCES.STATES.FAILED
+        # If the job is RECURRING
+        else:
+            assert len(result) >= 1
+            for record in result:
+                assert record["resources"]["state"] != JOBINSTANCES.STATES.FAILED
+
     @pytest.mark.scheduler
     @pytest.mark.parametrize("dsl_file", DSL_SCHEDULER_FILE)
     def test_job_create_runbook(self, dsl_file):
@@ -90,7 +133,7 @@ class TestSchedulerCommands:
         result = scheduler.create_job_command(dsl_file, None, None, False)
         LOG.info(result)
         assert result.get("resources").get("state") == "INACTIVE"
-        msg_list = result.get("resources").get("messages", [])
+        msg_list = result.get("resources").get("message_list", [])
         msgs = []
         for msg_dict in msg_list:
             msgs.append(msg_dict.get("message", ""))
@@ -154,7 +197,7 @@ class TestSchedulerCommands:
 
         assert result.get("code", "") == 422
 
-        msg_list = result.get("messages", [])
+        msg_list = result.get("message_list", [])
         msgs = []
         for msg_dict in msg_list:
             msgs.append(msg_dict.get("details", "").get("error", ""))
@@ -184,7 +227,7 @@ class TestSchedulerCommands:
 
         result = _create_job_with_custom_name(dsl_file)
         assert result.get("resources").get("state") == "INACTIVE"
-        msg_list = result.get("resources").get("messages", [])
+        msg_list = result.get("resources").get("message_list", [])
         msgs = []
         for msg_dict in msg_list:
             msgs.append(msg_dict.get("message", ""))
@@ -288,7 +331,7 @@ class TestSchedulerCommands:
         result = scheduler.create_job_command(dsl_file, jobname, None, False)
         assert result.get("resources").get("state") == "ACTIVE"
 
-        time.sleep(140)
+        time.sleep(160)
         result = json.loads(
             scheduler.get_job_instances_command(jobname, "json", None, 20, 0, False)
         )

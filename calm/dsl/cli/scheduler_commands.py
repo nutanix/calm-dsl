@@ -6,12 +6,14 @@ from .main import (
     create,
     describe,
     get,
+    delete,
 )
 from .scheduler import (
     create_job_command,
     describe_job_command,
     get_job_list_command,
     get_job_instances_command,
+    delete_job,
 )
 
 LOG = get_logging_handle(__name__)
@@ -100,3 +102,11 @@ def _get_job_instances(job_name, out, filter_by, limit, offset, all_items):
     """Describe a job"""
 
     get_job_instances_command(job_name, out, filter_by, limit, offset, all_items)
+
+
+@delete.command("job")
+@click.argument("job_names", nargs=-1)
+def _delete_job(job_names):
+    """Deletes a job"""
+
+    delete_job(job_names)

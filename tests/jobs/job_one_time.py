@@ -12,4 +12,4 @@ class JobOneTime(Job):
 
     name = "test_job"
     schedule_info = JobScheduler.ScheduleInfo.oneTime(start_date)
-    executable = JobScheduler.Exec.runbook("runbook1")
+    executable = JobScheduler.Exec.runbook("job_create_one_time")
