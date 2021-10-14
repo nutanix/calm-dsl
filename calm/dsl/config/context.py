@@ -178,6 +178,7 @@ class Context:
         project_config = self.get_project_config()
         log_config = self.get_log_config()
         connection_config = self.get_connection_config()
+        policy_config = self.get_policy_config()
 
         ConfigHandle = get_config_handle()
         config_str = ConfigHandle._render_config_template(
@@ -190,6 +191,7 @@ class Context:
             retries_enabled=connection_config["retries_enabled"],
             connection_timeout=connection_config["connection_timeout"],
             read_timeout=connection_config["read_timeout"],
+            policy_status=policy_config["policy_status"],
         )
 
         print(config_str)
