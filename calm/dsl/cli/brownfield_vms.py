@@ -9,7 +9,7 @@ from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.constants import PROVIDER_ACCOUNT_TYPE_MAP
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Version
-from .utils import highlight_text
+from .utils import highlight_text, get_account_details
 
 LOG = get_logging_handle(__name__)
 
@@ -275,76 +275,6 @@ def get_brownfield_vmware_vm_list(entity_rows):
     click.echo(table)
 
 
-def get_brownfield_account_details(project_name, provider_type, account_name):
-    """returns object containing project uuid and account uuid"""
-
-    client = get_api_client()
-
-    # Getting the account uuid map
-    account_type = PROVIDER_ACCOUNT_TYPE_MAP[provider_type]
-    params = {"length": 250, "filter": "state!=DELETED;type=={}".format(account_type)}
-    if account_name:
-        params["filter"] += ";name=={}".format(account_name)
-
-    account_uuid_name_map = client.account.get_uuid_name_map(params)
-    provider_account_uuids = list(account_uuid_name_map.keys())
-
-    LOG.info("Fetching project '{}' details".format(project_name))
-    params = {"length": 250, "filter": "name=={}".format(project_name)}
-    res, err = client.project.list(params)
-    if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-    res = res.json()
-    if res["metadata"]["total_matches"] == 0:
-        LOG.error("Project {} not found".format(project_name))
-        sys.exit(-1)
-
-    pj_data = res["entities"][0]
-    whitelisted_accounts = [
-        account["uuid"]
-        for account in pj_data["status"]["resources"].get("account_reference_list", [])
-    ]
-
-    project_uuid = pj_data["metadata"]["uuid"]
-    account_uuid = ""
-    for _account_uuid in whitelisted_accounts:
-        if _account_uuid in provider_account_uuids:
-            account_uuid = _account_uuid
-            break
-
-    if not account_uuid:
-        LOG.error("No account with given details found in project")
-        sys.exit(-1)
-
-    account_name = account_uuid_name_map[account_uuid]
-    LOG.info("Using account '{}' for listing brownfield vms".format(account_name))
-
-    if provider_type == "AHV_VM":
-        LOG.info("Fetching account '{}' details".format(account_name))
-        res, err = client.account.read(account_uuid)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        res = res.json()
-        clusters = res["status"]["resources"]["data"].get(
-            "cluster_account_reference_list", []
-        )
-        if not clusters:
-            LOG.error(
-                "No cluster found in ahv account (uuid='{}')".format(account_uuid)
-            )
-            sys.exit(-1)
-
-        # Use clustrer uuid for AHV account
-        account_uuid = clusters[0]["uuid"]
-
-    return {
-        "project": {"name": project_name, "uuid": project_uuid},
-        "account": {"name": account_name, "uuid": account_uuid},
-    }
-
-
 def get_brownfield_vms(
     limit, offset, quiet, out, project_name, provider_type, account_name
 ):
@@ -352,14 +282,17 @@ def get_brownfield_vms(
 
     client = get_api_client()
 
-    account_detail = get_brownfield_account_details(
+    account_detail = get_account_details(
         project_name=project_name,
-        provider_type=provider_type,
         account_name=account_name,
+        provider_type=provider_type,
+        pe_account_needed=True,
     )
     project_uuid = account_detail["project"]["uuid"]
     account_name = account_detail["account"]["name"]
     account_uuid = account_detail["account"]["uuid"]
+
+    LOG.info("Using account '{}' for listing brownfield vms".format(account_name))
 
     LOG.info("Fetching brownfield vms")
     Obj = get_resource_api("blueprints/brownfield_import/vms", client.connection)

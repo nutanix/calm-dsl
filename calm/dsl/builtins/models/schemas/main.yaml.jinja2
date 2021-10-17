@@ -39,7 +39,7 @@
 {% import "vm_blueprint.yaml.jinja2" as vm_blueprint %}
 {% import "calm_ref.yaml.jinja2" as calm_ref %}
 {% import "account_provider.yaml.jinja2" as account_provider %}
-
+{% import "ahv_recovery_vm.yaml.jinja2" as ahv_recovery_vm %}
 
 {% macro Schemas() -%}
 
@@ -84,7 +84,7 @@
 {{ vm_blueprint.VmBlueprintSchema() }}
 {{ calm_ref.CalmRefSchema() }}
 {{ account_provider.AccountProviderSchema() }}
-
+{{ ahv_recovery_vm.AhvRecoveryVmSchema() }}
 {%- endmacro %}
 
 

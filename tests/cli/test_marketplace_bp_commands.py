@@ -16,18 +16,16 @@ from calm.dsl.cli.marketplace import (
 )
 from calm.dsl.cli.utils import get_states_filter
 from calm.dsl.builtins import read_local_file
-from calm.dsl.cli.constants import APPLICATION, MARKETPLACE_ITEM
+from calm.dsl.cli.constants import MARKETPLACE_ITEM
 from calm.dsl.log import get_logging_handle
+from tests.utils import Application as ApplicationHelper
 
 LOG = get_logging_handle(__name__)
+
 APP_ICON_IMAGE_PATH = "tests/cli/images/test_app_icon.jpg"
 DSL_BP_FILEPATH = "tests/existing_vm_example/test_existing_vm_bp.py"
 DSL_BP_EDITABLE_PARAMS = "tests/existing_vm_example/existing_vm_bp_editable_params.py"
-NON_BUSY_APP_STATES = [
-    APPLICATION.STATES.STOPPED,
-    APPLICATION.STATES.RUNNING,
-    APPLICATION.STATES.ERROR,
-]
+
 APP_STATES = [
     MARKETPLACE_ITEM.STATES.PENDING,
     MARKETPLACE_ITEM.STATES.ACCEPTED,
@@ -46,6 +44,8 @@ PROJECT_NAME = PROJECT["NAME"]
 
 
 class TestMarketplaceBPCommands:
+    app_helper = ApplicationHelper()
+
     def setup_method(self):
         """Method to instantiate to created_bp_list and created_app_list"""
 
@@ -1928,21 +1928,10 @@ class TestMarketplaceBPCommands:
             pytest.fail("Deletion of marketplace blueprint failed")
         LOG.info("Success")
 
-    def _wait_for_non_busy_state(self, app_name):
-
-        runner = CliRunner()
-        non_busy_statuses = [
-            "Status: {}".format(state) for state in NON_BUSY_APP_STATES
-        ]
-        result = runner.invoke(cli, ["describe", "app", app_name])
-        while not any([state_str in result.output for state_str in non_busy_statuses]):
-            time.sleep(5)
-            result = runner.invoke(cli, ["describe", "app", app_name])
-
     def _test_app_delete(self, app_name):
 
         runner = CliRunner()
-        self._wait_for_non_busy_state(app_name)
+        self.app_helper._wait_for_non_busy_state(app_name)
         LOG.info("Deleting App {} ".format(app_name))
         result = runner.invoke(cli, ["delete", "app", app_name])
         if result.exit_code:

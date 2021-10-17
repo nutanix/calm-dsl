@@ -12,17 +12,13 @@ from calm.dsl.store import Version
 from calm.dsl.cli.constants import APPLICATION
 from calm.dsl.tools import make_file_dir
 from calm.dsl.log import get_logging_handle
+from tests.utils import Application as ApplicationHelper
 
 LOG = get_logging_handle(__name__)
 
 DSL_BP_FILEPATH = "tests/brownfield/separate_file_example/blueprint.py"
 DSL_BP_BD_FILEPATH = "tests/brownfield/separate_file_example/brownfield.py"
 LOCAL_VM_IP_PATH = "tests/brownfield/separate_file_example/.local/vm_ip"
-NON_BUSY_APP_STATES = [
-    APPLICATION.STATES.STOPPED,
-    APPLICATION.STATES.RUNNING,
-    APPLICATION.STATES.ERROR,
-]
 
 NON_BUSY_APP_DELETE_STATES = [APPLICATION.STATES.ERROR, APPLICATION.STATES.DELETED]
 
@@ -32,6 +28,8 @@ CALM_VERSION = Version.get_version("Calm")
 
 @pytest.mark.slow
 class TestBrownFieldCommands:
+    app_helper = ApplicationHelper()
+
     def setup_method(self):
         """Method to instantiate to created_bp_list and created_app_list"""
 
@@ -55,17 +53,6 @@ class TestBrownFieldCommands:
         self.created_app_list = []
         self.created_bp_list = []
 
-    def _wait_for_non_busy_state(self, app_name):
-
-        runner = CliRunner()
-        non_busy_statuses = [
-            "Status: {}".format(state) for state in NON_BUSY_APP_STATES
-        ]
-        result = runner.invoke(cli, ["describe", "app", app_name])
-        while not any([state_str in result.output for state_str in non_busy_statuses]):
-            time.sleep(5)
-            result = runner.invoke(cli, ["describe", "app", app_name])
-
     def _wait_for_app_delete_busy_state(self, app_name):
 
         runner = CliRunner()
@@ -80,7 +67,7 @@ class TestBrownFieldCommands:
     def _delete_app(self, app_name):
 
         runner = CliRunner()
-        self._wait_for_non_busy_state(app_name)
+        self.app_helper._wait_for_non_busy_state(app_name)
         LOG.info("Deleting App {} ".format(app_name))
         result = runner.invoke(cli, ["delete", "app", app_name])
         assert result.exit_code == 0
@@ -141,7 +128,7 @@ class TestBrownFieldCommands:
             pytest.fail("Creation of app {} failed".format(app_name))
 
         # Wait for app creation completion
-        self._wait_for_non_busy_state(app_name)
+        self.app_helper._wait_for_non_busy_state(app_name)
         LOG.info("Application {} created successfully".format(app_name))
 
         LOG.info("Extracting vm ip from the app")
@@ -205,7 +192,7 @@ class TestBrownFieldCommands:
             )
             pytest.fail("Brownfield App creation failed")
 
-        self._wait_for_non_busy_state(app_name)
+        self.app_helper._wait_for_non_busy_state(app_name)
         LOG.info("Brownfield App {} created successfully".format(app_name))
         self.created_app_list.append(app_name)
 
@@ -283,7 +270,7 @@ class TestBrownFieldCommands:
             pytest.fail("Creation of app {} failed".format(app_name))
 
         # Wait for app creation completion
-        self._wait_for_non_busy_state(app_name)
+        self.app_helper._wait_for_non_busy_state(app_name)
         LOG.info("Application {} created successfully".format(app_name))
 
         LOG.info("Extracting vm ip from the app")
@@ -350,7 +337,7 @@ class TestBrownFieldCommands:
             )
             pytest.fail("Brownfield App creation failed")
 
-        self._wait_for_non_busy_state(app_name_2)
+        self.app_helper._wait_for_non_busy_state(app_name_2)
         LOG.info("Brownfield App {} created successfully".format(app_name_2))
         self.created_app_list.append(app_name_2)
 
