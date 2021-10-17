@@ -47,6 +47,7 @@ from .models.ahv_vm import (
     AhvVmType,
     AhvVmResourcesType,
 )
+from .models.ahv_recovery_vm import AhvVmRecoveryResources, ahv_vm_recovery_spec
 
 from .models.substrate import Substrate, substrate, SubstrateType
 from .models.deployment import Deployment, deployment, DeploymentType
@@ -184,4 +185,6 @@ __all__ = [
     "_endpoint",
     "CalmEndpoint",
     "AppProtection",
+    "AhvVmRecoveryResources",
+    "ahv_vm_recovery_spec",
 ]

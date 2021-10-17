@@ -5,7 +5,7 @@ from .entity import EntityType, Entity, EntityTypeBase, EntityDict
 from .validator import PropertyValidator
 from .readiness_probe import readiness_probe
 from .provider_spec import provider_spec
-from .ahv_vm import AhvVm, AhvVmType
+from .ahv_vm import AhvVmType, ahv_vm
 from .client_attrs import update_dsl_metadata_map, get_dsl_metadata_map
 from .metadata_payload import get_metadata_obj
 from .helper import common as common_helper
@@ -268,12 +268,28 @@ class SubstrateType(EntityType):
             if not readiness_probe_dict.get("connection_protocol", ""):
                 readiness_probe_dict["connection_protocol"] = "http"
 
-        # Fill out address for readiness probe if not given
+        if cdict.get("vm_recovery_spec", {}) and cdict["type"] != "AHV_VM":
+            LOG.error(
+                "Recovery spec is supported only for AHV_VM substrate (given {})".format(
+                    cdict["type"]
+                )
+            )
+            sys.exit("Unknown attribute vm_recovery_spec given")
+
+        # Handle cases for empty readiness_probe and vm_recovery_spec
         if cdict["type"] == "AHV_VM":
             if not readiness_probe_dict.get("address", ""):
                 readiness_probe_dict[
                     "address"
                 ] = "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@"
+
+            if cdict.get("vm_recovery_spec", {}):
+                _vrs = cdict.pop("vm_recovery_spec", None)
+                if _vrs:
+                    cdict["create_spec"] = ahv_vm(
+                        name=_vrs.vm_name, resources=_vrs.vm_override_resources
+                    )
+                    cdict["recovery_point_reference"] = _vrs.recovery_point
 
         elif cdict["type"] == "EXISTING_VM":
             if not readiness_probe_dict.get("address", ""):
@@ -305,6 +321,9 @@ class SubstrateType(EntityType):
 
         else:
             raise Exception("Un-supported vm type :{}".format(cdict["type"]))
+
+        if not cdict.get("vm_recovery_spec", {}):
+            cdict.pop("vm_recovery_spec", None)
 
         # Adding min defaults in vm spec required by each provider
         if not cdict.get("create_spec"):
