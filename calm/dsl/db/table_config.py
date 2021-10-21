@@ -2799,6 +2799,317 @@ class AppProtectionPolicyCache(CacheTableBase):
         primary_key = CompositeKey("name", "uuid", "rule_uuid")
 
 
+class PolicyEventCache(CacheTableBase):
+    __cache_type__ = CACHE.ENTITY.POLICY_EVENT
+    feature_min_version = "3.5.0"
+    is_policy_required = True
+    entity_type = CharField()
+    name = CharField()
+    uuid = CharField()
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self, *args, **kwargs):
+        return {
+            "entity_type": self.entity_type,
+            "name": self.name,
+            "uuid": self.uuid,
+            "last_update_time": self.last_update_time,
+        }
+
+    @classmethod
+    def clear(cls):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = ["ENTITY_TYPE", "NAME", "UUID", "LAST UPDATED"]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["entity_type"]),
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        entity_type = kwargs.get("entity_type", "")
+        if not entity_type:
+            LOG.error(
+                "Entity type not supplied for fetching policy_event {}".format(name)
+            )
+            sys.exit(
+                "Entity type not supplied for fetching policy_event={}".format(name)
+            )
+
+        super().create(name=name, uuid=uuid, entity_type=entity_type)
+
+    @classmethod
+    def sync(cls):
+        """sync the table from server"""
+
+        # clear old data
+        cls.clear()
+
+        client = get_api_client()
+        res = client.policy_event.list_all()
+        if not res:
+            LOG.error("Failed to list policy events")
+            sys.exit("Failed to list policy events")
+        for entity in res:
+            query_obj = {
+                "entity_type": entity["status"]["resources"]["entity_type"],
+                "name": entity["status"]["name"],
+                "uuid": entity["metadata"]["uuid"],
+            }
+            cls.create_entry(**query_obj)
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+
+        query_obj = {"name": name}
+        try:
+            entity = super().get(**query_obj)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return dict()
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
+        try:
+            entity = super().get(cls.uuid == uuid)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return dict()
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("name", "uuid")
+
+
+class PolicyAttributesCache(CacheTableBase):
+    __cache_type__ = CACHE.ENTITY.POLICY_ATTRIBUTES
+    feature_min_version = "3.5.0"
+    is_policy_required = True
+    event_name = CharField()
+    name = CharField()
+    type = CharField()
+    operators = CharField()
+    jsonpath = CharField()
+
+    def get_detail_dict(self, *args, **kwargs):
+        return {
+            "event_name": self.event_name,
+            "name": self.name,
+            "type": self.type,
+            "operators": self.operators,
+            "jsonpath": self.jsonpath,
+        }
+
+    @classmethod
+    def clear(cls):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = ["EVENT_NAME", "Name", "TYPE", "OPERATOR_LIST"]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            table.add_row(
+                [
+                    highlight_text(entity_data["event_name"]),
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["type"]),
+                    highlight_text(entity_data["operators"]),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def create_entry(cls, name, **kwargs):
+        event_name = kwargs.get("event_name", "")
+        if not event_name:
+            LOG.error(
+                "Event name not supplied for fetching policy_attribute {}".format(
+                    event_name
+                )
+            )
+            sys.exit(
+                "Event name not supplied for fetching policy_attribute {}".format(
+                    event_name
+                )
+            )
+
+        super().create(
+            event_name=event_name,
+            name=name,
+            type=kwargs.get("type", ""),
+            operators=kwargs.get("operators", ""),
+            jsonpath=kwargs.get("jsonpath", ""),
+        )
+
+    @classmethod
+    def sync(cls):
+        """sync the table from server"""
+
+        # clear old data
+        cls.clear()
+
+        client = get_api_client()
+        res, err = client.policy_attributes.list()
+        if err:
+            LOG.error("[{}] - {}".format(err["code"], err["error"]))
+            LOG.error("Failed to list policy attributes")
+            sys.exit("Failed to list policy attributes")
+
+        res = res.json()
+        for entity in res.get("events", []):
+            event_name = entity["name"]
+            for attribute in entity["attributes"]:
+                query_obj = {
+                    "event_name": event_name,
+                    "name": attribute["name"],
+                    "type": attribute["type"],
+                    "operators": attribute["operators"],
+                    "jsonpath": attribute["jsonpath"],
+                }
+                cls.create_entry(**query_obj)
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+
+        query_obj = {"event_name": kwargs.get("event_name"), "name": name}
+        try:
+            entity = super().get(**query_obj)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return dict()
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("event_name", "name")
+
+
+class PolicyActionTypeCache(CacheTableBase):
+    __cache_type__ = CACHE.ENTITY.POLICY_ACTION_TYPE
+    feature_min_version = "3.5.0"
+    is_policy_required = True
+    name = CharField()
+    uuid = CharField()
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self, *args, **kwargs):
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "last_update_time": self.last_update_time,
+        }
+
+    @classmethod
+    def clear(cls):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = ["NAME", "UUID", "LAST UPDATED"]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        super().create(name=name, uuid=uuid)
+
+    @classmethod
+    def sync(cls):
+        """sync the table from server"""
+
+        # clear old data
+        cls.clear()
+
+        client = get_api_client()
+        res = client.policy_action_types.list_all()
+        if not res:
+            LOG.error("Failed to list policy action types")
+            sys.exit("Failed to list policy action types")
+
+        for entity in res:
+            name = entity["status"]["name"]
+            uuid = entity["metadata"]["uuid"]
+            cls.create_entry(name=name, uuid=uuid)
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+
+        query_obj = {"name": name}
+        try:
+            entity = super().get(**query_obj)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return dict()
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
+        try:
+            entity = super().get(cls.uuid == uuid)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return dict()
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("name", "uuid")
+
+
 class VersionTable(BaseModel):
     name = CharField()
     version = CharField()

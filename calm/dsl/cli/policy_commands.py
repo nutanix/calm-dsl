@@ -18,7 +18,7 @@ from .policy import (
 LOG = get_logging_handle(__name__)
 
 
-@create.command("policy", feature_min_version="3.4.0", experimental=True)
+@create.command("policy", feature_min_version="3.5.0", experimental=True)
 @click.option(
     "--file",
     "-f",
@@ -42,7 +42,7 @@ def _create_policy_command(policy_file, name, description, force):
     create_policy_command(policy_file, name, description, force)
 
 
-@describe.command("policy", feature_min_version="3.4.0")
+@describe.command("policy", feature_min_version="3.5.0")
 @click.argument("policy_name")
 @click.option(
     "--out",
@@ -58,7 +58,7 @@ def _describe_policy(policy_name, out):
     describe_policy(policy_name, out)
 
 
-@compile.command("policy", feature_min_version="3.4.0")
+@compile.command("policy", feature_min_version="3.5.0")
 @click.option(
     "--file",
     "-f",
@@ -80,7 +80,7 @@ def _compile_policy_command(policy_file, out):
     compile_policy_command(policy_file, out)
 
 
-@delete.command("policy", feature_min_version="3.4.0")
+@delete.command("policy", feature_min_version="3.5.0")
 @click.argument("policy_names", nargs=-1)
 def _delete_policy(policy_names):
     """Deletes a policy"""

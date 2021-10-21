@@ -17,8 +17,8 @@ DSL_POLICY_FILEPATH = "tests/policy/approval_policy.py"
 
 
 @pytest.mark.skipif(
-    LV(CALM_VERSION) < LV("3.4.0"),
-    reason="Approval policy is supported from 3.4.0",
+    LV(CALM_VERSION) < LV("3.5.0"),
+    reason="Approval policy is supported from 3.5.0",
 )
 class TestPolicyCommands:
     @classmethod
