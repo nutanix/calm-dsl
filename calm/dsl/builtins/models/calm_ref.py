@@ -188,8 +188,9 @@ class Ref:
 
             project_cache_data = common_helper.get_cur_context_project()
             project_name = project_cache_data.get("name")
+            project_uuid = project_cache_data.get("uuid")
             environment_cache_data = Cache.get_entity_data(
-                entity_type="environment", name=name, project=project_name
+                entity_type="environment", name=name, project_uuid=project_uuid
             )
             if not environment_cache_data:
                 LOG.error(
