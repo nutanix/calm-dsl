@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from calm.dsl.builtins import Job
 from calm.dsl.cli.scheduler import JobScheduler
 
-start_date = datetime.now() + timedelta(seconds=10)
+start_date = datetime.now() + timedelta(seconds=30)
 start_date = (
     str(start_date.strftime("%Y-%m-%dT%H:%M:%SZ")).replace("T", " ").replace("Z", "")
 )
