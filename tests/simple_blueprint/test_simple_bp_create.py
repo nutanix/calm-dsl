@@ -102,6 +102,9 @@ class TestSimpleBlueprint:
         generated_json["spec"]["resources"]["app_profile_list"][0].pop(
             "restore_config_list", None
         )
+        generated_json["spec"]["resources"]["app_profile_list"][0].pop(
+            "patch_list", None
+        )
         known_json = json.loads(open(SIMPLE_BP_OUT_PATH).read())
 
         # Change dynamic values in known json and remove account_uuid from generated_json

@@ -26,6 +26,13 @@ properties:
     type: array
     items:
       $ref: '#/components/schemas/Variable'
+  patch_list:
+    x-calm-dsl-min-version: 3.3.0
+    x-calm-dsl-display-name: patch_list
+    type: array
+    items:
+      $ref: '#/components/schemas/ConfigSpec'
+
   action_list:
     x-calm-dsl-display-name: actions
     type: array

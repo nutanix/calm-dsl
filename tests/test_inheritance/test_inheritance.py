@@ -269,6 +269,7 @@ def test_json():
 
     generated_json["app_profile_list"][0].pop("snapshot_config_list", None)
     generated_json["app_profile_list"][0].pop("restore_config_list", None)
+    generated_json["app_profile_list"][0].pop("patch_list", None)
     for _sd in generated_json["substrate_definition_list"]:
         _sd["create_spec"]["resources"].pop("account_uuid", None)
 

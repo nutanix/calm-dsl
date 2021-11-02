@@ -7,6 +7,7 @@ class ApplicationAPI(ResourceAPI):
         super().__init__(connection, resource_type="apps")
 
         self.ACTION_RUN = self.ITEM + "/actions/{}/run"
+        self.PATCH_RUN = self.ITEM + "/patch/{}/run"
         self.DOWNLOAD_RUNLOG = self.ITEM + "/app_runlogs/{}/output/download"
         self.ACTION_VARIABLE = self.ITEM + "/actions/{}/variables"
         self.RECOVERY_GROUPS_LIST = self.ITEM + "/recovery_groups/list"
@@ -14,6 +15,14 @@ class ApplicationAPI(ResourceAPI):
     def run_action(self, app_id, action_id, payload):
         return self.connection._call(
             self.ACTION_RUN.format(app_id, action_id),
+            request_json=payload,
+            verify=False,
+            method=REQUEST.METHOD.POST,
+        )
+
+    def run_patch(self, app_id, patch_id, payload):
+        return self.connection._call(
+            self.PATCH_RUN.format(app_id, patch_id),
             request_json=payload,
             verify=False,
             method=REQUEST.METHOD.POST,

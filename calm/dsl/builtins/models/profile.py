@@ -9,6 +9,7 @@ from .action import action, _action_create
 from .runbook import runbook_create
 from .config_spec import SnapshotConfigSpecType, RestoreConfigSpecType
 from calm.dsl.log import get_logging_handle
+from .config_spec import PatchConfigSpecType
 
 
 LOG = get_logging_handle(__name__)
@@ -40,7 +41,11 @@ class ProfileType(EntityType):
         # description attribute in profile gives bp launch error: https://jira.nutanix.com/browse/CALM-19380
         cdict.pop("description", None)
 
-        config_type_map = {"restore": "AHV_RESTORE", "snapshot": "AHV_SNAPSHOT"}
+        config_type_map = {
+            "restore": "AHV_RESTORE",
+            "snapshot": "AHV_SNAPSHOT",
+            "patch": "PATCH",
+        }
         config_action_prefix_map = {"restore": "Restore_", "snapshot": "Snapshot_"}
         action_names = list(map(lambda x: x.name, cdict["action_list"]))
 
@@ -59,6 +64,12 @@ class ProfileType(EntityType):
 
         def set_config_type_based_on_target(config, config_type):
             # Set the target to first deployment incase target for the config is not specified
+
+            # deployment = config.attrs_list[0].target_any_local_reference.__self__
+            # if deployment.substrate.__self__.provider_type == "AHV_VM":
+            #    config.type = config_type_map[config_type]
+            # else:
+            #    raise Exception(
             if config.attrs_list[0]["target_any_local_reference"] is None:
                 config.attrs_list[0]["target_any_local_reference"] = ref(
                     cdict["deployment_create_list"][0]
@@ -114,6 +125,15 @@ class ProfileType(EntityType):
                 "No snapshot config found. Cannot use RestoreConfig without a SnapshotConfig."
             )
             sys.exit("Missing restore configs")
+        for config in cdict["patch_list"]:
+            if not isinstance(config, PatchConfigSpecType):
+                LOG.error(
+                    "{} is not an object of PatchConfig. patch_config is an array of PatchConfig objects".format(
+                        config
+                    )
+                )
+                sys.exit("{} is not an instance of PatchConfig".format(config))
+            config = set_config_type_based_on_target(config, "patch")
 
         for config in cdict["restore_config_list"]:
             if not isinstance(config, RestoreConfigSpecType):

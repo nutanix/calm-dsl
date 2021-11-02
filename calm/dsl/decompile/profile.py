@@ -54,6 +54,13 @@ def render_profile_template(cls):
         snapshot_config_list.append(
             render_snapshot_config_template(entity, entity_context, CONFIG_SPEC_MAP)
         )
+    update_config_list = []
+    for idx, entity in enumerate(user_attrs.get("update_configs", [])):
+        CONFIG_SPEC_MAP[entity.name] = {
+            "global_name": "{}.update_configs[{}]".format(cls.__name__, idx),
+            "local_name": "update_configs[{}]".format(idx),
+        }
+        update_config_list.append(render_update_config_template(entity, entity_context))
 
     action_list = []
     for action in user_attrs.get("actions", []):

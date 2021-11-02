@@ -19,22 +19,40 @@ class Application:
     ]
 
     def _wait_for_non_busy_state(self, name, timeout=300):
+        return self._wait_for_states(name, self.NON_BUSY_APP_STATES, timeout)
+
+    def _wait_for_states(self, name, states, timeout=100):
+        LOG.info("Waiting for states: {}".format(states))
         runner = CliRunner()
         result = runner.invoke(cli, ["describe", "app", name, "--out=json"])
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
         app_data = json.loads(result.output)
         LOG.info("App State: {}".format(app_data["status"]["state"]))
-        LOG.debug("App Terminal states: {}".format(self.NON_BUSY_APP_STATES))
+        LOG.debug("App Terminal states: {}".format(states))
 
         is_terminal = True
         poll_interval = 15
-        while app_data["status"]["state"] not in self.NON_BUSY_APP_STATES:
+
+        state = app_data["status"]["state"]
+        while state not in states:
             time.sleep(poll_interval)
             result = runner.invoke(cli, ["describe", "app", name, "--out=json"])
             app_data = json.loads(result.output)
-            LOG.info("App State: {}".format(app_data["status"]["state"]))
+            state = app_data["status"]["state"]
+            LOG.debug("App State: {}".format(state))
             if timeout <= 0:
-                LOG.error("Failed to reach terminal state in 100 seconds")
-                LOG.debug("App: {}".format(app_data))
+                LOG.error("Timed out before reaching desired state")
                 is_terminal = False
                 break
             timeout -= poll_interval

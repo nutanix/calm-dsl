@@ -1,5 +1,6 @@
 import inspect
 import json
+import uuid
 import os
 import sys
 
@@ -15,6 +16,16 @@ from calm.dsl.log import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
+class UpdateConfig:
+    def __new__(
+        cls,
+        name,
+        target=None,
+        patch_attrs=None,
+    ):
+        return patch_config_create(name, target, patch_attrs)
+
+
 class ConfigSpecType(EntityType):
     __schema_name__ = "ConfigSpec"
     __openapi_type__ = "app_config_spec"
@@ -22,6 +33,106 @@ class ConfigSpecType(EntityType):
     def get_ref(cls, kind=None):
         """Note: app_blueprint_deployment kind to be used for pod deployment"""
         return super().get_ref(kind=ConfigSpecType.__openapi_type__)
+
+    def compile(cls):
+        cdict = super().compile()
+        if "patch_attrs" not in cdict or len(cdict["patch_attrs"]) == 0:
+            cdict.pop("patch_attrs", None)
+            return cdict
+        attrs = cdict.pop("patch_attrs")[0]
+        categories_data = []
+        categories = attrs.categories
+        for op_category in categories:
+            for op in op_category["val"]:
+                val = {}
+                val["operation"] = op_category["operation"]
+                val["value"] = op
+                categories_data.append(val)
+        memory = attrs.memory
+        if memory.min_value:
+            memory.min_value = memory.min_value * 1024
+        if memory.max_value:
+            memory.max_value = memory.max_value * 1024
+        if memory.value:
+            memory.value = str(int(float(memory.value) * 1024))
+        target = cdict["attrs_list"][0]["target_any_local_reference"]
+        disk_data = []
+        disks = attrs.disks
+        adapter_name_index_map = {}
+        for disk in disks:
+            if disk.disk_operation in ["delete", "modify"]:
+                val = target.__self__.substrate.__self__.provider_spec.resources.disks[
+                    disk.index
+                ].compile()
+            elif disk.disk_operation in ["add"]:
+                val = disk.disk_value.compile()
+            val["operation"] = disk.disk_operation
+
+            dtype = val["device_properties"]["disk_address"]["adapter_type"]
+            if disk.operation != "add":
+                if dtype not in adapter_name_index_map:
+                    adapter_name_index_map[dtype] = 0
+                else:
+                    adapter_name_index_map[dtype] += 1
+                val["device_properties"]["disk_address"][
+                    "device_index"
+                ] = adapter_name_index_map[dtype]
+            if disk.operation == "":
+                disk.operation = "equal"
+            if disk.value and disk.value != "0":
+                val["disk_size_mib"] = {}
+                val["disk_size_mib"]["editable"] = disk.editable
+                val["disk_size_mib"]["operation"] = disk.operation
+                val["disk_size_mib"]["value"] = str(int(float(disk.value) * 1024))
+            else:
+                prev = val["disk_size_mib"]
+                if not isinstance(prev, dict):
+                    val["disk_size_mib"] = {}
+                    val["disk_size_mib"]["editable"] = disk.editable
+                    val["disk_size_mib"]["operation"] = disk.operation
+                    val["disk_size_mib"]["value"] = str(prev)
+            if disk.min_value:
+                val["disk_size_mib"]["min_value"] = disk.min_value * 1024
+            if disk.max_value:
+                val["disk_size_mib"]["max_value"] = disk.max_value * 1024
+            val.pop("bootable", None)
+            disk_data.append(val)
+        nic_data = []
+        nics = attrs.nics
+        counter = 1
+        for nic in nics:
+            if nic.operation in ["delete", "modify"]:
+                val = target.__self__.substrate.__self__.provider_spec.resources.nics[
+                    int(nic.index)
+                ].compile()
+            elif nic.operation in ["add"]:
+                val = nic.nic_value.compile()
+                nic.index = "A{}".format(counter)
+                counter += 1
+            val["operation"] = nic.operation
+            val["editable"] = nic.editable
+            val["identifier"] = str(nic.index)
+            nic_data.append(val)
+
+        data = {
+            "type": "nutanix",
+            "nic_delete_allowed": attrs.nic_delete,
+            "categories_delete_allowed": attrs.categories_delete,
+            "categories_add_allowed": attrs.categories_add,
+            "disk_delete_allowed": attrs.disk_delete,
+            "num_sockets_ruleset": attrs.numsocket.get_all_attrs(),
+            "memory_size_mib_ruleset": memory.get_all_attrs(),
+            "num_vcpus_per_socket_ruleset": attrs.vcpu.get_all_attrs(),
+            "pre_defined_disk_list": disk_data,
+            "pre_defined_nic_list": nic_data,
+            "pre_defined_categories": categories_data,
+        }
+        cdict["attrs_list"][0]["data"] = data
+        return cdict
+
+
+class PatchConfigSpecType(ConfigSpecType):
+    pass
 
 
 class SnapshotConfigSpecType(ConfigSpecType):
@@ -40,6 +151,7 @@ class ConfigSpecValidator(PropertyValidator, openapi_type="app_config_spec"):
 CONFIG_SPEC_TYPE_MAP = {
     "snapshot": SnapshotConfigSpecType,
     "restore": RestoreConfigSpecType,
+    "patch": PatchConfigSpecType,
 }
 
 
@@ -55,6 +167,27 @@ def _config_create(config_type="snapshot", **kwargs):
     bases = (_config_spec(config_type),)
     config = CONFIG_SPEC_TYPE_MAP[config_type](name, bases, kwargs)
     return config
+
+
+def patch_config_create(
+    name,
+    target=None,
+    patch_attrs=None,
+    description="",
+):
+    attrs = {
+        "target_any_local_reference": target,
+        "data": {},
+        "uuid": str(uuid.uuid4()),
+    }
+    kwargs = {
+        "name": name,
+        "description": description,
+        "attrs_list": [attrs],
+        "patch_attrs": [patch_attrs],
+        "type": "PATCH",
+    }
+    return _config_create(config_type="patch", **kwargs)
 
 
 def snapshot_config_create(

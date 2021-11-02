@@ -56,3 +56,115 @@ calm run action Snapshot_<config_name> -a <app_name>
 calm run action Restore_<config_name> -a <app_name>
 ```
 Snapshot name is supplied as a runtime argument while running the snapshot action, and similarly, recovery group can be chosen while running the restore action.
+
+# App edit
+Adding a update config in a profile will auto-generate a profile-level patch action - <config_name> - which can be run using `calm update app <app-name> <config-name>`.
+- As of now we suport for app edit for `nutanix` provider
+
+## Built-in Models
+### AhvUpdateConfigAttrs
+#### Input Parameters
+- memory (optional) - PatchField.Ahv.memory
+- vcpu (optional) - PatchField.Ahv.vcpu
+- numsocket (optional) - PatchField.Ahv.numsocket
+- disk_delete (optional) - Boolean to make disk delete runtime
+- categories_delete (optional) - Boolean to make category delete runtime
+- nic_delete (optional) - Boolean to make nic delete runtime
+- categories_add (optional) - Boolean to make category add runtime
+- nics (optional) - list of nics of type PatchField.Ahv.Nics
+- disks (optional) - list of disks of type PatchField.Ahv.Disks
+- caegories (optional) - list of category of type PatchField.Ahv.Category
+
+#### Example
+```
+class AhvUpdateAttrs(AhvUpdateConfigAttrs):
+    memory = PatchField.Ahv.memory(value="2", operation="equal", max_val=0, min_val=0, editable=False)
+    vcpu = PatchField.Ahv.vcpu(value="2", operation="equal", max_val=0, min_val=0)
+    numsocket = PatchField.Ahv.numsocket(value="2", operation="equal", max_val=0, min_val=0)
+    disk_delete = True
+    categories_delete = True
+    nic_delete = True
+    categories_add = True
+    nics = [
+        PatchField.Ahv.Nics.delete(index=1, editable=True),
+        PatchField.Ahv.Nics.add(
+            AhvVmNic.DirectNic.ingress(
+                subnet="nested_vms", cluster="auto_cluster_prod_1a5e1b6769ad"
+            ),
+            editable=False,
+        ),
+    ]
+    disks = [
+        PatchField.Ahv.Disks.delete(index=1, editable=True),
+        PatchField.Ahv.Disks.modify(
+            index=2, editable=True, value="2", operation="equal", max_val=4, min_val=1
+        ),
+        PatchField.Ahv.Disks.add(
+            AhvVmDisk.Disk.Pci.allocateOnStorageContainer(10),
+            editable=False,
+        ),
+    ]
+    categories = [
+        PatchField.Ahv.Category.add({"TemplateType": "Vm"}),
+        PatchField.Ahv.Category.delete({"AppFamily": "Demo", "AppType": "Default"}),
+    ]
+```
+
+### PatchField.Ahv.memory
+#### Input Parameters
+- value - updated value
+- operation - operation (equal/increase/decrease)
+- max_value (optional) - max value if editable
+- min_value (optional) - min value if ediatble
+- editable (optional) - editable boolean
+### PatchField.Ahv.vcpu
+#### Input Parameters
+- value - updated value
+- operation - operation (equal/increase/decrease)
+- max_value (optional) - max value if editable
+- min_value (optional) - min value if ediatble
+- editable (optional) - editable boolean
+### PatchField.Ahv.numsocket
+#### Input Parameters
+- value - updated value
+- operation - operation (equal/increase/decrease)
+- max_value (optional) - max value if editable
+- min_value (optional) - min value if ediatble
+- editable (optional) - editable boolean
+### PatchField.Ahv.Nics.add
+#### Input Parameters
+- Ahv nic object
+- editable (optional) - editable boolean
+### PatchField.Ahv.Nics.delete
+- index - index of nic to be deleted
+### PatchField.Ahv.Disks.add
+- Ahv disk object
+- editable (optional) - editable boolean
+### PatchField.Ahv.Disks.modify
+- index - index of disk to be modified
+- value - updated value
+- operation - operation (equal/increase/decrease)
+- max_value (optional) - max value if editable
+- min_value (optional) - min value if ediatble
+- editable (optional) - editable boolean
+### PatchField.Ahv.Disks.delete
+- index - index of disk to be deleted
+### PatchField.Ahv.Category.add
+- dict of category
+### PatchField.Ahv.Category.delete
+- dict of category
+
+### Profile
+- Added `patch_list` attributes.
+```
+from calm.dsl.builtins import AhvUpdateConfigAttrs
+class HelloProfile(Profile):
+
+    deployments = [HelloDeployment]
+    patch_list = [AppEdit.UpdateConfig("Sample update", target=ref(HelloDeployment), patch_attrs=AhvUpdateAttrs)]
+```
+
+### Triggering Patch defined on a running APP
+```
+calm update app example_app example_update_config
+```

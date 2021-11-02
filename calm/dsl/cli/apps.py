@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import json
+import re
 import uuid
 from json import JSONEncoder
 
@@ -20,6 +21,7 @@ from .bps import (
     compile_blueprint,
     create_blueprint,
     parse_launch_runtime_vars,
+    parse_launch_params_attribute,
 )
 from calm.dsl.log import get_logging_handle
 
@@ -223,6 +225,15 @@ def describe_app(app_name, out):
             prefix_len = len("action_")
             action_name = action_name[prefix_len:]
         click.echo("\t" + highlight_text(action_name))
+
+    patch_list = app["status"]["resources"]["patch_list"]
+    click.echo("App Patches [{}]:".format(highlight_text(len(patch_list))))
+    for patch in patch_list:
+        patch_name = patch["name"]
+        if patch_name.startswith("patch_"):
+            prefix_len = len("patch_")
+            patch_name = patch_name[prefix_len:]
+        click.echo("\t" + highlight_text(patch_name))
 
     variable_list = app["status"]["resources"]["variable_list"]
     click.echo("App Variables [{}]".format(highlight_text(len(variable_list))))
@@ -470,7 +481,7 @@ def get_completion_func(screen):
     return is_action_complete
 
 
-def watch_action(runlog_uuid, app_name, client, screen, poll_interval=10):
+def watch_patch_or_action(runlog_uuid, app_name, client, screen, poll_interval=10):
     app = _get_app(client, app_name, screen=screen)
     app_uuid = app["metadata"]["uuid"]
 
@@ -480,7 +491,7 @@ def watch_action(runlog_uuid, app_name, client, screen, poll_interval=10):
     def poll_func():
         return client.application.poll_action_run(url, payload)
 
-    poll_action(poll_func, get_completion_func(screen), poll_interval)
+    poll_runnnable(poll_func, get_completion_func(screen), poll_interval)
 
 
 def watch_app(app_name, screen, app=None, poll_interval=10):
@@ -592,7 +603,7 @@ def watch_app(app_name, screen, app=None, poll_interval=10):
             return (is_complete, msg)
         return (False, "")
 
-    poll_action(poll_func, is_complete, poll_interval=poll_interval)
+    poll_runnnable(poll_func, is_complete, poll_interval=poll_interval)
 
 
 def delete_app(app_names, soft=False):
@@ -635,6 +646,504 @@ def get_action_var_val_from_launch_params(launch_vars, var_name):
         return filtered_launch_vars[0].get("value", {}).get("value", None)
 
     return None
+
+
+def get_patch_runtime_args(
+    app_uuid, deployments, patch_payload, ignore_runtime_variables, runtime_params_file
+):
+    """Returns patch arguments or variable data"""
+
+    patch_name = patch_payload["name"]
+
+    patch_args = {}
+    patch_args["patch"] = patch_payload
+    patch_args["variables"] = []
+
+    attrs_list = patch_payload["attrs_list"]
+
+    if ignore_runtime_variables:
+        return patch_args
+
+    def disk_in_use(substrate, disk):
+        boot_disk = substrate["create_spec"]["resources"]["boot_config"]["boot_device"]
+        return (
+            disk["disk_address"]["adapter_type"]
+            == boot_disk["disk_address"]["adapter_type"]
+            and disk["disk_address"]["device_index"]
+            == boot_disk["disk_address"]["device_index"]
+        )
+
+    def nic_name(nic):
+        return nic["subnet_reference"]["name"] if nic["subnet_reference"] else ""
+
+    def disk_name(disk):
+        return "{}-{}".format(
+            disk["device_properties"]["disk_address"]["adapter_type"],
+            disk["device_properties"]["disk_address"]["device_index"],
+        )
+
+    nic_index_pattern = r".+?\[([0-9]*)\]"
+
+    # If file is supplied for launch params
+    if runtime_params_file:
+        click.echo("Patching values for runtime variables under patch action ...")
+
+        for attrs in attrs_list:
+            patch_items = attrs["data"]
+
+            target_deployment_uuid = attrs["target_any_local_reference"]["uuid"]
+            target_deployment = next(
+                filter(
+                    lambda deployment: deployment["uuid"] == target_deployment_uuid,
+                    deployments,
+                ),
+                None,
+            )
+            if target_deployment == None:
+                LOG.info(
+                    "Target deployment with uuid {} not found. Skipping patch attributes editables".format(
+                        target_deployment_uuid
+                    )
+                )
+                continue
+
+            substrate = target_deployment["substrate"]
+
+            nic_in_use = -1
+            nic_address = substrate["readiness_probe"]["address"]
+            readiness_probe_disabled = substrate["readiness_probe"][
+                "disable_readiness_probe"
+            ]
+            if nic_address:
+                matches = re.search(nic_index_pattern, nic_address)
+                if matches != None and not readiness_probe_disabled:
+                    nic_in_use = int(matches.group(1))
+
+            # Skip nics that are being used by the vm
+            nics = (
+                patch_items["pre_defined_nic_list"]
+                if nic_in_use == -1
+                else patch_items["pre_defined_nic_list"][nic_in_use + 1 :]
+            )
+
+            disks = patch_items["pre_defined_disk_list"]
+
+            patch_attrs_editables = parse_launch_params_attribute(
+                launch_params=runtime_params_file, parse_attribute="patch_attrs"
+            )
+
+            editables = next(
+                filter(
+                    lambda patch_attrs: patch_attrs["patch_attributes_uuid"]
+                    == attrs["uuid"],
+                    patch_attrs_editables,
+                ),
+                None,
+            )
+
+            if editables == None:
+                LOG.info(
+                    "No patch editables found for patch attributes with uuid {}".format(
+                        attrs["uuid"]
+                    )
+                )
+                continue
+
+            vm_config_editables = editables.get("vm_config", {})
+            nic_editables = editables.get("nics", {})
+            disk_editables = editables.get("disks", {})
+            category_editables = editables.get("categories", {})
+
+            # VM config editables
+            for key, value in vm_config_editables.items():
+                patch_item = patch_items[key + "_ruleset"]
+                if (
+                    patch_item["editable"]
+                    and patch_item["min_value"] <= value <= patch_item["max_value"]
+                ):
+                    if patch_item["value"] != value:
+                        LOG.info(
+                            "Attribute {} marked for modify with value {}".format(
+                                key, value
+                            )
+                        )
+                        patch_item["value"] = value
+
+            # NIC delete
+            if patch_items["nic_delete_allowed"]:
+                for i, nic in enumerate(nics):
+                    nic_index = i if nic_in_use == -1 else i + nic_in_use
+                    if nic_index in nic_editables.get("delete", []):
+                        LOG.info('NIC "{}" marked for deletion'.format(nic_name(nic)))
+                        nic["operation"] = "delete"
+
+            nics_not_added = []
+
+            # NIC add
+            for i, nic in enumerate(nics):
+                if nic["operation"] == "add" and nic["editable"]:
+                    nic_edit = next(
+                        filter(
+                            lambda n: n["identifier"] == nic["identifier"],
+                            nic_editables.get("add", []),
+                        ),
+                        None,
+                    )
+                    if (
+                        nic_edit
+                        and nic["subnet_reference"]["uuid"]
+                        != nic_edit["subnet_reference"]["uuid"]
+                    ):
+                        LOG.info(
+                            "NIC with identifier {} marked for modify with subnet {}".format(
+                                nic["identifier"], nic_name(nic_edit)
+                            )
+                        )
+                        nic["subnet_reference"] = nic_edit["subnet_reference"]
+
+                if nic["operation"] == "add" and i in nic_editables.get("delete", []):
+                    LOG.info(
+                        "NIC with identifier {} skipped from addition".format(
+                            nic["identifier"]
+                        )
+                    )
+                    nics_not_added.append(i)
+
+            # Skip adding nics that are deleted
+            nics = [nic for i, nic in enumerate(nics) if i not in nics_not_added]
+
+            patch_items["pre_defined_nic_list"] = nics
+
+            # Disk delete
+            if patch_items["disk_delete_allowed"]:
+                for i, disk in enumerate(disks):
+                    if i in disk_editables.get("delete", []) and not disk_in_use(
+                        substrate, disk["device_properties"]
+                    ):
+                        LOG.info("Disk {} marked for deletion".format(disk_name(disk)))
+                        disk["operation"] = "delete"
+
+            # Disk modify
+            for disk in disks:
+                if (
+                    disk["operation"] == "modify"
+                    and disk["disk_size_mib"]
+                    and disk["disk_size_mib"]["editable"]
+                ):
+                    disk_edit = next(
+                        filter(
+                            lambda d: disk_name(d) == disk_name(disk),
+                            disk_editables.get("modify", []),
+                        ),
+                        None,
+                    )
+                    if (
+                        disk_edit
+                        and disk["disk_size_mib"]["min_value"]
+                        <= disk_edit["disk_size_mib"]["value"]
+                        <= disk["disk_size_mib"]["max_value"]
+                    ):
+                        if (
+                            disk["disk_size_mib"]["value"]
+                            != disk_edit["disk_size_mib"]["value"]
+                        ):
+                            LOG.info(
+                                "Disk {} marked for modify with size {}".format(
+                                    disk_name(disk), disk_edit["disk_size_mib"]["value"]
+                                )
+                            )
+                            disk["disk_size_mib"]["value"] = disk_edit["disk_size_mib"][
+                                "value"
+                            ]
+
+            disks_not_added = []
+
+            # Disk add
+            for i, disk in enumerate(disks):
+                if (
+                    disk["operation"] == "add"
+                    and disk["disk_size_mib"]
+                    and disk["disk_size_mib"]["editable"]
+                ):
+                    disk_edit = next(
+                        filter(
+                            lambda d: i == d["index"],
+                            disk_editables.get("add", []),
+                        ),
+                        None,
+                    )
+                    if (
+                        disk_edit
+                        and disk["disk_size_mib"]["min_value"]
+                        <= disk_edit["disk_size_mib"]["value"]
+                        <= disk["disk_size_mib"]["max_value"]
+                    ):
+                        if (
+                            disk["disk_size_mib"]["value"]
+                            != disk_edit["disk_size_mib"]["value"]
+                        ):
+                            LOG.info(
+                                "Disk {} marked for addition with size {}".format(
+                                    disk_name(disk), disk_edit["disk_size_mib"]["value"]
+                                )
+                            )
+                            disk["disk_size_mib"]["value"] = disk_edit["disk_size_mib"][
+                                "value"
+                            ]
+                if disk["operation"] == "add" and i in disk_editables.get("delete", []):
+                    LOG.info("Disk {} skipped from addition".format(disk_name(disk)))
+                    disks_not_added.append(i)
+
+            # Skip adding disks that are deleted
+            disks = [disk for i, disk in enumerate(disks) if i not in disks_not_added]
+
+            patch_items["pre_defined_disk_list"] = disks
+
+            categories = patch_items["pre_defined_categories"]
+
+            # Category delete
+            if patch_items["categories_delete_allowed"]:
+                for i, category in enumerate(categories):
+                    if i in category_editables.get("delete", []):
+                        LOG.info(
+                            "Category {} marked for deletion".format(category["value"])
+                        )
+                        category["operation"] = "delete"
+
+            # Category add
+            if patch_items["categories_add_allowed"]:
+                for category in category_editables.get("add", []):
+                    LOG.info("Category {} marked for addition".format(category))
+                    patch_items["pre_defined_categories"].append(
+                        {"operation": "add", "value": category}
+                    )
+
+        return patch_args
+
+    # Else prompt for runtime variable values
+
+    click.echo("Please provide values for runtime variables in the patch action")
+
+    for attrs in attrs_list:
+
+        patch_items = attrs["data"]
+        target_deployment_uuid = attrs["target_any_local_reference"]["uuid"]
+
+        click.echo(
+            "Patch editables targeted at deployment {} are as follows \n {}".format(
+                target_deployment_uuid,
+                json.dumps(patch_items, indent=4, separators=(",", ": ")),
+            )
+        )
+
+        nic_in_use = -1
+        disk_in_use = ""
+
+        # find out which nic and disk is currently used
+        for deployment in deployments:
+            if deployment["uuid"] == target_deployment_uuid:
+                substrate = deployment["substrate"]
+
+                nic_address = substrate["readiness_probe"]["address"]
+                readiness_probe_disabled = substrate["readiness_probe"][
+                    "disable_readiness_probe"
+                ]
+                if nic_address:
+                    matches = re.search(nic_index_pattern, nic_address)
+                    if matches != None and not readiness_probe_disabled:
+                        nic_in_use = int(matches.group(1))
+
+                disk_address = substrate["create_spec"]["resources"]["boot_config"][
+                    "boot_device"
+                ]["disk_address"]
+                disk = "{}-{}".format(
+                    disk_address["adapter_type"], disk_address["device_index"]
+                )
+                disk_in_use = disk
+
+        def prompt_value(patch_item, display_message):
+            min_value = (
+                patch_item["value"]
+                if patch_item["operation"] == "increase"
+                else patch_item["min_value"]
+            )
+            max_value = (
+                patch_item["value"]
+                if patch_item["operation"] == "decrease"
+                else patch_item["max_value"]
+            )
+            click.echo()
+            return click.prompt(
+                display_message,
+                default=highlight_text(patch_item["value"]),
+                type=click.IntRange(min=min_value, max=max_value),
+            )
+
+        def prompt_bool(display_message):
+            click.echo()
+            return click.prompt(
+                display_message,
+                default=highlight_text("n"),
+                type=click.Choice(["y", "n"]),
+            )
+
+        click.echo("\n\t\t\t", nl=False)
+        click.secho("VM CONFIGURATION", underline=True, bold=True)
+
+        # Sockets, cores and memory modify
+        display_names = {
+            "num_sockets_ruleset": "vCPUs",
+            "num_vcpus_per_socket_ruleset": "Cores per vCPU",
+            "memory_size_mib_ruleset": "Memory (MiB)",
+        }
+        for ruleset in display_names:
+            patch_item = patch_items[ruleset]
+            if patch_item["editable"]:
+                new_val = prompt_value(
+                    patch_item,
+                    "Enter value for {}".format(display_names[ruleset]),
+                )
+                patch_item["value"] = new_val
+
+        nics = (
+            patch_items["pre_defined_nic_list"]
+            if nic_in_use == -1
+            else patch_items["pre_defined_nic_list"][nic_in_use + 1 :]
+        )
+
+        click.echo("\n\t\t\t", nl=False)
+        click.secho("NETWORK CONFIGURATION", underline=True, bold=True)
+
+        # NIC add
+        nics_not_added = []
+        for i, nic in enumerate(nics):
+            if nic["operation"] == "add":
+                to_add = prompt_bool(
+                    'Do you want to add the NIC "{}" with identifier {}'.format(
+                        nic["subnet_reference"]["name"], nic["identifier"]
+                    )
+                )
+                if to_add == "n":
+                    nics_not_added.append(i)
+
+        # remove NICs not added from patch list
+        nics = [nic for i, nic in enumerate(nics) if i not in nics_not_added]
+
+        # NIC delete
+        if patch_items["nic_delete_allowed"] and len(nics) > 0:
+            to_delete = prompt_bool("Do you want to delete a NIC")
+
+            if to_delete == "y":
+                click.echo()
+                click.echo("Choose from following options")
+                for i, nic in enumerate(nics):
+                    click.echo(
+                        "\t{}. NIC-{} {}".format(
+                            highlight_text(i), i + 1, nic["subnet_reference"]["name"]
+                        )
+                    )
+
+                click.echo()
+                nic_to_delete = click.prompt(
+                    "Choose nic to delete",
+                    default=0,
+                    type=click.IntRange(max=len(nics)),
+                )
+
+                nics[nic_to_delete]["operation"] = "delete"
+                LOG.info(
+                    "Delete NIC-{} {}".format(
+                        nic_to_delete + 1,
+                        nics[nic_to_delete]["subnet_reference"]["name"],
+                    )
+                )
+        patch_items["pre_defined_nic_list"] = nics
+
+        click.echo("\n\t\t\t", nl=False)
+        click.secho("STORAGE CONFIGURATION", underline=True, bold=True)
+
+        # Disk delete
+        disks = list(
+            filter(
+                lambda disk: disk_name(disk) != disk_in_use,
+                patch_items["pre_defined_disk_list"],
+            )
+        )
+        if patch_items["disk_delete_allowed"] and len(disks) > 0:
+            to_delete = prompt_bool("Do you want to delete a disk")
+            if to_delete == "y":
+                click.echo()
+                click.echo("Choose from following options")
+                for i, disk in enumerate(disks):
+                    click.echo(
+                        "\t{}. DISK-{} {} {}".format(
+                            highlight_text(i),
+                            i + 1,
+                            disk_name(disk),
+                            disk["disk_size_mib"]["value"],
+                        )
+                    )
+                click.echo()
+                disk_to_delete = click.prompt(
+                    "Choose disk to delete",
+                    default=0,
+                    type=click.IntRange(max=len(disks)),
+                )
+                disks[disk_to_delete]["operation"] = "delete"
+                LOG.info(
+                    "Delete DISK-{} {}".format(
+                        disk_to_delete + 1, disk_name(disks[disk_to_delete])
+                    )
+                )
+
+        # Disk modify
+        for disk in disks:
+            disk_size = disk["disk_size_mib"]
+            if disk_size != None and disk_size["editable"]:
+                new_val = prompt_value(
+                    disk_size,
+                    "Enter size for disk {}".format(disk_name(disk)),
+                )
+                disk_size["value"] = new_val
+        patch_items["pre_defined_disk_list"] = disks
+
+        click.echo("\n\t\t\t", nl=False)
+        click.secho("CATEGORIES", underline=True, bold=True)
+
+        # Category delete
+        categories = patch_items["pre_defined_categories"]
+        if patch_items["categories_delete_allowed"] and len(categories) > 0:
+            to_delete = prompt_bool("Do you want to delete a category")
+            if to_delete == "y":
+                click.echo()
+                click.echo("Choose from following options")
+                for i, category in enumerate(categories):
+                    click.echo("\t{}. {}".format(highlight_text(i), category["value"]))
+                click.echo()
+                category_to_delete = click.prompt(
+                    "Choose category to delete",
+                    default=0,
+                    type=click.IntRange(max=len(categories)),
+                )
+                categories[category_to_delete]["operation"] = "delete"
+                LOG.info(
+                    "Delete category {}".format(categories[category_to_delete]["value"])
+                )
+
+        # Category add
+        if patch_items["categories_add_allowed"]:
+            to_add = prompt_bool("Add a category?")
+            while to_add == "y":
+                click.echo()
+                new_val = click.prompt(
+                    "Enter value for category", default="", show_default=False
+                )
+                patch_items["pre_defined_categories"].append(
+                    {"operation": "add", "value": new_val}
+                )
+                to_add = prompt_bool("Add another category?")
+
+    return patch_args
 
 
 def get_action_runtime_args(
@@ -720,6 +1229,94 @@ def get_action_runtime_args(
     return action_args
 
 
+def run_patches(
+    app_name,
+    patch_name,
+    watch,
+    ignore_runtime_variables=False,
+    runtime_params_file=None,
+):
+    client = get_api_client()
+
+    app = _get_app(client, app_name)
+    app_spec = app["spec"]
+    app_id = app["metadata"]["uuid"]
+
+    calm_patch_name = "patch_" + patch_name.lower()
+    patch_payload = next(
+        (
+            patch
+            for patch in app_spec["resources"]["patch_list"]
+            if patch["name"] == calm_patch_name or patch["name"] == patch_name
+        ),
+        None,
+    )
+    if not patch_payload:
+        LOG.error("No patch found matching name {}".format(patch_name))
+        sys.exit(-1)
+
+    patch_id = patch_payload["uuid"]
+
+    deployments = app_spec["resources"]["deployment_list"]
+
+    patch_args = get_patch_runtime_args(
+        app_uuid=app_id,
+        deployments=deployments,
+        patch_payload=patch_payload,
+        ignore_runtime_variables=ignore_runtime_variables,
+        runtime_params_file=runtime_params_file,
+    )
+
+    # Hit action run api (with metadata and minimal spec: [args, target_kind, target_uuid])
+    app.pop("status")
+    app["spec"] = {
+        "args": patch_args,
+        "target_kind": "Application",
+        "target_uuid": app_id,
+    }
+    res, err = client.application.run_patch(app_id, patch_id, app)
+
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    response = res.json()
+    runlog_uuid = response["status"]["runlog_uuid"]
+    click.echo(
+        "Patch is triggered. Got Runlog uuid: {}".format(highlight_text(runlog_uuid))
+    )
+
+    if watch:
+
+        def display_patch(screen):
+            screen.clear()
+            screen.print_at(
+                "Fetching runlog tree for patch '{}'".format(patch_name), 0, 0
+            )
+            screen.refresh()
+            watch_patch_or_action(
+                runlog_uuid,
+                app_name,
+                get_api_client(),
+                screen,
+            )
+            screen.wait_for_input(10.0)
+
+        Display.wrapper(display_patch, watch=True)
+
+    else:
+        click.echo("")
+        click.echo(
+            "# Hint1: You can run patch in watch mode using: calm run patch {} --app {} --watch".format(
+                patch_name, app_name
+            )
+        )
+        click.echo(
+            "# Hint2: You can watch patch runlog on the app using: calm watch action_runlog {} --app {}".format(
+                runlog_uuid, app_name
+            )
+        )
+
+
 def get_snapshot_name_arg(config, config_task_id):
     default_value = next(
         (
@@ -794,7 +1391,6 @@ def run_actions(
     app_name, action_name, watch, patch_editables=False, runtime_params_file=None
 ):
     client = get_api_client()
-
     if action_name.lower() == SYSTEM_ACTIONS.CREATE:
         click.echo(
             "The Create Action is triggered automatically when you deploy a blueprint. It cannot be run separately."
@@ -896,7 +1492,7 @@ def run_actions(
                 "Fetching runlog tree for action '{}'".format(action_name), 0, 0
             )
             screen.refresh()
-            watch_action(
+            watch_patch_or_action(
                 runlog_uuid,
                 app_name,
                 get_api_client(),
@@ -920,7 +1516,7 @@ def run_actions(
         )
 
 
-def poll_action(poll_func, completion_func, poll_interval=10):
+def poll_runnnable(poll_func, completion_func, poll_interval=10):
     # Poll every 10 seconds on the app status, for 5 mins
     maxWait = 5 * 60
     count = 0

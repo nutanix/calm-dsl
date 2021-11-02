@@ -34,7 +34,6 @@ from .models.utils import (
 from .models.provider_spec import provider_spec, read_provider_spec, read_spec
 from .models.provider_spec import read_ahv_spec, read_vmw_spec
 from .models.readiness_probe import ReadinessProbe, readiness_probe, ReadinessProbeType
-
 from .models.ahv_vm_nic import ahv_vm_nic, AhvVmNic, AhvNicType
 from .models.ahv_vm_disk import ahv_vm_disk, AhvVmDisk, AhvDiskType
 from .models.ahv_vm_gpu import ahv_vm_gpu, AhvVmGpu, AhvGpuType
@@ -53,10 +52,17 @@ from .models.substrate import Substrate, substrate, SubstrateType
 from .models.deployment import Deployment, deployment, DeploymentType
 from .models.pod_deployment import PODDeployment, pod_deployment
 
+from .models.config_attrs import AhvUpdateConfigAttrs, PatchDataField
 from .models.app_protection import AppProtection
 from .models.config_spec import ConfigSpecType
+from .models.app_edit import AppEdit
+from .models.patch_field import PatchField
 
 from .models.profile import Profile, profile, ProfileType
+
+from .models.config_spec import (
+    UpdateConfig,
+)
 
 from .models.blueprint import Blueprint, blueprint, BlueprintType
 

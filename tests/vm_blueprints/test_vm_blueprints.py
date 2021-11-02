@@ -122,6 +122,7 @@ class TestVmBlueprints:
         for profile in generated_json["app_profile_list"]:
             profile.pop("snapshot_config_list", None)
             profile.pop("restore_config_list", None)
+            profile.pop("patch_list", None)
         known_json = json.loads(open(bp_output_file_path).read())
 
         # Replaces ahv images and nic & uuids and account_uuid

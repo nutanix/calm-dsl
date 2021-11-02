@@ -2,13 +2,14 @@ import click
 
 from calm.dsl.api import get_api_client
 
-from .main import main, get, describe, delete, run, watch, download, create
+from .main import main, get, describe, delete, run, watch, download, create, update
 from .utils import Display, FeatureFlagGroup
 from .apps import (
     get_apps,
     describe_app,
     run_actions,
-    watch_action,
+    run_patches,
+    watch_patch_or_action,
     watch_app,
     delete_app,
     download_runlog,
@@ -192,7 +193,9 @@ def _watch_action_runlog(runlog_uuid, app_name, poll_interval):
     """Watch an app"""
 
     def display_action(screen):
-        watch_action(runlog_uuid, app_name, get_api_client(), screen, poll_interval)
+        watch_patch_or_action(
+            runlog_uuid, app_name, get_api_client(), screen, poll_interval
+        )
         screen.wait_for_input(10.0)
 
     Display.wrapper(display_action, watch=True)
@@ -284,3 +287,35 @@ def restart_app(app_name, watch):
     """Restarts an application"""
 
     run_actions(app_name=app_name, action_name="restart", watch=watch)
+
+
+@update.command("app", feature_min_version="3.3.0")
+@click.argument("app_name")
+@click.argument("patch_name")
+@click.option(
+    "--ignore_runtime_variables",
+    "-i",
+    is_flag=True,
+    default=False,
+    help="Ignore runtime variables and use defaults",
+)
+@click.option(
+    "--runtime_params",
+    "-r",
+    "runtime_params_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to python file for runtime editables",
+)
+@click.option("--watch/--no-watch", "-w", default=False, help="Watch scrolling output")
+def update_app(
+    app_name, patch_name, watch, ignore_runtime_variables, runtime_params_file
+):
+    """Updates an application"""
+
+    run_patches(
+        app_name=app_name,
+        patch_name=patch_name,
+        watch=watch,
+        ignore_runtime_variables=ignore_runtime_variables,
+        runtime_params_file=runtime_params_file,
+    )

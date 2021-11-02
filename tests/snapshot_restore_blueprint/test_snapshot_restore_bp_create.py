@@ -105,6 +105,7 @@ class TestSnapshotRestoreBlueprint:
         generated_json["resources"]["substrate_definition_list"][0]["create_spec"][
             "resources"
         ]["nic_list"][0].pop("subnet_reference", None)
+        generated_json["resources"]["app_profile_list"][0].pop("patch_list", None)
 
         # Assert whether account_uuid is present in generated_json
         sub_account_uuid = generated_json["resources"]["substrate_definition_list"][0][

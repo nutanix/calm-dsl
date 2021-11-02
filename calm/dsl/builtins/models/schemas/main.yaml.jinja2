@@ -3,6 +3,7 @@
 {% import "provider_spec.yaml.jinja2" as provider_spec %}
 {% import "substrate.yaml.jinja2" as substrate %}
 {% import "deployment.yaml.jinja2" as deployment %}
+{% import "config_attrs.yaml.jinja2" as config_attrs %}
 {% import "config_spec.yaml.jinja2" as config_spec %}
 {% import "profile.yaml.jinja2" as profile %}
 {% import "blueprint.yaml.jinja2" as blueprint %}
@@ -43,6 +44,10 @@
 
 {% macro Schemas() -%}
 
+{{ config_attrs.AhvDiskRulesetSchema() }}
+{{ config_attrs.AhvNicRulesetSchema() }}
+{{ config_attrs.PatchDataFieldSchema() }}
+{{ config_attrs.ConfigAttrsSchema() }}
 {{ config_spec.ConfigSpecSchema() }}
 {{ port.PortSchema() }}
 {{ service.ServiceSchema() }}
