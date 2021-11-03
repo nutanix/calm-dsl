@@ -63,8 +63,8 @@ def get_vm_recovery_points(name, limit, offset, quiet, out, project_name, accoun
     payload = {
         "filter": "account_uuid=={}".format(account_uuid),
         "length": limit,
-        "offset": offset
-        }
+        "offset": offset,
+    }
     if name:
         payload["filter"] += ";name=={}".format(name)
 
