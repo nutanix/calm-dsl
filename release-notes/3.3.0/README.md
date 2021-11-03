@@ -1,23 +1,18 @@
-# Brownfield Application
-
-## CLI commands
-
-- `calm get brownfield vms -p <project> -a <account_name>`: Added account cli option, that user should provide if there are multiple accounts in the given project.
-
-- `calm launch bp <bp_name> -b <brownfield_deployments_file_location> -n <app_name>`. Command will launch existing blueprint using brownfield deployments to create brownfield application. Sample file look [here](examples/Brownfield/separate_file_example/brownfield_deployments.py).
 
 # Snapshot Restore
 Adding a snapshot (or restore) config in a profile will auto-generate a profile-level snapshot (or restore) action - Snapshot_<config_name> (or Restore_<config_name>) - which can be run using `calm run action`.
+- As of now we suport for snapshot-restore for `nutanix` provider.
+- Sample [Blueprint](examples/AHV_CONFIG/snapshot_restore/demo_blueprint.py)  containg snapshot-restore configuration.
 
 ## CLI commands
-- `calm get protection_policies -p <project>`: Lists protection policies corresponding to the project (create/update/delete using DSL not supported in this release)
+- `calm get protection-policies -p <project>`: Lists protection policies corresponding to the project (create/update/delete using DSL not supported in this release)
 
 ## Built-in Models
 
 ### AppProtection.ProtectionPolicy
 #### Input  Parameters
 - <ins>name</ins>
-- rule_name - name of the protection rule (from `calm get protection_policies`)
+- rule_name - name of the protection rule (from `calm get protection-policies`)
 
 ### AppProtection.SnapshotConfig
 #### Input Parameters
@@ -47,8 +42,6 @@ class HelloProfile(Profile):
     snapshot_configs = [AppProtection.SnapshotConfig("Sample Config2", policy=AppProtection.ProtectionPolicy("policy1"), restore_config=ref(restore_configs[0]))]
 ```
 
-[Sample Blueprint](examples/AHV_CONFIG/snapshot_restore/demo_blueprint.py).
-
 ## Running Snapshot and Restore Actions
 Snapshot and Restore Actions can be run like any other profile-level action using `calm run action`.
 ```
@@ -58,8 +51,9 @@ calm run action Restore_<config_name> -a <app_name>
 Snapshot name is supplied as a runtime argument while running the snapshot action, and similarly, recovery group can be chosen while running the restore action.
 
 # App edit
-Adding a update config in a profile will auto-generate a profile-level patch action - <config_name> - which can be run using `calm update app <app-name> <config-name>`.
-- As of now we suport for app edit for `nutanix` provider
+Adding a update config in a profile will auto-generate a profile-level patch action - <config_name> - which can be run using `calm update app <app-name> <config-name>`. 
+- As of now we suport for app edit for `nutanix` provider.
+- Sample [Blueprint](examples/multivm_app_edit/blueprint.py) containing app-edit configuration
 
 ## Built-in Models
 ### AhvUpdateConfigAttrs
@@ -168,3 +162,68 @@ class HelloProfile(Profile):
 ```
 calm update app example_app example_update_config
 ```
+
+# *Brownfield Application
+
+## CLI commands
+
+- `calm get brownfield vms -p <project> -a <account_name>`: Added account cli option, that user should provide if there are multiple accounts in the given project.
+
+- `calm launch bp <bp_name> -b <brownfield_deployments_file_location> -n <app_name>`. Command will launch existing blueprint using brownfield deployments to create brownfield application. Sample file look [here](examples/Brownfield/separate_file_example/brownfield_deployments.py). Note: Name of deployment which user wants to override should be available in blueprint.
+
+
+# *Vm Recovery Points
+
+ From Calm v3.3.0, user can create and launch a blueprint having vm-recovery-point instead of vm-configuration for ahv substrates. Note: Only CrashConsistent vm_recovery_point are allowed. Sample file look [here](tests/vm_recovery_point/blueprint.py)
+
+ ## CLI commands
+
+ - `calm get vm-recovery-points -p <project_name> -a <account_name>`: Command will list the vm recovery points for given account in a project.
+
+## Builtin-Models
+
+- Added `AhvVmRecoveryResources` model which specify the vm resources to be overrided after recovery of vm.
+
+```
+class MyAhvVmResources(AhvVmRecoveryResources):
+    """
+        [NumVcpusPerSocket, NumSockets, MemorySizeMb, NicList, GPUList, vm_name] can be overrided
+    """
+
+    memory = 4
+    vCPUs = 2
+    cores_per_vCPU = 1
+    nics = [AhvVmNic(NETWORK1)]
+```
+
+- Added `Ref.RecoveryPoint(name, uuid)` which consumes name/uuid of recovery point and returns ref object for recovery point.
+
+```
+Ref.RecoveryPoint(name=VM_RECOVERY_POINT_NAME)
+```
+
+- Added `ahv_vm_recovery_spec` helper which consumes vm-recovery-point details and returns the ahv-vm-recovery-spec object.
+
+```
+ahv_vm_recovery_spec(
+    recovery_point=Ref.RecoveryPoint(name=VM_RECOVERY_POINT_NAME),
+    vm_name="AhvRestoredVm",
+    vm_override_resources=MyAhvVmResources,
+)
+```
+
+- Added `vm_recovery_spec` attribute which specify the vm_recovery_spec used for the given substrare.
+
+```
+class AhvVmSubstrate(Substrate):
+    """AHV VM config given by reading a spec file"""
+
+    provider_type = "AHV_VM"
+    vm_recovery_spec = ahv_vm_recovery_spec(
+        recovery_point=Ref.RecoveryPoint(name=VM_RECOVERY_POINT_NAME),
+        vm_name="AhvRestoredVm",
+        vm_override_resources=MyAhvVmResources,
+    )
+```
+
+*: Features are Calm-DSL specific. No support for UX/UI is available in Calm v3.3.0.

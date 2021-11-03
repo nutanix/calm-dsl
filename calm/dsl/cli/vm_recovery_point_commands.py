@@ -11,8 +11,7 @@ from calm.dsl.log import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-# TODO break command suffix
-@get.command("vm_recovery_points")
+@get.command("vm-recovery-points")
 @click.option(
     "--name", "-n", default=None, help="Search for vm recovery points by name"
 )
@@ -61,7 +60,11 @@ def get_vm_recovery_points(name, limit, offset, quiet, out, project_name, accoun
     account_uuid = account_detail["account"]["uuid"]
     LOG.info("Using account '{}' for listing brownfield vms".format(account_name))
 
-    payload = {"filter": "account_uuid=={}".format(account_uuid)}
+    payload = {
+        "filter": "account_uuid=={}".format(account_uuid),
+        "length": limit,
+        "offset": offset
+        }
     if name:
         payload["filter"] += ";name=={}".format(name)
 

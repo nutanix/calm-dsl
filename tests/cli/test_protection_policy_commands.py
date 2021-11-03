@@ -13,7 +13,7 @@ LOG = get_logging_handle(__name__)
 class TestProtectionPolicyCommands:
     def test_protection_policies_list(self):
         runner = CliRunner()
-        result = runner.invoke(cli, ["get", "protection_policies"])
+        result = runner.invoke(cli, ["get", "protection-policies"])
         if result.exit_code:
             cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
             LOG.debug(

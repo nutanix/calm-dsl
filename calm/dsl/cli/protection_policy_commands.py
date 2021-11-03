@@ -7,7 +7,7 @@ from calm.dsl.log import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-@get.command("protection_policies")
+@get.command("protection-policies")
 @click.option("--limit", "-l", default=20, help="Number of results to return")
 @click.option(
     "--offset", "-o", default=0, help="Offset results by the specified amount"

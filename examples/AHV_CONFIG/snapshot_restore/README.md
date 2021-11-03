@@ -27,7 +27,7 @@
 
 ##### Input  Parameters
 - <ins>name</ins>
-- rule_name - name of the protection rule (from `calm get protection_policies`)
+- rule_name - name of the protection rule (from `calm get protection-policies`)
 
 ### Usage
 
