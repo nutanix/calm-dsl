@@ -1,11 +1,15 @@
 import click
-from ruamel import yaml
 import uuid
 
-from calm.dsl.api import get_resource_api, get_api_client
-from calm.dsl.providers import get_provider_interface
-from .constants import AWS as aws
+from collections import OrderedDict
+from ruamel import yaml
+from distutils.version import LooseVersion as LV
 
+from calm.dsl.providers import get_provider_interface
+from calm.dsl.api import get_resource_api, get_api_client
+from calm.dsl.store.version import Version
+
+from .constants import AWS as aws
 
 Provider = get_provider_interface()
 
@@ -26,10 +30,80 @@ class AwsVmProvider(Provider):
         """returns object to call ahv provider specific apis"""
 
         client = get_api_client()
-        return AWS(client.connection)
+        calm_version = Version.get_version("Calm")
+        api_handlers = AWSBase.api_handlers
+
+        latest_version = "0"
+        for version in api_handlers.keys():
+            if LV(version) <= LV(calm_version) and LV(latest_version) < LV(version):
+                latest_version = version
+
+        api_handler = api_handlers[latest_version]
+        return api_handler(client.connection)
 
 
-class AWS:
+class AWSBase:
+    "Base class for AWS provider specific apis"
+
+    api_handlers = OrderedDict()
+    __api_version__ = None
+
+    def __init_subclass__(cls, **kwargs) -> None:
+        super().__init_subclass__(**kwargs)
+
+        version = getattr(cls, "__api_version__")
+        if version:
+            AWSBase.api_handlers[version] = cls
+
+    @classmethod
+    def get_version(cls):
+        return getattr(cls, "__api_version__")
+
+    def regions(self, *args, **kwargs):
+        raise NotImplementedError("regions call not implemented")
+
+    def machine_types(self, *args, **kwargs):
+        raise NotImplementedError("machine_types call not implemented")
+
+    def volume_types(self, *args, **kwargs):
+        raise NotImplementedError("volume_types call not implemented")
+
+    def availibility_zones(self, *args, **kwargs):
+        raise NotImplementedError("availibility_zones call not implemented")
+
+    def mixed_images(self, *args, **kwargs):
+        raise NotImplementedError("mixed_images call not implemented")
+
+    def roles(self, *args, **kwargs):
+        raise NotImplementedError("roles call not implemented")
+
+    def VPCs(self, *args, **kwargs):
+        raise NotImplementedError("VPCs call not implemented")
+
+    def key_pairs(self, *args, **kwargs):
+        raise NotImplementedError("key_pairs call not implemented")
+
+    def security_groups(self, *args, **kwargs):
+        raise NotImplementedError("security_groups call not implemented")
+
+    def subnets(self, *args, **kwargs):
+        raise NotImplementedError("subnets call not implemented")
+
+
+class AWSV0(AWSBase):
+    """aws api object for calm version < 3.2.0"""
+
+    __api_version__ = "0"
+    MACHINE_TYPES = "aws/machine_types"
+    VOLUME_TYPES = "aws/volume_types"
+    AVAILABILTY_ZONES = "aws/availability_zones"
+    MIXED_IMAGES = "aws/mixed_images"
+    ROLES = "aws/roles"
+    KEY_PAIRS = "aws/key_pairs"
+    VPCS = "aws/vpcs"
+    SECURITY_GROUPS = "aws/security_groups"
+    SUBNETS = "aws/subnets"
+
     def __init__(self, connection):
         self.connection = connection
 
@@ -49,7 +123,7 @@ class AWS:
         return region_list
 
     def machine_types(self):
-        Obj = get_resource_api(aws.MACHINE_TYPES, self.connection)
+        Obj = get_resource_api(self.MACHINE_TYPES, self.connection)
         res, err = Obj.list()
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -62,7 +136,7 @@ class AWS:
         return entity_list
 
     def volume_types(self):
-        Obj = get_resource_api(aws.VOLUME_TYPES, self.connection)
+        Obj = get_resource_api(self.VOLUME_TYPES, self.connection)
         res, err = Obj.list()
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -79,7 +153,7 @@ class AWS:
         payload = {
             "filter": "account_uuid=={};region=={}".format(account_id, region_name)
         }
-        Obj = get_resource_api(aws.AVAILABILTY_ZONES, self.connection)
+        Obj = get_resource_api(self.AVAILABILTY_ZONES, self.connection)
         res, err = Obj.list(payload)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -101,7 +175,7 @@ class AWS:
         payload = {
             "filter": "account_uuid=={};region=={}".format(account_id, region_name)
         }
-        Obj = get_resource_api(aws.MIXED_IMAGES, self.connection)
+        Obj = get_resource_api(self.MIXED_IMAGES, self.connection)
         res, err = Obj.list(payload)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -122,7 +196,7 @@ class AWS:
         payload = {
             "filter": "account_uuid=={};region=={}".format(account_id, region_name)
         }
-        Obj = get_resource_api(aws.ROLES, self.connection)
+        Obj = get_resource_api(self.ROLES, self.connection)
         res, err = Obj.list(payload)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -139,7 +213,7 @@ class AWS:
         payload = {
             "filter": "account_uuid=={};region=={}".format(account_id, region_name)
         }
-        Obj = get_resource_api(aws.KEY_PAIRS, self.connection)
+        Obj = get_resource_api(self.KEY_PAIRS, self.connection)
         res, err = Obj.list(payload)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -156,7 +230,7 @@ class AWS:
         payload = {
             "filter": "account_uuid=={};region=={}".format(account_id, region_name)
         }
-        Obj = get_resource_api(aws.VPCS, self.connection)
+        Obj = get_resource_api(self.VPCS, self.connection)
         res, err = Obj.list(payload)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -179,7 +253,7 @@ class AWS:
             )
         }
 
-        Obj = get_resource_api(aws.SECURITY_GROUPS, self.connection)
+        Obj = get_resource_api(self.SECURITY_GROUPS, self.connection)
         res, err = Obj.list(payload)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -202,7 +276,219 @@ class AWS:
         }
 
         subnet_list = []
-        Obj = get_resource_api(aws.SUBNETS, self.connection)
+        Obj = get_resource_api(self.SUBNETS, self.connection)
+        res, err = Obj.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        res = res.json()
+
+        for entity in res["entities"]:
+            subnet_id = entity["status"]["resources"]["id"]
+            subnet_list.append(subnet_id)
+
+        return subnet_list
+
+
+class AWSV1(AWSBase):
+    """aws api object for calm version >= 3.2.0"""
+
+    __api_version__ = "3.2.0"
+    MACHINE_TYPES = "aws/v1/machine_types"
+    VOLUME_TYPES = "aws/v1/volume_types"
+    AVAILABILTY_ZONES = "aws/v1/availability_zones"
+    MIXED_IMAGES = "aws/v1/mixed_images"
+    ROLES = "aws/v1/roles"
+    KEY_PAIRS = "aws/v1/key_pairs"
+    VPCS = "aws/v1/vpcs"
+    SECURITY_GROUPS = "aws/v1/security_groups"
+    SUBNETS = "aws/v1/subnets"
+    calm_api = True  # to enable v3.0 resource api
+
+    def __init__(self, connection):
+        self.connection = connection
+
+    def regions(self, account_id):
+        Obj = get_resource_api("accounts", self.connection, calm_api=self.calm_api)
+        res, err = Obj.read(account_id)  # TODO remove it from here
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        region_list = []
+        res = res.json()
+        entities = res["spec"]["resources"]["data"]["regions"]
+
+        for entity in entities:
+            region_list.append(entity["name"])
+
+        return region_list
+
+    def machine_types(self):
+        Obj = get_resource_api(
+            self.MACHINE_TYPES, self.connection, calm_api=self.calm_api
+        )
+        res, err = Obj.list()
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        entity_list = []
+        res = res.json()
+        for entity in res["entities"]:
+            entity_list.append(entity["metadata"]["name"])
+
+        return entity_list
+
+    def volume_types(self):
+        Obj = get_resource_api(
+            self.VOLUME_TYPES, self.connection, calm_api=self.calm_api
+        )
+        res, err = Obj.list()
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        entity_list = []
+        res = res.json()
+        for entity in res["entities"]:
+            entity_list.append(entity["metadata"]["name"])
+
+        return entity_list
+
+    def availability_zones(self, account_id, region_name):
+
+        payload = {
+            "filter": "account_uuid=={};region-name=={}".format(account_id, region_name)
+        }
+        Obj = get_resource_api(
+            self.AVAILABILTY_ZONES, self.connection, calm_api=self.calm_api
+        )
+        res, err = Obj.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        entity_list = []
+        res = res.json()
+        for entity in res["entities"]:
+            entity_list.append(entity["metadata"]["name"])
+
+        return entity_list
+
+    def mixed_images(self, account_id, region_name):
+        """Returns a map
+        m[key] = (tupVal1, tupVal2)
+        tupVal1 = id of the image
+        tupVal2 = root_device_name of the image
+        """
+
+        payload = {
+            "filter": "account_uuid=={};region-name=={}".format(
+                account_id, region_name, calm_api=self.calm_api
+            )
+        }
+        Obj = get_resource_api(
+            self.MIXED_IMAGES, self.connection, calm_api=self.calm_api
+        )
+        res, err = Obj.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        result = {}
+        for entity in res["entities"]:
+            name = entity["status"]["resources"]["name"]
+            image_id = entity["status"]["resources"]["id"]
+            root_device_name = entity["status"]["resources"]["root_device_name"]
+
+            result[name] = (image_id, root_device_name)
+
+        return result
+
+    def roles(self, account_id, region_name):
+
+        payload = {
+            "filter": "account_uuid=={};region-name=={}".format(account_id, region_name)
+        }
+        Obj = get_resource_api(self.ROLES, self.connection, calm_api=self.calm_api)
+        res, err = Obj.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        entity_list = []
+        res = res.json()
+        for entity in res["entities"]:
+            entity_list.append(entity["metadata"]["name"])
+
+        return entity_list
+
+    def key_pairs(self, account_id, region_name):
+
+        payload = {
+            "filter": "account_uuid=={};region-name=={}".format(account_id, region_name)
+        }
+        Obj = get_resource_api(self.KEY_PAIRS, self.connection, calm_api=self.calm_api)
+        res, err = Obj.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        entity_list = []
+        res = res.json()
+        for entity in res["entities"]:
+            entity_list.append(entity["metadata"]["name"])
+
+        return entity_list
+
+    def VPCs(self, account_id, region_name):
+
+        payload = {
+            "filter": "account_uuid=={};region-name=={}".format(account_id, region_name)
+        }
+        Obj = get_resource_api(self.VPCS, self.connection, calm_api=self.calm_api)
+        res, err = Obj.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        vpc_cidr_id_map = {}
+        for entity in res["entities"]:
+            ip_blk = entity["status"]["resources"]["cidr_block"]
+            vpc_id = entity["status"]["resources"]["id"]
+            vpc_cidr_id_map[ip_blk] = vpc_id
+
+        return vpc_cidr_id_map
+
+    def security_groups(self, account_id, region_name, vpc_id, inc_classic_sg=False):
+
+        inc_classic_sg = "true" if inc_classic_sg else "false"
+        payload = {
+            "filter": "account_uuid=={};region-name=={};vpc-id=={};include_classic_sg=={}".format(
+                account_id, region_name, vpc_id, inc_classic_sg
+            )
+        }
+
+        Obj = get_resource_api(
+            self.SECURITY_GROUPS, self.connection, calm_api=self.calm_api
+        )
+        res, err = Obj.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        res = res.json()
+
+        sg_name_id_map = {}
+        for entity in res["entities"]:
+            sg_id = entity["status"]["resources"]["id"]
+            name = entity["status"]["name"]
+            sg_name_id_map[name] = sg_id
+
+        return sg_name_id_map
+
+    def subnets(self, account_id, region_name, vpc_id, availability_zone):
+
+        payload = {
+            "filter": "account_uuid=={};region-name=={};vpc-id=={};availability-zone=={}".format(
+                account_id, region_name, vpc_id, availability_zone
+            )
+        }
+
+        subnet_list = []
+        Obj = get_resource_api(self.SUBNETS, self.connection, calm_api=self.calm_api)
         res, err = Obj.list(payload)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -223,7 +509,7 @@ def highlight_text(text, **kwargs):
 def create_spec(client):
 
     spec = {}
-    Obj = AWS(client.connection)
+    Obj = AwsVmProvider.get_api_obj()
 
     vpc_id = None
     region_name = None

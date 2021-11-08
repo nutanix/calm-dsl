@@ -12,16 +12,11 @@ from calm.dsl.builtins.models.metadata_payload import reset_metadata_obj
 from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Version
-from calm.dsl.cli.constants import APPLICATION
+from tests.utils import Application as ApplicationHelper
 
 LOG = get_logging_handle(__name__)
 
 DSL_BP_FILEPATH = "tests/3_2_0/blueprints/test_blueprint_having_ahv_helper/blueprint.py"
-NON_BUSY_APP_STATES = [
-    APPLICATION.STATES.STOPPED,
-    APPLICATION.STATES.RUNNING,
-    APPLICATION.STATES.ERROR,
-]
 
 # project constants
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
@@ -38,6 +33,8 @@ CALM_VERSION = Version.get_version("Calm")
     reason="Tests are for env changes introduced in 3.2.0",
 )
 class TestBpCommands:
+    app_helper = ApplicationHelper()
+
     def setup_method(self):
         """Method to instantiate to created_bp_list and reset context"""
 
@@ -50,17 +47,6 @@ class TestBpCommands:
 
         self.created_bp_list = []
         self.created_app_list = []
-
-    def _wait_for_non_busy_state(self, app_name):
-
-        runner = CliRunner()
-        non_busy_statuses = [
-            "Status: {}".format(state) for state in NON_BUSY_APP_STATES
-        ]
-        result = runner.invoke(cli, ["describe", "app", app_name])
-        while not any([state_str in result.output for state_str in non_busy_statuses]):
-            time.sleep(5)
-            result = runner.invoke(cli, ["describe", "app", app_name])
 
     def teardown_method(self):
         """Method to delete creates bps and apps during tests"""
@@ -80,7 +66,7 @@ class TestBpCommands:
 
         for app_name in self.created_app_list:
             LOG.info("Deleting App {}".format(app_name))
-            self._wait_for_non_busy_state(app_name=app_name)
+            self.app_helper._wait_for_non_busy_state(app_name)
             runner = CliRunner()
             result = runner.invoke(cli, ["delete", "app", app_name])
             assert result.exit_code == 0

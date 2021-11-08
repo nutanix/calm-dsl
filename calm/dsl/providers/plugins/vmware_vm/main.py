@@ -550,6 +550,8 @@ def create_spec(client):
 
     template_name_id_map = Obj.templates(account_id)
     template_names = list(template_name_id_map.keys())
+    template_id = ""
+
     if not template_names:
         click.echo("\n{}".format(highlight_text("No templates present")))
 
@@ -566,9 +568,10 @@ def create_spec(client):
             else:
                 template_name = template_names[ind - 1]
                 template_id = template_name_id_map[template_name]  # TO BE USED
-                spec["template"] = template_id
                 click.echo("{} selected".format(highlight_text(template_name)))
                 break
+
+    spec["template"] = template_id
 
     # Check if user want to supply vmware folder path
     if LV(CALM_VERSION) >= LV("3.2.0"):
@@ -666,7 +669,9 @@ def create_spec(client):
         click.prompt("\nMemory(in GiB)", default=1)
     ) * 1024
 
-    response = Obj.template_defaults(account_id, template_id)
+    response = {}
+    if template_id:
+        response = Obj.template_defaults(account_id, template_id)
 
     tempControllers = response.get("tempControllers", {})
     tempDisks = response.get("tempDisks", [])

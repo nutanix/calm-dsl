@@ -1883,7 +1883,6 @@
                     "num_sockets": 2,
                     "memory_size_mib": 4096,
                     "power_state": "ON",
-                    "account_uuid": "",
                     "gpu_list": [],
                     "disk_list": [
                         {
@@ -1959,7 +1958,6 @@
                     "num_sockets": 8,
                     "memory_size_mib": 16384,
                     "power_state": "ON",
-                    "account_uuid": "",
                     "gpu_list": [],
                     "disk_list": [
                         {
@@ -2035,7 +2033,6 @@
                     "num_sockets": 4,
                     "memory_size_mib": 8192,
                     "power_state": "ON",
-                    "account_uuid": "",
                     "gpu_list": [],
                     "disk_list": [
                         {
@@ -2111,7 +2108,6 @@
                     "num_sockets": 8,
                     "memory_size_mib": 16384,
                     "power_state": "ON",
-                    "account_uuid": "",
                     "gpu_list": [],
                     "disk_list": [
                         {

@@ -6,9 +6,11 @@ from asciimatics.screen import Screen
 from click_didyoumean import DYMMixin
 from distutils.version import LooseVersion as LV
 
-from calm.dsl.log import get_logging_handle
 from calm.dsl.tools import get_module_from_file
+from calm.dsl.api import get_api_client
+from calm.dsl.constants import PROVIDER_ACCOUNT_TYPE_MAP
 from calm.dsl.store import Version
+from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
@@ -130,3 +132,102 @@ class FeatureFlagGroup(FeatureFlagMixin, DYMMixin, click.Group):
     which can be used to set minimum calm version for command"""
 
     pass
+
+
+class FeatureDslOption(click.ParamType):
+
+    name = "feature-dsl-option"
+
+    def __init__(self, feature_min_version=""):
+        self.feature_min_version = feature_min_version
+
+    def convert(self, value, param, ctx):
+
+        if self.feature_min_version:
+            calm_version = Version.get_version("Calm")
+            if not calm_version:
+                LOG.error("Calm version not found. Please update cache")
+                sys.exit(-1)
+
+            # TODO add the pc version to warning also
+            if LV(calm_version) < LV(self.feature_min_version):
+                LOG.error(
+                    "Calm {} does not support '{}' option. Please upgrade server to Calm {}".format(
+                        calm_version, param.name, self.feature_min_version
+                    )
+                )
+                sys.exit(-1)
+
+        # Add validation for file types etc.
+        return value
+
+
+def get_account_details(
+    project_name, account_name, provider_type="AHV_VM", pe_account_needed=False
+):
+    """returns object containing project and account details"""
+
+    client = get_api_client()
+
+    # Getting the account uuid map
+    account_type = PROVIDER_ACCOUNT_TYPE_MAP[provider_type]
+    params = {"length": 250, "filter": "state!=DELETED;type=={}".format(account_type)}
+    if account_name:
+        params["filter"] += ";name=={}".format(account_name)
+
+    account_uuid_name_map = client.account.get_uuid_name_map(params)
+    provider_account_uuids = list(account_uuid_name_map.keys())
+
+    LOG.info("Fetching project '{}' details".format(project_name))
+    params = {"length": 250, "filter": "name=={}".format(project_name)}
+    res, err = client.project.list(params)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    res = res.json()
+    if res["metadata"]["total_matches"] == 0:
+        LOG.error("Project {} not found".format(project_name))
+        sys.exit(-1)
+
+    pj_data = res["entities"][0]
+    whitelisted_accounts = [
+        account["uuid"]
+        for account in pj_data["status"]["resources"].get("account_reference_list", [])
+    ]
+
+    project_uuid = pj_data["metadata"]["uuid"]
+    account_uuid = ""
+    for _account_uuid in whitelisted_accounts:
+        if _account_uuid in provider_account_uuids:
+            account_uuid = _account_uuid
+            break
+
+    if not account_uuid:
+        LOG.error("No account with given details found in project")
+        sys.exit(-1)
+
+    account_name = account_uuid_name_map[account_uuid]
+
+    if pe_account_needed and provider_type == "AHV_VM":
+        LOG.info("Fetching account '{}' details".format(account_name))
+        res, err = client.account.read(account_uuid)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        clusters = res["status"]["resources"]["data"].get(
+            "cluster_account_reference_list", []
+        )
+        if not clusters:
+            LOG.error(
+                "No cluster found in ahv account (uuid='{}')".format(account_uuid)
+            )
+            sys.exit(-1)
+
+        # Use cluster uuid for AHV account
+        account_uuid = clusters[0]["uuid"]
+
+    return {
+        "project": {"name": project_name, "uuid": project_uuid},
+        "account": {"name": account_name, "uuid": account_uuid},
+    }

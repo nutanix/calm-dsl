@@ -41,7 +41,7 @@ class AhvVmResourcesType(EntityType):
 
         # Merging boot_type to boot_config
         cdict["boot_config"] = boot_config
-        boot_type = cdict.pop("boot_type")
+        boot_type = cdict.pop("boot_type", None)
         if boot_type == "UEFI":
             cdict["boot_config"]["boot_type"] = "UEFI"
 
@@ -49,16 +49,21 @@ class AhvVmResourcesType(EntityType):
             cdict.pop("boot_config", None)
 
         serial_port_list = []
-        for ind, connection_status in cdict["serial_port_list"].items():
-            if not isinstance(ind, int):
-                raise TypeError("index {} is not of type integer".format(ind))
+        if cdict.get("serial_port_list"):
+            for ind, connection_status in cdict["serial_port_list"].items():
+                if not isinstance(ind, int):
+                    raise TypeError("index {} is not of type integer".format(ind))
 
-            if not isinstance(connection_status, bool):
-                raise TypeError(
-                    "connection status {} is not of type bool".format(connection_status)
+                if not isinstance(connection_status, bool):
+                    raise TypeError(
+                        "connection status {} is not of type bool".format(
+                            connection_status
+                        )
+                    )
+
+                serial_port_list.append(
+                    {"index": ind, "is_connected": connection_status}
                 )
-
-            serial_port_list.append({"index": ind, "is_connected": connection_status})
 
         cdict["serial_port_list"] = serial_port_list
 

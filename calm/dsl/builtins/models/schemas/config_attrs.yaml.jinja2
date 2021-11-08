@@ -1,0 +1,121 @@
+{% import "ref.yaml.jinja2" as ref %}
+
+{% macro AhvDiskRuleset() -%}
+title: AHV Disk rules
+type: object
+x-calm-dsl-type: ahv_disk_rule
+properties:
+  disk_operation:
+    type: string
+  operation:
+    type: string
+  editable:
+    type: boolean
+    default: False
+  value:
+    type: string
+  max_value:
+    type: integer
+  min_value:
+    type: integer
+  index:
+    type: integer
+  disk_value:
+    $ref: '#/components/schemas/AhvDisk'
+{%- endmacro %}
+
+{% macro AhvNicRuleset() -%}
+title: AHV NIC rules
+type: object
+x-calm-dsl-type: ahv_nic_rule
+properties:
+  operation: 
+    type: string
+  editable:
+    type: boolean
+    default: False
+  index:
+    type: string
+  nic_value:
+    $ref: '#/components/schemas/AhvNic'
+{%- endmacro %}
+
+{% macro PatchDataField() -%}
+title: PatchDataField
+type: object
+x-calm-dsl-type: patch_data_field
+properties:
+  type:
+    type: string
+  operation:
+    type: string
+  editable:
+    type: boolean
+    default: False
+  value:
+    type: string
+  max_value:
+    type: integer
+  min_value:
+    type: integer
+{%- endmacro %}
+
+{% macro ConfigAttrs() -%}
+title: ConfigAttrs
+type: object
+x-calm-dsl-type: config_attrs
+additionalProperties: true
+properties:
+  memory:
+    $ref : '#/components/schemas/PatchDataField'
+  vcpu:
+    $ref : '#/components/schemas/PatchDataField'
+  numsocket:
+    $ref : '#/components/schemas/PatchDataField'
+  disk_delete:
+    type: boolean
+    default: False
+  nic_delete:
+    type: boolean
+    default: False
+  categories_add:
+    type: boolean
+    default: False
+  categories_delete:
+    type: boolean
+    default: False
+  nics:
+    type: array
+    items:
+      $ref : '#/components/schemas/AhvNicRuleset'
+  disks:
+    type: array
+    items:
+      $ref : '#/components/schemas/AhvDiskRuleset'
+  categories:
+    type: array
+    items:
+        additionalProperties: true
+        type: object
+        x-calm-dsl-type: dict
+{%- endmacro %}
+
+{% macro AhvDiskRulesetSchema() -%}
+AhvDiskRuleset:
+  {{ AhvDiskRuleset()|indent(2) }}
+{%- endmacro %}
+
+{% macro AhvNicRulesetSchema() -%}
+AhvNicRuleset:
+  {{ AhvNicRuleset()|indent(2) }}
+{%- endmacro %}
+
+{% macro PatchDataFieldSchema() -%}
+PatchDataField:
+  {{ PatchDataField()|indent(2) }}
+{%- endmacro %}
+
+{% macro ConfigAttrsSchema() -%}
+ConfigAttrs:
+  {{ ConfigAttrs()|indent(2) }}
+{%- endmacro %}

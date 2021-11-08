@@ -7,6 +7,7 @@ Only 1 Profile per Blueprint
 
 """
 import sys
+import json
 
 from calm.dsl.builtins import ref, basic_cred
 from calm.dsl.builtins import SimpleDeployment, SimpleBlueprint
@@ -18,6 +19,12 @@ from calm.dsl.builtins import action, parallel
 CRED_USERNAME = read_local_file(".tests/username")
 CRED_PASSWORD = read_local_file(".tests/password")
 DNS_SERVER = read_local_file(".tests/dns_server")
+
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+NTNX_LOCAL_ACCOUNT = DSL_CONFIG["ACCOUNTS"]["NTNX_LOCAL_AZ"]
+SUBNET_UUID = NTNX_LOCAL_ACCOUNT["SUBNETS"][0]["UUID"]
+
+
 # Setting the recursion limit to max for
 sys.setrecursionlimit(100000)
 
@@ -31,6 +38,9 @@ class MySQLDeployment(SimpleDeployment):
 
     # VM Spec
     provider_spec = read_provider_spec("specs/ahv_provider_spec.yaml")
+    provider_spec.spec["resources"]["nic_list"][0]["subnet_reference"][
+        "uuid"
+    ] = SUBNET_UUID
 
     # All service, package and substrate system actions
     @action
@@ -85,6 +95,9 @@ class PHPDeployment(SimpleDeployment):
 
     # VM Spec
     provider_spec = read_provider_spec("specs/ahv_provider_spec.yaml")
+    provider_spec.spec["resources"]["nic_list"][0]["subnet_reference"][
+        "uuid"
+    ] = SUBNET_UUID
 
     # Deployment level properties
     max_replicas = "2"

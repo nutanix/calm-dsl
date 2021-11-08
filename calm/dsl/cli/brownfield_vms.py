@@ -3,11 +3,13 @@ import json
 import click
 import json
 from prettytable import PrettyTable
+from distutils.version import LooseVersion as LV
 
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.constants import PROVIDER_ACCOUNT_TYPE_MAP
 from calm.dsl.log import get_logging_handle
-from .utils import highlight_text
+from calm.dsl.store import Version
+from .utils import highlight_text, get_account_details
 
 LOG = get_logging_handle(__name__)
 
@@ -185,6 +187,45 @@ def get_brownfield_gcp_vm_list(entity_rows):
     click.echo(table)
 
 
+def get_vmware_vm_data_with_version_filtering(vm_data):
+    """returns instance_data_according_to_version_filter"""
+
+    CALM_VERSION = Version.get_version("Calm")
+
+    instance_id = vm_data["instance_id"]
+    instance_name = vm_data["instance_name"]
+
+    if LV(CALM_VERSION) >= LV("3.3.0"):
+        hostname = vm_data["guest_hostname"]
+        address = ",".join(vm_data["guest_ipaddress"])
+        vcpus = vm_data["cpu"]
+        sockets = vm_data["num_vcpus_per_socket"]
+        memory = int(vm_data["memory"]) // 1024
+        guest_family = vm_data.get("guest_family", "")
+        template = vm_data.get("is_template", False)
+
+    else:
+        hostname = vm_data["guest.hostName"]
+        address = ",".join(vm_data["guest.ipAddress"])
+        vcpus = vm_data["config.hardware.numCPU"]
+        sockets = vm_data["config.hardware.numCoresPerSocket"]
+        memory = int(vm_data["config.hardware.memoryMB"]) // 1024
+        guest_family = vm_data.get("guest.guestFamily", "")
+        template = vm_data.get("config.template", False)
+
+    return (
+        instance_id,
+        instance_name,
+        hostname,
+        address,
+        vcpus,
+        sockets,
+        memory,
+        guest_family,
+        template,
+    )
+
+
 def get_brownfield_vmware_vm_list(entity_rows):
     """displays vmware brownfield vms"""
 
@@ -205,16 +246,17 @@ def get_brownfield_vmware_vm_list(entity_rows):
 
         # Status section
         st_resources = row["status"]["resources"]
-
-        instance_id = st_resources["instance_id"]
-        instance_name = st_resources["instance_name"]
-        hostname = st_resources["guest.hostName"]
-        address = ",".join(st_resources["guest.ipAddress"])
-        vcpus = st_resources["config.hardware.numCPU"]
-        sockets = st_resources["config.hardware.numCoresPerSocket"]
-        memory = int(st_resources["config.hardware.memoryMB"]) // 1024
-        guest_family = st_resources.get("guest.guestFamily", "")
-        template = st_resources.get("config.template", False)
+        (
+            instance_id,
+            instance_name,
+            hostname,
+            address,
+            vcpus,
+            sockets,
+            memory,
+            guest_family,
+            template,
+        ) = get_vmware_vm_data_with_version_filtering(st_resources)
 
         table.add_row(
             [
@@ -233,76 +275,6 @@ def get_brownfield_vmware_vm_list(entity_rows):
     click.echo(table)
 
 
-def get_brownfield_account_details(project_name, provider_type, account_name):
-    """returns object containing project uuid and account uuid"""
-
-    client = get_api_client()
-
-    # Getting the account uuid map
-    account_type = PROVIDER_ACCOUNT_TYPE_MAP[provider_type]
-    params = {"length": 250, "filter": "state!=DELETED;type=={}".format(account_type)}
-    if account_name:
-        params["filter"] += ";name=={}".format(account_name)
-
-    account_uuid_name_map = client.account.get_uuid_name_map(params)
-    provider_account_uuids = list(account_uuid_name_map.keys())
-
-    LOG.info("Fetching project '{}' details".format(project_name))
-    params = {"length": 250, "filter": "name=={}".format(project_name)}
-    res, err = client.project.list(params)
-    if err:
-        raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-    res = res.json()
-    if res["metadata"]["total_matches"] == 0:
-        LOG.error("Project {} not found".format(project_name))
-        sys.exit(-1)
-
-    pj_data = res["entities"][0]
-    whitelisted_accounts = [
-        account["uuid"]
-        for account in pj_data["status"]["resources"].get("account_reference_list", [])
-    ]
-
-    project_uuid = pj_data["metadata"]["uuid"]
-    account_uuid = ""
-    for _account_uuid in whitelisted_accounts:
-        if _account_uuid in provider_account_uuids:
-            account_uuid = _account_uuid
-            break
-
-    if not account_uuid:
-        LOG.error("No account with given details found in project")
-        sys.exit(-1)
-
-    account_name = account_uuid_name_map[account_uuid]
-    LOG.info("Using account '{}' for listing brownfield vms".format(account_name))
-
-    if provider_type == "AHV_VM":
-        LOG.info("Fetching account '{}' details".format(account_name))
-        res, err = client.account.read(account_uuid)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        res = res.json()
-        clusters = res["status"]["resources"]["data"].get(
-            "cluster_account_reference_list", []
-        )
-        if not clusters:
-            LOG.error(
-                "No cluster found in ahv account (uuid='{}')".format(account_uuid)
-            )
-            sys.exit(-1)
-
-        # Use clustrer uuid for AHV account
-        account_uuid = clusters[0]["uuid"]
-
-    return {
-        "project": {"name": project_name, "uuid": project_uuid},
-        "account": {"name": account_name, "uuid": account_uuid},
-    }
-
-
 def get_brownfield_vms(
     limit, offset, quiet, out, project_name, provider_type, account_name
 ):
@@ -310,14 +282,17 @@ def get_brownfield_vms(
 
     client = get_api_client()
 
-    account_detail = get_brownfield_account_details(
+    account_detail = get_account_details(
         project_name=project_name,
-        provider_type=provider_type,
         account_name=account_name,
+        provider_type=provider_type,
+        pe_account_needed=True,
     )
     project_uuid = account_detail["project"]["uuid"]
     account_name = account_detail["account"]["name"]
     account_uuid = account_detail["account"]["uuid"]
+
+    LOG.info("Using account '{}' for listing brownfield vms".format(account_name))
 
     LOG.info("Fetching brownfield vms")
     Obj = get_resource_api("blueprints/brownfield_import/vms", client.connection)

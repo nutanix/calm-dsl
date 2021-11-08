@@ -261,9 +261,12 @@ class TestHTTPTasks:
                 "Status code 200 matched with expected response. Result: FAILURE\nFAILED!",
             ),
             (HTTPTaskWithUnsupportedPayload, "'payload' was unexpected"),
-            (
-                HTTPTaskWithUnsupportedURL,
-                "The requested URL was not found on the server.",
+            pytest.param(
+                (
+                    HTTPTaskWithUnsupportedURL,
+                    "The requested URL was not found on the server.",
+                ),
+                marks=pytest.mark.skip(reason="Product bug :- CALM-27162"),
             ),
             (HTTPTaskWithTLSVerify, "Error :Certificate has expired"),
             (HTTPTaskWithIncorrectAuth, "AUTHENTICATION_REQUIRED"),

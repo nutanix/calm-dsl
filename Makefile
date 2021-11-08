@@ -37,7 +37,7 @@ clean:
 	[ -S /var/run/docker.sock ] && \
 		docker ps -aq --no-trunc --filter "status=exited" | xargs -I {} docker rm {} && \
 		docker image prune -f
-	rm -r venv/ && mkdir venv/ && touch venv/.empty
+	rm -rf venv/ && mkdir venv/ && touch venv/.empty
 
 test-verbose: dev
 	venv/bin/py.test -s -vv

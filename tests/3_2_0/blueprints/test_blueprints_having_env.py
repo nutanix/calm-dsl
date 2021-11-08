@@ -10,7 +10,6 @@ from calm.dsl.cli.bps import get_blueprint
 from calm.dsl.builtins import read_local_file
 from calm.dsl.builtins.models.metadata_payload import reset_metadata_obj
 from calm.dsl.config import get_context
-from calm.dsl.api import get_api_client
 from calm.dsl.store import Version
 from calm.dsl.log import get_logging_handle
 
@@ -117,7 +116,6 @@ class TestBlueprint:
         """tests creation of blueprint"""
 
         runner = CliRunner()
-        client = get_api_client()
         created_dsl_bp_name = "Test_Single_VM_DSL_{}".format(str(uuid.uuid4())[-10:])
 
         LOG.info("Creating Bp {}".format(created_dsl_bp_name))
@@ -149,9 +147,7 @@ class TestBlueprint:
         self.created_bp_list.append(created_dsl_bp_name)
 
         # Get the blueprint
-        bp_data = get_blueprint(client, name=created_dsl_bp_name)
-        res, _ = client.blueprint.read(bp_data["metadata"]["uuid"])
-        bp_data = res.json()
+        bp_data = get_blueprint(name=created_dsl_bp_name)
 
         LOG.info("Asserting env data in blueprint")
         for _profile in bp_data["status"]["resources"].get("app_profile_list", []):

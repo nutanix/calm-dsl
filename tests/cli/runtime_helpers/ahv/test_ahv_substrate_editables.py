@@ -6,20 +6,15 @@ import sys
 import traceback
 
 from calm.dsl.cli import main as cli
-from calm.dsl.cli.constants import APPLICATION
 from calm.dsl.builtins import read_local_file
 from calm.dsl.log import get_logging_handle
+from tests.utils import Application as ApplicationHelper
 
 LOG = get_logging_handle(__name__)
 BP_FILE_PATH = "tests/cli/runtime_helpers/ahv/blueprint.py"
 LAUNCH_PARAMS = "tests/cli/runtime_helpers/ahv/editable_params.py"
 ACTION_LAUNCH_PARAMS = "tests/cli/runtime_helpers/ahv/profile_action_editable_params.py"
 PROFILE_ACTION_NAME = "test_profile_action"
-NON_BUSY_APP_STATES = [
-    APPLICATION.STATES.STOPPED,
-    APPLICATION.STATES.RUNNING,
-    APPLICATION.STATES.ERROR,
-]
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 CENTOS_HM = DSL_CONFIG["AHV"]["IMAGES"]["DISK"]["CENTOS_HADOOP_MASTER"]
@@ -27,6 +22,8 @@ NETWORK1 = DSL_CONFIG["AHV"]["NETWORK"]["VLAN1211"]  # TODO change network const
 
 
 class TestEditables:
+    app_helper = ApplicationHelper()
+
     def setup_method(self):
         """Method to instantiate to created_bp_list and created_app_list"""
 
@@ -45,7 +42,8 @@ class TestEditables:
         for app_name in self.created_app_list:
             LOG.info("Deleting app {}".format(app_name))
             runner = CliRunner()
-            self._wait_for_non_busy_state(app_name)
+
+            self.app_helper._wait_for_non_busy_state(app_name)
             result = runner.invoke(cli, "delete app {}".format(app_name))
             LOG.debug(result.output)
             assert result.exit_code == 0, "Error occured in application deletion"
@@ -180,7 +178,7 @@ class TestEditables:
 
         runner = CliRunner()
 
-        self._wait_for_non_busy_state(app_name)
+        self.app_helper._wait_for_non_busy_state(app_name)
 
         # Run profile action
         command = "run action {} -a {} ".format(PROFILE_ACTION_NAME, app_name)
@@ -209,7 +207,7 @@ class TestEditables:
             )
         LOG.info("Success")
 
-        self._wait_for_non_busy_state(app_name)
+        self.app_helper._wait_for_non_busy_state(app_name)
 
         # Run using --ignore_runtime_variables flag
         command = "run action {} -a {} --ignore_runtime_variables".format(
@@ -237,7 +235,7 @@ class TestEditables:
             )
         LOG.info("Success")
 
-        self._wait_for_non_busy_state(app_name)
+        self.app_helper._wait_for_non_busy_state(app_name)
 
         # Run using --launch_params flag
         command = "run action {} -a {} --runtime_params {}".format(
@@ -265,20 +263,3 @@ class TestEditables:
             )
 
         LOG.info("Success")
-
-    def _wait_for_non_busy_state(self, name):
-        runner = CliRunner()
-        result = runner.invoke(cli, ["describe", "app", name, "--out=json"])
-        app_data = json.loads(result.output)
-        LOG.info("App State: {}".format(app_data["status"]["state"]))
-        LOG.debug("App Terminal states: {}".format(NON_BUSY_APP_STATES))
-        cnt = 0
-        while app_data["status"]["state"] not in NON_BUSY_APP_STATES:
-            time.sleep(5)
-            result = runner.invoke(cli, ["describe", "app", name, "--out=json"])
-            app_data = json.loads(result.output)
-            LOG.info("App State: {}".format(app_data["status"]["state"]))
-            if cnt > 20:
-                LOG.error("Failed to reach terminal state in 100 seconds")
-                sys.exit(-1)
-            cnt += 1
