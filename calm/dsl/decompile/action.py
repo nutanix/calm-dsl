@@ -9,7 +9,7 @@ LOG = get_logging_handle(__name__)
 RUNBOOK_ACTION_MAP = {}
 
 
-def render_action_template(cls, entity_context=""):
+def render_action_template(cls, entity_context="", CONFIG_SPEC_MAP={}):
 
     global RUNBOOK_ACTION_MAP
     LOG.debug("Rendering {} action template".format(cls.__name__))
@@ -33,12 +33,14 @@ def render_action_template(cls, entity_context=""):
         if len(task_list) != 1:
             tasks.append(
                 render_parallel_task_template(
-                    task_list, entity_context, RUNBOOK_ACTION_MAP
+                    task_list, entity_context, RUNBOOK_ACTION_MAP, CONFIG_SPEC_MAP
                 )
             )
         else:
             tasks.append(
-                render_task_template(task_list[0], entity_context, RUNBOOK_ACTION_MAP)
+                render_task_template(
+                    task_list[0], entity_context, RUNBOOK_ACTION_MAP, CONFIG_SPEC_MAP
+                )
             )
 
     variables = []

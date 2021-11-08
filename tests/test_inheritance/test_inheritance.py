@@ -1,4 +1,5 @@
 import os
+import json
 
 from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
@@ -248,6 +249,7 @@ class TestInheritance(Blueprint):
 def test_json():
     """Test the generated json for a single VM
     against known output"""
+    import json
     import os
     import sys
 
@@ -261,7 +263,14 @@ def test_json():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_path = os.path.join(dir_path, "test_inheritance_bp_output.json")
 
-    generated_json = TestInheritance.json_dumps(pprint=True)
-    known_json = open(file_path).read()
+    # Change dynamic values in known json and remove account_uuid from generated_json
+    generated_json = json.loads(TestInheritance.json_dumps(pprint=True))
+    known_json = json.loads(open(file_path).read())
 
-    assert generated_json == known_json
+    generated_json["app_profile_list"][0].pop("snapshot_config_list", None)
+    generated_json["app_profile_list"][0].pop("restore_config_list", None)
+    generated_json["app_profile_list"][0].pop("patch_list", None)
+    for _sd in generated_json["substrate_definition_list"]:
+        _sd["create_spec"]["resources"].pop("account_uuid", None)
+
+    assert sorted(known_json.items()) == sorted(generated_json.items())

@@ -273,3 +273,60 @@ class Ref:
             )
 
             return vm_ref
+
+    class RecoveryPoint:
+        def __new__(cls, **kwargs):
+
+            kwargs["__ref_cls__"] = cls
+            return _calm_ref(**kwargs)
+
+        def compile(cls, name=None, **kwargs):
+
+            cls_substrate = common_helper._walk_to_parent_with_given_type(
+                cls, "SubstrateType"
+            )
+            account_uuid = (
+                cls_substrate.get_referenced_account_uuid() if cls_substrate else ""
+            )
+            account_uuid = account_uuid or kwargs.get("account_uuid", "")
+            if not account_uuid:
+                LOG.error("Account uuid not found")
+                sys.exit("Account not found for vm recovery point")
+
+            vrs_uuid = kwargs.get("uuid", "")
+            payload = {"filter": "account_uuid=={}".format(account_uuid)}
+            if vrs_uuid:
+                payload["filter"] += ";uuid=={}".format(vrs_uuid)
+            else:
+                payload["filter"] += ";name=={}".format(name)
+
+            client = get_api_client()
+            vrc_map = client.vm_recovery_point.get_name_uuid_map(payload)
+
+            if not vrc_map:
+                log_msg = "No recovery point found with " + (
+                    "uuid='{}'".format(vrs_uuid)
+                    if vrs_uuid
+                    else "name='{}'".format(name)
+                )
+                LOG.error(log_msg)
+                sys.exit("No recovery point found")
+
+            # there will be single key
+            vrc_name = list(vrc_map.keys())[0]
+            vrc_uuid = vrc_map[vrc_name]
+
+            if isinstance(vrc_uuid, list):
+                LOG.error(
+                    "Multiple recovery points found with name='{}'. Please provide uuid.".format(
+                        vrc_name
+                    )
+                )
+                LOG.debug("Found recovery point uuids: {}".format(vrc_uuid))
+                sys.exit("Multiple recovery points found")
+
+            return {
+                "kind": "vm_recovery_point",
+                "name": vrc_name,
+                "uuid": vrc_uuid,
+            }

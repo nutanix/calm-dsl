@@ -4,10 +4,11 @@ from .connection import REQUEST
 class ResourceAPI:
 
     ROOT = "api/nutanix/v3"
+    CALM_ROOT = "api/calm/v3.0"
 
-    def __init__(self, connection, resource_type):
+    def __init__(self, connection, resource_type, calm_api=False):
         self.connection = connection
-        self.PREFIX = ResourceAPI.ROOT + "/" + resource_type
+        self.PREFIX = (self.CALM_ROOT if calm_api else self.ROOT) + "/" + resource_type
         self.LIST = self.PREFIX + "/list"
         self.ITEM = self.PREFIX + "/{}"
 
@@ -120,5 +121,5 @@ class ResourceAPI:
         return final_list
 
 
-def get_resource_api(resource_type, connection):
-    return ResourceAPI(connection, resource_type)
+def get_resource_api(resource_type, connection, calm_api=False):
+    return ResourceAPI(connection, resource_type, calm_api=calm_api)

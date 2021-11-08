@@ -1,0 +1,63 @@
+{% import "ref.yaml.jinja2" as ref %}
+
+
+{% macro AhvVmRecoveryResources() -%}
+
+title: Ahv VM Post Recovery Override Resources
+type: object
+x-calm-dsl-type: recovery_vm_ahv_resources
+properties:
+  nic_list:
+    x-calm-dsl-display-name: nics
+    type: array
+    items:
+      $ref: '#/components/schemas/AhvNic'
+  num_vcpus_per_socket:
+    type: integer
+    x-calm-dsl-display-name: cores_per_vCPU
+    default: 1
+  num_sockets:
+    type: integer
+    x-calm-dsl-display-name: vCPUs
+    default: 2
+  memory_size_mib:
+    x-calm-dsl-display-name: memory
+    type: integer
+    default: 4
+  account_uuid:
+    type: string
+  gpu_list:
+    type: array
+    x-calm-dsl-display-name: gpus
+    items:
+      $ref: '#/components/schemas/AhvGpu'
+
+{%- endmacro %}
+
+
+{% macro AhvVmRecoverySpec() -%}
+
+title: AhvVmRecoverySpec
+type: object
+x-calm-dsl-type: recovery_vm_ahv_spec
+properties:
+  vm_name:
+    type: string
+  vm_override_resources:
+    type: object
+    x-calm-dsl-type: recovery_vm_ahv_resources
+  recovery_point:
+    type: object
+    x-calm-dsl-type: app_calm_ref
+
+{%- endmacro -%}
+
+
+{% macro AhvRecoveryVmSchema() -%}
+
+AhvVmRecoverySpec:
+  {{ AhvVmRecoverySpec() | indent(2) }}
+AhvVmRecoveryResources:
+  {{ AhvVmRecoveryResources() | indent(2) }}
+
+{%- endmacro %}

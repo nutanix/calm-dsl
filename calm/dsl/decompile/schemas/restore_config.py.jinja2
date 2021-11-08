@@ -1,0 +1,5 @@
+{%- macro restore_config(obj) %}
+AppProtection.RestoreConfig(name='{{obj.name}}', target=ref({{obj.target}}), delete_vm_post_restore={{obj.delete_vm_post_restore}})
+{%- endmacro %}
+
+{{ restore_config(obj) }}

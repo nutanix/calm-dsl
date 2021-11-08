@@ -7,6 +7,7 @@ from click.testing import CliRunner
 
 from calm.dsl.cli import main as cli
 from calm.dsl.log import get_logging_handle
+from calm.dsl.builtins import read_local_file
 
 # Setting the recursion limit to max for
 sys.setrecursionlimit(100000)
@@ -15,6 +16,10 @@ LOG = get_logging_handle(__name__)
 
 SIMPLE_BP_FILE_PATH = "tests/simple_blueprint/test_simple_blueprint.py"
 SIMPLE_BP_OUT_PATH = "tests/simple_blueprint/test_simple_blueprint.json"
+
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+NTNX_LOCAL_ACCOUNT = DSL_CONFIG["ACCOUNTS"]["NTNX_LOCAL_AZ"]
+SUBNET_UUID = NTNX_LOCAL_ACCOUNT["SUBNETS"][0]["UUID"]
 
 
 class TestSimpleBlueprint:
@@ -91,6 +96,26 @@ class TestSimpleBlueprint:
             pytest.fail("BP compile command failed")
 
         generated_json = json.loads(result.output)
+        generated_json["spec"]["resources"]["app_profile_list"][0].pop(
+            "snapshot_config_list", None
+        )
+        generated_json["spec"]["resources"]["app_profile_list"][0].pop(
+            "restore_config_list", None
+        )
+        generated_json["spec"]["resources"]["app_profile_list"][0].pop(
+            "patch_list", None
+        )
         known_json = json.loads(open(SIMPLE_BP_OUT_PATH).read())
 
-        assert generated_json == known_json
+        # Change dynamic values in known json and remove account_uuid from generated_json
+        for _sd in known_json["spec"]["resources"]["substrate_definition_list"]:
+            if _sd["type"] == "AHV_VM":
+                _sd["create_spec"]["resources"]["nic_list"][0]["subnet_reference"][
+                    "uuid"
+                ] = SUBNET_UUID
+
+        for _sd in generated_json["spec"]["resources"]["substrate_definition_list"]:
+            if _sd["type"] == "AHV_VM":
+                _sd["create_spec"]["resources"].pop("account_uuid", None)
+
+        assert sorted(known_json.items()) == sorted(generated_json.items())

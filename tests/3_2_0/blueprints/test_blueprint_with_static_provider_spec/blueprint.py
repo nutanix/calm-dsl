@@ -23,6 +23,8 @@ DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 PROJECT = DSL_CONFIG["PROJECTS"]["PROJECT1"]
 PROJECT_NAME = PROJECT["NAME"]
 ENV_NAME = PROJECT["ENVIRONMENTS"][0]["NAME"]
+NTNX_LOCAL_ACCOUNT = DSL_CONFIG["ACCOUNTS"]["NTNX_LOCAL_AZ"]
+SUBNET_UUID = NTNX_LOCAL_ACCOUNT["SUBNETS"][0]["UUID"]
 
 
 class MySQLService(Service):
@@ -46,6 +48,9 @@ class AHVVMforMySQL(Substrate):
     """AHV VM config given by reading a spec file"""
 
     provider_spec = read_provider_spec("specs/ahv_provider_spec.yaml")
+    provider_spec.spec["resources"]["nic_list"][0]["subnet_reference"][
+        "uuid"
+    ] = SUBNET_UUID
 
 
 class MySQLDeployment(Deployment):
@@ -84,6 +89,9 @@ class AHVVMforPHP(Substrate):
     """AHV VM config given by reading a spec file"""
 
     provider_spec = read_provider_spec("specs/ahv_provider_spec.yaml")
+    provider_spec.spec["resources"]["nic_list"][0]["subnet_reference"][
+        "uuid"
+    ] = SUBNET_UUID
 
 
 class PHPDeployment(Deployment):

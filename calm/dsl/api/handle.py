@@ -23,6 +23,9 @@ from .user_group import UserGroupAPI
 from .role import RoleAPI
 from .directory_service import DirectoryServiceAPI
 from .access_control_policy import AccessControlPolicyAPI
+from .app_protection_policy import AppProtectionPolicyAPI
+from .vm_recovery_point import VmRecoveryPointAPI
+from .nutanix_task import TaskAPI
 
 
 class ClientHandle:
@@ -52,6 +55,9 @@ class ClientHandle:
         self.directory_service = DirectoryServiceAPI(self.connection)
         self.acp = AccessControlPolicyAPI(self.connection)
         self.environment = EnvironmentAPI(self.connection)
+        self.app_protection_policy = AppProtectionPolicyAPI(self.connection)
+        self.vm_recovery_point = VmRecoveryPointAPI(self.connection)
+        self.nutanix_task = TaskAPI(self.connection)
 
 
 def get_client_handle_obj(

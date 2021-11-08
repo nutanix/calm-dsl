@@ -7,15 +7,10 @@ import traceback
 from click.testing import CliRunner
 
 from calm.dsl.cli import main as cli
-from calm.dsl.cli.constants import APPLICATION
 from calm.dsl.log import get_logging_handle
+from tests.utils import Application as ApplicationHelper
 
 LOG = get_logging_handle(__name__)
-NON_BUSY_APP_STATES = [
-    APPLICATION.STATES.STOPPED,
-    APPLICATION.STATES.RUNNING,
-    APPLICATION.STATES.ERROR,
-]
 
 DSL_BP_FILEPATH = "tests/blueprint_example/test_blueprint_example.py"
 DSL_LAUNCH_PARAM_FILEPATH = (
@@ -26,7 +21,7 @@ CUSTOM_ACTION_NAME = "sample_profile_action"
 
 @pytest.mark.slow
 class TestAppCommands:
-    non_busy_statuses = ["Status: {}".format(state) for state in NON_BUSY_APP_STATES]
+    app_helper = ApplicationHelper()
 
     def test_apps_list(self):
         runner = CliRunner()
@@ -197,23 +192,9 @@ class TestAppCommands:
             )
         LOG.info("Success")
 
-    def _wait_for_non_busy_state(self):
-        runner = CliRunner()
-        result = runner.invoke(cli, ["describe", "app", self.created_app_name])
-        cnt = 0
-        while not any(
-            [state_str in result.output for state_str in self.non_busy_statuses]
-        ):
-            time.sleep(5)
-            result = runner.invoke(cli, ["describe", "app", self.created_app_name])
-            if cnt > 20:
-                LOG.error("Failed to reach terminal state in 100 seconds")
-                sys.exit(-1)
-            cnt += 1
-
     def _test_run_custom_action(self):
         runner = CliRunner()
-        self._wait_for_non_busy_state()
+        self.app_helper._wait_for_non_busy_state(self.created_app_name)
         LOG.info(
             "Running {} action on app {}".format(
                 CUSTOM_ACTION_NAME, self.created_app_name
@@ -245,7 +226,7 @@ class TestAppCommands:
     def _test_restart_app(self):
 
         runner = CliRunner()
-        self._wait_for_non_busy_state()
+        self.app_helper._wait_for_non_busy_state(self.created_app_name)
         LOG.info("Restarting app {}".format(self.created_app_name))
         result = runner.invoke(cli, ["restart", "app", self.created_app_name])
         if result.exit_code:
@@ -265,7 +246,7 @@ class TestAppCommands:
     def _test_stop_app(self):
 
         runner = CliRunner()
-        self._wait_for_non_busy_state()
+        self.app_helper._wait_for_non_busy_state(self.created_app_name)
         LOG.info("Stopping app {}".format(self.created_app_name))
         result = runner.invoke(cli, ["stop", "app", self.created_app_name])
         if result.exit_code:
@@ -285,7 +266,7 @@ class TestAppCommands:
     def _test_start_app(self):
 
         runner = CliRunner()
-        self._wait_for_non_busy_state()
+        self.app_helper._wait_for_non_busy_state(self.created_app_name)
         LOG.info("Starting app {}".format(self.created_app_name))
         result = runner.invoke(cli, ["start", "app", self.created_app_name])
         if result.exit_code:
@@ -304,7 +285,7 @@ class TestAppCommands:
 
     def _test_app_delete(self):
         runner = CliRunner()
-        self._wait_for_non_busy_state()
+        self.app_helper._wait_for_non_busy_state(self.created_app_name)
         LOG.info("Deleting App {} ".format(self.created_app_name))
         result = runner.invoke(cli, ["delete", "app", self.created_app_name])
         if result.exit_code:
