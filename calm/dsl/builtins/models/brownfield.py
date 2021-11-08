@@ -97,7 +97,7 @@ def get_ahv_bf_vm_data(
     cluster_uuid = clusters[0]["uuid"]
 
     params = {
-        "length": 250,
+        "length": 1000,
         "offset": 0,
         "filter": "project_uuid=={};account_uuid=={}".format(
             project_uuid, cluster_uuid
@@ -233,7 +233,7 @@ def get_azure_bf_vm_data(
     client = get_api_client()
 
     params = {
-        "length": 250,
+        "length": 1000,
         "offset": 0,
         "filter": "project_uuid=={};account_uuid=={}".format(
             project_uuid, account_uuid
@@ -259,6 +259,10 @@ def get_azure_bf_vm_data(
         e_id = e_resources["instance_id"]
         e_address = e_resources["address"]
         e_address_list = e_resources["public_ip_address"]
+        e_private_address = e_resources["private_ip_address"]
+        if (not e_address_list) and e_private_address:
+            e_address = [e_private_address]
+            e_address_list = e_private_address
 
         if match_vm_data(
             vm_name=e_name,
