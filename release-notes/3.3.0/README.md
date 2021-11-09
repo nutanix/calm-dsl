@@ -89,7 +89,7 @@ class AhvUpdateAttrs(AhvUpdateConfigAttrs):
         ),
     ]
     disks = [
-        PatchField.Ahv.Disks.delete(index=1, editable=True),
+        PatchField.Ahv.Disks.delete(index=1),
         PatchField.Ahv.Disks.modify(
             index=2, editable=True, value="2", operation="equal", max_val=4, min_val=1
         ),
