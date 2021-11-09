@@ -92,6 +92,71 @@ def create_job_command(job_file, name, description, force):
 #     )
 
 
+def patch_runbook_runtime_editables(client, runbook):
+
+    args = []
+    variable_list = runbook["spec"]["resources"]["runbook"].get("variable_list", [])
+    for variable in variable_list:
+        if variable.get("editables", {}).get("value", False):
+            options = variable.get("options", {})
+            choices = options.get("choices", [])
+            if choices:
+                click.echo("Choose from given choices: ")
+                for choice in choices:
+                    click.echo("\t{}".format(highlight_text(repr(choice))))
+
+            default_val = variable.get("value", "")
+            is_secret = variable.get("type") == "SECRET"
+
+            new_val = click.prompt(
+                "Value for variable '{}' [{}]".format(
+                    variable["name"],
+                    highlight_text(default_val if not is_secret else "*****"),
+                ),
+                default=default_val,
+                show_default=False,
+                hide_input=is_secret,
+                type=click.Choice(choices) if choices else type(default_val),
+                show_choices=False,
+            )
+            if new_val:
+                args.append(
+                    {
+                        "name": variable.get("name"),
+                        "value": type(variable.get("value", ""))(new_val),
+                    }
+                )
+
+    for arg in args:
+        for variable in variable_list:
+            if variable["name"] == arg["name"]:
+                variable["value"] = arg["value"]
+
+    payload = {"spec": {"args": variable_list}}
+
+    default_target = (
+        runbook["spec"]["resources"]
+        .get("default_target_reference", {})
+        .get("name", None)
+    )
+    target = input(
+        "Endpoint target for the Runbook Run (default target={}): ".format(
+            default_target
+        )
+    )
+    if target == "":
+        target = default_target
+    if target:
+        endpoint = runbooks.get_endpoint(client, target)
+        endpoint_id = endpoint.get("metadata", {}).get("uuid", "")
+        payload["spec"]["default_target_reference"] = {
+            "kind": "app_endpoint",
+            "uuid": endpoint_id,
+            "name": target,
+        }
+    return payload
+
+
 def exec_runbook(runbook_name, patch_editables=True):
     # Get runbook uuid  from name
     client = get_api_client()
@@ -107,7 +172,7 @@ def exec_runbook(runbook_name, patch_editables=True):
     if not patch_editables:
         payload = {}
     else:
-        payload = runbooks.patch_runbook_runtime_editables(client, runbook)
+        payload = patch_runbook_runtime_editables(client, runbook)
     return job._create_job_executable_payload(
         "runbook", runbook_uuid, "RUNBOOK_RUN", payload, None
     )
@@ -209,7 +274,7 @@ def exec_app_action(
     )
 
 
-def set_one_time_schedule_info(start_time, time_zone):
+def set_one_time_schedule_info(start_time, time_zone="UTC"):
     # Get User timezone
     user_tz = ZoneInfo(time_zone)
     # Convert datetime string to datetime object
@@ -230,7 +295,7 @@ def set_one_time_schedule_info(start_time, time_zone):
     return job._create_one_time_job_schedule_payload(seconds_since_epoch, time_zone)
 
 
-def set_recurring_schedule_info(schedule, start_time, expiry_time, time_zone):
+def set_recurring_schedule_info(schedule, start_time, expiry_time, time_zone="UTC"):
     # Get User timezone
     user_tz = ZoneInfo(time_zone)
     # Convert datetime string to datetime object
@@ -422,6 +487,8 @@ def describe_job_command(job_name, out):
         + highlight_text(job_response["resources"]["name"])
         + " (uuid: "
         + highlight_text(job_response["metadata"]["uuid"])
+        + " (project: "
+        + highlight_text(job_response["metadata"]["project_reference"]["name"])
         + ")"
     )
 
@@ -521,19 +588,17 @@ def describe_job_command(job_name, out):
             variable_list_string = job_response["resources"]["executable"]["action"][
                 "spec"
             ].get("payload", "")
-
+            endpoint_name = ""
+            endpoint_uuid = ""
             if variable_list_string != "":
                 variable_list = json.loads(variable_list_string)
-                endpoint = (
-                    variable_list.get("spec")
-                    .get("default_target_reference")
-                    .get("name", "")
+                endpoint_target_reference = variable_list.get("spec").get(
+                    "default_target_reference"
                 )
-                endpoint_uuid = (
-                    variable_list.get("spec")
-                    .get("default_target_reference")
-                    .get("uuid", "")
-                )
+                if endpoint_target_reference is not None:
+                    endpoint_name = endpoint_target_reference.get("name", "")
+                    endpoint_uuid = endpoint_target_reference.get("uuid", "")
+
                 variable_list = variable_list["spec"]["args"]
 
                 click.echo("Runbook :")
@@ -554,7 +619,7 @@ def describe_job_command(job_name, out):
 
                 click.echo(
                     "Default Endpoint Target: "
-                    + highlight_text(endpoint)
+                    + highlight_text(endpoint_name)
                     + " (uuid: "
                     + highlight_text(endpoint_uuid)
                     + ")"
