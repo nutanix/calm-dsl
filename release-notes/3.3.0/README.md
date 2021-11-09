@@ -2,7 +2,7 @@
 # Snapshot Restore
 Adding a snapshot (or restore) config in a profile will auto-generate a profile-level snapshot (or restore) action - Snapshot_<config_name> (or Restore_<config_name>) - which can be run using `calm run action`.
 - As of now we suport for snapshot-restore for `nutanix` provider.
-- Sample [Blueprint](examples/AHV_CONFIG/snapshot_restore/demo_blueprint.py)  containg snapshot-restore configuration.
+- Sample [Blueprint](../../examples/AHV_CONFIG/snapshot_restore/demo_blueprint.py)  containg snapshot-restore configuration.
 
 ## CLI commands
 - `calm get protection-policies -p <project>`: Lists protection policies corresponding to the project (create/update/delete using DSL not supported in this release)
@@ -53,7 +53,7 @@ Snapshot name is supplied as a runtime argument while running the snapshot actio
 # App edit
 Adding a update config in a profile will auto-generate a profile-level patch action - <config_name> - which can be run using `calm update app <app-name> <config-name>`. 
 - As of now we suport for app edit for `nutanix` provider.
-- Sample [Blueprint](examples/multivm_app_edit/blueprint.py) containing app-edit configuration
+- Sample [Blueprint](../../examples/multivm_app_edit/blueprint.py) containing app-edit configuration
 
 ## Built-in Models
 ### AhvUpdateConfigAttrs
@@ -163,18 +163,25 @@ class HelloProfile(Profile):
 calm update app example_app example_update_config
 ```
 
+
 # *Brownfield Application
+From Calm v3.3.0, user can launch Greenfield blueprint to create Brownfield application by supplying brownfield deployments that will override the existing deployment configuration.
+- As of now we suport for app edit for nutanix provider.
+- Sample [file](../../examples/Brownfield/separate_file_example/brownfield_deployments.py) containing brownfield-deployment configuration.
+- Note: Name of deployment which user wants to override should exists in blueprint.
 
 ## CLI commands
 
 - `calm get brownfield vms -p <project> -a <account_name>`: Added account cli option, that user should provide if there are multiple accounts in the given project.
 
-- `calm launch bp <bp_name> -b <brownfield_deployments_file_location> -n <app_name>`. Command will launch existing blueprint using brownfield deployments to create brownfield application. Sample file look [here](examples/Brownfield/separate_file_example/brownfield_deployments.py). Note: Name of deployment which user wants to override should be available in blueprint.
+- `calm launch bp <bp_name> -b <brownfield_deployments_file_location> -n <app_name>`. Command will launch existing blueprint using brownfield deployments to create brownfield application. 
 
 
 # *Vm Recovery Points
 
- From Calm v3.3.0, user can create and launch a blueprint having vm-recovery-point instead of vm-configuration for ahv substrates. Note: Only CrashConsistent vm_recovery_point are allowed. Sample file look [here](tests/vm_recovery_point/blueprint.py)
+ From Calm v3.3.0, user can create and launch a blueprint having vm-recovery-point instead of vm-configuration for ahv substrates. 
+- Sample [Blueprint](../../tests/vm_recovery_point/blueprint.py) containing vm-recovery-point configuration.
+- Note: Only CrashConsistent vm_recovery_point are allowed.
 
  ## CLI commands
 
@@ -226,4 +233,4 @@ class AhvVmSubstrate(Substrate):
     )
 ```
 
-*: Features are Calm-DSL specific. No support for UX/UI is available in Calm v3.3.0.
+*: *Features are Calm-DSL specific. No support for UX/UI is available in Calm v3.3.0*.
