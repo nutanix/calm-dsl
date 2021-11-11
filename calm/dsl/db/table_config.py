@@ -115,6 +115,7 @@ class CacheTableBase(BaseModel):
 
 class AhvSubnetsCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.AHV_SUBNET
+    feature_min_version = "2.7.0"
     name = CharField()
     uuid = CharField()
     cluster = CharField()
@@ -281,6 +282,7 @@ class AhvSubnetsCache(CacheTableBase):
 
 class AhvImagesCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.AHV_DISK_IMAGE
+    feature_min_version = "2.7.0"
     name = CharField()
     image_type = CharField()
     uuid = CharField()
@@ -426,6 +428,7 @@ class AhvImagesCache(CacheTableBase):
 
 class AccountCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.ACCOUNT
+    feature_min_version = "2.7.0"
     name = CharField()
     uuid = CharField()
     provider_type = CharField()
@@ -580,6 +583,7 @@ class AccountCache(CacheTableBase):
 
 class ProjectCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.PROJECT
+    feature_min_version = "2.7.0"
     name = CharField()
     uuid = CharField()
     accounts_data = CharField()
@@ -670,8 +674,8 @@ class ProjectCache(CacheTableBase):
                 "subnet_reference_list", []
             )
             # Use spec dict in entity-payload for external subnets
-            external_subnets_ref_list = entity["spec"]["resources"].get(
-                "external_network_list", []
+            external_subnets_ref_list = (
+                entity["spec"].get("resources", {}).get("external_network_list", [])
             )
             account_map = {}
             for account in account_list:
@@ -778,6 +782,7 @@ class ProjectCache(CacheTableBase):
 
 class EnvironmentCache(CacheTableBase):
     __cache_type__ = "environment"
+    feature_min_version = "2.7.0"
     name = CharField()
     uuid = CharField()
     project_uuid = CharField()
@@ -911,6 +916,7 @@ class EnvironmentCache(CacheTableBase):
 
 class UsersCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.USER
+    feature_min_version = "2.7.0"
     name = CharField()
     uuid = CharField()
     display_name = CharField()
@@ -1048,6 +1054,7 @@ class UsersCache(CacheTableBase):
 
 class RolesCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.ROLE
+    feature_min_version = "2.7.0"
     name = CharField()
     uuid = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
@@ -1139,6 +1146,7 @@ class RolesCache(CacheTableBase):
 
 class DirectoryServiceCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.DIRECTORY_SERVICE
+    feature_min_version = "2.7.0"
     name = CharField()
     uuid = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
@@ -1230,6 +1238,7 @@ class DirectoryServiceCache(CacheTableBase):
 
 class UserGroupCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.USER_GROUP
+    feature_min_version = "2.7.0"
     name = CharField()
     uuid = CharField()
     display_name = CharField()
@@ -1376,6 +1385,7 @@ class UserGroupCache(CacheTableBase):
 
 class AhvNetworkFunctionChain(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.AHV_NETWORK_FUNCTION_CHAIN
+    feature_min_version = "2.7.0"
     name = CharField()
     uuid = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
@@ -1455,6 +1465,7 @@ class AhvNetworkFunctionChain(CacheTableBase):
 
 class AppProtectionPolicyCache(CacheTableBase):
     __cache_type__ = "app_protection_policy"
+    feature_min_version = "3.3.0"
     name = CharField()
     uuid = CharField()
     rule_name = CharField()
