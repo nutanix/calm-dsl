@@ -5,7 +5,7 @@ input:
 - "vm-@@{calm_array_index}@@-@@{calm_time}@@"  # instance name
 - "y"  # Enable Associate Public Ip Address
 - "y"  # Want Instance type
-- "61"  # Instance Type = t2.nano
+- "1"  # Instance Type = c3.2xlarge
 - "n"  # Want Region
 - "n"  # Want user-data
 - "n"  # Want tags
@@ -18,8 +18,4 @@ cli_assertions:
 - "Create spec for your AWS VM:"
 
 spec_assertions:
-- t2.nano  # Check for instance name
-
-dependencies:
- # For changing indexes of resource in input as per the setup
-- [5, instance_types/t2.nano]
+- c3.2xlarge  # Check for instance name

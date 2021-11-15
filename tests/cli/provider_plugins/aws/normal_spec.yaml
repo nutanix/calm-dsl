@@ -18,7 +18,3 @@ cli_assertions:
 
 spec_assertions:
 - "IO1"  # Check volume type
-
-dependencies:
- # For changing indexes of resource in input as per the setup
-- [9, volume_types/Provisioned IOPS SSD]
