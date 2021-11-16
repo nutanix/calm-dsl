@@ -193,7 +193,8 @@ class TestApps:
                 pytest.fail(
                     "action {} is not completed in 5 minutes".format(action_name)
                 )
-
+        # let's wait for few seconds before delete
+        time.sleep(5)
         LOG.info("Deleting application {}".format(app_name))
         res, err = client.application.delete(app_uuid)
         if err:
