@@ -10,6 +10,7 @@ import traceback
 
 from calm.dsl.cli import main as cli
 from calm.dsl.log import get_logging_handle
+from tests.cli.provider_plugins.populators import get_resource_populator_object
 
 LOG = get_logging_handle(__name__)
 
@@ -18,6 +19,31 @@ LOG = get_logging_handle(__name__)
 BP_FILE_PATH_LINUX = "test_bp_creation/_test_bp_linux_os_example.py"
 BP_FILE_PATH_WINDOWS = "test_bp_creation/_test_bp_windows_os_example.py"
 PROVIDER_SPEC_FILE_PATH = "test_bp_creation/provider_spec.yaml"
+
+
+def get_value_from_dictionary(path, dictionary):
+    """This method will return value from dictionary according to the key path"""
+    path_list = path.split("/")
+    data = dictionary
+    for key in path_list:
+        if key in data:
+            data = data[key]
+        else:
+            LOG.error("Info of {} is not present in dictionary".format(key))
+            raise KeyError
+    return data
+
+
+def resolve_input_dependencies(input, dependencies, resource_info):
+    """This method will resolve setup dependent data in input"""
+    for index, path in dependencies:
+        try:
+            input[index] = str(get_value_from_dictionary(path, resource_info) + 1)
+        except KeyError:
+            fail_msg = "Infomation of this particular resource {} not present in resource info object".format(
+                path
+            )
+            assert False, fail_msg
 
 
 def run_test(
@@ -171,6 +197,11 @@ def provider_decorator(provider_type="AHV_VM"):
             spec_assertions = spec.get("spec_assertions", [])
             cli_false_assertions = spec.get("cli_false_assertions", [])
             spec_false_assertions = spec.get("spec_false_assertions", [])
+            dependencies = spec.get("dependencies", [])
+
+            populator_object = get_resource_populator_object()
+            provider_resource_info = populator_object.get_resource_info(provider_type)
+            resolve_input_dependencies(input, dependencies, provider_resource_info)
 
             run_test(
                 input,
@@ -189,6 +220,11 @@ def provider_decorator(provider_type="AHV_VM"):
 
 
 def plugin_test(provider_type="AHV_VM"):
+
+    # Collect provider related resource info before running provider test
+    resource_populator_object = get_resource_populator_object()
+    resource_populator_object.populate_provider_resource_info(provider_type)
+
     def decorate_class(Cls):
         method_decorator = provider_decorator(provider_type)
 
