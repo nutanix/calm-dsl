@@ -78,7 +78,7 @@ def create_environment_payload(UserEnvironment, metadata=dict()):
         "spec_version": 1,
         "kind": "environment",
         "name": UserEnvironment.__name__,
-        "uuid": str(uuid.uuid4())
+        "uuid": str(uuid.uuid4()),
     }
 
     calm_version = Version.get_version("Calm")
