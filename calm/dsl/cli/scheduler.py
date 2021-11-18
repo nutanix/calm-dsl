@@ -19,6 +19,8 @@ from calm.dsl.constants import CACHE
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Cache
 from calm.dsl.tools import get_module_from_file
+
+# from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
 from .utils import (
     Display,
     get_name_query,
@@ -167,7 +169,6 @@ def exec_runbook(runbook_name, patch_editables=True):
         sys.exit(err["error"])
 
     runbook = res.json()
-
     runbook_uuid = runbook["metadata"]["uuid"]
     if not patch_editables:
         payload = {}
@@ -192,6 +193,7 @@ def exec_app_action(
     app = res.json()
     app_spec = app["spec"]
     app_id = app["metadata"]["uuid"]
+
     calm_action_name = "action_" + action_name.lower()
     action_payload = next(
         (
@@ -375,26 +377,6 @@ def create_job_from_dsl(job_file, name=None, description=None, force_create=Fals
         err = {"error": err_msg, "code": -1}
         return None, err
 
-    ContextObj = get_context()
-    project_config = ContextObj.get_project_config()
-    project_name = project_config["name"]
-    project_cache_data = Cache.get_entity_data(
-        entity_type=CACHE.ENTITY.PROJECT, name=project_name
-    )
-
-    if not project_cache_data:
-        LOG.error(
-            "Project {} not found. Please run: calm update cache".format(project_name)
-        )
-        sys.exit("Project not found.")
-
-    project_uuid = project_cache_data.get("uuid", "")
-    job_payload["metadata"]["project_reference"] = {
-        "kind": "project",
-        "uuid": project_uuid,
-        "name": project_name,
-    }
-
     return create_job(
         job_payload,
         name=name,
@@ -417,7 +399,9 @@ def create_job(job_payload, name=None, description=None, force_create=False):
 
 
 def compile_job(job_file):
-    """returns compiled payload from dsl account file"""
+    """returns compiled payload from dsl file"""
+
+    # metadata_payload = get_metadata_payload(job_file)
 
     user_job_module = get_job_module_from_file(job_file)
     UserJob = get_job_class_from_module(user_job_module)
@@ -434,6 +418,86 @@ def compile_job(job_file):
         },
         "api_version": "3.0",
     }
+
+    # if "project_reference" in metadata_payload:
+    #     # Read metadata payload and set project reference
+    #     job_payload["metadata"]["project_reference"] = metadata_payload[
+    #         "project_reference"
+    #     ]
+    # else:
+    # Read project name and uuid from config and set in job payload
+    ContextObj = get_context()
+    project_config = ContextObj.get_project_config()
+    project_name = project_config["name"]
+    project_cache_data = Cache.get_entity_data(
+        entity_type=CACHE.ENTITY.PROJECT, name=project_name
+    )
+
+    if not project_cache_data:
+        LOG.error(
+            "Project {} not found. Please run: calm update cache".format(project_name)
+        )
+        sys.exit("Project not found.")
+
+    project_uuid = project_cache_data.get("uuid", "")
+    job_payload["metadata"]["project_reference"] = {
+        "kind": "project",
+        "uuid": project_uuid,
+        "name": project_name,
+    }
+
+    executable_type = job_payload["resources"]["executable"].get("entity").get("type")
+    project_uuid = job_payload["metadata"]["project_reference"].get("uuid")
+    project_name = job_payload["metadata"]["project_reference"].get("name")
+    executable_uuid = job_payload["resources"]["executable"].get("entity").get("uuid")
+
+    if executable_type == "app":
+        # Get app uuid from name
+        client = get_api_client()
+        res, err = client.application.read(executable_uuid)
+        if err:
+            LOG.error("[{}] - {}".format(err["code"], err["error"]))
+            sys.exit(err["error"])
+
+        app = res.json()
+
+        # Check if project uuid in config is same as project uuid of the app
+        if app["metadata"]["project_reference"]["uuid"] != project_uuid:
+            application_name = app["metadata"]["name"]
+
+            LOG.error(
+                "Application {} does not belong to project {}.".format(
+                    application_name, project_name
+                )
+            )
+            sys.exit(
+                "Application {} does not belong to project {}.".format(
+                    application_name, project_name
+                )
+            )
+    elif executable_type == "runbook":
+        client = get_api_client()
+        res, err = client.runbook.read(executable_uuid)
+        if err:
+            LOG.error("[{}] - {}".format(err["code"], err["error"]))
+            sys.exit(err["error"])
+
+        runbook = res.json()
+
+        # Check if project uuid in config is same as project uuid of the runbook
+        if runbook["metadata"]["project_reference"]["uuid"] != project_uuid:
+            runbook_name = runbook["metadata"]["name"]
+            LOG.error(
+                "Runbook '{}' does not belong to project '{}'.".format(
+                    runbook_name, project_name
+                )
+            )
+            sys.exit(
+                "Runbook '{}' does not belong to project '{}'.".format(
+                    runbook_name, project_name
+                )
+            )
+
     return job_payload
 
 
@@ -498,6 +562,9 @@ def describe_job_command(job_name, out):
     schedule_type = job_response["resources"]["type"]
     click.echo("Status: " + highlight_text(job_response["resources"]["state"]))
 
+    owner = job_response["metadata"]["owner_reference"]["name"]
+    click.echo("Owner: " + highlight_text(owner))
+
     created_on = int(job_response["metadata"]["creation_time"]) // 1000000
     past = arrow.get(created_on).humanize()
     click.echo(
@@ -513,11 +580,32 @@ def describe_job_command(job_name, out):
         )
     )
 
+    message_list = job_response["resources"].get("message_list", "")
+    messages = []
+    if len(message_list) != 0:
+        for message in message_list:
+            messages.append(message)
+
+    if len(messages) > 0:
+        click.echo("----Errors----")
+        click.echo("Messages:")
+        for message in messages:
+            click.echo(
+                highlight_text(message.get("reason", ""))
+                + " for attribute "
+                + highlight_text(message.get("details").get("attribute_name"))
+                + " ."
+                + highlight_text(message.get("message", ""))
+            )
+        click.echo("")
+
     executable_type = job_response["resources"]["executable"]["entity"]["type"]
 
     click.echo("--Schedule Info--")
 
     click.echo("Schedule Type: " + highlight_text(schedule_type))
+    time_zone = job_response["resources"]["schedule_info"]["time_zone"]
+    click.echo("Time Zone: " + highlight_text(time_zone))
 
     if schedule_type == "ONE-TIME":
         start_time = int(job_response["resources"]["schedule_info"]["execution_time"])
@@ -624,6 +712,54 @@ def describe_job_command(job_name, out):
                     + highlight_text(endpoint_uuid)
                     + ")"
                 )
+    elif executable_type == "app":
+        click.echo("--Executable Info--")
+
+        app_uuid = job_response["resources"]["executable"]["entity"]["uuid"]
+        res, err = client.application.read(app_uuid)
+        application = res.json()
+
+        click.echo("Type: " + highlight_text(executable_type.upper()))
+        click.echo(
+            "Application Name: " + highlight_text(application["metadata"]["name"])
+        )
+        app_spec = application["spec"]
+        calm_action_uuid = job_response["resources"]["executable"]["action"]["spec"][
+            "uuid"
+        ]
+        action_payload = next(
+            (
+                action
+                for action in app_spec["resources"]["action_list"]
+                if action["uuid"] == calm_action_uuid
+            ),
+            None,
+        )
+        click.echo(
+            "Application Action: " + highlight_text(action_payload.get("name", ""))
+        )
+        action_args = apps.get_action_runtime_args(
+            app_uuid=app_uuid,
+            action_payload=action_payload,
+            patch_editables=False,
+            runtime_params_file=False,
+        )
+        if not action_payload:
+            LOG.error("No action found")
+            sys.exit(-1)
+
+        if len(action_args) > 0:
+            variable_types = []
+
+            for var in action_args:
+                var_name = var.get("name")
+                var_value = var.get("value", "")
+                variable_types.append(
+                    "Name: " + var_name + " | " + "Value: " + var_value
+                )
+
+            click.echo("\tVariables [{}]:".format(highlight_text(len(variable_types))))
+            click.echo("\t\t{}\n".format(highlight_text(", ".join(variable_types))))
 
 
 def get_job_list_command(name, filter_by, limit, offset, quiet, all_items):

@@ -84,6 +84,8 @@ class TestSchedulerCommands:
             for record in result:
                 assert record["resources"]["state"] != JOBINSTANCES.STATES.FAILED
 
+        scheduler.delete_job([jobname])
+
     @pytest.mark.scheduler
     @pytest.mark.parametrize("dsl_file", DSL_SCHEDULER_FILE)
     def test_job_create_runbook(self, dsl_file):
