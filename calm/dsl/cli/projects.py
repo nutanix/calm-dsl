@@ -667,6 +667,78 @@ def update_project_from_dsl(project_name, project_file):
             "default_environment_reference"
         ] = default_env_ref
 
+    # Get the diff in subnet and account payload for project usage
+    existing_subnets = [
+        _subnet["uuid"]
+        for _subnet in old_project_payload["spec"]["resources"].get(
+            "subnet_reference_list", []
+        )
+    ]
+    existing_subnets.extend(
+        [
+            _subnet["uuid"]
+            for _subnet in old_project_payload["spec"]["resources"].get(
+                "external_network_list", []
+            )
+        ]
+    )
+
+    new_subnets = [
+        _subnet["uuid"]
+        for _subnet in project_payload["spec"]["resources"].get(
+            "subnet_reference_list", []
+        )
+    ]
+    new_subnets.extend(
+        [
+            _subnet["uuid"]
+            for _subnet in project_payload["spec"]["resources"].get(
+                "external_network_list", []
+            )
+        ]
+    )
+
+    existing_accounts = [
+        _acc["uuid"]
+        for _acc in old_project_payload["spec"]["resources"].get(
+            "account_reference_list", []
+        )
+    ]
+    new_accounts = [
+        _acc["uuid"]
+        for _acc in project_payload["spec"]["resources"].get(
+            "account_reference_list", []
+        )
+    ]
+
+    project_usage_payload = {
+        "filter": {
+            "subnet_reference_list": list(set(existing_subnets) - set(new_subnets)),
+            "account_reference_list": list(set(existing_accounts) - set(new_accounts)),
+        }
+    }
+
+    LOG.info("Checking project usage")
+    res, err = client.project.usage(project_uuid, project_usage_payload)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    project_usage = res.json()
+    msg_list = []
+    should_update_project = is_project_updation_allowed(project_usage, msg_list)
+    if not should_update_project:
+        LOG.error("Project updation failed")
+        click.echo("\n".join(msg_list))
+        click.echo(
+            json.dumps(
+                project_usage["status"].get("resources", {}),
+                indent=4,
+                separators=(",", ": "),
+            )
+        )
+        sys.exit(-1)
+
     # Setting correct metadata for update call
     project_payload["metadata"] = old_project_payload["metadata"]
 

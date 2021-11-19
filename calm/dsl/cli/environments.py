@@ -152,16 +152,16 @@ def create_environment_from_dsl_class(env_cls, env_name="", metadata=dict()):
     return create_environment(env_payload)
 
 
-def update_project_envs(project_name, env_uuids=[]):
+def update_project_envs(project_name, remove_env_uuids=[], add_env_uuids=[]):
     """
     Update project with the environment reference list if not present
     Args:
         project_name(str): Name of project
-        env_uuids(list): list of environment uuids
+        remove_env_uuids(list): list of env uuids to be removed from project
+        add_env_uuids(list): list of env uuid to be added in project
     Returns: None
     """
-
-    if not env_uuids:
+    if not (remove_env_uuids or add_env_uuids):
         return
 
     project_payload = get_project(project_name)
@@ -170,11 +170,16 @@ def update_project_envs(project_name, env_uuids=[]):
     env_list = project_payload["spec"]["resources"].get(
         "environment_reference_list", []
     )
-    for _eu in env_uuids:
+    for _eu in add_env_uuids:
         env_list.append({"kind": "environment", "uuid": _eu})
 
+    final_env_list = []
+    for _edata in env_list:
+        if _edata["uuid"] not in remove_env_uuids:
+            final_env_list.append(_edata)
+
+    project_payload["spec"]["resources"]["environment_reference_list"] = final_env_list
     project_uuid = project_payload["metadata"]["uuid"]
-    project_payload["spec"]["resources"]["environment_reference_list"] = env_list
 
     # TODO remove this infunction imports
     from .projects import update_project
@@ -229,12 +234,13 @@ def create_environment_from_dsl_file(env_file, env_name, project_name):
     ContextObj.reset_configuration()
 
     LOG.info("Updating project for environment configuration")
-    update_project_envs(project_name, [env_std_out.get("uuid")])
+    update_project_envs(project_name, add_env_uuids=[env_std_out.get("uuid")])
     LOG.info("Project updated successfully")
 
     click.echo(json.dumps(env_std_out, indent=4, separators=(",", ": ")))
 
-    LOG.info("Updating environments cache ...")
+    LOG.info("Updating projects and environments cache ...")
+    Cache.sync_table(cache_type=CACHE.ENTITY.PROJECT)
     Cache.sync_table(cache_type=CACHE.ENTITY.ENVIRONMENT)
     LOG.info("[Done]")
 
@@ -300,7 +306,8 @@ def update_environment_from_dsl_file(env_name, env_file, project_name):
     }
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
-    LOG.info("Updating environments cache ...")
+    LOG.info("Updating projects and environments cache ...")
+    Cache.sync_table(cache_type=CACHE.ENTITY.PROJECT)
     Cache.sync_table(cache_type=CACHE.ENTITY.ENVIRONMENT)
     LOG.info("[Done]")
 
@@ -483,6 +490,10 @@ def delete_environment(environment_name, project_name):
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
     LOG.info("Environment {} deleted".format(environment_name))
 
-    LOG.info("Updating environments cache ...")
+    LOG.info("Updating project for environment configuration")
+    update_project_envs(project_name, remove_env_uuids=[environment_id])
+
+    LOG.info("Updating environments and projects cache ...")
+    Cache.sync_table(cache_type=CACHE.ENTITY.PROJECT)
     Cache.sync_table(cache_type=CACHE.ENTITY.ENVIRONMENT)
     LOG.info("[Done]")
