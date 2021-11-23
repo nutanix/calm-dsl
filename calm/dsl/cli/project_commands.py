@@ -139,6 +139,22 @@ def _describe_project(project_name, out):
     default=[],
 )
 @click.option(
+    "--add_account",
+    "-aa",
+    "add_account_list",
+    help="name of account to be added",
+    multiple=True,
+    default=[],
+)
+@click.option(
+    "--remove_account",
+    "-ra",
+    "remove_account_list",
+    help="name of account to be removed",
+    multiple=True,
+    default=[],
+)
+@click.option(
     "--remove_user",
     "-ru",
     "remove_user_list",
@@ -159,6 +175,8 @@ def _update_project(
     project_file,
     add_user_list,
     add_group_list,
+    add_account_list,
+    remove_account_list,
     remove_user_list,
     remove_group_list,
 ):
@@ -177,6 +195,8 @@ def _update_project(
         project_file
         or add_user_list
         or add_group_list
+        or add_account_list
+        or remove_account_list
         or remove_user_list
         or remove_group_list
     ):
@@ -201,4 +221,6 @@ def _update_project(
         add_group_list=add_group_list,
         remove_user_list=remove_user_list,
         remove_group_list=remove_group_list,
+        add_account_list=add_account_list,
+        remove_account_list=remove_account_list,
     )

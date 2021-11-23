@@ -139,8 +139,8 @@ Use `calm get roles` to list all roles in PC. The below roles are relevant for C
 - Create project on Calm Server: `calm create project --file <project_file_location> --name <project_name> --description <description>`.
 - List projects: `calm get projects`. Get projects, optionally filtered by a string
 - Describe project: `calm describe project <project_name>`. It will print summary of project.
-- Update project using dsl file: `calm update project <project_name> --file <project_file_location>`.
-- Update project using cli switches: `calm update project <project_name> --add_user/--remove_user <user_name> --add_group/--remove_group <group_name>`.
+- Update project using dsl file: `calm update project <project_name> --file <project_file_location>`. Environments will not be updated as part of this operation.
+- Update project using cli switches: `calm update project <project_name> --add_user/--remove_user <user_name> --add_group/--remove_group <group_name> --add_account/--remove_account <account_name>`.
 - Delete project: `calm delete project <project_name>`.
 
 ### Environments

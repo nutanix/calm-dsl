@@ -650,6 +650,95 @@ def update_project_from_dsl(project_name, project_file):
         if _group["name"] not in updated_project_groups_list:
             acp_remove_group_list.append(_group["name"])
 
+    # Environment updation is not allowed, so adding existing environments
+    old_env_refs = old_project_payload["spec"]["resources"].get(
+        "environment_reference_list", []
+    )
+    if old_env_refs:
+        project_payload["spec"]["resources"][
+            "environment_reference_list"
+        ] = old_env_refs
+
+    default_env_ref = old_project_payload["spec"]["resources"].get(
+        "default_environment_reference", {}
+    )
+    if default_env_ref:
+        project_payload["spec"]["resources"][
+            "default_environment_reference"
+        ] = default_env_ref
+
+    # Get the diff in subnet and account payload for project usage
+    existing_subnets = [
+        _subnet["uuid"]
+        for _subnet in old_project_payload["spec"]["resources"].get(
+            "subnet_reference_list", []
+        )
+    ]
+    existing_subnets.extend(
+        [
+            _subnet["uuid"]
+            for _subnet in old_project_payload["spec"]["resources"].get(
+                "external_network_list", []
+            )
+        ]
+    )
+
+    new_subnets = [
+        _subnet["uuid"]
+        for _subnet in project_payload["spec"]["resources"].get(
+            "subnet_reference_list", []
+        )
+    ]
+    new_subnets.extend(
+        [
+            _subnet["uuid"]
+            for _subnet in project_payload["spec"]["resources"].get(
+                "external_network_list", []
+            )
+        ]
+    )
+
+    existing_accounts = [
+        _acc["uuid"]
+        for _acc in old_project_payload["spec"]["resources"].get(
+            "account_reference_list", []
+        )
+    ]
+    new_accounts = [
+        _acc["uuid"]
+        for _acc in project_payload["spec"]["resources"].get(
+            "account_reference_list", []
+        )
+    ]
+
+    project_usage_payload = {
+        "filter": {
+            "subnet_reference_list": list(set(existing_subnets) - set(new_subnets)),
+            "account_reference_list": list(set(existing_accounts) - set(new_accounts)),
+        }
+    }
+
+    LOG.info("Checking project usage")
+    res, err = client.project.usage(project_uuid, project_usage_payload)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    project_usage = res.json()
+    msg_list = []
+    should_update_project = is_project_updation_allowed(project_usage, msg_list)
+    if not should_update_project:
+        LOG.error("Project updation failed")
+        click.echo("\n".join(msg_list))
+        click.echo(
+            json.dumps(
+                project_usage["status"].get("resources", {}),
+                indent=4,
+                separators=(",", ": "),
+            )
+        )
+        sys.exit(-1)
+
     # Setting correct metadata for update call
     project_payload["metadata"] = old_project_payload["metadata"]
 
@@ -696,7 +785,13 @@ def update_project_from_dsl(project_name, project_file):
 
 
 def update_project_using_cli_switches(
-    project_name, add_user_list, add_group_list, remove_user_list, remove_group_list
+    project_name,
+    add_user_list,
+    add_group_list,
+    add_account_list,
+    remove_account_list,
+    remove_user_list,
+    remove_group_list,
 ):
 
     client = get_api_client()
@@ -718,6 +813,9 @@ def update_project_using_cli_switches(
     project_payload = res.json()
     project_payload.pop("status", None)
 
+    project_usage_payload = {
+        "filter": {"account_reference_list": [], "subnet_reference_list": []}
+    }
     project_resources = project_payload["spec"]["resources"]
     project_users = []
     project_groups = []
@@ -783,6 +881,71 @@ def update_project_using_cli_switches(
     project_resources[
         "external_user_group_reference_list"
     ] = updated_group_reference_list
+
+    # Updating accounts data
+    if not set(add_account_list).isdisjoint(set(remove_account_list)):
+        LOG.error(
+            "Same accounts found in both added and removing list {}".format(
+                set(add_account_list).intersection(set(remove_account_list))
+            )
+        )
+        sys.exit("Same accounts found in both added and removing list")
+
+    project_accounts = project_resources.get("account_reference_list", [])
+    updated_proj_accounts = []
+    for _acc in project_accounts:
+        _acc_uuid = _acc["uuid"]
+        account_cache_data = Cache.get_entity_data_using_uuid(
+            entity_type="account", uuid=_acc_uuid
+        )
+        if not account_cache_data:
+            LOG.error(
+                "Account (uuid={}) not found. Please update cache".format(_acc_uuid)
+            )
+            sys.exit("Account (uuid={}) not found".format(_acc_uuid))
+
+        if account_cache_data["name"] not in remove_account_list:
+            updated_proj_accounts.append(_acc)
+        else:
+            project_usage_payload["filter"]["account_reference_list"].append(_acc_uuid)
+
+    project_account_uuids = [_e["uuid"] for _e in updated_proj_accounts]
+    for _acc in add_account_list:
+        account_cache_data = Cache.get_entity_data(entity_type="account", name=_acc)
+        if not account_cache_data:
+            LOG.error("Account (name={}) not found. Please update cache".format(_acc))
+            sys.exit("Account (name={}) not found".format(_acc))
+
+        # Account already present
+        if account_cache_data["uuid"] in project_account_uuids:
+            continue
+
+        updated_proj_accounts.append(
+            {"kind": "account", "name": _acc, "uuid": account_cache_data["uuid"]}
+        )
+
+    project_resources["account_reference_list"] = updated_proj_accounts
+
+    LOG.info("Checking project usage")
+    res, err = client.project.usage(project_uuid, project_usage_payload)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    project_usage = res.json()
+    msg_list = []
+    should_update_project = is_project_updation_allowed(project_usage, msg_list)
+    if not should_update_project:
+        LOG.error("Project updation failed")
+        click.echo("\n".join(msg_list))
+        click.echo(
+            json.dumps(
+                project_usage["status"].get("resources", {}),
+                indent=4,
+                separators=(",", ": "),
+            )
+        )
+        sys.exit(-1)
 
     LOG.info("Updating project '{}'".format(project_name))
     res, err = client.project.update(project_uuid, project_payload)
@@ -856,3 +1019,81 @@ def remove_users_from_project_acps(project_uuid, remove_user_list, remove_group_
     watch_project_task(
         project_uuid, res["status"]["execution_context"]["task_uuid"], poll_interval=4
     )
+
+
+def is_project_updation_allowed(project_usage, msg_list):
+    """
+    Returns whether project update is allowed.
+    Will also update project_usage dict to contain only associate entities
+    Args:
+        project_usage (dict): project usage details
+    Returns:
+        _eusage (bool): is updation allowed
+    """
+
+    def is_entity_used(e_usage):
+
+        entity_used = False
+        app_cnt = e_usage.pop("app", 0)
+        if app_cnt:
+            entity_used = True
+            e_usage["app"] = app_cnt
+
+        brownfield_cnt = e_usage.get("blueprint", {}).pop("brownfield", 0)
+        greenfield_cnt = e_usage.get("blueprint", {}).pop("greenfield", 0)
+        if brownfield_cnt or greenfield_cnt:
+            entity_used = True
+            if brownfield_cnt:
+                e_usage["blueprint"]["brownfield"] = brownfield_cnt
+            if greenfield_cnt:
+                e_usage["blueprint"]["greenfield"] = greenfield_cnt
+        else:
+            e_usage.pop("blueprint", None)
+
+        endpoint_cnt = e_usage.pop("endpoint", 0)
+        if endpoint_cnt:
+            entity_used = True
+            e_usage["endpoint"] = endpoint_cnt
+
+        environment_cnt = e_usage.pop("environment", 0)
+        if environment_cnt:
+            entity_used = True
+            e_usage["environment"] = environment_cnt
+
+        runbook_cnt = e_usage.pop("runbook", 0)
+        if runbook_cnt:
+            entity_used = True
+            e_usage["runbook"] = runbook_cnt
+
+        return entity_used
+
+    updation_allowed = True
+    accounts_usage = project_usage["status"]["resources"].get("account_list", [])
+    for _ac in accounts_usage:
+        entity_used = is_entity_used(_ac["usage"])
+        if entity_used:
+            updation_allowed = False
+            account_cache_data = Cache.get_entity_data_using_uuid(
+                entity_type="account", uuid=_ac["uuid"]
+            )
+            msg_list.append(
+                "Please disassociate the account '{}' (uuid='{}') references from existing entities".format(
+                    account_cache_data["name"], account_cache_data["uuid"]
+                )
+            )
+
+    subnets_usage = project_usage["status"]["resources"].get("subnet_list", [])
+    for _snt in subnets_usage:
+        entity_used = is_entity_used(_snt["usage"])
+        if entity_used:
+            updation_allowed = False
+            subnet_cache_data = Cache.get_entity_data_using_uuid(
+                entity_type=CACHE.ENTITY.AHV_SUBNET, uuid=_snt["uuid"]
+            )
+            msg_list.append(
+                "Please disassociate the subnet '{}' (uuid='{}') references from existing entities".format(
+                    subnet_cache_data["name"], subnet_cache_data["uuid"]
+                )
+            )
+
+    return updation_allowed

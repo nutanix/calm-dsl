@@ -18,6 +18,7 @@ from calm.dsl.log import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 DSL_PROJECT_PATH = "tests/3_2_0/project/project_with_multi_env.py"
+DSL_UPDATE_PROJECT_PATH = "tests/3_2_0/project/project_with_multi_env_update.py"
 DSL_ENVIRONMENT_PATH = "tests/3_2_0/project/sample_environment.py"
 ENV_1_NAME = "ProjEnvironment1"
 ENV_2_NAME = "ProjEnvironment2"
@@ -200,7 +201,55 @@ class TestProjectEnv:
 
         self._test_delete_environment()
 
+        self._test_env_removal_on_projects_update_dsl()
+
         self._test_delete_project()
+
+    def _test_env_removal_on_projects_update_dsl(self):
+        """tests whether updating project through dsl will not delete existing environment"""
+
+        runner = CliRunner()
+        project_data = get_project(self.project_name)
+        existing_env_uuids = [
+            _env["uuid"]
+            for _env in project_data["spec"]["resources"]["environment_reference_list"]
+        ]
+
+        LOG.info("Updating Project using file at {}".format(DSL_UPDATE_PROJECT_PATH))
+        result = runner.invoke(
+            cli,
+            [
+                "update",
+                "project",
+                self.project_name,
+                "--file={}".format(DSL_UPDATE_PROJECT_PATH),
+            ],
+        )
+
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Project update command failed")
+
+        LOG.info("Checking presence of environments in project")
+        project_data = get_project(self.project_name)
+        project_str = json.dumps(project_data)
+        new_env_uuids = [
+            _env["uuid"]
+            for _env in project_data["spec"]["resources"]["environment_reference_list"]
+        ]
+        assert (env_uuid in new_env_uuids for env_uuid in existing_env_uuids)
+        assert NTNX_ACCOUNT_2_UUID not in project_str
+        assert NTNX_ACCOUNT_2_SUBNET_1_UUID not in project_str
 
     def _test_env_data(self):
         """tests env data i.e. accounts, subnets in project-environments"""
@@ -290,7 +339,7 @@ class TestProjectEnv:
         # so assigning it to true before starting deletion of project
         self.project_deleted = True
 
-        LOG.info("Deleting Project using file at {}".format(DSL_PROJECT_PATH))
+        LOG.info("Deleting Project {}".format(self.project_name))
         result = runner.invoke(cli, ["delete", "project", self.project_name])
 
         if result.exit_code:
