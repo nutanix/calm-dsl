@@ -12,6 +12,7 @@ from calm.dsl.builtins import CalmVariable
 from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import provider_spec, read_local_file
+from tests.sample_runbooks.http_task import DslHTTPTask
 
 DNS_SERVER = read_local_file(".tests/dns_server")
 
@@ -374,25 +375,6 @@ class DefaultProfile(Profile):
 
     @action
     def test_profile_action():
-        var1 = CalmVariable.Simple(  # noqa
-            "var1_val",
-            label="var1_label",
-            regex="^[a-zA-Z0-9_]+$",
-            validate_regex=True,
-            runtime=True,
-        )
-        var2 = CalmVariable.Simple.Secret(  # noqa
-            "var2_val",
-            label="var2_label",
-            regex="^[a-zA-Z0-9_]+$",
-            validate_regex=True,
-            is_hidden=True,
-            is_mandatory=True,
-        )
-        CalmTask.Exec.ssh(
-            name="Task5", filename="scripts/sample_script.sh", target=ref(MySQLService)
-        )
-        PHPService.test_action(name="Task6")
         CalmTask.HTTP.get(
             "https://jsonplaceholder.typicode.com/posts/1",
             credential=DefaultCred,
@@ -405,69 +387,6 @@ class DefaultProfile(Profile):
             name="Test HTTP Task Get",
             target=ref(MySQLService),
         )
-        CalmTask.HTTP.post(
-            "https://jsonplaceholder.typicode.com/posts",
-            body=json.dumps({"id": 1, "title": "foo", "body": "bar", "userId": 1}),
-            headers={"Content-Type": "application/json"},
-            cred=ref(DefaultCred),
-            content_type="application/json",
-            verify=True,
-            status_mapping={200: True},
-            response_paths={"foo_title": "$.title"},
-            name="Test HTTP Task Post",
-            target=ref(MySQLService),
-        )
-        CalmTask.HTTP.put(
-            "https://jsonplaceholder.typicode.com/posts/1",
-            body=json.dumps({"id": 1, "title": "foo", "body": "bar", "userId": 1}),
-            headers={"Content-Type": "application/json"},
-            content_type="application/json",
-            verify=True,
-            status_mapping={200: True},
-            response_paths={"foo_title": "$.title"},
-            name="Test HTTP Task Put",
-            target=ref(MySQLService),
-        )
-        CalmTask.HTTP.delete(
-            "https://jsonplaceholder.typicode.com/posts/1",
-            headers={"Content-Type": "application/json"},
-            content_type="application/json",
-            verify=True,
-            status_mapping={200: True},
-            name="Test HTTP Task Delete",
-            target=ref(MySQLService),
-        )
-        CalmTask.HTTP(
-            "PUT",
-            "https://jsonplaceholder.typicode.com/posts/1",
-            body=json.dumps({"id": 1, "title": "foo", "body": "bar", "userId": 1}),
-            headers={"Content-Type": "application/json"},
-            content_type="application/json",
-            verify=True,
-            status_mapping={200: True},
-            response_paths={"foo_title": "$.title"},
-            name="Test HTTP Task",
-            target=ref(MySQLService),
-        )
-        with parallel():
-            CalmTask.Exec.escript(
-                "print 'Hello World!'", name="Test Escript", target=ref(MySQLService)
-            )
-            CalmTask.SetVariable.escript(
-                script="print 'var1=test'",
-                name="Test Setvar Escript",
-                variables=["var1"],
-                target=ref(MySQLService),
-            )
-            CalmTask.SetVariable.ssh(
-                filename="scripts/sample_script.sh",
-                name="Test Setvar SSH",
-                variables=["var2"],
-                target=ref(MySQLService),
-            )
-        CalmTask.Scaling.scale_out(1, target=ref(LampDeployment), name="Scale out Lamp")
-        CalmTask.Delay(delay_seconds=60, target=ref(MySQLService), name="Delay")
-        CalmTask.Scaling.scale_in(1, target=LampDeployment, name="Scale in Lamp")
 
 
 class ExistingVMBlueprint(Blueprint):
@@ -511,3 +430,8 @@ def test_json():
 
     known_json = json.load(open(file_path))
     assert generated_json == known_json
+
+
+import ipdb
+
+ipdb.set_trace()
