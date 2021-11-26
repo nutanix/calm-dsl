@@ -10,6 +10,6 @@ time_zone = "America/Jamaica"
 class JobOneTimeSpec(Job):
     """One Time Job for Executing a Runbook"""
 
-    name = "test_job" + str(uuid.uuid4())
+    name = "test_job" + str(uuid.uuid4())[:8]
     schedule_info = JobScheduler.ScheduleInfo.oneTime(start_date_time, time_zone)
     executable = JobScheduler.Exec.runbook("job_create_one_time", False)

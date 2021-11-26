@@ -11,7 +11,7 @@ time_zone = "America/Jamaica"
 class JobRecurringSpec(Job):
     """Recurring Job for Executing a Runbook"""
 
-    name = "test_job_recurring" + str(uuid.uuid4())
+    name = "test_job_recurring" + str(uuid.uuid4())[:8]
     schedule_info = JobScheduler.ScheduleInfo.recurring(
         cron, start_date_time, expiry_date_time, time_zone
     )

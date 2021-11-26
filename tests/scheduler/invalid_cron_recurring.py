@@ -12,7 +12,7 @@ time_zone = "America/Jamaica"
 class JobInvalidRecurringSpec(Job):
     """Recurring Job for Executing a Runbook with invalid cron"""
 
-    name = "test_job_invalid_cron_recurring_" + str(uuid.uuid4())
+    name = "test_job_invalid_cron_recurring_" + str(uuid.uuid4())[:8]
     schedule_info = JobScheduler.ScheduleInfo.recurring(
         cron, start_date_time, expiry_date_time, time_zone
     )

@@ -64,7 +64,7 @@ class TestSchedulerCommands:
         # Launch Blueprint
         bps.launch_blueprint_simple(bp_name, app_name=bp_name, patch_editables=False)
 
-        jobname = "test_job_scheduler" + str(uuid.uuid4())
+        jobname = "test_job_scheduler" + str(uuid.uuid4())[:8]
         result = scheduler.create_job_command(dsl_file, jobname, None, False)
         assert result.get("resources").get("state") == "ACTIVE"
 
@@ -187,7 +187,7 @@ class TestSchedulerCommands:
         runbooks.create_runbook_command(
             runbook_file, runbook_name, description="", force=True
         )
-        jobname = "duplicate_name_check" + str(uuid.uuid4())
+        jobname = "duplicate_name_check" + str(uuid.uuid4())[:8]
         # Create first job.
         result = scheduler.create_job_command(dsl_file, jobname, None, False)
         LOG.info(result)
@@ -257,7 +257,7 @@ class TestSchedulerCommands:
             runbook_file, runbook_name, description="", force=True
         )
 
-        job_name = "test_job_list_" + str(uuid.uuid4())
+        job_name = "test_job_list_" + str(uuid.uuid4())[:8]
         result = _create_job_with_custom_name(dsl_file, job_name)
         LOG.info(result)
         assert result.get("resources").get("state") == "ACTIVE"
@@ -289,7 +289,7 @@ class TestSchedulerCommands:
         runbooks.create_runbook_command(
             runbook_file, runbook_name, description="", force=True
         )
-        job_name = "test_job_describe_" + str(uuid.uuid4())
+        job_name = "test_job_describe_" + str(uuid.uuid4())[:8]
         result = _create_job_with_custom_name(dsl_file, job_name)
         LOG.info(result)
         assert result.get("resources").get("state") == "ACTIVE"
@@ -329,7 +329,7 @@ class TestSchedulerCommands:
         runbooks.create_runbook_command(
             runbook_file, runbook_name, description="", force=True
         )
-        jobname = "test_job_scheduler" + str(uuid.uuid4())
+        jobname = "test_job_scheduler" + str(uuid.uuid4())[:8]
         result = scheduler.create_job_command(dsl_file, jobname, None, False)
         assert result.get("resources").get("state") == "ACTIVE"
 
