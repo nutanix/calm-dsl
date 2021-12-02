@@ -58,7 +58,7 @@ class runbook(metaclass=DescriptorType):
     runbook descriptor
     """
 
-    def __init__(self, user_func, task_target_mapping=None):
+    def __init__(self, user_func, task_target_mapping={}, imported_action=False):
         """
         A decorator for generating runbooks from a function definition.
         Args:
@@ -74,8 +74,10 @@ class runbook(metaclass=DescriptorType):
         self.user_runbook = None
         self.task_target = None
 
-        # Will be used in actions
+        # Will be used in runbooks imported to blueprint actions
         self.task_target_mapping = task_target_mapping
+        self.imported_action = imported_action
+
         if self.__class__ == runbook:
             self.__get__()
 

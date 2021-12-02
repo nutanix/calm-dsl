@@ -13,6 +13,6 @@ def DslSetVariableTask():
 
     Task.SetVariable.escript(name="Task1", script="print 'var1=test'", variables=["var1"])
     Task.SetVariable.ssh(
-        name="Task2", script="print 'var2=test_var2'", variables=["var2"], target=ref(Endpoint.use_existing("efv"))
+        name="Task2", script="echo 'var2=test_var2'", variables=["var2"], target=ref(Endpoint.use_existing("efv"))
     )
     Task.Exec.escript(name="Task3", script="print '@@{var1}@@ @@{var2}@@'")

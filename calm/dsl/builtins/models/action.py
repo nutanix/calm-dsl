@@ -88,18 +88,32 @@ class action(runbook):
             if gui_display_name and gui_display_name.default != action_name:
                 action_name = gui_display_name.default
 
-        if self.task_target_mapping:
-            # For now it is used to map runbook task's target to bp entities
-            # In runbook, the target will be endpoint. So it will be changed to target_endpoint
-            for _task in self.user_runbook.tasks[1:]:
-                if _task.target_any_local_reference:
-                    _task.exec_target_reference = _task.target_any_local_reference
-                    _task.target_any_local_reference = None
+        # Case for imported runbooks in blueprints
+        if self.imported_action:
 
-                if _task.name in self.task_target_mapping:
-                    _task.target_any_local_reference = self.task_target_mapping[
-                        _task.name
-                    ]
+            # Mapping is compulsory for profile actions
+            if self.task_target_mapping:
+                # For now it is used to map runbook task's target to bp entities for PROFILE
+                # In runbook, the target will be endpoint. So it will be changed to target_endpoint
+                for _task in self.user_runbook.tasks[1:]:
+                    if _task.target_any_local_reference:
+                        _task.exec_target_reference = _task.target_any_local_reference
+                        _task.target_any_local_reference = None
+
+                    if _task.name in self.task_target_mapping:
+                        _task.target_any_local_reference = self.task_target_mapping[
+                            _task.name
+                        ]
+
+            # Non-Profile actions
+            else:
+                for _task in self.user_runbook.tasks[1:]:
+                    if (
+                        _task.target_any_local_reference
+                        and _task.target_any_local_reference.kind == "app_endpoint"
+                    ):
+                        _task.exec_target_reference = _task.target_any_local_reference
+                        _task.target_any_local_reference = self.task_target
 
         # Finally create the action
         self.user_action = _action_create(
@@ -119,11 +133,13 @@ class parallel:
     __calm_type__ = "parallel"
 
 
-def get_runbook_action(runbook_obj, task_target_mapping={"abhijeet": "singh"}):
+def get_runbook_action(runbook_obj, task_target_mapping={}):
     """
     Get action from the runbook object
     """
 
     user_func = runbook_obj.user_func
-    action_obj = action(user_func, task_target_mapping=task_target_mapping)
+    action_obj = action(
+        user_func, task_target_mapping=task_target_mapping, imported_action=True
+    )
     return action_obj
