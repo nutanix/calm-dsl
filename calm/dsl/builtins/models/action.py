@@ -1,9 +1,14 @@
 import inspect
+import sys
 
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .task import create_call_rb
 from .runbook import runbook, runbook_create
+
+from calm.dsl.log import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 # Action - Since action, runbook and DAG task are heavily coupled together,
 # the action type behaves as all three.
@@ -47,6 +52,23 @@ class action(runbook):
     action descriptor
     """
 
+    def __init__(self, user_func, task_target_mapping={}, imported_action=False):
+        """
+        A decorator for generating runbooks from a function definition.
+        Args:
+            user_func (function): User defined function
+            task_target_mapping (dict): Mapping for task's target. Used for imported runboosk in blueprint
+            imported_action (boolean): True if runbook imported as action in blueprint
+        Returns:
+            (Runbook): Runbook class
+        """
+
+        super(action, self).__init__(user_func)
+
+        # Will be used in runbooks imported to blueprint actions
+        self.task_target_mapping = task_target_mapping
+        self.imported_action = imported_action
+
     def __call__(self, name=None):
         if self.user_runbook:
             return create_call_rb(self.user_runbook, name=name)
@@ -63,6 +85,25 @@ class action(runbook):
         """
         if cls is None:
             return self
+
+        if self.imported_action:
+            # Only endpoints of type existing are supported
+            sig = inspect.signature(self.user_func)
+            for name, _ in sig.parameters.items():
+                if name in ["endpoints", "credentials", "default"]:
+                    if name in ["endpoints", "credentials"]:
+                        LOG.error(
+                            "{} are not supported for imported runbooks. Please use existing {} in the tasks.".format(
+                                name, name
+                            )
+                        )
+                    else:
+                        LOG.error(
+                            "{} are not supported for imported runbooks".format(name)
+                        )
+                    sys.exit(
+                        "Unknown parameter '{}' for imported runbooks".format(name)
+                    )
 
         super(action, self).__get__(instance, cls)
 
