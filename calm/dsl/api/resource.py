@@ -104,7 +104,14 @@ class ResourceAPI:
         final_list = []
         offset = 0
         while True:
-            response, err = self.list(params={"length": api_limit, "offset": offset})
+            response, err = self.list(
+                params={
+                    "length": api_limit,
+                    "offset": offset,
+                    "sort_attribute": "_created_timestamp_usecs_",
+                    "sort_order": "ASCENDING",
+                }
+            )
             if not err:
                 response = response.json()
             else:
