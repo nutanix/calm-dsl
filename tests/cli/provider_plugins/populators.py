@@ -3,6 +3,7 @@ from calm.dsl.log.logger import get_logging_handle
 from calm.dsl.providers.plugins.aws_vm.constants import AWS as AWS_CONSTANTS
 from calm.dsl.providers.plugins.aws_vm.main import AwsVmProvider
 from tests.cli.provider_plugins import constants as CONSTANTS
+from calm.dsl.providers.plugins.azure_vm.main import Azure
 
 _RESOURCE_POPULATOR_OBJECT = None
 
@@ -203,11 +204,284 @@ class ResourcePopulator:
         pass
 
     def __populate_azure_resources(self):
-        """Get azure resource info and store them"""
+        client = get_api_client()
+        Obj = Azure(client.connection)
+
+        # get projects
+        projects = client.project.get_name_uuid_map()
+        project_list = list(projects.keys())
+
+        self.azure_resource_info["projects"] = {}
+        for project in CONSTANTS.AZURE.PROJECTS:
+            if project in project_list:
+                self.azure_resource_info["projects"][project] = project_list.index(
+                    project
+                )
+
+        project_uuid = projects[project_list[0]]
+        res, err = client.project.read(project_uuid)
+
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        # get accounts from project
+        project = res.json()
+        accounts = project["status"]["resources"]["account_reference_list"]
+
+        reg_accounts = []
+        for account in accounts:
+            reg_accounts.append(account["uuid"])
+
+        payload = {"filter": "type==azure"}
+        res, err = client.account.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        index = 1
+        # adding accounts
+        self.azure_resource_info["accounts"] = {}
+        for entity in res["entities"]:
+            account_details = {}
+            entity_name = entity["metadata"]["name"]
+            entity_id = entity["metadata"]["uuid"]
+            if entity_id in reg_accounts:
+                entity_name = entity_name.split("_")
+                entity_name = entity_name[0] + "_" + entity_name[1]
+                account_details[entity_name] = {}
+                account_details[entity_name]["uuid"] = entity_id
+                account_details[entity_name]["index"] = index
+                index += 1
+
+                # adding resource groups
+                res_groups_in_acnt = Obj.resource_groups(entity_id)
+                account_details[entity_name]["resource_groups"] = {}
+                for resource_group in CONSTANTS.AZURE.RESOURCE_GROUPS:
+                    if resource_group in res_groups_in_acnt:
+                        resource_group_dict = {resource_group: {}}
+                        resource_group_dict[resource_group][
+                            "index"
+                        ] = res_groups_in_acnt.index(resource_group)
+
+                        # adding availability sets
+                        resource_group_dict[resource_group]["availability_sets"] = {}
+                        availability_sets = Obj.availability_sets(
+                            entity_id, resource_group
+                        )
+                        availability_sets = list(availability_sets.keys())
+                        for availability_set in CONSTANTS.AZURE.AVAILABILITY_SETS:
+                            if availability_set in availability_sets:
+                                avlbty_set_details = {availability_set: {}}
+                                avlbty_set_details[availability_set][
+                                    "index"
+                                ] = availability_sets.index(availability_set)
+                                resource_group_dict[resource_group][
+                                    "availability_sets"
+                                ].update(avlbty_set_details)
+                        account_details[entity_name]["resource_groups"].update(
+                            resource_group_dict
+                        )
+
+                        # adding Locations
+                        account_details[entity_name]["locations"] = {}
+                        locations = Obj.locations(entity_id)
+                        location_names = list(locations.keys())
+                        for location in CONSTANTS.AZURE.LOCATIONS:
+                            if location in location_names:
+                                location_details = {location: {}}
+                                location_details[location][
+                                    "index"
+                                ] = location_names.index(location)
+
+                                # adding hardware profile
+                                location_details[location]["hw_profiles"] = {}
+                                location_id = locations[location]
+                                hardware_profiles = Obj.hardware_profiles(
+                                    entity_id, location_id
+                                )
+                                hw_profile_names = list(hardware_profiles.keys())
+                                for hardware_profile in CONSTANTS.AZURE.HW_PROFILES:
+                                    if hardware_profile in hw_profile_names:
+                                        hw_profile_dict = {hardware_profile: {}}
+                                        hw_profile_dict[hardware_profile][
+                                            "index"
+                                        ] = hw_profile_names.index(hardware_profile)
+                                        location_details[location][
+                                            "hw_profiles"
+                                        ].update(hw_profile_dict)
+
+                                # adding publishers
+                                location_details[location]["publishers"] = {}
+                                publishers = Obj.image_publishers(
+                                    entity_id, location_id
+                                )
+                                for publisher in CONSTANTS.AZURE.PUBLISHERS:
+                                    publisher_details = {}
+                                    if publisher in publishers:
+                                        publisher_details[publisher] = {}
+                                        publisher_details[publisher][
+                                            "index"
+                                        ] = publishers.index(publisher)
+
+                                        # adding image offers
+                                        publisher_details[publisher][
+                                            "image_offers"
+                                        ] = {}
+                                        image_offers = Obj.image_offers(
+                                            entity_id, location_id, publisher
+                                        )
+                                        for image_offer in CONSTANTS.AZURE.IMAGE_OFFERS:
+                                            image_details = {}
+                                            if image_offer in image_offers:
+                                                image_details[image_offer] = {}
+                                                image_details[image_offer][
+                                                    "index"
+                                                ] = image_offers.index(image_offer)
+
+                                                # adding SKU's
+                                                image_details[image_offer][
+                                                    "image_skus"
+                                                ] = {}
+                                                image_skus = Obj.image_skus(
+                                                    entity_id,
+                                                    location_id,
+                                                    publisher,
+                                                    image_offer,
+                                                )
+                                                for (
+                                                    image_sku
+                                                ) in CONSTANTS.AZURE.IMAGE_SKUS:
+                                                    image_sku_details = {}
+                                                    if image_sku in image_skus:
+                                                        image_sku_details[
+                                                            image_sku
+                                                        ] = {}
+                                                        image_sku_details[image_sku][
+                                                            "index"
+                                                        ] = image_skus.index(image_sku)
+
+                                                        # adding image versions
+                                                        image_sku_details[image_sku][
+                                                            "image_versions"
+                                                        ] = {}
+                                                        image_versions = (
+                                                            Obj.image_versions(
+                                                                entity_id,
+                                                                location_id,
+                                                                publisher,
+                                                                image_offer,
+                                                                image_sku,
+                                                            )
+                                                        )
+                                                        for (
+                                                            image_version
+                                                        ) in (
+                                                            CONSTANTS.AZURE.IMAGE_VERSIONS
+                                                        ):
+                                                            if (
+                                                                image_version
+                                                                in image_versions
+                                                            ):
+                                                                image_version_dict = {}
+                                                                image_version_dict[
+                                                                    image_version
+                                                                ] = {}
+                                                                image_version_dict[
+                                                                    image_version
+                                                                ][
+                                                                    "index"
+                                                                ] = image_versions.index(
+                                                                    image_version
+                                                                )
+                                                                image_sku_details[
+                                                                    image_sku
+                                                                ][
+                                                                    "image_versions"
+                                                                ].update(
+                                                                    image_version_dict
+                                                                )
+                                                        image_details[image_offer][
+                                                            "image_skus"
+                                                        ].update(image_sku_details)
+
+                                                publisher_details[publisher][
+                                                    "image_offers"
+                                                ].update(image_details)
+                                        location_details[location]["publishers"].update(
+                                            publisher_details
+                                        )
+
+                                # adding custom images
+                                location_details[location]["custom images"] = {}
+                                custom_images = Obj.custom_images(
+                                    entity_id, location_id
+                                )
+                                custom_images = list(custom_images.keys())
+                                for custom_image in CONSTANTS.AZURE.CUSTOM_IMAGES:
+                                    if custom_image in custom_images:
+                                        custom_image_details = {custom_image: {}}
+                                        custom_image_details[custom_image][
+                                            "index"
+                                        ] = custom_images.index(custom_image)
+                                        location_details[location][
+                                            "custom images"
+                                        ].update(custom_image_details)
+
+                                # adding security group
+                                security_groups = Obj.security_groups(
+                                    entity_id, resource_group, location_id
+                                )
+                                location_details[location]["security_groups"] = {}
+                                for security_group in CONSTANTS.AZURE.SECURITY_GROUPS:
+                                    security_group_dict = {}
+                                    if security_group in security_groups:
+                                        security_group_dict[security_group] = {}
+                                        security_group_dict[security_group][
+                                            "index"
+                                        ] = security_groups.index(security_group)
+                                        location_details[location][
+                                            "security_groups"
+                                        ].update(security_group_dict)
+
+                                # adding virtual networks
+                                virtual_networks = Obj.virtual_networks(
+                                    entity_id, resource_group, location_id
+                                )
+                                location_details[location]["virtual_networks"] = {}
+                                for virtual_network in CONSTANTS.AZURE.VIRTUAL_NETWORKS:
+                                    virtual_network_dict = {}
+                                    if virtual_network in virtual_networks:
+                                        virtual_network_dict[virtual_network] = {}
+                                        virtual_network_dict[virtual_network][
+                                            "index"
+                                        ] = virtual_networks.index(virtual_network)
+
+                                        # adding subnets
+                                        virtual_network_dict[virtual_network][
+                                            "subnets"
+                                        ] = {}
+                                        subnets = Obj.subnets(
+                                            entity_id, resource_group, virtual_network
+                                        )
+                                        for subnet in CONSTANTS.AZURE.SUBNETS:
+                                            if subnet in subnets:
+                                                subnet_dict = {subnet: {}}
+                                                subnet_dict[subnet][
+                                                    "index"
+                                                ] = subnets.index(subnet)
+                                                virtual_network_dict[virtual_network][
+                                                    "subnets"
+                                                ].update(subnet_dict)
+                                        location_details[location][
+                                            "virtual_networks"
+                                        ].update(virtual_network_dict)
+                                account_details[entity_name]["locations"].update(
+                                    location_details
+                                )
+                        self.azure_resource_info["accounts"].update(account_details)
 
 
 def get_resource_populator_object():
-
     global _RESOURCE_POPULATOR_OBJECT
 
     if not _RESOURCE_POPULATOR_OBJECT:

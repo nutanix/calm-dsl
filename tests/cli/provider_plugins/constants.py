@@ -14,3 +14,21 @@ class AWS:
     SUBNETS = ["subnet-c599a5ef"]
     VOLUME_TYPES = ["Provisioned IOPS SSD"]
     INSTANCE_TYPES = ["t2.nano"]
+
+
+class AZURE:
+    """Azure Constants for cli provider_plugin tests"""
+
+    PROJECTS = ["default"]
+    RESOURCE_GROUPS = ["calmrg"]
+    LOCATIONS = ["East US 2"]
+    HW_PROFILES = ["Standard_D1_v2", "Standard_D2_v2"]
+    PUBLISHERS = ["Canonical"]
+    IMAGE_OFFERS = ["UbuntuServer"]
+    IMAGE_SKUS = ["18.04-LTS"]
+    IMAGE_VERSIONS = ["18.04.201903121"]
+    SECURITY_GROUPS = ["DND-CENTOS-IMAGE-nsg"]
+    VIRTUAL_NETWORKS = ["calm-virtual-network-eastus2"]
+    SUBNETS = ["subnet1", "default"]
+    CUSTOM_IMAGES = ["DND-CENTOS-IMAGE"]
+    AVAILABILITY_SETS = ["test_as_esha"]
