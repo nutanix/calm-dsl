@@ -174,13 +174,11 @@ class parallel:
     __calm_type__ = "parallel"
 
 
-def get_runbook_action(runbook_obj, task_target_mapping={}):
+def get_runbook_action(runbook_obj, targets={}):
     """
     Get action from the runbook object
     """
 
     user_func = runbook_obj.user_func
-    action_obj = action(
-        user_func, task_target_mapping=task_target_mapping, imported_action=True
-    )
+    action_obj = action(user_func, task_target_mapping=targets, imported_action=True)
     return action_obj

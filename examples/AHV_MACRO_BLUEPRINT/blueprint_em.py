@@ -6,7 +6,7 @@ import os  # no_qa
 import json
 
 from calm.dsl.builtins import *  # no_qa
-from examples.AHV_MACRO_BLUEPRINT.sample_runbook import DslSetVariableTask
+from examples.AHV_MACRO_BLUEPRINT.sample_runbook import DslSetVariableRunbook
 
 
 # Secret Variables
@@ -26,7 +26,7 @@ class Service1(Service):
     )
 
     # For profile, actions task_target_mapping is compulsory
-    http_task_action2 = get_runbook_action(DslSetVariableTask)
+    http_task_action2 = get_runbook_action(DslSetVariableRunbook)
 
 
 class Package1(Package):
@@ -68,8 +68,8 @@ class MacroBlueprintProfile(Profile):
 
     # For profile, actions task_target_mapping is compulsory
     http_task_action = get_runbook_action(
-        DslSetVariableTask,
-        task_target_mapping={
+        DslSetVariableRunbook,
+        targets={
             "Task1": ref(Service1),
             "Task2": ref(Service1),
             "Task3": ref(Service1),

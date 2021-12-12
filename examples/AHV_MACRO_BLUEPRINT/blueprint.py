@@ -5,7 +5,7 @@ This blueprint uses macro in nic and disk
 import os  # no_qa
 
 from calm.dsl.builtins import *  # no_qa
-from examples.AHV_MACRO_BLUEPRINT.sample_runbook import DslSetVariableTask
+from examples.AHV_MACRO_BLUEPRINT.sample_runbook import DslSetVariableRunbook
 
 
 # Secret Variables
@@ -74,8 +74,8 @@ class MacroBlueprintProfile(Profile):
 
     # For profile, actions task_target_mapping is compulsory
     http_task_action = get_runbook_action(
-        DslSetVariableTask,
-        task_target_mapping={
+        DslSetVariableRunbook,
+        targets={
             "Task1": ref(Service1),
             "Task2": ref(Service1),
             "Task3": ref(Service1),
