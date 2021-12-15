@@ -73,6 +73,7 @@ class runbook(metaclass=DescriptorType):
         self.user_func = user_func
         self.user_runbook = None
         self.task_target = None
+
         if self.__class__ == runbook:
             self.__get__()
 

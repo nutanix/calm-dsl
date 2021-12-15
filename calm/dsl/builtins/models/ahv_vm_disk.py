@@ -44,31 +44,37 @@ class AhvDiskType(EntityType):
             image_name = image_ref.get("name")
             device_type = cdict["device_properties"].get("device_type")
 
-            image_cache_data = Cache.get_entity_data(
-                entity_type=CACHE.ENTITY.AHV_DISK_IMAGE,
-                name=image_name,
-                image_type=IMAGE_TYPE_MAP[device_type],
-                account_uuid=account_uuid,
-            )
-            if not image_cache_data:
-                LOG.debug(
-                    "Ahv Disk Image (name = '{}') not found in registered nutanix_pc account (uuid = '{}') in project (name = '{}')".format(
-                        image_name, account_uuid, project["name"]
-                    )
+            if image_name.startswith("@@{") and image_name.endswith("}@@"):
+                cdict["data_source_reference"] = {
+                    "kind": "image",
+                    "uuid": image_name,
+                }
+            else:
+                image_cache_data = Cache.get_entity_data(
+                    entity_type=CACHE.ENTITY.AHV_DISK_IMAGE,
+                    name=image_name,
+                    image_type=IMAGE_TYPE_MAP[device_type],
+                    account_uuid=account_uuid,
                 )
-                LOG.error(
-                    "Ahv Disk Image {} of type {} not found. Please run: calm update cache".format(
-                        image_name, IMAGE_TYPE_MAP[device_type]
+                if not image_cache_data:
+                    LOG.debug(
+                        "Ahv Disk Image (name = '{}') not found in registered nutanix_pc account (uuid = '{}') in project (name = '{}')".format(
+                            image_name, account_uuid, project["name"]
+                        )
                     )
-                )
-                sys.exit(-1)
+                    LOG.error(
+                        "Ahv Disk Image {} of type {} not found. Please run: calm update cache".format(
+                            image_name, IMAGE_TYPE_MAP[device_type]
+                        )
+                    )
+                    sys.exit(-1)
 
-            image_uuid = image_cache_data.get("uuid", "")
-            cdict["data_source_reference"] = {
-                "kind": "image",
-                "name": image_name,
-                "uuid": image_uuid,
-            }
+                image_uuid = image_cache_data.get("uuid", "")
+                cdict["data_source_reference"] = {
+                    "kind": "image",
+                    "name": image_name,
+                    "uuid": image_uuid,
+                }
 
         return cdict
 
