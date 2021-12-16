@@ -114,18 +114,18 @@ class ProfileType(EntityType):
                 r"[^A-Za-z0-9-_]+", "_", suffix
             )
 
-        if cdict["restore_config_list"] and not cdict["snapshot_config_list"]:
+        if cdict.get("restore_config_list") and not cdict.get("snapshot_config_list"):
             LOG.error(
                 "No RestoreConfig found. Please add/associate a RestoreConfig with the SnapshotConfig(s)."
             )
             sys.exit("Missing snapshot configs")
 
-        if cdict["snapshot_config_list"] and not cdict["restore_config_list"]:
+        if cdict.get("snapshot_config_list") and not cdict.get("restore_config_list"):
             LOG.error(
                 "No snapshot config found. Cannot use RestoreConfig without a SnapshotConfig."
             )
             sys.exit("Missing restore configs")
-        for config in cdict["patch_list"]:
+        for config in cdict.get("patch_list", []):
             if not isinstance(config, PatchConfigSpecType):
                 LOG.error(
                     "{} is not an object of PatchConfig. patch_config is an array of PatchConfig objects".format(
@@ -135,7 +135,7 @@ class ProfileType(EntityType):
                 sys.exit("{} is not an instance of PatchConfig".format(config))
             config = set_config_type_based_on_target(config, "patch")
 
-        for config in cdict["restore_config_list"]:
+        for config in cdict.get("restore_config_list", []):
             if not isinstance(config, RestoreConfigSpecType):
                 LOG.error(
                     "{} is not an object of RestoreConfig. restore_configs is an array of AppProtection.RestoreConfig objects".format(
@@ -149,7 +149,7 @@ class ProfileType(EntityType):
             if config_action:
                 cdict["action_list"].append(config_action)
 
-        for config in cdict["snapshot_config_list"]:
+        for config in cdict.get("snapshot_config_list", []):
             if not isinstance(config, SnapshotConfigSpecType):
                 LOG.error(
                     "{} is not an object of SnapshotConfig. snapshot_configs is an array of AppProtection.SnapshotConfig objects".format(
