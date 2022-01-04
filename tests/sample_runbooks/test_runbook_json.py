@@ -11,6 +11,7 @@ from .parallel import DslParallelRunbook
 from .runbook_variables import DslRunbookWithVariables
 from .simple_runbook import DslSimpleRunbook
 from .while_loop import DslWhileLoopRunbook
+from .inherit_target_runbook import DslInheritTargetRunbook
 
 
 @pytest.mark.parametrize(
@@ -22,6 +23,7 @@ from .while_loop import DslWhileLoopRunbook
         ("test_runbook_variables.json", DslRunbookWithVariables),
         ("test_simple_runbook.json", DslSimpleRunbook),
         ("test_while_loop.json", DslWhileLoopRunbook),
+        ("test_inherit_target_runbook.json", DslInheritTargetRunbook),
     ],
 )
 def test_runbook_json(Runbook, json_file):

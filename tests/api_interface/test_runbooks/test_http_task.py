@@ -117,7 +117,7 @@ class TestHTTPTasks:
                 for message in task["message_list"]:
                     validation_errors += message["message"]
                 assert (
-                    "No default endpoint or endpoint at task level."
+                    "No default endpoint or endpoint at task level or inherited endpoint"
                     in validation_errors
                 )
                 assert (
