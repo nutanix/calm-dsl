@@ -66,6 +66,8 @@ class EntityDict(OrderedDict):
 
             elif isinstance(type(value), DescriptorType):
                 ValidatorType = None
+                # Set action_name attribute in action object
+                setattr(value, "action_name", name)
             is_array = False
 
         if ValidatorType is not None:
