@@ -1,3 +1,5 @@
+from distutils.version import LooseVersion as LV
+
 from .resource import ResourceAPI
 from .connection import REQUEST
 
@@ -6,7 +8,14 @@ class ProjectAPI(ResourceAPI):
     def __init__(self, connection):
         super().__init__(connection, resource_type="projects")
 
-        self.CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/projects"
+        from calm.dsl.store.version import Version
+        calm_version = Version.get_version("Calm")
+
+        if LV(calm_version) >= LV("3.4.0"):
+            self.CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/projects"
+        else:
+            self.CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/calm_projects"
+
         self.CALM_PROJECTS_ITEM = self.CALM_PROJECTS_PREFIX + "/{}"
         self.CALM_PROJECTS_PENDING_TASKS = self.CALM_PROJECTS_ITEM + "/pending_tasks/{}"
         self.CALM_PROJECTS_USAGE = self.CALM_PROJECTS_ITEM + "/usage"
