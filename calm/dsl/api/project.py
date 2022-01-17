@@ -11,7 +11,7 @@ class ProjectAPI(ResourceAPI):
         from calm.dsl.store.version import Version
         calm_version = Version.get_version("Calm")
 
-        if LV(calm_version) >= LV("3.4.0"):
+        if LV(calm_version) > LV("3.4.0"):
             self.CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/projects"
         else:
             self.CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/calm_projects"
