@@ -74,7 +74,7 @@ class TestRunbooks:
         else:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
-    @pytest.mark.runbook
+    @pytest.mark.runbook_1
     @pytest.mark.regression
     def test_rb_crud(self):
         """
@@ -327,7 +327,7 @@ class TestRunbooks:
             print("API Response: {}".format(res["description"]))
             print(">> Delete call to runbook is successful >>")
 
-    @pytest.mark.runbook
+    @pytest.mark.runbook_1
     @pytest.mark.regression
     def test_rb_execute_with_deleted_ep(self):
         """
