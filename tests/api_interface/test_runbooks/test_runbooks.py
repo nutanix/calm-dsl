@@ -4,6 +4,8 @@ import uuid
 
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import RUNLOG
+from calm.dsl.api.project import ProjectAPI
+from calm.dsl.config.context import get_context
 from calm.dsl.runbooks import create_endpoint_payload
 from tests.sample_runbooks import DslSimpleRunbook
 from utils import (
@@ -21,6 +23,41 @@ RunbookUpdatePayload = read_test_config(file_name="runbook_payload2.json")
 
 
 class TestRunbooks:
+
+    default_project_reference = None
+
+    def get_default_project_reference(self):
+        """This method gets default project reference"""
+
+        if TestRunbooks.default_project_reference:
+            return TestRunbooks.default_project_reference
+
+        context_obj = get_context()
+        client = get_api_client()
+        project_config = context_obj.get_project_config()
+        project_name = project_config["name"]
+
+        project_obj = ProjectAPI(client.connection)
+        params = {"filter": "name=={}".format(project_name)}
+        res, err = project_obj.list(params=params)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        entities = res.get("entities", None)
+        if not entities:
+            pytest.fail("No project with name {} exists".format(project_name))
+
+        project_uuid = entities[0]["metadata"]["uuid"]
+
+        project_ref = {
+            "kind": "project",
+            "uuid": project_uuid,
+            "name": project_name,
+        }
+        TestRunbooks.default_project_reference = project_ref
+        return project_ref
+
     @pytest.mark.runbook
     @pytest.mark.regression
     def test_runbooks_list(self):
@@ -47,6 +84,8 @@ class TestRunbooks:
 
         client = get_api_client()
         runbook = change_uuids(RunbookPayload, {})
+
+        runbook["metadata"]["project_reference"] = self.get_default_project_reference()
 
         # Runbook Create
         res, err = client.runbook.create(runbook)
@@ -297,6 +336,8 @@ class TestRunbooks:
 
         client = get_api_client()
         runbook = change_uuids(RunbookPayload, {})
+
+        runbook["metadata"]["project_reference"] = self.get_default_project_reference()
 
         # Runbook Create
         res, err = client.runbook.create(runbook)
