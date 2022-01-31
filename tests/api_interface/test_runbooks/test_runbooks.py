@@ -48,12 +48,13 @@ class TestRunbooks:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
         res = res.json()
+        print("project get response: {}".format(json.dumps(res)))
         entities = res.get("entities", None)
         if not entities:
             pytest.fail("No project with name {} exists".format(project_name))
 
         project_uuid = entities[0]["metadata"]["uuid"]
-
+        print("project uuid is :"+ project_uuid)
         project_ref = {
             "kind": "project",
             "uuid": project_uuid,
