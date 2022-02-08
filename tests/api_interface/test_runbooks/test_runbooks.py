@@ -33,9 +33,6 @@ class TestRunbooks:
     def get_default_project_reference(self):
         """This method gets default project reference"""
 
-        if TestRunbooks.default_project_reference:
-            return TestRunbooks.default_project_reference
-
         context_obj = get_context()
         client = get_api_client()
         project_config = context_obj.get_project_config()
@@ -60,7 +57,6 @@ class TestRunbooks:
             "uuid": project_uuid,
             "name": project_name,
         }
-        TestRunbooks.default_project_reference = project_ref
         return project_ref
 
     @pytest.mark.runbook
