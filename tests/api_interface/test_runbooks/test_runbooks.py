@@ -28,8 +28,6 @@ RunbookUpdatePayload = read_test_config(file_name="runbook_payload2.json")
 
 class TestRunbooks:
 
-    default_project_reference = None
-
     def get_default_project_reference(self):
         """This method gets default project reference"""
 
@@ -45,13 +43,11 @@ class TestRunbooks:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
         res = res.json()
-        print("project get response: {}".format(json.dumps(res)))
         entities = res.get("entities", None)
         if not entities:
             pytest.fail("No project with name {} exists".format(project_name))
 
         project_uuid = entities[0]["metadata"]["uuid"]
-        print("project uuid is :"+ project_uuid)
         project_ref = {
             "kind": "project",
             "uuid": project_uuid,
@@ -99,7 +95,6 @@ class TestRunbooks:
         rb_uuid = rb["metadata"]["uuid"]
         rb_name = rb["spec"]["name"]
         print(">> Runbook state: {}".format(rb_state))
-        print("Current state of runbook {}: {}".format(rb_name,rb_state))
         assert rb_state == "ACTIVE", "Current state of runbook {}: {}".format(rb_name,rb_state)
 
         # reading the runbook using get call
@@ -114,7 +109,6 @@ class TestRunbooks:
             assert rb_name == res["metadata"]["name"]
             assert rb_name == res["metadata"]["name"]
             print(">> Get call to runbook is successful >>")
-        print("Runbook spec from read: {}".format(json.dumps(res)))
         # creating an endpoint
         EndpointPayload, _ = create_endpoint_payload(linux_endpoint)
         ep_payload = EndpointPayload.get_dict()
@@ -127,7 +121,6 @@ class TestRunbooks:
         endpoint_state = endpoint["status"]["state"]
         endpoint_name = endpoint["status"]["name"]
         endpoint_uuid = endpoint["metadata"]["uuid"]
-        print("Current state of endpoint {}: {}".format(endpoint_name,endpoint_state))
         assert endpoint_state == "ACTIVE"
 
         # updating the runbook
@@ -151,7 +144,6 @@ class TestRunbooks:
             "kind": "app_endpoint",
         }
         rb["spec"]["description"] = "user-\u018e-name-\xf1"
-        print("Runbook spec for update: {}".format(json.dumps(rb)))
         res, err = client.runbook.update(rb_uuid, rb)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
@@ -193,7 +185,6 @@ class TestRunbooks:
         uploaded_rb = res.json()
         uploaded_rb_state = uploaded_rb["status"]["state"]
         uploaded_rb_uuid = uploaded_rb["metadata"]["uuid"]
-        print("Current state of runbook {}: {}".format(uploaded_runbook_name, uploaded_rb_state))
         assert uploaded_rb_state == "ACTIVE", "Current state of runbook {}: {}".format(uploaded_runbook_name, uploaded_rb_state)
 
         # delete uploaded runbook
@@ -375,7 +366,6 @@ class TestRunbooks:
             assert rb_name == res["metadata"]["name"]
             assert rb_name == res["metadata"]["name"]
             print(">> Get call to runbook is successful >>")
-        print("Runbook spec post read: {}".format(json.dumps(res)))
         # creating an endpoint
         EndpointPayload, _ = create_endpoint_payload(linux_endpoint)
         ep_payload = EndpointPayload.get_dict()
@@ -398,13 +388,11 @@ class TestRunbooks:
             "name": endpoint_name,
             "kind": "app_endpoint",
         }
-        print("Runbook spec for update: {}".format(json.dumps(rb)))
         res, err = client.runbook.update(rb_uuid, rb)
         if err:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
         rb = res.json()
-        print("Runbook spec after update: {}".format(json.dumps(rb)))
         LOG.debug("Current state of runbook: {}".format(rb["status"]["state"]))
         assert rb["status"]["state"] == "ACTIVE"
 
