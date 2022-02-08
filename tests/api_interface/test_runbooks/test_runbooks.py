@@ -27,7 +27,6 @@ RunbookUpdatePayload = read_test_config(file_name="runbook_payload2.json")
 
 
 class TestRunbooks:
-
     def get_default_project_reference(self):
         """This method gets default project reference"""
 
@@ -95,7 +94,9 @@ class TestRunbooks:
         rb_uuid = rb["metadata"]["uuid"]
         rb_name = rb["spec"]["name"]
         print(">> Runbook state: {}".format(rb_state))
-        assert rb_state == "ACTIVE", "Current state of runbook {}: {}".format(rb_name,rb_state)
+        assert rb_state == "ACTIVE", "Current state of runbook {}: {}".format(
+            rb_name, rb_state
+        )
 
         # reading the runbook using get call
         print("\n>>Reading Runbook")
@@ -185,7 +186,9 @@ class TestRunbooks:
         uploaded_rb = res.json()
         uploaded_rb_state = uploaded_rb["status"]["state"]
         uploaded_rb_uuid = uploaded_rb["metadata"]["uuid"]
-        assert uploaded_rb_state == "ACTIVE", "Current state of runbook {}: {}".format(uploaded_runbook_name, uploaded_rb_state)
+        assert uploaded_rb_state == "ACTIVE", "Current state of runbook {}: {}".format(
+            uploaded_runbook_name, uploaded_rb_state
+        )
 
         # delete uploaded runbook
         _, err = client.runbook.delete(uploaded_rb_uuid)
@@ -352,7 +355,9 @@ class TestRunbooks:
         rb_name = rb["spec"]["name"]
         print(">> Runbook state: {}".format(rb_state))
         LOG.debug("Current state of runbook {}: {}".format(rb_name, rb_state))
-        assert rb_state == "ACTIVE", "Current state of runbook {}: {}".format(rb_name, rb_state)
+        assert rb_state == "ACTIVE", "Current state of runbook {}: {}".format(
+            rb_name, rb_state
+        )
 
         # reading the runbook using get call
         print("\n>>Reading Runbook")
@@ -378,7 +383,9 @@ class TestRunbooks:
         endpoint_state = endpoint["status"]["state"]
         endpoint_name = endpoint["status"]["name"]
         endpoint_uuid = endpoint["metadata"]["uuid"]
-        LOG.debug("Current state of endpoint {}: {}".format(endpoint_name,endpoint_state))
+        LOG.debug(
+            "Current state of endpoint {}: {}".format(endpoint_name, endpoint_state)
+        )
         assert endpoint_state == "ACTIVE"
 
         # updating the runbook
