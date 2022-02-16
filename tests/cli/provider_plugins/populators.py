@@ -218,26 +218,22 @@ class ResourcePopulator:
                     project
                 )
 
-        project_uuid = projects[project_list[0]]
-        res, err = client.project.read(project_uuid)
-
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        # get accounts from project
-        project = res.json()
-        accounts = project["status"]["resources"]["account_reference_list"]
-
-        reg_accounts = []
-        for account in accounts:
-            reg_accounts.append(account["uuid"])
-
+        # get accounts
         payload = {"filter": "type==azure"}
         res, err = client.account.list(payload)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
         res = res.json()
+
+        reg_accounts = []
+        for entity in res["entities"]:
+            entity_name = entity["metadata"]["name"]
+            entity_id = entity["metadata"]["uuid"]
+            if entity_name.startswith("azure_primary_cloud"):
+                reg_accounts.append(entity_id)
+            elif entity_name.startswith("azure_secondary_cloud"):
+                reg_accounts.append(entity_id)
+
         index = 1
         # adding accounts
         self.azure_resource_info["accounts"] = {}

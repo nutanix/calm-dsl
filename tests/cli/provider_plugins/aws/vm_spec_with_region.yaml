@@ -28,4 +28,5 @@ spec_assertions:
 
 dependencies:
  # For changing indexes of resource in input as per the setup
+- [0, projects/default]
 - [7 , accounts/primary_account/regions/us-east-1/index]

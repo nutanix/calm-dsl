@@ -71,6 +71,7 @@ spec_assertions:
 
 dependencies:
  # For changing indexes of resource in input as per the setup
+- [0, projects/default]
 - [5, accounts/azure_primary/locations/East US 2/index]
 - [7, accounts/azure_primary/locations/East US 2/hw_profiles/Standard_D1_v2/index]
 - [4, accounts/azure_primary/resource_groups/calmrg/index]

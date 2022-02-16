@@ -22,4 +22,5 @@ spec_assertions:
 
 dependencies:
  # For changing indexes of resource in input as per the setup
+- [0, projects/default]
 - [5, instance_types/t2.nano]
