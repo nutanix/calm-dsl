@@ -1551,7 +1551,7 @@ def launch_blueprint_simple(
                     LOG.error("[{}] - {}".format(err["code"], err["error"]))
                     sys.exit("Unable to retrieve protection policies")
                 protection_policies = [p["status"] for p in res.json()["entities"]]
-                payload = {"filter": "uuid=={}". format(env_uuids[0])}
+                payload = {"filter": "uuid=={}".format(env_uuids[0])}
                 res, err = client.environment.list(payload)
                 if err:
                     LOG.error("[{}] - {}".format(err["code"], err["error"]))

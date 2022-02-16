@@ -19,7 +19,9 @@ jobs:
       with:
         python-version: 3.7
     - name: black
-      uses: psf/black@21.4b1 # Exclude list is not honored - https://github.com/psf/black/issues/1584
+      uses: psf/black@stable # Exclude list is not honored - https://github.com/psf/black/issues/1584
+      with:
+        version: "21.4b1"
     - name: Setup env
       run: |
         python -m pip install --upgrade pip
