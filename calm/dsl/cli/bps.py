@@ -1745,7 +1745,7 @@ def delete_blueprint(blueprint_names):
 
 
 def create_patched_blueprint(
-    blueprint, project_data, environment_data, profile_name=None
+    blueprint, project_data, environment_data, profile_name=None, with_secrets=False
 ):
     """Patch the blueprint with the given environment to create a new blueprint"""
     client = get_api_client()
@@ -1766,13 +1766,19 @@ def create_patched_blueprint(
                 {
                     "environment": {"uuid": env_uuid},
                     "app_profile": {"name": profile_name},
+                    "keep_secrets": with_secrets,
                 }
             ],
             "new_blueprint": {"name": new_bp_name},
         },
     }
 
-    LOG.info("Creating Patched blueprint")
+    msg = (
+        "Creating Patched blueprint with secrets preserved"
+        if with_secrets
+        else "Creating Patched blueprint"
+    )
+    LOG.info(msg)
     bp_res, err = client.blueprint.patch_with_environment(org_bp_uuid, request_spec)
     if err:
         LOG.error("[{}] - {}".format(err["code"], err["error"]))
@@ -1787,7 +1793,9 @@ def create_patched_blueprint(
     return bp_res
 
 
-def patch_bp_if_required(environment_name=None, blueprint_name=None, profile_name=None):
+def patch_bp_if_required(
+    with_secrets=False, environment_name=None, blueprint_name=None, profile_name=None
+):
     """Patch the blueprint with the given environment to create a new blueprint if the requested app profile
     is not already linked to the given environment"""
     if environment_name:
@@ -1816,7 +1824,7 @@ def patch_bp_if_required(environment_name=None, blueprint_name=None, profile_nam
         )
         if ref_env_uuid != env_uuid:
             new_blueprint = create_patched_blueprint(
-                bp, project_data, environment_data, profile_name
+                bp, project_data, environment_data, profile_name, with_secrets
             )
             return new_blueprint["metadata"]["name"], new_blueprint
 
