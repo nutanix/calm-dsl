@@ -705,9 +705,7 @@ class ProjectCache(CacheTableBase):
                     AhvVmProvider = cls.get_provider_plugin("AHV_VM")
                     AhvObj = AhvVmProvider.get_api_obj()
 
-                    filter_query = "_entity_id_=={}".format(
-                        "|".join(subnet_uuids)
-                    )
+                    filter_query = "_entity_id_=={}".format("|".join(subnet_uuids))
                     LOG.debug(
                         "fetching following subnets {} for nutanix_pc account_uuid {}".format(
                             subnet_uuids, account_uuid

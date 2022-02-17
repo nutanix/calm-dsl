@@ -115,18 +115,14 @@ class ResourceAPI:
             params["sort_order"] = "ASCENDING"
         while True:
             params["offset"] = offset
-            response, err = self.list(
-                params,
-                ignore_error=ignore_error
-            )
+            response, err = self.list(params, ignore_error=ignore_error)
             if not err:
                 response = response.json()
             else:
                 if ignore_error:
                     return [], err
                 else:
-                    raise Exception(
-                        "[{}] - {}".format(err["code"], err["error"]))
+                    raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
             final_list.extend(response["entities"])
 
