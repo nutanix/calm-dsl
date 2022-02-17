@@ -847,12 +847,11 @@ class AhvNew(AhvBase):
             filter_query = filter_query[1:]
 
         params = {"length": limit, "offset": offset, "filter": filter_query}
-        res, err = Obj.list(params, ignore_error=True)
+        res, err = Obj.list_all(base_params=params, ignore_error=True)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-        res = res.json()
-        return res
+        return {"entities": res}
 
     def categories(self, *args, **kwargs):
         payload = copy.deepcopy(self.CATEGORIES_PAYLOAD)
@@ -936,12 +935,11 @@ class Ahv(AhvBase):
         filter_query = kwargs.get("filter_query", "")
 
         params = {"length": limit, "offset": offset, "filter": filter_query}
-        res, err = Obj.list(params, ignore_error=True)
+        res, err = Obj.list_all(base_params=params, ignore_error=True)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-        res = res.json()
-        return res
+        return {"entities": res}
 
     def categories(self, *args, **kwargs):
         Obj = get_resource_api(self.GROUPS, self.connection)
