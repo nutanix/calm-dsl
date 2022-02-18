@@ -2,6 +2,7 @@ import json
 import time
 import uuid
 import pytest
+import re
 import os as os_lib
 
 from distutils.version import LooseVersion as LV
@@ -44,6 +45,16 @@ def suffix(length=8):
     return str(uuid.uuid4())[:length]
 
 
+def file_replace(filename, match_str, replace_str):
+    """Replaces given match_str with replace_str in file with filename"""
+    with open(filename, "r") as fd:
+        filecontent = fd.read()
+
+    newcontent = re.sub(match_str, replace_str, filecontent)
+    with open(filename, "w") as fd:
+        fd.write(newcontent)
+
+
 @pytest.mark.skipif(
     LV(CALM_VERSION) < LV("3.4.0"), reason="Scheduler FEAT is for v3.4.0"
 )
@@ -67,12 +78,16 @@ class TestSchedulerCommands:
         bp_file = os_lib.path.dirname(current_path) + "/scheduler/" + DSL_BP_FILE
         client = get_api_client()
         bps.create_blueprint_from_dsl(client, bp_file, bp_name, force_create=True)
+        app_name = "{}_{}".format(bp_name, suffix())
         # Launch Blueprint
-        bps.launch_blueprint_simple(
-            bp_name, app_name="{}_{}".format(bp_name, suffix()), patch_editables=False
-        )
+        bps.launch_blueprint_simple(bp_name, app_name=app_name, patch_editables=False)
 
         jobname = "test_job_scheduler" + suffix()
+        file_replace(
+            dsl_file,
+            r'"{}.*\n'.format(dsl_file_name[: dsl_file_name.find(".")]),
+            r'"{}"\n'.format(app_name),
+        )
         result = scheduler.create_job_command(dsl_file, jobname, None, False)
         assert result.get("resources").get("state") == "ACTIVE"
 
@@ -108,17 +123,20 @@ class TestSchedulerCommands:
         # Create runbook
         current_path = os_lib.path.dirname(os_lib.path.realpath(__file__))
         dsl_file_name_for_runbook = dsl_file[dsl_file.rfind("/") :].replace("/", "")
-        runbook_name = "{}_{}".format(
-            dsl_file_name_for_runbook[: dsl_file_name_for_runbook.find(".")], suffix()
-        )
+        runbook_name = dsl_file_name_for_runbook[: dsl_file_name_for_runbook.find(".")]
+        runbook_name_suffixed = "{}_{}".format(runbook_name, suffix())
         runbook_file = (
             os_lib.path.dirname(current_path) + "/scheduler/" + DSL_RUNBOOK_FILE
         )
 
         runbooks.create_runbook_command(
-            runbook_file, runbook_name, description="", force=True
+            runbook_file, runbook_name_suffixed, description="", force=True
         )
-
+        file_replace(
+            dsl_file,
+            r'"{}.*\n'.format(runbook_name),
+            r'"{}"\n'.format(runbook_name_suffixed),
+        )
         result = scheduler.create_job_command(dsl_file, None, None, False)
         LOG.info(result)
         assert result.get("resources").get("state") == "ACTIVE"
@@ -135,17 +153,20 @@ class TestSchedulerCommands:
         # Create runbook
         current_path = os_lib.path.dirname(os_lib.path.realpath(__file__))
         dsl_file_name_for_runbook = dsl_file[dsl_file.rfind("/") :].replace("/", "")
-        runbook_name = "{}_{}".format(
-            dsl_file_name_for_runbook[: dsl_file_name_for_runbook.find(".")], suffix()
-        )
+        runbook_name = dsl_file_name_for_runbook[: dsl_file_name_for_runbook.find(".")]
+        runbook_name_suffixed = "{}_{}".format(runbook_name, suffix())
         runbook_file = (
             os_lib.path.dirname(current_path) + "/scheduler/" + DSL_RUNBOOK_FILE
         )
 
         runbooks.create_runbook_command(
-            runbook_file, runbook_name, description="", force=True
+            runbook_file, runbook_name_suffixed, description="", force=True
         )
-
+        file_replace(
+            dsl_file,
+            r'"{}.*\n'.format(runbook_name),
+            r'"{}"\n'.format(runbook_name_suffixed),
+        )
         result = scheduler.create_job_command(dsl_file, None, None, False)
         LOG.info(result)
         assert result.get("resources").get("state") == "INACTIVE"
@@ -193,18 +214,22 @@ class TestSchedulerCommands:
         # Create runbook
         current_path = os_lib.path.dirname(os_lib.path.realpath(__file__))
         dsl_file_name_for_runbook = dsl_file[dsl_file.rfind("/") :].replace("/", "")
-        runbook_name = "{}_{}".format(
-            dsl_file_name_for_runbook[: dsl_file_name_for_runbook.find(".")], suffix()
-        )
+        runbook_name = dsl_file_name_for_runbook[: dsl_file_name_for_runbook.find(".")]
+        runbook_name_suffixed = "{}_{}".format(runbook_name, suffix())
         runbook_file = (
             os_lib.path.dirname(current_path) + "/scheduler/" + DSL_RUNBOOK_FILE
         )
 
         runbooks.create_runbook_command(
-            runbook_file, runbook_name, description="", force=True
+            runbook_file, runbook_name_suffixed, description="", force=True
         )
         jobname = "duplicate_name_check" + suffix()
         # Create first job.
+        file_replace(
+            dsl_file,
+            r'"{}.*\n'.format(runbook_name),
+            r'"{}"\n'.format(runbook_name_suffixed),
+        )
         result = scheduler.create_job_command(dsl_file, jobname, None, False)
         LOG.info(result)
         assert result.get("resources").get("state") == "ACTIVE"
@@ -234,17 +259,20 @@ class TestSchedulerCommands:
 
         # Create runbook
         dsl_file_name_for_runbook = dsl_file[dsl_file.rfind("/") :].replace("/", "")
-        runbook_name = "{}_{}".format(
-            dsl_file_name_for_runbook[: dsl_file_name_for_runbook.find(".")], suffix()
-        )
+        runbook_name = dsl_file_name_for_runbook[: dsl_file_name_for_runbook.find(".")]
+        runbook_name_suffixed = "{}_{}".format(runbook_name, suffix())
         runbook_file = (
             os_lib.path.dirname(current_path) + "/scheduler/" + DSL_RUNBOOK_FILE
         )
 
         runbooks.create_runbook_command(
-            runbook_file, runbook_name, description="", force=True
+            runbook_file, runbook_name_suffixed, description="", force=True
         )
-
+        file_replace(
+            dsl_file,
+            r"{}.*\n".format(runbook_name),
+            '{}"\n'.format(runbook_name_suffixed),
+        )
         result = _create_job_with_custom_name(dsl_file)
         assert result.get("resources").get("state") == "INACTIVE"
         msg_list = result.get("resources").get("message_list", [])
@@ -266,18 +294,22 @@ class TestSchedulerCommands:
         # Create runbook
         current_path = os_lib.path.dirname(os_lib.path.realpath(__file__))
         dsl_file_name_for_runbook = dsl_file[dsl_file.rfind("/") :].replace("/", "")
-        runbook_name = "{}_{}".format(
-            dsl_file_name_for_runbook[: dsl_file_name_for_runbook.find(".")], suffix()
-        )
+        runbook_name = dsl_file_name_for_runbook[: dsl_file_name_for_runbook.find(".")]
+        runbook_name_suffixed = "{}_{}".format(runbook_name, suffix())
         runbook_file = (
             os_lib.path.dirname(current_path) + "/scheduler/" + DSL_RUNBOOK_FILE
         )
 
         runbooks.create_runbook_command(
-            runbook_file, runbook_name, description="", force=True
+            runbook_file, runbook_name_suffixed, description="", force=True
         )
 
         job_name = "test_job_list_" + suffix()
+        file_replace(
+            dsl_file,
+            r'"{}.*\n'.format(runbook_name),
+            r'"{}"\n'.format(runbook_name_suffixed),
+        )
         result = _create_job_with_custom_name(dsl_file, job_name)
         LOG.info(result)
         assert result.get("resources").get("state") == "ACTIVE"
@@ -303,17 +335,21 @@ class TestSchedulerCommands:
         # Create runbook
         current_path = os_lib.path.dirname(os_lib.path.realpath(__file__))
         dsl_file_name_for_runbook = dsl_file[dsl_file.rfind("/") :].replace("/", "")
-        runbook_name = "{}_{}".format(
-            dsl_file_name_for_runbook[: dsl_file_name_for_runbook.find(".")], suffix()
-        )
+        runbook_name = dsl_file_name_for_runbook[: dsl_file_name_for_runbook.find(".")]
+        runbook_name_suffixed = "{}_{}".format(runbook_name, suffix())
         runbook_file = (
             os_lib.path.dirname(current_path) + "/scheduler/" + DSL_RUNBOOK_FILE
         )
 
         runbooks.create_runbook_command(
-            runbook_file, runbook_name, description="", force=True
+            runbook_file, runbook_name_suffixed, description="", force=True
         )
         job_name = "test_job_describe_" + suffix()
+        file_replace(
+            dsl_file,
+            r'"{}.*\n'.format(runbook_name),
+            r'"{}"\n'.format(runbook_name_suffixed),
+        )
         result = _create_job_with_custom_name(dsl_file, job_name)
         LOG.info(result)
         assert result.get("resources").get("state") == "ACTIVE"
@@ -345,17 +381,21 @@ class TestSchedulerCommands:
         # Create runbook
         current_path = os_lib.path.dirname(os_lib.path.realpath(__file__))
         dsl_file_name_for_runbook = dsl_file[dsl_file.rfind("/") :].replace("/", "")
-        runbook_name = "{}_{}".format(
-            dsl_file_name_for_runbook[: dsl_file_name_for_runbook.find(".")], suffix()
-        )
+        runbook_name = dsl_file_name_for_runbook[: dsl_file_name_for_runbook.find(".")]
+        runbook_name_suffixed = "{}_{}".format(runbook_name, suffix())
         runbook_file = (
             os_lib.path.dirname(current_path) + "/scheduler/" + dsl_runbook_file
         )
 
         runbooks.create_runbook_command(
-            runbook_file, runbook_name, description="", force=True
+            runbook_file, runbook_name_suffixed, description="", force=True
         )
         jobname = "test_job_scheduler" + suffix()
+        file_replace(
+            dsl_file,
+            r'"{}.*\n'.format(runbook_name),
+            r'"{}"\n'.format(runbook_name_suffixed),
+        )
         result = scheduler.create_job_command(dsl_file, jobname, None, False)
         assert result.get("resources").get("state") == "ACTIVE"
 

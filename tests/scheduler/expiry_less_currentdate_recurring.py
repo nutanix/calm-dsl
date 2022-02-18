@@ -17,6 +17,9 @@ expiry_time = datetime.utcnow() - timedelta(seconds=600)
 expiry_time = str(expiry_time.strftime("%Y-%m-%dT%H:%M:%SZ"))
 
 
+RUNBOOK_NAME = "expiry_less_currentdate_recurring"
+
+
 class JobInvalidRecurringSpec(Job):
     """Recurring Invalid Job for Executing a Runbook with expiry date less than current date"""
 
@@ -24,4 +27,4 @@ class JobInvalidRecurringSpec(Job):
     schedule_info = JobScheduler.ScheduleInfo.recurring(
         cron, start_date_time, expiry_date_time, time_zone
     )
-    executable = JobScheduler.Exec.runbook("expiry_less_currentdate_recurring", False)
+    executable = JobScheduler.Exec.runbook(RUNBOOK_NAME, False)

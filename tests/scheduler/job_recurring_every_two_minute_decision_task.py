@@ -15,6 +15,8 @@ expiry_date = (
 
 time_zone = "Asia/Kolkata"
 
+RUNBOOK_NAME = "job_recurring_every_two_minute_decision_task"
+
 
 class JobRecurring(Job):
     """Recurring Job for Executing a Runbook"""
@@ -22,6 +24,4 @@ class JobRecurring(Job):
     schedule_info = JobScheduler.ScheduleInfo.recurring(
         "*/2 * * * *", start_date, expiry_date, time_zone
     )
-    executable = JobScheduler.Exec.runbook(
-        "job_recurring_every_two_minute_decision_task", False
-    )
+    executable = JobScheduler.Exec.runbook(RUNBOOK_NAME, False)

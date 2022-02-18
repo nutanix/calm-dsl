@@ -9,9 +9,11 @@ start_date = (
 )
 time_zone = "Asia/Kolkata"
 
+RUNBOOK_NAME = "one_time_scheduler"
+
 
 class JobOneTimeSpec(Job):
     """One Time Job for Executing a Runbook"""
 
     schedule_info = JobScheduler.ScheduleInfo.oneTime(start_date, time_zone)
-    executable = JobScheduler.Exec.runbook("one_time_scheduler", False)
+    executable = JobScheduler.Exec.runbook(RUNBOOK_NAME, False)

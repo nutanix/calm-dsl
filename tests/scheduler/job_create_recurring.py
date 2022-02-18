@@ -7,6 +7,8 @@ expiry_date_time = "2050-10-09 00:17:00"
 cron = "52 15 * * *"
 time_zone = "America/Jamaica"
 
+RUNBOOK_NAME = "job_create_recurring"
+
 
 class JobRecurringSpec(Job):
     """Recurring Job for Executing a Runbook"""
@@ -15,4 +17,4 @@ class JobRecurringSpec(Job):
     schedule_info = JobScheduler.ScheduleInfo.recurring(
         cron, start_date_time, expiry_date_time, time_zone
     )
-    executable = JobScheduler.Exec.runbook("job_create_recurring", False)
+    executable = JobScheduler.Exec.runbook(RUNBOOK_NAME, False)

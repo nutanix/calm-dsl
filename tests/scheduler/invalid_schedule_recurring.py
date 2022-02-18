@@ -8,6 +8,8 @@ expiry_date_time = "2050-10-09 00:17:00"
 cron = "52 15 * * *"
 time_zone = "America/Jamaica"
 
+RUNBOOK_NAME = "invalid_schedule_recurring"
+
 
 class JobInvalidRecurringSpec(Job):
     """Recurring Invalid Job for Executing a Runbook with start date less than current date"""
@@ -16,4 +18,4 @@ class JobInvalidRecurringSpec(Job):
     schedule_info = JobScheduler.ScheduleInfo.recurring(
         cron, start_date_time, expiry_date_time, time_zone
     )
-    executable = JobScheduler.Exec.runbook("invalid_schedule_recurring", False)
+    executable = JobScheduler.Exec.runbook(RUNBOOK_NAME, False)

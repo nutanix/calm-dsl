@@ -15,14 +15,14 @@ expiry_date = (
 
 time_zone = "Asia/Kolkata"
 
+APP_NAME = "job_app_action_recc"
+
 
 class JobRecurring(Job):
     """Recurring Job for Executing an App Action"""
 
-    name = "job_app_action_recc"
+    name = "test_job_app_action_recc"
     schedule_info = JobScheduler.ScheduleInfo.recurring(
         "*/2 * * * *", start_date, expiry_date, time_zone
     )
-    executable = JobScheduler.Exec.app_action(
-        "job_app_action_recc", "sample_profile_action"
-    )
+    executable = JobScheduler.Exec.app_action(APP_NAME, "sample_profile_action")
