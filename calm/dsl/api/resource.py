@@ -98,32 +98,42 @@ class ResourceAPI:
 
         return uuid_name_map
 
-    def list_all(self, api_limit=250):
+    def list_all(self, api_limit=250, base_params=None, ignore_error=False):
         """returns the list of entities"""
 
         final_list = []
         offset = 0
+        if base_params is None:
+            base_params = {}
+        params = base_params.copy()
+        length = params.get("length", api_limit)
+        params["length"] = length
+        params["offset"] = offset
+        if params.get("sort_attribute", None) is None:
+            params["sort_attribute"] = "_created_timestamp_usecs_"
+        if params.get("sort_order", None) is None:
+            params["sort_order"] = "ASCENDING"
         while True:
-            response, err = self.list(
-                params={
-                    "length": api_limit,
-                    "offset": offset,
-                    "sort_attribute": "_created_timestamp_usecs_",
-                    "sort_order": "ASCENDING",
-                }
-            )
+            params["offset"] = offset
+            response, err = self.list(params, ignore_error=ignore_error)
             if not err:
                 response = response.json()
             else:
-                raise Exception("[{}] - {}".format(err["code"], err["error"]))
+                if ignore_error:
+                    return [], err
+                else:
+                    raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
             final_list.extend(response["entities"])
 
             total_matches = response["metadata"]["total_matches"]
-            if total_matches <= (api_limit + offset):
+            if total_matches <= (length + offset):
                 break
 
-            offset += api_limit
+            offset += length
+
+        if ignore_error:
+            return final_list, None
 
         return final_list
 

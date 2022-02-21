@@ -520,9 +520,7 @@ def describe_project(project_name, out):
             AhvVmProvider = get_provider("AHV_VM")
             AhvObj = AhvVmProvider.get_api_obj()
 
-            filter_query = "(_entity_id_=={})".format(
-                ",_entity_id_==".join(subnets_list)
-            )
+            filter_query = "_entity_id_=={}".format("|".join(subnets_list))
             nics = AhvObj.subnets(account_uuid=account_uuid, filter_query=filter_query)
             nics = nics["entities"]
 

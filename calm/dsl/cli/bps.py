@@ -1576,15 +1576,8 @@ def launch_blueprint_simple(
                     )
                     sys.exit("No nutanix account found in environment")
                 ahv_new = AhvNew(client.connection)
-                filter_query = (
-                    "("
-                    + ",".join(
-                        [
-                            "_entity_id_==" + subnet["uuid"]
-                            for subnet in ntnx_acc["subnet_references"]
-                        ]
-                    )
-                    + ")"
+                filter_query = "_entity_id_=in={}".format(
+                    "|".join(subnet["uuid"] for subnet in ntnx_acc["subnet_references"])
                 )
                 subnets = ahv_new.subnets(
                     filter_query=filter_query,
