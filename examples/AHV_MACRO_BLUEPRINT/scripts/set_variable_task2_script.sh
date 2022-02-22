@@ -1,0 +1,1 @@
+echo 'var2=test_var2'

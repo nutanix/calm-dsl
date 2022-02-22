@@ -4,10 +4,11 @@ from .connection import REQUEST
 class ResourceAPI:
 
     ROOT = "api/nutanix/v3"
+    CALM_ROOT = "api/calm/v3.0"
 
-    def __init__(self, connection, resource_type):
+    def __init__(self, connection, resource_type, calm_api=False):
         self.connection = connection
-        self.PREFIX = ResourceAPI.ROOT + "/" + resource_type
+        self.PREFIX = (self.CALM_ROOT if calm_api else self.ROOT) + "/" + resource_type
         self.LIST = self.PREFIX + "/list"
         self.ITEM = self.PREFIX + "/{}"
 
@@ -97,28 +98,45 @@ class ResourceAPI:
 
         return uuid_name_map
 
-    def list_all(self, api_limit=250):
+    def list_all(self, api_limit=250, base_params=None, ignore_error=False):
         """returns the list of entities"""
 
         final_list = []
         offset = 0
+        if base_params is None:
+            base_params = {}
+        params = base_params.copy()
+        length = params.get("length", api_limit)
+        params["length"] = length
+        params["offset"] = offset
+        if params.get("sort_attribute", None) is None:
+            params["sort_attribute"] = "_created_timestamp_usecs_"
+        if params.get("sort_order", None) is None:
+            params["sort_order"] = "ASCENDING"
         while True:
-            response, err = self.list(params={"length": api_limit, "offset": offset})
+            params["offset"] = offset
+            response, err = self.list(params, ignore_error=ignore_error)
             if not err:
                 response = response.json()
             else:
-                raise Exception("[{}] - {}".format(err["code"], err["error"]))
+                if ignore_error:
+                    return [], err
+                else:
+                    raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
             final_list.extend(response["entities"])
 
             total_matches = response["metadata"]["total_matches"]
-            if total_matches <= (api_limit + offset):
+            if total_matches <= (length + offset):
                 break
 
-            offset += api_limit
+            offset += length
+
+        if ignore_error:
+            return final_list, None
 
         return final_list
 
 
-def get_resource_api(resource_type, connection):
-    return ResourceAPI(connection, resource_type)
+def get_resource_api(resource_type, connection, calm_api=False):
+    return ResourceAPI(connection, resource_type, calm_api=calm_api)

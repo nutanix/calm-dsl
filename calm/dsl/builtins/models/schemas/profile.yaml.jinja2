@@ -26,11 +26,30 @@ properties:
     type: array
     items:
       $ref: '#/components/schemas/Variable'
+  patch_list:
+    x-calm-dsl-min-version: 3.3.0
+    x-calm-dsl-display-name: patch_list
+    type: array
+    items:
+      $ref: '#/components/schemas/ConfigSpec'
+
   action_list:
     x-calm-dsl-display-name: actions
     type: array
     items:
       $ref: '#/components/schemas/Action'
+  snapshot_config_list:
+    x-calm-dsl-display-name: snapshot_configs
+    x-calm-dsl-min-version: 3.3.0
+    type: array
+    items:
+      $ref: '#/components/schemas/ConfigSpec'
+  restore_config_list:
+    x-calm-dsl-display-name: restore_configs
+    x-calm-dsl-min-version: 3.3.0
+    type: array
+    items:
+      $ref: '#/components/schemas/ConfigSpec'
 {%- endmacro %}
 
 

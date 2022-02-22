@@ -1,7 +1,6 @@
 from .resource import ResourceAPI
 from .connection import REQUEST
 from .util import strip_secrets, patch_secrets
-from .project import ProjectAPI
 
 
 class BlueprintAPI(ResourceAPI):
@@ -21,6 +20,9 @@ class BlueprintAPI(ResourceAPI):
         self.VARIABLE_VALUES = self.ITEM + "/variables/{}/values"
         self.VARIABLE_VALUES_WITH_TRLID = (
             self.VARIABLE_VALUES + "?requestId={}&trlId={}"
+        )
+        self.PROTECTION_POLICY_LIST = (
+            self.ITEM + "/app_profile/{}/config_spec/{}/app_protection_policies/list"
         )
 
     # TODO https://jira.nutanix.com/browse/CALM-17178
@@ -84,6 +86,21 @@ class BlueprintAPI(ResourceAPI):
         payload["filter"] += ";refresh_cache==True"
         return self.connection._call(
             self.BROWNFIELD_VM_LIST,
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
+        )
+
+    def protection_policies(
+        self, bp_uuid, app_profile_uuid, config_uuid, env_uuid, length=250, offset=0
+    ):
+        payload = {
+            "length": 250,
+            "offset": 0,
+            "filter": "environment_references=={}".format(env_uuid),
+        }
+        return self.connection._call(
+            self.PROTECTION_POLICY_LIST.format(bp_uuid, app_profile_uuid, config_uuid),
             verify=False,
             request_json=payload,
             method=REQUEST.METHOD.POST,

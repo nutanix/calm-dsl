@@ -8,6 +8,7 @@ from peewee import (
     BooleanField,
     CompositeKey,
     DoesNotExist,
+    IntegerField,
 )
 import datetime
 import click
@@ -17,6 +18,7 @@ import sys
 from prettytable import PrettyTable
 
 from calm.dsl.api import get_resource_api, get_api_client
+from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 from calm.dsl.constants import CACHE
 
@@ -125,6 +127,7 @@ class CacheTableBase(BaseModel):
 
 class AhvSubnetsCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.AHV_SUBNET
+    feature_min_version = "2.7.0"
     name = CharField()
     uuid = CharField()
     cluster = CharField()
@@ -210,7 +213,9 @@ class AhvSubnetsCache(CacheTableBase):
             for entity in res.get("entities", []):
                 name = entity["status"]["name"]
                 uuid = entity["metadata"]["uuid"]
-                cluster_ref = entity["status"]["cluster_reference"]
+                cluster_ref = entity["status"].get("cluster_reference", {})
+                if not cluster_ref:
+                    continue
                 cluster_name = cluster_ref.get("name", "")
                 cluster_uuid = cluster_ref.get("uuid", "")
 
@@ -289,6 +294,7 @@ class AhvSubnetsCache(CacheTableBase):
 
 class AhvImagesCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.AHV_DISK_IMAGE
+    feature_min_version = "2.7.0"
     name = CharField()
     image_type = CharField()
     uuid = CharField()
@@ -434,6 +440,7 @@ class AhvImagesCache(CacheTableBase):
 
 class AccountCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.ACCOUNT
+    feature_min_version = "2.7.0"
     name = CharField()
     uuid = CharField()
     provider_type = CharField()
@@ -515,7 +522,7 @@ class AccountCache(CacheTableBase):
         client = get_api_client()
         payload = {
             "length": 250,
-            "filter": "(state==ACTIVE,state==VERIFIED);type!=nutanix",
+            "filter": "(state==ACTIVE,state==VERIFIED)",
         }
         res, err = client.account.list(payload)
         if err:
@@ -535,14 +542,23 @@ class AccountCache(CacheTableBase):
             if provider_type == "nutanix_pc":
                 query_obj["is_host"] = entity["status"]["resources"]["data"]["host_pc"]
 
-                # store cluster accounts for PC account
+                # store cluster accounts for PC account (Note it will store cluster name not account name)
                 for pe_acc in (
                     entity["status"]["resources"]
                     .get("data", {})
                     .get("cluster_account_reference_list", [])
                 ):
                     group = data.setdefault("clusters", {})
-                    group[pe_acc["uuid"]] = pe_acc.get("name")
+                    group[pe_acc["uuid"]] = (
+                        pe_acc.get("resources", {})
+                        .get("data", {})
+                        .get("cluster_name", "")
+                    )
+
+            elif provider_type == "nutanix":
+                data["pc_account_uuid"] = entity["status"]["resources"]["data"][
+                    "pc_account_uuid"
+                ]
 
             query_obj["data"] = json.dumps(data)
             cls.create_entry(**query_obj)
@@ -579,6 +595,7 @@ class AccountCache(CacheTableBase):
 
 class ProjectCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.PROJECT
+    feature_min_version = "2.7.0"
     name = CharField()
     uuid = CharField()
     accounts_data = CharField()
@@ -669,8 +686,8 @@ class ProjectCache(CacheTableBase):
                 "subnet_reference_list", []
             )
             # Use spec dict in entity-payload for external subnets
-            external_subnets_ref_list = entity["spec"]["resources"].get(
-                "external_network_list", []
+            external_subnets_ref_list = (
+                entity["spec"].get("resources", {}).get("external_network_list", [])
             )
             account_map = {}
             for account in account_list:
@@ -700,9 +717,7 @@ class ProjectCache(CacheTableBase):
                     AhvVmProvider = cls.get_provider_plugin("AHV_VM")
                     AhvObj = AhvVmProvider.get_api_obj()
 
-                    filter_query = "(_entity_id_=={})".format(
-                        ",_entity_id_==".join(subnet_uuids)
-                    )
+                    filter_query = "_entity_id_=={}".format("|".join(subnet_uuids))
                     LOG.debug(
                         "fetching following subnets {} for nutanix_pc account_uuid {}".format(
                             subnet_uuids, account_uuid
@@ -892,9 +907,10 @@ class ProjectCache(CacheTableBase):
 
 class EnvironmentCache(CacheTableBase):
     __cache_type__ = "environment"
+    feature_min_version = "2.7.0"
     name = CharField()
     uuid = CharField()
-    project = CharField()
+    project_uuid = CharField()
     accounts_data = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
@@ -902,7 +918,7 @@ class EnvironmentCache(CacheTableBase):
         return {
             "name": self.name,
             "uuid": self.uuid,
-            "project": self.project,
+            "project_uuid": self.project_uuid,
             "accounts_data": json.loads(self.accounts_data),
             "last_update_time": self.last_update_time,
         }
@@ -921,7 +937,7 @@ class EnvironmentCache(CacheTableBase):
             return
 
         table = PrettyTable()
-        table.field_names = ["NAME", "UUID", "PROJECT", "LAST UPDATED"]
+        table.field_names = ["NAME", "UUID", "PROJECT_UUID", "LAST UPDATED"]
         for entity in cls.select():
             entity_data = entity.get_detail_dict()
             last_update_time = arrow.get(
@@ -931,7 +947,7 @@ class EnvironmentCache(CacheTableBase):
                 [
                     highlight_text(entity_data["name"]),
                     highlight_text(entity_data["uuid"]),
-                    highlight_text(entity_data.get("project", "")),
+                    highlight_text(entity_data.get("project_uuid", "")),
                     highlight_text(last_update_time),
                 ]
             )
@@ -946,37 +962,16 @@ class EnvironmentCache(CacheTableBase):
         # update by latest data
         client = get_api_client()
 
-        payload = {"length": 250, "offset": 0}
-        res, err = client.project.list(payload)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        res = res.json()
-
-        # populating a map to lookup the project to which an environment belongs
-        env_uuid_to_project_map = {}
-        for entity in res["entities"]:
-            project_name = entity["status"]["name"]
-            project_environments = entity["status"]["resources"].get(
-                "environment_reference_list", []
-            )
-            for env in project_environments:
-                env_uuid_to_project_map[env["uuid"]] = project_name
-
-        # paginate to cache more environment?
-        Obj = get_resource_api("environments", client.connection)
-        res, err = Obj.list({"length": 250})
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        res = res.json()
-        for entity in res["entities"]:
+        env_list = client.environment.list_all()
+        for entity in env_list:
             name = entity["status"]["name"]
             uuid = entity["metadata"]["uuid"]
-            project_name = env_uuid_to_project_map.get(uuid)
+            project_uuid = (
+                entity["metadata"].get("project_reference", {}).get("uuid", "")
+            )
 
             # ignore environments that are not associated to a project
-            if not project_name:
+            if not project_uuid:
                 continue
 
             infra_inclusion_list = entity["status"]["resources"].get(
@@ -1004,7 +999,7 @@ class EnvironmentCache(CacheTableBase):
                 name=name,
                 uuid=uuid,
                 accounts_data=accounts_data,
-                project=project_name,
+                project_uuid=project_uuid,
             )
 
     @classmethod
@@ -1013,15 +1008,15 @@ class EnvironmentCache(CacheTableBase):
             name=name,
             uuid=uuid,
             accounts_data=kwargs.get("accounts_data", "{}"),
-            project=kwargs.get("project", ""),
+            project_uuid=kwargs.get("project_uuid", ""),
         )
 
     @classmethod
     def get_entity_data(cls, name, **kwargs):
         query_obj = {"name": name}
-        project = kwargs.get("project", "")
-        if project:
-            query_obj["project"] = project
+        project_uuid = kwargs.get("project_uuid", "")
+        if project_uuid:
+            query_obj["project_uuid"] = project_uuid
 
         try:
             entity = super().get(**query_obj)
@@ -1046,6 +1041,7 @@ class EnvironmentCache(CacheTableBase):
 
 class UsersCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.USER
+    feature_min_version = "2.7.0"
     name = CharField()
     uuid = CharField()
     display_name = CharField()
@@ -1183,6 +1179,7 @@ class UsersCache(CacheTableBase):
 
 class RolesCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.ROLE
+    feature_min_version = "2.7.0"
     name = CharField()
     uuid = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
@@ -1274,6 +1271,7 @@ class RolesCache(CacheTableBase):
 
 class DirectoryServiceCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.DIRECTORY_SERVICE
+    feature_min_version = "2.7.0"
     name = CharField()
     uuid = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
@@ -1365,6 +1363,7 @@ class DirectoryServiceCache(CacheTableBase):
 
 class UserGroupCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.USER_GROUP
+    feature_min_version = "2.7.0"
     name = CharField()
     uuid = CharField()
     display_name = CharField()
@@ -1511,6 +1510,7 @@ class UserGroupCache(CacheTableBase):
 
 class AhvNetworkFunctionChain(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.AHV_NETWORK_FUNCTION_CHAIN
+    feature_min_version = "2.7.0"
     name = CharField()
     uuid = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
@@ -1586,6 +1586,165 @@ class AhvNetworkFunctionChain(CacheTableBase):
     class Meta:
         database = dsl_database
         primary_key = CompositeKey("name", "uuid")
+
+
+class AppProtectionPolicyCache(CacheTableBase):
+    __cache_type__ = "app_protection_policy"
+    feature_min_version = "3.3.0"
+    name = CharField()
+    uuid = CharField()
+    rule_name = CharField()
+    rule_uuid = CharField()
+    rule_expiry = IntegerField()
+    rule_type = CharField()
+    project_name = CharField()
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self, *args, **kwargs):
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "rule_name": self.rule_name,
+            "rule_uuid": self.rule_uuid,
+            "rule_expiry": self.rule_expiry,
+            "rule_type": self.rule_type,
+            "project_name": self.project_name,
+            "last_update_time": self.last_update_time,
+        }
+
+    @classmethod
+    def clear(cls):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = [
+            "NAME",
+            "UUID",
+            "RULE NAME",
+            "RULE TYPE",
+            "EXPIRY (DAYS)",
+            "PROJECT",
+            "LAST UPDATED",
+        ]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            if not entity_data["rule_expiry"]:
+                entity_data["rule_expiry"] = "-"
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(entity_data["rule_name"]),
+                    highlight_text(entity_data["rule_type"]),
+                    highlight_text(entity_data["rule_expiry"]),
+                    highlight_text(entity_data["project_name"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def sync(cls):
+        # clear old data
+        cls.clear()
+
+        # update by latest data
+        client = get_api_client()
+        Obj = get_resource_api(
+            "app_protection_policies", client.connection, calm_api=True
+        )
+        entities = Obj.list_all()
+
+        for entity in entities:
+            name = entity["status"]["name"]
+            uuid = entity["metadata"]["uuid"]
+            project_reference = entity["metadata"].get("project_reference", {})
+            for rule in entity["status"]["resources"]["app_protection_rule_list"]:
+                expiry = 0
+                rule_type = ""
+                if rule.get("remote_snapshot_retention_policy", {}):
+                    rule_type = "Remote"
+                    expiry = (
+                        rule["remote_snapshot_retention_policy"]
+                        .get("snapshot_expiry_policy", {})
+                        .get("multiple", 0)
+                    )
+                elif rule.get("local_snapshot_retention_policy", {}):
+                    rule_type = "Local"
+                    expiry = (
+                        rule["local_snapshot_retention_policy"]
+                        .get("snapshot_expiry_policy", {})
+                        .get("multiple", 0)
+                    )
+                rule_name = rule["name"]
+                rule_uuid = rule["uuid"]
+                cls.create_entry(
+                    name=name,
+                    uuid=uuid,
+                    rule_name=rule_name,
+                    rule_uuid=rule_uuid,
+                    project_name=project_reference.get("name", ""),
+                    rule_expiry=expiry,
+                    rule_type=rule_type,
+                )
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        rule_name = kwargs.get("rule_name", "")
+        rule_uuid = kwargs.get("rule_uuid", "")
+        rule_expiry = kwargs.get("rule_expiry", 0)
+        rule_type = kwargs.get("rule_type", "")
+        project_name = kwargs.get("project_name", "")
+        if not rule_uuid:
+            LOG.error(
+                "Protection Rule UUID not supplied for Protection Policy {}".format(
+                    name
+                )
+            )
+            sys.exit("Missing rule_uuid for protection policy")
+        super().create(
+            name=name,
+            uuid=uuid,
+            rule_name=rule_name,
+            rule_uuid=rule_uuid,
+            rule_expiry=rule_expiry,
+            rule_type=rule_type,
+            project_name=project_name,
+        )
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        rule_uuid = kwargs.get("rule_uuid", "")
+        rule_name = kwargs.get("rule_name", "")
+        query_obj = {"name": name, "project_name": kwargs.get("project_name", "")}
+        if rule_name:
+            query_obj["rule_name"] = rule_name
+        elif rule_uuid:
+            query_obj["rule_uuid"] = rule_uuid
+
+        try:
+            entity = super().get(**query_obj)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return None
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("name", "uuid", "rule_uuid")
 
 
 class VersionTable(BaseModel):

@@ -1,5 +1,5 @@
 j2cli[yaml]==0.3.10
-ipython==7.16.1
+ipython==7.16.3
 pytest>=4.2.0,<=5.3.5
 pytest-sugar==0.9.4
 pytest-html==3.1.1
@@ -14,5 +14,7 @@ pytest-icdiff==0.5
 pytest-xdist==1.29.0
 pytest-gitignore==1.3
 pytest-rerunfailures==4.1.0
+pytest-reportportal==1.0.9
+reportportal-client==3.2.3
 #python-language-server[all]
 #pyls

@@ -22,6 +22,7 @@ from .bps import (
     create_blueprint_from_dsl,
 )
 from .apps import watch_app
+from .utils import FeatureDslOption
 
 LOG = get_logging_handle(__name__)
 
@@ -235,10 +236,9 @@ def create_blueprint_command(bp_file, name, description, force):
             msgs.append(msg + msg_dict.get("message", ""))
 
         LOG.error(
-            "Blueprint {} created with {} error(s): \n{}".format(
-                bp_name, len(msg_list), "\n".join(msgs)
-            )
+            "Blueprint {} created with {} error(s):".format(bp_name, len(msg_list))
         )
+        click.echo("\n".join(msgs))
         sys.exit(-1)
 
     LOG.info("Blueprint {} created successfully.".format(bp_name))
@@ -256,6 +256,13 @@ def create_blueprint_command(bp_file, name, description, force):
 
 @launch.command("bp")
 @click.argument("blueprint_name")
+@click.option(
+    "--with_secrets",
+    "-ws",
+    is_flag=True,
+    default=False,
+    help="Preserve secrets while launching the blueprint",
+)
 @click.option(
     "--environment", "-e", default=None, help="Environment for the application"
 )
@@ -289,9 +296,17 @@ def create_blueprint_command(bp_file, name, description, force):
     show_default=True,
     help="Give polling interval",
 )
+@click.option(
+    "--brownfield_deployments",
+    "-b",
+    "brownfield_deployment_file",
+    type=FeatureDslOption(feature_min_version="3.3.0"),
+    help="Path of Brownfield Deployment file (Added in 3.3)",
+)
 def launch_blueprint_command(
     blueprint_name,
     environment,
+    with_secrets,
     app_name,
     ignore_runtime_variables,
     profile_name,
@@ -299,6 +314,7 @@ def launch_blueprint_command(
     watch,
     poll_interval,
     blueprint=None,
+    brownfield_deployment_file=None,
 ):
     """Launches a blueprint.
     All runtime variables will be prompted by default. When passing the 'ignore_runtime_variables' flag, no variables will be prompted and all default values will be used.
@@ -340,14 +356,27 @@ def launch_blueprint_command(
                 "name": <Credential Name>,
             }
         ]
+        snapshot_config_list = [
+            {
+                "value":  {
+                    "attrs_list": [
+                        <attrs_list_editables>
+                    ]
+                },
+                "name": <Snapshot Config Name>,
+            }
+        ]
     Sample context for variables:
         1. context = "<Profile Name>"    # For variable under profile
         2. context = "<Service Name>"    # For variable under service
+
+    \b
+    >: brownfield_deployments: Python file containing brownfield deployments
     """
 
     app_name = app_name or "App-{}-{}".format(blueprint_name, int(time.time()))
     blueprint_name, blueprint = patch_bp_if_required(
-        environment, blueprint_name, profile_name
+        with_secrets, environment, blueprint_name, profile_name
     )
 
     launch_blueprint_simple(
@@ -357,6 +386,7 @@ def launch_blueprint_command(
         profile_name=profile_name,
         patch_editables=not ignore_runtime_variables,
         launch_params=launch_params,
+        brownfield_deployment_file=brownfield_deployment_file,
     )
     if watch:
 

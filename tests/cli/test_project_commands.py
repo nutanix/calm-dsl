@@ -22,6 +22,10 @@ DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 USER = DSL_CONFIG["USERS"][0]
 USER_NAME = USER["NAME"]
 
+ACCOUNTS = DSL_CONFIG["ACCOUNTS"]
+AWS_ACCOUNT = ACCOUNTS["AWS"][0]
+AWS_ACCOUNT_NAME = AWS_ACCOUNT["NAME"]
+
 # calm_version
 CALM_VERSION = Version.get_version("Calm")
 
@@ -247,6 +251,66 @@ class TestProjectCommands:
                 )
             )
             pytest.fail("Project update call failed")
+        LOG.info("Success")
+
+    def _test_account_updation_using_cli_switches(self):
+        """Removes and adds account to the project"""
+
+        runner = CliRunner()
+        LOG.info(
+            "Testing 'calm update project' command using cli switches for account deletion"
+        )
+        result = runner.invoke(
+            cli,
+            [
+                "update",
+                "project",
+                self.dsl_project_name,
+                "--remove_account",
+                AWS_ACCOUNT_NAME,
+            ],
+        )
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Project update call failed")
+
+        LOG.info(
+            "Testing 'calm update project' command using cli switches for account addition"
+        )
+        result = runner.invoke(
+            cli,
+            [
+                "update",
+                "project",
+                self.dsl_project_name,
+                "--add_account",
+                AWS_ACCOUNT_NAME,
+            ],
+        )
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Project update call failed")
+
         LOG.info("Success")
 
     def _test_update_project_using_dsl_file(self):

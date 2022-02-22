@@ -53,10 +53,11 @@ Context info includes server, project and log configuration for dsl operations.
  - Download app action runlogs: `calm download action_runlog <runlog_uuid> --app <application_name> --file <file_name>`
 
 ### Brownfield Application
-- Two ways to declare brownfield deployments in dsl: User can define brownfield deployments in blueprint [file](https://github.com/nutanix/calm-dsl/blob/release/2.9/examples/Brownfield/inline_example/blueprint.py) OR he can declare brownfield deployments in separate [file](https://github.com/nutanix/calm-dsl/blob/release/2.9/examples/Brownfield/separate_file_example/brownfield_deployments.py) and pass it as cli parameter while creating brownfield application.
+- Two ways to declare brownfield deployments in dsl: User can define brownfield deployments in blueprint [file](examples/Brownfield/inline_example/blueprint.py) OR he can declare brownfield deployments in separate [file](examples/Brownfield/separate_file_example/brownfield_deployments.py) and pass it as cli parameter while creating brownfield application.
 - List Brownfield vms: `calm get brownfield vms --project <project_name> --type [AHV_VM|AWS_VM|AZURE_VM|GCP_VM|VMWARE_VM]`. Please use `--account` cli option, if project has multiple accounts for a provider type.
 - Compile Blueprint: `calm compile bp -f <blueprint_file_location> -b <brownfield_deployments_file_location>`.
 - Create Brownfield Application: `calm create app -f <bluprint_file_location> -b <brownfield_deployments_file_location> -n <app_name> -i`.
+- Create Brownfield Application using existing blueprint: `calm launch bp <bp_name> -b <brownfield_deployments_file_location> -n <app_name>`. Command will launch existing blueprint to create brownfield application (3.3.0 onwards). Look at sample file [here](examples/Brownfield/separate_file_example/brownfield_deployments.py).
 
 ### Decompiling Blueprints (`.json`->`.py`)
 Decompilation is process to consume json data for any entity and convert it back to dsl python helpers/classes. Currently, decompile is supported for converting blueprint json to python files. Summary of support for blueprint decompilation(Experimental feature):
@@ -134,13 +135,20 @@ Use `calm get roles` to list all roles in PC. The below roles are relevant for C
 - Delete group: `calm delete group <distinguished_name>`
 
 ### Projects
-- Compile project: `calm compile project --file <project_file_location>`. This command will print the compiled project JSON. Look at sample file [here](https://github.com/nutanix/calm-dsl/blob/master/tests/project/demo_project.py) and [here](https://github.com/nutanix/calm-dsl/blob/master/tests/project/test_project_in_pc.py).
+- Compile project: `calm compile project --file <project_file_location>`. This command will print the compiled project JSON. Look at sample file [here](examples/Project/demo_project.py) and [here](examples/Project/project_with_env.py).
 - Create project on Calm Server: `calm create project --file <project_file_location> --name <project_name> --description <description>`.
 - List projects: `calm get projects`. Get projects, optionally filtered by a string
 - Describe project: `calm describe project <project_name>`. It will print summary of project.
-- Update project using dsl file: `calm update project <project_name> --file <project_file_location>`.
-- Update project using cli switches: `calm update project <project_name> --add_user/--remove_user <user_name> --add_group/--remove_group <group_name>`.
+- Update project using dsl file: `calm update project <project_name> --file <project_file_location>`. Environments will not be updated as part of this operation.
+- Update project using cli switches: `calm update project <project_name> --add_user/--remove_user <user_name> --add_group/--remove_group <group_name> --add_account/--remove_account <account_name>`.
 - Delete project: `calm delete project <project_name>`.
+
+### Environments
+- Compile environment: `calm compile environment --file <env_file_location> --project <project_name>`. Command will print the compiled environment JSON. Look at sample file [here](examples/Environment/sample_environment.py)
+- Create environment to existing project: `calm create environment --file <env_file_location> --project <project_name> --name <environmet_name>`.
+- Update environment: `calm update environment <environment_name> --file <env_file_location> --project <project_name>`.
+- List environments: `calm get environments --project <project_name>`. Get environments of project.
+- Delete environment: `calm delete environment <environment_name> --project <project_name>`.
 
 ### Access Control Policies
 Access control policies ensures that a project member can access only the entities or perform only the actions defined in the role assigned to that project member.

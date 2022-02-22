@@ -1,0 +1,13 @@
+{%- macro snapshot_config(obj) %}
+{% if obj.policy %}
+{% if obj.rule %}
+AppProtection.SnapshotConfig(name='{{obj.name}}', target=ref({{obj.target}}), restore_config=ref({{obj.restore_config}}), policy=AppProtection.ProtectionPolicy('{{obj.policy}}', rule='{{obj.rule}}'))
+{% else %}
+AppProtection.SnapshotConfig(name='{{obj.name}}', target=ref({{obj.target}}), restore_config=ref({{obj.restore_config}}), policy=AppProtection.ProtectionPolicy('{{obj.policy}}'))
+{% endif %}
+{% else %}
+AppProtection.SnapshotConfig(name='{{obj.name}}', target=ref({{obj.target}}), restore_config=ref({{obj.restore_config}}))
+{% endif %}
+{%- endmacro %}
+
+{{ snapshot_config(obj) }}

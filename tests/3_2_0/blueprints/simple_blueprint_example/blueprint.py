@@ -13,6 +13,8 @@ CENTOS_PUBLIC_KEY = read_local_file(".tests/keys/centos_pub")
 PROJECT = DSL_CONFIG["PROJECTS"]["PROJECT1"]
 PROJECT_NAME = PROJECT["NAME"]
 ENV_NAME = PROJECT["ENVIRONMENTS"][0]["NAME"]
+NTNX_LOCAL_ACCOUNT = DSL_CONFIG["ACCOUNTS"]["NTNX_LOCAL_AZ"]
+SUBNET_UUID = NTNX_LOCAL_ACCOUNT["SUBNETS"][0]["UUID"]
 
 Centos = basic_cred("centos", CENTOS_KEY, name="Centos", type="KEY", default=True)
 
@@ -22,6 +24,9 @@ class VmDeployment(SimpleDeployment):
 
     # VM Spec
     provider_spec = read_provider_spec("specs/ahv_provider_spec.yaml")
+    provider_spec.spec["resources"]["nic_list"][0]["subnet_reference"][
+        "uuid"
+    ] = SUBNET_UUID
 
 
 class SingleVmBlueprint(SimpleBlueprint):

@@ -3,6 +3,7 @@ Sample single vm example to convert python dsl to calm v3 api spec
 
 """
 import sys
+import json
 
 from calm.dsl.builtins import port, ref, setvar, basic_cred
 from calm.dsl.builtins import Port, Service, Package, Substrate
@@ -13,6 +14,11 @@ CRED_USERNAME = read_local_file(".tests/username")
 CRED_PASSWORD = read_local_file(".tests/password")
 DNS_SERVER = read_local_file(".tests/dns_server_two_vm_example")
 MYSQL_PORT = read_local_file(".tests/mysql_port")
+
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+NTNX_LOCAL_ACCOUNT = DSL_CONFIG["ACCOUNTS"]["NTNX_LOCAL_AZ"]
+SUBNET_UUID = NTNX_LOCAL_ACCOUNT["SUBNETS"][0]["UUID"]
+
 # Setting the recursion limit to max for
 sys.setrecursionlimit(100000)
 
@@ -63,12 +69,18 @@ class AHVMedVM(Substrate):
     """Medium size AHV VM config given by reading a spec file"""
 
     provider_spec = read_provider_spec("specs/ahv_provider_spec.yaml")
+    provider_spec.spec["resources"]["nic_list"][0]["subnet_reference"][
+        "uuid"
+    ] = SUBNET_UUID
 
 
 class AHVMedVMForPHP(Substrate):
     """Medium size AHV VM config given by reading a spec file"""
 
     provider_spec = read_provider_spec("specs/ahv_provider_spec.yaml")
+    provider_spec.spec["resources"]["nic_list"][0]["subnet_reference"][
+        "uuid"
+    ] = SUBNET_UUID
 
 
 class MySQLDeployment(Deployment):
@@ -110,15 +122,27 @@ class TwoBlueprint(Blueprint):
 def test_json():
     """Test the generated json for a single VM
     against known output"""
+    import json
     import os
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_path = os.path.join(dir_path, "two_vm_bp_output.json")
 
-    generated_json = TwoBlueprint.json_dumps(pprint=True)
-    known_json = open(file_path).read()
+    # Change dynamic values in known json and remove account_uuid from generated_json
+    known_json = json.loads(open(file_path).read())
+    generated_json = json.loads(TwoBlueprint.json_dumps(pprint=True))
+    for _sd in known_json["substrate_definition_list"]:
+        _sd["create_spec"]["resources"]["nic_list"][0]["subnet_reference"][
+            "uuid"
+        ] = SUBNET_UUID
 
-    assert generated_json == known_json
+    generated_json["app_profile_list"][0].pop("snapshot_config_list", None)
+    generated_json["app_profile_list"][0].pop("restore_config_list", None)
+    generated_json["app_profile_list"][0].pop("patch_list", None)
+    for _sd in generated_json["substrate_definition_list"]:
+        _sd["create_spec"]["resources"].pop("account_uuid", None)
+
+    assert sorted(known_json.items()) == sorted(generated_json.items())
 
 
 # Commenting test_yaml. for letting pass Jenkins run

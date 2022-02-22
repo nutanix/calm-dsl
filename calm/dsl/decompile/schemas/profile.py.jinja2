@@ -4,6 +4,8 @@ class {{obj.name}}(Profile):
 
     {% if obj.gui_display_name %}name="{{obj.gui_display_name}}"{% endif %}
     {% if obj.deployments %}deployments = [{{obj.deployments}}]{%- endif %}
+    {% if obj.restore_configs %}restore_configs = [{{obj.restore_configs}}]{%- endif %}
+    {% if obj.snapshot_configs %}snapshot_configs = [{{obj.snapshot_configs}}]{%- endif %}
 {% for variable in obj.variables %}
 {{variable | indent( width=4, first=True)}}
 {% endfor -%}

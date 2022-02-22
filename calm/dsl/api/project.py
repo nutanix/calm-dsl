@@ -9,6 +9,7 @@ class ProjectAPI(ResourceAPI):
         self.CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/calm_projects"
         self.CALM_PROJECTS_ITEM = self.CALM_PROJECTS_PREFIX + "/{}"
         self.CALM_PROJECTS_PENDING_TASKS = self.CALM_PROJECTS_ITEM + "/pending_tasks/{}"
+        self.CALM_PROJECTS_USAGE = self.CALM_PROJECTS_ITEM + "/usage"
 
     def create(self, payload):
 
@@ -30,6 +31,14 @@ class ProjectAPI(ResourceAPI):
             return None, err
 
         return super().create(payload)
+
+    def usage(self, uuid, payload):
+        return self.connection._call(
+            self.CALM_PROJECTS_USAGE.format(uuid),
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
+        )
 
     def delete(self, uuid):
         return self.connection._call(

@@ -1,0 +1,40 @@
+{% macro ConfigSpec() -%}
+title: ConfigSpec
+type: object
+x-calm-dsl-type: app_config_spec
+properties:
+  name:
+    type: string
+  description:
+    type: string
+  type:
+    type: string
+  variable_list:
+    x-calm-dsl-display-name: variables
+    type: array
+    items:
+      $ref: '#/components/schemas/Variable'
+  config_reference_list:
+    x-calm-dsl-display-name: config_references
+    type: array
+    items:
+      $ref: '#/components/schemas/Ref'
+  patch_attrs:
+    type: array
+    items:
+      $ref: '#/components/schemas/ConfigAttrs'
+  attrs_list:
+    type: array
+    items:
+        type: object
+        additionalProperties: true
+        x-calm-dsl-type: dict
+{%- endmacro %}
+
+
+{% macro ConfigSpecSchema() -%}
+
+ConfigSpec:
+  {{ ConfigSpec()|indent(2) }}
+
+{%- endmacro %}

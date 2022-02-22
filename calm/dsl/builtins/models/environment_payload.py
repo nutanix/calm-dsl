@@ -1,4 +1,5 @@
 import sys
+import uuid
 from distutils.version import LooseVersion as LV
 
 from .entity import EntityType, Entity
@@ -34,7 +35,15 @@ def _environment_payload(**kwargs):
 EnvironmentPayload = _environment_payload()
 
 
-def create_environment_payload(UserEnvironment):
+def create_environment_payload(UserEnvironment, metadata=dict()):
+    """
+    Creates environment payload
+    Args:
+        UserEnvironment(object): Environment object
+        metadata (dict) : Metadata for environment
+    Returns:
+        response(tuple): tuple consisting of environment payload object and error
+    """
 
     err = {"error": "", "code": -1}
 
@@ -52,31 +61,36 @@ def create_environment_payload(UserEnvironment):
         "resources": UserEnvironment,
     }
 
-    ContextObj = get_context()
-    project_config = ContextObj.get_project_config()
+    env_project = metadata.get("project_reference", {}).get("name", "")
+    if not env_project:
+        ContextObj = get_context()
+        project_config = ContextObj.get_project_config()
+        env_project = project_config["name"]
+
     project_cache_data = Cache.get_entity_data(
-        entity_type=CACHE.ENTITY.PROJECT, name=project_config["name"]
+        entity_type=CACHE.ENTITY.PROJECT, name=env_project
     )
     if not project_cache_data:
-        LOG.error("Project {} not found.".format(project_config["name"]))
-        sys.exit(-1)
+        LOG.error("Project {} not found.".format(env_project))
+        sys.exit("Project {} not found.".format(env_project))
 
-    metadata = {
+    metadata_payload = {
         "spec_version": 1,
         "kind": "environment",
         "name": UserEnvironment.__name__,
+        "uuid": str(uuid.uuid4()),
     }
 
     calm_version = Version.get_version("Calm")
     if LV(calm_version) >= LV("3.2.0"):
-        metadata["project_reference"] = {
+        metadata_payload["project_reference"] = {
             "kind": "project",
             "name": project_cache_data["name"],
             "uuid": project_cache_data["uuid"],
         }
 
     UserEnvironmentPayload = _environment_payload()
-    UserEnvironmentPayload.metadata = metadata
+    UserEnvironmentPayload.metadata = metadata_payload
     UserEnvironmentPayload.spec = spec
 
     return UserEnvironmentPayload, None

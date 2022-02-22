@@ -97,7 +97,7 @@ def get_ahv_bf_vm_data(
     cluster_uuid = clusters[0]["uuid"]
 
     params = {
-        "length": 250,
+        "length": 1000,
         "offset": 0,
         "filter": "project_uuid=={};account_uuid=={}".format(
             project_uuid, cluster_uuid
@@ -233,7 +233,7 @@ def get_azure_bf_vm_data(
     client = get_api_client()
 
     params = {
-        "length": 250,
+        "length": 1000,
         "offset": 0,
         "filter": "project_uuid=={};account_uuid=={}".format(
             project_uuid, account_uuid
@@ -259,6 +259,10 @@ def get_azure_bf_vm_data(
         e_id = e_resources["instance_id"]
         e_address = e_resources["address"]
         e_address_list = e_resources["public_ip_address"]
+        e_private_address = e_resources["private_ip_address"]
+        if (not e_address_list) and e_private_address:
+            e_address = [e_private_address]
+            e_address_list = e_private_address
 
         if match_vm_data(
             vm_name=e_name,
@@ -469,7 +473,11 @@ class BrownfiedVmType(EntityType):
         cls_deployment = common_helper._walk_to_parent_with_given_type(
             cls, "BrownfieldDeploymentType"
         )
-        return cls_deployment.substrate.__self__
+
+        if cls_deployment and getattr(cls_deployment, "substrate", None):
+            return cls_deployment.substrate.__self__
+
+        return None
 
     def get_account_uuid(cls):
         """returns the account_uuid configured for given brwonfield vm"""
@@ -479,7 +487,10 @@ class BrownfiedVmType(EntityType):
         cls_substrate = cls.get_substrate()
 
         provider_type = cls.provider
-        account_uuid = ""
+
+        # account_uuid is attached to brownfield instances if a
+        # blueprint is launched with runtime brownfield deployments
+        account_uuid = getattr(cls, "account_uuid", "")
         if cls_substrate:
             account = getattr(cls_substrate, "account", dict()) or dict()
             if account:

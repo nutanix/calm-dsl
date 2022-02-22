@@ -6,6 +6,7 @@ from calm.dsl.cli.constants import RUNLOG
 from calm.dsl.config import get_context
 from tests.api_interface.test_runbooks.test_files.exec_task import (
     EscriptTask,
+    EscriptMacroTask,
     SetVariableOnEscript,
     EscriptOnEndpoint,
     PowershellTask,
@@ -29,7 +30,7 @@ from tests.api_interface.test_runbooks.test_files.exec_task import (
 )
 from utils import upload_runbook, poll_runlog_status
 
-
+# TODO: Add validation for macro test values: EscriptMacroTask
 class TestExecTasks:
     @pytest.mark.runbook
     @pytest.mark.regression
@@ -37,6 +38,7 @@ class TestExecTasks:
         "Runbook",
         [
             EscriptTask,
+            EscriptMacroTask,
             SetVariableOnEscript,
             EscriptOnEndpoint,
             PowershellTask,

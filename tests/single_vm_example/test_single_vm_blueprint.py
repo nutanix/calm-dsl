@@ -3,8 +3,14 @@ Single AHV VM Blueprint Example
 
 """
 
+import json
+
 from calm.dsl.builtins import SimpleDeployment, SimpleBlueprint
-from calm.dsl.builtins import read_provider_spec
+from calm.dsl.builtins import read_provider_spec, read_local_file
+
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+NTNX_LOCAL_ACCOUNT = DSL_CONFIG["ACCOUNTS"]["NTNX_LOCAL_AZ"]
+SUBNET_UUID = NTNX_LOCAL_ACCOUNT["SUBNETS"][0]["UUID"]
 
 
 class VmDeployment(SimpleDeployment):
@@ -12,6 +18,9 @@ class VmDeployment(SimpleDeployment):
 
     # VM Spec
     provider_spec = read_provider_spec("specs/ahv_provider_spec.yaml")
+    provider_spec.spec["resources"]["nic_list"][0]["subnet_reference"][
+        "uuid"
+    ] = SUBNET_UUID
 
 
 class SingleVmBlueprint(SimpleBlueprint):

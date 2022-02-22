@@ -25,6 +25,14 @@ class UserGroupAPI(ResourceAPI):
             )
             distinguished_name = directory_service_user_group.get("distinguished_name")
 
+            # For user-groups having caps in the name
+            try:
+                distinguished_name = entity["spec"]["resources"][
+                    "directory_service_user_group"
+                ]["distinguished_name"]
+            except Exception:
+                pass
+
             directory_service_ref = (
                 directory_service_user_group.get("directory_service_reference")
                 or dict()
@@ -57,6 +65,14 @@ class UserGroupAPI(ResourceAPI):
                 e_resources.get("directory_service_user_group") or dict()
             )
             distinguished_name = directory_service_user_group.get("distinguished_name")
+
+            # For user-groups having caps in the name
+            try:
+                distinguished_name = entity["spec"]["resources"][
+                    "directory_service_user_group"
+                ]["distinguished_name"]
+            except Exception:
+                pass
 
             directory_service_ref = (
                 directory_service_user_group.get("directory_service_reference")

@@ -2,27 +2,50 @@ import click
 import sys
 import traceback
 from peewee import OperationalError, IntegrityError
+from distutils.version import LooseVersion as LV
 
 from .version import Version
+from calm.dsl.config import get_context
 from calm.dsl.db import get_db_handle, init_db_handle
 from calm.dsl.log import get_logging_handle
+from calm.dsl.api import get_client_handle_obj
 
 LOG = get_logging_handle(__name__)
+
+CALM_VERSION = Version.get_version("Calm")
 
 
 class Cache:
     """Cache class Implementation"""
 
     @classmethod
-    def get_cache_tables(cls):
+    def get_cache_tables(cls, sync_version=False):
         """returns tables used for cache purpose"""
 
         db = get_db_handle()
         db_tables = db.registered_tables
 
+        # Get calm version from api only if necessary
+        calm_version = CALM_VERSION
+        if sync_version or (not calm_version):
+            context = get_context()
+            server_config = context.get_server_config()
+            client = get_client_handle_obj(
+                server_config["pc_ip"],
+                server_config["pc_port"],
+                auth=(server_config["pc_username"], server_config["pc_password"]),
+            )
+            res, err = client.version.get_calm_version()
+            if err:
+                LOG.error("Failed to get version")
+                sys.exit(err["error"])
+            calm_version = res.content.decode("utf-8")
+
         cache_tables = {}
         for table in db_tables:
-            if hasattr(table, "__cache_type__"):
+            if hasattr(table, "__cache_type__") and (
+                LV(calm_version) >= LV(table.feature_min_version)
+            ):
                 cache_tables[table.__cache_type__] = table
         return cache_tables
 
@@ -103,7 +126,7 @@ class Cache:
                 table.sync()
                 click.echo(".", nl=False, err=True)
 
-        cache_table_map = cls.get_cache_tables()
+        cache_table_map = cls.get_cache_tables(sync_version=True)
         tables = list(cache_table_map.values())
 
         # Inserting version table at start

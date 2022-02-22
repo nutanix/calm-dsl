@@ -111,6 +111,11 @@ def EscriptTask():
 
 
 @runbook
+def EscriptMacroTask():
+    Task.Exec.escript(name="EscriptMacroTask", filename="macro_escript.py")
+
+
+@runbook
 def SetVariableOnEscript():
     Task.SetVariable.escript(
         name="SetVariableTask",
