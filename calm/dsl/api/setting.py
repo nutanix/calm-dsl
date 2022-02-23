@@ -26,7 +26,7 @@ class SettingAPI(ResourceAPI):
     def get_uuid_type_map(self, params=dict()):
         """returns map containing {account_uuid: account_type} details"""
 
-        response, err = self.list(params)
+        response, err = self.list_all(base_params=params)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 

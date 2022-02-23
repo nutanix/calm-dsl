@@ -111,11 +111,11 @@ class CacheTableBase(BaseModel):
     @classmethod
     def get_entity_data_using_uuid(cls, uuid, **kwargs):
         raise NotImplementedError("get_entity_data_using_uuid helper not implemented")
-    
+
     @classmethod
     def add_one(cls, uuid, **kwargs):
         raise NotImplementedError("add_one helper not implemented")
-    
+
     @classmethod
     def delete_one(cls, uuid, **kwargs):
         raise NotImplementedError("delete_one helper not implemented")
@@ -783,7 +783,7 @@ class ProjectCache(CacheTableBase):
             return dict()
 
     @classmethod
-    def get_project_data(cls, uuid):
+    def fetch_one(cls, uuid):
         """returns project data for project uuid"""
 
         # update by latest data
@@ -810,7 +810,7 @@ class ProjectCache(CacheTableBase):
         # Use spec dict in entity-payload for external subnets
         external_subnets_ref_list = project_data["spec"]["resources"].get(
             "external_network_list", []
-        )   
+        )
 
         account_map = dict()
         subnet_to_account_map = dict()
@@ -868,34 +868,34 @@ class ProjectCache(CacheTableBase):
             "name": project_name,
             "uuid": uuid,
             "accounts_data": accounts_data,
-            "whitelisted_subnets": whitelisted_subnets
+            "whitelisted_subnets": whitelisted_subnets,
         }
 
     @classmethod
     def add_one(cls, uuid, **kwargs):
         """adds one entry to project table"""
 
-        db_data = cls.get_project_data(uuid, **kwargs)
+        db_data = cls.fetch_one(uuid, **kwargs)
         cls.create_entry(**db_data)
 
     @classmethod
     def delete_one(cls, uuid, **kwargs):
         """deletes one entity from project"""
 
-        obj = cls.get(cls.uuid==uuid)
+        obj = cls.get(cls.uuid == uuid)
         obj.delete_instance()
 
     @classmethod
     def update_one(cls, uuid, **kwargs):
         """updates single entry to project table"""
 
-        db_data = cls.get_project_data(uuid, **kwargs)
+        db_data = cls.fetch_one(uuid, **kwargs)
         q = cls.update(
-                {
-                    cls.accounts_data : db_data["accounts_data"],
-                    cls.whitelisted_subnets : db_data["whitelisted_subnets"]
-                }
-            ).where(cls.uuid == uuid)
+            {
+                cls.accounts_data: db_data["accounts_data"],
+                cls.whitelisted_subnets: db_data["whitelisted_subnets"],
+            }
+        ).where(cls.uuid == uuid)
         q.execute()
 
     class Meta:
@@ -1031,6 +1031,74 @@ class EnvironmentCache(CacheTableBase):
 
         except DoesNotExist:
             return dict()
+
+    @classmethod
+    def fetch_one(cls, uuid):
+        """fetches one entity data"""
+
+        client = get_api_client()
+        res, err = client.environment.read(uuid)
+        if err:
+            LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+            return {}
+
+        entity = res.json()
+        env_name = entity["status"]["name"]
+        project_uuid = entity["metadata"].get("project_reference", {}).get("uuid", "")
+        infra_inclusion_list = entity["status"]["resources"].get(
+            "infra_inclusion_list", []
+        )
+        account_map = {}
+        for infra in infra_inclusion_list:
+            _account_type = infra["type"]
+            _account_data = dict(
+                uuid=infra["account_reference"]["uuid"],
+                name=infra["account_reference"].get("name", ""),
+            )
+
+            if _account_type == "nutanix_pc":
+                subnet_refs = infra.get("subnet_references", [])
+                _account_data["subnet_uuids"] = [row["uuid"] for row in subnet_refs]
+
+            if not account_map.get(_account_type):
+                account_map[_account_type] = []
+
+            account_map[_account_type].append(_account_data)
+
+        accounts_data = json.dumps(account_map)
+        return {
+            "name": env_name,
+            "uuid": uuid,
+            "accounts_data": accounts_data,
+            "project_uuid": project_uuid,
+        }
+
+    @classmethod
+    def add_one(cls, uuid, **kwargs):
+        """adds one entry to env table"""
+
+        db_data = cls.fetch_one(uuid, **kwargs)
+        cls.create_entry(**db_data)
+
+    @classmethod
+    def delete_one(cls, uuid, **kwargs):
+        """deletes one entity from env table"""
+
+        obj = cls.get(cls.uuid == uuid)
+        obj.delete_instance()
+
+    @classmethod
+    def update_one(cls, uuid, **kwargs):
+        """updates single entry to env table"""
+
+        db_data = cls.fetch_one(uuid, **kwargs)
+        q = cls.update(
+            {
+                cls.accounts_data: db_data["accounts_data"],
+                cls.project_uuid: db_data["project_uuid"],
+            }
+        ).where(cls.uuid == uuid)
+        q.execute()
 
     class Meta:
         database = dsl_database
