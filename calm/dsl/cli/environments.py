@@ -205,7 +205,9 @@ def get_env_class_from_module(user_env_module):
     return UserEnvironment
 
 
-def create_environment_from_dsl_file(env_file, env_name, project_name, no_cache_update=False):
+def create_environment_from_dsl_file(
+    env_file, env_name, project_name, no_cache_update=False
+):
     """
     Helper creates an environment from dsl file (for calm_version >= 3.2)
     Args:
@@ -248,7 +250,9 @@ def create_environment_from_dsl_file(env_file, env_name, project_name, no_cache_
         LOG.info("[Done]")
 
 
-def update_environment_from_dsl_file(env_name, env_file, project_name, no_cache_update=False):
+def update_environment_from_dsl_file(
+    env_name, env_file, project_name, no_cache_update=False
+):
     """
     Helper updates   an environment from dsl file (for calm_version >= 3.2)
     Args:
@@ -333,8 +337,7 @@ def get_project_environment(name=None, uuid=None, project_name=None, project_uui
         return None, project_data
 
     if uuid is None:
-        params = {"filter": "name=={};project_reference=={}".format(
-            name, project_uuid)}
+        params = {"filter": "name=={};project_reference=={}".format(name, project_uuid)}
         LOG.info(
             "Searching for the environment {} under project {}".format(
                 name, project_name
@@ -358,8 +361,7 @@ def get_project_environment(name=None, uuid=None, project_name=None, project_uui
 
     if not project_environments.get(uuid):
         raise Exception(
-            "No environment with name {} found in project {}".format(
-                name, project_name)
+            "No environment with name {} found in project {}".format(name, project_name)
         )
 
     LOG.info("Environment {} found ".format(name))
@@ -394,8 +396,7 @@ def get_environment_list(name, filter_by, limit, offset, quiet, out, project_nam
     if project_name:
         project_data = get_project(project_name)
         project_id = project_data["metadata"]["uuid"]
-        filter_query = filter_query + \
-            ";project_reference=={}".format(project_id)
+        filter_query = filter_query + ";project_reference=={}".format(project_id)
     if filter_query.startswith(";"):
         filter_query = filter_query[1:]
 

@@ -42,8 +42,7 @@ LOG = get_logging_handle(__name__)
 def _get_environment_list(name, filter_by, limit, offset, quiet, out, project_name):
     """Get the environment, optionally filtered by a string"""
 
-    get_environment_list(name, filter_by, limit, offset,
-                         quiet, out, project_name)
+    get_environment_list(name, filter_by, limit, offset, quiet, out, project_name)
 
 
 @delete.command("environment", feature_min_version="3.2.0")
@@ -54,7 +53,7 @@ def _get_environment_list(name, filter_by, limit, offset, quiet, out, project_na
     "no_cache_update",
     is_flag=True,
     default=False,
-    help="if true, cache is not updated for project"
+    help="if true, cache is not updated for project",
 )
 def _delete_environment(environment_name, project_name, no_cache_update):
     """Deletes a environment"""
@@ -80,7 +79,7 @@ def _delete_environment(environment_name, project_name, no_cache_update):
     "no_cache_update",
     is_flag=True,
     default=False,
-    help="if true, cache is not updated for project"
+    help="if true, cache is not updated for project",
 )
 def _create_environment(env_file, env_name, project_name, no_cache_update):
     """
@@ -89,7 +88,8 @@ def _create_environment(env_file, env_name, project_name, no_cache_update):
 
     if env_file.endswith(".py"):
         create_environment_from_dsl_file(
-            env_file, env_name, project_name, no_cache_update)
+            env_file, env_name, project_name, no_cache_update
+        )
     else:
         LOG.error("Unknown file format {}".format(env_file))
         return
@@ -111,7 +111,7 @@ def _create_environment(env_file, env_name, project_name, no_cache_update):
     "no_cache_update",
     is_flag=True,
     default=False,
-    help="if true, cache is not updated for project"
+    help="if true, cache is not updated for project",
 )
 def _update_environment(env_name, project_name, env_file, no_cache_update):
     """
@@ -120,7 +120,8 @@ def _update_environment(env_name, project_name, env_file, no_cache_update):
 
     if env_file.endswith(".py"):
         update_environment_from_dsl_file(
-            env_name, env_file, project_name, no_cache_update)
+            env_name, env_file, project_name, no_cache_update
+        )
     else:
         LOG.error("Unknown file format {}".format(env_file))
         return

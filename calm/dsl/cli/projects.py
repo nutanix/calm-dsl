@@ -237,8 +237,7 @@ def compile_project_command(project_file, out):
     project_payload = compile_project_dsl_class(UserProject)
 
     if out == "json":
-        click.echo(json.dumps(project_payload,
-                   indent=4, separators=(",", ": ")))
+        click.echo(json.dumps(project_payload, indent=4, separators=(",", ": ")))
     elif out == "yaml":
         click.echo(yaml.dump(project_payload, default_flow_style=False))
     else:
@@ -281,8 +280,7 @@ def create_project(project_payload, name="", description=""):
         poll_interval=4,
     )
     if task_state in PROJECT_TASK.FAILURE_STATES:
-        LOG.exception(
-            "Project creation task went to {} state".format(task_state))
+        LOG.exception("Project creation task went to {} state".format(task_state))
         sys.exit(-1)
 
     return stdout_dict
@@ -311,14 +309,15 @@ def update_project(project_uuid, project_payload):
         project["metadata"]["uuid"], project["status"]["execution_context"]["task_uuid"]
     )
     if task_state in PROJECT_TASK.FAILURE_STATES:
-        LOG.exception(
-            "Project updation task went to {} state".format(task_state))
+        LOG.exception("Project updation task went to {} state".format(task_state))
         sys.exit(-1)
 
     return stdout_dict
 
 
-def create_project_from_dsl(project_file, project_name, description="", no_cache_update=False):
+def create_project_from_dsl(
+    project_file, project_name, description="", no_cache_update=False
+):
     """Steps:
     1. Creation of project without env
     2. Creation of env
@@ -354,19 +353,16 @@ def create_project_from_dsl(project_file, project_name, description="", no_cache
         for _env in envs:
             env_name = _env.__name__
             LOG.info(
-                "Searching for existing environments with name '{}'".format(
-                    env_name)
+                "Searching for existing environments with name '{}'".format(env_name)
             )
-            res, err = client.environment.list(
-                {"filter": "name=={}".format(env_name)})
+            res, err = client.environment.list({"filter": "name=={}".format(env_name)})
             if err:
                 LOG.error(err)
                 sys.exit(-1)
 
             res = res.json()
             if res["metadata"]["total_matches"]:
-                LOG.error(
-                    "Environment with name '{}' already exists".format(env_name))
+                LOG.error("Environment with name '{}' already exists".format(env_name))
 
             LOG.info("No existing environment found with name '{}'".format(env_name))
 
@@ -427,8 +423,7 @@ def create_project_from_dsl(project_file, project_name, description="", no_cache
                 "default_environment_reference"
             ] = default_environment_ref
 
-        update_project(project_uuid=project_uuid,
-                       project_payload=project_payload)
+        update_project(project_uuid=project_uuid, project_payload=project_payload)
 
         # Reset the context changes
         ContextObj.reset_configuration()
@@ -463,16 +458,14 @@ def describe_project(project_name, out):
 
     click.echo("Status: " + highlight_text(project["status"]["state"]))
     click.echo(
-        "Owner: "
-        + highlight_text(project["metadata"]["owner_reference"]["name"])
+        "Owner: " + highlight_text(project["metadata"]["owner_reference"]["name"])
     )
 
     created_on = arrow.get(project["metadata"]["creation_time"])
     past = created_on.humanize()
     click.echo(
         "Created on: {} ({})".format(
-            highlight_text(time.ctime(created_on.timestamp)
-                           ), highlight_text(past)
+            highlight_text(time.ctime(created_on.timestamp)), highlight_text(past)
         )
     )
 
@@ -484,8 +477,7 @@ def describe_project(project_name, out):
         click.echo(highlight_text("No"))
     else:  # Handle Multiple Environments
         click.echo(
-            "{} ( uuid: {} )".format(highlight_text(
-                "Yes"), environments[0]["uuid"])
+            "{} ( uuid: {} )".format(highlight_text("Yes"), environments[0]["uuid"])
         )
 
     users = project_resources.get("user_reference_list", [])
@@ -497,12 +489,10 @@ def describe_project(project_name, out):
 
     groups = project_resources.get("external_user_group_reference_list", [])
     if groups:
-        usergroup_uuid_name_map = client.group.get_uuid_name_map({
-                                                                 "length": 1000})
+        usergroup_uuid_name_map = client.group.get_uuid_name_map({"length": 1000})
         click.echo("\nRegistered Groups: \n--------------------")
         for group in groups:
-            click.echo(
-                "\t" + highlight_text(usergroup_uuid_name_map[group["uuid"]]))
+            click.echo("\t" + highlight_text(usergroup_uuid_name_map[group["uuid"]]))
 
     click.echo("\nInfrastructure: \n---------------")
 
@@ -522,8 +512,7 @@ def describe_project(project_name, out):
         )
         if not account_cache_data:
             LOG.error(
-                "Account (uuid={}) not found. Please update cache".format(
-                    account_uuid)
+                "Account (uuid={}) not found. Please update cache".format(account_uuid)
             )
             sys.exit(-1)
 
@@ -543,8 +532,7 @@ def describe_project(project_name, out):
             filter_query = "(_entity_id_=={})".format(
                 ",_entity_id_==".join(subnets_list)
             )
-            nics = AhvObj.subnets(account_uuid=account_uuid,
-                                  filter_query=filter_query)
+            nics = AhvObj.subnets(account_uuid=account_uuid, filter_query=filter_query)
             nics = nics["entities"]
 
             click.echo("\n\tWhitelisted Subnets:\n\t--------------------")
@@ -566,8 +554,7 @@ def describe_project(project_name, out):
     if not accounts:
         click.echo(highlight_text("No provider's account registered"))
 
-    quota_resources = project_resources.get(
-        "resource_domain", {}).get("resources", [])
+    quota_resources = project_resources.get("resource_domain", {}).get("resources", [])
     if quota_resources:
         click.echo("\nQuotas: \n-------")
         for qr in quota_resources:
@@ -604,8 +591,7 @@ def delete_project(project_names, no_cache_update=False):
             project_id, res["status"]["execution_context"]["task_uuid"], poll_interval=4
         )
         if task_state in PROJECT_TASK.FAILURE_STATES:
-            LOG.exception(
-                "Project deletion task went to {} state".format(task_state))
+            LOG.exception("Project deletion task went to {} state".format(task_state))
             sys.exit(-1)
 
     # Update projects in cache if any project has been deleted
@@ -802,8 +788,7 @@ def update_project_from_dsl(project_name, project_file, no_cache_update=False):
                 remove_group_list=acp_remove_group_list,
             )
     else:
-        LOG.exception(
-            "Project updation task went to {} state".format(task_state))
+        LOG.exception("Project updation task went to {} state".format(task_state))
         sys.exit(-1)
 
     if no_cache_update:
@@ -930,24 +915,20 @@ def update_project_using_cli_switches(
         )
         if not account_cache_data:
             LOG.error(
-                "Account (uuid={}) not found. Please update cache".format(
-                    _acc_uuid)
+                "Account (uuid={}) not found. Please update cache".format(_acc_uuid)
             )
             sys.exit("Account (uuid={}) not found".format(_acc_uuid))
 
         if account_cache_data["name"] not in remove_account_list:
             updated_proj_accounts.append(_acc)
         else:
-            project_usage_payload["filter"]["account_reference_list"].append(
-                _acc_uuid)
+            project_usage_payload["filter"]["account_reference_list"].append(_acc_uuid)
 
     project_account_uuids = [_e["uuid"] for _e in updated_proj_accounts]
     for _acc in add_account_list:
-        account_cache_data = Cache.get_entity_data(
-            entity_type="account", name=_acc)
+        account_cache_data = Cache.get_entity_data(entity_type="account", name=_acc)
         if not account_cache_data:
-            LOG.error(
-                "Account (name={}) not found. Please update cache".format(_acc))
+            LOG.error("Account (name={}) not found. Please update cache".format(_acc))
             sys.exit("Account (name={}) not found".format(_acc))
 
         # Account already present
@@ -955,8 +936,7 @@ def update_project_using_cli_switches(
             continue
 
         updated_proj_accounts.append(
-            {"kind": "account", "name": _acc,
-                "uuid": account_cache_data["uuid"]}
+            {"kind": "account", "name": _acc, "uuid": account_cache_data["uuid"]}
         )
 
     project_resources["account_reference_list"] = updated_proj_accounts
@@ -1011,16 +991,14 @@ def update_project_using_cli_switches(
                 remove_group_list=acp_remove_group_list,
             )
     else:
-        LOG.exception(
-            "Project updation task went to {} state".format(task_state))
+        LOG.exception("Project updation task went to {} state".format(task_state))
         sys.exit(-1)
 
 
 def remove_users_from_project_acps(project_uuid, remove_user_list, remove_group_list):
 
     client = get_api_client()
-    ProjectInternalObj = get_resource_api(
-        "projects_internal", client.connection)
+    ProjectInternalObj = get_resource_api("projects_internal", client.connection)
     res, err = ProjectInternalObj.read(project_uuid)
     if err:
         LOG.error(err)
@@ -1105,8 +1083,7 @@ def is_project_updation_allowed(project_usage, msg_list):
         return entity_used
 
     updation_allowed = True
-    accounts_usage = project_usage["status"]["resources"].get(
-        "account_list", [])
+    accounts_usage = project_usage["status"]["resources"].get("account_list", [])
     for _ac in accounts_usage:
         entity_used = is_entity_used(_ac["usage"])
         if entity_used:
