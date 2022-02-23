@@ -370,6 +370,10 @@ def create_project_from_dsl(project_file, project_name, description="", no_cache
 
             LOG.info("No existing environment found with name '{}'".format(env_name))
 
+    if envs and no_cache_update:
+        LOG.error("Environment create is not allowed when cache update is disabled")
+        return
+
     # Creation of project
     project_payload = compile_project_dsl_class(UserProject)
     project_data = create_project(
@@ -379,13 +383,10 @@ def create_project_from_dsl(project_file, project_name, description="", no_cache
     project_uuid = project_data["uuid"]
 
     if envs:
-        if no_cache_update:
-            LOG.info("skipping projects and environments cache update")
-        else:
-            # Update project in cache
-            LOG.info("Updating projects cache")
-            Cache.sync_table("project")
-            LOG.info("[Done]")
+        # Update project in cache
+        LOG.info("Updating projects cache")
+        Cache.sync_table("project")
+        LOG.info("[Done]")
 
         # As ahv helpers in environment should use account from project accounts
         # updating the context
