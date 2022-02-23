@@ -8,18 +8,6 @@ class ProjectAPI(ResourceAPI):
     def __init__(self, connection):
         super().__init__(connection, resource_type="projects")
 
-        from calm.dsl.store.version import Version
-        calm_version = Version.get_version("Calm")
-
-        if LV(calm_version) > LV("3.4.0"):
-            self.CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/projects"
-        else:
-            self.CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/calm_projects"
-
-        self.CALM_PROJECTS_ITEM = self.CALM_PROJECTS_PREFIX + "/{}"
-        self.CALM_PROJECTS_PENDING_TASKS = self.CALM_PROJECTS_ITEM + "/pending_tasks/{}"
-        self.CALM_PROJECTS_USAGE = self.CALM_PROJECTS_ITEM + "/usage"
-
     def create(self, payload):
 
         project_name = payload["spec"].get("name") or payload["metadata"].get("name")
@@ -42,23 +30,61 @@ class ProjectAPI(ResourceAPI):
         return super().create(payload)
 
     def usage(self, uuid, payload):
+
+        from calm.dsl.store.version import Version
+
+        calm_version = Version.get_version("Calm")
+
+        if LV(calm_version) > LV("3.4.0"):
+            CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/projects"
+        else:
+            CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/calm_projects"
+
+        CALM_PROJECTS_ITEM = CALM_PROJECTS_PREFIX + "/{}"
+        CALM_PROJECTS_USAGE = CALM_PROJECTS_ITEM + "/usage"
+
         return self.connection._call(
-            self.CALM_PROJECTS_USAGE.format(uuid),
+            CALM_PROJECTS_USAGE.format(uuid),
             verify=False,
             request_json=payload,
             method=REQUEST.METHOD.POST,
         )
 
     def delete(self, uuid):
+
+        from calm.dsl.store.version import Version
+
+        calm_version = Version.get_version("Calm")
+
+        if LV(calm_version) > LV("3.4.0"):
+            CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/projects"
+        else:
+            CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/calm_projects"
+
+        CALM_PROJECTS_ITEM = CALM_PROJECTS_PREFIX + "/{}"
+
         return self.connection._call(
-            self.CALM_PROJECTS_ITEM.format(uuid),
+            CALM_PROJECTS_ITEM.format(uuid),
             verify=False,
             method=REQUEST.METHOD.DELETE,
         )
 
     def read_pending_task(self, uuid, task_uuid):
+
+        from calm.dsl.store.version import Version
+
+        calm_version = Version.get_version("Calm")
+
+        if LV(calm_version) > LV("3.4.0"):
+            CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/projects"
+        else:
+            CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/calm_projects"
+
+        CALM_PROJECTS_ITEM = CALM_PROJECTS_PREFIX + "/{}"
+        CALM_PROJECTS_PENDING_TASKS = CALM_PROJECTS_ITEM + "/pending_tasks/{}"
+
         return self.connection._call(
-            self.CALM_PROJECTS_PENDING_TASKS.format(uuid, task_uuid),
+            CALM_PROJECTS_PENDING_TASKS.format(uuid, task_uuid),
             verify=False,
             method=REQUEST.METHOD.GET,
         )
