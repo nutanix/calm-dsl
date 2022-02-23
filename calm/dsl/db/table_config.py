@@ -113,6 +113,10 @@ class CacheTableBase(BaseModel):
         raise NotImplementedError("get_entity_data_using_uuid helper not implemented")
 
     @classmethod
+    def fetch_one(cls, uuid):
+        raise NotImplementedError("fetch one helper not implemented")
+
+    @classmethod
     def add_one(cls, uuid, **kwargs):
         raise NotImplementedError("add_one helper not implemented")
 
@@ -797,7 +801,8 @@ class ProjectCache(CacheTableBase):
 
         res, err = client.project.read(uuid)
         if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+            LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+            return {}
 
         project_data = res.json()
         project_name = project_data["spec"]["name"]
@@ -1238,6 +1243,62 @@ class UsersCache(CacheTableBase):
         except DoesNotExist:
             return dict()
 
+    @classmethod
+    def fetch_one(cls, uuid):
+        """fetches one entity data"""
+
+        client = get_api_client()
+        res, err = client.user.read(uuid)
+        if err:
+            LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+            return {}
+
+        entity = res.json()
+        name = entity["status"]["name"]
+        display_name = entity["status"]["resources"].get("display_name") or ""
+        directory_service_user = (
+            entity["status"]["resources"].get("directory_service_user") or dict()
+        )
+        directory_service_ref = (
+            directory_service_user.get("directory_service_reference") or dict()
+        )
+        directory_service_name = directory_service_ref.get("name", "LOCAL")
+
+        return {
+            "name": name,
+            "uuid": uuid,
+            "display_name": display_name,
+            "directory": directory_service_name
+        }
+
+    @classmethod
+    def add_one(cls, uuid, **kwargs):
+        """adds one entry to env table"""
+
+        db_data = cls.fetch_one(uuid, **kwargs)
+        cls.create_entry(**db_data)
+
+    @classmethod
+    def delete_one(cls, uuid, **kwargs):
+        """deletes one entity from env table"""
+
+        obj = cls.get(cls.uuid == uuid)
+        obj.delete_instance()
+
+    @classmethod
+    def update_one(cls, uuid, **kwargs):
+        """updates single entry to env table"""
+
+        db_data = cls.fetch_one(uuid, **kwargs)
+        q = cls.update(
+            {
+                cls.name: db_data["name"],
+                cls.display_name: db_data["display_name"],
+                cls.directory: db_data["directory"],
+            }
+        ).where(cls.uuid == uuid)
+        q.execute()
+
     class Meta:
         database = dsl_database
         primary_key = CompositeKey("name", "uuid")
@@ -1329,6 +1390,38 @@ class RolesCache(CacheTableBase):
 
         except DoesNotExist:
             return dict()
+
+    @classmethod
+    def fetch_one(cls, uuid):
+        """fetches one entity data"""
+
+        client = get_api_client()
+        res, err = client.role.read(uuid)
+        if err:
+            LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+            return {}
+
+        entity = res.json()
+        name = entity["status"]["name"]
+
+        return {
+            "name": name,
+            "uuid": uuid
+        }
+
+    @classmethod
+    def add_one(cls, uuid, **kwargs):
+        """adds one entry to env table"""
+
+        db_data = cls.fetch_one(uuid, **kwargs)
+        cls.create_entry(**db_data)
+
+    @classmethod
+    def delete_one(cls, uuid, **kwargs):
+        """deletes one entity from env table"""
+
+        obj = cls.get(cls.uuid == uuid)
+        obj.delete_instance()
 
     class Meta:
         database = dsl_database
@@ -1568,6 +1661,68 @@ class UserGroupCache(CacheTableBase):
 
         except DoesNotExist:
             return dict()
+
+    @classmethod
+    def fetch_one(cls, uuid):
+        """fetches one entity data"""
+
+        client = get_api_client()
+        res, err = client.group.read(uuid)
+        if err:
+            LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+            return {}
+
+        entity = res.json()
+        e_resources = entity["status"]["resources"]
+
+        directory_service_user_group = (
+            e_resources.get("directory_service_user_group") or dict()
+        )
+        distinguished_name = directory_service_user_group.get("distinguished_name")
+
+        directory_service_ref = (
+            directory_service_user_group.get("directory_service_reference")
+            or dict()
+        )
+        directory_service_name = directory_service_ref.get("name", "")
+
+        display_name = e_resources.get("display_name", "")
+        uuid = entity["metadata"]["uuid"]
+
+        return {
+            "name": distinguished_name,
+            "uuid": uuid,
+            "display_name": display_name,
+            "directory": directory_service_name
+        }
+
+    @classmethod
+    def add_one(cls, uuid, **kwargs):
+        """adds one entry to env table"""
+
+        db_data = cls.fetch_one(uuid, **kwargs)
+        cls.create_entry(**db_data)
+
+    @classmethod
+    def delete_one(cls, uuid, **kwargs):
+        """deletes one entity from env table"""
+
+        obj = cls.get(cls.uuid == uuid)
+        obj.delete_instance()
+
+    @classmethod
+    def update_one(cls, uuid, **kwargs):
+        """updates single entry to env table"""
+
+        db_data = cls.fetch_one(uuid, **kwargs)
+        q = cls.update(
+            {
+                cls.name: db_data["name"],
+                cls.display_name: db_data["display_name"],
+                cls.directory: db_data["directory"],
+            }
+        ).where(cls.uuid == uuid)
+        q.execute()
 
     class Meta:
         database = dsl_database
