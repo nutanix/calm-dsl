@@ -61,7 +61,7 @@ class MyAhvLinuxVmResources(AhvVmResources):
     disks = [
         AhvVmDisk.Disk.Scsi.cloneFromImageService(CENTOS_CI, bootable=True),
     ]
-    nics = [AhvVmNic(NTNX_ACCOUNT_1_SUBNET_1)]
+    nics = [AhvVmNic(NTNX_ACCOUNT_1_SUBNET_1, cluster=NTNX_ACCOUNT_1_SUBNET_1_CLUSTER)]
 
     guest_customization = AhvVmGC.CloudInit(
         config={
@@ -99,7 +99,7 @@ class MyAhvWindowsVmResources(AhvVmResources):
     disks = [
         AhvVmDisk.CdRom.Sata.cloneFromImageService(SQL_SERVER_IMAGE, bootable=True),
     ]
-    nics = [AhvVmNic(NTNX_ACCOUNT_2_SUBNET_1)]
+    nics = [AhvVmNic(NTNX_ACCOUNT_2_SUBNET_1, cluster=NTNX_ACCOUNT_2_SUBNET_1_CLUSTER)]
 
     guest_customization = AhvVmGC.Sysprep.FreshScript(
         filename="scripts/sysprep_script.xml"
