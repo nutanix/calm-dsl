@@ -35,7 +35,7 @@ class ProjectAPI(ResourceAPI):
 
         calm_version = Version.get_version("Calm")
 
-        if LV(calm_version) > LV("3.4.0"):
+        if LV(calm_version) > LV("3.5.0"):
             CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/projects"
         else:
             CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/calm_projects"
