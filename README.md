@@ -142,7 +142,7 @@ Use `calm get roles` to list all roles in PC. The below roles are relevant for C
 - Update project using dsl file: `calm update project <project_name> --file <project_file_location>`. Environments will not be updated as part of this operation. Use `no-cache-update` flag to skip cache updations post operation.
 - Update project using cli switches: `calm update project <project_name> --add_user/--remove_user <user_name> --add_group/--remove_group <group_name> --add_account/--remove_account <account_name>`.
 - Delete project: `calm delete project <project_name>`. Use `no-cache-update` flag to skip cache updations post operation.
-- Note: While using `no-cache-update` flag in project create and update commands, user should not pass environment object in the project model.
+- Note: While using `no-cache-update` flag in project create and update commands, user should not pass environment object in the project model. User should update the cache separately after creation/updation of projects. Feature is experimental and will be discontinued after [#184](https://github.com/nutanix/calm-dsl/issues/184) is fixed.
 
 ### Environments
 - Compile environment: `calm compile environment --file <env_file_location> --project <project_name>`. Command will print the compiled environment JSON. Look at sample file [here](examples/Environment/sample_environment.py)
@@ -150,6 +150,7 @@ Use `calm get roles` to list all roles in PC. The below roles are relevant for C
 - Update environment: `calm update environment <environment_name> --file <env_file_location> --project <project_name>`. Use `no-cache-update` flag to skip cache updations post operation.
 - List environments: `calm get environments --project <project_name>`. Get environments of project.
 - Delete environment: `calm delete environment <environment_name> --project <project_name>`. Use `no-cache-update` flag to skip cache updations post operation.
+
 ### Access Control Policies
 Access control policies ensures that a project member can access only the entities or perform only the actions defined in the role assigned to that project member.
 - Create ACP: `calm create acp --role <role_name> --project <project_name> --user <user_principal_name> --group <group_distinguished_name> --name <acp_name>`. It is used to assign given role to users/groups. Parameters `user` and `group` can be provided multiple times.
