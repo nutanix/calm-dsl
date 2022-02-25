@@ -205,7 +205,9 @@ def get_env_class_from_module(user_env_module):
     return UserEnvironment
 
 
-def create_environment_from_dsl_file(env_file, env_name, project_name):
+def create_environment_from_dsl_file(
+    env_file, env_name, project_name, no_cache_update=False
+):
     """
     Helper creates an environment from dsl file (for calm_version >= 3.2)
     Args:
@@ -239,13 +241,18 @@ def create_environment_from_dsl_file(env_file, env_name, project_name):
 
     click.echo(json.dumps(env_std_out, indent=4, separators=(",", ": ")))
 
-    LOG.info("Updating projects and environments cache ...")
-    Cache.sync_table(cache_type=CACHE.ENTITY.PROJECT)
-    Cache.sync_table(cache_type=CACHE.ENTITY.ENVIRONMENT)
-    LOG.info("[Done]")
+    if no_cache_update:
+        LOG.info("skipping environments and projects cache update")
+    else:
+        LOG.info("Updating projects and environments cache ...")
+        Cache.sync_table(cache_type=CACHE.ENTITY.PROJECT)
+        Cache.sync_table(cache_type=CACHE.ENTITY.ENVIRONMENT)
+        LOG.info("[Done]")
 
 
-def update_environment_from_dsl_file(env_name, env_file, project_name):
+def update_environment_from_dsl_file(
+    env_name, env_file, project_name, no_cache_update=False
+):
     """
     Helper updates   an environment from dsl file (for calm_version >= 3.2)
     Args:
@@ -306,10 +313,13 @@ def update_environment_from_dsl_file(env_name, env_file, project_name):
     }
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
-    LOG.info("Updating projects and environments cache ...")
-    Cache.sync_table(cache_type=CACHE.ENTITY.PROJECT)
-    Cache.sync_table(cache_type=CACHE.ENTITY.ENVIRONMENT)
-    LOG.info("[Done]")
+    if no_cache_update:
+        LOG.info("skipping environments and projects cache update")
+    else:
+        LOG.info("Updating projects and environments cache ...")
+        Cache.sync_table(cache_type=CACHE.ENTITY.PROJECT)
+        Cache.sync_table(cache_type=CACHE.ENTITY.ENVIRONMENT)
+        LOG.info("[Done]")
 
 
 def get_project_environment(name=None, uuid=None, project_name=None, project_uuid=None):
@@ -480,7 +490,7 @@ def get_environment(environment_name, project_name):
     return res["entities"][0]
 
 
-def delete_environment(environment_name, project_name):
+def delete_environment(environment_name, project_name, no_cache_update=False):
 
     client = get_api_client()
     environment = get_environment(environment_name, project_name)
@@ -493,7 +503,10 @@ def delete_environment(environment_name, project_name):
     LOG.info("Updating project for environment configuration")
     update_project_envs(project_name, remove_env_uuids=[environment_id])
 
-    LOG.info("Updating environments and projects cache ...")
-    Cache.sync_table(cache_type=CACHE.ENTITY.PROJECT)
-    Cache.sync_table(cache_type=CACHE.ENTITY.ENVIRONMENT)
-    LOG.info("[Done]")
+    if no_cache_update:
+        LOG.info("skipping environments and projects cache update")
+    else:
+        LOG.info("Updating environments and projects cache ...")
+        Cache.sync_table(cache_type=CACHE.ENTITY.PROJECT)
+        Cache.sync_table(cache_type=CACHE.ENTITY.ENVIRONMENT)
+        LOG.info("[Done]")

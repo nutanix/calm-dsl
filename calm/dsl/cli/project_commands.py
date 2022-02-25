@@ -79,11 +79,20 @@ def _compile_project_command(project_file, out):
 @click.option(
     "--description", "-d", default=None, help="Blueprint description (Optional)"
 )
-def _create_project(project_file, project_name, description):
+@click.option(
+    "--no-cache-update",
+    "no_cache_update",
+    is_flag=True,
+    default=False,
+    help="if true, cache is not updated for project",
+)
+def _create_project(project_file, project_name, description, no_cache_update):
     """Creates a project"""
 
     if project_file.endswith(".py"):
-        create_project_from_dsl(project_file, project_name, description)
+        create_project_from_dsl(
+            project_file, project_name, description, no_cache_update
+        )
     else:
         LOG.error("Unknown file format")
         return
@@ -91,10 +100,17 @@ def _create_project(project_file, project_name, description):
 
 @delete.command("project")
 @click.argument("project_names", nargs=-1)
-def _delete_project(project_names):
+@click.option(
+    "--no-cache-update",
+    "no_cache_update",
+    is_flag=True,
+    default=False,
+    help="if true, cache is not updated for project",
+)
+def _delete_project(project_names, no_cache_update):
     """Deletes a project"""
 
-    delete_project(project_names)
+    delete_project(project_names, no_cache_update)
 
 
 @describe.command("project")
@@ -170,6 +186,13 @@ def _describe_project(project_name, out):
     multiple=True,
     default=[],
 )
+@click.option(
+    "--no-cache-update",
+    "no_cache_update",
+    is_flag=True,
+    default=False,
+    help="if true, cache is not updated for project",
+)
 def _update_project(
     project_name,
     project_file,
@@ -179,6 +202,7 @@ def _update_project(
     remove_account_list,
     remove_user_list,
     remove_group_list,
+    no_cache_update,
 ):
     """
         Updates a project.
@@ -208,7 +232,9 @@ def _update_project(
     if project_file:
         if project_file.endswith(".py"):
             update_project_from_dsl(
-                project_name=project_name, project_file=project_file
+                project_name=project_name,
+                project_file=project_file,
+                no_cache_update=no_cache_update,
             )
             return
         else:

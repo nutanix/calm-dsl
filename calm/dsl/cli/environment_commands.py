@@ -48,10 +48,17 @@ def _get_environment_list(name, filter_by, limit, offset, quiet, out, project_na
 @delete.command("environment", feature_min_version="3.2.0")
 @click.argument("environment_name")
 @click.option("--project", "-p", "project_name", help="Project name", required=True)
-def _delete_environment(environment_name, project_name):
+@click.option(
+    "--no-cache-update",
+    "no_cache_update",
+    is_flag=True,
+    default=False,
+    help="if true, cache is not updated for project",
+)
+def _delete_environment(environment_name, project_name, no_cache_update):
     """Deletes a environment"""
 
-    delete_environment(environment_name, project_name)
+    delete_environment(environment_name, project_name, no_cache_update)
 
 
 @create.command("environment", feature_min_version="3.2.0")
@@ -67,13 +74,22 @@ def _delete_environment(environment_name, project_name):
 @click.option(
     "--name", "-n", "env_name", default=None, help="Environment name (Optional)"
 )
-def _create_environment(env_file, env_name, project_name):
+@click.option(
+    "--no-cache-update",
+    "no_cache_update",
+    is_flag=True,
+    default=False,
+    help="if true, cache is not updated for project",
+)
+def _create_environment(env_file, env_name, project_name, no_cache_update):
     """
     Creates a environment to existing project.
     """
 
     if env_file.endswith(".py"):
-        create_environment_from_dsl_file(env_file, env_name, project_name)
+        create_environment_from_dsl_file(
+            env_file, env_name, project_name, no_cache_update
+        )
     else:
         LOG.error("Unknown file format {}".format(env_file))
         return
@@ -90,13 +106,22 @@ def _create_environment(env_file, env_name, project_name):
     required=True,
     help="Path of environment file to update",
 )
-def _update_environment(env_name, project_name, env_file):
+@click.option(
+    "--no-cache-update",
+    "no_cache_update",
+    is_flag=True,
+    default=False,
+    help="if true, cache is not updated for project",
+)
+def _update_environment(env_name, project_name, env_file, no_cache_update):
     """
     Updates environment of an existing project.
     """
 
     if env_file.endswith(".py"):
-        update_environment_from_dsl_file(env_name, env_file, project_name)
+        update_environment_from_dsl_file(
+            env_name, env_file, project_name, no_cache_update
+        )
     else:
         LOG.error("Unknown file format {}".format(env_file))
         return
