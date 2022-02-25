@@ -53,15 +53,7 @@ class Cache:
     def get_entity_data(cls, entity_type, name, **kwargs):
         """returns entity data corresponding to supplied entry using entity name"""
 
-        cache_tables = cls.get_cache_tables()
-        if not entity_type:
-            LOG.error("No entity type for cache supplied")
-            sys.exit(-1)
-
-        db_cls = cache_tables.get(entity_type, None)
-        if not db_cls:
-            LOG.error("Unknown entity type ({}) supplied".format(entity_type))
-            sys.exit(-1)
+        db_cls = cls.get_entity_db_table_object(entity_type)
 
         try:
             res = db_cls.get_entity_data(name=name, **kwargs)
@@ -87,15 +79,7 @@ class Cache:
     def get_entity_data_using_uuid(cls, entity_type, uuid, *args, **kwargs):
         """returns entity data corresponding to supplied entry using entity uuid"""
 
-        cache_tables = cls.get_cache_tables()
-        if not entity_type:
-            LOG.error("No entity type for cache supplied")
-            sys.exit(-1)
-
-        db_cls = cache_tables.get(entity_type, None)
-        if not db_cls:
-            LOG.error("Unknown entity type ({}) supplied".format(entity_type))
-            sys.exit(-1)
+        db_cls = cls.get_entity_db_table_object(entity_type)
 
         try:
             res = db_cls.get_entity_data_using_uuid(uuid=uuid, **kwargs)
@@ -116,6 +100,43 @@ class Cache:
             )
 
         return res
+
+    @classmethod
+    def get_entity_db_table_object(cls, entity_type):
+        """returns database entity table object corresponding to entity"""
+
+        if not entity_type:
+            LOG.error("No entity type for cache supplied")
+            sys.exit(-1)
+
+        cache_tables = cls.get_cache_tables()
+        db_cls = cache_tables.get(entity_type, None)
+        if not db_cls:
+            LOG.error("Unknown entity type ({}) supplied".format(entity_type))
+            sys.exit(-1)
+
+        return db_cls
+
+    @classmethod
+    def add_one(cls, entity_type, uuid, **kwargs):
+        """adds one entity to entity db object"""
+
+        db_obj = cls.get_entity_db_table_object(entity_type)
+        db_obj.add_one(uuid, **kwargs)
+
+    @classmethod
+    def delete_one(cls, entity_type, uuid, **kwargs):
+        """adds one entity to entity db object"""
+
+        db_obj = cls.get_entity_db_table_object(entity_type)
+        db_obj.delete_one(uuid, **kwargs)
+
+    @classmethod
+    def update_one(cls, entity_type, uuid, **kwargs):
+        """adds one entity to entity db object"""
+
+        db_obj = cls.get_entity_db_table_object(entity_type)
+        db_obj.delete_one(uuid, **kwargs)
 
     @classmethod
     def sync(cls):

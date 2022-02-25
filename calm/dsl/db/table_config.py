@@ -65,14 +65,18 @@ class CacheTableBase(BaseModel):
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
 
-        if not hasattr(cls, "__cache_type__"):
+        cache_type = cls.get_cache_type()
+        if not cache_type:
             raise TypeError("Base table does not have a cache type attribute")
 
-        cache_type = cls.__cache_type__
         cls.tables[cache_type] = cls
 
     def get_detail_dict(self):
-        raise NotImplementedError("get_detail_dict helper not implemented")
+        raise NotImplementedError(
+            "get_detail_dict helper not implemented for {} table".format(
+                self.get_cache_type()
+            )
+        )
 
     @classmethod
     def get_provider_plugin(self, provider_type="AHV_VM"):
@@ -88,45 +92,81 @@ class CacheTableBase(BaseModel):
         return cls.tables
 
     @classmethod
+    def get_cache_type(cls):
+        """return cache type for the table"""
+
+        return getattr(cls, "__cache_type__", None)
+
+    @classmethod
     def clear(cls):
         """removes entire data from table"""
-        raise NotImplementedError("clear helper not implemented")
+        raise NotImplementedError(
+            "clear helper not implemented for {} table".format(cls.get_cache_type())
+        )
 
     @classmethod
     def show_data(cls):
-        raise NotImplementedError("show_data helper not implemented")
+        raise NotImplementedError(
+            "show_data helper not implemented for {} table".format(cls.get_cache_type())
+        )
 
     @classmethod
     def sync(cls):
-        raise NotImplementedError("sync helper not implemented")
+        raise NotImplementedError(
+            "sync helper not implemented for {} table".format(cls.get_cache_type())
+        )
 
     @classmethod
     def create_entry(cls, name, uuid, **kwargs):
-        raise NotImplementedError("create_entry helper not implemented")
+        raise NotImplementedError(
+            "create_entry helper not implemented for {} table".format(
+                cls.get_cache_type()
+            )
+        )
 
     @classmethod
     def get_entity_data(cls, name, **kwargs):
-        raise NotImplementedError("get_entity_data helper not implemented")
+        raise NotImplementedError(
+            "get_entity_data helper not implemented for {} table".format(
+                cls.get_cache_type()
+            )
+        )
 
     @classmethod
     def get_entity_data_using_uuid(cls, uuid, **kwargs):
-        raise NotImplementedError("get_entity_data_using_uuid helper not implemented")
+        raise NotImplementedError(
+            "get_entity_data_using_uuid helper not implemented for {} table".format(
+                cls.get_cache_type()
+            )
+        )
 
     @classmethod
     def fetch_one(cls, uuid):
-        raise NotImplementedError("fetch one helper not implemented")
+        raise NotImplementedError(
+            "fetch one helper not implemented for {} table".format(cls.get_cache_type())
+        )
 
     @classmethod
     def add_one(cls, uuid, **kwargs):
-        raise NotImplementedError("add_one helper not implemented")
+        raise NotImplementedError(
+            "add_one helper not implemented for {} table".format(cls.get_cache_type())
+        )
 
     @classmethod
     def delete_one(cls, uuid, **kwargs):
-        raise NotImplementedError("delete_one helper not implemented")
+        raise NotImplementedError(
+            "delete_one helper not implemented for {} table".format(
+                cls.get_cache_type()
+            )
+        )
 
     @classmethod
     def update_one(cls, uuid, **kwargs):
-        raise NotImplementedError("update_one helper not implemented")
+        raise NotImplementedError(
+            "update_one helper not implemented for {} table".format(
+                cls.get_cache_type()
+            )
+        )
 
 
 class AhvSubnetsCache(CacheTableBase):
@@ -1268,7 +1308,7 @@ class UsersCache(CacheTableBase):
             "name": name,
             "uuid": uuid,
             "display_name": display_name,
-            "directory": directory_service_name
+            "directory": directory_service_name,
         }
 
     @classmethod
@@ -1404,10 +1444,7 @@ class RolesCache(CacheTableBase):
         entity = res.json()
         name = entity["status"]["name"]
 
-        return {
-            "name": name,
-            "uuid": uuid
-        }
+        return {"name": name, "uuid": uuid}
 
     @classmethod
     def add_one(cls, uuid, **kwargs):
@@ -1681,8 +1718,7 @@ class UserGroupCache(CacheTableBase):
         distinguished_name = directory_service_user_group.get("distinguished_name")
 
         directory_service_ref = (
-            directory_service_user_group.get("directory_service_reference")
-            or dict()
+            directory_service_user_group.get("directory_service_reference") or dict()
         )
         directory_service_name = directory_service_ref.get("name", "")
 
@@ -1693,7 +1729,7 @@ class UserGroupCache(CacheTableBase):
             "name": distinguished_name,
             "uuid": uuid,
             "display_name": display_name,
-            "directory": directory_service_name
+            "directory": directory_service_name,
         }
 
     @classmethod
