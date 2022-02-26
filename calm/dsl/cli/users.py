@@ -127,6 +127,7 @@ def create_user(name, directory_service):
     }
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
+    user_uuid = res["metadata"]["uuid"]
     LOG.info("Polling on user creation task")
     task_state = watch_task(
         res["status"]["execution_context"]["task_uuid"], poll_interval=5
@@ -137,7 +138,7 @@ def create_user(name, directory_service):
 
     # Update users in cache
     LOG.info("Updating users cache ...")
-    Cache.sync_table(cache_type=CACHE.ENTITY.USER)
+    Cache.add_one(entity_type=CACHE.ENTITY.USER, uuid=user_uuid)
     LOG.info("[Done]")
 
 
@@ -147,6 +148,7 @@ def delete_user(user_names):
     params = {"length": 1000}
     user_name_uuid_map = client.user.get_name_uuid_map(params)
 
+    deleted_user_uuids = []
     for name in user_names:
         user_uuid = user_name_uuid_map.get(name, "")
         if not user_uuid:
@@ -155,8 +157,10 @@ def delete_user(user_names):
 
         res, err = client.user.delete(user_uuid)
         if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+            LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+            sys.exit(-1)
 
+        deleted_user_uuids.append(user_uuid)
         LOG.info("Polling on user deletion task")
         res = res.json()
         task_state = watch_task(
@@ -167,6 +171,8 @@ def delete_user(user_names):
             sys.exit(-1)
 
     # Update users in cache
-    LOG.info("Updating users cache ...")
-    Cache.sync_table(cache_type=CACHE.ENTITY.USER)
-    LOG.info("[Done]")
+    if deleted_user_uuids:
+        LOG.info("Updating users cache ...")
+        for _user_uuid in deleted_user_uuids:
+            Cache.delete_one(entity_type=CACHE.ENTITY.USER, uuid=_user_uuid)
+        LOG.info("[Done]")

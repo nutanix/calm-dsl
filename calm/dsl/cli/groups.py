@@ -133,6 +133,7 @@ def create_group(name):
     }
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
+    user_group_uuid = res["metadata"]["uuid"]
     LOG.info("Polling on user-group creation task")
     task_state = watch_task(
         res["status"]["execution_context"]["task_uuid"], poll_interval=5
@@ -143,7 +144,7 @@ def create_group(name):
 
     # Update user-groups in cache
     LOG.info("Updating user-groups cache ...")
-    Cache.sync_table(cache_type=CACHE.ENTITY.USER_GROUP)
+    Cache.add_one(entity_type=CACHE.ENTITY.USER_GROUP, uuid=user_group_uuid)
     LOG.info("[Done]")
 
 
@@ -152,12 +153,15 @@ def delete_group(group_names):
 
     client = get_api_client()
 
+    deleted_group_uuids = []
     for name in group_names:
         group_ref = Ref.Group(name)
         res, err = client.group.delete(group_ref["uuid"])
         if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+            LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+            sys.exit(-1)
 
+        deleted_group_uuids.append(group_ref["uuid"])
         LOG.info("Polling on user-group deletion task")
         res = res.json()
         task_state = watch_task(
@@ -170,6 +174,8 @@ def delete_group(group_names):
             sys.exit(-1)
 
     # Update user-groups in cache
-    LOG.info("Updating user-groups cache ...")
-    Cache.sync_table(cache_type=CACHE.ENTITY.USER_GROUP)
-    LOG.info("[Done]")
+    if deleted_group_uuids:
+        LOG.info("Updating user-groups cache ...")
+        for _group_uuid in deleted_group_uuids:
+            Cache.delete_one(entity_type=CACHE.ENTITY.USER_GROUP, uuid=_group_uuid)
+        LOG.info("[Done]")
