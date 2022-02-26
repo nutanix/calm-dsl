@@ -98,6 +98,7 @@ class ResourceAPI:
 
         return uuid_name_map
 
+    # TODO: Fix return type of list_all helper
     def list_all(self, api_limit=250, base_params=None, ignore_error=False):
         """returns the list of entities"""
 

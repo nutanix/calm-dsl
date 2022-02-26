@@ -694,31 +694,44 @@ class ProjectCache(CacheTableBase):
         client = get_api_client()
 
         payload = {"length": 200, "offset": 0, "filter": "state!=DELETED;type!=nutanix"}
-        res, err = client.account.list(payload)
+        account_uuid_type_map = client.account.get_uuid_type_map(payload)
+
+        # store subnets for nutanix_pc accounts in some map, else we had to subnets api
+        # for each project (Speed very low in case of ~1000 projects)
+        ntnx_pc_account_subnet_map = dict()
+        for _acct_uuid in account_uuid_type_map.keys():
+            if account_uuid_type_map[_acct_uuid] == "nutanix_pc":
+                ntnx_pc_account_subnet_map[_acct_uuid] = list()
+
+        # Get the subnets for each nutanix_pc account
+        AhvVmProvider = cls.get_provider_plugin("AHV_VM")
+        AhvObj = AhvVmProvider.get_api_obj()
+        for acct_uuid in ntnx_pc_account_subnet_map.keys():
+            LOG.debug(
+                "Fetching subnets for nutanix_pc account_uuid {}".format(acct_uuid)
+            )
+            try:
+                res = AhvObj.subnets(account_uuid=acct_uuid)
+            except Exception as exp:
+                LOG.exception(exp)
+                LOG.warning(
+                    "Unable to fetch subnets for Nutanix_PC Account(uuid={})".format(
+                        acct_uuid
+                    )
+                )
+                continue
+
+            for row in res["entities"]:
+                ntnx_pc_account_subnet_map[acct_uuid].append(row["metadata"]["uuid"])
+
+        # Getting projects data
+        res_entities, err = client.project.list_all(ignore_error=True)
         if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+            LOG.exception(err)
 
-        res = res.json()
-        account_uuid_type_map = {}
-        local_nutanix_pc_account_uuid = ""
-        for entity in res["entities"]:
-            a_uuid = entity["metadata"]["uuid"]
-            a_type = entity["status"]["resources"]["type"]
-            account_uuid_type_map[a_uuid] = a_type
-            if a_type == "nutanix_pc" and entity["status"]["resources"]["data"].get(
-                "host_pc", False
-            ):
-                local_nutanix_pc_account_uuid = a_uuid
-
-        Obj = get_resource_api("projects", client.connection)
-        res, err = Obj.list({"length": 1000})
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        res = res.json()
-        for entity in res["entities"]:
+        for entity in res_entities:
             # populating a map to lookup the account to which a subnet belongs
-            subnet_to_account_map = dict()
+            whitelisted_subnets = dict()
 
             name = entity["status"]["name"]
             uuid = entity["metadata"]["uuid"]
@@ -726,13 +739,12 @@ class ProjectCache(CacheTableBase):
             account_list = entity["status"]["resources"].get(
                 "account_reference_list", []
             )
-            subnets_ref_list = entity["status"]["resources"].get(
-                "subnet_reference_list", []
-            )
-            # Use spec dict in entity-payload for external subnets
-            external_subnets_ref_list = (
-                entity["spec"].get("resources", {}).get("external_network_list", [])
-            )
+
+            project_subnets_ref_list = entity["spec"].get("resources", {}).get(
+                "external_network_list", []
+            ) + entity["spec"].get("resources", {}).get("subnet_reference_list", [])
+            project_subnet_uuids = [item["uuid"] for item in project_subnets_ref_list]
+
             account_map = {}
             for account in account_list:
                 account_uuid = account["uuid"]
@@ -749,45 +761,12 @@ class ProjectCache(CacheTableBase):
 
                 # for PC accounts add subnets to subnet_to_account_map. Will use it to populate whitelisted_subnets
                 if account_type == "nutanix_pc":
-                    project_network_list = (
-                        subnets_ref_list
-                        if account_uuid == local_nutanix_pc_account_uuid
-                        else external_subnets_ref_list
+                    whitelisted_subnets[account_uuid] = list(
+                        set(project_subnet_uuids)
+                        & set(ntnx_pc_account_subnet_map[account_uuid])
                     )
-                    subnet_uuids = [item["uuid"] for item in project_network_list]
-                    if not subnet_uuids:
-                        continue
-
-                    AhvVmProvider = cls.get_provider_plugin("AHV_VM")
-                    AhvObj = AhvVmProvider.get_api_obj()
-
-                    filter_query = "_entity_id_=={}".format("|".join(subnet_uuids))
-                    LOG.debug(
-                        "fetching following subnets {} for nutanix_pc account_uuid {}".format(
-                            subnet_uuids, account_uuid
-                        )
-                    )
-                    try:
-                        res = AhvObj.subnets(
-                            account_uuid=account_uuid, filter_query=filter_query
-                        )
-                    except Exception:
-                        LOG.warning(
-                            "Unable to fetch subnets for Nutanix_PC Account(uuid={})".format(
-                                account_uuid
-                            )
-                        )
-                        continue
-                    for row in res["entities"]:
-                        subnet_to_account_map[row["metadata"]["uuid"]] = account_uuid
 
             accounts_data = json.dumps(account_map)
-            whitelisted_subnets = dict()
-            for subnet_uuid, account_uuid in subnet_to_account_map.items():
-                if not whitelisted_subnets.get(account_uuid):
-                    whitelisted_subnets[account_uuid] = []
-                whitelisted_subnets[account_uuid].append(subnet_uuid)
-
             whitelisted_subnets = json.dumps(whitelisted_subnets)
             cls.create_entry(
                 name=name,
@@ -836,9 +815,6 @@ class ProjectCache(CacheTableBase):
         payload = {"length": 200, "offset": 0, "filter": "state!=DELETED;type!=nutanix"}
         account_uuid_type_map = client.account.get_uuid_type_map(payload)
 
-        ntnx_local_az_data = AccountCache.get_entity_data("NTNX_LOCAL_AZ")
-        local_nutanix_pc_account_uuid = ntnx_local_az_data.get("uuid", "")
-
         res, err = client.project.read(uuid)
         if err:
             LOG.exception("[{}] - {}".format(err["code"], err["error"]))
@@ -849,18 +825,20 @@ class ProjectCache(CacheTableBase):
         account_list = project_data["spec"]["resources"].get(
             "account_reference_list", []
         )
-        subnets_ref_list = project_data["spec"]["resources"].get(
-            "subnet_reference_list", []
-        )
-        # Use spec dict in entity-payload for external subnets
-        external_subnets_ref_list = project_data["spec"]["resources"].get(
+        project_subnets_ref_list = project_data["spec"].get("resources", {}).get(
             "external_network_list", []
-        )
+        ) + project_data["spec"].get("resources", {}).get("subnet_reference_list", [])
+        project_subnet_uuids = [item["uuid"] for item in project_subnets_ref_list]
 
+        # populating a map to lookup the account to which a subnet belongs
+        whitelisted_subnets = dict()
         account_map = dict()
-        subnet_to_account_map = dict()
         for _acc in account_list:
             account_uuid = _acc["uuid"]
+
+            # As projects may have deleted accounts registered
+            if account_uuid not in account_uuid_type_map:
+                continue
             account_type = account_uuid_type_map[account_uuid]
             if account_type not in account_map:
                 account_map[account_type] = [account_uuid]
@@ -868,22 +846,13 @@ class ProjectCache(CacheTableBase):
                 account_map[account_type].append(account_uuid)
 
             if account_type == "nutanix_pc":
-                project_network_list = (
-                    subnets_ref_list
-                    if account_uuid == local_nutanix_pc_account_uuid
-                    else external_subnets_ref_list
-                )
-                subnet_uuids = [item["uuid"] for item in project_network_list]
-                if not subnet_uuids:
-                    continue
-
                 AhvVmProvider = cls.get_provider_plugin("AHV_VM")
                 AhvObj = AhvVmProvider.get_api_obj()
 
-                filter_query = "_entity_id_=={}".format("|".join(subnet_uuids))
+                filter_query = "_entity_id_=={}".format("|".join(project_subnet_uuids))
                 LOG.debug(
                     "fetching following subnets {} for nutanix_pc account_uuid {}".format(
-                        subnet_uuids, account_uuid
+                        project_subnet_uuids, account_uuid
                     )
                 )
                 try:
@@ -897,16 +866,12 @@ class ProjectCache(CacheTableBase):
                         )
                     )
                     continue
-                for row in res["entities"]:
-                    subnet_to_account_map[row["metadata"]["uuid"]] = account_uuid
+
+                whitelisted_subnets[account_uuid] = [
+                    row["metadata"]["uuid"] for row in res["entities"]
+                ]
 
         accounts_data = json.dumps(account_map)
-        whitelisted_subnets = dict()
-        for subnet_uuid, account_uuid in subnet_to_account_map.items():
-            if not whitelisted_subnets.get(account_uuid):
-                whitelisted_subnets[account_uuid] = []
-            whitelisted_subnets[account_uuid].append(subnet_uuid)
-
         whitelisted_subnets = json.dumps(whitelisted_subnets)
 
         return {
