@@ -315,7 +315,9 @@ def update_project(project_uuid, project_payload):
     return stdout_dict
 
 
-def create_project_from_dsl(project_file, project_name, description=""):
+def create_project_from_dsl(
+    project_file, project_name, description="", no_cache_update=False
+):
     """Steps:
     1. Creation of project without env
     2. Creation of env
@@ -363,6 +365,10 @@ def create_project_from_dsl(project_file, project_name, description=""):
                 LOG.error("Environment with name '{}' already exists".format(env_name))
 
             LOG.info("No existing environment found with name '{}'".format(env_name))
+
+    if envs and no_cache_update:
+        LOG.error("Environment create is not allowed when cache update is disabled")
+        return
 
     # Creation of project
     project_payload = compile_project_dsl_class(UserProject)
@@ -423,11 +429,16 @@ def create_project_from_dsl(project_file, project_name, description=""):
         # Reset the context changes
         ContextObj.reset_configuration()
 
-        # Update environments in cache
-        LOG.info("Updating environments cache ...")
-        for _e_item in env_ref_list:
-            Cache.add_one(entity_type=CACHE.ENTITY.ENVIRONMENT, uuid=_e_item["uuid"])
-        LOG.info("[Done]")
+        if no_cache_update:
+            LOG.info("Skipping environments cache update")
+        else:
+            # Update environments in cache
+            LOG.info("Updating environments cache ...")
+            for _e_item in env_ref_list:
+                Cache.add_one(
+                    entity_type=CACHE.ENTITY.ENVIRONMENT, uuid=_e_item["uuid"]
+                )
+            LOG.info("[Done]")
 
 
 def describe_project(project_name, out):
@@ -557,7 +568,7 @@ def describe_project(project_name, out):
             click.echo("\t{} : {}".format(qk, highlight_text(qv)))
 
 
-def delete_project(project_names):
+def delete_project(project_names, no_cache_update=False):
 
     client = get_api_client()
     project_name_uuid_map = client.project.get_name_uuid_map()
@@ -587,13 +598,16 @@ def delete_project(project_names):
 
     # Update projects in cache if any project has been deleted
     if deleted_projects_uuids:
-        LOG.info("Updating projects cache ...")
-        for _proj_id in deleted_projects_uuids:
-            Cache.delete_one(entity_type=CACHE.ENTITY.PROJECT, uuid=_proj_id)
-        LOG.info("[Done]")
+        if no_cache_update:
+            LOG.info("skipping projects cache update")
+        else:
+            LOG.info("Updating projects cache ...")
+            for _proj_id in deleted_projects_uuids:
+                Cache.delete_one(entity_type=CACHE.ENTITY.PROJECT, uuid=_proj_id)
+            LOG.info("[Done]")
 
 
-def update_project_from_dsl(project_name, project_file):
+def update_project_from_dsl(project_name, project_file, no_cache_update=False):
 
     client = get_api_client()
 
@@ -779,9 +793,12 @@ def update_project_from_dsl(project_name, project_file):
         LOG.exception("Project updation task went to {} state".format(task_state))
         sys.exit(-1)
 
-    LOG.info("Updating projects cache ...")
-    Cache.update_one(entity_type=CACHE.ENTITY.PROJECT, uuid=project_uuid)
-    LOG.info("[Done]")
+    if no_cache_update:
+        LOG.info("Skipping projects cache update")
+    else:
+        LOG.info("Updating projects cache ...")
+        Cache.update_one(entity_type=CACHE.ENTITY.PROJECT, uuid=project_uuid)
+        LOG.info("[Done]")
 
 
 def update_project_using_cli_switches(
