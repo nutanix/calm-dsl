@@ -86,3 +86,7 @@ class Provider:
     class K8s:
         def __new__(cls, account):
             return account_provider(type="k8s", account_reference=account)
+
+    class Custom_Provider:
+        def __new__(cls, account):
+            return account_provider(type="custom_provider", account_reference=account)

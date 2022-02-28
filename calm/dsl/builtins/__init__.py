@@ -7,9 +7,9 @@
 from .models.ref import ref, RefType
 from .models.calm_ref import Ref
 from .models.metadata import Metadata, MetadataType
-from .models.credential import basic_cred, secret_cred, CredentialType
 from .models.variable import Variable, setvar, CalmVariable, VariableType
 from .models.action import action, parallel, ActionType, get_runbook_action
+from .models.credential import basic_cred, secret_cred, dynamic_cred, CredentialType
 
 from .models.task import Task, CalmTask, TaskType
 
@@ -101,6 +101,7 @@ __all__ = [
     "RefType",
     "basic_cred",
     "secret_cred",
+    "dynamic_cred",
     "CredentialType",
     "Variable",
     "setvar",

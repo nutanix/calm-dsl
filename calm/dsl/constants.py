@@ -10,6 +10,7 @@ class CACHE:
         AHV_SUBNET = "ahv_subnet"
         AHV_DISK_IMAGE = "ahv_disk_image"
         ACCOUNT = "account"
+        RESOURCE_TYPE = "resource_type"
         PROJECT = "project"
         USER = "user"
         ROLE = "role"

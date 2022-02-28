@@ -25,7 +25,9 @@ from .main import get, delete, describe
     default=None,
     multiple=True,
     help="Search for accounts of specific provider",
-    type=click.Choice(["aws", "k8s", "vmware", "azure", "gcp", "nutanix"]),
+    type=click.Choice(
+        ["aws", "k8s", "vmware", "azure", "gcp", "nutanix", "custom_provider"]
+    ),
 )
 def _get_accounts(name, filter_by, limit, offset, quiet, all_items, account_type):
     """Get accounts, optionally filtered by a string"""

@@ -330,3 +330,47 @@ class Ref:
                 "name": vrc_name,
                 "uuid": vrc_uuid,
             }
+
+    class Resource_Type:
+        def __new__(cls, name, **kwargs):
+            kwargs["__ref_cls__"] = cls
+            kwargs["name"] = name
+            return _calm_ref(**kwargs)
+
+        def compile(cls, name, **kwargs):
+
+            client = get_api_client()
+
+            if name:
+                params = {"filter": "name=={}".format(name), "length": 250}
+                res, err = client.resource_types.list(params)
+                if err:
+                    LOG.error(err)
+                    sys.exit(-1)
+
+                res = res.json()
+                if res["metadata"]["total_matches"] == 0:
+                    LOG.error("No vm with name '{}' found".format(name))
+                    sys.exit(-1)
+
+                elif res["metadata"]["total_matches"] > 1:
+                    LOG.error(
+                        "Multiple resource type with same name found. "
+                        "Please provide resource type uuid"
+                    )
+                    sys.exit(-1)
+
+                resource_type_uuid = res["entities"][0]["status"]["uuid"]
+            else:
+                LOG.error(
+                    "Resource type name not passed, " "pls pass resource type name"
+                )
+                sys.exit(-1)
+
+            resource_type_ref = {
+                "uuid": resource_type_uuid,
+                "name": name,
+                "kind": "resource_type",
+            }
+
+            return resource_type_ref
