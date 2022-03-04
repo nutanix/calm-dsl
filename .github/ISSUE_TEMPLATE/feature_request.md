@@ -2,7 +2,7 @@
 name: Feature request
 about: Use this to file new functionality.
 title: "[Feat] Develop cli command for <cli_command>"
-labels: enhancement
+labels: feature
 assignees: abhijeetkaurav1st
 
 ---
