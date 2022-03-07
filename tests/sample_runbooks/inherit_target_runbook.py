@@ -3,7 +3,7 @@ Calm DSL Decision Task with child tasks inheriting target Example
 
 """
 
-from calm.dsl.runbooks import runbook, runbook_json
+from calm.dsl.runbooks import runbook
 from calm.dsl.runbooks import RunbookTask as Task
 from calm.dsl.runbooks import CalmEndpoint as Endpoint, ref
 
@@ -31,11 +31,3 @@ def DslInheritTargetRunbook():
             Task.Exec.ssh(
                 name="Task2", script="print 'Decision Task Failed'", inherit_target=True
             )
-
-
-def main():
-    print(runbook_json(DslInheritTargetRunbook))
-
-
-if __name__ == "__main__":
-    main()

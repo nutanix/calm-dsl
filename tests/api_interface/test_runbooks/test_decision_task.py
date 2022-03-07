@@ -97,8 +97,8 @@ class TestDecisionTasks:
     @pytest.mark.ces
     @pytest.mark.regression
     @pytest.mark.skipif(
-        LV(CALM_VERSION) < LV("3.4.0"),
-        reason="Inherit target from parent supported from 3.4.0",
+        LV(CALM_VERSION) < LV("3.5.0"),
+        reason="Inherit target from parent supported from 3.5.0",
     )
     def test_desision_task_with_multiple_targets(self):
         """test_desision_task_with_multiple_targets"""

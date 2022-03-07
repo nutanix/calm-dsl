@@ -9,7 +9,6 @@ from .runbook_variables import DslRunbookWithVariables
 from .set_variable import DslSetVariableTask
 from .simple_runbook import DslSimpleRunbook
 from .while_loop import DslWhileLoopRunbook
-from .inherit_target_runbook import DslInheritTargetRunbook
 
 __all__ = [
     DslConfirmRunbook,
@@ -23,5 +22,4 @@ __all__ = [
     DslSetVariableTask,
     DslSimpleRunbook,
     DslWhileLoopRunbook,
-    DslInheritTargetRunbook,
 ]
