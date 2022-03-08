@@ -1,4 +1,4 @@
-name: Setup & build calm-dsl
+name: Update release containers
 on:
   push:
     branches:
@@ -26,8 +26,11 @@ jobs:
     - name: Build docker image
       run: |
         make release-docker
+    - name: Read VERSION file
+      id: getversion
+      run: echo "::set-output name=version::$(cat CalmVersion)"
     - name: Publish docker image
       if: ${{ github.event_name == 'push' && github.repository == 'nutanix/calm-dsl'}}
       run: |
         docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-        docker push ntnx/calm-dsl
+        docker push ntnx/calm-dsl:v${{ steps.getversion.outputs.version }}
