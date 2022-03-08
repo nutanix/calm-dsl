@@ -1,0 +1,33 @@
+name: Setup & build calm-dsl
+on:
+  push:
+    branches:
+      - 'release/**'
+
+jobs:
+  build:
+
+    runs-on: [ubuntu-latest]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+    - name: black
+      uses: psf/black@stable # Exclude list is not honored - https://github.com/psf/black/issues/1584
+      with:
+        version: "21.4b1"
+    - name: Setup env
+      run: |
+        python -m pip install --upgrade pip
+        pip install virtualenv
+    - name: Build docker image
+      run: |
+        make release-docker
+    - name: Publish docker image
+      if: ${{ github.event_name == 'push' && github.repository == 'nutanix/calm-dsl'}}
+      run: |
+        docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+        docker push ntnx/calm-dsl
