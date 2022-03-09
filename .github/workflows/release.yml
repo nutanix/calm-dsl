@@ -3,6 +3,9 @@ on:
   push:
     branches:
       - 'release/**'
+  pull_request:
+    branches:
+      - 'release/**'
 
 jobs:
   build:
@@ -29,6 +32,11 @@ jobs:
     - name: Read VERSION file
       id: getversion
       run: echo "::set-output name=version::$(cat CalmVersion)"
+    - name: Execute container
+      uses: addnab/docker-run-action@v3
+      with:
+        image: ntnx/calm-dsl:v${{ steps.getversion.outputs.version }}
+        run: calm
     - name: Publish docker image
       if: ${{ github.event_name == 'push' && github.repository == 'nutanix/calm-dsl'}}
       run: |
