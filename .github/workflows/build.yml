@@ -35,6 +35,11 @@ jobs:
     - name: Build docker image
       run: |
         make docker
+    - name: Execute container
+      uses: addnab/docker-run-action@v3
+      with:
+        image: ntnx/calm-dsl
+        run: calm
     - name: Publish docker image
       if: ${{ github.event_name == 'push' && github.repository == 'nutanix/calm-dsl'}}
       run: |
