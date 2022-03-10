@@ -7,7 +7,6 @@ from calm.dsl.cli.constants import RUNLOG
 from calm.dsl.runbooks import read_local_file
 from tests.api_interface.test_runbooks.test_files.decision_task import (
     DecisionTask,
-    DecisionWithMultipleIpTarget,
 )
 from utils import upload_runbook, poll_runlog_status
 from calm.dsl.store import Version
@@ -102,6 +101,11 @@ class TestDecisionTasks:
     )
     def test_desision_task_with_multiple_targets(self):
         """test_desision_task_with_multiple_targets"""
+        # inline import is needed so that version check happens before creating runbook
+        from tests.api_interface.test_runbooks.test_files.decision_task import (
+            DecisionWithMultipleIpTarget,
+        )
+
         global linux_ip2
         client = get_api_client()
         rb_name = "test_decisiontask_" + str(uuid.uuid4())[-10:]
