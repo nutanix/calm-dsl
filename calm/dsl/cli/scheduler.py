@@ -6,7 +6,11 @@ import arrow
 import click
 from prettytable import PrettyTable
 from datetime import datetime
-from backports.zoneinfo import ZoneInfo
+
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    from backports.zoneinfo import ZoneInfo
 
 
 from calm.dsl.api import get_api_client
