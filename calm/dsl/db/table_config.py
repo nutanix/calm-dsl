@@ -61,6 +61,7 @@ class DataTable(BaseModel):
 
 class CacheTableBase(BaseModel):
     tables = {}
+    is_approval_policy_required = False
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -2803,6 +2804,7 @@ class PolicyEventCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.POLICY_EVENT
     feature_min_version = "3.5.0"
     is_policy_required = True
+    is_approval_policy_required = True
     entity_type = CharField()
     name = CharField()
     uuid = CharField()
@@ -2868,11 +2870,14 @@ class PolicyEventCache(CacheTableBase):
         cls.clear()
 
         client = get_api_client()
-        res = client.policy_event.list_all()
-        if not res:
-            LOG.error("Failed to list policy events")
-            sys.exit("Failed to list policy events")
-        for entity in res:
+        res, err = client.policy_event.list()
+        if err:
+            LOG.error("[{}] - {}".format(err["code"], err["error"]))
+            LOG.error("Failed to list policy attributes")
+            sys.exit("Failed to list policy attributes")
+
+        res = res.json()
+        for entity in res.get("entities", []):
             query_obj = {
                 "entity_type": entity["status"]["resources"]["entity_type"],
                 "name": entity["status"]["name"],
@@ -2909,6 +2914,7 @@ class PolicyAttributesCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.POLICY_ATTRIBUTES
     feature_min_version = "3.5.0"
     is_policy_required = True
+    is_approval_policy_required = True
     event_name = CharField()
     name = CharField()
     type = CharField()
@@ -3022,6 +3028,7 @@ class PolicyActionTypeCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.POLICY_ACTION_TYPE
     feature_min_version = "3.5.0"
     is_policy_required = True
+    is_approval_policy_required = True
     name = CharField()
     uuid = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
@@ -3075,12 +3082,14 @@ class PolicyActionTypeCache(CacheTableBase):
         cls.clear()
 
         client = get_api_client()
-        res = client.policy_action_types.list_all()
-        if not res:
-            LOG.error("Failed to list policy action types")
-            sys.exit("Failed to list policy action types")
+        res, err = client.policy_action_types.list()
+        if err:
+            LOG.error("[{}] - {}".format(err["code"], err["error"]))
+            LOG.error("Failed to list policy attributes")
+            sys.exit("Failed to list policy attributes")
 
-        for entity in res:
+        res = res.json()
+        for entity in res.get("entities", []):
             name = entity["status"]["name"]
             uuid = entity["metadata"]["uuid"]
             cls.create_entry(name=name, uuid=uuid)

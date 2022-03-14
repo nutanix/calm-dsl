@@ -76,6 +76,7 @@ class POLICY:
     """Policy related constants"""
 
     MIN_SUPPORTED_VERSION = "3.1.0"
+    APPROVAL_POLICY_MIN_SUPPORTED_VERSION = "3.5.0"
 
     class APPROVER_SET:
         """Types of approver set for approval policy"""

@@ -32,7 +32,7 @@ class Context:
         self.categories_config = config_handle.get_categories_config()
         self.connection_config = config_handle.get_connection_config()
         self.policy_config = config_handle.get_policy_config()
-
+        self.approval_policy_config = config_handle.get_approval_policy_config()
         # Override with env data
         self.server_config.update(EnvConfig.get_server_config())
         self.project_config.update(EnvConfig.get_project_config())
@@ -127,6 +127,14 @@ class Context:
 
         return config
 
+    def get_approval_policy_config(self):
+        """returns approval policy configuration"""
+        config = self.approval_policy_config
+        if not config.get("approval_policy_status"):
+            config["approval_policy_status"] = False
+
+        return config
+
     def get_log_config(self):
         """returns logging configuration"""
 
@@ -179,6 +187,7 @@ class Context:
         log_config = self.get_log_config()
         connection_config = self.get_connection_config()
         policy_config = self.get_policy_config()
+        approval_policy_config = self.get_approval_policy_config()
 
         ConfigHandle = get_config_handle()
         config_str = ConfigHandle._render_config_template(
@@ -192,6 +201,7 @@ class Context:
             connection_timeout=connection_config["connection_timeout"],
             read_timeout=connection_config["read_timeout"],
             policy_status=policy_config["policy_status"],
+            approval_policy_status=approval_policy_config["approval_policy_status"],
         )
 
         print(config_str)

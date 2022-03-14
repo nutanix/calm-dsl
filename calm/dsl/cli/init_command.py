@@ -213,6 +213,25 @@ def set_server_details(
         LOG.debug("Policy is not supported")
         policy_status = False
 
+    # get approval policy status
+    if LV(calm_version) >= LV(POLICY.APPROVAL_POLICY_MIN_SUPPORTED_VERSION):
+        Obj = get_resource_api(
+            "features/approval_policy", client.connection, calm_api=True
+        )
+        res, err = Obj.read()
+
+        if err:
+            click.echo("[Fail]")
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        result = json.loads(res.content)
+        approval_policy_status = (
+            result.get("status", {}).get("feature_status", {}).get("is_enabled", False)
+        )
+        LOG.info("Approval Policy enabled={}".format(approval_policy_status))
+    else:
+        LOG.debug("Approval Policy is not supported")
+        approval_policy_status = False
+
     LOG.info("Verifying the project details")
     project_name_uuid_map = client.project.get_name_uuid_map(
         params={"filter": "name=={}".format(project_name)}
@@ -237,6 +256,7 @@ def set_server_details(
         connection_timeout=connection_timeout,
         read_timeout=read_timeout,
         policy_status=policy_status,
+        approval_policy_status=approval_policy_status,
     )
 
     # Updating context for using latest config data
@@ -455,6 +475,25 @@ def _set_config(
         LOG.debug("Policy is not supported")
         policy_status = False
 
+    # get approval policy status
+    if LV(calm_version) >= LV(POLICY.APPROVAL_POLICY_MIN_SUPPORTED_VERSION):
+        Obj = get_resource_api(
+            "features/approval_policy", client.connection, calm_api=True
+        )
+        res, err = Obj.read()
+
+        if err:
+            click.echo("[Fail]")
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        result = json.loads(res.content)
+        approval_policy_status = (
+            result.get("status", {}).get("feature_status", {}).get("is_enabled", False)
+        )
+        LOG.info("Approval Policy enabled={}".format(approval_policy_status))
+    else:
+        LOG.debug("Approval Policy is not supported")
+        approval_policy_status = False
+
     LOG.info("Verifying the project details")
     project_name_uuid_map = client.project.get_name_uuid_map(
         params={"filter": "name=={}".format(project_name)}
@@ -497,6 +536,7 @@ def _set_config(
         connection_timeout=connection_timeout,
         read_timeout=read_timeout,
         policy_status=policy_status,
+        approval_policy_status=approval_policy_status,
     )
     LOG.info("Configuration changed successfully")
 
