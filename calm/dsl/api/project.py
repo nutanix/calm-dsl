@@ -1,5 +1,3 @@
-from distutils.version import LooseVersion as LV
-
 from .resource import ResourceAPI
 from .connection import REQUEST
 
@@ -31,14 +29,7 @@ class ProjectAPI(ResourceAPI):
 
     def usage(self, uuid, payload):
 
-        from calm.dsl.store.version import Version
-
-        calm_version = Version.get_version("Calm")
-
-        if LV(calm_version) > LV("3.5.0"):
-            CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/projects"
-        else:
-            CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/calm_projects"
+        CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/calm_projects"
 
         CALM_PROJECTS_ITEM = CALM_PROJECTS_PREFIX + "/{}"
         CALM_PROJECTS_USAGE = CALM_PROJECTS_ITEM + "/usage"
@@ -52,14 +43,7 @@ class ProjectAPI(ResourceAPI):
 
     def delete(self, uuid):
 
-        from calm.dsl.store.version import Version
-
-        calm_version = Version.get_version("Calm")
-
-        if LV(calm_version) > LV("3.4.0"):
-            CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/projects"
-        else:
-            CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/calm_projects"
+        CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/calm_projects"
 
         CALM_PROJECTS_ITEM = CALM_PROJECTS_PREFIX + "/{}"
 
@@ -71,14 +55,7 @@ class ProjectAPI(ResourceAPI):
 
     def read_pending_task(self, uuid, task_uuid):
 
-        from calm.dsl.store.version import Version
-
-        calm_version = Version.get_version("Calm")
-
-        if LV(calm_version) > LV("3.4.0"):
-            CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/projects"
-        else:
-            CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/calm_projects"
+        CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/calm_projects"
 
         CALM_PROJECTS_ITEM = CALM_PROJECTS_PREFIX + "/{}"
         CALM_PROJECTS_PENDING_TASKS = CALM_PROJECTS_ITEM + "/pending_tasks/{}"

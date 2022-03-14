@@ -1216,7 +1216,7 @@ def create_spec(client):
     option = []  # Any option occured during finding key
 
     # VM Configuration
-    projects = client.project.get_name_uuid_map({"length": 1000, "offset": 0})
+    projects = client.project.get_name_uuid_map({"length": 250, "offset": 0})
     project_list = list(projects.keys())
 
     if not project_list:

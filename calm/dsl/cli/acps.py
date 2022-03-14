@@ -75,7 +75,7 @@ def get_acps(name, project_name, filter_by, limit, offset, quiet, out):
 
     client = get_api_client()
 
-    params = {"length": 1000}
+    params = {"length": 250, "filter": "name=={}".format(project_name)}
     project_name_uuid_map = client.project.get_name_uuid_map(params)
 
     project_uuid = project_name_uuid_map.get(project_name, "")
@@ -188,7 +188,7 @@ def create_acp(role, project, acp_users, acp_groups, name):
         LOG.error("ACP {} already exists.".format(acp_name))
         sys.exit(-1)
 
-    params = {"length": 1000}
+    params = {"length": 250}
     project_name_uuid_map = client.project.get_name_uuid_map(params)
 
     project_uuid = project_name_uuid_map.get(project, "")
@@ -236,7 +236,7 @@ def create_acp(role, project, acp_users, acp_groups, name):
     role_cache_data = Cache.get_entity_data(entity_type=CACHE.ENTITY.ROLE, name=role)
     role_uuid = role_cache_data["uuid"]
 
-    limit = 1000
+    limit = 250
     res, err = get_acps_from_project(
         client, project_uuid, role_uuid=role_uuid, limit=limit
     )
@@ -376,7 +376,7 @@ def delete_acp(acp_name, project_name):
 
     client = get_api_client()
 
-    params = {"length": 1000}
+    params = {"length": 250, "filter": "name=={}".format(project_name)}
     project_name_uuid_map = client.project.get_name_uuid_map(params)
 
     project_uuid = project_name_uuid_map.get(project_name, "")
@@ -430,7 +430,7 @@ def describe_acp(acp_name, project_name, out):
 
     client = get_api_client()
 
-    params = {"length": 1000}
+    params = {"length": 250, "filter": "name=={}".format(project_name)}
     project_name_uuid_map = client.project.get_name_uuid_map(params)
 
     project_uuid = project_name_uuid_map.get(project_name, "")
@@ -438,7 +438,7 @@ def describe_acp(acp_name, project_name, out):
         LOG.error("Project '{}' not found".format(project_name))
         sys.exit(-1)
 
-    limit = 1000
+    limit = 250
     res, err = get_acps_from_project(
         client, project_uuid, acp_name=acp_name, limit=limit
     )
@@ -516,7 +516,7 @@ def update_acp(
 
     client = get_api_client()
 
-    params = {"length": 1000}
+    params = {"length": 250, "filter": "name=={}".format(project_name)}
     project_name_uuid_map = client.project.get_name_uuid_map(params)
 
     project_uuid = project_name_uuid_map.get(project_name, "")
