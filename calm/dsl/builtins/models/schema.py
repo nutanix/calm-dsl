@@ -176,7 +176,8 @@ def get_validators_with_defaults(schema_props):
         ValidatorType, is_array, default = get_validator_details(schema_props, name)
         attr_name = props.get("x-calm-dsl-display-name", name)
         validators[attr_name] = (ValidatorType, is_array)
-        defaults[attr_name] = default
+        if props.get("x-calm-dsl-default-required", True):
+            defaults[attr_name] = default
         display_map[attr_name] = name
 
     return validators, defaults, display_map
