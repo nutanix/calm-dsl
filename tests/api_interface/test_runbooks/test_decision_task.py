@@ -102,7 +102,7 @@ class TestDecisionTasks:
     def test_desision_task_with_multiple_targets(self):
         """test_desision_task_with_multiple_targets"""
         # inline import is needed so that version check happens before creating runbook
-        from tests.api_interface.test_runbooks.test_files.decision_task import (
+        from tests.api_interface.test_runbooks.test_files.decision_task_with_multiple_target import (
             DecisionWithMultipleIpTarget,
         )
 
