@@ -1,7 +1,4 @@
-from datetime import datetime, timedelta
-
-from calm.dsl.builtins import Job
-from calm.dsl.cli.scheduler import JobScheduler
+from calm.dsl.builtins import Job, JobScheduler
 
 start_date_time = "2021-11-15 23:17:15"
 expiry_date_time = "2021-11-16 00:17:00"

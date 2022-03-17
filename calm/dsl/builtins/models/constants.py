@@ -19,3 +19,13 @@ class TASK_INPUT:
         TYPE.TIME,
         TYPE.DATETIME,
     ]
+
+
+class SYSTEM_ACTIONS:
+    CREATE = "create"
+    START = "start"
+    RESTART = "restart"
+    UPDATE = "update"
+    STOP = "stop"
+    DELETE = "delete"
+    SOFT_DELETE = "soft_delete"

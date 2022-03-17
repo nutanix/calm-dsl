@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 
-from calm.dsl.builtins import Job
-from calm.dsl.cli.scheduler import JobScheduler
+from calm.dsl.builtins import Job, JobScheduler
 
 start_date = datetime.now() + timedelta(seconds=10)
 start_date = (

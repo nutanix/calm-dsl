@@ -1,7 +1,4 @@
-from datetime import datetime, timedelta
-
-from calm.dsl.builtins import Job
-from calm.dsl.cli.scheduler import JobScheduler
+from calm.dsl.builtins import Job, JobScheduler
 
 start_date_time = "2021-11-08 19:14:00"
 time_zone = "Asia/Calcutta"

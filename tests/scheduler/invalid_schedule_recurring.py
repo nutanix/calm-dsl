@@ -1,7 +1,6 @@
 import uuid
 
-from calm.dsl.builtins import Job
-from calm.dsl.cli.scheduler import JobScheduler
+from calm.dsl.builtins import Job, JobScheduler
 
 start_date_time = "2020-10-08 16:17:15"
 expiry_date_time = "2050-10-09 00:17:00"
