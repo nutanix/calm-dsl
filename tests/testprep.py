@@ -49,7 +49,9 @@ def add_account_details(config):
             else:
                 result = result.json()
                 for entity in result["entities"]:
-                    cluster_ref = entity["status"]["cluster_reference"]
+                    cluster_ref = entity["status"].get("cluster_reference", {})
+                    if not cluster_ref:
+                        continue
                     cluster_name = cluster_ref.get("name", "")
 
                     account_data["SUBNETS"].append(
