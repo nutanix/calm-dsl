@@ -12,8 +12,13 @@ from calm.dsl.builtins import CalmVariable
 from calm.dsl.builtins import Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import provider_spec, read_local_file
+from calm.dsl.store import Version
+from distutils.version import LooseVersion as LV
 
 DNS_SERVER = read_local_file(".tests/dns_server")
+
+# calm_version
+CALM_VERSION = Version.get_version("Calm")
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 TEST_PC_IP = DSL_CONFIG["EXISTING_MACHINE"]["IP_1"]
@@ -510,4 +515,7 @@ def test_json():
     generated_json["app_profile_list"][0].pop("patch_list", None)
 
     known_json = json.load(open(file_path))
+    if LV(CALM_VERSION) >= LV("3.4.0"):
+        for cred in known_json["credential_definition_list"]:
+            cred["cred_class"] = "static"
     assert generated_json == known_json

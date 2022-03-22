@@ -1,0 +1,56 @@
+{% macro ExecutableResources() -%}
+title: JobExecutable
+type: object
+x-calm-dsl-type: executable_resources
+properties:
+    entity:
+      {{ ExecutableEntity()|indent(6) }}
+    action:
+      {{ ExecutableAction()|indent(6) }}
+{%- endmacro %}
+
+{% macro JobExecutableSchema() -%}
+
+JobExecutable:
+  {{ ExecutableResources()|indent(2) }}
+
+
+{%- endmacro %}
+
+{% macro ExecutableEntity() -%}
+type: object
+x-calm-dsl-type: object
+title: job executable entity
+properties:
+    type:
+      type: string
+      description: type of job
+      enum: ["runbook", "blueprint", "app", "mpi"]
+    uuid:
+      description: job executable entity UUID
+      type: string
+{%- endmacro %}
+
+{% macro ExecutableAction() -%}
+type: object
+x-calm-dsl-type: object
+title: job executable action
+properties:
+    type:
+      type: string
+      description: type of action
+    spec:
+      {{ ActionSpec()|indent(6) }}
+
+{%- endmacro %}
+
+{% macro ActionSpec() -%}
+type: object
+x-calm-dsl-type: object
+properties:
+    uuid:
+      description: job executable entity UUID
+      type: string
+    payload:
+      type: string
+{%- endmacro %}

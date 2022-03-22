@@ -47,6 +47,7 @@ from calm.dsl.providers import get_provider
 from calm.dsl.providers.plugins.ahv_vm.main import AhvNew
 from calm.dsl.constants import CACHE
 from calm.dsl.log import get_logging_handle
+from calm.dsl.builtins.models.calm_ref import Ref
 
 LOG = get_logging_handle(__name__)
 
@@ -311,6 +312,9 @@ def compile_blueprint(bp_file, brownfield_deployment_file=None):
                     # Replacing new deployment in profile.deployments
                     pf.deployments[ind] = bf_dep
 
+    ContextObj = get_context()
+    project_config = ContextObj.get_project_config()
+
     bp_payload = None
     if isinstance(UserBlueprint, type(SimpleBlueprint)):
         bp_payload = UserBlueprint.make_bp_dict()
@@ -318,6 +322,9 @@ def compile_blueprint(bp_file, brownfield_deployment_file=None):
             bp_payload["metadata"]["project_reference"] = metadata_payload[
                 "project_reference"
             ]
+        else:
+            project_name = project_config["name"]
+            bp_payload["metadata"]["project_reference"] = Ref.Project(project_name)
     else:
         if isinstance(UserBlueprint, type(VmBlueprint)):
             UserBlueprint = UserBlueprint.make_bp_obj()

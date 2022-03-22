@@ -273,4 +273,7 @@ def test_json():
     for _sd in generated_json["substrate_definition_list"]:
         _sd["create_spec"]["resources"].pop("account_uuid", None)
 
+    for _cred in generated_json["credential_definition_list"]:
+        _cred.pop("cred_class", None)
+
     assert sorted(known_json.items()) == sorted(generated_json.items())

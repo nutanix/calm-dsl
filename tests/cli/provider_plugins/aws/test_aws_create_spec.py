@@ -3,7 +3,6 @@ from .. import plugin_test
 
 
 @pytest.mark.slow
-@pytest.mark.presetup_required
 @plugin_test("AWS_VM")
 class TestAWSSpec:
     def test_normal_spec(self):

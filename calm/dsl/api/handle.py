@@ -13,7 +13,7 @@ from .library_tasks import TaskLibraryApi
 from .application import ApplicationAPI
 from .project import ProjectAPI
 from .environment import EnvironmentAPI
-from .setting import SettingAPI
+from .setting import AccountsAPI
 from .marketplace import MarketPlaceAPI
 from .app_icons import AppIconAPI
 from .version import VersionAPI
@@ -26,6 +26,8 @@ from .access_control_policy import AccessControlPolicyAPI
 from .app_protection_policy import AppProtectionPolicyAPI
 from .vm_recovery_point import VmRecoveryPointAPI
 from .nutanix_task import TaskAPI
+from .job import JobAPI
+from .resource_type import ResourceTypeAPI
 
 
 class ClientHandle:
@@ -44,7 +46,7 @@ class ClientHandle:
         self.runbook = RunbookAPI(self.connection)
         self.task = TaskLibraryApi(self.connection)
         self.application = ApplicationAPI(self.connection)
-        self.account = SettingAPI(self.connection)
+        self.account = AccountsAPI(self.connection)
         self.market_place = MarketPlaceAPI(self.connection)
         self.app_icon = AppIconAPI(self.connection)
         self.version = VersionAPI(self.connection)
@@ -58,6 +60,8 @@ class ClientHandle:
         self.app_protection_policy = AppProtectionPolicyAPI(self.connection)
         self.vm_recovery_point = VmRecoveryPointAPI(self.connection)
         self.nutanix_task = TaskAPI(self.connection)
+        self.job = JobAPI(self.connection)
+        self.resource_types = ResourceTypeAPI(self.connection)
 
 
 def get_client_handle_obj(

@@ -9,6 +9,10 @@ from calm.dsl.cli import main as cli
 from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 
+# for tcs
+from calm.dsl.store import Version
+from distutils.version import LooseVersion as LV
+
 # Setting the recursion limit to max for
 sys.setrecursionlimit(100000)
 
@@ -136,5 +140,12 @@ class TestVmBlueprints:
             sub["create_spec"]["resources"]["account_uuid"] = generated_json[
                 "substrate_definition_list"
             ][ind]["create_spec"]["resources"]["account_uuid"]
+
+        # calm_version
+        CALM_VERSION = Version.get_version("Calm")
+        # For versions > 3.4, cred_class is needed to cred-payload
+        if LV(CALM_VERSION) >= LV("3.4.0"):
+            for cred in known_json["credential_definition_list"]:
+                cred["cred_class"] = "static"
 
         assert generated_json == known_json

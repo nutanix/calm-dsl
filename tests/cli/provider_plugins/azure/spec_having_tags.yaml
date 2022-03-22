@@ -5,8 +5,8 @@ input:
 - "1"   # os = Linux
 - "vm-@@{calm_unique_hash}@@-@@{calm_array_index}@@"  # VM name
 - "1"   # resource group = calmrg
-- "n"   # Want Availability set
 - "5"   # Location = East US 2
+- "n"   # Want Availability set
 - "11"  # Hardware Profile = Standard_D1_v2
 - "n"   # Want secrets
 - "echo 'Sample azure cloud init script'"   # Cloud Init Script
@@ -48,3 +48,14 @@ spec_assertions:
 - "azure"           # Value of tag1
 - "blueprint"       # Key of tag2
 - "calm"            # Value of tag2
+
+dependencies:
+ # For changing indexes of resource in input as per the setup
+- [0, projects/default]
+- [5, accounts/azure_primary/locations/East US 2/index]
+- [7, accounts/azure_primary/locations/East US 2/hw_profiles/Standard_D1_v2/index]
+- [4, accounts/azure_primary/resource_groups/calmrg/index]
+- [11, accounts/azure_primary/locations/East US 2/publishers/Canonical/index]
+- [13, accounts/azure_primary/locations/East US 2/publishers/Canonical/image_offers/UbuntuServer/image_skus/18.04-LTS/index]
+- [14, accounts/azure_primary/locations/East US 2/publishers/Canonical/image_offers/UbuntuServer/image_skus/18.04-LTS/image_versions/18.04.201903121/index]
+- [12, accounts/azure_primary/locations/East US 2/publishers/Canonical/image_offers/UbuntuServer/index]

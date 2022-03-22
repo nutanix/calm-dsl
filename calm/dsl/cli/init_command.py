@@ -261,6 +261,21 @@ def init_dsl_runbook(runbook_name, dir_name):
     init_runbook(runbook_name, dir_name)
 
 
+# @init.command("scheduler", feature_min_version="3.3.0", experimental=True)
+# @click.option("--name", "-n", "job_name", default="Hello", help="Name of job")
+# @click.option(
+#     "--dir_name", "-d", default=os.getcwd(), help="Directory path for the scheduler"
+# )
+# def init_dsl_scheduler(job_name, dir_name):
+#     """Creates a starting directory for runbook"""
+#
+#     if not job_name.isidentifier():
+#         LOG.error("Job name '{}' is not a valid identifier".format(job_name))
+#         sys.exit(-1)
+#
+#     init_scheduler(job_name, dir_name)
+
+
 @set.command("config")
 @click.option(
     "--ip",

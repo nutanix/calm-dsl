@@ -5,25 +5,25 @@ input:
 - "vm-@@{calm_array_index}@@-@@{calm_time}@@"  # instance name
 - "y"  # Enable Associate Public Ip Address
 - "y"  # Want Instance type
-- "1"  # Instance Type = c3.2xlarge
+- "61"  # Instance Type = t2.nano
 - "y"  # Want Region
-- "1"  # Region = up-east-1
+- "1"  # Region = us-east-1
 - "y"  # Want availability zone
 - "1"  # Availability Zone = us-east-1a
 - "y"  # Want machine image
-- "21"  # Machine Image = CALM_1.8.2
+- "31"  # Machine Image = CentOS Linux 7 x86_64 HVM EBS 1704_01-b7ee8a69-ee97-4a49-9e68-afaee216db2e-ami-d52f5bc3.4
 - "y"  # Want IAM Role
-- "1"  # IAM Role = aws-ec2-spot-fleet-role
+- "1"  # IAM Role = aws-elasticbeanstalk-ec2-role
 - "y"  # Want Key Pair
-- "6"  # Key-Pair = calm-qa
+- "6"  # Key-Pair = calm-blueprints
 - "y"  # Want VPC
-- "1"  # VPC = 172.31.0.0/16 | vpc-dcd149bb
+- "3"  # VPC = vpc-ffd54d98
 - "y"  # Want Security Group
 - "n"  # Include Classic Security Group
-- "51"  # Security Group = sg-963925ed | default
+- "56"  # Security Group = sg-184ead62
 - "n"  # Want more security Groups
 - "y"  # Want Subnets
-- "1"  # Subnet = subnet-9a9ea2b0 | vpc-dcd149bb
+- "1"  # Subnet = subnet-c599a5ef
 - "y"  # Want user-data
 - "Sample aws data"  # User data
 - "y"  # Want tags
@@ -46,9 +46,20 @@ cli_assertions:
 spec_assertions:
 - "us-east-1"  # Check for region name
 - "us-east-1a"  # Check for Availability Zone
-- "ami-1b61f50c" # Check for Machine Image ID
-- "aws-ec2-spot-fleet-role"  # Check for AM Role
-- "sg-963925ed"  # Check for Security Group
-- "subnet-9a9ea2b0"  # Check for Subnet
-- "calm-qa" # Check for Key-Pair
+- "ami-46c1b650" # Check for Machine Image ID
+- "aws-elasticbeanstalk-ec2-role"  # Check for AM Role
+- "sg-184ead62"  # Check for Security Group
+- "subnet-c599a5ef"  # Check for Subnet
+- "calm-blueprints" # Check for Key-Pair
 
+dependencies:
+  # For changing indexes of resource in input as per the setup
+- [0 , projects/default]
+- [7 , accounts/primary_account/regions/us-east-1/index]
+- [9 , accounts/primary_account/regions/us-east-1/availability_zones/us-east-1a]
+- [11 , accounts/primary_account/regions/us-east-1/machine_images/CentOS Linux 7 x86_64 HVM EBS 1704_01-b7ee8a69-ee97-4a49-9e68-afaee216db2e-ami-d52f5bc3.4]
+- [13 , accounts/primary_account/regions/us-east-1/iam_roles/aws-elasticbeanstalk-ec2-role]
+- [15 , accounts/primary_account/regions/us-east-1/key_pairs/calm-blueprints]
+- [17 , accounts/primary_account/regions/us-east-1/vpcs/vpc-ffd54d98/index]
+- [20 , accounts/primary_account/regions/us-east-1/vpcs/vpc-ffd54d98/security_groups/sg-184ead62]
+- [23 , accounts/primary_account/regions/us-east-1/subnets/vpc-ffd54d98/us-east-1a/subnet-c599a5ef]

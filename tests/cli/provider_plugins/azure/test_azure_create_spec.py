@@ -3,7 +3,6 @@ from .. import plugin_test
 
 
 @pytest.mark.slow
-@pytest.mark.presetup_required
 @plugin_test("AZURE_VM")
 class TestAZURESpec:
     def test_normal_spec(self):

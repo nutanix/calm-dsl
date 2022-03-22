@@ -119,4 +119,9 @@ class TestSnapshotRestoreBlueprint:
             "resources"
         ]["account_uuid"] = sub_account_uuid
 
+        # For versions > 3.4, cred_class is needed to cred-payload
+        if LV(CALM_VERSION) >= LV("3.4.0"):
+            for cred in known_json["resources"]["credential_definition_list"]:
+                cred["cred_class"] = "static"
+
         assert sorted(known_json.items()) == sorted(generated_json.items())

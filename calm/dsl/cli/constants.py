@@ -42,6 +42,21 @@ class RUNLOG:
     ]
 
 
+class JOBS:
+    class STATES:
+        ACTIVE = "ACTIVE"
+        DELETED = "DELETED"
+        INACTIVE = "INACTIVE"
+
+
+class JOBINSTANCES:
+    class STATES:
+        SCHEDULED = "SCHEDULED"
+        RUNNING = "RUNNING"
+        SKIPPED = "SKIPPED"
+        FAILED = "FAILED"
+
+
 class RUNBOOK:
     class STATES:
         ACTIVE = "ACTIVE"
