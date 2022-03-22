@@ -341,6 +341,45 @@ def describe_k8s_account(spec):
     click.echo(highlight_text(auth_type))
 
 
+def describe_custom_provider_account(client, spec):
+    provider_name = resource_type_name = spec["provider_reference"]["name"]
+    click.echo("Provider Name: {}".format(provider_name))
+
+    click.echo("Account Variables")
+    for variable in spec["variable_list"]:
+        click.echo("\t{}".format(highlight_text(variable["name"])))
+
+    Obj = client.resource_types
+
+    params = {"filter": "name=={}".format(resource_type_name)}
+    res, err = Obj.list(params=params)
+    if err:
+        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
+
+    response = res.json()
+    entities = response.get("entities", None)
+    resource_type = None
+    if entities:
+        if len(entities) != 1:
+            LOG.exception("More than one account found - {}".format(entities))
+            sys.exit(-1)
+
+        LOG.info("{} found ".format(resource_type_name))
+        resource_type = entities[0]
+    else:
+        LOG.exception("No account having name {} found".format(resource_type_name))
+        sys.exit(-1)
+
+    click.echo("Resource Type Schema Variables")
+    for schema_variable in resource_type["status"]["resources"]["schema_list"]:
+        click.echo("\t{}".format(highlight_text(schema_variable["name"])))
+
+    click.echo("Resource Type Variables List")
+    for variable in resource_type["status"]["resources"]["variable_list"]:
+        click.echo("\t{}".format(highlight_text(variable["name"])))
+
+
 def describe_account(account_name):
 
     client = get_api_client()
@@ -397,6 +436,9 @@ def describe_account(account_name):
 
     elif account_type == "azure":
         describe_azure_account(provider_data)
+
+    elif account_type == "custom_provider":
+        describe_custom_provider_account(client, provider_data)
 
     else:
         click.echo("Provider details not present")

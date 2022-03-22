@@ -5,9 +5,9 @@ input:
 - "vm-@@{calm_array_index}@@-@@{calm_time}@@"  # instance name
 - "y"  # Enable Associate Public Ip Address
 - "y"  # Want Instance type
-- "1"  # Instance Type = c3.2xlarge
+- "61"  # Instance Type = t2.nano
 - "y"  # Want Region
-- "1"  # Region = up-east-1
+- "1"  # Region = us-east-1
 - "n"  # Want availability zone
 - "n"  # Want machine image
 - "n"  # Want IAM Role
@@ -25,3 +25,8 @@ cli_assertions:
 
 spec_assertions:
 - us-east-1  # Check for region name
+
+dependencies:
+ # For changing indexes of resource in input as per the setup
+- [0, projects/default]
+- [7 , accounts/primary_account/regions/us-east-1/index]

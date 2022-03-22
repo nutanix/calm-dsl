@@ -93,6 +93,22 @@ def get_validator_details(schema_props, name):
         elif type_ == "object":
             object_type = True
             for name in props.get("properties", {}):
+                attr_props = props["properties"].get(name, dict())
+                calm_version = Version.get_version("Calm")
+
+                # dev machines do not follow standard version protocols. Avoid matching there
+                attribute_min_version = str(
+                    attr_props.get("x-calm-dsl-min-version", "")
+                )
+                if not calm_version:
+                    calm_version = "2.9.0"  # Raise warning and set default to 2.9.0
+
+                # If attribute version is less than calm version, ignore it
+                if attribute_min_version and LV(attribute_min_version) > LV(
+                    calm_version
+                ):
+                    continue
+
                 validator, is_array, default = get_validator_details(
                     props["properties"], name
                 )
@@ -100,8 +116,10 @@ def get_validator_details(schema_props, name):
                     "x-calm-dsl-display-name", name
                 )
                 object_validators[attr_name] = (validator, is_array)
-                object_defaults[attr_name] = default
                 object_display_map[attr_name] = name
+
+                if attr_props.get("x-calm-dsl-default-required", True):
+                    object_defaults[attr_name] = default
 
     if type_ == "array":
         item_props = props.get("items", None)
@@ -158,7 +176,8 @@ def get_validators_with_defaults(schema_props):
         ValidatorType, is_array, default = get_validator_details(schema_props, name)
         attr_name = props.get("x-calm-dsl-display-name", name)
         validators[attr_name] = (ValidatorType, is_array)
-        defaults[attr_name] = default
+        if props.get("x-calm-dsl-default-required", True):
+            defaults[attr_name] = default
         display_map[attr_name] = name
 
     return validators, defaults, display_map

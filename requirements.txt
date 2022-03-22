@@ -22,3 +22,4 @@ schema==0.7.1
 colorlog==5.0.1
 black==21.4b1
 importlib-metadata==4.0.1
+backports.zoneinfo==0.2.1;python_version<"3.9"

@@ -159,6 +159,7 @@ class BlueprintAPI(ResourceAPI):
             "package_definition_list",
             "substrate_definition_list",
             "app_profile_list",
+            "credential_definition_list",
         ]
         strip_secrets(
             bp_resources, secret_map, secret_variables, object_lists=object_lists

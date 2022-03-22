@@ -41,6 +41,10 @@
 {% import "calm_ref.yaml.jinja2" as calm_ref %}
 {% import "account_provider.yaml.jinja2" as account_provider %}
 {% import "ahv_recovery_vm.yaml.jinja2" as ahv_recovery_vm %}
+{% import "jobs.yaml.jinja2" as scheduler_job %}
+{% import "jobexecutable.yaml.jinja2" as job_executable %}
+{% import "jobscheduleinfo.yaml.jinja2" as job_schedule %}
+
 
 {% macro Schemas() -%}
 
@@ -90,6 +94,10 @@
 {{ calm_ref.CalmRefSchema() }}
 {{ account_provider.AccountProviderSchema() }}
 {{ ahv_recovery_vm.AhvRecoveryVmSchema() }}
+{{ job_executable.JobExecutableSchema() }}
+{{ job_schedule.JobScheduleInfoSchema() }}
+{{ scheduler_job.SchedulerJobSchema() }}
+
 {%- endmacro %}
 
 

@@ -59,10 +59,7 @@ class TestWhileTasks:
         for entity in entities:
             if entity["status"]["type"] == "task_runlog":
                 task_name = entity["status"]["task_reference"]["name"]
-                machine_name = entity["status"].get("machine_name", "")
-                if len(machine_name.split(runlog_uuid)) == 2 or not entity[
-                    "status"
-                ].get("loop_counter", None):
+                if not entity["status"].get("loop_counter", None):
                     continue
                 if int(entity["status"]["loop_counter"]) > 0:
                     pytest.fail(

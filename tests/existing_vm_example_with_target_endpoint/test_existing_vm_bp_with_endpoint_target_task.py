@@ -15,6 +15,10 @@ from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import provider_spec, read_local_file
 from calm.dsl.builtins import CalmEndpoint
 
+# for tcs
+from calm.dsl.store import Version
+from distutils.version import LooseVersion as LV
+
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 TEST_PC_IP = DSL_CONFIG["EXISTING_MACHINE"]["IP_1"]
 CRED_USERNAME = DSL_CONFIG["EXISTING_MACHINE"]["CREDS"]["LINUX"]["USERNAME"]
@@ -515,4 +519,12 @@ def test_json():
     generated_json["app_profile_list"][0].pop("restore_config_list", None)
     generated_json["app_profile_list"][0].pop("patch_list", None)
     known_json = json.load(open(file_path))
+
+    # calm_version
+    CALM_VERSION = Version.get_version("Calm")
+    # For versions > 3.4, cred_class is needed to cred-payload
+    if LV(CALM_VERSION) >= LV("3.4.0"):
+        for cred in known_json["credential_definition_list"]:
+            cred["cred_class"] = "static"
+
     assert generated_json == known_json

@@ -3,6 +3,8 @@ from app_edit_blueprint import TestRuntime
 from calm.dsl.log import get_logging_handle
 import os
 from calm.dsl.builtins import read_local_file
+from calm.dsl.store import Version
+from distutils.version import LooseVersion as LV
 
 CRED_USERNAME = read_local_file(".tests/username")
 CRED_PASSWORD = read_local_file(".tests/password")
@@ -11,7 +13,12 @@ MYSQL_PORT = read_local_file(".tests/mysql_port")
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 NTNX_LOCAL_ACCOUNT = DSL_CONFIG["ACCOUNTS"]["NTNX_LOCAL_AZ"]
-SUBNET_UUID = NTNX_LOCAL_ACCOUNT["SUBNETS"][1]["UUID"]
+SUBNET_UUID = [
+    _["UUID"] for _ in NTNX_LOCAL_ACCOUNT["SUBNETS"] if _["NAME"] == "vlan1211"
+][0]
+
+# calm_version
+CALM_VERSION = Version.get_version("Calm")
 
 LOG = get_logging_handle(__name__)
 
@@ -48,4 +55,10 @@ def test_json():
         "uuid"
     ] = None
 
-    assert sorted(known_json.items()) == sorted(generated_json.items())
+    if LV(CALM_VERSION) >= LV("3.4.0"):
+        for cred in known_json["credential_definition_list"]:
+            cred["cred_class"] = "static"
+
+    assert sorted(known_json.items()) == sorted(
+        generated_json.items()
+    ), "Known Json: {}\nGen Json: {}".format(known_json.items(), generated_json.items())

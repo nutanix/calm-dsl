@@ -394,6 +394,9 @@ def create_library_task_from_json(
     else:
         name = task_payload.get("spec").get("name")
 
+    if description:
+        task_payload["spec"]["description"] = description
+
     return create_update_library_task(
         client,
         task_payload,
@@ -413,6 +416,9 @@ def create_library_task_from_dsl(
         task_payload["spec"]["name"] = name
     else:
         name = task_payload.get("spec").get("name")
+
+    if description:
+        task_payload["spec"]["description"] = description
 
     return create_update_library_task(
         client,

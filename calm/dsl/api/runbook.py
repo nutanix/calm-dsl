@@ -1,4 +1,6 @@
 import os
+from distutils.version import LooseVersion as LV
+
 
 from .resource import ResourceAPI
 from .connection import REQUEST
@@ -14,6 +16,7 @@ class RunbookAPI(ResourceAPI):
         self.UPDATE_USING_NAMES = self.PREFIX + "/{}/update"
         self.RUNBOOK_RUNLOGS_LIST = self.PREFIX + "/runlogs/list"
         self.RUN = self.PREFIX + "/{}/run"
+        self.EXECUTE = self.PREFIX + "/{}/execute"  # For calm versions >= 3.3.2
         self.POLL_RUN = self.PREFIX + "/runlogs/{}"
         self.PAUSE = self.PREFIX + "/runlogs/{}/pause"
         self.PLAY = self.PREFIX + "/runlogs/{}/play"
@@ -223,8 +226,15 @@ class RunbookAPI(ResourceAPI):
         )
 
     def run(self, uuid, payload):
+        from calm.dsl.store.version import Version
+
+        calm_version = Version.get_version("Calm")
+        runbook_run_api = self.RUN
+        if LV(calm_version) >= LV("3.3.2"):
+            runbook_run_api = self.EXECUTE
+
         return self.connection._call(
-            self.RUN.format(uuid),
+            runbook_run_api.format(uuid),
             verify=False,
             request_json=payload,
             method=REQUEST.METHOD.POST,

@@ -9,6 +9,8 @@ from calm.dsl.builtins import port, ref, setvar, basic_cred
 from calm.dsl.builtins import Port, Service, Package, Substrate
 from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import read_provider_spec, CalmVariable, read_local_file
+from calm.dsl.store import Version
+from distutils.version import LooseVersion as LV
 
 CRED_USERNAME = read_local_file(".tests/username")
 CRED_PASSWORD = read_local_file(".tests/password")
@@ -141,6 +143,13 @@ def test_json():
     generated_json["app_profile_list"][0].pop("patch_list", None)
     for _sd in generated_json["substrate_definition_list"]:
         _sd["create_spec"]["resources"].pop("account_uuid", None)
+
+    # calm_version
+    CALM_VERSION = Version.get_version("Calm")
+    # For versions > 3.4, cred_class is needed to cred-payload
+    if LV(CALM_VERSION) >= LV("3.4.0"):
+        for cred in known_json["credential_definition_list"]:
+            cred["cred_class"] = "static"
 
     assert sorted(known_json.items()) == sorted(generated_json.items())
 

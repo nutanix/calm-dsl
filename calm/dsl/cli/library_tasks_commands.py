@@ -149,7 +149,7 @@ def _create_task(task_file, name, description, force):
 
     (-f | --file) supports:\n
     \t.py       - Python DSL\n
-    \t.json     - Full json payload download from Calm API (v3 #GET) or using `calm describe <task_name> -o json`\n
+    \t.json     - Full json payload download from Calm API (v3 #GET) or using `calm describe library task <task_name> -o json `\n
 
     Examples:\n
     calm create library task --name=HTTPGetVM -f HTTPGetVM.py\n

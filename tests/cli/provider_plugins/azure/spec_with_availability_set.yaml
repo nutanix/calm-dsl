@@ -5,9 +5,10 @@ input:
 - "1"   # os = Linux
 - "vm-@@{calm_unique_hash}@@-@@{calm_array_index}@@"  # VM name
 - "1"   # resource group = calmrg
-- "y"   # Want Availability set
-- "1"   # Availability set = azure-sample-availabilityset
 - "5"   # Location = East US 2
+- "y"   # Want Availability set
+- "1"   # choose Availability set
+- "1"   # Availability set = test_as_esha
 - "11"  # Hardware Profile = Standard_D1_v2
 - "n"   # Want secrets
 - "echo 'Sample azure cloud init script'"   # Cloud Init Script
@@ -29,7 +30,7 @@ cli_assertions:
 - "ATTACH"
 
 spec_assertions:
-- "/subscriptions/c88c75b1-c860-411e-b920-a48d02a8ce45/resourceGroups/calmrg/providers/Microsoft.Compute/availabilitySets/azure-sample-availabilityset"   # Availability set id
+- "/subscriptions/c88c75b1-c860-411e-b920-a48d02a8ce45/resourceGroups/calmrg/providers/Microsoft.Compute/availabilitySets/test_as_esha"   # Availability set id
 - "eastus2"   # Location
 - "Standard_D1_v2"  # Hardware Profile
 - "calmrg"    # Resource group
@@ -40,3 +41,14 @@ spec_assertions:
 - "UbuntuServer"  # Image offer
 - "data_disk_list: []"   # Data disks = No
 - "os-@@{calm_unique_hash}@@-@@{calm_array_index}@@-disk"   # Os disk name
+
+dependencies:
+ # For changing indexes of resource in input as per the setup
+- [0, projects/default]
+- [5, accounts/azure_primary/locations/East US 2/index]
+- [9, accounts/azure_primary/locations/East US 2/hw_profiles/Standard_D1_v2/index]
+- [4, accounts/azure_primary/resource_groups/calmrg/index]
+- [13, accounts/azure_primary/locations/East US 2/publishers/Canonical/index]
+- [15, accounts/azure_primary/locations/East US 2/publishers/Canonical/image_offers/UbuntuServer/image_skus/18.04-LTS/index]
+- [16, accounts/azure_primary/locations/East US 2/publishers/Canonical/image_offers/UbuntuServer/image_skus/18.04-LTS/image_versions/18.04.201903121/index]
+- [14, accounts/azure_primary/locations/East US 2/publishers/Canonical/image_offers/UbuntuServer/index]
