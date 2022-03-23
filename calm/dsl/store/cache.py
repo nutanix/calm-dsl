@@ -136,7 +136,7 @@ class Cache:
         """adds one entity to entity db object"""
 
         db_obj = cls.get_entity_db_table_object(entity_type)
-        db_obj.delete_one(uuid, **kwargs)
+        db_obj.update_one(uuid, **kwargs)
 
     @classmethod
     def sync(cls):
