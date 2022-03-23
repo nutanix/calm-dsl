@@ -93,4 +93,8 @@
                 )
             ]
 
+# Cache
+- Allow cache update for individual enities. CLI command: `calm update cache --entity [ahv_subnet|ahv_disk_image|account|project|environment|user|role|directory_service|user_group|ahv_network_function_chain|app_protection_policy]`
+- Fixed issue [#184](https://github.com/nutanix/calm-dsl/issues/184). Allow atomic updates in cache for entity crud operations i.e. project/environment crud operations etc.
+
 *** Please look for Calm 3.4.0 overview [here](https://drive.google.com/file/d/1oITux-OVntRQ3eh8v2h-dRfCEnqpxcOl/view?usp=sharing)
