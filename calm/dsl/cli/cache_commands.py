@@ -15,7 +15,7 @@ def get_cache_table_types():
     """returns cache table types"""
 
     # Note do not use Cache.get_cache_tables().keys(),
-    # It will break, container initialization
+    # It will break, container initialization due to cyclic dependency
     table_types = []
     for attr in CACHE.ENTITY.__dict__:
         if not (attr.startswith("__")):
