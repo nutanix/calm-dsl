@@ -207,3 +207,21 @@ class Cache:
                     "Cache error occurred. Please update cache using 'calm update cache' command"
                 )
                 sys.exit(-1)
+
+    @classmethod
+    def show_table(cls, cache_type):
+        """sync the cache table provided in cache_type list"""
+
+        if not cache_type:
+            return
+
+        cache_type = [cache_type] if not isinstance(cache_type, list) else cache_type
+        cache_table_map = cls.get_cache_tables()
+
+        for _ct in cache_type:
+            if _ct not in cache_table_map:
+                LOG.warning("Invalid cache_type ('{}') provided".format(cache_type))
+                continue
+
+            cache_table = cache_table_map[_ct]
+            cache_table.show_data()
