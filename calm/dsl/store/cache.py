@@ -53,15 +53,7 @@ class Cache:
     def get_entity_data(cls, entity_type, name, **kwargs):
         """returns entity data corresponding to supplied entry using entity name"""
 
-        cache_tables = cls.get_cache_tables()
-        if not entity_type:
-            LOG.error("No entity type for cache supplied")
-            sys.exit(-1)
-
-        db_cls = cache_tables.get(entity_type, None)
-        if not db_cls:
-            LOG.error("Unknown entity type ({}) supplied".format(entity_type))
-            sys.exit(-1)
+        db_cls = cls.get_entity_db_table_object(entity_type)
 
         try:
             res = db_cls.get_entity_data(name=name, **kwargs)
@@ -87,15 +79,7 @@ class Cache:
     def get_entity_data_using_uuid(cls, entity_type, uuid, *args, **kwargs):
         """returns entity data corresponding to supplied entry using entity uuid"""
 
-        cache_tables = cls.get_cache_tables()
-        if not entity_type:
-            LOG.error("No entity type for cache supplied")
-            sys.exit(-1)
-
-        db_cls = cache_tables.get(entity_type, None)
-        if not db_cls:
-            LOG.error("Unknown entity type ({}) supplied".format(entity_type))
-            sys.exit(-1)
+        db_cls = cls.get_entity_db_table_object(entity_type)
 
         try:
             res = db_cls.get_entity_data_using_uuid(uuid=uuid, **kwargs)
@@ -116,6 +100,43 @@ class Cache:
             )
 
         return res
+
+    @classmethod
+    def get_entity_db_table_object(cls, entity_type):
+        """returns database entity table object corresponding to entity"""
+
+        if not entity_type:
+            LOG.error("No entity type for cache supplied")
+            sys.exit(-1)
+
+        cache_tables = cls.get_cache_tables()
+        db_cls = cache_tables.get(entity_type, None)
+        if not db_cls:
+            LOG.error("Unknown entity type ({}) supplied".format(entity_type))
+            sys.exit(-1)
+
+        return db_cls
+
+    @classmethod
+    def add_one(cls, entity_type, uuid, **kwargs):
+        """adds one entity to entity db object"""
+
+        db_obj = cls.get_entity_db_table_object(entity_type)
+        db_obj.add_one(uuid, **kwargs)
+
+    @classmethod
+    def delete_one(cls, entity_type, uuid, **kwargs):
+        """adds one entity to entity db object"""
+
+        db_obj = cls.get_entity_db_table_object(entity_type)
+        db_obj.delete_one(uuid, **kwargs)
+
+    @classmethod
+    def update_one(cls, entity_type, uuid, **kwargs):
+        """adds one entity to entity db object"""
+
+        db_obj = cls.get_entity_db_table_object(entity_type)
+        db_obj.update_one(uuid, **kwargs)
 
     @classmethod
     def sync(cls):
@@ -186,3 +207,21 @@ class Cache:
                     "Cache error occurred. Please update cache using 'calm update cache' command"
                 )
                 sys.exit(-1)
+
+    @classmethod
+    def show_table(cls, cache_type):
+        """sync the cache table provided in cache_type list"""
+
+        if not cache_type:
+            return
+
+        cache_type = [cache_type] if not isinstance(cache_type, list) else cache_type
+        cache_table_map = cls.get_cache_tables()
+
+        for _ct in cache_type:
+            if _ct not in cache_table_map:
+                LOG.warning("Invalid cache_type ('{}') provided".format(cache_type))
+                continue
+
+            cache_table = cache_table_map[_ct]
+            cache_table.show_data()

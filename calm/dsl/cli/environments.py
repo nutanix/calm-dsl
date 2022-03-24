@@ -242,11 +242,12 @@ def create_environment_from_dsl_file(
     click.echo(json.dumps(env_std_out, indent=4, separators=(",", ": ")))
 
     if no_cache_update:
-        LOG.info("skipping environments and projects cache update")
+        LOG.info("skipping environments cache update")
     else:
-        LOG.info("Updating projects and environments cache ...")
-        Cache.sync_table(cache_type=CACHE.ENTITY.PROJECT)
-        Cache.sync_table(cache_type=CACHE.ENTITY.ENVIRONMENT)
+        LOG.info("Updating environments cache ...")
+        Cache.add_one(
+            entity_type=CACHE.ENTITY.ENVIRONMENT, uuid=env_std_out.get("uuid")
+        )
         LOG.info("[Done]")
 
 
@@ -314,11 +315,10 @@ def update_environment_from_dsl_file(
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
     if no_cache_update:
-        LOG.info("skipping environments and projects cache update")
+        LOG.info("skipping environments cache update")
     else:
-        LOG.info("Updating projects and environments cache ...")
-        Cache.sync_table(cache_type=CACHE.ENTITY.PROJECT)
-        Cache.sync_table(cache_type=CACHE.ENTITY.ENVIRONMENT)
+        LOG.info("Updating environments cache ...")
+        Cache.update_one(entity_type=CACHE.ENTITY.ENVIRONMENT, uuid=environment_id)
         LOG.info("[Done]")
 
 
@@ -504,9 +504,8 @@ def delete_environment(environment_name, project_name, no_cache_update=False):
     update_project_envs(project_name, remove_env_uuids=[environment_id])
 
     if no_cache_update:
-        LOG.info("skipping environments and projects cache update")
+        LOG.info("skipping environments cache update")
     else:
-        LOG.info("Updating environments and projects cache ...")
-        Cache.sync_table(cache_type=CACHE.ENTITY.PROJECT)
-        Cache.sync_table(cache_type=CACHE.ENTITY.ENVIRONMENT)
+        LOG.info("Updating environments cache ...")
+        Cache.delete_one(entity_type=CACHE.ENTITY.ENVIRONMENT, uuid=environment_id)
         LOG.info("[Done]")

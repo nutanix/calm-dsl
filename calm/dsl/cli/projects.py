@@ -378,11 +378,12 @@ def create_project_from_dsl(
     project_name = project_data["name"]
     project_uuid = project_data["uuid"]
 
+    # Update project in cache
+    LOG.info("Updating projects cache")
+    Cache.add_one(entity_type=CACHE.ENTITY.PROJECT, uuid=project_uuid)
+    LOG.info("[Done]")
+
     if envs:
-        # Update project in cache
-        LOG.info("Updating projects cache")
-        Cache.sync_table("project")
-        LOG.info("[Done]")
 
         # As ahv helpers in environment should use account from project accounts
         # updating the context
@@ -428,14 +429,16 @@ def create_project_from_dsl(
         # Reset the context changes
         ContextObj.reset_configuration()
 
-    if no_cache_update:
-        LOG.info("skipping projects and environments cache update")
-    else:
-        # Update projects in cache
-        LOG.info("Updating projects and environments cache ...")
-        Cache.sync_table(cache_type=CACHE.ENTITY.PROJECT)
-        Cache.sync_table(cache_type=CACHE.ENTITY.ENVIRONMENT)
-        LOG.info("[Done]")
+        if no_cache_update:
+            LOG.info("Skipping environments cache update")
+        else:
+            # Update environments in cache
+            LOG.info("Updating environments cache ...")
+            for _e_item in env_ref_list:
+                Cache.add_one(
+                    entity_type=CACHE.ENTITY.ENVIRONMENT, uuid=_e_item["uuid"]
+                )
+            LOG.info("[Done]")
 
 
 def describe_project(project_name, out):
@@ -568,20 +571,21 @@ def describe_project(project_name, out):
 def delete_project(project_names, no_cache_update=False):
 
     client = get_api_client()
-    params = {"length": 1000}
-    project_name_uuid_map = client.project.get_name_uuid_map(params)
-    projects_deleted = False
+    project_name_uuid_map = client.project.get_name_uuid_map()
+    deleted_projects_uuids = []
     for project_name in project_names:
         project_id = project_name_uuid_map.get(project_name, "")
         if not project_id:
             LOG.warning("Project {} not found.".format(project_name))
             continue
 
-        projects_deleted = True
         LOG.info("Deleting project '{}'".format(project_name))
         res, err = client.project.delete(project_id)
         if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+            LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+            continue
+
+        deleted_projects_uuids.append(project_id)
 
         LOG.info("Polling on project deletion task")
         res = res.json()
@@ -593,13 +597,13 @@ def delete_project(project_names, no_cache_update=False):
             sys.exit(-1)
 
     # Update projects in cache if any project has been deleted
-    if projects_deleted:
+    if deleted_projects_uuids:
         if no_cache_update:
-            LOG.info("skipping projects and environment cache update")
+            LOG.info("skipping projects cache update")
         else:
-            LOG.info("Updating projects and environment cache ...")
-            Cache.sync_table(cache_type=CACHE.ENTITY.PROJECT)
-            Cache.sync_table(cache_type=CACHE.ENTITY.ENVIRONMENT)
+            LOG.info("Updating projects cache ...")
+            for _proj_id in deleted_projects_uuids:
+                Cache.delete_one(entity_type=CACHE.ENTITY.PROJECT, uuid=_proj_id)
             LOG.info("[Done]")
 
 
@@ -790,10 +794,10 @@ def update_project_from_dsl(project_name, project_file, no_cache_update=False):
         sys.exit(-1)
 
     if no_cache_update:
-        LOG.info("skipping projects cache update")
+        LOG.info("Skipping projects cache update")
     else:
         LOG.info("Updating projects cache ...")
-        Cache.sync_table(cache_type=CACHE.ENTITY.PROJECT)
+        Cache.update_one(entity_type=CACHE.ENTITY.PROJECT, uuid=project_uuid)
         LOG.info("[Done]")
 
 
@@ -991,6 +995,10 @@ def update_project_using_cli_switches(
     else:
         LOG.exception("Project updation task went to {} state".format(task_state))
         sys.exit(-1)
+
+    LOG.info("Updating projects cache ...")
+    Cache.update_one(entity_type=CACHE.ENTITY.PROJECT, uuid=project_uuid)
+    LOG.info("[Done]")
 
 
 def remove_users_from_project_acps(project_uuid, remove_user_list, remove_group_list):
