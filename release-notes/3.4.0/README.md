@@ -25,8 +25,7 @@
 
 - The Runbook `runbook_name` will be executed on March 08 2022 Asia/Calcutta.
 
-        from calm.dsl.builtins import Job
-        from calm.dsl.cli.scheduler import JobScheduler
+        from calm.dsl.builtins import Job, JobScheduler
 
         start_date_time = "2022-03-08 19:14:00"
         time_zone = "Asia/Calcutta"
@@ -45,8 +44,7 @@
 
 - The Runbook `job_app_action_recc` will be executed from `2022-03-01 23:17:15` to `2022-03-05 00:17:00` at `11:50 PM`.
 
-        from calm.dsl.builtins import Job
-        from calm.dsl.cli.scheduler import JobScheduler
+        from calm.dsl.builtins import Job, JobScheduler
 
         start_date_time = "2022-03-01 23:17:15"
         expiry_date_time = "2022-03-05 00:17:00"
