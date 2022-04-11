@@ -328,10 +328,23 @@ def get_vmware_bf_vm_data(
     res_vm_data = None
     for entity in res["entities"]:
         e_resources = entity["status"]["resources"]
-        e_name = e_resources["instance_name"]
-        e_id = e_resources["instance_id"]
         e_address = e_resources["address"]
-        e_address_list = e_resources["guest.ipAddress"]
+
+        from calm.dsl.cli.brownfield_vms import (
+            get_vmware_vm_data_with_version_filtering,
+        )
+
+        (
+            e_id,
+            e_name,
+            _,
+            e_address_list,
+            _,
+            _,
+            _,
+            _,
+            _,
+        ) = get_vmware_vm_data_with_version_filtering(e_resources, join_address=False)
 
         if match_vm_data(
             vm_name=e_name,

@@ -187,17 +187,18 @@ def get_brownfield_gcp_vm_list(entity_rows):
     click.echo(table)
 
 
-def get_vmware_vm_data_with_version_filtering(vm_data):
+def get_vmware_vm_data_with_version_filtering(vm_data, **kwargs):
     """returns instance_data_according_to_version_filter"""
 
     CALM_VERSION = Version.get_version("Calm")
+    join_address = kwargs.get("join_address", True)
 
     instance_id = vm_data["instance_id"]
     instance_name = vm_data["instance_name"]
 
     if LV(CALM_VERSION) >= LV("3.3.0"):
         hostname = vm_data["guest_hostname"]
-        address = ",".join(vm_data["guest_ipaddress"])
+        vm_address = vm_data["guest_ipaddress"]
         vcpus = vm_data["cpu"]
         sockets = vm_data["num_vcpus_per_socket"]
         memory = int(vm_data["memory"]) // 1024
@@ -206,18 +207,21 @@ def get_vmware_vm_data_with_version_filtering(vm_data):
 
     else:
         hostname = vm_data["guest.hostName"]
-        address = ",".join(vm_data["guest.ipAddress"])
+        vm_address = vm_data["guest.ipAddress"]
         vcpus = vm_data["config.hardware.numCPU"]
         sockets = vm_data["config.hardware.numCoresPerSocket"]
         memory = int(vm_data["config.hardware.memoryMB"]) // 1024
         guest_family = vm_data.get("guest.guestFamily", "")
         template = vm_data.get("config.template", False)
 
+    if join_address:
+        vm_address = ",".join(vm_address)
+
     return (
         instance_id,
         instance_name,
         hostname,
-        address,
+        vm_address,
         vcpus,
         sockets,
         memory,
