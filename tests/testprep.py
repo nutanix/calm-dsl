@@ -94,8 +94,8 @@ def add_directory_service_users(config):
         if e_resources.get("user_type", "") == "DIRECTORY_SERVICE":
             ds_users.append(
                 {
-                    "DISPLAY_NAME": e_resources["display_name"],
-                    "DIRECTORY": e_resources["directory_service_user"]
+                    "DISPLAY_NAME": e_resources.get("display_name") or "",
+                    "DIRECTORY": e_resources.get("directory_service_user", {})
                     .get("directory_service_reference", {})
                     .get("name", ""),
                     "NAME": e_resources["directory_service_user"].get(
@@ -138,7 +138,7 @@ def add_directory_service_user_groups(config):
         if directory_service_name and distinguished_name:
             ds_groups.append(
                 {
-                    "DISPLAY_NAME": e_resources["display_name"],
+                    "DISPLAY_NAME": e_resources.get("display_name") or "",
                     "DIRECTORY": directory_service_name,
                     "NAME": distinguished_name,
                     "UUID": entity["metadata"]["uuid"],
