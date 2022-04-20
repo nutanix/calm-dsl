@@ -13,7 +13,7 @@ LOG = get_logging_handle(__name__)
 class ConfigFileParser:
     def __init__(self, config_file):
 
-        config = configparser.ConfigParser()
+        config = configparser.RawConfigParser()
         config.optionxform = str  # Maintaining case sensitivity for field names
         config.read(config_file)
 

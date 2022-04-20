@@ -28,7 +28,7 @@ class InitConfigHandle:
         """
 
         init_file = INIT_FILE_LOCATION
-        init_config = configparser.ConfigParser()
+        init_config = configparser.RawConfigParser()
         init_config.optionxform = str
         init_config.read(init_file)
 
