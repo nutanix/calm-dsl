@@ -346,6 +346,22 @@ properties:
 
 {%- endmacro %}
 
+{% macro VcenterLibrary() -%}
+
+title:  VMWARE Content Library
+type: [object, "null"]
+properties:
+  library_id:
+    type: string
+  library_template_id:
+    type: string
+  library_template_type:
+    type: string
+  type:
+    type: string
+
+{%- endmacro %}
+
 {% macro VcenterFolder() -%}
 
 title:  VMWARE Folder
@@ -468,6 +484,9 @@ properties:
     default: False
   folder:
     {{ VcenterFolder() | indent(4) }}
+  library:
+    x-calm-dsl-min-version: 3.5.0
+    {{ VcenterLibrary() | indent(4) }}
   resources:
     {{ VcenterVMResource() | indent(4) }}
 
