@@ -150,9 +150,21 @@ class runbook(metaclass=DescriptorType):
                 if isinstance(to_task, list):
                     create_edges(to_task, from_task=from_task)
                 else:
-                    child_tasks.append(to_task)
-                    if from_task:
+                    if to_task not in child_tasks:
+                        child_tasks.append(to_task)
+                    if from_task and (not isinstance(from_task, list)):
                         edges.append((from_task.get_ref(), to_task.get_ref()))
+                    elif from_task:
+                        # from_task = list
+                        # parallel to single Case1: [[Task1], [Task2, Task3]], [Task4]
+                        # parallel to parallel Case2: [[Task1], [Task2, Task3]], [[Task4], [Task5, Task6]]
+
+                        # If it is paralle containing branches
+                        if isinstance(from_task[0], list):
+                            for f_task in from_task:
+                                create_edges([to_task], f_task[-1])
+                        else:
+                            create_edges([to_task], from_task[-1])
 
             for from_tasks, to_tasks in zip(_task_list, _task_list[1:]):
                 if not isinstance(from_tasks, list):
@@ -161,16 +173,15 @@ class runbook(metaclass=DescriptorType):
                     to_tasks = [to_tasks]
                 for to_task in to_tasks:
                     if not isinstance(to_task, list):
-                        child_tasks.append(to_task)
+                        if to_task not in child_tasks:
+                            child_tasks.append(to_task)
                     for from_task in from_tasks:
-                        if isinstance(from_task, list):
-                            raise ValueError(
-                                "Tasks are not supported after parallel in runbooks"
-                            )
-                        if isinstance(to_task, list) and len(from_tasks) == 1:
-                            create_edges(to_task, from_task=from_task)
-                        else:
+                        if not (isinstance(to_task, list) or isinstance(from_task, list)):
                             edges.append((from_task.get_ref(), to_task.get_ref()))
+                        else:
+                            if not isinstance(to_task, list):
+                                to_task = [to_task]
+                            create_edges(to_task, from_task)
 
         create_edges(task_list)
         # Note - Server checks for name uniqueness in runbooks across actions
