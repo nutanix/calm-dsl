@@ -47,9 +47,11 @@ class ResourcePopulator:
 
         client = get_api_client()
         Obj = AwsVmProvider.get_api_obj()
+
         # get projects
         projects = client.project.get_name_uuid_map()
         projects_list = list(projects.keys())
+
         self.aws_resource_info["projects"] = {}
         for project in CONSTANTS.AWS.PROJECTS:
             if project in projects_list:
