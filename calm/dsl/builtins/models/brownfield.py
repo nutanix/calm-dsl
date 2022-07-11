@@ -29,11 +29,9 @@ def match_vm_data(
         if instance_id == vm_id:
             # If supplied ip_addresses not found in given instance, raise error
             if not set(instance_address).issubset(set(vm_address_list)):
-                diff_ips = set(instance_address).difference(
-                    set(vm_address_list))
+                diff_ips = set(instance_address).difference(set(vm_address_list))
                 LOG.error(
-                    "IP Address {} not found in instance(id={})".format(
-                        diff_ips, vm_id)
+                    "IP Address {} not found in instance(id={})".format(diff_ips, vm_id)
                 )
                 sys.exit(-1)
 
@@ -137,8 +135,7 @@ def get_ahv_bf_vm_data(
             if res_vm_data:
                 # If there is an existing vm with provided configuration
                 LOG.error(
-                    "Multiple vms with same name ({}) found".format(
-                        instance_name)
+                    "Multiple vms with same name ({}) found".format(instance_name)
                 )
                 sys.exit(-1)
 
@@ -206,8 +203,7 @@ def get_aws_bf_vm_data(
             if res_vm_data:
                 # If there is an existing vm with provided configuration
                 LOG.error(
-                    "Multiple vms with same name ({}) found".format(
-                        instance_name)
+                    "Multiple vms with same name ({}) found".format(instance_name)
                 )
                 sys.exit(-1)
 
@@ -241,14 +237,8 @@ def get_azure_bf_vm_data(
             instance_name, project_uuid, account_uuid
         )
     else:
-        filter = "project_uuid=={};account_uuid=={}".format(
-            project_uuid, account_uuid
-        )
-    params = {
-        "length": 1000,
-        "offset": 0,
-        "filter": filter
-    }
+        filter = "project_uuid=={};account_uuid=={}".format(project_uuid, account_uuid)
+    params = {"length": 1000, "offset": 0, "filter": filter}
     res, err = client.blueprint.brownfield_vms(params)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -285,8 +275,7 @@ def get_azure_bf_vm_data(
             if res_vm_data:
                 # If there is an existing vm with provided configuration
                 LOG.error(
-                    "Multiple vms with same name ({}) found".format(
-                        instance_name)
+                    "Multiple vms with same name ({}) found".format(instance_name)
                 )
                 sys.exit(-1)
 
@@ -355,8 +344,7 @@ def get_vmware_bf_vm_data(
             if res_vm_data:
                 # If there is an existing vm with provided configuration
                 LOG.error(
-                    "Multiple vms with same name ({}) found".format(
-                        instance_name)
+                    "Multiple vms with same name ({}) found".format(instance_name)
                 )
                 sys.exit(-1)
 
@@ -424,8 +412,7 @@ def get_gcp_bf_vm_data(
             if res_vm_data:
                 # If there is an existing vm with provided configuration
                 LOG.error(
-                    "Multiple vms with same name ({}) found".format(
-                        instance_name)
+                    "Multiple vms with same name ({}) found".format(instance_name)
                 )
                 sys.exit(-1)
 
@@ -460,8 +447,7 @@ class BrownfiedVmType(EntityType):
         """
 
         environment = {}
-        cls_profile = common_helper._walk_to_parent_with_given_type(
-            cls, "ProfileType")
+        cls_profile = common_helper._walk_to_parent_with_given_type(cls, "ProfileType")
         environment = getattr(cls_profile, "environment", {})
         if environment:
             LOG.debug(
@@ -471,8 +457,7 @@ class BrownfiedVmType(EntityType):
             )
         else:
             LOG.debug(
-                "No environment associated to the app-profile {}".format(
-                    cls_profile)
+                "No environment associated to the app-profile {}".format(cls_profile)
             )
 
         if environment:
@@ -518,8 +503,7 @@ class BrownfiedVmType(EntityType):
                 )
                 if not accounts:
                     LOG.error(
-                        "No {} account regsitered in environment".format(
-                            provider_type)
+                        "No {} account regsitered in environment".format(provider_type)
                     )
                     sys.exit(-1)
 
@@ -529,8 +513,7 @@ class BrownfiedVmType(EntityType):
                 )
                 if not accounts:
                     LOG.error(
-                        "No {} account regsitered in environment".format(
-                            provider_type)
+                        "No {} account regsitered in environment".format(provider_type)
                     )
                     sys.exit(-1)
 
