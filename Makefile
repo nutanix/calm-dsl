@@ -70,7 +70,8 @@ run:
 
 _init_centos:
 	# Lets get python3 in
-	rpm -q epel-release || sudo yum -y install epel-release openssl-devel
+	rpm -q epel-release || sudo yum -y install epel-release
+	sudo yum -y install openssl-devel sqlite-devel ncurses-devel
 	# Not needed: This has a modern git
 	# rpm -q wandisco-git-release || sudo yum install -y http://opensource.wandisco.com/centos/7/git/x86_64/wandisco-git-release-7-2.noarch.rpm || :
 	#sudo yum update -y git || :
