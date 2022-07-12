@@ -232,13 +232,13 @@ def get_azure_bf_vm_data(
 
     client = get_api_client()
 
-    params = {
-        "length": 1000,
-        "offset": 0,
-        "filter": "project_uuid=={};account_uuid=={}".format(
-            project_uuid, account_uuid
-        ),
-    }
+    if instance_name:
+        filter = "instance_name=={};project_uuid=={};account_uuid=={}".format(
+            instance_name, project_uuid, account_uuid
+        )
+    else:
+        filter = "project_uuid=={};account_uuid=={}".format(project_uuid, account_uuid)
+    params = {"length": 1000, "offset": 0, "filter": filter}
     res, err = client.blueprint.brownfield_vms(params)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
