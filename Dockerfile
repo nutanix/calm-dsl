@@ -11,6 +11,8 @@ ENV BUILD_PACKAGES="\
         openssl-dev \
         libxml2-dev \
         jpeg-dev \
+        sqlite-dev \
+        ncurses-dev \
 	"
 
 # Install build packages for building from source
