@@ -86,7 +86,7 @@ def render_ahv_template(template, bp_name):
         )
         sys.exit(-1)
 
-    cluster_name = subnet_cache_data["cluster"]
+    cluster_name = subnet_cache_data["cluster_name"]
     default_subnet = subnet_cache_data["name"]
     LOG.info(
         "Using Nutanix PC account {}, cluster {}, subnet {}".format(
@@ -173,7 +173,7 @@ def render_single_vm_bp_ahv_template(template, bp_name):
         )
         sys.exit(-1)
 
-    cluster_name = subnet_cache_data["cluster"]
+    cluster_name = subnet_cache_data["cluster_name"]
     default_subnet = subnet_cache_data["name"]
 
     # Fetch image for vm

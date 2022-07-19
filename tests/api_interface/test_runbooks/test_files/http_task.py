@@ -8,7 +8,13 @@ from calm.dsl.runbooks import runbook
 from calm.dsl.runbooks import RunbookTask as Task, RunbookVariable as Variable
 from calm.dsl.runbooks import CalmEndpoint as Endpoint
 from calm.dsl.config import get_context
-from utils import read_test_config, change_uuids
+from utils import (
+    read_test_config,
+    change_uuids,
+    get_vpc_project,
+    get_vpc_tunnel_using_account,
+    update_tunnel_and_project,
+)
 
 AUTH_USERNAME = read_local_file(".tests/runbook_tests/auth_username")
 AUTH_PASSWORD = read_local_file(".tests/runbook_tests/auth_password")
@@ -33,13 +39,16 @@ endpoint_with_multiple_urls = Endpoint.HTTP(
 )
 
 
-def get_http_task_runbook():
+def get_http_task_runbook(endpoint_file="http_endpoint_payload.json", config_file=None):
     """returns the runbook for http task"""
 
     global endpoint_payload
-    endpoint_payload = change_uuids(
-        read_test_config(file_name="http_endpoint_payload.json"), {}
-    )
+    endpoint_payload = change_uuids(read_test_config(file_name=endpoint_file), {})
+
+    if endpoint_file == "http_tunnel_endpoint.json" and config_file:
+        vpc_project = get_vpc_project(config_file)
+        vpc_tunnel = get_vpc_tunnel_using_account(config_file)
+        update_tunnel_and_project(vpc_tunnel, vpc_project, endpoint_payload)
 
     @runbook
     def HTTPTask(endpoints=[endpoint]):

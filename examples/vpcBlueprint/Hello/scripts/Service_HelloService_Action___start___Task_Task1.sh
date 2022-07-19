@@ -1,0 +1,1 @@
+echo 'Service start in ENV=@@{ENV}@@'

@@ -58,6 +58,7 @@ class TestDecompile:
                     "".join(traceback.format_tb(result.exc_info[2]))
                 )
             )
+
         bp_json = json.loads(result.output)
 
         # Fetch project used for compilation
@@ -112,6 +113,7 @@ class TestDecompile:
             )
 
         self.bp_dir_list.append(get_bp_dir())
+
         # TODO add interface check tests
         decompiled_bp_file_location = os.path.join(get_bp_dir(), "blueprint.py")
         LOG.info(

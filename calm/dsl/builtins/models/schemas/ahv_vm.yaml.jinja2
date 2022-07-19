@@ -1,4 +1,20 @@
 {% import "ref.yaml.jinja2" as ref %}
+{% import "calm_ref.yaml.jinja2" as calm_ref %}
+
+
+{% macro AhvVmVpc() -%}
+type: object
+x-calm-dsl-type: vm_ahv_vpc
+properties:
+  uuid:
+    type: string
+  kind:
+    type: string
+    default: vpc
+  name:
+    type: string
+
+{%- endmacro %}
 
 
 {% macro AhvNic() -%}
@@ -52,6 +68,11 @@ properties:
         type:
           type: string
           enum: [ASSIGNED, LEARNED]
+  vpc_reference:
+    {{ AhvVmVpc() | indent(4) }}
+    x-calm-dsl-min-version: 3.5.0
+    x-calm-dsl-not-required-if-none: true
+       
 
 {%- endmacro %}
 
@@ -214,6 +235,21 @@ properties:
 {%- endmacro %}
 
 
+{% macro AhvVmCluster() -%}
+type: object
+x-calm-dsl-type: vm_ahv_cluster
+properties:
+  uuid:
+    type: string
+  kind:
+    type: string
+    default: cluster
+  name:
+    type: string
+
+{%- endmacro %}
+
+
 {% macro AhvVm() -%}
 
 title: AHV VM Create Spec
@@ -225,6 +261,11 @@ properties:
   categories:
     type: object
     x-calm-dsl-type: dict
+  cluster_reference:
+    x-calm-dsl-display-name: cluster
+    x-calm-dsl-min-version: 3.5.0
+    x-calm-dsl-not-required-if-none: true
+    {{ calm_ref.CalmRef() | indent(4) }}
   resources:
     $ref: '#/components/schemas/AhvVmResources'
 
@@ -245,5 +286,9 @@ AhvVm:
   {{ AhvVm() | indent(2) }}
 AhvGpu:
   {{ AhvGpu() | indent(2) }}
+AhvVmVpc:
+  {{ AhvVmVpc() | indent(2) }}
+AhvVmCluster:
+  {{ AhvVmCluster() | indent(2) }}
 
 {%- endmacro %}

@@ -1,0 +1,5 @@
+vmip="@@{var1}@@"
+if vmip == "127.0.0.1":
+    print "variable was set"
+
+    

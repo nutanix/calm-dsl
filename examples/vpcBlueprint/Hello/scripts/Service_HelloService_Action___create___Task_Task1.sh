@@ -1,0 +1,1 @@
+echo 'Service create in ENV=@@{ENV}@@'

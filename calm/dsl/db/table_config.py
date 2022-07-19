@@ -169,24 +169,177 @@ class CacheTableBase(BaseModel):
         )
 
 
-class AhvSubnetsCache(CacheTableBase):
-    __cache_type__ = CACHE.ENTITY.AHV_SUBNET
+class AccountCache(CacheTableBase):
+    __cache_type__ = CACHE.ENTITY.ACCOUNT
     feature_min_version = "2.7.0"
+    is_policy_required = False
     name = CharField()
     uuid = CharField()
-    cluster = CharField()
-    account_uuid = CharField(default="")
-    cluster_uuid = CharField(
-        default=""
-    )  # TODO separate out uuid and create separate table for it
+    provider_type = CharField()
+    state = CharField()
+    is_host = BooleanField(default=False)  # Used for Ntnx accounts only
+    data = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
     def get_detail_dict(self, *args, **kwargs):
         return {
             "name": self.name,
             "uuid": self.uuid,
-            "cluster": self.cluster,
-            "cluster_uuid": self.cluster_uuid,
+            "provider_type": self.provider_type,
+            "state": self.state,
+            "is_host": self.is_host,
+            "data": json.loads(self.data),
+            "last_update_time": self.last_update_time,
+        }
+
+    @classmethod
+    def clear(cls):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = ["NAME", "PROVIDER_TYPE", "UUID", "STATE", "LAST UPDATED"]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["provider_type"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(entity_data["state"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        provider_type = kwargs.get("provider_type", "")
+        if not provider_type:
+            LOG.error("Provider type not supplied for fetching user {}".format(name))
+            sys.exit(-1)
+
+        is_host = kwargs.get("is_host", False)
+        data = kwargs.get("data", "{}")
+        state = kwargs.get("state", "")
+
+        super().create(
+            name=name,
+            uuid=uuid,
+            provider_type=provider_type,
+            is_host=is_host,
+            data=data,
+            state=state,
+        )
+
+    @classmethod
+    def sync(cls):
+        """sync the table from server"""
+
+        # clear old data
+        cls.clear()
+
+        client = get_api_client()
+        payload = {
+            "length": 250,
+            "filter": "(state==ACTIVE,state==VERIFIED)",
+        }
+        res, err = client.account.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        for entity in res.get("entities", []):
+            provider_type = entity["status"]["resources"]["type"]
+            data = {}
+            query_obj = {
+                "name": entity["status"]["name"],
+                "uuid": entity["metadata"]["uuid"],
+                "provider_type": entity["status"]["resources"]["type"],
+                "state": entity["status"]["resources"]["state"],
+            }
+
+            if provider_type == "nutanix_pc":
+                query_obj["is_host"] = entity["status"]["resources"]["data"]["host_pc"]
+
+                # store cluster accounts for PC account (Note it will store cluster name not account name)
+                for pe_acc in (
+                    entity["status"]["resources"]
+                    .get("data", {})
+                    .get("cluster_account_reference_list", [])
+                ):
+                    group = data.setdefault("clusters", {})
+                    group[pe_acc["uuid"]] = (
+                        pe_acc.get("resources", {})
+                        .get("data", {})
+                        .get("cluster_name", "")
+                    )
+
+            elif provider_type == "nutanix":
+                data["pc_account_uuid"] = entity["status"]["resources"]["data"][
+                    "pc_account_uuid"
+                ]
+
+            query_obj["data"] = json.dumps(data)
+            cls.create_entry(**query_obj)
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        query_obj = {"name": name}
+
+        provider_type = kwargs.get("provider_type", "")
+        if provider_type:
+            query_obj["provider_type"] = provider_type
+
+        try:
+            # The get() method is shorthand for selecting with a limit of 1
+            # If more than one row is found, the first row returned by the database cursor
+            entity = super().get(**query_obj)
+            return entity.get_detail_dict()
+        except DoesNotExist:
+            return dict()
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
+        try:
+            entity = super().get(cls.uuid == uuid)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return dict()
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("name", "uuid")
+
+
+class AhvClustersCache(CacheTableBase):
+    __cache_type__ = CACHE.ENTITY.AHV_CLUSTER
+    feature_min_version = "3.5.0"
+    is_policy_required = False
+    name = CharField()
+    uuid = CharField()
+    pe_account_uuid = CharField(default="")
+    account_uuid = CharField(default="")
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self):
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "pe_account_uuid": self.pe_account_uuid,
             "account_uuid": self.account_uuid,
             "last_update_time": self.last_update_time,
         }
@@ -209,7 +362,7 @@ class AhvSubnetsCache(CacheTableBase):
         table.field_names = [
             "NAME",
             "UUID",
-            "CLUSTER_NAME",
+            "PE_ACCOUNT_UUID",
             "ACCOUNT_UUID",
             "LAST UPDATED",
         ]
@@ -222,7 +375,389 @@ class AhvSubnetsCache(CacheTableBase):
                 [
                     highlight_text(entity_data["name"]),
                     highlight_text(entity_data["uuid"]),
-                    highlight_text(entity_data["cluster"]),
+                    highlight_text(entity_data["pe_account_uuid"]),
+                    highlight_text(entity_data["account_uuid"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def sync(cls):
+        """sync the table from server"""
+
+        # clear old data
+        cls.clear()
+
+        client = get_api_client()
+        payload = {"length": 250, "filter": "state==VERIFIED;type==nutanix_pc"}
+        account_name_uuid_map = client.account.get_name_uuid_map(payload)
+
+        AhvVmProvider = cls.get_provider_plugin("AHV_VM")
+        AhvObj = AhvVmProvider.get_api_obj()
+
+        for pc_acc_name, pc_acc_uuid in account_name_uuid_map.items():
+            try:
+                res = AhvObj.clusters(account_uuid=pc_acc_uuid)
+            except Exception:
+                LOG.warning(
+                    "Unable to fetch clusters for Nutanix_PC Account(uuid={})".format(
+                        pc_acc_name
+                    )
+                )
+                continue
+            account = AccountCache.get(uuid=pc_acc_uuid)
+            account_clusters_data = json.loads(account.data).get("clusters", {})
+            account_clusters_data_rev = {v: k for k, v in account_clusters_data.items()}
+
+            for entity in res.get("entities", []):
+                name = entity["status"]["name"]
+                uuid = entity["metadata"]["uuid"]
+                cluster_resources = entity["status"]["resources"]
+                service_list = cluster_resources.get("config", {}).get(
+                    "service_list", []
+                )
+
+                # Here, AHV denotes the 'PE' functionality of a cluster
+                if "AOS" not in service_list:
+                    LOG.debug(
+                        "Cluster '{}' with UUID '{}' having function {} is not an AHV PE cluster".format(
+                            name, uuid, service_list
+                        )
+                    )
+                    continue
+
+                cls.create_entry(
+                    name=name,
+                    uuid=uuid,
+                    pe_account_uuid=account_clusters_data_rev.get(name, ""),
+                    account_uuid=pc_acc_uuid,
+                )
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        """
+        Creates an entry for an AHV PE Cluster.
+
+        Args:
+            name: Name of the AHV PE cluster.
+            uuid: UUID of the AHV PE cluster.
+        """
+        account_uuid = kwargs.get("account_uuid", "")
+        if not account_uuid:
+            LOG.error("Account UUID not supplied for AHV PE Cluster {}".format(name))
+            sys.exit(-1)
+
+        pe_account_uuid = kwargs.get("pe_account_uuid", "")
+        if not pe_account_uuid:
+            LOG.error("PE Cluster UUID not supplied for AHV PE Cluster {}".format(name))
+            sys.exit(-1)
+
+        # store data in table
+        super().create(
+            name=name,
+            uuid=uuid,
+            pe_account_uuid=pe_account_uuid,
+            account_uuid=account_uuid,
+        )
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        query_obj = {"name": name}
+        pe_account_uuid = kwargs.get("pe_account_uuid", "")
+        if pe_account_uuid:
+            query_obj["pe_account_uuid"] = pe_account_uuid
+
+        account_uuid = kwargs.get("account_uuid", "")
+        if account_uuid:
+            query_obj["account_uuid"] = account_uuid
+
+        try:
+            # The get() method is shorthand for selecting with a limit of 1
+            # If more than one row is found, the first row returned by the database cursor
+            entity = super().get(**query_obj)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return dict()
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
+        pe_account_uuid = kwargs.get("pe_account", "")
+
+        try:
+            if pe_account_uuid:
+                entity = super().get(
+                    cls.uuid == uuid, cls.pe_account == pe_account_uuid
+                )
+            else:
+                entity = super().get(cls.uuid == uuid)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return dict()
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("name", "uuid", "account_uuid")
+
+
+class AhvVpcsCache(CacheTableBase):
+    __cache_type__ = CACHE.ENTITY.AHV_VPC
+    feature_min_version = "3.5.0"
+    is_policy_required = False
+    name = CharField()
+    uuid = CharField()
+    account_uuid = CharField(default="")
+    tunnel_name = CharField(default="")
+    tunnel_uuid = CharField(default="")
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self):
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "account_uuid": self.account_uuid,
+            "tunnel_name": self.tunnel_name,
+            "tunnel_uuid": self.tunnel_uuid,
+            "last_update_time": self.last_update_time,
+        }
+
+    @classmethod
+    def clear(cls):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = [
+            "NAME",
+            "UUID",
+            "TUNNEL_NAME",
+            "TUNNEL_UUID",
+            "ACCOUNT_UUID",
+            "LAST UPDATED",
+        ]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(
+                        entity_data["tunnel_name"]
+                        if entity_data["tunnel_name"] != ""
+                        else "-"
+                    ),
+                    highlight_text(
+                        entity_data["tunnel_uuid"]
+                        if entity_data["tunnel_uuid"] != ""
+                        else "-"
+                    ),
+                    highlight_text(entity_data["account_uuid"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def sync(cls):
+        """sync the table from server"""
+
+        # clear old data
+        cls.clear()
+
+        client = get_api_client()
+        payload = {"length": 250}
+        account_name_uuid_map = client.account.get_name_uuid_map(payload)
+        account_uuid_type_map = client.account.get_uuid_type_map(payload)
+        AhvVmProvider = cls.get_provider_plugin("AHV_VM")
+        AhvObj = AhvVmProvider.get_api_obj()
+
+        # Get all Calm vpcs and Tunnels
+        calm_vpc_entities = client.network_group.list_all()
+        tunnel_entities = client.tunnel.list_all()
+
+        for pc_acc_name, pc_acc_uuid in account_name_uuid_map.items():
+            acc_type = account_uuid_type_map.get(pc_acc_uuid)
+            if acc_type != "nutanix_pc":
+                LOG.debug(
+                    "Skipping account name: {} and uuid: {}".format(
+                        pc_acc_name, pc_acc_uuid
+                    )
+                )
+                continue
+            try:
+                res = AhvObj.vpcs(account_uuid=pc_acc_uuid)
+            except Exception:
+                LOG.warning(
+                    "Unable to fetch vpcs for Nutanix_PC Account(uuid={})".format(
+                        pc_acc_name
+                    )
+                )
+                continue
+
+            for entity in res.get("entities", []):
+                name = entity["status"]["name"]
+                uuid = entity["metadata"]["uuid"]
+
+                tunnel_reference = next(
+                    (
+                        calm_vpc["status"]["resources"].get("tunnel_reference", {})
+                        for calm_vpc in calm_vpc_entities
+                        if uuid
+                        in calm_vpc["status"]["resources"].get(
+                            "platform_vpc_uuid_list", []
+                        )
+                    ),
+                    {},
+                )
+
+                cls.create_entry(
+                    name=name,
+                    uuid=uuid,
+                    account_uuid=pc_acc_uuid,
+                    tunnel_reference=tunnel_reference,
+                )
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        """
+        Creates an entry for an AHV PE Cluster.
+
+        Args:
+            name: Name of the AHV PE cluster.
+            uuid: UUID of the AHV PE cluster.
+        """
+        account_uuid = kwargs.get("account_uuid", "")
+        if not account_uuid:
+            LOG.error("Account UUID not supplied for VPC {}".format(name))
+            sys.exit(-1)
+        tunnel_reference = kwargs.get("tunnel_reference", {})
+        kwargs = {"name": name, "uuid": uuid, "account_uuid": account_uuid}
+        if tunnel_reference:
+            kwargs["tunnel_name"] = tunnel_reference.get("name", "")
+            kwargs["tunnel_uuid"] = tunnel_reference.get("uuid", "")
+
+        # store data in table
+        super().create(**kwargs)
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        query_obj = {}
+        if name:
+            query_obj = {"name": name}
+
+        account_uuid = kwargs.get("account_uuid", "")
+        if account_uuid:
+            query_obj["account_uuid"] = account_uuid
+
+        tunnel_name = kwargs.get("tunnel_name", "")
+        if tunnel_name:
+            query_obj["tunnel_name"] = tunnel_name
+
+        try:
+            # The get() method is shorthand for selecting with a limit of 1
+            # If more than one row is found, the first row returned by the database cursor
+            entity = super().get(**query_obj)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return dict()
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
+
+        try:
+            entity = super().get(cls.uuid == uuid)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return dict()
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("name", "uuid", "account_uuid")
+
+
+class AhvSubnetsCache(CacheTableBase):
+    __cache_type__ = CACHE.ENTITY.AHV_SUBNET
+    feature_min_version = "2.7.0"
+    name = CharField()
+    uuid = CharField()
+    account_uuid = CharField(default="")
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+    subnet_type = CharField()
+    cluster = ForeignKeyField(AhvClustersCache, to_field="uuid", null=True)
+    vpc = ForeignKeyField(AhvVpcsCache, to_field="uuid", null=True)
+
+    def get_detail_dict(self, *args, **kwargs):
+        details = {
+            "name": self.name,
+            "uuid": self.uuid,
+            "subnet_type": self.subnet_type,
+            "account_uuid": self.account_uuid,
+            "last_update_time": self.last_update_time,
+        }
+        if self.cluster:
+            details["cluster_name"] = self.cluster.name
+            details["cluster_uuid"] = self.cluster.uuid
+        elif self.vpc:
+            details["vpc_name"] = self.vpc.name
+            details["vpc_uuid"] = self.vpc.uuid
+        return details
+
+    @classmethod
+    def clear(cls):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = [
+            "NAME",
+            "UUID",
+            "TYPE",
+            "CLUSTER_NAME",
+            "CLUSTER_UUID",
+            "VPC_NAME",
+            "VPC_UUID",
+            "ACCOUNT_UUID",
+            "LAST UPDATED",
+        ]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(entity_data["subnet_type"]),
+                    highlight_text(entity_data.get("cluster_name", "-")),
+                    highlight_text(entity_data.get("cluster_uuid", "-")),
+                    highlight_text(entity_data.get("vpc_name", "-")),
+                    highlight_text(entity_data.get("vpc_uuid", "-")),
                     highlight_text(entity_data["account_uuid"]),
                     highlight_text(last_update_time),
                 ]
@@ -257,18 +792,30 @@ class AhvSubnetsCache(CacheTableBase):
             for entity in res.get("entities", []):
                 name = entity["status"]["name"]
                 uuid = entity["metadata"]["uuid"]
-                cluster_ref = entity["status"].get("cluster_reference", {})
-                if not cluster_ref:
-                    continue
-                cluster_name = cluster_ref.get("name", "")
-                cluster_uuid = cluster_ref.get("uuid", "")
-
+                subnet_type = (
+                    entity["status"].get("resources", {}).get("subnet_type", "-")
+                )
+                cluster_uuid = (
+                    entity["status"].get("cluster_reference", {}).get("uuid", "")
+                )
+                vpc_uuid = (
+                    entity["status"]
+                    .get("resources")
+                    .get("vpc_reference", {})
+                    .get("uuid", "")
+                )
+                LOG.debug(
+                    "Cluster: {}, VPC: {} for account: {}, subnet: {}".format(
+                        cluster_uuid, vpc_uuid, e_uuid, uuid
+                    )
+                )
                 cls.create_entry(
                     name=name,
                     uuid=uuid,
-                    cluster=cluster_name,
+                    subnet_type=subnet_type,
                     account_uuid=e_uuid,
                     cluster_uuid=cluster_uuid,
+                    vpc_uuid=vpc_uuid,
                 )
 
         # For older version < 2.9.0
@@ -281,33 +828,45 @@ class AhvSubnetsCache(CacheTableBase):
             LOG.error("Account UUID not supplied for subnet {}".format(name))
             sys.exit(-1)
 
-        cluster_name = kwargs.get("cluster", None)
-        if not cluster_name:
-            LOG.error("cluster not supplied for subnet {}".format(name))
-            sys.exit(-1)
-
         cluster_uuid = kwargs.get("cluster_uuid", "")
+        vpc_uuid = kwargs.get("vpc_uuid", "")
+        subnet_type = kwargs.get("subnet_type", "-")
+        kwargs = {
+            "name": name,
+            "uuid": uuid,
+            "account_uuid": account_uuid,
+            "subnet_type": subnet_type,
+        }
+        if cluster_uuid:
+            kwargs["cluster"] = cluster_uuid
+        elif vpc_uuid:
+            kwargs["vpc"] = vpc_uuid
 
         # store data in table
-        super().create(
-            name=name,
-            uuid=uuid,
-            cluster=cluster_name,
-            account_uuid=account_uuid,
-            cluster_uuid=cluster_uuid,
-        )
+        super().create(**kwargs)
 
     @classmethod
     def get_entity_data(cls, name, **kwargs):
+
         query_obj = {"name": name}
         account_uuid = kwargs.get("account_uuid", "")
         if account_uuid:
             query_obj["account_uuid"] = account_uuid
 
         cluster_name = kwargs.get("cluster", "")
+        vpc_name = kwargs.get("vpc", "")
         if cluster_name:
-            query_obj["cluster"] = cluster_name
-
+            cluster_query_obj = {"name": cluster_name}
+            if account_uuid:
+                cluster_query_obj["account_uuid"] = account_uuid
+            cluster = AhvClustersCache.get(**cluster_query_obj)
+            query_obj["cluster"] = cluster.uuid
+        elif vpc_name:
+            vpc_query_obj = {"name": vpc_name}
+            if account_uuid:
+                vpc_query_obj["account_uuid"] = account_uuid
+            vpc = AhvVpcsCache.get(**vpc_query_obj)
+            query_obj["vpc"] = vpc.uuid
         try:
             # The get() method is shorthand for selecting with a limit of 1
             # If more than one row is found, the first row returned by the database cursor
@@ -482,161 +1041,6 @@ class AhvImagesCache(CacheTableBase):
         primary_key = CompositeKey("name", "uuid", "account_uuid")
 
 
-class AccountCache(CacheTableBase):
-    __cache_type__ = CACHE.ENTITY.ACCOUNT
-    feature_min_version = "2.7.0"
-    name = CharField()
-    uuid = CharField()
-    provider_type = CharField()
-    state = CharField()
-    is_host = BooleanField(default=False)  # Used for Ntnx accounts only
-    data = CharField()
-    last_update_time = DateTimeField(default=datetime.datetime.now())
-
-    def get_detail_dict(self, *args, **kwargs):
-        return {
-            "name": self.name,
-            "uuid": self.uuid,
-            "provider_type": self.provider_type,
-            "state": self.state,
-            "is_host": self.is_host,
-            "data": json.loads(self.data),
-            "last_update_time": self.last_update_time,
-        }
-
-    @classmethod
-    def clear(cls):
-        """removes entire data from table"""
-        for db_entity in cls.select():
-            db_entity.delete_instance()
-
-    @classmethod
-    def show_data(cls):
-        """display stored data in table"""
-
-        if not len(cls.select()):
-            click.echo(highlight_text("No entry found !!!"))
-            return
-
-        table = PrettyTable()
-        table.field_names = ["NAME", "PROVIDER_TYPE", "UUID", "STATE", "LAST UPDATED"]
-        for entity in cls.select():
-            entity_data = entity.get_detail_dict()
-            last_update_time = arrow.get(
-                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
-            ).humanize()
-            table.add_row(
-                [
-                    highlight_text(entity_data["name"]),
-                    highlight_text(entity_data["provider_type"]),
-                    highlight_text(entity_data["uuid"]),
-                    highlight_text(entity_data["state"]),
-                    highlight_text(last_update_time),
-                ]
-            )
-        click.echo(table)
-
-    @classmethod
-    def create_entry(cls, name, uuid, **kwargs):
-        provider_type = kwargs.get("provider_type", "")
-        if not provider_type:
-            LOG.error("Provider type not supplied for fetching user {}".format(name))
-            sys.exit(-1)
-
-        is_host = kwargs.get("is_host", False)
-        data = kwargs.get("data", "{}")
-        state = kwargs.get("state", "")
-
-        super().create(
-            name=name,
-            uuid=uuid,
-            provider_type=provider_type,
-            is_host=is_host,
-            data=data,
-            state=state,
-        )
-
-    @classmethod
-    def sync(cls):
-        """sync the table from server"""
-
-        # clear old data
-        cls.clear()
-
-        client = get_api_client()
-        payload = {
-            "length": 250,
-            "filter": "(state==ACTIVE,state==VERIFIED)",
-        }
-        res, err = client.account.list(payload)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        res = res.json()
-        for entity in res.get("entities", []):
-            provider_type = entity["status"]["resources"]["type"]
-            data = {}
-            query_obj = {
-                "name": entity["status"]["name"],
-                "uuid": entity["metadata"]["uuid"],
-                "provider_type": entity["status"]["resources"]["type"],
-                "state": entity["status"]["resources"]["state"],
-            }
-
-            if provider_type == "nutanix_pc":
-                query_obj["is_host"] = entity["status"]["resources"]["data"]["host_pc"]
-
-                # store cluster accounts for PC account (Note it will store cluster name not account name)
-                for pe_acc in (
-                    entity["status"]["resources"]
-                    .get("data", {})
-                    .get("cluster_account_reference_list", [])
-                ):
-                    group = data.setdefault("clusters", {})
-                    group[pe_acc["uuid"]] = (
-                        pe_acc.get("resources", {})
-                        .get("data", {})
-                        .get("cluster_name", "")
-                    )
-
-            elif provider_type == "nutanix":
-                data["pc_account_uuid"] = entity["status"]["resources"]["data"][
-                    "pc_account_uuid"
-                ]
-
-            query_obj["data"] = json.dumps(data)
-            cls.create_entry(**query_obj)
-
-    @classmethod
-    def get_entity_data(cls, name, **kwargs):
-        query_obj = {"name": name}
-
-        provider_type = kwargs.get("provider_type", "")
-        if provider_type:
-            query_obj["provider_type"] = provider_type
-
-        try:
-            # The get() method is shorthand for selecting with a limit of 1
-            # If more than one row is found, the first row returned by the database cursor
-            entity = super().get(**query_obj)
-            return entity.get_detail_dict()
-        except DoesNotExist:
-            return dict()
-
-    @classmethod
-    def get_entity_data_using_uuid(cls, uuid, **kwargs):
-        try:
-            entity = super().get(cls.uuid == uuid)
-            return entity.get_detail_dict()
-
-        except DoesNotExist:
-            return dict()
-
-    class Meta:
-        database = dsl_database
-        primary_key = CompositeKey("name", "uuid")
-
-
 class ProjectCache(CacheTableBase):
     __cache_type__ = CACHE.ENTITY.PROJECT
     feature_min_version = "2.7.0"
@@ -644,6 +1048,8 @@ class ProjectCache(CacheTableBase):
     uuid = CharField()
     accounts_data = CharField()
     whitelisted_subnets = CharField()
+    whitelisted_clusters = CharField()
+    whitelisted_vpcs = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
     def get_detail_dict(self, *args, **kwargs):
@@ -652,6 +1058,8 @@ class ProjectCache(CacheTableBase):
             "uuid": self.uuid,
             "accounts_data": json.loads(self.accounts_data),
             "whitelisted_subnets": json.loads(self.whitelisted_subnets),
+            "whitelisted_clusters": json.loads(self.whitelisted_clusters),
+            "whitelisted_vpcs": json.loads(self.whitelisted_vpcs),
             "last_update_time": self.last_update_time,
         }
 
@@ -699,9 +1107,13 @@ class ProjectCache(CacheTableBase):
         # store subnets for nutanix_pc accounts in some map, else we had to subnets api
         # for each project (Speed very low in case of ~1000 projects)
         ntnx_pc_account_subnet_map = dict()
+        ntnx_pc_account_vpc_map = dict()
+        ntnx_pc_account_cluster_map = dict()
         for _acct_uuid in account_uuid_type_map.keys():
             if account_uuid_type_map[_acct_uuid] == "nutanix_pc":
                 ntnx_pc_account_subnet_map[_acct_uuid] = list()
+                ntnx_pc_account_vpc_map[_acct_uuid] = list()
+                ntnx_pc_account_cluster_map[_acct_uuid] = list()
 
         # Get the subnets for each nutanix_pc account
         AhvVmProvider = cls.get_provider_plugin("AHV_VM")
@@ -710,6 +1122,7 @@ class ProjectCache(CacheTableBase):
             LOG.debug(
                 "Fetching subnets for nutanix_pc account_uuid {}".format(acct_uuid)
             )
+            res = {}
             try:
                 res = AhvObj.subnets(account_uuid=acct_uuid)
             except Exception as exp:
@@ -721,8 +1134,38 @@ class ProjectCache(CacheTableBase):
                 )
                 continue
 
-            for row in res["entities"]:
+            for row in res.get("entities", []):
                 ntnx_pc_account_subnet_map[acct_uuid].append(row["metadata"]["uuid"])
+
+            LOG.debug(
+                "Fetching clusters for nutanix_pc account_uuid {}".format(acct_uuid)
+            )
+            res = {}
+            try:
+                res = AhvObj.clusters(account_uuid=acct_uuid)
+            except Exception as exp:
+                LOG.exception(exp)
+                LOG.warning(
+                    "Unable to fetch clusters for Nutanix_PC Account(uuid={})".format(
+                        acct_uuid
+                    )
+                )
+            for row in res.get("entities", []):
+                ntnx_pc_account_cluster_map[acct_uuid].append(row["metadata"]["uuid"])
+
+            LOG.debug("Fetching VPCs for nutanix_pc account_uuid {}".format(acct_uuid))
+            res = {}
+            try:
+                res = AhvObj.vpcs(account_uuid=acct_uuid)
+            except Exception as exp:
+                LOG.exception(exp)
+                LOG.warning(
+                    "Unable to fetch VPCs for Nutanix_PC Account(uuid={})".format(
+                        acct_uuid
+                    )
+                )
+            for row in res.get("entities", []):
+                ntnx_pc_account_vpc_map[acct_uuid].append(row["metadata"]["uuid"])
 
         # Getting projects data
         res_entities, err = client.project.list_all(ignore_error=True)
@@ -732,6 +1175,8 @@ class ProjectCache(CacheTableBase):
         for entity in res_entities:
             # populating a map to lookup the account to which a subnet belongs
             whitelisted_subnets = dict()
+            whitelisted_clusters = dict()
+            whitelisted_vpcs = dict()
 
             name = entity["status"]["name"]
             uuid = entity["metadata"]["uuid"]
@@ -739,6 +1184,17 @@ class ProjectCache(CacheTableBase):
             account_list = entity["status"]["resources"].get(
                 "account_reference_list", []
             )
+
+            cluster_uuids = [
+                cluster["uuid"]
+                for cluster in entity["status"]["resources"].get(
+                    "cluster_reference_list", []
+                )
+            ]
+            vpc_uuids = [
+                vpc["uuid"]
+                for vpc in entity["status"]["resources"].get("vpc_reference_list", [])
+            ]
 
             project_subnets_ref_list = entity["spec"].get("resources", {}).get(
                 "external_network_list", []
@@ -766,24 +1222,42 @@ class ProjectCache(CacheTableBase):
                         & set(ntnx_pc_account_subnet_map[account_uuid])
                     )
 
+                    whitelisted_vpcs[account_uuid] = list(
+                        set(vpc_uuids) & set(ntnx_pc_account_vpc_map[account_uuid])
+                    )
+
+                    whitelisted_clusters[account_uuid] = list(
+                        set(cluster_uuids)
+                        & set(ntnx_pc_account_cluster_map[account_uuid])
+                    )
+
             accounts_data = json.dumps(account_map)
+
             whitelisted_subnets = json.dumps(whitelisted_subnets)
+            whitelisted_clusters = json.dumps(whitelisted_clusters)
+            whitelisted_vpcs = json.dumps(whitelisted_vpcs)
             cls.create_entry(
                 name=name,
                 uuid=uuid,
                 accounts_data=accounts_data,
                 whitelisted_subnets=whitelisted_subnets,
+                whitelisted_clusters=whitelisted_clusters,
+                whitelisted_vpcs=whitelisted_vpcs,
             )
 
     @classmethod
     def create_entry(cls, name, uuid, **kwargs):
         accounts_data = kwargs.get("accounts_data", "{}")
         whitelisted_subnets = kwargs.get("whitelisted_subnets", "[]")
+        whitelisted_clusters = kwargs.get("whitelisted_clusters", "[]")
+        whitelisted_vpcs = kwargs.get("whitelisted_vpcs", "[]")
         super().create(
             name=name,
             uuid=uuid,
             accounts_data=accounts_data,
             whitelisted_subnets=whitelisted_subnets,
+            whitelisted_clusters=whitelisted_clusters,
+            whitelisted_vpcs=whitelisted_vpcs,
         )
 
     @classmethod
@@ -830,8 +1304,21 @@ class ProjectCache(CacheTableBase):
         ) + project_data["spec"].get("resources", {}).get("subnet_reference_list", [])
         project_subnet_uuids = [item["uuid"] for item in project_subnets_ref_list]
 
+        project_cluster_uuids = [
+            cluster["uuid"]
+            for cluster in project_data["status"]["resources"].get(
+                "cluster_reference_list", []
+            )
+        ]
+        project_vpc_uuids = [
+            vpc["uuid"]
+            for vpc in project_data["status"]["resources"].get("vpc_reference_list", [])
+        ]
+
         # populating a map to lookup the account to which a subnet belongs
         whitelisted_subnets = dict()
+        whitelisted_clusters = dict()
+        whitelisted_vpcs = dict()
         account_map = dict()
         for _acc in account_list:
             account_uuid = _acc["uuid"]
@@ -849,7 +1336,12 @@ class ProjectCache(CacheTableBase):
                 AhvVmProvider = cls.get_provider_plugin("AHV_VM")
                 AhvObj = AhvVmProvider.get_api_obj()
 
-                filter_query = "_entity_id_=={}".format("|".join(project_subnet_uuids))
+                if project_subnet_uuids:
+                    filter_query = "_entity_id_=={}".format(
+                        "|".join(project_subnet_uuids)
+                    )
+                else:
+                    filter_query = ""
                 LOG.debug(
                     "fetching following subnets {} for nutanix_pc account_uuid {}".format(
                         project_subnet_uuids, account_uuid
@@ -871,14 +1363,67 @@ class ProjectCache(CacheTableBase):
                     row["metadata"]["uuid"] for row in res["entities"]
                 ]
 
+                # fetch clusters
+                if project_cluster_uuids:
+                    filter_query = "_entity_id_=={}".format(
+                        "|".join(project_cluster_uuids)
+                    )
+                    LOG.debug(
+                        "fetching following cluster {} for nutanix_pc account_uuid {}".format(
+                            project_cluster_uuids, account_uuid
+                        )
+                    )
+                    try:
+                        res = AhvObj.clusters(
+                            account_uuid=account_uuid, filter_query=filter_query
+                        )
+                    except Exception:
+                        LOG.warning(
+                            "Unable to fetch clusters for Nutanix_PC Account(uuid={})".format(
+                                account_uuid
+                            )
+                        )
+                        continue
+
+                    whitelisted_clusters[account_uuid] = [
+                        row["metadata"]["uuid"] for row in res["entities"]
+                    ]
+
+                # fetch vpcs
+                if project_vpc_uuids:
+                    filter_query = "_entity_id_=={}".format("|".join(project_vpc_uuids))
+                    LOG.debug(
+                        "fetching following vpcs {} for nutanix_pc account_uuid {}".format(
+                            project_vpc_uuids, account_uuid
+                        )
+                    )
+                    try:
+                        res = AhvObj.vpcs(
+                            account_uuid=account_uuid, filter_query=filter_query
+                        )
+                    except Exception:
+                        LOG.warning(
+                            "Unable to fetch vpcs for Nutanix_PC Account(uuid={})".format(
+                                account_uuid
+                            )
+                        )
+                        continue
+
+                    whitelisted_vpcs[account_uuid] = [
+                        row["metadata"]["uuid"] for row in res["entities"]
+                    ]
+
         accounts_data = json.dumps(account_map)
         whitelisted_subnets = json.dumps(whitelisted_subnets)
-
+        whitelisted_clusters = json.dumps(whitelisted_clusters)
+        whitelisted_vpcs = json.dumps(whitelisted_vpcs)
         return {
             "name": project_name,
             "uuid": uuid,
             "accounts_data": accounts_data,
             "whitelisted_subnets": whitelisted_subnets,
+            "whitelisted_clusters": whitelisted_clusters,
+            "whitelisted_vpcs": whitelisted_vpcs,
         }
 
     @classmethod
@@ -904,6 +1449,8 @@ class ProjectCache(CacheTableBase):
             {
                 cls.accounts_data: db_data["accounts_data"],
                 cls.whitelisted_subnets: db_data["whitelisted_subnets"],
+                cls.whitelisted_vpcs: db_data["whitelisted_vpcs"],
+                cls.whitelisted_clusters: db_data["whitelisted_clusters"],
             }
         ).where(cls.uuid == uuid)
         q.execute()

@@ -1,4 +1,5 @@
 import sys
+import json
 from ..metadata_payload import get_metadata_obj
 from calm.dsl.api import get_api_client
 from calm.dsl.store import Cache
@@ -158,7 +159,8 @@ def get_pe_account_uuid_using_pc_account_uuid_and_subnet_uuid(
         sys.exit("Ahv Subnet {} not found".format(subnet_uuid))
 
     # As for nutanix accounts, cluster name is account name
-    subnet_cluster_name = subnet_cache_data["cluster"]
+    LOG.debug("Subnet cache data: {}".format(subnet_cache_data))
+    subnet_cluster_name = subnet_cache_data["cluster_name"]
 
     pc_account_cache = Cache.get_entity_data_using_uuid(
         entity_type=CACHE.ENTITY.ACCOUNT, uuid=pc_account_uuid
@@ -192,7 +194,7 @@ def get_pe_account_uuid_using_pc_account_uuid_and_nic_data(
         sys.exit("AHV Subnet {} not found".format(subnet_name))
 
     # As for nutanix accounts, cluster name is account name
-    subnet_cluster_name = subnet_cache_data["cluster"]
+    subnet_cluster_name = subnet_cache_data["cluster_name"]
 
     pc_account_cache = Cache.get_entity_data_using_uuid(
         entity_type=CACHE.ENTITY.ACCOUNT, uuid=pc_account_uuid
@@ -201,3 +203,118 @@ def get_pe_account_uuid_using_pc_account_uuid_and_nic_data(
     pc_clusters_rev = {v: k for k, v in pc_clusters.items()}
 
     return pc_clusters_rev.get(subnet_cluster_name, "")
+
+
+def get_pe_account_using_pc_account_uuid_and_cluster_name(
+    pc_account_uuid, cluster_name
+):
+    """
+    returns pe account uuid using pc account uuid and cluster_name
+    """
+    cluster_cache_data = Cache.get_entity_data(
+        entity_type=CACHE.ENTITY.AHV_CLUSTER,
+        name=cluster_name,
+        account_uuid=pc_account_uuid,
+    )
+    return cluster_cache_data.get("pe_account_uuid", "")
+
+
+def get_network_group(name=None, tunnel_uuid=None):
+
+    if not (name):
+        LOG.error(" name  must be provided")
+        sys.exit(-1)
+
+    nested_attributes = [
+        "tunnel_name",
+        "tunnel_vm_name",
+        "tunnel_status",
+        "app_uuid",
+        "app_status",
+    ]
+
+    client = get_api_client()
+    network_group_uuid = None
+    network_group = None
+    if not network_group_uuid:
+        params = {}
+        filter_query = ""
+        if name:
+            params = {"filter": "name=={}".format(name)}
+        elif tunnel_uuid:
+            params = {"filter": "tunnel_reference=={}".format(tunnel_uuid)}
+        params["nested_attributes"] = nested_attributes
+
+        LOG.info("Searching for the network group {}".format(name))
+        res, err = client.network_group.list(params=params)
+        if err:
+            LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+
+        response = res.json()
+        entities = response.get("entities", None)
+        network_group = None
+        if entities:
+            if len(entities) != 1:
+                LOG.exception("More than one Network Group found - {}".format(entities))
+
+            LOG.info("Network Group {} found ".format(name))
+            network_group = entities[0]
+        else:
+            LOG.exception("No Network Group found with name {} found".format(name))
+
+    return network_group
+
+
+def get_network_group_by_tunnel_name(name):
+
+    if not (name):
+        LOG.error(" name  must be provided")
+        sys.exit(-1)
+
+    nested_attributes = [
+        "tunnel_name",
+        "tunnel_vm_name",
+        "tunnel_status",
+        "app_uuid",
+        "app_status",
+    ]
+
+    client = get_api_client()
+
+    network_group = {}
+
+    params = {"filter": "name=={}".format(name)}
+    res, err = client.tunnel.list(params=params)
+    if err:
+        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+    response = res.json()
+    LOG.debug("Tunnel response: {}".format(response))
+
+    tunnels = response.get("entities", [])
+    if not tunnels:
+        LOG.exception("No Tunnel found with name: {}".format(name))
+
+    tunnel_uuid = tunnels[0].get("metadata", {}).get("uuid")
+
+    if tunnel_uuid:
+        params = {"filter": "tunnel_reference=={}".format(tunnel_uuid)}
+        params["nested_attributes"] = nested_attributes
+
+        LOG.info("Searching for the network group using tunnel name: {}".format(name))
+        res, err = client.network_group.list(params=params)
+        if err:
+            LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+
+        response = res.json()
+        entities = response.get("entities", None)
+        network_group = None
+        if entities:
+            if len(entities) != 1:
+                LOG.exception("More than one Network Group found - {}".format(entities))
+
+            LOG.info("Network Group {} found ".format(name))
+            network_group = entities[0]
+        else:
+            LOG.exception("No Network Group found with name {} found".format(name))
+
+    return network_group

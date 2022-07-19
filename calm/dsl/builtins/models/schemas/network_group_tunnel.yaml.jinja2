@@ -1,0 +1,56 @@
+{% import "ref.yaml.jinja2" as ref %}
+{% import "calm_ref.yaml.jinja2" as calm_ref %}
+
+{% macro NetworkGroupTunnelVMSpec() %}
+title: Network Group Tunnel VM Spec
+type: object
+x-calm-dsl-type: network_group_tunnel_vm_spec
+properties:
+  cluster:
+    type: string
+  vm_name:
+    type: string
+  subnet:
+    type: string
+  type:
+      type: string
+{%- endmacro %}
+
+{% macro NetworkGroupTunnelVMSpecSchema() -%}
+
+NetworkGroupTunnelVMSpec:
+  {{ NetworkGroupTunnelVMSpec() | indent(2) }}
+
+{%- endmacro %}
+
+
+{% macro NetworkGroupTunnelSpec() -%}
+
+title: Network Group Tunnel Spec
+type: object
+x-calm-dsl-type: network_group_tunnel
+properties: 
+  account_reference:
+    x-calm-dsl-display-name: account
+    {{ calm_ref.CalmRef() | indent(4) }}
+  platform_vpc_uuid_list:
+    x-calm-dsl-display-name: platform_vpcs
+    description: List of VPC UUIDs
+    type: array
+    items:
+      $ref: '#/components/schemas/CalmRef'
+  tunnel_reference:
+    x-calm-dsl-display-name: tunnel_name
+    type: string
+  tunnel_vm_spec:
+    x-calm-dsl-display-name: tunnel_vm_spec
+    {{ NetworkGroupTunnelVMSpec() | indent(4) }}
+{%- endmacro %}
+
+
+{% macro NetworkGroupTunnelSchema() -%}
+
+NetworkGroupTunnel:
+  {{ NetworkGroupTunnelSpec() | indent(2) }}
+
+{%- endmacro %}

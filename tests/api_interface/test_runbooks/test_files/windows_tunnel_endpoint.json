@@ -1,0 +1,56 @@
+{
+    "spec": {
+        "name": "Endpoint_ac7d10c0",
+        "description": "",
+        "resources": {
+            "name": "Endpoint_ac7d10c0",
+            "type": "Windows",
+            "value_type": "IP",
+            "tunnel_reference": {
+                "uuid": "030313f7-37c3-4bf5-9f6c-983260271b0e",
+                "name": "vpc_name_1_tunnel",
+                "kind": "tunnel"
+            },
+            "attrs": {
+                "values": [
+                    "10.46.8.91"
+                ],
+                "port": 5986,
+                "connection_protocol": "https",
+                "credential_definition_list": [
+                    {
+            		"uuid": "d96f5c37-323a-43ac-85fc-fcd95b121598",
+                        "name": "endpoint_cred",
+                        "description": "",
+                        "type": "PASSWORD",
+                        "username": "root",
+                        "secret": {
+                            "attrs": {
+                                "is_secret_modified": true
+                            },
+                            "value": "nutanix/4u"
+                        },
+                        "cred_class": "static",
+                        "editables": {}
+                    }
+                ],
+                "login_credential_reference": {
+                    "kind": "app_credential",
+                    "name": "endpoint_cred",
+                    "uuid": "d96f5c37-323a-43ac-85fc-fcd95b121598"
+                }
+            }
+        }
+    },
+    "api_version": "3.0",
+    "metadata": {
+        "spec_version": 1,
+        "kind": "endpoint",
+        "name": "Endpoint_ac7d10c0",
+        "project_reference": {
+            "kind": "project",
+            "uuid": "29180067-fb43-494c-ae9f-f81b3e9733c2",
+            "name": "test_vpc_project"
+        }
+    }
+}

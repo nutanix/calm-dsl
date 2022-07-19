@@ -7,6 +7,8 @@ class CACHE:
     """Cache constants"""
 
     class ENTITY:
+        AHV_CLUSTER = "ahv_cluster"
+        AHV_VPC = "ahv_vpc"
         AHV_SUBNET = "ahv_subnet"
         AHV_DISK_IMAGE = "ahv_disk_image"
         ACCOUNT = "account"
@@ -50,3 +52,18 @@ class PROJECT_TASK:
     ]
 
     FAILURE_STATES = [STATUS.ABORTED, STATUS.SUSPENDED, STATUS.FAILURE]
+
+
+class NETWORK_GROUP_TUNNEL_TASK:
+    class STATUS:
+        SUCCESS = "Succeeded"
+        FAILURE = "Failed"
+        ABORTED = "Aborted"
+        QUEUED = "Queued"
+
+    TERMINAL_STATES = [
+        STATUS.ABORTED,
+        STATUS.SUCCESS,
+        STATUS.FAILURE,
+    ]
+    FAILURE_STATES = [STATUS.ABORTED, STATUS.FAILURE]

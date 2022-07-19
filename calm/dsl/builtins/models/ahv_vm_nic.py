@@ -1,5 +1,6 @@
 import sys
 
+from .ahv_vm_vpc import AhvVpc
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from calm.dsl.store import Cache
@@ -35,6 +36,9 @@ class AhvNicType(EntityType):
         subnet_ref = cdict.get("subnet_reference") or dict()
         subnet_name = subnet_ref.get("name", "") or ""
 
+        vpc_ref = cdict.get("vpc_reference") or dict()
+        vpc_name = vpc_ref.get("name", "") or ""
+
         if subnet_name.startswith("@@{") and subnet_name.endswith("}@@"):
             cdict["subnet_reference"] = {
                 "kind": "subnet",
@@ -43,10 +47,12 @@ class AhvNicType(EntityType):
 
         elif subnet_name:
             cluster_name = subnet_ref.get("cluster", "")
+
             subnet_cache_data = Cache.get_entity_data(
                 entity_type=CACHE.ENTITY.AHV_SUBNET,
                 name=subnet_name,
                 cluster=cluster_name,
+                vpc=vpc_name,
                 account_uuid=account_uuid,
             )
 
@@ -58,9 +64,29 @@ class AhvNicType(EntityType):
                 )
                 sys.exit("AHV Subnet {} not found.".format(subnet_name))
 
-            subnet_uuid = subnet_cache_data.get("uuid", "")
+            vpc_name = subnet_cache_data.get("vpc_name", "")
+            vpc_uuid = subnet_cache_data.get("vpc_uuid", "")
+            cluster_name = subnet_cache_data.get("cluster_name", "")
+
+            if (
+                cluster_name
+                and cls_substrate
+                and cls_substrate.provider_spec
+                and cls_substrate.provider_spec.cluster
+                and cluster_name != str(cls_substrate.provider_spec.cluster)
+            ):
+                sys.exit("Cluster mismatch - All VLANs should belong to same cluster")
+
+            if (
+                vpc_name
+                and cls_substrate
+                and cls_substrate.provider_spec
+                and not cls_substrate.provider_spec.cluster
+            ):
+                sys.exit("Cluster reference is mandatory for Overlay NICs")
 
             # If substrate defined under environment model
+            subnet_uuid = subnet_cache_data.get("uuid", "")
             cls_env = common_helper._walk_to_parent_with_given_type(
                 cls, "EnvironmentType"
             )
@@ -120,6 +146,8 @@ class AhvNicType(EntityType):
                 "name": subnet_name,
                 "uuid": subnet_uuid,
             }
+            if vpc_name:
+                cdict["vpc_reference"] = AhvVpc(vpc_name)
 
         nfc_ref = cdict.get("network_function_chain_reference") or dict()
         nfc_name = nfc_ref.get("name", "")
@@ -170,8 +198,14 @@ def create_ahv_nic(
     mac_address="",
     ip_endpoints=[],
     cluster=None,
+    vpc=None,
 ):
 
+    if vpc and cluster:
+        LOG.error(
+            "Invalid params [vpc, subnet] passed for Ahv Subnet (name = '{}'). Ahv Subnet can  have only one of [vpc, cluster]"
+        )
+        sys.exit("Invalid params [vpc, cluster] passed for subnet {}".format(subnet))
     kwargs = {}
 
     if subnet:
@@ -180,6 +214,11 @@ def create_ahv_nic(
             "name": subnet,
             "kind": "subnet",
             "cluster": cluster,
+        }
+    if vpc:
+        kwargs["vpc_reference"] = {
+            "name": vpc,
+            "kind": "vpc",
         }
 
     if network_function_chain:
@@ -206,7 +245,7 @@ def create_ahv_nic(
     return ahv_vm_nic(**kwargs)
 
 
-def normal_ingress_nic(subnet, mac_address="", ip_endpoints=[], cluster=None):
+def normal_ingress_nic(subnet, mac_address="", ip_endpoints=[], cluster=None, vpc=None):
     return create_ahv_nic(
         subnet=subnet,
         network_function_nic_type="INGRESS",
@@ -214,10 +253,11 @@ def normal_ingress_nic(subnet, mac_address="", ip_endpoints=[], cluster=None):
         mac_address=mac_address,
         ip_endpoints=ip_endpoints,
         cluster=cluster,
+        vpc=vpc,
     )
 
 
-def normal_egress_nic(subnet, mac_address="", ip_endpoints=[], cluster=None):
+def normal_egress_nic(subnet, mac_address="", ip_endpoints=[], cluster=None, vpc=None):
     return create_ahv_nic(
         subnet=subnet,
         network_function_nic_type="EGRESS",
@@ -225,10 +265,11 @@ def normal_egress_nic(subnet, mac_address="", ip_endpoints=[], cluster=None):
         mac_address=mac_address,
         ip_endpoints=ip_endpoints,
         cluster=cluster,
+        vpc=vpc,
     )
 
 
-def normal_tap_nic(subnet, mac_address="", ip_endpoints=[], cluster=None):
+def normal_tap_nic(subnet, mac_address="", ip_endpoints=[], cluster=None, vpc=None):
     return create_ahv_nic(
         subnet=subnet,
         network_function_nic_type="TAP",
@@ -236,10 +277,11 @@ def normal_tap_nic(subnet, mac_address="", ip_endpoints=[], cluster=None):
         mac_address=mac_address,
         ip_endpoints=ip_endpoints,
         cluster=cluster,
+        vpc=vpc,
     )
 
 
-def direct_ingress_nic(subnet, mac_address="", ip_endpoints=[], cluster=None):
+def direct_ingress_nic(subnet, mac_address="", ip_endpoints=[], cluster=None, vpc=None):
     return create_ahv_nic(
         subnet=subnet,
         network_function_nic_type="INGRESS",
@@ -247,10 +289,11 @@ def direct_ingress_nic(subnet, mac_address="", ip_endpoints=[], cluster=None):
         mac_address=mac_address,
         ip_endpoints=ip_endpoints,
         cluster=cluster,
+        vpc=vpc,
     )
 
 
-def direct_egress_nic(subnet, mac_address="", ip_endpoints=[], cluster=None):
+def direct_egress_nic(subnet, mac_address="", ip_endpoints=[], cluster=None, vpc=None):
     return create_ahv_nic(
         subnet=subnet,
         network_function_nic_type="EGRESS",
@@ -258,10 +301,11 @@ def direct_egress_nic(subnet, mac_address="", ip_endpoints=[], cluster=None):
         mac_address=mac_address,
         ip_endpoints=ip_endpoints,
         cluster=cluster,
+        vpc=vpc,
     )
 
 
-def direct_tap_nic(subnet, mac_address="", ip_endpoints=[], cluster=None):
+def direct_tap_nic(subnet, mac_address="", ip_endpoints=[], cluster=None, vpc=None):
     return create_ahv_nic(
         subnet=subnet,
         network_function_nic_type="TAP",
@@ -269,6 +313,7 @@ def direct_tap_nic(subnet, mac_address="", ip_endpoints=[], cluster=None):
         mac_address=mac_address,
         ip_endpoints=ip_endpoints,
         cluster=cluster,
+        vpc=vpc,
     )
 
 
@@ -300,21 +345,25 @@ def network_function_tap_nic(mac_address="", network_function_chain=None):
 
 
 class AhvVmNic:
-    def __new__(cls, subnet, mac_address="", ip_endpoints=[], cluster=None):
+    def __new__(cls, subnet, mac_address="", ip_endpoints=[], cluster=None, vpc=None):
         return normal_ingress_nic(
             subnet=subnet,
             mac_address=mac_address,
             ip_endpoints=ip_endpoints,
             cluster=cluster,
+            vpc=vpc,
         )
 
     class NormalNic:
-        def __new__(cls, subnet, mac_address="", ip_endpoints=[], cluster=None):
+        def __new__(
+            cls, subnet, mac_address="", ip_endpoints=[], cluster=None, vpc=None
+        ):
             return normal_ingress_nic(
                 subnet=subnet,
                 mac_address=mac_address,
                 ip_endpoints=ip_endpoints,
                 cluster=cluster,
+                vpc=vpc,
             )
 
         ingress = normal_ingress_nic
@@ -322,12 +371,15 @@ class AhvVmNic:
         tap = normal_tap_nic
 
     class DirectNic:
-        def __new__(cls, subnet, mac_address="", ip_endpoints=[], cluster=None):
+        def __new__(
+            cls, subnet, mac_address="", ip_endpoints=[], cluster=None, vpc=None
+        ):
             return direct_ingress_nic(
                 subnet=subnet,
                 mac_address=mac_address,
                 ip_endpoints=ip_endpoints,
                 cluster=cluster,
+                vpc=vpc,
             )
 
         ingress = direct_ingress_nic

@@ -22,6 +22,16 @@ properties:
   default_subnet_reference:
     type: object
     x-calm-dsl-type: app_calm_ref
+  cluster_reference_list:
+    type: array
+    items:
+      type: object
+      x-calm-dsl-type: app_calm_ref
+  vpc_reference_list:
+    type: array
+    items:
+      type: object
+      x-calm-dsl-type: app_calm_ref
   
 {%- endmacro %}
 

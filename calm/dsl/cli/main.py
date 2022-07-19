@@ -380,6 +380,11 @@ def abort():
     pass
 
 
+@main.group(cls=FeatureFlagGroup)
+def reset():
+    """Reset entity"""
+
+
 @create.command("provider_spec")
 @click.option(
     "--type",

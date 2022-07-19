@@ -34,6 +34,17 @@ from .models.utils import (
 from .models.provider_spec import provider_spec, read_provider_spec, read_spec
 from .models.provider_spec import read_ahv_spec, read_vmw_spec
 from .models.readiness_probe import ReadinessProbe, readiness_probe, ReadinessProbeType
+
+from .models.ahv_vm_cluster import (
+    ahv_vm_cluster,
+    AhvCluster,
+    AhvClusterType,
+)
+from .models.ahv_vm_vpc import (
+    ahv_vm_vpc,
+    AhvVpc,
+    AhvVpcType,
+)
 from .models.ahv_vm_nic import ahv_vm_nic, AhvVmNic, AhvNicType
 from .models.ahv_vm_disk import ahv_vm_disk, AhvVmDisk, AhvDiskType
 from .models.ahv_vm_gpu import ahv_vm_gpu, AhvVmGpu, AhvGpuType
@@ -94,6 +105,15 @@ from .models.endpoint import Endpoint, _endpoint, CalmEndpoint
 from .models.vm_profile import VmProfile
 from .models.vm_blueprint import VmBlueprint
 from .models.job import Job, JobScheduler
+
+from .models.network_group_tunnel_vm_spec import (
+    NetworkGroupTunnelVMSpecType,
+    NetworkGroupTunnelVMSpec,
+    ahv_network_group_tunnel_vm_spec,
+)
+from .models.network_group_tunnel import NetworkGroupTunnelType, NetworkGroupTunnel
+from .models.network_group_tunnel_payload import NetworkGroupTunnelPayloadType
+
 
 __all__ = [
     "Ref",
@@ -183,6 +203,11 @@ __all__ = [
     "create_project_payload",
     "ProjectType",
     "Project",
+    "NetworkGroupTunnelVMSpec",
+    "NetworkGroupTunnelVMSpecType",
+    "NetworkGroupTunnel",
+    "NetworkGroupTunnelType",
+    "ahv_network_group_tunnel_vm_spec",
     "Metadata",
     "MetadataType",
     "Brownfield",

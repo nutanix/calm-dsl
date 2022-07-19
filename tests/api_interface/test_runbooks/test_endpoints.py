@@ -1,27 +1,80 @@
+from operator import is_
 import pytest
 import copy
 import os
 import uuid
+import json
 from distutils.version import LooseVersion as LV
 
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import ENDPOINT
 from calm.dsl.config import get_context
 from calm.dsl.store import Version
-from utils import change_uuids, read_test_config
+
+from utils import (
+    change_uuids,
+    read_test_config,
+    get_vpc_project,
+    get_vpc_tunnel_using_account,
+    update_tunnel_and_project,
+)
+from calm.dsl.builtins.models.utils import read_local_file
+
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+# calm_version
+CALM_VERSION = Version.get_version("Calm")
+
+VPC_PROJECT = get_vpc_project(DSL_CONFIG)
+VPC_TUNNEL = get_vpc_tunnel_using_account(DSL_CONFIG)
 
 LinuxEndpointPayload = read_test_config(file_name="linux_endpoint_payload.json")
 WindowsEndpointPayload = read_test_config(file_name="windows_endpoint_payload.json")
 HTTPEndpointPayload = read_test_config(file_name="http_endpoint_payload.json")
+HTTPEndpointWithTunnelPayload = read_test_config(file_name="http_tunnel_endpoint.json")
+LinuxEndpointWithTunnelPayload = read_test_config(
+    file_name="linux_tunnel_endpoint.json"
+)
+WindowsEndpointWithTunnelPayload = read_test_config(
+    file_name="windows_tunnel_endpoint.json"
+)
 
 
 class TestEndpoints:
     @pytest.mark.runbook
     @pytest.mark.endpoint
     @pytest.mark.regression
+    # @pytest.mark.parametrize(
+    #    "EndpointPayload",
+    #    [LinuxEndpointPayload, WindowsEndpointPayload, HTTPEndpointPayload],
+    # )
     @pytest.mark.parametrize(
         "EndpointPayload",
-        [LinuxEndpointPayload, WindowsEndpointPayload, HTTPEndpointPayload],
+        [
+            pytest.param(LinuxEndpointPayload),
+            pytest.param(WindowsEndpointPayload),
+            pytest.param(HTTPEndpointPayload),
+            pytest.param(
+                HTTPEndpointWithTunnelPayload,
+                marks=pytest.mark.skipif(
+                    LV(CALM_VERSION) < LV("3.5.0") or not DSL_CONFIG["IS_VPC_ENABLED"],
+                    reason="VPC Tunnels can be used in Calm v3.5.0+ or VPC is disabled on the setup",
+                ),
+            ),
+            pytest.param(
+                LinuxEndpointWithTunnelPayload,
+                marks=pytest.mark.skipif(
+                    LV(CALM_VERSION) < LV("3.5.0") or not DSL_CONFIG["IS_VPC_ENABLED"],
+                    reason="VPC Tunnels can be used in Calm v3.5.0+ or VPC is disabled on the setup",
+                ),
+            ),
+            pytest.param(
+                WindowsEndpointWithTunnelPayload,
+                marks=pytest.mark.skipif(
+                    LV(CALM_VERSION) < LV("3.5.0") or not DSL_CONFIG["IS_VPC_ENABLED"],
+                    reason="VPC Tunnels can be used in Calm v3.5.0+ or VPC is disabled on the setup",
+                ),
+            ),
+        ],
     )
     def test_endpoint_crud(self, EndpointPayload):
         """
@@ -33,6 +86,13 @@ class TestEndpoints:
 
         client = get_api_client()
         endpoint = change_uuids(EndpointPayload, {})
+
+        ep_resources = endpoint.get("spec", {}).get("resources", {})
+        payload_tunnel_reference = ep_resources.get("tunnel_reference", {})
+        if payload_tunnel_reference:
+            # Update with active tunnel reference and project
+            update_tunnel_and_project(VPC_TUNNEL, VPC_PROJECT, endpoint)
+            payload_tunnel_reference = ep_resources.get("tunnel_reference", {})
 
         # Endpoint Create
         res, err = client.endpoint.create(endpoint)
@@ -51,9 +111,12 @@ class TestEndpoints:
             pytest.fail("[{}] - {}".format(err["code"], err["error"]))
         ep = res.json()
         ep_state = ep["status"]["state"]
+        ep_tunnel_reference = ep["status"]["resources"].get("tunnel_reference", {})
         assert ep_uuid == ep["metadata"]["uuid"]
         assert ep_state == "ACTIVE"
         assert ep_name == ep["spec"]["name"]
+        if payload_tunnel_reference:
+            assert ep_tunnel_reference == payload_tunnel_reference
 
         # Endpoint Update
         ep_type = ep["spec"]["resources"]["type"]
@@ -82,6 +145,10 @@ class TestEndpoints:
         else:
             pytest.fail("Invalid type {} of the endpoint".format(ep_type))
 
+        ep_tunnel_reference = ep["status"]["resources"].get("tunnel_reference", {})
+        if payload_tunnel_reference:
+            assert ep_tunnel_reference == payload_tunnel_reference
+
         # download the endpoint
         file_path = client.endpoint.export_file(ep_uuid, passphrase="test_passphrase")
 
@@ -98,6 +165,12 @@ class TestEndpoints:
         uploaded_ep_state = uploaded_ep["status"]["state"]
         uploaded_ep_uuid = uploaded_ep["metadata"]["uuid"]
         assert uploaded_ep_state == "ACTIVE"
+
+        uploaded_ep_tunnel_reference = uploaded_ep["status"]["resources"].get(
+            "tunnel_reference", {}
+        )
+        if payload_tunnel_reference:
+            assert payload_tunnel_reference == uploaded_ep_tunnel_reference
 
         # delete uploaded endpoint
         _, err = client.endpoint.delete(uploaded_ep_uuid)

@@ -73,12 +73,20 @@ class AhvVmProvider(Provider):
 
         project = res.json()
         subnets_list = []
+        cluster_list = []
+        vpc_list = []
         for subnet in project["status"]["resources"]["subnet_reference_list"]:
             subnets_list.append(subnet["uuid"])
 
         # Extending external subnet's list from remote account
         for subnet in project["status"]["resources"].get("external_network_list"):
             subnets_list.append(subnet["uuid"])
+
+        for cluster in project["status"]["resources"].get("cluster_reference_list", []):
+            cluster_list.append(cluster["uuid"])
+
+        for vpc in project["status"]["resources"].get("vpc_reference_list", []):
+            vpc_list.append(vpc["uuid"])
 
         accounts = project["status"]["resources"]["account_reference_list"]
 
@@ -115,11 +123,12 @@ class AhvVmProvider(Provider):
         # Getting the readiness probe details
         runtime_readiness_probe = sub_editable_spec["value"].get("readiness_probe", {})
         runtime_spec = sub_editable_spec["value"].get("spec", {})
-
+        runtime_cluster_spec = runtime_spec.get("cluster_reference", {})
         if (
             runtime_spec.get("resources")
             or runtime_spec.get("categories")
             or runtime_readiness_probe
+            or runtime_cluster_spec
         ):
             click.secho(
                 "\n-- Substrate {} --\n".format(
@@ -144,6 +153,49 @@ class AhvVmProvider(Provider):
         sub_create_spec = substrate_spec["create_spec"]
         downloadable_images = list(vm_img_map.keys())
         vm_os = substrate_spec["os_type"]
+
+        # Cluster
+        runtime_cluster = {}
+        if runtime_cluster_spec:
+            filter_query = "(_entity_id_=={})".format(
+                ",_entity_id_==".join(cluster_list)
+            )
+            clusters = Obj.clusters(
+                account_uuid=account_uuid, filter_query=filter_query
+            )
+            clusters = clusters["entities"]
+            click.echo("Choose from below clusters:")
+            i = 1
+            cfg_cluster_idx = 1
+            LOG.debug("Clusters: {}".format(clusters))
+            for cluster in clusters:
+                click.echo(
+                    "{}. {}, UUID:{}".format(
+                        i,
+                        cluster.get("spec", {}).get("name"),
+                        cluster.get("metadata", {}).get("uuid"),
+                    )
+                )
+                if cluster.get("metadata", {}).get("uuid") == runtime_cluster_spec.get(
+                    "uuid"
+                ):
+                    cluster_name = cluster.get("spec", {}).get("name")
+                    cfg_cluster_idx = i
+                i += 1
+
+            cluster_idx = click.prompt(
+                "Enter index for cluster[{}]".format(highlight_text(cluster_name)),
+                type=click.IntRange(1, len(cluster_list) + 1),
+                default=cfg_cluster_idx,
+            )
+            if cluster_idx != cfg_cluster_idx:
+                runtime_cluster_spec["uuid"] = (
+                    clusters[cluster_idx - 1].get("metadata", {}).get("uuid")
+                )
+                runtime_cluster_spec["name"] = (
+                    clusters[cluster_idx - 1].get("spec", {}).get("name")
+                )
+                runtime_cluster = runtime_cluster_spec
 
         # NAME
         vm_name = runtime_spec.get("name", None)
@@ -279,19 +331,49 @@ class AhvVmProvider(Provider):
             nics = Obj.subnets(account_uuid=account_uuid, filter_query=filter_query)
             nics = nics["entities"]
 
+            vpcs = []
+            if vpc_list:
+                vpc_filter_query = "(_entity_id_=={})".format(
+                    ",_entity_id_==".join(vpc_list)
+                )
+
+                vpcs = Obj.vpcs(
+                    account_uuid=account_uuid, filter_query=vpc_filter_query
+                )
+                vpcs = vpcs["entities"]
+
+            vpc_id_name_map = {}
+            for vpc in vpcs:
+                LOG.debug("VPC information:{}".format(vpc))
+                vpc_id = vpc.get("metadata", {}).get("uuid")
+                vpc_name = vpc.get("spec", {}).get("name")
+                if not vpc_id_name_map.get(vpc_id, None):
+                    vpc_id_name_map[vpc_id] = vpc_name
+
             nic_cluster_data = {}
             subnet_id_name_map = {}
+
             for nic in nics:
                 nic_name = nic["status"]["name"]
-                cluster_name = nic["status"]["cluster_reference"]["name"]
+                cluster_name = nic["status"].get("cluster_reference", {}).get("name")
+                vpc_uuid = (
+                    nic["status"]
+                    .get("resources", {})
+                    .get("vpc_reference", {})
+                    .get("uuid")
+                )
                 nic_uuid = nic["metadata"]["uuid"]
                 subnet_id_name_map[nic_uuid] = nic_name
 
                 if nic_cluster_data.get(nic_name):
-                    nic_cluster_data[nic_name].append((cluster_name, nic_uuid))
+                    nic_cluster_data[nic_name].append(
+                        (cluster_name, nic_uuid, vpc_uuid)
+                    )
                 else:
-                    nic_cluster_data[nic_name] = [(cluster_name, nic_uuid)]
+                    nic_cluster_data[nic_name] = [(cluster_name, nic_uuid, vpc_uuid)]
 
+            selected_cluster_name = ""
+            selected_vpc_uuid = ""
             for nic_index, nic_data in nic_list.items():
                 click.echo("\n--Nic {} -- ".format(nic_index))
                 nic_uuid = (nic_data.get("subnet_reference") or {}).get("uuid")
@@ -300,7 +382,55 @@ class AhvVmProvider(Provider):
 
                 click.echo("Choose from given subnets:")
                 for ind, name in enumerate(nic_cluster_data.keys()):
-                    click.echo("\t {}. {}".format(str(ind + 1), name))
+                    if len(nic_cluster_data[name]) == 1:
+                        vpc_uuid = nic_cluster_data[name][0][2]
+                        cluster_name = nic_cluster_data[name][0][0]
+                        if cluster_name:
+                            if (
+                                runtime_cluster
+                                and runtime_cluster.get("name")
+                                and runtime_cluster.get("name") != cluster_name
+                            ):
+                                # Skip this subnet as cluster is already selected. So choosing this VLAN subnet will lead to validation errors
+                                LOG.debug(
+                                    "Skipping this subnet as cluster is already pre-decided:{}".format(
+                                        cluster_name
+                                    )
+                                )
+                                continue
+                            if (
+                                selected_cluster_name
+                                and selected_cluster_name != cluster_name
+                            ):
+                                # Skip this subnet as cluster is already selected. So choosing this VLAN subnet will lead to validation errors
+                                LOG.debug(
+                                    "Skipping this subnet as cluster is already pre-decided:{}".format(
+                                        cluster_name
+                                    )
+                                )
+                                continue
+
+                            click.echo(
+                                "\t {}. {}, Cluster: {}".format(
+                                    str(ind + 1), name, cluster_name
+                                )
+                            )
+                        else:
+                            if selected_vpc_uuid and selected_vpc_uuid != vpc_uuid:
+                                # Skip this subnet as VPC is already selected. So choosing this Overlay subnet will lead to validation errors
+                                LOG.debug(
+                                    "Skipping this VPC option because VPC is pre-decided: {}".format(
+                                        vpc_uuid
+                                    )
+                                )
+                                continue
+                            click.echo(
+                                "\t {}. {}, VPC: {}".format(
+                                    str(ind + 1), name, vpc_id_name_map.get(vpc_uuid)
+                                )
+                            )
+                    else:
+                        click.echo("\t {}. {} (expand)".format(str(ind + 1), name))
 
                 nic_name = subnet_id_name_map.get(nic_uuid, "")
 
@@ -324,7 +454,7 @@ class AhvVmProvider(Provider):
 
                 else:
                     if not nic_cluster_data.get(new_val):
-                        LOG.erro("Invalid nic name")
+                        LOG.error("Invalid nic name")
                         sys.exit(-1)
 
                     nc_list = nic_cluster_data[new_val]
@@ -332,25 +462,88 @@ class AhvVmProvider(Provider):
                         nic_data["subnet_reference"].update(
                             {"name": new_val, "uuid": nc_list[0][1]}
                         )
+                        vpc_uuid = nc_list[0][2] if nc_list[0][2] else None
+                        if vpc_uuid:
+                            # This is an Overlay Subnet, in case of Overlay subnets if subnet is runtime then vpc is also runtime.
+                            vpc_name = vpc_id_name_map.get(vpc_uuid, "")
+                            nic_data["vpc_reference"] = {
+                                "name": vpc_name,
+                                "uuid": vpc_uuid,
+                                "kind": "vpc",
+                            }
 
                     else:
                         # Getting the cluster for supplied nic
                         click.echo(
-                            "Multiple nic with same name exists. Select from given clusters:"
+                            "Multiple subnet with same name exists. Select from given clusters/VPCs:"
                         )
                         for nc_ind, cluster_data in enumerate(nc_list):
-                            click.echo(
-                                "\t {}. {}".format(str(nc_ind + 1), cluster_data[0])
-                            )
+                            cluster_name = cluster_data[0]
+                            vpc_uuid = cluster_data[2]
+                            if cluster_name:
+                                click.echo(
+                                    "\t {}. {}".format(str(nc_ind + 1), cluster_name)
+                                )
+                            elif vpc_uuid:
+                                click.echo(
+                                    "\t {}. {}".format(
+                                        str(nc_ind + 1),
+                                        vpc_id_name_map.get(vpc_uuid, ""),
+                                    )
+                                )
 
                         ind = click.prompt(
-                            "Enter index for cluster",
+                            "Enter index for cluster/VPC",
                             type=click.IntRange(1, len(nc_list)),
                             default=1,
                         )
                         nic_data["subnet_reference"].update(
                             {"name": new_val, "uuid": nc_list[ind - 1][1]}
                         )
+
+                        new_selected_cluster_name = nic_list[ind - 1][0]
+                        new_selected_vpc_uuid = nic_list[ind - 1][2]
+
+                        if (
+                            selected_cluster_name
+                            and new_selected_cluster_name
+                            and selected_cluster_name != new_selected_cluster_name
+                        ):
+                            LOG.error(
+                                "Change of cluster not supported in multiple NICs, previous: {}, now: {}".format(
+                                    selected_cluster_name, new_selected_cluster_name
+                                )
+                            )
+                            sys.exit(-1)
+                        elif (
+                            selected_vpc_uuid
+                            and new_selected_vpc_uuid
+                            and selected_vpc_uuid != new_selected_vpc_uuid
+                        ):
+                            LOG.error(
+                                "Change of VPC not supported in multiple NICs, previous: {}, now: {}".format(
+                                    vpc_id_name_map.get(selected_vpc_uuid),
+                                    vpc_id_name_map.get(new_selected_vpc_uuid),
+                                )
+                            )
+                            sys.exit(-1)
+                        elif (
+                            selected_vpc_uuid
+                            and new_selected_cluster_name
+                            or selected_cluster_name
+                            and new_selected_vpc_uuid
+                        ):
+                            LOG.error(
+                                "Change of subnet type from OVERLAY to VLAN and vice versa is not supported"
+                            )
+                            sys.exit(-1)
+
+                        if vpc_uuid:
+                            nic_data["vpc_reference"] = {
+                                "name": vpc_id_name_map.get(vpc_uuid),
+                                "uuid": vpc_uuid,
+                                "kind": "vpc",
+                            }
 
         # DISKS
         disk_list = resources.get("disk_list", {})
@@ -790,6 +983,8 @@ class AhvNew(AhvBase):
     __api_version__ = "2.9.0"
     SUBNETS = "nutanix/v1/subnets"
     IMAGES = "nutanix/v1/images"
+    CLUSTERS = "nutanix/v1/clusters"
+    VPCS = "nutanix/v1/vpcs"
     GROUPS = "nutanix/v1/groups"
     CATEGORIES_PAYLOAD = {
         "entity_type": "category",
@@ -883,6 +1078,54 @@ class AhvNew(AhvBase):
                 categories.append({"key": key, "value": value})
 
         return categories
+
+    def clusters(self, *args, **kwargs):
+        Obj = get_resource_api(self.CLUSTERS, self.connection)
+        limit = kwargs.get("length", 250)
+        offset = kwargs.get("offset", 0)
+        filter_query = kwargs.get("filter_query", "")
+
+        account_uuid = kwargs.get("account_uuid", None)
+        if account_uuid:
+            filter_query = filter_query + ";account_uuid=={}".format(account_uuid)
+
+        if filter_query.startswith(";"):
+            filter_query = filter_query[1:]
+
+        params = {"length": limit, "offset": offset, "filter": filter_query}
+        res, err = Obj.list(params, ignore_error=True)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        return res
+
+    def vpcs(self, *args, **kwargs):
+        Obj = get_resource_api(self.VPCS, self.connection)
+        limit = kwargs.get("length", 500)
+        offset = kwargs.get("offset", 0)
+        ignore_failures = kwargs.get("ignore_failures", False)
+
+        filter_query = kwargs.get("filter_query", "")
+
+        account_uuid = kwargs.get("account_uuid", None)
+        if account_uuid:
+            filter_query = filter_query + ";account_uuid=={}".format(account_uuid)
+
+        if filter_query.startswith(";"):
+            filter_query = filter_query[1:]
+
+        params = {"length": limit, "offset": offset, "filter": filter_query}
+        LOG.debug(params)
+        res, err = Obj.list(params, ignore_error=True)
+        if err:
+            if ignore_failures:
+                LOG.warning("Failed to query VPCs due to: {}, ignoring".format(err))
+                return None
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        return res
 
 
 class Ahv(AhvBase):

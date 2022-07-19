@@ -44,8 +44,8 @@
 {% import "jobs.yaml.jinja2" as scheduler_job %}
 {% import "jobexecutable.yaml.jinja2" as job_executable %}
 {% import "jobscheduleinfo.yaml.jinja2" as job_schedule %}
-
-
+{% import "network_group_tunnel.yaml.jinja2" as network_group_tunnel %}
+{% import "network_group_tunnel_payload.yaml.jinja2" as network_group_tunnel_payload %}
 {% macro Schemas() -%}
 
 {{ config_attrs.AhvDiskRulesetSchema() }}
@@ -97,7 +97,10 @@
 {{ job_executable.JobExecutableSchema() }}
 {{ job_schedule.JobScheduleInfoSchema() }}
 {{ scheduler_job.SchedulerJobSchema() }}
-
+{{ network_group_tunnel.NetworkGroupTunnelVMSpecSchema() }}
+{{ network_group_tunnel.NetworkGroupTunnelSchema() }}
+{{ network_group_tunnel_payload.NetworkGroupTunnelPayloadSchema() }}
+{{ network_group_tunnel_payload.NetworkGroupTunnelVMPayloadSchema() }}
 {%- endmacro %}
 
 

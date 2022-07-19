@@ -26,6 +26,18 @@ properties:
         type: string
       type:
         type: string
+  vpc_reference:
+    type: [object, "null"]
+    properties:
+      uuid:
+        type: string
+      kind:
+        type: string
+        default: vpc
+      name:
+        type: string
+      type:
+        type: string
   network_function_chain_reference:
     type: [object, "null"]
     properties:

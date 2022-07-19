@@ -1,0 +1,82 @@
+{% macro NetworkGroupTunnelPayload() -%}
+title: NetworkGroupTunnelPayload
+type: object
+x-calm-dsl-type: app_network_group_tunnel_payload
+properties:
+  spec:
+    type: object
+    x-calm-dsl-type: dict
+    properties:
+      name:
+        type: string
+        description: Network Group name
+      description:
+        type: string
+        description: Network Group description
+      resources:
+        type: object
+        properties:
+          $ref: '#/components/schemas/NetworkGroupTunnel'
+
+  api_version:
+    type: string
+    default: "3.0"
+
+  metadata:
+    type: object
+    x-calm-dsl-type: dict
+    additionalProperties: true
+    properties:
+      spec_version:
+        type: integer
+        default: 1
+      kind:
+        type: string
+        default: network_group_tunnel
+
+{%- endmacro %}
+
+
+{% macro NetworkGroupTunnelPayloadSchema() -%}
+
+NetworkGroupTunnelPayload:
+  {{ NetworkGroupTunnelPayload()|indent(2) }}
+
+{%- endmacro %}
+
+{% macro NetworkGroupTunnelVMPayload() -%}
+title: NetworkGroupTunnelVMPayload
+type: object
+x-calm-dsl-type: app_network_group_tunnel_vm_payload
+properties:
+  spec:
+    type: object
+    x-calm-dsl-type: dict
+    properties:
+      resources:
+        type: object
+        properties:
+          $ref: '#/components/schemas/NetworkGroupTunnelVMSpec'
+
+  api_version:
+    type: string
+    default: "3.0"
+
+  metadata:
+    type: object
+    x-calm-dsl-type: dict
+    additionalProperties: true
+    properties:
+      spec_version:
+        type: integer
+        default: 1
+      kind:
+        type: string
+        default: network_group_tunnel_vm
+{%- endmacro %}
+
+
+{% macro NetworkGroupTunnelVMPayloadSchema() -%}
+NetworkGroupTunnelVMPayload:
+  {{ NetworkGroupTunnelVMPayload() | indent(2) }}
+{%- endmacro %}
