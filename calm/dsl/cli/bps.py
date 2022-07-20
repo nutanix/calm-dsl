@@ -11,6 +11,7 @@ from ruamel import yaml
 import arrow
 import click
 from prettytable import PrettyTable
+from copy import deepcopy
 from black import format_file_in_place, WriteBack, FileMode
 
 from calm.dsl.builtins import (
@@ -1006,10 +1007,10 @@ def get_protection_policy_rule(
     if not snapshot_config:
         LOG.err(
             "No snapshot config with uuid {} found in App Profile {}".format(
-                snapshot_config_id, app_profile["name"]
+                snapshot_config_uuid, app_profile["name"]
             )
         )
-        sys.exit("Snapshot config {} not found".format(snapshot_config_id))
+        sys.exit("Snapshot config {} not found".format(snapshot_config_uuid))
     is_local_snapshot = (
         snapshot_config["attrs_list"][0]["snapshot_location_type"].lower() == "local"
     )
@@ -1095,8 +1096,8 @@ def get_protection_policy_rule(
     ]
     if not cluster_uuid:
         LOG.error(
-            "Cannot find the cluster associated with the subnet {} with uuid {}".format(
-                target_subnet_reference["name"], target_subnet_uuid
+            "Cannot find the cluster associated with the subnet having uuid {}".format(
+                target_subnet_uuid
             )
         )
         sys.exit("Cluster not found")
@@ -1547,7 +1548,22 @@ def launch_blueprint_simple(
                         None,
                     )
                     if _config:
-                        snapshot_config["value"] = _config["value"]
+                        snapshot_config_obj = next(
+                            (
+                                config
+                                for config in app_profile["snapshot_config_list"]
+                                if config["uuid"] == snapshot_config["uuid"]
+                            ),
+                            None,
+                        )
+                        snapshot_config["value"] = deepcopy(_config["value"])
+                        restore_config_id = snapshot_config_obj[
+                            "config_reference_list"
+                        ][0]["uuid"]
+                        restore_config = restore_config_map[restore_config_id]
+                        restore_config["value"] = deepcopy(_config["value"])
+                        continue
+
                 res, err = client.blueprint.protection_policies(
                     blueprint_uuid,
                     app_profile["uuid"],
@@ -1590,14 +1606,6 @@ def launch_blueprint_simple(
                     filter_query=filter_query,
                     account_uuid=ntnx_acc["account_reference"]["uuid"],
                 )
-                subnet_cluster_map = {
-                    subnet["metadata"]["uuid"]: {
-                        "cluster_name": subnet["status"]["cluster_reference"]["name"],
-                        "cluster_uuid": subnet["status"]["cluster_reference"]["uuid"],
-                        "subnet_name": subnet["status"]["name"],
-                    }
-                    for subnet in subnets["entities"]
-                }
                 subnet_cluster_map = [
                     {
                         "cluster_name": subnet["status"]["cluster_reference"]["name"],
