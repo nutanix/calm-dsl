@@ -26,7 +26,7 @@ CALM_VERSION = Version.get_version("Calm")
 
 # TODO add another check to check if there is any vpc present on the PC
 @pytest.mark.skipif(
-    LV(CALM_VERSION) < LV("3.5.0") or not DSL_CONFIG["IS_VPC_ENABLED"],
+    LV(CALM_VERSION) < LV("3.5.0") or not DSL_CONFIG.get("IS_VPC_ENABLED", False),
     reason="Overlay Subnets can be used in Calm v3.5.0+ blueprints or VPC is disabled on the setup",
 )
 class TestOverlaySubnetBlueprint:

@@ -406,7 +406,7 @@ class TestProjectCommands:
         self._test_project_delete()
 
     @pytest.mark.skipif(
-        LV(CALM_VERSION) < LV("3.5.0") or not DSL_CONFIG["IS_VPC_ENABLED"],
+        LV(CALM_VERSION) < LV("3.5.0") or not DSL_CONFIG.get("IS_VPC_ENABLED", False),
         reason="Overlay Subnets can be used in Calm v3.5.0+ blueprints or VPC is disabled on the setup",
     )
     def test_project_with_vpc_and_overlay_subnets(self):
@@ -444,7 +444,7 @@ class TestProjectCommands:
         self._test_project_delete()
 
     @pytest.mark.skipif(
-        LV(CALM_VERSION) < LV("3.5.0") or not DSL_CONFIG["IS_VPC_ENABLED"],
+        LV(CALM_VERSION) < LV("3.5.0") or not DSL_CONFIG.get("IS_VPC_ENABLED", False),
         reason="Overlay Subnets can be used in Calm v3.5.0+ blueprints or VPC is disabled on the setup",
     )
     def test_compile_project_with_vpc_and_overlay_subnets(self):

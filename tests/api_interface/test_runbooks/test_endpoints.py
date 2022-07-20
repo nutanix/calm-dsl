@@ -56,21 +56,24 @@ class TestEndpoints:
             pytest.param(
                 HTTPEndpointWithTunnelPayload,
                 marks=pytest.mark.skipif(
-                    LV(CALM_VERSION) < LV("3.5.0") or not DSL_CONFIG["IS_VPC_ENABLED"],
+                    LV(CALM_VERSION) < LV("3.5.0")
+                    or not DSL_CONFIG.get("IS_VPC_ENABLED", False),
                     reason="VPC Tunnels can be used in Calm v3.5.0+ or VPC is disabled on the setup",
                 ),
             ),
             pytest.param(
                 LinuxEndpointWithTunnelPayload,
                 marks=pytest.mark.skipif(
-                    LV(CALM_VERSION) < LV("3.5.0") or not DSL_CONFIG["IS_VPC_ENABLED"],
+                    LV(CALM_VERSION) < LV("3.5.0")
+                    or not DSL_CONFIG.get("IS_VPC_ENABLED", False),
                     reason="VPC Tunnels can be used in Calm v3.5.0+ or VPC is disabled on the setup",
                 ),
             ),
             pytest.param(
                 WindowsEndpointWithTunnelPayload,
                 marks=pytest.mark.skipif(
-                    LV(CALM_VERSION) < LV("3.5.0") or not DSL_CONFIG["IS_VPC_ENABLED"],
+                    LV(CALM_VERSION) < LV("3.5.0")
+                    or not DSL_CONFIG.get("IS_VPC_ENABLED", False),
                     reason="VPC Tunnels can be used in Calm v3.5.0+ or VPC is disabled on the setup",
                 ),
             ),
