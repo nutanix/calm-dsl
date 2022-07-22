@@ -1109,6 +1109,8 @@ class ProjectCache(CacheTableBase):
         ntnx_pc_account_subnet_map = dict()
         ntnx_pc_account_vpc_map = dict()
         ntnx_pc_account_cluster_map = dict()
+        ntnx_pc_subnet_cluster_map = dict()
+        ntnx_pc_subnet_vpc_map = dict()
         for _acct_uuid in account_uuid_type_map.keys():
             if account_uuid_type_map[_acct_uuid] == "nutanix_pc":
                 ntnx_pc_account_subnet_map[_acct_uuid] = list()
@@ -1135,7 +1137,16 @@ class ProjectCache(CacheTableBase):
                 continue
 
             for row in res.get("entities", []):
-                ntnx_pc_account_subnet_map[acct_uuid].append(row["metadata"]["uuid"])
+                _sub_uuid = row["metadata"]["uuid"]
+                ntnx_pc_account_subnet_map[acct_uuid].append(_sub_uuid)
+                if row["status"]["resources"]["subnet_type"] == "VLAN":
+                    ntnx_pc_subnet_cluster_map[_sub_uuid] = row["status"][
+                        "cluster_reference"
+                    ]["uuid"]
+                elif row["status"]["resources"]["subnet_type"] == "OVERLAY":
+                    ntnx_pc_subnet_vpc_map[_sub_uuid] = row["status"]["resources"][
+                        "vpc_reference"
+                    ]["uuid"]
 
             LOG.debug(
                 "Fetching clusters for nutanix_pc account_uuid {}".format(acct_uuid)
@@ -1221,6 +1232,19 @@ class ProjectCache(CacheTableBase):
                         set(project_subnet_uuids)
                         & set(ntnx_pc_account_subnet_map[account_uuid])
                     )
+
+                    for _subnet_uuid in whitelisted_subnets[account_uuid]:
+                        _subnet_cluster_uuid = ntnx_pc_subnet_cluster_map.get(
+                            _subnet_uuid
+                        )
+                        if (
+                            _subnet_cluster_uuid
+                            and _subnet_cluster_uuid not in cluster_uuids
+                        ):
+                            cluster_uuids.append(_subnet_cluster_uuid)
+                        _subnet_vpc_uuid = ntnx_pc_subnet_vpc_map.get(_subnet_uuid)
+                        if _subnet_vpc_uuid and _subnet_vpc_uuid not in vpc_uuids:
+                            vpc_uuids.append(_subnet_vpc_uuid)
 
                     whitelisted_vpcs[account_uuid] = list(
                         set(vpc_uuids) & set(ntnx_pc_account_vpc_map[account_uuid])
@@ -1336,12 +1360,7 @@ class ProjectCache(CacheTableBase):
                 AhvVmProvider = cls.get_provider_plugin("AHV_VM")
                 AhvObj = AhvVmProvider.get_api_obj()
 
-                if project_subnet_uuids:
-                    filter_query = "_entity_id_=={}".format(
-                        "|".join(project_subnet_uuids)
-                    )
-                else:
-                    filter_query = ""
+                filter_query = "_entity_id_=={}".format("|".join(project_subnet_uuids))
                 LOG.debug(
                     "fetching following subnets {} for nutanix_pc account_uuid {}".format(
                         project_subnet_uuids, account_uuid
@@ -1362,6 +1381,24 @@ class ProjectCache(CacheTableBase):
                 whitelisted_subnets[account_uuid] = [
                     row["metadata"]["uuid"] for row in res["entities"]
                 ]
+                for row in res.get("entities", []):
+                    _cluster_uuid = (row["status"].get("cluster_reference") or {}).get(
+                        "uuid", ""
+                    )
+                    _vpc_uuid = (
+                        row["status"]["resources"].get("vpc_reference") or {}
+                    ).get("uuid", "")
+                    whitelisted_subnets[account_uuid].append(row["metadata"]["uuid"])
+                    if (
+                        row["status"]["resources"]["subnet_type"] == "VLAN"
+                        and _cluster_uuid not in project_cluster_uuids
+                    ):
+                        project_cluster_uuids.append(_cluster_uuid)
+                    elif (
+                        row["status"]["resources"]["subnet_type"] == "OVERLAY"
+                        and _vpc_uuid not in project_vpc_uuids
+                    ):
+                        project_vpc_uuids.append(_vpc_uuid)
 
                 # fetch clusters
                 if project_cluster_uuids:
@@ -1535,14 +1572,59 @@ class EnvironmentCache(CacheTableBase):
             account_map = {}
             for infra in infra_inclusion_list:
                 account_type = infra["type"]
+                account_uuid = infra["account_reference"]["uuid"]
                 account_data = dict(
-                    uuid=infra["account_reference"]["uuid"],
+                    uuid=account_uuid,
                     name=infra["account_reference"]["name"],
                 )
 
                 if account_type == "nutanix_pc":
+                    AhvVmProvider = cls.get_provider_plugin("AHV_VM")
+                    AhvObj = AhvVmProvider.get_api_obj()
                     subnet_refs = infra.get("subnet_references", [])
                     account_data["subnet_uuids"] = [row["uuid"] for row in subnet_refs]
+                    cluster_refs = infra.get("cluster_references", [])
+                    account_data["cluster_uuids"] = [
+                        row["uuid"] for row in cluster_refs
+                    ]
+                    vpc_refs = infra.get("vpc_references", [])
+                    account_data["vpc_uuids"] = [row["uuid"] for row in vpc_refs]
+
+                    # It may happen, that cluster reference is not present in migrated environment
+                    res = {}
+                    filter_query = "_entity_id_=={}".format(
+                        "|".join(account_data["subnet_uuids"])
+                    )
+                    try:
+                        res = AhvObj.subnets(
+                            account_uuid=account_uuid, filter_query=filter_query
+                        )
+                    except Exception as exp:
+                        LOG.exception(exp)
+                        LOG.warning(
+                            "Unable to fetch subnets for Nutanix_PC Account(uuid={})".format(
+                                account_uuid
+                            )
+                        )
+                        continue
+                    for row in res.get("entities", []):
+                        _subnet_type = row["status"]["resources"]["subnet_type"]
+                        if (
+                            _subnet_type == "VLAN"
+                            and row["status"]["cluster_reference"]["uuid"]
+                            not in account_data["cluster_uuids"]
+                        ):
+                            account_data["cluster_uuids"].append(
+                                row["status"]["cluster_reference"]["uuid"]
+                            )
+                        elif (
+                            _subnet_type == "OVERLAY"
+                            and row["status"]["resources"]["vpc_reference"]["uuid"]
+                            not in account_data["vpc_uuids"]
+                        ):
+                            account_data["vpc_uuids"].append(
+                                row["status"]["resources"]["vpc_reference"]["uuid"]
+                            )
 
                 if not account_map.get(account_type):
                     account_map[account_type] = []
@@ -1608,14 +1690,57 @@ class EnvironmentCache(CacheTableBase):
         account_map = {}
         for infra in infra_inclusion_list:
             _account_type = infra["type"]
+            _account_uuid = infra["account_reference"]["uuid"]
             _account_data = dict(
                 uuid=infra["account_reference"]["uuid"],
                 name=infra["account_reference"].get("name", ""),
             )
 
             if _account_type == "nutanix_pc":
+                AhvVmProvider = cls.get_provider_plugin("AHV_VM")
+                AhvObj = AhvVmProvider.get_api_obj()
                 subnet_refs = infra.get("subnet_references", [])
                 _account_data["subnet_uuids"] = [row["uuid"] for row in subnet_refs]
+                cluster_refs = infra.get("cluster_references", [])
+                _account_data["cluster_uuids"] = [row["uuid"] for row in cluster_refs]
+                vpc_refs = infra.get("vpc_references", [])
+                _account_data["vpc_uuids"] = [row["uuid"] for row in vpc_refs]
+
+                # It may happen, that cluster reference is not present in migrated environment
+                res = {}
+                filter_query = "_entity_id_=={}".format(
+                    "|".join(_account_data["subnet_uuids"])
+                )
+                try:
+                    res = AhvObj.subnets(
+                        account_uuid=_account_uuid, filter_query=filter_query
+                    )
+                except Exception as exp:
+                    LOG.exception(exp)
+                    LOG.warning(
+                        "Unable to fetch subnets for Nutanix_PC Account(uuid={})".format(
+                            _account_uuid
+                        )
+                    )
+                    continue
+                for row in res.get("entities", []):
+                    _subnet_type = row["status"]["resources"]["subnet_type"]
+                    if (
+                        _subnet_type == "VLAN"
+                        and row["status"]["cluster_reference"]["uuid"]
+                        not in _account_data["cluster_uuids"]
+                    ):
+                        _account_data["cluster_uuids"].append(
+                            row["status"]["cluster_reference"]["uuid"]
+                        )
+                    elif (
+                        _subnet_type == "OVERLAY"
+                        and row["status"]["resources"]["vpc_reference"]["uuid"]
+                        not in _account_data["vpc_uuids"]
+                    ):
+                        _account_data["vpc_uuids"].append(
+                            row["status"]["resources"]["vpc_reference"]["uuid"]
+                        )
 
             if not account_map.get(_account_type):
                 account_map[_account_type] = []

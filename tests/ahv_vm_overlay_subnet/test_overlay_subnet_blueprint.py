@@ -2,7 +2,7 @@ import json
 import os
 
 from calm.dsl.builtins import Service, Package, Substrate
-from calm.dsl.builtins import Deployment, Profile, Blueprint
+from calm.dsl.builtins import Deployment, Profile, Blueprint, Metadata
 from calm.dsl.builtins import CalmVariable as Variable
 from calm.dsl.builtins import CalmTask as Task
 from calm.dsl.builtins import action, parallel, ref, basic_cred
@@ -11,6 +11,9 @@ from calm.dsl.builtins import vm_disk_package, AhvVmDisk, AhvVmNic
 from calm.dsl.builtins import AhvVmGC, AhvVmResources, AhvVm, Ref
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+VPC_PROJECT = (
+    DSL_CONFIG.get("VPC_PROJECTS", {}).get("PROJECT1", {}).get("NAME", "default")
+)
 
 
 def get_local_az_overlay_details_from_dsl_config(config):
@@ -161,3 +164,7 @@ class DSLDemo(Blueprint):
     packages = [HelloPackage, CentosPackage]
     substrates = [HelloSubstrate]
     profiles = [HelloProfile]
+
+
+class BpMetadata(Metadata):
+    project = Ref.Project(VPC_PROJECT)

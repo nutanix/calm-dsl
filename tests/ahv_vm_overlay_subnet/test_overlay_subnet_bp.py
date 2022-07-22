@@ -6,6 +6,8 @@ import traceback
 from click.testing import CliRunner
 from distutils.version import LooseVersion as LV
 from calm.dsl.builtins.models.utils import read_local_file
+from calm.dsl.config import get_context
+from calm.dsl.builtins.models.metadata_payload import reset_metadata_obj
 
 from calm.dsl.store import Version
 from calm.dsl.cli import main as cli
@@ -33,10 +35,24 @@ class TestOverlaySubnetBlueprint:
     def setup_method(self):
         """Method to instantiate to created_bp_list"""
 
+        # Resetting context
+        ContextObj = get_context()
+        ContextObj.reset_configuration()
+
+        # Resetting metadata object
+        reset_metadata_obj()
+
         self.created_bp_list = []
 
     def teardown_method(self):
         """Method to delete creates bps and apps during tests"""
+
+        # Resetting context
+        ContextObj = get_context()
+        ContextObj.reset_configuration()
+
+        # Resetting metadata object
+        reset_metadata_obj()
 
         for bp_name in self.created_bp_list:
             LOG.info("Deleting Blueprint {}".format(bp_name))
@@ -120,5 +136,49 @@ class TestOverlaySubnetBlueprint:
             "resources"
         ]["account_uuid"] = sub_account_uuid
         known_json["resources"].pop("client_attrs", None)
+
+        known_json["resources"]["substrate_definition_list"][0]["create_spec"][
+            "cluster_reference"
+        ] = generated_json["resources"]["substrate_definition_list"][0]["create_spec"][
+            "cluster_reference"
+        ]
+        known_json["resources"]["substrate_definition_list"][0]["create_spec"][
+            "resources"
+        ]["nic_list"][0]["subnet_reference"]["uuid"] = generated_json["resources"][
+            "substrate_definition_list"
+        ][
+            0
+        ][
+            "create_spec"
+        ][
+            "resources"
+        ][
+            "nic_list"
+        ][
+            0
+        ][
+            "subnet_reference"
+        ][
+            "uuid"
+        ]
+        known_json["resources"]["substrate_definition_list"][0]["create_spec"][
+            "resources"
+        ]["nic_list"][0]["vpc_reference"]["uuid"] = generated_json["resources"][
+            "substrate_definition_list"
+        ][
+            0
+        ][
+            "create_spec"
+        ][
+            "resources"
+        ][
+            "nic_list"
+        ][
+            0
+        ][
+            "vpc_reference"
+        ][
+            "uuid"
+        ]
 
         assert sorted(known_json.items()) == sorted(generated_json.items())

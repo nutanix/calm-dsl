@@ -31,6 +31,10 @@ class AhvVpcType(EntityType):
         if not account_uuid:
             account_uuid = list(project_whitelist.keys())[0]
 
+        proj_whitelisted_vpc_uuids = (
+            project_whitelist.get(account_uuid, {}).get("vpc_uuids") or []
+        )
+
         vpc_name = cdict.get("name", "")
         vpc_data = Cache.get_entity_data(
             entity_type=CACHE.ENTITY.AHV_VPC,
@@ -50,18 +54,8 @@ class AhvVpcType(EntityType):
             )
             sys.exit(-1)
 
-        project_data = common_helper.get_project(project["name"])
-        LOG.debug("Cache data: {}".format(vpc_data))
-        LOG.debug("Project data: {}".format(project_data))
-        vpc_list = (
-            project_data.get("status", {})
-            .get("resources", {})
-            .get("vpc_reference_list", [])
-        )
-        for vpc in vpc_list:
-            if vpc_data["uuid"] == vpc["uuid"]:
-                break
-        else:
+        # Check if it is whitelisted in project
+        if vpc_data["uuid"] not in proj_whitelisted_vpc_uuids:
             LOG.debug(
                 "Ahv Vpc (name = '{}') in registered Nutanix PC account (uuid = '{}') "
                 "not whitelisted in project (name = '{}')".format(
@@ -71,6 +65,7 @@ class AhvVpcType(EntityType):
             LOG.error("AHV Vpc {} not found. Please update project.".format(vpc_name))
             sys.exit(-1)
 
+        #  TODO check for environment whitelisting if substrate is part of env, check ahv_vm_nic implementation
         cdict = {"name": vpc_name, "uuid": vpc_data["uuid"], "kind": "vpc"}
 
         return cdict

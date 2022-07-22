@@ -26,10 +26,13 @@ class AhvClusterType(EntityType):
         )
 
         LOG.debug("Cluster  CDict: {}".format(cdict))
-
         project, project_whitelist = common_helper.get_project_with_pc_account()
         if not account_uuid:
             account_uuid = list(project_whitelist.keys())[0]
+
+        proj_whitelisted_cluster_uuids = (
+            project_whitelist.get(account_uuid, {}).get("cluster_uuids") or []
+        )
 
         cluster_name = cdict.get("name", "")
         cluster_data = Cache.get_entity_data(
@@ -52,17 +55,8 @@ class AhvClusterType(EntityType):
             )
             sys.exit(-1)
 
-        project_data = common_helper.get_project(project["name"])
-        LOG.debug("Project data: {}".format(project_data))
-        cluster_list = (
-            project_data.get("status", {})
-            .get("resources", {})
-            .get("cluster_reference_list", [])
-        )
-        for cluster in cluster_list:
-            if cluster_data["uuid"] == cluster["uuid"]:
-                break
-        else:
+        # Check if it is whitelisted in project
+        if cluster_data["uuid"] not in proj_whitelisted_cluster_uuids:
             LOG.debug(
                 "Ahv Cluster (name = '{}') in registered Nutanix PC account (uuid = '{}') "
                 "not whitelisted in project (name = '{}')".format(
@@ -74,6 +68,7 @@ class AhvClusterType(EntityType):
             )
             sys.exit(-1)
 
+        # TODO check for environment whitelisting if substrate is part of env, check ahv_vm_nic implementation
         cdict = {"name": cluster_name, "uuid": cluster_data["uuid"]}
 
         return cdict

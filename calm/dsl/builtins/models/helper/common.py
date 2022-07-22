@@ -35,10 +35,17 @@ def get_project_with_pc_account():
         sys.exit(-1)
 
     accounts_data = {}
-    for acc in project_pc_accounts:
-        accounts_data[acc] = []
-    for acc, subnet_uuids in project_cache_data.get("whitelisted_subnets", {}).items():
-        accounts_data[acc] = subnet_uuids
+    for ntnx_acc_uuid in project_pc_accounts:
+        accounts_data[ntnx_acc_uuid] = {
+            "subnet_uuids": project_cache_data["whitelisted_subnets"].get(ntnx_acc_uuid)
+            or [],
+            "vpc_uuids": project_cache_data["whitelisted_vpcs"].get(ntnx_acc_uuid)
+            or [],
+            "cluster_uuids": project_cache_data["whitelisted_clusters"].get(
+                ntnx_acc_uuid
+            )
+            or [],
+        }
 
     return (
         dict(uuid=project_cache_data.get("uuid", ""), name=project_name),

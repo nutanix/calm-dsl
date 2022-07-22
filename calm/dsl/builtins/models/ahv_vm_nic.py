@@ -33,6 +33,10 @@ class AhvNicType(EntityType):
         if not account_uuid:
             account_uuid = list(project_whitelist.keys())[0]
 
+        project_whitelist_subnet_uuids = project_whitelist.get(account_uuid, {}).get(
+            "subnet_uuids", []
+        )
+
         subnet_ref = cdict.get("subnet_reference") or dict()
         subnet_name = subnet_ref.get("name", "") or ""
 
@@ -133,7 +137,7 @@ class AhvNicType(EntityType):
                         )
                         sys.exit(-1)
 
-                elif subnet_uuid not in project_whitelist.get(account_uuid, []):
+                elif subnet_uuid not in project_whitelist_subnet_uuids:
                     LOG.error(
                         "Subnet {} is not whitelisted in project {}".format(
                             subnet_name, project["name"]

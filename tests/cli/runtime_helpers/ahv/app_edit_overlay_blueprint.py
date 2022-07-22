@@ -19,6 +19,9 @@ CENTOS_CI = DSL_CONFIG["AHV"]["IMAGES"]["DISK"]["CENTOS_7_CLOUD_INIT"]
 SUBNET = DSL_CONFIG["ACCOUNTS"]["NUTANIX_PC"][0]["SUBNETS"][0]["NAME"]
 CLUSTER = DSL_CONFIG["ACCOUNTS"]["NUTANIX_PC"][0]["SUBNETS"][0]["CLUSTER"]
 NETWORK1 = DSL_CONFIG["AHV"]["NETWORK"]["VLAN1211"]
+VPC_PROJECT = (
+    DSL_CONFIG.get("VPC_PROJECTS", {}).get("PROJECT1", {}).get("NAME", "default")
+)
 
 
 def get_local_az_overlay_details_from_dsl_config(config):
@@ -184,3 +187,7 @@ class TestVPCRuntime(Blueprint):
     packages = [AhvPackage]
     substrates = [AhvSubstrate]
     profiles = [DefaultProfile]
+
+
+class BpMetadata(Metadata):
+    project = Ref.Project(VPC_PROJECT)
