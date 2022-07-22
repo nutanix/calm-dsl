@@ -458,24 +458,36 @@ class SubstrateType(EntityType):
                     ]
 
                     _cs = cdict["create_spec"]
+
                     if isinstance(_cs, AhvVmType):
                         # NOTE: We cann't get subnet_uuid here, as it involved parent reference
                         subnet_name = ""
-                        cluster_name = ""
+                        cluster_name = _cs.cluster or ""
                         _nics = _cs.resources.nics
-                        for _nic in _nics:
-                            _nic_dict = _nic.subnet_reference.get_dict()
-                            if not common_helper.is_macro(_nic_dict["name"]):
-                                subnet_name = _nic_dict["name"]
-                                cluster_name = _nic_dict["cluster"]
-                                break
-
-                        if subnet_name:
-                            account_uuid = common_helper.get_pe_account_uuid_using_pc_account_uuid_and_nic_data(
+                        if cluster_name:
+                            account_uuid = common_helper.get_pe_account_using_pc_account_uuid_and_cluster_name(
                                 pc_account_uuid=substrate_account_uuid,
-                                subnet_name=subnet_name,
                                 cluster_name=cluster_name,
                             )
+                        else:
+                            for _nic in _nics:
+                                _nic_dict = _nic.subnet_reference.get_dict()
+                                if _nic_dict["cluster"] and not common_helper.is_macro(
+                                    _nic_dict["name"]
+                                ):
+                                    subnet_name = _nic_dict["name"]
+                                    cluster_name = _nic_dict["cluster"]
+                                    break
+
+                            # calm_version = Version.get_version("Calm")
+                            # if LV(calm_version) >= LV("3.5.0") and not cluster_name:
+                            #    raise Exception("Unable to infer cluster for vm")
+                            if subnet_name:
+                                account_uuid = common_helper.get_pe_account_uuid_using_pc_account_uuid_and_nic_data(
+                                    pc_account_uuid=substrate_account_uuid,
+                                    subnet_name=subnet_name,
+                                    cluster_name=cluster_name,
+                                )
 
                         # Assigning the pe account uuid to ahv vm resources
                         _cs.resources.account_uuid = account_uuid
@@ -483,6 +495,7 @@ class SubstrateType(EntityType):
                     else:
                         subnet_uuid = ""
                         _nics = _cs.get("resources", {}).get("nic_list", [])
+
                         for _nic in _nics:
                             _nu = _nic["subnet_reference"].get("uuid", "")
                             if _nu and not common_helper.is_macro(_nu):

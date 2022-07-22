@@ -43,7 +43,12 @@ class EndpointAPI(ResourceAPI):
         return endpoint_payload
 
     def upload_with_secrets(
-        self, endpoint_name, endpoint_desc, endpoint_resources, force_create=False
+        self,
+        endpoint_name,
+        endpoint_desc,
+        endpoint_resources,
+        force_create=False,
+        project_reference={},
     ):
 
         # check if endpoint with the given name already exists
@@ -77,24 +82,29 @@ class EndpointAPI(ResourceAPI):
         upload_payload = self._make_endpoint_payload(
             endpoint_name, endpoint_desc, endpoint_resources
         )
+        project_name = ""
+        project_id = ""
+        if project_reference:
+            project_name = project_reference.get("name")
+            project_id = project_reference.get("uuid")
+        else:
+            ContextObj = get_context()
+            project_config = ContextObj.get_project_config()
+            project_name = project_config["name"]
+            projectObj = ProjectAPI(self.connection)
 
-        ContextObj = get_context()
-        project_config = ContextObj.get_project_config()
-        project_name = project_config["name"]
-        projectObj = ProjectAPI(self.connection)
+            # Fetch project details
+            params = {"filter": "name=={}".format(project_name)}
+            res, err = projectObj.list(params=params)
+            if err:
+                raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-        # Fetch project details
-        params = {"filter": "name=={}".format(project_name)}
-        res, err = projectObj.list(params=params)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+            response = res.json()
+            entities = response.get("entities", None)
+            if not entities:
+                raise Exception("No project with name {} exists".format(project_name))
 
-        response = res.json()
-        entities = response.get("entities", None)
-        if not entities:
-            raise Exception("No project with name {} exists".format(project_name))
-
-        project_id = entities[0]["metadata"]["uuid"]
+            project_id = entities[0]["metadata"]["uuid"]
 
         # Setting project reference
         upload_payload["metadata"]["project_reference"] = {

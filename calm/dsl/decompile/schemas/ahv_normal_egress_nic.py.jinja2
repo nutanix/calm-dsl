@@ -1,5 +1,5 @@
 {%- macro ahv_normal_egress_nic(obj) -%}
-AhvVmNic.NormalNic.egress("{{obj.subnet_name}}" {%- if obj.cluster_name %}, cluster="{{obj.cluster_name}}"{%- endif %})
+AhvVmNic.NormalNic.egress("{{obj.subnet_name}}" {%- if obj.cluster_name %}, cluster="{{obj.cluster_name}}"{%- elif obj.vpc_name %}, vpc="{{obj.vpc_name}}"{%- endif %})
 {% endmacro %}
 
 {{ ahv_normal_egress_nic(obj) }}

@@ -1,0 +1,1 @@
+echo 'Service delete in ENV=@@{ENV}@@'

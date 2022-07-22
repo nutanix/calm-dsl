@@ -1,0 +1,7 @@
+#cloud-config
+users:
+- name: centos
+  ssh-authorized-keys:
+  - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDOqtxbVdrDfhCRKlJdUwDnmUY96NIV6MLVcHlBrSYJbkaD3huooCWaDojyk2R4ZYL/ECbSYfIHlAMxp5yzKgT1m1wVK7J6ZLyszV/4LduKrfC7W60cdBf1nNDznmcRmfpDJl3Qp2PPc+qW8RTSJkrp02ToQKyOLFPC2e9Nv5Ik00UKZ45wzT8ow0nqbp4pZGxfFNII5dOVwkdTnG1pL0/yDYNLeNv9RrNObjLRHhouZDUnV6XqtiCPtue83c2OSmKkqS9vnNMCPyfofdD8nWzS7VFPiYwX6oIKSjsL651K4MMcq0O4ihMxZ3Elb0qx5mkBNGqsooufBYyKiwnek2pn
+  sudo:
+  - ALL=(ALL) NOPASSWD:ALL

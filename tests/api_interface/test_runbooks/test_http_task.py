@@ -1,5 +1,6 @@
 import pytest
 import uuid
+import json
 
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import RUNLOG
@@ -19,18 +20,39 @@ from tests.api_interface.test_runbooks.test_files.http_task import (
 )
 from utils import upload_runbook, poll_runlog_status
 
+from distutils.version import LooseVersion as LV
+from calm.dsl.store import Version
+from calm.dsl.builtins.models.utils import read_local_file
+
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+CALM_VERSION = Version.get_version("Calm")
+
 
 class TestHTTPTasks:
     @pytest.mark.runbook
     @pytest.mark.regression
-    def test_http_task(self):
+    @pytest.mark.parametrize(
+        "endpoint_file",
+        [
+            "http_endpoint_payload.json",
+            pytest.param(
+                "http_tunnel_endpoint.json",
+                marks=pytest.mark.skipif(
+                    LV(CALM_VERSION) < LV("3.5.0")
+                    or not DSL_CONFIG.get("IS_VPC_ENABLED", False),
+                    reason="VPC Tunnels can be used in Calm v3.5.0+ or VPC is disabled on the setup",
+                ),
+            ),
+        ],
+    )
+    def test_http_task(self, endpoint_file):
         """test_http_task, test_http_task_outputin_set_variable,
         test_relative_url_http, test_http_task_without_tls_verify"""
 
         client = get_api_client()
         rb_name = "test_httptask_" + str(uuid.uuid4())[-10:]
 
-        HTTPTask = get_http_task_runbook()
+        HTTPTask = get_http_task_runbook(endpoint_file, config_file=DSL_CONFIG)
         rb = upload_runbook(client, rb_name, HTTPTask)
         rb_state = rb["status"]["state"]
         rb_uuid = rb["metadata"]["uuid"]
@@ -117,7 +139,7 @@ class TestHTTPTasks:
                 for message in task["message_list"]:
                     validation_errors += message["message"]
                 assert (
-                    "No default endpoint or endpoint at task level."
+                    "No default endpoint or endpoint at task level or inherited endpoint"
                     in validation_errors
                 )
                 assert (

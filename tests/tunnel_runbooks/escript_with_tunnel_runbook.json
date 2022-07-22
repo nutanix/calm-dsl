@@ -1,0 +1,154 @@
+{
+    "spec": {
+        "name": "DslSetVariableTaskUsingTunnel",
+        "resources": {
+            "endpoint_definition_list": [],
+            "client_attrs": {},
+            "credential_definition_list": [],
+            "runbook": {
+                "task_definition_list": [
+                    {
+                        "retries": "",
+                        "uuid": "6da601a3-462e-4469-8068-b60d24dda00a",
+                        "child_tasks_local_reference_list": [
+                            {
+                                "kind": "app_task",
+                                "name": "tunnel_set_var",
+                                "uuid": "aa226b05-2533-4abf-844b-7b327a72f85f"
+                            },
+                            {
+                                "kind": "app_task",
+                                "name": "tunnel_exec",
+                                "uuid": "6513641d-6c94-45ba-bff4-86c02ede3c19"
+                            },
+                            {
+                                "kind": "app_task",
+                                "name": "check set variable",
+                                "uuid": "7c1f3f1e-e53e-454c-8477-e69ca6d17a4a"
+                            }
+                        ],
+                        "name": "DslSetVariableTaskUsingTunnel_dag",
+                        "attrs": {
+                            "edges": [
+                                {
+                                    "from_task_reference": {
+                                        "kind": "app_task",
+                                        "name": "tunnel_set_var",
+                                        "uuid": "aa226b05-2533-4abf-844b-7b327a72f85f"
+                                    },
+                                    "uuid": "864cee10-7910-4d32-8419-be5942d975f5",
+                                    "to_task_reference": {
+                                        "kind": "app_task",
+                                        "name": "tunnel_exec",
+                                        "uuid": "6513641d-6c94-45ba-bff4-86c02ede3c19"
+                                    }
+                                },
+                                {
+                                    "from_task_reference": {
+                                        "kind": "app_task",
+                                        "name": "tunnel_exec",
+                                        "uuid": "6513641d-6c94-45ba-bff4-86c02ede3c19"
+                                    },
+                                    "uuid": "a529af63-bfa2-45e2-a8ee-5507c94bf6d4",
+                                    "to_task_reference": {
+                                        "kind": "app_task",
+                                        "name": "check set variable",
+                                        "uuid": "7c1f3f1e-e53e-454c-8477-e69ca6d17a4a"
+                                    }
+                                }
+                            ]
+                        },
+                        "timeout_secs": "",
+                        "type": "DAG",
+                        "variable_list": [],
+                        "description": ""
+                    },
+                    {
+                        "retries": "",
+                        "uuid": "aa226b05-2533-4abf-844b-7b327a72f85f",
+                        "child_tasks_local_reference_list": [],
+                        "name": "tunnel_set_var",
+                        "attrs": {
+                            "eval_variables": [
+                                "var1"
+                            ],
+                            "script_type": "static",
+                            "tunnel_reference": {
+                                "kind": "tunnel",
+                                "uuid": "eff3b014-cd71-44c3-80d0-6ab6f0a222cc",
+                                "name": "NewNetworkGroupTunnel2"
+                            },
+                            "script": "vmip = \"127.0.0.1\"\nvm_url=\"http://{0}:12345/health\".format(vmip)\ndef get_resource_list(url):\n    headers = {'Content-Type': 'text/html', 'Accept':'text/html'}\n    try:\n        r=urlreq(url, verb='GET', headers=headers, auth=\"NONE\")\n    except Exception as e:\n        print e\n    return r\n\nres=get_resource_list(vm_url)\nprint res\nprint \"var1=\" + vmip\n"
+                        },
+                        "timeout_secs": "",
+                        "type": "SET_VARIABLE",
+                        "variable_list": [],
+                        "description": ""
+                    },
+                    {
+                        "retries": "",
+                        "uuid": "6513641d-6c94-45ba-bff4-86c02ede3c19",
+                        "child_tasks_local_reference_list": [],
+                        "name": "tunnel_exec",
+                        "attrs": {
+                            "script_type": "static",
+                            "tunnel_reference": {
+                                "kind": "tunnel",
+                                "uuid": "eff3b014-cd71-44c3-80d0-6ab6f0a222cc",
+                                "name": "NewNetworkGroupTunnel2"
+                            },
+                            "script": "vmip = \"127.0.0.1\"\nvm_url=\"http://{0}:12345/health\".format(vmip)\ndef get_resource_list(url):\n    headers = {'Content-Type': 'text/html', 'Accept':'text/html'}\n    try:\n        r=urlreq(url, verb='GET', headers=headers, auth=\"NONE\")\n    except Exception as e:\n        print e\n    return r\n\nres=get_resource_list(vm_url)\nprint res\nprint \"var1=\" + vmip\n"
+                        },
+                        "timeout_secs": "",
+                        "type": "EXEC",
+                        "variable_list": [],
+                        "description": ""
+                    },
+                    {
+                        "retries": "",
+                        "uuid": "7c1f3f1e-e53e-454c-8477-e69ca6d17a4a",
+                        "child_tasks_local_reference_list": [],
+                        "name": "check set variable",
+                        "attrs": {
+                            "script_type": "static",
+                            "script": "vmip=\"@@{var1}@@\"\nif vmip == \"127.0.0.1\":\n    print \"variable was set\"\n\n    \n"
+                        },
+                        "timeout_secs": "",
+                        "type": "EXEC",
+                        "variable_list": [],
+                        "description": ""
+                    }
+                ],
+                "uuid": "7be249ab-3ce1-41f0-a148-e3a1fa1eb6be",
+                "name": "DslSetVariableTaskUsingTunnel_runbook",
+                "variable_list": [],
+                "main_task_local_reference": {
+                    "kind": "app_task",
+                    "name": "DslSetVariableTaskUsingTunnel_dag",
+                    "uuid": "6da601a3-462e-4469-8068-b60d24dda00a"
+                },
+                "description": ""
+            }
+        },
+        "description": "Runbook example with Set Variable Tasks"
+    },
+    "api_version": "3.0",
+    "metadata": {
+        "last_update_time": "1652711278207553",
+        "owner_reference": {
+            "kind": "user",
+            "uuid": "00000000-0000-0000-0000-000000000000",
+            "name": "admin"
+        },
+        "kind": "runbook",
+        "uuid": "b7c118b5-0127-4e97-b2bc-13c7d0d7df58",
+        "project_reference": {
+            "kind": "project",
+            "name": "test_dsl_project",
+            "uuid": "7994834e-74f2-4402-bb42-d3c357cbaaa1"
+        },
+        "spec_version": 1,
+        "creation_time": "1652711276840133",
+        "name": "DslSetVariableTaskUsingTunnel"
+    }
+}

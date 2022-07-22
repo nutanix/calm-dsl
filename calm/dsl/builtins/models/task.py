@@ -3,6 +3,7 @@ import uuid
 import os
 import sys
 
+
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .ref import RefType
@@ -193,12 +194,16 @@ def _exec_create(
     target_endpoint=None,
     cred=None,
     depth=2,
+    tunnel=None,
+    **kwargs,
 ):
     if script is not None and filename is not None:
         raise ValueError(
             "Only one of script or filename should be given for exec task "
             + (name or "")
         )
+    if script_type != "static" and tunnel is not None:
+        raise ValueError("Tunnel is supported only for Escript script type")
 
     if filename is not None:
         file_path = os.path.join(
@@ -211,24 +216,34 @@ def _exec_create(
         raise ValueError(
             "One of script or filename is required for exec task " + (name or "")
         )
-
-    kwargs = {
+    params = {
         "name": name,
         "type": "EXEC",
         "attrs": {"script_type": script_type, "script": script},
     }
     if cred is not None:
-        kwargs["attrs"]["login_credential_local_reference"] = _get_target_ref(cred)
+        params["attrs"]["login_credential_local_reference"] = _get_target_ref(cred)
     if target is not None:
-        kwargs["target_any_local_reference"] = _get_target_ref(target)
+        params["target_any_local_reference"] = _get_target_ref(target)
     if target_endpoint is not None:
-        kwargs["exec_target_reference"] = _get_target_ref(target_endpoint)
-
-    return _task_create(**kwargs)
+        params["exec_target_reference"] = _get_target_ref(target_endpoint)
+    if tunnel is not None:
+        params["attrs"]["tunnel_reference"] = tunnel
+    if "inherit_target" in kwargs:
+        params["inherit_target"] = kwargs.get("inherit_target")
+    return _task_create(**params)
 
 
 def _decision_create(
-    script_type, script=None, filename=None, name=None, target=None, cred=None, depth=2
+    script_type,
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    cred=None,
+    depth=2,
+    tunnel=None,
+    **kwargs,
 ):
     if script is not None and filename is not None:
         raise ValueError(
@@ -249,17 +264,23 @@ def _decision_create(
             "One of script or filename is required for decision task " + (name or "")
         )
 
-    kwargs = {
+    if script_type != "static" and tunnel is not None:
+        raise ValueError("Tunnel is support only for Escript script type")
+
+    params = {
         "name": name,
         "type": "DECISION",
         "attrs": {"script_type": script_type, "script": script},
     }
     if cred is not None:
-        kwargs["attrs"]["login_credential_local_reference"] = _get_target_ref(cred)
+        params["attrs"]["login_credential_local_reference"] = _get_target_ref(cred)
     if target is not None:
-        kwargs["target_any_local_reference"] = _get_target_ref(target)
-
-    return _task_create(**kwargs)
+        params["target_any_local_reference"] = _get_target_ref(target)
+    if tunnel is not None:
+        params["attrs"]["tunnel_reference"] = tunnel
+    if "inherit_target" in kwargs:
+        params["inherit_target"] = kwargs.get("inherit_target")
+    return _task_create(**params)
 
 
 def dag(name=None, child_tasks=None, edges=None, target=None):
@@ -326,20 +347,21 @@ def parallel_task(name=None, child_tasks=[], attrs={}):
     return _task_create(**kwargs)
 
 
-def while_loop(name=None, child_tasks=[], attrs={}):
+def while_loop(name=None, child_tasks=[], attrs={}, **kwargs):
     """
     Create a WHILE LOOP
     Args:
         name (str): Name for the task
         child_tasks (list [Task]): Child tasks within this dag
         attrs (dict): Task's attrs
+        :keyword inherit_target (bool): True if target needs to be inherited.
     Returns:
         (Task): WHILE task
     """
 
     # This follows UI naming convention for runbooks
     name = name or str(uuid.uuid4())[:8] + "_while_loop"
-    kwargs = {
+    params = {
         "name": name,
         "child_tasks_local_reference_list": [
             task.get_ref() for task in child_tasks or []
@@ -347,8 +369,9 @@ def while_loop(name=None, child_tasks=[], attrs={}):
         "type": "WHILE_LOOP",
         "attrs": attrs,
     }
-
-    return _task_create(**kwargs)
+    if "inherit_target" in kwargs:
+        params["inherit_target"] = kwargs.get("inherit_target")
+    return _task_create(**params)
 
 
 def meta(name=None, child_tasks=None, edges=None, target=None):
@@ -387,6 +410,7 @@ def exec_task_ssh(
     target_endpoint=None,
     cred=None,
     depth=2,
+    **kwargs,
 ):
     return _exec_create(
         "sh",
@@ -397,10 +421,13 @@ def exec_task_ssh(
         target_endpoint=target_endpoint,
         cred=cred,
         depth=depth,
+        **kwargs,
     )
 
 
-def exec_task_escript(script=None, filename=None, name=None, target=None, depth=2):
+def exec_task_escript(
+    script=None, filename=None, name=None, target=None, depth=2, tunnel=None, **kwargs
+):
     return _exec_create(
         "static",
         script=script,
@@ -409,6 +436,8 @@ def exec_task_escript(script=None, filename=None, name=None, target=None, depth=
         target=target,
         target_endpoint=None,
         depth=depth,
+        tunnel=tunnel,
+        **kwargs,
     )
 
 
@@ -420,6 +449,7 @@ def exec_task_powershell(
     target_endpoint=None,
     cred=None,
     depth=2,
+    **kwargs,
 ):
     return _exec_create(
         "npsscript",
@@ -430,12 +460,26 @@ def exec_task_powershell(
         target_endpoint=target_endpoint,
         cred=cred,
         depth=depth,
+        **kwargs,
     )
 
 
 def exec_task_ssh_runbook(
-    script=None, filename=None, name=None, target=None, cred=None, depth=2
+    script=None, filename=None, name=None, target=None, cred=None, depth=2, **kwargs
 ):
+    """
+    This function is used to create exec task with shell target
+    Args:
+        script(str): Script which needs to be run
+        filename(str): file which has script
+        name(str): Task name
+        target(Entity/Ref): Entity/Ref that is the target for this task
+        cred (Entity/Ref): Entity/Ref that is the cred for this task
+        depth (int): Number of times to look back in call stack, will be used to locate filename specified
+        :keyword inherit_target (bool): True if target needs to be inherited.
+    Returns:
+        obj: Exec task object
+    """
     return _exec_create(
         "sh",
         script=script,
@@ -444,12 +488,26 @@ def exec_task_ssh_runbook(
         target=target,
         cred=cred,
         depth=depth,
+        **kwargs,
     )
 
 
 def exec_task_powershell_runbook(
-    script=None, filename=None, name=None, target=None, cred=None, depth=2
+    script=None, filename=None, name=None, target=None, cred=None, depth=2, **kwargs
 ):
+    """
+    This function is used to create exec task with shell target
+    Args:
+        script(str): Script which needs to be run
+        filename(str): file which has script
+        name(str): Task name
+        target(Entity/Ref): Entity/Ref that is the target for this task
+        cred (Entity/Ref): Entity/Ref that is the cred for this task
+        depth (int): Number of times to look back in call stack, will be used to locate filename specified
+        :keyword inherit_target (bool): True if target needs to be inherited.
+    Returns:
+        obj: Exec task object
+    """
     return _exec_create(
         "npsscript",
         script=script,
@@ -458,12 +516,26 @@ def exec_task_powershell_runbook(
         target=target,
         cred=cred,
         depth=depth,
+        **kwargs,
     )
 
 
 def decision_task_ssh(
-    script=None, filename=None, name=None, target=None, cred=None, depth=2
+    script=None, filename=None, name=None, target=None, cred=None, depth=2, **kwargs
 ):
+    """
+    This function is used to create decision task with shell target
+    Args:
+        script(str): Script which needs to be run
+        filename(str): file which has script
+        name(str): Task name
+        target(Entity/Ref): Entity/Ref that is the target for this task
+        cred (Entity/Ref): Entity/Ref that is the cred for this task
+        depth (int): Number of times to look back in call stack, will be used to locate filename specified
+        :keyword inherit_target (bool): True if target needs to be inherited.
+    Returns:
+        obj: Decision task object
+    """
     return _decision_create(
         "sh",
         script=script,
@@ -472,12 +544,26 @@ def decision_task_ssh(
         target=target,
         cred=cred,
         depth=depth,
+        **kwargs,
     )
 
 
 def decision_task_powershell(
-    script=None, filename=None, name=None, target=None, cred=None, depth=2
+    script=None, filename=None, name=None, target=None, cred=None, depth=2, **kwargs
 ):
+    """
+    This function is used to create decision task with powershell target
+    Args:
+        script(str): Script which needs to be run
+        filename(str): file which has script
+        name(str): Task name
+        target(Entity/Ref): Entity/Ref that is the target for this task
+        cred (Entity/Ref): Entity/Ref that is the cred for this task
+        depth (int): Number of times to look back in call stack, will be used to locate filename specified
+        :keyword inherit_target (bool): True if target needs to be inherited.
+    Returns:
+        obj: Decision task object
+    """
     return _decision_create(
         "npsscript",
         script=script,
@@ -486,12 +572,34 @@ def decision_task_powershell(
         target=target,
         cred=cred,
         depth=depth,
+        **kwargs,
     )
 
 
 def decision_task_escript(
-    script=None, filename=None, name=None, target=None, cred=None, depth=2
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    cred=None,
+    depth=2,
+    tunnel=None,
+    **kwargs,
 ):
+    """
+    This function is used to create decision task with escript target
+    Args:
+        script(str): Script which needs to be run
+        filename(str): file which has script
+        name(str): Task name
+        target(Entity/Ref): Entity/Ref that is the target for this task
+        cred (Entity/Ref): Entity/Ref that is the cred for this task
+        depth (int): Number of times to look back in call stack, will be used to locate filename specified
+        tunnel (ref.Tunnel): Tunnel reference
+        :keyword inherit_target (bool): True if target needs to be inherited.
+    Returns:
+        obj: Decision task object
+    """
     return _decision_create(
         "static",
         script=script,
@@ -500,6 +608,8 @@ def decision_task_escript(
         target=target,
         cred=cred,
         depth=depth,
+        tunnel=tunnel,
+        **kwargs,
     )
 
 
@@ -527,7 +637,21 @@ def set_variable_task_ssh(
     variables=None,
     depth=3,
     cred=None,
+    **kwargs,
 ):
+    """
+    This function is used to create set variable task with shell target
+    Args:
+        script(str): Script which needs to be run
+        filename(str): file which has script
+        name(str): Task name
+        target(Entity/Ref): Entity/Ref that is the target for this task
+        cred (Entity/Ref): Entity/Ref that is the cred for this task
+        depth (int): Number of times to look back in call stack, will be used to locate filename specified
+        :keyword inherit_target (bool): True if target needs to be inherited.
+    Returns:
+        obj: Set variable task object
+    """
     task = exec_task_ssh(
         script=script,
         filename=filename,
@@ -536,15 +660,43 @@ def set_variable_task_ssh(
         target_endpoint=target_endpoint,
         depth=depth,
         cred=cred,
+        **kwargs,
     )
     return _set_variable_create(task, variables)
 
 
 def set_variable_task_escript(
-    script=None, filename=None, name=None, target=None, variables=None, depth=3
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    variables=None,
+    depth=3,
+    tunnel=None,
+    **kwargs,
 ):
+    """
+    This function is used to create set variable task with escript target
+    Args:
+        script(str): Script which needs to be run
+        filename(str): file which has script
+        name(str): Task name
+        target(Entity/Ref): Entity/Ref that is the target for this task
+        cred (Entity/Ref): Entity/Ref that is the cred for this task
+        depth (int): Number of times to look back in call stack, will be used to locate filename specified
+        tunnel (Ref.Tunnel): Tunnel reference
+        :keyword inherit_target (bool): True if target needs to be inherited.
+    Returns:
+        obj: Set variable task object
+    """
     task = exec_task_escript(
-        script=script, filename=filename, name=name, target=target, depth=depth
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        depth=depth,
+        tunnel=tunnel,
+        **kwargs,
     )
     return _set_variable_create(task, variables)
 
@@ -558,7 +710,21 @@ def set_variable_task_powershell(
     variables=None,
     depth=3,
     cred=None,
+    **kwargs,
 ):
+    """
+    This function is used to create set variable task with powershell target
+    Args:
+        script(str): Script which needs to be run
+        filename(str): file which has script
+        name(str): Task name
+        target(Entity/Ref): Entity/Ref that is the target for this task
+        cred (Entity/Ref): Entity/Ref that is the cred for this task
+        depth (int): Number of times to look back in call stack, will be used to locate filename specified
+        :keyword inherit_target (bool): True if target needs to be inherited.
+    Returns:
+        obj: Set variable task object
+    """
     task = exec_task_powershell(
         script=script,
         filename=filename,
@@ -567,6 +733,7 @@ def set_variable_task_powershell(
         target_endpoint=target_endpoint,
         depth=depth,
         cred=cred,
+        **kwargs,
     )
     return _set_variable_create(task, variables)
 
@@ -582,6 +749,7 @@ def http_task_on_endpoint(
     response_paths=None,
     name=None,
     target=None,
+    **kwargs,
 ):
     """
 
@@ -597,6 +765,7 @@ def http_task_on_endpoint(
         response_paths (dict): Mapping of variable name (str) to path in response (str)
         name (str): Task name
         target (Ref): Target entity that this task runs under.
+        :keyword inherit_target (bool): True if target needs to be inherited.
     Returns:
         (Task): HTTP Task
     """
@@ -612,6 +781,7 @@ def http_task_on_endpoint(
         response_paths=response_paths,
         name=name,
         target=target,
+        **kwargs,
     )
 
 
@@ -683,6 +853,7 @@ def http_task_get(
     name=None,
     target=None,
     cred=None,
+    tunnel=None,
 ):
     """
 
@@ -704,6 +875,7 @@ def http_task_get(
         response_paths (dict): Mapping of variable name (str) to path in response (str)
         name (str): Task name
         target (Ref): Target entity that this task runs under.
+        tunnel (Ref.Tunnel): Tunnel reference
     Returns:
         (Task): HTTP Task
     """
@@ -724,6 +896,7 @@ def http_task_get(
         response_paths=response_paths,
         name=name,
         target=target,
+        tunnel=tunnel,
     )
 
 
@@ -743,6 +916,7 @@ def http_task_post(
     name=None,
     target=None,
     cred=None,
+    tunnel=None,
 ):
     """
 
@@ -765,6 +939,7 @@ def http_task_post(
         response_paths (dict): Mapping of variable name (str) to path in response (str)
         name (str): Task name
         target (Ref): Target entity that this task runs under.
+        tunnel (Ref.Tunnel): Tunnel reference
     Returns:
         (Task): HTTP Task
     """
@@ -785,6 +960,7 @@ def http_task_post(
         response_paths=response_paths,
         name=name,
         target=target,
+        tunnel=tunnel,
     )
 
 
@@ -804,6 +980,7 @@ def http_task_put(
     name=None,
     target=None,
     cred=None,
+    tunnel=None,
 ):
     """
 
@@ -826,6 +1003,7 @@ def http_task_put(
         response_paths (dict): Mapping of variable name (str) to path in response (str)
         name (str): Task name
         target (Ref): Target entity that this task runs under.
+        tunnel (Ref.Tunnel): Tunnel reference
     Returns:
         (Task): HTTP Task
     """
@@ -846,6 +1024,7 @@ def http_task_put(
         response_paths=response_paths,
         name=name,
         target=target,
+        tunnel=tunnel,
     )
 
 
@@ -865,6 +1044,7 @@ def http_task_delete(
     name=None,
     target=None,
     cred=None,
+    tunnel=None,
 ):
     """
 
@@ -887,6 +1067,7 @@ def http_task_delete(
         response_paths (dict): Mapping of variable name (str) to path in response (str)
         name (str): Task name
         target (Ref): Target entity that this task runs under.
+        tunnel (Ref.Tunnel): Tunnel Reference
     Returns:
         (Task): HTTP Task
     """
@@ -907,6 +1088,7 @@ def http_task_delete(
         response_paths=response_paths,
         name=name,
         target=target,
+        tunnel=tunnel,
     )
 
 
@@ -958,6 +1140,8 @@ def http_task(
     response_paths=None,
     name=None,
     target=None,
+    tunnel=None,
+    **kwargs,
 ):
     """
     Defines a HTTP Task.
@@ -980,6 +1164,7 @@ def http_task(
         response_paths (dict): Mapping of variable name (str) to path in response (str)
         name (str): Task name
         target (Ref): Target entity that this task runs under.
+        tunnel (Ref.Tunnel): Tunnel reference
     Returns:
         (Task): HTTP Task
     """
@@ -1022,7 +1207,7 @@ def http_task(
             },
         }
 
-    kwargs = {
+    params = {
         "name": name,
         "type": "HTTP",
         "attrs": {
@@ -1037,27 +1222,27 @@ def http_task(
     }
 
     if relative_url is not None:
-        kwargs["attrs"]["relative_url"] = relative_url
+        params["attrs"]["relative_url"] = relative_url
 
     if body is not None:
-        kwargs["attrs"]["request_body"] = body
+        params["attrs"]["request_body"] = body
 
     if content_type is not None:
-        kwargs["attrs"]["content_type"] = content_type
+        params["attrs"]["content_type"] = content_type
 
     if target is not None:
-        kwargs["target_any_local_reference"] = _get_target_ref(target)
+        params["target_any_local_reference"] = _get_target_ref(target)
 
     header_variables = []
     if headers is not None:
         header_variables.extend(_header_variables_from_dict(headers))
-        kwargs["attrs"]["headers"] = header_variables
+        params["attrs"]["headers"] = header_variables
 
     if secret_headers is not None:
         header_variables.extend(
             _header_variables_from_dict(secret_headers, secret=True)
         )
-        kwargs["attrs"]["headers"] = header_variables
+        params["attrs"]["headers"] = header_variables
 
     if status_mapping is not None:
         LOG.debug("Status mapping for HTTP Task : {}".format(status_mapping))
@@ -1084,7 +1269,7 @@ def http_task(
             expected_response.append(
                 {"status": "SUCCESS" if state else "FAILURE", "code": code}
             )
-        kwargs["attrs"]["expected_response_params"] = expected_response
+        params["attrs"]["expected_response_params"] = expected_response
 
     if response_paths is not None:
         LOG.debug("Response paths for HTTP Task : {}".format(response_paths))
@@ -1107,9 +1292,15 @@ def http_task(
                     + (name or "")
                     + " should be dictionary of strings"
                 )
-        kwargs["attrs"]["response_paths"] = response_paths
+        params["attrs"]["response_paths"] = response_paths
 
-    return _task_create(**kwargs)
+    if "inherit_target" in kwargs:
+        params["inherit_target"] = kwargs.get("inherit_target")
+
+    if tunnel is not None:
+        params["attrs"]["tunnel_reference"] = tunnel
+
+    return _task_create(**params)
 
 
 def _deployment_scaling_create(target, scaling_type, scaling_count, name=None):
@@ -1187,20 +1378,23 @@ def delay_task(delay_seconds=None, name=None, target=None):
     return _task_create(**kwargs)
 
 
-def vm_operation(name=None, type="VM_OPERATION", target=None):
+def vm_operation(name=None, type="VM_OPERATION", target=None, **kwargs):
     """
     Defines a vm_operation task i.e. POWERON/ POWEROFF/ RESTART
     Args:
         name (str): Name for this task
         type(str): Task Type
         target (Ref): Target entity for this task
+        :keyword inherit_target (bool): True if target needs to be inherited.
     Returns:
         (Task): VM Operation task
     """
-    kwargs = {"name": name, "type": type}
+    params = {"name": name, "type": type}
     if target is not None:
-        kwargs["target_any_local_reference"] = _get_target_ref(target)
-    return _task_create(**kwargs)
+        params["target_any_local_reference"] = _get_target_ref(target)
+    if "inherit_target" in kwargs:
+        params["inherit_target"] = kwargs.get("inherit_target")
+    return _task_create(**params)
 
 
 def input_task(timeout=None, name=None, inputs=[]):
@@ -1279,6 +1473,7 @@ class BaseTask:
             response_paths=None,
             name=None,
             target=None,
+            tunnel=None,
         ):
             return http_task(
                 method,
@@ -1297,6 +1492,7 @@ class BaseTask:
                 response_paths=response_paths,
                 name=name,
                 target=target,
+                tunnel=tunnel,
             )
 
         get = http_task_get
@@ -1362,6 +1558,7 @@ class RunbookTask(BaseTask):
             child_tasks=[],
             loop_variable="iteration",
             exit_condition=Status.DONT_CARE,
+            **kwargs,
         ):
             attrs = {"iterations": str(iterations), "loop_variable": loop_variable}
             exit_code = EXIT_CONDITION_MAP.get(exit_condition, None)
@@ -1371,7 +1568,7 @@ class RunbookTask(BaseTask):
                 raise ValueError(
                     "Valid Exit Conditions for loop are 'Status.SUCCESS/Status.FAILURE/Status.DONT_CARE'."
                 )
-            return while_loop(name=name, child_tasks=child_tasks, attrs=attrs)
+            return while_loop(name=name, child_tasks=child_tasks, attrs=attrs, **kwargs)
 
     class HTTP:
         def __new__(
@@ -1386,6 +1583,7 @@ class RunbookTask(BaseTask):
             response_paths=None,
             name=None,
             target=None,
+            **kwargs,
         ):
             return http_task_on_endpoint(
                 method,
@@ -1398,6 +1596,7 @@ class RunbookTask(BaseTask):
                 response_paths=response_paths,
                 name=name,
                 target=target,
+                **kwargs,
             )
 
         get = http_task_get_on_endpoint
@@ -1414,13 +1613,13 @@ class RunbookTask(BaseTask):
             return confirm_task(timeout=timeout, name=name)
 
     class VMPowerOn:
-        def __new__(cls, name=None, target=None):
-            return vm_operation(name=name, type="VM_POWERON", target=target)
+        def __new__(cls, name=None, target=None, **kwargs):
+            return vm_operation(name=name, type="VM_POWERON", target=target, **kwargs)
 
     class VMPowerOff:
-        def __new__(cls, name=None, target=None):
-            return vm_operation(name=name, type="VM_POWEROFF", target=target)
+        def __new__(cls, name=None, target=None, **kwargs):
+            return vm_operation(name=name, type="VM_POWEROFF", target=target, **kwargs)
 
     class VMRestart:
-        def __new__(cls, name=None, target=None):
-            return vm_operation(name=name, type="VM_RESTART", target=target)
+        def __new__(cls, name=None, target=None, **kwargs):
+            return vm_operation(name=name, type="VM_RESTART", target=target, **kwargs)

@@ -16,6 +16,10 @@ properties:
   provider_type:
     type: string
     maxLength: 64
+  tunnel_reference:
+    x-calm-dsl-display-name: tunnel
+    x-calm-dsl-min-version: 3.5.0
+    $ref: '#/components/schemas/CalmRef'
   attrs:
     additionalProperties: true
     type: object

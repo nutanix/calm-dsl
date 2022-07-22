@@ -32,7 +32,10 @@ def render_ahv_vm_nic(cls):
             sys.exit(-1)
 
         user_attrs["subnet_name"] = subnet_cache_data["name"]
-        user_attrs["cluster_name"] = subnet_cache_data["cluster"]
+        if subnet_cache_data.get("vpc_name", ""):
+            user_attrs["vpc_name"] = subnet_cache_data["vpc_name"]
+        else:
+            user_attrs["cluster_name"] = subnet_cache_data["cluster_name"]
 
     schema_file = ""
     if nic_type == "NORMAL_NIC":

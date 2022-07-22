@@ -1,0 +1,1 @@
+echo 'Service stop in ENV=@@{ENV}@@'

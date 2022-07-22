@@ -61,6 +61,38 @@ class EnvironmentType(EntityType):
                 ) + provider_data.get("external_network_list", [])
                 provider_data.pop("subnet_reference_list", None)
                 provider_data.pop("external_network_list", None)
+                provider_data["cluster_references"] = provider_data.get(
+                    "cluster_reference_list", []
+                )
+                provider_data.pop("cluster_reference_list", None)
+                provider_data["vpc_references"] = provider_data.get(
+                    "vpc_reference_list", []
+                )
+                provider_data.pop("vpc_reference_list", None)
+
+                for cluster in provider_data["cluster_references"]:
+                    if cluster["uuid"] not in project_cache_data[
+                        "whitelisted_clusters"
+                    ].get(infra_account_uuid, []):
+                        LOG.error(
+                            "Environment uses cluster {} for nutanix_pc account {} which is not added to "
+                            "project {}.".format(
+                                cluster["name"], infra_account_name, project_name
+                            )
+                        )
+                        sys.exit(-1)
+
+                for vpc in provider_data["vpc_references"]:
+                    if vpc["uuid"] not in project_cache_data["whitelisted_vpcs"].get(
+                        infra_account_uuid, []
+                    ):
+                        LOG.error(
+                            "Environment uses vpc {} for nutanix_pc account {} which is not added to "
+                            "project {}.".format(
+                                vpc["name"], infra_account_name, project_name
+                            )
+                        )
+                        sys.exit(-1)
 
                 for sub in provider_data["subnet_references"]:
                     if sub["uuid"] not in project_cache_data["whitelisted_subnets"].get(

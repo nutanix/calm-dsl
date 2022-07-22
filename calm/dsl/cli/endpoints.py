@@ -9,6 +9,7 @@ import click
 from prettytable import PrettyTable
 from black import format_file_in_place, WriteBack, FileMode
 
+from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
 from calm.dsl.runbooks import Endpoint, create_endpoint_payload
 from calm.dsl.config import get_context
 from calm.dsl.api import get_api_client
@@ -141,20 +142,31 @@ def compile_endpoint_command(endpoint_file, out):
         LOG.error("User endpoint not found in {}".format(endpoint_file))
         return
 
-    ContextObj = get_context()
-    project_config = ContextObj.get_project_config()
-    project_name = project_config["name"]
-    project_cache_data = Cache.get_entity_data(CACHE.ENTITY.PROJECT, name=project_name)
-
-    if not project_cache_data:
-        LOG.error(
-            "Project {} not found. Please run: calm update cache".format(project_name)
+    metadata_payload = get_metadata_payload(endpoint_file)
+    project_cache_data = {}
+    project_name = ""
+    if "project_reference" in metadata_payload:
+        project_cache_data = metadata_payload["project_reference"]
+        project_name = metadata_payload["project_reference"]["name"]
+    else:
+        ContextObj = get_context()
+        project_config = ContextObj.get_project_config()
+        project_name = project_config["name"]
+        project_cache_data = Cache.get_entity_data(
+            CACHE.ENTITY.PROJECT, name=project_name
         )
-        sys.exit(-1)
+
+        if not project_cache_data:
+            LOG.error(
+                "Project {} not found. Please run: calm update cache".format(
+                    project_name
+                )
+            )
+            sys.exit(-1)
 
     project_uuid = project_cache_data.get("uuid", "")
     endpoint_payload["metadata"]["project_reference"] = {
-        "type": "project",
+        "kind": "project",
         "uuid": project_uuid,
         "name": project_name,
     }
@@ -193,7 +205,11 @@ def get_endpoint(client, name, all=False):
 
 
 def create_endpoint(
-    client, endpoint_payload, name=None, description=None, force_create=False
+    client,
+    endpoint_payload,
+    name=None,
+    description=None,
+    force_create=False,
 ):
 
     endpoint_payload.pop("status", None)
@@ -208,17 +224,33 @@ def create_endpoint(
     endpoint_resources = endpoint_payload["spec"]["resources"]
     endpoint_name = endpoint_payload["spec"]["name"]
     endpoint_desc = endpoint_payload["spec"]["description"]
+    user_project = endpoint_payload["metadata"].get("project_reference", {})
 
     return client.endpoint.upload_with_secrets(
-        endpoint_name, endpoint_desc, endpoint_resources, force_create=force_create
+        endpoint_name,
+        endpoint_desc,
+        endpoint_resources,
+        force_create=force_create,
+        project_reference=user_project,
     )
 
 
 def create_endpoint_from_json(
-    client, path_to_json, name=None, description=None, force_create=False
+    client,
+    path_to_json,
+    name=None,
+    description=None,
+    force_create=False,
+    endpoint_metadata=None,
 ):
 
     endpoint_payload = json.loads(open(path_to_json, "r").read())
+
+    if endpoint_metadata and "project_reference" in endpoint_metadata:
+        endpoint_payload["metadata"]["project_reference"] = endpoint_metadata[
+            "project_reference"
+        ]
+
     return create_endpoint(
         client,
         endpoint_payload,
@@ -229,7 +261,12 @@ def create_endpoint_from_json(
 
 
 def create_endpoint_from_dsl(
-    client, endpoint_file, name=None, description=None, force_create=False
+    client,
+    endpoint_file,
+    name=None,
+    description=None,
+    force_create=False,
+    endpoint_metadata=None,
 ):
 
     endpoint_payload = compile_endpoint(endpoint_file)
@@ -237,6 +274,11 @@ def create_endpoint_from_dsl(
         err_msg = "User endpoint not found in {}".format(endpoint_file)
         err = {"error": err_msg, "code": -1}
         return None, err
+
+    if endpoint_metadata and "project_reference" in endpoint_metadata:
+        endpoint_payload["metadata"]["project_reference"] = endpoint_metadata[
+            "project_reference"
+        ]
 
     return create_endpoint(
         client,
@@ -252,6 +294,8 @@ def create_endpoint_command(endpoint_file, name, description, force):
 
     client = get_api_client()
 
+    endpoint_metadata = get_metadata_payload(endpoint_file)
+
     if endpoint_file.endswith(".json"):
         res, err = create_endpoint_from_json(
             client,
@@ -259,6 +303,7 @@ def create_endpoint_command(endpoint_file, name, description, force):
             name=name,
             description=description,
             force_create=force,
+            endpoint_metadata=endpoint_metadata,
         )
     elif endpoint_file.endswith(".py"):
         res, err = create_endpoint_from_dsl(
@@ -267,6 +312,7 @@ def create_endpoint_command(endpoint_file, name, description, force):
             name=name,
             description=description,
             force_create=force,
+            endpoint_metadata=endpoint_metadata,
         )
     else:
         LOG.error("Unknown file format {}".format(endpoint_file))

@@ -2,17 +2,25 @@
 Calm DSL Decision Task Example
 
 """
+import json
 
 from calm.dsl.runbooks import runbook
 from calm.dsl.runbooks import RunbookTask as Task
 from calm.dsl.runbooks import CalmEndpoint as Endpoint
 from calm.dsl.runbooks import read_local_file, basic_cred
+from calm.dsl.config import get_context
 
+ContextObj = get_context()
+server_config = ContextObj.get_server_config()
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 linux_ip = read_local_file(".tests/runbook_tests/vm_ip")
+linux_ip2 = DSL_CONFIG["EXISTING_MACHINE"]["IP_2"]
 windows_ip = read_local_file(".tests/runbook_tests/windows_vm_ip")
 CRED_USERNAME = read_local_file(".tests/runbook_tests/username")
 CRED_WINDOWS_USERNAME = read_local_file(".tests/runbook_tests/windows_username")
 CRED_PASSWORD = read_local_file(".tests/runbook_tests/password")
+AUTH_USERNAME = read_local_file(".tests/runbook_tests/auth_username")
+AUTH_PASSWORD = read_local_file(".tests/runbook_tests/auth_password")
 
 LinuxCred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="linux_cred")
 WindowsCred = basic_cred(CRED_WINDOWS_USERNAME, CRED_PASSWORD, name="windows_cred")

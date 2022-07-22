@@ -54,6 +54,14 @@ class EndpointType(EntityType):
 
                 cdict["provider_type"] = provider_type.upper()
 
+            tunnel = cdict.get("tunnel_reference", None)
+            if tunnel is not None:
+                if value_type not in ["IP", "HTTP"]:
+                    LOG.error("Tunnel is supported only with IP and HTTP endpoints")
+                    sys.exit(-1)
+                cdict["tunnel_reference"] = tunnel.compile()
+            else:
+                cdict.pop("tunnel_reference")
         return cdict
 
     def post_compile(cls, cdict):
@@ -100,7 +108,14 @@ def _endpoint_create(**kwargs):
 
 
 def _http_endpoint(
-    url, name=None, retries=0, retry_interval=10, timeout=120, verify=False, auth=None
+    url,
+    name=None,
+    retries=0,
+    retry_interval=10,
+    timeout=120,
+    verify=False,
+    auth=None,
+    tunnel=None,
 ):
     kwargs = {
         "name": name,
@@ -118,6 +133,8 @@ def _http_endpoint(
         kwargs["attrs"]["authentication"] = auth
     else:
         kwargs["attrs"]["authentication"] = {"auth_type": "none"}
+    if tunnel is not None:
+        kwargs["tunnel_reference"] = tunnel
     return _endpoint_create(**kwargs)
 
 
@@ -133,6 +150,7 @@ def _os_endpoint(
     subnet=None,
     filter=None,
     account=None,
+    tunnel=None,
 ):
     kwargs = {
         "name": name,
@@ -161,15 +179,22 @@ def _os_endpoint(
     if cred is not None and isinstance(cred, CredentialType):
         kwargs["attrs"]["credential_definition_list"] = [cred]
         kwargs["attrs"]["login_credential_reference"] = cred.get_ref()
+    if tunnel:
+        kwargs["tunnel_reference"] = tunnel
+
     return _endpoint_create(**kwargs)
 
 
-def linux_endpoint_ip(value, name=None, port=22, os_type="Linux", cred=None):
-    return _os_endpoint("IP", value, ep_type="Linux", name=name, port=port, cred=cred)
+def linux_endpoint_ip(
+    value, name=None, port=22, os_type="Linux", cred=None, tunnel=None
+):
+    return _os_endpoint(
+        "IP", value, ep_type="Linux", name=name, port=port, cred=cred, tunnel=tunnel
+    )
 
 
 def windows_endpoint_ip(
-    value, name=None, connection_protocol="HTTP", port=None, cred=None
+    value, name=None, connection_protocol="HTTP", port=None, cred=None, tunnel=None
 ):
     connection_protocol = connection_protocol.lower()
     if connection_protocol not in ["http", "https"]:
@@ -190,6 +215,7 @@ def windows_endpoint_ip(
         name=name,
         port=port,
         cred=cred,
+        tunnel=tunnel,
     )
 
 

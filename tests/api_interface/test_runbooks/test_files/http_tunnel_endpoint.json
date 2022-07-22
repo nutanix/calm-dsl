@@ -1,0 +1,47 @@
+{
+    "spec": {
+        "name": "Endpoint_f0d18f05",
+        "description": "",
+        "resources": {
+            "name": "Endpoint_f0d18f05",
+            "type": "HTTP",
+            "value_type": "IP",
+            "tunnel_reference": {
+                "uuid": "030313f7-37c3-4bf5-9f6c-983260271b0e",
+                "name": "vpc_name_1_tunnel",
+                "kind": "tunnel"
+            },
+            "attrs": {
+                "urls": [
+                    "https://localhost:9440/api/nutanix/v3/endpoints"
+                ],
+                "retry_count": 1,
+                "retry_interval": 10,
+                "connection_timeout": 120,
+                "tls_verify": true,
+                "authentication": {
+                    "type": "basic",
+                    "username": "admin",
+                    "password": {
+                        "attrs": {
+                            "is_secret_modified": true
+                        },
+                        "value": "Nutanix.123"
+                    }
+                }
+            }
+        }
+    },
+    "api_version": "3.0",
+    "metadata": {
+        "spec_version": 1,
+        "kind": "endpoint",
+        "name": "Endpoint_f0d18f05",
+        "uuid": "b12c4087-6a65-408a-b9b5-7d573aee2d09",
+        "project_reference": {
+            "kind": "project",
+            "uuid": "29180067-fb43-494c-ae9f-f81b3e9733c2",
+            "name": "test_vpc_project"
+        }
+    }
+}

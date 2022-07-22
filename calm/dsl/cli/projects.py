@@ -164,7 +164,6 @@ def get_project_class_from_module(user_project_module):
 
 
 def compile_project_dsl_class(project_class):
-
     envs = []
     if hasattr(project_class, "envs"):
         envs = getattr(project_class, "envs", [])
@@ -507,6 +506,14 @@ def describe_project(project_name, out):
     for subnet in project_resources.get("external_network_list", []):
         subnets_list.append(subnet["uuid"])
 
+    clusters_list = []
+    for cluster in project_resources.get("cluster_reference_list", []):
+        clusters_list.append(cluster["uuid"])
+
+    vpcs_list = []
+    for vpc in project_resources.get("vpc_reference_list", []):
+        vpcs_list.append(vpc["uuid"])
+
     accounts = project_resources["account_reference_list"]
     for account in accounts:
         account_uuid = account["uuid"]
@@ -536,21 +543,75 @@ def describe_project(project_name, out):
             nics = AhvObj.subnets(account_uuid=account_uuid, filter_query=filter_query)
             nics = nics["entities"]
 
+            # passing entity ids in filter doesn't work for clusters list call
+            clusters = AhvObj.clusters(account_uuid=account_uuid).get("entities", [])
+            vpcs = AhvObj.vpcs(account_uuid=account_uuid).get("entities", [])
+
+            vpc_uuid_name_map = {}
+
+            click.echo("\n\tWhitelisted Clusters:\n\t--------------------")
+            for cluster in clusters:
+                if cluster["metadata"]["uuid"] in clusters_list:
+                    click.echo(
+                        "\tName: {} (uuid: {})".format(
+                            highlight_text(cluster["status"]["name"]),
+                            highlight_text(cluster["metadata"]["uuid"]),
+                        )
+                    )
+
+            click.echo("\n\tWhitelited VPCs:\n\t--------------------")
+            for vpc in vpcs:
+                if vpc["metadata"]["uuid"] in vpcs_list:
+                    vpc_name = vpc["status"]["name"]
+                    click.echo(
+                        "\tName: {} (uuid: {})".format(
+                            highlight_text(vpc_name),
+                            highlight_text(vpc["metadata"]["uuid"]),
+                        )
+                    )
+                    vpc_uuid_name_map[vpc["metadata"]["uuid"]] = vpc_name
+
             click.echo("\n\tWhitelisted Subnets:\n\t--------------------")
+            overlay_nics = []
             for nic in nics:
+                if nic["status"]["resources"].get("subnet_type", "") != "VLAN":
+                    overlay_nics.append(nic)
+                    continue
+
                 nic_name = nic["status"]["name"]
                 vlan_id = nic["status"]["resources"]["vlan_id"]
                 cluster_name = nic["status"]["cluster_reference"]["name"]
                 nic_uuid = nic["metadata"]["uuid"]
 
                 click.echo(
-                    "\tName: {} (uuid: {})\tVLAN ID: {}\tCluster Name: {}".format(
+                    "\tName: {} (uuid: {})\tType: VLAN\tVLAN ID: {}\tCluster Name: {}".format(
                         highlight_text(nic_name),
                         highlight_text(nic_uuid),
                         highlight_text(vlan_id),
                         highlight_text(cluster_name),
                     )
                 )
+            for nic in overlay_nics:
+                nic_name = nic["status"]["name"]
+                nic_uuid = nic["metadata"]["uuid"]
+                vpc_name = vpc_uuid_name_map.get(
+                    nic["status"]["resources"]["vpc_reference"]["uuid"], ""
+                )
+                if vpc_name:
+                    click.echo(
+                        "\tName: {} (uuid: {})\tType: Overlay\tVPC Name: {}".format(
+                            highlight_text(nic_name),
+                            highlight_text(nic_uuid),
+                            highlight_text(vpc_name),
+                        )
+                    )
+                else:
+                    click.echo(
+                        "\tName: {} (uuid: {})\tType: Overlay".format(
+                            highlight_text(nic_name),
+                            highlight_text(nic_uuid),
+                        )
+                    )
 
     if not accounts:
         click.echo(highlight_text("No provider's account registered"))
@@ -725,10 +786,38 @@ def update_project_from_dsl(project_name, project_file, no_cache_update=False):
         )
     ]
 
+    existing_vpcs = [
+        _vpc["uuid"]
+        for _vpc in old_project_payload["spec"]["resources"].get(
+            "vpc_reference_list", []
+        )
+    ]
+
+    new_vpcs = [
+        _vpc["uuid"]
+        for _vpc in project_payload["spec"]["resources"].get("vpc_reference_list", [])
+    ]
+
+    existing_clusters = [
+        _cluster["uuid"]
+        for _cluster in old_project_payload["spec"]["resources"].get(
+            "cluster_reference_list", []
+        )
+    ]
+
+    new_clusters = [
+        _cluster["uuid"]
+        for _cluster in project_payload["spec"]["resources"].get(
+            "cluster_reference_list", []
+        )
+    ]
+
     project_usage_payload = {
         "filter": {
             "subnet_reference_list": list(set(existing_subnets) - set(new_subnets)),
             "account_reference_list": list(set(existing_accounts) - set(new_accounts)),
+            "vpc_reference_list": list(set(existing_vpcs) - set(new_vpcs)),
+            "cluster_reference_list": list(set(existing_clusters) - set(new_clusters)),
         }
     }
 
@@ -1114,6 +1203,34 @@ def is_project_updation_allowed(project_usage, msg_list):
             msg_list.append(
                 "Please disassociate the subnet '{}' (uuid='{}') references from existing entities".format(
                     subnet_cache_data["name"], subnet_cache_data["uuid"]
+                )
+            )
+
+    cluster_usage = project_usage["status"]["resources"].get("cluster_list", [])
+    for _snt in cluster_usage:
+        entity_used = is_entity_used(_snt["usage"])
+        if entity_used:
+            updation_allowed = False
+            cluster_cache_data = Cache.get_entity_data_using_uuid(
+                entity_type=CACHE.ENTITY.AHV_CLUSTER, uuid=_snt["uuid"]
+            )
+            msg_list.append(
+                "Please disassociate the cluster '{}' (uuid='{}') references from existing entities".format(
+                    cluster_cache_data["name"], cluster_cache_data["uuid"]
+                )
+            )
+
+    vpc_usage = project_usage["status"]["resources"].get("vpc_list", [])
+    for _snt in vpc_usage:
+        entity_used = is_entity_used(_snt["usage"])
+        if entity_used:
+            updation_allowed = False
+            vpc_cache_data = Cache.get_entity_data_using_uuid(
+                entity_type=CACHE.ENTITY.AHV_VPC, uuid=_snt["uuid"]
+            )
+            msg_list.append(
+                "Please disassociate the vpc '{}' (uuid='{}') references from existing entities".format(
+                    vpc_cache_data["name"], vpc_cache_data["uuid"]
                 )
             )
 

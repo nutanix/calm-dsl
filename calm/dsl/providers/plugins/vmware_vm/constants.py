@@ -3,6 +3,8 @@ class VCENTER:
     VERSION = "v6"
     DATACENTER = "vmware/{}/datacenter".format(VERSION)
     TEMPLATE = "vmware/{}/template".format(VERSION)
+    CONTENT_LIBRARY = "vmware/{}/library".format(VERSION)
+    CONTENT_LIBRARY_TEMPLATE = "vmware/{}/library_items".format(VERSION)
     DATASTORE = "vmware/{}/datastore".format(VERSION)
     HOST = "vmware/{}/host".format(VERSION)
     CLUSTER = "vmware/{}/cluster".format(VERSION)

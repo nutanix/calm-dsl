@@ -1,4 +1,5 @@
 import click
+from collections import OrderedDict
 from ruamel import yaml
 from distutils.version import LooseVersion as LV
 
@@ -31,12 +32,476 @@ class VCenterVmProvider(Provider):
     @classmethod
     def get_api_obj(cls):
         """returns object to call vmware provider specific apis"""
-
         client = get_api_client()
-        return VCenter(client.connection)
+        # TODO remove this mess
+        from calm.dsl.store.version import Version
+
+        calm_version = Version.get_version("Calm")
+        api_handlers = VCenterBase.api_handlers
+
+        # Return min version that is greater or equal to user calm version
+        supported_versions = []
+        for k in api_handlers.keys():
+            if LV(k) <= LV(calm_version):
+                supported_versions.append(k)
+
+        latest_version = max(supported_versions, key=lambda x: LV(x))
+        api_handler = api_handlers[latest_version]
+        return api_handler(client.connection)
 
 
-class VCenter:
+class VCenterBase:
+    """Base class for vmware provider specific apis"""
+
+    api_handlers = OrderedDict()
+    __api_version__ = None
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+
+        version = getattr(cls, "__api_version__")
+        if version:
+            cls.api_handlers[version] = cls
+
+    @classmethod
+    def get_version(cls):
+        return getattr(cls, "__api_version__")
+
+    def hosts(self, *args, **kwargs):
+        raise NotImplementedError("hosts call not implemented")
+
+    def datastores(self, *args, **kwargs):
+        raise NotImplementedError("datastores call not implemented")
+
+    def storage_pods(self, *args, **kwargs):
+        raise NotImplementedError("storage_pods call not implemented")
+
+    def templates(self, *args, **kwargs):
+        raise NotImplementedError("templates call not implemented")
+
+    def content_library(self, *args, **kwargs):
+        raise NotImplementedError("content_library call not implemented")
+
+    def content_library_templates(self, *args, **kwargs):
+        raise NotImplementedError("content_library_templates call not implemented")
+
+    def customizations(self, *args, **kwargs):
+        raise NotImplementedError("customizations call not implemented")
+
+    def timezones(self, *args, **kwargs):
+        raise NotImplementedError("timezones call not implemented")
+
+    def networks(self, *args, **kwargs):
+        raise NotImplementedError("networks call not implemented")
+
+    def tags(self, *args, **kwargs):
+        raise NotImplementedError("tags call not implemented")
+
+    def file_paths(self, *args, **kwargs):
+        raise NotImplementedError("file_paths call not implemented")
+
+    def template_defaults(self, *args, **kwargs):
+        raise NotImplementedError("template_defaults call not implemented")
+
+
+class VCenterV1(VCenterBase):
+    """vmware api object for calm_version >= 3.5.0"""
+
+    __api_version__ = "3.5.0"
+
+    def __init__(self, connection):
+        self.connection = connection
+
+    def hosts(self, account_id):
+        Obj = get_resource_api(vmw.HOST, self.connection)
+        payload = {"filter": "account_uuid=={};".format(account_id)}
+        res, err = Obj.list(payload)
+
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        name_id_map = {}
+        res = res.json()
+        for entity in res["entities"]:
+            name = entity["status"]["resources"]["name"]
+            entity_uuid = entity["status"]["resources"]["summary"]["hardware"]["uuid"]
+            name_id_map[name] = entity_uuid
+
+        return name_id_map
+
+    def datastores(self, account_id, cluster_name=None, host_id=None):
+        Obj = get_resource_api(vmw.DATASTORE, self.connection)
+        payload = ""
+        if host_id:
+            payload = {
+                "filter": "account_uuid=={};host_id=={}".format(account_id, host_id)
+            }
+
+        if cluster_name:
+            payload = {
+                "filter": "account_uuid=={};cluster_name=={}".format(
+                    account_id, cluster_name
+                )
+            }
+
+        res, err = Obj.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        name_url_map = {}
+        for entity in res["entities"]:
+            name = entity["status"]["resources"]["name"]
+            url = entity["status"]["resources"]["summary"]["url"]
+            name_url_map[name] = url
+
+        return name_url_map
+
+    def clusters(self, account_id):
+        Obj = get_resource_api(vmw.CLUSTER, self.connection)
+        payload = {"filter": "account_uuid=={};".format(account_id)}
+
+        res, err = Obj.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        cluster_list = []
+        res = res.json()
+        for entity in res["entities"]:
+            name = entity["status"]["resources"]["name"]
+            cluster_list.append(name)
+
+        return cluster_list
+
+    def storage_pods(self, account_id):
+        Obj = get_resource_api(vmw.STORAGE_POD, self.connection)
+        payload = {"filter": "account_uuid=={};".format(account_id)}
+
+        res, err = Obj.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        pod_list = []
+        for entity in res["entities"]:
+            name = entity["status"]["resources"]["name"]
+            pod_list.append(name)
+
+        return pod_list
+
+    def templates(self, account_id):
+        Obj = get_resource_api(vmw.TEMPLATE, self.connection)
+        payload = {"filter": "account_uuid=={};".format(account_id)}
+        res, err = Obj.list(payload)
+
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        name_id_map = {}
+        for entity in res["entities"]:
+            name = entity["status"]["resources"]["name"]
+            temp_id = entity["status"]["resources"]["config"]["instanceUuid"]
+            name_id_map[name] = temp_id
+
+        return name_id_map
+
+    def content_library(self, account_id):
+        Obj = get_resource_api(vmw.CONTENT_LIBRARY, self.connection)
+        payload = {"filter": "account_uuid=={};".format(account_id)}
+        res, err = Obj.list(payload)
+
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        name_id_map = {}
+        for entity in res["entities"]:
+            name = entity["status"]["resources"]["name"]
+            temp_id = entity["status"]["resources"]["id"]
+            name_id_map[name] = temp_id
+
+        return name_id_map
+
+    def content_library_templates(self, account_id, library_id):
+        Obj = get_resource_api(vmw.CONTENT_LIBRARY_TEMPLATE, self.connection)
+        payload = {
+            "filter": "account_uuid=={};library_id=={}".format(account_id, library_id)
+        }
+        res, err = Obj.list(payload)
+
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        name_id_map = {}
+        for entity in res["entities"]:
+            name = entity["status"]["resources"]["name"]
+            id = entity["status"]["resources"]["id"]
+            type = entity["status"]["resources"]["type"]
+            name_id_map[name] = {"id": id, "type": type}
+
+        return name_id_map
+
+    def customizations(self, account_id, os):
+
+        Obj = get_resource_api(vmw.CUSTOMIZATION, self.connection)
+        payload = {"filter": "account_uuid=={};".format(account_id)}
+
+        res, err = Obj.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        cust_list = []
+        for entity in res["entities"]:
+            if entity["status"]["resources"]["type"] == os:
+                cust_list.append(entity["status"]["resources"]["name"])
+
+        return cust_list
+
+    def timezones(self, os):
+
+        Obj = get_resource_api(vmw.TIMEZONE, self.connection)
+        payload = {"filter": "guest_os=={};".format(os)}
+
+        res, err = Obj.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        name_ind_map = {}
+        for entity in res["entities"]:
+            name = entity["status"]["resources"]["name"]
+            ind = entity["status"]["resources"]["index"]
+            name_ind_map[name] = ind
+
+        return name_ind_map
+
+    def networks(self, account_id, host_id=None, cluster_name=None):
+        Obj = get_resource_api(vmw.NETWORK, self.connection)
+        payload = ""
+        if host_id:
+            payload = {
+                "filter": "account_uuid=={};host_id=={}".format(account_id, host_id)
+            }
+
+        if cluster_name:
+            payload = {
+                "filter": "account_uuid=={};cluster_name=={}".format(
+                    account_id, cluster_name
+                )
+            }
+
+        res, err = Obj.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        name_id_map = {}
+        for entity in res["entities"]:
+            name = entity["status"]["resources"]["name"]
+            entity_id = entity["status"]["resources"]["id"]
+
+            name_id_map[name] = entity_id
+
+        return name_id_map
+
+    def tags(self, account_id):
+        obj = get_resource_api(vmw.TAGS, self.connection)
+        payload = {"filter": "account_uuid=={}".format(account_id)}
+        res, err = obj.list(payload)
+
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        name_tag_id_map = {}
+        name_cardinality_map = {}
+        for entity in res.get("entities"):
+            name = entity["status"]["resources"]["name"]
+            name_cardinality_map[name] = entity["status"]["resources"]["cardinality"]
+            for tag in entity["status"]["resources"]["tags"]:
+                key = str(entity["status"]["resources"]["name"] + ":" + tag["name"])
+                name_tag_id_map[key] = {
+                    "id": tag["id"],
+                    "name": entity["status"]["resources"]["name"],
+                    "tag_name": tag["name"],
+                }
+
+        return {"tag_list": name_tag_id_map, "cardinality_list": name_cardinality_map}
+
+    def file_paths(
+        self,
+        account_id,
+        datastore_url=None,
+        file_extension="iso",
+        host_id=None,
+        cluster_name=None,
+    ):
+
+        Obj = get_resource_api(vmw.FILE_PATHS, self.connection)
+        payload = ""
+        if datastore_url:
+            payload = {
+                "filter": "account_uuid=={};file_extension=={};datastore_url=={}".format(
+                    account_id, file_extension, datastore_url
+                )
+            }
+        elif host_id:
+            payload = {
+                "filter": "account_uuid=={};file_extension=={};host_id=={}".format(
+                    account_id, file_extension, host_id
+                )
+            }
+        else:
+            payload = {
+                "filter": "account_uuid=={};file_extension=={};cluster_name=={}".format(
+                    account_id, file_extension, cluster_name
+                )
+            }
+
+        res, err = Obj.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        fpaths = []
+        for entity in res["entities"]:
+            fpaths.append(entity["status"]["resources"])
+
+        return fpaths
+
+    def template_defaults(
+        self, account_id, template_id, is_library
+    ):  # TODO improve this mess
+        payload = {
+            "filter": 'template_uuids==["{}"];is_library=={}'.format(
+                template_id, str(is_library).lower()
+            )
+        }
+        Obj = get_resource_api(vmw.TEMPLATE_DEFS.format(account_id), self.connection)
+        res, err = Obj.list(payload)
+
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        tempControllers = {}
+        tempDisks = []
+        tempNics = []
+        free_device_slots = {}
+        controller_count = {"SCSI": 0, "SATA": 0, "IDE": 0}
+        controller_key_type_map = {
+            1000: ("SCSI", None),
+            15000: ("SATA", None),
+            200: ("IDE", None),
+        }
+        controller_label_key_map = {"SCSI": {}, "SATA": {}, "IDE": {}}
+
+        controllers = []
+        disks = []
+        networks = []
+
+        for entity in res["entities"]:
+            entity_config = entity["status"]["resources"]["config"]
+            entity_id = entity_config["instanceUuid"] if not is_library else ""
+            if entity_id == template_id or is_library:
+                controllers = entity_config["hardware"]["device"]["controller"] or []
+                disks = entity_config["hardware"]["device"]["disk"] or []
+                networks = entity_config["hardware"]["device"]["network"] or []
+                break
+
+        for controller in controllers:
+            contlr = {}
+
+            label = controller["label"]
+            free_device_slots[label] = controller["freeDeviceSlots"]
+            type = controller["type"]
+            if vmw.ControllerMap.get(type):
+                controller_type = vmw.ControllerMap[type]
+            else:
+                controller_type = "IDE"  # SCSI/SATA/IDE
+
+            ctlr_type = vmw.VirtualControllerNameMap[type]
+
+            if controller_type == "SCSI":
+                contlr["controller_type"] = vmw.SCSIControllerOptions[ctlr_type]
+
+            elif controller_type == "SATA":
+                contlr["controller_type"] = vmw.SATAControllerOptions[ctlr_type]
+
+            contlr["key"] = controller["key"]
+            controller_label_key_map[controller_type][label] = contlr["key"]
+            controller_key_type_map[contlr["key"]] = (controller_type, label)
+
+            controller_count[controller_type] += 1
+            if controller_type == "SCSI":
+                contlr["bus_sharing"] = controller["sharedBus"]
+
+            if not tempControllers.get(controller_type):
+                tempControllers[controller_type] = []
+
+            tempControllers[controller_type].append(contlr)
+
+        disk_mode_inv = {v: k for k, v in vmw.DISK_MODE.items()}
+        for disk in disks:
+            dsk = {}
+
+            dsk["disk_type"] = vmw.DiskMap[disk["type"]]
+            dsk["key"] = disk["key"]
+            dsk["controller_key"] = (
+                disk["controllerKey"] if "controllerKey" in disk.keys() else ""
+            )
+
+            if "controllerKey" in disk.keys() and controller_key_type_map.get(
+                disk["controllerKey"]
+            ):
+                dsk["adapter_type"] = controller_key_type_map.get(
+                    disk["controllerKey"]
+                )[0]
+            else:
+                # Taken from VMwareTemplateDisks.jsx
+                dsk["adapter_type"] = "IDE"
+
+            if dsk["disk_type"] == "disk":
+                dsk["size"] = disk["capacityInKB"] // 1024
+                if "backing" in disk.keys():
+                    dsk["mode"] = disk_mode_inv[disk["backing"]["diskMode"]]
+                    dsk["location"] = (
+                        disk["backing"]["datastore"]["url"],
+                        disk["backing"]["datastore"]["name"],
+                    )
+                dsk["device_slot"] = disk["unitNumber"]
+
+            tempDisks.append(dsk)
+
+        for network in networks:
+            nic = {}
+            nic["key"] = network["key"]
+            nic["net_name"] = network["backing"]["network"]["name"]
+            nic["nic_type"] = vmw.NetworkAdapterMap.get(network["type"], "")
+
+            tempNics.append(nic)
+
+        response = {
+            "tempControllers": tempControllers,
+            "tempDisks": tempDisks,
+            "tempNics": tempNics,
+            "free_device_slots": free_device_slots,
+            "controller_count": controller_count,
+            "controller_key_type_map": controller_key_type_map,
+            "controller_label_key_map": controller_label_key_map,
+        }
+
+        return response
+
+
+class VCenterV0(VCenterBase):
+    """vmware api object for calm_version < 3.5.0"""
+
+    __api_version__ = "0"
+
     def __init__(self, connection):
         self.connection = connection
 
@@ -342,7 +807,8 @@ class VCenter:
                     disk["controllerKey"]
                 )[0]
             else:
-                dsk["adapter_type"] = "IDE"  # Taken from VMwareTemplateDisks.jsx
+                # Taken from VMwareTemplateDisks.jsx
+                dsk["adapter_type"] = "IDE"
 
             if dsk["disk_type"] == "disk":
                 dsk["size"] = disk["capacityInKB"] // 1024
@@ -385,7 +851,7 @@ def create_spec(client):
 
     CALM_VERSION = Version.get_version("Calm")
     spec = {}
-    Obj = VCenter(client.connection)
+    Obj = VCenterVmProvider.get_api_obj()
 
     # VM Configuration
 
@@ -502,7 +968,7 @@ def create_spec(client):
 
                 else:
                     datastore_name = datastore_names[ind - 1]
-                    datastore_url = datastore_name_url_map[datastore_name]  # TO BE USED
+                    datastore_url = datastore_name_url_map[datastore_name]
                     spec["datastore"] = datastore_url
                     click.echo("{} selected".format(highlight_text(datastore_name)))
                     break
@@ -548,30 +1014,160 @@ def create_spec(client):
                     click.echo("{} selected".format(highlight_text(pod_name)))
                     break
 
-    template_name_id_map = Obj.templates(account_id)
-    template_names = list(template_name_id_map.keys())
-    template_id = ""
-
-    if not template_names:
-        click.echo("\n{}".format(highlight_text("No templates present")))
-
-    else:
-        click.echo("\nChoose from given templates:")
-        for ind, name in enumerate(template_names):
+    if LV(CALM_VERSION) >= LV("3.5.0"):
+        click.echo("\nChoose template source:")
+        for ind, name in enumerate(["VM Template", "Content Library"]):
             click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
 
         while True:
-            ind = click.prompt("\nEnter the index of template", default=1)
-            if (ind > len(template_names)) or (ind <= 0):
+            ind = click.prompt("\nEnter the index of source of template", default=1)
+            if (ind > 2) or (ind <= 0):
                 click.echo("Invalid index !!! ")
 
-            else:
-                template_name = template_names[ind - 1]
-                template_id = template_name_id_map[template_name]  # TO BE USED
-                click.echo("{} selected".format(highlight_text(template_name)))
-                break
+            if ind == 1:
+                template_name_id_map = Obj.templates(account_id)
+                template_names = list(template_name_id_map.keys())
+                template_id = ""
 
-    spec["template"] = template_id
+                if not template_names:
+                    click.echo("\n{}".format(highlight_text("No templates present")))
+
+                else:
+                    click.echo("\nChoose from given templates:")
+                    for ind, name in enumerate(template_names):
+                        click.echo(
+                            "\t {}. {}".format(str(ind + 1), highlight_text(name))
+                        )
+
+                    while True:
+                        ind = click.prompt("\nEnter the index of template", default=1)
+                        if (ind > len(template_names)) or (ind <= 0):
+                            click.echo("Invalid index !!! ")
+                        else:
+                            template_name = template_names[ind - 1]
+                            # TO BE USED
+                            template_id = template_name_id_map[template_name]
+                            click.echo(
+                                "{} selected".format(highlight_text(template_name))
+                            )
+                            spec["template"] = template_id
+                            break
+                break
+            else:
+                spec["library"] = {}
+                library_name_id_map = Obj.content_library(account_id)
+                library_names = list(library_name_id_map.keys())
+                library_id = ""
+                if not library_names:
+                    click.echo("\n{}".format(highlight_text("No Library present")))
+                else:
+                    click.echo("\nChoose from given library:")
+                    for ind, name in enumerate(library_names):
+                        click.echo(
+                            "\t {}. {}".format(str(ind + 1), highlight_text(name))
+                        )
+
+                    while True:
+                        ind = click.prompt("\nEnter the index of library", default=1)
+                        if (ind > len(library_names)) or (ind <= 0):
+                            click.echo("Invalid index !!! ")
+                        else:
+                            library_name = library_names[ind - 1]
+                            library_id = library_name_id_map[library_name]
+                            click.echo(
+                                "{} selected".format(highlight_text(library_name))
+                            )
+
+                            library_template_name_id_map = (
+                                Obj.content_library_templates(account_id, library_id)
+                            )
+                            library_template_names = list(
+                                library_template_name_id_map.keys()
+                            )
+                            library_template_id = ""
+                            if not library_template_names:
+                                click.echo(
+                                    "\n{}".format(
+                                        highlight_text(
+                                            "No templates present in the library"
+                                        )
+                                    )
+                                )
+                            else:
+                                click.echo("\nChoose template from given library:")
+                                for ind, name in enumerate(library_template_names):
+                                    click.echo(
+                                        "\t {}. {}".format(
+                                            str(ind + 1),
+                                            highlight_text(
+                                                "{} ({})".format(
+                                                    name,
+                                                    library_template_name_id_map[name][
+                                                        "type"
+                                                    ],
+                                                )
+                                            ),
+                                        )
+                                    )
+
+                                while True:
+                                    ind = click.prompt(
+                                        "\nEnter the index of library template",
+                                        default=1,
+                                    )
+                                    if (ind > len(library_template_names)) or (
+                                        ind <= 0
+                                    ):
+                                        click.echo("Invalid index !!! ")
+                                    else:
+                                        library_template_name = library_template_names[
+                                            ind - 1
+                                        ]
+                                        library_template = library_template_name_id_map[
+                                            library_template_name
+                                        ]
+                                        library_template_id = library_template["id"]
+                                        library_template_type = library_template["type"]
+                                        click.echo(
+                                            "{} selected".format(
+                                                highlight_text(library_template_name)
+                                            )
+                                        )
+                                        spec["library"]["library_id"] = library_id
+                                        spec["library"][
+                                            "library_template_id"
+                                        ] = library_template_id
+                                        spec["library"][
+                                            "library_template_type"
+                                        ] = library_template_type
+                                        break
+                            break
+                break
+    else:
+        template_name_id_map = Obj.templates(account_id)
+        template_names = list(template_name_id_map.keys())
+        template_id = ""
+
+        if not template_names:
+            click.echo("\n{}".format(highlight_text("No templates present")))
+
+        else:
+            click.echo("\nChoose from given templates:")
+            for ind, name in enumerate(template_names):
+                click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
+
+            while True:
+                ind = click.prompt("\nEnter the index of template", default=1)
+                if (ind > len(template_names)) or (ind <= 0):
+                    click.echo("Invalid index !!! ")
+
+                else:
+                    template_name = template_names[ind - 1]
+                    # TO BE USED
+                    template_id = template_name_id_map[template_name]
+                    click.echo("{} selected".format(highlight_text(template_name)))
+                    break
+        spec["template"] = template_id
 
     # Check if user want to supply vmware folder path
     if LV(CALM_VERSION) >= LV("3.2.0"):
@@ -670,8 +1266,24 @@ def create_spec(client):
     ) * 1024
 
     response = {}
-    if template_id:
-        response = Obj.template_defaults(account_id, template_id)
+    if LV(CALM_VERSION) >= LV("3.5.0"):
+        is_library_template = True if "library" in spec.keys() else False
+        template_id = (
+            spec["library"]["library_template_id"]
+            if is_library_template
+            else spec["template"]
+        )
+        template_type = (
+            spec["library"]["library_template_type"] if is_library_template else ""
+        )
+        if template_id and (is_library_template and template_type != "ovf"):
+            response = Obj.template_defaults(
+                account_id, template_id, is_library_template
+            )
+    else:
+        template_id = spec["template"]
+        if template_id:
+            response = Obj.template_defaults(account_id, template_id)
 
     tempControllers = response.get("tempControllers", {})
     tempDisks = response.get("tempDisks", [])
@@ -817,11 +1429,20 @@ def create_spec(client):
 
         if disk_type == "disk":
             click.echo("Size (in GiB): {}".format(highlight_text(disk["size"] // 1024)))
-            click.echo("Location : {}".format(highlight_text(disk["location"][1])))
-            controller_label = controller_key_type_map[disk["controller_key"]][1]
+            click.echo(
+                "Location : {}".format(highlight_text(disk["location"][1]))
+            ) if "location" in disk.keys() else None
+            controller_label = (
+                controller_key_type_map[disk["controller_key"]][1]
+                if "controller_key" in disk.keys()
+                and disk["controller_key"] in controller_key_type_map.keys()
+                else "-"
+            )
             click.echo("Controller: {}".format(highlight_text(controller_label)))
             click.echo("Device Slot: {}".format(highlight_text(disk["device_slot"])))
-            click.echo("Disk Mode: {}".format(highlight_text(disk["mode"])))
+            click.echo(
+                "Disk Mode: {}".format(highlight_text(disk["mode"]))
+            ) if "mode" in disk.keys() else None
             click.echo("Exclude from vm config: {}".format(highlight_text("No")))
 
             choice = click.prompt(
@@ -1139,7 +1760,8 @@ def create_spec(client):
             else:
                 adapter_type = disk_adapters[ind - 1]
                 click.echo("{} selected".format(highlight_text(adapter_type)))
-                adapter_type = vmw.DISK_ADAPTER_TYPES[adapter_type]  # TO BE USED
+                # TO BE USED
+                adapter_type = vmw.DISK_ADAPTER_TYPES[adapter_type]
                 break
 
         if disk_type == "disk":
@@ -1165,7 +1787,8 @@ def create_spec(client):
                 else:
                     datastore_name = locations[ind - 1]
                     click.echo("{} selected".format(highlight_text(datastore_name)))
-                    datastore_url = datastore_name_url_map[datastore_name]  # TO BE USED
+                    # TO BE USED
+                    datastore_url = datastore_name_url_map[datastore_name]
                     break
 
             controllers = list(controller_label_key_map[adapter_type].keys())
