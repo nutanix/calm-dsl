@@ -43,7 +43,7 @@ jobs:
         image: ntnx/calm-dsl
         run: calm
     - name: Publish docker image
-      if: ${{ github.event_name == 'push' && github.repository == 'nutanix/calm-dsl' && matrix.os == '3.9'}}
+      if: ${{ github.event_name == 'push' && github.repository == 'nutanix/calm-dsl' && matrix.python-version == '3.9'}}
       run: |
         docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
         docker push ntnx/calm-dsl
