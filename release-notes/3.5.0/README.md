@@ -51,7 +51,7 @@
 
 Network Group Tunnels (network-group-tunnels) commands are available to perform Create, Delete and List of VPC Tunnels. VPC Tunnels are refrenced using Tunnel Name. Look [here](../../examples/NetworkGroupTunnel/network_group_tunnel.py) for sample example.
 
-### Sample Commands
+### Commands
 
 - Create network group tunnel: `calm create network_group_tunnel -f tunnel_file.py`
 - List of all VPC/Network Group Tunnels: `calm get network-group-tunnels`
@@ -59,9 +59,9 @@ Network Group Tunnels (network-group-tunnels) commands are available to perform 
 - Deletes a VPC Tunnel: `calm delete network-group-tunnel <tunnel-name>`
 
 
-## Sample examples
+### Sample examples
 
-###  Sample Project with Cluster, VPC and Overlay Subnet
+#### Project Example with Cluster, VPC and Overlay Subnet
 
 - User can use specify clusters, VPCs and Overlay Subnets in Projects. Clusters whitelisting can be done for Projects with VLAN subnets also. Look [here](../../tests/project/test_project_with_overlay_subnets.py)
     ```
@@ -80,14 +80,14 @@ Network Group Tunnels (network-group-tunnels) commands are available to perform 
     ]
     ```
 
-### Sample examples for referencing cluster in AhvVm
+#### Example for referencing cluster in AhvVm
 - Users can specify cluser used for vm configuration.
     ```
     class MyVM(AhvVM):
         cluster = Ref.Cluster(name="cluster-name")
     ```
   
- ### Sample example for overlay subnets
+ #### Example for using overlay subnets
  - Can be used in Projects as described above
  - User can specify overlay subnets within AhvVmResources
     ```
@@ -105,7 +105,7 @@ Network Group Tunnels (network-group-tunnels) commands are available to perform 
     ```
  
 
-### Sample examples to reference Tunnel in different constructs.
+#### Examples to reference Tunnel in different constructs.
 - Can be used in Endpoints of type IP and HTTP. Sample below, Tunnel reference is accepted as an argument in Endpoint helpers.
   ```
     DslHTTPEndpoint = Endpoint.HTTP(
