@@ -90,6 +90,7 @@ Network Group Tunnels (network-group-tunnels) commands are available to perform 
  #### Example for using overlay subnets
  - Can be used in Projects as described above
  - User can specify overlay subnets within AhvVmResources
+ - Look [here](../../examples/vpcBlueprint/blueprint.py) for blueprint example using overlay subnets and referrencing cluster.
     ```
     class MyVMResources(AhvVMResources)
         nics = [AhvVmNic(subnet="overlay-subnet", vpc="vpc-name")]
