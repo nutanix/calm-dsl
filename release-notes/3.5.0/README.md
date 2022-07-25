@@ -119,28 +119,6 @@ Network Group Tunnels (network-group-tunnels) commands are available to perform 
     Task.Exec.escript(name="tunnel_exec", filename="<file-name>", tunnel=Ref.Tunnel(name="tunnel-name"))
   ```
 
-# Calm-DSL support for creating runbook task with inherit flag
-- User can add child tasks to decision task with inherit_target parameter. Look [here](../../tests/api_interface/test_runbooks/test_files/decision_task_with_multiple_target.py) for sample example
-    ```
-    with Task.Decision.ssh(
-        name="DecisionTask",
-        script="cat hell",
-        target=ref(Endpoint.use_existing("DslEndpoint")),
-    ) as d:
-
-        if d.ok:
-            Task.Exec.escript(
-                name="Task1",
-                script="print 'Decision Task is Successful'",
-                inherit_target=True,
-            )
-
-        else:
-            Task.Exec.ssh(
-                name="Task2", script="print 'Decision Task Failed'", inherit_target=True
-            )
-
-    ```
 
 # Calm-DSL support for vCenter Content Library
 - This allows using of templates from the content library in blueprints.
