@@ -19,9 +19,17 @@ CENTOS_CI = DSL_CONFIG["AHV"]["IMAGES"]["DISK"]["CENTOS_7_CLOUD_INIT"]
 SUBNET = DSL_CONFIG["ACCOUNTS"]["NUTANIX_PC"][0]["SUBNETS"][0]["NAME"]
 CLUSTER = DSL_CONFIG["ACCOUNTS"]["NUTANIX_PC"][0]["SUBNETS"][0]["CLUSTER"]
 NETWORK1 = DSL_CONFIG["AHV"]["NETWORK"]["VLAN1211"]
-VPC_PROJECT = (
-    DSL_CONFIG.get("VPC_PROJECTS", {}).get("PROJECT1", {}).get("NAME", "default")
-)
+
+
+def get_vpc_project(config):
+    project_name = "default"
+    vpc_enabled = config.get("IS_VPC_ENABLED", False)
+    if not vpc_enabled:
+        return project_name
+
+    project_name = (
+        config.get("VPC_PROJECTS", {}).get("PROJECT1", {}).get("NAME", "default")
+    )
 
 
 def get_local_az_overlay_details_from_dsl_config(config):
@@ -51,6 +59,7 @@ def get_local_az_overlay_details_from_dsl_config(config):
 
 
 NETWORK1, VPC1, CLUSTER1 = get_local_az_overlay_details_from_dsl_config(DSL_CONFIG)
+VPC_PROJECT = get_vpc_project(DSL_CONFIG)
 
 DefaultCred = basic_cred(
     CRED_USERNAME,

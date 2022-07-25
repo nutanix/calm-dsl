@@ -335,15 +335,36 @@ def add_tunnel_details(config):
     config["VPC_TUNNELS"] = config_tunnels_dict
 
 
+def check_project_exists(project_name="default"):
+    client = get_api_client()
+
+    payload = {
+        "length": 200,
+        "offset": 0,
+        "filter": "name=={}".format(project_name),
+    }
+    project_name_uuid_map = client.project.get_name_uuid_map(payload)
+
+    if not project_name_uuid_map:
+        print("Project {} not found".format(project_name))
+        return False
+
+    return True
+
+
 def add_vpc_details(config):
     config["IS_VPC_ENABLED"] = False
+
     add_project_details(config, "VPC_PROJECTS", "test_vpc_project")
 
     # UUID gets populated if the project actually exists
-    config_projects = (
-        config.get("VPC_PROJECTS", {}).get("PROJECT1", {}).get("UUID", None)
-    )
-    if config_projects:
+    # config_projects = (
+    #    config.get("VPC_PROJECTS", {}).get("PROJECT1", {}).get("UUID", None)
+    # )
+    # if config_projects:
+    #    config["IS_VPC_ENABLED"] = True
+    project_exists = check_project_exists("test_vpc_project")
+    if project_exists:
         config["IS_VPC_ENABLED"] = True
 
     add_tunnel_details(config)
