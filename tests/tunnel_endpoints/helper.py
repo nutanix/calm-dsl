@@ -13,5 +13,7 @@ def get_vpc_tunnel_using_account(config):
 
 
 def get_vpc_project(config):
-    vpc_project = config.get("VPC_PROJECTS", {}).get("PROJECT1", {}).get("NAME", "")
+    vpc_project = (
+        config.get("VPC_PROJECTS", {}).get("PROJECT1", {}).get("NAME", "") or "default"
+    )
     return vpc_project
