@@ -86,3 +86,16 @@ class ProjectAPI(ResourceAPI):
             verify=False,
             method=REQUEST.METHOD.GET,
         )
+
+    # https://jira.nutanix.com/browse/CALM-32302
+    # Project list timeout if we have more Projects.
+    # So setting read timeout to 300 seconds
+    def list(self, params={}, ignore_error=False):
+        return self.connection._call(
+            self.LIST,
+            verify=False,
+            request_json=params,
+            method=REQUEST.METHOD.POST,
+            ignore_error=ignore_error,
+            timeout=(5, 300),
+        )
