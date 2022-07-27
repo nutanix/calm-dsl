@@ -244,6 +244,11 @@ class ACP:
                 "left_hand_side": {"entity_type": "app_variable"},
                 "right_hand_side": {"collection": "SELF_OWNED"},
             },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "virtual_network"},
+                "right_hand_side": {"collection": "ALL"},
+            },
         ]
 
         OPERATOR = [
@@ -289,6 +294,11 @@ class ACP:
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "app_variable"},
                 "right_hand_side": {"collection": "SELF_OWNED"},
+            },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "virtual_network"},
+                "right_hand_side": {"collection": "ALL"},
             },
         ]
 
@@ -352,6 +362,11 @@ class ACP:
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "app_variable"},
                 "right_hand_side": {"collection": "SELF_OWNED"},
+            },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "virtual_network"},
+                "right_hand_side": {"collection": "ALL"},
             },
         ]
 
