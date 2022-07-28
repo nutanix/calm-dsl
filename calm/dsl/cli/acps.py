@@ -273,7 +273,7 @@ def create_acp(role, project, acp_users, acp_groups, name):
             entity_type=CACHE.ENTITY.AHV_SUBNET, uuid=subnet_uuid
         )
 
-        if subnet_cache_data.get("subnet_type", "VLAN"):
+        if subnet_cache_data.get("subnet_type", "VLAN") == "VLAN":
             cluster_uuids.append(subnet_cache_data["cluster_uuid"])
 
     cluster_uuids = list(set(whiltelisted_clusters) | set(cluster_uuids))
