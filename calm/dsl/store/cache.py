@@ -42,6 +42,7 @@ class Cache:
             calm_version = res.content.decode("utf-8")
 
         cache_tables = {}
+
         for table in db_tables:
             if hasattr(table, "__cache_type__") and (
                 LV(calm_version) >= LV(table.feature_min_version)

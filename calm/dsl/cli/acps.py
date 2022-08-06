@@ -257,11 +257,15 @@ def create_acp(role, project, acp_users, acp_groups, name):
 
     # Getting the cluster uuids for acp
     whitelisted_subnets = []
+    whiltelisted_clusters = []
     for subnet in project_resources.get("subnet_reference_list", []):
         whitelisted_subnets.append(subnet["uuid"])
 
     for subnet in project_resources.get("external_network_list", []):
         whitelisted_subnets.append(subnet["uuid"])
+
+    for cluster in project_resources.get("cluster_reference_list", []):
+        whiltelisted_clusters.append(cluster["uuid"])
 
     cluster_uuids = []
     for subnet_uuid in whitelisted_subnets:
@@ -269,8 +273,10 @@ def create_acp(role, project, acp_users, acp_groups, name):
             entity_type=CACHE.ENTITY.AHV_SUBNET, uuid=subnet_uuid
         )
 
-        cluster_uuids.append(subnet_cache_data["cluster_uuid"])
+        if subnet_cache_data.get("subnet_type", "VLAN") == "VLAN":
+            cluster_uuids.append(subnet_cache_data["cluster_uuid"])
 
+    cluster_uuids = list(set(whiltelisted_clusters) | set(cluster_uuids))
     # Default context for acp
     default_context = ACP.DEFAULT_CONTEXT
 

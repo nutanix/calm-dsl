@@ -30,6 +30,7 @@ def get_vpc_project(config):
     project_name = (
         config.get("VPC_PROJECTS", {}).get("PROJECT1", {}).get("NAME", "default")
     )
+    return project_name
 
 
 def get_local_az_overlay_details_from_dsl_config(config):
