@@ -579,9 +579,8 @@ class AhvVpcsCache(CacheTableBase):
         cls.clear()
 
         client = get_api_client()
-        payload = {"length": 250}
+        payload = {"length": 250, "filter": "type==nutanix_pc"}
         account_name_uuid_map = client.account.get_name_uuid_map(payload)
-        account_uuid_type_map = client.account.get_uuid_type_map(payload)
         AhvVmProvider = cls.get_provider_plugin("AHV_VM")
         AhvObj = AhvVmProvider.get_api_obj()
 
@@ -590,14 +589,6 @@ class AhvVpcsCache(CacheTableBase):
         tunnel_entities = client.tunnel.list_all()
 
         for pc_acc_name, pc_acc_uuid in account_name_uuid_map.items():
-            acc_type = account_uuid_type_map.get(pc_acc_uuid)
-            if acc_type != "nutanix_pc":
-                LOG.debug(
-                    "Skipping account name: {} and uuid: {}".format(
-                        pc_acc_name, pc_acc_uuid
-                    )
-                )
-                continue
             try:
                 res = AhvObj.vpcs(account_uuid=pc_acc_uuid)
             except Exception:
