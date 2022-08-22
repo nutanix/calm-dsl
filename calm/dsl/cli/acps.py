@@ -234,7 +234,10 @@ def create_acp(role, project, acp_users, acp_groups, name):
         sys.exit(-1)
 
     role_cache_data = Cache.get_entity_data(entity_type=CACHE.ENTITY.ROLE, name=role)
-    role_uuid = role_cache_data["uuid"]
+    if not role_cache_data.get("uuid"):
+        LOG.error("Role with name {} not found".format(role))
+        sys.exit(-1)
+    role_uuid = role_cache_data.get("uuid")
 
     limit = 250
     res, err = get_acps_from_project(
@@ -243,8 +246,7 @@ def create_acp(role, project, acp_users, acp_groups, name):
     if err:
         return None, err
 
-    entities = response.get("entities", None)
-
+    entities = res.get("entities", None)
     if res["metadata"]["total_matches"] > 0:
         LOG.error(
             "ACP {} already exists for given role in project".format(
@@ -303,6 +305,9 @@ def create_acp(role, project, acp_users, acp_groups, name):
 
     elif role == "Operator" and cluster_uuids:
         entity_filter_expression_list = ACP.ENTITY_FILTER_EXPRESSION_LIST.OPERATOR
+
+    else:
+        entity_filter_expression_list = get_filters_custom_role(role_uuid, client)
 
     if cluster_uuids:
         entity_filter_expression_list.append(
@@ -370,6 +375,29 @@ def create_acp(role, project, acp_users, acp_groups, name):
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
     LOG.info("Polling on acp creation task")
     watch_task(res["status"]["execution_context"]["task_uuid"])
+
+
+def get_filters_custom_role(role_uuid, client):
+
+    role, err = client.role.read(id=role_uuid)
+    if err:
+        LOG.error("Couldn't fetch role with uuid {}, error: {}".format(role_uuid, err))
+        sys.exit(-1)
+    role = role.json()
+    permissions_list = (
+        role.get("status", {}).get("resources", {}).get("permission_reference_list", [])
+    )
+    permission_names = set()
+    for perm in permissions_list:
+        if perm:
+            perm_name = perm.get("name", "")
+            if perm_name:
+                permission_names.add(perm_name.lower())
+    entity_filter_expression_list = []
+    for perm_filter in ACP.CUSTOM_ROLE_PERMISSIONS_FILTERS:
+        if perm_filter.get("permission") in permission_names:
+            entity_filter_expression_list.append(perm_filter.get("filter"))
+    return entity_filter_expression_list
 
 
 def delete_acp(acp_name, project_name):
