@@ -302,7 +302,7 @@ def create_acp(role, project, acp_users, acp_groups, name):
         entity_filter_expression_list = ACP.ENTITY_FILTER_EXPRESSION_LIST.CONSUMER
 
     elif role == "Operator" and cluster_uuids:
-        entity_filter_expression_list = ACP.ENTITY_FILTER_EXPRESSION_LIST.CONSUMER
+        entity_filter_expression_list = ACP.ENTITY_FILTER_EXPRESSION_LIST.OPERATOR
 
     if cluster_uuids:
         entity_filter_expression_list.append(
