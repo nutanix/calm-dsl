@@ -145,6 +145,14 @@ def watch_project_task(project_uuid, task_uuid, poll_interval=4):
     )
 
 
+def convert_groups_to_lowercase(group_list):
+    group_mutable_list = []
+    for group in group_list:
+        group_mutable_list.append(group.lower())
+    group_list = tuple(group_mutable_list)
+    return group_list
+
+
 def get_project_module_from_file(project_file):
     """Returns Project module given a user project dsl file (.py)"""
     return get_module_from_file("calm.dsl.user_project", project_file)
@@ -685,7 +693,7 @@ def update_project_from_dsl(project_name, project_file, no_cache_update=False):
     project_payload = compile_project_dsl_class(UserProject)
 
     LOG.info("Fetching project '{}' details".format(project_name))
-    params = {"length": 1000, "filter": "name=={}".format(project_name)}
+    params = {"length": 250, "filter": "name=={}".format(project_name)}
     project_name_uuid_map = client.project.get_name_uuid_map(params)
     project_uuid = project_name_uuid_map.get(project_name, "")
 
@@ -903,7 +911,7 @@ def update_project_using_cli_switches(
     client = get_api_client()
 
     LOG.info("Fetching project '{}' details".format(project_name))
-    params = {"length": 1000, "filter": "name=={}".format(project_name)}
+    params = {"length": 250, "filter": "name=={}".format(project_name)}
     project_name_uuid_map = client.project.get_name_uuid_map(params)
     project_uuid = project_name_uuid_map.get(project_name, "")
 
@@ -940,6 +948,7 @@ def update_project_using_cli_switches(
         )
         sys.exit(-1)
 
+    remove_group_list = convert_groups_to_lowercase(remove_group_list)
     if not set(remove_group_list).issubset(set(project_groups)):
         LOG.error(
             "Groups {} are not registered in project".format(
@@ -974,6 +983,8 @@ def update_project_using_cli_switches(
         )
 
     usergroup_name_uuid_map = client.group.get_name_uuid_map({"length": 1000})
+
+    add_group_list = convert_groups_to_lowercase(add_group_list)
     for group in add_group_list:
         updated_group_reference_list.append(
             {

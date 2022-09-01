@@ -3,7 +3,6 @@ import click
 from .acps import (
     get_acps,
     create_acp,
-    get_system_roles,
     delete_acp,
     update_acp,
     describe_acp,
@@ -41,7 +40,6 @@ def _get_acps(name, project, filter_by, limit, offset, quiet, out):
     "--role",
     "-r",
     required=True,
-    type=click.Choice(get_system_roles()),
     help="ACP role",
 )
 @click.option("--project", "-p", required=True, help="ACP project name")
