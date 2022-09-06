@@ -6,7 +6,7 @@ import time
 import sys
 import json
 import traceback
-
+from distutils.version import LooseVersion as LV
 from calm.dsl.cli import main as cli
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.cli.marketplace import (
@@ -19,11 +19,15 @@ from calm.dsl.builtins import read_local_file
 from calm.dsl.cli.constants import MARKETPLACE_ITEM
 from calm.dsl.log import get_logging_handle
 from tests.utils import Application as ApplicationHelper
+from calm.dsl.store import Version
 
 LOG = get_logging_handle(__name__)
-
+CALM_VERSION = Version.get_version("Calm")
 APP_ICON_IMAGE_PATH = "tests/cli/images/test_app_icon.jpg"
 DSL_BP_FILEPATH = "tests/existing_vm_example/test_existing_vm_bp.py"
+DSL_BP_WITH_OVERLAY_SUBNETS = (
+    "tests/ahv_vm_overlay_subnet/test_overlay_subnet_blueprint.py"
+)
 DSL_BP_EDITABLE_PARAMS = "tests/existing_vm_example/existing_vm_bp_editable_params.py"
 
 APP_STATES = [
@@ -391,7 +395,7 @@ class TestMarketplaceBPCommands:
 
         LOG.info("Success")
 
-    def _create_bp(self, name=None):
+    def _create_bp(self, BP_PATH=DSL_BP_FILEPATH, name=None):
 
         self.created_dsl_bp_name = name or "Test_Existing_VM_DSL_{}".format(
             str(uuid.uuid4())[-10:]
@@ -404,7 +408,7 @@ class TestMarketplaceBPCommands:
             [
                 "create",
                 "bp",
-                "--file={}".format(DSL_BP_FILEPATH),
+                "--file={}".format(BP_PATH),
                 "--name={}".format(self.created_dsl_bp_name),
                 "--description='Test DSL Blueprint; to delete'",
             ],
@@ -425,7 +429,21 @@ class TestMarketplaceBPCommands:
             )
             pytest.fail("BP creation failed")
 
-    def test_mpi_basic_commands(self):
+    @pytest.mark.parametrize(
+        "BP_PATH",
+        [
+            pytest.param(DSL_BP_FILEPATH),
+            pytest.param(
+                DSL_BP_WITH_OVERLAY_SUBNETS,
+                marks=pytest.mark.skipif(
+                    LV(CALM_VERSION) < LV("3.5.0")
+                    or not DSL_CONFIG.get("IS_VPC_ENABLED", False),
+                    reason="VPC Tunnels can be used in Calm v3.5.0+ or VPC is disabled on the setup",
+                ),
+            ),
+        ],
+    )
+    def test_mpi_basic_commands(self, BP_PATH):
         """
         Steps:
             1. Create a blueprint
@@ -444,7 +462,7 @@ class TestMarketplaceBPCommands:
 
         """
 
-        self._create_bp()
+        self._create_bp(BP_PATH)
         self.created_bp_list.append(self.created_dsl_bp_name)
         self.marketplace_bp_name = "Test_Marketplace_Bp_{}".format(
             str(uuid.uuid4())[-10:]
@@ -895,7 +913,21 @@ class TestMarketplaceBPCommands:
         LOG.info("Success")
 
     @pytest.mark.slow
-    def test_mpi_launch(self):
+    @pytest.mark.parametrize(
+        "BP_PATH",
+        [
+            pytest.param(DSL_BP_FILEPATH),
+            pytest.param(
+                DSL_BP_WITH_OVERLAY_SUBNETS,
+                marks=pytest.mark.skipif(
+                    LV(CALM_VERSION) < LV("3.5.0")
+                    or not DSL_CONFIG.get("IS_VPC_ENABLED", False),
+                    reason="VPC Tunnels can be used in Calm v3.5.0+ or VPC is disabled on the setup",
+                ),
+            ),
+        ],
+    )
+    def test_mpi_launch(self, BP_PATH):
         """
         Steps:
             1. Create a blueprint
@@ -908,7 +940,7 @@ class TestMarketplaceBPCommands:
             8. Delete the blueprint
         """
 
-        self._create_bp()
+        self._create_bp(BP_PATH)
         self.created_bp_list.append(self.created_dsl_bp_name)
         self.marketplace_bp_name = "Test_Marketplace_Bp_{}".format(
             str(uuid.uuid4())[-10:]

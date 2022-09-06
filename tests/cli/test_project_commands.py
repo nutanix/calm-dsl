@@ -5,7 +5,7 @@ import click
 import traceback
 from distutils.version import LooseVersion as LV
 from click.testing import CliRunner
-
+from calm.dsl.builtins.models.helper.common import get_project
 from calm.dsl.cli import main as cli
 from calm.dsl.builtins.models.metadata_payload import reset_metadata_obj
 from calm.dsl.builtins import read_local_file
@@ -13,8 +13,8 @@ from calm.dsl.config import get_context
 from calm.dsl.store import Version
 from calm.dsl.log import get_logging_handle
 
-LOG = get_logging_handle(__name__)
 
+LOG = get_logging_handle(__name__)
 DSL_PROJECT_PATH = "tests/project/test_project_in_pc.py"
 DSL_PROJECT_WITH_ENV_PATH = "tests/project/test_project_with_env.py"
 DSL_PROJECT_WITH_VPC_PATH = "tests/project/test_project_with_overlay_subnets.py"
@@ -22,6 +22,11 @@ DSL_PROJECT_WITH_VPC_PATH = "tests/project/test_project_with_overlay_subnets.py"
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 USER = DSL_CONFIG["USERS"][0]
 USER_NAME = USER["NAME"]
+
+ACCOUNTS = DSL_CONFIG["ACCOUNTS"]
+
+NTNX_ACCOUNT_1 = ACCOUNTS["NUTANIX_PC"][1]
+OVERLAY_SUBNETS = NTNX_ACCOUNT_1["OVERLAY_SUBNETS"][0]["VPC"]
 
 ACCOUNTS = DSL_CONFIG["ACCOUNTS"]
 AWS_ACCOUNT = ACCOUNTS["AWS"][0]
@@ -92,15 +97,30 @@ class TestProjectCommands:
             pytest.fail("Project compile command failed")
         LOG.info("Success")
 
-    def test_project_crud(self):
+    @pytest.mark.parametrize(
+        "PROJECT_PATH",
+        [
+            pytest.param(DSL_PROJECT_PATH),
+            pytest.param(
+                DSL_PROJECT_WITH_VPC_PATH,
+                marks=pytest.mark.skipif(
+                    LV(CALM_VERSION) < LV("3.5.0")
+                    or not DSL_CONFIG.get("IS_VPC_ENABLED", False),
+                    reason="VPC Tunnels can be used in Calm v3.5.0+ or VPC is disabled on the setup",
+                ),
+            ),
+        ],
+    )
+    def test_project_crud(self, PROJECT_PATH):
         """
         It will cover create/describe/update/delete/get commands on project
         This test assumes users/groups mentioned in project file are already created
         """
 
         # Create operation
-        self._test_project_create_using_dsl()
-
+        self._test_project_create_using_dsl(PROJECT_PATH)
+        if self.VPC_FLAG:
+            self.test_overlay_subnets()
         # Read operations
         click.echo("")
         self._test_project_describe_out_json()
@@ -119,9 +139,14 @@ class TestProjectCommands:
         click.echo("")
         self._test_project_delete()
 
-    def _test_project_create_using_dsl(self):
+    def _test_project_create_using_dsl(self, PROJECT_PATH=DSL_PROJECT_PATH):
 
         runner = CliRunner()
+        if PROJECT_PATH == DSL_PROJECT_WITH_VPC_PATH:
+            self.VPC_FLAG = True
+        else:
+            self.VPC_FLAG = False
+
         self.dsl_project_name = "Test_DSL_Project_{}".format(str(uuid.uuid4()))
         LOG.info("Testing 'calm create project' command")
         result = runner.invoke(
@@ -129,7 +154,7 @@ class TestProjectCommands:
             [
                 "create",
                 "project",
-                "--file={}".format(DSL_PROJECT_PATH),
+                "--file={}".format(PROJECT_PATH),
                 "--name={}".format(self.dsl_project_name),
                 "--description='Test DSL Project to delete'",
             ],
@@ -403,45 +428,7 @@ class TestProjectCommands:
             pytest.fail("Project creation from python file failed")
         LOG.info("Success")
 
-        self._test_project_delete()
-
-    @pytest.mark.skipif(
-        LV(CALM_VERSION) < LV("3.5.0") or not DSL_CONFIG.get("IS_VPC_ENABLED", False),
-        reason="Overlay Subnets can be used in Calm v3.5.0+ blueprints or VPC is disabled on the setup",
-    )
-    def test_project_with_vpc_and_overlay_subnets(self):
-        """This test will check Project creation having VPC and
-        Overlay subnets"""
-
-        runner = CliRunner()
-        self.dsl_project_name = "Test_DSL_Project_With_VPC{}".format(str(uuid.uuid4()))
-        LOG.info("Testing 'calm create project' command")
-        result = runner.invoke(
-            cli,
-            [
-                "create",
-                "project",
-                "--file={}".format(DSL_PROJECT_WITH_VPC_PATH),
-                "--name={}".format(self.dsl_project_name),
-                "--description='Test DSL Project with VPC to delete'",
-            ],
-        )
-        if result.exit_code:
-            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
-            LOG.debug(
-                "Cli Response: {}".format(
-                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
-                )
-            )
-            LOG.debug(
-                "Traceback: \n{}".format(
-                    "".join(traceback.format_tb(result.exc_info[2]))
-                )
-            )
-            pytest.fail("Project creation from python file failed")
-        LOG.info("Success")
-
-        self._test_project_delete()
+        # self._test_project_delete()
 
     @pytest.mark.skipif(
         LV(CALM_VERSION) < LV("3.5.0") or not DSL_CONFIG.get("IS_VPC_ENABLED", False),
@@ -475,3 +462,9 @@ class TestProjectCommands:
             )
             pytest.fail("Project compilation from python file failed")
         LOG.info("Success")
+
+    def test_overlay_subnets(self):
+        """This is a test to check if the project created consists of overlay subnets"""
+
+        project_data = get_project(self.dsl_project_name)
+        assert OVERLAY_SUBNETS in str(project_data)
