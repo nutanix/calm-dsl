@@ -13,7 +13,6 @@ from calm.dsl.config import get_context
 from calm.dsl.store import Version
 from calm.dsl.log import get_logging_handle
 
-
 LOG = get_logging_handle(__name__)
 DSL_PROJECT_PATH = "tests/project/test_project_in_pc.py"
 DSL_PROJECT_WITH_ENV_PATH = "tests/project/test_project_with_env.py"
@@ -24,10 +23,6 @@ USER = DSL_CONFIG["USERS"][0]
 USER_NAME = USER["NAME"]
 
 ACCOUNTS = DSL_CONFIG["ACCOUNTS"]
-
-NTNX_ACCOUNT_1 = ACCOUNTS["NUTANIX_PC"][1]
-OVERLAY_SUBNETS = NTNX_ACCOUNT_1["OVERLAY_SUBNETS"][0]["VPC"]
-
 ACCOUNTS = DSL_CONFIG["ACCOUNTS"]
 AWS_ACCOUNT = ACCOUNTS["AWS"][0]
 AWS_ACCOUNT_NAME = AWS_ACCOUNT["NAME"]
@@ -120,7 +115,7 @@ class TestProjectCommands:
         # Create operation
         self._test_project_create_using_dsl(PROJECT_PATH)
         if self.VPC_FLAG:
-            self.test_overlay_subnets()
+            self._test_overlay_subnets()
         # Read operations
         click.echo("")
         self._test_project_describe_out_json()
@@ -463,8 +458,10 @@ class TestProjectCommands:
             pytest.fail("Project compilation from python file failed")
         LOG.info("Success")
 
-    def test_overlay_subnets(self):
+    def _test_overlay_subnets(self):
         """This is a test to check if the project created consists of overlay subnets"""
+        NTNX_ACCOUNT_1 = ACCOUNTS["NUTANIX_PC"][1]
+        OVERLAY_SUBNETS = NTNX_ACCOUNT_1["OVERLAY_SUBNETS"][0]["VPC"]
 
         project_data = get_project(self.dsl_project_name)
         assert OVERLAY_SUBNETS in str(project_data)
