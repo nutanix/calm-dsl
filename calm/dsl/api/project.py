@@ -1,3 +1,5 @@
+from distutils.version import LooseVersion as LV
+
 from .resource import ResourceAPI
 from .connection import REQUEST
 
