@@ -53,21 +53,21 @@ class InitConfigHandle:
             config_obj["CONFIG"] = {"location": DEFAULT_CONFIG_FILE}
 
         if env_init_config.get("config_file_location"):
-            config_obj["CONFIG"]["LOCATION"] = env_init_config["config_file_location"]
+            config_obj["CONFIG"]["location"] = env_init_config["config_file_location"]
 
         if not config_obj.get("DB", {}).get("location"):
             make_file_dir(DEFAULT_DB_LOCATION)
             config_obj["DB"] = {"location": DEFAULT_DB_LOCATION}
 
         if env_init_config.get("db_location"):
-            config_obj["DB"]["LOCATION"] = env_init_config["db_location"]
+            config_obj["DB"]["location"] = env_init_config["db_location"]
 
         if not config_obj.get("LOCAL_DIR", {}).get("location"):
             make_file_dir(DEFAULT_LOCAL_DIR_LOCATION)
             config_obj["LOCAL_DIR"] = {"location": DEFAULT_LOCAL_DIR_LOCATION}
 
         if env_init_config.get("local_dir_location"):
-            config_obj["LOCAL_DIR"]["LOCATION"] = env_init_config["local_dir_location"]
+            config_obj["LOCAL_DIR"]["location"] = env_init_config["local_dir_location"]
 
         self._CONFIG = config_obj
 
