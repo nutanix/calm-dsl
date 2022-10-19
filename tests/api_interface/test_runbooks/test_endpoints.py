@@ -14,10 +14,9 @@ from calm.dsl.store import Version
 from utils import (
     change_uuids,
     read_test_config,
-    get_vpc_project,
-    get_vpc_tunnel_using_account,
     update_tunnel_and_project,
 )
+from tests.utils import get_vpc_project, get_vpc_tunnel_using_account
 from calm.dsl.builtins.models.utils import read_local_file
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))

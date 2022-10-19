@@ -7,7 +7,7 @@ from calm.dsl.runbooks import basic_cred
 from calm.dsl.builtins.models.metadata import Metadata
 from calm.dsl.runbooks import CalmEndpoint as Endpoint
 from calm.dsl.builtins.models.calm_ref import Ref
-from tests.tunnel_endpoints.helper import get_vpc_tunnel_using_account, get_vpc_project
+from tests.utils import get_vpc_tunnel_using_account, get_vpc_project
 
 CRED_USERNAME = read_local_file(".tests/runbook_tests/username")
 CRED_PASSWORD = read_local_file(".tests/runbook_tests/password")

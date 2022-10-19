@@ -6,6 +6,7 @@ from calm.dsl.providers.base import get_provider
 
 
 dsl_config_file_location = os.path.expanduser("~/.calm/.local/.tests/config.json")
+VPC_PROJECT_NAME = "test_vpc_project"
 
 
 def add_account_details(config):
@@ -203,8 +204,9 @@ def add_project_details(
     if not config_projects:
         config[config_header] = {"PROJECT1": {"NAME": default_project_name}}
 
-    for _, project_config in config[config_header].items():
-        project_name = project_config["NAME"]
+    for config_key, project_config in config[config_header].items():
+        project_name = project_config.get("NAME", default_project_name)
+        project_config["NAME"] = project_name
 
         payload = {
             "length": 200,
@@ -213,8 +215,10 @@ def add_project_details(
         }
         project_name_uuid_map = client.project.get_name_uuid_map(payload)
 
+        # If not found, clear older data, just store name
         if not project_name_uuid_map:
             print("Project {} not found".format(project_name))
+            config[config_header][config_key] = {}
             continue
 
         project_uuid = project_name_uuid_map[project_name]
@@ -355,7 +359,11 @@ def check_project_exists(project_name="default"):
 def add_vpc_details(config):
     config["IS_VPC_ENABLED"] = False
 
-    add_project_details(config, "VPC_PROJECTS", "test_vpc_project")
+    project_exists = check_project_exists(VPC_PROJECT_NAME)
+    if project_exists:
+        config["IS_VPC_ENABLED"] = True
+
+    add_project_details(config, "VPC_PROJECTS", VPC_PROJECT_NAME)
 
     # UUID gets populated if the project actually exists
     # config_projects = (
@@ -363,9 +371,6 @@ def add_vpc_details(config):
     # )
     # if config_projects:
     #    config["IS_VPC_ENABLED"] = True
-    project_exists = check_project_exists("test_vpc_project")
-    if project_exists:
-        config["IS_VPC_ENABLED"] = True
 
     add_tunnel_details(config)
 

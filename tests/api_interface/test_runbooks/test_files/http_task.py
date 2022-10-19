@@ -11,10 +11,9 @@ from calm.dsl.config import get_context
 from utils import (
     read_test_config,
     change_uuids,
-    get_vpc_project,
-    get_vpc_tunnel_using_account,
     update_tunnel_and_project,
 )
+from tests.utils import get_vpc_project, get_vpc_tunnel_using_account
 
 AUTH_USERNAME = read_local_file(".tests/runbook_tests/auth_username")
 AUTH_PASSWORD = read_local_file(".tests/runbook_tests/auth_password")

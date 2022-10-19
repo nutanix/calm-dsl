@@ -9,6 +9,7 @@ from calm.dsl.builtins import Deployment, Profile, Blueprint
 from calm.dsl.builtins import read_local_file, read_spec
 from calm.dsl.builtins import readiness_probe, Ref, Metadata
 from calm.dsl.builtins import AppEdit, PatchField, AhvUpdateConfigAttrs
+from tests.utils import get_vpc_project
 
 CRED_USERNAME = read_local_file(".tests/username")
 CRED_PASSWORD = read_local_file(".tests/password")
@@ -19,18 +20,6 @@ CENTOS_CI = DSL_CONFIG["AHV"]["IMAGES"]["DISK"]["CENTOS_7_CLOUD_INIT"]
 SUBNET = DSL_CONFIG["ACCOUNTS"]["NUTANIX_PC"][0]["SUBNETS"][0]["NAME"]
 CLUSTER = DSL_CONFIG["ACCOUNTS"]["NUTANIX_PC"][0]["SUBNETS"][0]["CLUSTER"]
 NETWORK1 = DSL_CONFIG["AHV"]["NETWORK"]["VLAN1211"]
-
-
-def get_vpc_project(config):
-    project_name = "default"
-    vpc_enabled = config.get("IS_VPC_ENABLED", False)
-    if not vpc_enabled:
-        return project_name
-
-    project_name = (
-        config.get("VPC_PROJECTS", {}).get("PROJECT1", {}).get("NAME", "default")
-    )
-    return project_name
 
 
 def get_local_az_overlay_details_from_dsl_config(config):

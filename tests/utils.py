@@ -128,3 +128,29 @@ class Task:
             pytest.fail("Task went to {} state".format(task_payload["status"]))
 
         return task_payload
+
+
+def get_vpc_project(config):
+    project_name = "default"
+    vpc_enabled = config.get("IS_VPC_ENABLED", False)
+    if not vpc_enabled:
+        return project_name
+
+    project_name = (
+        config.get("VPC_PROJECTS", {}).get("PROJECT1", {}).get("NAME", "default")
+    )
+    return project_name
+
+
+def get_vpc_tunnel_using_account(config):
+    vpc = ""  # set default, if found set that value
+    accounts = config.get("ACCOUNTS", {}).get("NUTANIX_PC", [])
+    for acc in accounts:
+        if acc.get("NAME") == "NTNX_LOCAL_AZ":
+            for subnet in acc.get("OVERLAY_SUBNETS", []):
+                if subnet.get("VPC", "") == "vpc_name_1":
+                    vpc = "vpc_name_1"
+                    break
+    vpc_tunnel = config.get("VPC_TUNNELS", {}).get("NTNX_LOCAL_AZ", {}).get(vpc, {})
+
+    return vpc_tunnel.get("name", "")
