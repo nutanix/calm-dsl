@@ -34,6 +34,8 @@ from .policy_action_type import PolicyActionTypeAPI
 from .policy_event import PolicyEventAPI
 from .policy_attributes import PolicyAttributesAPI
 from .policy import PolicyAPI
+from .approval import ApprovalAPI
+from .approval_request import ApprovalRequestAPI
 
 
 class ClientHandle:
@@ -74,6 +76,8 @@ class ClientHandle:
         self.policy_event = PolicyEventAPI(self.connection)
         self.policy_attributes = PolicyAttributesAPI(self.connection)
         self.policy = PolicyAPI(self.connection)
+        self.approvals = ApprovalAPI(self.connection)
+        self.approval_requests = ApprovalRequestAPI(self.connection)
 
 
 def get_client_handle_obj(

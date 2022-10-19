@@ -328,7 +328,7 @@ def publish():
 
 @main.group(cls=FeatureFlagGroup)
 def approve():
-    """Approve blueprints in marketplace manager"""
+    """Approve blueprints in marketplace manager or approve event triggered by approval policies"""
     pass
 
 
@@ -340,7 +340,19 @@ def unpublish():
 
 @main.group(cls=FeatureFlagGroup)
 def reject():
-    """Reject blueprints from marketplace manager"""
+    """Reject blueprints from marketplace manager or reject event triggered by approval policies"""
+    pass
+
+
+@main.group(cls=FeatureFlagGroup)
+def enable():
+    """Enable policies"""
+    pass
+
+
+@main.group(cls=FeatureFlagGroup)
+def disable():
+    """Disable policies"""
     pass
 
 

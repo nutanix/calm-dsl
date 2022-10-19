@@ -90,6 +90,30 @@ class BLUEPRINT:
         ERROR = "ERROR"
 
 
+class POLICY:
+    class STATES:
+        ENABLED = "ENABLED"
+        DISABLED = "DISABLED"
+        DELETED = "DELETED"
+        DRAFT = "DRAFT"
+
+
+class APPROVAL_REQUEST:
+    class STATES:
+        PENDING = "PENDING"
+        APPROVED = "APPROVED"
+        REJECTED = "REJECTED"
+        EXPIRED = "EXPIRED"
+        ABORTED = "ABORTED"
+
+    TERMINAL_STATES = [
+        STATES.APPROVED,
+        STATES.REJECTED,
+        STATES.EXPIRED,
+        STATES.ABORTED,
+    ]
+
+
 class APPLICATION:
     class STATES:
         PROVISIONING = "provisioning"

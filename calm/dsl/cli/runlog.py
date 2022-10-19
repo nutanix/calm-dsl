@@ -629,6 +629,12 @@ def get_runlog_status(screen):
             screen.clear()
             screen.print_at(msg, 0, 0)
             screen.refresh()
+        elif response["status"]["state"] == "POLICY_EXEC":
+            msg = "Runlog run is POLICY_EXEC state"
+            screen.clear()
+            screen.print_at(msg, 0, 0)
+            screen.refresh()
+            return (True, "")
         elif response["status"]["state"] in RUNLOG.FAILURE_STATES:
             msg = "Runlog run is in {} state.".format(response["status"]["state"])
             msg += " {}".format("\n".join(response["status"]["reason_list"]))
