@@ -68,7 +68,7 @@ def _approve_approval_command(approval_name, comment, uuid=""):
     """Updates a approval"""
 
     update_approval_command(
-        approval_name, APPROVAL_REQUEST.APPROVED, comment, uuid=uuid
+        approval_name, APPROVAL_REQUEST.STATES.APPROVED, comment, uuid=uuid
     )
 
 
@@ -89,7 +89,7 @@ def _reject_approval_command(approval_name, comment, uuid=""):
     """Updates a approval"""
 
     update_approval_command(
-        approval_name, APPROVAL_REQUEST.REJECTED, comment, uuid=uuid
+        approval_name, APPROVAL_REQUEST.STATES.REJECTED, comment, uuid=uuid
     )
 
 
