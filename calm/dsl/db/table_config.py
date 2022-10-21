@@ -1866,13 +1866,10 @@ class UsersCache(CacheTableBase):
         cls.clear()
 
         client = get_api_client()
-        Obj = get_resource_api("users", client.connection)
-        res, err = Obj.list({"length": 1000})
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        entities = client.user.list_all(api_limit=500)
 
-        res = res.json()
-        for entity in res["entities"]:
+        for entity in entities:
+
             name = entity["status"]["name"]
             uuid = entity["metadata"]["uuid"]
             display_name = entity["status"]["resources"].get("display_name") or ""
