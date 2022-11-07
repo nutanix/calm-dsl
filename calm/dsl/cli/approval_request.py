@@ -22,7 +22,11 @@ def describe_approval_request(approval_request_name, out, uuid=""):
 
     if out == "json":
         approval_request.pop("status", None)
-        click.echo(json.dumps(approval_request, indent=4, separators=(",", ": ")))
+        click.echo(
+            json.dumps(
+                approval_request, indent=4, separators=(",", ": "), ensure_ascii=False
+            )
+        )
         return
 
     click.echo("\n----Approval request Summary----\n")
@@ -246,7 +250,9 @@ def get_approval_request_list(name, filter_by, limit, offset, quiet, all_items, 
         )
 
     if out == "json":
-        click.echo(json.dumps(res, indent=4, separators=(",", ": ")))
+        click.echo(
+            json.dumps(res, indent=4, separators=(",", ": "), ensure_ascii=False)
+        )
         return
 
     json_rows = res["entities"]

@@ -1,5 +1,7 @@
 import json
+from logging import exception
 import time
+import traceback
 import pytest
 
 from click.testing import CliRunner
@@ -243,3 +245,11 @@ def get_vpc_tunnel_using_account(config):
 
     vpc_tunnel = config.get("VPC_TUNNELS", {}).get("NTNX_LOCAL_AZ", {}).get(vpc, {})
     return {"name": vpc_tunnel.get("name", ""), "uuid": vpc_tunnel.get("uuid", "")}
+
+
+def get_approval_project(config):
+    policy_enabled = config.get("IS_POLICY_ENABLED", False)
+    if not policy_enabled:
+        raise exception("No Approval Policy Project Found")
+    project_name = config.get("POLICY_PROJECTS", {}).get("PROJECT1", {}).get("NAME", "")
+    return project_name

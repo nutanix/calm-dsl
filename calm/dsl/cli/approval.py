@@ -25,7 +25,9 @@ def describe_approval(approval_name, out, uuid=""):
 
     if out == "json":
         approval.pop("status", None)
-        click.echo(json.dumps(approval, indent=4, separators=(",", ": ")))
+        click.echo(
+            json.dumps(approval, indent=4, separators=(",", ": "), ensure_ascii=False)
+        )
         return
 
     click.echo("\n----Approval Summary----\n")
@@ -194,7 +196,9 @@ def update_approval_command(name, state, comment="", uuid=""):
         pc_ip, pc_port, uuid
     )
     stdout_dict = {"name": approval_name, "link": link, "state": approval_state}
-    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+    click.echo(
+        json.dumps(stdout_dict, indent=4, separators=(",", ": "), ensure_ascii=False)
+    )
 
 
 def get_approval(client, approval_name, uuid=""):
@@ -280,7 +284,9 @@ def get_approval_list(name, filter_by, limit, offset, quiet, all_items, out):
         )
 
     if out == "json":
-        click.echo(json.dumps(res, indent=4, separators=(",", ": ")))
+        click.echo(
+            json.dumps(res, indent=4, separators=(",", ": "), ensure_ascii=False)
+        )
         return
 
     json_rows = res["entities"]

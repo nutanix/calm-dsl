@@ -1,0 +1,71 @@
+clone_is_template: false
+cluster: ''
+compute_drs_mode: false
+datastore: ds:///vmfs/volumes/f6a8bff3-a29c7b8e/
+drs_mode: false
+folder: null
+host: 00000000-0000-0000-0000-ac1f6bba7912
+library: null
+name: testvm-@@{calm_random_hash}@@
+resources:
+  account_uuid: f7d5df43-71ad-4fb6-8847-013fb3dfedcc
+  controller_list: []
+  cpu_hot_add: false
+  disk_list: []
+  guest_customization:
+    cloud_init: ''
+    customization_name: ''
+    customization_type: GUEST_OS_LINUX
+    type: ''
+  memory_hot_plug: false
+  memory_size_mib: 3072
+  nic_list:
+  - net_name: key-vim.host.PortGroup-vlan.112
+    nic_type: e1000
+    type: ''
+  num_sockets: 1
+  num_vcpus_per_socket: 1
+  power_state: poweron
+  tag_list:
+  - tag_id: urn:vmomi:InventoryServiceTag:67988884-a4c3-414f-ba10-b27e37b2ffb5:GLOBAL
+    type: ''
+  template_controller_list:
+  - bus_sharing: noSharing
+    controller_type: VirtualLsiLogicSASController
+    is_deleted: false
+    key: 1000
+    type: ''
+  template_disk_list:
+  - adapter_type: SCSI
+    controller_key: 1000
+    device_slot: 0
+    disk_mode: persistent
+    disk_size_mb: 40960
+    disk_type: disk
+    is_deleted: false
+    iso_path: ''
+    key: 2000
+    location: ds:///vmfs/volumes/f6a8bff3-a29c7b8e/
+    type: ''
+  - adapter_type: IDE
+    controller_key: 200
+    device_slot: 0
+    disk_mode: persistent
+    disk_size_mb: -1
+    disk_type: cdrom
+    is_deleted: false
+    iso_path: ''
+    key: 3000
+    location: ''
+    type: ''
+  template_nic_list:
+  - is_deleted: false
+    key: 4000
+    net_name: key-vim.host.PortGroup-vlan.112
+    nic_type: e1000
+    type: ''
+  type: ''
+storage_drs_mode: false
+storage_pod: ''
+template: 503e35e6-e621-64bf-86db-a51115f7ab28
+type: PROVISION_VMWARE_VM

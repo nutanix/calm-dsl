@@ -16,6 +16,14 @@ POLICY_EVENT_MAP = {
     POLICY.EVENT.RUNBOOK.EXECUTE: "RUNBOOK_EXECUTE",
 }
 
+PROVIDER_SUBSTRATE_TYPE_MAP = {
+    "AHV": "AHV_VM",
+    "VMWare": "VMWARE_VM",
+    "Azure": "AZURE_VM",
+    "AWS": "AWS_VM",
+    "GCP": "GCP_VM",
+}
+
 
 def get_provider(attribute_name):
     provider_attribute_pair = attribute_name.split(":")
@@ -46,11 +54,12 @@ def get_criteria_list(attribute_dict, jsonpath):
                 "update cache".format("Substrate Type")
             )
             sys.exit("No entry found for policy attribute={}".format("Substrate Type"))
+        criteria_val = PROVIDER_SUBSTRATE_TYPE_MAP.get(provider, provider)
         criteria_list.append(
             {
                 "operator": "=",
                 "is_primary": False,
-                "rhs": provider,
+                "rhs": criteria_val,
                 "lhs": substrate_attribute_info["jsonpath"],
             }
         )

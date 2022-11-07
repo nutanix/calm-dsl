@@ -1,0 +1,6 @@
+datastore: false
+name: false
+resources:
+  controller_list: {}
+  memory_size_mib: false
+template: false

@@ -31,7 +31,9 @@ def describe_policy(policy_name, out):
 
     if out == "json":
         policy.pop("status", None)
-        click.echo(json.dumps(policy, indent=4, separators=(",", ": ")))
+        click.echo(
+            json.dumps(policy, indent=4, separators=(",", ": "), ensure_ascii=False)
+        )
         return
 
     click.echo("\n----Policy Summary----\n")
@@ -172,7 +174,11 @@ def compile_policy_command(policy_file, out):
         return
 
     if out == "json":
-        click.echo(json.dumps(policy_payload, indent=4, separators=(",", ": ")))
+        click.echo(
+            json.dumps(
+                policy_payload, indent=4, separators=(",", ": "), ensure_ascii=False
+            )
+        )
     elif out == "yaml":
         click.echo(yaml.dump(policy_payload, default_flow_style=False))
     else:
@@ -284,7 +290,9 @@ def enable_policy_command(name):
         pc_ip, pc_port, policy_uuid
     )
     stdout_dict = {"name": policy_name, "link": link, "state": policy_state}
-    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+    click.echo(
+        json.dumps(stdout_dict, indent=4, separators=(",", ": "), ensure_ascii=False)
+    )
 
 
 def disable_policy_command(name):
@@ -332,7 +340,9 @@ def disable_policy_command(name):
         pc_ip, pc_port, policy_uuid
     )
     stdout_dict = {"name": policy_name, "link": link, "state": policy_state}
-    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+    click.echo(
+        json.dumps(stdout_dict, indent=4, separators=(",", ": "), ensure_ascii=False)
+    )
 
 
 def update_policy_command(policy_file, name, description):
@@ -390,7 +400,9 @@ def update_policy_command(policy_file, name, description):
         pc_ip, pc_port, policy_uuid
     )
     stdout_dict = {"name": policy_name, "link": link, "state": policy_state}
-    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+    click.echo(
+        json.dumps(stdout_dict, indent=4, separators=(",", ": "), ensure_ascii=False)
+    )
 
 
 def get_policy(client, policy_name):
@@ -515,7 +527,9 @@ def get_policy_list(name, filter_by, limit, offset, quiet, all_items, out):
         )
 
     if out == "json":
-        click.echo(json.dumps(res, indent=4, separators=(",", ": ")))
+        click.echo(
+            json.dumps(res, indent=4, separators=(",", ": "), ensure_ascii=False)
+        )
         return
 
     json_rows = res["entities"]
@@ -637,7 +651,9 @@ def create_policy_command(policy_file, name, description, force):
         pc_ip, pc_port, policy_uuid
     )
     stdout_dict = {"name": policy_name, "link": link, "state": policy_state}
-    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+    click.echo(
+        json.dumps(stdout_dict, indent=4, separators=(",", ": "), ensure_ascii=False)
+    )
 
 
 def get_policy_execution_list(
@@ -689,7 +705,9 @@ def get_policy_execution_list(
         )
 
     if out == "json":
-        click.echo(json.dumps(res, indent=4, separators=(",", ": ")))
+        click.echo(
+            json.dumps(res, indent=4, separators=(",", ": "), ensure_ascii=False)
+        )
         return
 
     json_rows = res["entities"]
@@ -738,7 +756,11 @@ def describe_policy_execution(policy_name, out, uuid=""):
 
     if out == "json":
         policy_exec.pop("status", None)
-        click.echo(json.dumps(policy_exec, indent=4, separators=(",", ": ")))
+        click.echo(
+            json.dumps(
+                policy_exec, indent=4, separators=(",", ": "), ensure_ascii=False
+            )
+        )
         return
 
     click.echo("\n----Approval request Summary----\n")

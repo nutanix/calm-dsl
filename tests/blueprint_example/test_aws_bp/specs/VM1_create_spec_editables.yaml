@@ -1,0 +1,17 @@
+name: false
+resources:
+  associate_public_ip_address: false
+  availability_zone: false
+  block_device_map:
+    root_disk:
+      size_gb: false
+  image_id: false
+  instance_initiated_shutdown_behavior: false
+  instance_profile_name: false
+  instance_type: false
+  key_name: false
+  region: false
+  security_group_list: false
+  subnet_id: false
+  tag_list: false
+  vpc_id: false

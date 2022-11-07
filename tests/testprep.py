@@ -483,6 +483,15 @@ def add_vpc_endpoints(config):
         with open(LOCAL_WINDOWS_ENDPOINT_VPC, "w") as f:
             f.write(dsl_windows_endpoint)
 
+def add_approval_details(config):
+
+    config["IS_POLICY_ENABLED"] = False
+    project_exists = check_project_exists("test_approval_policy")
+    if project_exists:
+        config["IS_POLICY_ENABLED"] = True
+
+    add_project_details(config, "POLICY_PROJECTS", "test_approval_policy")
+
 
 config = {}
 if os.path.exists(dsl_config_file_location):
@@ -499,6 +508,7 @@ add_project_details(config)
 add_vpc_details(config)
 add_rerun_report_portal(config)
 add_vpc_endpoints(config)
+add_approval_details(config)
 f = open(dsl_config_file_location, "w")
 f.write(json.dumps(config, indent=4))
 f.close()
