@@ -679,6 +679,7 @@ def delete_project(project_names, no_cache_update=False):
 def update_project_from_dsl(project_name, project_file, no_cache_update=False):
 
     client = get_api_client()
+    calm_version = Version.get_version("Calm")
 
     user_project_module = get_project_module_from_file(project_file)
     UserProject = get_project_class_from_module(user_project_module)
@@ -865,8 +866,13 @@ def update_project_from_dsl(project_name, project_file, no_cache_update=False):
         sys.exit(-1)
 
     res = res.json()
+    if LV(calm_version) >= LV("3.5.2") and LV(calm_version) < LV("3.6.1"):
+        name = res["spec"]["project_detail"]["name"]
+    else:
+        name = res["spec"]["name"]
+
     stdout_dict = {
-        "name": res["spec"]["name"],
+        "name": name,
         "uuid": res["metadata"]["uuid"],
         "execution_context": res["status"]["execution_context"],
     }
@@ -909,6 +915,7 @@ def update_project_using_cli_switches(
 ):
 
     client = get_api_client()
+    calm_version = Version.get_version("Calm")
 
     LOG.info("Fetching project '{}' details".format(project_name))
     params = {"length": 250, "filter": "name=={}".format(project_name)}
@@ -1071,8 +1078,12 @@ def update_project_using_cli_switches(
         sys.exit(-1)
 
     res = res.json()
+    if LV(calm_version) >= LV("3.5.2") and LV(calm_version) < LV("3.6.1"):
+        name = res["spec"]["project_detail"]["name"]
+    else:
+        name = res["spec"]["name"]
     stdout_dict = {
-        "name": res["spec"]["name"],
+        "name": name,
         "uuid": res["metadata"]["uuid"],
         "execution_context": res["status"]["execution_context"],
     }

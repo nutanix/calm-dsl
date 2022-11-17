@@ -50,6 +50,25 @@ class ProjectAPI(ResourceAPI):
             method=REQUEST.METHOD.POST,
         )
 
+    def update(self, uuid, payload):
+
+        from calm.dsl.store.version import Version
+
+        calm_version = Version.get_version("Calm")
+        if LV(calm_version) >= LV("3.5.2") and LV(calm_version) < LV("3.6.1"):
+            payload = get_projects_internal_payload(payload)
+            CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/projects_internal"
+        else:
+            CALM_PROJECTS_PREFIX = ResourceAPI.ROOT + "/projects"
+
+        CALM_PROJECTS_ITEM = CALM_PROJECTS_PREFIX + "/{}"
+        return self.connection._call(
+            CALM_PROJECTS_ITEM.format(uuid),
+            verify=False,
+            request_json=payload,
+            method=REQUEST.METHOD.PUT,
+        )
+
     def delete(self, uuid):
 
         from calm.dsl.store.version import Version
@@ -101,3 +120,25 @@ class ProjectAPI(ResourceAPI):
             ignore_error=ignore_error,
             timeout=(5, 300),
         )
+
+
+def get_projects_internal_payload(payload):
+    """Modify projects paylaod to projects internal payload
+
+    Args:
+        payload (dict): project payload
+
+    Returns:
+        dict: projects internal payload
+    """
+
+    spec = payload["spec"]
+    spec["project_detail"] = {"name": spec["name"], "resources": spec["resources"]}
+    if "description" in spec:
+        spec["project_detail"]["description"] = spec["description"]
+        del spec["description"]
+    del spec["name"]
+    del spec["resources"]
+    payload["spec"] = spec
+
+    return payload
