@@ -375,6 +375,16 @@ def add_vpc_details(config):
     add_tunnel_details(config)
 
 
+def add_rerun_report_portal(config):
+    config["reportportal"] = {
+        "run_name": "runname",
+        "run_number": "runnumber",
+        "rerun_tests_type": "rerunteststype",
+        "run_type": "runtype",
+        "token": "authToken",
+    }
+
+
 config = {}
 if os.path.exists(dsl_config_file_location):
     f = open(dsl_config_file_location, "r")
@@ -388,7 +398,7 @@ add_directory_service_users(config)
 add_directory_service_user_groups(config)
 add_project_details(config)
 add_vpc_details(config)
-
+add_rerun_report_portal(config)
 f = open(dsl_config_file_location, "w")
 f.write(json.dumps(config, indent=4))
 f.close()
