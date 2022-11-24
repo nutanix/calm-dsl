@@ -46,7 +46,7 @@ cli_assertions:
 spec_assertions:
 - "us-east-1"  # Check for region name
 - "us-east-1a"  # Check for Availability Zone
-- "ami-46c1b650" # Check for Machine Image ID
+- "ami-0ccec2041ac92b449" # Check for Machine Image ID
 - "aws-elasticbeanstalk-ec2-role"  # Check for AM Role
 - "sg-184ead62"  # Check for Security Group
 - "subnet-c599a5ef"  # Check for Subnet
@@ -57,7 +57,7 @@ dependencies:
 - [0 , projects/default]
 - [7 , accounts/primary_account/regions/us-east-1/index]
 - [9 , accounts/primary_account/regions/us-east-1/availability_zones/us-east-1a]
-- [11 , accounts/primary_account/regions/us-east-1/machine_images/CentOS Linux 7 x86_64 HVM EBS 1704_01-b7ee8a69-ee97-4a49-9e68-afaee216db2e-ami-d52f5bc3.4]
+- [11 , accounts/primary_account/regions/us-east-1/machine_images/DND_CENTOS_QA]
 - [13 , accounts/primary_account/regions/us-east-1/iam_roles/aws-elasticbeanstalk-ec2-role]
 - [15 , accounts/primary_account/regions/us-east-1/key_pairs/calm-blueprints]
 - [17 , accounts/primary_account/regions/us-east-1/vpcs/vpc-ffd54d98/index]
