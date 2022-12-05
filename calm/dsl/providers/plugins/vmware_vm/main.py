@@ -1276,7 +1276,7 @@ def create_spec(client):
         template_type = (
             spec["library"]["library_template_type"] if is_library_template else ""
         )
-        if template_id and (is_library_template and template_type != "ovf"):
+        if template_id or (is_library_template and template_type != "ovf"):
             response = Obj.template_defaults(
                 account_id, template_id, is_library_template
             )
