@@ -10,18 +10,14 @@ from calm.dsl.builtins.models.calm_ref import Ref
 from tests.utils import get_vpc_tunnel_using_account, get_vpc_project
 
 CRED_USERNAME = read_local_file(".tests/runbook_tests/username")
-CRED_WINDOWS_USERNAME = read_local_file(".tests/runbook_tests/windows_username")
 CRED_PASSWORD = read_local_file(".tests/runbook_tests/password")
-VM_IP = read_local_file(".tests/runbook_tests/windows_vm_ip")
+VM_IP = read_local_file(".tests/runbook_tests/vm_ip")
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 
 VPC_TUNNEL = get_vpc_tunnel_using_account(DSL_CONFIG)
 VPC_PROJECT = get_vpc_project(DSL_CONFIG)
-WindowsCred = basic_cred(CRED_WINDOWS_USERNAME, CRED_PASSWORD, name="endpoint_cred")
+
+Cred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
 DslWindowsEndpoint = Endpoint.Windows.ip(
-    [VM_IP], connection_protocol="HTTPS", cred=WindowsCred
+    [VM_IP], connection_protocol="HTTPS", cred=Cred, tunnel=Ref.Tunnel(name=VPC_TUNNEL)
 )
-
-
-class EndpointMetadata(Metadata):
-    project = Ref.Project(VPC_PROJECT)

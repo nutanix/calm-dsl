@@ -461,7 +461,7 @@ class TestProjectCommands:
     def _test_overlay_subnets(self):
         """This is a test to check if the project created consists of overlay subnets"""
         NTNX_ACCOUNT_1 = ACCOUNTS["NUTANIX_PC"][1]
-        OVERLAY_SUBNETS = NTNX_ACCOUNT_1["OVERLAY_SUBNETS"][0]["NAME"]
+        OVERLAY_SUBNETS = NTNX_ACCOUNT_1["OVERLAY_SUBNETS"][0]["VPC"]
 
         project_data = get_project(self.dsl_project_name)
         assert OVERLAY_SUBNETS in str(project_data)

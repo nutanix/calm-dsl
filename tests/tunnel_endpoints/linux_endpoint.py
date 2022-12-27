@@ -18,7 +18,9 @@ VPC_TUNNEL = get_vpc_tunnel_using_account(DSL_CONFIG)
 VPC_PROJECT = get_vpc_project(DSL_CONFIG)
 
 Cred = basic_cred(CRED_USERNAME, CRED_PASSWORD, name="endpoint_cred")
-DslLinuxEndpoint = Endpoint.Linux.ip([VM_IP], cred=Cred)
+DslLinuxEndpoint = Endpoint.Linux.ip(
+    [VM_IP], cred=Cred, tunnel=Ref.Tunnel(name=VPC_TUNNEL)
+)
 
 
 class EndpointMetadata(Metadata):
