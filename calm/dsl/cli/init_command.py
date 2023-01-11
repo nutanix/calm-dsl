@@ -9,6 +9,7 @@ from calm.dsl.config import (
     get_default_config_file,
     get_default_db_file,
     get_default_local_dir,
+    get_default_connection_config,
     init_context,
 )
 from calm.dsl.db import init_db_handle
@@ -159,6 +160,12 @@ def set_server_details(
     # Default log-level
     log_level = "INFO"
 
+    # Default connection params
+    default_connection_config = get_default_connection_config()
+    retries_enabled = default_connection_config["retries_enabled"]
+    connection_timeout = default_connection_config["connection_timeout"]
+    read_timeout = default_connection_config["read_timeout"]
+
     # Do not prompt for init config variables, Take default values for init.ini file
     config_file = config_file or get_default_config_file()
     local_dir = local_dir or get_default_local_dir()
@@ -199,6 +206,9 @@ def set_server_details(
         config_file=config_file,
         db_location=db_file,
         local_dir=local_dir,
+        retries_enabled=retries_enabled,
+        connection_timeout=connection_timeout,
+        read_timeout=read_timeout,
     )
 
     # Updating context for using latest config data
@@ -325,6 +335,24 @@ def init_dsl_runbook(runbook_name, dir_name):
     help="Path to local directory for storing secrets",
 )
 @click.option("--log_level", "-l", default=None, help="Default log level")
+@click.option(
+    "--retries-enabled/--retries-disabled",
+    "-re/-rd",
+    default=None,
+    help="Retries enabled/disabled",
+)
+@click.option(
+    "--connection-timeout",
+    "-ct",
+    type=int,
+    help="connection timeout",
+)
+@click.option(
+    "--read-timeout",
+    "-rt",
+    type=int,
+    help="read timeout",
+)
 @click.argument("config_file", required=False)
 def _set_config(
     host,
@@ -336,6 +364,9 @@ def _set_config(
     log_level,
     config_file,
     local_dir,
+    retries_enabled,
+    connection_timeout,
+    read_timeout,
 ):
     """writes the configuration to config files i.e. config.ini and init.ini
 
@@ -393,6 +424,13 @@ def _set_config(
     db_location = db_location or init_config["DB"]["location"]
     local_dir = local_dir or init_config["LOCAL_DIR"]["location"]
 
+    # Get connection config
+    connection_config = ContextObj.get_connection_config()
+    if retries_enabled is None:  # Not supplied in command
+        retries_enabled = connection_config["retries_enabled"]
+    connection_timeout = connection_timeout or connection_config["connection_timeout"]
+    read_timeout = read_timeout or connection_config["read_timeout"]
+
     # Set the dsl configuration
     set_dsl_config(
         host=host,
@@ -404,6 +442,9 @@ def _set_config(
         log_level=log_level,
         local_dir=local_dir,
         config_file=config_file,
+        retries_enabled=retries_enabled,
+        connection_timeout=connection_timeout,
+        read_timeout=read_timeout,
     )
     LOG.info("Configuration changed successfully")
 

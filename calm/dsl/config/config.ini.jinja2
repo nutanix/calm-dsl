@@ -1,4 +1,4 @@
-{% macro ConfigTemplate(ip, port, username, password, project_name, db_location, log_level) -%}
+{% macro ConfigTemplate(ip, port, username, password, project_name, db_location, log_level, retries_enabled, connection_timeout, read_timeout) -%}
 
 [SERVER]
 pc_ip = {{ip}}
@@ -12,8 +12,13 @@ name = {{project_name}}
 [LOG]
 level = {{log_level}}
 
+[CONNECTION]
+retries_enabled = {{retries_enabled}}
+connection_timeout = {{connection_timeout}}
+read_timeout = {{read_timeout}}
+
 [CATEGORIES]
 {%- endmacro %}
 
 
-{{ConfigTemplate(ip, port, username, password, project_name, db_location, log_level)}}
+{{ConfigTemplate(ip, port, username, password, project_name, db_location, log_level, retries_enabled, connection_timeout, read_timeout)}}

@@ -26,6 +26,7 @@ class ConfigFileParser:
                 config_obj[section][k] = v
 
         self._CONFIG = config_obj
+        self._CONFIG_PARSER_OBJECT = config
 
     def get_server_config(self):
         """returns server config"""
@@ -63,6 +64,25 @@ class ConfigFileParser:
         else:
             return {}
 
+    def get_connection_config(self):
+        """returns connection config"""
+
+        connection_config = {}
+        if "CONNECTION" in self._CONFIG_PARSER_OBJECT:
+            for k, v in self._CONFIG_PARSER_OBJECT.items("CONNECTION"):
+                if k == "retries_enabled":
+                    connection_config[k] = self._CONFIG_PARSER_OBJECT[
+                        "CONNECTION"
+                    ].getboolean(k)
+                elif k in ["connection_timeout", "read_timeout"]:
+                    connection_config[k] = self._CONFIG_PARSER_OBJECT[
+                        "CONNECTION"
+                    ].getint(k)
+                else:
+                    connection_config[k] = v
+
+        return connection_config
+
 
 class ConfigHandle:
     def __init__(self, config_file=None):
@@ -78,6 +98,7 @@ class ConfigHandle:
         self.project_config = config_obj.get_project_config()
         self.log_config = config_obj.get_log_config()
         self.categories_config = config_obj.get_categories_config()
+        self.connection_config = config_obj.get_connection_config()
 
     def get_server_config(self):
         """returns server configuration"""
@@ -99,6 +120,11 @@ class ConfigHandle:
 
         return self.categories_config
 
+    def get_connection_config(self):
+        """returns connection config"""
+
+        return self.connection_config
+
     @classmethod
     def get_init_config(cls):
 
@@ -114,6 +140,9 @@ class ConfigHandle:
         password,
         project_name,
         log_level,
+        retries_enabled,
+        connection_timeout,
+        read_timeout,
         schema_file="config.ini.jinja2",
     ):
         """renders the config template"""
@@ -128,19 +157,40 @@ class ConfigHandle:
             password=password,
             project_name=project_name,
             log_level=log_level,
+            retries_enabled=retries_enabled,
+            connection_timeout=connection_timeout,
+            read_timeout=read_timeout,
         )
         return text.strip() + os.linesep
 
     @classmethod
     def update_config_file(
-        cls, config_file, host, port, username, password, project_name, log_level
+        cls,
+        config_file,
+        host,
+        port,
+        username,
+        password,
+        project_name,
+        log_level,
+        retries_enabled,
+        connection_timeout,
+        read_timeout,
     ):
         """Updates the config file data"""
 
         LOG.debug("Rendering configuration template")
         make_file_dir(config_file)
         text = cls._render_config_template(
-            host, port, username, password, project_name, log_level
+            host,
+            port,
+            username,
+            password,
+            project_name,
+            log_level,
+            retries_enabled,
+            connection_timeout,
+            read_timeout,
         )
 
         LOG.debug("Writing configuration to '{}'".format(config_file))
@@ -164,6 +214,9 @@ def set_dsl_config(
     db_location,
     local_dir,
     config_file,
+    retries_enabled,
+    connection_timeout,
+    read_timeout,
 ):
 
     """
@@ -188,4 +241,7 @@ def set_dsl_config(
         password=password,
         project_name=project_name,
         log_level=log_level,
+        retries_enabled=retries_enabled,
+        connection_timeout=connection_timeout,
+        read_timeout=read_timeout,
     )
