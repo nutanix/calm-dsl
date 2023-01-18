@@ -306,9 +306,9 @@ def update_project(project_uuid, project_payload):
 
     project = res.json()
     if LV(calm_version) >= LV("3.5.2") and LV(calm_version) < LV("3.6.1"):
-        project_name = res["spec"]["project_detail"]["name"]
+        project_name = project["spec"]["project_detail"]["name"]
     else:
-        project_name = res["spec"]["name"]
+        project_name = project["spec"]["name"]
     stdout_dict = {
         "name": project_name,
         "uuid": project["metadata"]["uuid"],
