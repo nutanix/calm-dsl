@@ -6,6 +6,8 @@ from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.task_commands import watch_task
 from calm.dsl.cli.constants import ERGON_TASK
 from calm.dsl.log import get_logging_handle
+from distutils.version import LooseVersion as LV
+from calm.dsl.store import Version
 
 LOG = get_logging_handle(__name__)
 PROJECT_SPEC_FILE_LOCATION = "tests/api_interface/entity_spec/sample_project.json"
@@ -82,8 +84,13 @@ class TestProjects:
         else:
             assert res.ok is True
             res = res.json()
+            calm_version = Version.get_version("Calm")
             assert project_name == res["metadata"]["name"]
-            assert project_upd_des == res["spec"]["description"]
+
+            if LV(calm_version) >= LV("3.5.2") and LV(calm_version) < LV("3.6.1"):
+                assert project_upd_des == res["spec"]["project_detail"]["description"]
+            else:
+                assert project_upd_des == res["spec"]["description"]
             task_state = watch_task(res["status"]["execution_context"]["task_uuid"])
             if task_state in ERGON_TASK.FAILURE_STATES:
                 pytest.fail("Project creation task went to {} state".format(task_state))
