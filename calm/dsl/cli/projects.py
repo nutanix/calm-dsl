@@ -296,6 +296,7 @@ def create_project(project_payload, name="", description=""):
 def update_project(project_uuid, project_payload):
 
     client = get_api_client()
+    calm_version = Version.get_version("Calm")
 
     project_payload.pop("status", None)
     res, err = client.project.update(project_uuid, project_payload)
@@ -304,8 +305,12 @@ def update_project(project_uuid, project_payload):
         sys.exit(-1)
 
     project = res.json()
+    if LV(calm_version) >= LV("3.5.2") and LV(calm_version) < LV("3.6.1"):
+        project_name = res["spec"]["project_detail"]["name"]
+    else:
+        project_name = res["spec"]["name"]
     stdout_dict = {
-        "name": project["spec"]["name"],
+        "name": project_name,
         "uuid": project["metadata"]["uuid"],
         "execution_context": project["status"]["execution_context"],
     }
