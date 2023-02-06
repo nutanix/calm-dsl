@@ -202,7 +202,6 @@ def provider_decorator(provider_type="AHV_VM"):
             populator_object = get_resource_populator_object()
             provider_resource_info = populator_object.get_resource_info(provider_type)
             resolve_input_dependencies(input, dependencies, provider_resource_info)
-
             run_test(
                 input,
                 cli_assertions,

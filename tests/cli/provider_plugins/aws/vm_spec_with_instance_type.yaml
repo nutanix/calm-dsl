@@ -1,26 +1,53 @@
 
 input:
-- "1"  # project = default
+- "1" # project = default
 - "1"  # account
 - "vm-@@{calm_array_index}@@-@@{calm_time}@@"  # instance name
 - "y"  # Enable Associate Public Ip Address
+- "y"  # Want Region
+- "1"  # Region = us-east-1
 - "y"  # Want Instance type
-- "61"  # Instance Type = t2.nano
-- "n"  # Want Region
-- "n"  # Want user-data
-- "n"  # Want tags
+- "61" # Instance Type = t2.nano
+- "y"  # Want availability zone
+- "1"  # Availability Zone = us-east-1a
+- "y"  # Want machine image
+- "31"  # Machine Image = CentOS Linux 7 x86_64 HVM EBS 1704_01-b7ee8a69-ee97-4a49-9e68-afaee216db2e-ami-d52f5bc3.4
+- "y"  # Want IAM Role
+- "1"  # IAM Role = aws-elasticbeanstalk-ec2-role
+- "y"  # Want Key Pair
+- "6"  # Key-Pair = calm-blueprints
+- "y"  # Want VPC
+- "3"  # VPC = vpc-ffd54d98
+- "y"  # Want Security Group
+- "n"  # Include Classic Security Group
+- "56"  # Security Group = sg-184ead62
+- "n"  # Want more security Groups
+- "y"  # Want Subnets
+- "1"  # Subnet = subnet-c599a5ef
+- "y"  # Want user-data
+- "Sample aws data"  # User data
+- "y"  # Want tags
+- "cloud"  # Key of tag
+- "aws"  # Value of tag
+- "n"  # Want more tags
 - "8"  # Size of root disk
 - "1"  # Volume Type = Provisioned IOPS SSD
 - "n"  # Want to delete on termination
+- "y"  # Want more disks
+- "1"  # Device Name = /dev/sdb
+- "1"  # Volume Type = Provisioned IOPS SSD
+- "8"  # Size of root disk
+- "y"  # Want to delete on termination
 - "n"  # Want more disks
 
 cli_assertions:
 - "Create spec for your AWS VM:"
 
 spec_assertions:
-- t2.nano  # Check for instance name
+- "t2.nano"  # Check for instance name
 
 dependencies:
  # For changing indexes of resource in input as per the setup
 - [0, projects/default]
-- [5, instance_types/t2.nano]
+- [5, accounts/primary_account/regions/us-east-1/index]
+- [7, accounts/primary_account/regions/us-east-1/instance_types/t2.nano]

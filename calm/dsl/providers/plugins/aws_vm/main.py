@@ -122,9 +122,14 @@ class AWSV0(AWSBase):
 
         return region_list
 
-    def machine_types(self):
+    def machine_types(self, account_uuid, region_name):
+        payload = {
+            "filter": "account_uuid=={};region-name=={}".format(
+                account_uuid, region_name
+            )
+        }
         Obj = get_resource_api(self.MACHINE_TYPES, self.connection)
-        res, err = Obj.list()
+        res, err = Obj.list(payload)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -132,7 +137,7 @@ class AWSV0(AWSBase):
         res = res.json()
         for entity in res["entities"]:
             entity_list.append(entity["metadata"]["name"])
-
+        entity_list.sort()
         return entity_list
 
     def volume_types(self):
@@ -322,11 +327,16 @@ class AWSV1(AWSBase):
 
         return region_list
 
-    def machine_types(self):
+    def machine_types(self, account_uuid, region_name):
+        payload = {
+            "filter": "account_uuid=={};region-name=={}".format(
+                account_uuid, region_name
+            )
+        }
         Obj = get_resource_api(
             self.MACHINE_TYPES, self.connection, calm_api=self.calm_api
         )
-        res, err = Obj.list()
+        res, err = Obj.list(payload)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
@@ -334,7 +344,7 @@ class AWSV1(AWSBase):
         res = res.json()
         for entity in res["entities"]:
             entity_list.append(entity["metadata"]["name"])
-
+        entity_list.sort()
         return entity_list
 
     def volume_types(self):
@@ -607,31 +617,6 @@ def create_spec(client):
             )
         )
 
-    choice = click.prompt(
-        "\n{}(y/n)".format(highlight_text("Want to add an instance type")), default="n"
-    )
-
-    ins_types = Obj.machine_types() if choice[0] == "y" else None
-
-    if (not ins_types) and (choice[0] == "y"):
-        click.echo("\n{}".format(highlight_text("No Instance Profile present")))
-
-    elif ins_types:
-        click.echo("\nChoose from given instance types")
-        for ind, name in enumerate(ins_types):
-            click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
-
-        while True:
-            res = click.prompt("\nEnter the index of instance type", default=1)
-            if (res > len(ins_types)) or (res <= 0):
-                click.echo("Invalid index !!! ")
-
-            else:
-                instance_type = ins_types[res - 1]
-                spec["resources"]["instance_type"] = instance_type
-                click.echo("{} selected".format(highlight_text(instance_type)))
-                break
-
     choice = (
         click.prompt(
             "\n{}(y/n)".format(highlight_text("Want to add a region")), default="n"
@@ -658,6 +643,35 @@ def create_spec(client):
                 region_name = regions[res - 1]  # TO BE USED
                 spec["resources"]["region"] = region_name
                 click.echo("{} selected".format(highlight_text(region_name)))
+                break
+
+    choice = (
+        click.prompt(
+            "\n{}(y/n)".format(highlight_text("Want to add an instance type")),
+            default="n",
+        )
+        if region_name
+        else "n"
+    )
+
+    ins_types = Obj.machine_types(account_id, region_name) if choice[0] == "y" else None
+    if (not ins_types) and (choice[0] == "y"):
+        click.echo("\n{}".format(highlight_text("No Instance Profile present")))
+
+    elif ins_types:
+        click.echo("\nChoose from given instance types")
+        for ind, name in enumerate(ins_types):
+            click.echo("\t {}. {}".format(str(ind + 1), highlight_text(name)))
+
+        while True:
+            res = click.prompt("\nEnter the index of instance type", default=1)
+            if (res > len(ins_types)) or (res <= 0):
+                click.echo("Invalid index !!! ")
+
+            else:
+                instance_type = ins_types[res - 1]
+                spec["resources"]["instance_type"] = instance_type
+                click.echo("{} selected".format(highlight_text(instance_type)))
                 break
 
     choice = (
