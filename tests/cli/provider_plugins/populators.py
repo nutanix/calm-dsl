@@ -44,7 +44,6 @@ class ResourcePopulator:
     def __populate_aws_resources(self):
         """Get aws resource info and store them"""
         LOG.info("Collecting aws resource info")
-
         client = get_api_client()
         Obj = AwsVmProvider.get_api_obj()
 

@@ -19,6 +19,7 @@ class AwsVmProvider(Provider):
     provider_type = "AWS_VM"
     package_name = __name__
     spec_template_file = "aws_vm_provider_spec.yaml.jinja2"
+    calm_version = Version.get_version("Calm")
 
     @classmethod
     def create_spec(cls):
@@ -30,12 +31,12 @@ class AwsVmProvider(Provider):
         """returns object to call ahv provider specific apis"""
 
         client = get_api_client()
-        calm_version = Version.get_version("Calm")
         api_handlers = AWSBase.api_handlers
-
         latest_version = "0"
         for version in api_handlers.keys():
-            if LV(version) <= LV(calm_version) and LV(latest_version) < LV(version):
+            if LV(version) <= LV(AwsVmProvider.calm_version) and LV(
+                latest_version
+            ) < LV(version):
                 latest_version = version
 
         api_handler = api_handlers[latest_version]
@@ -123,11 +124,14 @@ class AWSV0(AWSBase):
         return region_list
 
     def machine_types(self, account_uuid, region_name):
-        payload = {
-            "filter": "account_uuid=={};region-name=={}".format(
-                account_uuid, region_name
-            )
-        }
+        if LV(AwsVmProvider.calm_version) >= LV("3.7.0"):
+            payload = {
+                "filter": "account_uuid=={};region-name=={}".format(
+                    account_uuid, region_name
+                )
+            }
+        else:
+            payload = {}
         Obj = get_resource_api(self.MACHINE_TYPES, self.connection)
         res, err = Obj.list(payload)
         if err:
@@ -328,11 +332,14 @@ class AWSV1(AWSBase):
         return region_list
 
     def machine_types(self, account_uuid, region_name):
-        payload = {
-            "filter": "account_uuid=={};region-name=={}".format(
-                account_uuid, region_name
-            )
-        }
+        if LV(AwsVmProvider.calm_version) >= LV("3.7.0"):
+            payload = {
+                "filter": "account_uuid=={};region-name=={}".format(
+                    account_uuid, region_name
+                )
+            }
+        else:
+            payload = {}
         Obj = get_resource_api(
             self.MACHINE_TYPES, self.connection, calm_api=self.calm_api
         )
