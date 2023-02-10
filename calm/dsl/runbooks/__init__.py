@@ -5,7 +5,12 @@
 from calm.dsl.builtins.models.ref import ref, RefType
 from calm.dsl.builtins.models.calm_ref import Ref
 from calm.dsl.builtins.models.metadata import Metadata, MetadataType
-from calm.dsl.builtins.models.credential import basic_cred, secret_cred, CredentialType
+from calm.dsl.builtins.models.credential import (
+    basic_cred,
+    secret_cred,
+    dynamic_cred,
+    CredentialType,
+)
 
 from calm.dsl.builtins.models.utils import (
     read_file,
@@ -35,6 +40,7 @@ __all__ = [
     "RefType",
     "basic_cred",
     "secret_cred",
+    "dynamic_cred",
     "CredentialType",
     "Metadata",
     "MetadataType",
