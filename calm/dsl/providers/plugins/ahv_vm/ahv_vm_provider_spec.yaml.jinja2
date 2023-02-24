@@ -88,7 +88,7 @@ properties:
             type: string
   boot_type:
     type: string
-    enum: [LEGACY, UEFI, '']
+    enum: [LEGACY, UEFI, SECURE_BOOT, '']
   type:
     type: string
   mac_address:
@@ -427,6 +427,8 @@ properties:
         type: string
       type:
         type: string
+  machine_type:
+    type: string
   guest_tools:
     {{ ahvGuestTools() | indent(4) }}
   disk_list:
