@@ -288,7 +288,6 @@ class TestHTTPTasks:
                     HTTPTaskWithUnsupportedURL,
                     "The requested URL was not found on the server.",
                 ),
-                marks=pytest.mark.skip(reason="Product bug :- CALM-27162"),
             ),
             (HTTPTaskWithTLSVerify, "Error :Certificate has expired"),
             (HTTPTaskWithIncorrectAuth, "AUTHENTICATION_REQUIRED"),

@@ -37,6 +37,12 @@ endpoint_with_multiple_urls = Endpoint.HTTP(
     auth=Endpoint.Auth(AUTH_USERNAME, AUTH_PASSWORD),
 )
 
+endpoint_with_invalid_url = Endpoint.HTTP(
+    TEST_URL + "api/nutanix/v3/random",
+    verify=False,
+    auth=Endpoint.Auth(AUTH_USERNAME, AUTH_PASSWORD),
+)
+
 
 def get_http_task_runbook(endpoint_file="http_endpoint_payload.json", config_file=None):
     """returns the runbook for http task"""
@@ -123,7 +129,7 @@ def HTTPTaskWithFailureState(endpoints=[endpoint_without_auth]):
 
 
 @runbook
-def HTTPTaskWithUnsupportedURL(endpoints=[endpoint]):
+def HTTPTaskWithUnsupportedURL(endpoints=[endpoint_with_invalid_url]):
 
     # Creating an endpoint with POST call
     Task.HTTP.get(
