@@ -10,6 +10,7 @@ class AccountsAPI(ResourceAPI):
         self.RESOURCE_TYPES_LIST_BASED_ON_ACCOUNT = (
             self.PREFIX + "/{}/resource_types/list"
         )
+        self.PLATFORM_SYNC = self.PREFIX + "/{}/sync"
 
     def verify(self, id):
         return self.connection._call(
@@ -40,3 +41,12 @@ class AccountsAPI(ResourceAPI):
             uuid_type_map[a_uuid] = a_type
 
         return uuid_type_map
+
+    def platform_sync(self, id):
+        """sync platform account"""
+
+        return self.connection._call(
+            self.PLATFORM_SYNC.format(id),
+            verify=False,
+            method=REQUEST.METHOD.POST,
+        )

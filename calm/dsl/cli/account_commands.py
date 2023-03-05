@@ -1,7 +1,7 @@
 import click
 
-from .accounts import get_accounts, delete_account, describe_account
-from .main import get, delete, describe
+from .accounts import get_accounts, delete_account, describe_account, sync_account
+from .main import get, delete, describe, sync
 
 
 @get.command("accounts")
@@ -49,3 +49,12 @@ def _describe_account(account_name):
     """Describe a account"""
 
     describe_account(account_name)
+
+
+@sync.command("account", feature_min_version="3.0.0")
+@click.argument("account_name")
+def _sync_account(account_name):
+    """Sync a platform account
+    Args: account_name (string): name of the account to sync"""
+
+    sync_account(account_name)

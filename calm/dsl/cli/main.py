@@ -491,3 +491,9 @@ def library_describe():
 def library_delete():
     """Delete Library entities"""
     pass
+
+
+@main.group(cls=FeatureFlagGroup)
+def sync():
+    """Sync platform account"""
+    pass
