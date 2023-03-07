@@ -344,6 +344,8 @@ class Ref:
 
         def compile(cls, name=None, **kwargs):
 
+            if name.startswith("@@{") and name.endswith("}@@"):
+                return {"kind": "cluster", "uuid": name}
             account_name = kwargs.get("account_name", None)
             if account_name:
                 cache_acc_data = Cache.get_entity_data(
