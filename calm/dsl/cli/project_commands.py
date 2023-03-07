@@ -193,6 +193,13 @@ def _describe_project(project_name, out):
     default=False,
     help="if true, cache is not updated for project",
 )
+@click.option(
+    "--append-only",
+    "append_only",
+    is_flag=True,
+    default=False,
+    help="if true, will only append the users, groups, subnets, external networks, accounts, vpc and cluster from the project_file",
+)
 def _update_project(
     project_name,
     project_file,
@@ -203,6 +210,7 @@ def _update_project(
     remove_user_list,
     remove_group_list,
     no_cache_update,
+    append_only,
 ):
     """
         Updates a project.
@@ -235,6 +243,7 @@ def _update_project(
                 project_name=project_name,
                 project_file=project_file,
                 no_cache_update=no_cache_update,
+                append_only=append_only,
             )
             return
         else:

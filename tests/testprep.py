@@ -75,16 +75,19 @@ def add_account_details(config):
                                 "NAME": entity["status"]["name"],
                                 "VPC": vpc_name,
                                 "UUID": entity["metadata"]["uuid"],
+                                "VPC_UUID": vpc_ref.get("uuid", ""),
                             }
                         )
                         continue
 
                     cluster_name = cluster_ref.get("name", "")
+                    cluster_uuid = cluster_ref.get("uuid", "")
 
                     account_data["SUBNETS"].append(
                         {
                             "NAME": entity["status"]["name"],
                             "CLUSTER": cluster_name,
+                            "CLUSTER_UUID": cluster_uuid,
                             "UUID": entity["metadata"]["uuid"],
                         }
                     )
