@@ -1,10 +1,24 @@
 import json
 import os
+import uuid
+from click.testing import CliRunner
 
+from calm.dsl.cli import main as cli
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.providers.base import get_provider
+from calm.dsl.config import get_context
+from calm.dsl.log import get_logging_handle
+from calm.dsl.tools.utils import make_file_dir
 
-
+LOG = get_logging_handle(__name__)
+VPC_LINUX_EP_PATH = "tests/tunnel_endpoints/linux_endpoint.py"
+VPC_WINDOWS_EP_PATH = "tests/tunnel_endpoints/windows_endpoint.py"
+LOCAL_LINUX_ENDPOINT_VPC = (
+    "tests/api_interface/test_runbooks/test_files/.local/endpoint_linux_vpc"
+)
+LOCAL_WINDOWS_ENDPOINT_VPC = (
+    "tests/api_interface/test_runbooks/test_files/.local/endpoint_windows_vpc"
+)
 dsl_config_file_location = os.path.expanduser("~/.calm/.local/.tests/config.json")
 VPC_PROJECT_NAME = "test_vpc_project"
 
@@ -388,6 +402,88 @@ def add_rerun_report_portal(config):
     }
 
 
+def add_vpc_endpoints(config):
+    dsl_linux_endpoint = "Endpoint_Linux_VPC_{}".format(str(uuid.uuid4()))
+    dsl_windows_endpoint = "Endpoint_Windows_VPC_{}".format(str(uuid.uuid4()))
+
+    make_file_dir(LOCAL_LINUX_ENDPOINT_VPC)
+    with open(LOCAL_LINUX_ENDPOINT_VPC, "w") as f:
+        f.write(dsl_linux_endpoint)
+    make_file_dir(LOCAL_WINDOWS_ENDPOINT_VPC)
+    with open(LOCAL_WINDOWS_ENDPOINT_VPC, "w") as f:
+        f.write(dsl_windows_endpoint)
+
+    if config["IS_VPC_ENABLED"]:
+
+        ContextObj = get_context()
+
+        ContextObj.update_project_context(VPC_PROJECT_NAME)
+
+        runner = CliRunner()
+        result = runner.invoke(
+            cli,
+            [
+                "create",
+                "endpoint",
+                "--file={}".format(VPC_LINUX_EP_PATH),
+                "--name={}".format(dsl_linux_endpoint),
+                "--description='NEW Test DSL Endpoint to delete'",
+            ],
+        )
+        LOG.info(result.output)
+        if result.exit_code:
+            cli_res_dict = {
+                "Output": result.output,
+                "Exception": str(result.exception),
+            }
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Endpoint creation from python file failed")
+
+        make_file_dir(LOCAL_LINUX_ENDPOINT_VPC)
+        with open(LOCAL_LINUX_ENDPOINT_VPC, "w") as f:
+            f.write(dsl_linux_endpoint)
+
+        result = runner.invoke(
+            cli,
+            [
+                "create",
+                "endpoint",
+                "--file={}".format(VPC_WINDOWS_EP_PATH),
+                "--name={}".format(dsl_windows_endpoint),
+                "--description='NEW Test DSL Endpoint to delete'",
+            ],
+        )
+        if result.exit_code:
+            cli_res_dict = {
+                "Output": result.output,
+                "Exception": str(result.exception),
+            }
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Endpoint creation from python file failed")
+
+        make_file_dir(LOCAL_WINDOWS_ENDPOINT_VPC)
+        with open(LOCAL_WINDOWS_ENDPOINT_VPC, "w") as f:
+            f.write(dsl_windows_endpoint)
+
+
 config = {}
 if os.path.exists(dsl_config_file_location):
     f = open(dsl_config_file_location, "r")
@@ -402,6 +498,7 @@ add_directory_service_user_groups(config)
 add_project_details(config)
 add_vpc_details(config)
 add_rerun_report_portal(config)
+add_vpc_endpoints(config)
 f = open(dsl_config_file_location, "w")
 f.write(json.dumps(config, indent=4))
 f.close()
