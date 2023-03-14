@@ -7,6 +7,7 @@ import sys
 import json
 import traceback
 from distutils.version import LooseVersion as LV
+from tests.utils import get_vpc_project
 from calm.dsl.cli import main as cli
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.cli.marketplace import (
@@ -990,6 +991,13 @@ class TestMarketplaceBPCommands:
                 self.marketplace_bp_name, self.mpi1_version
             )
         )
+        if BP_PATH == DSL_BP_WITH_OVERLAY_SUBNETS:
+            profile_name = "HelloProfile"
+            proj_name = get_vpc_project(DSL_CONFIG)
+        else:
+            profile_name = "DefaultProfile"
+            proj_name = PROJECT_NAME
+
         command = [
             "launch",
             "marketplace",
@@ -998,11 +1006,11 @@ class TestMarketplaceBPCommands:
             "--version",
             self.mpi1_version,
             "--project",
-            PROJECT_NAME,
+            proj_name,
             "--app_name",
             self.pending_mpbp_app_name,
             "--profile_name",
-            "DefaultProfile",
+            profile_name,
             "-i",
         ]
         runner = CliRunner()
@@ -1040,11 +1048,11 @@ class TestMarketplaceBPCommands:
             "--version",
             self.mpi1_version,
             "--project",
-            PROJECT_NAME,
+            proj_name,
             "--app_name",
             self.pending_mpbp_lp_app_name,
             "--profile_name",
-            "DefaultProfile",
+            profile_name,
             "--launch_params",
             DSL_BP_EDITABLE_PARAMS,
         ]
@@ -1114,11 +1122,11 @@ class TestMarketplaceBPCommands:
             "--version",
             self.mpi1_version,
             "--project",
-            PROJECT_NAME,
+            proj_name,
             "--app_name",
             self.accepted_mpbp_app_name,
             "--profile_name",
-            "DefaultProfile",
+            profile_name,
             "-i",
         ]
         runner = CliRunner()
@@ -1153,7 +1161,7 @@ class TestMarketplaceBPCommands:
             "--version",
             self.mpi1_version,
             "--project",
-            PROJECT_NAME,
+            proj_name,
         ]
 
         result = runner.invoke(cli, command)
@@ -1187,11 +1195,11 @@ class TestMarketplaceBPCommands:
             "--version",
             self.mpi1_version,
             "--project",
-            PROJECT_NAME,
+            proj_name,
             "--app_name",
             self.published_mpbp_app_name,
             "--profile_name",
-            "DefaultProfile",
+            profile_name,
             "-i",
         ]
         runner = CliRunner()
@@ -1229,11 +1237,11 @@ class TestMarketplaceBPCommands:
             "--version",
             self.mpi1_version,
             "--project",
-            PROJECT_NAME,
+            proj_name,
             "--app_name",
             self.published_mpbp_lp_app_name,
             "--profile_name",
-            "DefaultProfile",
+            profile_name,
             "--launch_params",
             DSL_BP_EDITABLE_PARAMS,
         ]
