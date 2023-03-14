@@ -51,9 +51,9 @@ def get_http_task_runbook(endpoint_file="http_endpoint_payload.json", config_fil
     endpoint_payload = change_uuids(read_test_config(file_name=endpoint_file), {})
 
     if endpoint_file == "http_tunnel_endpoint.json" and config_file:
-        vpc_project = get_vpc_project(config_file)
-        vpc_tunnel = get_vpc_tunnel_using_account(config_file)
-        update_tunnel_and_project(vpc_tunnel, vpc_project, endpoint_payload)
+        vpc_project_obj = get_vpc_project(config_file)
+        vpc_tunnel_obj = get_vpc_tunnel_using_account(config_file)
+        update_tunnel_and_project(vpc_tunnel_obj, vpc_project_obj, endpoint_payload)
 
     @runbook
     def HTTPTask(endpoints=[endpoint]):

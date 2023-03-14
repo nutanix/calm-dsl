@@ -993,7 +993,7 @@ class TestMarketplaceBPCommands:
         )
         if BP_PATH == DSL_BP_WITH_OVERLAY_SUBNETS:
             profile_name = "HelloProfile"
-            proj_name = get_vpc_project(DSL_CONFIG)
+            proj_name = get_vpc_project(DSL_CONFIG)["name"]
         else:
             profile_name = "DefaultProfile"
             proj_name = PROJECT_NAME

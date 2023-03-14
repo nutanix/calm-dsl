@@ -33,8 +33,9 @@ CRED_PASSWORD = read_local_file(".tests/runbook_tests/password")
 HTTP_AUTH_USERNAME = read_local_file(".tests/runbook_tests/auth_username")
 HTTP_AUTH_PASSWORD = read_local_file(".tests/runbook_tests/auth_password")
 HTTP_URL = read_local_file(".tests/runbook_tests/url")
-LOCAL_LINUX_ENDPOINT_VPC = read_file(".local/endpoint_linux_vpc")
-LOCAL_WINDOWS_ENDPOINT_VPC = read_file(".local/endpoint_windows_vpc")
+
+LOCAL_LINUX_ENDPOINT_VPC = read_local_file(".tests/endpoint_linux_vpc")
+LOCAL_WINDOWS_ENDPOINT_VPC = read_local_file(".tests/endpoint_windows_vpc")
 
 VMWARE_ACCOUNT_NAME = get_vmware_account_from_datacenter()
 

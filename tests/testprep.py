@@ -1,6 +1,7 @@
 import json
 import os
 import uuid
+import traceback
 from click.testing import CliRunner
 
 from calm.dsl.cli import main as cli
@@ -13,11 +14,12 @@ from calm.dsl.tools.utils import make_file_dir
 LOG = get_logging_handle(__name__)
 VPC_LINUX_EP_PATH = "tests/tunnel_endpoints/linux_endpoint.py"
 VPC_WINDOWS_EP_PATH = "tests/tunnel_endpoints/windows_endpoint.py"
-LOCAL_LINUX_ENDPOINT_VPC = (
-    "tests/api_interface/test_runbooks/test_files/.local/endpoint_linux_vpc"
+
+LOCAL_LINUX_ENDPOINT_VPC = os.path.join(
+    os.path.expanduser("~"), ".calm", ".local", ".tests", "endpoint_linux_vpc"
 )
-LOCAL_WINDOWS_ENDPOINT_VPC = (
-    "tests/api_interface/test_runbooks/test_files/.local/endpoint_windows_vpc"
+LOCAL_WINDOWS_ENDPOINT_VPC = os.path.join(
+    os.path.expanduser("~"), ".calm", ".local", ".tests", "endpoint_windows_vpc"
 )
 dsl_config_file_location = os.path.expanduser("~/.calm/.local/.tests/config.json")
 VPC_PROJECT_NAME = "test_vpc_project"
@@ -446,7 +448,6 @@ def add_vpc_endpoints(config):
                     "".join(traceback.format_tb(result.exc_info[2]))
                 )
             )
-            pytest.fail("Endpoint creation from python file failed")
 
         make_file_dir(LOCAL_LINUX_ENDPOINT_VPC)
         with open(LOCAL_LINUX_ENDPOINT_VPC, "w") as f:
@@ -477,7 +478,6 @@ def add_vpc_endpoints(config):
                     "".join(traceback.format_tb(result.exc_info[2]))
                 )
             )
-            pytest.fail("Endpoint creation from python file failed")
 
         make_file_dir(LOCAL_WINDOWS_ENDPOINT_VPC)
         with open(LOCAL_WINDOWS_ENDPOINT_VPC, "w") as f:

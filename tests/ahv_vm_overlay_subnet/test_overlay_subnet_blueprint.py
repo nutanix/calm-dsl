@@ -167,4 +167,4 @@ class DSLDemo(Blueprint):
 
 
 class BpMetadata(Metadata):
-    project = Ref.Project(VPC_PROJECT)
+    project = Ref.Project(VPC_PROJECT["name"])

@@ -1,38 +1,20 @@
 import pytest
 import uuid
 import json
-import traceback
-from click.testing import CliRunner
 
-from calm.dsl.cli import main as cli
 from distutils.version import LooseVersion as LV
 from calm.dsl.builtins import read_local_file
-from calm.dsl.tools import make_file_dir
 from calm.dsl.store import Version
 from calm.dsl.config import get_context
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import RUNLOG
 from calm.dsl.log import get_logging_handle
-from tests.utils import get_vpc_project
-
-"""from tests.api_interface.test_runbooks.test_files.exec_task import (  # NOQA
-    PowershellTaskinVpc,
-    ShellTaskinVpc,
-)"""
+from utils import upload_runbook, poll_runlog_status
 
 LOG = get_logging_handle(__name__)
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
-from utils import upload_runbook, poll_runlog_status
 
-LINUX_EP_PATH = "tests/tunnel_endpoints/linux_endpoint.py"
-WINDOWS_EP_PATH = "tests/tunnel_endpoints/windows_endpoint.py"
-LOCAL_LINUX_ENDPOINT_VPC = (
-    "tests/api_interface/test_runbooks/test_files/.local/endpoint_linux_vpc"
-)
-LOCAL_WINDOWS_ENDPOINT_VPC = (
-    "tests/api_interface/test_runbooks/test_files/.local/endpoint_windows_vpc"
-)
 # calm_version
 CALM_VERSION = Version.get_version("Calm")
 

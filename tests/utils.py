@@ -11,6 +11,7 @@ from calm.dsl.api import get_client_handle_obj
 from calm.dsl.api.connection import REQUEST
 
 
+VPC_TUNNEL_NAME = "vpc_name_1"
 LOG = get_logging_handle(__name__)
 
 
@@ -220,12 +221,14 @@ def get_vpc_project(config):
     project_name = "default"
     vpc_enabled = config.get("IS_VPC_ENABLED", False)
     if not vpc_enabled:
-        return project_name
+        return {"name": project_name, "uuid": ""}
 
-    project_name = (
-        config.get("VPC_PROJECTS", {}).get("PROJECT1", {}).get("NAME", "default")
-    )
-    return project_name
+    return {
+        "name": config.get("VPC_PROJECTS", {})
+        .get("PROJECT1", {})
+        .get("NAME", project_name),
+        "uuid": config.get("VPC_PROJECTS", {}).get("PROJECT1", {}).get("UUID", ""),
+    }
 
 
 def get_vpc_tunnel_using_account(config):
@@ -234,9 +237,9 @@ def get_vpc_tunnel_using_account(config):
     for acc in accounts:
         if acc.get("NAME") == "NTNX_LOCAL_AZ":
             for subnet in acc.get("OVERLAY_SUBNETS", []):
-                if subnet.get("VPC", "") == "vpc_name_1":
-                    vpc = "vpc_name_1"
+                if subnet.get("VPC", "") == VPC_TUNNEL_NAME:
+                    vpc = VPC_TUNNEL_NAME
                     break
-    vpc_tunnel = config.get("VPC_TUNNELS", {}).get("NTNX_LOCAL_AZ", {}).get(vpc, {})
 
-    return vpc_tunnel.get("name", "")
+    vpc_tunnel = config.get("VPC_TUNNELS", {}).get("NTNX_LOCAL_AZ", {}).get(vpc, {})
+    return {"name": vpc_tunnel.get("name", ""), "uuid": vpc_tunnel.get("uuid", "")}
