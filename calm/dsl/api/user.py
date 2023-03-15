@@ -16,4 +16,5 @@ class UserAPI(ResourceAPI):
             request_json=params,
             method=REQUEST.METHOD.POST,
             ignore_error=ignore_error,
+            timeout=(5, 60),
         )

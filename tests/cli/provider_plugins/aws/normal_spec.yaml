@@ -4,7 +4,6 @@ input:
 - "1"  # account
 - "vm-@@{calm_array_index}@@-@@{calm_time}@@"  # instance name
 - "y"  # Enable Associate Public Ip Address
-- "n"  # Want Instance type
 - "n"  # Want Region
 - "n"  # Want user-data
 - "n"  # Want tags

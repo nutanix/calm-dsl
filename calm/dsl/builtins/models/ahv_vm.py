@@ -152,7 +152,7 @@ class AhvVmType(ProviderSpecType):
                         )
                         sys.exit("VPC mismatch")
 
-            if nic.subnet_reference["cluster"]:
+            if nic.subnet_reference and nic.subnet_reference["cluster"]:
                 if not network_type:
                     network_type = "VLAN"
                 elif network_type != "VLAN":

@@ -1230,6 +1230,31 @@ def get_protection_policy_rule(
     return selected_policy, rule_choices[selected_rule]["rule"]
 
 
+def get_app(app_name):
+    """
+    This routine checks if app with give name exists or not.
+    If exists then returns the app list resp
+    args:
+        app_name (str): app name
+    returns:
+        resp (dict): app response if app exists
+    """
+    client = get_api_client()
+
+    LOG.info("Searching for existing applications with name {}".format(app_name))
+
+    resp, err = client.application.list(params={"filter": "name=={}".format(app_name)})
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+    resp = resp.json()
+    if resp["metadata"]["total_matches"] > 0:
+        LOG.info("Application found with name {}".format(app_name))
+        return resp
+
+    LOG.info("No existing application found with name {}".format(app_name))
+    return None
+
+
 def launch_blueprint_simple(
     blueprint_name=None,
     app_name=None,
@@ -1239,26 +1264,16 @@ def launch_blueprint_simple(
     launch_params=None,
     is_brownfield=False,
     brownfield_deployment_file=None,
+    skip_app_name_check=False,
 ):
     client = get_api_client()
 
-    if app_name:
-        LOG.info("Searching for existing applications with name {}".format(app_name))
-
-        res, err = client.application.list(
-            params={"filter": "name=={}".format(app_name)}
-        )
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        res = res.json()
-        total_matches = res["metadata"]["total_matches"]
-        if total_matches:
+    if app_name and not skip_app_name_check:
+        res = get_app(app_name)
+        if res:
             LOG.debug(res)
             LOG.error("Application Name ({}) is already used.".format(app_name))
             sys.exit(-1)
-
-        LOG.info("No existing application found with name {}".format(app_name))
 
     if not blueprint:
         blueprint = get_blueprint(blueprint_name, is_brownfield=is_brownfield)

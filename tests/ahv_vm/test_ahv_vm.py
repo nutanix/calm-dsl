@@ -1,12 +1,12 @@
 import json
 
-from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC, AhvVmGpu
-from calm.dsl.builtins import basic_cred, ahv_vm_resources
+from calm.dsl.builtins import AhvVmDisk, AhvVmNic, AhvVmGC, AhvVmGpu, AhvVm
+from calm.dsl.builtins import basic_cred, ahv_vm_resources, Ref
 from calm.dsl.builtins import vm_disk_package, read_local_file
 from calm.dsl.config import get_context
 
 
-AhvVm = ahv_vm_resources()
+AhvVmResources = ahv_vm_resources()
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 CENTOS_HM = DSL_CONFIG["AHV"]["IMAGES"]["DISK"]["CENTOS_HADOOP_MASTER"]
@@ -30,8 +30,10 @@ DefaultKeyCred = basic_cred(
 )
 Era = vm_disk_package(name="era", config_file="specs/era_image_config.yaml")
 
+CLUSTER_MACRO = "@@{macro_cluster.uuid}@@"
 
-class MyAhvVm(AhvVm):
+
+class MyAhvVmResources(AhvVmResources):
 
     memory = 2
     vCPUs = 2
@@ -78,12 +80,19 @@ class MyAhvVm(AhvVm):
     ]
 
 
+class MyAhvVM(AhvVm):
+
+    resources = MyAhvVmResources
+    categories = {"AppFamily": "Demo", "AppType": "Default"}
+    cluster = Ref.Cluster(CLUSTER_MACRO)
+
+
 def test_json():
 
     ContextObj = get_context()
 
     ContextObj.update_project_context(project_name=PROJECT_NAME)
-    print(MyAhvVm.json_dumps(pprint=True))
+    print(MyAhvVmResources.json_dumps(pprint=True))
     ContextObj.reset_configuration()
 
 
@@ -94,8 +103,19 @@ def test_macro_in_nic():
 
     ContextObj = get_context()
     ContextObj.update_project_context(project_name=PROJECT_NAME)
-    vm_data = json.loads(MyAhvVm.json_dumps())
+    vm_data = json.loads(MyAhvVmResources.json_dumps())
     assert (
         vm_data["nic_list"][9]["subnet_reference"]["uuid"] == "@@{substrate_variable}@@"
     )
     ContextObj.reset_configuration()
+
+
+def test_macro_in_cluster():
+    """Tests macro in vm clusters"""
+
+    import json
+
+    ContextObj = get_context()
+    ContextObj.update_project_context(project_name=PROJECT_NAME)
+    vm_data = json.loads(MyAhvVM.json_dumps())
+    assert vm_data["cluster_reference"]["uuid"] == CLUSTER_MACRO

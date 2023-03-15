@@ -4,10 +4,10 @@ input:
 - "1"  # account
 - "vm-@@{calm_array_index}@@-@@{calm_time}@@"  # instance name
 - "y"  # Enable Associate Public Ip Address
-- "y"  # Want Instance type
-- "61"  # Instance Type = t2.nano
 - "y"  # Want Region
 - "1"  # Region = us-east-1
+- "y"  # Want Instance type
+- "61"  # Instance Type = t2.nano
 - "n"  # Want availability zone
 - "n"  # Want machine image
 - "n"  # Want IAM Role
@@ -29,4 +29,4 @@ spec_assertions:
 dependencies:
  # For changing indexes of resource in input as per the setup
 - [0, projects/default]
-- [7 , accounts/primary_account/regions/us-east-1/index]
+- [5, accounts/primary_account/regions/us-east-1/index]

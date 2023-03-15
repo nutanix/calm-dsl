@@ -1,12 +1,16 @@
 """
 Calm Runbook Sample for running http tasks
 """
-from calm.dsl.runbooks import read_local_file
+import json
+from calm.dsl.runbooks import read_local_file, read_file
 from calm.dsl.runbooks import runbook, Ref
 from calm.dsl.runbooks import RunbookTask as Task, basic_cred
-from calm.dsl.runbooks import CalmEndpoint as Endpoint
+from calm.dsl.runbooks import CalmEndpoint as Endpoint, ref
 from calm.dsl.builtins.models.helper.common import get_vmware_account_from_datacenter
+from calm.dsl.log import get_logging_handle
 
+LOG = get_logging_handle(__name__)
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 linux_ip = read_local_file(".tests/runbook_tests/vm_ip")
 windows_ip = read_local_file(".tests/runbook_tests/windows_vm_ip")
 AHV_LINUX_ID = read_local_file(".tests/runbook_tests/ahv_linux_id")
@@ -29,6 +33,9 @@ CRED_PASSWORD = read_local_file(".tests/runbook_tests/password")
 HTTP_AUTH_USERNAME = read_local_file(".tests/runbook_tests/auth_username")
 HTTP_AUTH_PASSWORD = read_local_file(".tests/runbook_tests/auth_password")
 HTTP_URL = read_local_file(".tests/runbook_tests/url")
+
+LOCAL_LINUX_ENDPOINT_VPC = read_local_file(".tests/endpoint_linux_vpc")
+LOCAL_WINDOWS_ENDPOINT_VPC = read_local_file(".tests/endpoint_windows_vpc")
 
 VMWARE_ACCOUNT_NAME = get_vmware_account_from_datacenter()
 
@@ -136,6 +143,26 @@ def EscriptOnEndpoint(endpoints=[multiple_linux_endpoint]):
 def PowershellTask(endpoints=[windows_endpoint]):
     Task.Exec.powershell(
         name="ExecTask", script='''echo "Task is Successful"''', target=endpoints[0]
+    )
+
+
+@runbook
+def PowershellTaskinVpc():
+    LOG.info(LOCAL_WINDOWS_ENDPOINT_VPC)
+    Task.Exec.powershell(
+        name="ExecTask",
+        script='''echo "Task is Successful"''',
+        target=ref(Endpoint.use_existing(LOCAL_WINDOWS_ENDPOINT_VPC)),
+    )
+
+
+@runbook
+def ShellTaskinVpc():
+    LOG.info(LOCAL_LINUX_ENDPOINT_VPC)
+    Task.Exec.ssh(
+        name="ExecTask",
+        script='''echo "Task is Successful"''',
+        target=ref(Endpoint.use_existing(LOCAL_LINUX_ENDPOINT_VPC)),
     )
 
 

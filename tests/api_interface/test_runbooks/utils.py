@@ -546,30 +546,11 @@ def get_runbook_dynamic_variable_values(runbook_uuid, var_uuid):
     return []
 
 
-def get_vpc_tunnel_using_account(config):
-    vpc = ""  # set default, if found set that value
-    accounts = config.get("ACCOUNTS", {}).get("NUTANIX_PC", [])
-    for acc in accounts:
-        if acc.get("NAME") == "NTNX_LOCAL_AZ":
-            for subnet in acc.get("OVERLAY_SUBNETS", []):
-                if subnet.get("VPC", "") == "vpc_name_1":
-                    vpc = "vpc_name_1"
-                    break
-    vpc_tunnel = config.get("VPC_TUNNELS", {}).get("NTNX_LOCAL_AZ", {}).get(vpc, {})
-
-    return vpc_tunnel
-
-
-def get_vpc_project(config):
-    vpc_project = config.get("VPC_PROJECTS", {}).get("PROJECT1", {})
-    return vpc_project
-
-
 def update_tunnel_and_project(tunnel_reference, project, endpoint_payload):
     metadata = endpoint_payload["metadata"]
     if metadata.get("project_reference", {}):
-        metadata["project_reference"]["uuid"] = project.get("UUID")
-        metadata["project_reference"]["name"] = project.get("NAME")
+        metadata["project_reference"]["name"] = project.get("name")
+        metadata["project_reference"]["uuid"] = project.get("uuid")
 
     resources = endpoint_payload["spec"]["resources"]
     if resources.get("tunnel_reference", {}):

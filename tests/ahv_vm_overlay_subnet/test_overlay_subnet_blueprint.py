@@ -10,10 +10,10 @@ from calm.dsl.builtins import read_local_file
 from calm.dsl.builtins import vm_disk_package, AhvVmDisk, AhvVmNic
 from calm.dsl.builtins import AhvVmGC, AhvVmResources, AhvVm, Ref
 
+from tests.utils import get_vpc_project
+
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
-VPC_PROJECT = (
-    DSL_CONFIG.get("VPC_PROJECTS", {}).get("PROJECT1", {}).get("NAME", "") or "default"
-)
+VPC_PROJECT = get_vpc_project(DSL_CONFIG)
 
 
 def get_local_az_overlay_details_from_dsl_config(config):
@@ -167,4 +167,4 @@ class DSLDemo(Blueprint):
 
 
 class BpMetadata(Metadata):
-    project = Ref.Project(VPC_PROJECT)
+    project = Ref.Project(VPC_PROJECT["name"])

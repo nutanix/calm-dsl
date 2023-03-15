@@ -23,6 +23,7 @@ from requests.exceptions import ConnectTimeout
 from requests.packages.urllib3.util.retry import Retry
 
 from calm.dsl.log import get_logging_handle
+from calm.dsl.config import get_context
 
 urllib3.disable_warnings()
 LOG = get_logging_handle(__name__)
@@ -91,7 +92,6 @@ class Connection:
         base_url="",
         response_processor=None,
         session_headers=None,
-        retries_enabled=True,
         **kwargs,
     ):
         """Generic client to connect to server.
@@ -110,7 +110,6 @@ class Connection:
             session_headers (dict): session headers dict
             auth_type (str): auth type that needs to be used by the client
             auth (tuple): authentication
-            retries_enabled (bool): Flag to perform retries (default: false)
         Returns:
         Raises:
         """
@@ -126,7 +125,6 @@ class Connection:
         self.scheme = scheme
         self.auth_type = auth_type
         self.response_processor = response_processor
-        self.retries_enabled = retries_enabled
 
     def connect(self):
         """Connect to api server, create http session pool.
@@ -137,7 +135,9 @@ class Connection:
         Raises:
         """
 
-        if self.retries_enabled:
+        context = get_context()
+        connection_config = context.get_connection_config()
+        if connection_config["retries_enabled"]:
             retry_strategy = Retry(
                 total=3,
                 status_forcelist=[429, 500, 502, 503, 504],
@@ -194,9 +194,9 @@ class Connection:
         verify=True,
         headers=None,
         files=None,
-        timeout=(5, 30),  # (connection timeout, read timeout)
         ignore_error=False,
         warning_msg="",
+        **kwargs,
     ):
         """Private method for making http request to calm
 
@@ -206,9 +206,19 @@ class Connection:
             cookies (dict): cookies that need to be forwarded.
             request_json (dict): request data
             request_params (dict): request params
+            timeout (touple): (connection timeout, read timeout)
         Returns:
             (tuple (requests.Response, dict)): Response
         """
+        timeout = kwargs.get("timeout", None)
+        if not timeout:
+            context = get_context()
+            connection_config = context.get_connection_config()
+            timeout = (
+                connection_config["connection_timeout"],
+                connection_config["read_timeout"],
+            )
+
         if request_params is None:
             request_params = {}
 

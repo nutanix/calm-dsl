@@ -4,6 +4,7 @@ import click
 import arrow
 import json
 import sys
+import copy
 from distutils.version import LooseVersion as LV
 from prettytable import PrettyTable
 from ruamel import yaml
@@ -681,7 +682,18 @@ def delete_project(project_names, no_cache_update=False):
             LOG.info("[Done]")
 
 
-def update_project_from_dsl(project_name, project_file, no_cache_update=False):
+def update_project_from_dsl(
+    project_name, project_file, no_cache_update=False, append_only=False
+):
+    """
+    Flow:
+        1. compile to get project_payload from the file
+        2. If apppend_only, then update using old project data
+        3. Calculate the data for acp updations
+        4. If not append only, then do project_usage calculation
+        5. Update project: PUT call
+        6. If project is updated successfully, then do acp updations
+    """
 
     client = get_api_client()
     calm_version = Version.get_version("Calm")
@@ -714,6 +726,11 @@ def update_project_from_dsl(project_name, project_file, no_cache_update=False):
 
     old_project_payload = res.json()
 
+    if append_only:
+        update_payload_from_old_project_data(
+            project_payload, copy.deepcopy(old_project_payload)
+        )
+
     # Find users already registered
     updated_project_user_list = []
     for _user in project_payload["spec"]["resources"].get("user_reference_list", []):
@@ -727,6 +744,7 @@ def update_project_from_dsl(project_name, project_file, no_cache_update=False):
 
     acp_remove_user_list = []
     acp_remove_group_list = []
+
     for _user in old_project_payload["spec"]["resources"].get(
         "user_reference_list", []
     ):
@@ -756,105 +774,32 @@ def update_project_from_dsl(project_name, project_file, no_cache_update=False):
             "default_environment_reference"
         ] = default_env_ref
 
-    # Get the diff in subnet and account payload for project usage
-    existing_subnets = [
-        _subnet["uuid"]
-        for _subnet in old_project_payload["spec"]["resources"].get(
-            "subnet_reference_list", []
+    if not append_only:
+        project_usage_payload = get_project_usage_payload(
+            project_payload, old_project_payload
         )
-    ]
-    existing_subnets.extend(
-        [
-            _subnet["uuid"]
-            for _subnet in old_project_payload["spec"]["resources"].get(
-                "external_network_list", []
+
+        LOG.info("Checking project usage")
+        res, err = client.project.usage(project_uuid, project_usage_payload)
+
+        if err:
+            LOG.error(err)
+            sys.exit(-1)
+
+        project_usage = res.json()
+        msg_list = []
+        should_update_project = is_project_updation_allowed(project_usage, msg_list)
+        if not should_update_project:
+            LOG.error("Project updation failed")
+            click.echo("\n".join(msg_list))
+            click.echo(
+                json.dumps(
+                    project_usage["status"].get("resources", {}),
+                    indent=4,
+                    separators=(",", ": "),
+                )
             )
-        ]
-    )
-
-    new_subnets = [
-        _subnet["uuid"]
-        for _subnet in project_payload["spec"]["resources"].get(
-            "subnet_reference_list", []
-        )
-    ]
-    new_subnets.extend(
-        [
-            _subnet["uuid"]
-            for _subnet in project_payload["spec"]["resources"].get(
-                "external_network_list", []
-            )
-        ]
-    )
-
-    existing_accounts = [
-        _acc["uuid"]
-        for _acc in old_project_payload["spec"]["resources"].get(
-            "account_reference_list", []
-        )
-    ]
-    new_accounts = [
-        _acc["uuid"]
-        for _acc in project_payload["spec"]["resources"].get(
-            "account_reference_list", []
-        )
-    ]
-
-    existing_vpcs = [
-        _vpc["uuid"]
-        for _vpc in old_project_payload["spec"]["resources"].get(
-            "vpc_reference_list", []
-        )
-    ]
-
-    new_vpcs = [
-        _vpc["uuid"]
-        for _vpc in project_payload["spec"]["resources"].get("vpc_reference_list", [])
-    ]
-
-    existing_clusters = [
-        _cluster["uuid"]
-        for _cluster in old_project_payload["spec"]["resources"].get(
-            "cluster_reference_list", []
-        )
-    ]
-
-    new_clusters = [
-        _cluster["uuid"]
-        for _cluster in project_payload["spec"]["resources"].get(
-            "cluster_reference_list", []
-        )
-    ]
-
-    project_usage_payload = {
-        "filter": {
-            "subnet_reference_list": list(set(existing_subnets) - set(new_subnets)),
-            "account_reference_list": list(set(existing_accounts) - set(new_accounts)),
-            "vpc_reference_list": list(set(existing_vpcs) - set(new_vpcs)),
-            "cluster_reference_list": list(set(existing_clusters) - set(new_clusters)),
-        }
-    }
-
-    LOG.info("Checking project usage")
-    res, err = client.project.usage(project_uuid, project_usage_payload)
-    if err:
-        LOG.error(err)
-        sys.exit(-1)
-
-    project_usage = res.json()
-    msg_list = []
-    should_update_project = is_project_updation_allowed(project_usage, msg_list)
-    if not should_update_project:
-        LOG.error("Project updation failed")
-        click.echo("\n".join(msg_list))
-        click.echo(
-            json.dumps(
-                project_usage["status"].get("resources", {}),
-                indent=4,
-                separators=(",", ": "),
-            )
-        )
-        sys.exit(-1)
+            sys.exit(-1)
 
     # Setting correct metadata for update call
     project_payload["metadata"] = old_project_payload["metadata"]
@@ -1262,3 +1207,198 @@ def is_project_updation_allowed(project_usage, msg_list):
             )
 
     return updation_allowed
+
+
+def update_payload_from_old_project_data(project_payload, old_project_payload):
+    """
+    updates the project_payload dict by appending the entities
+    Args:
+        project_payload (dict): updated project payload
+        old_project_payload (dict): original payload before updating
+    """
+
+    updated_project_user_list = []
+    for _user in project_payload["spec"]["resources"].get("user_reference_list", []):
+        updated_project_user_list.append(_user["uuid"])
+
+    updated_project_groups_list = []
+    for _group in project_payload["spec"]["resources"].get(
+        "external_user_group_reference_list", []
+    ):
+        updated_project_groups_list.append(_group["uuid"])
+
+    updated_project_subnet_reference_list = []
+    for _subnet in project_payload["spec"]["resources"].get(
+        "subnet_reference_list", []
+    ):
+        updated_project_subnet_reference_list.append(_subnet["uuid"])
+
+    updated_project_external_network_list = []
+    for _external_network in project_payload["spec"]["resources"].get(
+        "external_network_list", []
+    ):
+        updated_project_external_network_list.append(_external_network["uuid"])
+
+    updated_project_account_reference_list = []
+    for _account_reference in project_payload["spec"]["resources"].get(
+        "account_reference_list", []
+    ):
+        updated_project_account_reference_list.append(_account_reference["uuid"])
+
+    updated_project_vpc_reference_list = []
+    for _vpc_reference in project_payload["spec"]["resources"].get(
+        "vpc_reference_list", []
+    ):
+        updated_project_vpc_reference_list.append(_vpc_reference["uuid"])
+
+    updated_project_cluster_reference_list = []
+    for _cluster_reference in project_payload["spec"]["resources"].get(
+        "cluster_reference_list", []
+    ):
+        updated_project_cluster_reference_list.append(_cluster_reference["uuid"])
+
+    for _user in old_project_payload["spec"]["resources"].get(
+        "user_reference_list", []
+    ):
+        if _user["uuid"] not in updated_project_user_list:
+            project_payload["spec"]["resources"]["user_reference_list"].append(_user)
+
+    for _group in old_project_payload["spec"]["resources"].get(
+        "external_user_group_reference_list", []
+    ):
+        if _group["uuid"] not in updated_project_groups_list:
+            project_payload["spec"]["resources"][
+                "external_user_group_reference_list"
+            ].append(_group)
+
+    for _subnet in old_project_payload["spec"]["resources"].get(
+        "subnet_reference_list", []
+    ):
+        if _subnet["uuid"] not in updated_project_subnet_reference_list:
+            project_payload["spec"]["resources"]["subnet_reference_list"].append(
+                _subnet
+            )
+
+    for _external_network in old_project_payload["spec"]["resources"].get(
+        "external_network_list", []
+    ):
+        if _external_network["uuid"] not in updated_project_external_network_list:
+            project_payload["spec"]["resources"]["external_network_list"].append(
+                _external_network
+            )
+
+    for _account_reference in old_project_payload["spec"]["resources"].get(
+        "account_reference_list", []
+    ):
+        if _account_reference["uuid"] not in updated_project_account_reference_list:
+            project_payload["spec"]["resources"]["account_reference_list"].append(
+                _account_reference
+            )
+
+    for _vpc_reference in old_project_payload["spec"]["resources"].get(
+        "vpc_reference_list", []
+    ):
+        if _vpc_reference["uuid"] not in updated_project_vpc_reference_list:
+            project_payload["spec"]["resources"]["vpc_reference_list"].append(
+                _vpc_reference
+            )
+
+    for _cluster_reference in old_project_payload["spec"]["resources"].get(
+        "cluster_reference_list", []
+    ):
+        if _cluster_reference["uuid"] not in updated_project_cluster_reference_list:
+            project_payload["spec"]["resources"]["cluster_reference_list"].append(
+                _cluster_reference
+            )
+
+
+def get_project_usage_payload(project_payload, old_project_payload):
+    """
+    Returns project_usage_payload (dict) which is used to check if project updation is allowed
+    Args:
+        project_payload (dict): updated project payload
+        old_project_payload (dict): original payload before updating
+    Returns:
+        project_usage_payload (dict): payload for checking project usage
+    """
+
+    # Get the diff in subnet and account payload for project usage
+    existing_subnets = [
+        _subnet["uuid"]
+        for _subnet in old_project_payload["spec"]["resources"].get(
+            "subnet_reference_list", []
+        )
+    ]
+    existing_subnets.extend(
+        [
+            _subnet["uuid"]
+            for _subnet in old_project_payload["spec"]["resources"].get(
+                "external_network_list", []
+            )
+        ]
+    )
+
+    new_subnets = [
+        _subnet["uuid"]
+        for _subnet in project_payload["spec"]["resources"].get(
+            "subnet_reference_list", []
+        )
+    ]
+    new_subnets.extend(
+        [
+            _subnet["uuid"]
+            for _subnet in project_payload["spec"]["resources"].get(
+                "external_network_list", []
+            )
+        ]
+    )
+
+    existing_accounts = [
+        _acc["uuid"]
+        for _acc in old_project_payload["spec"]["resources"].get(
+            "account_reference_list", []
+        )
+    ]
+    new_accounts = [
+        _acc["uuid"]
+        for _acc in project_payload["spec"]["resources"].get(
+            "account_reference_list", []
+        )
+    ]
+
+    existing_vpcs = [
+        _vpc["uuid"]
+        for _vpc in old_project_payload["spec"]["resources"].get(
+            "vpc_reference_list", []
+        )
+    ]
+
+    new_vpcs = [
+        _vpc["uuid"]
+        for _vpc in project_payload["spec"]["resources"].get("vpc_reference_list", [])
+    ]
+
+    existing_clusters = [
+        _cluster["uuid"]
+        for _cluster in old_project_payload["spec"]["resources"].get(
+            "cluster_reference_list", []
+        )
+    ]
+
+    new_clusters = [
+        _cluster["uuid"]
+        for _cluster in project_payload["spec"]["resources"].get(
+            "cluster_reference_list", []
+        )
+    ]
+
+    project_usage_payload = {
+        "filter": {
+            "subnet_reference_list": list(set(existing_subnets) - set(new_subnets)),
+            "account_reference_list": list(set(existing_accounts) - set(new_accounts)),
+            "vpc_reference_list": list(set(existing_vpcs) - set(new_vpcs)),
+            "cluster_reference_list": list(set(existing_clusters) - set(new_clusters)),
+        }
+    }
+
+    return project_usage_payload

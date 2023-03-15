@@ -79,7 +79,14 @@ class AhvNicType(EntityType):
                 and cls_substrate.provider_spec.cluster
                 and cluster_name != str(cls_substrate.provider_spec.cluster)
             ):
-                sys.exit("Cluster mismatch - All VLANs should belong to same cluster")
+                substrate_cluster = str(cls_substrate.provider_spec.cluster)
+                if not (
+                    substrate_cluster.startswith("@@{")
+                    and substrate_cluster.endswith("}@@")
+                ):
+                    sys.exit(
+                        "Cluster mismatch - All VLANs should belong to same cluster"
+                    )
 
             if (
                 vpc_name

@@ -11,10 +11,9 @@ from calm.dsl.config import get_context
 from utils import (
     read_test_config,
     change_uuids,
-    get_vpc_project,
-    get_vpc_tunnel_using_account,
     update_tunnel_and_project,
 )
+from tests.utils import get_vpc_project, get_vpc_tunnel_using_account
 
 AUTH_USERNAME = read_local_file(".tests/runbook_tests/auth_username")
 AUTH_PASSWORD = read_local_file(".tests/runbook_tests/auth_password")
@@ -38,6 +37,12 @@ endpoint_with_multiple_urls = Endpoint.HTTP(
     auth=Endpoint.Auth(AUTH_USERNAME, AUTH_PASSWORD),
 )
 
+endpoint_with_invalid_url = Endpoint.HTTP(
+    TEST_URL + "api/nutanix/v3/random",
+    verify=False,
+    auth=Endpoint.Auth(AUTH_USERNAME, AUTH_PASSWORD),
+)
+
 
 def get_http_task_runbook(endpoint_file="http_endpoint_payload.json", config_file=None):
     """returns the runbook for http task"""
@@ -46,9 +51,9 @@ def get_http_task_runbook(endpoint_file="http_endpoint_payload.json", config_fil
     endpoint_payload = change_uuids(read_test_config(file_name=endpoint_file), {})
 
     if endpoint_file == "http_tunnel_endpoint.json" and config_file:
-        vpc_project = get_vpc_project(config_file)
-        vpc_tunnel = get_vpc_tunnel_using_account(config_file)
-        update_tunnel_and_project(vpc_tunnel, vpc_project, endpoint_payload)
+        vpc_project_obj = get_vpc_project(config_file)
+        vpc_tunnel_obj = get_vpc_tunnel_using_account(config_file)
+        update_tunnel_and_project(vpc_tunnel_obj, vpc_project_obj, endpoint_payload)
 
     @runbook
     def HTTPTask(endpoints=[endpoint]):
@@ -124,7 +129,7 @@ def HTTPTaskWithFailureState(endpoints=[endpoint_without_auth]):
 
 
 @runbook
-def HTTPTaskWithUnsupportedURL(endpoints=[endpoint]):
+def HTTPTaskWithUnsupportedURL(endpoints=[endpoint_with_invalid_url]):
 
     # Creating an endpoint with POST call
     Task.HTTP.get(

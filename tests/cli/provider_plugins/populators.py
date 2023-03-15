@@ -44,7 +44,6 @@ class ResourcePopulator:
     def __populate_aws_resources(self):
         """Get aws resource info and store them"""
         LOG.info("Collecting aws resource info")
-
         client = get_api_client()
         Obj = AwsVmProvider.get_api_obj()
 
@@ -79,15 +78,6 @@ class ResourcePopulator:
                 self.aws_resource_info["accounts"]["secondary_account"] = {
                     "uuid": entity_id
                 }
-
-        # get instance_types
-        instance_types = Obj.machine_types()
-        self.aws_resource_info["instance_types"] = {}
-        for type in CONSTANTS.AWS.INSTANCE_TYPES:
-            if type in instance_types:
-                self.aws_resource_info["instance_types"][type] = instance_types.index(
-                    type
-                )
 
         # get volume_types
         volume_types_names = list(AWS_CONSTANTS.VOLUME_TYPE_MAP.keys())
@@ -187,6 +177,14 @@ class ResourcePopulator:
                                         }
                                     }
 
+                    # get instance_types
+                    instance_types = Obj.machine_types(account_uuid, region)
+                    region_related_info["instance_types"] = {}
+                    for instance in CONSTANTS.AWS.INSTANCE_TYPES:
+                        if instance in instance_types:
+                            region_related_info["instance_types"][
+                                instance
+                            ] = instance_types.index(instance)
                     self.aws_resource_info["accounts"][account]["regions"][
                         region
                     ] = region_related_info

@@ -460,3 +460,23 @@ def describe_account(account_name):
             describe_showback_data(price_items)
 
     click.echo("")
+
+
+def sync_account(account_name):
+    """Sync account with corresponding account name"""
+
+    client = get_api_client()
+    account_uuid = client.account.get_name_uuid_map().get(account_name, "")
+
+    if not account_uuid:
+        LOG.error("Could not find the account {}".format(account_name))
+        sys.exit(-1)
+
+    res, err = client.account.platform_sync(account_uuid)
+    LOG.info(res.json())
+
+    if err:
+        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit(-1)
+
+    LOG.info("[DONE]")

@@ -1,5 +1,5 @@
 from .config import get_config_handle, set_dsl_config
-from .context import get_context, init_context
+from .context import get_context, init_context, get_default_connection_config
 from .init_config import (
     get_default_config_file,
     get_default_db_file,
@@ -15,4 +15,5 @@ __all__ = [
     "get_default_config_file",
     "get_default_db_file",
     "get_default_local_dir",
+    "get_default_connection_config",
 ]

@@ -116,6 +116,9 @@ def render_task_template(
         user_attrs["response_paths"] = attrs.get("response_paths", {})
         method = attrs["method"]
 
+        if (method == "POST" or method == "PUT") and not cls.attrs["request_body"]:
+            cls.attrs["request_body"] = {}
+
         if method == "GET":
             schema_file = "task_http_get.py.jinja2"
 

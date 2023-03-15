@@ -7,7 +7,7 @@ import json
 
 from calm.dsl.runbooks import runbook
 from calm.dsl.runbooks import RunbookTask as Task, basic_cred
-from calm.dsl.builtins import dynamic_cred
+from calm.dsl.runbooks import dynamic_cred
 from calm.dsl.runbooks import read_local_file
 from calm.dsl.runbooks import CalmEndpoint as Endpoint, Ref
 

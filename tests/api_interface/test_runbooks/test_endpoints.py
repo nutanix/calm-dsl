@@ -14,18 +14,17 @@ from calm.dsl.store import Version
 from utils import (
     change_uuids,
     read_test_config,
-    get_vpc_project,
-    get_vpc_tunnel_using_account,
     update_tunnel_and_project,
 )
+from tests.utils import get_vpc_project, get_vpc_tunnel_using_account
 from calm.dsl.builtins.models.utils import read_local_file
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 # calm_version
 CALM_VERSION = Version.get_version("Calm")
 
-VPC_PROJECT = get_vpc_project(DSL_CONFIG)
-VPC_TUNNEL = get_vpc_tunnel_using_account(DSL_CONFIG)
+VPC_PROJECT_OBJ = get_vpc_project(DSL_CONFIG)
+VPC_TUNNEL_OBJ = get_vpc_tunnel_using_account(DSL_CONFIG)
 
 LinuxEndpointPayload = read_test_config(file_name="linux_endpoint_payload.json")
 WindowsEndpointPayload = read_test_config(file_name="windows_endpoint_payload.json")
@@ -94,7 +93,7 @@ class TestEndpoints:
         payload_tunnel_reference = ep_resources.get("tunnel_reference", {})
         if payload_tunnel_reference:
             # Update with active tunnel reference and project
-            update_tunnel_and_project(VPC_TUNNEL, VPC_PROJECT, endpoint)
+            update_tunnel_and_project(VPC_TUNNEL_OBJ, VPC_PROJECT_OBJ, endpoint)
             payload_tunnel_reference = ep_resources.get("tunnel_reference", {})
 
         # Endpoint Create

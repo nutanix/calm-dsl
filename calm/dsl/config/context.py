@@ -7,6 +7,10 @@ from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
+DEFAULT_RETRIES_ENABLED = True
+DEFAILT_CONNECTION_TIMEOUT = 5
+DEFAULT_READ_TIMEOUT = 30
+
 
 class Context:
     def __init__(self):
@@ -26,7 +30,7 @@ class Context:
         self.project_config = config_handle.get_project_config()
         self.log_config = config_handle.get_log_config()
         self.categories_config = config_handle.get_categories_config()
-
+        self.connection_config = config_handle.get_connection_config()
         # Override with env data
         self.server_config.update(EnvConfig.get_server_config())
         self.project_config.update(EnvConfig.get_project_config())
@@ -100,6 +104,21 @@ class Context:
 
         return config
 
+    def get_connection_config(self):
+        """returns connection configuration"""
+
+        config = self.connection_config
+        if "retries_enabled" not in config:
+            config[
+                "retries_enabled"
+            ] = DEFAULT_RETRIES_ENABLED  # TODO check boolean is supported by ini
+        if "connection_timeout" not in config:
+            config["connection_timeout"] = DEFAILT_CONNECTION_TIMEOUT
+        if "read_timeout" not in config:
+            config["read_timeout"] = DEFAULT_READ_TIMEOUT
+
+        return config
+
     def get_log_config(self):
         """returns logging configuration"""
 
@@ -139,6 +158,7 @@ class Context:
         self.server_config.update(cxt_config_handle.get_server_config())
         self.project_config.update(cxt_config_handle.get_project_config())
         self.log_config.update(cxt_config_handle.get_log_config())
+        self.connection_config.update(cxt_config_handle.get_connection_config())
 
         if cxt_config_handle.get_categories_config():
             self.categories_config = cxt_config_handle.get_categories_config()
@@ -149,6 +169,7 @@ class Context:
         server_config = self.get_server_config()
         project_config = self.get_project_config()
         log_config = self.get_log_config()
+        connection_config = self.get_connection_config()
 
         ConfigHandle = get_config_handle()
         config_str = ConfigHandle._render_config_template(
@@ -158,6 +179,9 @@ class Context:
             password="xxxxxxxx",  # Do not render password
             project_name=project_config["name"],
             log_level=log_config["level"],
+            retries_enabled=connection_config["retries_enabled"],
+            connection_timeout=connection_config["connection_timeout"],
+            read_timeout=connection_config["read_timeout"],
         )
 
         print(config_str)
@@ -178,3 +202,13 @@ def get_context():
         init_context()
 
     return _ContextHandle
+
+
+def get_default_connection_config():
+    """Returns default connection config"""
+
+    return {
+        "connection_timeout": DEFAILT_CONNECTION_TIMEOUT,
+        "read_timeout": DEFAULT_READ_TIMEOUT,
+        "retries_enabled": DEFAULT_RETRIES_ENABLED,
+    }

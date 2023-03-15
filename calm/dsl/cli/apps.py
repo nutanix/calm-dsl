@@ -20,6 +20,7 @@ from .bps import (
     launch_blueprint_simple,
     compile_blueprint,
     create_blueprint,
+    get_app,
     parse_launch_runtime_vars,
     parse_launch_params_attribute,
 )
@@ -278,6 +279,16 @@ def create_app(
         LOG.error("User blueprint not found in {}".format(bp_file))
         sys.exit(-1)
 
+    # Check if give app name exists or generate random app name
+    if app_name:
+        res = get_app(app_name)
+        if res:
+            LOG.debug(res)
+            LOG.error("Application Name ({}) is already used.".format(app_name))
+            sys.exit(-1)
+    else:
+        app_name = "App{}".format(str(uuid.uuid4())[:10])
+
     # Get the blueprint type
     bp_type = bp_payload["spec"]["resources"].get("type", "")
 
@@ -305,7 +316,6 @@ def create_app(
     )
 
     # Creating an app
-    app_name = app_name or "App{}".format(str(uuid.uuid4())[:10])
     LOG.info("Creating app {}".format(app_name))
     launch_blueprint_simple(
         blueprint_name=bp_name,
@@ -314,6 +324,7 @@ def create_app(
         patch_editables=patch_editables,
         launch_params=launch_params,
         is_brownfield=True if bp_type == "BROWNFIELD" else False,
+        skip_app_name_check=True,
     )
 
     if bp_type != "BROWNFIELD":

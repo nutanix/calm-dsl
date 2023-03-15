@@ -7,7 +7,11 @@ from calm.dsl.cli import main as cli
 
 from calm.dsl.cli.constants import APPLICATION, ERGON_TASK
 from calm.dsl.log import get_logging_handle
+from calm.dsl.api import get_client_handle_obj
+from calm.dsl.api.connection import REQUEST
 
+
+VPC_TUNNEL_NAME = "vpc_name_1"
 LOG = get_logging_handle(__name__)
 
 
@@ -128,3 +132,114 @@ class Task:
             pytest.fail("Task went to {} state".format(task_payload["status"]))
 
         return task_payload
+
+
+class ReportPortal(object):
+    def __init__(self, token):
+
+        self.headers = {"Authorization": str(token)}
+        self.host = "rp.calm.nutanix.com/api/v1/calm"
+        self.client = get_client_handle_obj(
+            host=self.host, port=None, scheme=REQUEST.SCHEME.HTTP
+        )
+        self.client.connection.session.headers = self.headers
+
+    def get_launch_id(self, run_name, run_number):
+        """
+        This routine gets the launch id for the given runname and number
+        Args:
+            run_name(str): Report portal run name
+            run_number(int): Report portal run number
+        Returns:
+            (str) launch id
+        """
+        endpoint = "launch?page.size=50&page=1"
+        response, _ = self.client.connection._call(method="get", endpoint=endpoint)
+        response = response.json()
+
+        total_pages = int(response["page"]["totalPages"]) + 1
+
+        for page in range(1, total_pages):
+            endpoint = "launch?page.size=50&page.page={}&page.sort=start_time,number%2CDESC".format(
+                page
+            )
+            launches, _ = self.client.connection._call(method="get", endpoint=endpoint)
+            launches = json.loads(launches.content)
+
+            for launch in launches["content"]:
+                if launch["name"] == run_name and launch["number"] == run_number:
+                    LOG.info(
+                        "Launch id of run name: {}, number: {} is {}".format(
+                            run_name, run_number, launch["id"]
+                        )
+                    )
+                    return launch["id"]
+
+        LOG.warning(
+            "Launch id of run name: {}, number: {} is not found".format(
+                run_name, run_number
+            )
+        )
+
+    def get_tests(self, launch_id, query_parm, only_test_names=True):
+        """
+        This routine gets the tests for the given launch id and query_param
+        Args:
+            launch_id(str): Launch id
+            query_parm(str): query_parm supported by report portal
+            only_test_names(bool): Return only test name
+        Returns:
+            (list) list of test names
+        """
+        endpoint = "item?page.size=50&filter.eq.launch={}".format(launch_id)
+        query_parm = endpoint + query_parm if query_parm else endpoint
+
+        response, _ = self.client.connection._call(method="get", endpoint=endpoint)
+        response = json.loads(response.content)
+
+        total_pages = int(response["page"]["totalPages"]) + 1
+        all_tests = list()
+        for page in range(1, total_pages):
+            endpoint = "item?page.page={}&page.size=50&filter.eq.launch={}&filter.in.issue$issue_type=TI001".format(
+                page, launch_id
+            )
+            tests, _ = self.client.connection._call(method="get", endpoint=endpoint)
+            tests = json.loads(tests.content)
+            all_tests.extend(tests["content"])
+
+        if not only_test_names:
+            return all_tests
+        all_test_name_list = list()
+        for test in all_tests:
+            test_full_name_split = test["name"].split("::")
+            test_name = test_full_name_split[len(test_full_name_split) - 1]
+            all_test_name_list.append(test_name)
+        return all_test_name_list
+
+
+def get_vpc_project(config):
+    project_name = "default"
+    vpc_enabled = config.get("IS_VPC_ENABLED", False)
+    if not vpc_enabled:
+        return {"name": project_name, "uuid": ""}
+
+    return {
+        "name": config.get("VPC_PROJECTS", {})
+        .get("PROJECT1", {})
+        .get("NAME", project_name),
+        "uuid": config.get("VPC_PROJECTS", {}).get("PROJECT1", {}).get("UUID", ""),
+    }
+
+
+def get_vpc_tunnel_using_account(config):
+    vpc = ""  # set default, if found set that value
+    accounts = config.get("ACCOUNTS", {}).get("NUTANIX_PC", [])
+    for acc in accounts:
+        if acc.get("NAME") == "NTNX_LOCAL_AZ":
+            for subnet in acc.get("OVERLAY_SUBNETS", []):
+                if subnet.get("VPC", "") == VPC_TUNNEL_NAME:
+                    vpc = VPC_TUNNEL_NAME
+                    break
+
+    vpc_tunnel = config.get("VPC_TUNNELS", {}).get("NTNX_LOCAL_AZ", {}).get(vpc, {})
+    return {"name": vpc_tunnel.get("name", ""), "uuid": vpc_tunnel.get("uuid", "")}
