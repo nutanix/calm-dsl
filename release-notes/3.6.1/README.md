@@ -7,7 +7,7 @@
 - Fixes #190. Make retries_enabled, connection_timeout, read_timeout as configurable parameter.
 - Fixes #231. Expose dynamic_cred helper through calm.dsl.runbooks.
 - Fixes #251. Added command to manual sync platform account.
-- Fixes #204. Added `--apend-only` flag to only append data for project updation.
+- Fixes #204. Added `--append-only` flag to only append data for project updation.
 - Fixes #237. Fixes the env variables ignorance for config data.
 - Fixes a issue where project updation was failing with `Account not found`. Jira: CALM-3335
 
