@@ -32,6 +32,7 @@ from calm.dsl.api import get_api_client
 from calm.dsl.store import Cache
 from calm.dsl.decompile.decompile_render import create_bp_dir
 from calm.dsl.decompile.file_handler import get_bp_dir
+from calm.dsl.decompile.bp_file_helper import decrypt_decompiled_secrets_file
 
 from .utils import (
     get_name_query,
@@ -472,7 +473,53 @@ def create_blueprint_from_dsl(
     )
 
 
-def decompile_bp(name, bp_file, with_secrets=False, prefix="", bp_dir=None):
+def create_blueprint_from_dsl_with_encrypted_secrets(
+    client, bp_file, passphrase, name=None, description=None, force_create=False
+):
+    """
+    creates blueprint from the bp python file supplied using import_file API.
+    NOTE: Project mentioned remains unchanged
+    """
+
+    bp_payload = compile_blueprint(bp_file)
+    if bp_payload is None:
+        err_msg = "User blueprint not found in {}".format(bp_file)
+        err = {"error": err_msg, "code": -1}
+        return None, err
+
+    # Brownfield blueprints creation should be blocked using dsl file
+    if bp_payload["spec"]["resources"].get("type", "") == "BROWNFIELD":
+        LOG.error(
+            "Command not allowed for brownfield blueprints. Please use 'calm create app -f <bp_file_location>' for creating brownfield application"
+        )
+
+    decompiled_secrets = decrypt_decompiled_secrets_file(pth=bp_file.rsplit("/", 1)[0])
+
+    if name:
+        bp_payload["spec"]["name"] = name
+        bp_payload["metadata"]["name"] = name
+
+    if description:
+        bp_payload["spec"]["description"] = description
+
+    bp_resources = bp_payload["spec"]["resources"]
+    project_uuid = bp_payload["metadata"]["project_reference"]["uuid"]
+    bp_name = bp_payload["metadata"]["name"]
+
+    return client.blueprint.upload_with_decompiled_secrets(
+        bp_payload,
+        bp_resources,
+        project_uuid,
+        bp_name,
+        passphrase,
+        force_create=force_create,
+        decompiled_secrets=decompiled_secrets,
+    )
+
+
+def decompile_bp(
+    name, bp_file, with_secrets=False, prefix="", bp_dir=None, passphrase=None
+):
     """helper to decompile blueprint"""
 
     if name and bp_file:
@@ -482,9 +529,18 @@ def decompile_bp(name, bp_file, with_secrets=False, prefix="", bp_dir=None):
         sys.exit(-1)
 
     if name:
-        decompile_bp_from_server(
-            name=name, with_secrets=with_secrets, prefix=prefix, bp_dir=bp_dir
-        )
+        if passphrase:
+            decompile_bp_from_server_with_secrets(
+                name=name,
+                with_secrets=with_secrets,
+                prefix=prefix,
+                bp_dir=bp_dir,
+                passphrase=passphrase,
+            )
+        else:
+            decompile_bp_from_server(
+                name=name, with_secrets=with_secrets, prefix=prefix, bp_dir=bp_dir
+            )
 
     elif bp_file:
         decompile_bp_from_file(
@@ -515,6 +571,30 @@ def decompile_bp_from_server(name, with_secrets=False, prefix="", bp_dir=None):
     )
 
 
+def decompile_bp_from_server_with_secrets(
+    name, with_secrets=False, prefix="", bp_dir=None, passphrase=None
+):
+    """decompiles the blueprint by fetching it from server"""
+
+    client = get_api_client()
+    blueprint = get_blueprint(name)
+    bp_uuid = blueprint["metadata"]["uuid"]
+
+    res, err = client.blueprint.export_file(bp_uuid, passphrase)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    res = res.json()
+
+    _decompile_bp(
+        bp_payload=res,
+        with_secrets=with_secrets,
+        prefix=prefix,
+        bp_dir=bp_dir,
+        contains_encrypted_secrets=True,
+    )
+
+
 def decompile_bp_from_file(filename, with_secrets=False, prefix="", bp_dir=None):
     """decompile blueprint from local blueprint file"""
 
@@ -526,7 +606,13 @@ def decompile_bp_from_file(filename, with_secrets=False, prefix="", bp_dir=None)
     )
 
 
-def _decompile_bp(bp_payload, with_secrets=False, prefix="", bp_dir=None):
+def _decompile_bp(
+    bp_payload,
+    with_secrets=False,
+    prefix="",
+    bp_dir=None,
+    contains_encrypted_secrets=False,
+):
     """decompiles the blueprint from payload"""
 
     blueprint = bp_payload["spec"]["resources"]
@@ -569,6 +655,7 @@ def _decompile_bp(bp_payload, with_secrets=False, prefix="", bp_dir=None):
         with_secrets=with_secrets,
         metadata_obj=metadata_obj,
         bp_dir=bp_dir,
+        contains_encrypted_secrets=contains_encrypted_secrets,
     )
     click.echo(
         "\nSuccessfully decompiled. Directory location: {}. Blueprint location: {}".format(

@@ -14,7 +14,7 @@ LOG = get_logging_handle(__name__)
 CONFIG_SPEC_MAP = {}
 
 
-def render_profile_template(cls):
+def render_profile_template(cls, secrets_dict=[]):
 
     LOG.debug("Rendering {} profile template".format(cls.__name__))
     if not isinstance(cls, ProfileType):
@@ -22,6 +22,7 @@ def render_profile_template(cls):
 
     # Entity context
     entity_context = "Profile_" + cls.__name__
+    context = "app_profile_list." + (getattr(cls, "name", "") or cls.__name__) + "."
 
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__
@@ -65,7 +66,13 @@ def render_profile_template(cls):
     action_list = []
     for action in user_attrs.get("actions", []):
         action_list.append(
-            render_action_template(action, entity_context, CONFIG_SPEC_MAP)
+            render_action_template(
+                action,
+                entity_context,
+                CONFIG_SPEC_MAP,
+                secrets_dict=secrets_dict,
+                context=context,
+            )
         )
 
     deployment_list = []
@@ -74,7 +81,11 @@ def render_profile_template(cls):
 
     variable_list = []
     for entity in user_attrs.get("variables", []):
-        variable_list.append(render_variable_template(entity, entity_context))
+        variable_list.append(
+            render_variable_template(
+                entity, entity_context, secrets_dict=secrets_dict, context=context
+            )
+        )
 
     user_attrs["variables"] = variable_list
     user_attrs["deployments"] = ", ".join(deployment_list)

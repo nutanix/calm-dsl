@@ -20,6 +20,7 @@ from .bps import (
     decompile_bp,
     create_blueprint_from_json,
     create_blueprint_from_dsl,
+    create_blueprint_from_dsl_with_encrypted_secrets,
 )
 from .apps import watch_app
 from .utils import FeatureDslOption
@@ -152,6 +153,14 @@ def _compile_blueprint_command(bp_file, brownfield_deployment_file, out):
     help="Interactive Mode to provide the value for secrets",
 )
 @click.option(
+    "--passphrase",
+    "-ps",
+    "passphrase",
+    default=None,
+    required=False,
+    help="Passphrase to import secrets",
+)
+@click.option(
     "--prefix",
     "-p",
     default="",
@@ -164,10 +173,10 @@ def _compile_blueprint_command(bp_file, brownfield_deployment_file, out):
     default=None,
     help="Blueprint directory location used for placing decompiled entities",
 )
-def _decompile_bp(name, bp_file, with_secrets, prefix, bp_dir):
+def _decompile_bp(name, bp_file, with_secrets, prefix, bp_dir, passphrase):
     """Decompiles blueprint present on server or json file"""
 
-    decompile_bp(name, bp_file, with_secrets, prefix, bp_dir)
+    decompile_bp(name, bp_file, with_secrets, prefix, bp_dir, passphrase)
 
 
 @create.command("bp")
@@ -190,7 +199,14 @@ def _decompile_bp(name, bp_file, with_secrets, prefix, bp_dir):
     default=False,
     help="Deletes existing blueprint with the same name before create.",
 )
-def create_blueprint_command(bp_file, name, description, force):
+@click.option(
+    "--passphrase",
+    "-ps",
+    "passphrase",
+    default=None,
+    help="Passphrase for the encrypted secret values in blueprint",
+)
+def create_blueprint_command(bp_file, name, description, force, passphrase):
     """Creates a blueprint"""
 
     client = get_api_client()
@@ -200,9 +216,19 @@ def create_blueprint_command(bp_file, name, description, force):
             client, bp_file, name=name, description=description, force_create=force
         )
     elif bp_file.endswith(".py"):
-        res, err = create_blueprint_from_dsl(
-            client, bp_file, name=name, description=description, force_create=force
-        )
+        if passphrase:
+            res, err = create_blueprint_from_dsl_with_encrypted_secrets(
+                client,
+                bp_file,
+                passphrase,
+                name=name,
+                description=description,
+                force_create=force,
+            )
+        else:
+            res, err = create_blueprint_from_dsl(
+                client, bp_file, name=name, description=description, force_create=force
+            )
     else:
         LOG.error("Unknown file format {}".format(bp_file))
         return

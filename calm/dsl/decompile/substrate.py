@@ -13,7 +13,7 @@ from calm.dsl.log import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-def render_substrate_template(cls, vm_images=[]):
+def render_substrate_template(cls, vm_images=[], secrets_dict=[]):
 
     LOG.debug("Rendering {} substrate template".format(cls.__name__))
     if not isinstance(cls, SubstrateType):
@@ -21,6 +21,9 @@ def render_substrate_template(cls, vm_images=[]):
 
     # Entity context
     entity_context = "Substrate_" + cls.__name__
+    context = (
+        "substrate_definition_list." + (getattr(cls, "name", "") or cls.__name__) + "."
+    )
 
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__
@@ -98,7 +101,11 @@ def render_substrate_template(cls, vm_images=[]):
         if action.__name__ in list(system_actions.keys()):
             action.name = system_actions[action.__name__]
             action.__name__ = system_actions[action.__name__]
-        action_list.append(render_action_template(action, entity_context))
+        action_list.append(
+            render_action_template(
+                action, entity_context, context=context, secrets_dict=secrets_dict
+            )
+        )
 
     user_attrs["actions"] = action_list
 

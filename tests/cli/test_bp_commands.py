@@ -15,6 +15,10 @@ LOG = get_logging_handle(__name__)
 DSL_BP_FILEPATH = "tests/existing_vm_example/test_existing_vm_bp.py"
 JSON_BP_FILEPATH = "tests/existing_vm_example/test_existing_vm_bp.json"
 
+ENCRYPTED_SECRETS_BP_DIRECTORY_PATH = os.path.join(
+    os.getcwd(), "tests/blueprint_example/test_bp_with_encrypted_secrets"
+)
+
 BLUEPRINT_ERROR_MSG = {
     "AHV": {"DISK_NOT_ADDED": "Atleast one of the disk is required"},
     "VMW": {"NON_INTEGER_MEMORY": "memory_size_mib should be an integer (minimum 1)"},
@@ -182,6 +186,59 @@ class TestBpCommands:
                 f.write(old_spec_data)
 
         self._test_json_bp_delete()
+
+    def test_dsl_bp_with_encrypted_secrets_create(self):
+        runner = CliRunner()
+        os.makedirs(ENCRYPTED_SECRETS_BP_DIRECTORY_PATH + "/.local")
+
+        os.rename(
+            ENCRYPTED_SECRETS_BP_DIRECTORY_PATH + "/decompiled_secrets.bin",
+            ENCRYPTED_SECRETS_BP_DIRECTORY_PATH + "/.local/decompiled_secrets.bin",
+        )
+
+        self.created_dsl_bp_name = (
+            "Test_Existing_VM_With_Encrypted_Secrets_DSL_{}".format(int(time.time()))
+        )
+        passphrase = "test_passphrase"
+        LOG.info("Creating Bp {}".format(self.created_dsl_bp_name))
+        result = runner.invoke(
+            cli,
+            [
+                "create",
+                "bp",
+                "--file={}".format(
+                    ENCRYPTED_SECRETS_BP_DIRECTORY_PATH + "/blueprint.py"
+                ),
+                "--name={}".format(self.created_dsl_bp_name),
+                "--description='Test DSL Blueprint; to delete'",
+                "--passphrase={}".format(passphrase),
+            ],
+        )
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("BP creation from python file failed")
+
+        if "DRAFT" not in result.output:
+            assert '"state": "ACTIVE"' in result.output
+
+        LOG.info("Success")
+        os.rename(
+            ENCRYPTED_SECRETS_BP_DIRECTORY_PATH + "/.local/decompiled_secrets.bin",
+            ENCRYPTED_SECRETS_BP_DIRECTORY_PATH + "/decompiled_secrets.bin",
+        )
+
+        os.rmdir(ENCRYPTED_SECRETS_BP_DIRECTORY_PATH + "/.local")
+        self._test_dsl_bp_delete()
 
     def _test_bp_describe(self):
         runner = CliRunner()

@@ -15,7 +15,13 @@ def create_bp_file(dir_name, bp_data):
         fd.write(bp_data)
 
 
-def create_bp_dir(bp_cls=None, bp_dir=None, with_secrets=False, metadata_obj=None):
+def create_bp_dir(
+    bp_cls=None,
+    bp_dir=None,
+    with_secrets=False,
+    metadata_obj=None,
+    contains_encrypted_secrets=False,
+):
 
     if not bp_dir:
         bp_dir = os.path.join(os.getcwd(), bp_cls.__name__)
@@ -24,7 +30,10 @@ def create_bp_dir(bp_cls=None, bp_dir=None, with_secrets=False, metadata_obj=Non
     _, _, _, _ = init_bp_dir(bp_dir)
     LOG.info("Rendering blueprint file template")
     bp_data = render_bp_file_template(
-        cls=bp_cls, with_secrets=with_secrets, metadata_obj=metadata_obj
+        cls=bp_cls,
+        with_secrets=with_secrets,
+        metadata_obj=metadata_obj,
+        contains_encrypted_secrets=contains_encrypted_secrets,
     )
     LOG.info("Formatting blueprint file using black")
     bp_data = format_str(bp_data, mode=FileMode())

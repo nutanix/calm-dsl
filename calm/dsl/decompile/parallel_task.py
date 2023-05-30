@@ -3,7 +3,12 @@ from calm.dsl.decompile.task import render_task_template
 
 
 def render_parallel_task_template(
-    task_list, entity_context, RUNBOOK_ACTION_MAP, CONFIG_SPEC_MAP
+    task_list,
+    entity_context,
+    RUNBOOK_ACTION_MAP,
+    CONFIG_SPEC_MAP,
+    context="",
+    secrets_dict=[],
 ):
     """render parallel tasks template"""
 
@@ -11,7 +16,12 @@ def render_parallel_task_template(
     for task in task_list:
         rendered_tasks.append(
             render_task_template(
-                task, entity_context, RUNBOOK_ACTION_MAP, CONFIG_SPEC_MAP
+                task,
+                entity_context,
+                RUNBOOK_ACTION_MAP,
+                CONFIG_SPEC_MAP,
+                context=context,
+                secrets_dict=secrets_dict,
             )
         )
 

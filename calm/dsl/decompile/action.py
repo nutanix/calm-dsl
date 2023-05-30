@@ -9,7 +9,9 @@ LOG = get_logging_handle(__name__)
 RUNBOOK_ACTION_MAP = {}
 
 
-def render_action_template(cls, entity_context="", CONFIG_SPEC_MAP={}):
+def render_action_template(
+    cls, entity_context="", CONFIG_SPEC_MAP={}, context="", secrets_dict=[]
+):
 
     global RUNBOOK_ACTION_MAP
     LOG.debug("Rendering {} action template".format(cls.__name__))
@@ -19,9 +21,14 @@ def render_action_template(cls, entity_context="", CONFIG_SPEC_MAP={}):
     # Update entity context
     # TODO for now, not adding runbook to context as current mapping -is 1:1
     entity_context = entity_context + "_Action_" + cls.__name__
+    context = (
+        context + "action_list." + (getattr(cls, "name", "") or cls.__name__) + "."
+    )
 
     runbook = cls.runbook
     runbook_name = getattr(runbook, "name", "") or runbook.__name__
+    runbook_context = context + "runbook." + runbook_name + "."
+
     # Note cls.__name__ should be used for call_runbook tasks
     RUNBOOK_ACTION_MAP[runbook_name] = cls.__name__
 
@@ -33,19 +40,36 @@ def render_action_template(cls, entity_context="", CONFIG_SPEC_MAP={}):
         if len(task_list) != 1:
             tasks.append(
                 render_parallel_task_template(
-                    task_list, entity_context, RUNBOOK_ACTION_MAP, CONFIG_SPEC_MAP
+                    task_list,
+                    entity_context,
+                    RUNBOOK_ACTION_MAP,
+                    CONFIG_SPEC_MAP,
+                    context=runbook_context,
+                    secrets_dict=secrets_dict,
                 )
             )
         else:
             tasks.append(
                 render_task_template(
-                    task_list[0], entity_context, RUNBOOK_ACTION_MAP, CONFIG_SPEC_MAP
+                    task_list[0],
+                    entity_context,
+                    RUNBOOK_ACTION_MAP,
+                    CONFIG_SPEC_MAP,
+                    context=runbook_context,
+                    secrets_dict=secrets_dict,
                 )
             )
 
     variables = []
     for variable in runbook.variables:
-        variables.append(render_variable_template(variable, entity_context))
+        variables.append(
+            render_variable_template(
+                variable,
+                entity_context,
+                context=runbook_context,
+                secrets_dict=secrets_dict,
+            )
+        )
 
     if not (variables or tasks):
         return ""

@@ -11,7 +11,12 @@ LOG = get_logging_handle(__name__)
 
 
 def render_task_template(
-    cls, entity_context="", RUNBOOK_ACTION_MAP={}, CONFIG_SPEC_MAP={}
+    cls,
+    entity_context="",
+    RUNBOOK_ACTION_MAP={},
+    CONFIG_SPEC_MAP={},
+    context="",
+    secrets_dict=[],
 ):
 
     LOG.debug("Rendering {} task template".format(cls.name))
@@ -20,6 +25,9 @@ def render_task_template(
 
     # update entity_context
     entity_context = entity_context + "_Task_" + cls.__name__
+    context = (
+        context + "task_definition_list." + (getattr(cls, "name", "") or cls.__name__)
+    )
 
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.name
@@ -95,6 +103,13 @@ def render_task_template(
 
             elif var_type == "SECRET":
                 user_attrs["secret_headers"][var["name"]] = var["value"]
+                secrets_dict.append(
+                    {
+                        "context": context + ".headers." + var["name"],
+                        "secret_name": var["name"],
+                        "secret_value": var["value"],
+                    }
+                )
 
         for status in attrs.get("expected_response_params", []):
             user_attrs["status_mapping"][status["code"]] = (
