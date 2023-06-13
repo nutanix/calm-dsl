@@ -19,8 +19,14 @@ from calm.dsl.tools import get_module_from_file
 from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
 from calm.dsl.builtins.models.helper.common import get_project
+from calm.dsl.cli.quotas import (
+    _set_quota_state,
+    get_quota_uuid_at_project,
+    create_quota_at_project,
+    set_quota_at_project,
+)
 from calm.dsl.store import Cache, Version
-from calm.dsl.constants import CACHE, PROJECT_TASK
+from calm.dsl.constants import CACHE, PROJECT_TASK, QUOTA
 
 LOG = get_logging_handle(__name__)
 
@@ -252,9 +258,51 @@ def compile_project_command(project_file, out):
         LOG.error("Unknown output format {} given".format(out))
 
 
+def set_quota_at_project_level(client, quota, project_uuid):
+    """Setting quota at project level"""
+
+    quota_entities = {"project": project_uuid}
+
+    res, err = _set_quota_state(
+        client=client, state=QUOTA.STATE.ENABLED, quota_entities=quota_entities
+    )
+
+    if not res:
+        LOG.exception("Setting quota state failed with error {}".format(err))
+        sys.exit(-1)
+
+    quota_uuid, _ = get_quota_uuid_at_project(
+        client=client, quota_entities=quota_entities
+    )
+
+    if not quota_uuid:
+        res, err = create_quota_at_project(
+            client=client,
+            quota=quota,
+            project_uuid=project_uuid,
+            quota_entities=quota_entities,
+        )
+
+        if res is None:
+            LOG.exception("Quota creation at project failed with error {}".format(err))
+            sys.exit(-1)
+    else:
+        res, err = set_quota_at_project(
+            client=client,
+            quota_uuid=quota_uuid,
+            project_uuid=project_uuid,
+            quota=quota,
+            quota_entities=quota_entities,
+        )
+        if res is None:
+            LOG.exception("Setting quota at project failed with error {}".format(err))
+            sys.exit(-1)
+
+
 def create_project(project_payload, name="", description=""):
 
     client = get_api_client()
+    context_obj = get_context()
 
     project_payload.pop("status", None)
 
@@ -290,6 +338,20 @@ def create_project(project_payload, name="", description=""):
     if task_state in PROJECT_TASK.FAILURE_STATES:
         LOG.exception("Project creation task went to {} state".format(task_state))
         sys.exit(-1)
+
+    project_uuid = project["metadata"]["uuid"]
+
+    quota = (
+        project_payload.get("spec", {}).get("resources", {}).get("resource_domain", {})
+    )
+
+    if quota:
+        policy_config = context_obj.get_policy_config()
+
+        if policy_config.get("policy_status", "False") == "False":
+            LOG.info("Quotas would not be set as policy is not enabled")
+        else:
+            set_quota_at_project_level(client, quota, project_uuid)
 
     return stdout_dict
 
@@ -696,6 +758,7 @@ def update_project_from_dsl(
     """
 
     client = get_api_client()
+    context_obj = get_context()
     calm_version = Version.get_version("Calm")
 
     user_project_module = get_project_module_from_file(project_file)
@@ -810,6 +873,22 @@ def update_project_from_dsl(
 
     # TODO removed users should be removed from acps also.
     LOG.info("Updating project '{}'".format(project_name))
+    quota = (
+        project_payload.get("spec", {}).get("resources", {}).get("resource_domain", {})
+    )
+
+    if quota:
+        policy_config = context_obj.get_policy_config()
+
+        if policy_config.get("policy_status", "False") == "False":
+            LOG.info("Quotas would not be set as policy is not enabled")
+        else:
+            set_quota_at_project_level(client, quota, project_uuid)
+    else:
+        LOG.info(
+            "Quotas not provided in the file, so already existing quotas will not be updated"
+        )
+
     res, err = client.project.update(project_uuid, project_payload)
     if err:
         LOG.error(err)
@@ -862,6 +941,8 @@ def update_project_using_cli_switches(
     remove_account_list,
     remove_user_list,
     remove_group_list,
+    disable_quotas,
+    enable_quotas,
 ):
 
     client = get_api_client()
@@ -1020,6 +1101,26 @@ def update_project_using_cli_switches(
             )
         )
         sys.exit(-1)
+
+    quota_entities = {"project": project_uuid}
+
+    if enable_quotas:
+        res, err = _set_quota_state(
+            client=client, state=QUOTA.STATE.ENABLED, quota_entities=quota_entities
+        )
+
+        if err:
+            LOG.exception("Failed to enable quotas with error {}".format(err))
+            sys.exit(-1)
+
+    if disable_quotas:
+        res, err = _set_quota_state(
+            client=client, state=QUOTA.STATE.DISABLED, quota_entities=quota_entities
+        )
+
+        if err:
+            LOG.exception("Failed to disable quotas with error {}".format(err))
+            sys.exit(-1)
 
     LOG.info("Updating project '{}'".format(project_name))
     res, err = client.project.update(project_uuid, project_payload)

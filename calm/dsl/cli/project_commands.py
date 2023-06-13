@@ -200,6 +200,20 @@ def _describe_project(project_name, out):
     default=False,
     help="if true, will only append the users, groups, subnets, external networks, accounts, vpc and cluster from the project_file",
 )
+@click.option(
+    "--disable-quotas",
+    "disable_quotas",
+    is_flag=True,
+    default=False,
+    help="if true, will disable quotas at project level",
+)
+@click.option(
+    "--enable-quotas",
+    "enable_quotas",
+    is_flag=True,
+    default=False,
+    help="if true, will enable quotas at project level",
+)
 def _update_project(
     project_name,
     project_file,
@@ -211,6 +225,8 @@ def _update_project(
     remove_group_list,
     no_cache_update,
     append_only,
+    disable_quotas,
+    enable_quotas,
 ):
     """
         Updates a project.
@@ -218,8 +234,13 @@ def _update_project(
     \b
     Usability:
         a. If project_file is given, command will use file to update project. Environment updation is not allowed
+           If the project already has quotas set and enabled and quotas are present in project_file then the quotas would be updated
+           If the project already has quotas set and enabled and there are no quotas in project_file then the original quotas would be left as it is.
+           If the project did not have quotas enabled/set and the project_file has quotas then the quotas would be enabled and set.
         b. If project_file is not given , project will be updated based on other cli switches
-           i.e. add_user, add_group, remove_user, remove_group
+           i.e. add_user, add_group, remove_user, remove_group, disable_quotas, enable_quotas
+                disable_quotas - It will disable the project level quotas without affecting their values
+                enable_quotas - It will enable the project level quotas without affecting their values
         c. Project ACPs will be updated synchronously you remove users/groups from project
     """
 
@@ -231,9 +252,11 @@ def _update_project(
         or remove_account_list
         or remove_user_list
         or remove_group_list
+        or disable_quotas
+        or enable_quotas
     ):
         LOG.error(
-            "Either project file or add/remove paramters for users/groups should be given"
+            "Either project file or add/remove paramters for users/groups or --quota-disable/--enable-quotas flag should be given"
         )
         sys.exit(-1)
 
@@ -250,6 +273,12 @@ def _update_project(
             LOG.error("Unknown file format")
             return
 
+    if enable_quotas and disable_quotas:
+        LOG.error(
+            "Either provide --enable-quotas/--disable-quotas, both at the same time is invalid"
+        )
+        sys.exit(-1)
+
     update_project_using_cli_switches(
         project_name=project_name,
         add_user_list=add_user_list,
@@ -258,4 +287,6 @@ def _update_project(
         remove_group_list=remove_group_list,
         add_account_list=add_account_list,
         remove_account_list=remove_account_list,
+        disable_quotas=disable_quotas,
+        enable_quotas=enable_quotas,
     )

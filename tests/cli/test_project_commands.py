@@ -5,6 +5,8 @@ import click
 import traceback
 from distutils.version import LooseVersion as LV
 from click.testing import CliRunner
+from calm.dsl.api import get_api_client
+from calm.dsl.cli.quotas import _get_quota
 from calm.dsl.builtins.models.helper.common import get_project
 from calm.dsl.cli import main as cli
 from calm.dsl.builtins.models.metadata_payload import reset_metadata_obj
@@ -15,6 +17,7 @@ from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 DSL_PROJECT_PATH = "tests/project/test_project_in_pc.py"
+DSL_UPDATE_PROJECT_PATH = "tests/project/test_project_update_in_pc.py"
 DSL_PROJECT_WITH_ENV_PATH = "tests/project/test_project_with_env.py"
 DSL_PROJECT_WITH_VPC_PATH = "tests/project/test_project_with_overlay_subnets.py"
 
@@ -111,8 +114,13 @@ class TestProjectCommands:
         This test assumes users/groups mentioned in project file are already created
         """
 
+        context_obj = get_context()
+        policy_config = context_obj.get_policy_config()
+
         # Create operation
         self._test_project_create_using_dsl(PROJECT_PATH)
+        if policy_config.get("policy_status", "False") == "True":
+            self._test_quotas_set_and_enabled_on_project_create(PROJECT_PATH)
         if self.VPC_FLAG:
             self._test_overlay_subnets()
         # Read operations
@@ -166,6 +174,249 @@ class TestProjectCommands:
                 )
             )
             pytest.fail("Project creation from python file failed")
+        LOG.info("Success")
+
+    def _test_quotas_set_and_enabled_on_project_create(
+        self, PROJECT_PATH=DSL_PROJECT_PATH
+    ):
+        """
+        Test if quotas are set and enabled on crating project
+        """
+
+        client = get_api_client()
+        runner = CliRunner()
+        if PROJECT_PATH == DSL_PROJECT_WITH_VPC_PATH:
+            self.VPC_FLAG = True
+        else:
+            self.VPC_FLAG = False
+
+        self.dsl_project_name = "Test_DSL_Project_{}".format(str(uuid.uuid4()))
+        LOG.info("Testing 'calm create project' command")
+        result = runner.invoke(
+            cli,
+            [
+                "create",
+                "project",
+                "--file={}".format(PROJECT_PATH),
+                "--name={}".format(self.dsl_project_name),
+                "--description='Test DSL Project to delete'",
+            ],
+        )
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Project creation from python file failed")
+
+        project_uuid = json.loads(result.output).get("uuid", "")
+        quota_entities = {"project": project_uuid}
+        quota_spec = _get_quota(client=client, quota_entities=quota_entities)
+        quota = quota_spec[0].get("entities", None)
+
+        if not (
+            (quota)
+            and (
+                quota[0].get("status", {}).get("resources", {}).get("state", "")
+                == "enabled"
+            )
+            and (
+                quota[0]
+                .get("status", {})
+                .get("resources", {})
+                .get("data", {})
+                .get("vcpu", -1)
+            )
+            and (
+                quota[0]
+                .get("status", {})
+                .get("resources", {})
+                .get("data", {})
+                .get("disk", -1)
+            )
+            and (
+                quota[0]
+                .get("status", {})
+                .get("resources", {})
+                .get("data", {})
+                .get("memory", -1)
+            )
+        ):
+            pytest.fail("Quota enable/set failed")
+
+        self._test_disable_quotas_using_cli_switches(project_uuid=project_uuid)
+        self._test_enable_quotas_using_cli_switches(project_uuid=project_uuid)
+        self._test_quotas_updated_on_project_update(
+            UPDATE_PROJECT_PATH=DSL_UPDATE_PROJECT_PATH
+        )
+
+        LOG.info("Success")
+
+    def _test_quotas_updated_on_project_update(
+        self, UPDATE_PROJECT_PATH=DSL_UPDATE_PROJECT_PATH
+    ):
+        """
+        Test if projects are updated on using project update command
+        """
+
+        client = get_api_client()
+        runner = CliRunner()
+        LOG.info("Testing 'calm update project' command for updating quotas")
+        result = runner.invoke(
+            cli,
+            [
+                "update",
+                "project",
+                self.dsl_project_name,
+                "--file={}".format(UPDATE_PROJECT_PATH),
+            ],
+        )
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Project update from python file failed")
+
+        project_uuid = json.loads(result.output).get("uuid", "")
+        quota_entities = {"project": project_uuid}
+        quota_spec = _get_quota(client=client, quota_entities=quota_entities)
+        quota = quota_spec[0].get("entities", None)
+
+        if not (
+            (quota)
+            and (
+                quota[0].get("status", {}).get("resources", {}).get("state", "")
+                == "enabled"
+            )
+            and (
+                quota[0]
+                .get("status", {})
+                .get("resources", {})
+                .get("data", {})
+                .get("vcpu", -1)
+                == 2
+            )
+            and (
+                quota[0]
+                .get("status", {})
+                .get("resources", {})
+                .get("data", {})
+                .get("disk", -1)
+                == 2147483648
+            )
+            and (
+                quota[0]
+                .get("status", {})
+                .get("resources", {})
+                .get("data", {})
+                .get("memory", -1)
+                == 1073741824
+            )
+        ):
+            pytest.fail("Quota updation failed")
+
+    LOG.info("Success")
+
+    def _test_disable_quotas_using_cli_switches(self, project_uuid):
+        """
+        Test if cli switch disables quotas at project level to given project.
+        """
+
+        client = get_api_client()
+        runner = CliRunner()
+        LOG.info(
+            "Testing 'calm update project' command using --disable-quotas cli switch"
+        )
+        result = runner.invoke(
+            cli,
+            ["update", "project", self.dsl_project_name, "--disable-quotas"],
+        )
+
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Project update call failed")
+
+        quota_entities = {"project": project_uuid}
+        quota_spec = _get_quota(client=client, quota_entities=quota_entities)
+        quota_state = (
+            quota_spec[0]
+            .get("entities", [])[0]
+            .get("status", {})
+            .get("resources", {})
+            .get("state", None)
+        )
+
+        if quota_state != "disabled":
+            pytest.fail("Failed disabling quotas using cli switch")
+
+        LOG.info("Success")
+
+    def _test_enable_quotas_using_cli_switches(self, project_uuid):
+        """
+        Test if cli switch enables quotas at project level to given project.
+        """
+
+        client = get_api_client()
+        runner = CliRunner()
+        LOG.info(
+            "Testing 'calm update project' command using --enable-quotas cli switch"
+        )
+        result = runner.invoke(
+            cli,
+            ["update", "project", self.dsl_project_name, "--enable-quotas"],
+        )
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            LOG.debug(
+                "Traceback: \n{}".format(
+                    "".join(traceback.format_tb(result.exc_info[2]))
+                )
+            )
+            pytest.fail("Project update call failed")
+
+        quota_entities = {"project": project_uuid}
+        quota_spec = _get_quota(client=client, quota_entities=quota_entities)
+        quota_state = (
+            quota_spec[0]
+            .get("entities", [])[0]
+            .get("status", {})
+            .get("resources", {})
+            .get("state", None)
+        )
+
+        if quota_state != "enabled":
+            pytest.fail("Failed enabling quotas using cli switch")
+
         LOG.info("Success")
 
     def _test_project_describe_out_text(self):

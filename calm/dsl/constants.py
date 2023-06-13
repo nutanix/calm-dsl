@@ -57,21 +57,6 @@ class PROJECT_TASK:
     FAILURE_STATES = [STATUS.ABORTED, STATUS.SUSPENDED, STATUS.FAILURE]
 
 
-class NETWORK_GROUP_TUNNEL_TASK:
-    class STATUS:
-        SUCCESS = "Succeeded"
-        FAILURE = "Failed"
-        ABORTED = "Aborted"
-        QUEUED = "Queued"
-
-    TERMINAL_STATES = [
-        STATUS.ABORTED,
-        STATUS.SUCCESS,
-        STATUS.FAILURE,
-    ]
-    FAILURE_STATES = [STATUS.ABORTED, STATUS.FAILURE]
-
-
 class POLICY:
     """Policy related constants"""
 
@@ -101,3 +86,29 @@ class POLICY:
         APPROVAL = "APPROVAL"
         QUOTA_CHECK = "QUOTA_CHECK"
         EMAIL = "EMAIL"
+
+
+class NETWORK_GROUP_TUNNEL_TASK:
+    class STATUS:
+        SUCCESS = "Succeeded"
+        FAILURE = "Failed"
+        ABORTED = "Aborted"
+        QUEUED = "Queued"
+
+    TERMINAL_STATES = [
+        STATUS.ABORTED,
+        STATUS.SUCCESS,
+        STATUS.FAILURE,
+    ]
+    FAILURE_STATES = [STATUS.ABORTED, STATUS.FAILURE]
+
+
+class QUOTA(object):
+    class STATE(object):
+        ENABLED = "enabled"
+        DISABLED = "disabled"
+
+    class ENTITY(object):
+        ACCOUNT = "account"
+        CLUSTER = "cluster"
+        PROJECT = "project"
