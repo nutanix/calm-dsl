@@ -6,48 +6,17 @@ import traceback
 from click.testing import CliRunner
 
 from calm.dsl.cli import main as cli
+from calm.dsl.builtins import read_local_file
 from calm.dsl.decompile.file_handler import get_bp_dir
 from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 from calm.dsl.decompile import init_decompile_context
 
+
 LOG = get_logging_handle(__name__)
 
-ENCRYPTED_SECRETS_BP_DIRECTORY_PATH = os.path.join(
-    os.getcwd(), "tests/decompile/example_bp_for_decompile_with_encrypted_secrets"
-)
-PASSPHRASE = "test_passphrase"
-SECRETS_PATH_LIST = [
-    ["credential_definition_list", 0],
-    ["service_definition_list", 0, "variable_list", 0],
-    ["service_definition_list", 0, "action_list", 6, "runbook", "variable_list", 0],
-    [
-        "service_definition_list",
-        0,
-        "action_list",
-        7,
-        "runbook",
-        "task_definition_list",
-        1,
-        "attrs",
-        "headers",
-        0,
-    ],
-    ["service_definition_list", 1, "action_list", 6, "runbook", "variable_list", 0],
-    [
-        "service_definition_list",
-        1,
-        "action_list",
-        6,
-        "runbook",
-        "task_definition_list",
-        1,
-        "attrs",
-        "headers",
-        0,
-    ],
-    ["app_profile_list", 0, "action_list", 0, "runbook", "variable_list", 0],
-]
+BP_FILE = "tests/decompile/test_task_tree_bp.py"
+CRED_PASSWORD = read_local_file(".tests/password")
 
 
 class TestDecompile:
@@ -66,28 +35,12 @@ class TestDecompile:
         for dir_location in self.bp_dir_list:
             shutil.rmtree(dir_location)
 
-    def remove_secret_values(self, bp_payload):
-        for path in SECRETS_PATH_LIST:
-            secret = bp_payload
-            for sub_path in path:
-                secret = secret[sub_path]
-            if path[0] == "credential_definition_list":
-                secret = secret["secret"]
-            secret["value"] = ""
-
-    def test_bp_payload_with_encrypted_secrets(self):
+    def test_task_tree_bp(self):
         """Tests whether compiled payload of decompiled blueprint is same as normal blueprint"""
 
         runner = CliRunner()
 
-        os.makedirs(ENCRYPTED_SECRETS_BP_DIRECTORY_PATH + "/.local")
-
-        os.rename(
-            ENCRYPTED_SECRETS_BP_DIRECTORY_PATH + "/decompiled_secrets.bin",
-            ENCRYPTED_SECRETS_BP_DIRECTORY_PATH + "/.local/decompiled_secrets.bin",
-        )
-
-        bp_file_location = ENCRYPTED_SECRETS_BP_DIRECTORY_PATH + "/blueprint.py"
+        bp_file_location = os.path.join(os.getcwd(), BP_FILE)
         LOG.info("Compiling Blueprint file at {}".format(bp_file_location))
         result = runner.invoke(cli, ["-vv", "compile", "bp", "-f", bp_file_location])
         if result.exit_code:
@@ -104,7 +57,6 @@ class TestDecompile:
             )
 
         bp_json = json.loads(result.output)
-        bp_json = json.loads(json.dumps(bp_json, sort_keys=True))
 
         # Fetch project used for compilation
         project_name = bp_json["metadata"]["project_reference"].get("name")
@@ -115,14 +67,7 @@ class TestDecompile:
             "Creating Blueprint '{}' from file at {}".format(bp_name, bp_file_location)
         )
         result = runner.invoke(
-            cli,
-            [
-                "create",
-                "bp",
-                "--file={}".format(bp_file_location),
-                "--name={}".format(bp_name),
-                "--passphrase={}".format(PASSPHRASE),
-            ],
+            cli, ["create", "bp", "-f", bp_file_location, "-n", bp_name]
         )
         if result.exit_code:
             cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
@@ -144,9 +89,11 @@ class TestDecompile:
         self.created_bp_list.append(bp_name)
         # Decompiling the created bp and storing secrets in file
         LOG.info("Decompiling Blueprint {}".format(bp_name))
+        cli_inputs = [CRED_PASSWORD]
         result = runner.invoke(
             cli,
-            ["decompile", "bp", bp_name, "--passphrase={}".format(PASSPHRASE)],
+            ["decompile", "bp", bp_name, "--with_secrets"],
+            input="\n".join(cli_inputs),
         )
 
         if result.exit_code:
@@ -188,28 +135,51 @@ class TestDecompile:
             )
 
         decompiled_bp_json = json.loads(result.output)
-
         # We don't have paramter to pass name of blueprint during compile right now
         # So compare everythin else other than blueprint name
         decompiled_bp_json["metadata"]["name"] = bp_json["metadata"]["name"]
         decompiled_bp_json["spec"]["name"] = bp_json["spec"]["name"]
 
-        decompiled_bp_json = json.loads(json.dumps(decompiled_bp_json, sort_keys=True))
+        bp_json_edge_list = (
+            bp_json.get("spec", {})
+            .get("resources", {})
+            .get("package_definition_list", [{}])[0]
+            .get("options", {})
+            .get("uninstall_runbook", {})
+            .get("task_definition_list", [{}])[0]
+            .get("attrs", {})
+            .get("edges", [])
+        )
 
-        LOG.info("Comparing original and decompiled blueprint json")
+        decompiled_bp_json_edge_list = (
+            decompiled_bp_json.get("spec", {})
+            .get("resources", {})
+            .get("package_definition_list", [{}])[0]
+            .get("options", {})
+            .get("uninstall_runbook", {})
+            .get("task_definition_list", [{}])[0]
+            .get("attrs", {})
+            .get("edges", [])
+        )
 
-        self.remove_secret_values(bp_json["spec"]["resources"])
-        self.remove_secret_values(decompiled_bp_json["spec"]["resources"])
+        sorted_bp_json_edge_list = sorted(
+            bp_json_edge_list,
+            key=lambda edge: (
+                edge["from_task_reference"]["name"],
+                edge["to_task_reference"]["name"],
+            ),
+        )
+        sorted_decompiled_bp_json_edge_list = sorted(
+            decompiled_bp_json_edge_list,
+            key=lambda edge: (
+                edge["from_task_reference"]["name"],
+                edge["to_task_reference"]["name"],
+            ),
+        )
 
-        assert bp_json == decompiled_bp_json
+        LOG.info("Comparing original and decompiled edge list")
+        assert sorted_bp_json_edge_list == sorted_decompiled_bp_json_edge_list
         LOG.info("Success")
 
         # Deleting old bp directory
         shutil.rmtree(self.bp_dir_list.pop())
-
-        os.rename(
-            ENCRYPTED_SECRETS_BP_DIRECTORY_PATH + "/.local/decompiled_secrets.bin",
-            ENCRYPTED_SECRETS_BP_DIRECTORY_PATH + "/decompiled_secrets.bin",
-        )
-
-        os.rmdir(ENCRYPTED_SECRETS_BP_DIRECTORY_PATH + "/.local")

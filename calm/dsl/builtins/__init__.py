@@ -79,6 +79,7 @@ from .models.blueprint import Blueprint, blueprint, BlueprintType
 
 from .models.simple_deployment import SimpleDeployment
 from .models.simple_blueprint import SimpleBlueprint
+from .models.runbook import branch
 
 from .models.blueprint_payload import create_blueprint_payload
 from .models.vm_disk_package import (
@@ -234,4 +235,7 @@ __all__ = [
     "PolicyApproverSet",
     "CalmPolicy",
     "Policy",
+    "AhvVmRecoveryResources",
+    "ahv_vm_recovery_spec",
+    "branch",
 ]

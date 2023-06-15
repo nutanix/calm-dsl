@@ -1,6 +1,9 @@
+import uuid
+
 from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.task import render_task_template
 from calm.dsl.decompile.parallel_task import render_parallel_task_template
+from calm.dsl.decompile.task_tree import render_task_tree_template
 from calm.dsl.decompile.variable import render_variable_template
 from calm.dsl.builtins import action, ActionType
 from calm.dsl.log import get_logging_handle
@@ -34,31 +37,21 @@ def render_action_template(
 
     # NOTE Not using main_task_local_reference for now,
     # bcz type of main task is "DAG"
-    levelled_tasks = get_task_order(runbook.tasks)
+    root_node, task_child_map = get_task_order(runbook.tasks)
+
     tasks = []
-    for task_list in levelled_tasks:
-        if len(task_list) != 1:
-            tasks.append(
-                render_parallel_task_template(
-                    task_list,
-                    entity_context,
-                    RUNBOOK_ACTION_MAP,
-                    CONFIG_SPEC_MAP,
-                    context=runbook_context,
-                    secrets_dict=secrets_dict,
-                )
+    if task_child_map:
+        tasks.append(
+            render_task_tree_template(
+                root_node,
+                task_child_map,
+                entity_context,
+                RUNBOOK_ACTION_MAP,
+                CONFIG_SPEC_MAP,
+                context=runbook_context,
+                secrets_dict=secrets_dict,
             )
-        else:
-            tasks.append(
-                render_task_template(
-                    task_list[0],
-                    entity_context,
-                    RUNBOOK_ACTION_MAP,
-                    CONFIG_SPEC_MAP,
-                    context=runbook_context,
-                    secrets_dict=secrets_dict,
-                )
-            )
+        )
 
     variables = []
     for variable in runbook.variables:
@@ -90,7 +83,23 @@ def render_action_template(
 
 
 def get_task_order(task_list):
-    """Returns the list where each index represents a list of task that executes parallely"""
+    """
+    Returns the root_node and task_child_map which is a dict containg a node mapped to all its children
+
+    Algorithm Description:
+        - After declaring all the variables - edges, task_indegree_count_map, task_edges_map
+        - First we create an empty queue and add all the nodes present on the base level and at the same time
+          task_name and task_data are appended to task_child_map
+          q = [] -> q = [{root_node, root_node_data}, {task_name, task_data}, ....]
+          task_child_map[(root_node, 0)] = [] -> task_child_map[(root_node, 0)] = [{task_name, task_data}, ....]
+
+        - Then we start traversing by popping each element from the queue, traversing is done in level-order
+
+        - Each node's child is traversed and is added to the queue if it has not been visited already and
+          the task_name and task_data are appended to the task_child_map
+          q = [..., (child_task_name, child_task_level), ...]
+          task_child_map = [..., {child_task_name, child_task_data}, ...]
+    """
 
     dag_task = None
     for ind, task in enumerate(task_list):
@@ -137,36 +146,51 @@ def get_task_order(task_list):
         if indegree == 0:
             queue.append(task_name)
 
-    # Topological sort
-    while queue:
+    """
+    task_child_map is the dict containg a node mapped to all its children
+        key(tuple): (node_name, depth)
+        value(list(dict)): [{child1_task_name, child1_task_data}, {child2_task_name, child2_task_data}, ...] 
+    """
 
-        # length of queue
-        ql = len(queue)
+    # Here we are taking the name of root node as random to avoid any conflicts
+    root_node = str(uuid.uuid4())
+    task_child_map = {}
+    q = []
 
-        # Inserting task with current indegree = 0
-        task_data_list = []
-        for task in queue:
-            task_data_list.append(task_name_data_map[task])
+    # Here we first check append all the nodes which are present on the base level to our queue
+    for task_name in queue:
+        if (root_node, 0) not in task_child_map:
+            task_child_map[(root_node, 0)] = []
+            q.append((root_node, 0))
 
-        if task_data_list:
-            res_task_list.append(task_data_list)
+        task_child_map[(root_node, 0)].append(
+            {"task_name": task_name, "task_data": task_name_data_map[task_name]}
+        )
 
-        while ql:
-            # Popping the element at start
-            cur_task = queue.pop(0)
+    while q:
+        n = len(q)
 
-            # Iterating its edges, and decrease the indegree of to_edge task by 1
-            for to_task in task_edges_map[cur_task]:
-                task_indegree_count_map[to_task] -= 1
+        # travelling level by level
+        while n:
+            task_key = q.pop(0)
+            # Iterating through every node in the queue
+            for task in task_child_map[task_key]:
+                # Iterating through every child of the node
+                for child in task_edges_map[task.get("task_name")]:
+                    child_task_key = (task.get("task_name"), (task_key[1] + 1))
+                    # if the child has not been visited before then we append it to the queue
+                    if child_task_key not in task_child_map:
+                        task_child_map[child_task_key] = []
+                        q.append(child_task_key)
 
-                # If indegree is 0, push to queue
-                if task_indegree_count_map[to_task] == 0:
-                    queue.append(to_task)
+                    # appending the child to the task_child_map
+                    task_child_map[child_task_key].append(
+                        {"task_name": child, "task_data": task_name_data_map[child]}
+                    )
 
-            # decrement the counter for queue length
-            ql -= 1
+            n -= 1
 
-    return res_task_list
+    return root_node, task_child_map
 
 
 def init_action_globals():
