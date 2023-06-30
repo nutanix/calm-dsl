@@ -6,6 +6,7 @@ from .library_tasks_commands import *  # NoQA
 from .endpoint_commands import *  # NoQA
 from .config_commands import *  # NoQA
 from .account_commands import *  # NoQA
+from .provider_commands import *  # NoQA
 from .project_commands import *  # NoQA
 from .secret_commands import *  # NoQA
 from .cache_commands import *  # NoQA

@@ -1,0 +1,30 @@
+{% macro CustomProviderAccountResources() -%}
+
+title: CustomProviderAccountResources
+type: object
+x-calm-dsl-type: app_custom_provider_resources
+properties:
+    provider_reference:
+        type: object
+        x-calm-dsl-type: object
+        properties:
+          kind:
+            type: string
+          uuid:
+            type: string
+    parent_reference:
+        type: object
+        x-calm-dsl-type: app_calm_ref
+    variable_list:
+        type: array
+        items:
+          type: dict
+    
+
+{%- endmacro %}
+{% macro CustomProviderAccountResourcesSchema() -%}
+
+CustomProviderAccountResources:
+  {{ CustomProviderAccountResources()|indent(2) }}
+
+{%- endmacro %}

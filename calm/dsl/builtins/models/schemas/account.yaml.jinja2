@@ -1,0 +1,23 @@
+{% macro Account() -%}
+
+title: Account Spec
+type: object
+x-calm-dsl-type: account
+properties:
+  type:
+    type: string
+  sync_interval_secs:
+    type: integer
+    x-calm-dsl-display-name: sync_interval
+  data:
+    type: object
+    x-calm-dsl-type: app_descriptor
+    x-calm-dsl-display-name: resources
+
+{%- endmacro %}
+{% macro AccountSchema() -%}
+
+Account:
+  {{ Account()|indent(2) }}
+
+{%- endmacro %}

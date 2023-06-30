@@ -36,6 +36,7 @@ from .policy_attributes import PolicyAttributesAPI
 from .policy import PolicyAPI
 from .approval import ApprovalAPI
 from .approval_request import ApprovalRequestAPI
+from .provider import ProviderAPI
 from .quotas import QuotasAPI
 
 
@@ -79,6 +80,7 @@ class ClientHandle:
         self.policy = PolicyAPI(self.connection)
         self.approvals = ApprovalAPI(self.connection)
         self.approval_requests = ApprovalRequestAPI(self.connection)
+        self.provider = ProviderAPI(self.connection)
         self.quotas = QuotasAPI(self.connection)
 
 

@@ -1,0 +1,30 @@
+{% macro AwsAccount() -%}
+
+title: AwsAccount
+type: object
+x-calm-dsl-type: app_aws_account
+properties:
+  access_key_id:
+    type: string
+  secret_access_key:
+    type: string
+  regions:
+    type: array
+    items:
+      type: object
+      x-calm-dsl-type: object
+      properties:
+        name:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+
+{%- endmacro %}
+{% macro AwsAccountSchema() -%}
+
+AwsAccount:
+  {{ AwsAccount()|indent(2) }}
+
+{%- endmacro %}

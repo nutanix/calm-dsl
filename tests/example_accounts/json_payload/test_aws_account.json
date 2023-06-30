@@ -1,0 +1,28 @@
+{
+    "spec": {
+        "name": "test_aws_account_123321",
+        "resources": {
+            "type": "aws",
+            "sync_interval_secs": 3900,
+            "data": {
+                "access_key_id": "access_key_id",
+                "regions": [
+                    {
+                        "name": "us-east-1"
+                    }
+                ],
+                "secret_access_key": {
+                    "value": "secret_access_key",
+                    "attrs": {
+                        "is_secret_modified": true
+                    }
+                }
+            }
+        }
+    },
+    "metadata": {
+        "kind": "account",
+        "name": "test_aws_account_123321",
+        "uuid": ""
+    }
+}

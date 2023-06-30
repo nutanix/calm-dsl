@@ -1,0 +1,23 @@
+{% macro K8sVanillaAccount() -%}
+
+title: K8sVanillaAccount
+type: object
+x-calm-dsl-type: app_k8s_vanilla_account
+properties:
+  authentication:
+    type: dict
+    x-calm-dsl-display-name: auth
+  server:
+    type: string
+  port:
+    type: string
+  type:
+    type: string
+
+{%- endmacro %}
+{% macro K8sVanillaAccountSchema() -%}
+
+K8sVanillaAccount:
+  {{ K8sVanillaAccount()|indent(2) }}
+
+{%- endmacro %}

@@ -358,7 +358,7 @@ def disable():
 
 @main.group(cls=FeatureFlagGroup)
 def describe():
-    """Describe apps, blueprints, projects, accounts, endpoints, runbooks"""
+    """Describe apps, blueprints, projects, accounts, endpoints, runbooks, providers"""
     pass
 
 
@@ -508,4 +508,10 @@ def library_delete():
 @main.group(cls=FeatureFlagGroup)
 def sync():
     """Sync platform account"""
+    pass
+
+
+@main.group(cls=FeatureFlagGroup)
+def verify():
+    """Verify an account"""
     pass

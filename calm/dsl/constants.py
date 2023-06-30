@@ -103,6 +103,23 @@ class NETWORK_GROUP_TUNNEL_TASK:
     FAILURE_STATES = [STATUS.ABORTED, STATUS.FAILURE]
 
 
+class ACCOUNT:
+    """Account constants"""
+
+    class TYPE:
+        AHV = "nutanix_pc"
+        AWS = "aws"
+        AWS_C2S = "aws_govcloud"
+        AZURE = "azure"
+        GCP = "gcp"
+        VMWARE = "vmware"
+        K8S_KARBON = "k8s_karbon"
+        K8S_VANILLA = "k8s_vanilla"
+        CREDENTIAL_PROVIDER = "credential_provider"
+        NDB = "NDB"
+        CUSTOM_PROVIDER = "custom_provider"
+
+
 class QUOTA(object):
     class STATE(object):
         ENABLED = "enabled"
@@ -112,3 +129,19 @@ class QUOTA(object):
         ACCOUNT = "account"
         CLUSTER = "cluster"
         PROJECT = "project"
+
+
+class ENTITY:
+    "Entity constants"
+
+    class OPENAPI_TYPE:
+        AHV = "app_ahv_account"
+        AZURE = "app_azure_account"
+        AWS = "app_aws_account"
+        AWS_C2S = "app_aws_c2s_account"
+        K8S_VANILLA = "app_k8s_vanilla_account"
+        K8S_KARBON = "app_k8s_karbon_account"
+        VMWARE = "app_vmware_account"
+        GCP = "app_gcp_account"
+        CREDENTIAL_PROVIDER = "app_credential_provider_account"
+        CUSTOM_PROVIDER = "app_custom_provider_account"

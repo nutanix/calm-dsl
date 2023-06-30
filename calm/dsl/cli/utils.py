@@ -1,3 +1,4 @@
+import uuid
 import click
 import sys
 import os
@@ -231,3 +232,25 @@ def get_account_details(
         "project": {"name": project_name, "uuid": project_uuid},
         "account": {"name": account_name, "uuid": account_uuid},
     }
+
+
+def insert_uuid(action, name_uuid_map, action_list_with_uuid):
+    """
+    Helper function to insert uuids in action_list
+    """
+
+    # if action is of type list then recursively call insert_uuid for each element
+    if isinstance(action, list):
+        for i in range(len(action)):
+            if isinstance(action[i], (dict, list)):
+                insert_uuid(action[i], name_uuid_map, action_list_with_uuid[i])
+    elif isinstance(action, dict):
+        for key, value in action.items():
+            # if the key is name then assign a unique uuid to it if not already assigned
+            if key == "name":
+                if value not in name_uuid_map:
+                    name_uuid_map[value] = str(uuid.uuid4())
+                # inserting the uuid using name_uuid_map
+                action_list_with_uuid["uuid"] = name_uuid_map[value]
+            elif isinstance(value, (dict, list)):
+                insert_uuid(value, name_uuid_map, action_list_with_uuid[key])

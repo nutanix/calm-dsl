@@ -325,3 +325,44 @@ def get_network_group_by_tunnel_name(name):
             LOG.exception("No Network Group found with name {} found".format(name))
 
     return network_group
+
+
+def get_provider_uuid(name):
+    """returns provider uuid if present else raises error"""
+
+    client = get_api_client()
+    params = {"filter": "name=={}".format(name)}
+
+    res, err = client.provider.list(params=params)
+    if err:
+        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit("[{}] - {}".format(err["code"], err["error"]))
+
+    response = res.json()
+    entities = response.get("entities", None)
+    provider = None
+    if entities:
+        if len(entities) != 1:
+            LOG.error("More than one provider found - {}".format(entities))
+            sys.exit(-1)
+
+        LOG.info("{} found ".format(name))
+        provider = entities[0]
+    else:
+        LOG.error("No provider found with name {} found".format(name))
+        sys.exit("No provider found with name {} found".format(name))
+
+    return provider["metadata"]["uuid"]
+
+
+def get_provider(name):
+    """returns provider get call data"""
+
+    client = get_api_client()
+    provider_uuid = get_provider_uuid(name=name)
+    res, err = client.provider.read(provider_uuid)
+    if err:
+        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit("[{}] - {}".format(err["code"], err["error"]))
+
+    return res.json()

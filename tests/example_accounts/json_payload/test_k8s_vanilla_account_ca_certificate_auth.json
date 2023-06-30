@@ -1,0 +1,40 @@
+{
+    "spec": {
+        "name": "test_k8s_vailla_account_123321",
+        "resources": {
+            "type": "k8s",
+            "sync_interval_secs": 3900,
+            "data": {
+                "authentication": {
+                    "type": "ca_certificate",
+                    "ca_certificate": {
+                        "attrs": {
+                            "is_secret_modified": true
+                        },
+                        "value": "ca_certificate"
+                    },
+                    "client_certificate": {
+                        "attrs": {
+                            "is_secret_modified": true
+                        },
+                        "value": "certificate"
+                    },
+                    "client_key": {
+                        "attrs": {
+                            "is_secret_modified": true
+                        },
+                        "value": "key"
+                    }
+                },
+                "server": "server",
+                "port": "9440",
+                "type": "vanilla"
+            }
+        }
+    },
+    "metadata": {
+        "kind": "account",
+        "name": "test_k8s_vailla_account_123321",
+        "uuid": ""
+    }
+}

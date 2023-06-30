@@ -1,0 +1,23 @@
+{% macro AzureAccount() -%}
+
+title: AzureAccount
+type: object
+x-calm-dsl-type: app_azure_account
+properties:
+    tenant_id:
+        type: string
+    client_id:
+        type: string
+    client_key:
+        type: string
+    cloud_environment:
+        type: string
+        x-calm-dsl-display-name: cloud
+
+{%- endmacro %}
+{% macro AzureAccountSchema() -%}
+
+AzureAccount:
+  {{ AzureAccount()|indent(2) }}
+
+{%- endmacro %}

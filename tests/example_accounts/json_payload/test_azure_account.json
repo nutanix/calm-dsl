@@ -1,0 +1,25 @@
+{
+    "spec": {
+        "name": "test_azure_account_123321",
+        "resources": {
+            "type": "azure",
+            "sync_interval_secs": 3900,
+            "data": {
+                "tenant_id": "tenant_id",
+                "client_id": "client_id",
+                "cloud_environment": "PublicCloud",
+                "client_key": {
+                    "attrs": {
+                        "is_secret_modified": true
+                    },
+                    "value": "client_key"
+                }
+            }
+        }
+    },
+    "metadata": {
+        "kind": "account",
+        "name": "test_azure_account_123321",
+        "uuid": ""
+    }
+}

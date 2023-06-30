@@ -1,0 +1,65 @@
+{
+    "spec": {
+        "name": "test_vmware_account_123321",
+        "resources": {
+            "type": "vmware",
+            "sync_interval_secs": 3900,
+            "data": {
+                "username": "username",
+                "server": "10.44.44.13",
+                "port": "9440",
+                "password": {
+                    "attrs": {
+                        "is_secret_modified": true
+                    },
+                    "value": "password"
+                }
+            },
+            "price_items": [
+                {
+                    "details": {
+                        "occurrence": "recurring"
+                    },
+                    "state_cost_list": [
+                        {
+                            "state": "ON",
+                            "cost_list": [
+                                {
+                                    "interval": "hour",
+                                    "name": "sockets",
+                                    "value": 0.02
+                                },
+                                {
+                                    "interval": "hour",
+                                    "name": "memory",
+                                    "value": 0.01
+                                },
+                                {
+                                    "interval": "hour",
+                                    "name": "storage",
+                                    "value": 0.0003
+                                }
+                            ]
+                        },
+                        {
+                            "state": "OFF",
+                            "cost_list": [
+                                {
+                                    "interval": "hour",
+                                    "name": "storage",
+                                    "value": 0.0003
+                                }
+                            ]
+                        }
+                    ],
+                    "uuid": ""
+                }
+            ]
+        }
+    },
+    "metadata": {
+        "kind": "account",
+        "name": "test_vmware_account_123321",
+        "uuid": ""
+    }
+}

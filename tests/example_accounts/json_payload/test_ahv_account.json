@@ -1,0 +1,25 @@
+{
+    "spec": {
+        "name": "test_ahv_account_123321",
+        "resources": {
+            "type": "nutanix_pc",
+            "sync_interval_secs": 3900,
+            "data": {
+                "username": "username",
+                "server": "10.44.44.18",
+                "port": "9440",
+                "password": {
+                    "value": "password",
+                    "attrs": {
+                        "is_secret_modified": true
+                    }
+                }
+            }
+        }
+    },
+    "metadata": {
+        "kind": "account",
+        "name": "test_ahv_account_123321",
+        "uuid": ""
+    }
+}
