@@ -257,6 +257,12 @@ class AccountCache(CacheTableBase):
             "length": 250,
             "filter": "(state==ACTIVE,state==VERIFIED)",
         }
+
+        ContextObj = get_context()
+        stratos_config = ContextObj.get_stratos_config()
+        if stratos_config.get("stratos_status", False):
+            payload["filter"] += ";child_account==true"
+
         res, err = client.account.list(payload)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -324,6 +330,313 @@ class AccountCache(CacheTableBase):
     class Meta:
         database = dsl_database
         primary_key = CompositeKey("name", "uuid")
+
+
+class ProviderCache(CacheTableBase):
+    __cache_type__ = CACHE.ENTITY.PROVIDER
+    feature_min_version = "3.7.0"
+    is_policy_required = False
+    name = CharField()
+    uuid = CharField()
+    _type = CharField()
+    use_parent_auth = BooleanField(default=False)
+    parent_uuid = CharField()
+    infra_type = CharField()
+    state = CharField()
+    auth_schema_list = BlobField()
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self, *args, **kwargs):
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "type": self._type,
+            "state": self.state,
+            "infra_type": self.infra_type,
+            "parent_uuid": self.parent_uuid,
+            "use_parent_auth": self.use_parent_auth,
+            "auth_schema_list": json.loads(self.auth_schema_list),
+            "last_update_time": self.last_update_time,
+        }
+
+    @classmethod
+    def clear(cls):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = ["NAME", "INFRA TYPE", "UUID", "STATE", "LAST UPDATED"]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["infra_type"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(entity_data["state"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        _type = kwargs.get("type", "")
+        infra_type = kwargs.get("infra_type", "cloud")
+        parent_uuid = kwargs.get("parent_uuid", "")
+        use_parent_auth = kwargs.get("use_parent_auth", False)
+        state = kwargs.get("state", "")
+        auth_schema_list = kwargs.get("auth_schema_list", "[]")
+
+        super().create(
+            name=name,
+            uuid=uuid,
+            _type=_type,
+            infra_type=infra_type,
+            parent_uuid=parent_uuid,
+            state=state,
+            use_parent_auth=use_parent_auth,
+            auth_schema_list=auth_schema_list,
+        )
+
+    @classmethod
+    def sync(cls):
+        """sync the table from server"""
+
+        # clear old data
+        cls.clear()
+
+        client = get_api_client()
+        payload = {"length": 250, "filter": ""}
+
+        res, err = client.provider.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        for entity in res.get("entities", []):
+            query_obj = {
+                "name": entity["status"]["name"],
+                "uuid": entity["metadata"]["uuid"],
+                "_type": entity["status"]["resources"].get("type", ""),
+                "infra_type": entity["status"]["resources"].get("infra_type", ""),
+                "parent_uuid": entity["status"]["resources"]
+                .get("parent_reference", {})
+                .get("uuid", ""),
+                "use_parent_auth": entity["status"]["resources"].get(
+                    "use_parent_auth", False
+                ),
+                "auth_schema_list": json.dumps(
+                    entity["status"]["resources"].get("auth_schema_list", {})
+                ),
+                "state": entity["status"]["state"],
+            }
+
+            cls.create_entry(**query_obj)
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        query_obj = {"name": name}
+
+        try:
+            # The get() method is shorthand for selecting with a limit of 1
+            # If more than one row is found, the first row returned by the database cursor
+            entity = super().get(**query_obj)
+            return entity.get_detail_dict()
+        except DoesNotExist:
+            return dict()
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
+        try:
+            entity = super().get(cls.uuid == uuid)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return dict()
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("name", "uuid")
+
+
+class ResourceTypeCache(CacheTableBase):
+    __cache_type__ = CACHE.ENTITY.RESOURCE_TYPE
+    feature_min_version = "3.7.0"
+    is_policy_required = False
+    name = CharField()
+    uuid = CharField()
+    _type = CharField()
+    state = CharField()
+    tags = CharField()
+    provider_uuid = CharField()
+    provider_name = CharField()
+    action_list = BlobField()
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self, *args, **kwargs):
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "_type": self._type,
+            "state": self.state,
+            "tags": json.loads(self.tags),
+            "provider_uuid": self.provider_uuid,
+            "provider_name": self.provider_name,
+            "action_list": json.loads(self.action_list),
+            "last_update_time": self.last_update_time,
+        }
+
+    @classmethod
+    def clear(cls):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = [
+            "NAME",
+            "TAGs",
+            "PROVIDER NAME",
+            "UUID",
+            "STATE",
+            "LAST UPDATED",
+        ]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["tags"]),
+                    highlight_text(entity_data["provider_name"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(entity_data["state"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        provider_name = kwargs.get("provider_name", "")
+        if not provider_name:
+            LOG.error(
+                "provider_name not supplied for fetching resource_type {}".format(name)
+            )
+            sys.exit(-1)
+
+        _type = kwargs.get("_type", "")
+        tags = kwargs.get("tags", "[]")
+        state = kwargs.get("state", "")
+        provider_uuid = kwargs.get("provider_uuid", "")
+        action_list = kwargs.get("action_list", "[]")
+
+        super().create(
+            name=name,
+            uuid=uuid,
+            provider_uuid=provider_uuid,
+            _type=_type,
+            tags=tags,
+            state=state,
+            provider_name=provider_name,
+            action_list=action_list,
+        )
+
+    @classmethod
+    def sync(cls):
+        """sync the table from server"""
+
+        # clear old data
+        cls.clear()
+
+        client = get_api_client()
+        payload = {
+            "length": 250,
+            "filter": "",
+        }
+
+        ContextObj = get_context()
+        stratos_config = ContextObj.get_stratos_config()
+        if stratos_config.get("stratos_status", False):
+            payload[
+                "filter"
+            ] += ";provider_type==SYS_CUSTOM|CUSTOM|CREDENTIAL|SYS_CREDENTIAL"
+
+        res, err = client.resource_types.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        for entity in res.get("entities", []):
+            query_obj = {
+                "name": entity["status"]["name"],
+                "uuid": entity["metadata"]["uuid"],
+                "state": entity["status"]["state"],
+                "_type": entity["status"]["resources"].get("type", ""),
+                "tags": json.dumps(entity["status"]["resources"].get("tags", [])),
+                "provider_uuid": entity["status"]["resources"]
+                .get("provider_reference", {})
+                .get("uuid", ""),
+                "provider_name": entity["status"]["resources"]
+                .get("provider_reference", {})
+                .get("name", ""),
+                "action_list": json.dumps(
+                    entity["status"]["resources"].get("action_list", [])
+                ),
+            }
+            cls.create_entry(**query_obj)
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        query_obj = {"name": name}
+
+        provider_name = kwargs.get("provider_name", "")
+        if provider_name:
+            query_obj["provider_name"] = provider_name
+
+        try:
+            # The get() method is shorthand for selecting with a limit of 1
+            # If more than one row is found, the first row returned by the database cursor
+            entity = super().get(**query_obj)
+            return entity.get_detail_dict()
+        except DoesNotExist:
+            return dict()
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
+        try:
+            entity = super().get(cls.uuid == uuid)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return dict()
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("name", "uuid", "provider_uuid")
 
 
 class AhvClustersCache(CacheTableBase):
@@ -3117,6 +3430,1308 @@ class PolicyActionTypeCache(CacheTableBase):
     class Meta:
         database = dsl_database
         primary_key = CompositeKey("name", "uuid")
+
+
+"""
+NDB Entities Cache
+"""
+
+
+class NDB_DatabaseCache(CacheTableBase):
+    __cache_type__ = CACHE.NDB + CACHE.KEY_SEPARATOR + CACHE.NDB_ENTITY.DATABASE
+    feature_min_version = "3.7.0"
+    is_policy_required = True
+    name = CharField()
+    uuid = CharField()
+    account_name = CharField()
+    _type = CharField()
+    status = CharField()
+    clone = BooleanField()
+    clustered = BooleanField()
+    platform_data = BlobField()
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self, *args, **kwargs):
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "account_name": self.account_name,
+            "type": self._type,
+            "status": self.status,
+            "clone": self.clone,
+            "clustered": self.clustered,
+            "platform_data": json.loads(self.platform_data),
+            "last_update_time": self.last_update_time,
+        }
+
+    @classmethod
+    def clear(cls):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = [
+            "NAME",
+            "TYPE",
+            "STATUS",
+            "UUID",
+            "ACCOUNT NAME",
+            "CLONE",
+            "CLUSTERED",
+            "LAST UPDATED",
+        ]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["type"]),
+                    highlight_text(entity_data["status"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(entity_data["account_name"]),
+                    highlight_text(entity_data["clone"]),
+                    highlight_text(entity_data["clustered"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        account_name = kwargs.get("account_name", "")
+        if not account_name:
+            LOG.error(
+                "account_name not supplied for creating NDB Database {} entry".format(
+                    name
+                )
+            )
+            sys.exit(-1)
+
+        _type = kwargs.get("_type", "")
+        status = kwargs.get("status", "")
+        clone = kwargs.get("clone", False)
+        clustered = kwargs.get("clustered", False)
+        platform_data = kwargs.get("platform_data", "{}")
+
+        super().create(
+            name=name,
+            uuid=uuid,
+            account_name=account_name,
+            _type=_type,
+            status=status,
+            clone=clone,
+            clustered=clustered,
+            platform_data=platform_data,
+        )
+
+    @classmethod
+    def sync(cls):
+        """sync the table from server"""
+
+        # clear old data
+        cls.clear()
+
+        ContextObj = get_context()
+        stratos_config = ContextObj.get_stratos_config()
+        if not stratos_config.get("stratos_status", False):
+            LOG.info("Stratos not enabled, skipping NDB Database synchronization")
+            return
+
+        client = get_api_client()
+        account_payload = {
+            "length": 250,
+            "filter": "state==VERIFIED;type==NDB;child_account==true",
+        }
+
+        res, err = client.account.list(account_payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        for entity in res.get("entities", []):
+
+            # for now we call "Postgres Database Instance" list for databases, this should be fixed when other databases type are introduced
+            platform_res, err = client.resource_types.get_platform_list(
+                "Postgres Database Instance",
+                entity["metadata"]["uuid"],
+                args=None,
+                outargs=["database_instances"],
+            )
+            if err:
+                raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+            platform_res = platform_res.json()
+            for database in platform_res["database_instances"]:
+                query_obj = {
+                    "name": database["name"],
+                    "uuid": database["id"],
+                    "account_name": entity["metadata"]["name"],
+                    "status": database.get("status", ""),
+                    "_type": database.get("type", ""),
+                    "clone": database.get("clone", False),
+                    "clustered": database.get("clustered", False),
+                    "platform_data": json.dumps(database),
+                }
+                cls.create_entry(**query_obj)
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        query_obj = {"name": name}
+
+        account_name = kwargs.get("account_name", "")
+        if account_name:
+            query_obj["account_name"] = account_name
+
+        _type = kwargs.get("type", "")
+        if _type:
+            query_obj["_type"] = _type
+
+        try:
+            # The get() method is shorthand for selecting with a limit of 1
+            # If more than one row is found, the first row returned by the database cursor
+            entity = super().get(**query_obj)
+            return entity.get_detail_dict()
+        except DoesNotExist:
+            return dict()
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
+        try:
+            entity = super().get(cls.uuid == uuid)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return dict()
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("name", "uuid", "account_name", "_type")
+
+
+class NDB_ProfileCache(CacheTableBase):
+    __cache_type__ = CACHE.NDB + CACHE.KEY_SEPARATOR + CACHE.NDB_ENTITY.PROFILE
+    feature_min_version = "3.7.0"
+    is_policy_required = True
+    name = CharField()
+    uuid = CharField()
+    account_name = CharField()
+    _type = CharField()
+    status = CharField()
+    engine_type = CharField()
+    system_profile = BooleanField()
+    platform_data = BlobField()
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self, *args, **kwargs):
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "account_name": self.account_name,
+            "type": self._type,
+            "status": self.status,
+            "engine_type": self.engine_type,
+            "system_profile": self.system_profile,
+            "platform_data": json.loads(self.platform_data),
+            "last_update_time": self.last_update_time,
+        }
+
+    @classmethod
+    def clear(cls):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = [
+            "NAME",
+            "TYPE",
+            "STATUS",
+            "UUID",
+            "ACCOUNT NAME",
+            "ENGINE",
+            "SYSTEM PROFILE",
+            "LAST UPDATED",
+        ]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["type"]),
+                    highlight_text(entity_data["status"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(entity_data["account_name"]),
+                    highlight_text(entity_data["engine_type"]),
+                    highlight_text(entity_data["system_profile"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        account_name = kwargs.get("account_name", "")
+        if not account_name:
+            LOG.error(
+                "account_name not supplied for creating NDB Profile {} entry".format(
+                    name
+                )
+            )
+            sys.exit(-1)
+
+        _type = kwargs.get("_type", "")
+        status = kwargs.get("status", "")
+        engine_type = kwargs.get("engine_type", "")
+        system_profile = kwargs.get("system_profile", False)
+        platform_data = kwargs.get("platform_data", "{}")
+
+        super().create(
+            name=name,
+            uuid=uuid,
+            account_name=account_name,
+            _type=_type,
+            status=status,
+            engine_type=engine_type,
+            system_profile=system_profile,
+            platform_data=platform_data,
+        )
+
+    @classmethod
+    def sync(cls):
+        """sync the table from server"""
+
+        # clear old data
+        cls.clear()
+
+        ContextObj = get_context()
+        stratos_config = ContextObj.get_stratos_config()
+        if not stratos_config.get("stratos_status", False):
+            LOG.info("Stratos not enabled, skipping NDB Database synchronization")
+            return
+
+        client = get_api_client()
+        account_payload = {
+            "length": 250,
+            "filter": "state==VERIFIED;type==NDB;child_account==true",
+        }
+
+        res, err = client.account.list(account_payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        for entity in res.get("entities", []):
+
+            # for now we call "Postgres Database Instance" list for profiles, this should be fixed when other profiles type are introduced
+            platform_res, err = client.resource_types.get_platform_list(
+                "Profile",
+                entity["metadata"]["uuid"],
+                args=None,
+                outargs=["profiles"],
+            )
+            if err:
+                raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+            platform_res = platform_res.json()
+            for profile in platform_res["profiles"]:
+                if profile.get("engine_type", "") in ["postgres_database", "Generic"]:
+                    query_obj = {
+                        "name": profile["name"],
+                        "uuid": profile["id"],
+                        "account_name": entity["metadata"]["name"],
+                        "status": profile.get("status", ""),
+                        "_type": profile.get("type", ""),
+                        "engine_type": profile.get("engine_type", ""),
+                        "system_profile": profile.get("system_profile", False),
+                        "platform_data": json.dumps(profile),
+                    }
+                    cls.create_entry(**query_obj)
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        query_obj = {"name": name}
+
+        account_name = kwargs.get("account_name", "")
+        if account_name:
+            query_obj["account_name"] = account_name
+
+        _type = kwargs.get("type", "")
+        if _type:
+            query_obj["_type"] = _type
+
+        engine_type = kwargs.get("engine_type", "")
+        if engine_type:
+            query_obj["engine_type"] = engine_type
+
+        try:
+            # The get() method is shorthand for selecting with a limit of 1
+            # If more than one row is found, the first row returned by the database cursor
+            entity = super().get(**query_obj)
+            return entity.get_detail_dict()
+        except DoesNotExist:
+            return dict()
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
+        try:
+            entity = super().get(cls.uuid == uuid)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return dict()
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey(
+            "name", "uuid", "account_name", "_type", "engine_type"
+        )
+
+
+class NDB_SLACache(CacheTableBase):
+    __cache_type__ = CACHE.NDB + CACHE.KEY_SEPARATOR + CACHE.NDB_ENTITY.SLA
+    feature_min_version = "3.7.0"
+    is_policy_required = True
+    name = CharField()
+    uuid = CharField()
+    account_name = CharField()
+    continuous_retention = IntegerField()
+    daily_retention = IntegerField()
+    weekly_retention = IntegerField()
+    monthly_retention = IntegerField()
+    quartely_retention = IntegerField()
+    yearly_retention = IntegerField()
+    platform_data = BlobField()
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self, *args, **kwargs):
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "account_name": self.account_name,
+            "continuous_retention": self.continuous_retention,
+            "daily_retention": self.daily_retention,
+            "weekly_retention": self.weekly_retention,
+            "monthly_retention": self.monthly_retention,
+            "quartely_retention": self.quartely_retention,
+            "yearly_retention": self.yearly_retention,
+            "platform_data": json.loads(self.platform_data),
+            "last_update_time": self.last_update_time,
+        }
+
+    @classmethod
+    def clear(cls):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = [
+            "NAME",
+            "UUID",
+            "ACCOUNT NAME",
+            "CONTINOUS",
+            "DAILY",
+            "WEEKLY",
+            "MONTHLY",
+            "QUATERLY",
+            "YEARLY",
+            "LAST UPDATED",
+        ]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(entity_data["account_name"]),
+                    highlight_text(entity_data["continuous_retention"]),
+                    highlight_text(entity_data["daily_retention"]),
+                    highlight_text(entity_data["weekly_retention"]),
+                    highlight_text(entity_data["monthly_retention"]),
+                    highlight_text(entity_data["quartely_retention"]),
+                    highlight_text(entity_data["yearly_retention"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        account_name = kwargs.get("account_name", "")
+        if not account_name:
+            LOG.error(
+                "account_name not supplied for creating NDB SLA {} entry".format(name)
+            )
+            sys.exit(-1)
+
+        platform_data = kwargs.get("platform_data", "{}")
+        continuous_retention = kwargs.get("continuous_retention", 0)
+        daily_retention = kwargs.get("daily_retention", 0)
+        weekly_retention = kwargs.get("weekly_retention", 0)
+        monthly_retention = kwargs.get("monthly_retention", 0)
+        quartely_retention = kwargs.get("quartely_retention", 0)
+        yearly_retention = kwargs.get("yearly_retention", 0)
+
+        super().create(
+            name=name,
+            uuid=uuid,
+            account_name=account_name,
+            continuous_retention=continuous_retention,
+            daily_retention=daily_retention,
+            weekly_retention=weekly_retention,
+            monthly_retention=monthly_retention,
+            quartely_retention=quartely_retention,
+            yearly_retention=yearly_retention,
+            platform_data=platform_data,
+        )
+
+    @classmethod
+    def sync(cls):
+        """sync the table from server"""
+
+        # clear old data
+        cls.clear()
+
+        ContextObj = get_context()
+        stratos_config = ContextObj.get_stratos_config()
+        if not stratos_config.get("stratos_status", False):
+            LOG.info("Stratos not enabled, skipping NDB Database synchronization")
+            return
+
+        client = get_api_client()
+        account_payload = {
+            "length": 250,
+            "filter": "state==VERIFIED;type==NDB;child_account==true",
+        }
+
+        res, err = client.account.list(account_payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        for entity in res.get("entities", []):
+
+            # for now we call "Postgres Database Instance" list for slas, this should be fixed when other slas type are introduced
+            platform_res, err = client.resource_types.get_platform_list(
+                "SLA",
+                entity["metadata"]["uuid"],
+                args=None,
+                outargs=["slas"],
+            )
+            if err:
+                raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+            platform_res = platform_res.json()
+            for sla in platform_res["slas"]:
+                query_obj = {
+                    "name": sla["name"],
+                    "uuid": sla["id"],
+                    "account_name": entity["metadata"]["name"],
+                    "continuous_retention": sla.get("continuous_retention", 0),
+                    "daily_retention": sla.get("daily_retention", 0),
+                    "weekly_retention": sla.get("weekly_retention", 0),
+                    "monthly_retention": sla.get("monthly_retention", 0),
+                    "quartely_retention": sla.get("quartely_retention", 0),
+                    "yearly_retention": sla.get("yearly_retention", 0),
+                    "platform_data": json.dumps(sla),
+                }
+                cls.create_entry(**query_obj)
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        query_obj = {"name": name}
+
+        account_name = kwargs.get("account_name", "")
+        if account_name:
+            query_obj["account_name"] = account_name
+
+        try:
+            # The get() method is shorthand for selecting with a limit of 1
+            # If more than one row is found, the first row returned by the database cursor
+            entity = super().get(**query_obj)
+            return entity.get_detail_dict()
+        except DoesNotExist:
+            return dict()
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
+        try:
+            entity = super().get(cls.uuid == uuid)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return dict()
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("name", "uuid", "account_name")
+
+
+class NDB_ClusterCache(CacheTableBase):
+    __cache_type__ = CACHE.NDB + CACHE.KEY_SEPARATOR + CACHE.NDB_ENTITY.CLUSTER
+    feature_min_version = "3.7.0"
+    is_policy_required = True
+    name = CharField()
+    uuid = CharField()
+    account_name = CharField()
+    status = CharField()
+    healthy = BooleanField()
+    hypervisor_type = CharField()
+    nx_cluster_uuid = CharField()
+    platform_data = BlobField()
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self, *args, **kwargs):
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "account_name": self.account_name,
+            "status": self.status,
+            "healthy": self.healthy,
+            "hypervisor_type": self.hypervisor_type,
+            "nx_cluster_uuid": self.nx_cluster_uuid,
+            "platform_data": json.loads(self.platform_data),
+            "last_update_time": self.last_update_time,
+        }
+
+    @classmethod
+    def clear(cls):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = [
+            "NAME",
+            "UUID",
+            "ACCOUNT NAME",
+            "STATUS",
+            "HEALTHY",
+            "HYPERVISOR TYPE",
+            "NX CLUSTER UUID",
+            "LAST UPDATED",
+        ]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(entity_data["account_name"]),
+                    highlight_text(entity_data["status"]),
+                    highlight_text(entity_data["healthy"]),
+                    highlight_text(entity_data["hypervisor_type"]),
+                    highlight_text(entity_data["nx_cluster_uuid"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        account_name = kwargs.get("account_name", "")
+        if not account_name:
+            LOG.error(
+                "account_name not supplied for creating NDB SLA {} entry".format(name)
+            )
+            sys.exit(-1)
+
+        platform_data = kwargs.get("platform_data", "{}")
+        status = kwargs.get("status", "")
+        healthy = kwargs.get("healthy", False)
+        hypervisor_type = kwargs.get("hypervisor_type", "")
+        nx_cluster_uuid = kwargs.get("nx_cluster_uuid", "")
+
+        super().create(
+            name=name,
+            uuid=uuid,
+            account_name=account_name,
+            status=status,
+            healthy=healthy,
+            hypervisor_type=hypervisor_type,
+            nx_cluster_uuid=nx_cluster_uuid,
+            platform_data=platform_data,
+        )
+
+    @classmethod
+    def sync(cls):
+        """sync the table from server"""
+
+        # clear old data
+        cls.clear()
+
+        ContextObj = get_context()
+        stratos_config = ContextObj.get_stratos_config()
+        if not stratos_config.get("stratos_status", False):
+            LOG.info("Stratos not enabled, skipping NDB Database synchronization")
+            return
+
+        client = get_api_client()
+        account_payload = {
+            "length": 250,
+            "filter": "state==VERIFIED;type==NDB;child_account==true",
+        }
+
+        res, err = client.account.list(account_payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        for entity in res.get("entities", []):
+
+            # for now we call "Postgres Database Instance" list for clusters, this should be fixed when other clusters type are introduced
+            platform_res, err = client.resource_types.get_platform_list(
+                "Cluster",
+                entity["metadata"]["uuid"],
+                args=None,
+                outargs=["clusters"],
+            )
+            if err:
+                raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+            platform_res = platform_res.json()
+            for cluster in platform_res["clusters"]:
+                query_obj = {
+                    "name": cluster["name"],
+                    "uuid": cluster["id"],
+                    "account_name": entity["metadata"]["name"],
+                    "status": cluster.get("status", ""),
+                    "healthy": cluster.get("healthy", False),
+                    "hypervisor_type": cluster.get("hypervisor_type", ""),
+                    "nx_cluster_uuid": cluster.get("nx_cluster_uuid", ""),
+                    "platform_data": json.dumps(cluster),
+                }
+                cls.create_entry(**query_obj)
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        query_obj = {"name": name}
+
+        account_name = kwargs.get("account_name", "")
+        if account_name:
+            query_obj["account_name"] = account_name
+
+        try:
+            # The get() method is shorthand for selecting with a limit of 1
+            # If more than one row is found, the first row returned by the database cursor
+            entity = super().get(**query_obj)
+            return entity.get_detail_dict()
+        except DoesNotExist:
+            return dict()
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
+        try:
+            entity = super().get(cls.uuid == uuid)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return dict()
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("name", "uuid", "account_name")
+
+
+class NDB_TimeMachineCache(CacheTableBase):
+    __cache_type__ = CACHE.NDB + CACHE.KEY_SEPARATOR + CACHE.NDB_ENTITY.TIME_MACHINE
+    feature_min_version = "3.7.0"
+    is_policy_required = True
+    name = CharField()
+    uuid = CharField()
+    account_name = CharField()
+    status = CharField()
+    _type = CharField()
+    clustered = BooleanField()
+    slas = CharField()
+    platform_data = BlobField()
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self, *args, **kwargs):
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "account_name": self.account_name,
+            "status": self.status,
+            "_type": self._type,
+            "clustered": self.clustered,
+            "slas": json.loads(self.slas),
+            "platform_data": json.loads(self.platform_data),
+            "last_update_time": self.last_update_time,
+        }
+
+    @classmethod
+    def clear(cls):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = [
+            "NAME",
+            "UUID",
+            "ACCOUNT NAME",
+            "STATUS",
+            "TYPE",
+            "CLUSTERED",
+            "SLAs",
+            "LAST UPDATED",
+        ]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(entity_data["account_name"]),
+                    highlight_text(entity_data["status"]),
+                    highlight_text(entity_data["_type"]),
+                    highlight_text(entity_data["clustered"]),
+                    highlight_text(entity_data["slas"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        account_name = kwargs.get("account_name", "")
+        if not account_name:
+            LOG.error(
+                "account_name not supplied for creating NDB SLA {} entry".format(name)
+            )
+            sys.exit(-1)
+
+        platform_data = kwargs.get("platform_data", "{}")
+        status = kwargs.get("status", "")
+        _type = kwargs.get("_type", "")
+        clustered = kwargs.get("clustered", False)
+        slas = kwargs.get("slas", "[]")
+
+        super().create(
+            name=name,
+            uuid=uuid,
+            account_name=account_name,
+            status=status,
+            _type=_type,
+            clustered=clustered,
+            slas=slas,
+            platform_data=platform_data,
+        )
+
+    @classmethod
+    def sync(cls):
+        """sync the table from server"""
+
+        # clear old data
+        cls.clear()
+
+        ContextObj = get_context()
+        stratos_config = ContextObj.get_stratos_config()
+        if not stratos_config.get("stratos_status", False):
+            LOG.info("Stratos not enabled, skipping NDB Database synchronization")
+            return
+
+        client = get_api_client()
+        account_payload = {
+            "length": 250,
+            "filter": "state==VERIFIED;type==NDB;child_account==true",
+        }
+
+        res, err = client.account.list(account_payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        for entity in res.get("entities", []):
+            platform_res, err = client.resource_types.get_platform_list(
+                "Time Machine",
+                entity["metadata"]["uuid"],
+                args=None,
+                outargs=["time_machines"],
+            )
+            if err:
+                raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+            platform_res = platform_res.json()
+            for time_machine in platform_res["time_machines"]:
+
+                # for now we filter postgres_database for time_machines, this should be fixed when other time_machines type are introduced
+                if time_machine.get("type", "") in ["postgres_database"]:
+                    query_obj = {
+                        "name": time_machine["name"],
+                        "uuid": time_machine["id"],
+                        "account_name": entity["metadata"]["name"],
+                        "status": time_machine.get("status", ""),
+                        "_type": time_machine.get("type", ""),
+                        "clustered": time_machine.get("clustered", False),
+                        "slas": json.dumps(
+                            [sla.get("name", "") for sla in time_machine.get("sla", [])]
+                        ),
+                        "platform_data": json.dumps(time_machine),
+                    }
+                    cls.create_entry(**query_obj)
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        query_obj = {"name": name}
+
+        account_name = kwargs.get("account_name", "")
+        if account_name:
+            query_obj["account_name"] = account_name
+
+        _type = kwargs.get("type", "")
+        if _type:
+            query_obj["_type"] = _type
+
+        try:
+            # The get() method is shorthand for selecting with a limit of 1
+            # If more than one row is found, the first row returned by the database cursor
+            entity = super().get(**query_obj)
+            return entity.get_detail_dict()
+        except DoesNotExist:
+            return dict()
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
+        try:
+            entity = super().get(cls.uuid == uuid)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return dict()
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("name", "uuid", "account_name", "_type")
+
+
+class NDB_SnapshotCache(CacheTableBase):
+    __cache_type__ = CACHE.NDB + CACHE.KEY_SEPARATOR + CACHE.NDB_ENTITY.SNAPSHOT
+    feature_min_version = "3.7.0"
+    is_policy_required = True
+    name = CharField()
+    uuid = CharField()
+    account_name = CharField()
+    status = CharField()
+    _type = CharField()
+    time_machine_id = CharField()
+    snapshot_timestamp = CharField()
+    timezone = CharField()
+    platform_data = BlobField()
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self, *args, **kwargs):
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "account_name": self.account_name,
+            "status": self.status,
+            "_type": self._type,
+            "time_machine_id": self.time_machine_id,
+            "snapshot_timestamp": self.snapshot_timestamp,
+            "timezone": self.timezone,
+            "platform_data": json.loads(self.platform_data),
+            "last_update_time": self.last_update_time,
+        }
+
+    @classmethod
+    def clear(cls):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = [
+            "NAME",
+            "TIME STAMP",
+            "TIME ZONE",
+            "UUID",
+            "ACCOUNT NAME",
+            "STATUS",
+            "TYPE",
+            "TIME MACHINE ID",
+            "LAST UPDATED",
+        ]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["snapshot_timestamp"]),
+                    highlight_text(entity_data["timezone"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(entity_data["account_name"]),
+                    highlight_text(entity_data["status"]),
+                    highlight_text(entity_data["_type"]),
+                    highlight_text(entity_data["time_machine_id"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        account_name = kwargs.get("account_name", "")
+        if not account_name:
+            LOG.error(
+                "account_name not supplied for creating NDB SLA {} entry".format(name)
+            )
+            sys.exit(-1)
+
+        platform_data = kwargs.get("platform_data", "{}")
+        status = kwargs.get("status", "")
+        _type = kwargs.get("_type", "")
+        time_machine_id = kwargs.get("time_machine_id", "")
+        timezone = kwargs.get("timezone", "")
+        snapshot_timestamp = kwargs.get("snapshot_timestamp", "")
+
+        super().create(
+            name=name,
+            uuid=uuid,
+            account_name=account_name,
+            status=status,
+            _type=_type,
+            time_machine_id=time_machine_id,
+            timezone=timezone,
+            snapshot_timestamp=snapshot_timestamp,
+            platform_data=platform_data,
+        )
+
+    @classmethod
+    def sync(cls):
+        """sync the table from server"""
+
+        # clear old data
+        cls.clear()
+
+        ContextObj = get_context()
+        stratos_config = ContextObj.get_stratos_config()
+        if not stratos_config.get("stratos_status", False):
+            LOG.info("Stratos not enabled, skipping NDB Database synchronization")
+            return
+
+        client = get_api_client()
+        account_payload = {
+            "length": 250,
+            "filter": "state==VERIFIED;type==NDB;child_account==true",
+        }
+
+        res, err = client.account.list(account_payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        for entity in res.get("entities", []):
+
+            # for now we call "Postgres Database Instance" list for snapshots, this should be fixed when other snapshots type are introduced
+            platform_res, err = client.resource_types.get_platform_list(
+                "Snapshot",
+                entity["metadata"]["uuid"],
+                args=None,
+                outargs=["snapshots"],
+            )
+            if err:
+                raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+            platform_res = platform_res.json()
+            for snapshot in platform_res["snapshots"]:
+                if NDB_TimeMachineCache.get_entity_data_using_uuid(
+                    snapshot.get("time_machine_id", "")
+                ):
+                    query_obj = {
+                        "name": snapshot["name"],
+                        "uuid": snapshot["id"],
+                        "account_name": entity["metadata"]["name"],
+                        "status": snapshot.get("status", ""),
+                        "_type": snapshot.get("type", ""),
+                        "time_machine_id": snapshot.get("time_machine_id", ""),
+                        "snapshot_timestamp": snapshot.get("snapshot_timestamp", ""),
+                        "timezone": snapshot.get("timezone", ""),
+                        "platform_data": json.dumps(snapshot),
+                    }
+                    cls.create_entry(**query_obj)
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        query_obj = {"name": name}
+
+        account_name = kwargs.get("account_name", "")
+        if account_name:
+            query_obj["account_name"] = account_name
+
+        time_machine_id = kwargs.get("time_machine_id", "")
+        if account_name:
+            query_obj["time_machine_id"] = time_machine_id
+
+        snapshot_timestamp = kwargs.get("snapshot_timestamp", "")
+        if account_name:
+            query_obj["snapshot_timestamp"] = snapshot_timestamp
+
+        try:
+            # The get() method is shorthand for selecting with a limit of 1
+            # If more than one row is found, the first row returned by the database cursor
+            entity = super().get(**query_obj)
+            return entity.get_detail_dict()
+        except DoesNotExist:
+            return dict()
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
+        try:
+            entity = super().get(cls.uuid == uuid)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return dict()
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey(
+            "name", "uuid", "account_name", "snapshot_timestamp", "time_machine_id"
+        )
+
+
+class NDB_TagCache(CacheTableBase):
+    __cache_type__ = CACHE.NDB + CACHE.KEY_SEPARATOR + CACHE.NDB_ENTITY.TAG
+    feature_min_version = "3.7.0"
+    is_policy_required = True
+    name = CharField()
+    uuid = CharField()
+    account_name = CharField()
+    status = CharField()
+    entity_type = CharField()
+    values = IntegerField()
+    platform_data = BlobField()
+    last_update_time = DateTimeField(default=datetime.datetime.now())
+
+    def get_detail_dict(self, *args, **kwargs):
+        return {
+            "name": self.name,
+            "uuid": self.uuid,
+            "account_name": self.account_name,
+            "status": self.status,
+            "entity_type": self.entity_type,
+            "values": self.values,
+            "platform_data": json.loads(self.platform_data),
+            "last_update_time": self.last_update_time,
+        }
+
+    @classmethod
+    def clear(cls):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
+    def show_data(cls):
+        """display stored data in table"""
+
+        if not len(cls.select()):
+            click.echo(highlight_text("No entry found !!!"))
+            return
+
+        table = PrettyTable()
+        table.field_names = [
+            "NAME",
+            "UUID",
+            "ACCOUNT NAME",
+            "STATUS",
+            "ENTITY TYPE",
+            "VALUES",
+            "LAST UPDATED",
+        ]
+        for entity in cls.select():
+            entity_data = entity.get_detail_dict()
+            last_update_time = arrow.get(
+                entity_data["last_update_time"].astimezone(datetime.timezone.utc)
+            ).humanize()
+            table.add_row(
+                [
+                    highlight_text(entity_data["name"]),
+                    highlight_text(entity_data["uuid"]),
+                    highlight_text(entity_data["account_name"]),
+                    highlight_text(entity_data["status"]),
+                    highlight_text(entity_data["entity_type"]),
+                    highlight_text(entity_data["values"]),
+                    highlight_text(last_update_time),
+                ]
+            )
+        click.echo(table)
+
+    @classmethod
+    def create_entry(cls, name, uuid, **kwargs):
+        account_name = kwargs.get("account_name", "")
+        if not account_name:
+            LOG.error(
+                "account_name not supplied for creating NDB SLA {} entry".format(name)
+            )
+            sys.exit(-1)
+
+        platform_data = kwargs.get("platform_data", "{}")
+        status = kwargs.get("status", "")
+        entity_type = kwargs.get("entity_type", "")
+        values = kwargs.get("values", "")
+
+        super().create(
+            name=name,
+            uuid=uuid,
+            account_name=account_name,
+            status=status,
+            entity_type=entity_type,
+            values=values,
+            platform_data=platform_data,
+        )
+
+    @classmethod
+    def sync(cls):
+        """sync the table from server"""
+
+        # clear old data
+        cls.clear()
+
+        ContextObj = get_context()
+        stratos_config = ContextObj.get_stratos_config()
+        if not stratos_config.get("stratos_status", False):
+            LOG.info("Stratos not enabled, skipping NDB Database synchronization")
+            return
+
+        client = get_api_client()
+        account_payload = {
+            "length": 250,
+            "filter": "state==VERIFIED;type==NDB;child_account==true",
+        }
+
+        res, err = client.account.list(account_payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        for entity in res.get("entities", []):
+
+            # for now we call "Postgres Database Instance" list for tags, this should be fixed when other tags type are introduced
+            platform_res, err = client.resource_types.get_platform_list(
+                "Tag",
+                entity["metadata"]["uuid"],
+                args=None,
+                outargs=["tags"],
+            )
+            if err:
+                raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+            platform_res = platform_res.json()
+            for tag in platform_res["tags"]:
+
+                query_obj = {
+                    "name": tag["name"],
+                    "uuid": tag["id"],
+                    "account_name": entity["metadata"]["name"],
+                    "status": tag.get("status", ""),
+                    "entity_type": tag.get("entity_type", ""),
+                    "values": tag.get("values", 0),
+                    "platform_data": json.dumps(tag),
+                }
+                cls.create_entry(**query_obj)
+
+    @classmethod
+    def get_entity_data(cls, name, **kwargs):
+        query_obj = {"name": name}
+
+        account_name = kwargs.get("account_name", "")
+        if account_name:
+            query_obj["account_name"] = account_name
+
+        _type = kwargs.get("type", "")
+        if _type:
+            query_obj["entity_type"] = _type
+
+        try:
+            # The get() method is shorthand for selecting with a limit of 1
+            # If more than one row is found, the first row returned by the database cursor
+            entity = super().get(**query_obj)
+            return entity.get_detail_dict()
+        except DoesNotExist:
+            return dict()
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
+        try:
+            entity = super().get(cls.uuid == uuid)
+            return entity.get_detail_dict()
+
+        except DoesNotExist:
+            return dict()
+
+    class Meta:
+        database = dsl_database
+        primary_key = CompositeKey("name", "uuid", "account_name", "entity_type")
 
 
 class VersionTable(BaseModel):

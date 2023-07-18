@@ -1,11 +1,15 @@
 import sys
-import json
+import pytz
+from dateutil.parser import parse
+from dateutil import tz
+
 from ..metadata_payload import get_metadata_obj
 from calm.dsl.api import get_api_client
 from calm.dsl.store import Cache
 from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 from calm.dsl.constants import CACHE
+from calm.dsl.db.table_config import ResourceTypeCache
 
 LOG = get_logging_handle(__name__)
 
@@ -142,7 +146,9 @@ def get_vmware_account_from_datacenter(datacenter="Sabine59-DC"):
 
 def is_macro(var):
     """returns true if given var is macro"""
-    return var.startswith("@@{") and var.endswith("}@@")
+    if "@@{" in var:
+        return True
+    return False
 
 
 def get_pe_account_uuid_using_pc_account_uuid_and_subnet_uuid(
@@ -325,6 +331,141 @@ def get_network_group_by_tunnel_name(name):
             LOG.exception("No Network Group found with name {} found".format(name))
 
     return network_group
+
+
+def get_variable_list_and_task_name_for_rt_and_action(
+    resource_type_name, action_name, provider_name
+):
+    """
+    Fetch variable list and Plugin Task Name for given RT name and one of it's action name
+    Args:
+        resource_type_name (str): Name for this Resource Type
+        action_name (str): Name of the Resource Type action
+        provider_name (str): Name of the provider
+    Returns:
+        ([dict]): Array of Variable List
+        (str): Plugin Task name
+    """
+
+    res = get_resource_type(resource_type_name, provider_name)
+    action_list = res["action_list"]
+
+    variable_list = []
+    task_name = None
+    for rt_action in action_list:
+        if action_name == rt_action["name"]:
+            variable_list = rt_action["runbook"]["variable_list"]
+            task_name = rt_action["runbook"]["task_definition_list"][1]["name"]
+            break
+
+    return variable_list, task_name
+
+
+def get_ndb_profile(name, profile_type, account_name, **kwargs):
+    """
+    Fetch profile wrt name, profile_type account_name and kwargs given
+    Args:
+        name (str): Name of the profile
+        profile_type (str): type of profile
+        account_name (str): Name of the account
+    Returns:
+        (dict): Profile dictionary
+    """
+
+    engine = kwargs.get("engine", "")
+    if not account_name:
+        LOG.error(
+            "Account Name is required NutanixDB Profile type {} compile, pls pass Account name".format(
+                profile_type
+            )
+        )
+        sys.exit(-1)
+
+    query_obj = {
+        "entity_type": CACHE.NDB + CACHE.KEY_SEPARATOR + CACHE.NDB_ENTITY.PROFILE,
+        "name": name,
+        "account_name": account_name,
+        "type": profile_type,
+    }
+    if kwargs.get("engine", ""):
+        query_obj["engine_type"] = kwargs["engine"]
+    cache_profile_data = Cache.get_entity_data(**query_obj)
+
+    if not cache_profile_data:
+        LOG.error("No NDB {} Profile with name '{}' found".format(profile_type, name))
+        sys.exit(-1)
+
+    return cache_profile_data
+
+
+def get_ndb_tag(name, account_name, entity_type):
+    """
+    FetchTag wrt name, account_name and kwargs given
+    Args:
+        name (str): Name of the tag
+        account_name (str): ID of the account
+    Returns:
+        (dict): Tag dictionary
+    """
+    cache_tag_data = Cache.get_entity_data(
+        entity_type=CACHE.NDB + CACHE.KEY_SEPARATOR + CACHE.NDB_ENTITY.TAG,
+        name=name,
+        account_name=account_name,
+        type=entity_type,
+    )
+
+    if not cache_tag_data:
+        LOG.error("No NDB {} Tag with name '{}' found".format(entity_type, name))
+        sys.exit("No NDB {} Tag with name '{}' found".format(entity_type, name))
+
+    return cache_tag_data
+
+
+def get_resource_type(name, provider_name):
+    """
+    Fetched resource_type
+    Args:
+        name (str): Name for this Resource Type
+        provider_name (str): Name of the provider
+    Returns:
+        (dict): Resource_type response dict
+    """
+    resource_type = ResourceTypeCache.get_entity_data(
+        name=name, provider_name=provider_name
+    )
+    if not resource_type:
+        LOG.error("No resource_type with name '{}' found".format(name))
+        sys.exit("No resource_type with name '{}' found".format(name))
+    return resource_type
+
+
+def macro_or_ref_validation(val, ref, err_msg):
+    """Validate if val is either macro or the correct ref"""
+    if is_not_macro(val) and is_not_right_ref(val, ref):
+        raise ValueError(err_msg)
+
+
+def is_not_macro(val):
+    """Check if val is not a macro"""
+    return not (isinstance(val, str) and is_macro(val))
+
+
+def is_not_right_ref(val, ref):
+    """Check if val is not the ref for given reference"""
+    return not (getattr(val, "get_ref_cls", None) and val.get_ref_cls() == ref)
+
+
+def get_timestamp_in_utc(timestamp, from_timezone, time_format="%Y-%m-%d %H:%M:%S"):
+    """Convert timeStamp in given timezone to UTC"""
+    if from_timezone not in pytz.all_timezones_set:
+        raise ValueError(
+            "{} is invalid, Please provide valid timezone.\nSupported timezones are {}".format(
+                from_timezone, pytz.all_timezones_set
+            )
+        )
+    from_zone = tz.gettz(from_timezone)
+    tme = parse(timestamp).replace(tzinfo=from_zone)
+    return tme.astimezone(tz.gettz("UTC")).strftime(time_format)
 
 
 def get_provider_uuid(name):

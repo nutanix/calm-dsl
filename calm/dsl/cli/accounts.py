@@ -35,11 +35,16 @@ def get_accounts(name, filter_by, limit, offset, quiet, all_items, account_type)
 
     client = get_api_client()
     calm_version = Version.get_version("Calm")
+    ContextObj = get_context()
 
     params = {"length": limit, "offset": offset}
+
     filter_query = ""
+    stratos_config = ContextObj.get_stratos_config()
+    if stratos_config.get("stratos_status", False):
+        filter_query = "child_account==true"
     if name:
-        filter_query = get_name_query([name])
+        filter_query = filter_query + ";" + get_name_query([name])
     if filter_by:
         filter_query = filter_query + ";(" + filter_by + ")"
     if account_type:
@@ -60,7 +65,6 @@ def get_accounts(name, filter_by, limit, offset, quiet, all_items, account_type)
     res, err = client.account.list(params)
 
     if err:
-        ContextObj = get_context()
         server_config = ContextObj.get_server_config()
         pc_ip = server_config["pc_ip"]
 

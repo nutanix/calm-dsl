@@ -8,6 +8,7 @@ from calm.dsl.cli import main as cli
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.providers.base import get_provider
 from calm.dsl.config import get_context
+from calm.dsl.constants import STRATOS
 from calm.dsl.log import get_logging_handle
 from calm.dsl.tools.utils import make_file_dir
 
@@ -33,6 +34,11 @@ def add_account_details(config):
 
     # Add accounts details
     payload = {"length": 250, "filter": "state==VERIFIED;type!=nutanix"}
+    ContextObj = get_context()
+    stratos_config = ContextObj.get_stratos_config()
+    if stratos_config.get("stratos_status", False):
+        payload["filter"] += ";child_account==true"
+        config["IS_STRATOS_ENABLED"] = True
     res, err = client.account.list(payload)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
@@ -111,6 +117,12 @@ def add_account_details(config):
             # If it is local nutanix account, assign it to local nutanix ACCOUNT
             if a_entity["status"]["resources"]["data"].get("host_pc", False):
                 accounts["NTNX_LOCAL_AZ"] = account_data
+        elif account_type == "CUSTOM_PROVIDER":
+            provider_name = a_entity["status"]["resources"]["data"][
+                "provider_reference"
+            ]["name"]
+            if provider_name == STRATOS.PROVIDER.NDB:
+                accounts[STRATOS.PROVIDER.NDB] = account_data
 
         accounts[account_type].append(account_data)
 

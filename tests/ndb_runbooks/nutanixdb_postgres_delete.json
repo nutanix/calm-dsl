@@ -1,0 +1,76 @@
+{
+    "endpoint_definition_list": [],
+    "credential_definition_list": [],
+    "client_attrs": {},
+    "runbook": {
+        "name": "nutanixdb_postgres_delete_runbook",
+        "description": "",
+        "main_task_local_reference": {
+            "kind": "app_task",
+            "name": "nutanixdb_postgres_delete_dag"
+        },
+        "task_definition_list": [
+            {
+                "name": "nutanixdb_postgres_delete_dag",
+                "description": "",
+                "type": "DAG",
+                "attrs": {
+                    "edges": []
+                },
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "task_name"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "task_name",
+                "description": "",
+                "type": "RT_OPERATION",
+                "attrs": {
+                    "type": "RT_OPERATION",
+                    "resource_type_reference": {
+                        "uuid": "7d60e0a6-b021-4c22-b6a5-2fd311930709",
+                        "name": "Postgres Database Instance",
+                        "kind": "resource_type"
+                    },
+                    "action_reference": {
+                        "kind": "app_action",
+                        "name": "Delete",
+                        "uuid": "71c95c88-f7ad-4854-b636-dd5f0b03064d"
+                    },
+                    "inarg_list": [
+                        {
+                            "name": "delete_nutanix_ndb_database__id",
+                            "description": "",
+                            "type": "LOCAL",
+                            "label": "Target Database",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "@@{db_uuid}@@",
+                            "data_type": "BASE",
+                            "is_hidden": false,
+                            "is_mandatory": true
+                        }
+                    ],
+                    "output_variables": null,
+                    "tag": "Database",
+                    "account_reference": {
+                        "kind": "account",
+                        "name": "ndb-account",
+                        "uuid": "65d3ec1d-8044-4c5c-af50-881acb3c3a3d"
+                    }
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            }
+        ],
+        "variable_list": []
+    }
+}

@@ -6,7 +6,6 @@ from distutils.version import LooseVersion as LV
 
 from calm.dsl.config import get_context
 from .version import Version
-from calm.dsl.config import get_context
 from calm.dsl.db import get_db_handle, init_db_handle
 from calm.dsl.log import get_logging_handle
 from calm.dsl.api import get_client_handle_obj

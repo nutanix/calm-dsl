@@ -6,12 +6,16 @@
 class CACHE:
     """Cache constants"""
 
+    NDB = "ndb"
+    KEY_SEPARATOR = "_"
+
     class ENTITY:
         AHV_CLUSTER = "ahv_cluster"
         AHV_VPC = "ahv_vpc"
         AHV_SUBNET = "ahv_subnet"
         AHV_DISK_IMAGE = "ahv_disk_image"
         ACCOUNT = "account"
+        PROVIDER = "provider"
         RESOURCE_TYPE = "resource_type"
         PROJECT = "project"
         USER = "user"
@@ -23,6 +27,15 @@ class CACHE:
         POLICY_EVENT = "policy_event"
         POLICY_ACTION_TYPE = "policy_action_type"
         POLICY_ATTRIBUTES = "policy_attributes"
+
+    class NDB_ENTITY:
+        DATABASE = "database"
+        PROFILE = "profile"
+        SLA = "sla"
+        TIME_MACHINE = "timemachine"
+        TAG = "tag"
+        CLUSTER = "cluster"
+        SNAPSHOT = "snapshot"
 
 
 PROVIDER_ACCOUNT_TYPE_MAP = {
@@ -86,6 +99,17 @@ class POLICY:
         APPROVAL = "APPROVAL"
         QUOTA_CHECK = "QUOTA_CHECK"
         EMAIL = "EMAIL"
+
+
+class STRATOS:
+    """stratos related constants"""
+
+    MIN_SUPPORTED_VERSION = "3.7.0"
+
+    class PROVIDER:
+        """Stratos added providers"""
+
+        NDB = "NDB"
 
 
 class NETWORK_GROUP_TUNNEL_TASK:

@@ -33,6 +33,7 @@ class Context:
         self.connection_config = config_handle.get_connection_config()
         self.policy_config = config_handle.get_policy_config()
         self.approval_policy_config = config_handle.get_approval_policy_config()
+        self.stratos_config = config_handle.get_stratos_config()
         # Override with env data
         self.server_config.update(EnvConfig.get_server_config())
         self.project_config.update(EnvConfig.get_project_config())
@@ -135,6 +136,14 @@ class Context:
 
         return config
 
+    def get_stratos_config(self):
+        """returns stratos configuration"""
+        config = self.stratos_config
+        if not config.get("stratos_status"):
+            config["stratos_status"] = False
+
+        return config
+
     def get_log_config(self):
         """returns logging configuration"""
 
@@ -188,6 +197,7 @@ class Context:
         connection_config = self.get_connection_config()
         policy_config = self.get_policy_config()
         approval_policy_config = self.get_approval_policy_config()
+        stratos_status = self.get_stratos_config()
 
         ConfigHandle = get_config_handle()
         config_str = ConfigHandle._render_config_template(
@@ -202,6 +212,7 @@ class Context:
             read_timeout=connection_config["read_timeout"],
             policy_status=policy_config["policy_status"],
             approval_policy_status=approval_policy_config["approval_policy_status"],
+            stratos_status=stratos_status["stratos_status"],
         )
 
         print(config_str)

@@ -21,6 +21,12 @@ def get_cache_table_types():
         if not (attr.startswith("__")):
             table_types.append(getattr(CACHE.ENTITY, attr))
 
+    for attr in CACHE.NDB_ENTITY.__dict__:
+        if not (attr.startswith("__")):
+            table_types.append(
+                CACHE.NDB + CACHE.KEY_SEPARATOR + getattr(CACHE.NDB_ENTITY, attr)
+            )
+
     return table_types
 
 

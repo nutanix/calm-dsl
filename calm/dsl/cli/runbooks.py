@@ -12,9 +12,11 @@ from black import format_file_in_place, WriteBack, FileMode
 
 from calm.dsl.builtins import file_exists
 from calm.dsl.runbooks import runbook, create_runbook_payload
+from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
 from calm.dsl.config import get_context
 from calm.dsl.api import get_api_client
 from calm.dsl.log import get_logging_handle
+from calm.dsl.builtins.models.calm_ref import Ref
 from calm.dsl.constants import CACHE
 from calm.dsl.store import Cache
 from calm.dsl.tools import get_module_from_file
@@ -139,6 +141,18 @@ def compile_runbook(runbook_file):
     UserRunbookPayload, _ = create_runbook_payload(UserRunbook)
     runbook_payload = UserRunbookPayload.get_dict()
 
+    ContextObj = get_context()
+    project_config = ContextObj.get_project_config()
+
+    metadata_payload = get_metadata_payload(runbook_file)
+    if "project_reference" in metadata_payload:
+        runbook_payload["metadata"]["project_reference"] = metadata_payload[
+            "project_reference"
+        ]
+    else:
+        project_name = project_config["name"]
+        runbook_payload["metadata"]["project_reference"] = Ref.Project(project_name)
+
     return runbook_payload
 
 
@@ -148,25 +162,6 @@ def compile_runbook_command(runbook_file, out):
     if rb_payload is None:
         LOG.error("User runbook not found in {}".format(runbook_file))
         return
-
-    ContextObj = get_context()
-    project_config = ContextObj.get_project_config()
-    project_name = project_config["name"]
-    project_cache_data = Cache.get_entity_data(
-        entity_type=CACHE.ENTITY.PROJECT, name=project_name
-    )
-
-    if not project_cache_data:
-        LOG.error(
-            "Project {} not found. Please run: calm update cache".format(project_name)
-        )
-
-    project_uuid = project_cache_data.get("uuid", "")
-    rb_payload["metadata"]["project_reference"] = {
-        "type": "project",
-        "uuid": project_uuid,
-        "name": project_name,
-    }
 
     if out == "json":
         click.echo(json.dumps(rb_payload, indent=4, separators=(",", ": ")))
@@ -192,9 +187,14 @@ def create_runbook(
     runbook_resources = runbook_payload["spec"]["resources"]
     runbook_name = runbook_payload["spec"]["name"]
     runbook_desc = runbook_payload["spec"]["description"]
+    runbook_metadata = runbook_payload.get("metadata")
 
     return client.runbook.upload_with_secrets(
-        runbook_name, runbook_desc, runbook_resources, force_create=force_create
+        runbook_name,
+        runbook_desc,
+        runbook_resources,
+        force_create=force_create,
+        runbook_metadata=runbook_metadata,
     )
 
 
@@ -305,11 +305,17 @@ def update_runbook(client, runbook_payload, name=None, description=None):
     runbook_desc = runbook_payload["spec"]["description"]
 
     runbook = get_runbook(client, runbook_payload["spec"]["name"])
-    uuid = runbook["metadata"]["uuid"]
-    spec_version = runbook["metadata"]["spec_version"]
+    runbook_metadata = runbook["metadata"]
+    uuid = runbook_metadata["uuid"]
+    spec_version = runbook_metadata["spec_version"]
 
     return client.runbook.update_with_secrets(
-        uuid, runbook_name, runbook_desc, runbook_resources, spec_version
+        uuid,
+        runbook_name,
+        runbook_desc,
+        runbook_resources,
+        spec_version,
+        runbook_metadata=runbook_metadata,
     )
 
 

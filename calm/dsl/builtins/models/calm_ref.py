@@ -2,8 +2,9 @@ import sys
 import uuid
 
 from calm.dsl.db.table_config import AhvSubnetsCache
+from calm.dsl.builtins.models.constants import NutanixDB as NutanixDBConst
 
-from .entity import Entity, EntityType
+from .entity import Entity, EntityType, EntityDict
 from .validator import PropertyValidator
 from .helper import common as common_helper
 
@@ -20,6 +21,13 @@ LOG = get_logging_handle(__name__)
 
 
 # CalmRef
+class CalmRefDict(EntityDict):
+    """Meta dict class for calm_ref_type"""
+
+    @classmethod
+    def _validate_attr(cls, vdict, name, value):
+        """attrs validator for calm ref type class. Always true, as CalmRefType is base class for every ref, any attribute can be added to it."""
+        return value
 
 
 class CalmRefType(EntityType):
@@ -27,6 +35,7 @@ class CalmRefType(EntityType):
 
     __schema_name__ = "CalmRef"
     __openapi_type__ = "app_calm_ref"
+    __prepare_dict__ = CalmRefDict
 
     def compile(cls):
         """compiles the calm_ref object"""
@@ -39,6 +48,10 @@ class CalmRefType(EntityType):
         """return the vale in compiled class payload"""
         data = cls.compile()
         return data[key]
+
+    def get_ref_cls(cls):
+        """return the ref cls of the calm_ref"""
+        return getattr(cls, "__ref_cls__")
 
 
 class CalmRefValidator(PropertyValidator, openapi_type="app_calm_ref"):
@@ -208,6 +221,38 @@ class Ref:
                 "name": name,
                 "uuid": environment_cache_data["uuid"],
             }
+
+    class ResourceTypeAction:
+        def __new__(cls, name, **kwargs):
+            kwargs["__ref_cls__"] = cls
+            rt_name = kwargs.get("resource_type_name", "")
+            provider_name = kwargs.get("provider_name", "")
+            if not provider_name:
+                LOG.info("Provider name not passed, Using resource_type name for same")
+                provider_name = rt_name
+
+            if rt_name:
+                res = common_helper.get_resource_type(rt_name, provider_name)
+                resource_type_action_list = res["action_list"]
+                resource_type_action_uuid = ""
+                for resource_type_action in resource_type_action_list:
+                    if resource_type_action["name"] == name:
+                        resource_type_action_uuid = resource_type_action["uuid"]
+                if resource_type_action_uuid == "":
+                    LOG.error(
+                        "No resource_type_action with name '{}' found".format(name)
+                    )
+                    sys.exit(-1)
+                return {
+                    "kind": "app_action",
+                    "name": name,
+                    "uuid": resource_type_action_uuid,
+                }
+            else:
+                LOG.error(
+                    "Resource type name not passed, please pass resource type name"
+                )
+                sys.exit(-1)
 
     class DirectoryService:
         def __new__(cls, name, **kwargs):
@@ -436,31 +481,17 @@ class Ref:
 
         def compile(cls, name, **kwargs):
 
-            client = get_api_client()
+            provider_name = kwargs.get("provider_name", "")
+            if not provider_name:
+                LOG.info("Provider name not passed, Using resource_type name for same")
+                provider_name = name
 
             if name:
-                params = {"filter": "name=={}".format(name), "length": 250}
-                res, err = client.resource_types.list(params)
-                if err:
-                    LOG.error(err)
-                    sys.exit(-1)
-
-                res = res.json()
-                if res["metadata"]["total_matches"] == 0:
-                    LOG.error("No vm with name '{}' found".format(name))
-                    sys.exit(-1)
-
-                elif res["metadata"]["total_matches"] > 1:
-                    LOG.error(
-                        "Multiple resource type with same name found. "
-                        "Please provide resource type uuid"
-                    )
-                    sys.exit(-1)
-
-                resource_type_uuid = res["entities"][0]["status"]["uuid"]
+                res = common_helper.get_resource_type(name, provider_name)
+                resource_type_uuid = res["uuid"]
             else:
                 LOG.error(
-                    "Resource type name not passed, " "pls pass resource type name"
+                    "Resource type name not passed, please pass resource type name"
                 )
                 sys.exit(-1)
 
@@ -490,7 +521,7 @@ class Ref:
                 tunnel_uuid = cache_vpc_data.get("tunnel_uuid")
                 LOG.debug("Tunnel UUID: {}".format(tunnel_uuid))
             else:
-                LOG.error("Tunnel name not passed, " "pls pass Tunnel name")
+                LOG.error("Tunnel name not passed, please pass Tunnel name")
                 sys.exit(-1)
 
             tunnel_ref = {
@@ -538,3 +569,520 @@ class Ref:
                 "name": name,
                 "uuid": ds_cache_data["uuid"],
             }
+
+    class NutanixDB:
+        """Base Calm Ref Class for Nutanix DB entitites (Not Callable)"""
+
+        def __new__(cls, *args, **kwargs):
+            raise TypeError("'{}' is not callable".format(cls.__name__))
+
+        class Database:
+            """Base Calm Ref Class for Nutanix DB Database entities"""
+
+            def __new__(cls, name, **kwargs):
+                kwargs["__ref_cls__"] = cls
+                kwargs["name"] = name
+                return _calm_ref(**kwargs)
+
+            def compile(cls, name, **kwargs):
+                """
+                defines compile for NDB Database Ref
+                Args:
+                    name(str): name of the database
+                    kwargs: This includes account_name for NDB account
+                Return:
+                    (dict): corresponding profile dictionary
+                """
+                account_name = kwargs.get("account_name", "")
+                if not account_name:
+                    LOG.error(
+                        "account_name is required NutanixDB Database compile, please pass account_name"
+                    )
+                    sys.exit(-1)
+
+                _type = kwargs.get("type", "")
+                if not _type:
+                    LOG.error(
+                        "type is required for NutanixDB Database compile, please pass type"
+                    )
+                    sys.exit(-1)
+
+                cache_database_data = Cache.get_entity_data(
+                    entity_type=CACHE.NDB
+                    + CACHE.KEY_SEPARATOR
+                    + CACHE.NDB_ENTITY.DATABASE,
+                    name=name,
+                    account_name=account_name,
+                    type=_type,
+                )
+
+                if not cache_database_data:
+                    LOG.error("No NDB Database with name '{}' found".format(name))
+                    sys.exit(-1)
+
+                return cache_database_data
+
+        class Profile:
+            """Base Calm Ref Class for Nutanix DB profile entitites (Not Callable)"""
+
+            def __new__(cls, *args, **kwargs):
+                raise TypeError("'{}' is not callable".format(cls.__name__))
+
+            class Software:
+                """Calm Ref Class for Nutanix DB software profile entity"""
+
+                def __new__(cls, name, **kwargs):
+                    kwargs["__ref_cls__"] = cls
+                    kwargs["name"] = name
+                    return _calm_ref(**kwargs)
+
+                def compile(cls, name, **kwargs):
+                    """
+                    defines compile for NDB Software Profile Ref
+                    Args:
+                        name(str): name of the software profile
+                        kwargs: This includes account_name for NDB account and engine of profile if any
+                    Return:
+                        (dict): corresponding profile dictionary
+                    """
+                    account_name = kwargs.pop("account_name", "")
+                    return common_helper.get_ndb_profile(
+                        name, NutanixDBConst.PROFILE.SOFTWARE, account_name, **kwargs
+                    )
+
+            class Software_Version:
+                """Calm Ref Class for Nutanix DB software profile version entity"""
+
+                def __new__(cls, name=None, **kwargs):
+                    kwargs["__ref_cls__"] = cls
+                    kwargs["name"] = name
+                    return _calm_ref(**kwargs)
+
+                def compile(cls, name=None, **kwargs):
+                    """
+                    defines compile for NDB Software Profile Version Ref
+                    Args:
+                        name(str): name of the software profile
+                        kwargs: This includes account_name for NDB account, software profile name, and engine of profile if any
+                    Return:
+                        (dict): corresponding profile dictionary
+                    """
+                    software_name = kwargs.get("software_name", "")
+                    if not software_name:
+                        LOG.error(
+                            "Software name is required for Software Version Profile compile, please pass Software name"
+                        )
+                        sys.exit(-1)
+
+                    account_name = kwargs.pop("account_name", "")
+                    software_profile = common_helper.get_ndb_profile(
+                        software_name,
+                        NutanixDBConst.PROFILE.SOFTWARE,
+                        account_name,
+                        **kwargs,
+                    )
+                    if name:
+                        for version in software_profile["platform_data"]["versions"]:
+                            if version["name"] == name:
+                                return version["id"]
+
+                        LOG.error(
+                            "No NDB {} with name '{}' found for the software with name {}".format(
+                                NutanixDBConst.PROFILE.SOFTWARE_PROFILE_VERSION,
+                                name,
+                                software_name,
+                            )
+                        )
+                        sys.exit(-1)
+
+                    return software_profile["latest_version_id"]
+
+            class Network:
+                """Calm Ref Class for Nutanix DB network profile entity"""
+
+                def __new__(cls, name, **kwargs):
+                    kwargs["__ref_cls__"] = cls
+                    kwargs["name"] = name
+                    return _calm_ref(**kwargs)
+
+                def compile(cls, name, **kwargs):
+                    """
+                    defines compile for NDB Network Ref
+                    Args:
+                        name(str): name of the software profile
+                        kwargs: This includes account_name for NDB account and engine of profile if any
+                    Return:
+                        (dict): corresponding profile dictionary
+                    """
+                    account_name = kwargs.pop("account_name", "")
+                    return common_helper.get_ndb_profile(
+                        name, NutanixDBConst.PROFILE.NETWORK, account_name, **kwargs
+                    )
+
+            class Compute:
+                """Calm Ref Class for Nutanix DB compute profile entity"""
+
+                def __new__(cls, name, **kwargs):
+                    kwargs["__ref_cls__"] = cls
+                    kwargs["name"] = name
+                    return _calm_ref(**kwargs)
+
+                def compile(cls, name, **kwargs):
+                    """
+                    defines compile for NDB Compute Ref
+                    Args:
+                        name(str): name of the software profile
+                        kwargs: This includes account_name for NDB account and engine of profile if any
+                    Return:
+                        (dict): corresponding profile dictionary
+                    """
+                    account_name = kwargs.pop("account_name", "")
+                    return common_helper.get_ndb_profile(
+                        name, NutanixDBConst.PROFILE.COMPUTE, account_name, **kwargs
+                    )
+
+            class Database_Parameter:
+                """Calm Ref Class for Nutanix DB database parameter profile entity"""
+
+                def __new__(cls, name, **kwargs):
+                    kwargs["__ref_cls__"] = cls
+                    kwargs["name"] = name
+                    return _calm_ref(**kwargs)
+
+                def compile(cls, name, **kwargs):
+                    """
+                    defines compile for NDB Database_Paramter Ref
+                    Args:
+                        name(str): name of the software profile
+                        kwargs: This includes account_name for NDB account and engine of profile if any
+                    Return:
+                        (dict): corresponding profile dictionary
+                    """
+                    account_name = kwargs.pop("account_name", "")
+                    return common_helper.get_ndb_profile(
+                        name,
+                        NutanixDBConst.PROFILE.DATABASE_PARAMETER,
+                        account_name,
+                        **kwargs,
+                    )
+
+        class SLA:
+            """Calm Ref Class for Nutanix DB sla entity"""
+
+            def __new__(cls, name, **kwargs):
+                kwargs["__ref_cls__"] = cls
+                kwargs["name"] = name
+                return _calm_ref(**kwargs)
+
+            def compile(cls, name, **kwargs):
+                """
+                defines compile for NDB SLA Ref
+                Args:
+                    name(str): name of the software profile
+                    kwargs: This includes account_name for NDB account
+                Return:
+                    (dict): corresponding profile dictionary
+                """
+                account_name = kwargs.get("account_name", "")
+                if not account_name:
+                    LOG.error(
+                        "account_name is required NutanixDB SLA compile, please pass account_name"
+                    )
+                    sys.exit(-1)
+
+                cache_sla_data = Cache.get_entity_data(
+                    entity_type=CACHE.NDB + CACHE.KEY_SEPARATOR + CACHE.NDB_ENTITY.SLA,
+                    name=name,
+                    account_name=account_name,
+                )
+
+                if not cache_sla_data:
+                    LOG.error("No NDB SLA with name '{}' found".format(name))
+                    sys.exit(-1)
+
+                return cache_sla_data
+
+        class Cluster:
+            """Calm Ref Class for Nutanix DB cluster entity"""
+
+            def __new__(cls, name, **kwargs):
+                kwargs["__ref_cls__"] = cls
+                kwargs["name"] = name
+                return _calm_ref(**kwargs)
+
+            def compile(cls, name, **kwargs):
+                """
+                defines compile for NDB cluster Ref
+                Args:
+                    name(str): name of the software profile
+                    kwargs: This includes account_name for NDB account
+                Return:
+                    (dict): corresponding profile dictionary
+                """
+                account_name = kwargs.get("account_name", "")
+                if not account_name:
+                    LOG.error(
+                        "account_name is required NutanixDB Cluster compile, please pass account_name"
+                    )
+                    sys.exit(-1)
+
+                cache_cluster_data = Cache.get_entity_data(
+                    entity_type=CACHE.NDB
+                    + CACHE.KEY_SEPARATOR
+                    + CACHE.NDB_ENTITY.CLUSTER,
+                    name=name,
+                    account_name=account_name,
+                )
+
+                if not cache_cluster_data:
+                    LOG.error("No NDB Cluster with name '{}' found".format(name))
+                    sys.exit(-1)
+
+                return cache_cluster_data
+
+        class Snapshot:
+            """Calm Ref Class for Nutanix DB snapshot entity"""
+
+            def __new__(cls, name, **kwargs):
+                kwargs["__ref_cls__"] = cls
+                kwargs["name"] = name
+                return _calm_ref(**kwargs)
+
+            def compile(cls, name, **kwargs):
+                """
+                defines compile for NDB cluster Ref
+                Args:
+                    name(str): name of the snapshot
+                    kwargs: This includes account_name for NDB account and time_machine_id if any
+                Return:
+                    (dict): corresponding profile dictionary
+                """
+                account_name = kwargs.get("account_name", "")
+                time_machine_id = kwargs.get("time_machine_id", "")
+                snapshot_timestamp = kwargs.get("snapshot_timestamp", "")
+                if not account_name:
+                    LOG.error(
+                        "Account Name is required NutanixDB Snapshot compile, please pass Account Name"
+                    )
+                    sys.exit(
+                        "Account Name is required NutanixDB Snapshot compile, please pass Account Name"
+                    )
+
+                if not snapshot_timestamp:
+                    LOG.error(
+                        "snapshot_timestamp is required NutanixDB Snapshot compile, please pass snapshot_timestamp"
+                    )
+                    sys.exit(
+                        "snapshot_timestamp is required NutanixDB Snapshot compile, please pass snapshot_timestamp"
+                    )
+                cache_snapshot_data = Cache.get_entity_data(
+                    entity_type=CACHE.NDB
+                    + CACHE.KEY_SEPARATOR
+                    + CACHE.NDB_ENTITY.SNAPSHOT,
+                    name=name,
+                    account_name=account_name,
+                    time_machine_id=time_machine_id,
+                    snapshot_timestamp=snapshot_timestamp,
+                )
+
+                if not cache_snapshot_data:
+                    LOG.error(
+                        "No NDB snapshot with name '{}' and timeStamp '{} found, Note: Timestamp is in UTC".format(
+                            name, snapshot_timestamp
+                        )
+                    )
+                    sys.exit(
+                        "No NDB snapshot with name '{}' and timeStamp '{} found, Note: Timestamp is in UTC".format(
+                            name, snapshot_timestamp
+                        )
+                    )
+
+                return cache_snapshot_data
+
+        class TimeMachine:
+            """Calm Ref Class for Nutanix DB TimeMachine entity"""
+
+            def __new__(cls, name, **kwargs):
+                kwargs["__ref_cls__"] = cls
+                kwargs["name"] = name
+                return _calm_ref(**kwargs)
+
+            def compile(cls, name, **kwargs):
+                """
+                Defines compile for NDB TimeMachine Ref
+
+                Args:
+                    name:   (str) Time Machine Name
+                    kwargs: (Dict) Includes account_name for NDB account
+                Return:
+                    (Dict): corresponding Time Machine info
+                """
+                client = get_api_client()
+                account_name = kwargs.get("account_name", "")
+                _type = kwargs.get("type", "")
+                if not account_name:
+                    LOG.error("Account Name is required NutanixDB TimeMachine compile")
+                    sys.exit("Account Name is required NutanixDB TimeMachine compile")
+
+                cache_time_machine_data = Cache.get_entity_data(
+                    entity_type=CACHE.NDB
+                    + CACHE.KEY_SEPARATOR
+                    + CACHE.NDB_ENTITY.TIME_MACHINE,
+                    name=name,
+                    account_name=account_name,
+                    type=_type,
+                )
+
+                if not cache_time_machine_data:
+                    LOG.error("No NDB Time Machine with name '{}' found".format(name))
+                    sys.exit("No NDB Time Machine with name '{}' found".format(name))
+
+                return cache_time_machine_data
+
+        class Tag:
+            """Base Calm Ref Class for Nutanix DB Tag entitites (Not Callable)"""
+
+            def __new__(cls, *args, **kwargs):
+                raise TypeError("'{}' is not callable".format(cls.__name__))
+
+            class Database:
+                """Calm Ref Class for Nutanix DB Database tag entity"""
+
+                def __new__(cls, name, value, **kwargs):
+                    kwargs["__ref_cls__"] = cls
+                    kwargs["name"] = name
+                    kwargs["value"] = value
+                    return _calm_ref(**kwargs)
+
+                def compile(cls, name, **kwargs):
+                    """
+                    defines compile for NDB Database Tag Ref
+                    Args:
+                        name(str): name of the Tag
+                        kwargs: This includes account_name for NDB account and value of tag
+                    Return:
+                        (dict): corresponding tag dictionary
+                    """
+                    account_name = kwargs.get("account_name", "")
+                    if not account_name:
+                        LOG.error(
+                            "account_name is required NutanixDB Database Tag compile, please pass account_name"
+                        )
+                        sys.exit(
+                            "account_name is required NutanixDB Database Tag compile, please pass account_name"
+                        )
+
+                    tag = common_helper.get_ndb_tag(name, account_name, "DATABASE")
+                    tag_dict = {
+                        "tag_id": tag["uuid"],
+                        "tag_name": name,
+                        "value": kwargs.get("value", ""),
+                    }
+                    return tag_dict
+
+            class TimeMachine:
+                """Calm Ref Class for Nutanix DB TIME_MACHINE tag entity"""
+
+                def __new__(cls, name, value, **kwargs):
+                    kwargs["__ref_cls__"] = cls
+                    kwargs["name"] = name
+                    kwargs["value"] = value
+                    return _calm_ref(**kwargs)
+
+                def compile(cls, name, **kwargs):
+                    """
+                    defines compile for NDB TIME_MACHINE Tag Ref
+                    Args:
+                        name(str): name of the Tag
+                        kwargs: This includes account_name for NDB account and value of tag
+                    Return:
+                        (dict): corresponding tag dictionary
+                    """
+                    account_name = kwargs.get("account_name", "")
+                    if not account_name:
+                        LOG.error(
+                            "account_name is required NutanixDB TIME_MACHINE Tag compile, please pass account_name"
+                        )
+                        sys.exit(
+                            "account_name is required NutanixDB TIME_MACHINE Tag compile, please pass account_name"
+                        )
+
+                    tag = common_helper.get_ndb_tag(name, account_name, "TIME_MACHINE")
+                    tag_dict = {
+                        "tag_id": tag["uuid"],
+                        "tag_name": name,
+                        "value": kwargs.get("value", ""),
+                    }
+                    return tag_dict
+
+            class Clone:
+                """Calm Ref Class for Nutanix DB CLONE tag entity"""
+
+                def __new__(cls, name, value, **kwargs):
+                    kwargs["__ref_cls__"] = cls
+                    kwargs["name"] = name
+                    kwargs["value"] = value
+                    return _calm_ref(**kwargs)
+
+                def compile(cls, name, **kwargs):
+                    """
+                    defines compile for NDB CLONE Tag Ref
+                    Args:
+                        name(str): name of the Tag
+                        kwargs: This includes account_name for NDB account and value of tag
+                    Return:
+                        (dict): corresponding tag dictionary
+                    """
+                    account_name = kwargs.get("account_name", "")
+                    if not account_name:
+                        LOG.error(
+                            "account_name is required NutanixDB CLONE Tag compile, please pass account_name"
+                        )
+                        sys.exit(
+                            "account_name is required NutanixDB CLONE Tag compile, please pass account_name"
+                        )
+
+                    tag = common_helper.get_ndb_tag(name, account_name, "CLONE")
+                    tag_dict = {
+                        "tag_id": tag["uuid"],
+                        "tag_name": name,
+                        "value": kwargs.get("value", ""),
+                    }
+                    return tag_dict
+
+            class DatabaseServer:
+                """Calm Ref Class for Nutanix DB DATABASE_SERVER tag entity"""
+
+                def __new__(cls, name, value, **kwargs):
+                    kwargs["__ref_cls__"] = cls
+                    kwargs["name"] = name
+                    kwargs["value"] = value
+                    return _calm_ref(**kwargs)
+
+                def compile(cls, name, **kwargs):
+                    """
+                    defines compile for NDB DATABASE_SERVER Tag Ref
+                    Args:
+                        name(str): name of the Tag
+                        kwargs: This includes account_name for NDB account and value of tag
+                    Return:
+                        (dict): corresponding tag dictionary
+                    """
+                    account_name = kwargs.get("account_name", "")
+                    if not account_name:
+                        LOG.error(
+                            "account_name is required NutanixDB DATABASE_SERVER Tag compile, please pass account_name"
+                        )
+                        sys.exit(
+                            "account_name is required NutanixDB DATABASE_SERVER Tag compile, please pass account_name"
+                        )
+
+                    tag = common_helper.get_ndb_tag(
+                        name, account_name, "DATABASE_SERVER"
+                    )
+                    tag_dict = {
+                        "tag_id": tag["uuid"],
+                        "tag_name": name,
+                        "value": kwargs.get("value", ""),
+                    }
+                    return tag_dict

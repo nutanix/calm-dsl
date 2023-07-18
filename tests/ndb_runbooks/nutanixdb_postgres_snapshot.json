@@ -1,0 +1,130 @@
+{
+    "endpoint_definition_list": [],
+    "credential_definition_list": [],
+    "client_attrs": {},
+    "runbook": {
+        "name": "nutanixdb_postgres_snapshot_runbook",
+        "description": "",
+        "main_task_local_reference": {
+            "kind": "app_task",
+            "name": "nutanixdb_postgres_snapshot_dag"
+        },
+        "task_definition_list": [
+            {
+                "name": "nutanixdb_postgres_snapshot_dag",
+                "description": "",
+                "type": "DAG",
+                "attrs": {
+                    "edges": []
+                },
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "postgres_create_snapshot"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "postgres_create_snapshot",
+                "description": "",
+                "type": "RT_OPERATION",
+                "attrs": {
+                    "type": "RT_OPERATION",
+                    "resource_type_reference": {
+                        "uuid": "722a4722-beb9-49ec-8229-80e552091a24",
+                        "name": "Postgres Database Instance",
+                        "kind": "resource_type"
+                    },
+                    "action_reference": {
+                        "kind": "app_action",
+                        "name": "Create Snapshot",
+                        "uuid": "a0bbfae7-2643-4932-85bb-adafbf961bd2"
+                    },
+                    "inarg_list": [
+                        {
+                            "name": "create_snapshot_nutanix_ndb_database__name",
+                            "description": "",
+                            "type": "LOCAL",
+                            "label": "Snapshot Name",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "@@{snapshot_uuid}@@",
+                            "data_type": "BASE",
+                            "regex": {
+                                "value": "^(|[a-zA-Z][A-Za-z0-9_.-]+)$",
+                                "should_validate": true
+                            },
+                            "is_hidden": false,
+                            "is_mandatory": false
+                        },
+                        {
+                            "name": "create_snapshot_nutanix_ndb_database__time_machine_id",
+                            "description": "",
+                            "type": "LOCAL",
+                            "label": "Target Time Machine",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "@@{tm_uuid}@@",
+                            "data_type": "BASE",
+                            "is_hidden": false,
+                            "is_mandatory": true
+                        },
+                        {
+                            "name": "create_snapshot_nutanix_ndb_database__remove_schedule_in_days",
+                            "description": "",
+                            "type": "INPUT",
+                            "label": "Remove in (number of days)",
+                            "attrs": {
+                                "is_internal": false,
+                                "type": "",
+                                "omit_on_empty": true
+                            },
+                            "val_type": "STRING",
+                            "value": "2",
+                            "data_type": "BASE",
+                            "regex": {
+                                "value": "^(|([1-9]|[1-8][0-9]|90))$",
+                                "should_validate": true
+                            },
+                            "is_hidden": false,
+                            "is_mandatory": false
+                        },
+                        {
+                            "name": "create_snapshot_nutanix_ndb_database__is_removal_configured",
+                            "description": "",
+                            "type": "INPUT",
+                            "label": "Removal Schedule",
+                            "attrs": {
+                                "is_internal": true,
+                                "type": "",
+                                "omit_on_empty": false
+                            },
+                            "val_type": "BOOLEAN",
+                            "value": "true",
+                            "data_type": "BASE",
+                            "is_hidden": false,
+                            "is_mandatory": false
+                        }
+                    ],
+                    "output_variables": {
+                        "myplatformdata": "platform_data"
+                    },
+                    "tag": "Database",
+                    "account_reference": {
+                        "kind": "account",
+                        "name": "dnd_era_secondary_account",
+                        "uuid": "12c995cb-3b82-47ef-9e4d-efd8af07e294"
+                    }
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            }
+        ],
+        "variable_list": []
+    }
+}

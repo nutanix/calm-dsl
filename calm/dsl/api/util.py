@@ -81,7 +81,7 @@ def strip_secrets(
         path_list, obj, field_name="variable_list", context=""
     ):
 
-        if field_name != "headers":
+        if field_name != "headers" and obj.get("name", None):
             context = context + "." + obj["name"] + "." + field_name
 
         filtered_decompiled_secrets = get_secrets_from_context(
@@ -249,8 +249,20 @@ def strip_secrets(
         context = path_list[0] + "." + obj["name"] + ".task_definition_list"
 
         tasks = obj.get("task_definition_list", [])
+        original_path_list = copy.deepcopy(path_list)
         for task_idx, task in enumerate(tasks):
-            if task.get("type", None) != "HTTP":
+            path_list = original_path_list
+            if task.get("type", None) == "RT_OPERATION":
+                path_list = path_list + [
+                    "task_definition_list",
+                    task_idx,
+                    "attrs",
+                ]
+                strip_entity_secret_variables(
+                    path_list, task["attrs"], field_name="inarg_list"
+                )
+                continue
+            elif task.get("type", None) != "HTTP":
                 continue
             auth = (task.get("attrs", {}) or {}).get("authentication", {}) or {}
             path_list = path_list + [
@@ -440,15 +452,21 @@ def patch_secrets(resources, secret_map, secret_variables, existing_secrets=[]):
     for path, secret in existing_secrets:
         variable = resources
         for sub_path in path:
+            if isinstance(variable, dict) and sub_path not in variable:
+                break
             variable = variable[sub_path]
-        variable["attrs"] = {"is_secret_modified": False}
+        else:
+            variable["attrs"] = {"is_secret_modified": False}
 
     if secret_variables:
-        for path, secret, secret_name in secret_variables:
+        for path, secret, _ in secret_variables:
             variable = resources
             for sub_path in path:
+                if isinstance(variable, dict) and sub_path not in variable:
+                    break
                 variable = variable[sub_path]
-            variable["attrs"] = {"is_secret_modified": True}
-            variable["value"] = secret
+            else:
+                variable["attrs"] = {"is_secret_modified": True}
+                variable["value"] = secret
 
     return resources

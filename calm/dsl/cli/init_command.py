@@ -19,7 +19,7 @@ from calm.dsl.store import Cache
 from calm.dsl.init import init_bp, init_runbook
 from calm.dsl.providers import get_provider_types
 from calm.dsl.store import Version
-from calm.dsl.constants import POLICY
+from calm.dsl.constants import POLICY, STRATOS
 
 from .main import init, set
 from calm.dsl.log import get_logging_handle
@@ -232,6 +232,25 @@ def set_server_details(
         LOG.debug("Approval Policy is not supported")
         approval_policy_status = False
 
+    # get stratos status
+    if LV(calm_version) >= LV(STRATOS.MIN_SUPPORTED_VERSION):
+        Obj = get_resource_api(
+            "features/stratos/status", client.connection, calm_api=True
+        )
+        res, err = Obj.read()
+
+        if err:
+            click.echo("[Fail]")
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        result = json.loads(res.content)
+        stratos_status = (
+            result.get("status", {}).get("feature_status", {}).get("is_enabled", False)
+        )
+        LOG.info("stratos enabled={}".format(stratos_status))
+    else:
+        LOG.debug("Stratos is not supported")
+        stratos_status = False
+
     LOG.info("Verifying the project details")
     project_name_uuid_map = client.project.get_name_uuid_map(
         params={"filter": "name=={}".format(project_name)}
@@ -257,6 +276,7 @@ def set_server_details(
         read_timeout=read_timeout,
         policy_status=policy_status,
         approval_policy_status=approval_policy_status,
+        stratos_status=stratos_status,
     )
 
     # Updating context for using latest config data
@@ -494,6 +514,25 @@ def _set_config(
         LOG.debug("Approval Policy is not supported")
         approval_policy_status = False
 
+    # get stratos status
+    if LV(calm_version) >= LV(STRATOS.MIN_SUPPORTED_VERSION):
+        Obj = get_resource_api(
+            "features/stratos/status", client.connection, calm_api=True
+        )
+        res, err = Obj.read()
+
+        if err:
+            click.echo("[Fail]")
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        result = json.loads(res.content)
+        stratos_status = (
+            result.get("status", {}).get("feature_status", {}).get("is_enabled", False)
+        )
+        LOG.info("stratos enabled={}".format(stratos_status))
+    else:
+        LOG.debug("Stratos is not supported")
+        stratos_status = False
+
     LOG.info("Verifying the project details")
     project_name_uuid_map = client.project.get_name_uuid_map(
         params={"filter": "name=={}".format(project_name)}
@@ -537,6 +576,7 @@ def _set_config(
         read_timeout=read_timeout,
         policy_status=policy_status,
         approval_policy_status=approval_policy_status,
+        stratos_status=stratos_status,
     )
     LOG.info("Configuration changed successfully")
 

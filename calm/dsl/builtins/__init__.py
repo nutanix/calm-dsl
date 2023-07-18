@@ -114,6 +114,13 @@ from .models.network_group_tunnel_vm_spec import (
 )
 from .models.network_group_tunnel import NetworkGroupTunnelType, NetworkGroupTunnel
 from .models.network_group_tunnel_payload import NetworkGroupTunnelPayloadType
+from .models.ndb import (
+    Database,
+    DatabaseServer,
+    TimeMachine,
+    Tag,
+    PostgresDatabaseOutputVariables,
+)
 
 from .models.policy_condition import PolicyCondition
 from .models.approver_set import PolicyApproverSet, create_policy_approver_set
@@ -284,4 +291,9 @@ __all__ = [
     "custom_provider_account",
     "CustomProviderAccountResources",
     "branch",
+    "Database",
+    "DatabaseServer",
+    "TimeMachine",
+    "Tag",
+    "PostgresDatabaseOutputVariables",
 ]

@@ -204,8 +204,9 @@ def update_runbook(client, rb_name, Runbook):
             pytest.fail("More than one runbook found - {}".format(entities))
 
         print(">> {} found >>".format(Runbook))
-        rb_uuid = entities[0]["metadata"]["uuid"]
-        rb_spec_version = entities[0]["metadata"]["spec_version"]
+        runbook_metadata = entities[0]["metadata"]
+        rb_uuid = runbook_metadata["uuid"]
+        rb_spec_version = runbook_metadata["spec_version"]
 
     else:
         pytest.fail(">> {} not found >>".format(Runbook))
@@ -215,7 +216,12 @@ def update_runbook(client, rb_name, Runbook):
     rb_desc = "Runbook DSL Test automation"
     rb_resources = json.loads(Runbook.runbook.json_dumps())
     res, err = client.runbook.update_with_secrets(
-        rb_uuid, rb_name, rb_desc, rb_resources, rb_spec_version
+        rb_uuid,
+        rb_name,
+        rb_desc,
+        rb_resources,
+        rb_spec_version,
+        runbook_metadata=runbook_metadata,
     )
 
     if not err:

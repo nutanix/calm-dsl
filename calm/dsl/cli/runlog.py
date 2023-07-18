@@ -404,11 +404,15 @@ def get_completion_func(screen):
                 if runlog["status"]["type"] == "task_runlog":
 
                     task_id = runlog["status"]["task_reference"]["uuid"]
-                    if task_type_map[task_id] == "META":
+                    if task_id in task_type_map and task_type_map[task_id] == "META":
                         continue  # don't add metatask's trl in runlogTree
 
                     # Output is not valid for input, confirm and while_loop tasks
-                    if task_type_map[task_id] not in ["INPUT", "CONFIRM", "WHILE_LOOP"]:
+                    if task_id not in task_type_map or (
+                        task_id in task_type_map
+                        and task_type_map[task_id]
+                        not in ["INPUT", "CONFIRM", "WHILE_LOOP"]
+                    ):
                         res, err = client.runbook.runlog_output(runlog_uuid, uuid)
                         if err:
                             raise Exception(
