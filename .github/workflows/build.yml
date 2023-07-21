@@ -24,6 +24,7 @@ jobs:
       uses: psf/black@stable # Exclude list is not honored - https://github.com/psf/black/issues/1584
       with:
         version: "22.6.0"
+        options: "--check --extend-exclude tests/escript/scripts/"
     - name: Setup env
       run: |
         python -m pip install --upgrade pip
