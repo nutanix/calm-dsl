@@ -1,0 +1,5 @@
+{%- macro while_task(obj) -%}
+CalmTask.Loop(name='{{obj.name}}', iterations={{obj.attrs.iterations}}, exit_condition={{obj.attrs.exit_condition_type}}, loop_variable='{{obj.attrs.loop_variable}}')
+{%- endmacro %}
+
+{{ while_task(obj) }}

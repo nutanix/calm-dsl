@@ -88,6 +88,18 @@ Decompilation is process to consume json data for any entity and convert it back
  - Abort runbook execution: `calm abort runbook_execution <runlog_id>`. It will abort the runbook execution.
  - Please look [here](docs/01-Calm-Terminology#runbooks) for more details.
 
+### Decompiling Runbooks (`.json`->`.py`)
+Decompilation is process to consume json data for any entity and convert it back to dsl python helpers/classes. Currently, decompile is supported for converting blueprint and runbook jsons to python files. Summary of support for runbook decompilation(Experimental feature):
+- Python helpers/classes are automatically generated with the use of jinja templates.
+- Generated python file is formatted using [black](https://github.com/psf/black)
+- Default values for most of the entities will be shown in decompiled file.
+- Separate files are created under `.local` directory in decompiled runbook directory for handling secrets used inside runbooks i.e. passwords etc.
+- Separate files are created under `scripts` directory in decompiled runbook directory for storing scripts used in variable, tasks etc.
+- Name of created files are taken from the context of variable/task. For ex: Filename for task script: _Runbook_test_rb_1_Task_Task2.py
+- Decompile existing server runbook: `calm decompile runbook <runbook_name>`.
+- Decompile runbook from existing json file: `calm decompile runbook --file <json_file_location>`.
+- Decompile runbook to a location: `calm decompile runbook <runbook_name> --dir <runbook_dir>`. It will decompile runbook entities to `runbook_dir` location.
+
 ### Task Library
  - List task library items: `calm get library tasks`. Use `calm get library tasks -q` to show only task library names.
  - Create task library item: `calm create library task -f <file>`. Command will create task under library. Please look at `calm create library task -h`.
@@ -130,13 +142,13 @@ Use `calm get roles` to list all roles in PC. The below roles are relevant for C
 - Delete user: `calm delete user <principal_name>`
 
 ### User-Groups
-- Create group: `calm create group <distinguished_name>`. 
+- Create group: `calm create group <distinguished_name>`.
 - List groups: `calm get groups`. Get user groups, optionally filtered by a string
 - Delete group: `calm delete group <distinguished_name>`
 
 ### Projects
 - Compile project: `calm compile project --file <project_file_location>`. This command will print the compiled project JSON. Look at sample file [here](examples/Project/demo_project.py) and [here](examples/Project/project_with_env.py).
-- Create project on Calm Server: `calm create project --file <project_file_location> --name <project_name> --description <description>`. Use `no-cache-update` flag to skip cache updations post operation. 
+- Create project on Calm Server: `calm create project --file <project_file_location> --name <project_name> --description <description>`. Use `no-cache-update` flag to skip cache updations post operation.
 - List projects: `calm get projects`. Get projects, optionally filtered by a string
 - Describe project: `calm describe project <project_name>`. It will print summary of project.
 - Update project using dsl file: `calm update project <project_name> --file <project_file_location>`. Environments will not be updated as part of this operation. Use `no-cache-update` flag to skip cache updations post operation.

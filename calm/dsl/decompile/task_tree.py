@@ -1,9 +1,6 @@
 from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.task import render_task_template
-
-from calm.dsl.log import get_logging_handle
-
-LOG = get_logging_handle(__name__)
+from .decompile_helpers import IndentHelper, special_tasks_types
 
 
 def render_task_tree_template(
@@ -12,23 +9,67 @@ def render_task_tree_template(
     entity_context,
     RUNBOOK_ACTION_MAP,
     CONFIG_SPEC_MAP,
-    context="",
-    secrets_dict=[],
+    decision_tasks=None,
+    while_tasks=None,
 ):
     """render task tree template"""
 
-    rendered_tasks = {}
-    for task_key in task_child_map:
-        for task in task_child_map[task_key]:
-            rendered_tasks[task.get("task_name")] = render_task_template(
-                task.get("task_data"),
+    decision_tree_rendered_tasks = {}
+    if decision_tasks:
+        for decision_task in decision_tasks:
+            decision_tree_rendered_tasks[decision_task] = render_task_template(
+                decision_tasks[decision_task]["data"],
                 entity_context,
                 RUNBOOK_ACTION_MAP,
                 CONFIG_SPEC_MAP,
-                context=context,
-                secrets_dict=secrets_dict,
             )
+            for tasks in ["success_tasks", "failure_tasks"]:
+                for task in decision_tasks[decision_task][tasks]:
+                    decision_tree_rendered_tasks[task["name"]] = render_task_template(
+                        task["data"],
+                        entity_context,
+                        RUNBOOK_ACTION_MAP,
+                        CONFIG_SPEC_MAP,
+                    )
 
+    while_loop_rendered_tasks = {}
+    if while_tasks:
+        for base_task in while_tasks:
+            while_loop_rendered_tasks[base_task] = render_task_template(
+                while_tasks[base_task]["data"],
+                entity_context,
+                RUNBOOK_ACTION_MAP,
+                CONFIG_SPEC_MAP,
+            )
+            for child_task in while_tasks[base_task]["child_tasks"]:
+                while_loop_rendered_tasks[child_task.name] = render_task_template(
+                    child_task, entity_context, RUNBOOK_ACTION_MAP, CONFIG_SPEC_MAP
+                )
+    special_task_data = {"decision_tasks": decision_tasks, "while_tasks": while_tasks}
+    rendered_tasks = {}
+
+    for task_key in task_child_map:
+        for task in task_child_map[task_key]:
+            if task.get("task_data").type in special_tasks_types:
+                helper = IndentHelper()
+                generic_indent_list = helper.generate_indents(
+                    special_task_data, task.get("task_data"), 0, 0, False, False
+                )
+                rendered_tasks[task.get("task_name")] = render_template(
+                    schema_file="task_list.py.jinja2",
+                    obj={
+                        "generic_indent_list": generic_indent_list,
+                        "while_tasks": while_loop_rendered_tasks,
+                        "decision_tasks": decision_tree_rendered_tasks,
+                    },
+                )
+            else:
+                rendered_tasks[task.get("task_name")] = render_task_template(
+                    task.get("task_data"),
+                    entity_context,
+                    RUNBOOK_ACTION_MAP,
+                    CONFIG_SPEC_MAP,
+                )
     task_indent_tree = []
     visited = []
 

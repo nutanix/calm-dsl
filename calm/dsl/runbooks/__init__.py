@@ -20,7 +20,13 @@ from calm.dsl.builtins.models.utils import (
 
 from calm.dsl.builtins.models.variable import RunbookVariable
 from calm.dsl.builtins.models.task import RunbookTask, Status
-from calm.dsl.builtins.models.runbook import Runbook, runbook, runbook_json, branch
+from calm.dsl.builtins.models.runbook import (
+    Runbook,
+    RunbookType,
+    runbook,
+    runbook_json,
+    branch,
+)
 from calm.dsl.builtins.models.action import parallel
 
 from calm.dsl.builtins.models.endpoint import Endpoint, _endpoint, CalmEndpoint
@@ -47,6 +53,7 @@ __all__ = [
     "RunbookTask",
     "Status",
     "Runbook",
+    "RunbookType",
     "runbook",
     "runbook_json",
     "branch",

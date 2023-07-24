@@ -1,0 +1,5 @@
+{%- macro existing_endpoint(obj) -%}
+{{obj.var_name}}=Endpoint.use_existing("{{obj.name}}")
+{%- endmacro %}
+
+{{ existing_endpoint(obj) }}

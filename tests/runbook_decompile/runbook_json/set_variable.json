@@ -1,0 +1,153 @@
+{
+    "status": {
+        "description": "",
+        "message_list": [],
+        "name": "test_generic_rb",
+        "state": "ACTIVE",
+        "critical": false,
+        "attrs": {},
+        "resources": {
+            "endpoints_information": [],
+            "type": "workflow",
+            "endpoint_definition_list": [],
+            "credential_definition_list": [],
+            "runbook": {
+                "task_definition_list": [
+                    {
+                        "retries": "0",
+                        "description": "",
+                        "type": "DAG",
+                        "uuid": "07ead3c9-7790-9d07-bb70-bf0310c30d2c",
+                        "child_tasks_local_reference_list": [
+                            {
+                                "kind": "app_task",
+                                "name": "Task 1",
+                                "uuid": "2e543732-dfcb-51e1-9494-012a30cfab80"
+                            }
+                        ],
+                        "state": "ACTIVE",
+                        "attrs": {
+                            "edges": [],
+                            "type": ""
+                        },
+                        "timeout_secs": "0",
+                        "inherit_target": false,
+                        "message_list": [],
+                        "variable_list": [],
+                        "name": "016635f6_dag"
+                    },
+                    {
+                        "target_any_local_reference": {
+                            "kind": "app_endpoint",
+                            "name": "Endpoint_12072659",
+                            "uuid": "818631db-9e5c-4252-aca9-9c458eef3623"
+                        },
+                        "retries": "0",
+                        "description": "",
+                        "type": "SET_VARIABLE",
+                        "uuid": "2e543732-dfcb-51e1-9494-012a30cfab80",
+                        "child_tasks_local_reference_list": [],
+                        "state": "ACTIVE",
+                        "attrs": {
+                            "exit_status": [],
+                            "script": "echo \"hi\"",
+                            "eval_variables": [
+                                "1"
+                            ],
+                            "eval_scope": "local",
+                            "type": "",
+                            "script_type": "sh"
+                        },
+                        "timeout_secs": "0",
+                        "inherit_target": false,
+                        "message_list": [],
+                        "variable_list": [],
+                        "name": "Task 1"
+                    }
+                ],
+                "description": "",
+                "message_list": [],
+                "uuid": "de59fdac-c4f6-b200-4c6d-f6400250674b",
+                "state": "ACTIVE",
+                "variable_list": [],
+                "main_task_local_reference": {
+                    "kind": "app_task",
+                    "name": "016635f6_dag",
+                    "uuid": "07ead3c9-7790-9d07-bb70-bf0310c30d2c"
+                },
+                "name": "80660901_runbook"
+            }
+        }
+    },
+    "spec": {
+        "name": "test_generic_rb",
+        "resources": {
+            "endpoint_definition_list": [],
+            "credential_definition_list": [],
+            "runbook": {
+                "main_task_local_reference": {
+                    "kind": "app_task",
+                    "uuid": "07ead3c9-7790-9d07-bb70-bf0310c30d2c"
+                },
+                "task_definition_list": [
+                    {
+                        "attrs": {
+                            "edges": []
+                        },
+                        "type": "DAG",
+                        "name": "016635f6_dag",
+                        "child_tasks_local_reference_list": [
+                            {
+                                "kind": "app_task",
+                                "uuid": "2e543732-dfcb-51e1-9494-012a30cfab80"
+                            }
+                        ],
+                        "uuid": "07ead3c9-7790-9d07-bb70-bf0310c30d2c"
+                    },
+                    {
+                        "target_any_local_reference": {
+                            "kind": "app_endpoint",
+                            "uuid": "818631db-9e5c-4252-aca9-9c458eef3623",
+                            "name": "Endpoint_12072659"
+                        },
+                        "uuid": "2e543732-dfcb-51e1-9494-012a30cfab80",
+                        "child_tasks_local_reference_list": [],
+                        "attrs": {
+                            "eval_variables": [
+                                "1"
+                            ],
+                            "script": "echo \"hi\"",
+                            "script_type": "sh"
+                        },
+                        "type": "SET_VARIABLE",
+                        "variable_list": [],
+                        "name": "Task 1"
+                    }
+                ],
+                "name": "80660901_runbook",
+                "variable_list": [],
+                "uuid": "de59fdac-c4f6-b200-4c6d-f6400250674b"
+            }
+        }
+    },
+    "api_version": "3.0",
+    "metadata": {
+        "last_update_time": "1688037268044458",
+        "use_categories_mapping": false,
+        "kind": "runbook",
+        "name": "test_generic_rb",
+        "project_reference": {
+            "kind": "project",
+            "name": "default",
+            "uuid": "40541414-4d37-481c-812c-4e96e90422ae"
+        },
+        "spec_version": 3,
+        "creation_time": "1687932510212904",
+        "owner_reference": {
+            "kind": "user",
+            "uuid": "00000000-0000-0000-0000-000000000000",
+            "name": "admin"
+        },
+        "uuid": "619ccfe1-b1cb-1ad2-2eac-ffae3b883032"
+    }
+}

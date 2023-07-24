@@ -4,6 +4,7 @@ from calm.dsl.log import get_logging_handle
 
 from .main import (
     compile,
+    decompile,
     get,
     describe,
     delete,
@@ -26,6 +27,7 @@ from .runbooks import (
     delete_runbook,
     format_runbook_command,
     compile_runbook_command,
+    decompile_runbook_command,
     watch_runbook_execution,
     resume_runbook_execution,
     pause_runbook_execution,
@@ -180,6 +182,34 @@ def _format_runbook_command(runbook_file):
 def _compile_runbook_command(runbook_file, out):
     """Compiles a DSL (Python) runbook into JSON or YAML"""
     compile_runbook_command(runbook_file, out)
+
+
+@decompile.command("runbook", experimental=True)
+@click.argument("name", required=False)
+@click.option(
+    "--file",
+    "-f",
+    "runbook_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to Runbook file",
+)
+@click.option(
+    "--prefix",
+    "-p",
+    default="",
+    help="Prefix used for appending to entities name(Reserved name cases)",
+)
+@click.option(
+    "--dir",
+    "-d",
+    "runbook_dir",
+    default=None,
+    help="Runbook directory location used for placing decompiled entities",
+)
+def _decompile_runbook_command(name, runbook_file, prefix, runbook_dir):
+    """Decompiles runbook present on server or json file"""
+
+    decompile_runbook_command(name, runbook_file, prefix, runbook_dir)
 
 
 @run.command("runbook", feature_min_version="3.0.0", experimental=True)

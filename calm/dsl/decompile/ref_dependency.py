@@ -1,3 +1,5 @@
+from .decompile_helpers import process_variable_name
+
 SERVICE_NAME_MAP = {}
 PROFILE_NAME_MAP = {}
 SUBSTRATE_NAME_MAP = {}
@@ -56,6 +58,10 @@ def update_package_name(ui_name, dsl_name):
 
     global PACKAGE_NAME_MAP
     PACKAGE_NAME_MAP[ui_name] = dsl_name
+
+
+def get_endpoint_name(name):
+    return process_variable_name(name)
 
 
 def get_deployment_name(name):

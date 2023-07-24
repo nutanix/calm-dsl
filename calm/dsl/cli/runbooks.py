@@ -1,4 +1,5 @@
 import json
+import os
 import time
 import sys
 import uuid
@@ -10,8 +11,15 @@ import click
 from prettytable import PrettyTable
 from black import format_file_in_place, WriteBack, FileMode
 
-from calm.dsl.builtins import file_exists
-from calm.dsl.runbooks import runbook, create_runbook_payload
+from calm.dsl.builtins import (
+    file_exists,
+    MetadataType,
+    CredentialType,
+    get_valid_identifier,
+)
+from calm.dsl.decompile.decompile_render import create_runbook_dir
+from calm.dsl.decompile.file_handler import get_runbook_dir
+from calm.dsl.runbooks import runbook, create_runbook_payload, RunbookType
 from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
 from calm.dsl.config import get_context
 from calm.dsl.api import get_api_client
@@ -169,6 +177,84 @@ def compile_runbook_command(runbook_file, out):
         click.echo(yaml.dump(rb_payload, default_flow_style=False))
     else:
         LOG.error("Unknown output format {} given".format(out))
+
+
+def decompile_runbook_command(name, runbook_file, prefix="", runbook_dir=None):
+    """helper to decompile runbook"""
+    if name and runbook_file:
+        LOG.error("Please provide either runbook file location or server runbook name")
+        sys.exit("Both runbook name and file location provided.")
+
+    if name:
+        decompile_runbook_from_server(name=name, runbook_dir=runbook_dir, prefix=prefix)
+
+    elif runbook_file:
+        decompile_runbook_from_file(
+            filename=runbook_file, runbook_dir=runbook_dir, prefix=prefix
+        )
+    else:
+        LOG.error("Please provide either runbook file location or server runbook name")
+        sys.exit("Runbook name or file location not provided.")
+
+
+def decompile_runbook_from_server(name, runbook_dir, prefix):
+    """decompiles the runbook by fetching it from server"""
+
+    client = get_api_client()
+    runbook = get_runbook(client, name)
+    runbook_uuid = runbook["status"]["uuid"]
+    res, err = client.runbook.read(runbook_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    runbook = res.json()
+    _decompile_runbook(runbook_payload=runbook, runbook_dir=runbook_dir, prefix=prefix)
+
+
+def decompile_runbook_from_file(filename, runbook_dir, prefix):
+    """decompile runbook from local runbook file"""
+
+    runbook_payload = json.loads(open(filename).read())
+    _decompile_runbook(
+        runbook_payload=runbook_payload, runbook_dir=runbook_dir, prefix=prefix
+    )
+
+
+def _decompile_runbook(runbook_payload, runbook_dir, prefix):
+    """decompiles the runbook from payload"""
+    runbook = runbook_payload["status"]["resources"]["runbook"]
+    credential_list = runbook_payload["status"]["resources"][
+        "credential_definition_list"
+    ]
+    runbook_name = runbook_payload["status"].get("name", "DslRunbook")
+    runbook_description = runbook_payload["status"].get("description", "")
+
+    runbook_metadata = runbook_payload["metadata"]
+    # POP unnecessary keys
+    runbook_metadata.pop("creation_time", None)
+    runbook_metadata.pop("last_update_time", None)
+
+    metadata_obj = MetadataType.decompile(runbook_metadata)
+
+    LOG.info("Decompiling runbook {}".format(runbook_name))
+    prefix = get_valid_identifier(prefix)
+    runbook_cls = RunbookType.decompile(runbook, prefix=prefix)
+    credentials = []
+    for cred in credential_list:
+        credentials.append(CredentialType.decompile(cred))
+    runbook_cls.__name__ = get_valid_identifier(runbook_name)
+    runbook_cls.__doc__ = runbook_description
+    create_runbook_dir(
+        runbook_cls=runbook_cls,
+        runbook_dir=runbook_dir,
+        metadata_obj=metadata_obj,
+        credentials=credentials,
+    )
+    click.echo(
+        "\nSuccessfully decompiled. Directory location: {}. Runbook location: {}".format(
+            get_runbook_dir(), os.path.join(get_runbook_dir(), "runbook.py")
+        )
+    )
 
 
 def create_runbook(
