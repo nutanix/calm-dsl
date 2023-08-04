@@ -3726,6 +3726,8 @@ class NDB_ProfileCache(CacheTableBase):
         # clear old data
         cls.clear()
 
+        from calm.dsl.builtins.models.constants import NutanixDB as NutanixDBConst
+
         ContextObj = get_context()
         stratos_config = ContextObj.get_stratos_config()
         if not stratos_config.get("stratos_status", False):
@@ -3769,6 +3771,20 @@ class NDB_ProfileCache(CacheTableBase):
                         "platform_data": json.dumps(profile),
                     }
                     cls.create_entry(**query_obj)
+
+                    if profile.get("type", "") == NutanixDBConst.PROFILE.SOFTWARE:
+                        for version in profile.get("versions", []):
+                            query_obj = {
+                                "name": version["name"],
+                                "uuid": version["id"],
+                                "account_name": entity["metadata"]["name"],
+                                "status": version.get("status", ""),
+                                "_type": NutanixDBConst.PROFILE.SOFTWARE_PROFILE_VERSION,
+                                "engine_type": version.get("engine_type", ""),
+                                "system_profile": version.get("system_profile", False),
+                                "platform_data": json.dumps(version),
+                            }
+                            cls.create_entry(**query_obj)
 
     @classmethod
     def get_entity_data(cls, name, **kwargs):
