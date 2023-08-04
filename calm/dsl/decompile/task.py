@@ -1,10 +1,14 @@
 import os
+import sys
 
 from calm.dsl.decompile.render import render_template
+from calm.dsl.decompile.ndb import get_schema_file_and_user_attrs
 from calm.dsl.decompile.ref import render_ref_template
 from calm.dsl.decompile.credential import get_cred_var_name
 from calm.dsl.decompile.file_handler import get_scripts_dir, get_scripts_dir_key
 from calm.dsl.builtins import TaskType
+from calm.dsl.db.table_config import AccountCache
+
 from calm.dsl.builtins.models.task import EXIT_CONDITION_MAP
 from calm.dsl.log import get_logging_handle
 
@@ -165,6 +169,20 @@ def render_task_template(
             "config": CONFIG_SPEC_MAP[config_name]["global_name"],
         }
         schema_file = "task_call_config.py.jinja2"
+    elif cls.type == "RT_OPERATION":
+        acc_uuid = cls.attrs["account_reference"]["uuid"]
+        account_cache_data = AccountCache.get_entity_data_using_uuid(uuid=acc_uuid)
+        if account_cache_data["provider_type"] == "NDB":
+            schema_file, user_attrs = get_schema_file_and_user_attrs(
+                cls.name, cls.attrs, account_cache_data["name"]
+            )
+        else:
+            LOG.error("Provider type not supported for RT operation")
+            sys.exit(
+                "Provider type {} not supported for RT operation".format(
+                    account_cache_data["provider_type"]
+                )
+            )
     elif cls.type == "DECISION":
         script_type = cls.attrs["script_type"]
         cls.attrs["script_file"] = create_script_file(
@@ -193,7 +211,7 @@ def render_task_template(
         schema_file = "task_vm_restart.py.jinja2"
     else:
         LOG.error("Task type does not match any known types")
-        sys.exit("Invalid task task")
+        sys.exit("Invalid task {}".format(cls.type))
 
     text = render_template(schema_file=schema_file, obj=user_attrs)
     return text.strip()

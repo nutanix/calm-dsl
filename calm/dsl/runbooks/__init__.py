@@ -5,6 +5,13 @@
 from calm.dsl.builtins.models.ref import ref, RefType
 from calm.dsl.builtins.models.calm_ref import Ref
 from calm.dsl.builtins.models.metadata import Metadata, MetadataType
+from calm.dsl.builtins.models.ndb import (
+    Database,
+    DatabaseServer,
+    TimeMachine,
+    Tag,
+    PostgresDatabaseOutputVariables,
+)
 from calm.dsl.builtins.models.credential import (
     basic_cred,
     secret_cred,
@@ -64,4 +71,9 @@ __all__ = [
     "RunbookService",
     "create_endpoint_payload",
     "create_runbook_payload",
+    "Database",
+    "DatabaseServer",
+    "TimeMachine",
+    "Tag",
+    "PostgresDatabaseOutputVariables",
 ]

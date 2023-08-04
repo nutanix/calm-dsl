@@ -6,7 +6,7 @@ import pytz
 from calm.dsl.log import get_logging_handle
 from calm.dsl.api.handle import get_api_client
 from .calm_ref import Ref
-from .constants import NutanixDB as NutanixDBConst
+from .constants import NutanixDB as NutanixDBConst, HIDDEN_SUFFIX
 from .helper import common as common_helper
 from .custom_entity import CustomEntity, OutputVariables
 
@@ -33,35 +33,37 @@ class DatabaseServer:
             """
             Database Server class for Postgres Create Action includes all field supported.
             Attributes supported for this class:
-                name: Name of the database server
-                password: Password of the database server
-                cluster: Cluster to use for the database server
-                software_profile: Software Profile to use for the database server
-                software_profile_version: Version of the Software Profile to use for the database server
-                compute_profile: Compute Profile to use for the database server
-                network_profile: Netwrok Profile to use for the database server
-                ip_address: Static IP address for  static network profile if choosen
-                ssh_public_key:  RSA based public key to use for the database server
-                description: Description of the database server
+                name: Name of the database server,
+                password: Password of the database server,
+                cluster: Cluster to use for the database server,
+                software_profile: Software Profile to use for the database server,
+                software_profile_version: Version of the Software Profile to use for the database server,
+                compute_profile: Compute Profile to use for the database server,
+                network_profile: Netwrok Profile to use for the database server,
+                ip_address: Static IP address for  static network profile if choosen,
+                ssh_public_key:  RSA based public key to use for the database server,
+                description: Description of the database server,
             """
 
             name = "Create_Postgres_DatabaseServer"
             DUPLICATE_KEY_MAP = {
-                "network_profile": "networkprofileid",
+                NutanixDBConst.Attrs.Profile.NETWORK_PROFILE: "networkprofileid",
             }
             FIELD_MAP = {
                 "name": "nodes__0__vmname",
                 "password": "vm_password",
-                "cluster": "nxclusterid",
-                "software_profile": "softwareprofileid",
-                "software_profile_version": "softwareprofileversionid",
-                "compute_profile": "computeprofileid",
-                "network_profile": "nodes__0__networkprofileid",
+                NutanixDBConst.Attrs.CLUSTER: "nxclusterid",
+                NutanixDBConst.Attrs.Profile.SOFTWARE_PROFILE: "softwareprofileid",
+                NutanixDBConst.Attrs.Profile.SOFTWARE_PROFILE_VERSION: "softwareprofileversionid",
+                NutanixDBConst.Attrs.Profile.COMPUTE_PROFILE: "computeprofileid",
+                NutanixDBConst.Attrs.Profile.NETWORK_PROFILE: "nodes__0__networkprofileid",
                 "ssh_public_key": "sshpublickey",
                 "description": "actionarguments__0__value",
                 "ip_address": "nodes__0__ip_infos__0__ip_addresses__0",
-                "description_actionargument_key": "actionarguments__0__name",  # Not visible to users
-                "ip_type": "nodes__0__ip_infos__0__ip_type",  # Not visible to users
+                "description_actionargument_key"
+                + HIDDEN_SUFFIX: "actionarguments__0__name",  # Not visible to users
+                "ip_type"
+                + HIDDEN_SUFFIX: "nodes__0__ip_infos__0__ip_type",  # Not visible to users
             }
 
             def pre_validate(self, account):
@@ -231,28 +233,28 @@ class DatabaseServer:
             """
             Database class for Postgres Clone Action includes all field supported
             Attributes supported for this class:
-                name: Name of the Postgres Instance
-                password: Password of the database server
-                cluster: Cluster to use for the database server
-                compute_profile: Compute Profile to use for the database server
-                network_profile: Netwrok Profile to use for the database server
-                ssh_public_key:  RSA based public key to use for the database server
+                name: Name of the Postgres Instance,
+                password: Password of the database server,
+                cluster: Cluster to use for the database server,
+                compute_profile: Compute Profile to use for the database server,
+                network_profile: Netwrok Profile to use for the database server,
+                ssh_public_key:  RSA based public key to use for the database server,
                 description: Description of the database server
             """
 
             name = "Clone_Postgres_DatabaseServer"
             DUPLICATE_KEY_MAP = {
-                "network_profile": "nodes__0__network_profile_id",
-                "cluster": "nodes__0__nx_cluster_id",
-                "compute_profile": "nodes__0__compute_profile_id",
+                NutanixDBConst.Attrs.Profile.NETWORK_PROFILE: "nodes__0__network_profile_id",
+                NutanixDBConst.Attrs.CLUSTER: "nodes__0__nx_cluster_id",
+                NutanixDBConst.Attrs.Profile.COMPUTE_PROFILE: "nodes__0__compute_profile_id",
                 "name": "nodes__0__vm_name",
             }
             FIELD_MAP = {
                 "name": "postgresql_info__0__vm_name",
                 "password": "vm_password",
-                "cluster": "nx_cluster_id",
-                "compute_profile": "compute_profile_id",
-                "network_profile": "network_profile_id",
+                NutanixDBConst.Attrs.CLUSTER: "nx_cluster_id",
+                NutanixDBConst.Attrs.Profile.COMPUTE_PROFILE: "compute_profile_id",
+                NutanixDBConst.Attrs.Profile.NETWORK_PROFILE: "network_profile_id",
                 "ssh_public_key": "ssh_public_key",
                 "description": "description",
                 "node_count": "node_count",
@@ -327,22 +329,22 @@ class Database:
             """
             Database class for Postgres Create Action includes all field supported
             Attributes supported for this class:
-                name: Name of the Postgres Instance
-                description: Description of the Postgres Instance
-                database_parameter_profile: Database Parameter Profile to use for Postgres Instance
-                initial_database_name: Intial Database name to use for Postgres Instance
-                initial_database_password: Intial Database password to use for Postgres Instance
-                listener_port: Listener Port to use for Postgres Instance
-                size: Size of the Postgres Instance
-                pre_create_script: Script to run before creating the Postgres Instance
-                post_create_script: Script to run after creating the Postgres Instance
+                name: Name of the Postgres Instance,
+                description: Description of the Postgres Instance,
+                database_parameter_profile: Database Parameter Profile to use for Postgres Instance,
+                initial_database_name: Intial Database name to use for Postgres Instance,
+                initial_database_password: Intial Database password to use for Postgres Instance,
+                listener_port: Listener Port to use for Postgres Instance,
+                size: Size of the Postgres Instance,
+                pre_create_script: Script to run before creating the Postgres Instance,
+                post_create_script: Script to run after creating the Postgres Instance,
             """
 
             name = "Create_Postgres_Database"
             FIELD_MAP = {
                 "name": "name",
                 "description": "description",
-                "database_parameter_profile": "dbparameterprofileid",
+                NutanixDBConst.Attrs.Profile.DATABASE_PARAMETER_PROFILE: "dbparameterprofileid",
                 "initial_database_name": "postgresql_info__0__database_names",
                 "initial_database_password": "postgresql_info__0__db_password",
                 "listener_port": "postgresql_info__0__listener_port",
@@ -379,11 +381,11 @@ class Database:
             """
             Database class for Postgres Delete Action includes all field supported
             Attributes supported for this class:
-                name: Name of the Postgres Instance
+                database: Ref of the Postgres Instance
             """
 
             name = "Delete_Postgres_Database"
-            FIELD_MAP = {"name": "id"}
+            FIELD_MAP = {NutanixDBConst.Attrs.DATABASE: "id"}
 
             def pre_validate(self, account):
                 """
@@ -410,16 +412,16 @@ class Database:
             """
             Database class for Postgres Restore from Time Machine Action includes all field supported
             Attributes supported for this class:
-                database: Name of the Postgres Instance
-                snapshot_with_timeStamp: Name of the snapshot along with TimeStamp (yyyy-mm-dd hh:mm:ss), Eg-> "era_auto_snapshot (2023-02-12 10:01:40)"
-                point in time: point in Time to Restore yyyy-mm-dd hh:mm:ss, Eg -> "2023-02-12 10:01:40"
-                time_zone: Time Zone of the snapshot/point in time (If not given defaults to system timezone)
+                database: Name of the Postgres Instance,
+                snapshot_with_timeStamp: Name of the snapshot along with TimeStamp (yyyy-mm-dd hh:mm:ss), Eg-> "era_auto_snapshot (2023-02-12 10:01:40)",
+                point in time: point in Time to Restore yyyy-mm-dd hh:mm:ss, Eg -> "2023-02-12 10:01:40",
+                time_zone: Time Zone of the snapshot/point in time (If not given defaults to system timezone),
             """
 
             name = "Restore_From_TimeMachine_Postgres_Database"
             FIELD_MAP = {
-                "database": "database_id",
-                "snapshot_with_timeStamp": "snapshot_id",
+                NutanixDBConst.Attrs.DATABASE: "database_id",
+                NutanixDBConst.Attrs.SNAPSHOT_WITH_TIMESTAMP: "snapshot_id",
                 "point_in_time": "user_pitr_timestamp",
                 "time_zone": "time_zone_pitr",
             }
@@ -529,19 +531,20 @@ class Database:
             """
             Database class for Postgres Snapshot Action includes all field supported
             Attributes supported for this class:
-                snapshot_name:           (String) Snapshot Name
-                remove_schedule_in_days: (Integer) Removal Schedule
-                time_machine:            (String) Time Machine Name
-                database:                (String) Database Name
+                snapshot_name:           (String) Snapshot Name,
+                remove_schedule_in_days: (Integer) Removal Schedule,
+                time_machine:            (String) Time Machine Name,
+                database:                (String) Database Name,
             """
 
             name = "Create_Snaphost_Postgres_Database"
             FIELD_MAP = {
                 "snapshot_name": "name",
-                "time_machine": "time_machine_id",
-                "database": "time_machine_id_from_database",
+                NutanixDBConst.Attrs.TIME_MACHINE: "time_machine_id",
+                NutanixDBConst.Attrs.DATABASE: "time_machine_id_from_database",
                 "remove_schedule_in_days": "remove_schedule_in_days",
-                "is_removal_configured": "is_removal_configured",
+                "is_removal_configured"
+                + HIDDEN_SUFFIX: "is_removal_configured",  # Not visible to users
             }
 
             def pre_validate(self, account):
@@ -605,12 +608,12 @@ class Database:
             """
             Database class for Postgres Clone Action includes all field supported
             Attributes supported for this class:
-                name: Name of the Postgres Instance
-                description: Description of the Postgres Instance
-                password: Password of the Postgres Instance
-                database_parameter_profile: Database Parameter Profile to use for Postgres Instance
-                pre_clone_cmd: Script to run before creating the Postgres Instance
-                post_clone_cmd: Script to run after creating the Postgres Instance
+                name: Name of the Postgres Instance,
+                description: Description of the Postgres Instance,
+                password: Password of the Postgres Instance,
+                database_parameter_profile: Database Parameter Profile to use for Postgres Instance,
+                pre_clone_cmd: Script to run before creating the Postgres Instance,
+                post_clone_cmd: Script to run after creating the Postgres Instance,
             """
 
             name = "Clone_Postgres_Database"
@@ -618,7 +621,7 @@ class Database:
             FIELD_MAP = {
                 "name": "name",
                 "description": "description",
-                "database_parameter_profile": "database_parameter_profile_id",
+                NutanixDBConst.Attrs.Profile.DATABASE_PARAMETER_PROFILE: "database_parameter_profile_id",
                 "password": "postgresql_info__0__db_password",
                 "pre_clone_cmd": "postgresql_info__0__pre_clone_cmd",
                 "post_clone_cmd": "postgresql_info__0__post_clone_cmd",
@@ -669,24 +672,24 @@ class TimeMachine:
             """
             TimeMachine class for Postgres Create Action includes all field supported
             Attributes supported for this class:
-                name: Name of the Time Machine
-                description: Description of the Time Machine
-                sla: SLA to use for the Time Machine
-                snapshottimeofday__hours: Hour of the day to take Snapshot
-                snapshottimeofday__minutes: Minute of the day to take Snapshot
-                snapshottimeofday__seconds: Second of the day to take Snapshot
-                snapshots_perday: Snapshots to take Per day
-                logbackup_interval: Log Backup Interval in minutes
-                weeklyschedule__dayofweek: Weekly Snapshot day of the week
-                monthlyschedule__dayofmonth: Monthly Snaphot day of the month
-                quartelyschedule__startmonth: Quarterly Snapshot start of the month
+                name: Name of the Time Machine,
+                description: Description of the Time Machine,
+                sla: SLA to use for the Time Machine,
+                snapshottimeofday__hours: Hour of the day to take Snapshot,
+                snapshottimeofday__minutes: Minute of the day to take Snapshot,
+                snapshottimeofday__seconds: Second of the day to take Snapshot,
+                snapshots_perday: Snapshots to take Per day,
+                logbackup_interval: Log Backup Interval in minutes,
+                weeklyschedule__dayofweek: Weekly Snapshot day of the week,
+                monthlyschedule__dayofmonth: Monthly Snaphot day of the month,
+                quartelyschedule__startmonth: Quarterly Snapshot start of the month,
             """
 
             name = "Create_Postgres_TimeMachine"
             FIELD_MAP = {
                 "name": "timemachineinfo__0__name",
                 "description": "timemachineinfo__0__description",
-                "sla": "timemachineinfo__0__slaid",
+                NutanixDBConst.Attrs.SLA: "timemachineinfo__0__slaid",
                 "snapshottimeofday__hours": "timemachineinfo__0__schedule__0__snapshottimeofday__0__hours",
                 "snapshottimeofday__minutes": "timemachineinfo__0__schedule__0__snapshottimeofday__0__minutes",
                 "snapshottimeofday__seconds": "timemachineinfo__0__schedule__0__snapshottimeofday__0__seconds",
@@ -768,22 +771,22 @@ class TimeMachine:
             """
             TimeMachine class for Postgres Clone Action includes all field supported
             Attributes supported for this class:
-                time_machine_name: Name of the Time Machine
-                snapshot_with_timeStamp: Name of the snapshot along with TimeStamp (yyyy-mm-dd hh:mm:ss), Eg-> "era_auto_snapshot (2023-02-12 10:01:40)"
-                point in time: point in Time to Restore yyyy-mm-dd hh:mm:ss, Eg -> "2023-02-12 10:01:40"
-                time_zone: Time Zone of the snapshot/point in time (If not given defaults to system timezone)
-                expiry_days: Number of days to expire
-                expiry_date_timezone : Timezone to be used for expiry date
-                delete_database: Boolean input for deletion of database
-                refresh_in_days: Number of days to refresh
-                refresh_time: Time at which refresh should trigger
-                refresh_date_timezone: Timezone for the refresh time
+                time_machine: Name of the Time Machine,
+                snapshot_with_timeStamp: Name of the snapshot along with TimeStamp (yyyy-mm-dd hh:mm:ss), Eg-> "era_auto_snapshot (2023-02-12 10:01:40)",
+                point in time: point in Time to Restore yyyy-mm-dd hh:mm:ss, Eg -> "2023-02-12 10:01:40",
+                time_zone: Time Zone of the snapshot/point in time (If not given defaults to system timezone),
+                expiry_days: Number of days to expire,
+                expiry_date_timezone : Timezone to be used for expiry date,
+                delete_database: Boolean input for deletion of database,
+                refresh_in_days: Number of days to refresh,
+                refresh_time: Time at which refresh should trigger,
+                refresh_date_timezone: Timezone for the refresh time,
             """
 
             name = "Clone_Postgres_TimeMachine"
             FIELD_MAP = {
-                "time_machine_name": "time_machine_id",
-                "snapshot_with_timeStamp": "snapshot_id",
+                NutanixDBConst.Attrs.TIME_MACHINE: "time_machine_id",
+                NutanixDBConst.Attrs.SNAPSHOT_WITH_TIMESTAMP: "snapshot_id",
                 "point_in_time": "user_pitr_timestamp",
                 "time_zone": "time_zone",
                 "expiry_days": "lcm_config__0__database_lcm_config__0__expiry_details__0__expire_in_days",
@@ -792,8 +795,10 @@ class TimeMachine:
                 "refresh_in_days": "lcm_config__0__database_lcm_config__0__refresh_details__0__refresh_in_days",
                 "refresh_time": "lcm_config__0__database_lcm_config__0__refresh_details__0__refresh_time",
                 "refresh_date_timezone": "lcm_config__0__database_lcm_config__0__refresh_details__0__refresh_date_timezone",
-                "schedule_data_refresh": "schedule_data_refresh",
-                "remove_schedule": "remove_schedule",
+                "schedule_data_refresh"
+                + HIDDEN_SUFFIX: "schedule_data_refresh",  # Not visible to users
+                "remove_schedule"
+                + HIDDEN_SUFFIX: "remove_schedule",  # Not visible to users
             }
 
             def pre_validate(self, account):
@@ -922,14 +927,14 @@ class Tag:
         """
         Tag class for Create Action includes all field supported
         Attributes supported for this class:
-            database_tags: array of NDB Database Tag Ref. Eg -> [ Ref.NutanixDB.Tag.Database(name1, value1), Ref.NutanixDB.Tag.Database(name=name2, value=value2) ]
-            time_machine_tags: array of NDB TimeMachine Tag Ref. Eg -> [ Ref.NutanixDB.Tag.TimeMachine(name=name1, value=value1), Ref.NutanixDB.Tag.TimeMachine(name2, value2) ]
+            database: array of NDB Database Tag Ref. Eg -> [ Ref.NutanixDB.Tag.Database(name1, value1), Ref.NutanixDB.Tag.Database(name=name2, value=value2) ],
+            time_machine: array of NDB TimeMachine Tag Ref. Eg -> [ Ref.NutanixDB.Tag.TimeMachine(name=name1, value=value1), Ref.NutanixDB.Tag.TimeMachine(name2, value2) ],
         """
 
         name = "Create_Tag"
         FIELD_MAP = {
-            "database_tags": "tags",
-            "time_machine_tags": "timemachineinfo__0__tags",
+            NutanixDBConst.Attrs.Tag.DATABASE: "tags",
+            NutanixDBConst.Attrs.Tag.TIME_MACHINE: "timemachineinfo__0__tags",
         }
 
         def pre_validate(self, account):
@@ -981,12 +986,12 @@ class Tag:
         """
         Tag class for Clone Action includes all field supported
         Attributes supported for this class:
-            tags: array of NDB Clone Tag Ref. Eg -> [ Ref.NutanixDB.Tag.Clone(name1, value1), Ref.NutanixDB.Tag.Clone(name=name2, value=value2) ]
+            clone: array of NDB Clone Tag Ref. Eg -> [ Ref.NutanixDB.Tag.Clone(name1, value1), Ref.NutanixDB.Tag.Clone(name=name2, value=value2) ]
         """
 
         name = "Clone_Tag"
         FIELD_MAP = {
-            "tags": "tags",
+            NutanixDBConst.Attrs.Tag.CLONE: "tags",
         }
 
         def pre_validate(self, account):

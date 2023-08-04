@@ -2,6 +2,7 @@ import json
 
 from calm.dsl.log import get_logging_handle
 from .variable import CalmVariable
+from .constants import HIDDEN_SUFFIX
 
 LOG = get_logging_handle(__name__)
 
@@ -37,7 +38,7 @@ class CustomEntity(object):
 
         self.field_values = dict()
         for field_name in kwargs:
-            if field_name not in self.FIELD_MAP:
+            if field_name not in self.FIELD_MAP or field_name.endswith(HIDDEN_SUFFIX):
                 raise Exception(
                     "field {} is not mapped as a property under {}".format(
                         field_name, self.name

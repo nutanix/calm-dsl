@@ -31,6 +31,9 @@ class SYSTEM_ACTIONS:
     SOFT_DELETE = "soft_delete"
 
 
+HIDDEN_SUFFIX = "__hidden"
+
+
 class NutanixDB:
     """Nutanix DB class constant for dsl models"""
 
@@ -73,3 +76,30 @@ class NutanixDB:
         """Supported Tag Constant for Nutanix DB models resource_type"""
 
         DATABASE = "Database"
+
+    class Attrs:
+        """NDB constant attrs"""
+
+        CLUSTER = "cluster"
+        TAGS = "tags"
+        DATABASE = "database"
+        SNAPSHOT_WITH_TIMESTAMP = "snapshot_with_timeStamp"
+        TIME_MACHINE = "time_machine"
+        SLA = "sla"
+
+        class Profile:
+            """Supported Profile for Nutanix DB models"""
+
+            SOFTWARE_PROFILE = "software_profile"
+            SOFTWARE_PROFILE_VERSION = "software_profile_version"
+            COMPUTE_PROFILE = "compute_profile"
+            NETWORK_PROFILE = "network_profile"
+            DATABASE_PARAMETER_PROFILE = "database_parameter_profile"
+
+        class Tag:
+            """Supported Tag Constant for Nutanix DB models"""
+
+            DATABASE = "database"
+            TIME_MACHINE = "time_machine"
+            CLONE = "clone"
+            DATABASE_SERVER = "database_server"
