@@ -44,7 +44,7 @@ LOG = get_logging_handle(__name__)
     default=False,
     help="Update cache before running command",
 )
-@click.version_option("3.6.1")
+@click.version_option("3.7.0")
 @click.pass_context
 def main(ctx, config_file, sync):
     """Calm CLI
