@@ -244,6 +244,12 @@ def create_account(client, account_payload, name=None, force_create=False):
                 LOG.error("public_images is not a valid parameter for create command")
                 sys.exit("Invalid argument public_images")
 
+        elif account_type == ACCOUNT.TYPE.VMWARE:
+            datacenter = account_data.get("datacenter", "")
+            if datacenter:
+                LOG.error("'datacenter' is not a valid parameter for create command")
+                sys.exit("Invalid parameter 'datacenter'")
+
     if name:
         account_payload["spec"]["name"] = name
         account_payload["metadata"]["name"] = name
@@ -813,14 +819,14 @@ def verify_account(account_name):
         LOG.error("Could not find the account {}".format(account_name))
         sys.exit(-1)
 
-    LOG.info("Verifying Account")
-    res, err = client.account.verify(account_uuid)
+    LOG.info("Verifying account '{}'".format(account_name))
+    _, err = client.account.verify(account_uuid)
 
     if err:
         LOG.exception("[{}] - {}".format(err["code"], err["error"]))
-        sys.exit(-1)
+        sys.exit("Account verification failed")
 
-    LOG.info("Account sucessfully verified")
+    LOG.info("Account '{}' sucessfully verified".format(account_name))
 
 
 def update_account(client, account_payload, name=None, updated_name=None):
@@ -936,6 +942,20 @@ def update_account_from_dsl(client, account_file, name=None, updated_name=None):
                     )
 
                 account_data["public_images"] = final_public_images
+
+        elif account_type == ACCOUNT.TYPE.VMWARE:
+            datacenter = account_data.get("datacenter", "")
+            if datacenter:
+                vmwProvider = get_provider(PROVIDER.TYPE.VMWARE)
+                vmwResource = vmwProvider.get_api_obj()
+                verifiedDatacenters = vmwResource.datacenters(account_uuid)
+                if datacenter not in verifiedDatacenters:
+                    LOG.error(
+                        "Invalid datacenter '{}' found. Please select one of {}".format(
+                            datacenter, json.dumps(verifiedDatacenters)
+                        )
+                    )
+                    sys.exit("Invalid datacenter provided")
 
     return update_account(client, account_payload, name=name, updated_name=updated_name)
 

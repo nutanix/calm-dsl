@@ -103,6 +103,9 @@ class VCenterBase:
     def template_defaults(self, *args, **kwargs):
         raise NotImplementedError("template_defaults call not implemented")
 
+    def datacenters(self, *args, **kwargs):
+        raise NotImplementedError("datacenter call not implemented")
+
 
 class VCenterV1(VCenterBase):
     """vmware api object for calm_version >= 3.5.0"""
@@ -111,6 +114,20 @@ class VCenterV1(VCenterBase):
 
     def __init__(self, connection):
         self.connection = connection
+
+    def datacenters(self, account_id):
+        Obj = get_resource_api(vmw.DATACENTER, self.connection)
+        payload = {"filter": "account_uuid=={};".format(account_id)}
+        res, err = Obj.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        datacenters = []
+        for entity in res["entities"]:
+            datacenters.append(entity["status"]["resources"]["name"])
+
+        return datacenters
 
     def hosts(self, account_id):
         Obj = get_resource_api(vmw.HOST, self.connection)

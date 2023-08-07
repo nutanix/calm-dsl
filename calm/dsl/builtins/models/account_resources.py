@@ -102,12 +102,15 @@ class AccountResources:
             )
 
     class Vmware:
-        def __new__(cls, username, password, server, port, price_items):
+        def __new__(
+            cls, username, password, server, port, price_items, datacenter=None
+        ):
             return vmware_account(
                 username=username,
                 password=password,
                 server=server,
                 port=str(port),
+                datacenter=datacenter,
                 price_items=price_items,
             )
 

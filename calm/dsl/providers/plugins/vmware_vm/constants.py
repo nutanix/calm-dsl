@@ -17,6 +17,7 @@ class VCENTER:
     TEMPLATE_DEFS = ("vmware/{}/accounts/".format(VERSION)) + "{}/templates"
     FILE_PATHS = "vmware/{}/file_paths".format(VERSION)
     TAGS = "vmware/{}/vm_categories".format(VERSION)
+    DATACENTER = "vmware/{}/datacenter".format(VERSION)
     POWER_STATE = {
         "POWER_ON": "poweron",
         "POWER_OFF": "poweroff",

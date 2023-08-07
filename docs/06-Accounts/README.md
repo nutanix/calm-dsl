@@ -275,6 +275,7 @@ Note:
             password=PASSWORD,
             server=SERVER,
             port=PORT,
+            datacenter=DATACENTER,
             price_items={"vcpu": 0.02, "memory": 0.01, "storage": 0.0003},
         )
     ```
@@ -284,7 +285,11 @@ Note:
 - Use `password` for defining password.
 - Use `server` to define server ip.
 - Use `port` to define port.
+- Use `datacenter` to define datacenter.
 - Use `price_items` to define resource usage costs.
+
+Note:
+- `datacenter` parameter is only allowed for update of vmware accounts.
 
 </br>
 
