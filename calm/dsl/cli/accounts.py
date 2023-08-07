@@ -16,7 +16,11 @@ from calm.dsl.builtins import (
 from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.config import get_context
 from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
-from .providers import update_custom_provider, get_custom_provider, create_custom_provider
+from .providers import (
+    update_custom_provider,
+    get_custom_provider,
+    create_custom_provider,
+)
 from calm.dsl.providers import get_provider
 from .resource_types import update_resource_types, create_resource_type
 
@@ -914,22 +918,20 @@ def update_account_from_dsl(client, account_file, name=None, updated_name=None):
                 gcpResource = gcpProvider.get_api_obj()
 
                 payload = {
-                    "filter": "account_uuid=={};public_only==true".format(
-                        account_uuid
-                    )
+                    "filter": "account_uuid=={};public_only==true".format(account_uuid)
                 }
                 images_name_data_map = gcpResource.images(payload)
 
                 final_public_images = []
                 for pi in public_images:
                     if not images_name_data_map.get(pi):
-                        LOG.error("Invalid public image provided {}". format(pi))
+                        LOG.error("Invalid public image provided {}".format(pi))
                         sys.exit("Invalid public image")
 
                     final_public_images.append(
                         {
                             "selfLink": images_name_data_map[pi]["selfLink"],
-                            "diskSizeGb": images_name_data_map[pi]["diskSizeGb"]
+                            "diskSizeGb": images_name_data_map[pi]["diskSizeGb"],
                         }
                     )
 

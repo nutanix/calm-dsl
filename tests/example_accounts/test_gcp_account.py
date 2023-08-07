@@ -35,6 +35,9 @@ class test_gcp_account_123321(Account):
         auth_provider_cert_url=AUTH_PROVIDER_x509_CERT_URL,
         client_cert_url=CLIENT_x509_CERT_URL,
         regions=["asia-east1"],
-        public_images=[PUBLIC_IMAGE_1, PUBLIC_IMAGE_2],     # Only allowed for update commands
-        gke_config={"server": SERVER_IP, "port": PORT},     # GKE configuration
+        public_images=[
+            PUBLIC_IMAGE_1,
+            PUBLIC_IMAGE_2,
+        ],  # Only allowed for update commands
+        gke_config={"server": SERVER_IP, "port": PORT},  # GKE configuration
     )
