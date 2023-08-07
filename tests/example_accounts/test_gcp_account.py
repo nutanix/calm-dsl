@@ -17,7 +17,6 @@ SERVER_IP = "server_ip"
 PORT = 944
 PUBLIC_IMAGE_1 = "PUBLIC_IMAGE_1"
 PUBLIC_IMAGE_2 = "PUBLIC_IMAGE_2"
-
 SYNC_INTERVAL_SECS = 3900
 
 
@@ -35,7 +34,7 @@ class test_gcp_account_123321(Account):
         auth_uri=AUTH_URI,
         auth_provider_cert_url=AUTH_PROVIDER_x509_CERT_URL,
         client_cert_url=CLIENT_x509_CERT_URL,
-        regions=["eu-central-1"],
-        public_images=[PUBLIC_IMAGE_1, PUBLIC_IMAGE_2],
-        gke_config={"server": SERVER_IP, "port": PORT},
+        regions=["asia-east1"],
+        public_images=[PUBLIC_IMAGE_1, PUBLIC_IMAGE_2],     # Only allowed for update commands
+        gke_config={"server": SERVER_IP, "port": PORT},     # GKE configuration
     )

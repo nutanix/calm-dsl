@@ -251,6 +251,11 @@ Describes an account.
 - Use `public_images` to define public images.
 - Use `gke_config` to define gke configuration.
 
+Note:
+- `public_images` parameter is only allowed for update of gcp accounts.
+- Use `gke_config` parameter for gke enabled gcp accounts
+
+
 </br>
 
 ### VMware Account Model

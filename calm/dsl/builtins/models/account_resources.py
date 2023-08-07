@@ -73,7 +73,7 @@ class AccountResources:
             auth_uri,
             auth_provider_cert_url,
             client_cert_url,
-            gke_config,
+            gke_config={},
             public_images=[],
             regions=[],
         ):

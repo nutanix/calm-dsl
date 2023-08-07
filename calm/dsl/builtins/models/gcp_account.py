@@ -25,9 +25,6 @@ class GcpAccountType(EntityType):
         region_list = cdict.pop("regions", None)
         cdict["regions"] = [{"name": rn} for rn in region_list]
 
-        public_images = cdict.pop("public_images", {})
-        cdict["public_images"] = [{"selfLink": image} for image in public_images]
-
         if not cdict.get("gke_config"):
             cdict.pop("gke_config")
 

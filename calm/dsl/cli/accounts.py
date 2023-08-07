@@ -17,10 +17,12 @@ from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.config import get_context
 from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
 from .providers import update_custom_provider, get_custom_provider, create_custom_provider
+from calm.dsl.providers import get_provider
 from .resource_types import update_resource_types, create_resource_type
 
 from .utils import get_name_query, get_states_filter, highlight_text, insert_uuid
 from .constants import ACCOUNT
+from calm.dsl.constants import PROVIDER
 from calm.dsl.store import Version
 from calm.dsl.tools import get_module_from_file
 from calm.dsl.log import get_logging_handle
@@ -226,6 +228,17 @@ def create_account(client, account_payload, name=None, force_create=False):
                 name=name,
             )
         account_payload = account_payload.get("account", {})
+
+    else:
+        account_resources = account_payload.get("spec", {}).get("resources", {})
+        account_type = account_resources.get("type", "")
+        account_data = account_resources.get("data", "")
+
+        if account_type == ACCOUNT.TYPE.GCP:
+            public_images = account_data.get("public_images", [])
+            if public_images:
+                LOG.error("public_images is not a valid parameter for create command")
+                sys.exit("Invalid argument public_images")
 
     if name:
         account_payload["spec"]["name"] = name
@@ -888,6 +901,39 @@ def update_account_from_dsl(client, account_file, name=None, updated_name=None):
         account_payload["spec"]["resources"]["data"]["provider_reference"][
             "uuid"
         ] = provider["metadata"]["uuid"]
+
+    else:
+        account_resources = account_payload.get("spec", {}).get("resources", {})
+        account_type = account_resources.get("type", "")
+        account_data = account_resources.get("data", "")
+
+        if account_type == ACCOUNT.TYPE.GCP:
+            public_images = account_data.get("public_images", [])
+            if public_images:
+                gcpProvider = get_provider(PROVIDER.TYPE.GCP)
+                gcpResource = gcpProvider.get_api_obj()
+
+                payload = {
+                    "filter": "account_uuid=={};public_only==true".format(
+                        account_uuid
+                    )
+                }
+                images_name_data_map = gcpResource.images(payload)
+
+                final_public_images = []
+                for pi in public_images:
+                    if not images_name_data_map.get(pi):
+                        LOG.error("Invalid public image provided {}". format(pi))
+                        sys.exit("Invalid public image")
+
+                    final_public_images.append(
+                        {
+                            "selfLink": images_name_data_map[pi]["selfLink"],
+                            "diskSizeGb": images_name_data_map[pi]["diskSizeGb"]
+                        }
+                    )
+
+                account_data["public_images"] = final_public_images
 
     return update_account(client, account_payload, name=name, updated_name=updated_name)
 

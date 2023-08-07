@@ -101,8 +101,7 @@ class GCP:
         res = res.json()
         for entity in res["entities"]:
             name = entity["status"]["resources"]["name"]
-            selfLink = entity["status"]["resources"]["selfLink"]
-            entity_map[name] = selfLink
+            entity_map[name] = entity["status"]["resources"]
 
         return entity_map
 
@@ -118,17 +117,12 @@ class GCP:
         for entity in public_images:
             selfLink = entity["selfLink"]
             name = selfLink[selfLink.rindex("/") + 1 :]  # noqa
-            public_image_map[name] = selfLink
+            public_image_map[name] = entity
 
         return public_image_map
 
-    def images(self, account_id, zone):
+    def images(self, payload):
         Obj = get_resource_api(gcp.DISK_IMAGES, self.connection)
-        payload = {
-            "filter": "account_uuid=={};zone=={};unused==true;private_only==true".format(
-                account_id, zone
-            )
-        }
         res, err = Obj.list(payload)
 
         if err:
@@ -138,8 +132,7 @@ class GCP:
         res = res.json()
         for entity in res["entities"]:
             name = entity["status"]["resources"]["name"]
-            selfLink = entity["status"]["resources"]["selfLink"]
-            entity_map[name] = selfLink
+            entity_map[name] = entity["status"]["resources"]
 
         return entity_map
 
@@ -151,7 +144,13 @@ class GCP:
         image_map = {}
         image_map.update(self.configured_public_images(account_id))
         image_map.update(self.snapshots(account_id, zone))
-        image_map.update(self.images(account_id, zone))
+
+        private_images_payload = {
+            "filter": "account_uuid=={};zone=={};unused==true;private_only==true".format(
+                account_id, zone
+            )
+        }
+        image_map.update(self.images(private_images_payload))
 
         return image_map
 
@@ -568,7 +567,7 @@ def get_disks(gcp_obj, account_id, zone):
 
             else:
                 source_image = image_names[ind - 1]
-                source_image_link = source_image_map[source_image]
+                source_image_link = source_image_map[source_image]["selfLink"]
                 click.echo("{} selected".format(highlight_text(source_image)))
                 break
 
@@ -699,7 +698,7 @@ def get_disks(gcp_obj, account_id, zone):
 
                     else:
                         source_image = image_names[ind - 1]
-                        source_image_link = source_image_map[source_image]
+                        source_image_link = source_image_map[source_image]["selfLink"]
                         click.echo("{} selected".format(highlight_text(source_image)))
                         break
 
