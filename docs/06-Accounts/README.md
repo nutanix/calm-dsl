@@ -33,7 +33,7 @@ Allows compiling account from account dsl file.
 
 Allows updating account from account dsl file.
 
-`calm update account --file="FILEPATH" --name="ACCOUNT_NAME"`
+`calm update account ACCOUNT_NAME --file="FILEPATH"`
 
 #### Flags:
 

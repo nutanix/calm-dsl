@@ -222,6 +222,7 @@ def _compile_account_command(account_file, out):
 
 
 @update.command("account", feature_min_version="3.0.0")
+@click.argument("account_name")
 @click.option(
     "--file",
     "-f",
@@ -230,11 +231,10 @@ def _compile_account_command(account_file, out):
     required=True,
     help="Path of Account file to upload",
 )
-@click.option("--name", "-n", default=None, required=True, help="Account name")
 @click.option(
     "--updated-name", "-un", default=None, required=False, help="Updated account name"
 )
-def _update_account_command(account_file, name, updated_name):
+def _update_account_command(account_file, account_name, updated_name):
     """Updates an account"""
 
-    update_account_command(account_file, name, updated_name)
+    update_account_command(account_file, account_name, updated_name)

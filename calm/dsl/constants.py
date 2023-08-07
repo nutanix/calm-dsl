@@ -144,6 +144,15 @@ class ACCOUNT:
         CUSTOM_PROVIDER = "custom_provider"
 
 
+class PROVIDER:
+    class TYPE:
+        GCP = "GCP_VM"
+        AZURE = "AZURE_VM"
+        AHV = "AHV_VM"
+        VMWARE = "VMWARE_VM"
+        AWS = "AWS_VM"
+
+
 class QUOTA(object):
     class STATE(object):
         ENABLED = "enabled"

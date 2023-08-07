@@ -141,13 +141,18 @@ class ACCOUNT:
         ACTIVE = "ACTIVE"
         UNSAVED = "UNSAVED"
 
-    class TYPES:
+    class TYPE:
+        AHV = "nutanix_pc"
         AWS = "aws"
-        AHV = "nutanix"
-        KUBERNETES = "k8s"
+        AWS_C2S = "aws_govcloud"
         AZURE = "azure"
         GCP = "gcp"
         VMWARE = "vmware"
+        K8S_KARBON = "k8s_karbon"
+        K8S_VANILLA = "k8s_vanilla"
+        CREDENTIAL_PROVIDER = "credential_provider"
+        NDB = "NDB"
+        CUSTOM_PROVIDER = "custom_provider"
 
 
 class SINGLE_INPUT:

@@ -6,7 +6,7 @@ import arrow
 import click
 
 from calm.dsl.api import get_api_client
-from .providers import get_provider
+from .providers import get_custom_provider
 
 from calm.dsl.log import get_logging_handle
 
@@ -44,7 +44,7 @@ def update_resource_types(
     uuid = resource_type["metadata"]["uuid"]
     spec_version = resource_type["metadata"]["spec_version"]
 
-    provider = get_provider(updated_name or name)
+    provider = get_custom_provider(updated_name or name)
 
     resource_type_resources["provider_reference"]["uuid"] = provider["metadata"]["uuid"]
 

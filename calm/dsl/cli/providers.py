@@ -17,7 +17,7 @@ from calm.dsl.log import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-def get_provider(name):
+def get_custom_provider(name):
     """returns provider get call data"""
 
     client = get_api_client()
@@ -29,7 +29,7 @@ def get_provider(name):
     return res.json()
 
 
-def update_provider(provider_payload, name=None, updated_name=None):
+def update_custom_provider(provider_payload, name=None, updated_name=None):
     """Updates a provider"""
 
     client = get_api_client()
@@ -43,7 +43,7 @@ def update_provider(provider_payload, name=None, updated_name=None):
     provider_resources = provider_payload["spec"]["resources"]
     provider_name = provider_payload["spec"]["name"]
 
-    provider = get_provider(name=name)
+    provider = get_custom_provider(name=name)
     uuid = provider["metadata"]["uuid"]
     spec_version = provider["metadata"]["spec_version"]
 
@@ -61,7 +61,7 @@ def update_provider(provider_payload, name=None, updated_name=None):
     return client.provider.update(uuid, provider_payload)
 
 
-def create_provider(provider_payload, name):
+def create_custom_provider(provider_payload, name):
     """
     creates provider
 
@@ -85,10 +85,10 @@ def create_provider(provider_payload, name):
     LOG.info("Provider Created")
 
 
-def describe_provider(provider_name, out):
+def describe_custom_provider(provider_name, out):
     """Displays provider data"""
 
-    provider = get_provider(provider_name)
+    provider = get_custom_provider(provider_name)
 
     if out == "json":
         provider.pop("status", None)

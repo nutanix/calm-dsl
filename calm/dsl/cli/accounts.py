@@ -16,7 +16,7 @@ from calm.dsl.builtins import (
 from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.config import get_context
 from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
-from .providers import update_provider, get_provider, create_provider
+from .providers import update_custom_provider, get_custom_provider, create_custom_provider
 from .resource_types import update_resource_types, create_resource_type
 
 from .utils import get_name_query, get_states_filter, highlight_text, insert_uuid
@@ -217,7 +217,7 @@ def create_account(client, account_payload, name=None, force_create=False):
     # For custom_provider type we create provider and resource_type before creating account
     if account_type == "custom_provider":
         if account_payload["provider"]:
-            create_provider(
+            create_custom_provider(
                 provider_payload=account_payload.get("provider", {}), name=name
             )
         if account_payload["resource_type"]:
@@ -867,12 +867,12 @@ def update_account_from_dsl(client, account_file, name=None, updated_name=None):
         .get("type", "")
     )
 
-    # if is is a credential provider account
-    if account_type == "custom_provider":
-        account = get_account(client, name)
-        account_uuid = account["metadata"]["uuid"]
+    account = get_account(client, name)
+    account_uuid = account["metadata"]["uuid"]
 
-        update_provider(
+    # if is is a credential provider account
+    if account_type == ACCOUNT.TYPE.CUSTOM_PROVIDER:
+        update_custom_provider(
             provider_payload=account_payload["provider"],
             name=name,
             updated_name=updated_name,
@@ -884,7 +884,7 @@ def update_account_from_dsl(client, account_file, name=None, updated_name=None):
             updated_name=updated_name,
         )
         account_payload = account_payload.get("account", {})
-        provider = get_provider(updated_name or name)
+        provider = get_custom_provider(updated_name or name)
         account_payload["spec"]["resources"]["data"]["provider_reference"][
             "uuid"
         ] = provider["metadata"]["uuid"]

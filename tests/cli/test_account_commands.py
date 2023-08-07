@@ -325,7 +325,7 @@ class TestAccountCommands:
             [
                 "update",
                 "account",
-                "--name={}".format(self.created_dsl_account_name),
+                self.created_dsl_account_name,
                 "--file={}".format(update_account_file_path),
                 "--updated-name={}".format(self.updated_account_name),
             ],

@@ -3,7 +3,7 @@ import click
 from calm.dsl.log import get_logging_handle
 
 from .main import describe
-from .providers import describe_provider
+from .providers import describe_custom_provider
 
 LOG = get_logging_handle(__name__)
 
@@ -21,4 +21,4 @@ LOG = get_logging_handle(__name__)
 def _describe_provider(provider_name, out):
     """Describe a provider"""
 
-    describe_provider(provider_name, out)
+    describe_custom_provider(provider_name, out)
