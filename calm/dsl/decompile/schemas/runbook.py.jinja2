@@ -5,6 +5,7 @@ import os
 import json
 from calm.dsl.runbooks import *
 from calm.dsl.runbooks import CalmEndpoint as Endpoint, RunbookTask as CalmTask, RunbookVariable as CalmVariable
+from calm.dsl.builtins import CalmTask as CalmVarTask
 
 {%- if obj.endpoints %}
 # Endpoints

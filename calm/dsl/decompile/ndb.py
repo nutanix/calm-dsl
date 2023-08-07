@@ -338,19 +338,19 @@ rt_action_class_map = {
 
 
 def get_schema_file_and_user_attrs(task_name, attrs, account_name):
-    resource_type_uuid = attrs.get("resource_type_reference", {}).get("uuid", "")
-    action_uuid = attrs.get("action_reference", {}).get("uuid", "")
-    resource_type_cached_data = ResourceTypeCache.get_entity_data_using_uuid(
-        uuid=resource_type_uuid
+    resource_type_name = attrs.get("resource_type_reference", {}).get("name", "")
+    action_name = attrs.get("action_reference", {}).get("name", "")
+    resource_type_cached_data = ResourceTypeCache.get_entity_data(
+        name=resource_type_name, provider_name="NDB"
     )
     if not resource_type_cached_data:
         LOG.error("resource_type not found in NDB provider")
         sys.exit(
-            "resource_type uuid {} not found in NDB provider".format(resource_type_uuid)
+            "resource_type {} not found in NDB provider".format(resource_type_name)
         )
 
     for action in resource_type_cached_data["action_list"]:
-        if action_uuid == action["uuid"]:
+        if action_name == action["name"]:
             rt_task = action["runbook"]["task_definition_list"][1]["name"]
             modified_rt_task = "-".join(rt_task.lower().split())
             if (
@@ -374,12 +374,12 @@ def get_schema_file_and_user_attrs(task_name, attrs, account_name):
             )
 
     LOG.error(
-        "No action uuid {} found in resource type {}".format(
-            action_uuid, resource_type_cached_data["name"]
+        "No action  {} found in resource type {}".format(
+            action_name, resource_type_cached_data["name"]
         )
     )
     sys.exit(
-        "No action uuid {} found in resource type {}".format(
-            action_uuid, resource_type_cached_data["name"]
+        "No action {} found in resource type {}".format(
+            action_name, resource_type_cached_data["name"]
         )
     )

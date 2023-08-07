@@ -19,6 +19,7 @@ RB_FILES = [
     "vm_restart.json",
     "task_tree_runbook.json",
     "ndb_task.json",
+    "fetch_http_var.json",
 ]
 
 

@@ -94,6 +94,15 @@ def render_task_template(
         elif scaling_type == "SCALEIN":
             schema_file = "task_scaling_scalein.py.jinja2"
     elif cls.type == "HTTP":
+        user_attrs["calm_var_task"] = False
+        if "Runbook" in entity_context:
+            if user_attrs.get("attrs", {}).get("url", ""):
+
+                # For runbook decompile we are using the RunbookTask as CalmTask
+                # But for this case since url is present ( it is the base CalmTask )
+                # we import this as CalmVarTask
+                user_attrs["calm_var_task"] = True
+
         attrs = cls.attrs
         user_attrs["headers"] = {}
         user_attrs["secret_headers"] = {}
@@ -170,19 +179,15 @@ def render_task_template(
         }
         schema_file = "task_call_config.py.jinja2"
     elif cls.type == "RT_OPERATION":
-        acc_uuid = cls.attrs["account_reference"]["uuid"]
-        account_cache_data = AccountCache.get_entity_data_using_uuid(uuid=acc_uuid)
-        if account_cache_data["provider_type"] == "NDB":
+        acc_name = cls.attrs["account_reference"]["name"]
+        tag = cls.attrs.get("tag", "")
+        if tag == "Database":
             schema_file, user_attrs = get_schema_file_and_user_attrs(
-                cls.name, cls.attrs, account_cache_data["name"]
+                cls.name, cls.attrs, acc_name
             )
         else:
-            LOG.error("Provider type not supported for RT operation")
-            sys.exit(
-                "Provider type {} not supported for RT operation".format(
-                    account_cache_data["provider_type"]
-                )
-            )
+            LOG.error("Tag {} not supported for RT operation".format(tag))
+            sys.exit("Tag {} not supported for RT operation".format(tag))
     elif cls.type == "DECISION":
         script_type = cls.attrs["script_type"]
         cls.attrs["script_file"] = create_script_file(

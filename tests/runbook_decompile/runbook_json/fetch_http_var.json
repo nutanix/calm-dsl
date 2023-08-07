@@ -1,0 +1,270 @@
+{
+    "status": {
+        "description": "",
+        "message_list": [],
+        "name": "test_var_fetch",
+        "state": "ACTIVE",
+        "critical": false,
+        "attrs": {},
+        "resources": {
+            "endpoints_information": [],
+            "type": "workflow",
+            "endpoint_definition_list": [],
+            "credential_definition_list": [],
+            "runbook": {
+                "task_definition_list": [
+                    {
+                        "retries": "0",
+                        "description": "",
+                        "type": "DAG",
+                        "uuid": "c511ba57-87ca-67aa-1031-c09166bd5a12",
+                        "child_tasks_local_reference_list": [
+                            {
+                                "kind": "app_task",
+                                "name": "Task 1",
+                                "uuid": "229bad5b-eafe-6e27-c3f2-f9296af64a9f"
+                            }
+                        ],
+                        "state": "ACTIVE",
+                        "attrs": {
+                            "edges": [],
+                            "type": ""
+                        },
+                        "timeout_secs": "0",
+                        "inherit_target": false,
+                        "message_list": [],
+                        "variable_list": [],
+                        "name": "30b67a13_dag"
+                    },
+                    {
+                        "target_any_local_reference": {
+                            "kind": "app_endpoint",
+                            "name": "ep1",
+                            "uuid": "a738143a-5ad3-eb48-49c4-4db83173a213"
+                        },
+                        "retries": "0",
+                        "description": "",
+                        "type": "HTTP",
+                        "uuid": "229bad5b-eafe-6e27-c3f2-f9296af64a9f",
+                        "child_tasks_local_reference_list": [],
+                        "state": "ACTIVE",
+                        "attrs": {
+                            "expected_response_params": [
+                                {
+                                    "status": "SUCCESS",
+                                    "code": 200,
+                                    "type": ""
+                                }
+                            ],
+                            "relative_url": "/a/b/c",
+                            "request_body": "",
+                            "retry_count": 1,
+                            "url": "",
+                            "response_paths": {
+                                "k1": "$"
+                            },
+                            "retry_interval": 10,
+                            "proxy_type": "",
+                            "headers": [],
+                            "authentication": {
+                                "type": "none"
+                            },
+                            "tls_verify": false,
+                            "content_type": "application/json",
+                            "connection_timeout": 120,
+                            "type": "",
+                            "method": "POST"
+                        },
+                        "timeout_secs": "0",
+                        "inherit_target": false,
+                        "message_list": [],
+                        "variable_list": [],
+                        "name": "Task 1"
+                    }
+                ],
+                "description": "",
+                "message_list": [],
+                "uuid": "55b69db4-39c0-662e-cbfb-5d16acc1dbaa",
+                "state": "ACTIVE",
+                "variable_list": [
+                    {
+                        "regex": {},
+                        "val_type": "STRING",
+                        "is_mandatory": false,
+                        "description": "",
+                        "data_type": "BASE",
+                        "message_list": [],
+                        "uuid": "cda93e74-a3d7-f864-0211-b74ab2f9aa83",
+                        "value": "",
+                        "label": "",
+                        "state": "ACTIVE",
+                        "attrs": {
+                            "type": "LOCAL"
+                        },
+                        "editables": {
+                            "value": true
+                        },
+                        "is_hidden": false,
+                        "type": "HTTP_LOCAL",
+                        "options": {
+                            "type": "HTTP",
+                            "attrs": {
+                                "expected_response_params": [
+                                    {
+                                        "status": "SUCCESS",
+                                        "code": 200,
+                                        "type": ""
+                                    }
+                                ],
+                                "request_body": "",
+                                "retry_count": 1,
+                                "url": "http://localhost:9440/api/nutanix/v3/groups/",
+                                "response_paths": {
+                                    "var1": "$"
+                                },
+                                "retry_interval": 1,
+                                "proxy_type": "",
+                                "headers": [],
+                                "authentication": {
+                                    "type": "none"
+                                },
+                                "tls_verify": false,
+                                "content_type": "application/json",
+                                "connection_timeout": 120,
+                                "type": "HTTP",
+                                "method": "GET"
+                            }
+                        },
+                        "name": "var1"
+                    }
+                ],
+                "main_task_local_reference": {
+                    "kind": "app_task",
+                    "name": "30b67a13_dag",
+                    "uuid": "c511ba57-87ca-67aa-1031-c09166bd5a12"
+                },
+                "name": "b8b612be_runbook"
+            }
+        }
+    },
+    "spec": {
+        "name": "test_var_fetch",
+        "resources": {
+            "endpoint_definition_list": [],
+            "credential_definition_list": [],
+            "runbook": {
+                "main_task_local_reference": {
+                    "kind": "app_task",
+                    "uuid": "c511ba57-87ca-67aa-1031-c09166bd5a12"
+                },
+                "task_definition_list": [
+                    {
+                        "attrs": {
+                            "edges": []
+                        },
+                        "type": "DAG",
+                        "name": "30b67a13_dag",
+                        "child_tasks_local_reference_list": [
+                            {
+                                "kind": "app_task",
+                                "uuid": "229bad5b-eafe-6e27-c3f2-f9296af64a9f"
+                            }
+                        ],
+                        "uuid": "c511ba57-87ca-67aa-1031-c09166bd5a12"
+                    },
+                    {
+                        "target_any_local_reference": {
+                            "kind": "app_endpoint",
+                            "uuid": "a738143a-5ad3-eb48-49c4-4db83173a213",
+                            "name": "ep1"
+                        },
+                        "uuid": "229bad5b-eafe-6e27-c3f2-f9296af64a9f",
+                        "child_tasks_local_reference_list": [],
+                        "attrs": {
+                            "response_paths": {
+                                "k1": "$"
+                            },
+                            "expected_response_params": [
+                                {
+                                    "status": "SUCCESS",
+                                    "code": "200"
+                                }
+                            ],
+                            "method": "POST",
+                            "content_type": "application/json",
+                            "relative_url": "/a/b/c"
+                        },
+                        "type": "HTTP",
+                        "variable_list": [],
+                        "name": "Task 1"
+                    }
+                ],
+                "name": "b8b612be_runbook",
+                "variable_list": [
+                    {
+                        "val_type": "STRING",
+                        "name": "var1",
+                        "data_type": "BASE",
+                        "uuid": "cda93e74-a3d7-f864-0211-b74ab2f9aa83",
+                        "label": "",
+                        "attrs": {
+                            "type": "LOCAL"
+                        },
+                        "editables": {
+                            "value": true
+                        },
+                        "is_hidden": false,
+                        "type": "HTTP_LOCAL",
+                        "options": {
+                            "type": "HTTP",
+                            "attrs": {
+                                "expected_response_params": [
+                                    {
+                                        "status": "SUCCESS",
+                                        "code": "200"
+                                    }
+                                ],
+                                "headers": [],
+                                "url": "http://localhost:9440/api/nutanix/v3/groups/",
+                                "response_paths": {
+                                    "var1": "$"
+                                },
+                                "retry_interval": 1,
+                                "retry_count": 1,
+                                "authentication": {
+                                    "type": "none"
+                                },
+                                "content_type": "application/json",
+                                "connection_timeout": 120,
+                                "type": "HTTP",
+                                "method": "GET"
+                            }
+                        },
+                        "description": ""
+                    }
+                ],
+                "uuid": "55b69db4-39c0-662e-cbfb-5d16acc1dbaa"
+            }
+        }
+    },
+    "api_version": "3.0",
+    "metadata": {
+        "last_update_time": "1691148848709588",
+        "use_categories_mapping": false,
+        "kind": "runbook",
+        "name": "test_var_fetch",
+        "project_reference": {
+            "kind": "project",
+            "name": "test_project",
+            "uuid": "1572e21c-77d7-4f11-b5ff-8658be941fb0"
+        },
+        "spec_version": 6,
+        "creation_time": "1691140478273511",
+        "owner_reference": {
+            "kind": "user",
+            "uuid": "00000000-0000-0000-0000-000000000000",
+            "name": "admin"
+        },
+        "uuid": "9018e946-7786-059b-ffca-19db17812612"
+    }
+}
