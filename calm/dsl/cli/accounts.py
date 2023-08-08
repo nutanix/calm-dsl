@@ -478,15 +478,76 @@ def create_provider_payload(UserAccount):
 
 
 def delete_account(account_names):
-
     client = get_api_client()
     for account_name in account_names:
-        account = get_account(client, account_name)
-        account_id = account["metadata"]["uuid"]
-        _, err = client.account.delete(account_id)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-        LOG.info("Account {} deleted".format(account_name))
+        account_payload = get_account(client, account_name)
+        account_type = (
+            account_payload.get("spec", {}).get("resources", {}).get("type", "")
+        )
+
+        account_uuid = account_payload["metadata"]["uuid"]
+
+        # Handling case where account type is not custom provider
+        if account_type != "custom_provider":
+            _, err = client.account.delete(account_uuid)
+            if err:
+                LOG.error("Unable to delete Account")
+                sys.exit("Error Code: [{}]".format(err["code"]))
+            LOG.info("Account {} deleted".format(account_name))
+
+        # Handling case where account type is custom provider
+        else:
+            LOG.info(
+                "Custom Provider Account Found. Deleting attached Provider and ResourceType."
+            )
+
+            provider_uuid = (
+                account_payload.get("spec", {})
+                .get("resources", {})
+                .get("data", {})
+                .get("provider_reference", {})
+                .get("uuid", None)
+            )
+
+            provider_payload = get_custom_provider(account_name, provider_uuid)
+            resources = (
+                provider_payload.get("status", {})
+                .get("resources", {})
+                .get("resource_type_references", [])
+            )
+
+            provider_payload_type = (
+                provider_payload.get("status", {})
+                .get("resources", {})
+                .get("type", None)
+            )
+
+            resource_uuids = []
+            for resource in resources:
+                if resource["kind"] == "resource_type":
+                    resource_uuids.append(resource["uuid"])
+
+            # If provider type is CREDENTIAL, deleting in this order ->
+            # ResourceType, Account, Provider
+            if provider_payload_type and provider_payload_type == "CREDENTIAL":
+                for resource_uuid in resource_uuids:
+                    _, err = client.resource_types.delete(resource_uuid)
+                    if err:
+                        LOG.error("Unable to delete ResourceType")
+                        sys.exit("Error Code: [{}]".format(err["code"]))
+                    LOG.info("ResourceType (uuid='{}') deleted".format(resource_uuid))
+
+                _, err = client.account.delete(account_uuid)
+                if err:
+                    LOG.error("Unable to delete Account")
+                    sys.exit("Error Code: [{}]".format(err["code"]))
+                LOG.info("Account {} deleted".format(account_name))
+
+                _, err = client.provider.delete(provider_uuid)
+                if err:
+                    LOG.error("Unable to delete Provider")
+                    sys.exit("Error Code: [{}]".format(err["code"]))
+                LOG.info("Provider (uuid='{}') deleted".format(provider_uuid))
 
     # Update account related caches i.e. Account, AhvImage, AhvSubnet
     LOG.info("Updating accounts cache ...")

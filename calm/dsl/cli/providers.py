@@ -17,11 +17,12 @@ from calm.dsl.log import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-def get_custom_provider(name):
+def get_custom_provider(name, provider_uuid=None):
     """returns provider get call data"""
 
     client = get_api_client()
-    provider_uuid = get_provider_uuid(name=name)
+    if not provider_uuid:
+        provider_uuid = get_provider_uuid(name=name)
     res, err = client.provider.read(provider_uuid)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
