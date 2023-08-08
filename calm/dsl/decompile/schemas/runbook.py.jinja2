@@ -50,12 +50,6 @@ class RunbookMetadata(Metadata):
     project = Ref.Project('{{obj.project_name}}')
 {%- endif %}
 
-def main():
-    print(runbook_json({{obj.name}}))
-
-
-if __name__ == "__main__":
-    main()
 {%- endmacro %}
 
 {{runbook(obj)}}
