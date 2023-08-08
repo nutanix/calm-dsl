@@ -19,7 +19,7 @@ from calm.dsl.store import Cache
 from calm.dsl.init import init_bp, init_runbook
 from calm.dsl.providers import get_provider_types
 from calm.dsl.store import Version
-from calm.dsl.constants import POLICY, STRATOS
+from calm.dsl.constants import POLICY, STRATOS, DSL_CONFIG
 
 from .main import init, set
 from calm.dsl.log import get_logging_handle
@@ -158,7 +158,9 @@ def set_server_details(
     port = port or click.prompt("Port", default="9440")
     username = username or click.prompt("Username", default="admin")
     password = password or click.prompt("Password", default="", hide_input=True)
-    project_name = project_name or click.prompt("Project", default="default")
+    project_name = project_name or click.prompt(
+        "Project", default=DSL_CONFIG.EMPTY_PROJECT_NAME
+    )
 
     # Default log-level
     log_level = "INFO"
@@ -250,15 +252,15 @@ def set_server_details(
     else:
         LOG.debug("Stratos is not supported")
         stratos_status = False
-
-    LOG.info("Verifying the project details")
-    project_name_uuid_map = client.project.get_name_uuid_map(
-        params={"filter": "name=={}".format(project_name)}
-    )
-    if not project_name_uuid_map:
-        LOG.error("Project '{}' not found !!!".format(project_name))
-        sys.exit(-1)
-    LOG.info("Project '{}' verified successfully".format(project_name))
+    if project_name != DSL_CONFIG.EMPTY_PROJECT_NAME:
+        LOG.info("Verifying the project details")
+        project_name_uuid_map = client.project.get_name_uuid_map(
+            params={"filter": "name=={}".format(project_name)}
+        )
+        if not project_name_uuid_map:
+            LOG.error("Project '{}' not found !!!".format(project_name))
+            sys.exit(-1)
+        LOG.info("Project '{}' verified successfully".format(project_name))
 
     # Writing configuration to file
     set_dsl_config(
@@ -455,7 +457,7 @@ def _set_config(
     password = password or server_config["pc_password"]
 
     project_config = ContextObj.get_project_config()
-    project_name = project_name or project_config.get("name") or "default"
+    project_name = project_name or project_config.get("name")
 
     LOG.info("Checking if Calm is enabled on Server")
 
@@ -533,14 +535,15 @@ def _set_config(
         LOG.debug("Stratos is not supported")
         stratos_status = False
 
-    LOG.info("Verifying the project details")
-    project_name_uuid_map = client.project.get_name_uuid_map(
-        params={"filter": "name=={}".format(project_name)}
-    )
-    if not project_name_uuid_map:
-        LOG.error("Project '{}' not found !!!".format(project_name))
-        sys.exit(-1)
-    LOG.info("Project '{}' verified successfully".format(project_name))
+    if project_name != DSL_CONFIG.EMPTY_PROJECT_NAME:
+        LOG.info("Verifying the project details")
+        project_name_uuid_map = client.project.get_name_uuid_map(
+            params={"filter": "name=={}".format(project_name)}
+        )
+        if not project_name_uuid_map:
+            LOG.error("Project '{}' not found !!!".format(project_name))
+            sys.exit(-1)
+        LOG.info("Project '{}' verified successfully".format(project_name))
 
     log_config = ContextObj.get_log_config()
     log_level = log_level or log_config.get("level") or "INFO"

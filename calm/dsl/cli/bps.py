@@ -47,7 +47,7 @@ from calm.dsl.tools import get_module_from_file
 from calm.dsl.builtins import Brownfield as BF
 from calm.dsl.providers import get_provider
 from calm.dsl.providers.plugins.ahv_vm.main import AhvNew
-from calm.dsl.constants import CACHE
+from calm.dsl.constants import CACHE, DSL_CONFIG
 from calm.dsl.log import get_logging_handle
 from calm.dsl.builtins.models.calm_ref import Ref
 
@@ -326,6 +326,10 @@ def compile_blueprint(bp_file, brownfield_deployment_file=None):
             ]
         else:
             project_name = project_config["name"]
+            if project_name == DSL_CONFIG.EMPTY_PROJECT_NAME:
+                LOG.error(DSL_CONFIG.EMPTY_PROJECT_MESSAGE)
+                sys.exit("Invalid project configuration")
+
             bp_payload["metadata"]["project_reference"] = Ref.Project(project_name)
     else:
         if isinstance(UserBlueprint, type(VmBlueprint)):

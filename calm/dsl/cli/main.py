@@ -14,6 +14,7 @@ from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.log import get_logging_handle
 from calm.dsl.config import get_context
 from calm.dsl.store import Cache
+from calm.dsl.constants import DSL_CONFIG
 
 from .version_validator import validate_version
 from .click_options import simple_verbosity_option, show_trace_option
@@ -75,6 +76,14 @@ def main(ctx, config_file, sync):
     if config_file:
         ContextObj = get_context()
         ContextObj.update_config_file_context(config_file=config_file)
+
+    ContextObj = get_context()
+    project_config = ContextObj.get_project_config()
+    project_name = project_config.get("name")
+
+    if project_name == DSL_CONFIG.EMPTY_PROJECT_NAME:
+        LOG.warning(DSL_CONFIG.EMPTY_PROJECT_MESSAGE)
+
     if sync:
         Cache.sync()
 

@@ -4,6 +4,7 @@ import sys
 from .env_config import EnvConfig
 from .config import get_config_handle
 from calm.dsl.log import get_logging_handle
+from calm.dsl.constants import DSL_CONFIG
 
 LOG = get_logging_handle(__name__)
 
@@ -100,10 +101,7 @@ class Context:
 
         config = self.project_config
         if not config.get("name"):
-            LOG.warning(
-                "Default project not found in config file or environment('CALM_DSL_DEFAULT_PROJECT' variable). Setting it to 'default' project"
-            )
-            config["name"] = "default"
+            config["name"] = DSL_CONFIG.EMPTY_PROJECT_NAME
 
         return config
 
