@@ -15,6 +15,7 @@ import click
 import arrow
 import json
 import sys
+import re
 from prettytable import PrettyTable
 
 from calm.dsl.api import get_resource_api, get_api_client
@@ -23,6 +24,8 @@ from calm.dsl.log import get_logging_handle
 from calm.dsl.constants import CACHE
 
 LOG = get_logging_handle(__name__)
+NON_ALPHA_NUMERIC_CHARACTER = "[^0-9a-zA-Z]+"
+REPLACED_CLUSTER_NAME_CHARACTER = "_"
 # Proxy database
 dsl_database = SqliteDatabase(None)
 
@@ -728,8 +731,13 @@ class AhvClustersCache(CacheTableBase):
             account_clusters_data_rev = {v: k for k, v in account_clusters_data.items()}
 
             for entity in res.get("entities", []):
-                name = entity["status"]["name"]
-                uuid = entity["metadata"]["uuid"]
+                cluster_name = entity["status"]["name"]
+                calm_account_name = re.sub(
+                    NON_ALPHA_NUMERIC_CHARACTER,
+                    REPLACED_CLUSTER_NAME_CHARACTER,
+                    entity["status"]["name"],
+                )
+                cluster_uuid = entity["metadata"]["uuid"]
                 cluster_resources = entity["status"]["resources"]
                 service_list = cluster_resources.get("config", {}).get(
                     "service_list", []
@@ -739,24 +747,26 @@ class AhvClustersCache(CacheTableBase):
                 if "AOS" not in service_list:
                     LOG.debug(
                         "Cluster '{}' with UUID '{}' having function {} is not an AHV PE cluster".format(
-                            name, uuid, service_list
+                            cluster_name, cluster_uuid, service_list
                         )
                     )
                     continue
 
                 # For esxi clusters, there will not be any pe account
-                if not account_clusters_data_rev.get(name, ""):
+                if not account_clusters_data_rev.get(calm_account_name, ""):
                     LOG.debug(
                         "Ignoring cluster '{}' with uuid '{}', as it doesn't have any pc account".format(
-                            name, uuid
+                            cluster_name, cluster_uuid
                         )
                     )
                     continue
 
                 cls.create_entry(
-                    name=name,
-                    uuid=uuid,
-                    pe_account_uuid=account_clusters_data_rev.get(name, ""),
+                    name=cluster_name,
+                    uuid=cluster_uuid,
+                    pe_account_uuid=account_clusters_data_rev.get(
+                        calm_account_name, ""
+                    ),
                     account_uuid=pc_acc_uuid,
                 )
 
