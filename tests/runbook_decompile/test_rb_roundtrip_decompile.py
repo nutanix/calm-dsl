@@ -11,6 +11,7 @@ from calm.dsl.decompile.file_handler import get_runbook_dir
 
 LOG = get_logging_handle(__name__)
 RB_PY_FILE = "tests/runbook_decompile/runbook_py/runbook.py"
+EP_FILE = "tests/runbook_decompile/endpoint/test_endpoint.json"
 
 
 class TestRoundtripRunbookDecompile:
@@ -79,6 +80,12 @@ class TestRoundtripRunbookDecompile:
         LOG.info("Comparing original and decompiled runbook json")
         compiled_rb_json["metadata"]["name"] = rb_json["metadata"]["name"]
         compiled_rb_json["spec"]["name"] = rb_json["spec"]["name"]
+        compiled_rb_json["spec"]["resources"]["default_target_reference"][
+            "name"
+        ] = rb_json["spec"]["resources"]["default_target_reference"]["name"]
+        compiled_rb_json["spec"]["resources"]["endpoint_definition_list"] = rb_json[
+            "spec"
+        ]["resources"]["endpoint_definition_list"]
         compiled_rb_json["spec"]["resources"]["runbook"]["name"] = rb_json["spec"][
             "resources"
         ]["runbook"]["name"]
@@ -88,5 +95,12 @@ class TestRoundtripRunbookDecompile:
         compiled_rb_json["spec"]["resources"]["runbook"]["task_definition_list"][0][
             "name"
         ] = rb_json["spec"]["resources"]["runbook"]["task_definition_list"][0]["name"]
+        compiled_rb_json["spec"]["resources"]["runbook"]["task_definition_list"][1][
+            "target_any_local_reference"
+        ]["name"] = rb_json["spec"]["resources"]["runbook"]["task_definition_list"][1][
+            "target_any_local_reference"
+        ][
+            "name"
+        ]
         assert compiled_rb_json == rb_json
         LOG.info("Success")

@@ -5,7 +5,7 @@ import os
 import json
 from calm.dsl.runbooks import *
 from calm.dsl.runbooks import CalmEndpoint as Endpoint, RunbookTask as CalmTask, RunbookVariable as CalmVariable
-from calm.dsl.builtins import CalmTask as CalmVarTask
+from calm.dsl.builtins import CalmTask as CalmVarTask{% if obj.project_name %}, Metadata{%- endif %}
 
 {%- if obj.endpoints %}
 # Endpoints
@@ -30,7 +30,7 @@ from calm.dsl.builtins import CalmTask as CalmVarTask
 
 # Runbook
 @runbook
-def {{obj.name}}():
+def {{obj.name}}({% if obj.credentials_list %}credentials={{obj.credentials_list | replace("'","")}}{% endif %}{% if obj.default_endpoint_name %}{% if obj.credentials_list %},{% endif %}default=ref({{obj.default_endpoint_name | replace("'","")}}){% endif %}):
 {% if obj.description %}
     """{{obj.description}}"""
 {% endif %}
@@ -43,6 +43,11 @@ def {{obj.name}}():
 {%- endfor %}
 {% else %}
     pass
+{%- endif %}
+
+{% if obj.project_name %}
+class RunbookMetadata(Metadata):
+    project = Ref.Project('{{obj.project_name}}')
 {%- endif %}
 
 def main():

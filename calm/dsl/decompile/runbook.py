@@ -1,12 +1,19 @@
 import uuid
 from calm.dsl.decompile.render import render_template
+from calm.dsl.decompile.metadata import render_metadata_template
 from calm.dsl.decompile.task_tree import render_task_tree_template
 from calm.dsl.decompile.variable import (
     render_variable_template,
     get_secret_variable_files,
 )
 from calm.dsl.decompile.endpoint import render_endpoint
-from calm.dsl.decompile.credential import render_credential_template, get_cred_files
+from calm.dsl.decompile.credential import (
+    render_credential_template,
+    get_cred_files,
+    get_cred_var_name,
+)
+from calm.dsl.decompile.decompile_helpers import process_variable_name
+from calm.dsl.builtins import CalmEndpoint as Endpoint
 from calm.dsl.builtins.models.runbook import RunbookType, runbook
 from calm.dsl.log import get_logging_handle
 
@@ -15,13 +22,17 @@ RUNBOOK_ACTION_MAP = {}
 
 
 def render_runbook_template(
-    runbook_cls, entity_context="", CONFIG_SPEC_MAP={}, credentials=[]
+    runbook_cls,
+    metadata_obj=None,
+    entity_context="",
+    CONFIG_SPEC_MAP={},
+    credentials=[],
+    default_endpoint=None,
 ):
     global RUNBOOK_ACTION_MAP
     LOG.debug("Rendering {} runbook template".format(runbook_cls.__name__))
     if not isinstance(runbook_cls, RunbookType):
         raise TypeError("{} is not of type {}".format(runbook_cls, runbook))
-
     # Update entity context
     entity_context = entity_context + "_Runbook_" + runbook_cls.__name__
 
@@ -39,10 +50,22 @@ def render_runbook_template(
                 continue
             endpoints.append(render_endpoint(ep))
             ep_list.append(ep.name)
+    default_endpoint_name = ""
+    if default_endpoint:
+        default_endpoint_name = default_endpoint["name"]
+        if default_endpoint_name not in ep_list:
+            ep_list.append(default_endpoint_name)
+            endpoints.append(
+                render_endpoint(Endpoint.use_existing(default_endpoint_name))
+            )
 
-    credential_list = []
+    default_endpoint_name = process_variable_name(default_endpoint_name)
+
+    rendered_credential_list = []
+    credentials_list = []
     for cred in credentials:
-        credential_list.append(render_credential_template(cred))
+        rendered_credential_list.append(render_credential_template(cred))
+        credentials_list.append(get_cred_var_name(cred.name))
     # get mapping used for rendering task_tree template
 
     root_node, task_child_map, decision_tasks, while_loop_tasks = get_task_order(
@@ -71,15 +94,20 @@ def render_runbook_template(
     if while_loop_tasks:
         import_status = True
 
+    # runbook project reference
+    project_name = metadata_obj.project["name"]
     user_attrs = {
         "name": runbook_cls.__name__,
         "description": runbook_cls.__doc__ or "",
         "secret_files": secret_files,
         "endpoints": endpoints,
-        "credentials": credential_list,
+        "credentials_list": credentials_list,
+        "credentials": rendered_credential_list,
         "tasks": tasks,
         "variables": variables,
+        "project_name": project_name,
         "import_status": import_status,
+        "default_endpoint_name": default_endpoint_name,
     }
 
     gui_display_name = getattr(runbook_cls, "name", "") or runbook_cls.__name__

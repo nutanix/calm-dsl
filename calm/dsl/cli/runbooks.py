@@ -227,6 +227,9 @@ def _decompile_runbook(runbook_payload, runbook_dir, prefix):
     credential_list = runbook_payload["status"]["resources"][
         "credential_definition_list"
     ]
+    default_endpoint = runbook_payload["status"]["resources"].get(
+        "default_target_reference", None
+    )
     runbook_name = runbook_payload["status"].get("name", "DslRunbook")
     runbook_description = runbook_payload["status"].get("description", "")
 
@@ -250,10 +253,12 @@ def _decompile_runbook(runbook_payload, runbook_dir, prefix):
         runbook_dir=runbook_dir,
         metadata_obj=metadata_obj,
         credentials=credentials,
+        default_endpoint=default_endpoint,
     )
     click.echo(
         "\nSuccessfully decompiled. Directory location: {}. Runbook location: {}".format(
-            get_runbook_dir(), os.path.join(get_runbook_dir(), "runbook.py")
+            highlight_text(get_runbook_dir()),
+            highlight_text(os.path.join(get_runbook_dir(), "runbook.py")),
         )
     )
 

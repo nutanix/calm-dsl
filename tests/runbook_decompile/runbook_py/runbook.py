@@ -9,18 +9,15 @@ from calm.dsl.runbooks import (
     RunbookVariable as CalmVariable,
 )
 
-# Endpoints
-Endpoint_12072659 = Endpoint.use_existing("Endpoint_12072659")
-
-
+endpoint = Endpoint.Linux.ip("10.10.10.10")
 # Runbook
 @runbook
-def test_generic_rb():
+def test_generic_rb(endpoints=[endpoint]):
 
     CalmTask.Exec.ssh(
         name="Task 1",
         filename=os.path.join("scripts", "_Runbook_test_generic_rb_Task_Task1.sh"),
-        target=ref(Endpoint_12072659),
+        target=endpoints[0],
     )
 
 

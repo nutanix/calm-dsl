@@ -509,7 +509,7 @@ class EntityType(EntityTypeBase):
                 continue
 
             elif k not in display_map:
-                LOG.warning("Additional Property ({}) found".format(k))
+                LOG.debug("Additional Property ({}) found".format(k))
                 continue
 
             user_attrs.setdefault(display_map[k], v)

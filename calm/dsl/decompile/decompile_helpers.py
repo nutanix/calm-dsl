@@ -1,4 +1,4 @@
-import re
+from calm.dsl.builtins.models.utils import get_valid_identifier
 
 
 def process_variable_name(var_name):
@@ -8,7 +8,7 @@ def process_variable_name(var_name):
     Returns: processed variable name
     """
 
-    return re.sub("-", "_", var_name)
+    return get_valid_identifier(var_name)
 
 
 special_tasks_types = ["DECISION", "WHILE_LOOP"]

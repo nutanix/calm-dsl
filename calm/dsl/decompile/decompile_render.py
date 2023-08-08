@@ -50,7 +50,11 @@ def create_bp_dir(
 
 
 def create_runbook_dir(
-    runbook_cls=None, runbook_dir=None, metadata_obj=None, credentials=None
+    runbook_cls=None,
+    runbook_dir=None,
+    metadata_obj=None,
+    credentials=None,
+    default_endpoint=None,
 ):
     if not runbook_dir:
         runbook_dir = os.path.join(os.getcwd(), runbook_cls.__name__)
@@ -59,7 +63,10 @@ def create_runbook_dir(
     _, _, _ = init_runbook_dir(runbook_dir)
     LOG.info("Rendering runbook file template")
     runbook_data = render_runbook_template(
-        runbook_cls=runbook_cls, credentials=credentials
+        runbook_cls=runbook_cls,
+        credentials=credentials,
+        metadata_obj=metadata_obj,
+        default_endpoint=default_endpoint,
     )
 
     LOG.info("Formatting runbook file using black")
