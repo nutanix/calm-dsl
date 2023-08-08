@@ -93,12 +93,22 @@ class AccountResources:
             )
 
     class Azure:
-        def __new__(cls, tenant_id, client_id, client_key, cloud):
+        def __new__(
+            cls,
+            tenant_id,
+            client_id,
+            client_key,
+            cloud,
+            subscriptions=[],
+            default_subscription="",
+        ):
             return azure_account(
                 tenant_id=tenant_id,
                 client_id=client_id,
                 client_key=client_key,
                 cloud=cloud,
+                subscriptions=subscriptions,
+                default_subscription=default_subscription,
             )
 
     class Vmware:

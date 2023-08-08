@@ -34,7 +34,13 @@ class AzureAccount(EntityType):
                     cdict["cloud_environment"]
                 )
             )
-            sys.exit(-1)
+            sys.exit("Invalid cloud environmend")
+
+        if not cdict.get("subscriptions", []):
+            cdict.pop("subscriptions", None)
+
+        if not cdict.get("default_subscription", ""):
+            cdict.pop("default_subscription", None)
 
         return cdict
 

@@ -15,6 +15,7 @@ class AZURE:
     IMAGE_SKUS = "{}/image_skus".format(URL)
     IMAGE_VERSIONS = "{}/image_versions".format(URL)
     SUBSCRIPTION_IMAGES = "{}/subscription_images".format(URL)
+    SUBSCRIPTIONS = "{}/subscriptions".format(URL)
     IMAGES = "{}/images".format(URL)
 
     UNATTENDED_SETTINGS = ["FirstLogonCommands", "AutoLogon"]

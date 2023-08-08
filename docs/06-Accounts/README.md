@@ -199,6 +199,8 @@ Describes an account.
             client_id=CLIENT_ID,
             client_key=CLIENT_KEY,
             cloud="PublicCloud",
+            subscriptions=["Calm", "Self-Service"],     # For update command only
+            default_subscription = "Calm"               # For update command only
         )
     ```
 
@@ -207,6 +209,12 @@ Describes an account.
 - Use `client_id` for defining application/client id.
 - Use `client_key` to define client key/secret.
 - Use `cloud` to define cloud environment.
+- Use `subscriptions` to define subcriptions.
+- Use `default_subscription` to define default_subscription.
+
+Note:
+- `subscriptions`, `default_subscription` parameter are only allowed for update of gcp accounts.
+
 
 </br>
 

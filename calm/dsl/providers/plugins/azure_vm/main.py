@@ -146,6 +146,22 @@ class Azure:
 
         return name_id_map
 
+    def subscriptions(self, account_id):
+        Obj = get_resource_api(azure.SUBSCRIPTIONS, self.connection)
+        payload = {"filter": "account_uuid=={}".format(account_id)}
+
+        res, err = Obj.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        name_data_map = {}
+        for entity in res["entities"]:
+            name = entity["status"]["name"]
+            name_data_map[name] = entity["status"]["resources"]
+
+        return name_data_map
+
     def image_publishers(self, account_id, location):
         Obj = get_resource_api(azure.IMAGE_PUBLISHERS, self.connection)
         payload = {

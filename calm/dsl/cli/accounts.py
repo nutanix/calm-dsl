@@ -250,6 +250,16 @@ def create_account(client, account_payload, name=None, force_create=False):
                 LOG.error("'datacenter' is not a valid parameter for create command")
                 sys.exit("Invalid parameter 'datacenter'")
 
+        elif account_type == ACCOUNT.TYPE.AZURE:
+            subscriptions = account_data.get("subscriptions", [])
+            default_subscription = account_data.get("default_subscription", "")
+
+            if subscriptions or default_subscription:
+                LOG.error(
+                    "'subscriptions', 'default_subscription' are not valid parameters for create command"
+                )
+                sys.exit("Invalid parameter 'subscriptions' / 'default_subscription")
+
     if name:
         account_payload["spec"]["name"] = name
         account_payload["metadata"]["name"] = name
@@ -956,6 +966,44 @@ def update_account_from_dsl(client, account_file, name=None, updated_name=None):
                         )
                     )
                     sys.exit("Invalid datacenter provided")
+
+        elif account_type == ACCOUNT.TYPE.AZURE:
+            subscriptions = account_data.pop("subscriptions", [])
+            default_subscription = account_data.pop("default_subscription", "")
+
+            if subscriptions or default_subscription:
+                azureProvider = get_provider(PROVIDER.TYPE.AZURE)
+                azureResource = azureProvider.get_api_obj()
+                valid_subs = azureResource.subscriptions(account_uuid)
+
+                subs_data = []
+                for _subs_name in subscriptions:
+                    if _subs_name not in valid_subs:
+                        LOG.error(
+                            "Invalid subscription '{}' found in subscriptions. Please select one of {}".format(
+                                _subs_name, json.dumps(list(valid_subs.keys()))
+                            )
+                        )
+                        sys.exit("Invalid subscription provided")
+
+                    subs_data.append({"subscription_id": valid_subs[_subs_name]["id"]})
+
+                if subs_data:
+                    account_data["subscriptions"] = subs_data
+
+                if default_subscription:
+                    if default_subscription not in valid_subs:
+                        LOG.error(
+                            "Invalid subscription '{}' found in default_subscription. Please select one of {}".format(
+                                default_subscription,
+                                json.dumps(list(valid_subs.keys())),
+                            )
+                        )
+                        sys.exit("Invalid subscription provided")
+
+                    account_data["subscription_id"] = valid_subs[default_subscription][
+                        "id"
+                    ]
 
     return update_account(client, account_payload, name=name, updated_name=updated_name)
 
