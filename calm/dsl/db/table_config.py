@@ -62,6 +62,7 @@ class DataTable(BaseModel):
 class CacheTableBase(BaseModel):
     tables = {}
     is_approval_policy_required = False
+    is_policy_required = False
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
