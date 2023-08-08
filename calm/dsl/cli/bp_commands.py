@@ -7,7 +7,7 @@ from calm.dsl.api import get_api_client
 from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 
-from .utils import Display
+from .utils import Display, _get_nested_messages
 from .main import get, compile, describe, create, launch, delete, decompile, format
 from .bps import (
     get_blueprint_list,
@@ -55,25 +55,6 @@ def _get_blueprint_list(name, filter_by, limit, offset, quiet, all_items, out):
     """Get the blueprints, optionally filtered by a string"""
 
     get_blueprint_list(name, filter_by, limit, offset, quiet, all_items, out)
-
-
-def _get_nested_messages(path, obj, message_list):
-    """Get nested message list objects from the blueprint"""
-    if isinstance(obj, list):
-        for index, sub_obj in enumerate(obj):
-            _get_nested_messages(path, sub_obj, message_list)
-    elif isinstance(obj, dict):
-        name = obj.get("name", "")
-        if name and isinstance(name, str):
-            path = path + ("." if path else "") + name
-        for key in obj:
-            sub_obj = obj[key]
-            if key == "message_list":
-                for message in sub_obj:
-                    message["path"] = path
-                    message_list.append(message)
-                continue
-            _get_nested_messages(path, sub_obj, message_list)
 
 
 @describe.command("bp")

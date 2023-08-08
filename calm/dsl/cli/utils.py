@@ -40,6 +40,25 @@ def get_name_query(names):
     return ""
 
 
+def _get_nested_messages(path, obj, message_list):
+    """Get nested message list objects from the blueprint"""
+    if isinstance(obj, list):
+        for _, sub_obj in enumerate(obj):
+            _get_nested_messages(path, sub_obj, message_list)
+    elif isinstance(obj, dict):
+        name = obj.get("name", "")
+        if name and isinstance(name, str):
+            path = path + ("." if path else "") + name
+        for key in obj:
+            sub_obj = obj[key]
+            if key == "message_list":
+                for message in sub_obj:
+                    message["path"] = path
+                    message_list.append(message)
+                continue
+            _get_nested_messages(path, sub_obj, message_list)
+
+
 def highlight_text(text, **kwargs):
     """Highlight text in our standard format"""
     return click.style("{}".format(text), fg="blue", bold=False, **kwargs)

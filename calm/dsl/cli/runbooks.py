@@ -34,6 +34,7 @@ from .utils import (
     highlight_text,
     get_states_filter,
     import_var_from_file,
+    _get_nested_messages,
 )
 from .constants import RUNBOOK, RUNLOG
 from .runlog import get_completion_func, get_runlog_status
@@ -346,7 +347,9 @@ def create_runbook_command(runbook_file, name, description, force):
     LOG.debug("Runbook {} has state: {}".format(runbook_name, runbook_state))
 
     if runbook_state != "ACTIVE":
-        msg_list = runbook_status.get("message_list", [])
+        msg_list = []
+        _get_nested_messages("", runbook_status, msg_list)
+
         if not msg_list:
             LOG.error("Runbook {} created with errors.".format(runbook_name))
             LOG.debug(json.dumps(runbook_status))
@@ -354,7 +357,11 @@ def create_runbook_command(runbook_file, name, description, force):
 
         msgs = []
         for msg_dict in msg_list:
-            msgs.append(msg_dict.get("message", ""))
+            msg = ""
+            path = msg_dict.get("path", "")
+            if path:
+                msg = path + ": "
+            msgs.append(msg + msg_dict.get("message", ""))
 
         LOG.error(
             "Runbook {} created with {} error(s): {}".format(

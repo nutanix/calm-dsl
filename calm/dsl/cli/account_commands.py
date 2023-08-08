@@ -6,7 +6,6 @@ from calm.dsl.api import get_api_client
 from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
 
-from .main import get, delete, compile, describe, sync, create, verify
 from .accounts import (
     create_account_from_dsl,
     compile_account_command,
@@ -17,7 +16,8 @@ from .accounts import (
     verify_account,
     update_account_command,
 )
-from .main import get, delete, compile, describe, sync, create, update
+from .utils import _get_nested_messages
+from .main import get, delete, compile, describe, sync, create, update, verify
 from calm.dsl.log import get_logging_handle
 from calm.dsl.api import get_api_client
 
@@ -87,25 +87,6 @@ def _verify_account(account_name):
     Args: account_name (string): name of the account to verify"""
 
     verify_account(account_name)
-
-
-def _get_nested_messages(path, obj, message_list):
-    """Get nested message list objects from the account"""
-    if isinstance(obj, list):
-        for index, sub_obj in enumerate(obj):
-            _get_nested_messages(path, sub_obj, message_list)
-    elif isinstance(obj, dict):
-        name = obj.get("name", "")
-        if name and isinstance(name, str):
-            path = path + ("." if path else "") + name
-        for key in obj:
-            sub_obj = obj[key]
-            if key == "message_list":
-                for message in sub_obj:
-                    message["path"] = path
-                    message_list.append(message)
-                continue
-            _get_nested_messages(path, sub_obj, message_list)
 
 
 @create.command("account")
