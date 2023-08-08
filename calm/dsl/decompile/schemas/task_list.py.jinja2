@@ -18,7 +18,7 @@
 {{ "    " * (obj.indent_obj.else_block_indent) }}else:
 {%- endif %}
 {%- if obj.indent_obj.while_block_indent != None %}
-{{ "    " * (obj.indent_obj.while_block_indent) }}while {{obj.while_tasks[obj.indent_obj.task_name]}}:
+{{ "    " * (obj.indent_obj.while_block_indent) }}with {{obj.while_tasks[obj.indent_obj.task_name]}}:
 {%- else %}
 {{ "    " * (obj.indent_obj.task_indent) }}{{obj.while_tasks[obj.indent_obj.task_name]}}
 {%- endif %}
