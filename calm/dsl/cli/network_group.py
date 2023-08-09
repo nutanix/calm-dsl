@@ -768,7 +768,6 @@ def create_network_group_tunnel_from_dsl(
     if network_group_json:
         LOG.info("Updating cache...")
         Cache.sync_table(CACHE.ENTITY.AHV_VPC)
-        LOG.info("[Done]")
 
 
 def create_network_group_tunnel_vm_from_dsl(
@@ -797,7 +796,6 @@ def create_network_group_tunnel_vm_from_dsl(
     if network_group_json:
         LOG.info("Updating cache...")
         Cache.sync_table(CACHE.ENTITY.AHV_VPC)
-        LOG.info("[Done]")
 
 
 def get_network_group_from_tunnel_name(tunnel_name):

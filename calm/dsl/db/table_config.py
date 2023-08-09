@@ -331,6 +331,78 @@ class AccountCache(CacheTableBase):
         except DoesNotExist:
             return dict()
 
+    @classmethod
+    def fetch_one(cls, uuid):
+        """returns project data for project uuid"""
+
+        # update by latest data
+        client = get_api_client()
+
+        res, err = client.account.read(uuid)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        entity = res.json()
+        provider_type = entity["status"]["resources"]["type"]
+        data = {}
+        query_obj = {
+            "name": entity["status"]["name"],
+            "uuid": entity["metadata"]["uuid"],
+            "provider_type": entity["status"]["resources"]["type"],
+            "state": entity["status"]["resources"]["state"],
+        }
+
+        if provider_type == "nutanix_pc":
+            query_obj["is_host"] = entity["status"]["resources"]["data"]["host_pc"]
+
+            # store cluster accounts for PC account (Note it will store cluster name not account name)
+            for pe_acc in (
+                entity["status"]["resources"]
+                .get("data", {})
+                .get("cluster_account_reference_list", [])
+            ):
+                group = data.setdefault("clusters", {})
+                group[pe_acc["uuid"]] = (
+                    pe_acc.get("resources", {}).get("data", {}).get("cluster_name", "")
+                )
+
+        elif provider_type == "nutanix":
+            data["pc_account_uuid"] = entity["status"]["resources"]["data"][
+                "pc_account_uuid"
+            ]
+
+        query_obj["data"] = json.dumps(data)
+        return query_obj
+
+    @classmethod
+    def add_one(cls, uuid, **kwargs):
+        """adds one entry to project table"""
+
+        db_data = cls.fetch_one(uuid, **kwargs)
+        cls.create_entry(**db_data)
+
+    @classmethod
+    def delete_one(cls, uuid, **kwargs):
+        """deletes one entity from project"""
+
+        obj = cls.get(cls.uuid == uuid)
+        obj.delete_instance()
+
+    @classmethod
+    def update_one(cls, uuid, **kwargs):
+        """updates single entry to project table"""
+
+        db_data = cls.fetch_one(uuid, **kwargs)
+        q = cls.update(
+            {
+                cls.name: db_data["name"],
+                cls.provider_type: db_data["provider_type"],
+                cls.state: db_data["state"],
+                cls.data: db_data["data"],
+            }
+        ).where(cls.uuid == uuid)
+        q.execute()
+
     class Meta:
         database = dsl_database
         primary_key = CompositeKey("name", "uuid")

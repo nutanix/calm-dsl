@@ -130,8 +130,18 @@ class NETWORK_GROUP_TUNNEL_TASK:
 class ACCOUNT:
     """Account constants"""
 
+    class STATES:
+        DELETED = "DELETED"
+        VERIFIED = "VERIFIED"
+        NOT_VERIFIED = "NOT_VERIFIED"
+        VERIFY_FAILED = "VERIFY_FAILED"
+        DRAFT = "DRAFT"
+        ACTIVE = "ACTIVE"
+        UNSAVED = "UNSAVED"
+
     class TYPE:
         AHV = "nutanix_pc"
+        AHV_PE = "nutanix"
         AWS = "aws"
         AWS_C2S = "aws_govcloud"
         AZURE = "azure"

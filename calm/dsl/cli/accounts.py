@@ -24,9 +24,14 @@ from .providers import (
 from calm.dsl.providers import get_provider
 from .resource_types import update_resource_types, create_resource_type
 
-from .utils import get_name_query, get_states_filter, highlight_text, insert_uuid
-from .constants import ACCOUNT
-from calm.dsl.constants import PROVIDER
+from .utils import (
+    get_name_query,
+    get_states_filter,
+    highlight_text,
+    insert_uuid,
+    _get_nested_messages,
+)
+from calm.dsl.constants import PROVIDER, ACCOUNT
 from calm.dsl.store import Version
 from calm.dsl.tools import get_module_from_file
 from calm.dsl.log import get_logging_handle
@@ -278,11 +283,73 @@ def create_account_from_dsl(client, account_file, name=None, force_create=False)
     account_payload = compile_account(account_file)
 
     if account_payload is None:
-        err_msg = "User account not found in {}".format(account_file)
-        err = {"error": err_msg, "code": -1}
-        return None, err
+        LOG.error("User account not found in {}".format(account_file))
+        sys.exit("User account not found")
 
-    return create_account(client, account_payload, name=name, force_create=force_create)
+    res, err = create_account(
+        client, account_payload, name=name, force_create=force_create
+    )
+    if err:
+        LOG.error(err["error"])
+        sys.exit("Account creation failed")
+
+    account = res.json()
+
+    account_uuid = account["metadata"]["uuid"]
+    account_name = account["metadata"]["name"]
+    account_status = account.get("status", {})
+    account_state = account_status.get("resources", {}).get("state", "DRAFT")
+    account_type = account_status.get("resources", {}).get("type", "")
+    LOG.debug("Account {} has state: {}".format(account_name, account_state))
+
+    if account_state == "DRAFT":
+        msg_list = []
+        _get_nested_messages("", account_status, msg_list)
+
+        if not msg_list:
+            LOG.error("Account {} created with errors.".format(account_name))
+            LOG.debug(json.dumps(account_status))
+
+        msgs = []
+        for msg_dict in msg_list:
+            msg = ""
+            path = msg_dict.get("path", "")
+            if path:
+                msg = path + ": "
+            msgs.append(msg + msg_dict.get("message", ""))
+
+        LOG.error(
+            "Account {} created with {} error(s):".format(account_name, len(msg_list))
+        )
+        click.echo("\n".join(msgs))
+        sys.exit("Account went to {} state".format(account_state))
+
+    LOG.info("Updating accounts cache ...")
+    if account_type == ACCOUNT.TYPE.AHV:
+        Cache.sync_table(
+            cache_type=[
+                CACHE.ENTITY.ACCOUNT,
+                CACHE.ENTITY.AHV_DISK_IMAGE,
+                CACHE.ENTITY.AHV_CLUSTER,
+                CACHE.ENTITY.AHV_VPC,
+                CACHE.ENTITY.AHV_SUBNET,
+            ]
+        )
+    else:
+        # TODO Fix case for custom providers
+        Cache.add_one(CACHE.ENTITY.ACCOUNT, account_uuid)
+        click.echo(".[Done]", err=True)
+
+    LOG.info("Account {} created successfully.".format(account_name))
+    context = get_context()
+    server_config = context.get_server_config()
+    pc_ip = server_config["pc_ip"]
+    pc_port = server_config["pc_port"]
+    link = "https://{}:{}/dm/self_service/settings/accounts".format(pc_ip, pc_port)
+    stdout_dict = {"name": account_name, "link": link, "state": account_state}
+    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
+
+    return stdout_dict
 
 
 def get_account_module_from_file(account_file):
@@ -479,13 +546,18 @@ def create_provider_payload(UserAccount):
 
 def delete_account(account_names):
     client = get_api_client()
+    any_ahv_account = False
+    delete_accounts_uuids = []
     for account_name in account_names:
         account_payload = get_account(client, account_name)
+        account_uuid = account_payload["metadata"]["uuid"]
+        delete_accounts_uuids.append(account_uuid)
         account_type = (
             account_payload.get("spec", {}).get("resources", {}).get("type", "")
         )
 
-        account_uuid = account_payload["metadata"]["uuid"]
+        if account_type in [ACCOUNT.TYPE.AHV, ACCOUNT.TYPE.AHV_PE]:
+            any_ahv_account = True
 
         # Handling case where account type is not custom provider
         if account_type != "custom_provider":
@@ -551,14 +623,22 @@ def delete_account(account_names):
 
     # Update account related caches i.e. Account, AhvImage, AhvSubnet
     LOG.info("Updating accounts cache ...")
-    Cache.sync_table(
-        cache_type=[
-            CACHE.ENTITY.ACCOUNT,
-            CACHE.ENTITY.AHV_DISK_IMAGE,
-            CACHE.ENTITY.AHV_SUBNET,
-        ]
-    )
-    LOG.info("[Done]")
+    if any_ahv_account:
+        Cache.sync_table(
+            cache_type=[
+                CACHE.ENTITY.ACCOUNT,
+                CACHE.ENTITY.AHV_DISK_IMAGE,
+                CACHE.ENTITY.AHV_CLUSTER,
+                CACHE.ENTITY.AHV_VPC,
+                CACHE.ENTITY.AHV_SUBNET,
+            ]
+        )
+    else:
+        # TODO Fix case for custom providers
+        if delete_accounts_uuids:
+            for _acc_id in delete_accounts_uuids:
+                Cache.delete_one(entity_type=CACHE.ENTITY.ACCOUNT, uuid=_acc_id)
+            click.echo(".[Done]", err=True)
 
 
 def describe_showback_data(spec):
@@ -1091,9 +1171,11 @@ def update_account_command(account_file, name, updated_name):
         return
 
     account = res.json()
+    account_uuid = account["metadata"]["uuid"]
     account_name = account["metadata"]["name"]
     account_status = account.get("status", {})
     account_state = account_status.get("resources", {}).get("state", "DRAFT")
+    account_type = account_status.get("resources", {}).get("type", "")
     LOG.debug("Account {} has state: {}".format(account_name, account_state))
 
     if account_state != "ACTIVE":
@@ -1112,7 +1194,23 @@ def update_account_command(account_file, name, updated_name):
                 account_name, len(msg_list), msgs
             )
         )
-        sys.exit(-1)
+        sys.exit("Account went to {} state".format(account_state))
+
+    LOG.info("Updating accounts cache ...")
+    if account_type == ACCOUNT.TYPE.AHV:
+        Cache.sync_table(
+            cache_type=[
+                CACHE.ENTITY.ACCOUNT,
+                CACHE.ENTITY.AHV_DISK_IMAGE,
+                CACHE.ENTITY.AHV_CLUSTER,
+                CACHE.ENTITY.AHV_VPC,
+                CACHE.ENTITY.AHV_SUBNET,
+            ]
+        )
+    else:
+        # TODO Fix case for custom providers
+        Cache.update_one(CACHE.ENTITY.ACCOUNT, account_uuid)
+        click.echo(".[Done]", err=True)
 
     LOG.info("Account {} updated successfully.".format(account_name))
     ContextObj = get_context()

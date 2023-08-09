@@ -200,6 +200,8 @@ class Cache:
 
             cache_table = cache_table_map[_ct]
             cache_table.sync()
+            click.echo(".", nl=False, err=True)
+        click.echo("[Done]", err=True)
 
     @classmethod
     def clear_entities(cls):

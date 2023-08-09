@@ -119,65 +119,21 @@ def create_account_command(account_file, name, force, auto_verify):
 
     Note:
 
-        For ndb/custom_provider account creation the resource type schema variables can be looked by running `calm descrie provider PROVIDER_NAME`
+        For ndb/custom_provider account creation the resource type schema variables can be looked by running `calm describe provider PROVIDER_NAME`
     """
 
     client = get_api_client()
 
     if account_file.endswith(".py"):
-        res, err = create_account_from_dsl(
+        account_data = create_account_from_dsl(
             client, account_file, name=name, force_create=force
         )
     else:
         LOG.error("Unknown file format {}".format(account_file))
         return
 
-    if err:
-        LOG.error(err["error"])
-        return
-
-    account = res.json()
-
-    account_uuid = account["metadata"]["uuid"]
-    account_name = account["metadata"]["name"]
-    account_status = account.get("status", {})
-    account_state = account_status.get("resources", {}).get("state", "DRAFT")
-    LOG.debug("Account {} has state: {}".format(account_name, account_state))
-
-    if account_state == "DRAFT":
-        msg_list = []
-        _get_nested_messages("", account_status, msg_list)
-
-        if not msg_list:
-            LOG.error("Account {} created with errors.".format(account_name))
-            LOG.debug(json.dumps(account_status))
-
-        msgs = []
-        for msg_dict in msg_list:
-            msg = ""
-            path = msg_dict.get("path", "")
-            if path:
-                msg = path + ": "
-            msgs.append(msg + msg_dict.get("message", ""))
-
-        LOG.error(
-            "Account {} created with {} error(s):".format(account_name, len(msg_list))
-        )
-        click.echo("\n".join(msgs))
-        sys.exit(-1)
-
-    LOG.info("Account {} created successfully.".format(account_name))
-
-    context = get_context()
-    server_config = context.get_server_config()
-    pc_ip = server_config["pc_ip"]
-    pc_port = server_config["pc_port"]
-    link = "https://{}:{}/dm/self_service/settings/accounts".format(pc_ip, pc_port)
-    stdout_dict = {"name": account_name, "link": link, "state": account_state}
-    click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
-
     if auto_verify:
-        verify_account(account_name)
+        verify_account(account_data["account_name"])
 
 
 @compile.command("account")
