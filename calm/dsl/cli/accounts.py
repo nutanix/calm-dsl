@@ -265,6 +265,15 @@ def create_account(client, account_payload, name=None, force_create=False):
                 )
                 sys.exit("Invalid parameter 'subscriptions' / 'default_subscription")
 
+        elif account_type == ACCOUNT.TYPE.AWS:
+            regions = account_data.get("regions", [])
+            for _rd in regions:
+                if _rd.get("images", []):
+                    LOG.error(
+                        "Region-Images are not valid parameter for create command. User can set them on existing account using update command only"
+                    )
+                    sys.exit("Invalid parameter 'Images'")
+
     if name:
         account_payload["spec"]["name"] = name
         account_payload["metadata"]["name"] = name
@@ -1145,6 +1154,35 @@ def update_account_from_dsl(client, account_file, name=None, updated_name=None):
                     account_data["subscription_id"] = valid_subs[default_subscription][
                         "id"
                     ]
+
+        elif account_type == ACCOUNT.TYPE.AWS:
+            awsProvider = get_provider(PROVIDER.TYPE.AWS)
+            awsResource = awsProvider.get_api_obj()
+            regions = account_data.get("regions", [])
+            for _rd in regions:
+                _rname = _rd.get("name", "")
+                if not _rname:
+                    LOG.error("Region name is compulsory")
+                    sys.exit("Invalid region data")
+
+                _rimgs = _rd.pop("images", [])
+                if _rimgs:
+                    _fimgs = []
+                    for _ri in _rimgs:
+                        img_data = awsResource.images(account_uuid, _rname, _ri)
+                        if not img_data.get(_ri):
+                            LOG.error("Image not found {}".format(_ri))
+                            sys.exit("Invalid image {}".format(_ri))
+
+                        _fimgs.append(
+                            {
+                                "name": img_data[_ri]["name"],
+                                "image_id": img_data[_ri]["id"],
+                                "root_device_name": img_data[_ri]["root_device_name"],
+                            }
+                        )
+
+                    _rd["images"] = _fimgs
 
     return update_account(client, account_payload, name=name, updated_name=updated_name)
 

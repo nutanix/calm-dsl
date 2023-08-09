@@ -17,5 +17,13 @@ class test_aws_account_123321(Account):
     resources = AccountResources.Aws(
         access_key_id=ACCESS_KEY_ID,
         secret_access_key=SECRET_ACCESS_KEY,
-        regions=[{"name": "us-east-1"}],
+        regions=[
+            {
+                "name": "us-east-2",
+                "images": [
+                    "bitnami-dreamfactory-4.12.0-9-r09-linux-debian-11-x86_64-hvm-ebs-nami",
+                    "centos7-nem-demo",
+                ],
+            }
+        ],
     )

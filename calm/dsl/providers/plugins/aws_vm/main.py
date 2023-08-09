@@ -306,6 +306,7 @@ class AWSV1(AWSBase):
     VOLUME_TYPES = "aws/v1/volume_types"
     AVAILABILTY_ZONES = "aws/v1/availability_zones"
     MIXED_IMAGES = "aws/v1/mixed_images"
+    IMAGES = "aws/v1/images"
     ROLES = "aws/v1/roles"
     KEY_PAIRS = "aws/v1/key_pairs"
     VPCS = "aws/v1/vpcs"
@@ -368,6 +369,24 @@ class AWSV1(AWSBase):
             entity_list.append(entity["metadata"]["name"])
 
         return entity_list
+
+    def images(self, account_uuid, region_name, image_name):
+        payload = {
+            "filter": "account_uuid=={};region-name=={};name=={}".format(
+                account_uuid, region_name, image_name
+            )
+        }
+        Obj = get_resource_api(self.IMAGES, self.connection, calm_api=self.calm_api)
+        res, err = Obj.list(payload)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+        res = res.json()
+        entity_data = {}
+        for entity in res["entities"]:
+            entity_data[entity["status"]["name"]] = entity["status"]["resources"]
+
+        return entity_data
 
     def availability_zones(self, account_id, region_name):
 
