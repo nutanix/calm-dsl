@@ -1,5 +1,7 @@
 from calm.dsl.builtins.models.utils import get_valid_identifier
 
+special_tasks_types = ["DECISION", "WHILE_LOOP"]
+
 
 def process_variable_name(var_name):
     """
@@ -9,9 +11,6 @@ def process_variable_name(var_name):
     """
 
     return get_valid_identifier(var_name)
-
-
-special_tasks_types = ["DECISION", "WHILE_LOOP"]
 
 
 class IndentHelper:
@@ -59,34 +58,31 @@ class DecisionTaskIndentHelper:
         """
         decision_tasks = special_tasks_data["decision_tasks"]
         output = self.output
-        curr_indent = base_indent
         if_block_indent = None
         else_block_indent = None
         if if_needed:
-            curr_indent += 1
-            if_block_indent = base_indent
+            if_block_indent = base_indent - 1
         elif else_needed:
-            curr_indent += 1
-            else_block_indent = base_indent
+            else_block_indent = base_indent - 1
         output.append(
             {
                 "task_name": curr_node,
-                "with_block_indent": curr_indent,
+                "with_block_indent": base_indent,
                 "if_block_indent": if_block_indent,
                 "else_block_indent": else_block_indent,
-                "task_indent": curr_indent,
+                "task_indent": base_indent,
                 "depth": depth,
             }
         )
         ind = 0
-        child_indent = curr_indent + 2
+        child_indent = base_indent + 2
         for success_task in decision_tasks[curr_node]["success_tasks"]:
             if success_task["data"].type in special_tasks_types:
                 helper = IndentHelper()
                 output += helper.generate_indents(
                     special_tasks_data,
                     success_task["data"],
-                    curr_indent + 1,
+                    child_indent,
                     depth + 1,
                     ind == 0,
                     False,
@@ -96,7 +92,7 @@ class DecisionTaskIndentHelper:
                     {
                         "task_name": success_task["name"],
                         "with_block_indent": None,
-                        "if_block_indent": curr_indent + 1 if ind == 0 else None,
+                        "if_block_indent": base_indent + 1 if ind == 0 else None,
                         "else_block_indent": None,
                         "task_indent": child_indent,
                         "depth": depth + 1,
@@ -111,7 +107,7 @@ class DecisionTaskIndentHelper:
                 output += helper.generate_indents(
                     special_tasks_data,
                     failure_task["data"],
-                    curr_indent + 1,
+                    child_indent,
                     depth + 1,
                     False,
                     ind == 0,
@@ -122,7 +118,7 @@ class DecisionTaskIndentHelper:
                         "task_name": failure_task["name"],
                         "with_block_indent": None,
                         "if_block_indent": None,
-                        "else_block_indent": curr_indent + 1 if ind == 0 else None,
+                        "else_block_indent": base_indent + 1 if ind == 0 else None,
                         "task_indent": child_indent,
                         "depth": depth + 1,
                     }
@@ -156,8 +152,8 @@ class WhileTaskIndentHelper:
                 "while_block_indent": curr_indent,
                 "task_indent": curr_indent,
                 "depth": depth,
-                "if_block_indent": base_indent if if_needed else None,
-                "else_block_indent": base_indent if if_needed else None,
+                "if_block_indent": base_indent - 1 if if_needed else None,
+                "else_block_indent": base_indent - 1 if if_needed else None,
             }
         )
         for task in while_tasks[curr_task]["child_tasks"]:
