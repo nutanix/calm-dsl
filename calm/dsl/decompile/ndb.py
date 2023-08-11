@@ -214,6 +214,23 @@ def create_ndb_task_user_attrs(
                 + tag_reverse_field_map[modified_var_name],
                 inarg["value"],
             )
+    if time_machine_attrs.get(NutanixDBConst.Attrs.SNAPSHOT_WITH_TIMESTAMP, None):
+        time_machine_attrs[NutanixDBConst.Attrs.TIME_ZONE] = {
+            "value": "UTC",
+            "type": "Non_Ref",
+        }
+
+    if database_attrs.get(NutanixDBConst.Attrs.SNAPSHOT_WITH_TIMESTAMP, None):
+        database_attrs[NutanixDBConst.Attrs.TIME_ZONE] = {
+            "value": "UTC",
+            "type": "Non_Ref",
+        }
+
+    if database_server_attrs.get(NutanixDBConst.Attrs.SNAPSHOT_WITH_TIMESTAMP, None):
+        database_server_attrs[NutanixDBConst.Attrs.TIME_ZONE] = {
+            "value": "UTC",
+            "type": "Non_Ref",
+        }
 
     for value, output_var in output_variable.items():
         if output_var in output_vars_reverse_field_map:

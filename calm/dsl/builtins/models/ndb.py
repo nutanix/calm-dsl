@@ -423,7 +423,7 @@ class Database:
                 NutanixDBConst.Attrs.DATABASE: "database_id",
                 NutanixDBConst.Attrs.SNAPSHOT_WITH_TIMESTAMP: "snapshot_id",
                 "point_in_time": "user_pitr_timestamp",
-                "time_zone": "time_zone_pitr",
+                NutanixDBConst.Attrs.TIME_ZONE: "time_zone_pitr",
             }
 
             def pre_validate(self, account):
@@ -788,7 +788,7 @@ class TimeMachine:
                 NutanixDBConst.Attrs.TIME_MACHINE: "time_machine_id",
                 NutanixDBConst.Attrs.SNAPSHOT_WITH_TIMESTAMP: "snapshot_id",
                 "point_in_time": "user_pitr_timestamp",
-                "time_zone": "time_zone",
+                NutanixDBConst.Attrs.TIME_ZONE: "time_zone",
                 "expiry_days": "lcm_config__0__database_lcm_config__0__expiry_details__0__expire_in_days",
                 "expiry_date_timezone": "lcm_config__0__database_lcm_config__0__expiry_details__0__expiry_date_timezone",
                 "delete_database": "lcm_config__0__database_lcm_config__0__expiry_details__0__delete_database",

@@ -86,6 +86,7 @@ class NutanixDB:
         SNAPSHOT_WITH_TIMESTAMP = "snapshot_with_timeStamp"
         TIME_MACHINE = "time_machine"
         SLA = "sla"
+        TIME_ZONE = "time_zone"
 
         class Profile:
             """Supported Profile for Nutanix DB models"""
