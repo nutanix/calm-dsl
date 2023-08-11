@@ -11,6 +11,8 @@ def render_task_tree_template(
     CONFIG_SPEC_MAP,
     decision_tasks=None,
     while_tasks=None,
+    context="",
+    secrets_dict=[],
 ):
     """render task tree template"""
 
@@ -22,6 +24,8 @@ def render_task_tree_template(
                 entity_context,
                 RUNBOOK_ACTION_MAP,
                 CONFIG_SPEC_MAP,
+                context,
+                secrets_dict,
             )
             for tasks in ["success_tasks", "failure_tasks"]:
                 for task in decision_tasks[decision_task][tasks]:
@@ -30,6 +34,8 @@ def render_task_tree_template(
                         entity_context,
                         RUNBOOK_ACTION_MAP,
                         CONFIG_SPEC_MAP,
+                        context,
+                        secrets_dict,
                     )
 
     while_loop_rendered_tasks = {}
@@ -40,10 +46,17 @@ def render_task_tree_template(
                 entity_context,
                 RUNBOOK_ACTION_MAP,
                 CONFIG_SPEC_MAP,
+                context,
+                secrets_dict,
             )
             for child_task in while_tasks[base_task]["child_tasks"]:
                 while_loop_rendered_tasks[child_task.name] = render_task_template(
-                    child_task, entity_context, RUNBOOK_ACTION_MAP, CONFIG_SPEC_MAP
+                    child_task,
+                    entity_context,
+                    RUNBOOK_ACTION_MAP,
+                    CONFIG_SPEC_MAP,
+                    context,
+                    secrets_dict,
                 )
     special_task_data = {"decision_tasks": decision_tasks, "while_tasks": while_tasks}
     rendered_tasks = {}
@@ -69,6 +82,8 @@ def render_task_tree_template(
                     entity_context,
                     RUNBOOK_ACTION_MAP,
                     CONFIG_SPEC_MAP,
+                    context,
+                    secrets_dict,
                 )
     task_indent_tree = []
     visited = []
