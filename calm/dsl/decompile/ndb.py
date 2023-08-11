@@ -92,6 +92,15 @@ def set_ndb_calm_reference(inarg_var_name, inarg_var_value):
         obj = Cache.get_entity_data_using_uuid(
             CACHE.NDB + CACHE.KEY_SEPARATOR + entity_map["cache"], inarg_var_value
         )
+        if inarg_var_name == NutanixDBConst.Attrs.SNAPSHOT_WITH_TIMESTAMP:
+            return {
+                "value": obj.get("name", "")
+                + " ("
+                + obj.get("snapshot_timestamp", "")
+                + ")",
+                "type": "Ref",
+                "ref": entity_map["ref"],
+            }
         return {"value": obj.get("name", ""), "type": "Ref", "ref": entity_map["ref"]}
     if inarg_var_name in tags_map:
         try:
