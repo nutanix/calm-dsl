@@ -50,7 +50,7 @@ def instance_params():
 def timemachine_params():
     """Get the Time Machine config for postgres create action"""
     return TimeMachine.Postgres.Clone(
-        time_machine_name="@@{timemachine_uuid}@@",
+        time_machine="@@{timemachine_uuid}@@",
         snapshot_with_timeStamp="@@{snapshot_uuid}@@",
         time_zone="UTC",
     )

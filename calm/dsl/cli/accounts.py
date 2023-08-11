@@ -355,7 +355,12 @@ def create_account_from_dsl(client, account_file, name=None, force_create=False)
     pc_ip = server_config["pc_ip"]
     pc_port = server_config["pc_port"]
     link = "https://{}:{}/dm/self_service/settings/accounts".format(pc_ip, pc_port)
-    stdout_dict = {"name": account_name, "link": link, "state": account_state}
+    stdout_dict = {
+        "name": account_name,
+        "uuid": account_uuid,
+        "link": link,
+        "state": account_state,
+    }
     click.echo(json.dumps(stdout_dict, indent=4, separators=(",", ": ")))
 
     return stdout_dict

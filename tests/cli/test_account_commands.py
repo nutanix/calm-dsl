@@ -389,21 +389,13 @@ class TestAccountCommands:
         account_file_path = DSL_NDB_ACCOUNT_FILEPATH
 
         LOG.info("Creating Account {}".format(self.created_dsl_account_name))
-        res, err = create_account_from_dsl(
+        account_data = create_account_from_dsl(
             client, account_file_path, name=self.created_dsl_account_name
         )
 
-        if err:
-            LOG.error(err["error"])
-            pytest.fail("ACCOUNT creation from python file failed")
+        account_state = account_data["state"]
 
-        account = res.json()
-
-        account_uuid = account["metadata"]["uuid"]
-        account_status = account.get("status", {})
-        account_state = account_status.get("resources", {}).get("state", "DRAFT")
-
-        self.created_account_list.append(account_uuid)
+        self.created_account_list.append(account_data["uuid"])
 
         assert (
             (account_state == "ACTIVE")

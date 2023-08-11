@@ -19,7 +19,7 @@ ACCOUNTS = DSL_CONFIG["ACCOUNTS"]
 
 def postgresinstance_params():
     """ "Get the postgres instance config for postgres create action"""
-    return Database.Postgres.Delete(name="@@{db_uuid}@@")
+    return Database.Postgres.Delete(database="@@{db_uuid}@@")
 
 
 @runbook
