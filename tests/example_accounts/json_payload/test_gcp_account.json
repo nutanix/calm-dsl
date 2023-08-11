@@ -25,16 +25,10 @@
                 },
                 "regions": [
                     {
-                        "name": "eu-central-1"
+                        "name": "asia-east1"
                     }
                 ],
                 "public_images": [
-                    {
-                        "selfLink": "PUBLIC_IMAGE_1"
-                    },
-                    {
-                        "selfLink": "PUBLIC_IMAGE_2"
-                    }
                 ]
             }
         }

@@ -20,10 +20,6 @@ class test_aws_account_123321(Account):
         regions=[
             {
                 "name": "us-east-2",
-                "images": [
-                    "bitnami-dreamfactory-4.12.0-9-r09-linux-debian-11-x86_64-hvm-ebs-nami",
-                    "centos7-nem-demo",
-                ],
             }
         ],
     )

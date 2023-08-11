@@ -21,6 +21,4 @@ class test_azure_account_123321(Account):
         client_id=CLIENT_ID,
         client_key=CLIENT_KEY,
         cloud="PublicCloud",
-        # subscriptions=["Calm", "Self-Service"],     # For update command only
-        # default_subscription = "Calm"               # For update command only
     )

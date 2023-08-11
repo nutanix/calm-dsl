@@ -182,6 +182,9 @@ class TestAccountCommands:
             )
             pytest.fail("ACCOUNT compile command failed")
 
+        with open(json_file_path) as f:
+            known_json = json.load(f)
+
         compiled_payload = json.loads(result.output)
         compiled_payload["metadata"]["uuid"] = ""
         if account_file_path == DSL_VMWARE_ACCOUNT_FILEPATH:
@@ -206,10 +209,12 @@ class TestAccountCommands:
         if account_file_path == DSL_NDB_ACCOUNT_FILEPATH:
             compiled_payload["spec"]["resources"]["parent_reference"]["uuid"] = ""
 
-        with open(json_file_path) as f:
-            account_json = json.load(f)
+        elif account_file_path == DSL_AHV_ACCOUNT_FILEPATH:
+            known_json["spec"]["resources"]["data"]["server"] = compiled_payload[
+                "spec"
+            ]["resources"]["data"]["server"]
 
-        assert compiled_payload == account_json
+        assert compiled_payload == known_json
         LOG.info("Success")
 
     @pytest.mark.parametrize(

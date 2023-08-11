@@ -62,6 +62,9 @@ class VmwareAccountType(EntityType):
             price_item_list = cls.create_price_item_list(price_items)
             cdict["price_items"] = price_item_list
 
+        if not cdict.get("datacenter"):
+            cdict.pop("datacenter", None)
+
         return cdict
 
 

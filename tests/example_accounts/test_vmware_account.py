@@ -21,6 +21,5 @@ class test_vmware_account_123321(Account):
         password=PASSWORD,
         server=SERVER,
         port=PORT,
-        # datacenter="DATACENTER" # Datacenter only allowed for update command
         price_items={"vcpu": 0.02, "memory": 0.01, "storage": 0.0003},
     )
