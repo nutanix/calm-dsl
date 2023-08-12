@@ -174,14 +174,9 @@ def get_pe_account_uuid_using_pc_account_uuid_and_subnet_uuid(
     # As for nutanix accounts, cluster name is account name
     LOG.debug("Subnet cache data: {}".format(subnet_cache_data))
     subnet_cluster_name = subnet_cache_data["cluster_name"]
-
-    pc_account_cache = Cache.get_entity_data_using_uuid(
-        entity_type=CACHE.ENTITY.ACCOUNT, uuid=pc_account_uuid
+    return get_pe_account_using_pc_account_uuid_and_cluster_name(
+        pc_account_uuid, subnet_cluster_name
     )
-    pc_clusters = pc_account_cache["data"].get("clusters", {})
-    pc_clusters_rev = {v: k for k, v in pc_clusters.items()}
-
-    return pc_clusters_rev.get(subnet_cluster_name, "")
 
 
 def get_pe_account_uuid_using_pc_account_uuid_and_nic_data(
@@ -206,16 +201,11 @@ def get_pe_account_uuid_using_pc_account_uuid_and_nic_data(
         )
         sys.exit("AHV Subnet {} not found".format(subnet_name))
 
-    # As for nutanix accounts, cluster name is account name
+    # As for nutanix accounts, cluster name is account name (Needed if cluster_name is not supplied)
     subnet_cluster_name = subnet_cache_data["cluster_name"]
-
-    pc_account_cache = Cache.get_entity_data_using_uuid(
-        entity_type=CACHE.ENTITY.ACCOUNT, uuid=pc_account_uuid
+    return get_pe_account_using_pc_account_uuid_and_cluster_name(
+        pc_account_uuid, subnet_cluster_name
     )
-    pc_clusters = pc_account_cache["data"].get("clusters", {})
-    pc_clusters_rev = {v: k for k, v in pc_clusters.items()}
-
-    return pc_clusters_rev.get(subnet_cluster_name, "")
 
 
 def get_pe_account_using_pc_account_uuid_and_cluster_name(

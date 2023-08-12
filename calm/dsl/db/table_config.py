@@ -285,7 +285,7 @@ class AccountCache(CacheTableBase):
             if provider_type == "nutanix_pc":
                 query_obj["is_host"] = entity["status"]["resources"]["data"]["host_pc"]
 
-                # store cluster accounts for PC account (Note it will store cluster name not account name)
+                # store cluster accounts for PC account (Note it will store account name)
                 for pe_acc in (
                     entity["status"]["resources"]
                     .get("data", {})
@@ -295,7 +295,7 @@ class AccountCache(CacheTableBase):
                     group[pe_acc["uuid"]] = (
                         pe_acc.get("resources", {})
                         .get("data", {})
-                        .get("cluster_name", "")
+                        .get("cluster_name", "")  # This is  the account_name itself
                     )
 
             elif provider_type == "nutanix":
