@@ -33,6 +33,7 @@ from calm.dsl.store import Cache
 from calm.dsl.decompile.decompile_render import create_bp_dir
 from calm.dsl.decompile.file_handler import get_bp_dir
 from calm.dsl.decompile.bp_file_helper import decrypt_decompiled_secrets_file
+from calm.dsl.decompile.main import init_decompile_context
 
 from .utils import (
     get_name_query,
@@ -618,6 +619,8 @@ def _decompile_bp(
     contains_encrypted_secrets=False,
 ):
     """decompiles the blueprint from payload"""
+
+    init_decompile_context()
 
     blueprint = bp_payload["spec"]["resources"]
     blueprint_name = bp_payload["spec"].get("name", "DslBlueprint")

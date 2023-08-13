@@ -79,9 +79,11 @@ class TestDecompile:
         """Tests whether compiled payload of decompiled blueprint is same as normal blueprint"""
 
         runner = CliRunner()
+        local_dir_path = ENCRYPTED_SECRETS_BP_DIRECTORY_PATH + "/.local"
+        if os.path.exists(local_dir_path):
+            shutil.rmtree(local_dir_path)
 
-        os.makedirs(ENCRYPTED_SECRETS_BP_DIRECTORY_PATH + "/.local")
-
+        os.makedirs(local_dir_path)
         os.rename(
             ENCRYPTED_SECRETS_BP_DIRECTORY_PATH + "/decompiled_secrets.bin",
             ENCRYPTED_SECRETS_BP_DIRECTORY_PATH + "/.local/decompiled_secrets.bin",
@@ -211,5 +213,4 @@ class TestDecompile:
             ENCRYPTED_SECRETS_BP_DIRECTORY_PATH + "/.local/decompiled_secrets.bin",
             ENCRYPTED_SECRETS_BP_DIRECTORY_PATH + "/decompiled_secrets.bin",
         )
-
-        os.rmdir(ENCRYPTED_SECRETS_BP_DIRECTORY_PATH + "/.local")
+        os.rmdir(local_dir_path)
