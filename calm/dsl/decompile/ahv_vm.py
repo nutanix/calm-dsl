@@ -18,7 +18,7 @@ def render_ahv_vm(cls, boot_config):
     vm_name = cls.__name__
     user_attrs["name"] = vm_name
     if cls.cluster:
-        user_attrs["cluster_name"] = str(cls.cluster)
+        user_attrs["cluster_name"] = cls.cluster.name
 
     # Update service name map and gui name
     gui_display_name = getattr(cls, "name", "") or vm_name

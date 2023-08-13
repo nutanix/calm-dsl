@@ -8,6 +8,7 @@ from calm.dsl.decompile.file_handler import get_specs_dir, get_specs_dir_key
 from calm.dsl.builtins import SubstrateType, get_valid_identifier
 from calm.dsl.decompile.ahv_vm import render_ahv_vm
 from calm.dsl.decompile.ref_dependency import update_substrate_name
+from calm.dsl.store import Cache
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -78,6 +79,21 @@ def render_substrate_template(cls, vm_images=[], secrets_dict=[]):
         boot_config = getattr(provider_spec.resources, "boot_config", {})
         user_attrs["provider_spec"] = provider_spec.__name__
         ahv_vm_str = render_ahv_vm(provider_spec, boot_config)
+
+        # Get account data
+        try:
+            pe_acc_cache_data = Cache.get_entity_data_using_uuid(
+                entity_type="account", uuid=provider_spec.resources.account_uuid
+            )
+            pc_acc_uuid = pe_acc_cache_data["data"]["pc_account_uuid"]
+            pc_acc_cache_data = Cache.get_entity_data_using_uuid(
+                entity_type="account", uuid=pc_acc_uuid
+            )
+            user_attrs["account_name"] = pc_acc_cache_data["name"]
+        except:
+            LOG.debug(
+                "Failed to get substrate account uuid in cache. Ignoring substrate-account decompilation"
+            )
 
     else:
         # creating a file for storing provider_spec

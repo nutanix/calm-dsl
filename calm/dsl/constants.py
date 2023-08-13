@@ -28,6 +28,14 @@ class CACHE:
         POLICY_ACTION_TYPE = "policy_action_type"
         POLICY_ATTRIBUTES = "policy_attributes"
 
+    API_ENTITY_KIND_MAP = {
+        "cluster": ENTITY.AHV_CLUSTER,
+        "vpc": ENTITY.AHV_VPC,
+        "subnet": ENTITY.AHV_SUBNET,
+        "image": ENTITY.AHV_DISK_IMAGE,
+        "account": ENTITY.ACCOUNT,
+    }
+
     class NDB_ENTITY:
         DATABASE = "database"
         PROFILE = "profile"

@@ -32,7 +32,11 @@ class ProfileType(EntityType):
             cdict["__name__"] = "{}{}".format(prefix, cdict["__name__"])
 
         # TODO add support for decompilation of profile environment
-        cdict.pop("environment_reference_list", None)
+        env_uuids = cdict.pop("environment_reference_list", None)
+        if env_uuids:
+            cdict["environment_reference_list"] = [
+                {"kind": "environment", "uuid": _eid} for _eid in env_uuids
+            ]
 
         return cdict
 

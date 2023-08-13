@@ -5,7 +5,7 @@
 # the import for these below the entities will cause a TypeError.
 
 from .models.ref import ref, RefType
-from .models.calm_ref import Ref
+from .models.calm_ref import Ref, CalmRefType
 from .models.metadata import Metadata, MetadataType
 from .models.variable import Variable, setvar, CalmVariable, VariableType
 from .models.action import action, parallel, ActionType, get_runbook_action
@@ -150,6 +150,7 @@ from .models.account import Account
 
 __all__ = [
     "Ref",
+    "CalmRefType",
     "ref",
     "RefType",
     "basic_cred",

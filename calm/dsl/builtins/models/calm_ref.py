@@ -1,5 +1,6 @@
 import sys
 import uuid
+import json
 
 from calm.dsl.db.table_config import AhvSubnetsCache
 from calm.dsl.builtins.models.constants import NutanixDB as NutanixDBConst
@@ -49,6 +50,25 @@ class CalmRefType(EntityType):
         data = cls.compile()
         return data[key]
 
+    @classmethod
+    def decompile(mcls, cdict, context=[], prefix=""):
+        """return the decompiled class"""
+
+        cdict = mcls.pre_decompile(cdict, context=context, prefix=prefix)
+        cls_mapping = Ref.get_cls_kind_mapping()
+        ref_cls_kind = CACHE.API_ENTITY_KIND_MAP.get(cdict["kind"], cdict["kind"])
+
+        entity_cls = cls_mapping.get(ref_cls_kind, None)
+        if entity_cls and hasattr(entity_cls, "decompile"):
+            return entity_cls.decompile(cdict)
+
+        LOG.warning(
+            "Ref not implemented for {}. Approaching name based entry in cache".format(
+                ref_cls_kind
+            )
+        )
+        return super().decompile(cdict, context, prefix)
+
     def get_ref_cls(cls):
         """return the ref cls of the calm_ref"""
         return getattr(cls, "__ref_cls__")
@@ -69,7 +89,23 @@ class Ref:
     def __new__(cls, *args, **kwargs):
         raise TypeError("'{}' is not callable".format(cls.__name__))
 
+    @classmethod
+    def get_cls_kind_mapping(cls):
+        """return class kind mapping"""
+
+        cls_mapping = dict()
+        for _, rcls in cls.__dict__.items():
+            try:
+                rcls_kind = rcls.__ref_kind__
+                cls_mapping[rcls_kind] = rcls
+            except Exception:
+                pass
+
+        return cls_mapping
+
     class Subnet:
+        __ref_kind__ = CACHE.ENTITY.AHV_SUBNET
+
         def __new__(cls, **kwargs):
             kwargs["__ref_cls__"] = cls
             return _calm_ref(**kwargs)
@@ -79,16 +115,17 @@ class Ref:
             cluster = kwargs.get("cluster")
             vpc = kwargs.get("vpc")
             account_uuid = kwargs.get("account_uuid")
-            subnet_cache_data = None
-            try:
-                provider_obj = cls.__parent__
-                subnet_account = provider_obj.account_reference.get_dict()
-                account_uuid = subnet_account.get("uuid")
+            if not account_uuid:
+                try:
+                    provider_obj = cls.__parent__
+                    subnet_account = provider_obj.account_reference.get_dict()
+                    account_uuid = subnet_account.get("uuid")
 
-            except Exception:
-                pass
+                except Exception:
+                    pass
 
             LOG.debug("Searching for subnet with name: {}".format(name))
+            subnet_cache_data = None
             subnet_cache_data = AhvSubnetsCache.get_entity_data(
                 name, cluster=cluster, vpc=vpc, account_uuid=account_uuid
             )
@@ -102,7 +139,58 @@ class Ref:
 
             return {"kind": "subnet", "name": name, "uuid": subnet_cache_data["uuid"]}
 
+        @classmethod
+        def decompile(cls, cdict):
+            """return decompile class"""
+
+            if cdict.get("uuid"):
+                cache_data = Cache.get_entity_data_using_uuid(
+                    entity_type=CACHE.ENTITY.AHV_SUBNET, uuid=cdict["uuid"]
+                )
+
+                if not cache_data:
+                    LOG.error(
+                        "Entity with type {} and uuid {} not found in cache. Please update cache".format(
+                            CACHE.ENTITY.AHV_SUBNET, cdict["uuid"]
+                        )
+                    )
+                    sys.exit(
+                        "Invalid {} entity (uuid='')".format(
+                            CACHE.ENTITY.AHV_SUBNET, cdict["uuid"]
+                        )
+                    )
+
+                if cache_data.get("cluster_name"):
+                    return cls.__new__(
+                        cls,
+                        name=cache_data["name"],
+                        cluster=cache_data["cluster_name"],
+                        account_uuid=cache_data["account_uuid"],
+                    )
+
+                elif cache_data.get("vpc_name"):
+                    return cls.__new__(
+                        cls,
+                        name=cache_data["name"],
+                        vpc=cache_data["vpc_name"],
+                        account_uuid=cache_data["account_uuid"],
+                    )
+
+                return cls.__new__(
+                    cls,
+                    name=cache_data["name"],
+                    account_uuid=cache_data["account_uuid"],
+                )
+
+            elif cdict.get("name"):
+                return cls.__new__(cls, name=cdict["name"])
+
+            LOG.error("Invalid reference data".format(json.dumps(cdict)))
+            sys.exit("Invalid reference data".format(json.dumps(cdict)))
+
     class User:
+        __ref_kind__ = CACHE.ENTITY.USER
+
         def __new__(cls, name, **kwargs):
 
             directory = kwargs.get("directory") or ""
@@ -122,6 +210,8 @@ class Ref:
             return {"kind": "user", "name": name, "uuid": user_cache_data["uuid"]}
 
     class Group:
+        __ref_kind__ = CACHE.ENTITY.USER_GROUP
+
         def __new__(cls, name, **kwargs):
 
             directory = kwargs.get("directory") or ""
@@ -147,6 +237,8 @@ class Ref:
             }
 
     class Account:
+        __ref_kind__ = CACHE.ENTITY.ACCOUNT
+
         def __new__(cls, name, **kwargs):
 
             kwargs["__ref_cls__"] = cls
@@ -169,7 +261,38 @@ class Ref:
 
             return {"kind": "account", "name": name, "uuid": account_cache_data["uuid"]}
 
+        @classmethod
+        def decompile(cls, cdict):
+            """return decompile class"""
+
+            if cdict.get("uuid"):
+                cache_data = Cache.get_entity_data_using_uuid(
+                    entity_type=CACHE.ENTITY.ACCOUNT, uuid=cdict["uuid"]
+                )
+
+                if not cache_data:
+                    LOG.error(
+                        "Entity with type {} and uuid {} not found in cache. Please update cache".format(
+                            CACHE.ENTITY.ACCOUNT, cdict["uuid"]
+                        )
+                    )
+                    sys.exit(
+                        "Invalid {} entity (uuid='')".format(
+                            CACHE.ENTITY.ACCOUNT, cdict["uuid"]
+                        )
+                    )
+
+                return cls.__new__(cls, name=cache_data["name"])
+
+            elif cdict.get("name"):
+                return cls.__new__(cls, name=cdict["name"])
+
+            LOG.error("Invalid reference data".format(json.dumps(cdict)))
+            sys.exit("Invalid reference data".format(json.dumps(cdict)))
+
     class Role:
+        __ref_kind__ = CACHE.ENTITY.ROLE
+
         def __new__(cls, name, **kwargs):
 
             role_cache_data = Cache.get_entity_data(
@@ -182,6 +305,8 @@ class Ref:
             return {"kind": "role", "name": name, "uuid": role_cache_data["uuid"]}
 
     class Project:
+        __ref_kind__ = CACHE.ENTITY.PROJECT
+
         def __new__(cls, name, **kwargs):
 
             project_cache_data = Cache.get_entity_data(
@@ -194,6 +319,8 @@ class Ref:
             return {"kind": "project", "name": name, "uuid": project_cache_data["uuid"]}
 
     class Environment:
+        __ref_kind__ = CACHE.ENTITY.ENVIRONMENT
+
         def __new__(cls, **kwargs):
 
             kwargs["__ref_cls__"] = cls
@@ -202,11 +329,20 @@ class Ref:
         def compile(cls, name, **kwargs):
             """cls = CalmRef object"""
 
-            project_cache_data = common_helper.get_cur_context_project()
+            project_name = kwargs.get("project_name")
+            if not project_name:
+                project_cache_data = common_helper.get_cur_context_project()
+            else:
+                project_cache_data = Cache.get_entity_data(
+                    entity_type=CACHE.ENTITY.PROJECT, name=project_name
+                )
+
             project_name = project_cache_data.get("name")
             project_uuid = project_cache_data.get("uuid")
             environment_cache_data = Cache.get_entity_data(
-                entity_type="environment", name=name, project_uuid=project_uuid
+                entity_type=CACHE.ENTITY.ENVIRONMENT,
+                name=name,
+                project_uuid=project_uuid,
             )
             if not environment_cache_data:
                 LOG.error(
@@ -221,6 +357,44 @@ class Ref:
                 "name": name,
                 "uuid": environment_cache_data["uuid"],
             }
+
+        @classmethod
+        def decompile(cls, cdict):
+            """return decompile class"""
+
+            if cdict.get("uuid"):
+                cache_data = Cache.get_entity_data_using_uuid(
+                    entity_type=CACHE.ENTITY.ENVIRONMENT, uuid=cdict["uuid"]
+                )
+
+                if not cache_data:
+                    LOG.error(
+                        "Entity with type {} and uuid {} not found in cache. Please update cache".format(
+                            CACHE.ENTITY.ENVIRONMENT, cdict["uuid"]
+                        )
+                    )
+                    sys.exit(
+                        "Invalid {} entity (uuid='')".format(
+                            CACHE.ENTITY.ENVIRONMENT, cdict["uuid"]
+                        )
+                    )
+
+                project_uuid = cache_data["project_uuid"]
+                project_cache_data = Cache.get_entity_data_using_uuid(
+                    entity_type=CACHE.ENTITY.PROJECT, uuid=project_uuid
+                )
+
+                return cls.__new__(
+                    cls,
+                    name=cache_data["name"],
+                    project_name=project_cache_data["name"],
+                )
+
+            elif cdict.get("name"):
+                return cls.__new__(cls, name=cdict["name"])
+
+            LOG.error("Invalid reference data".format(json.dumps(cdict)))
+            sys.exit("Invalid reference data".format(json.dumps(cdict)))
 
     class ResourceTypeAction:
         def __new__(cls, name, **kwargs):
@@ -255,6 +429,8 @@ class Ref:
                 sys.exit(-1)
 
     class DirectoryService:
+        __ref_kind__ = CACHE.ENTITY.DIRECTORY_SERVICE
+
         def __new__(cls, name, **kwargs):
 
             ds_cache_data = Cache.get_entity_data(
@@ -272,7 +448,10 @@ class Ref:
                 "uuid": ds_cache_data["uuid"],
             }
 
+    # VM ref do not interact with local cache
     class Vm:
+        __ref_kind__ = "VM"
+
         def __new__(cls, **kwargs):
 
             kwargs["__ref_cls__"] = cls
@@ -322,7 +501,54 @@ class Ref:
 
             return vm_ref
 
+    class PolicyEvent:
+        __ref_kind__ = CACHE.ENTITY.POLICY_EVENT
+
+        def __new__(cls, name, **kwargs):
+
+            ds_cache_data = Cache.get_entity_data(
+                entity_type=CACHE.ENTITY.POLICY_EVENT, name=name
+            )
+            if not ds_cache_data:
+                LOG.error(
+                    "Policy Event {} not found. Please run: calm update cache".format(
+                        name
+                    )
+                )
+                if not name:
+                    sys.exit("Policy event name not provided")
+                sys.exit("Policy Event name={} not found".format(name))
+            return {
+                "kind": "policy_event",
+                "name": name,
+                "uuid": ds_cache_data["uuid"],
+            }
+
+    class PolicyActionType:
+        __ref_kind__ = CACHE.ENTITY.POLICY_ACTION_TYPE
+
+        def __new__(cls, name, **kwargs):
+
+            ds_cache_data = Cache.get_entity_data(
+                entity_type=CACHE.ENTITY.POLICY_ACTION_TYPE, name=name
+            )
+            if not ds_cache_data:
+                LOG.error(
+                    "Policy action type {} not found. Please run: calm update cache".format(
+                        name
+                    )
+                )
+                sys.exit("Policy action type name={} not found.".format(name))
+            return {
+                "kind": "policy_action_type",
+                "name": name,
+                "uuid": ds_cache_data["uuid"],
+            }
+
+    # RecoveryPoint ref do not interact with local cache
     class RecoveryPoint:
+        __ref_kind__ = "vm_recovery_point"
+
         def __new__(cls, **kwargs):
 
             kwargs["__ref_cls__"] = cls
@@ -380,6 +606,8 @@ class Ref:
             }
 
     class Cluster:
+        __ref_kind__ = CACHE.ENTITY.AHV_CLUSTER
+
         def __new__(cls, name=None, account_name=None, **kwargs):
 
             kwargs["__ref_cls__"] = cls
@@ -426,7 +654,46 @@ class Ref:
                     "uuid": cdict["uuid"],
                 }
 
+        @classmethod
+        def decompile(cls, cdict):
+            """return decompile class"""
+
+            if cdict.get("uuid"):
+                cache_data = Cache.get_entity_data_using_uuid(
+                    entity_type=CACHE.ENTITY.AHV_CLUSTER, uuid=cdict["uuid"]
+                )
+
+                if not cache_data:
+                    LOG.error(
+                        "Entity with type {} and uuid {} not found in cache. Please update cache".format(
+                            CACHE.ENTITY.AHV_CLUSTER, cdict["uuid"]
+                        )
+                    )
+                    sys.exit(
+                        "Invalid {} entity (uuid='')".format(
+                            CACHE.ENTITY.AHV_CLUSTER, cdict["uuid"]
+                        )
+                    )
+
+                # TODO use foreign keys
+                account_cache_data = Cache.get_entity_data_using_uuid(
+                    entity_type=CACHE.ENTITY.ACCOUNT, uuid=cache_data["account_uuid"]
+                )
+                return cls.__new__(
+                    cls,
+                    name=cache_data["name"],
+                    account_name=account_cache_data["name"],
+                )
+
+            elif cdict.get("name"):
+                return cls.__new__(cls, name=cdict["name"])
+
+            LOG.error("Invalid reference data".format(json.dumps(cdict)))
+            sys.exit("Invalid reference data".format(json.dumps(cdict)))
+
     class Vpc:
+        __ref_kind__ = CACHE.ENTITY.AHV_VPC
+
         def __new__(cls, name=None, account_name=None, **kwargs):
 
             kwargs["__ref_cls__"] = cls
@@ -474,6 +741,8 @@ class Ref:
                 }
 
     class Resource_Type:
+        __ref_kind__ = CACHE.ENTITY.RESOURCE_TYPE
+
         def __new__(cls, name, **kwargs):
             kwargs["__ref_cls__"] = cls
             kwargs["name"] = name
@@ -483,7 +752,7 @@ class Ref:
 
             provider_name = kwargs.get("provider_name", "")
             if not provider_name:
-                LOG.info("Provider name not passed, Using resource_type name for same")
+                LOG.debug("Provider name not passed, Using resource_type name for same")
                 provider_name = name
 
             if name:
@@ -503,7 +772,38 @@ class Ref:
 
             return resource_type_ref
 
+        @classmethod
+        def decompile(cls, cdict):
+            """return decompile class"""
+
+            if cdict.get("uuid"):
+                cache_data = Cache.get_entity_data_using_uuid(
+                    entity_type=CACHE.ENTITY.RESOURCE_TYPE, uuid=cdict["uuid"]
+                )
+
+                if not cache_data:
+                    LOG.error(
+                        "Entity with type {} and uuid {} not found in cache. Please update cache".format(
+                            CACHE.ENTITY.RESOURCE_TYPE, cdict["uuid"]
+                        )
+                    )
+                    sys.exit(
+                        "Invalid {} entity (uuid='')".format(
+                            CACHE.ENTITY.RESOURCE_TYPE, cdict["uuid"]
+                        )
+                    )
+
+                return cls.__new__(cls, name=cache_data["name"])
+
+            elif cdict.get("name"):
+                return cls.__new__(cls, name=cdict["name"])
+
+            LOG.error("Invalid reference data".format(json.dumps(cdict)))
+            sys.exit("Invalid reference data".format(json.dumps(cdict)))
+
     class Tunnel:
+        __ref_kind__ = "tunnel"
+
         def __new__(cls, name, **kwargs):
             kwargs["__ref_cls__"] = cls
             kwargs["name"] = name
@@ -531,44 +831,6 @@ class Ref:
             }
 
             return tunnel_ref
-
-    class PolicyEvent:
-        def __new__(cls, name, **kwargs):
-
-            ds_cache_data = Cache.get_entity_data(
-                entity_type=CACHE.ENTITY.POLICY_EVENT, name=name
-            )
-            if not ds_cache_data:
-                LOG.error(
-                    "Policy Event {} not found. Please run: calm update cache".format(
-                        name
-                    )
-                )
-                sys.exit("Policy Event name={} not found".format(name))
-            return {
-                "kind": "policy_event",
-                "name": name,
-                "uuid": ds_cache_data["uuid"],
-            }
-
-    class PolicyActionType:
-        def __new__(cls, name, **kwargs):
-
-            ds_cache_data = Cache.get_entity_data(
-                entity_type=CACHE.ENTITY.POLICY_ACTION_TYPE, name=name
-            )
-            if not ds_cache_data:
-                LOG.error(
-                    "Policy action type {} not found. Please run: calm update cache".format(
-                        name
-                    )
-                )
-                sys.exit("Policy action type name={} not found.".format(name))
-            return {
-                "kind": "policy_action_type",
-                "name": name,
-                "uuid": ds_cache_data["uuid"],
-            }
 
     class NutanixDB:
         """Base Calm Ref Class for Nutanix DB entitites (Not Callable)"""
