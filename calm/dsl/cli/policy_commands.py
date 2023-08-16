@@ -66,8 +66,8 @@ def _get_policy_list(name, filter_by, limit, offset, quiet, all_items, out):
     required=True,
     help="Path of Policy file to upload",
 )
-@click.option("--name", "-n", default=None, help="Job name (Optional)")
-@click.option("--description", default=None, help="Job description (Optional)")
+@click.option("--name", "-n", default=None, help="Policy name (Optional)")
+@click.option("--description", default=None, help="Policy description (Optional)")
 @click.option(
     "--force",
     "-fc",
@@ -76,7 +76,7 @@ def _get_policy_list(name, filter_by, limit, offset, quiet, all_items, out):
     help="",
 )
 def _create_policy_command(policy_file, name, description, force):
-    """Creates a job in scheduler"""
+    """Create a policy"""
 
     create_policy_command(policy_file, name, description, force)
 

@@ -96,7 +96,6 @@ class POLICY:
         class APP:
             LAUNCH = "LAUNCH"
             DAY_TWO_OPERATION = "DAY_TWO_OPERATION"
-            PRE_CREATE = "PRE_CREATE"
 
         class RUNBOOK:
             EXECUTE = "EXECUTE"

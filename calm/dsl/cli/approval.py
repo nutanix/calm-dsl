@@ -188,12 +188,19 @@ def update_approval_command(name, state, comment="", uuid=""):
     approval_res = approval.get("status", {}).get("resources", {})
     approval_state = approval_res.get("state", "DRAFT")
 
+    # in case of single request from approval we need to fetch uuid explicitly from metadata
+    if not uuid:
+        approval = get_approval(client, name, uuid)
+        approval_uuid = approval["metadata"]["uuid"]
+    else:
+        approval_uuid = uuid
+
     ContextObj = get_context()
     server_config = ContextObj.get_server_config()
     pc_ip = server_config["pc_ip"]
     pc_port = server_config["pc_port"]
     link = "https://{}:{}/console/#page/explore/calm/policies/approvals/requests/{}".format(
-        pc_ip, pc_port, uuid
+        pc_ip, pc_port, approval_uuid
     )
     stdout_dict = {"name": approval_name, "link": link, "state": approval_state}
     click.echo(

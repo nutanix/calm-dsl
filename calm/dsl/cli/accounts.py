@@ -826,6 +826,7 @@ def describe_k8s_account(spec):
         "basic": "Basic Auth",
         "client_certificate": "Client Certificate",
         "ca_certificate": "CA Certificate",
+        "service_account": "Service Account",
     }
 
     auth = spec["authentication"]
