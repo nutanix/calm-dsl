@@ -31,10 +31,20 @@ def get_cache_table_types():
 
 
 @show.command("cache")
-def show_cache_command():
+@click.option(
+    "--entity",
+    "-e",
+    default=None,
+    help="Cache entity, if not given will update whole cache",
+    type=click.Choice(get_cache_table_types()),
+)
+def show_cache_command(entity):
     """Display the cache data"""
 
-    Cache.show_data()
+    if entity:
+        Cache.show_table(entity)
+    else:
+        Cache.show_data()
 
 
 @clear.command("cache")
