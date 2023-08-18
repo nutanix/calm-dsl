@@ -25,28 +25,30 @@ class UserTestMin(Policy):
             attribute="Runbook Name", operator="like", value="Demo runbook"
         )
     ]
-    actions = CalmPolicy.Action.approvalAction(
-        approver_sets=[
-            create_policy_approver_set(
-                name="ApproverSet1",  # default is ""
-                type=POLICY.APPROVER_SET.ANY,  # default is "ANY"
-                users=[CalmPolicy.Approver("ssptest1@qa.nucalm.io")],  # default []
-                external_users=[
-                    CalmPolicy.Approver.externalUser("abc@gmail.com")
-                ],  # default []
-            ),
-            create_policy_approver_set(
-                name="ApproverSet2",
-                type=POLICY.APPROVER_SET.ALL,  # default is "ANY"
-                users=[CalmPolicy.Approver.user("ssptest1@qa.nucalm.io")],  # default []
-                groups=[
-                    CalmPolicy.Approver.group(
-                        "cn=ssptestgroup,cn=users,dc=qa,dc=nucalm,dc=io"
-                    )
-                ],  # default []
-            ),
-        ]
-    )  # if not defined then it will be empty list
+    actions = [
+        CalmPolicy.Action.approvalAction(
+            approver_sets=[
+                create_policy_approver_set(
+                    name="ApproverSet1",  # default is ""
+                    type=POLICY.APPROVER_SET.ANY,  # default is "ANY"
+                    users=[CalmPolicy.Approver("ssptest1@qa.nucalm.io")],  # default []
+                    # external_users=[CalmPolicy.Approver.externalUser("abc@gmail.com")],  # default []
+                ),
+                create_policy_approver_set(
+                    name="ApproverSet2",
+                    type=POLICY.APPROVER_SET.ALL,  # default is "ANY"
+                    users=[
+                        CalmPolicy.Approver.user("ssptest1@qa.nucalm.io")
+                    ],  # default []
+                    groups=[
+                        CalmPolicy.Approver.group(
+                            "cn=ssptestgroup,cn=users,dc=qa,dc=nucalm,dc=io"
+                        )
+                    ],  # default []
+                ),
+            ]
+        )
+    ]  # if not defined then it will be empty list
     # enabled = true # default is false
 
 

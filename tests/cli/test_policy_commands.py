@@ -43,6 +43,7 @@ DSL_DAY2_BP = "tests/blueprint_example/test_bp_dayTwo/blueprint.py"
     LV(CALM_VERSION) < LV("3.5.0"),
     reason="Approval policy is supported from 3.5.0",
 )
+@pytest.mark.parallel_executable
 class TestPolicyCommands:
     @classmethod
     def setup_class(cls):

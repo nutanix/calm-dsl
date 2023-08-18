@@ -32,7 +32,7 @@ class PolicyAprroval(Policy):
     ]
 
     # if not defined then it will be empty list
-    actions = CalmPolicy.Action.approvalAction(approver_sets=[ApproverSet1])
+    actions = [CalmPolicy.Action.approvalAction(approver_sets=[ApproverSet1])]
 
     # default is false
     enabled = False

@@ -22,7 +22,7 @@ class PolicyAprroval(Policy):
     conditions = []
 
     # if not defined then it will be empty list
-    actions = CalmPolicy.Action.approvalAction()
+    actions = [CalmPolicy.Action.approvalAction()]
 
     # default is false
     enabled = False

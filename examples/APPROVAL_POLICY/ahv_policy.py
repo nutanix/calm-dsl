@@ -9,13 +9,13 @@ from tests.utils import get_approval_project
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 POLICY_PROJECT = get_approval_project(DSL_CONFIG)
 
-#Select this option if you want any approvers selected for the set to approve the action.
+# Select this option if you want any approvers selected for the set to approve the action.
 class ApproverSet1(PolicyApproverSet):
     type = POLICY.APPROVER_SET.ANY
     users = [CalmPolicy.Approver.user("admin")]
 
 
-#Select this option if you want all approvers in the set to approve the action.
+# Select this option if you want all approvers in the set to approve the action.
 class ApproverSet2(PolicyApproverSet):
     type = POLICY.APPROVER_SET.ALL
     users = [CalmPolicy.Approver.user("admin")]
@@ -30,14 +30,11 @@ class PolicyAprroval(Policy):
     # condition list
     conditions = [
         CalmPolicy.Condition(attribute="AHV: Cores Per vCPU", operator=">", value="3"),
-        CalmPolicy.Condition(attribute="AHV: Memory", operator="<", value="5")
+        CalmPolicy.Condition(attribute="AHV: Memory", operator="<", value="5"),
     ]
 
-
     # if not defined Policy will be saved in Draft state
-    actions = CalmPolicy.Action.approvalAction(
-        approver_sets=[ApproverSet2]
-    )
+    actions = [CalmPolicy.Action.approvalAction(approver_sets=[ApproverSet2])]
 
     # default is false
     enabled = True

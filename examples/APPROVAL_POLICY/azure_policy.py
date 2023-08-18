@@ -9,13 +9,13 @@ from tests.utils import get_approval_project
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 POLICY_PROJECT = get_approval_project(DSL_CONFIG)
 
-#Select this option if you want any approvers selected for the set to approve the action.
+# Select this option if you want any approvers selected for the set to approve the action.
 class ApproverSet1(PolicyApproverSet):
     type = POLICY.APPROVER_SET.ANY
     users = [CalmPolicy.Approver.user("admin")]
 
 
-#Select this option if you want all approvers in the set to approve the action.
+# Select this option if you want all approvers in the set to approve the action.
 class ApproverSet2(PolicyApproverSet):
     type = POLICY.APPROVER_SET.ALL
     users = [CalmPolicy.Approver.user("admin")]
@@ -29,16 +29,19 @@ class PolicyAprroval(Policy):
 
     # condition list
     conditions = [
-        CalmPolicy.Condition(attribute="Azure: Location", operator="contains", value="us"),
-        CalmPolicy.Condition(attribute="Azure: Data Disk Size", operator="=", value="2"),
-        CalmPolicy.Condition(attribute="Azure: Data Disk Name", operator="like", value="vpc")
+        CalmPolicy.Condition(
+            attribute="Azure: Location", operator="contains", value="us"
+        ),
+        CalmPolicy.Condition(
+            attribute="Azure: Data Disk Size", operator="=", value="2"
+        ),
+        CalmPolicy.Condition(
+            attribute="Azure: Data Disk Name", operator="like", value="vpc"
+        ),
     ]
 
-
     # if not defined Policy will be saved in Draft state
-    actions = CalmPolicy.Action.approvalAction(
-        approver_sets=[ApproverSet2]
-    )
+    actions = [CalmPolicy.Action.approvalAction(approver_sets=[ApproverSet2])]
 
     # default is false
     enabled = False

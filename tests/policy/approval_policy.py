@@ -11,13 +11,15 @@ PROJECT_NAME = PROJECT["NAME"]
 
 class ApproverSet1(PolicyApproverSet):
     type = POLICY.APPROVER_SET.ANY
-    external_users = [CalmPolicy.Approver.externalUser("abc@gmail.com")]
+    users = [CalmPolicy.Approver.user("admin")]
+    # external_users = [CalmPolicy.Approver.externalUser("abc@gmail.com")]
     # users = [CalmPolicy.Approver.user("ssptest1@qa.nucalm.io")]
 
 
 class ApproverSet2(PolicyApproverSet):
     type = POLICY.APPROVER_SET.ALL
-    external_users = [CalmPolicy.Approver.externalUser("abc@gmail.com")]
+    users = [CalmPolicy.Approver.user("admin")]
+    # external_users = [CalmPolicy.Approver.externalUser("abc@gmail.com")]
     # default case - if nothing specified after Approver it will assume it to be user
     # users = [CalmPolicy.Approver("ssptest1@qa.nucalm.io")]
     # groups = [
@@ -40,9 +42,9 @@ class UserTest(Policy):
     ]
 
     # if not defined then it will be empty list
-    actions = CalmPolicy.Action.approvalAction(
-        approver_sets=[ApproverSet1, ApproverSet2]
-    )
+    actions = [
+        CalmPolicy.Action.approvalAction(approver_sets=[ApproverSet1, ApproverSet2])
+    ]
 
     # default is false
     enabled = True
