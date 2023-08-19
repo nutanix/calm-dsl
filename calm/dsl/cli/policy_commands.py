@@ -82,6 +82,7 @@ def _create_policy_command(policy_file, name, description, force):
 
 
 @update.command("policy", feature_min_version="3.5.0", experimental=True)
+@click.argument("policy_name")
 @click.option(
     "--file",
     "-f",
@@ -90,12 +91,11 @@ def _create_policy_command(policy_file, name, description, force):
     required=True,
     help="Path of Policy file to upload",
 )
-@click.option("--name", "-n", default=None, help="Policy name (Optional)")
 @click.option("--description", default=None, help="Policy description (Optional)")
-def _update_policy_command(policy_file, name, description):
+def _update_policy_command(policy_file, policy_name, description):
     """Updates a policy"""
 
-    update_policy_command(policy_file, name, description)
+    update_policy_command(policy_file, policy_name, description)
 
 
 @enable.command("policy", feature_min_version="3.5.0", experimental=True)

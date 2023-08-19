@@ -334,8 +334,8 @@ class TestPolicyCommands:
             [
                 "update",
                 "policy",
+                self.created_dsl_policy_name,
                 "--file={}".format(dsl_filepath),
-                "--name={}".format(self.created_dsl_policy_name),
                 "--description='Test DSL Policy: to update'",
             ],
         )

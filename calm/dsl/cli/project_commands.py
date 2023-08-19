@@ -195,6 +195,7 @@ def _describe_project(project_name, out):
 )
 @click.option(
     "--append-only",
+    "-ao",
     "append_only",
     is_flag=True,
     default=False,
@@ -202,6 +203,7 @@ def _describe_project(project_name, out):
 )
 @click.option(
     "--disable-quotas",
+    "-dq",
     "disable_quotas",
     is_flag=True,
     default=False,
@@ -209,6 +211,7 @@ def _describe_project(project_name, out):
 )
 @click.option(
     "--enable-quotas",
+    "-eq",
     "enable_quotas",
     is_flag=True,
     default=False,
