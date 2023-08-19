@@ -45,13 +45,16 @@ def describe_policy(policy_name, out):
         + ")"
     )
     click.echo("Description: " + highlight_text(policy["status"]["description"]))
+
+    policy_scope = (
+        policy["spec"]["resources"].get("category_list", {}).get("Project", "-")
+    )
+    click.echo("Scope: " + highlight_text(policy_scope))
+
     click.echo("Status: " + highlight_text(policy["status"]["resources"]["state"]))
     click.echo(
-        "Owner: " + highlight_text(policy["metadata"]["owner_reference"]["name"]),
-        nl=False,
-    )
-    click.echo(
-        " Project: " + highlight_text(policy["metadata"]["project_reference"]["name"])
+        "Owner: "
+        + highlight_text(policy["metadata"].get("owner_reference", {}).get("name", "-"))
     )
 
     created_on = int(policy["metadata"]["creation_time"]) // 1000000
@@ -224,6 +227,19 @@ def update_policy(client, policy_payload, name=None, description=None):
     policy = get_policy(client, policy_payload["spec"]["name"])
     policy_payload["metadata"]["spec_version"] = policy["metadata"]["spec_version"]
     uuid = policy["metadata"]["uuid"]
+
+    policy_old_project_name = (
+        policy["metadata"].get("project_reference", {}).get("name", "")
+    )
+    policy_new_project_name = (
+        policy_payload["metadata"].get("project_reference", {}).get("name", "")
+    )
+    if policy_new_project_name != policy_old_project_name:
+        LOG.warning(
+            "Project (Policy Scope) will be changed to {} from {}".format(
+                policy_new_project_name, policy_old_project_name
+            )
+        )
 
     return client.policy.update(uuid, policy_payload)
 

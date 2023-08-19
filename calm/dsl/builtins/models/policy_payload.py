@@ -62,6 +62,12 @@ def create_policy_payload(UserPolicy, metadata={}):
     if not metadata.get("categories", {}):
         metadata["categories"] = config_categories
 
+    # Add project-reference in category-list also for policy-scope
+    if metadata.get("project_reference", {}):
+        if not UserPolicy.category_list:
+            UserPolicy.category_list = {}
+        UserPolicy.category_list["Project"] = metadata["project_reference"]["name"]
+
     metadata["kind"] = "policy"
     UserPolicyPayload = _policy_payload()
     UserPolicyPayload.metadata = metadata

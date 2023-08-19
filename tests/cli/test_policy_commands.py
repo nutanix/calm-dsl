@@ -14,6 +14,8 @@ from calm.dsl.store import Version
 from calm.dsl.builtins import read_local_file
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+POLICY_PROJECT = get_approval_project(DSL_CONFIG)
+
 LOG = get_logging_handle(__name__)
 
 CALM_VERSION = Version.get_version("Calm")
@@ -299,6 +301,11 @@ class TestPolicyCommands:
             )
             pytest.fail("Policy describe failed")
 
+        assert (
+            "Scope: {}".format(POLICY_PROJECT) in result.output
+        ), "No Scope found with name {}".format(POLICY_PROJECT)
+        LOG.info("Success")
+
     def _test_dsl_policy_enable(self):
         runner = CliRunner()
         result = runner.invoke(cli, ["enable", "policy", self.created_dsl_policy_name])
@@ -347,6 +354,8 @@ class TestPolicyCommands:
             pytest.fail("Policy update from python file failed")
         LOG.info(result.output)
         LOG.info("Success")
+
+        self._test_policy_describe()
 
     def _test_dsl_policy_delete(self):
         runner = CliRunner()
