@@ -143,31 +143,35 @@ class WhileTaskIndentHelper:
         """
         while_tasks = special_tasks_data["while_tasks"]
         output = self.output
-        curr_indent = base_indent
-        if if_needed or else_needed:
-            curr_indent += 1
+        if_block_indent = None
+        else_block_indent = None
+        if if_needed:
+            if_block_indent = base_indent - 1
+        elif else_needed:
+            else_block_indent = base_indent - 1
+
         output.append(
             {
                 "task_name": curr_task,
-                "while_block_indent": curr_indent,
-                "task_indent": curr_indent,
+                "while_block_indent": base_indent,
+                "task_indent": base_indent,
                 "depth": depth,
-                "if_block_indent": base_indent - 1 if if_needed else None,
-                "else_block_indent": base_indent - 1 if if_needed else None,
+                "if_block_indent": if_block_indent,
+                "else_block_indent": else_block_indent,
             }
         )
         for task in while_tasks[curr_task]["child_tasks"]:
             if task.type in special_tasks_types:
                 helper = IndentHelper()
                 output += helper.generate_indents(
-                    special_tasks_data, task, curr_indent + 1, depth + 1, False, False
+                    special_tasks_data, task, base_indent + 1, depth + 1, False, False
                 )
             else:
                 output.append(
                     {
                         "task_name": task.name,
                         "while_block_indent": None,
-                        "task_indent": curr_indent + 1,
+                        "task_indent": base_indent + 1,
                         "depth": depth + 1,
                         "if_block_indent": None,
                         "else_block_indent": None,

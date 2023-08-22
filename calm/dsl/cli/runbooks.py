@@ -19,6 +19,7 @@ from calm.dsl.builtins import (
 )
 from calm.dsl.decompile.decompile_render import create_runbook_dir
 from calm.dsl.decompile.file_handler import get_runbook_dir
+from calm.dsl.decompile.main import init_decompile_context
 from calm.dsl.runbooks import runbook, create_runbook_payload, RunbookType
 from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
 from calm.dsl.config import get_context
@@ -189,7 +190,7 @@ def decompile_runbook_command(name, runbook_file, prefix="", runbook_dir=None):
     if name and runbook_file:
         LOG.error("Please provide either runbook file location or server runbook name")
         sys.exit("Both runbook name and file location provided.")
-
+    init_decompile_context()
     if name:
         decompile_runbook_from_server(name=name, runbook_dir=runbook_dir, prefix=prefix)
 
