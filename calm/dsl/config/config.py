@@ -226,7 +226,7 @@ class ConfigHandle:
         read_timeout,
         policy_status,
         approval_policy_status,
-        stratos_status
+        stratos_status,
     ):
         """Updates the config file data"""
 
@@ -244,7 +244,7 @@ class ConfigHandle:
             read_timeout,
             policy_status,
             approval_policy_status,
-            stratos_status
+            stratos_status,
         )
 
         LOG.debug("Writing configuration to '{}'".format(config_file))
@@ -273,7 +273,7 @@ def set_dsl_config(
     read_timeout,
     policy_status,
     approval_policy_status,
-    stratos_status
+    stratos_status,
 ):
 
     """
@@ -303,5 +303,5 @@ def set_dsl_config(
         read_timeout=read_timeout,
         policy_status=policy_status,
         approval_policy_status=approval_policy_status,
-        stratos_status=stratos_status
+        stratos_status=stratos_status,
     )

@@ -495,6 +495,7 @@ def add_vpc_endpoints(config):
         with open(LOCAL_WINDOWS_ENDPOINT_VPC, "w") as f:
             f.write(dsl_windows_endpoint)
 
+
 def add_approval_details(config):
 
     config["IS_POLICY_ENABLED"] = False

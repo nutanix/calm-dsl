@@ -22,7 +22,7 @@ class Cache:
 
         db = get_db_handle()
         db_tables = db.registered_tables
-        
+
         # Get context
         context = get_context()
 
@@ -64,7 +64,6 @@ class Cache:
                 else:
                     cache_tables[table.__cache_type__] = table
         return cache_tables
-
 
     @classmethod
     def get_entity_data(cls, entity_type, name, **kwargs):

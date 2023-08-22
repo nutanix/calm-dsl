@@ -117,7 +117,7 @@ class Context:
             config["connection_timeout"] = DEFAILT_CONNECTION_TIMEOUT
         if "read_timeout" not in config:
             config["read_timeout"] = DEFAULT_READ_TIMEOUT
-        
+
         return config
 
     def get_policy_config(self):
