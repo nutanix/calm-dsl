@@ -21,6 +21,11 @@ from calm.dsl.decompile.variable import get_secret_variable_files
 from calm.dsl.decompile.file_handler import get_local_dir
 from calm.dsl.builtins import BlueprintType, ServiceType, PackageType
 from calm.dsl.builtins import DeploymentType, ProfileType, SubstrateType
+from calm.dsl.builtins import get_valid_identifier
+from calm.dsl.log import get_logging_handle
+
+
+LOG = get_logging_handle(__name__)
 
 SECRETS_FILE_ENCRYPTION_KEY = (
     b"dslengine@calm23"  # the key must be a multiple of 16 bytes
@@ -48,19 +53,23 @@ def render_bp_file_template(
 
     credential_list = []
     cred_file_dict = dict()
-    for index, cred in enumerate(cls.credentials):
+    for _, cred in enumerate(cls.credentials):
         cred_name = getattr(cred, "name", "") or cred.__name__
+        cred_type = cred.type
+        cred_file_name = "BP_CRED_{}_{}".format(
+            get_valid_identifier(cred_name), cred_type
+        )
+
         if default_cred_name and cred_name == default_cred_name:
             cred.default = True
+
         credential_list.append(render_credential_template(cred))
-        cred_file_dict["BP_CRED_" + cred_name + "_PASSWORD"] = getattr(
-            cred, "secret", ""
-        ).get("value", "")
+        cred_file_dict[cred_file_name] = getattr(cred, "secret", "").get("value", "")
         secrets_dict.append(
             {
                 "context": "credential_definition_list." + cred_name,
                 "secret_name": cred_name,
-                "secret_value": cred_file_dict["BP_CRED_" + cred_name + "_PASSWORD"],
+                "secret_value": cred_file_dict[cred_file_name],
             }
         )
 
@@ -131,7 +140,12 @@ def render_bp_file_template(
             click.secho("Enter the value to be used in secret files")
         for file_name in secret_files:
             if contains_encrypted_secrets:
-                secret_val = cred_file_dict[file_name]
+                try:
+                    secret_val = cred_file_dict[file_name]
+                except Exception:
+                    import pdb
+
+                    pdb.set_trace()
             else:
                 secret_val = click.prompt(
                     "\nValue for {}".format(file_name),
@@ -165,7 +179,15 @@ def render_bp_file_template(
                 v, vm_images=vm_images, secrets_dict=secrets_dict
             )
 
-    encrypt_decompile_secrets(secrets_dict=secrets_dict)
+    is_any_secret_value_available = False
+    for _e in secrets_dict:
+        if _e.get("secret_value", ""):
+            is_any_secret_value_available = True
+            break
+
+    if is_any_secret_value_available:
+        LOG.info("Creating secret metadata file")
+        encrypt_decompile_secrets(secrets_dict=secrets_dict)
 
     blueprint = render_blueprint_template(cls)
 
@@ -277,6 +299,8 @@ def decrypt_decompiled_secrets_file(key=SECRETS_FILE_ENCRYPTION_KEY, pth=""):
         local_dir_pth = get_local_dir()
 
     encrypted_file_path = os.path.join(local_dir_pth, "decompiled_secrets.bin")
+    if not os.path.exists(encrypted_file_path):
+        return {}
 
     # read the contents of the encrypted file
     with open(encrypted_file_path, "rb") as f:

@@ -454,6 +454,9 @@ class DefaultProfile(Profile):
             name="Test HTTP Task",
             target=ref(MySQLService),
         )
+        CalmTask.Scaling.scale_out(1, target=ref(LampDeployment), name="Scale out Lamp")
+        CalmTask.Delay(delay_seconds=60, target=ref(MySQLService), name="Delay")
+        CalmTask.Scaling.scale_in(1, target=LampDeployment, name="Scale in Lamp")
         with parallel():
             CalmTask.Exec.escript(
                 "print 'Hello World!'", name="Test Escript", target=ref(MySQLService)
@@ -470,9 +473,6 @@ class DefaultProfile(Profile):
                 variables=["var2"],
                 target=ref(MySQLService),
             )
-        CalmTask.Scaling.scale_out(1, target=ref(LampDeployment), name="Scale out Lamp")
-        CalmTask.Delay(delay_seconds=60, target=ref(MySQLService), name="Delay")
-        CalmTask.Scaling.scale_in(1, target=LampDeployment, name="Scale in Lamp")
 
 
 class ExistingVMBlueprint(Blueprint):

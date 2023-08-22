@@ -1,5 +1,9 @@
 import copy
 
+from calm.dsl.log import get_logging_handle
+
+LOG = get_logging_handle(__name__)
+
 
 def get_secrets_from_context(decompiled_secrets, context):
     """Finds all the secrets by context of the current secret"""
@@ -18,9 +22,17 @@ def is_secret_modified(filtered_secrets, name, value):
     Secret is considered modified if its name/value has changed
     """
 
-    return (value) and (
-        (name not in filtered_secrets) or (filtered_secrets[name] != value)
-    )
+    if name in filtered_secrets and filtered_secrets[name] != value:
+        LOG.warning("Value of decompiled secret variable {} is modified".format(name))
+        LOG.debug(
+            "Original value: {}, New value: {}".format(filtered_secrets[name], value)
+        )
+        return True
+
+    elif name not in filtered_secrets:
+        return True
+
+    return False
 
 
 def strip_secrets(
@@ -207,8 +219,10 @@ def strip_secrets(
                             )
                         )
 
-                    if not (task.get("attrs", {}) or {}).get("headers", []) or []:
-                        continue
+                http_task_headers = (task.get("attrs", {}) or {}).get(
+                    "headers", []
+                ) or []
+                if http_task_headers:
                     strip_entity_secret_variables(
                         path_list
                         + [
@@ -221,28 +235,8 @@ def strip_secrets(
                         ],
                         task["attrs"],
                         field_name="headers",
-                        context=var_runbook_task_name_context,
+                        context=var_runbook_task_name_context + ".headers",
                     )
-
-                auth_headers = (task.get("attrs", {}) or {}).get("headers", []) or []
-
-                if not auth_headers:
-                    continue
-
-                strip_entity_secret_variables(
-                    path_list
-                    + [
-                        "action_list",
-                        action_idx,
-                        "runbook",
-                        "task_definition_list",
-                        task_idx,
-                        "attrs",
-                    ],
-                    task["attrs"],
-                    field_name="headers",
-                    context=var_runbook_task_name_context + ".headers",
-                )
 
     def strip_runbook_secret_variables(path_list, obj):
 
@@ -459,7 +453,9 @@ def patch_secrets(resources, secret_map, secret_variables, existing_secrets=[]):
             variable["attrs"] = {"is_secret_modified": False}
 
     if secret_variables:
-        for path, secret, _ in secret_variables:
+        for secret_var_data in secret_variables:
+            path = secret_var_data[0]
+            secret = secret_var_data[1]
             variable = resources
             for sub_path in path:
                 if isinstance(variable, dict) and sub_path not in variable:

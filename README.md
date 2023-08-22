@@ -68,7 +68,8 @@ Decompilation is process to consume json data for any entity and convert it back
 - Separate files are created under `scripts` directory in decompiled blueprint directory for storing scripts used in variable, tasks, guest customization etc.
 - Provider specs (Other than AHV) / Runtime editables for substrates  are stored in `specs` directory in blueprint directory.
 - Name of created files are taken from the context of variable/task. For ex: Filename for service action task script: Service_MySQLService_Action___create___Task_Task1
-- Decompile existing server blueprint: `calm decompile bp <bp_name>`. Use `calm decompile bp <bp_name> --with_secrets` to fill the value for secrets used inside blueprint interactively while decompiling blueprint.
+- Decompile blueprint with secrets: Decompile the blueprint using the  `--passphrase` or`-ps` flag. This will create files for all secret files and have encrypted secrets in them. This also creates a `decompiled_secrets.bin` file (Not to be changed) which is used during blueprint create for validating if the encrypted secret value is not modified while launching the blueprint again.
+- [Deprecated] Decompile blueprint : `calm decompile bp <bp_name>`. Use `calm decompile bp <bp_name> --with_secrets` to fill the value for secrets at runtime in the terminal which are used inside blueprint.
 - Decompile bp from existing json file: `calm decompile bp --file <json_file_location>`.
 - Decompile marketplace blueprint: `calm decompile marketplace bp <bp_name> --version <bp_version>`.
 - Decompile bp to a location: `calm decompile bp <bp_name> --dir <bp_dir>`. It will decompile blueprint entities to `bp_dir` location.
@@ -154,6 +155,12 @@ Use `calm get roles` to list all roles in PC. The below roles are relevant for C
 - Update project using dsl file: `calm update project <project_name> --file <project_file_location>`. Environments will not be updated as part of this operation. Use `no-cache-update` flag to skip cache updations post operation.
 - Update project using cli switches: `calm update project <project_name> --add_user/--remove_user <user_name> --add_group/--remove_group <group_name> --add_account/--remove_account <account_name>`.
 - Delete project: `calm delete project <project_name>`. Use `no-cache-update` flag to skip cache updations post operation.
+- Enable/Disable Quotas: 
+ - During project creation, it checks if quotas are avaialble in project payload (json or python file). If it is there, then quotas are enabled in the project.
+ - During project updation, use the following flags `--enable-quotas/-eq` and `--disable-quotas/-dq`
+  - If the project already has quotas set and enabled and quotas are present in {project_file} then the quotas would be updated
+  - If the project already has quotas set and enabled and there are no quotas in {project_file} then the original quotas in the projects would be persisted.
+  - If the project doesn't have quotas enabled/set and the {project_file} has quotas then the quotas would be enabled and set in the project.
 - Note: While using `no-cache-update` flag in project create and update commands, user should not pass environment object in the project model. User should update the cache separately after creation/updation of projects. Feature is experimental and will be discontinued after [#184](https://github.com/nutanix/calm-dsl/issues/184) is fixed.
 
 ### Environments

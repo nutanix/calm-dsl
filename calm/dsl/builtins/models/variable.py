@@ -152,7 +152,9 @@ def simple_variable_secret(
             )
         if validate_regex and regex and value and common_helper.is_not_macro(value):
             regex_result = re.match(regex, value)
-            if not regex_result:
+            if (
+                not regex_result and ":utf-8" not in value
+            ):  # TODO Fix it, the case when value is encoded and received from the server
                 raise ValueError(
                     "Value '{}' doesn't match with specified regex '{}'".format(
                         value, regex
@@ -306,7 +308,9 @@ def _advanced_variable(
         # If options are None, just regex validate the value
         if validate_regex and regex and value and common_helper.is_not_macro(value):
             regex_result = re.match(regex["value"], value)
-            if not regex_result:
+            if (
+                not regex_result and ":utf-8" not in value
+            ):  # TODO Fix it, the case when value is encoded and received from the server:
                 raise ValueError(
                     "Value '{}' doesn't match with specified regex '{}'".format(
                         value, regex["value"]

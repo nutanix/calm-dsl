@@ -456,6 +456,12 @@ def create_blueprint_from_dsl(
     client, bp_file, name=None, description=None, force_create=False
 ):
 
+    decompiled_secrets = decrypt_decompiled_secrets_file(pth=bp_file.rsplit("/", 1)[0])
+    if decompiled_secrets:
+        LOG.warning(
+            "Decompiled secrets metadata found. Use `--passphrase/-ps` cli option to create blueprint with decompiled secrets"
+        )
+
     bp_payload = compile_blueprint(bp_file)
     if bp_payload is None:
         err_msg = "User blueprint not found in {}".format(bp_file)
@@ -499,6 +505,8 @@ def create_blueprint_from_dsl_with_encrypted_secrets(
         )
 
     decompiled_secrets = decrypt_decompiled_secrets_file(pth=bp_file.rsplit("/", 1)[0])
+    if not decompiled_secrets:
+        LOG.warning("Decompiled secrets metadata not found. No need to pass passphrase")
 
     if name:
         bp_payload["spec"]["name"] = name

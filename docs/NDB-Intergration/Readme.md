@@ -1,5 +1,29 @@
-# Calm-DSL supports Nutanix Database (NDB) operations in Runbook for Postgres Databases:
+# Table of Contents
+- [Overview](#overview)
+- [NDB Entity Cache support](#ndb-entity-cache-support)
+- [Create Task](#create-task)
+  * [database_server_config](#database_server_config)
+  * [instance_config](#instance_config)
+  * [timemachine_config](#timemachine_config)
+  * [tag_config](#tag_config)
+  * [outargs](#outargs)
+- [Delete Task](#delete-task)
+  * [instance_config](#instance_config-1)
+- [Create Snapshot Task](#create-snapshot-task)
+  * [instance_config](#instance_config-2)
+  * [outargs](#outargs-1)
+- [Restore From Time Machine:](#restore-from-time-machine-)
+  * [instance_config](#instance_config-3)
+  * [outargs](#outargs-2)
+- [Clone Task](#clone-task)
+  * [database_server_config](#database_server_config-1)
+  * [instance_config](#instance_config-4)
+  * [timemachine_config](#timemachine_config-1)
+  * [tag_config](#tag_config-1)
+  * [outargs](#outargs-3)
 
+## Overview
+Calm-DSL supports Nutanix Database (NDB) operations in Runbook for Postgres Databases:
 1. Ability to Create, Delete PostgreSQL Database VMs and it's instances on NDB.
 2. Ability to Create Snapshot of Existing Postgres Databases on NDB. 
 3. Ability to Restore Database Instance using a existing snapshot or point in time snapshot on NDB. 
@@ -7,7 +31,7 @@
 
 Checkout the [Blog](https://next.nutanix.com/community-blog-154/unlock-the-simplicity-exploring-the-nutanix-database-service-ndb-and-nutanix-cloud-manager-ncm-self-service-integration-42140) for feature details in Self Service
 
-## NDB Entity Cache support:
+## NDB Entity Cache support
 
 - User can use `calm show cache -e <entity_name>` helper to look for the existing NDB entities cached in Calm-DSL database
 - NDB Entities supported in cache
@@ -19,7 +43,7 @@ Checkout the [Blog](https://next.nutanix.com/community-blog-154/unlock-the-simpl
     6. Snapshot: User can use `ndb_snapshot` as entity_name to get the existing Snapshots compatible to Postgres Database in NDB.
     7. Tag: User can use  `ndb_tag` as entity_name to get the existing tags in NDB.
 
-## Create Task:
+## Create Task
 
 - User can use `Task.NutanixDB.PostgresDatabase.Create()` helper to create NDB Create Action Task. 
 - Look [here](../../examples/Runbooks/NutanixDB_runbooks/postgresDB_create.py) for example.
@@ -205,7 +229,7 @@ Checkout the [Blog](https://next.nutanix.com/community-blog-154/unlock-the-simpl
     9. platform_data: Platform data is the aggregate data of all the output variables supported
 
 
-## Delete Task:
+## Delete Task
 
 - User can use `Task.NutanixDB.PostgresDatabase.Delete()` helper to create NDB Delete Action Task.
 - Look [here](../../examples/Runbooks/NutanixDB_runbooks/postgresDB_delete.py) for example.
@@ -235,7 +259,7 @@ Checkout the [Blog](https://next.nutanix.com/community-blog-154/unlock-the-simpl
     1. database: Ref of the Postgres Instance
 
 
-## Create Snapshot Task:
+## Create Snapshot Task
 
 - User can use `Task.NutanixDB.PostgresDatabase.CreateSnapshot()` helper to create NDB Postgres Snapshot Action Task.
 - Look [here](../../examples/Runbooks/NutanixDB_runbooks/postgresDB_create_snapshot.py) for example.
@@ -371,7 +395,7 @@ Checkout the [Blog](https://next.nutanix.com/community-blog-154/unlock-the-simpl
     8. type: The type of the database created i.e., postgres_database
     9. platform_data: Platform data is the aggregate data of all the output variables supported
 
-## Clone Task:
+## Clone Task
 
 - User can use `Task.NutanixDB.PostgresDatabase.Clone()` helper to create NDB Clone Action Task.
 - Look [here](../../examples/Runbooks/NutanixDB_runbooks/postgresDb_clone_with_point_in_time.py) for example using point in time to clone the database

@@ -1,9 +1,37 @@
-# Calm allows CRUD of accounts:
+# Table Of Contents
+- [CLI Commands](#cli-commands)
+  * [Create Account](#create-account)
+  * [Compile Account](#compile-account)
+  * [Update Account](#update-account)
+  * [Delete Account](#delete-account)
+  * [Sync Account](#sync-account)
+  * [Verify Account](#verify-account)
+  * [Describe Account](#describe-account)
+- [Account Models](#account-models)
+  * [AHV Account Model](#ahv-account-model)
+  * [AWS Account Model](#aws-account-model)
+  * [AWS C2S Account Model](#aws-c2s-account-model)
+  * [Azure Account Model](#azure-account-model)
+  * [GCP Account Model](#gcp-account-model)
+  * [VMware Account Model](#vmware-account-model)
+  * [Kubernetes Account Model](#kubernetes-account-model)
+  * [NDB Account Model](#ndb-account-model)
+  * [Credential Provider Model](#credential-provider-model)
 
-## <u>DSL Commands</u>
-</br>
 
-### 1. Create Account Command
+## CLI Commands
+Below are the CLI commands added as part of this feat. Please use `--help / -h` flag to know more details about the individial commands. Overview:
+- Compile Account – `calm compile account --file="FILEPATH"`.
+- Create Account – `calm create account --file="FILEPATH"`. Please run `calm create account -h` to get more details about the command.
+- Update Account – `calm update account <ACCOUNT_NAME> --file="FILEPATH"`. Please run `calm update account -h` to get more details about the command.
+- Delete Account  - `calm delete account <ACCOUNT_NAME>`.
+- Sync Account - `calm sync account <ACCOUNT_NAME>`.
+- Verify Account - `calm verify account <ACCOUNT_NAME>`.
+- Describe Account - `calm describe account <ACCOUNT_NAME>`.
+
+NOTE: Please use `--help / -h` flag to know more details about the individial commands.
+
+### Create Account 
 
 Allows creating account from account dsl file.
 
@@ -17,7 +45,7 @@ Allows creating account from account dsl file.
 
 </br>
 
-### 2. Compile Account Command
+### Compile Account 
 
 Allows compiling account from account dsl file.
 
@@ -29,7 +57,7 @@ Allows compiling account from account dsl file.
 
 </br>
 
-### 3. Update Account Command
+### Update Account 
 
 Allows updating account from account dsl file.
 
@@ -41,7 +69,7 @@ Allows updating account from account dsl file.
 
 </br>
 
-### 4. Delete Account Command
+### Delete Account 
 
 Allows deleting an account.
 
@@ -49,7 +77,7 @@ Allows deleting an account.
 
 </br>
 
-### 5. Sync Account Command
+### Sync Account 
 
 Allows syncing a platform an account.
 
@@ -57,7 +85,7 @@ Allows syncing a platform an account.
 
 </br>
 
-### 6. Verify Account Command
+### Verify Account 
 
 Allows verifying an account.
 
@@ -65,7 +93,7 @@ Allows verifying an account.
 
 </br>
 
-### 7. Describe Account Command
+### Describe Account 
 
 Describes an account.
 
@@ -73,7 +101,7 @@ Describes an account.
 
 </br>
 
-## <u>Account Models</u>
+## Account Models
 
 </br>
 
