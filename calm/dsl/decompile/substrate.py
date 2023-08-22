@@ -8,12 +8,13 @@ from calm.dsl.decompile.file_handler import get_specs_dir, get_specs_dir_key
 from calm.dsl.builtins import SubstrateType, get_valid_identifier
 from calm.dsl.decompile.ahv_vm import render_ahv_vm
 from calm.dsl.decompile.ref_dependency import update_substrate_name
+from calm.dsl.store import Cache
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
 
-def render_substrate_template(cls, vm_images=[]):
+def render_substrate_template(cls, vm_images=[], secrets_dict=[]):
 
     LOG.debug("Rendering {} substrate template".format(cls.__name__))
     if not isinstance(cls, SubstrateType):
@@ -21,6 +22,9 @@ def render_substrate_template(cls, vm_images=[]):
 
     # Entity context
     entity_context = "Substrate_" + cls.__name__
+    context = (
+        "substrate_definition_list." + (getattr(cls, "name", "") or cls.__name__) + "."
+    )
 
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__
@@ -76,6 +80,21 @@ def render_substrate_template(cls, vm_images=[]):
         user_attrs["provider_spec"] = provider_spec.__name__
         ahv_vm_str = render_ahv_vm(provider_spec, boot_config)
 
+        # Get account data
+        try:
+            pe_acc_cache_data = Cache.get_entity_data_using_uuid(
+                entity_type="account", uuid=provider_spec.resources.account_uuid
+            )
+            pc_acc_uuid = pe_acc_cache_data["data"]["pc_account_uuid"]
+            pc_acc_cache_data = Cache.get_entity_data_using_uuid(
+                entity_type="account", uuid=pc_acc_uuid
+            )
+            user_attrs["account_name"] = pc_acc_cache_data["name"]
+        except:
+            LOG.debug(
+                "Failed to get substrate account uuid in cache. Ignoring substrate-account decompilation"
+            )
+
     else:
         # creating a file for storing provider_spec
         provider_spec_file_name = cls.__name__ + "_provider_spec.yaml"
@@ -98,7 +117,11 @@ def render_substrate_template(cls, vm_images=[]):
         if action.__name__ in list(system_actions.keys()):
             action.name = system_actions[action.__name__]
             action.__name__ = system_actions[action.__name__]
-        action_list.append(render_action_template(action, entity_context))
+        action_list.append(
+            render_action_template(
+                action, entity_context, context=context, secrets_dict=secrets_dict
+            )
+        )
 
     user_attrs["actions"] = action_list
 

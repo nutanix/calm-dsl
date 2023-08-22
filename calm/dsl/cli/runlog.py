@@ -404,11 +404,15 @@ def get_completion_func(screen):
                 if runlog["status"]["type"] == "task_runlog":
 
                     task_id = runlog["status"]["task_reference"]["uuid"]
-                    if task_type_map[task_id] == "META":
+                    if task_id in task_type_map and task_type_map[task_id] == "META":
                         continue  # don't add metatask's trl in runlogTree
 
                     # Output is not valid for input, confirm and while_loop tasks
-                    if task_type_map[task_id] not in ["INPUT", "CONFIRM", "WHILE_LOOP"]:
+                    if task_id not in task_type_map or (
+                        task_id in task_type_map
+                        and task_type_map[task_id]
+                        not in ["INPUT", "CONFIRM", "WHILE_LOOP"]
+                    ):
                         res, err = client.runbook.runlog_output(runlog_uuid, uuid)
                         if err:
                             raise Exception(
@@ -629,6 +633,12 @@ def get_runlog_status(screen):
             screen.clear()
             screen.print_at(msg, 0, 0)
             screen.refresh()
+        elif response["status"]["state"] == "POLICY_EXEC":
+            msg = "Runlog run is POLICY_EXEC state"
+            screen.clear()
+            screen.print_at(msg, 0, 0)
+            screen.refresh()
+            return (True, "")
         elif response["status"]["state"] in RUNLOG.FAILURE_STATES:
             msg = "Runlog run is in {} state.".format(response["status"]["state"])
             msg += " {}".format("\n".join(response["status"]["reason_list"]))

@@ -23,15 +23,15 @@ LOG = get_logging_handle(__name__)
 
 
 class SubstrateDict(EntityDict):
-    @staticmethod
-    def pre_validate(vdict, name, value):
+    @classmethod
+    def pre_validate(cls, vdict, name, value, parent=None):
         if name == "readiness_probe":
             if isinstance(value, dict):
                 rp_validator, is_array = vdict[name]
                 rp_cls_type = rp_validator.get_kind()
-                return rp_cls_type(None, (Entity,), value)
+                return vdict, rp_cls_type(None, (Entity,), value)
 
-        return value
+        return vdict, value
 
 
 class SubstrateType(EntityType):

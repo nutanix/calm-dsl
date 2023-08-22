@@ -1,0 +1,18 @@
+{% macro K8sKarbonAccount() -%}
+
+title: K8sKarbonAccount
+type: object
+x-calm-dsl-type: app_k8s_karbon_account
+properties:
+  cluster:
+    type: string
+  type:
+    type: string
+
+{%- endmacro %}
+{% macro K8sKarbonAccountSchema() -%}
+
+K8sKarbonAccount:
+  {{ K8sKarbonAccount()|indent(2) }}
+
+{%- endmacro %}

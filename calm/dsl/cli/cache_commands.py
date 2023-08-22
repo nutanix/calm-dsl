@@ -21,14 +21,30 @@ def get_cache_table_types():
         if not (attr.startswith("__")):
             table_types.append(getattr(CACHE.ENTITY, attr))
 
+    for attr in CACHE.NDB_ENTITY.__dict__:
+        if not (attr.startswith("__")):
+            table_types.append(
+                CACHE.NDB + CACHE.KEY_SEPARATOR + getattr(CACHE.NDB_ENTITY, attr)
+            )
+
     return table_types
 
 
 @show.command("cache")
-def show_cache_command():
+@click.option(
+    "--entity",
+    "-e",
+    default=None,
+    help="Cache entity, if not given will update whole cache",
+    type=click.Choice(get_cache_table_types()),
+)
+def show_cache_command(entity):
     """Display the cache data"""
 
-    Cache.show_data()
+    if entity:
+        Cache.show_table(entity)
+    else:
+        Cache.show_data()
 
 
 @clear.command("cache")

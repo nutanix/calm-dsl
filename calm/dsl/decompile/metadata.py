@@ -16,10 +16,13 @@ def render_metadata_template(cls):
     if cls_data.get("categories"):
         user_attrs["categories"] = cls_data["categories"]
 
+    if cls_data.get("project_reference", {}):
+        user_attrs["project_name"] = cls_data["project_reference"]["name"]
+
     # NOTE: Project and Owner info is not provided by calm export_file api yet.
     # When available add their rendered_text to user_attrs and modify jinja template accordingly
 
-    # NOTE: Name of class is constant i.e. BpMetadata
+    # NOTE: Name of class is constant i.e. EntityMetadata
 
     # If metadata is not available, return empty string
     if not user_attrs:

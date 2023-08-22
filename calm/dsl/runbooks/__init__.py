@@ -5,6 +5,13 @@
 from calm.dsl.builtins.models.ref import ref, RefType
 from calm.dsl.builtins.models.calm_ref import Ref
 from calm.dsl.builtins.models.metadata import Metadata, MetadataType
+from calm.dsl.builtins.models.ndb import (
+    Database,
+    DatabaseServer,
+    TimeMachine,
+    Tag,
+    PostgresDatabaseOutputVariables,
+)
 from calm.dsl.builtins.models.credential import (
     basic_cred,
     secret_cred,
@@ -20,14 +27,16 @@ from calm.dsl.builtins.models.utils import (
 
 from calm.dsl.builtins.models.variable import RunbookVariable
 from calm.dsl.builtins.models.task import RunbookTask, Status
-from calm.dsl.builtins.models.runbook import Runbook, runbook, runbook_json, branch
+from calm.dsl.builtins.models.runbook import (
+    Runbook,
+    RunbookType,
+    runbook,
+    runbook_json,
+    branch,
+)
 from calm.dsl.builtins.models.action import parallel
 
-from calm.dsl.builtins.models.endpoint import (
-    Endpoint,
-    _endpoint,
-    CalmEndpoint,
-)
+from calm.dsl.builtins.models.endpoint import Endpoint, _endpoint, CalmEndpoint
 
 from calm.dsl.builtins.models.runbook_service import RunbookService
 from calm.dsl.builtins.models.endpoint_payload import create_endpoint_payload
@@ -51,6 +60,7 @@ __all__ = [
     "RunbookTask",
     "Status",
     "Runbook",
+    "RunbookType",
     "runbook",
     "runbook_json",
     "branch",
@@ -61,4 +71,9 @@ __all__ = [
     "RunbookService",
     "create_endpoint_payload",
     "create_runbook_payload",
+    "Database",
+    "DatabaseServer",
+    "TimeMachine",
+    "Tag",
+    "PostgresDatabaseOutputVariables",
 ]

@@ -63,7 +63,7 @@ release-docker: dist
 		docker tag ${NAME}:${TAG} ${NAME}:${RELEASE_VERSION}
 
 black:
-	black .
+	black . --extend-exclude tests/escript/scripts/
 
 run:
 	docker run -it ${NAME}

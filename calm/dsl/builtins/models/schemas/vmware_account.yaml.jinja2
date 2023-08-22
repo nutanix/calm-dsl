@@ -1,0 +1,26 @@
+{% macro VmwareAccount() -%}
+
+title: VmwareAccount
+type: object
+x-calm-dsl-type: app_vmware_account
+properties: 
+  username:
+    type: string
+  password:
+    type: string
+  server:
+    type: string
+  port:
+    type: string
+  price_items:
+    type: dict
+  datacenter:
+    type: string
+
+{%- endmacro %}
+{% macro VmwareAccountSchema() -%}
+
+VmwareAccount:
+  {{ VmwareAccount()|indent(2) }}
+
+{%- endmacro %}

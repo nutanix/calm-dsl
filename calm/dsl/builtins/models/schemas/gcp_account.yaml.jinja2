@@ -1,0 +1,51 @@
+{% macro GcpAccount() -%}
+
+title: GcpAccount
+type: object
+x-calm-dsl-type: app_gcp_account
+properties:
+    project_id:
+        type: string
+    private_key_id:
+        type: string
+    private_key:
+        type: string
+    client_email:
+        type: string
+    token_uri:
+        type: string
+    client_id:
+        type: string
+    auth_uri:
+        type: string
+    auth_provider_x509_cert_url:
+        type: string
+        x-calm-dsl-display-name: auth_provider_cert_url
+    client_x509_cert_url:
+        type: string
+        x-calm-dsl-display-name: client_cert_url
+    regions:
+        type: array
+        items:
+            type: string
+    public_images:
+        type: array
+        items:
+            type: string
+    gke_config:
+        type: object
+        x-calm-dsl-type: object
+        properties:
+            port:
+                type: integer
+            server:
+                type: string
+
+
+{%- endmacro %}
+{% macro GcpAccountSchema() -%}
+
+GcpAccount:
+  {{ GcpAccount()|indent(2) }}
+
+{%- endmacro %}

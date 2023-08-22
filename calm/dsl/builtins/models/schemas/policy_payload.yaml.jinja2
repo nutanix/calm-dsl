@@ -1,0 +1,37 @@
+{% import "policy.yaml.jinja2" as policy %}
+
+{% macro PolicyPayload() -%}
+
+title: PolicyPayload
+type: object
+x-calm-dsl-type: policy_payload
+properties:
+  spec:
+    type: object
+    x-calm-dsl-type: object
+    properties:
+      name:
+        type: string
+        description: Policy name
+      description:
+        type: string
+        description: Policy description
+      resources:
+        {{ policy.Policy() | indent(8) }}
+
+  api_version:
+    type: string
+    default: "3.0"
+
+  metadata:
+    $ref: '#/components/schemas/Metadata'
+
+{%- endmacro %}
+
+
+{% macro PolicyPayloadSchema() -%}
+
+PolicyPayload:
+  {{ PolicyPayload()|indent(2) }}
+
+{%- endmacro %}

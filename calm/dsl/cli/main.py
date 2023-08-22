@@ -14,6 +14,7 @@ from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.log import get_logging_handle
 from calm.dsl.config import get_context
 from calm.dsl.store import Cache
+from calm.dsl.constants import DSL_CONFIG
 
 from .version_validator import validate_version
 from .click_options import simple_verbosity_option, show_trace_option
@@ -44,7 +45,7 @@ LOG = get_logging_handle(__name__)
     default=False,
     help="Update cache before running command",
 )
-@click.version_option("3.6.1")
+@click.version_option("3.7.0")
 @click.pass_context
 def main(ctx, config_file, sync):
     """Calm CLI
@@ -75,6 +76,14 @@ def main(ctx, config_file, sync):
     if config_file:
         ContextObj = get_context()
         ContextObj.update_config_file_context(config_file=config_file)
+
+    ContextObj = get_context()
+    project_config = ContextObj.get_project_config()
+    project_name = project_config.get("name")
+
+    if project_name == DSL_CONFIG.EMPTY_PROJECT_NAME:
+        LOG.warning(DSL_CONFIG.EMPTY_PROJECT_MESSAGE)
+
     if sync:
         Cache.sync()
 
@@ -328,7 +337,7 @@ def publish():
 
 @main.group(cls=FeatureFlagGroup)
 def approve():
-    """Approve blueprints in marketplace manager"""
+    """Approve blueprints in marketplace manager or approve event triggered by approval policies"""
     pass
 
 
@@ -340,13 +349,25 @@ def unpublish():
 
 @main.group(cls=FeatureFlagGroup)
 def reject():
-    """Reject blueprints from marketplace manager"""
+    """Reject blueprints from marketplace manager or reject event triggered by approval policies"""
+    pass
+
+
+@main.group(cls=FeatureFlagGroup)
+def enable():
+    """Enable policies"""
+    pass
+
+
+@main.group(cls=FeatureFlagGroup)
+def disable():
+    """Disable policies"""
     pass
 
 
 @main.group(cls=FeatureFlagGroup)
 def describe():
-    """Describe apps, blueprints, projects, accounts, endpoints, runbooks"""
+    """Describe apps, blueprints, projects, accounts, endpoints, runbooks, providers"""
     pass
 
 
@@ -496,4 +517,10 @@ def library_delete():
 @main.group(cls=FeatureFlagGroup)
 def sync():
     """Sync platform account"""
+    pass
+
+
+@main.group(cls=FeatureFlagGroup)
+def verify():
+    """Verify an account"""
     pass

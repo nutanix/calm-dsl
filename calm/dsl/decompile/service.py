@@ -9,7 +9,7 @@ from calm.dsl.log import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-def render_service_template(cls):
+def render_service_template(cls, secrets_dict=[]):
 
     LOG.debug("Rendering {} service template".format(cls.__name__))
     if not isinstance(cls, ServiceType):
@@ -17,6 +17,9 @@ def render_service_template(cls):
 
     # Entity context
     entity_context = "Service_" + cls.__name__
+    context = (
+        "service_definition_list." + (getattr(cls, "name", "") or cls.__name__) + "."
+    )
 
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__
@@ -36,7 +39,11 @@ def render_service_template(cls):
 
     variable_list = []
     for entity in user_attrs.get("variables", []):
-        variable_list.append(render_variable_template(entity, entity_context))
+        variable_list.append(
+            render_variable_template(
+                entity, entity_context, context=context, secrets_dict=secrets_dict
+            )
+        )
 
     action_list = []
     system_actions = {v: k for k, v in ServiceType.ALLOWED_SYSTEM_ACTIONS.items()}
@@ -58,7 +65,9 @@ def render_service_template(cls):
         update_runbook_action_map(action_runbook_name, entity.__name__)
 
     for entity in user_attrs.get("actions", []):
-        rendered_txt = render_action_template(entity, entity_context)
+        rendered_txt = render_action_template(
+            entity, entity_context, context=context, secrets_dict=secrets_dict
+        )
         if rendered_txt:
             action_list.append(rendered_txt)
 

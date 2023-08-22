@@ -7,9 +7,21 @@ import sys
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .ref import RefType
+from .calm_ref import Ref
 from .task_input import TaskInputType
 from .variable import CalmVariable
+from .helper import common as common_helper
+
 from calm.dsl.log import get_logging_handle
+from calm.dsl.api.handle import get_api_client
+from calm.dsl.builtins.models.ndb import (
+    DatabaseServer,
+    Database,
+    TimeMachine,
+    PostgresDatabaseOutputVariables,
+    Tag,
+)
+from calm.dsl.builtins.models.constants import NutanixDB as NutanixDBConst
 
 LOG = get_logging_handle(__name__)
 
@@ -1450,6 +1462,36 @@ def confirm_task(timeout=None, name=None):
     return _task_create(**kwargs)
 
 
+def resource_type_operation_task_builder(
+    name,
+    resource_type_ref,
+    action_ref,
+    account_ref=None,
+    inarg_list=[],
+    target_ref=None,
+    output_variables=None,
+    tag=None,
+):
+    kwargs = {
+        "name": name,
+        "type": "RT_OPERATION",
+        "attrs": {
+            "type": "RT_OPERATION",
+            "resource_type_reference": resource_type_ref,
+            "action_reference": action_ref,
+            "inarg_list": inarg_list,
+            "output_variables": output_variables,
+            "tag": tag,
+        },
+    }
+    if target_ref:
+        kwargs["target_any_local_reference"] = target_ref
+
+    if account_ref:
+        kwargs["attrs"]["account_reference"] = account_ref
+    return _task_create(**kwargs)
+
+
 class BaseTask:
     def __new__(cls, *args, **kwargs):
         raise TypeError("'{}' is not callable".format(cls.__name__))
@@ -1550,6 +1592,31 @@ class RunbookTask(BaseTask):
         powershell = exec_task_powershell_runbook
         escript = exec_task_escript
 
+    class ResourceTypeOperationTask:
+        def __new__(
+            cls,
+            name,
+            resource_type_ref,
+            action_ref,
+            account_ref=None,
+            inarg_list=[],
+            target_ref=None,
+            output_variables=None,
+            tag=None,
+            *args,
+            **kwargs,
+        ):
+            return resource_type_operation_task_builder(
+                name=name,
+                resource_type_ref=resource_type_ref,
+                account_ref=account_ref,
+                action_ref=action_ref,
+                inarg_list=inarg_list,
+                target_ref=target_ref,
+                output_variables=output_variables,
+                tag=tag,
+            )
+
     class Loop:
         def __new__(
             cls,
@@ -1623,3 +1690,497 @@ class RunbookTask(BaseTask):
     class VMRestart:
         def __new__(cls, name=None, target=None, **kwargs):
             return vm_operation(name=name, type="VM_RESTART", target=target, **kwargs)
+
+    class NutanixDB:
+        """This is the base class of all the NDB Task DSL Support (Not Callable)"""
+
+        def __new__(cls, *args, **kwargs):
+            raise TypeError("'{}' is not callable".format(cls.__name__))
+
+        class PostgresDatabase:
+            """This is the base class of all the NDB Postgres Database Action task DSL Support (Not Callable)"""
+
+            def __new__(cls, *args, **kwargs):
+                raise TypeError("'{}' is not callable".format(cls.__name__))
+
+            class Create:
+                """
+                Defines a NDB Postgres Database Create Action task.
+                Args:
+                    name (str): Name for this task
+                    account (Ref.Account): Object of Calm Ref Accounts
+                    database_server_config (DatabaseServer.Postgres.Create): Object of NDB Entity DatabaseServer Postgres Create
+                    instance_config (Database.Postgres.Create): Object of NDB Entity Database Postgres Create
+                    timemachine_config (TimeMachine.Postgres.Create): Object of NDB Entity TimeMachine Postgres Create
+                    tag_config (Tag.Postgres.Create): Object of NDB Entity Tag Postgres Create
+                    outargs (PostgresDatabaseOutputVariables.Create): Object of Output Variables PostgresDatabaseOutputVariables Create
+                Returns:
+                    (Task): Resource Type Operation task
+                """
+
+                def __new__(
+                    cls,
+                    name,
+                    account,
+                    database_server_config,
+                    instance_config,
+                    timemachine_config,
+                    tag_config=None,
+                    outargs=None,
+                ):
+                    (
+                        action_variable_list,
+                        action_task_name,
+                    ) = common_helper.get_variable_list_and_task_name_for_rt_and_action(
+                        resource_type_name=NutanixDBConst.RESOURCE_TYPE.POSTGRES_DATABASE,
+                        action_name=NutanixDBConst.ACTION_TYPE.CREATE,
+                        provider_name=NutanixDBConst.NDB,
+                    )
+
+                    action_task_name_modified = "-".join(
+                        action_task_name.lower().split()
+                    )
+
+                    inargs = list()
+                    common_helper.macro_or_ref_validation(
+                        account, Ref.Account, "account should be a instance of Calm Ref"
+                    )
+
+                    if not isinstance(
+                        database_server_config, DatabaseServer.Postgres.Create
+                    ):
+                        raise ValueError(
+                            "database_server_config should be a instance of DatabaseServer.Postgres.Create"
+                        )
+
+                    if not isinstance(instance_config, Database.Postgres.Create):
+                        raise ValueError(
+                            "instance_config should be a instance of Database.Postgres.Create"
+                        )
+
+                    if not isinstance(timemachine_config, TimeMachine.Postgres.Create):
+                        raise ValueError(
+                            "timemachine_config should be a instance of TimeMachine.Postgres.Create"
+                        )
+                    if not tag_config:
+                        tag_config = Tag.Create()
+                    elif not isinstance(tag_config, Tag.Create):
+                        raise ValueError(
+                            "timemachine_config should be a instance of Tag.Create"
+                        )
+
+                    database_server_config.validate(
+                        account,
+                        action_variable_list,
+                        action_task_name_modified,
+                        inargs,
+                    )
+
+                    instance_config.validate(
+                        account,
+                        action_variable_list,
+                        action_task_name_modified,
+                        inargs,
+                    )
+
+                    timemachine_config.validate(
+                        account,
+                        action_variable_list,
+                        action_task_name_modified,
+                        inargs,
+                    )
+
+                    tag_config.validate(
+                        account,
+                        action_variable_list,
+                        action_task_name_modified,
+                        inargs,
+                    )
+
+                    output_variables = {}
+                    if outargs:
+                        if not isinstance(
+                            outargs, PostgresDatabaseOutputVariables.Create
+                        ):
+                            raise ValueError(
+                                "outargs should be a instance of PostgresDatabaseOutputVariables.Create"
+                            )
+                    else:
+                        outargs = PostgresDatabaseOutputVariables.Create()
+
+                    output_variables = dict(
+                        (v, k) for k, v in outargs.field_values.items()
+                    )
+
+                    resource_type_ref = Ref.Resource_Type(
+                        name=NutanixDBConst.RESOURCE_TYPE.POSTGRES_DATABASE,
+                        provider_name=NutanixDBConst.NDB,
+                    )
+                    action_ref = Ref.ResourceTypeAction(
+                        name=NutanixDBConst.ACTION_TYPE.CREATE,
+                        resource_type_name=NutanixDBConst.RESOURCE_TYPE.POSTGRES_DATABASE,
+                        provider_name=NutanixDBConst.NDB,
+                    )
+
+                    return RunbookTask.ResourceTypeOperationTask(
+                        name,
+                        inarg_list=inargs,
+                        resource_type_ref=resource_type_ref,
+                        account_ref=account,
+                        action_ref=action_ref,
+                        output_variables=output_variables,
+                        tag=NutanixDBConst.Tag.DATABASE,
+                    )
+
+            class Delete:
+                """
+                Defines a NDB Postgres Database Delete Action task.
+                Args:
+                    name (str): Name for this task
+                    account (Ref.Account): Object of Calm Ref Accounts
+                    instance_config (Database.Postgres.Delete): Object of NDB Entity Database Postgres Delete
+                Returns:
+                    (Task): Resource Type Operation task
+                """
+
+                def __new__(cls, name, account, instance_config):
+                    (
+                        action_variable_list,
+                        action_task_name,
+                    ) = common_helper.get_variable_list_and_task_name_for_rt_and_action(
+                        resource_type_name=NutanixDBConst.RESOURCE_TYPE.POSTGRES_DATABASE,
+                        action_name=NutanixDBConst.ACTION_TYPE.DELETE,
+                        provider_name=NutanixDBConst.NDB,
+                    )
+
+                    action_task_name_modified = "-".join(
+                        action_task_name.lower().split()
+                    )
+
+                    inargs = list()
+                    common_helper.macro_or_ref_validation(
+                        account, Ref.Account, "account should be a instance of Calm Ref"
+                    )
+                    if not isinstance(instance_config, Database.Postgres.Delete):
+                        raise ValueError(
+                            "instance_config should be a instance of Database.Postgres.Delete"
+                        )
+
+                    instance_config.validate(
+                        account,
+                        action_variable_list,
+                        action_task_name_modified,
+                        inargs,
+                    )
+
+                    resource_type_ref = Ref.Resource_Type(
+                        name=NutanixDBConst.RESOURCE_TYPE.POSTGRES_DATABASE,
+                        provider_name=NutanixDBConst.NDB,
+                    )
+                    action_ref = Ref.ResourceTypeAction(
+                        name=NutanixDBConst.ACTION_TYPE.DELETE,
+                        resource_type_name=NutanixDBConst.RESOURCE_TYPE.POSTGRES_DATABASE,
+                        provider_name=NutanixDBConst.NDB,
+                    )
+
+                    rt = RunbookTask.ResourceTypeOperationTask(
+                        name,
+                        inarg_list=inargs,
+                        resource_type_ref=resource_type_ref,
+                        account_ref=account,
+                        action_ref=action_ref,
+                        tag=NutanixDBConst.Tag.DATABASE,
+                    )
+                    return rt
+
+            class RestoreFromTimeMachine:
+                """
+                Defines a NDB Postgres Database RestoreFromTimeMachine Action task.
+                Args:
+                    name (str): Name for this task
+                    account (Ref.Account): Object of Calm Ref Accounts
+                    instance_config (Database.Postgres.RestoreFromTimeMachine): Object of NDB Entity Database Postgres RestoreFromTimeMachine
+                    outargs (PostgresDatabaseOutputVariables.RestoreFromTimeMachine): Object of Output Variables PostgresDatabaseOutputVariables RestoreFromTimeMachine
+                Returns:
+                    (Task): Resource Type Operation task
+                """
+
+                def __new__(
+                    cls,
+                    name,
+                    account,
+                    instance_config,
+                    outargs=None,
+                ):
+                    (
+                        action_variable_list,
+                        action_task_name,
+                    ) = common_helper.get_variable_list_and_task_name_for_rt_and_action(
+                        resource_type_name=NutanixDBConst.RESOURCE_TYPE.POSTGRES_DATABASE,
+                        action_name=NutanixDBConst.ACTION_TYPE.RESTORE_FROM_TIME_MACHINE,
+                        provider_name=NutanixDBConst.NDB,
+                    )
+
+                    action_task_name_modified = "-".join(
+                        action_task_name.lower().split()
+                    )
+
+                    inargs = list()
+                    common_helper.macro_or_ref_validation(
+                        account, Ref.Account, "account should be a instance of Calm Ref"
+                    )
+
+                    if not isinstance(
+                        instance_config, Database.Postgres.RestoreFromTimeMachine
+                    ):
+                        raise ValueError(
+                            "instance_config should be a instance of Database.Postgres.RestoreFromTimeMachine"
+                        )
+
+                    instance_config.validate(
+                        account,
+                        action_variable_list,
+                        action_task_name_modified,
+                        inargs,
+                    )
+
+                    output_variables = {}
+                    if outargs:
+                        if not isinstance(
+                            outargs,
+                            PostgresDatabaseOutputVariables.RestoreFromTimeMachine,
+                        ):
+                            raise ValueError(
+                                "outargs should be a instance of PostgresDatabaseOutputVariables.RestoreFromTimeMachine"
+                            )
+                    else:
+                        outargs = (
+                            PostgresDatabaseOutputVariables.RestoreFromTimeMachine()
+                        )
+
+                    output_variables = dict(
+                        (v, k) for k, v in outargs.field_values.items()
+                    )
+
+                    resource_type_ref = Ref.Resource_Type(
+                        name=NutanixDBConst.RESOURCE_TYPE.POSTGRES_DATABASE,
+                        provider_name=NutanixDBConst.NDB,
+                    )
+                    action_ref = Ref.ResourceTypeAction(
+                        name=NutanixDBConst.ACTION_TYPE.RESTORE_FROM_TIME_MACHINE,
+                        resource_type_name=NutanixDBConst.RESOURCE_TYPE.POSTGRES_DATABASE,
+                        provider_name=NutanixDBConst.NDB,
+                    )
+
+                    return RunbookTask.ResourceTypeOperationTask(
+                        name,
+                        inarg_list=inargs,
+                        resource_type_ref=resource_type_ref,
+                        account_ref=account,
+                        action_ref=action_ref,
+                        output_variables=output_variables,
+                        tag=NutanixDBConst.Tag.DATABASE,
+                    )
+
+            class CreateSnapshot:
+                def __new__(cls, name, account, instance_config, outargs=None):
+                    """
+                    Defines a NDB Postgres Database Snapshot Action task.
+
+                    Args:
+                        name (str): Name for this task
+                        account (Ref.Account): Object of Calm Ref Accounts
+                        instance_config (Database.Postgres.CreateSnapshot): Object of NDB Postgres CreateSnapshot
+
+                    Returns:
+                        (Task): Resource Type Operation task
+                    """
+                    (
+                        action_variable_list,
+                        action_task_name,
+                    ) = common_helper.get_variable_list_and_task_name_for_rt_and_action(
+                        resource_type_name=NutanixDBConst.RESOURCE_TYPE.POSTGRES_DATABASE,
+                        action_name=NutanixDBConst.ACTION_TYPE.CREATE_SNAPSHOT,
+                        provider_name=NutanixDBConst.NDB,
+                    )
+
+                    action_task_name_modified = "-".join(
+                        action_task_name.lower().split()
+                    )
+
+                    inargs = list()
+                    common_helper.macro_or_ref_validation(
+                        account, Ref.Account, "account should be a instance of Calm Ref"
+                    )
+                    if not isinstance(
+                        instance_config, Database.Postgres.CreateSnapshot
+                    ):
+                        raise ValueError(
+                            "instance_config should be a instance of Database.Postgres.CreateSnapshot"
+                        )
+
+                    instance_config.validate(
+                        account,
+                        action_variable_list,
+                        action_task_name_modified,
+                        inargs,
+                    )
+
+                    if outargs:
+                        if not isinstance(
+                            outargs, PostgresDatabaseOutputVariables.CreateSnapshot
+                        ):
+                            raise ValueError(
+                                "outargs should be a instance of PostgresDatabaseOutputVariables.CreateSnapshot"
+                            )
+                    else:
+                        outargs = PostgresDatabaseOutputVariables.CreateSnapshot()
+                    output_variables = dict(
+                        (v, k) for k, v in outargs.field_values.items()
+                    )
+
+                    resource_type_ref = Ref.Resource_Type(
+                        name=NutanixDBConst.RESOURCE_TYPE.POSTGRES_DATABASE,
+                        provider_name=NutanixDBConst.NDB,
+                    )
+                    action_ref = Ref.ResourceTypeAction(
+                        name=NutanixDBConst.ACTION_TYPE.CREATE_SNAPSHOT,
+                        resource_type_name=NutanixDBConst.RESOURCE_TYPE.POSTGRES_DATABASE,
+                        provider_name=NutanixDBConst.NDB,
+                    )
+
+                    rt = RunbookTask.ResourceTypeOperationTask(
+                        name,
+                        inarg_list=inargs,
+                        resource_type_ref=resource_type_ref,
+                        account_ref=account,
+                        action_ref=action_ref,
+                        output_variables=output_variables,
+                        tag=NutanixDBConst.Tag.DATABASE,
+                    )
+                    return rt
+
+            class Clone:
+                """
+                Defines a NDB Postgres Database Clone Action task.
+                Args:
+                    name (str): Name for this task
+                    account (Ref.Account): Object of Calm Ref Accounts
+                    instance_config (Database.Postgres.Clone): Object of NDB Entity Database Postgres Clone
+                    timemachine_config (TimeMachine.Postgres.Clone): Object of NDB Entity TimeMachine Postgres Clone
+                    tag_config (Tag.Postgres.Clone): Object of NDB Entity Tag Postgres Clone
+                Returns:
+                    (Task): Resource Type Operation task
+                """
+
+                def __new__(
+                    cls,
+                    name,
+                    account,
+                    database_server_config,
+                    instance_config,
+                    timemachine_config,
+                    tag_config=None,
+                    outargs=None,
+                ):
+                    (
+                        action_variable_list,
+                        action_task_name,
+                    ) = common_helper.get_variable_list_and_task_name_for_rt_and_action(
+                        resource_type_name=NutanixDBConst.RESOURCE_TYPE.POSTGRES_DATABASE,
+                        action_name=NutanixDBConst.ACTION_TYPE.CLONE,
+                        provider_name=NutanixDBConst.NDB,
+                    )
+
+                    action_task_name_modified = "-".join(
+                        action_task_name.lower().split()
+                    )
+
+                    inargs = list()
+                    common_helper.macro_or_ref_validation(
+                        account, Ref.Account, "account should be a instance of Calm Ref"
+                    )
+                    if not isinstance(instance_config, Database.Postgres.Clone):
+                        raise ValueError(
+                            "instance_config should be a instance of Database.Postgres.Clone"
+                        )
+
+                    if not isinstance(
+                        database_server_config, DatabaseServer.Postgres.Clone
+                    ):
+                        raise ValueError(
+                            "database_server_config should be a instance of DatabaseServer.Postgres.Clone"
+                        )
+
+                    if not isinstance(timemachine_config, TimeMachine.Postgres.Clone):
+                        raise ValueError(
+                            "timemachine_config should be a instance of TimeMachine.Postgres.Clone"
+                        )
+
+                    if not tag_config:
+                        tag_config = Tag.Clone()
+                    elif not isinstance(tag_config, Tag.Clone):
+                        raise ValueError("tag_config should be a instance of Tag.Clone")
+
+                    database_server_config.validate(
+                        account,
+                        action_variable_list,
+                        action_task_name_modified,
+                        inargs,
+                    )
+
+                    instance_config.validate(
+                        account,
+                        action_variable_list,
+                        action_task_name_modified,
+                        inargs,
+                    )
+
+                    timemachine_config.validate(
+                        account,
+                        action_variable_list,
+                        action_task_name_modified,
+                        inargs,
+                    )
+
+                    tag_config.validate(
+                        account,
+                        action_variable_list,
+                        action_task_name_modified,
+                        inargs,
+                    )
+
+                    output_variables = {}
+                    if outargs:
+                        if not isinstance(
+                            outargs, PostgresDatabaseOutputVariables.Clone
+                        ):
+                            raise ValueError(
+                                "outargs should be a instance of PostgresDatabaseOutputVariables.Clone"
+                            )
+                    else:
+                        outargs = PostgresDatabaseOutputVariables.Clone()
+                    output_variables = dict(
+                        (v, k) for k, v in outargs.field_values.items()
+                    )
+                    resource_type_ref = Ref.Resource_Type(
+                        name=NutanixDBConst.RESOURCE_TYPE.POSTGRES_DATABASE,
+                        provider_name=NutanixDBConst.NDB,
+                    )
+
+                    action_ref = Ref.ResourceTypeAction(
+                        name=NutanixDBConst.ACTION_TYPE.CLONE,
+                        resource_type_name=NutanixDBConst.RESOURCE_TYPE.POSTGRES_DATABASE,
+                        provider_name=NutanixDBConst.NDB,
+                    )
+
+                    rt = RunbookTask.ResourceTypeOperationTask(
+                        name,
+                        inarg_list=inargs,
+                        resource_type_ref=resource_type_ref,
+                        account_ref=account,
+                        action_ref=action_ref,
+                        output_variables=output_variables,
+                        tag=NutanixDBConst.Tag.DATABASE,
+                    )
+                    return rt

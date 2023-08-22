@@ -47,12 +47,21 @@ class ObjectDict(EntityDict):
         ret = {}
         if not self.__items_set__:
             return ret
+
         for key, value in self.defaults.items():
             value = self.get(key, value())
             if getattr(value, "__is_object__", False):
                 ret[self.display_map[key]] = value.compile(self)
             else:
                 ret[self.display_map[key]] = value
+
+        for key, value in self.items():
+            _k = self.display_map[key]
+            if getattr(value, "__is_object__", False):
+                ret[_k] = value.compile(self)
+            else:
+                ret[_k] = value
+
         return ret
 
     def pre_decompile(mcls, cdict, context, prefix=""):

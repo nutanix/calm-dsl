@@ -1,0 +1,14 @@
+{%- macro task_tree(obj) -%}
+{% for task in obj.task_indent_tree -%}
+{% if task.parallel_indent != None %}
+{{ "    " * (task.parallel_indent) }}with parallel() as p{{task.depth - 1}}:
+{%- endif %}
+{% if task.branch_indent != None  -%}
+{{ "    " * (task.branch_indent) }}with branch(p{{ task.depth - 1 }}):
+{%- endif %}
+{{obj.tasks[task.task] | indent(width=4*(task.task_indent), first=True)}}
+{%- endfor %}
+
+{% endmacro %}
+
+{{task_tree(obj)}}

@@ -1,0 +1,37 @@
+{%- macro decision_task(obj) -%}
+{% if obj.indent_obj.if_block_indent != None %}
+{{ "    " * (obj.indent_obj.if_block_indent) }}if d{{obj.indent_obj.depth - 1}}.ok:
+{%- elif obj.indent_obj.else_block_indent != None %}
+{{ "    " * (obj.indent_obj.else_block_indent) }}else:
+{%- endif %}
+{%- if obj.indent_obj.with_block_indent != None %}
+{{ "    " * (obj.indent_obj.with_block_indent) }}with {{obj.decision_tasks[obj.indent_obj.task_name]}} as d{{obj.indent_obj.depth}}:
+{%- else %}
+{{ "    " * (obj.indent_obj.task_indent) }}{{obj.decision_tasks[obj.indent_obj.task_name]}}
+{%- endif %}
+{% endmacro %}
+
+{%- macro while_loop_task(obj) -%}
+{% if obj.indent_obj.if_block_indent != None %}
+{{ "    " * (obj.indent_obj.if_block_indent) }}if d{{obj.indent_obj.depth - 1}}.ok:
+{%- elif obj.indent_obj.else_block_indent != None %}
+{{ "    " * (obj.indent_obj.else_block_indent) }}else:
+{%- endif %}
+{%- if obj.indent_obj.while_block_indent != None %}
+{{ "    " * (obj.indent_obj.while_block_indent) }}with {{obj.while_tasks[obj.indent_obj.task_name]}}:
+{%- else %}
+{{ "    " * (obj.indent_obj.task_indent) }}{{obj.while_tasks[obj.indent_obj.task_name]}}
+{%- endif %}
+{% endmacro %}
+
+{%- macro task_list(obj) -%}
+{% for indent_obj in obj.generic_indent_list -%}
+{% if "while_block_indent" in indent_obj %}
+{{while_loop_task({"indent_obj": indent_obj, "while_tasks": obj.while_tasks})}}
+{% elif "with_block_indent" in indent_obj %}
+{{decision_task({"indent_obj": indent_obj, "decision_tasks": obj.decision_tasks})}}
+{% endif %}
+{%- endfor %}
+{% endmacro %}
+
+{{task_list(obj)}}

@@ -1,4 +1,5 @@
 import json
+import os
 import time
 import sys
 import uuid
@@ -10,12 +11,22 @@ import click
 from prettytable import PrettyTable
 from black import format_file_in_place, WriteBack, FileMode
 
-from calm.dsl.builtins import file_exists
-from calm.dsl.runbooks import runbook, create_runbook_payload
+from calm.dsl.builtins import (
+    file_exists,
+    MetadataType,
+    CredentialType,
+    get_valid_identifier,
+)
+from calm.dsl.decompile.decompile_render import create_runbook_dir
+from calm.dsl.decompile.file_handler import get_runbook_dir
+from calm.dsl.decompile.main import init_decompile_context
+from calm.dsl.runbooks import runbook, create_runbook_payload, RunbookType
+from calm.dsl.builtins.models.metadata_payload import get_metadata_payload
 from calm.dsl.config import get_context
 from calm.dsl.api import get_api_client
 from calm.dsl.log import get_logging_handle
-from calm.dsl.constants import CACHE
+from calm.dsl.builtins.models.calm_ref import Ref
+from calm.dsl.constants import CACHE, DSL_CONFIG
 from calm.dsl.store import Cache
 from calm.dsl.tools import get_module_from_file
 from .utils import (
@@ -24,6 +35,7 @@ from .utils import (
     highlight_text,
     get_states_filter,
     import_var_from_file,
+    _get_nested_messages,
 )
 from .constants import RUNBOOK, RUNLOG
 from .runlog import get_completion_func, get_runlog_status
@@ -139,6 +151,22 @@ def compile_runbook(runbook_file):
     UserRunbookPayload, _ = create_runbook_payload(UserRunbook)
     runbook_payload = UserRunbookPayload.get_dict()
 
+    ContextObj = get_context()
+    project_config = ContextObj.get_project_config()
+
+    metadata_payload = get_metadata_payload(runbook_file)
+    if "project_reference" in metadata_payload:
+        runbook_payload["metadata"]["project_reference"] = metadata_payload[
+            "project_reference"
+        ]
+    else:
+        project_name = project_config["name"]
+        if project_name == DSL_CONFIG.EMPTY_PROJECT_NAME:
+            LOG.error(DSL_CONFIG.EMPTY_PROJECT_MESSAGE)
+            sys.exit("Invalid project configuration")
+
+        runbook_payload["metadata"]["project_reference"] = Ref.Project(project_name)
+
     return runbook_payload
 
 
@@ -149,31 +177,95 @@ def compile_runbook_command(runbook_file, out):
         LOG.error("User runbook not found in {}".format(runbook_file))
         return
 
-    ContextObj = get_context()
-    project_config = ContextObj.get_project_config()
-    project_name = project_config["name"]
-    project_cache_data = Cache.get_entity_data(
-        entity_type=CACHE.ENTITY.PROJECT, name=project_name
-    )
-
-    if not project_cache_data:
-        LOG.error(
-            "Project {} not found. Please run: calm update cache".format(project_name)
-        )
-
-    project_uuid = project_cache_data.get("uuid", "")
-    rb_payload["metadata"]["project_reference"] = {
-        "type": "project",
-        "uuid": project_uuid,
-        "name": project_name,
-    }
-
     if out == "json":
         click.echo(json.dumps(rb_payload, indent=4, separators=(",", ": ")))
     elif out == "yaml":
         click.echo(yaml.dump(rb_payload, default_flow_style=False))
     else:
         LOG.error("Unknown output format {} given".format(out))
+
+
+def decompile_runbook_command(name, runbook_file, prefix="", runbook_dir=None):
+    """helper to decompile runbook"""
+    if name and runbook_file:
+        LOG.error("Please provide either runbook file location or server runbook name")
+        sys.exit("Both runbook name and file location provided.")
+    init_decompile_context()
+    if name:
+        decompile_runbook_from_server(name=name, runbook_dir=runbook_dir, prefix=prefix)
+
+    elif runbook_file:
+        decompile_runbook_from_file(
+            filename=runbook_file, runbook_dir=runbook_dir, prefix=prefix
+        )
+    else:
+        LOG.error("Please provide either runbook file location or server runbook name")
+        sys.exit("Runbook name or file location not provided.")
+
+
+def decompile_runbook_from_server(name, runbook_dir, prefix):
+    """decompiles the runbook by fetching it from server"""
+
+    client = get_api_client()
+    runbook = get_runbook(client, name)
+    runbook_uuid = runbook["status"]["uuid"]
+    res, err = client.runbook.read(runbook_uuid)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    runbook = res.json()
+    _decompile_runbook(runbook_payload=runbook, runbook_dir=runbook_dir, prefix=prefix)
+
+
+def decompile_runbook_from_file(filename, runbook_dir, prefix):
+    """decompile runbook from local runbook file"""
+
+    runbook_payload = json.loads(open(filename).read())
+    _decompile_runbook(
+        runbook_payload=runbook_payload, runbook_dir=runbook_dir, prefix=prefix
+    )
+
+
+def _decompile_runbook(runbook_payload, runbook_dir, prefix):
+    """decompiles the runbook from payload"""
+    runbook = runbook_payload["status"]["resources"]["runbook"]
+    credential_list = runbook_payload["status"]["resources"][
+        "credential_definition_list"
+    ]
+    default_endpoint = runbook_payload["status"]["resources"].get(
+        "default_target_reference", None
+    )
+    runbook_name = runbook_payload["status"].get("name", "DslRunbook")
+    runbook_description = runbook_payload["status"].get("description", "")
+
+    runbook_metadata = runbook_payload["metadata"]
+    # POP unnecessary keys
+    runbook_metadata.pop("creation_time", None)
+    runbook_metadata.pop("last_update_time", None)
+
+    metadata_obj = MetadataType.decompile(runbook_metadata)
+
+    LOG.info("Decompiling runbook {}".format(runbook_name))
+    prefix = get_valid_identifier(prefix)
+    runbook_cls = RunbookType.decompile(runbook, prefix=prefix)
+    credentials = []
+    for cred in credential_list:
+        credentials.append(CredentialType.decompile(cred))
+    runbook_cls.__name__ = get_valid_identifier(runbook_name)
+    runbook_cls.__doc__ = runbook_description
+    create_runbook_dir(
+        runbook_cls=runbook_cls,
+        runbook_dir=runbook_dir,
+        metadata_obj=metadata_obj,
+        credentials=credentials,
+        default_endpoint=default_endpoint,
+    )
+    click.echo(
+        "\nSuccessfully decompiled. Directory location: {}. Runbook location: {}".format(
+            highlight_text(get_runbook_dir()),
+            highlight_text(os.path.join(get_runbook_dir(), "runbook.py")),
+        )
+    )
 
 
 def create_runbook(
@@ -192,9 +284,14 @@ def create_runbook(
     runbook_resources = runbook_payload["spec"]["resources"]
     runbook_name = runbook_payload["spec"]["name"]
     runbook_desc = runbook_payload["spec"]["description"]
+    runbook_metadata = runbook_payload.get("metadata")
 
     return client.runbook.upload_with_secrets(
-        runbook_name, runbook_desc, runbook_resources, force_create=force_create
+        runbook_name,
+        runbook_desc,
+        runbook_resources,
+        force_create=force_create,
+        runbook_metadata=runbook_metadata,
     )
 
 
@@ -260,7 +357,9 @@ def create_runbook_command(runbook_file, name, description, force):
     LOG.debug("Runbook {} has state: {}".format(runbook_name, runbook_state))
 
     if runbook_state != "ACTIVE":
-        msg_list = runbook_status.get("message_list", [])
+        msg_list = []
+        _get_nested_messages("", runbook_status, msg_list)
+
         if not msg_list:
             LOG.error("Runbook {} created with errors.".format(runbook_name))
             LOG.debug(json.dumps(runbook_status))
@@ -268,7 +367,11 @@ def create_runbook_command(runbook_file, name, description, force):
 
         msgs = []
         for msg_dict in msg_list:
-            msgs.append(msg_dict.get("message", ""))
+            msg = ""
+            path = msg_dict.get("path", "")
+            if path:
+                msg = path + ": "
+            msgs.append(msg + msg_dict.get("message", ""))
 
         LOG.error(
             "Runbook {} created with {} error(s): {}".format(
@@ -305,11 +408,17 @@ def update_runbook(client, runbook_payload, name=None, description=None):
     runbook_desc = runbook_payload["spec"]["description"]
 
     runbook = get_runbook(client, runbook_payload["spec"]["name"])
-    uuid = runbook["metadata"]["uuid"]
-    spec_version = runbook["metadata"]["spec_version"]
+    runbook_metadata = runbook["metadata"]
+    uuid = runbook_metadata["uuid"]
+    spec_version = runbook_metadata["spec_version"]
 
     return client.runbook.update_with_secrets(
-        uuid, runbook_name, runbook_desc, runbook_resources, spec_version
+        uuid,
+        runbook_name,
+        runbook_desc,
+        runbook_resources,
+        spec_version,
+        runbook_metadata=runbook_metadata,
     )
 
 

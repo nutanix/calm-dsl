@@ -1,0 +1,41 @@
+{
+    "spec": {
+        "name": "test_gcp_account_123321",
+        "resources": {
+            "type": "gcp",
+            "sync_interval_secs": 0,
+            "data": {
+                "project_id": "project_id",
+                "private_key_id": "private_key_id",
+                "client_email": "example@example.com",
+                "token_uri": "https://accounts.google.com/o/oauth2/token",
+                "client_id": "123213123123123",
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+                "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/108048128720-compute%40developer.gserviceaccount.com",
+                "gke_config": {
+                    "port": 944,
+                    "server": "server_ip"
+                },
+                "private_key": {
+                    "attrs": {
+                        "is_secret_modified": true
+                    },
+                    "value": "private_key"
+                },
+                "regions": [
+                    {
+                        "name": "asia-east1"
+                    }
+                ],
+                "public_images": [
+                ]
+            }
+        }
+    },
+    "metadata": {
+        "kind": "account",
+        "name": "test_gcp_account_123321",
+        "uuid": ""
+    }
+}

@@ -10,7 +10,7 @@ LOG = get_logging_handle(__name__)
 SECRET_VAR_FILES = []
 
 
-def render_variable_template(cls, entity_context):
+def render_variable_template(cls, entity_context, context="", secrets_dict=[]):
 
     LOG.debug("Rendering {} variable template".format(cls.__name__))
     if not isinstance(cls, VariableType):
@@ -18,6 +18,7 @@ def render_variable_template(cls, entity_context):
 
     # Updating the context of variables
     entity_context = entity_context + "_variable_" + cls.__name__
+    context = context + "variable_list." + cls.__name__
 
     user_attrs = cls.get_user_attrs()
     user_attrs["description"] = cls.__doc__ or ""
@@ -60,7 +61,17 @@ def render_variable_template(cls, entity_context):
         is_secret = True if user_attrs["type"] == "SECRET" else False
 
         if is_secret:
-            user_attrs["value"] = get_secret_var_val(entity_context)
+            secrets_dict.append(
+                {
+                    "context": context,
+                    "secret_name": cls.__name__,
+                    "secret_value": getattr(cls, "value", ""),
+                }
+            )
+
+            user_attrs["value"] = get_secret_var_val(
+                entity_context, getattr(cls, "value", "")
+            )
             if var_val_type == "STRING":
                 schema_file = "var_simple_secret_string.py.jinja2"
             elif var_val_type == "INT":
@@ -173,7 +184,7 @@ def render_variable_template(cls, entity_context):
     return text.strip()
 
 
-def get_secret_var_val(entity_context):
+def get_secret_var_val(entity_context, value=""):
 
     global SECRET_VAR_FILES
 
@@ -181,7 +192,7 @@ def get_secret_var_val(entity_context):
     file_location = os.path.join(get_local_dir(), entity_context)
 
     with open(file_location, "w+") as fd:
-        fd.write("")
+        fd.write(value)
 
     # Replace read_local_file by a constant
     return entity_context

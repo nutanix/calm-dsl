@@ -1,5 +1,9 @@
 import click
 import os
+from io import StringIO
+import json
+import ast
+from Crypto.Cipher import AES
 
 from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.service import render_service_template
@@ -17,9 +21,20 @@ from calm.dsl.decompile.variable import get_secret_variable_files
 from calm.dsl.decompile.file_handler import get_local_dir
 from calm.dsl.builtins import BlueprintType, ServiceType, PackageType
 from calm.dsl.builtins import DeploymentType, ProfileType, SubstrateType
+from calm.dsl.builtins import get_valid_identifier
+from calm.dsl.log import get_logging_handle
 
 
-def render_bp_file_template(cls, with_secrets=False, metadata_obj=None):
+LOG = get_logging_handle(__name__)
+
+SECRETS_FILE_ENCRYPTION_KEY = (
+    b"dslengine@calm23"  # the key must be a multiple of 16 bytes
+)
+
+
+def render_bp_file_template(
+    cls, with_secrets=False, metadata_obj=None, contains_encrypted_secrets=False
+):
 
     if not isinstance(cls, BlueprintType):
         raise TypeError("{} is not of type {}".format(cls, BlueprintType))
@@ -28,6 +43,8 @@ def render_bp_file_template(cls, with_secrets=False, metadata_obj=None):
     user_attrs["name"] = cls.__name__
     user_attrs["description"] = cls.__doc__
 
+    secrets_dict = []
+
     # Find default cred
     default_cred = cls.default_cred
     default_cred_name = getattr(default_cred, "name", "") or getattr(
@@ -35,11 +52,26 @@ def render_bp_file_template(cls, with_secrets=False, metadata_obj=None):
     )
 
     credential_list = []
-    for index, cred in enumerate(cls.credentials):
+    cred_file_dict = dict()
+    for _, cred in enumerate(cls.credentials):
         cred_name = getattr(cred, "name", "") or cred.__name__
+        cred_type = cred.type
+        cred_file_name = "BP_CRED_{}_{}".format(
+            get_valid_identifier(cred_name), cred_type
+        )
+
         if default_cred_name and cred_name == default_cred_name:
             cred.default = True
+
         credential_list.append(render_credential_template(cred))
+        cred_file_dict[cred_file_name] = getattr(cred, "secret", "").get("value", "")
+        secrets_dict.append(
+            {
+                "context": "credential_definition_list." + cred_name,
+                "secret_name": cred_name,
+                "secret_value": cred_file_dict[cred_file_name],
+            }
+        )
 
     # Map to store the [Name: Rendered template for entity]
     entity_name_text_map = {}
@@ -101,17 +133,26 @@ def render_bp_file_template(cls, with_secrets=False, metadata_obj=None):
     secret_files = get_secret_variable_files()
     secret_files.extend(get_cred_files())
 
-    if with_secrets:
+    if with_secrets or contains_encrypted_secrets:
+        # If contains_encrypted_secrets is True then populate secrets directly from payload
         # Fill the secret if flag is set
-        if secret_files:
+        if secret_files and (not contains_encrypted_secrets):
             click.secho("Enter the value to be used in secret files")
         for file_name in secret_files:
-            secret_val = click.prompt(
-                "\nValue for {}".format(file_name),
-                default="",
-                show_default=False,
-                hide_input=True,
-            )
+            if contains_encrypted_secrets:
+                try:
+                    secret_val = cred_file_dict[file_name]
+                except Exception:
+                    import pdb
+
+                    pdb.set_trace()
+            else:
+                secret_val = click.prompt(
+                    "\nValue for {}".format(file_name),
+                    default="",
+                    show_default=False,
+                    hide_input=True,
+                )
             file_loc = os.path.join(get_local_dir(), file_name)
             with open(file_loc, "w+") as fd:
                 fd.write(secret_val)
@@ -122,19 +163,31 @@ def render_bp_file_template(cls, with_secrets=False, metadata_obj=None):
     # Rendering templates
     for k, v in enumerate(dependepent_entities):
         if isinstance(v, ServiceType):
-            dependepent_entities[k] = render_service_template(v)
+            dependepent_entities[k] = render_service_template(v, secrets_dict)
 
         elif isinstance(v, PackageType):
-            dependepent_entities[k] = render_package_template(v)
+            dependepent_entities[k] = render_package_template(v, secrets_dict)
 
         elif isinstance(v, ProfileType):
-            dependepent_entities[k] = render_profile_template(v)
+            dependepent_entities[k] = render_profile_template(v, secrets_dict)
 
         elif isinstance(v, DeploymentType):
             dependepent_entities[k] = render_deployment_template(v)
 
         elif isinstance(v, SubstrateType):
-            dependepent_entities[k] = render_substrate_template(v, vm_images=vm_images)
+            dependepent_entities[k] = render_substrate_template(
+                v, vm_images=vm_images, secrets_dict=secrets_dict
+            )
+
+    is_any_secret_value_available = False
+    for _e in secrets_dict:
+        if _e.get("secret_value", ""):
+            is_any_secret_value_available = True
+            break
+
+    if is_any_secret_value_available:
+        LOG.info("Creating secret metadata file")
+        encrypt_decompile_secrets(secrets_dict=secrets_dict)
 
     blueprint = render_blueprint_template(cls)
 
@@ -149,6 +202,7 @@ def render_bp_file_template(cls, with_secrets=False, metadata_obj=None):
             "dependent_entities": dependepent_entities,
             "blueprint": blueprint,
             "metadata": metadata_str,
+            "contains_encrypted_secrets": contains_encrypted_secrets,
         }
     )
 
@@ -213,3 +267,72 @@ def add_edges(edges, from_entity, to_entity):
         edges[from_entity] = []
 
     edges[from_entity].append(to_entity)
+
+
+def encrypt_decompile_secrets(key=SECRETS_FILE_ENCRYPTION_KEY, secrets_dict=[]):
+    """
+    Stores secrets_dict in a file and encrypts the file
+    A new encrypted file decompiled_secrets.bin is created
+    """
+
+    data = str(secrets_dict).encode("utf-8")
+
+    # pad the data with spaces to make it a multiple of 16 bytes
+    data += b" " * (AES.block_size - len(data) % AES.block_size)
+
+    cipher = AES.new(key, AES.MODE_EAX)
+    ciphertext, tag = cipher.encrypt_and_digest(data)
+
+    encrypted_file_path = os.path.join(get_local_dir(), "decompiled_secrets.bin")
+
+    with open(encrypted_file_path, "wb") as f:
+        [f.write(x) for x in (cipher.nonce, tag, ciphertext)]
+
+
+def decrypt_decompiled_secrets_file(key=SECRETS_FILE_ENCRYPTION_KEY, pth=""):
+    """
+    The encrypted file containing the secrets and context is decrypted
+    """
+
+    local_dir_pth = pth + "/.local"
+    if pth == "":
+        local_dir_pth = get_local_dir()
+
+    encrypted_file_path = os.path.join(local_dir_pth, "decompiled_secrets.bin")
+    if not os.path.exists(encrypted_file_path):
+        return {}
+
+    # read the contents of the encrypted file
+    with open(encrypted_file_path, "rb") as f:
+        nonce, tag, ciphertext = [f.read(x) for x in (16, 16, -1)]
+
+    cipher = AES.new(key, AES.MODE_EAX, nonce)
+    decrypted_data = cipher.decrypt(ciphertext)
+
+    # verify the integrity of the decrypted data using the tag
+    try:
+        cipher.verify(tag)
+    except ValueError:
+        print(
+            "Warning! The file has been tampered with and the contents may have been altered."
+        )
+
+    decrypted_data = decrypted_data.rstrip()
+    decrypted_data = ast.literal_eval(decrypted_data.decode())
+
+    decompiled_secrets = json.dumps(decrypted_data)
+    decompiled_secrets = json.loads(decompiled_secrets)
+
+    decompiled_secrets_dict = {}
+
+    for decompiled_secret in decompiled_secrets:
+        if (
+            decompiled_secret["context"].rsplit(".", 1)[0]
+            not in decompiled_secrets_dict
+        ):
+            decompiled_secrets_dict[decompiled_secret["context"].rsplit(".", 1)[0]] = {}
+        decompiled_secrets_dict[decompiled_secret["context"].rsplit(".", 1)[0]][
+            decompiled_secret["secret_name"]
+        ] = decompiled_secret["secret_value"]
+
+    return decompiled_secrets_dict

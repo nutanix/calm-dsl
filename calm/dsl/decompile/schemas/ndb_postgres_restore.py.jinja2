@@ -1,0 +1,27 @@
+{% macro database_restore(obj) %}
+Database.Postgres.RestoreFromTimeMachine(
+    {%- for key, val in obj.items() %}
+    {{ key }}={% if val.type == "Ref" %}{{val.ref}}("{{val.value}}"){% else %} "{{val.value}}" {% endif %},
+    {%- endfor %}
+)
+{% endmacro %}
+
+
+{% macro output_vars_restore(obj) %}
+PostgresDatabaseOutputVariables.RestoreFromTimeMachine(
+    {%- for key, val in obj.items() %}
+    {{ key }}="{{ val }}",
+    {%- endfor %}
+)
+{% endmacro %}
+
+{% macro nutanix_db_postgres_restore(obj) %}
+CalmTask.NutanixDB.PostgresDatabase.RestoreFromTimeMachine(
+    name="{{ obj.name }}",
+    account=Ref.Account("{{ obj.account }}"),
+    instance_config={{ database_restore(obj.database) }},
+    outargs={{ output_vars_restore(obj.output_vars) }},
+)
+{% endmacro %}
+
+{{ nutanix_db_postgres_restore(obj) }}

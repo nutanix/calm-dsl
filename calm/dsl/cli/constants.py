@@ -90,6 +90,30 @@ class BLUEPRINT:
         ERROR = "ERROR"
 
 
+class POLICY:
+    class STATES:
+        ENABLED = "ENABLED"
+        DISABLED = "DISABLED"
+        DELETED = "DELETED"
+        DRAFT = "DRAFT"
+
+
+class APPROVAL_REQUEST:
+    class STATES:
+        PENDING = "PENDING"
+        APPROVED = "APPROVED"
+        REJECTED = "REJECTED"
+        EXPIRED = "EXPIRED"
+        ABORTED = "ABORTED"
+
+    TERMINAL_STATES = [
+        STATES.APPROVED,
+        STATES.REJECTED,
+        STATES.EXPIRED,
+        STATES.ABORTED,
+    ]
+
+
 class APPLICATION:
     class STATES:
         PROVISIONING = "provisioning"
@@ -117,13 +141,18 @@ class ACCOUNT:
         ACTIVE = "ACTIVE"
         UNSAVED = "UNSAVED"
 
-    class TYPES:
+    class TYPE:
+        AHV = "nutanix_pc"
         AWS = "aws"
-        AHV = "nutanix"
-        KUBERNETES = "k8s"
+        AWS_C2S = "aws_govcloud"
         AZURE = "azure"
         GCP = "gcp"
         VMWARE = "vmware"
+        K8S_KARBON = "k8s_karbon"
+        K8S_VANILLA = "k8s_vanilla"
+        CREDENTIAL_PROVIDER = "credential_provider"
+        NDB = "NDB"
+        CUSTOM_PROVIDER = "custom_provider"
 
 
 class SINGLE_INPUT:
@@ -249,6 +278,16 @@ class ACP:
                 "left_hand_side": {"entity_type": "virtual_network"},
                 "right_hand_side": {"collection": "ALL"},
             },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "resource_type"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "custom_provider"},
+                "right_hand_side": {"collection": "ALL"},
+            },
         ]
 
         OPERATOR = [
@@ -261,6 +300,16 @@ class ACP:
                 "operator": "IN",
                 "right_hand_side": {"collection": "ALL"},
                 "left_hand_side": {"entity_type": "category"},
+            },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "resource_type"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "custom_provider"},
+                "right_hand_side": {"collection": "ALL"},
             },
         ]
 
@@ -298,6 +347,16 @@ class ACP:
             {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "virtual_network"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "resource_type"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "custom_provider"},
                 "right_hand_side": {"collection": "ALL"},
             },
         ]
@@ -366,6 +425,16 @@ class ACP:
             {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "virtual_network"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "resource_type"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "custom_provider"},
                 "right_hand_side": {"collection": "ALL"},
             },
         ]
@@ -481,6 +550,22 @@ class ACP:
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "app_variable"},
                 "right_hand_side": {"collection": "SELF_OWNED"},
+            },
+        },
+        {
+            "permission": "view_image",
+            "filter": {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "resource_type"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+        },
+        {
+            "permission": "view_image",
+            "filter": {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "custom_provider"},
+                "right_hand_side": {"collection": "ALL"},
             },
         },
     ]

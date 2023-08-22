@@ -5,6 +5,9 @@ from .task import meta
 from .entity import EntityType
 from .task import CalmTask, RunbookTask, TaskType
 from .variable import CalmVariable, RunbookVariable, VariableType
+from calm.dsl.log import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 def handle_meta_create(node, func_globals, prefix=None):
@@ -37,13 +40,20 @@ class GetCallNodes(ast.NodeVisitor):
 
     # TODO: Need to add validations for unsupported nodes.
     def __init__(
-        self, func_globals, target=None, is_runbook=False, is_metatask_context=False
+        self,
+        func_globals,
+        target=None,
+        is_runbook=False,
+        is_metatask_context=False,
+        is_branch_present=False,
     ):
         self.task_list = []
         self.all_tasks = []
         self.variables = {}
         self.target = target or None
         self._globals = func_globals or {}.copy()
+
+        self.is_branch_present = is_branch_present
 
         # flag to check if this runbook is in context of RaaS, as decision, while, parallel tasks are supported only in RaaS
         self.is_runbook = is_runbook
@@ -103,6 +113,17 @@ class GetCallNodes(ast.NodeVisitor):
 
     def visit_With(self, node):
         if len(node.items) > 1:
+            """
+            NOT VALID:
+            with parallel() as p0, p1:
+
+            VALID:
+            with parallel() as p0:
+            """
+            LOG.debug(
+                "\nNOT VALID: \nwith parallel() as p0, p1:\n\nVALID: \nwith parallel() as p0:"
+            )
+
             raise ValueError(
                 "Only a single context is supported in 'with' statements inside the action."
             )
@@ -110,8 +131,10 @@ class GetCallNodes(ast.NodeVisitor):
             compile(ast.Expression(node.items[0].context_expr), "", "eval"),
             self._globals,
         )
+
         if (
             not self.is_runbook
+            and (not self.is_branch_present)
             and hasattr(context, "__calm_type__")
             and context.__calm_type__ == "parallel"
         ):
@@ -127,17 +150,19 @@ class GetCallNodes(ast.NodeVisitor):
                     self.all_tasks.append(task)
             self.task_list.append(parallel_tasks)
 
-        # for parallel tasks in runbooks
         elif (
-            self.is_runbook
+            (self.is_runbook or self.is_branch_present)
             and hasattr(context, "__calm_type__")
             and context.__calm_type__ == "parallel"
         ):
-            if self.is_metatask:
+            if self.is_runbook and self.is_metatask:
                 raise ValueError(
                     "parallel is not supported in runbooks under decision or loop task context."
                 )
             if not node.items[0].optional_vars:
+                LOG.debug(
+                    "Parallel task must be used in the format `with parallel as p`"
+                )
                 raise ValueError(
                     "Parallel task must be used in the format `with parallel as p`"
                 )
@@ -149,8 +174,21 @@ class GetCallNodes(ast.NodeVisitor):
 
             for statement in node.body:
                 if not isinstance(statement, ast.With) or len(statement.items) > 1:
+                    """
+                    NOT VALID:
+                    with parallel() as p0:
+                        CalmTask. ...
+
+                    VALID:
+                    with parallel() as p0:
+                        with branch(p0):
+                            CalmTask. ...
+                    """
+                    LOG.debug(
+                        "\nNOT VALID: \nwith parallel() as p0:\n\tCalmTask. ... \n\nVALID: \nwith parallel() as p0:\n\twith branch(p0):\n\t\tCalmTask. ..."
+                    )
                     raise ValueError(
-                        "Only a single context is supported in 'with' statements inside the parallel."
+                        "`with parallel` should have `with branch` within them"
                     )
                 statement_context = statement.items[0].context_expr
                 if (

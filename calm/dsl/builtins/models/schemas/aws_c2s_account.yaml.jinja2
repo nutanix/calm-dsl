@@ -1,0 +1,39 @@
+{% macro AwsC2SAccount() -%}
+
+title: AwsC2SAccount
+type: object
+x-calm-dsl-type: app_aws_c2s_account
+properties:
+    c2s_account_address:
+        type: string
+        x-calm-dsl-display-name: account_address
+    client_key:
+        type: string
+    client_certificate:
+        type: string
+    role:
+        type: string
+    mission:
+        type: string
+    agency:
+        type: string
+    regions:
+        type: array
+        items:
+            type: object
+            x-calm-dsl-type: object
+            properties:
+                name:
+                    type: string
+                images:
+                    type: array
+                    items:
+                        type: string
+
+{%- endmacro %}
+{% macro AwsC2SAccountSchema() -%}
+
+AwsC2SAccount:
+  {{ AwsC2SAccount()|indent(2) }}
+
+{%- endmacro %}

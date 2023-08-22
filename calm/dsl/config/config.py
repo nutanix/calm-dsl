@@ -55,6 +55,33 @@ class ConfigFileParser:
         else:
             return {}
 
+    def get_policy_config(self):
+        """returns policy config"""
+
+        if "POLICY" in self._CONFIG:
+            return self._CONFIG["POLICY"]
+
+        else:
+            return {}
+
+    def get_approval_policy_config(self):
+        """returns approval policy config"""
+
+        if "APPROVAL_POLICY" in self._CONFIG:
+            return self._CONFIG["APPROVAL_POLICY"]
+
+        else:
+            return {}
+
+    def get_stratos_config(self):
+        """returns stratos config"""
+
+        if "STRATOS" in self._CONFIG:
+            return self._CONFIG["STRATOS"]
+
+        else:
+            return {}
+
     def get_categories_config(self):
         """returns categories config"""
 
@@ -97,6 +124,9 @@ class ConfigHandle:
         self.server_config = config_obj.get_server_config()
         self.project_config = config_obj.get_project_config()
         self.log_config = config_obj.get_log_config()
+        self.policy_config = config_obj.get_policy_config()
+        self.approval_policy_config = config_obj.get_approval_policy_config()
+        self.stratos_config = config_obj.get_stratos_config()
         self.categories_config = config_obj.get_categories_config()
         self.connection_config = config_obj.get_connection_config()
 
@@ -114,6 +144,18 @@ class ConfigHandle:
         """returns logging configuration"""
 
         return self.log_config
+
+    def get_policy_config(self):
+        """returns policy status"""
+        return self.policy_config
+
+    def get_approval_policy_config(self):
+        """returns approval policy status"""
+        return self.approval_policy_config
+
+    def get_stratos_config(self):
+        """returns approval policy status"""
+        return self.stratos_config
 
     def get_categories_config(self):
         """returns config categories"""
@@ -143,6 +185,9 @@ class ConfigHandle:
         retries_enabled,
         connection_timeout,
         read_timeout,
+        policy_status,
+        approval_policy_status,
+        stratos_status,
         schema_file="config.ini.jinja2",
     ):
         """renders the config template"""
@@ -160,6 +205,9 @@ class ConfigHandle:
             retries_enabled=retries_enabled,
             connection_timeout=connection_timeout,
             read_timeout=read_timeout,
+            policy_status=policy_status,
+            approval_policy_status=approval_policy_status,
+            stratos_status=stratos_status,
         )
         return text.strip() + os.linesep
 
@@ -176,6 +224,9 @@ class ConfigHandle:
         retries_enabled,
         connection_timeout,
         read_timeout,
+        policy_status,
+        approval_policy_status,
+        stratos_status,
     ):
         """Updates the config file data"""
 
@@ -191,6 +242,9 @@ class ConfigHandle:
             retries_enabled,
             connection_timeout,
             read_timeout,
+            policy_status,
+            approval_policy_status,
+            stratos_status,
         )
 
         LOG.debug("Writing configuration to '{}'".format(config_file))
@@ -217,6 +271,9 @@ def set_dsl_config(
     retries_enabled,
     connection_timeout,
     read_timeout,
+    policy_status,
+    approval_policy_status,
+    stratos_status,
 ):
 
     """
@@ -244,4 +301,7 @@ def set_dsl_config(
         retries_enabled=retries_enabled,
         connection_timeout=connection_timeout,
         read_timeout=read_timeout,
+        policy_status=policy_status,
+        approval_policy_status=approval_policy_status,
+        stratos_status=stratos_status,
     )

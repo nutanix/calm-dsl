@@ -2,6 +2,7 @@ import click
 import os
 import json
 import sys
+from distutils.version import LooseVersion as LV
 
 from calm.dsl.config import (
     get_context,
@@ -17,6 +18,8 @@ from calm.dsl.api import get_resource_api, get_client_handle_obj
 from calm.dsl.store import Cache
 from calm.dsl.init import init_bp, init_runbook
 from calm.dsl.providers import get_provider_types
+from calm.dsl.store import Version
+from calm.dsl.constants import POLICY, STRATOS, DSL_CONFIG
 
 from .main import init, set
 from calm.dsl.log import get_logging_handle
@@ -155,7 +158,9 @@ def set_server_details(
     port = port or click.prompt("Port", default="9440")
     username = username or click.prompt("Username", default="admin")
     password = password or click.prompt("Password", default="", hide_input=True)
-    project_name = project_name or click.prompt("Project", default="default")
+    project_name = project_name or click.prompt(
+        "Project", default=DSL_CONFIG.EMPTY_PROJECT_NAME
+    )
 
     # Default log-level
     log_level = "INFO"
@@ -186,14 +191,76 @@ def set_server_details(
     service_enablement_status = result["service_enablement_status"]
     LOG.info(service_enablement_status)
 
-    LOG.info("Verifying the project details")
-    project_name_uuid_map = client.project.get_name_uuid_map(
-        params={"filter": "name=={}".format(project_name)}
-    )
-    if not project_name_uuid_map:
-        LOG.error("Project '{}' not found !!!".format(project_name))
-        sys.exit(-1)
-    LOG.info("Project '{}' verified successfully".format(project_name))
+    res, err = client.version.get_calm_version()
+    if err:
+        LOG.error("Failed to get version")
+        click.echo("[Fail]")
+        sys.exit(err["error"])
+    calm_version = res.content.decode("utf-8")
+
+    # get policy status
+    if LV(calm_version) >= LV(POLICY.MIN_SUPPORTED_VERSION):
+        Obj = get_resource_api("features/policy", client.connection, calm_api=True)
+        res, err = Obj.read()
+
+        if err:
+            click.echo("[Fail]")
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        result = json.loads(res.content)
+        policy_status = (
+            result.get("status", {}).get("feature_status", {}).get("is_enabled", False)
+        )
+        LOG.info("Policy enabled={}".format(policy_status))
+    else:
+        LOG.debug("Policy is not supported")
+        policy_status = False
+
+    # get approval policy status
+    if LV(calm_version) >= LV(POLICY.APPROVAL_POLICY_MIN_SUPPORTED_VERSION):
+        Obj = get_resource_api(
+            "features/approval_policy", client.connection, calm_api=True
+        )
+        res, err = Obj.read()
+
+        if err:
+            click.echo("[Fail]")
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        result = json.loads(res.content)
+        approval_policy_status = (
+            result.get("status", {}).get("feature_status", {}).get("is_enabled", False)
+        )
+        LOG.info("Approval Policy enabled={}".format(approval_policy_status))
+    else:
+        LOG.debug("Approval Policy is not supported")
+        approval_policy_status = False
+
+    # get stratos status
+    if LV(calm_version) >= LV(STRATOS.MIN_SUPPORTED_VERSION):
+        Obj = get_resource_api(
+            "features/stratos/status", client.connection, calm_api=True
+        )
+        res, err = Obj.read()
+
+        if err:
+            click.echo("[Fail]")
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        result = json.loads(res.content)
+        stratos_status = (
+            result.get("status", {}).get("feature_status", {}).get("is_enabled", False)
+        )
+        LOG.info("stratos enabled={}".format(stratos_status))
+    else:
+        LOG.debug("Stratos is not supported")
+        stratos_status = False
+    if project_name != DSL_CONFIG.EMPTY_PROJECT_NAME:
+        LOG.info("Verifying the project details")
+        project_name_uuid_map = client.project.get_name_uuid_map(
+            params={"filter": "name=={}".format(project_name)}
+        )
+        if not project_name_uuid_map:
+            LOG.error("Project '{}' not found !!!".format(project_name))
+            sys.exit(-1)
+        LOG.info("Project '{}' verified successfully".format(project_name))
 
     # Writing configuration to file
     set_dsl_config(
@@ -209,6 +276,9 @@ def set_server_details(
         retries_enabled=retries_enabled,
         connection_timeout=connection_timeout,
         read_timeout=read_timeout,
+        policy_status=policy_status,
+        approval_policy_status=approval_policy_status,
+        stratos_status=stratos_status,
     )
 
     # Updating context for using latest config data
@@ -387,7 +457,7 @@ def _set_config(
     password = password or server_config["pc_password"]
 
     project_config = ContextObj.get_project_config()
-    project_name = project_name or project_config.get("name") or "default"
+    project_name = project_name or project_config.get("name")
 
     LOG.info("Checking if Calm is enabled on Server")
 
@@ -403,15 +473,77 @@ def _set_config(
     result = json.loads(res.content)
     service_enablement_status = result["service_enablement_status"]
     LOG.info(service_enablement_status)
+    res, err = client.version.get_calm_version()
+    if err:
+        LOG.error("Failed to get version")
+        click.echo("[Fail]")
+        sys.exit(err["error"])
+    calm_version = res.content.decode("utf-8")
 
-    LOG.info("Verifying the project details")
-    project_name_uuid_map = client.project.get_name_uuid_map(
-        params={"filter": "name=={}".format(project_name)}
-    )
-    if not project_name_uuid_map:
-        LOG.error("Project '{}' not found !!!".format(project_name))
-        sys.exit(-1)
-    LOG.info("Project '{}' verified successfully".format(project_name))
+    # get policy status
+    if LV(calm_version) >= LV(POLICY.MIN_SUPPORTED_VERSION):
+        Obj = get_resource_api("features/policy", client.connection, calm_api=True)
+        res, err = Obj.read()
+
+        if err:
+            click.echo("[Fail]")
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        result = json.loads(res.content)
+        policy_status = (
+            result.get("status", {}).get("feature_status", {}).get("is_enabled", False)
+        )
+        LOG.info("Policy enabled={}".format(policy_status))
+    else:
+        LOG.debug("Policy is not supported")
+        policy_status = False
+
+    # get approval policy status
+    if LV(calm_version) >= LV(POLICY.APPROVAL_POLICY_MIN_SUPPORTED_VERSION):
+        Obj = get_resource_api(
+            "features/approval_policy", client.connection, calm_api=True
+        )
+        res, err = Obj.read()
+
+        if err:
+            click.echo("[Fail]")
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        result = json.loads(res.content)
+        approval_policy_status = (
+            result.get("status", {}).get("feature_status", {}).get("is_enabled", False)
+        )
+        LOG.info("Approval Policy enabled={}".format(approval_policy_status))
+    else:
+        LOG.debug("Approval Policy is not supported")
+        approval_policy_status = False
+
+    # get stratos status
+    if LV(calm_version) >= LV(STRATOS.MIN_SUPPORTED_VERSION):
+        Obj = get_resource_api(
+            "features/stratos/status", client.connection, calm_api=True
+        )
+        res, err = Obj.read()
+
+        if err:
+            click.echo("[Fail]")
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        result = json.loads(res.content)
+        stratos_status = (
+            result.get("status", {}).get("feature_status", {}).get("is_enabled", False)
+        )
+        LOG.info("stratos enabled={}".format(stratos_status))
+    else:
+        LOG.debug("Stratos is not supported")
+        stratos_status = False
+
+    if project_name != DSL_CONFIG.EMPTY_PROJECT_NAME:
+        LOG.info("Verifying the project details")
+        project_name_uuid_map = client.project.get_name_uuid_map(
+            params={"filter": "name=={}".format(project_name)}
+        )
+        if not project_name_uuid_map:
+            LOG.error("Project '{}' not found !!!".format(project_name))
+            sys.exit(-1)
+        LOG.info("Project '{}' verified successfully".format(project_name))
 
     log_config = ContextObj.get_log_config()
     log_level = log_level or log_config.get("level") or "INFO"
@@ -445,6 +577,9 @@ def _set_config(
         retries_enabled=retries_enabled,
         connection_timeout=connection_timeout,
         read_timeout=read_timeout,
+        policy_status=policy_status,
+        approval_policy_status=approval_policy_status,
+        stratos_status=stratos_status,
     )
     LOG.info("Configuration changed successfully")
 

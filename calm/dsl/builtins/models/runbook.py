@@ -13,6 +13,9 @@ from .validator import PropertyValidator
 from .node_visitor import GetCallNodes
 from calm.dsl.log import get_logging_handle
 
+
+from _ast import AST
+
 LOG = get_logging_handle(__name__)
 
 
@@ -73,6 +76,7 @@ class runbook(metaclass=DescriptorType):
         self.user_func = user_func
         self.user_runbook = None
         self.task_target = None
+        self.is_branch_present = False
 
         if self.__class__ == runbook:
             self.__get__()
@@ -124,10 +128,18 @@ class runbook(metaclass=DescriptorType):
             if args.get("endpoints", []):
                 func_globals.update({"endpoints": args["endpoints"]})
 
+        try:
+            func_globals_copy = func_globals.copy()
+            self.check_if_branch_present(node, func_globals_copy)
+        except Exception as ex:
+            LOG.exception(ex)
+            sys.exit(-1)
+
         node_visitor = GetCallNodes(
             func_globals,
             target=self.task_target,
             is_runbook=True if self.__class__ == runbook else False,
+            is_branch_present=self.is_branch_present,
         )
         try:
             node_visitor.visit(node)
@@ -262,6 +274,77 @@ class runbook(metaclass=DescriptorType):
 
         else:
             return self.user_runbook
+
+    def iter_fields(self, node):
+        """
+        Yield a tuple of ``(fieldname, value)`` for each field in ``node._fields``
+        that is present on *node*.
+        """
+        for field in node._fields:
+            try:
+                yield field, getattr(node, field)
+            except AttributeError:
+                pass
+
+    def generic_visit(self, node, func_globals_copy):
+        """
+        Called if no explicit visitor function exists for a node.
+        if there is any branch() helper present then it sets is_branch_present as True
+        """
+
+        for field, value in self.iter_fields(node):
+            if isinstance(value, list):
+                for item in value:
+                    if isinstance(item, AST):
+
+                        if isinstance(item, ast.With):
+                            context = eval(
+                                compile(
+                                    ast.Expression(item.items[0].context_expr),
+                                    "",
+                                    "eval",
+                                ),
+                                func_globals_copy,
+                            )
+                            if (
+                                hasattr(context, "__calm_type__")
+                                and context.__calm_type__ == "parallel"
+                            ):
+                                var = item.items[0].optional_vars
+                                if var:
+                                    func_globals_copy.update({var.id: "var"})
+
+                                    for statement in item.body:
+                                        if isinstance(item, ast.With):
+                                            statement_context = eval(
+                                                compile(
+                                                    ast.Expression(
+                                                        statement.items[0].context_expr
+                                                    ),
+                                                    "",
+                                                    "eval",
+                                                ),
+                                                func_globals_copy,
+                                            )
+
+                                            if (
+                                                hasattr(
+                                                    statement_context, "__calm_type__"
+                                                )
+                                                and statement_context.__calm_type__
+                                                == "branch"
+                                            ):
+                                                self.is_branch_present = True
+
+                        self.check_if_branch_present(item, func_globals_copy)
+            elif isinstance(value, AST):
+                self.check_if_branch_present(value, func_globals_copy)
+
+    def check_if_branch_present(self, node, func_globals_copy):
+        """Visit a node. to checks if branch is present or not"""
+        method = "visit_" + node.__class__.__name__
+        visitor = getattr(self, method, self.generic_visit)
+        return visitor(node, func_globals_copy)
 
 
 # helper function to get runbook json dump

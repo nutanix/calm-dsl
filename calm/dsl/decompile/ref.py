@@ -3,6 +3,7 @@ from calm.dsl.builtins import RefType
 from calm.dsl.log import get_logging_handle
 from calm.dsl.decompile.ref_dependency import (
     get_service_name,
+    get_endpoint_name,
     get_profile_name,
     get_substrate_name,
 )
@@ -43,6 +44,10 @@ def render_ref_template(cls):
             user_attrs["name"] = cls_name
     elif kind == "app_profile":
         cls_name = get_profile_name(user_attrs["name"])
+        if cls_name:
+            user_attrs["name"] = cls_name
+    elif kind == "app_endpoint":
+        cls_name = get_endpoint_name(user_attrs["name"])
         if cls_name:
             user_attrs["name"] = cls_name
 

@@ -9,7 +9,7 @@ from calm.dsl.log import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-def render_package_template(cls):
+def render_package_template(cls, secrets_dict=[]):
 
     LOG.debug("Rendering {} package template".format(cls.__name__))
     if not isinstance(cls, PackageType):
@@ -17,6 +17,7 @@ def render_package_template(cls):
 
     # Entity context
     entity_context = "Package_" + cls.__name__
+    context = "package_definition_list." + (getattr(cls, "name", "") or cls.__name__)
 
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.__name__
@@ -36,18 +37,36 @@ def render_package_template(cls):
 
     variable_list = []
     for entity in user_attrs.get("variables", []):
-        variable_list.append(render_variable_template(entity, entity_context))
+        variable_list.append(
+            render_variable_template(
+                entity, entity_context, secrets_dict=secrets_dict, context=context
+            )
+        )
 
     action_list = []
     if hasattr(cls, "__install__"):
         cls.__install__.__name__ = "__install__"
         cls.__install__.name = "__install__"
-        action_list.append(render_action_template(cls.__install__, entity_context))
+        action_list.append(
+            render_action_template(
+                cls.__install__,
+                entity_context,
+                secrets_dict=secrets_dict,
+                context=context,
+            )
+        )
 
     if hasattr(cls, "__uninstall__"):
         cls.__uninstall__.__name__ = "__uninstall__"
         cls.__uninstall__.name = "__uninstall__"
-        action_list.append(render_action_template(cls.__uninstall__, entity_context))
+        action_list.append(
+            render_action_template(
+                cls.__uninstall__,
+                entity_context,
+                secrets_dict=secrets_dict,
+                context=context,
+            )
+        )
 
     user_attrs["services"] = ",".join(service_list)
     user_attrs["variables"] = variable_list

@@ -1,0 +1,20 @@
+{% macro PolicyCondition() -%}
+
+title: Policy Condition
+type: object
+x-calm-dsl-type: policy_condition
+properties:
+  attribute_name:
+    type: string
+    x-calm-dsl-display-name: attribute
+  operator:
+    type: string
+  value:
+    type: string
+{%- endmacro %}
+{% macro PolicyConditionSchema() -%}
+
+PolicyCondition:
+  {{ PolicyCondition()|indent(2) }}
+
+{%- endmacro %}

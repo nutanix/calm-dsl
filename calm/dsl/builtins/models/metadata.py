@@ -15,8 +15,6 @@ class MetadataType(EntityType):
             cdict.pop("owner_reference", None)
         if not cdict.get("categories", {}):
             cdict.pop("categories", None)
-        if not cdict.get("project_reference", {}):
-            cdict.pop("project_reference", None)
         return cdict
 
 

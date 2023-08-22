@@ -1,0 +1,29 @@
+{
+    "spec": {
+        "name": "test_k8s_vailla_account_123321",
+        "resources": {
+            "type": "k8s",
+            "sync_interval_secs": 3900,
+            "data": {
+                "authentication": {
+                    "type": "basic",
+                    "username": "username",
+                    "password": {
+                        "attrs": {
+                            "is_secret_modified": true
+                        },
+                        "value": "password"
+                    }
+                },
+                "server": "server",
+                "port": "9440",
+                "type": "vanilla"
+            }
+        }
+    },
+    "metadata": {
+        "kind": "account",
+        "name": "test_k8s_vailla_account_123321",
+        "uuid": ""
+    }
+}

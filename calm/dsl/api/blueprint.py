@@ -1,6 +1,16 @@
+import os
+import json
+
 from .resource import ResourceAPI
 from .connection import REQUEST
-from .util import strip_secrets, patch_secrets
+from . import util
+from .util import (
+    strip_secrets,
+    patch_secrets,
+)
+from calm.dsl.log import get_logging_handle
+
+LOG = get_logging_handle(__name__)
 
 
 class BlueprintAPI(ResourceAPI):
@@ -12,6 +22,7 @@ class BlueprintAPI(ResourceAPI):
         self.MARKETPLACE_LAUNCH = self.PREFIX + "/marketplace_launch"
         self.LAUNCH_POLL = self.ITEM + "/pending_launches/{}"
         self.BP_EDITABLES = self.ITEM + "/runtime_editables"
+        self.IMPORT_FILE = self.PREFIX + "/import_file"
         self.EXPORT_JSON = self.ITEM + "/export_json"
         self.EXPORT_JSON_WITH_SECRETS = self.ITEM + "/export_json?keep_secrets=true"
         self.EXPORT_FILE = self.ITEM + "/export_file"
@@ -35,6 +46,15 @@ class BlueprintAPI(ResourceAPI):
             request_json=payload,
             method=REQUEST.METHOD.POST,
             timeout=(5, 300),
+        )
+
+    def upload_using_import_file(self, payload, files):
+        return self.connection._call(
+            self.IMPORT_FILE,
+            verify=False,
+            files=files,
+            request_json=payload,
+            method=REQUEST.METHOD.POST,
         )
 
     def launch(self, uuid, payload):
@@ -124,10 +144,7 @@ class BlueprintAPI(ResourceAPI):
 
         return bp_payload
 
-    def upload_with_secrets(
-        self, bp_name, bp_desc, bp_resources, bp_metadata=None, force_create=False
-    ):
-
+    def check_if_bp_already_exists(self, bp_name, force_create):
         # check if bp with the given name already exists
         params = {"filter": "name=={};state!=DELETED".format(bp_name)}
         res, err = self.list(params=params)
@@ -151,6 +168,15 @@ class BlueprintAPI(ResourceAPI):
                 _, err = self.delete(bp_uuid)
                 if err:
                     return None, err
+        return None, None
+
+    def upload_with_secrets(
+        self, bp_name, bp_desc, bp_resources, bp_metadata=None, force_create=False
+    ):
+        _, err = self.check_if_bp_already_exists(bp_name, force_create)
+
+        if err:
+            return None, err
 
         secret_map = {}
         secret_variables = []
@@ -165,44 +191,13 @@ class BlueprintAPI(ResourceAPI):
             bp_resources, secret_map, secret_variables, object_lists=object_lists
         )
 
-        # Handling vmware secrets
-        def strip_vmware_secrets(path_list, obj):
-            path_list.extend(["create_spec", "resources", "guest_customization"])
-            obj = obj["create_spec"]["resources"]["guest_customization"]
-
-            if "windows_data" in obj:
-                path_list.append("windows_data")
-                obj = obj["windows_data"]
-
-                # Check for admin_password
-                if "password" in obj:
-                    secret_variables.append(
-                        (path_list + ["password"], obj["password"].pop("value", ""))
-                    )
-                    obj["password"]["attrs"] = {
-                        "is_secret_modified": False,
-                        "secret_reference": None,
-                    }
-
-                # Now check for domain password
-                if obj.get("is_domain", False):
-                    if "domain_password" in obj:
-                        secret_variables.append(
-                            (
-                                path_list + ["domain_password"],
-                                obj["domain_password"].pop("value", ""),
-                            )
-                        )
-                        obj["domain_password"]["attrs"] = {
-                            "is_secret_modified": False,
-                            "secret_reference": None,
-                        }
-
         for obj_index, obj in enumerate(
             bp_resources.get("substrate_definition_list", []) or []
         ):
             if (obj["type"] == "VMWARE_VM") and (obj["os_type"] == "Windows"):
-                strip_vmware_secrets(["substrate_definition_list", obj_index], obj)
+                util.strip_vmware_secrets(
+                    ["substrate_definition_list", obj_index], obj, secret_variables
+                )
 
         upload_payload = self._make_blueprint_payload(
             bp_name, bp_desc, bp_resources, bp_metadata
@@ -230,6 +225,100 @@ class BlueprintAPI(ResourceAPI):
 
         return self.update(uuid, update_payload)
 
+    def upload_with_decompiled_secrets(
+        self,
+        bp_payload,
+        bp_resources,
+        project_uuid,
+        bp_name=None,
+        passphrase=None,
+        force_create=None,
+        decompiled_secrets=[],
+    ):
+        """
+        Used to create a blueprint if it contains encrypted secrets from decompilation
+
+        Args:
+            bp_payload (dict): payload of the blueprint
+            bp_resources (dict): resources of blueprint
+            project_uuid (string): UUID of the project
+            bp_name (string): name of the blueprint to be created
+            passphrase (string): passphrase for creating blueprint with secrets (it should be same as the one provided while decompilation)
+            force_create (boolean): to delete bp with same name(if exists) and create a new one
+            decompiled_secrets (list): contains all the secrets that were present in the decompiled blueprint
+        """
+
+        _, err = self.check_if_bp_already_exists(bp_name, force_create)
+
+        if err:
+            return None, err
+
+        secret_map = {}
+        secret_variables = []
+        not_stripped_secrets = []
+        object_lists = [
+            "service_definition_list",
+            "package_definition_list",
+            "substrate_definition_list",
+            "app_profile_list",
+            "credential_definition_list",
+        ]
+
+        strip_secrets(
+            bp_resources,
+            secret_map,
+            secret_variables,
+            object_lists=object_lists,
+            decompiled_secrets=decompiled_secrets,
+            not_stripped_secrets=not_stripped_secrets,
+        )
+
+        for obj_index, obj in enumerate(
+            bp_resources.get("substrate_definition_list", []) or []
+        ):
+            if (obj["type"] == "VMWARE_VM") and (obj["os_type"] == "Windows"):
+                util.strip_vmware_secrets(
+                    ["substrate_definition_list", obj_index],
+                    obj,
+                    secret_variables,
+                    decompiled_secrets,
+                    not_stripped_secrets,
+                )
+
+        payload = {"name": bp_name, "project_uuid": project_uuid}
+
+        if passphrase:
+            payload["passphrase"] = passphrase
+
+        bp_payload["spec"]["resources"] = bp_resources
+
+        files = {"file": ("file", json.dumps(bp_payload))}
+
+        res, err = self.upload_using_import_file(payload, files)
+
+        if err:
+            return res, err
+
+        # Add secrets and update bp
+        bp = res.json()
+        del bp["status"]
+
+        LOG.info("Patching newly created/updated secrets")
+        for k in secret_map:
+            LOG.debug("[CREATED/MODIFIED] credential -> '{}'".format(k))
+        for s in secret_variables:
+            LOG.debug("[CREATED/MODIFIED] variable -> '{}' path: {}".format(s[2], s[0]))
+
+        patch_secrets(
+            bp["spec"]["resources"], secret_map, secret_variables, not_stripped_secrets
+        )
+
+        # Update blueprint
+        update_payload = bp
+        uuid = bp["metadata"]["uuid"]
+
+        return self.update(uuid, update_payload)
+
     def export_json(self, uuid):
         url = self.EXPORT_JSON.format(uuid)
         return self.connection._call(url, verify=False, method=REQUEST.METHOD.GET)
@@ -238,7 +327,15 @@ class BlueprintAPI(ResourceAPI):
         url = self.EXPORT_JSON_WITH_SECRETS.format(uuid)
         return self.connection._call(url, verify=False, method=REQUEST.METHOD.GET)
 
-    def export_file(self, uuid):
+    def export_file(self, uuid, passphrase=None):
+        if passphrase:
+            return self.connection._call(
+                self.EXPORT_FILE.format(uuid),
+                verify=False,
+                method=REQUEST.METHOD.POST,
+                request_json={"passphrase": passphrase},
+                files=[],
+            )
         return self.connection._call(
             self.EXPORT_FILE.format(uuid), verify=False, method=REQUEST.METHOD.GET
         )

@@ -19,16 +19,14 @@ LOG = get_logging_handle(__name__)
 
 
 class EntityDict(OrderedDict):
-    @staticmethod
-    def pre_validate(vdict, name, value):
+    def pre_validate(cls, vdict, name, value, parent=None):
         """hook to change values before validation, typecast, etc"""
-        return value
+        return vdict, value
 
-    @classmethod
     def _validate_attr(cls, vdict, name, value):
         """validates  name-value pair via __validator_dict__ of entity"""
 
-        value = cls.pre_validate(vdict, name, value)
+        vdict, value = cls.pre_validate(vdict, name, value, cls.__parent__)
 
         if name.startswith("__") and name.endswith("__"):
             return value
@@ -74,8 +72,9 @@ class EntityDict(OrderedDict):
             ValidatorType.validate(value, is_array)
         return value
 
-    def __init__(self, validators=dict()):
+    def __init__(self, validators=dict(), parent=None):
         self.validators = validators
+        self.__parent__ = parent
 
     def _validate(self, name, value):
         vdict = self.validators
@@ -139,6 +138,7 @@ class EntityType(EntityTypeBase):
     __schema_name__ = None
     __openapi_type__ = None
     __prepare_dict__ = EntityDict
+    __namespace_dict__ = None
 
     @classmethod
     def validate_dict(cls, entity_dict):
@@ -166,7 +166,8 @@ class EntityType(EntityTypeBase):
         # Class creation would happen using EntityDict() instead of dict().
         # This is done to add validations to class attrs during class creation.
         # Look at __setitem__ in EntityDict
-        return mcls.__prepare_dict__(validators)
+        mcls.__namespace_dict__ = mcls.__prepare_dict__(validators, mcls)
+        return mcls.__namespace_dict__
 
     def __new__(mcls, name, bases, kwargs):
 
@@ -208,9 +209,11 @@ class EntityType(EntityTypeBase):
     def validate(mcls, name, value):
 
         if hasattr(mcls, "__validator_dict__"):
-            vdict = mcls.__validator_dict__
-            entity_dict = mcls.__prepare_dict__
-            return entity_dict._validate_attr(vdict, name, value)
+            if not mcls.__namespace_dict__:
+                mcls.__namespace_dict__ = mcls.__prepare_dict__(
+                    mcls.__validator_dict__, mcls
+                )
+            return mcls.__namespace_dict__._validate(name, value)
 
         return value
 
@@ -506,7 +509,7 @@ class EntityType(EntityTypeBase):
                 continue
 
             elif k not in display_map:
-                LOG.warning("Additional Property ({}) found".format(k))
+                LOG.debug("Additional Property ({}) found".format(k))
                 continue
 
             user_attrs.setdefault(display_map[k], v)

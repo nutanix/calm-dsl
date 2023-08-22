@@ -1,0 +1,27 @@
+{% macro database_create_snapshot(obj) %}
+Database.Postgres.CreateSnapshot(
+    {%- for key, val in obj.items() %}
+    {{ key }}={% if val.type == "Ref" %}{{val.ref}}("{{val.value}}"){% else %} "{{val.value}}" {% endif %},
+    {%- endfor %}
+)
+{% endmacro %}
+
+
+{% macro output_vars_create_snapshot(obj) %}
+PostgresDatabaseOutputVariables.CreateSnapshot(
+    {%- for key, val in obj.items() %}
+    {{ key }}="{{ val }}",
+    {%- endfor %}
+)
+{% endmacro %}
+
+{% macro nutanix_db_postgres_create_snapshot(obj) %}
+CalmTask.NutanixDB.PostgresDatabase.CreateSnapshot(
+    name="{{ obj.name }}",
+    account=Ref.Account("{{ obj.account }}"),
+    instance_config={{ database_create_snapshot(obj.database) }},
+    outargs={{ output_vars_create_snapshot(obj.output_vars) }},
+)
+{% endmacro %}
+
+{{ nutanix_db_postgres_create_snapshot(obj) }}

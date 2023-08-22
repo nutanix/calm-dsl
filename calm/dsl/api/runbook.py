@@ -90,8 +90,19 @@ class RunbookAPI(ResourceAPI):
 
     @staticmethod
     def _make_runbook_payload(
-        runbook_name, runbook_desc, runbook_resources, spec_version=None
+        runbook_name,
+        runbook_desc,
+        runbook_resources,
+        spec_version=None,
+        runbook_metadata=None,
     ):
+        # construct runbook metadata only if it is empty
+        if not runbook_metadata:
+            runbook_metadata = {
+                "spec_version": spec_version or 1,
+                "name": runbook_name,
+                "kind": "runbook",
+            }
 
         runbook_payload = {
             "spec": {
@@ -99,18 +110,19 @@ class RunbookAPI(ResourceAPI):
                 "description": runbook_desc or "",
                 "resources": runbook_resources,
             },
-            "metadata": {
-                "spec_version": spec_version or 1,
-                "name": runbook_name,
-                "kind": "runbook",
-            },
+            "metadata": runbook_metadata,
             "api_version": "3.0",
         }
 
         return runbook_payload
 
     def upload_with_secrets(
-        self, runbook_name, runbook_desc, runbook_resources, force_create=False
+        self,
+        runbook_name,
+        runbook_desc,
+        runbook_resources,
+        force_create=False,
+        runbook_metadata=None,
     ):
 
         # check if runbook with the given name already exists
@@ -164,33 +176,37 @@ class RunbookAPI(ResourceAPI):
             endpoint["attrs"].pop("default_credential_local_reference", None)
 
         upload_payload = self._make_runbook_payload(
-            runbook_name, runbook_desc, runbook_resources
+            runbook_name,
+            runbook_desc,
+            runbook_resources,
+            runbook_metadata=runbook_metadata,
         )
 
-        ContextObj = get_context()
-        project_config = ContextObj.get_project_config()
-        project_name = project_config["name"]
-        projectObj = ProjectAPI(self.connection)
+        if not upload_payload.get("metadata", {}).get("project_reference"):
+            ContextObj = get_context()
+            project_config = ContextObj.get_project_config()
+            project_name = project_config["name"]
+            projectObj = ProjectAPI(self.connection)
 
-        # Fetch project details
-        params = {"filter": "name=={}".format(project_name)}
-        res, err = projectObj.list(params=params)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+            # Fetch project details
+            params = {"filter": "name=={}".format(project_name)}
+            res, err = projectObj.list(params=params)
+            if err:
+                raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-        response = res.json()
-        entities = response.get("entities", None)
-        if not entities:
-            raise Exception("No project with name {} exists".format(project_name))
+            response = res.json()
+            entities = response.get("entities", None)
+            if not entities:
+                raise Exception("No project with name {} exists".format(project_name))
 
-        project_id = entities[0]["metadata"]["uuid"]
+            project_id = entities[0]["metadata"]["uuid"]
 
-        # Setting project reference
-        upload_payload["metadata"]["project_reference"] = {
-            "kind": "project",
-            "uuid": project_id,
-            "name": project_name,
-        }
+            # Setting project reference
+            upload_payload["metadata"]["project_reference"] = {
+                "kind": "project",
+                "uuid": project_id,
+                "name": project_name,
+            }
 
         res, err = self.upload(upload_payload)
 
@@ -284,7 +300,13 @@ class RunbookAPI(ResourceAPI):
             )
 
     def update_with_secrets(
-        self, uuid, runbook_name, runbook_desc, runbook_resources, spec_version
+        self,
+        uuid,
+        runbook_name,
+        runbook_desc,
+        runbook_resources,
+        spec_version,
+        runbook_metadata=None,
     ):
 
         secret_map = {}
@@ -315,33 +337,12 @@ class RunbookAPI(ResourceAPI):
             endpoint["attrs"].pop("default_credential_local_reference", None)
 
         update_payload = self._make_runbook_payload(
-            runbook_name, runbook_desc, runbook_resources, spec_version=spec_version
+            runbook_name,
+            runbook_desc,
+            runbook_resources,
+            spec_version=spec_version,
+            runbook_metadata=runbook_metadata,
         )
-
-        ContextObj = get_context()
-        project_config = ContextObj.get_project_config()
-        project_name = project_config["name"]
-        projectObj = ProjectAPI(self.connection)
-
-        # Fetch project details
-        params = {"filter": "name=={}".format(project_name)}
-        res, err = projectObj.list(params=params)
-        if err:
-            raise Exception("[{}] - {}".format(err["code"], err["error"]))
-
-        response = res.json()
-        entities = response.get("entities", None)
-        if not entities:
-            raise Exception("No project with name {} exists".format(project_name))
-
-        project_id = entities[0]["metadata"]["uuid"]
-
-        # Setting project reference
-        update_payload["metadata"]["project_reference"] = {
-            "kind": "project",
-            "uuid": project_id,
-            "name": project_name,
-        }
 
         res, err = self.update_using_name_reference(uuid, update_payload)
         if err:

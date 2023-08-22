@@ -16,6 +16,7 @@ from calm.dsl.constants import CACHE
 from calm.dsl.store import Cache
 from calm.dsl.api import get_api_client
 from calm.dsl.cli.constants import JOBINSTANCES
+from calm.dsl.builtins.models.utils import read_local_file
 
 LOG = get_logging_handle(__name__)
 
@@ -39,6 +40,9 @@ DSL_BP_FILE = "example_blueprint.py"
 CALM_VERSION = Version.get_version("Calm")
 LIST_FILTER_LEN = 200
 
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
+POLICY_ENABLED = DSL_CONFIG.get("IS_POLICY_ENABLED", False)
+
 
 def suffix(length=8):
     """Return UUID substring for name randomization"""
@@ -56,7 +60,8 @@ def file_replace(filename, match_str, replace_str):
 
 
 @pytest.mark.skipif(
-    LV(CALM_VERSION) < LV("3.4.0"), reason="Scheduler FEAT is for v3.4.0"
+    LV(CALM_VERSION) < LV("3.4.0") or not POLICY_ENABLED,
+    reason="Scheduler FEAT is for v3.4.0",
 )
 class TestSchedulerCommands:
     @pytest.mark.scheduler

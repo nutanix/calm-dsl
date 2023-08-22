@@ -1,0 +1,39 @@
+availability_zone_reference: null
+backup_policy: null
+cluster_reference: null
+name: testvm-@@{calm_random_hash}@@
+resources:
+  account_uuid: 94ab4c55-40c5-431e-a89b-19646e082191
+  associate_public_ip_address: true
+  availability_zone: us-east-1a
+  block_device_map:
+    data_disk_list: []
+    root_disk:
+      delete_on_termination: true
+      device_name: /dev/sda1
+      iops: 1
+      size_gb: 8
+      snapshot_id: ''
+      type: ''
+      volume_type: GP2
+    type: ''
+  image_id: ami-0ccec2041ac92b449
+  instance_initiated_shutdown_behavior: TERMINATE
+  instance_profile_name: aws-elasticbeanstalk-ec2-role
+  instance_type: t2.small
+  key_name: calm-blueprints
+  private_ip_address: ''
+  region: us-east-1
+  security_group_list:
+  - security_group_id: sg-184ead62
+    type: ''
+  state: RUNNING
+  subnet_id: subnet-c599a5ef
+  tag_list:
+  - key: TEST
+    type: ''
+    value: QA
+  type: ''
+  user_data: ''
+  vpc_id: vpc-ffd54d98
+type: PROVISION_AWS_VM

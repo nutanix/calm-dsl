@@ -6,6 +6,7 @@ from .library_tasks_commands import *  # NoQA
 from .endpoint_commands import *  # NoQA
 from .config_commands import *  # NoQA
 from .account_commands import *  # NoQA
+from .provider_commands import *  # NoQA
 from .project_commands import *  # NoQA
 from .secret_commands import *  # NoQA
 from .cache_commands import *  # NoQA
@@ -28,5 +29,8 @@ from .protection_policy_commands import *  # NoQA
 from .vm_recovery_point_commands import *  # NoQA
 from .scheduler_commands import *  # NoQA
 from .network_group_commands import *  # NoQA
+from .policy_commands import *  # NoQA
+from .approval_commands import *  # NoQA
+from .approval_request_commands import *  # NoQA
 
 __all__ = ["main", "get_api_client"]

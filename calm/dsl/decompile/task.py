@@ -1,29 +1,40 @@
 import os
+import sys
 
 from calm.dsl.decompile.render import render_template
+from calm.dsl.decompile.ndb import get_schema_file_and_user_attrs
 from calm.dsl.decompile.ref import render_ref_template
 from calm.dsl.decompile.credential import get_cred_var_name
 from calm.dsl.decompile.file_handler import get_scripts_dir, get_scripts_dir_key
 from calm.dsl.builtins import TaskType
+from calm.dsl.db.table_config import AccountCache
+
+from calm.dsl.builtins.models.task import EXIT_CONDITION_MAP
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 
 
 def render_task_template(
-    cls, entity_context="", RUNBOOK_ACTION_MAP={}, CONFIG_SPEC_MAP={}
+    cls,
+    entity_context="",
+    RUNBOOK_ACTION_MAP={},
+    CONFIG_SPEC_MAP={},
+    context="",
+    secrets_dict=[],
 ):
-
     LOG.debug("Rendering {} task template".format(cls.name))
     if not isinstance(cls, TaskType):
         raise TypeError("{} is not of type {}".format(cls, TaskType))
 
     # update entity_context
     entity_context = entity_context + "_Task_" + cls.__name__
+    context = (
+        context + "task_definition_list." + (getattr(cls, "name", "") or cls.__name__)
+    )
 
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.name
-
     target = getattr(cls, "target_any_local_reference", None)
     if target:  # target will be modified to have correct name(DSL name)
         user_attrs["target"] = render_ref_template(target)
@@ -83,6 +94,15 @@ def render_task_template(
         elif scaling_type == "SCALEIN":
             schema_file = "task_scaling_scalein.py.jinja2"
     elif cls.type == "HTTP":
+        user_attrs["calm_var_task"] = False
+        if "Runbook" in entity_context:
+            if user_attrs.get("attrs", {}).get("url", ""):
+
+                # For runbook decompile we are using the RunbookTask as CalmTask
+                # But for this case since url is present ( it is the base CalmTask )
+                # we import this as CalmVarTask
+                user_attrs["calm_var_task"] = True
+
         attrs = cls.attrs
         user_attrs["headers"] = {}
         user_attrs["secret_headers"] = {}
@@ -95,6 +115,13 @@ def render_task_template(
 
             elif var_type == "SECRET":
                 user_attrs["secret_headers"][var["name"]] = var["value"]
+                secrets_dict.append(
+                    {
+                        "context": context + ".headers." + var["name"],
+                        "secret_name": var["name"],
+                        "secret_value": var["value"],
+                    }
+                )
 
         for status in attrs.get("expected_response_params", []):
             user_attrs["status_mapping"][status["code"]] = (
@@ -151,10 +178,45 @@ def render_task_template(
             "config": CONFIG_SPEC_MAP[config_name]["global_name"],
         }
         schema_file = "task_call_config.py.jinja2"
+    elif cls.type == "RT_OPERATION":
+        acc_name = cls.attrs["account_reference"]["name"]
+        tag = cls.attrs.get("tag", "")
+        if tag == "Database":
+            schema_file, user_attrs = get_schema_file_and_user_attrs(
+                cls.name, cls.attrs, acc_name
+            )
+        else:
+            LOG.error("Tag {} not supported for RT operation".format(tag))
+            sys.exit("Tag {} not supported for RT operation".format(tag))
+    elif cls.type == "DECISION":
+        script_type = cls.attrs["script_type"]
+        cls.attrs["script_file"] = create_script_file(
+            script_type, cls.attrs["script"], entity_context
+        )
+        script_type = cls.attrs["script_type"]
+        if script_type == "sh":
+            schema_file = "task_decision_ssh.py.jinja2"
 
+        elif script_type == "static":
+            schema_file = "task_decision_escript.py.jinja2"
+
+        elif script_type == "npsscript":
+            schema_file = "task_decision_powershell.py.jinja2"
+    elif cls.type == "WHILE_LOOP":
+        exit_condition_type = cls.attrs["exit_condition_type"]
+        for key in EXIT_CONDITION_MAP:
+            if EXIT_CONDITION_MAP[key] == exit_condition_type:
+                cls.attrs["exit_condition_type"] = key
+        schema_file = "task_while_loop.py.jinja2"
+    elif cls.type == "VM_POWERON":
+        schema_file = "task_vm_power_on.py.jinja2"
+    elif cls.type == "VM_POWEROFF":
+        schema_file = "task_vm_power_off.py.jinja2"
+    elif cls.type == "VM_RESTART":
+        schema_file = "task_vm_restart.py.jinja2"
     else:
         LOG.error("Task type does not match any known types")
-        sys.exit("Invalid task task")
+        sys.exit("Invalid task {}".format(cls.type))
 
     text = render_template(schema_file=schema_file, obj=user_attrs)
     return text.strip()

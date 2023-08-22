@@ -1,0 +1,52 @@
+{% macro ApproverSet() -%}
+
+title: ApproverSet
+type: object
+x-calm-dsl-type: approver_set
+properties:
+  type:
+    type: string
+    description: Approver set type
+  name:
+    type: string
+  external_user_list:
+    type: array
+    x-calm-dsl-display-name: external_users
+    items:
+      type: dict
+      x-calm-dsl-type: dict
+  user_reference_list:
+    type: array
+    x-calm-dsl-display-name: users
+    items:
+      type: object
+      x-calm-dsl-type: object
+      properties:
+        kind:
+          type: string
+        name:
+          type: string
+        uuid:
+          type: string
+  user_group_reference_list:
+    type: array
+    x-calm-dsl-display-name: groups
+    items:
+      type: object
+      x-calm-dsl-type: object
+      properties:
+        kind:
+          type: string
+        name:
+          type: string
+        uuid:
+          type: string
+
+{%- endmacro %}
+
+{% macro ApproverSetSchema() -%}
+
+ApproverSet:
+  {{ ApproverSet()|indent(2) }}
+
+{%- endmacro %}

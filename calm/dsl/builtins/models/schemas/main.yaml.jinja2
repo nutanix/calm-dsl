@@ -46,6 +46,23 @@
 {% import "jobscheduleinfo.yaml.jinja2" as job_schedule %}
 {% import "network_group_tunnel.yaml.jinja2" as network_group_tunnel %}
 {% import "network_group_tunnel_payload.yaml.jinja2" as network_group_tunnel_payload %}
+{% import "policy_action.yaml.jinja2" as policy_action %}
+{% import "policy_condition.yaml.jinja2" as policy_condition %}
+{% import "policy.yaml.jinja2" as policy %}
+{% import "approver_set.yaml.jinja2" as approver_set %}
+{% import "policy_payload.yaml.jinja2" as policy_payload %}
+{% import "credential_provider_resources.yaml.jinja2" as cred_provider_resources %}
+{% import "credential_provider_account.yaml.jinja2" as cred_provider_account %}
+{% import "custom_provider_account.yaml.jinja2" as custom_provider_resources %}
+{% import "account.yaml.jinja2" as account %}
+{% import "ahv_account.yaml.jinja2" as ahv_account %}
+{% import "azure_account.yaml.jinja2" as azure_account %}
+{% import "aws_account.yaml.jinja2" as aws_account %}
+{% import "aws_c2s_account.yaml.jinja2" as aws_c2s_account %}
+{% import "k8s_vanilla_account.yaml.jinja2" as k8s_vanilla_account %}
+{% import "k8s_karbon_account.yaml.jinja2" as k8s_karbon_account %}
+{% import "vmware_account.yaml.jinja2" as vmware_account %}
+{% import "gcp_account.yaml.jinja2" as gcp_account %}
 {% macro Schemas() -%}
 
 {{ config_attrs.AhvDiskRulesetSchema() }}
@@ -101,6 +118,23 @@
 {{ network_group_tunnel.NetworkGroupTunnelSchema() }}
 {{ network_group_tunnel_payload.NetworkGroupTunnelPayloadSchema() }}
 {{ network_group_tunnel_payload.NetworkGroupTunnelVMPayloadSchema() }}
+{{ policy_condition.PolicyConditionSchema() }}
+{{ policy_action.PolicyActionSchema() }}
+{{ policy.PolicySchema() }}
+{{ approver_set.ApproverSetSchema() }}
+{{ policy_payload.PolicyPayloadSchema() }}
+{{ cred_provider_resources.CredAccountResourcesSchema() }}
+{{ cred_provider_account.CredAccountSchema() }}
+{{ custom_provider_resources.CustomProviderAccountResourcesSchema() }}
+{{ account.AccountSchema() }}
+{{ ahv_account.AhvAccountSchema() }}
+{{ azure_account.AzureAccountSchema() }}
+{{ aws_account.AwsAccountSchema() }}
+{{ aws_c2s_account.AwsC2SAccountSchema() }}
+{{ k8s_vanilla_account.K8sVanillaAccountSchema() }}
+{{ k8s_karbon_account.K8sKarbonAccountSchema() }}
+{{ vmware_account.VmwareAccountSchema() }}
+{{ gcp_account.GcpAccountSchema() }}
 {%- endmacro %}
 
 

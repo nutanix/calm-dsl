@@ -895,6 +895,7 @@
                 },
                 "value": "password"
             },
+            "cred_class": "static",
             "editables": {}
         }
     ],
@@ -1880,56 +1881,6 @@
                                             },
                                             "to_task_reference": {
                                                 "kind": "app_task",
-                                                "name": "Test Escript"
-                                            }
-                                        },
-                                        {
-                                            "from_task_reference": {
-                                                "kind": "app_task",
-                                                "name": "Test HTTP Task"
-                                            },
-                                            "to_task_reference": {
-                                                "kind": "app_task",
-                                                "name": "Test Setvar Escript"
-                                            }
-                                        },
-                                        {
-                                            "from_task_reference": {
-                                                "kind": "app_task",
-                                                "name": "Test HTTP Task"
-                                            },
-                                            "to_task_reference": {
-                                                "kind": "app_task",
-                                                "name": "Test Setvar SSH"
-                                            }
-                                        },
-                                        {
-                                            "from_task_reference": {
-                                                "kind": "app_task",
-                                                "name": "Test Escript"
-                                            },
-                                            "to_task_reference": {
-                                                "kind": "app_task",
-                                                "name": "Scale out Lamp"
-                                            }
-                                        },
-                                        {
-                                            "from_task_reference": {
-                                                "kind": "app_task",
-                                                "name": "Test Setvar Escript"
-                                            },
-                                            "to_task_reference": {
-                                                "kind": "app_task",
-                                                "name": "Scale out Lamp"
-                                            }
-                                        },
-                                        {
-                                            "from_task_reference": {
-                                                "kind": "app_task",
-                                                "name": "Test Setvar SSH"
-                                            },
-                                            "to_task_reference": {
-                                                "kind": "app_task",
                                                 "name": "Scale out Lamp"
                                             }
                                         },
@@ -1951,6 +1902,36 @@
                                             "to_task_reference": {
                                                 "kind": "app_task",
                                                 "name": "Scale in Lamp"
+                                            }
+                                        },
+                                        {
+                                            "from_task_reference": {
+                                                "kind": "app_task",
+                                                "name": "Scale in Lamp"
+                                            },
+                                            "to_task_reference": {
+                                                "kind": "app_task",
+                                                "name": "Test Escript"
+                                            }
+                                        },
+                                        {
+                                            "from_task_reference": {
+                                                "kind": "app_task",
+                                                "name": "Scale in Lamp"
+                                            },
+                                            "to_task_reference": {
+                                                "kind": "app_task",
+                                                "name": "Test Setvar Escript"
+                                            }
+                                        },
+                                        {
+                                            "from_task_reference": {
+                                                "kind": "app_task",
+                                                "name": "Scale in Lamp"
+                                            },
+                                            "to_task_reference": {
+                                                "kind": "app_task",
+                                                "name": "Test Setvar SSH"
                                             }
                                         }
                                     ]
@@ -1986,18 +1967,6 @@
                                     },
                                     {
                                         "kind": "app_task",
-                                        "name": "Test Escript"
-                                    },
-                                    {
-                                        "kind": "app_task",
-                                        "name": "Test Setvar Escript"
-                                    },
-                                    {
-                                        "kind": "app_task",
-                                        "name": "Test Setvar SSH"
-                                    },
-                                    {
-                                        "kind": "app_task",
                                         "name": "Scale out Lamp"
                                     },
                                     {
@@ -2007,6 +1976,18 @@
                                     {
                                         "kind": "app_task",
                                         "name": "Scale in Lamp"
+                                    },
+                                    {
+                                        "kind": "app_task",
+                                        "name": "Test Escript"
+                                    },
+                                    {
+                                        "kind": "app_task",
+                                        "name": "Test Setvar Escript"
+                                    },
+                                    {
+                                        "kind": "app_task",
+                                        "name": "Test Setvar SSH"
                                     }
                                 ],
                                 "variable_list": [],
@@ -2315,6 +2296,56 @@
                                 "timeout_secs": ""
                             },
                             {
+                                "name": "Scale out Lamp",
+                                "description": "",
+                                "type": "SCALING",
+                                "target_any_local_reference": {
+                                    "kind": "app_blueprint_deployment",
+                                    "name": "LampDeployment"
+                                },
+                                "attrs": {
+                                    "scaling_type": "SCALEOUT",
+                                    "scaling_count": "1"
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            },
+                            {
+                                "name": "Delay",
+                                "description": "",
+                                "type": "DELAY",
+                                "target_any_local_reference": {
+                                    "kind": "app_service",
+                                    "name": "MySQLService"
+                                },
+                                "attrs": {
+                                    "interval_secs": 60
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            },
+                            {
+                                "name": "Scale in Lamp",
+                                "description": "",
+                                "type": "SCALING",
+                                "target_any_local_reference": {
+                                    "kind": "app_blueprint_deployment",
+                                    "name": "LampDeployment"
+                                },
+                                "attrs": {
+                                    "scaling_type": "SCALEIN",
+                                    "scaling_count": "1"
+                                },
+                                "child_tasks_local_reference_list": [],
+                                "variable_list": [],
+                                "retries": "",
+                                "timeout_secs": ""
+                            },
+                            {
                                 "name": "Test Escript",
                                 "description": "",
                                 "type": "EXEC",
@@ -2365,56 +2396,6 @@
                                     "eval_variables": [
                                         "var2"
                                     ]
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            },
-                            {
-                                "name": "Scale out Lamp",
-                                "description": "",
-                                "type": "SCALING",
-                                "target_any_local_reference": {
-                                    "kind": "app_blueprint_deployment",
-                                    "name": "LampDeployment"
-                                },
-                                "attrs": {
-                                    "scaling_type": "SCALEOUT",
-                                    "scaling_count": "1"
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            },
-                            {
-                                "name": "Delay",
-                                "description": "",
-                                "type": "DELAY",
-                                "target_any_local_reference": {
-                                    "kind": "app_service",
-                                    "name": "MySQLService"
-                                },
-                                "attrs": {
-                                    "interval_secs": 60
-                                },
-                                "child_tasks_local_reference_list": [],
-                                "variable_list": [],
-                                "retries": "",
-                                "timeout_secs": ""
-                            },
-                            {
-                                "name": "Scale in Lamp",
-                                "description": "",
-                                "type": "SCALING",
-                                "target_any_local_reference": {
-                                    "kind": "app_blueprint_deployment",
-                                    "name": "LampDeployment"
-                                },
-                                "attrs": {
-                                    "scaling_type": "SCALEIN",
-                                    "scaling_count": "1"
                                 },
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],

@@ -1408,7 +1408,8 @@ def run_actions(
         )
         return
     if action_name.lower() == SYSTEM_ACTIONS.DELETE:
-        delete_app([app_name])  # Because Delete requries a differernt API workflow
+        # Because Delete requries a differernt API workflow
+        delete_app([app_name])
         return
     if action_name.lower() == SYSTEM_ACTIONS.SOFT_DELETE:
         delete_app(

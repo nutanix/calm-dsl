@@ -1,0 +1,103 @@
+{
+    "spec": {
+        "name": "test_ndb_123321",
+        "resources": {
+            "type": "NDB",
+            "sync_interval_secs": 0,
+            "data": {
+                "provider_reference": {
+                    "kind": "provider",
+                    "uuid": ""
+                },
+                "variable_list": [
+                    {
+                        "regex": {},
+                        "val_type": "STRING",
+                        "is_mandatory": true,
+                        "description": "",
+                        "data_type": "BASE",
+                        "message_list": [],
+                        "uuid": "",
+                        "value": "ENDPOINT_VALUE",
+                        "label": "Server IP",
+                        "attrs": {},
+                        "editables": {
+                            "value": true
+                        },
+                        "is_hidden": false,
+                        "type": "LOCAL",
+                        "options": {},
+                        "name": "ndb__ndb_endpoint"
+                    },
+                    {
+                        "regex": {},
+                        "val_type": "STRING",
+                        "is_mandatory": true,
+                        "description": "",
+                        "data_type": "BASE",
+                        "message_list": [],
+                        "uuid": "",
+                        "value": "USERNAME_VALUE",
+                        "label": "Username",
+                        "attrs": {},
+                        "editables": {
+                            "value": true
+                        },
+                        "is_hidden": false,
+                        "type": "LOCAL",
+                        "options": {},
+                        "name": "ndb__ndb_username"
+                    },
+                    {
+                        "regex": {},
+                        "val_type": "STRING",
+                        "is_mandatory": true,
+                        "description": "",
+                        "data_type": "BASE",
+                        "message_list": [],
+                        "uuid": "",
+                        "value": "PASSWORD_VALUE",
+                        "label": "Password",
+                        "editables": {
+                            "value": true
+                        },
+                        "is_hidden": false,
+                        "type": "SECRET",
+                        "options": {},
+                        "name": "ndb__ndb_password",
+                        "attrs": {
+                            "is_secret_modified": true
+                        }
+                    },
+                    {
+                        "regex": {},
+                        "val_type": "BOOLEAN",
+                        "is_mandatory": false,
+                        "description": "",
+                        "data_type": "BASE",
+                        "message_list": [],
+                        "uuid": "",
+                        "value": "true",
+                        "label": "",
+                        "attrs": {},
+                        "editables": {},
+                        "is_hidden": true,
+                        "type": "LOCAL",
+                        "options": {},
+                        "name": "ndb__insecure"
+                    }
+                ]
+            },
+            "parent_reference": {
+                "kind": "account",
+                "name": "NTNX_LOCAL_AZ",
+                "uuid": ""
+            }
+        }
+    },
+    "metadata": {
+        "kind": "account",
+        "name": "test_ndb_123321",
+        "uuid": ""
+    }
+}

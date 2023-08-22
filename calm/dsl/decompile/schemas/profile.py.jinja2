@@ -3,6 +3,7 @@ class {{obj.name}}(Profile):
     {% if obj.description %}"""{{obj.description}}"""{% endif %}
 
     {% if obj.gui_display_name %}name="{{obj.gui_display_name}}"{% endif %}
+    {% if obj.environments %}environments = [Ref.Environment(name="{{obj.environments[0]}}")]{% endif %}
     {% if obj.deployments %}deployments = [{{obj.deployments}}]{%- endif %}
     {% if obj.restore_configs %}restore_configs = [{{obj.restore_configs}}]{%- endif %}
     {% if obj.snapshot_configs %}snapshot_configs = [{{obj.snapshot_configs}}]{%- endif %}

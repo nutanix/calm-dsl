@@ -4,6 +4,7 @@ import sys
 from .env_config import EnvConfig
 from .config import get_config_handle
 from calm.dsl.log import get_logging_handle
+from calm.dsl.constants import DSL_CONFIG
 
 LOG = get_logging_handle(__name__)
 
@@ -31,6 +32,9 @@ class Context:
         self.log_config = config_handle.get_log_config()
         self.categories_config = config_handle.get_categories_config()
         self.connection_config = config_handle.get_connection_config()
+        self.policy_config = config_handle.get_policy_config()
+        self.approval_policy_config = config_handle.get_approval_policy_config()
+        self.stratos_config = config_handle.get_stratos_config()
         # Override with env data
         self.server_config.update(EnvConfig.get_server_config())
         self.project_config.update(EnvConfig.get_project_config())
@@ -97,10 +101,7 @@ class Context:
 
         config = self.project_config
         if not config.get("name"):
-            LOG.warning(
-                "Default project not found in config file or environment('CALM_DSL_DEFAULT_PROJECT' variable). Setting it to 'default' project"
-            )
-            config["name"] = "default"
+            config["name"] = DSL_CONFIG.EMPTY_PROJECT_NAME
 
         return config
 
@@ -116,6 +117,30 @@ class Context:
             config["connection_timeout"] = DEFAILT_CONNECTION_TIMEOUT
         if "read_timeout" not in config:
             config["read_timeout"] = DEFAULT_READ_TIMEOUT
+
+        return config
+
+    def get_policy_config(self):
+        """returns policy configuration"""
+        config = self.policy_config
+        if not config.get("policy_status"):
+            config["policy_status"] = False
+
+        return config
+
+    def get_approval_policy_config(self):
+        """returns approval policy configuration"""
+        config = self.approval_policy_config
+        if not config.get("approval_policy_status"):
+            config["approval_policy_status"] = False
+
+        return config
+
+    def get_stratos_config(self):
+        """returns stratos configuration"""
+        config = self.stratos_config
+        if not config.get("stratos_status"):
+            config["stratos_status"] = False
 
         return config
 
@@ -170,6 +195,9 @@ class Context:
         project_config = self.get_project_config()
         log_config = self.get_log_config()
         connection_config = self.get_connection_config()
+        policy_config = self.get_policy_config()
+        approval_policy_config = self.get_approval_policy_config()
+        stratos_status = self.get_stratos_config()
 
         ConfigHandle = get_config_handle()
         config_str = ConfigHandle._render_config_template(
@@ -182,6 +210,9 @@ class Context:
             retries_enabled=connection_config["retries_enabled"],
             connection_timeout=connection_config["connection_timeout"],
             read_timeout=connection_config["read_timeout"],
+            policy_status=policy_config["policy_status"],
+            approval_policy_status=approval_policy_config["approval_policy_status"],
+            stratos_status=stratos_status["stratos_status"],
         )
 
         print(config_str)

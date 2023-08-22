@@ -1,0 +1,107 @@
+{
+    "endpoint_definition_list": [],
+    "credential_definition_list": [],
+    "client_attrs": {},
+    "runbook": {
+        "name": "nutanixdb_postgres_restore_runbook",
+        "description": "",
+        "main_task_local_reference": {
+            "kind": "app_task",
+            "name": "nutanixdb_postgres_restore_dag"
+        },
+        "task_definition_list": [
+            {
+                "name": "nutanixdb_postgres_restore_dag",
+                "description": "",
+                "type": "DAG",
+                "attrs": {
+                    "edges": []
+                },
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "postgres_restore_task_name"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "postgres_restore_task_name",
+                "description": "",
+                "type": "RT_OPERATION",
+                "attrs": {
+                    "type": "RT_OPERATION",
+                    "resource_type_reference": {
+                        "uuid": "7d60e0a6-b021-4c22-b6a5-2fd311930709",
+                        "name": "Postgres Database Instance",
+                        "kind": "resource_type"
+                    },
+                    "action_reference": {
+                        "kind": "app_action",
+                        "name": "Restore from Time Machine",
+                        "uuid": "e3bc4dcf-7149-43e0-9d48-79ab6ab4ef5e"
+                    },
+                    "inarg_list": [
+                        {
+                            "name": "restore_from_time_machine_nutanix_ndb_database__database_id",
+                            "description": "",
+                            "type": "LOCAL",
+                            "label": "Target Database",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "@@{db_uuid}@@",
+                            "data_type": "BASE",
+                            "is_hidden": false,
+                            "is_mandatory": true
+                        },
+                        {
+                            "name": "restore_from_time_machine_nutanix_ndb_database__user_pitr_timestamp",
+                            "description": "",
+                            "type": "LOCAL",
+                            "label": "Point in Time",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "2023-02-12 10:01:40",
+                            "data_type": "BASE",
+                            "regex": {
+                                "value": "^(|(\\d{4}-([0]\\d|[1][0-2])-([0-2]\\d|[3][0-1])\\s([0-1]\\d|[2][0-3]):[0-5]\\d:[0-5]\\d))$",
+                                "should_validate": true
+                            },
+                            "is_hidden": false,
+                            "is_mandatory": false
+                        },
+                        {
+                            "name": "restore_from_time_machine_nutanix_ndb_database__time_zone_pitr",
+                            "description": "",
+                            "type": "LOCAL",
+                            "label": "",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "Asia/Kolkata",
+                            "data_type": "BASE",
+                            "is_hidden": true,
+                            "is_mandatory": false
+                        }
+                    ],
+                    "output_variables": {
+                        "postgres_database_name": "database_name",
+                        "postgres_time_machine": "time_machine"
+                    },
+                    "tag": "Database",
+                    "account_reference": {
+                        "kind": "account",
+                        "name": "ndb-account",
+                        "uuid": "65d3ec1d-8044-4c5c-af50-881acb3c3a3d"
+                    }
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            }
+        ],
+        "variable_list": []
+    }
+}

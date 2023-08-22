@@ -1,10 +1,16 @@
+import sys
+
 from calm.dsl.config import get_context
+from calm.dsl.constants import DSL_CONFIG
+from calm.dsl.log import get_logging_handle
 
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .blueprint import BlueprintType
 from .simple_blueprint import SimpleBlueprintType
 from .calm_ref import Ref
+
+LOG = get_logging_handle(__name__)
 
 
 # Blueprint Payload
@@ -61,6 +67,10 @@ def create_blueprint_payload(UserBlueprint, metadata={}):
     #  Project will be taken from config if not provided
     if not metadata.get("project_reference", {}):
         project_name = project_config["name"]
+        if project_name == DSL_CONFIG.EMPTY_PROJECT_NAME:
+            LOG.error(DSL_CONFIG.EMPTY_PROJECT_MESSAGE)
+            sys.exit("Invalid project configuration")
+
         metadata["project_reference"] = Ref.Project(project_name)
 
     #  User will be taken from config if not provided

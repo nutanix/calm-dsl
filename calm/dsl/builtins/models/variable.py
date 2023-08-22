@@ -3,6 +3,7 @@ import re
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .task_input import _task_input
+from .helper import common as common_helper
 
 
 # Variable
@@ -15,6 +16,7 @@ VARIABLE_VALUE_TYPES = {
     "string": "STRING",
     "data_time": "DATE_TIME",
     "multiline_string": "MULTILINE_STRING",
+    "bool": "BOOLEAN",
 }
 
 VARIABLE_DATA_TYPES = {
@@ -82,6 +84,9 @@ def simple_variable(
     is_mandatory=False,
     runtime=False,
     description="",
+    type_=None,
+    data_type=None,
+    attrs=None,
 ):
     kwargs = {"is_hidden": is_hidden, "is_mandatory": is_mandatory}
     editables = {}
@@ -97,7 +102,7 @@ def simple_variable(
                 + (name or "")
                 + ", got {}".format(type(regex))
             )
-        if validate_regex and regex and value:
+        if validate_regex and regex and value and common_helper.is_not_macro(value):
             regex_result = re.match(regex, value)
             if not regex_result:
                 raise ValueError(
@@ -110,6 +115,12 @@ def simple_variable(
         kwargs["regex"] = regex
     if description is not None:
         kwargs["description"] = description
+    if type_ is not None:
+        kwargs["type_"] = type_
+    if data_type is not None:
+        kwargs["data_type"] = data_type
+    if attrs is not None:
+        kwargs["attrs"] = attrs
 
     return setvar(name, value, **kwargs)
 
@@ -139,9 +150,11 @@ def simple_variable_secret(
                 + (name or "")
                 + ", got {}".format(type(regex))
             )
-        if validate_regex and regex and value:
+        if validate_regex and regex and value and common_helper.is_not_macro(value):
             regex_result = re.match(regex, value)
-            if not regex_result:
+            if (
+                not regex_result and ":utf-8" not in value
+            ):  # TODO Fix it, the case when value is encoded and received from the server
                 raise ValueError(
                     "Value '{}' doesn't match with specified regex '{}'".format(
                         value, regex
@@ -170,6 +183,7 @@ def _advanced_variable(
     is_mandatory=False,
     runtime=False,
     description="",
+    attrs=None,
 ):
     kwargs = {"name": name, "value": value, "type_": type_}
     if runtime:
@@ -277,7 +291,12 @@ def _advanced_variable(
         if value is None and len(choices) > 0:
             value = choices[0]
             kwargs["value"] = value
-        if data_type != "LIST" and value not in choices:
+        if (
+            data_type != "LIST"
+            and value
+            and common_helper.is_not_macro(value)
+            and value not in choices
+        ):
             raise TypeError(
                 "Default value for variable with options "
                 + (name or "")
@@ -287,9 +306,11 @@ def _advanced_variable(
         kwargs["options"] = options
     else:
         # If options are None, just regex validate the value
-        if validate_regex and regex and value:
+        if validate_regex and regex and value and common_helper.is_not_macro(value):
             regex_result = re.match(regex["value"], value)
-            if not regex_result:
+            if (
+                not regex_result and ":utf-8" not in value
+            ):  # TODO Fix it, the case when value is encoded and received from the server:
                 raise ValueError(
                     "Value '{}' doesn't match with specified regex '{}'".format(
                         value, regex["value"]
@@ -301,6 +322,8 @@ def _advanced_variable(
         kwargs["is_mandatory"] = bool(is_mandatory)
     if description is not None:
         kwargs["description"] = description
+    if attrs is not None:
+        kwargs["attrs"] = attrs
 
     return setvar(**kwargs)
 
@@ -309,26 +332,61 @@ def simple_variable_int(
     value,
     name=None,
     label=None,
+    type_=None,
+    data_type=None,
     regex=r"^[\d]*$",
     validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
     description="",
+    attrs=None,
 ):
     return _advanced_variable(
-        "LOCAL",
+        type_ or "LOCAL",
         name=name,
         value=value,
         label=label,
         value_type="INT",
-        data_type="BASE",
+        data_type=data_type or "BASE",
         regex=regex,
         validate_regex=validate_regex,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
         description=description,
+        attrs=attrs,
+    )
+
+
+def simple_variable_boolean(
+    value,
+    name=None,
+    label=None,
+    regex=None,
+    type_=None,
+    data_type=None,
+    validate_regex=False,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+    description="",
+    attrs=None,
+):
+    return _advanced_variable(
+        type_ or "LOCAL",
+        name=name,
+        value=value,
+        label=label,
+        value_type="BOOLEAN",
+        data_type=data_type or "BASE",
+        regex=regex,
+        validate_regex=validate_regex,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+        description=description,
+        attrs=attrs,
     )
 
 
@@ -336,26 +394,30 @@ def simple_variable_date(
     value,
     name=None,
     label=None,
+    type_=None,
+    data_type=None,
     regex=r"^((0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/[12]\d{3})$",
     validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
     description="",
+    attrs=None,
 ):
     return _advanced_variable(
-        "LOCAL",
+        type_ or "LOCAL",
         name=name,
         value=value,
         label=label,
         value_type="DATE",
-        data_type="BASE",
+        data_type=data_type or "BASE",
         regex=regex,
         validate_regex=validate_regex,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
         description=description,
+        attrs=attrs,
     )
 
 
@@ -363,26 +425,30 @@ def simple_variable_time(
     value,
     name=None,
     label=None,
+    type_=None,
+    data_type=None,
     regex=r"^[\d]{2}:[\d]{2}(:[0-5]\d)?$",
     validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
     description="",
+    attrs=None,
 ):
     return _advanced_variable(
-        "LOCAL",
+        type_ or "LOCAL",
         name=name,
         value=value,
         label=label,
         value_type="TIME",
-        data_type="BASE",
+        data_type=data_type or "BASE",
         regex=regex,
         validate_regex=validate_regex,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
         description=description,
+        attrs=attrs,
     )
 
 
@@ -390,26 +456,30 @@ def simple_variable_datetime(
     value,
     name=None,
     label=None,
+    type_=None,
+    data_type=None,
     regex=r"^((0[1-9]|[12]\d|3[01])/(0[1-9]|1[0-2])/[12]\d{3})((T)|(\s-\s))[\d]{2}:[\d]{2}(:[0-5]\d)?$",
     validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
     description="",
+    attrs=None,
 ):
     return _advanced_variable(
-        "LOCAL",
+        type_ or "LOCAL",
         name=name,
         value=value,
         label=label,
         value_type="DATE_TIME",
-        data_type="BASE",
+        data_type=data_type or "BASE",
         regex=regex,
         validate_regex=validate_regex,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
         description=description,
+        attrs=attrs,
     )
 
 
@@ -418,25 +488,59 @@ def simple_variable_multiline(
     name=None,
     label=None,
     regex=None,
+    type_=None,
+    data_type=None,
     validate_regex=False,
     is_hidden=False,
     is_mandatory=False,
     runtime=False,
     description="",
+    attrs=None,
 ):
     return _advanced_variable(
-        "LOCAL",
+        type_ or "LOCAL",
         name=name,
         value=value,
         label=label,
         value_type="MULTILINE_STRING",
-        data_type="BASE",
+        data_type=data_type or "BASE",
         regex=regex,
         validate_regex=validate_regex,
         is_hidden=is_hidden,
         is_mandatory=is_mandatory,
         runtime=runtime,
         description=description,
+    )
+
+
+def simple_variable_dict(
+    value,
+    name=None,
+    label=None,
+    regex=None,
+    type_=None,
+    data_type=None,
+    validate_regex=False,
+    is_hidden=False,
+    is_mandatory=False,
+    runtime=False,
+    description="",
+    attrs=None,
+):
+    return _advanced_variable(
+        type_ or "LOCAL",
+        name=name,
+        value=value,
+        label=label,
+        value_type="DICT",
+        data_type=data_type or "BASE",
+        regex=regex,
+        validate_regex=validate_regex,
+        is_hidden=is_hidden,
+        is_mandatory=is_mandatory,
+        runtime=runtime,
+        description=description,
+        attrs=attrs,
     )
 
 
@@ -1272,12 +1376,14 @@ class CalmVariable:
             is_mandatory=False,
             runtime=False,
             description="",
+            type_=None,
         ):
             return simple_variable(
                 value,
                 name=name,
                 label=label,
                 regex=regex,
+                type_=type_,
                 validate_regex=validate_regex,
                 is_hidden=is_hidden,
                 is_mandatory=is_mandatory,
@@ -1287,10 +1393,12 @@ class CalmVariable:
 
         string = simple_variable
         int = simple_variable_int
+        boolean = simple_variable_boolean
         date = simple_variable_date
         time = simple_variable_time
         datetime = simple_variable_datetime
         multiline = simple_variable_multiline
+        dictionary = simple_variable_dict
 
         class Secret:
             def __new__(

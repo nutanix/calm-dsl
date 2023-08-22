@@ -1,0 +1,5 @@
+{%- macro task_vm_power_on(obj) -%}
+CalmTask.VMPowerOn(name='{{obj.name}}', target={{obj.target}})
+{%- endmacro %}
+
+{{ task_vm_power_on(obj) }}

@@ -1,0 +1,58 @@
+{% macro database_server_clone(obj) %}
+DatabaseServer.Postgres.Clone(
+    {%- for key, val in obj.items() %}
+    {{ key }}={% if val.type == "Ref" %}{{val.ref}}("{{val.value}}"){% else %} "{{val.value}}" {% endif %},
+    {%- endfor %}
+)
+{% endmacro %}
+
+{% macro database_clone(obj) %}
+Database.Postgres.Clone(
+    {%- for key, val in obj.items() %}
+    {{ key }}={% if val.type == "Ref" %}{{val.ref}}("{{val.value}}"){% else %} "{{val.value}}" {% endif %},
+    {%- endfor %}
+)
+{% endmacro %}
+
+{% macro time_machine_clone(obj) %}
+TimeMachine.Postgres.Clone(
+    {%- for key, val in obj.items() %}
+    {{ key }}={% if val.type == "Ref" %}{{val.ref}}("{{val.value}}"){% else %} "{{val.value}}" {% endif %},
+    {%- endfor %}
+)
+{% endmacro %}
+
+{% macro tag_clone(obj) %}
+Tag.Clone(
+    {%- for key, obj_val in obj.items() %}
+    {{ key }}=[
+    {%- for val in obj_val.value %}
+    {{obj_val.ref}}("{{val.name}}", "{{val.value}}"),
+    {%- endfor %}
+    ],
+    {%- endfor %}
+)
+{% endmacro %}
+
+{% macro output_vars_clone(obj) %}
+PostgresDatabaseOutputVariables.Clone(
+    {%- for key, val in obj.items() %}
+    {{ key }}="{{ val }}",
+    {%- endfor %}
+)
+{% endmacro %}
+
+{% macro nutanix_db_postgres_clone(obj) %}
+CalmTask.NutanixDB.PostgresDatabase.Clone(
+    name="{{ obj.name }}",
+    account=Ref.Account("{{ obj.account }}"),
+    database_server_config={{ database_server_clone(obj.database_server) }},
+    instance_config={{ database_clone(obj.database) }},
+    timemachine_config={{ time_machine_clone(obj.time_machine) }},
+    tag_config={{ tag_clone(obj.tag) }},
+    outargs={{ output_vars_clone(obj.output_vars) }}
+
+)
+{% endmacro %}
+
+{{ nutanix_db_postgres_clone(obj) }}

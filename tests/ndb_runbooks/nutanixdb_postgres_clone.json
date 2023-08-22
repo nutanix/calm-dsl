@@ -1,0 +1,304 @@
+{
+    "endpoint_definition_list": [],
+    "credential_definition_list": [],
+    "client_attrs": {},
+    "runbook": {
+        "name": "nutanixdb_postgres_clone_runbook",
+        "description": "",
+        "main_task_local_reference": {
+            "kind": "app_task",
+            "name": "nutanixdb_postgres_clone_dag"
+        },
+        "task_definition_list": [
+            {
+                "name": "nutanixdb_postgres_clone_dag",
+                "description": "",
+                "type": "DAG",
+                "attrs": {
+                    "edges": []
+                },
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "postgres_clone_task_name"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "postgres_clone_task_name",
+                "description": "",
+                "type": "RT_OPERATION",
+                "attrs": {
+                    "type": "RT_OPERATION",
+                    "resource_type_reference": {
+                        "uuid": "7d60e0a6-b021-4c22-b6a5-2fd311930709",
+                        "name": "Postgres Database Instance",
+                        "kind": "resource_type"
+                    },
+                    "action_reference": {
+                        "kind": "app_action",
+                        "name": "Clone from Time Machine",
+                        "uuid": "546269c6-fa7a-4f29-ad86-49035d725cd2"
+                    },
+                    "inarg_list": [
+                        {
+                            "name": "clone_from_time_machine_nutanix_ndb_database__name",
+                            "description": "",
+                            "type": "LOCAL",
+                            "label": "Instance Name",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "post_inst_@@{calm_time}@@",
+                            "data_type": "BASE",
+                            "is_hidden": false,
+                            "is_mandatory": true
+                        },
+                        {
+                            "name": "clone_from_time_machine_nutanix_ndb_database__nx_cluster_id",
+                            "description": "",
+                            "type": "LOCAL",
+                            "label": "Nutanix Cluster",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "@@{cluster_uuid}@@",
+                            "data_type": "BASE",
+                            "is_hidden": false,
+                            "is_mandatory": true
+                        },
+                        {
+                            "name": "clone_from_time_machine_nutanix_ndb_database__ssh_public_key",
+                            "description": "",
+                            "type": "SECRET",
+                            "label": "SSH Public Key for Node Access",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC5GGnkZH75LzRFxOh4LcM0owSLn+1nvxP8tcw2PeXmdi82N1Fe8RZ3m5SkJqxJO2BvC39McyovNFIXC2LN2HeXuvovB6C0v1PGNb7oq2I5QrnRRUp1Tm4OJQN9cNZZ8MYaAcd0LokodrXgwpUQ4zlDdmlza1sDGQxXg4Dxvh5N/Y+rMjYdFbRSYmzzqI5aSHty8Shg9rbrqebFhTVCvzyQJzE/0PS3WUnCAbhLovLI/sdnTyM0CAm+Y6ui+1EFQkyg2VkbjJ6Y2foFRPJufqrnQS6S/njUeD5US3W4r8nMOxRZutRlFoado/yR+9MOkGn57NhIkMhji8wTH6SVtq2m09P+3/1Z9P+rASIS0rmH80XwwUVhfSyJ/J5dN0Axu8Bfqa9T40VDRRsoVKs79BRFr/5XRayS/O6jfGw6biYKJLeU9vV7OxtjzIuMDlbnsshuCcGtNMfI9W73F9VlKfKdQx2n547KEx79DlEJg4mtoaxkguvDo/aTH+0IJTF2BMh2iqL23ie6BkRVjHfhwWFM2WDRdHhDLcuAYSPP/sTuOEZgkElzK+ODahAXoglgTkqJeq2MiJ3tAmi39k9EKuTDR2xn1BLo/B4dMq1jkQJwVfEP+jD4eRTrlhZ8ZycIZgeY4c5MGqUNW9WfFuKOHogWEWMbuM3C8LLUFB4T1H5yDQ== mitesh.madaan@nutanix.com",
+                            "data_type": "BASE",
+                            "is_hidden": false,
+                            "is_mandatory": true
+                        },
+                        {
+                            "name": "clone_from_time_machine_nutanix_ndb_database__node_count",
+                            "description": "",
+                            "type": "LOCAL",
+                            "label": "Node Count",
+                            "attrs": {},
+                            "val_type": "INT",
+                            "value": "1",
+                            "data_type": "BASE",
+                            "is_hidden": false,
+                            "is_mandatory": true
+                        },
+                        {
+                            "name": "clone_from_time_machine_nutanix_ndb_database__description",
+                            "description": "",
+                            "type": "LOCAL",
+                            "label": "Description",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "Sample description of db server",
+                            "data_type": "BASE",
+                            "is_hidden": false,
+                            "is_mandatory": false
+                        },
+                        {
+                            "name": "clone_from_time_machine_nutanix_ndb_database__compute_profile_id",
+                            "description": "",
+                            "type": "LOCAL",
+                            "label": "Compute Profile",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "85b669f6-604e-41e1-b5d4-429f8fdc077d",
+                            "data_type": "BASE",
+                            "is_hidden": false,
+                            "is_mandatory": true
+                        },
+                        {
+                            "name": "clone_from_time_machine_nutanix_ndb_database__network_profile_id",
+                            "description": "",
+                            "type": "LOCAL",
+                            "label": "Network Profile",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "c49bc35a-2adc-49fd-bf2e-0ccc430ea36d",
+                            "data_type": "BASE",
+                            "is_hidden": false,
+                            "is_mandatory": true
+                        },
+                        {
+                            "name": "clone_from_time_machine_nutanix_ndb_database__nodes__0__vm_name",
+                            "description": "",
+                            "type": "LOCAL",
+                            "label": "Database Server VM Name",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "new_db_@@{calm_time}@@",
+                            "data_type": "BASE",
+                            "is_hidden": false,
+                            "is_mandatory": true
+                        },
+                        {
+                            "name": "clone_from_time_machine_nutanix_ndb_database__vm_password",
+                            "description": "",
+                            "type": "SECRET",
+                            "label": "Password",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "abc123",
+                            "data_type": "BASE",
+                            "is_hidden": false,
+                            "is_mandatory": true
+                        },
+                        {
+                            "name": "clone_from_time_machine_nutanix_ndb_database__nodes__0__compute_profile_id",
+                            "description": "",
+                            "type": "LOCAL",
+                            "label": "Compute Profile",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "85b669f6-604e-41e1-b5d4-429f8fdc077d",
+                            "data_type": "BASE",
+                            "is_hidden": false,
+                            "is_mandatory": true
+                        },
+                        {
+                            "name": "clone_from_time_machine_nutanix_ndb_database__nodes__0__network_profile_id",
+                            "description": "",
+                            "type": "LOCAL",
+                            "label": "Network Profile",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "c49bc35a-2adc-49fd-bf2e-0ccc430ea36d",
+                            "data_type": "BASE",
+                            "is_hidden": false,
+                            "is_mandatory": true
+                        },
+                        {
+                            "name": "clone_from_time_machine_nutanix_ndb_database__nodes__0__nx_cluster_id",
+                            "description": "",
+                            "type": "LOCAL",
+                            "label": "Nutanix Cluster",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "eaa57d0a-8e0d-49e5-b19c-6d593f52937d",
+                            "data_type": "BASE",
+                            "is_hidden": false,
+                            "is_mandatory": true
+                        },
+                        {
+                            "name": "clone_from_time_machine_nutanix_ndb_database__database_parameter_profile_id",
+                            "description": "",
+                            "type": "LOCAL",
+                            "label": "Database Parameter Profile",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "552d3408-fb9f-4cf3-9cfd-92b479635c4b",
+                            "data_type": "BASE",
+                            "is_hidden": false,
+                            "is_mandatory": true
+                        },
+                        {
+                            "name": "clone_from_time_machine_nutanix_ndb_database__postgresql_info__0__vm_name",
+                            "description": "",
+                            "type": "LOCAL",
+                            "label": "Database server VM Name",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "new_db_@@{calm_time}@@",
+                            "data_type": "BASE",
+                            "is_hidden": false,
+                            "is_mandatory": true
+                        },
+                        {
+                            "name": "clone_from_time_machine_nutanix_ndb_database__postgresql_info__0__pre_clone_cmd",
+                            "description": "",
+                            "type": "LOCAL",
+                            "label": "Pre Clone Command",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "",
+                            "data_type": "BASE",
+                            "is_hidden": false,
+                            "is_mandatory": false
+                        },
+                        {
+                            "name": "clone_from_time_machine_nutanix_ndb_database__postgresql_info__0__post_clone_cmd",
+                            "description": "",
+                            "type": "LOCAL",
+                            "label": "Post Clone Command",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "",
+                            "data_type": "BASE",
+                            "is_hidden": false,
+                            "is_mandatory": false
+                        },
+                        {
+                            "name": "clone_from_time_machine_nutanix_ndb_database__postgresql_info__0__db_password",
+                            "description": "",
+                            "type": "SECRET",
+                            "label": "Password",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "Nutanix.123",
+                            "data_type": "BASE",
+                            "is_hidden": false,
+                            "is_mandatory": true
+                        },
+                        {
+                            "name": "clone_from_time_machine_nutanix_ndb_database__time_machine_id",
+                            "description": "",
+                            "type": "LOCAL",
+                            "label": "Target Time Machine",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "@@{timemachine_uuid}@@",
+                            "data_type": "BASE",
+                            "is_hidden": false,
+                            "is_mandatory": true
+                        },
+                        {
+                            "name": "clone_from_time_machine_nutanix_ndb_database__snapshot_id",
+                            "description": "",
+                            "type": "LOCAL",
+                            "label": "Snapshot",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "@@{snapshot_uuid}@@",
+                            "data_type": "BASE",
+                            "is_hidden": false,
+                            "is_mandatory": false
+                        },
+                        {
+                            "name": "clone_from_time_machine_nutanix_ndb_database__time_zone",
+                            "description": "",
+                            "type": "LOCAL",
+                            "label": "Timezone",
+                            "attrs": {},
+                            "val_type": "STRING",
+                            "value": "UTC",
+                            "data_type": "BASE",
+                            "is_hidden": true,
+                            "is_mandatory": false
+                        }
+                    ],
+                    "output_variables": {},
+                    "tag": "Database",
+                    "account_reference": {
+                        "kind": "account",
+                        "name": "ndb-account",
+                        "uuid": "65d3ec1d-8044-4c5c-af50-881acb3c3a3d"
+                    }
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            }
+        ],
+        "variable_list": []
+    }
+}
