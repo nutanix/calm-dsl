@@ -414,7 +414,7 @@ class Database:
             Attributes supported for this class:
                 database: Name of the Postgres Instance,
                 snapshot_with_timeStamp: Name of the snapshot along with TimeStamp (yyyy-mm-dd hh:mm:ss), Eg-> "era_auto_snapshot (2023-02-12 10:01:40)",
-                point in time: point in Time to Restore yyyy-mm-dd hh:mm:ss, Eg -> "2023-02-12 10:01:40",
+                point_in_time: point in Time to Restore yyyy-mm-dd hh:mm:ss, Eg -> "2023-02-12 10:01:40",
                 time_zone: Time Zone of the snapshot/point in time (If not given defaults to system timezone),
             """
 
@@ -1035,12 +1035,12 @@ class PostgresDatabaseOutputVariables:
         Postgres Database Instance Create Action Output variables of NDB Provider, user can provide mapping for the name of this attributes that can be used as alias to it.
         Attributes supported for this class:
             database_name: Name of the database instance
-            database_instance_id: ID of databse instance created
+            database_instance_id: ID of database instance created
             tags: A tag is a label consisting of a user-defined name and a value that makes it easier to manage, search for, and filter entities
             properties: Properties of the entity, Eg -> Database instance, database, profiles
             time_machine: Time machine details when an instance is created
             time_machine_id: UUID of time machine
-            metric: Stores storage info regarding size, allocatedSize, usedSize and unit of calculation that seems to have been fetched from PRISM
+            metric: Stores storage info regarding size, allocatedSize, usedSize and unit of calculation that have been fetched from PRISM
             type: The type of the database created i.e., postgres_database
             platform_data: Platform data is the aggregate data of all the output variables supported
         """
@@ -1063,7 +1063,7 @@ class PostgresDatabaseOutputVariables:
         Postgres Database Instance RestoreFromTimeMachine Action Output variables of NDB Provider, user can provide mapping for the name of this attributes that can be used as alias to it.
         Attributes supported for this class:
             database_name: Name of the database instance
-            database_instance_id: ID of databse instance created
+            database_instance_id: ID of database instance created
             tags: A tag is a label consisting of a user-defined name and a value that makes it easier to manage, search for, and filter entities
             properties: Properties of the entity, Eg -> Database instance, database, profiles
             time_machine: Time machine details when an instance is created
@@ -1091,78 +1091,54 @@ class PostgresDatabaseOutputVariables:
         Postgres Database Instance CreateSnapshot Action Output variables of NDB Provider.
         User can provide mapping for the name of this attributes that can be used as alias to it.
 
-        (TODO): List to be pruned
         Attributes supported for this class:
+            database_snapshot: Snapshot of the database
+            properties: Properties of the entity, Eg -> Database instance, database, profiles
+            dbserver_name: Name of the database server VM
+            type: The type of the database created i.e., postgres_database
+            dbserver_ip: IP address of the database server VM
+            id: ID of database instance created
+            parent_snapshot: Snapshot used to clone the database
+            snapshot_uuid: Uuid of the Snapshot
             platform_data: Platform data is the aggregate data of all the output variables supported
         """
 
         name = "Create_Snapshot_Postgres_OutputVariables"
         FIELD_MAP = {
             "database_snapshot": "database_snapshot",
-            "date_modified": "date_modified",
-            "santised_from_snapshot_id": "santised_from_snapshot_id",
-            "santised": "santised",
-            "software_snapshot_id": "software_snapshot_id",
-            "to_timestamp": "to_timestamp",
-            "from_timestamp": "from_timestamp",
             "properties": "properties",
-            "software_snapshot": "software_snapshot",
             "dbserver_name": "dbserver_name",
-            "owner_id": "owner_id",
-            "snapshot_size": "snapshot_size",
-            "replicated_snapshots": "replicated_snapshots",
-            "santised_snapshots": "santised_snapshots",
-            "snapshot_family": "snapshot_family",
-            "applicable_types": "applicable_types",
-            "metadata": "metadata",
-            "status": "status",
             "type": "type",
             "dbserver_ip": "dbserver_ip",
-            "parent_snapshot_id": "parent_snapshot_id",
-            "protection_domain_id": "protection_domain_id",
-            "software_database_snapshot": "software_database_snapshot",
-            "snapshot_timestamp": "snapshot_timestamp",
-            "snapshot_timestamp_date": "snapshot_timestamp_date",
-            "timezone": "timezone",
-            "database_node_id": "database_node_id",
-            "dbserver_id": "dbserver_id",
-            "nx_cluster_id": "nx_cluster_id",
-            "processed": "processed",
             "id": "id",
-            "lcm_config": "lcm_config",
             "parent_snapshot": "parent_snapshot",
             "snapshot_uuid": "snapshot_uuid",
-            "app_info_version": "app_info_version",
-            "date_created": "date_created",
-            "dbserver_storage_metadata_version": "dbserver_storage_metadata_version",
-            "description": "description",
-            "tags__LLIISSTT__entity_id": "tags__LLIISSTT__entity_id",
-            "tags__LLIISSTT__entity_type": "tags__LLIISSTT__entity_type",
-            "tags__LLIISSTT__tag_id": "tags__LLIISSTT__tag_id",
-            "tags__LLIISSTT__tag_name": "tags__LLIISSTT__tag_name",
-            "tags__LLIISSTT__value": "tags__LLIISSTT__value",
             "platform_data": "platform_data",
         }
 
     class Clone(OutputVariables):
-        """Postgres Database Instance Clone Action Output variables of NDB Provider"""
+        """
+        Postgres Database Instance Clone Action Output variables of NDB Provider
+        User can provide mapping for the name of this attributes that can be used as alias to it.
+
+        Attributes supported for this class:
+            type: The type of the database created i.e., postgres_database
+            id: ID of database instance created
+            time_machine: Time machine details when an instance is created
+            linked_databases: These are databases which are created as a part of the instance
+            database_name: Name of the database instance
+            database_nodes: Info of nodes of databases
+            platform_data: Platform data is the aggregate data of all the output variables supported
+        """
 
         name = "Clone_Postgres_OutputVariables"
 
         FIELD_MAP = {
-            "database_cluster_type": "database_cluster_type",
             "type": "type",
             "id": "id",
             "time_machine": "time_machine",
-            "dbserver_logical_cluster": "dbserver_logical_cluster",
             "linked_databases": "linked_databases",
-            "properties": "properties",
-            "status": "status",
-            "time_zone": "time_zone",
             "database_name": "database_name",
-            "clone": "clone",
             "database_nodes": "database_nodes",
-            "metric": "metric",
-            "parent_database_id": "parent_database_id",
             "platform_data": "platform_data",
         }
