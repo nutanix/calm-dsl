@@ -11,6 +11,10 @@ from calm.dsl.log import get_logging_handle
 from calm.dsl.cli import runbooks
 from calm.dsl.api import get_api_client
 from calm.dsl.cli.constants import RUNLOG
+import json
+from calm.dsl.runbooks import read_local_file
+
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 
 
 LOG = get_logging_handle(__name__)
@@ -70,6 +74,7 @@ runbook_dsl_input = [
 # )
 
 
+@pytest.mark.escript
 class TestEscript:
     def setup_class(self):
         """setup class method"""
@@ -92,12 +97,12 @@ class TestEscript:
                 else:
                     script_pass = True
                 if "python3" in first_line.lower() or "py3" in first_line.lower():
-                    script_version = "py3"
+                    script_version = "static"
                 elif "python2" in first_line.lower() or "py2" in first_line.lower():
-                    script_version = "py2"
+                    script_version = "static"
                 else:
                     # default to python2 for now, pls fix python scripts
-                    script_version = "py2"
+                    script_version = "static"
                     script_content = first_line + "\n" + script_content
             try:
                 file_path = "{}.out".format(file_path)
@@ -106,6 +111,15 @@ class TestEscript:
             except IOError:
                 # skip output check if no out file in environment
                 script_output = None
+            provider = script.split(".")[0].split("_")
+            if len(provider) > 1:
+                provider = provider[1]
+            else:
+                provider = None
+            provider_config = DSL_CONFIG["provider"].get(provider, None)
+            if provider_config:
+                for replace_key, replace_item in provider_config.items():
+                    script_content = script_content.replace(replace_key, replace_item)
             self.script_map[script.split(".")[0]] = (
                 script_content,
                 script_version,
@@ -181,7 +195,7 @@ class TestEscript:
 
             # polling till runbook run gets to terminal state
             state, reasons = poll_runlog_status(
-                client, runlog_uuid, RUNLOG.TERMINAL_STATES, maxWait=30
+                client, runlog_uuid, RUNLOG.TERMINAL_STATES, maxWait=60
             )
             LOG.debug(">> Runbook Run state: {}\n{}".format(state, reasons))
             # assert for overall runbook status

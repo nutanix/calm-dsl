@@ -1256,6 +1256,7 @@ class TestMarketplaceRunbook:
             if err:
                 pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
+    @pytest.mark.escript
     @pytest.mark.runbook
     @pytest.mark.regression
     @pytest.mark.skipif(

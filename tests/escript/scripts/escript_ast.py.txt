@@ -1,0 +1,12 @@
+# python3;success
+
+import ast
+code_string = """
+def add(a, b):
+    return a + b
+
+result = add(1, 2)
+print(result)
+"""
+tree = ast.parse(code_string)
+print(ast.dump(tree, indent=2))

@@ -1,5 +1,4 @@
 # python3;success
-
 xml_val = """<breakfast_menu>
 <food>
 <name>Belgian Waffles</name>

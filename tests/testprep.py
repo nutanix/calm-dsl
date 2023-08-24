@@ -505,6 +505,28 @@ def add_approval_details(config):
 
     add_project_details(config, "POLICY_PROJECTS", "test_approval_policy")
 
+def add_provider_constants(config):
+    provider_config = {
+        "provider": {
+            "azure": {
+                "client_id_a": "VAULT_AZURE_CLIENT_ID",
+                "client_key": "VAULT_AZURE_CLIENT_KEY",
+                "subscription_id": "VAULT_AZURE_SUBSCRIPTION_ID",
+                "tenant_id": "VAULT_AZURE_TENANT_ID",
+            },
+            "aws": {
+                "accessKey": "VAULT_AWS_ACCESS_KEY",
+                "secretKey": "VAULT_AWS_SECRET_KEY",
+            },
+            "kubernetes": {
+                "server": "VAULT_K8_SERVER_IP",
+                "kube_port": "VAULT_K8_SERVER_PORT",
+                "token_a": "VAULT_K8_SERVER_TOKEN",
+            },
+        }
+    }
+    config.update(provider_config)
+
 
 config = {}
 if os.path.exists(dsl_config_file_location):
@@ -522,6 +544,7 @@ add_vpc_details(config)
 add_rerun_report_portal(config)
 add_vpc_endpoints(config)
 add_approval_details(config)
+add_provider_constants(config)
 f = open(dsl_config_file_location, "w")
 f.write(json.dumps(config, indent=4))
 f.close()

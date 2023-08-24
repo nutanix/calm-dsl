@@ -32,6 +32,7 @@ from utils import upload_runbook, poll_runlog_status
 
 # TODO: Add validation for macro test values: EscriptMacroTask
 class TestExecTasks:
+    @pytest.mark.escript
     @pytest.mark.runbook
     @pytest.mark.regression
     @pytest.mark.parametrize(
@@ -133,6 +134,7 @@ class TestExecTasks:
             if err:
                 pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
+    @pytest.mark.escript
     @pytest.mark.runbook
     @pytest.mark.regression
     @pytest.mark.parametrize(
@@ -172,6 +174,7 @@ class TestExecTasks:
         else:
             print("runbook {} deleted".format(rb_name))
 
+    @pytest.mark.escript
     @pytest.mark.runbook
     @pytest.mark.regression
     @pytest.mark.parametrize(
@@ -254,6 +257,7 @@ class TestExecTasks:
             if err:
                 pytest.fail("[{}] - {}".format(err["code"], err["error"]))
 
+    @pytest.mark.escript
     @pytest.mark.runbook
     @pytest.mark.regression
     @pytest.mark.parametrize(

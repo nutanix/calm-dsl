@@ -1,5 +1,4 @@
 # python3;success
-
 print("python3")
 output = urlreq("https://pypi.org/pypi/sampleproject/json", verb="GET")
 email = output.json()["info"]["author_email"]
