@@ -13,4 +13,4 @@ try:
         print(row[0])
     cnxn.close()
 except Exception as exp:
-    print(str(exp) == "Connection to the database failed for an unknown reason.")
+    print("TODO")
