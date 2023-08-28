@@ -787,6 +787,23 @@ class AhvClustersCache(CacheTableBase):
         AhvObj = AhvVmProvider.get_api_obj()
 
         for pc_acc_name, pc_acc_uuid in account_name_uuid_map.items():
+
+            # Get pe-accoun-uuid to cluster-uuid map
+            res, err = client.account.read(pc_acc_uuid)
+            if err:
+                LOG.error("[{}] - {}".format(err["code"], err["error"]))
+                continue
+
+            pc_acc_data = res.json()
+            cluster_uuid_pe_account_uuid_map = {}
+            for _cluster_data in pc_acc_data["status"]["resources"]["data"].get(
+                "cluster_account_reference_list", []
+            ):
+                _cluster_uuid = _cluster_data["resources"]["data"].get(
+                    "cluster_uuid", ""
+                )
+                cluster_uuid_pe_account_uuid_map[_cluster_uuid] = _cluster_data["uuid"]
+
             try:
                 res = AhvObj.clusters(account_uuid=pc_acc_uuid)
             except Exception:
@@ -797,37 +814,13 @@ class AhvClustersCache(CacheTableBase):
                 )
                 continue
 
-            # TODO the order of cache sync is how their model is defined in table_config.py file
-            account = AccountCache.get(uuid=pc_acc_uuid)
-            account_clusters_data = json.loads(account.data).get("clusters", {})
-            account_clusters_data_rev = {v: k for k, v in account_clusters_data.items()}
-
             for entity in res.get("entities", []):
                 cluster_name = entity["status"]["name"]
-                calm_account_name = re.sub(
-                    NON_ALPHA_NUMERIC_CHARACTER,
-                    REPLACED_CLUSTER_NAME_CHARACTER,
-                    entity["status"]["name"],
-                )
                 cluster_uuid = entity["metadata"]["uuid"]
-                cluster_resources = entity["status"]["resources"]
-                service_list = cluster_resources.get("config", {}).get(
-                    "service_list", []
-                )
 
-                # Here, AHV denotes the 'PE' functionality of a cluster
-                if "AOS" not in service_list:
+                if not cluster_uuid_pe_account_uuid_map.get(cluster_uuid, ""):
                     LOG.debug(
-                        "Cluster '{}' with UUID '{}' having function {} is not an AHV PE cluster".format(
-                            cluster_name, cluster_uuid, service_list
-                        )
-                    )
-                    continue
-
-                # For esxi clusters, there will not be any pe account
-                if not account_clusters_data_rev.get(calm_account_name, ""):
-                    LOG.debug(
-                        "Ignoring cluster '{}' with uuid '{}', as it doesn't have any pc account".format(
+                        "Ignoring cluster '{}' with uuid '{}', as it doesn't have any pe account".format(
                             cluster_name, cluster_uuid
                         )
                     )
@@ -836,9 +829,7 @@ class AhvClustersCache(CacheTableBase):
                 cls.create_entry(
                     name=cluster_name,
                     uuid=cluster_uuid,
-                    pe_account_uuid=account_clusters_data_rev.get(
-                        calm_account_name, ""
-                    ),
+                    pe_account_uuid=cluster_uuid_pe_account_uuid_map[cluster_uuid],
                     account_uuid=pc_acc_uuid,
                 )
 
