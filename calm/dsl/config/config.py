@@ -76,11 +76,17 @@ class ConfigFileParser:
     def get_stratos_config(self):
         """returns stratos config"""
 
-        if "STRATOS" in self._CONFIG:
-            return self._CONFIG["STRATOS"]
+        stratos_config = {}
+        if "STRATOS" in self._CONFIG_PARSER_OBJECT:
+            for k, v in self._CONFIG_PARSER_OBJECT.items("STRATOS"):
+                if k == "stratos_status":
+                    stratos_config[k] = self._CONFIG_PARSER_OBJECT[
+                        "STRATOS"
+                    ].getboolean(k)
+                else:
+                    stratos_config[k] = v
 
-        else:
-            return {}
+        return stratos_config
 
     def get_categories_config(self):
         """returns categories config"""

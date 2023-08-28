@@ -140,7 +140,13 @@ def get_accounts(name, filter_by, limit, offset, quiet, all_items, account_type)
 
 def get_account(client, account_name):
 
-    params = {"filter": "name=={};child_account==true".format(account_name)}
+    params = {"filter": "name=={}".format(account_name)}
+
+    ContextObj = get_context()
+    stratos_config = ContextObj.get_stratos_config()
+    if stratos_config.get("stratos_status", False):
+        params["filter"] += ";child_account==true"
+
     res, err = client.account.list(params=params)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
