@@ -253,3 +253,32 @@ def get_approval_project(config):
         raise exception("No Approval Policy Project Found")
     project_name = config.get("POLICY_PROJECTS", {}).get("PROJECT1", {}).get("NAME", "")
     return project_name
+
+
+def poll_runlog_status(
+    client, runlog_uuid, expected_states, poll_interval=10, maxWait=300
+):
+    """
+    This routine polls for 5mins till the runlog gets into the expected state
+    Args:
+        client (obj): client object
+        runlog_uuid (str): runlog id
+        expected_states (list): list of expected states
+    Returns:
+        (str, list): returns final state of the runlog and reasons list
+    """
+    count = 0
+    while count < maxWait:
+        res, err = client.runbook.poll_action_run(runlog_uuid)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        response = res.json()
+        LOG.debug(response)
+        state = response["status"]["state"]
+        reasons = response["status"]["reason_list"]
+        if state in expected_states:
+            break
+        count += poll_interval
+        time.sleep(poll_interval)
+
+    return state, reasons or []
