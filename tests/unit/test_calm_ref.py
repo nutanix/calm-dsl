@@ -52,7 +52,7 @@ def test_decompile_cluster():
         assert cls.account_name == AHV_ACCOUNT_NAME
 
 
-@pytest.mark.pre_commit
+
 @pytest.mark.skipif(
     not AHV_ACCOUNT_UUID, reason="No {} account on the setup".format(AHV_ACCOUNT_NAME)
 )
@@ -63,7 +63,7 @@ def test_decompile_account():
     assert cls.name == AHV_ACCOUNT_NAME
 
 
-@pytest.mark.pre_commit
+
 @pytest.mark.skipif(not DEFAULT_PROJECT, reason="No default project on the setup")
 def test_decompile_environment():
 
