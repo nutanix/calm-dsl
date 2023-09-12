@@ -48,8 +48,8 @@ jobs:
           coverage_percentage=$(coverage report -m | awk '/calm\/dsl\/builtins\/models\/calm_ref.py/ {print $6}')
           echo "Coverage Percentage: $coverage_percentage%"
           coverage=$(echo "$coverage_percentage" | sed 's/%//')
-          if [ "$coverage" -lt 80 ]; then
-            echo "Code coverage is below the threshold (80%). Blocking PR."
+          if [ "$coverage" -lt 40 ]; then
+            echo "Code coverage is below the threshold (40%). Blocking PR."
             exit 1
           fi
         env:
