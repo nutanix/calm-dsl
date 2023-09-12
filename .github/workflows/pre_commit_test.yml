@@ -32,3 +32,12 @@ jobs:
           value="MOCK"
           echo "CALM_DSL_TESTS=$value" >> $GITHUB_ENV
           echo "${{ env.CALM_DSL_TESTS }}"
+      - name: Build test environment
+        run: |
+          pwd
+          source venv/bin/activate
+          calm --version
+          pytest --version
+          python tests/unit/update_init.py
+          pwd
+          pytest "tests/unit/test_calm_ref.py"
