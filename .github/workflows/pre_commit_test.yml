@@ -29,14 +29,5 @@ jobs:
       - name: Set environment variables
         shell: bash
         run: |
-          echo "CALM_DSL_TESTS=MOCK" >> $GITHUB_ENV
+          echo "CALM_DSL_TESTS=3" >> $GITHUB_ENV
           echo "${{ env.CALM_DSL_TESTS }}
-      - name: Build test environment
-        run: |
-          pwd
-          source venv/bin/activate
-          calm --version
-          pytest --version
-          python tests/unit/update_init.py
-          pwd
-          pytest "tests/unit/test_calm_ref.py"
