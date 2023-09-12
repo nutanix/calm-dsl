@@ -45,7 +45,7 @@ jobs:
         run: |
           source venv/bin/activate
           pytest
-          coverage run -m pytest
+          coverage run -m pre_commit
           coverage report --fail-under=80
         env:
           CI: true

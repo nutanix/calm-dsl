@@ -18,7 +18,7 @@ AHV_ACCOUNT_UUID = DSL_CONFIG["METADATA"]["ACCOUNT"].get(AHV_ACCOUNT_NAME, None)
 DEFAULT_PROJECT_NAME = "default"
 DEFAULT_PROJECT = DSL_CONFIG["METADATA"]["PROJECT"].get(DEFAULT_PROJECT_NAME, None)
 
-
+@pytest.mark.pre_commit
 @pytest.mark.skipif(
     not AHV_ACCOUNT_UUID, reason="No {} account on the setup".format(AHV_ACCOUNT_NAME)
 )
@@ -34,7 +34,7 @@ def test_decompile_subnet():
         assert cls.cluster == subnets[0]["CLUSTER_NAME"]
         assert cls.account_uuid == AHV_ACCOUNT_UUID
 
-
+@pytest.mark.pre_commit
 @pytest.mark.skipif(
     not AHV_ACCOUNT_UUID, reason="No {} account on the setup".format(AHV_ACCOUNT_NAME)
 )
@@ -49,7 +49,7 @@ def test_decompile_cluster():
         assert cls.name == clusters[0]["NAME"]
         assert cls.account_name == AHV_ACCOUNT_NAME
 
-
+@pytest.mark.pre_commit
 @pytest.mark.skipif(
     not AHV_ACCOUNT_UUID, reason="No {} account on the setup".format(AHV_ACCOUNT_NAME)
 )
@@ -59,7 +59,7 @@ def test_decompile_account():
     cls = CalmRefType.decompile(cdict)
     assert cls.name == AHV_ACCOUNT_NAME
 
-
+@pytest.mark.pre_commit
 @pytest.mark.skipif(not DEFAULT_PROJECT, reason="No default project on the setup")
 def test_decompile_environment():
 
