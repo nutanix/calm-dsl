@@ -1,0 +1,634 @@
+{
+    "PROJECTS": {
+        "6a11cbf0-6bf8-4272-a38a-5cc10e233bb8": {
+            "NAME": "test_snapshot_policy_project",
+            "ENVIRONMENTS": [
+                {
+                    "NAME": "test_local_account_environment",
+                    "UUID": "a5459fba-70f6-4153-ae1a-b885ea8b9ccf"
+                },
+                {
+                    "NAME": "test_remote_account_environment",
+                    "UUID": "1f60328d-f73e-41e2-baec-a3714830021a"
+                }
+            ],
+            "APP_PROTECTION_POLICY": [
+                {
+                    "NAME": "test_local_snapshot_policy_local_account",
+                    "UUID": "737ba64d-3abe-48bb-bea3-c8906116d399",
+                    "RULE_UUID": "e8b44a04-17ee-43b9-bd73-b0dbe64dfb9c"
+                }
+            ],
+            "ACCOUNTS": [
+                {
+                    "NAME": "nutanix_pc",
+                    "ACCOUNT_UUIDS": [
+                        "57fffea1-ab1f-4d61-b23d-a405547e8295",
+                        "c0b9e702-93b0-aa65-7151-70453a22fefc"
+                    ]
+                }
+            ]
+        },
+        "ff69c50e-d509-4978-935e-59d8ef74fc21": {
+            "NAME": "test_dyn_cred_project",
+            "ENVIRONMENTS": [
+                {
+                    "NAME": "test_env29f5ce1b1c4d",
+                    "UUID": "de6cdc38-2b06-4c18-bc55-ab531aedb688"
+                }
+            ],
+            "APP_PROTECTION_POLICY": [],
+            "ACCOUNTS": [
+                {
+                    "NAME": "vmware",
+                    "ACCOUNT_UUIDS": [
+                        "f0c261ea-fb50-493d-a6fe-32a4a18f554f"
+                    ]
+                },
+                {
+                    "NAME": "nutanix_pc",
+                    "ACCOUNT_UUIDS": [
+                        "57fffea1-ab1f-4d61-b23d-a405547e8295"
+                    ]
+                },
+                {
+                    "NAME": "aws",
+                    "ACCOUNT_UUIDS": [
+                        "8569cf12-5e2e-48f6-b34e-0a2b1b2b4f70"
+                    ]
+                },
+                {
+                    "NAME": "azure",
+                    "ACCOUNT_UUIDS": [
+                        "01541e60-f529-46e9-ae9e-d7827f9e9679"
+                    ]
+                },
+                {
+                    "NAME": "gcp",
+                    "ACCOUNT_UUIDS": [
+                        "a3a8267a-f380-4440-a912-c47178d3595a"
+                    ]
+                },
+                {
+                    "NAME": "custom_provider",
+                    "ACCOUNT_UUIDS": [
+                        "4dc36e38-1cba-49aa-bd0b-31b858f321c8",
+                        "f1f1be54-2338-4db6-8035-1851197b8ac4"
+                    ]
+                }
+            ]
+        },
+        "940791c7-0708-439b-86c7-b818a38c2731": {
+            "NAME": "test_quota_project",
+            "ENVIRONMENTS": [],
+            "APP_PROTECTION_POLICY": [],
+            "ACCOUNTS": [
+                {
+                    "NAME": "vmware",
+                    "ACCOUNT_UUIDS": [
+                        "f0c261ea-fb50-493d-a6fe-32a4a18f554f"
+                    ]
+                },
+                {
+                    "NAME": "nutanix_pc",
+                    "ACCOUNT_UUIDS": [
+                        "57fffea1-ab1f-4d61-b23d-a405547e8295"
+                    ]
+                },
+                {
+                    "NAME": "aws",
+                    "ACCOUNT_UUIDS": [
+                        "8569cf12-5e2e-48f6-b34e-0a2b1b2b4f70"
+                    ]
+                },
+                {
+                    "NAME": "azure",
+                    "ACCOUNT_UUIDS": [
+                        "01541e60-f529-46e9-ae9e-d7827f9e9679"
+                    ]
+                },
+                {
+                    "NAME": "gcp",
+                    "ACCOUNT_UUIDS": [
+                        "a3a8267a-f380-4440-a912-c47178d3595a"
+                    ]
+                }
+            ]
+        },
+        "8dd6be75-3047-405c-a0fe-b1f386933fc3": {
+            "NAME": "test_approval_policy_rbac",
+            "ENVIRONMENTS": [
+                {
+                    "NAME": "test_env8f9b98081d18",
+                    "UUID": "0d736c3d-98b3-449a-99f3-1f7064165d9c"
+                }
+            ],
+            "APP_PROTECTION_POLICY": [
+                {
+                    "NAME": "test_snapshot_policy_1",
+                    "UUID": "02876657-a0ab-4841-b307-c506a0e5b480",
+                    "RULE_UUID": "b3198748-5369-4077-8c8e-cd8f2dcfb308"
+                },
+                {
+                    "NAME": "test_snapshot_policy_1",
+                    "UUID": "02876657-a0ab-4841-b307-c506a0e5b480",
+                    "RULE_UUID": "befce7f0-71c0-4c99-aded-7977dbb20bd8"
+                }
+            ],
+            "ACCOUNTS": [
+                {
+                    "NAME": "vmware",
+                    "ACCOUNT_UUIDS": [
+                        "f0c261ea-fb50-493d-a6fe-32a4a18f554f"
+                    ]
+                },
+                {
+                    "NAME": "nutanix_pc",
+                    "ACCOUNT_UUIDS": [
+                        "57fffea1-ab1f-4d61-b23d-a405547e8295"
+                    ]
+                },
+                {
+                    "NAME": "aws",
+                    "ACCOUNT_UUIDS": [
+                        "8569cf12-5e2e-48f6-b34e-0a2b1b2b4f70"
+                    ]
+                },
+                {
+                    "NAME": "azure",
+                    "ACCOUNT_UUIDS": [
+                        "01541e60-f529-46e9-ae9e-d7827f9e9679"
+                    ]
+                },
+                {
+                    "NAME": "gcp",
+                    "ACCOUNT_UUIDS": [
+                        "a3a8267a-f380-4440-a912-c47178d3595a"
+                    ]
+                }
+            ]
+        },
+        "d28afd05-d95d-42ee-bb9a-fdd5e5db3713": {
+            "NAME": "test_approval_policy",
+            "ENVIRONMENTS": [
+                {
+                    "NAME": "test_env6fae98277ad8",
+                    "UUID": "a1e66720-b0c6-4d90-b0b1-32f5ce01e0d9"
+                }
+            ],
+            "APP_PROTECTION_POLICY": [],
+            "ACCOUNTS": [
+                {
+                    "NAME": "vmware",
+                    "ACCOUNT_UUIDS": [
+                        "f0c261ea-fb50-493d-a6fe-32a4a18f554f"
+                    ]
+                },
+                {
+                    "NAME": "nutanix_pc",
+                    "ACCOUNT_UUIDS": [
+                        "57fffea1-ab1f-4d61-b23d-a405547e8295"
+                    ]
+                },
+                {
+                    "NAME": "aws",
+                    "ACCOUNT_UUIDS": [
+                        "8569cf12-5e2e-48f6-b34e-0a2b1b2b4f70"
+                    ]
+                },
+                {
+                    "NAME": "azure",
+                    "ACCOUNT_UUIDS": [
+                        "01541e60-f529-46e9-ae9e-d7827f9e9679"
+                    ]
+                },
+                {
+                    "NAME": "gcp",
+                    "ACCOUNT_UUIDS": [
+                        "a3a8267a-f380-4440-a912-c47178d3595a"
+                    ]
+                }
+            ]
+        },
+        "6f503b5e-c500-4bbe-ae6d-8c962f898113": {
+            "NAME": "rbac_bp_test_project",
+            "ENVIRONMENTS": [
+                {
+                    "NAME": "test_envaa63fcbe4973",
+                    "UUID": "62caaeb1-968f-483b-ad53-6d20a38a6909"
+                }
+            ],
+            "APP_PROTECTION_POLICY": [],
+            "ACCOUNTS": [
+                {
+                    "NAME": "vmware",
+                    "ACCOUNT_UUIDS": [
+                        "f0c261ea-fb50-493d-a6fe-32a4a18f554f"
+                    ]
+                },
+                {
+                    "NAME": "nutanix_pc",
+                    "ACCOUNT_UUIDS": [
+                        "57fffea1-ab1f-4d61-b23d-a405547e8295"
+                    ]
+                },
+                {
+                    "NAME": "aws",
+                    "ACCOUNT_UUIDS": [
+                        "8569cf12-5e2e-48f6-b34e-0a2b1b2b4f70"
+                    ]
+                },
+                {
+                    "NAME": "azure",
+                    "ACCOUNT_UUIDS": [
+                        "01541e60-f529-46e9-ae9e-d7827f9e9679"
+                    ]
+                },
+                {
+                    "NAME": "gcp",
+                    "ACCOUNT_UUIDS": [
+                        "a3a8267a-f380-4440-a912-c47178d3595a"
+                    ]
+                }
+            ]
+        },
+        "3bf3262f-3c3e-4abe-a4b2-8d894c9575f9": {
+            "NAME": "test_vmw_snapshot_policy_project",
+            "ENVIRONMENTS": [
+                {
+                    "NAME": "test_first_account_environment",
+                    "UUID": "c6a18a12-f8cd-4957-a091-5920afc855f5"
+                },
+                {
+                    "NAME": "test_second_account_environment",
+                    "UUID": "91438a7f-5f85-44b2-9475-0baf7ac267e9"
+                }
+            ],
+            "APP_PROTECTION_POLICY": [
+                {
+                    "NAME": "test_snapshot_policy_2",
+                    "UUID": "e72fb948-2085-4464-872a-6c09d39ec8a5",
+                    "RULE_UUID": "5d9152b6-3e65-42a0-a90b-15f297498b4c"
+                },
+                {
+                    "NAME": "test_snapshot_policy_2",
+                    "UUID": "e72fb948-2085-4464-872a-6c09d39ec8a5",
+                    "RULE_UUID": "4aa596cd-eb17-464d-8159-41196e545be5"
+                },
+                {
+                    "NAME": "test_snapshot_policy_2",
+                    "UUID": "e72fb948-2085-4464-872a-6c09d39ec8a5",
+                    "RULE_UUID": "5ee2e226-f63f-4468-b5ee-90ea7a6ce336"
+                },
+                {
+                    "NAME": "test_snapshot_policy_2",
+                    "UUID": "e72fb948-2085-4464-872a-6c09d39ec8a5",
+                    "RULE_UUID": "204c76ca-9333-4880-a05a-15ff16222a2e"
+                },
+                {
+                    "NAME": "test_snapshot_policy_2",
+                    "UUID": "e72fb948-2085-4464-872a-6c09d39ec8a5",
+                    "RULE_UUID": "4ff07364-75fe-4594-8ac8-753f48a8650c"
+                },
+                {
+                    "NAME": "test_snapshot_policy_1",
+                    "UUID": "a30afb92-0e45-4e70-8ccd-1dc75cf00bc2",
+                    "RULE_UUID": "d788d0a9-aab0-48a6-86ff-1f5e2665d262"
+                },
+                {
+                    "NAME": "test_snapshot_policy_1",
+                    "UUID": "a30afb92-0e45-4e70-8ccd-1dc75cf00bc2",
+                    "RULE_UUID": "d90ae6d6-c0ed-4eef-a5ec-bcd9db49dc05"
+                }
+            ],
+            "ACCOUNTS": [
+                {
+                    "NAME": "vmware",
+                    "ACCOUNT_UUIDS": [
+                        "f0c261ea-fb50-493d-a6fe-32a4a18f554f",
+                        "e136ba53-f163-4c92-8032-74ee799d320b"
+                    ]
+                }
+            ]
+        },
+        "4a883cf7-9c4b-47d1-a9d7-d0466a439f9b": {
+            "NAME": "default",
+            "ENVIRONMENTS": [
+                {
+                    "NAME": "test_env6e495e935d7e",
+                    "UUID": "7f9b6256-5bff-41c2-adc7-bd26d6c0e4bf"
+                }
+            ],
+            "APP_PROTECTION_POLICY": [
+                {
+                    "NAME": "snap_1",
+                    "UUID": "40173154-237d-cde9-a043-285d730fbc59",
+                    "RULE_UUID": "dadb9c04-dd86-f230-f45a-88d764613ebd"
+                }
+            ],
+            "ACCOUNTS": [
+                {
+                    "NAME": "vmware",
+                    "ACCOUNT_UUIDS": [
+                        "f0c261ea-fb50-493d-a6fe-32a4a18f554f",
+                        "e136ba53-f163-4c92-8032-74ee799d320b"
+                    ]
+                },
+                {
+                    "NAME": "gcp",
+                    "ACCOUNT_UUIDS": [
+                        "a3a8267a-f380-4440-a912-c47178d3595a"
+                    ]
+                },
+                {
+                    "NAME": "azure",
+                    "ACCOUNT_UUIDS": [
+                        "01541e60-f529-46e9-ae9e-d7827f9e9679"
+                    ]
+                },
+                {
+                    "NAME": "aws",
+                    "ACCOUNT_UUIDS": [
+                        "8569cf12-5e2e-48f6-b34e-0a2b1b2b4f70"
+                    ]
+                },
+                {
+                    "NAME": "k8s",
+                    "ACCOUNT_UUIDS": [
+                        "32c957fc-231f-40f8-ac6f-ac44c55dd275"
+                    ]
+                },
+                {
+                    "NAME": "nutanix_pc",
+                    "ACCOUNT_UUIDS": [
+                        "57fffea1-ab1f-4d61-b23d-a405547e8295",
+                        "c0b9e702-93b0-aa65-7151-70453a22fefc"
+                    ]
+                }
+            ]
+        }
+    },
+    "ACCOUNTS": {
+        "f1f1be54-2338-4db6-8035-1851197b8ac4": {
+            "NAME": "AzureVault_Cred_Provider",
+            "AHV_CLUSTER": [],
+            "AHV_DISK_IMAGE": [],
+            "AHV_VPC": [],
+            "AHV_SUBNET": []
+        },
+        "4dc36e38-1cba-49aa-bd0b-31b858f321c8": {
+            "NAME": "HashiCorpVault_Cred_Provider",
+            "AHV_CLUSTER": [],
+            "AHV_DISK_IMAGE": [],
+            "AHV_VPC": [],
+            "AHV_SUBNET": []
+        },
+        "e136ba53-f163-4c92-8032-74ee799d320b": {
+            "NAME": "vmware_second_cloud6cf163fccaa9",
+            "AHV_CLUSTER": [],
+            "AHV_DISK_IMAGE": [],
+            "AHV_VPC": [],
+            "AHV_SUBNET": []
+        },
+        "f0c261ea-fb50-493d-a6fe-32a4a18f554f": {
+            "NAME": "vmware_cloud60a484003884",
+            "AHV_CLUSTER": [],
+            "AHV_DISK_IMAGE": [],
+            "AHV_VPC": [],
+            "AHV_SUBNET": []
+        },
+        "32c957fc-231f-40f8-ac6f-ac44c55dd275": {
+            "NAME": "k8_cloud171928d351f1",
+            "AHV_CLUSTER": [],
+            "AHV_DISK_IMAGE": [],
+            "AHV_VPC": [],
+            "AHV_SUBNET": []
+        },
+        "a3a8267a-f380-4440-a912-c47178d3595a": {
+            "NAME": "gcp_cloud8061c6026716",
+            "AHV_CLUSTER": [],
+            "AHV_DISK_IMAGE": [],
+            "AHV_VPC": [],
+            "AHV_SUBNET": []
+        },
+        "01541e60-f529-46e9-ae9e-d7827f9e9679": {
+            "NAME": "azure_primary_cloudc38dcaf30690",
+            "AHV_CLUSTER": [],
+            "AHV_DISK_IMAGE": [],
+            "AHV_VPC": [],
+            "AHV_SUBNET": []
+        },
+        "8569cf12-5e2e-48f6-b34e-0a2b1b2b4f70": {
+            "NAME": "aws_cloud2efadae324dc",
+            "AHV_CLUSTER": [],
+            "AHV_DISK_IMAGE": [],
+            "AHV_VPC": [],
+            "AHV_SUBNET": []
+        },
+        "c0b9e702-93b0-aa65-7151-70453a22fefc": {
+            "NAME": "multipc_account",
+            "AHV_CLUSTER": [
+                {
+                    "NAME": "auto_cluster_prod_1a15d4353066",
+                    "UUID": "000604a0-cf08-7ec6-3c07-ac1f6b6f9780"
+                }
+            ],
+            "AHV_DISK_IMAGE": [
+                {
+                    "NAME": "Centos7HadoopMaster",
+                    "UUID": "22642e83-e1ec-4d60-82ca-fd4de5a9fcf1"
+                }
+            ],
+            "AHV_VPC": [],
+            "AHV_SUBNET": [
+                {
+                    "NAME": "vlan.800",
+                    "UUID": "9ba820c2-c0ae-48c7-af15-a51aec53b243",
+                    "CLUSTER_NAME": "auto_cluster_prod_1a15d4353066",
+                    "CLUSTER_UUID": "000604a0-cf08-7ec6-3c07-ac1f6b6f9780",
+                    "VPC_NAME": null,
+                    "VPC_UUID": null
+                },
+                {
+                    "NAME": "vlan1211",
+                    "UUID": "bcf84c80-0bae-4632-a78c-82e5f32152b3",
+                    "CLUSTER_NAME": "auto_cluster_prod_1a15d4353066",
+                    "CLUSTER_UUID": "000604a0-cf08-7ec6-3c07-ac1f6b6f9780",
+                    "VPC_NAME": null,
+                    "VPC_UUID": null
+                }
+            ]
+        },
+        "57fffea1-ab1f-4d61-b23d-a405547e8295": {
+            "NAME": "NTNX_LOCAL_AZ",
+            "AHV_CLUSTER": [
+                {
+                    "NAME": "auto-cluster-prod-1ad3ea1715bb",
+                    "UUID": "0006014a-98c2-f4b7-7cba-ac1f6b6f97d8"
+                }
+            ],
+            "AHV_DISK_IMAGE": [
+                {
+                    "NAME": "Centos7HadoopMaster",
+                    "UUID": "247721b1-1eba-42d5-8b8e-b8c59a478943"
+                },
+                {
+                    "NAME": "CentOS-7-cloudinit",
+                    "UUID": "8030dd9b-f74e-43da-a19d-02688e92a8bf"
+                },
+                {
+                    "NAME": "Ubuntu1404",
+                    "UUID": "b48bb648-ec11-482b-80d7-a063812df02d"
+                },
+                {
+                    "NAME": "Win2k12r2_Sysprep",
+                    "UUID": "b93f7e74-09a2-4ddb-949f-d4e1103ae515"
+                },
+                {
+                    "NAME": "WindowsServer2012V4-Base",
+                    "UUID": "5c925dda-3758-4b29-b368-36f144ac2f4e"
+                },
+                {
+                    "NAME": "WindowsServer2016",
+                    "UUID": "6f6bffad-a745-4dc8-9d78-9ff0266a6f6f"
+                },
+                {
+                    "NAME": "centos74_uefi_legacy_vdisk",
+                    "UUID": "c3f9e245-7f83-4fb4-9374-0faf84fd6d98"
+                },
+                {
+                    "NAME": "SQLServer2014SP2-FullSlipstream-x64-ENU.iso",
+                    "UUID": "ec2c6c08-d330-43b0-9291-eda4619fdf13"
+                },
+                {
+                    "NAME": "centos73_uefi_q35_vdisk.qcow2",
+                    "UUID": "40b2ade7-b30d-4eb7-ae3c-f37454425943"
+                },
+                {
+                    "NAME": "WindowsServer2012V4NGT-Base",
+                    "UUID": "cec3bc02-5153-4053-ab20-282963f689f1"
+                },
+                {
+                    "NAME": "win2019_datacenter_uefi_q35_vdisk.qcow2",
+                    "UUID": "5557f344-62b7-4fce-8ed2-b155ce6d7843"
+                },
+                {
+                    "NAME": "ERA-APP",
+                    "UUID": "6515253e-9d05-4810-972c-637e1120b00c"
+                },
+                {
+                    "NAME": "Centos7HadoopMaster_Test",
+                    "UUID": "99696caa-2627-495a-ad9c-3e61171cc714"
+                },
+                {
+                    "NAME": "centos_disk",
+                    "UUID": "40d837d8-9d63-436d-a590-8585b45455a5"
+                }
+            ],
+            "AHV_VPC": [],
+            "AHV_SUBNET": [
+                {
+                    "NAME": "vlan.800",
+                    "UUID": "e5df1bec-b18f-4cf6-aefc-56800eae651e",
+                    "CLUSTER_NAME": "auto-cluster-prod-1ad3ea1715bb",
+                    "CLUSTER_UUID": "0006014a-98c2-f4b7-7cba-ac1f6b6f97d8",
+                    "VPC_NAME": null,
+                    "VPC_UUID": null
+                },
+                {
+                    "NAME": "vlan1211",
+                    "UUID": "3f8d7703-ab74-4eb4-979e-ad250988882d",
+                    "CLUSTER_NAME": "auto-cluster-prod-1ad3ea1715bb",
+                    "CLUSTER_UUID": "0006014a-98c2-f4b7-7cba-ac1f6b6f97d8",
+                    "VPC_NAME": null,
+                    "VPC_UUID": null
+                },
+                {
+                    "NAME": "vlan_static",
+                    "UUID": "641b0355-d469-45aa-a557-9dc0a6b70102",
+                    "CLUSTER_NAME": "auto-cluster-prod-1ad3ea1715bb",
+                    "CLUSTER_UUID": "0006014a-98c2-f4b7-7cba-ac1f6b6f97d8",
+                    "VPC_NAME": null,
+                    "VPC_UUID": null
+                }
+            ]
+        }
+    },
+    "PROVIDERS": {
+        "206d8bb3-c749-4a5c-a256-6f5fc891e90d": {
+            "NAME": "AzureVault_Cred_Provider",
+            "RESOURCE_TYPE": [
+                {
+                    "NAME": "AzureVault_Cred_Provider",
+                    "UUID": "d89da33a-249d-4acc-a7a8-0d62c0d56ccd"
+                }
+            ]
+        },
+        "c7bf6cdf-bde4-4b1e-adc6-b90f61124527": {
+            "NAME": "HashiCorpVault_Cred_Provider",
+            "RESOURCE_TYPE": [
+                {
+                    "NAME": "HashiCorpVault_Cred_Provider",
+                    "UUID": "7d9b809f-32b2-4aec-86a8-3df819c701fd"
+                }
+            ]
+        },
+        "ed2da1ba-b271-4546-a35e-725f161f01e5": {
+            "NAME": "NDB",
+            "RESOURCE_TYPE": [
+                {
+                    "NAME": "Cluster",
+                    "UUID": "fd8e365c-d0a6-4a6b-8f6c-5cd62d340cfb"
+                },
+                {
+                    "NAME": "Postgres Database Instance",
+                    "UUID": "eeca36bc-9c1e-4686-8252-0423b3c28d82"
+                },
+                {
+                    "NAME": "Tag",
+                    "UUID": "8d2ceb0a-e3e8-4818-92f1-a6e2e65f4fe4"
+                },
+                {
+                    "NAME": "Profile",
+                    "UUID": "4cf65abd-f8f7-43ab-b1bf-86181ffc3eb4"
+                },
+                {
+                    "NAME": "Snapshot",
+                    "UUID": "484d8183-7d2e-4b2d-a636-fb1efe1bf84e"
+                },
+                {
+                    "NAME": "SLA",
+                    "UUID": "3b167fec-915d-46d0-90fb-9434c9af4713"
+                },
+                {
+                    "NAME": "Time Machine",
+                    "UUID": "1ac8ed42-18fc-4023-869c-a5d98a83642b"
+                }
+            ]
+        }
+    },
+    "METADATA": {
+        "PROJECT": {
+            "test_snapshot_policy_project": "6a11cbf0-6bf8-4272-a38a-5cc10e233bb8",
+            "test_dyn_cred_project": "ff69c50e-d509-4978-935e-59d8ef74fc21",
+            "test_quota_project": "940791c7-0708-439b-86c7-b818a38c2731",
+            "test_approval_policy_rbac": "8dd6be75-3047-405c-a0fe-b1f386933fc3",
+            "test_approval_policy": "d28afd05-d95d-42ee-bb9a-fdd5e5db3713",
+            "rbac_bp_test_project": "6f503b5e-c500-4bbe-ae6d-8c962f898113",
+            "test_vmw_snapshot_policy_project": "3bf3262f-3c3e-4abe-a4b2-8d894c9575f9",
+            "default": "4a883cf7-9c4b-47d1-a9d7-d0466a439f9b"
+        },
+        "ACCOUNT": {
+            "AzureVault_Cred_Provider": "f1f1be54-2338-4db6-8035-1851197b8ac4",
+            "HashiCorpVault_Cred_Provider": "4dc36e38-1cba-49aa-bd0b-31b858f321c8",
+            "vmware_second_cloud6cf163fccaa9": "e136ba53-f163-4c92-8032-74ee799d320b",
+            "vmware_cloud60a484003884": "f0c261ea-fb50-493d-a6fe-32a4a18f554f",
+            "k8_cloud171928d351f1": "32c957fc-231f-40f8-ac6f-ac44c55dd275",
+            "gcp_cloud8061c6026716": "a3a8267a-f380-4440-a912-c47178d3595a",
+            "azure_primary_cloudc38dcaf30690": "01541e60-f529-46e9-ae9e-d7827f9e9679",
+            "aws_cloud2efadae324dc": "8569cf12-5e2e-48f6-b34e-0a2b1b2b4f70",
+            "multipc_account": "c0b9e702-93b0-aa65-7151-70453a22fefc",
+            "NTNX_LOCAL_AZ": "57fffea1-ab1f-4d61-b23d-a405547e8295"
+        }
+    }
+}

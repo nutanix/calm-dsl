@@ -27,6 +27,7 @@ class CACHE:
         POLICY_EVENT = "policy_event"
         POLICY_ACTION_TYPE = "policy_action_type"
         POLICY_ATTRIBUTES = "policy_attributes"
+        APP_PROTECTION_POLICY = "app_protection_policy"
 
     API_ENTITY_KIND_MAP = {
         "cluster": ENTITY.AHV_CLUSTER,

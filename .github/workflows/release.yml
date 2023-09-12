@@ -1,11 +1,6 @@
 name: Update release containers
 on:
-  push:
-    branches:
-      - 'release/**'
-  pull_request:
-    branches:
-      - 'release/**'
+  workflow_dispatch
 
 jobs:
   build:

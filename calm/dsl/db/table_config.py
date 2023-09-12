@@ -887,7 +887,7 @@ class AhvClustersCache(CacheTableBase):
         try:
             if pe_account_uuid:
                 entity = super().get(
-                    cls.uuid == uuid, cls.pe_account == pe_account_uuid
+                    cls.uuid == uuid, cls.pe_account_uuid == pe_account_uuid
                 )
             else:
                 entity = super().get(cls.uuid == uuid)
@@ -1890,7 +1890,7 @@ class ProjectCache(CacheTableBase):
 
 
 class EnvironmentCache(CacheTableBase):
-    __cache_type__ = "environment"
+    __cache_type__ = CACHE.ENTITY.ENVIRONMENT
     feature_min_version = "2.7.0"
     is_policy_required = False
     name = CharField()
@@ -2878,7 +2878,7 @@ class AhvNetworkFunctionChain(CacheTableBase):
 
 
 class AppProtectionPolicyCache(CacheTableBase):
-    __cache_type__ = "app_protection_policy"
+    __cache_type__ = CACHE.ENTITY.APP_PROTECTION_POLICY
     feature_min_version = "3.3.0"
     is_policy_required = False
     name = CharField()

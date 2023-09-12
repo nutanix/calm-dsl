@@ -1,0 +1,443 @@
+{
+    "AHV": {
+        "IMAGES": {
+            "DISK": {
+                "CENTOS_HADOOP_MASTER": "Centos7HadoopMaster",
+                "CENTOS_HADOOP_SLAVE": "Centos7HadoopSlave",
+                "CETNOS_BASE": "Centos7-Base",
+                "UBUNTU": "Ubuntu1404",
+                "CENTOS_7_CLOUD_INIT": "CentOS-7-cloudinit",
+                "WINDOWS_SYS_PREP_IMAGE": "Win2k12r2_Sysprep",
+                "WINDOWS_SERVER_2016": "WindowsServer2016",
+                "CENTOS_UEFI_LEGACY_VDISK": "centos74_uefi_legacy_vdisk"
+            },
+            "CD_ROM": {
+                "SQL_SERVER_2014_x64": "SQLServer2014SP2-FullSlipstream-x64-ENU.iso"
+            }
+        },
+        "NETWORK": {
+            "VLAN1211": "vlan1211",
+            "VLAN800": "vlan.800"
+        },
+        "CREDS": {
+            "LINUX": {
+                "NAME": "root",
+                "USERNAME": "root",
+                "PASSWORD": "nutanix/4u"
+            },
+            "WINDOWS": {
+                "NAME": "administrator",
+                "USERNAME": "administrator",
+                "PASSWORD": "nutanix/4u"
+            }
+        }
+    },
+    "EXISTING_MACHINE": {
+        "IP_1": "10.46.8.91",
+        "IP_2": "10.46.8.98",
+        "WIN_IP_ADDR": "10.46.8.92",
+        "CREDS": {
+            "LINUX": {
+                "NAME": "root",
+                "USERNAME": "root",
+                "PASSWORD": "nutanix/4u"
+            },
+            "WINDOWS": {
+                "NAME": "administrator",
+                "USERNAME": "administrator",
+                "PASSWORD": "nutanix/4u"
+            }
+        },
+        "PROTOCOL": "http",
+        "PORT": {
+            "SSH": 22,
+            "POWERSHELL": 5985
+        },
+        "CONNECTION_TYPE": {
+            "SSH": "SSH",
+            "POWERSHELL": "POWERSHELL"
+        },
+        "DUMMY_DATA": {
+            "IP_1": "1.1.1.1",
+            "CREDS": {
+                "LINUX": {
+                    "NAME": "name",
+                    "USERNAME": "username",
+                    "PASSWORD": "password"
+                },
+                "WINDOWS": {
+                    "NAME": "name",
+                    "USERNAME": "usernam",
+                    "PASSWORD": "password"
+                }
+            }
+        }
+    },
+    "IS_STRATOS_ENABLED": true,
+    "ACCOUNTS": {
+        "NUTANIX_PC": [
+            {
+                "NAME": "multipc_account",
+                "UUID": "c0b9e702-93b0-aa65-7151-70453a22fefc",
+                "SUBNETS": [
+                    {
+                        "NAME": "vlan.800",
+                        "CLUSTER": "auto_cluster_prod_1a15d4353066",
+                        "CLUSTER_UUID": "000604a0-cf08-7ec6-3c07-ac1f6b6f9780",
+                        "UUID": "9ba820c2-c0ae-48c7-af15-a51aec53b243"
+                    },
+                    {
+                        "NAME": "vlan1211",
+                        "CLUSTER": "auto_cluster_prod_1a15d4353066",
+                        "CLUSTER_UUID": "000604a0-cf08-7ec6-3c07-ac1f6b6f9780",
+                        "UUID": "bcf84c80-0bae-4632-a78c-82e5f32152b3"
+                    }
+                ],
+                "OVERLAY_SUBNETS": []
+            },
+            {
+                "NAME": "NTNX_LOCAL_AZ",
+                "UUID": "57fffea1-ab1f-4d61-b23d-a405547e8295",
+                "SUBNETS": [
+                    {
+                        "NAME": "vlan.800",
+                        "CLUSTER": "auto-cluster-prod-1ad3ea1715bb",
+                        "CLUSTER_UUID": "0006014a-98c2-f4b7-7cba-ac1f6b6f97d8",
+                        "UUID": "e5df1bec-b18f-4cf6-aefc-56800eae651e"
+                    },
+                    {
+                        "NAME": "vlan1211",
+                        "CLUSTER": "auto-cluster-prod-1ad3ea1715bb",
+                        "CLUSTER_UUID": "0006014a-98c2-f4b7-7cba-ac1f6b6f97d8",
+                        "UUID": "3f8d7703-ab74-4eb4-979e-ad250988882d"
+                    },
+                    {
+                        "NAME": "vlan_static",
+                        "CLUSTER": "auto-cluster-prod-1ad3ea1715bb",
+                        "CLUSTER_UUID": "0006014a-98c2-f4b7-7cba-ac1f6b6f97d8",
+                        "UUID": "641b0355-d469-45aa-a557-9dc0a6b70102"
+                    }
+                ],
+                "OVERLAY_SUBNETS": []
+            }
+        ],
+        "CUSTOM_PROVIDER": [
+            {
+                "NAME": "Suman b s",
+                "UUID": "79f28f54-1ed5-4f2b-6f1d-bc6fe50b3c79"
+            },
+            {
+                "NAME": "AzureVault_Cred_Provider",
+                "UUID": "f1f1be54-2338-4db6-8035-1851197b8ac4"
+            },
+            {
+                "NAME": "HashiCorpVault_Cred_Provider",
+                "UUID": "4dc36e38-1cba-49aa-bd0b-31b858f321c8"
+            },
+            {
+                "NAME": "HashiCorpVault_Cred_Provider1",
+                "UUID": "d6b21083-871b-436a-b798-8046c66fda46"
+            },
+            {
+                "NAME": "HashiCorp Vault Sample",
+                "UUID": "31c7a2ce-753a-49ee-bfc4-5290276423fe"
+            }
+        ],
+        "NDB": [
+            {
+                "NAME": "ndb_tests",
+                "UUID": "8bf577d0-1373-0bbc-8935-e87bd925116d"
+            }
+        ],
+        "K8S": [
+            {
+                "NAME": "test_k8s_vailla_updated_account_123321",
+                "UUID": "4679ad5c-2fbe-47f2-ba88-19e3965f6f9b"
+            },
+            {
+                "NAME": "k8_cloud171928d351f1",
+                "UUID": "32c957fc-231f-40f8-ac6f-ac44c55dd275"
+            }
+        ],
+        "VMWARE": [
+            {
+                "NAME": "vmware_second_cloud6cf163fccaa9",
+                "UUID": "e136ba53-f163-4c92-8032-74ee799d320b"
+            },
+            {
+                "NAME": "vmware_cloud60a484003884",
+                "UUID": "f0c261ea-fb50-493d-a6fe-32a4a18f554f"
+            }
+        ],
+        "GCP": [
+            {
+                "NAME": "gcp_second_cloud3a0e3ea83bd2",
+                "UUID": "b0bbb2b2-2c38-4e1f-ba9b-87cda841b8e3"
+            },
+            {
+                "NAME": "gcp_cloud8061c6026716",
+                "UUID": "a3a8267a-f380-4440-a912-c47178d3595a"
+            }
+        ],
+        "AZURE": [
+            {
+                "NAME": "azure_secondary_cloud1c3ff83fc359",
+                "UUID": "fe80b498-69cb-45b1-83a9-ca22cf412782"
+            },
+            {
+                "NAME": "azure_primary_cloudc38dcaf30690",
+                "UUID": "01541e60-f529-46e9-ae9e-d7827f9e9679"
+            }
+        ],
+        "AWS": [
+            {
+                "NAME": "aws_second_cloud_2fc2dda45d34",
+                "UUID": "75133737-93d8-462d-b70b-148923da4a76"
+            },
+            {
+                "NAME": "aws_cloud2efadae324dc",
+                "UUID": "8569cf12-5e2e-48f6-b34e-0a2b1b2b4f70"
+            }
+        ],
+        "NTNX_LOCAL_AZ": {
+            "NAME": "NTNX_LOCAL_AZ",
+            "UUID": "57fffea1-ab1f-4d61-b23d-a405547e8295",
+            "SUBNETS": [
+                {
+                    "NAME": "vlan.800",
+                    "CLUSTER": "auto-cluster-prod-1ad3ea1715bb",
+                    "CLUSTER_UUID": "0006014a-98c2-f4b7-7cba-ac1f6b6f97d8",
+                    "UUID": "e5df1bec-b18f-4cf6-aefc-56800eae651e"
+                },
+                {
+                    "NAME": "vlan1211",
+                    "CLUSTER": "auto-cluster-prod-1ad3ea1715bb",
+                    "CLUSTER_UUID": "0006014a-98c2-f4b7-7cba-ac1f6b6f97d8",
+                    "UUID": "3f8d7703-ab74-4eb4-979e-ad250988882d"
+                },
+                {
+                    "NAME": "vlan_static",
+                    "CLUSTER": "auto-cluster-prod-1ad3ea1715bb",
+                    "CLUSTER_UUID": "0006014a-98c2-f4b7-7cba-ac1f6b6f97d8",
+                    "UUID": "641b0355-d469-45aa-a557-9dc0a6b70102"
+                }
+            ],
+            "OVERLAY_SUBNETS": []
+        }
+    },
+    "USERS": [
+        {
+            "DISPLAY_NAME": "ssptest10",
+            "DIRECTORY": "qa_nucalm_io",
+            "NAME": "ssptest10@qa.nucalm.io",
+            "UUID": "357ac0e8-477d-5fcd-b827-e775b888b821"
+        },
+        {
+            "DISPLAY_NAME": "ssptest1",
+            "DIRECTORY": "qa_nucalm_io",
+            "NAME": "ssptest1@qa.nucalm.io",
+            "UUID": "fa769725-98e3-5bcd-b2cc-1759213807bd"
+        },
+        {
+            "DISPLAY_NAME": "ssptest3",
+            "DIRECTORY": "qa_nucalm_io",
+            "NAME": "ssptest3@qa.nucalm.io",
+            "UUID": "0a8fc689-97d4-5a34-a40a-8d6bbe872dee"
+        },
+        {
+            "DISPLAY_NAME": "sspgroup1user1",
+            "DIRECTORY": "qa_nucalm_io",
+            "NAME": "sspgroup1user1@qa.nucalm.io",
+            "UUID": "b6e614cf-b36f-590b-bf9c-12fb2b260bb1"
+        },
+        {
+            "DISPLAY_NAME": "ssptest4",
+            "DIRECTORY": "qa_nucalm_io",
+            "NAME": "ssptest4@qa.nucalm.io",
+            "UUID": "84a56248-2890-5c3c-9ba5-0470129e9e26"
+        },
+        {
+            "DISPLAY_NAME": "test_a",
+            "DIRECTORY": "SystestAD",
+            "NAME": "test_a@systest.nutanix.com",
+            "UUID": "19eab1eb-2643-5fdd-89a6-353600141f9f"
+        },
+        {
+            "DISPLAY_NAME": "ssptest",
+            "DIRECTORY": "qa_nucalm_io",
+            "NAME": "ssptest@test.com",
+            "UUID": "ca0e0b7a-0956-53c9-a491-57b7524200a3"
+        },
+        {
+            "DISPLAY_NAME": "sspadmin",
+            "DIRECTORY": "qa_nucalm_io",
+            "NAME": "sspadmin@qa.nucalm.io",
+            "UUID": "550f4558-9e1b-526b-8aac-8dc4bf78faec"
+        },
+        {
+            "DISPLAY_NAME": "adminadmin",
+            "DIRECTORY": "SystestAD",
+            "NAME": "admin@systest.nutanix.com",
+            "UUID": "2044a16c-d616-55a4-aef4-e27f404e110f"
+        },
+        {
+            "DISPLAY_NAME": "ssptest2",
+            "DIRECTORY": "qa_nucalm_io",
+            "NAME": "ssptest2@qa.nucalm.io",
+            "UUID": "ac79343f-4b5d-58fc-b40a-984fdc6847d6"
+        }
+    ],
+    "USER_GROUPS": [
+        {
+            "DISPLAY_NAME": "sspgroupqa3",
+            "DIRECTORY": "qa_nucalm_io",
+            "NAME": "cn=sspgroupqa3,cn=users,dc=qa,dc=nucalm,dc=io",
+            "UUID": "1a68d0ea-9048-447b-8d7e-8304b176b6e8"
+        },
+        {
+            "DISPLAY_NAME": "sspgroupqa1",
+            "DIRECTORY": "qa_nucalm_io",
+            "NAME": "cn=sspgroupqa1,cn=users,dc=qa,dc=nucalm,dc=io",
+            "UUID": "fe1ac3f9-9d1f-4e92-8350-c5da81e49e2d"
+        },
+        {
+            "DISPLAY_NAME": "sspgroupqa4",
+            "DIRECTORY": "qa_nucalm_io",
+            "NAME": "cn=sspgroupqa4,cn=users,dc=qa,dc=nucalm,dc=io",
+            "UUID": "cf5b7d85-de74-4664-8dc7-fb96a7e896e3"
+        },
+        {
+            "DISPLAY_NAME": "dnd_approval_group_2",
+            "DIRECTORY": "qa_nucalm_io",
+            "NAME": "cn=dnd_approval_group_2,cn=users,dc=qa,dc=nucalm,dc=io",
+            "UUID": "c733da41-3d5a-4041-85ac-0800e97fed49"
+        },
+        {
+            "DISPLAY_NAME": "dnd_approval_group_1",
+            "DIRECTORY": "qa_nucalm_io",
+            "NAME": "cn=dnd_approval_group_1,cn=users,dc=qa,dc=nucalm,dc=io",
+            "UUID": "23c2786c-50c3-4299-9e7b-3f2a4378f879"
+        },
+        {
+            "DISPLAY_NAME": "sspgroupqa2",
+            "DIRECTORY": "qa_nucalm_io",
+            "NAME": "cn=sspgroupqa2,cn=users,dc=qa,dc=nucalm,dc=io",
+            "UUID": "1ad364a1-cf3b-420d-951a-7f1f9d4dd527"
+        }
+    ],
+    "PROJECTS": {
+        "PROJECT1": {
+            "NAME": "default",
+            "UUID": "4a883cf7-9c4b-47d1-a9d7-d0466a439f9b",
+            "ACCOUNTS": {
+                "VMWARE": [
+                    {
+                        "NAME": "vmware_cloud60a484003884",
+                        "UUID": "f0c261ea-fb50-493d-a6fe-32a4a18f554f"
+                    },
+                    {
+                        "NAME": "vmware_second_cloud6cf163fccaa9",
+                        "UUID": "e136ba53-f163-4c92-8032-74ee799d320b"
+                    }
+                ],
+                "GCP": [
+                    {
+                        "NAME": "gcp_cloud8061c6026716",
+                        "UUID": "a3a8267a-f380-4440-a912-c47178d3595a"
+                    }
+                ],
+                "AZURE": [
+                    {
+                        "NAME": "azure_primary_cloudc38dcaf30690",
+                        "UUID": "01541e60-f529-46e9-ae9e-d7827f9e9679"
+                    }
+                ],
+                "AWS": [
+                    {
+                        "NAME": "aws_cloud2efadae324dc",
+                        "UUID": "8569cf12-5e2e-48f6-b34e-0a2b1b2b4f70"
+                    }
+                ],
+                "K8S": [
+                    {
+                        "NAME": "k8_cloud171928d351f1",
+                        "UUID": "32c957fc-231f-40f8-ac6f-ac44c55dd275"
+                    }
+                ],
+                "NUTANIX_PC": [
+                    {
+                        "NAME": "NTNX_LOCAL_AZ",
+                        "UUID": "57fffea1-ab1f-4d61-b23d-a405547e8295"
+                    },
+                    {
+                        "NAME": "multipc_account",
+                        "UUID": "c0b9e702-93b0-aa65-7151-70453a22fefc"
+                    }
+                ]
+            },
+            "ENVIRONMENTS": [
+                {
+                    "NAME": "test_env6e495e935d7e",
+                    "UUID": "7f9b6256-5bff-41c2-adc7-bd26d6c0e4bf"
+                }
+            ]
+        }
+    },
+    "IS_VPC_ENABLED": false,
+    "VPC_PROJECTS": {
+        "PROJECT1": {}
+    },
+    "VPC_TUNNELS": {},
+    "reportportal": {
+        "run_name": "runname",
+        "run_number": "runnumber",
+        "rerun_tests_type": "rerunteststype",
+        "run_type": "runtype",
+        "token": "authToken"
+    },
+    "IS_POLICY_ENABLED": true,
+    "POLICY_PROJECTS": {
+        "PROJECT1": {
+            "NAME": "test_approval_policy",
+            "UUID": "d28afd05-d95d-42ee-bb9a-fdd5e5db3713",
+            "ACCOUNTS": {
+                "VMWARE": [
+                    {
+                        "NAME": "vmware_cloud60a484003884",
+                        "UUID": "f0c261ea-fb50-493d-a6fe-32a4a18f554f"
+                    }
+                ],
+                "NUTANIX_PC": [
+                    {
+                        "NAME": "NTNX_LOCAL_AZ",
+                        "UUID": "57fffea1-ab1f-4d61-b23d-a405547e8295"
+                    }
+                ],
+                "AWS": [
+                    {
+                        "NAME": "aws_cloud2efadae324dc",
+                        "UUID": "8569cf12-5e2e-48f6-b34e-0a2b1b2b4f70"
+                    }
+                ],
+                "AZURE": [
+                    {
+                        "NAME": "azure_primary_cloudc38dcaf30690",
+                        "UUID": "01541e60-f529-46e9-ae9e-d7827f9e9679"
+                    }
+                ],
+                "GCP": [
+                    {
+                        "NAME": "gcp_cloud8061c6026716",
+                        "UUID": "a3a8267a-f380-4440-a912-c47178d3595a"
+                    }
+                ]
+            },
+            "ENVIRONMENTS": [
+                {
+                    "NAME": "test_env6fae98277ad8",
+                    "UUID": "a1e66720-b0c6-4d90-b0b1-32f5ce01e0d9"
+                }
+            ]
+        }
+    }
+}

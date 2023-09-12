@@ -4,56 +4,68 @@ import pytest
 from calm.dsl.builtins import CalmRefType
 from calm.dsl.builtins import read_local_file
 from calm.dsl.log import get_logging_handle
+from calm.dsl.builtins import read_local_file
+
 
 LOG = get_logging_handle(__name__)
 
 
-DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
-AHV_ACCOUNTS = DSL_CONFIG["ACCOUNTS"]["NUTANIX_PC"]
-DEFAULT_PROJECT = DSL_CONFIG["PROJECTS"].get("PROJECT1", {})
+DSL_CONFIG = json.loads(read_local_file(".tests/config_test.json"))
+ACCOUNTS = DSL_CONFIG["ACCOUNTS"]
+PROJECTS = DSL_CONFIG["PROJECTS"]
+AHV_ACCOUNT_NAME = "NTNX_LOCAL_AZ"
+AHV_ACCOUNT_UUID = DSL_CONFIG["METADATA"]["ACCOUNT"].get(AHV_ACCOUNT_NAME, None)
+DEFAULT_PROJECT_NAME = "default"
+DEFAULT_PROJECT = DSL_CONFIG["METADATA"]["PROJECT"].get(DEFAULT_PROJECT_NAME, None)
 
 
-@pytest.mark.skipif(len(AHV_ACCOUNTS) == 0, reason="No Ahv account on the setup")
+@pytest.mark.skipif(
+    not AHV_ACCOUNT_UUID, reason="No {} account on the setup".format(AHV_ACCOUNT_NAME)
+)
 def test_decompile_subnet():
 
-    subnets = AHV_ACCOUNTS[0].get("SUBNETS", [])
+    subnets = ACCOUNTS.get(AHV_ACCOUNT_UUID, {}).get("AHV_SUBNET", [])
     if not subnets:
-        LOG.warning("Subnet not found")
+        LOG.warning("Subnet not found in {} account".format(AHV_ACCOUNT_NAME))
     else:
         cdict = {"kind": "subnet", "uuid": subnets[0]["UUID"]}
         cls = CalmRefType.decompile(cdict)
         assert cls.name == subnets[0]["NAME"]
-        assert cls.cluster == subnets[0]["CLUSTER"]
-        assert cls.account_uuid == AHV_ACCOUNTS[0]["UUID"]
+        assert cls.cluster == subnets[0]["CLUSTER_NAME"]
+        assert cls.account_uuid == AHV_ACCOUNT_UUID
 
 
-@pytest.mark.skipif(len(AHV_ACCOUNTS) == 0, reason="No Ahv account on the setup")
+@pytest.mark.skipif(
+    not AHV_ACCOUNT_UUID, reason="No {} account on the setup".format(AHV_ACCOUNT_NAME)
+)
 def test_decompile_cluster():
 
-    subnets = AHV_ACCOUNTS[0].get("SUBNETS", [])
-    if not subnets:
-        pytest.skip("No subnets found in {} account".format(AHV_ACCOUNTS[0]["NAME"]))
+    clusters = ACCOUNTS[AHV_ACCOUNT_UUID].get("AHV_CLUSTER", [])
+    if not clusters:
+        pytest.skip("No clusters found in {} account".format(AHV_ACCOUNT_NAME))
     else:
-        cdict = {"kind": "cluster", "uuid": subnets[0]["CLUSTER_UUID"]}
+        cdict = {"kind": "cluster", "uuid": clusters[0]["UUID"]}
         cls = CalmRefType.decompile(cdict)
-        assert cls.name == subnets[0]["CLUSTER"]
-        assert cls.account_name == AHV_ACCOUNTS[0]["NAME"]
+        assert cls.name == clusters[0]["NAME"]
+        assert cls.account_name == AHV_ACCOUNT_NAME
 
 
-@pytest.mark.skipif(len(AHV_ACCOUNTS) == 0, reason="No Ahv account on the setup")
+@pytest.mark.skipif(
+    not AHV_ACCOUNT_UUID, reason="No {} account on the setup".format(AHV_ACCOUNT_NAME)
+)
 def test_decompile_account():
 
-    cdict = {"kind": "account", "uuid": AHV_ACCOUNTS[0]["UUID"]}
+    cdict = {"kind": "account", "uuid": AHV_ACCOUNT_UUID}
     cls = CalmRefType.decompile(cdict)
-    assert cls.name == AHV_ACCOUNTS[0]["NAME"]
+    assert cls.name == AHV_ACCOUNT_NAME
 
 
-@pytest.mark.skipif(not DEFAULT_PROJECT, reason="No Ahv account on the setup")
+@pytest.mark.skipif(not DEFAULT_PROJECT, reason="No default project on the setup")
 def test_decompile_environment():
 
-    envs = DEFAULT_PROJECT.get("ENVIRONMENTS", [])
+    envs = PROJECTS.get(DEFAULT_PROJECT, {}).get("ENVIRONMENTS", [])
     if not envs:
-        pytest.skip("No envs found in {} project".format(DEFAULT_PROJECT["NAME"]))
+        pytest.skip("No envs found in {} project".format(DEFAULT_PROJECT_NAME))
 
     cdict = {
         "kind": "environment",
@@ -61,7 +73,7 @@ def test_decompile_environment():
     }
     cls = CalmRefType.decompile(cdict)
     assert cls.name == envs[0]["NAME"]
-    assert cls.project_name == DEFAULT_PROJECT["NAME"]
+    assert cls.project_name == DEFAULT_PROJECT_NAME
     assert cls.compile() == {
         "kind": "environment",
         "uuid": envs[0]["UUID"],

@@ -2,6 +2,7 @@ import sys
 import pytest
 import logging
 import json
+import os
 
 from pytest_reportportal import RPLogger, RPLogHandler
 from calm.dsl.log import CustomLogging, get_logging_handle
@@ -49,6 +50,10 @@ def pytest_collection_modifyitems(config, items):
         config(obj): pytest config object
         items(list): list of item objects
     """
+
+    if os.environ.get("CALM_DSL_TESTS") == "MOCK":
+        return
+
     DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 
     query_param = {
