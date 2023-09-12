@@ -1,8 +1,6 @@
 name: run pre commit tests
 on:
   workflow_dispatch
-env: 
-
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -28,6 +26,12 @@ jobs:
       - name: Install requirements
         run: |
           make dev
+      - name: Set environment variables
+        shell: bash
+        run: |
+          value="MOCK"
+          echo "CALM_DSL_TESTS=$value" >> $GITHUB_ENV
+          echo "${{ env.CALM_DSL_TESTS }}
       - name: Build test environment
         run: |
           pwd
