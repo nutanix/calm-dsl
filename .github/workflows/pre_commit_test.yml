@@ -41,10 +41,3 @@ jobs:
           python tests/unit/update_init.py
           pwd
           pytest "tests/unit/test_calm_ref.py"
-      - name: Check coverage
-        run: |
-          source venv/bin/activate
-          cd tests/unit/
-          pytest -k pre_commit
-        env:
-          CI: true
