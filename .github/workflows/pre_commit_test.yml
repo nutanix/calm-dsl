@@ -29,8 +29,7 @@ jobs:
       - name: Set environment variables
         shell: bash
         run: |
-          value="MOCK"
-          echo "CALM_DSL_TESTS=$value" >> $GITHUB_ENV
+          echo "CALM_DSL_TESTS=MOCK" >> $GITHUB_ENV
           echo "${{ env.CALM_DSL_TESTS }}
       - name: Build test environment
         run: |
