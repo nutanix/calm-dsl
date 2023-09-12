@@ -52,6 +52,7 @@ def pytest_collection_modifyitems(config, items):
     """
 
     if os.environ.get("CALM_DSL_TESTS") == "MOCK":
+        print("Returning from conftests")
         return
 
     DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
