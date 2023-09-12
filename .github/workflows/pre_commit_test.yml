@@ -41,3 +41,11 @@ jobs:
           python tests/unit/update_init.py
           pwd
           pytest "tests/unit/test_calm_ref.py"
+      - name: Check coverage
+        run: |
+          source venv/bin/activate
+          pytest
+          coverage run -m pytest
+          coverage report --fail-under=80
+        env:
+          CI: true
