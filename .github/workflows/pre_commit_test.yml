@@ -41,3 +41,14 @@ jobs:
           python tests/unit/update_init.py
           pwd
           pytest "tests/unit/test_calm_ref.py"
+      - name: Run Tests and Calculate Coverage
+        run: |
+          pytest -m pre_commit
+          coverage_percentage=$(coverage report -m | awk '/calm\/dsl\/builtins\/models\/calm_ref.py/ {print $6}')
+          echo "Coverage Percentage: $coverage_percentage%"
+          if [ $(echo "$coverage_percentage < 80" | bc -l) -eq 1 ]; then
+            echo "Code coverage is below the threshold (80%). Blocking PR."
+            exit 1
+          fi
+        env:
+          CI: true
