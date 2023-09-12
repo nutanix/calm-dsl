@@ -47,7 +47,8 @@ jobs:
           pytest -m pre_commit
           coverage_percentage=$(coverage report -m | awk '/calm\/dsl\/builtins\/models\/calm_ref.py/ {print $6}')
           echo "Coverage Percentage: $coverage_percentage%"
-          if [ "$coverage_percentage" -lt 80 ]; then
+          coverage=$(echo "$coverage_percentage" | sed 's/%//')
+          if [ "$coverage" -lt 80 ]; then
             echo "Code coverage is below the threshold (80%). Blocking PR."
             exit 1
           fi
