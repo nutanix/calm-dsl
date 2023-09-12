@@ -43,6 +43,7 @@ jobs:
           pytest "tests/unit/test_calm_ref.py"
       - name: Run Tests and Calculate Coverage
         run: |
+          source venv/bin/activate
           pytest -m pre_commit
           coverage_percentage=$(coverage report -m | awk '/calm\/dsl\/builtins\/models\/calm_ref.py/ {print $6}')
           echo "Coverage Percentage: $coverage_percentage%"
