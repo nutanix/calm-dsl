@@ -44,8 +44,12 @@ jobs:
       - name: Check coverage
         run: |
           source venv/bin/activate
-          pytest
-          coverage run -m pre_commit
-          coverage report --fail-under=80
+          pytest -k pre_commit --cov="tests/unit/"
+          coverage_percentage=$(coverage report -m | awk '/tests/unit/ {print $4}')
+          echo "Coverage Percentage: $coverage_percentage%"
+          if [ $(echo "$coverage_percentage < 80" | bc -l) -eq 1 ]; then
+            echo "Code coverage is below the threshold (80%). Blocking PR."
+            exit 1
+          fi
         env:
           CI: true
