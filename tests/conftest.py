@@ -50,7 +50,7 @@ def pytest_collection_modifyitems(config, items):
         config(obj): pytest config object
         items(list): list of item objects
     """
-    print("Inside conftests")
+
     if os.environ.get("CALM_DSL_TESTS") == "MOCK":
         return
 
