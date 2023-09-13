@@ -1,6 +1,11 @@
 name: run pre commit tests
 on:
-  workflow_dispatch
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 jobs:
   build:
     runs-on: ${{ matrix.os }}
