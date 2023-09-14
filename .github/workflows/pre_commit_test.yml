@@ -43,7 +43,8 @@ jobs:
           source venv/bin/activate
           calm --version
           pytest --version
-          python tests/unit/update_init.py
+          make mock-db-location
+          make mock-db
           pwd
           pytest "tests/unit/test_calm_ref.py"
       - name: Run Tests and Calculate Coverage

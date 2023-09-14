@@ -2,15 +2,13 @@ import json
 import pytest
 
 from calm.dsl.builtins import CalmRefType
-from calm.dsl.builtins import read_local_file
+from calm.dsl.builtins import read_file
 from calm.dsl.log import get_logging_handle
-from calm.dsl.builtins import read_local_file
-
 
 LOG = get_logging_handle(__name__)
 
 
-DSL_CONFIG = json.loads(read_local_file(".tests/config_test.json"))
+DSL_CONFIG = json.loads(read_file("~/calm-dsl/config_test.json", 0))
 ACCOUNTS = DSL_CONFIG["ACCOUNTS"]
 PROJECTS = DSL_CONFIG["PROJECTS"]
 AHV_ACCOUNT_NAME = "NTNX_LOCAL_AZ"
@@ -63,7 +61,6 @@ def test_decompile_account():
     assert cls.name == AHV_ACCOUNT_NAME
 
 
-@pytest.mark.pre_commit
 @pytest.mark.skipif(not DEFAULT_PROJECT, reason="No default project on the setup")
 def test_decompile_environment():
 
