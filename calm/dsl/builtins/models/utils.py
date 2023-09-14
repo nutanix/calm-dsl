@@ -25,7 +25,7 @@ def read_file(filename, depth=1):
 
     if not file_exists(file_path):
         LOG.debug("file {} not found at location {}".format(filename, file_path))
-        raise ValueError("file {} not found".format(filename))
+        raise ValueError("file {} not found in {}".format(filename, file_path))
 
     with open(file_path, "r") as data:
         return data.read()
