@@ -8,7 +8,7 @@ from calm.dsl.log import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-DSL_CONFIG = json.loads(read_file("./config_test.json", 0))
+DSL_CONFIG = json.loads(read_file("~/config_test.json", 0))
 ACCOUNTS = DSL_CONFIG["ACCOUNTS"]
 PROJECTS = DSL_CONFIG["PROJECTS"]
 AHV_ACCOUNT_NAME = "NTNX_LOCAL_AZ"
