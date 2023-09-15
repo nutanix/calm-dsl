@@ -34,14 +34,10 @@ jobs:
           echo "${{ env.CALM_DSL_TESTS }}"
       - name: Build test environment
         run: |
-          pwd
           source venv/bin/activate
           calm --version
           pytest --version
-          cd tests/mock
-          pwd
-          make mock-db-location
-          make mock-db
+          cd tests/mock && make mock-db-location && make mock-db
       - name: Run Tests and Calculate Coverage
         run: |
           source venv/bin/activate
