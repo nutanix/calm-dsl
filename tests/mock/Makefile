@@ -5,7 +5,7 @@ load-db-data:
 	# get_data_from_file.py False -> to not load data from db
 	../../venv/bin/python3 get_data_from_db.py False
 
-db-location:
+mock-db-location:
 	# Create and point init.ini to mock db location.
 	../../venv/bin/python3 mock_dsl_config.py True
 
