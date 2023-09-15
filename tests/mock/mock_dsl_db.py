@@ -11,6 +11,7 @@ from constants import MockConstants
 
 LOG = get_logging_handle(__name__)
 
+
 class BaseMockCache:
     __cache_type__ = None
     tables = {}
@@ -48,7 +49,9 @@ class BaseMockCache:
         """
         reads cache data from the file
         """
-        cache_data_location = os.path.join(os.path.dirname(os.path.abspath(__file__)), MockConstants.CACHE_FILE_NAME)
+        cache_data_location = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), MockConstants.CACHE_FILE_NAME
+        )
         with open(cache_data_location, "r") as file:
             cache_data = json.loads(file.read())
 

@@ -10,7 +10,11 @@ from tests.mock.constants import MockConstants
 LOG = get_logging_handle(__name__)
 
 directory_parts = os.path.abspath(__file__).split(os.path.sep)
-test_config_location = os.path.join(os.path.sep.join(directory_parts[:-3]), MockConstants.MOCK_LOCATION, MockConstants.TEST_CONFIG_FILE_NAME)
+test_config_location = os.path.join(
+    os.path.sep.join(directory_parts[:-3]),
+    MockConstants.MOCK_LOCATION,
+    MockConstants.TEST_CONFIG_FILE_NAME,
+)
 
 DSL_CONFIG = json.loads(read_file(test_config_location, 0))
 ACCOUNTS = DSL_CONFIG["ACCOUNTS"]

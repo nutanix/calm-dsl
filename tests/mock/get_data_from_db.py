@@ -17,6 +17,7 @@ cache_data_dict = {}
 filtered_cache_data = {}
 test_config_data = {}
 
+
 def filter_project_data(entity_data, **kwargs):
     """
 
@@ -470,10 +471,14 @@ def load_data():
         get_data(entity_type)
 
     filter_data()
-    
+
     directory_parts = os.path.abspath(__file__).split(os.path.sep)
-    cache_data_location = os.path.join(os.path.sep.join(directory_parts[:-1]), MockConstants.CACHE_FILE_NAME)
-    test_config_location = os.path.join(os.path.sep.join(directory_parts[:-1]), MockConstants.TEST_CONFIG_FILE_NAME)
+    cache_data_location = os.path.join(
+        os.path.sep.join(directory_parts[:-1]), MockConstants.CACHE_FILE_NAME
+    )
+    test_config_location = os.path.join(
+        os.path.sep.join(directory_parts[:-1]), MockConstants.TEST_CONFIG_FILE_NAME
+    )
 
     with open(cache_data_location, "w+") as outfile:
         outfile.write(json.dumps(filtered_cache_data, default=str, indent=4))
