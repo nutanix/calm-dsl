@@ -301,6 +301,8 @@ def filter_provider_data(entity_data, **kwargs):
         provider_name = each_data.get("name", None)
         if provider_name in PROVIDERS:
             provider_uuid = each_data.get("uuid", None)
+            kwargs.get("provider_name_uuid_map")[provider_name] = provider_uuid
+
             kwargs.get("provider_connection")[provider_uuid] = {}
             kwargs.get("provider_connection")[provider_uuid]["NAME"] = provider_name
             kwargs.get("provider_connection")[provider_uuid]["RESOURCE_TYPE"] = []
@@ -352,6 +354,7 @@ def filter_data():
 
     project_name_uuid_map = {}
     rev_account_name_uuid_map = {}
+    provider_name_uuid_map = {}
     entities_connection = {}
     account_connection = {}
     provider_connection = {}
@@ -367,6 +370,7 @@ def filter_data():
         "provider_connection": provider_connection,
         "project_uuids": project_uuids,
         "all_account_uuids": all_account_uuids,
+        "provider_name_uuid_map": provider_name_uuid_map,
     }
 
     project_data = cache_data_dict[CACHE.ENTITY.PROJECT]
@@ -436,6 +440,7 @@ def filter_data():
         "METADATA": {
             "PROJECT": project_name_uuid_map,
             "ACCOUNT": {v: k for k, v in rev_account_name_uuid_map.items()},
+            "PROVIDER": provider_name_uuid_map,
         },
     }
 

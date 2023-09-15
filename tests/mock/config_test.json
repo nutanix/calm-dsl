@@ -629,6 +629,11 @@
             "aws_cloud2efadae324dc": "8569cf12-5e2e-48f6-b34e-0a2b1b2b4f70",
             "multipc_account": "c0b9e702-93b0-aa65-7151-70453a22fefc",
             "NTNX_LOCAL_AZ": "57fffea1-ab1f-4d61-b23d-a405547e8295"
+        },
+        "PROVIDER": {
+            "AzureVault_Cred_Provider": "206d8bb3-c749-4a5c-a256-6f5fc891e90d",
+            "HashiCorpVault_Cred_Provider": "c7bf6cdf-bde4-4b1e-adc6-b90f61124527",
+            "NDB": "ed2da1ba-b271-4546-a35e-725f161f01e5"
         }
     }
 }

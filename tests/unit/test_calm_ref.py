@@ -19,11 +19,13 @@ test_config_location = os.path.join(
 DSL_CONFIG = json.loads(read_file(test_config_location, 0))
 ACCOUNTS = DSL_CONFIG["ACCOUNTS"]
 PROJECTS = DSL_CONFIG["PROJECTS"]
+PROVIDERS = DSL_CONFIG["PROVIDERS"]
 AHV_ACCOUNT_NAME = "NTNX_LOCAL_AZ"
 AHV_ACCOUNT_UUID = DSL_CONFIG["METADATA"]["ACCOUNT"].get(AHV_ACCOUNT_NAME, None)
-DEFAULT_PROJECT_NAME = "default"
-DEFAULT_PROJECT = DSL_CONFIG["METADATA"]["PROJECT"].get(DEFAULT_PROJECT_NAME, None)
-
+PROJECT_NAME = "default"
+PROJECT_UUID = DSL_CONFIG["METADATA"]["PROJECT"].get(PROJECT_NAME, None)
+PROVIDER_NAME = "AzureVault_Cred_Provider"
+PROVIDER_UUID = DSL_CONFIG["METADATA"]["PROVIDER"].get(PROVIDER_NAME, None)
 
 @pytest.mark.pre_commit
 @pytest.mark.skipif(
@@ -70,12 +72,12 @@ def test_decompile_account():
 
 
 @pytest.mark.pre_commit
-@pytest.mark.skipif(not DEFAULT_PROJECT, reason="No default project on the setup")
+@pytest.mark.skipif(not PROJECT_UUID, reason="No default project on the setup")
 def test_decompile_environment():
 
-    envs = PROJECTS.get(DEFAULT_PROJECT, {}).get("ENVIRONMENTS", [])
+    envs = PROJECTS.get(PROJECT_UUID, {}).get("ENVIRONMENTS", [])
     if not envs:
-        pytest.skip("No envs found in {} project".format(DEFAULT_PROJECT_NAME))
+        pytest.skip("No envs found in {} project".format(PROJECT_NAME))
 
     cdict = {
         "kind": "environment",
@@ -83,9 +85,26 @@ def test_decompile_environment():
     }
     cls = CalmRefType.decompile(cdict)
     assert cls.name == envs[0]["NAME"]
-    assert cls.project_name == DEFAULT_PROJECT_NAME
+    assert cls.project_name == PROJECT_NAME
     assert cls.compile() == {
         "kind": "environment",
         "uuid": envs[0]["UUID"],
         "name": envs[0]["NAME"],
     }
+
+
+@pytest.mark.pre_commit
+@pytest.mark.skipif(
+    not PROVIDER_UUID, reason="No {} on the setup".format(PROVIDER_NAME)
+)
+def test_decompile_resource_type():
+
+    resources = PROVIDERS.get(PROVIDER_UUID, {}).get("RESOURCE_TYPE", [])
+
+    if not resources:
+        pytest.skip("No resource found in provider {}".format(PROVIDER_NAME))
+    else:
+        cdict = {"kind": "resource_type", "uuid": resources[0]["UUID"]}
+        cls = CalmRefType.decompile(cdict)
+
+    assert cls.name == PROVIDER_NAME
