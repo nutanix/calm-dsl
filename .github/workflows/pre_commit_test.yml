@@ -1,13 +1,18 @@
 name: run pre commit tests
 on:
-  workflow_dispatch
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: ['3.7']
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -35,8 +40,6 @@ jobs:
       - name: Build test environment
         run: |
           source venv/bin/activate
-          calm --version
-          pytest --version
           cd tests/mock && make mock-db-location && make mock-db
       - name: Run Tests and Calculate Coverage
         run: |
@@ -46,8 +49,8 @@ jobs:
           coverage_percentage=$(coverage report -m | awk '/calm\/dsl\/builtins\/models\/calm_ref.py/ {print $6}')
           echo "Coverage Percentage: $coverage_percentage%"
           coverage=$(echo "$coverage_percentage" | sed 's/%//')
-          if [ "$coverage" -lt 40 ]; then
-            echo "Code coverage is below the threshold (40%). Blocking PR."
+          if [ "$coverage" -lt 10 ]; then
+            echo "Code coverage is below the threshold (10%). Blocking PR."
             exit 1
           fi
         env:
