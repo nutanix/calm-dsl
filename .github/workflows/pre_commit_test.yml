@@ -39,6 +39,7 @@ jobs:
           calm --version
           pytest --version
           cd tests/mock
+          pwd
           make mock-db-location
           make mock-db
           pwd
