@@ -7,12 +7,9 @@ from calm.dsl.constants import CACHE
 from calm.dsl.db.table_config import CacheTableBase, VersionTable
 from peewee import OperationalError, IntegrityError
 from calm.dsl.db import init_db_handle
+from constants import MockConstants
 
 LOG = get_logging_handle(__name__)
-
-ROOT_DB_LOCATION = ""
-CACHE_FILE_NAME = "cache_data.json"
-
 
 class BaseMockCache:
     __cache_type__ = None
@@ -51,8 +48,7 @@ class BaseMockCache:
         """
         reads cache data from the file
         """
-
-        cache_data_location = os.path.join(ROOT_DB_LOCATION, CACHE_FILE_NAME)
+        cache_data_location = os.path.join(os.path.dirname(os.path.abspath(__file__)), MockConstants.CACHE_FILE_NAME)
         with open(cache_data_location, "r") as file:
             cache_data = json.loads(file.read())
 

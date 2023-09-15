@@ -12,21 +12,10 @@ from constants import (
     SERIALISED_KEYS,
 )
 from calm.dsl.db.table_config import CacheTableBase
-from calm.dsl.log import get_logging_handle
-
-LOG = get_logging_handle(__name__)
-
-ROOT_DB_LOCATION = "calm/dsl/db"
 
 cache_data_dict = {}
 filtered_cache_data = {}
 test_config_data = {}
-
-
-def db_location(filename):
-    file_path = os.path.join(ROOT_DB_LOCATION, filename)
-    return file_path
-
 
 def filter_project_data(entity_data, **kwargs):
     """
@@ -481,21 +470,24 @@ def load_data():
         get_data(entity_type)
 
     filter_data()
-    LOG.info("Filtered data successfully")
-    with open(MockConstants.CACHE_FILE_NAME, "w") as outfile:
+    
+    directory_parts = os.path.abspath(__file__).split(os.path.sep)
+    cache_data_location = os.path.join(os.path.sep.join(directory_parts[:-1]), MockConstants.CACHE_FILE_NAME)
+    test_config_location = os.path.join(os.path.sep.join(directory_parts[:-1]), MockConstants.TEST_CONFIG_FILE_NAME)
+
+    with open(cache_data_location, "w+") as outfile:
         outfile.write(json.dumps(filtered_cache_data, default=str, indent=4))
 
-    with open(MockConstants.TEST_CONFIG_FILE_NAME, "w") as outfile:
+    with open(test_config_location, "w+") as outfile:
         outfile.write(json.dumps(test_config_data, default=str, indent=4))
 
 
 if __name__ == "__main__":
     is_data_loaded = False
-    LOG.info("Started")
+
     if len(sys.argv) > 1:
         is_data_loaded = sys.argv[1]
         is_data_loaded = True if is_data_loaded == "True" else False
-    LOG.info("ww")
+
     if not is_data_loaded:
-        LOG.info("ww")
         load_data()

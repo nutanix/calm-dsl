@@ -2,8 +2,24 @@ from calm.dsl.constants import CACHE
 
 
 class MockConstants:
+    MOCK_LOCATION = "tests/mock"
     CACHE_FILE_NAME = "cache_data.json"
     TEST_CONFIG_FILE_NAME = "config_test.json"
+
+    dsl_context = {
+        "host": "1.1.1.1",
+        "port": "1",
+        "username": "usr",
+        "password": "pswd",
+        "project_name": "default",
+        "log_level": "INFO",
+        "policy_status": True,
+        "approval_policy_status": True,
+        "stratos_status": True,
+        "retries_enabled": True,
+        "connection_timeout": 5,
+        "read_timeout": 30,
+    }
 
 
 CONSTANT_ENTITIES = [

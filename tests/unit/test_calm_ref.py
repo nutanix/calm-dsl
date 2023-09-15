@@ -1,14 +1,18 @@
 import json
 import pytest
+import os
 
 from calm.dsl.builtins import CalmRefType
 from calm.dsl.builtins import read_file
 from calm.dsl.log import get_logging_handle
+from tests.mock.constants import MockConstants
 
 LOG = get_logging_handle(__name__)
 
+directory_parts = os.path.abspath(__file__).split(os.path.sep)
+test_config_location = os.path.join(os.path.sep.join(directory_parts[:-3]), MockConstants.MOCK_LOCATION, MockConstants.TEST_CONFIG_FILE_NAME)
 
-DSL_CONFIG = json.loads(read_file("~/config_test.json", 0))
+DSL_CONFIG = json.loads(read_file(test_config_location, 0))
 ACCOUNTS = DSL_CONFIG["ACCOUNTS"]
 PROJECTS = DSL_CONFIG["PROJECTS"]
 AHV_ACCOUNT_NAME = "NTNX_LOCAL_AZ"
@@ -61,6 +65,7 @@ def test_decompile_account():
     assert cls.name == AHV_ACCOUNT_NAME
 
 
+@pytest.mark.pre_commit
 @pytest.mark.skipif(not DEFAULT_PROJECT, reason="No default project on the setup")
 def test_decompile_environment():
 
