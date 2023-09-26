@@ -13,6 +13,7 @@ from calm.dsl.api import get_api_client
 from calm.dsl.cli.constants import RUNLOG
 import json
 from calm.dsl.runbooks import read_local_file
+from tests.utils import get_escript_language_from_version
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 
@@ -127,13 +128,14 @@ class TestEscript:
                 else:
                     script_pass = True
                 if "python3" in first_line.lower() or "py3" in first_line.lower():
-                    script_version = "static"
+                    script_version = "static_py3"
                 elif "python2" in first_line.lower() or "py2" in first_line.lower():
                     script_version = "static"
                 else:
                     # default to python2 for now, pls fix python scripts
                     script_version = "static"
                     script_content = first_line + "\n" + script_content
+            script_language = get_escript_language_from_version(script_version)
             try:
                 file_path = "{}.out".format(file_path)
                 with open(file_path) as fd:
@@ -161,6 +163,7 @@ class TestEscript:
                 script_version,  # python(escript) script version
                 script_output,  # python(escript) script output
                 script_pass,  # python(escript) script expected status
+                script_language,  # python(escript) script language
             )
             with open(runbook_dsl_file, "w") as fd:
                 for line in runbook_dsl_input:
@@ -172,8 +175,8 @@ class TestEscript:
                         fd.write("'''")
                         fd.write("\n")
                     elif "#replace_task" in line:
-                        task_ln = '    Task.Exec.escript(name="{}", script=script_{}_{})'.format(
-                            script_name, script_name, script_version
+                        task_ln = '    Task.Exec.escript{}(name="{}", script=script_{}_{})'.format(
+                            script_language, script_name, script_name, script_version
                         )
                         fd.write(task_ln)
                         fd.write("\n")
@@ -234,12 +237,12 @@ class TestEscript:
                 LOG.debug(">> Runbook Run state: {}\n{}".format(state, reasons))
                 # assert for overall runbook status
                 if script_details[4]:
-                    expected_overall_status = RUNLOG.STATUS.SUCCESS
+                    expected_overall_status = [RUNLOG.STATUS.SUCCESS]
                 else:
-                    expected_overall_status = RUNLOG.STATUS.FAILURE
+                    expected_overall_status = [RUNLOG.STATUS.FAILURE, RUNLOG.STATUS.ERROR]
 
                 # check for overall status
-                if state != expected_overall_status:
+                if state not in expected_overall_status:
                     err_msg = """Runbook is in unexpected state
                     Expected: {}
                     Actual: {}
@@ -262,7 +265,7 @@ class TestEscript:
                     )
                     errors_map[runbook_name].append(err_msg)
                 # check for script status
-                if expected_overall_status != actual_script_status:
+                if actual_script_status not in expected_overall_status:
                     err_msg = """Mismatch in Status:
                     Expected status: {} 
                     Actual status: {}

@@ -512,7 +512,7 @@ def add_provider_constants(config):
                 "client_id_a": "VAULT_AZURE_CLIENT_ID",
                 "client_key": "VAULT_AZURE_CLIENT_KEY",
                 "subscription_id": "VAULT_AZURE_SUBSCRIPTION_ID",
-                "tenant_id": "VAULT_AZURE_TENANT_ID",
+                "tenant_id_a": "VAULT_AZURE_TENANT_ID",
             },
             "aws": {
                 "accessKey": "VAULT_AWS_ACCESS_KEY",

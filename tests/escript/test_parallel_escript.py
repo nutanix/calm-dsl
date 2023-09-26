@@ -10,7 +10,7 @@ from calm.dsl.cli import runbooks
 from calm.dsl.api import get_api_client
 from calm.dsl.cli.constants import RUNLOG
 from calm.dsl.runbooks import read_local_file
-from tests.utils import poll_runlog_status
+from tests.utils import poll_runlog_status, get_escript_language_from_version
 
 
 LOG = get_logging_handle(__name__)
@@ -35,15 +35,22 @@ runbook_dsl_input = [
 
 
 def dsl_file_udpate(
-    runbook_dsl_file, escript, escript_version="static", parallel_count=10
+    runbook_dsl_file,
+    escript,
+    escript_version="static",
+    parallel_count=10,
 ):
     escript_name = escript.split(".")[0]
+    escript_language = get_escript_language_from_version(escript_version)
     with open(runbook_dsl_file, "w") as fd:
         for line in runbook_dsl_input:
             if "#replace_task" in line:
                 for i in range(parallel_count):
-                    task_ln = '        with branch(p):\n            Task.Exec.escript(name="{}_{}",filename="{}")'.format(
-                        escript_name, i + 1, os.path.join(ESCRIPT_BASE_PATH, escript)
+                    task_ln = '        with branch(p):\n            Task.Exec.escript{}(name="{}_{}",filename="{}")'.format(
+                        escript_language,
+                        escript_name,
+                        i + 1,
+                        os.path.join(ESCRIPT_BASE_PATH, escript),
                     )
                     fd.write(task_ln)
                     fd.write("\n")
@@ -62,8 +69,7 @@ def get_escript_version_status(escript):
         else:
             script_pass = RUNLOG.STATUS.SUCCESS
         if "python3" in first_line.lower() or "py3" in first_line.lower():
-            # FIXME: chnage once python3 support lands
-            script_version = "static"
+            script_version = "static_py3"
         elif "python2" in first_line.lower() or "py2" in first_line.lower():
             script_version = "static"
         else:

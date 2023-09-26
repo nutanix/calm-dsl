@@ -214,6 +214,7 @@ class TASKS:
         POWERSHELL = "npsscript"
         SHELL = "sh"
         ESCRIPT = "static"
+        ESCRIPT_PY3 = "static_py3"
 
     class STATES:
         ACTIVE = "ACTIVE"

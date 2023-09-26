@@ -82,7 +82,7 @@ def _delete_task(task_names):
     "task_file",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     required=True,
-    help="Path of task file (.json, .sh, .escript, .ps1)",
+    help="Path of task file (.json, .sh, .escript, .escript.py2, .escript.py3, .ps1)",
 )
 @click.option("--name", "-n", default=None, help="Task Library item name (Optional)")
 @click.option(
@@ -108,17 +108,22 @@ def _import_task(task_file, name, description, out_vars, force):
 
     (-f | --file) supports:\n
 
-    \t.sh       - Shell script file\n
-    \t.escript  - Escript file\n
-    \t.ps1      - Powershell Script File\n
+    \t.sh           - Shell script file\n
+    \t.escript      - Escript file(python2)\n
+    \t.escript.py2  - Escript file(python2)\n
+    \t.escript.py3  - Escript file(python3)\n
+    \t.ps1          - Powershell Script File\n
 
     Note:\n
         To import Set-Variable task, use --out-vars="OUT1,OUT2".
+        To import escript file with specific version, use file extension as .escript, .escript.py2; .escript.py3
 
     Examples:\n
     calm import library task --name="Install IIS" -f Install_IIS.ps1\n
     calm import library task -f Install_Docker.sh\n
-    calm import library task -f Install_Docker.sh --out-vars="IP_ADDRESS,PORT" """
+    calm import library task -f Install_Docker.sh --out-vars="IP_ADDRESS,PORT"\n
+    calm import library task --name="Escript-RUtil-Py2" -f request_util.escript.py2\n
+    calm import library task --name="Escript-RUtil-Py3" -f request_util.escript.py3\n"""
 
     import_task(task_file, name, description, out_vars, force)
 

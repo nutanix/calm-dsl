@@ -282,3 +282,19 @@ def poll_runlog_status(
         time.sleep(poll_interval)
 
     return state, reasons or []
+
+
+def get_escript_language_from_version(script_version="static"):
+    """Gets escript language for dsl based on escript_version
+    Args:
+        script_version(str): Escript version/type: static or static_Py3
+    Returns:
+        script_language(str): Escript DSL specific language:
+            python2- '', '.py2';
+            python3- '.py3';
+    """
+    if script_version == "static_py3":
+        script_language = ".py3"
+    else:
+        script_language = ""  # we can use .py2 as well for static versions
+    return script_language

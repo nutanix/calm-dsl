@@ -438,7 +438,13 @@ def exec_task_ssh(
 
 
 def exec_task_escript(
-    script=None, filename=None, name=None, target=None, depth=2, tunnel=None, **kwargs
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    depth=2,
+    tunnel=None,
+    **kwargs,
 ):
     return _exec_create(
         "static",
@@ -447,7 +453,29 @@ def exec_task_escript(
         name=name,
         target=target,
         target_endpoint=None,
-        depth=depth,
+        depth=depth + 1,
+        tunnel=tunnel,
+        **kwargs,
+    )
+
+
+def exec_task_escript_py3(
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    depth=2,
+    tunnel=None,
+    **kwargs,
+):
+    return _exec_create(
+        "static_py3",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        target_endpoint=None,
+        depth=depth + 1,
         tunnel=tunnel,
         **kwargs,
     )
@@ -593,7 +621,6 @@ def decision_task_escript(
     filename=None,
     name=None,
     target=None,
-    cred=None,
     depth=2,
     tunnel=None,
     **kwargs,
@@ -605,7 +632,6 @@ def decision_task_escript(
         filename(str): file which has script
         name(str): Task name
         target(Entity/Ref): Entity/Ref that is the target for this task
-        cred (Entity/Ref): Entity/Ref that is the cred for this task
         depth (int): Number of times to look back in call stack, will be used to locate filename specified
         tunnel (ref.Tunnel): Tunnel reference
         :keyword inherit_target (bool): True if target needs to be inherited.
@@ -618,8 +644,41 @@ def decision_task_escript(
         filename=filename,
         name=name,
         target=target,
-        cred=cred,
-        depth=depth,
+        depth=depth + 1,
+        tunnel=tunnel,
+        **kwargs,
+    )
+
+
+def decision_task_escript_py3(
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    depth=2,
+    tunnel=None,
+    **kwargs,
+):
+    """
+    This function is used to create decision task with escript(python3) target
+    Args:
+        script(str): Script which needs to be run
+        filename(str): file which has script
+        name(str): Task name
+        target(Entity/Ref): Entity/Ref that is the target for this task
+        depth (int): Number of times to look back in call stack, will be used to locate filename specified
+        tunnel (ref.Tunnel): Tunnel reference
+        :keyword inherit_target (bool): True if target needs to be inherited.
+    Returns:
+        obj: Decision task object
+    """
+    return _decision_create(
+        "static_py3",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        depth=depth + 1,
         tunnel=tunnel,
         **kwargs,
     )
@@ -694,7 +753,6 @@ def set_variable_task_escript(
         filename(str): file which has script
         name(str): Task name
         target(Entity/Ref): Entity/Ref that is the target for this task
-        cred (Entity/Ref): Entity/Ref that is the cred for this task
         depth (int): Number of times to look back in call stack, will be used to locate filename specified
         tunnel (Ref.Tunnel): Tunnel reference
         :keyword inherit_target (bool): True if target needs to be inherited.
@@ -702,6 +760,41 @@ def set_variable_task_escript(
         obj: Set variable task object
     """
     task = exec_task_escript(
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        depth=depth,
+        tunnel=tunnel,
+        **kwargs,
+    )
+    return _set_variable_create(task, variables)
+
+
+def set_variable_task_escript_py3(
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    variables=None,
+    depth=3,
+    tunnel=None,
+    **kwargs,
+):
+    """
+    This function is used to create set variable task with escript(python3) target
+    Args:
+        script(str): Script which needs to be run
+        filename(str): file which has script
+        name(str): Task name
+        target(Entity/Ref): Entity/Ref that is the target for this task
+        depth (int): Number of times to look back in call stack, will be used to locate filename specified
+        tunnel (Ref.Tunnel): Tunnel reference
+        :keyword inherit_target (bool): True if target needs to be inherited.
+    Returns:
+        obj: Set variable task object
+    """
+    task = exec_task_escript_py3(
         script=script,
         filename=filename,
         name=name,
@@ -748,6 +841,81 @@ def set_variable_task_powershell(
         **kwargs,
     )
     return _set_variable_create(task, variables)
+
+
+class EscriptTaskType:
+    class ExecTask:
+        def __new__(
+            cls,
+            script=None,
+            filename=None,
+            name=None,
+            target=None,
+            depth=2,
+            tunnel=None,
+            **kwargs,
+        ):
+            return exec_task_escript(
+                script=script,
+                filename=filename,
+                name=name,
+                target=target,
+                depth=depth,
+                tunnel=tunnel,
+                **kwargs,
+            )
+
+        py2 = exec_task_escript
+        py3 = exec_task_escript_py3
+
+    class DecisionTask:
+        def __new__(
+            cls,
+            script=None,
+            filename=None,
+            name=None,
+            target=None,
+            depth=2,
+            tunnel=None,
+            **kwargs,
+        ):
+            return decision_task_escript(
+                script=script,
+                filename=filename,
+                name=name,
+                target=target,
+                depth=depth,
+                tunnel=tunnel,
+                **kwargs,
+            )
+
+        py2 = decision_task_escript
+        py3 = decision_task_escript_py3
+
+    class SetVariableTask:
+        def __new__(
+            cls,
+            script=None,
+            filename=None,
+            name=None,
+            target=None,
+            variables=None,
+            depth=3,
+            tunnel=None,
+            **kwargs,
+        ):
+            return set_variable_task_escript(
+                script=script,
+                filename=filename,
+                name=name,
+                target=target,
+                depth=depth,
+                tunnel=tunnel,
+                **kwargs,
+            )
+
+        py2 = set_variable_task_escript
+        py3 = set_variable_task_escript_py3
 
 
 def http_task_on_endpoint(
@@ -1545,7 +1713,7 @@ class BaseTask:
     class SetVariable:
         ssh = set_variable_task_ssh
         powershell = set_variable_task_powershell
-        escript = set_variable_task_escript
+        escript = EscriptTaskType.SetVariableTask
 
     class Delay:
         def __new__(cls, delay_seconds=None, name=None, target=None):
@@ -1563,7 +1731,7 @@ class CalmTask(BaseTask):
 
         ssh = exec_task_ssh
         powershell = exec_task_powershell
-        escript = exec_task_escript
+        escript = EscriptTaskType.ExecTask
 
     class ConfigExec:
         def __new__(cls, config, name=None):
@@ -1582,7 +1750,7 @@ class RunbookTask(BaseTask):
 
         ssh = decision_task_ssh
         powershell = decision_task_powershell
-        escript = decision_task_escript
+        escript = EscriptTaskType.DecisionTask
 
     class Exec:
         def __new__(cls, *args, **kwargs):
@@ -1590,7 +1758,7 @@ class RunbookTask(BaseTask):
 
         ssh = exec_task_ssh_runbook
         powershell = exec_task_powershell_runbook
-        escript = exec_task_escript
+        escript = EscriptTaskType.ExecTask
 
     class ResourceTypeOperationTask:
         def __new__(
