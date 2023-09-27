@@ -909,6 +909,7 @@ class EscriptTaskType:
                 filename=filename,
                 name=name,
                 target=target,
+                variables=variables,
                 depth=depth,
                 tunnel=tunnel,
                 **kwargs,

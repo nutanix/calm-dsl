@@ -239,7 +239,10 @@ class TestEscript:
                 if script_details[4]:
                     expected_overall_status = [RUNLOG.STATUS.SUCCESS]
                 else:
-                    expected_overall_status = [RUNLOG.STATUS.FAILURE, RUNLOG.STATUS.ERROR]
+                    expected_overall_status = [
+                        RUNLOG.STATUS.FAILURE,
+                        RUNLOG.STATUS.ERROR,
+                    ]
 
                 # check for overall status
                 if state not in expected_overall_status:
