@@ -93,7 +93,7 @@ def _delete_task(task_names):
     "-v",
     "out_vars",
     default=None,
-    help="Set-variable output variables coma seperated (,) (Optional)",
+    help="Set-variable output variables comma seperated (,) (Optional)",
 )
 @click.option(
     "--force",
