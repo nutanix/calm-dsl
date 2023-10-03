@@ -289,7 +289,7 @@ def _reject_marketplace_runbook(name, version):
     help="Preserve endpoints publishing runbooks to marketplace",
 )
 @click.option(
-    "--existing_markeplace_runbook",
+    "--existing_marketplace_runbook",
     "-e",
     is_flag=True,
     default=False,
@@ -340,7 +340,7 @@ def publish_runbook(
     description,
     with_secrets,
     with_endpoints,
-    existing_markeplace_runbook,
+    existing_marketplace_runbook,
     publish_to_marketplace,
     projects=[],
     category=None,
@@ -354,7 +354,7 @@ def publish_runbook(
         # Using runbook name as the marketplace runbook name if no name provided
         name = runbook_name
 
-    if not existing_markeplace_runbook:
+    if not existing_marketplace_runbook:
         publish_runbook_as_new_marketplace_item(
             runbook_name=runbook_name,
             marketplace_item_name=name,
