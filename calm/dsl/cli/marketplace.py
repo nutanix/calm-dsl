@@ -1757,6 +1757,7 @@ def publish_runbook_as_existing_marketplace_item(
         version=version,
         description=description,
         with_secrets=with_secrets,
+        with_endpoints=with_endpoints,
         app_group_uuid=app_group_uuid,
         icon_name=icon_name,
         icon_file=icon_file,
