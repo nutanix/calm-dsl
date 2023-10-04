@@ -44,6 +44,8 @@ def render_variable_template(cls, entity_context, context="", secrets_dict=[]):
     if cls.regex:
         regex = cls.regex.get_dict()
         user_attrs["regex"] = regex.get("value", None)
+        if user_attrs["regex"]:
+            user_attrs["regex"] = repr(user_attrs["regex"]).strip("'")
         user_attrs["validate_regex"] = regex.get("should_validate", False)
 
     else:
