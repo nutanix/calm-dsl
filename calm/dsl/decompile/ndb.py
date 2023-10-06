@@ -16,6 +16,7 @@ from calm.dsl.builtins.models.constants import (
 from calm.dsl.builtins.models.helper import common as common_helper
 from calm.dsl.constants import CACHE
 from calm.dsl.store import Cache
+from calm.dsl.tools import get_escaped_quotes_string
 
 from calm.dsl.log import get_logging_handle
 
@@ -84,6 +85,9 @@ tags_map = {
 
 
 def set_ndb_calm_reference(inarg_var_name, inarg_var_value):
+
+    # Adding backslash if quotes present in string
+    inarg_var_value = get_escaped_quotes_string(inarg_var_value)
     if not common_helper.is_not_macro(inarg_var_value):
         return {"value": inarg_var_value, "type": "Non_Ref"}
 
@@ -364,11 +368,13 @@ rt_action_class_map = {
 
 
 def get_schema_file_and_user_attrs(task_name, attrs, account_name):
+
     resource_type_name = attrs.get("resource_type_reference", {}).get("name", "")
     action_name = attrs.get("action_reference", {}).get("name", "")
     resource_type_cached_data = ResourceTypeCache.get_entity_data(
         name=resource_type_name, provider_name="NDB"
     )
+
     if not resource_type_cached_data:
         LOG.error("resource_type not found in NDB provider")
         sys.exit(

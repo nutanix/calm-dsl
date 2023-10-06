@@ -36,3 +36,14 @@ def get_module_from_file(module_name, file):
         sys.exit(-1)
 
     return user_module
+
+
+def get_escaped_quotes_string(val):
+    """Returns a string with backslash support"""
+
+    if not isinstance(val, str):
+        return val
+
+    val = val.replace('"', '\\"')
+    val = val.replace("'", "\\'")
+    return val
