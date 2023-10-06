@@ -1272,6 +1272,7 @@ def update_marketplace_item(
     projects=[],
     description=None,
     app_source=None,
+    all_projects=None,
     type=None,
 ):
     """
@@ -1314,19 +1315,29 @@ def update_marketplace_item(
 
         item_data["metadata"]["categories"] = {"AppFamily": category}
 
-    if projects:
-        # Clear all stored projects
+    if projects or all_projects:
+        # Clear the stored projects
         item_data["spec"]["resources"]["project_reference_list"] = []
-        for project in projects:
-            project_data = get_project(project)
+        project_name_uuid_map = client.project.get_name_uuid_map(params={"length": 250})
 
-            item_data["spec"]["resources"]["project_reference_list"].append(
-                {
-                    "kind": "project",
-                    "name": project,
-                    "uuid": project_data["metadata"]["uuid"],
-                }
-            )
+        if all_projects:
+            for k, v in project_name_uuid_map.items():
+                item_data["spec"]["resources"]["project_reference_list"].append(
+                    {
+                        "kind": "project",
+                        "name": k,
+                        "uuid": v,
+                    }
+                )
+        else:
+            for _project in projects:
+                item_data["spec"]["resources"]["project_reference_list"].append(
+                    {
+                        "kind": "project",
+                        "name": _project,
+                        "uuid": project_name_uuid_map[_project],
+                    }
+                )
 
     if description:
         item_data["spec"]["description"] = description

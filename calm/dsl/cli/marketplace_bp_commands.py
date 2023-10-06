@@ -504,7 +504,16 @@ def _publish_marketplace_bp(name, version, category, source, all_projects, proje
     type=click.Choice(APP_SOURCES),
     help="App Source for marketplace blueprint",
 )
-def _update_marketplace_bp(name, version, category, projects, description, source):
+@click.option(
+    "--all_projects",
+    "-ap",
+    is_flag=True,
+    default=False,
+    help="Update marketplace blueprints with all projects",
+)
+def _update_marketplace_bp(
+    name, version, category, projects, description, source, all_projects
+):
     """Update a marketplace manager blueprint"""
 
     update_marketplace_item(
@@ -514,6 +523,7 @@ def _update_marketplace_bp(name, version, category, projects, description, sourc
         projects=projects,
         description=description,
         app_source=source,
+        all_projects=all_projects,
         type=MARKETPLACE_ITEM.TYPES.BLUEPRINT,
     )
 

@@ -209,7 +209,16 @@ def _publish_marketplace_runbook(
     type=click.Choice(APP_SOURCES),
     help="App Source for marketplace runbook",
 )
-def _update_marketplace_runbook(name, version, category, projects, description, source):
+@click.option(
+    "--all_projects",
+    "-ap",
+    is_flag=True,
+    default=False,
+    help="Update marketplace runbook with all projects",
+)
+def _update_marketplace_runbook(
+    name, version, category, projects, description, source, all_projects
+):
     """Update a marketplace manager runbook"""
 
     update_marketplace_item(
@@ -219,6 +228,7 @@ def _update_marketplace_runbook(name, version, category, projects, description, 
         projects=projects,
         description=description,
         app_source=source,
+        all_projects=all_projects,
         type=MARKETPLACE_ITEM.TYPES.RUNBOOK,
     )
 

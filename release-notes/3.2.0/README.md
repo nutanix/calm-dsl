@@ -147,7 +147,9 @@ class SampleProject(Project):
 
 - `calm publish marketplace runbook`: It will publish marketplace manager runbook to marketplace store.
 
-- `calm update marketplace runbook`: It will update marketplace manager runbook.
+- `calm update marketplace runbook`: It will update marketplace manager runbook.\
+   **Options:**\
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; `--all_projects`: Use this flag to update the marketplace runbook item with all the projects existed in system.
 
 - `calm delete marketplace runbook`: It will delete marketplace manager runbook.
 
