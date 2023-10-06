@@ -259,8 +259,10 @@ def strip_secrets(
             elif task.get("type", None) != "HTTP":
                 continue
             auth = (task.get("attrs", {}) or {}).get("authentication", {}) or {}
+            if auth.get("auth_type", None) == "basic":
+                path_list = path_list + ["runbook"]
+
             path_list = path_list + [
-                "runbook",
                 "task_definition_list",
                 task_idx,
                 "attrs",
@@ -271,15 +273,14 @@ def strip_secrets(
                 path_list, task.get("attrs", {}) or {}, context=var_task_context
             )
 
-            if auth.get("auth_type", None) == "basic":
-                if not (task.get("attrs", {}) or {}).get("headers", []) or []:
-                    continue
-                strip_entity_secret_variables(
-                    path_list,
-                    task["attrs"],
-                    field_name="headers",
-                    context=var_task_context + ".headers",
-                )
+            if not (task.get("attrs", {}) or {}).get("headers", []) or []:
+                continue
+            strip_entity_secret_variables(
+                path_list,
+                task["attrs"],
+                field_name="headers",
+                context=var_task_context + ".headers",
+            )
 
     def strip_authentication_secret_variables(path_list, obj, context=""):
 
