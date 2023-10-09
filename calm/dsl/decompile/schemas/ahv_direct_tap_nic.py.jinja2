@@ -1,5 +1,5 @@
 {%- macro ahv_direct_tap_nic(obj) -%}
-AhvVmNic.DirectNic.tap("{{obj.subnet_name}}" {%- if obj.cluster_name %}, cluster="{{obj.cluster_name}}"{%- elif obj.vpc_name %}, vpc="{{obj.vpc_name}}"{%- endif %})
+AhvVmNic.DirectNic.tap("{{obj.subnet_name}}" {%- if obj.cluster_name %}, cluster="{{obj.cluster_name}}"{%- elif obj.vpc_name %}, vpc="{{obj.vpc_name}}"{%- endif %} {%- if obj.ip_endpoint_list %}, ip_endpoints={{obj.ip_endpoint_list}}{%- endif %})
 {% endmacro %}
 
 {{ ahv_direct_tap_nic(obj) }}

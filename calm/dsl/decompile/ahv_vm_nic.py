@@ -20,6 +20,11 @@ def render_ahv_vm_nic(cls):
     network_function_nic_type = cls.network_function_nic_type
 
     user_attrs = {}
+    ip_endpoints = []
+    for ip in cls.ip_endpoint_list:
+        ip_endpoints.append((ip.get_dict()["ip"]))
+    if ip_endpoints:
+        user_attrs["ip_endpoint_list"] = ip_endpoints
     subnet_uuid = subnet_ref.get("uuid", "")
     if subnet_uuid.startswith("@@{") and subnet_uuid.endswith("}@@"):
         user_attrs["subnet_name"] = subnet_uuid
