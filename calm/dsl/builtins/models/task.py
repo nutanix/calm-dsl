@@ -214,8 +214,8 @@ def _exec_create(
             "Only one of script or filename should be given for exec task "
             + (name or "")
         )
-    if script_type != "static" and tunnel is not None:
-        raise ValueError("Tunnel is supported only for Escript script type")
+    if script_type not in ["static", "static_py3"] and tunnel is not None:
+        raise ValueError("Tunnel is supported only for Escript script types")
 
     if filename is not None:
         file_path = os.path.join(
@@ -276,8 +276,8 @@ def _decision_create(
             "One of script or filename is required for decision task " + (name or "")
         )
 
-    if script_type != "static" and tunnel is not None:
-        raise ValueError("Tunnel is support only for Escript script type")
+    if script_type not in ["static", "static_py3"] and tunnel is not None:
+        raise ValueError("Tunnel is support only for Escript script types")
 
     params = {
         "name": name,
@@ -453,7 +453,7 @@ def exec_task_escript(
         name=name,
         target=target,
         target_endpoint=None,
-        depth=depth + 1,
+        depth=depth,
         tunnel=tunnel,
         **kwargs,
     )
@@ -475,7 +475,7 @@ def exec_task_escript_py3(
         name=name,
         target=target,
         target_endpoint=None,
-        depth=depth + 1,
+        depth=depth,
         tunnel=tunnel,
         **kwargs,
     )
@@ -644,7 +644,7 @@ def decision_task_escript(
         filename=filename,
         name=name,
         target=target,
-        depth=depth + 1,
+        depth=depth,
         tunnel=tunnel,
         **kwargs,
     )
@@ -678,7 +678,7 @@ def decision_task_escript_py3(
         filename=filename,
         name=name,
         target=target,
-        depth=depth + 1,
+        depth=depth,
         tunnel=tunnel,
         **kwargs,
     )
@@ -860,7 +860,7 @@ class EscriptTaskType:
                 filename=filename,
                 name=name,
                 target=target,
-                depth=depth,
+                depth=depth + 1,
                 tunnel=tunnel,
                 **kwargs,
             )
@@ -884,7 +884,7 @@ class EscriptTaskType:
                 filename=filename,
                 name=name,
                 target=target,
-                depth=depth,
+                depth=depth + 1,
                 tunnel=tunnel,
                 **kwargs,
             )
@@ -910,7 +910,7 @@ class EscriptTaskType:
                 name=name,
                 target=target,
                 variables=variables,
-                depth=depth,
+                depth=depth + 1,
                 tunnel=tunnel,
                 **kwargs,
             )
