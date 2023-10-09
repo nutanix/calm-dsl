@@ -3,6 +3,8 @@ from .entity import EntityType, Entity
 from calm.dsl.log import get_logging_handle
 from .validator import PropertyValidator
 from calm.dsl.constants import ENTITY
+from .utils import is_compile_secrets
+
 
 LOG = get_logging_handle(__name__)
 
@@ -19,7 +21,7 @@ class GcpAccountType(EntityType):
         private_key = cdict.pop("private_key", None)
         cdict["private_key"] = {
             "attrs": {"is_secret_modified": True},
-            "value": private_key,
+            "value": private_key if is_compile_secrets() else "",
         }
 
         region_list = cdict.pop("regions", None)

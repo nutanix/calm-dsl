@@ -6,6 +6,7 @@ from distutils.version import LooseVersion as LV
 from .entity import EntityType, Entity, EntityTypeBase
 from .validator import DictValidator, PropertyValidator
 from .credential import CredentialType
+from .utils import is_compile_secrets
 from calm.dsl.store import Cache
 from calm.dsl.constants import CACHE
 from calm.dsl.store import Version
@@ -280,7 +281,10 @@ def windows_endpoint_vm(
 
 
 def _basic_auth(username, password):
-    secret = {"attrs": {"is_secret_modified": True}, "value": password}
+    secret = {
+        "attrs": {"is_secret_modified": True},
+        "value": password if is_compile_secrets() else "",
+    }
     auth = {}
     auth["type"] = "basic"
     auth["username"] = username

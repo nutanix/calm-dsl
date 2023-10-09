@@ -4,6 +4,7 @@ from .entity import EntityType, Entity
 from calm.dsl.log import get_logging_handle
 from .validator import PropertyValidator
 from calm.dsl.constants import ENTITY
+from .utils import is_compile_secrets
 
 LOG = get_logging_handle(__name__)
 
@@ -19,7 +20,7 @@ class AzureAccount(EntityType):
         client_key = cdict.pop("client_key", None)
         cdict["client_key"] = {
             "attrs": {"is_secret_modified": True},
-            "value": client_key,
+            "value": client_key if is_compile_secrets() else "",
         }
 
         # TODO remove from here

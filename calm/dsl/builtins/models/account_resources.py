@@ -19,6 +19,7 @@ from calm.dsl.builtins import (
 from calm.dsl.constants import CACHE
 from calm.dsl.store import Cache
 from .helper.common import get_provider
+from .utils import is_compile_secrets
 
 from calm.dsl.log import get_logging_handle
 
@@ -194,7 +195,11 @@ class AccountResources:
                     LOG.error("{} is a mandatory variable".format(label_dict_key))
                     sys.exit("Mandatory variable not provided")
 
-                auth_schema["value"] = variable_list_values[label_dict_key]
+                auth_schema["value"] = (
+                    variable_list_values[label_dict_key]
+                    if is_compile_secrets() and auth_schema["type"] == "SECRET"
+                    else ""
+                )
 
                 if auth_schema["type"] == "SECRET":
                     auth_schema.pop("attrs")

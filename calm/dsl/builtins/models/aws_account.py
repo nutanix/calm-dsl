@@ -3,6 +3,7 @@ from .entity import EntityType, Entity
 from calm.dsl.log import get_logging_handle
 from .validator import PropertyValidator
 from calm.dsl.constants import ENTITY
+from .utils import is_compile_secrets
 
 LOG = get_logging_handle(__name__)
 
@@ -17,7 +18,7 @@ class AwsAccountType(EntityType):
         cdict = super().compile()
         secret_access_key_value = cdict.pop("secret_access_key", "")
         cdict["secret_access_key"] = {
-            "value": secret_access_key_value,
+            "value": secret_access_key_value if is_compile_secrets() else "",
             "attrs": {"is_secret_modified": True},
         }
         return cdict

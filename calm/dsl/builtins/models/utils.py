@@ -9,6 +9,7 @@ from calm.dsl.log import get_logging_handle
 from calm.dsl.config import get_context
 
 LOG = get_logging_handle(__name__)
+COMPILE_WITH_SECRETS = True
 
 
 def read_file(filename, depth=1):
@@ -152,3 +153,12 @@ def get_valid_identifier(data=None):
         data = "_{}".format(data)
 
     return data
+
+
+def set_compile_secrets_flag(compile_with_secrets):
+    global COMPILE_WITH_SECRETS
+    COMPILE_WITH_SECRETS = compile_with_secrets
+
+
+def is_compile_secrets():
+    return COMPILE_WITH_SECRETS

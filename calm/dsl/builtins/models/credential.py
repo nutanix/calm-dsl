@@ -10,6 +10,7 @@ from calm.dsl.builtins import Ref
 from calm.dsl.api.handle import get_api_client
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Version
+from calm.dsl.builtins.models.utils import is_compile_secrets
 
 LOG = get_logging_handle(__name__)
 
@@ -56,7 +57,10 @@ def basic_cred(
     if filename:
         password = read_file(filename, depth=2)
 
-    secret = {"attrs": {"is_secret_modified": True}, "value": password}
+    secret = {
+        "attrs": {"is_secret_modified": True},
+        "value": password if is_compile_secrets() else "",
+    }
 
     kwargs = {}
     kwargs["type"] = type
@@ -80,7 +84,11 @@ def secret_cred(
 ):
 
     # This secret value will be replaced when user is creatring a blueprint
-    secret = {"attrs": {"is_secret_modified": True}, "value": "", "secret": secret}
+    secret = {
+        "attrs": {"is_secret_modified": True},
+        "value": "",
+        "secret": secret if is_compile_secrets() else "",
+    }
 
     kwargs = {}
     kwargs["type"] = type

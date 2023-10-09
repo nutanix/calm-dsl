@@ -11,6 +11,7 @@ from .calm_ref import Ref
 from .task_input import TaskInputType
 from .variable import CalmVariable
 from .helper import common as common_helper
+from .utils import is_compile_secrets
 
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Cache
@@ -1402,7 +1403,9 @@ def http_task(
             "basic_auth": {
                 "username": credential.username,
                 "password": {
-                    "value": credential.secret.get("value"),
+                    "value": credential.secret.get("value")
+                    if is_compile_secrets()
+                    else "",
                     "attrs": {"is_secret_modified": True},
                 },
             },

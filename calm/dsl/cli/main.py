@@ -15,6 +15,7 @@ from calm.dsl.log import get_logging_handle
 from calm.dsl.config import get_context
 from calm.dsl.store import Cache
 from calm.dsl.constants import DSL_CONFIG
+from calm.dsl.builtins.models.utils import set_compile_secrets_flag
 
 from .version_validator import validate_version
 from .click_options import simple_verbosity_option, show_trace_option
@@ -76,6 +77,9 @@ def main(ctx, config_file, sync):
     if config_file:
         ContextObj = get_context()
         ContextObj.update_config_file_context(config_file=config_file)
+
+    # This is added to ensure non compile commands has secrets in the dictionary.
+    set_compile_secrets_flag(True)
 
     ContextObj = get_context()
     project_config = ContextObj.get_project_config()
@@ -302,7 +306,9 @@ def format():
 @main.group(cls=FeatureFlagGroup)
 def compile():
     """Compile blueprint to json / yaml"""
-    pass
+
+    # Setting this to make sure during compile secrets are not printed
+    set_compile_secrets_flag(False)
 
 
 @main.group(cls=FeatureFlagGroup)
