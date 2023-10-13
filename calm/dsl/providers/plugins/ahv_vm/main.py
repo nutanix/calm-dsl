@@ -1261,6 +1261,7 @@ def create_spec(client):
 
     # As account_uuid is required for versions>2.9.0
     account_uuid = ""
+    accounts = []
     is_host_pc = True
     payload = {"length": 250, "filter": "type==nutanix_pc"}
     res, err = client.account.list(payload)
@@ -1271,8 +1272,29 @@ def create_spec(client):
     for entity in res["entities"]:
         entity_id = entity["metadata"]["uuid"]
         if entity_id in reg_accounts:
-            account_uuid = entity_id
-            break
+            accounts.append(
+                {"name": entity["metadata"]["name"], "uuid": entity["metadata"]["uuid"]}
+            )
+
+    if len(accounts) > 1:
+        click.echo("Choose from given accounts:")
+        for ind, account in enumerate(accounts):
+            click.echo(
+                "\t {}. {}".format(str(ind + 1), highlight_text(account["name"]))
+            )
+
+        while True:
+            ind = click.prompt("\nEnter the index of account", default=1)
+            if (ind > len(accounts)) or (ind <= 0):
+                click.echo("Invalid index !!! ")
+            else:
+                account_uuid = accounts[ind - 1]["uuid"]
+                click.echo(
+                    "{} selected".format(highlight_text(accounts[ind - 1]["name"]))
+                )
+                break
+    elif len(accounts) == 1:
+        account_uuid = accounts[0]["uuid"]
 
     # TODO Host PC dependency for categories call due to bug https://jira.nutanix.com/browse/CALM-17213
     if account_uuid:
