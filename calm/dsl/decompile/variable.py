@@ -10,7 +10,14 @@ LOG = get_logging_handle(__name__)
 SECRET_VAR_FILES = []
 
 
-def render_variable_template(cls, entity_context, context="", secrets_dict=[]):
+def render_variable_template(
+    cls,
+    entity_context,
+    context="",
+    secrets_dict=[],
+    credentials_list=[],
+    rendered_credential_list=[],
+):
 
     LOG.debug("Rendering {} variable template".format(cls.__name__))
     if not isinstance(cls, VariableType):
@@ -149,7 +156,10 @@ def render_variable_template(cls, entity_context, context="", secrets_dict=[]):
             task = TaskType.decompile(options)
             task.__name__ = "SampleTask"
             user_attrs["value"] = render_task_template(
-                task, entity_context=entity_context
+                task,
+                entity_context=entity_context,
+                credentials_list=credentials_list,
+                rendered_credential_list=rendered_credential_list,
             )
 
             if data_type == "BASE":

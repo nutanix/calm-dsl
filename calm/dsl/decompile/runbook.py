@@ -85,7 +85,14 @@ def render_runbook_template(
     )
     variables = []
     for variable in runbook_cls.variables:
-        variables.append(render_variable_template(variable, entity_context))
+        variables.append(
+            render_variable_template(
+                variable,
+                entity_context,
+                credentials_list=credentials_list,
+                rendered_credential_list=rendered_credential_list,
+            )
+        )
     secret_files = get_secret_variable_files()
     secret_files.extend(get_cred_files())
     if not (variables or tasks):

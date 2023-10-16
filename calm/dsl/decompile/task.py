@@ -4,7 +4,11 @@ import sys
 from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.ndb import get_schema_file_and_user_attrs
 from calm.dsl.decompile.ref import render_ref_template
-from calm.dsl.decompile.credential import get_cred_var_name
+from calm.dsl.builtins import CredentialType
+from calm.dsl.decompile.credential import (
+    get_cred_var_name,
+    render_credential_template,
+)
 from calm.dsl.decompile.file_handler import get_scripts_dir, get_scripts_dir_key
 from calm.dsl.builtins import TaskType
 from calm.dsl.db.table_config import AccountCache
@@ -22,6 +26,8 @@ def render_task_template(
     CONFIG_SPEC_MAP={},
     context="",
     secrets_dict=[],
+    credentials_list=[],
+    rendered_credential_list=[],
 ):
     LOG.debug("Rendering {} task template".format(cls.name))
     if not isinstance(cls, TaskType):
@@ -148,6 +154,17 @@ def render_task_template(
                         getattr(auth_cred, "name", "") or auth_cred.__name__
                     )
                 )
+        elif auth_type == "basic":
+            cred_dict = {
+                "username": auth_obj["username"],
+                "password": auth_obj["password"],
+                "type": "PASSWORD",
+            }
+            cred = CredentialType.decompile(cred_dict)
+            rendered_credential_list.append(render_credential_template(cred))
+            cred = get_cred_var_name(cred.name)
+            user_attrs["credentials_list"] = cred
+            credentials_list.append(cred)
 
         user_attrs["response_paths"] = attrs.get("response_paths", {})
         method = attrs["method"]

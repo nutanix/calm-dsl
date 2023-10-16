@@ -122,6 +122,35 @@ def strip_secrets(
                     not_stripped_secrets.append(
                         (path_list + [field_name, var_idx], variable["value"])
                     )
+            # For dynamic variables having http task with auth
+            opts = variable.get("options", None)
+            auth = None
+            if opts:
+                auth = opts["attrs"].get("authentication", None)
+            if auth and auth.get("auth_type") == "basic":
+                basic_auth = auth.get("basic_auth")
+                username = basic_auth.get("username")
+                password = basic_auth.pop("password")
+                secret_variables.append(
+                    (
+                        path_list
+                        + [
+                            field_name,
+                            var_idx,
+                            "options",
+                            "attrs",
+                            "authentication",
+                            "basic_auth",
+                            "password",
+                        ],
+                        password.get("value", None),
+                        username,
+                    )
+                )
+                basic_auth["password"] = {
+                    "value": None,
+                    "attrs": {"is_secret_modified": False},
+                }
 
     def strip_action_secret_variables(path_list, obj):
 
