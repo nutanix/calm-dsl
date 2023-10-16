@@ -36,7 +36,10 @@ def render_task_template(
     user_attrs = cls.get_user_attrs()
     user_attrs["name"] = cls.name
     target = getattr(cls, "target_any_local_reference", None)
-    if target:  # target will be modified to have correct name(DSL name)
+    endpoint_target = getattr(cls, "exec_target_reference", None)
+    if endpoint_target:  # if target is endpoint target then use that
+        user_attrs["target"] = render_ref_template(endpoint_target)
+    elif target:  # target will be modified to have correct name(DSL name)
         user_attrs["target"] = render_ref_template(target)
 
     cred = cls.attrs.get("login_credential_local_reference", None)

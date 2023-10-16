@@ -14,7 +14,7 @@ LOG = get_logging_handle(__name__)
 CONFIG_SPEC_MAP = {}
 
 
-def render_profile_template(cls, secrets_dict=[]):
+def render_profile_template(cls, secrets_dict=[], endpoints=[], ep_list=[]):
 
     LOG.debug("Rendering {} profile template".format(cls.__name__))
     if not isinstance(cls, ProfileType):
@@ -72,6 +72,8 @@ def render_profile_template(cls, secrets_dict=[]):
                 CONFIG_SPEC_MAP,
                 secrets_dict=secrets_dict,
                 context=context,
+                endpoints=endpoints,
+                ep_list=ep_list,
             )
         )
 

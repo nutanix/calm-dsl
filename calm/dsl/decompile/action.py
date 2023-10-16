@@ -4,6 +4,7 @@ from calm.dsl.decompile.render import render_template
 from calm.dsl.decompile.task import render_task_template
 from calm.dsl.decompile.parallel_task import render_parallel_task_template
 from calm.dsl.decompile.task_tree import render_task_tree_template
+from calm.dsl.decompile.endpoint import render_endpoint
 from calm.dsl.decompile.variable import render_variable_template
 from calm.dsl.builtins import action, ActionType
 from calm.dsl.log import get_logging_handle
@@ -13,7 +14,13 @@ RUNBOOK_ACTION_MAP = {}
 
 
 def render_action_template(
-    cls, entity_context="", CONFIG_SPEC_MAP={}, context="", secrets_dict=[]
+    cls,
+    entity_context="",
+    CONFIG_SPEC_MAP={},
+    context="",
+    secrets_dict=[],
+    endpoints=[],
+    ep_list=[],
 ):
 
     global RUNBOOK_ACTION_MAP
@@ -66,12 +73,20 @@ def render_action_template(
 
     if not (variables or tasks):
         return ""
-
+    # get rendered endpoints to be rendered by blueprint
+    for ind, task in enumerate(runbook.tasks):
+        ep = task.exec_target_reference
+        if ep:
+            if ep.name in ep_list:
+                continue
+            endpoints.append(render_endpoint(ep))
+            ep_list.append(ep.name)
     user_attrs = {
         "name": cls.__name__,
         "description": cls.__doc__ or "",
         "tasks": tasks,
         "variables": variables,
+        "endpoints": endpoints,
     }
 
     gui_display_name = getattr(cls, "name", "") or cls.__name__

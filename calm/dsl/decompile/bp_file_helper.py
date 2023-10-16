@@ -44,7 +44,9 @@ def render_bp_file_template(
     user_attrs["description"] = cls.__doc__
 
     secrets_dict = []
-
+    # endpoints contains rendered endpoints, and ep_list contains the names in a list to avoid duplication
+    endpoints = []
+    ep_list = []
     # Find default cred
     default_cred = cls.default_cred
     default_cred_name = getattr(default_cred, "name", "") or getattr(
@@ -159,24 +161,33 @@ def render_bp_file_template(
 
     dependepent_entities = []
     dependepent_entities = get_ordered_entities(entity_name_text_map, entity_edges)
-
     # Rendering templates
     for k, v in enumerate(dependepent_entities):
         if isinstance(v, ServiceType):
-            dependepent_entities[k] = render_service_template(v, secrets_dict)
+            dependepent_entities[k] = render_service_template(
+                v, secrets_dict, endpoints=endpoints, ep_list=ep_list
+            )
 
         elif isinstance(v, PackageType):
-            dependepent_entities[k] = render_package_template(v, secrets_dict)
+            dependepent_entities[k] = render_package_template(
+                v, secrets_dict, endpoints=endpoints, ep_list=ep_list
+            )
 
         elif isinstance(v, ProfileType):
-            dependepent_entities[k] = render_profile_template(v, secrets_dict)
+            dependepent_entities[k] = render_profile_template(
+                v, secrets_dict, endpoints=endpoints, ep_list=ep_list
+            )
 
         elif isinstance(v, DeploymentType):
             dependepent_entities[k] = render_deployment_template(v)
 
         elif isinstance(v, SubstrateType):
             dependepent_entities[k] = render_substrate_template(
-                v, vm_images=vm_images, secrets_dict=secrets_dict
+                v,
+                vm_images=vm_images,
+                secrets_dict=secrets_dict,
+                endpoints=endpoints,
+                ep_list=ep_list,
             )
 
     is_any_secret_value_available = False
@@ -203,6 +214,7 @@ def render_bp_file_template(
             "blueprint": blueprint,
             "metadata": metadata_str,
             "contains_encrypted_secrets": contains_encrypted_secrets,
+            "endpoints": endpoints,
         }
     )
 

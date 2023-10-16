@@ -14,7 +14,9 @@ from calm.dsl.log import get_logging_handle
 LOG = get_logging_handle(__name__)
 
 
-def render_substrate_template(cls, vm_images=[], secrets_dict=[]):
+def render_substrate_template(
+    cls, vm_images=[], secrets_dict=[], endpoints=[], ep_list=[]
+):
 
     LOG.debug("Rendering {} substrate template".format(cls.__name__))
     if not isinstance(cls, SubstrateType):
