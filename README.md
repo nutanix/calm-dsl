@@ -149,7 +149,11 @@ Use `calm get roles` to list all roles in PC. The below roles are relevant for C
 
 ### Projects
 - Compile project: `calm compile project --file <project_file_location>`. This command will print the compiled project JSON. Look at sample file [here](examples/Project/demo_project.py) and [here](examples/Project/project_with_env.py).
-- Create project on Calm Server: `calm create project --file <project_file_location> --name <project_name> --description <description>`. Use `no-cache-update` flag to skip cache updations post operation.
+- Create project on Calm Server: `calm create project --file <project_file_location> --name <project_name> --description <description>`.\
+**Options:**\
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; `--no-cache-update`: flag to skip cache updations post operation.\
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; `--force`:  flag to delete existing project with the same name before create, if entities are not associated with it.
+    
 - List projects: `calm get projects`. Get projects, optionally filtered by a string
 - Describe project: `calm describe project <project_name>`. It will print summary of project.
 - Update project using dsl file: `calm update project <project_name> --file <project_file_location>`. Environments will not be updated as part of this operation. Use `no-cache-update` flag to skip cache updations post operation.
@@ -165,7 +169,10 @@ Use `calm get roles` to list all roles in PC. The below roles are relevant for C
 
 ### Environments
 - Compile environment: `calm compile environment --file <env_file_location> --project <project_name>`. Command will print the compiled environment JSON. Look at sample file [here](examples/Environment/sample_environment.py)
-- Create environment to existing project: `calm create environment --file <env_file_location> --project <project_name> --name <environmet_name>`. Use `no-cache-update` flag to skip cache updations post operation.
+- Create environment to existing project: `calm create environment --file <env_file_location> --project <project_name> --name <environmet_name>`.\
+**Options:**\
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; `--no-cache-update`: flag to skip cache updations post operation.\
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; `--force`:  flag to delete existing environment in a project with the same name before create, if entities are not associated with it.
 - Update environment: `calm update environment <environment_name> --file <env_file_location> --project <project_name>`. Use `no-cache-update` flag to skip cache updations post operation.
 - List environments: `calm get environments --project <project_name>`. Get environments of project.
 - Delete environment: `calm delete environment <environment_name> --project <project_name>`. Use `no-cache-update` flag to skip cache updations post operation.

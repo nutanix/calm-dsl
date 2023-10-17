@@ -391,7 +391,7 @@ def update_project(project_uuid, project_payload):
 
 
 def create_project_from_dsl(
-    project_file, project_name, description="", no_cache_update=False
+    project_file, project_name, description="", no_cache_update=False, force=False
 ):
     """Steps:
     1. Creation of project without env
@@ -400,6 +400,34 @@ def create_project_from_dsl(
     """
 
     client = get_api_client()
+    if force:
+        project_name_uuid_map = client.project.get_name_uuid_map()
+        project_id = project_name_uuid_map.get(project_name)
+        if project_id:
+            entities = get_projects_usage(project_name)
+            if entities:
+                click.echo(highlight_text("\n-------- Projects usage --------\n"))
+                for entity in entities:
+                    click.echo(
+                        highlight_text(list(entity.keys())[0])
+                        + ": "
+                        + highlight_text(list(entity.values())[0])
+                    )
+                click.echo(
+                    highlight_text(
+                        f"\nProject with name {project_name} has entities associated with it, project creation with same name cannot be forced.\n"
+                    )
+                )
+                sys.exit(-1)
+            else:
+                LOG.info(
+                    f"Forcing the project create with name {project_name} by deleting the existing project with same name"
+                )
+                delete_project([project_name])
+        else:
+            LOG.info(
+                f"Project with same name {project_name} does not exist in system, no need of forcing the project create"
+            )
 
     user_project_module = get_project_module_from_file(project_file)
     UserProject = get_project_class_from_module(user_project_module)
@@ -1503,3 +1531,28 @@ def get_project_usage_payload(project_payload, old_project_payload):
     }
 
     return project_usage_payload
+
+
+def get_projects_usage(project_name, filter={"filter": {}}):
+    client = get_api_client()
+    project_name_uuid_map = client.project.get_name_uuid_map()
+    project_id = project_name_uuid_map.get(project_name)
+    res, err = client.project.usage(project_id, filter)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    entities = []
+
+    def collect_entities(usage):
+        for entity_name, count in usage.items():
+            if entity_name not in ["environment", "marketplace_item"]:
+                if isinstance(count, dict):
+                    collect_entities(count)
+                    continue
+                if count > 0:
+                    entities.append({entity_name: count})
+
+    res = res.json()
+    collect_entities(res["status"]["usage"])
+    return entities

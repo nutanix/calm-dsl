@@ -86,12 +86,19 @@ def _compile_project_command(project_file, out):
     default=False,
     help="if true, cache is not updated for project",
 )
-def _create_project(project_file, project_name, description, no_cache_update):
+@click.option(
+    "--force",
+    "-fc",
+    is_flag=True,
+    default=False,
+    help="Deletes existing project with the same name before create, if entities are not associated with it.",
+)
+def _create_project(project_file, project_name, description, no_cache_update, force):
     """Creates a project"""
 
     if project_file.endswith(".py"):
         create_project_from_dsl(
-            project_file, project_name, description, no_cache_update
+            project_file, project_name, description, no_cache_update, force
         )
     else:
         LOG.error("Unknown file format")

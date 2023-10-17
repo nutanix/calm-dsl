@@ -206,7 +206,7 @@ def get_env_class_from_module(user_env_module):
 
 
 def create_environment_from_dsl_file(
-    env_file, env_name, project_name, no_cache_update=False
+    env_file, env_name, project_name, no_cache_update=False, force=False
 ):
     """
     Helper creates an environment from dsl file (for calm_version >= 3.2)
@@ -217,6 +217,31 @@ def create_environment_from_dsl_file(
     Returns:
         response (object): Response object containing environment object details
     """
+    if force:
+        env_exist, res = is_environment_exist(env_name, project_name)
+        if env_exist:
+            entities = get_environments_usage(res["metadata"]["uuid"], project_name)
+            if entities:
+                click.echo(highlight_text("\n-------- Environments usage --------\n"))
+                for entity in entities:
+                    click.echo(
+                        highlight_text(list(entity.keys())[0])
+                        + ": "
+                        + highlight_text(list(entity.values())[0])
+                    )
+                LOG.error(
+                    f"\nEnvironment with name {env_name} has entities associated with it, environment creation with same name cannot be forced.\n"
+                )
+                sys.exit(-1)
+            else:
+                LOG.info(
+                    f"Forcing the environment create with name {env_name} by deleting the existing environment with same name"
+                )
+                delete_environment(env_name, project_name)
+        else:
+            LOG.info(
+                f"Environment with same name {env_name} does not exist in system, no need of forcing the environment create"
+            )
 
     # Update project on context
     ContextObj = get_context()
@@ -509,3 +534,53 @@ def delete_environment(environment_name, project_name, no_cache_update=False):
         LOG.info("Updating environments cache ...")
         Cache.delete_one(entity_type=CACHE.ENTITY.ENVIRONMENT, uuid=environment_id)
         LOG.info("[Done]")
+
+
+def is_environment_exist(env_name, project_name):
+    client = get_api_client()
+    payload = {
+        "length": 250,
+        "offset": 0,
+        "filter": "name=={}".format(env_name),
+    }
+
+    if project_name:
+        project = get_project(project_name)
+        project_id = project["metadata"]["uuid"]
+        payload["filter"] += ";project_reference=={}".format(project_id)
+
+    res, err = client.environment.list(payload)
+    if err:
+        raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    res = res.json()
+    if res["metadata"]["total_matches"] == 0:
+        return False, None
+
+    return True, res["entities"][0]
+
+
+def get_environments_usage(env_uuid, project_name):
+    filter = {"filter": {"environment_reference_list": [env_uuid]}}
+    client = get_api_client()
+    project_name_uuid_map = client.project.get_name_uuid_map()
+    project_id = project_name_uuid_map.get(project_name)
+    res, err = client.project.usage(project_id, filter)
+    if err:
+        LOG.error(err)
+        sys.exit(-1)
+
+    entities = []
+
+    def collect_entities(usage):
+        for entity_name, count in usage.items():
+            if entity_name not in ["environment", "marketplace_item"]:
+                if isinstance(count, dict):
+                    collect_entities(count)
+                    continue
+                if count > 0:
+                    entities.append({entity_name: count})
+
+    res = res.json()
+    collect_entities(res["status"]["usage"])
+    return entities

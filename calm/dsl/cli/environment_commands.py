@@ -81,14 +81,21 @@ def _delete_environment(environment_name, project_name, no_cache_update):
     default=False,
     help="if true, cache is not updated for project",
 )
-def _create_environment(env_file, env_name, project_name, no_cache_update):
+@click.option(
+    "--force",
+    "-fc",
+    is_flag=True,
+    default=False,
+    help="Deletes existing environment with the same name before create, if entities are not associated with it.",
+)
+def _create_environment(env_file, env_name, project_name, no_cache_update, force):
     """
     Creates a environment to existing project.
     """
 
     if env_file.endswith(".py"):
         create_environment_from_dsl_file(
-            env_file, env_name, project_name, no_cache_update
+            env_file, env_name, project_name, no_cache_update, force
         )
     else:
         LOG.error("Unknown file format {}".format(env_file))
