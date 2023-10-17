@@ -1372,6 +1372,7 @@ def http_task(
     """
     auth_obj = {"auth_type": "none"}
 
+    # Auth object for basic auth with credential.
     if cred is not None:
         cred_ref = _get_target_ref(cred)
         if getattr(cred_ref, "kind", None) != "app_credential":
@@ -1386,6 +1387,7 @@ def http_task(
             "credential_local_reference": cred_ref,
         }
 
+    # Auth object for basic auth
     elif credential is not None:
         if getattr(credential, "__kind__", None) != "app_credential":
             raise ValueError(
@@ -1394,10 +1396,6 @@ def http_task(
                 + " should be a Credential object of PASSWORD type"
             )
 
-        # TODO: Auth should be changed to basic auth with credential.
-        # This is dependent on https://jira.nutanix.com/browse/CALM-12149
-        # We could also possibly check calm server version to switch between
-        # the two auth mechanisms since basic auth will be deprecated.
         auth_obj = {
             "auth_type": "basic",
             "basic_auth": {
