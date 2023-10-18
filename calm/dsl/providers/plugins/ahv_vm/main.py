@@ -15,6 +15,9 @@ from calm.dsl.log import get_logging_handle
 
 from .constants import AHV as AhvConstants
 
+from calm.dsl.store import Cache
+from calm.dsl.constants import CACHE
+
 LOG = get_logging_handle(__name__)
 Provider = get_provider_interface()
 
@@ -1637,13 +1640,29 @@ def create_spec(client):
             nics = nics["entities"]
             click.echo("\nChoose from given subnets:")
             for ind, nic in enumerate(nics):
-                click.echo(
-                    "\t {}. {} ({})".format(
-                        str(ind + 1),
-                        highlight_text(nic["status"]["name"]),
-                        highlight_text(nic["status"]["cluster_reference"]["name"]),
+                name = Cache.get_entity_data_using_uuid
+                if nic["status"]["resources"]["subnet_type"] == "VLAN":
+                    click.echo(
+                        "\t {}. {} ({})".format(
+                            str(ind + 1),
+                            highlight_text(nic["status"]["name"]),
+                            highlight_text(nic["status"]["cluster_reference"]["name"]),
+                        )
                     )
-                )
+                else:
+                    uuid_for_vpc_name = nic["status"]["resources"]["vpc_reference"][
+                        "uuid"
+                    ]
+                    vpc_name_for_overlay = Cache.get_entity_data_using_uuid(
+                        entity_type=CACHE.ENTITY.AHV_VPC, uuid=uuid_for_vpc_name
+                    )
+                    click.echo(
+                        "\t {}. {} ({})".format(
+                            str(ind + 1),
+                            highlight_text(nic["status"]["name"]),
+                            highlight_text(vpc_name_for_overlay["name"]),
+                        )
+                    )
 
             spec["resources"]["nic_list"] = []
             while True:
