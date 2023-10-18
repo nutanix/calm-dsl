@@ -126,7 +126,9 @@ def strip_secrets(
             opts = variable.get("options", None)
             auth = None
             if opts:
-                auth = opts["attrs"].get("authentication", None)
+                attrs = opts.get("attrs", None)
+                if attrs:
+                    auth = attrs.get("authentication", None)
             if auth and auth.get("auth_type") == "basic":
                 basic_auth = auth.get("basic_auth")
                 username = basic_auth.get("username")
