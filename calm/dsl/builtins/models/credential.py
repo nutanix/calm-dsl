@@ -127,20 +127,16 @@ def dynamic_cred(
     kwargs["cred_class"] = "dynamic"
     kwargs["account"] = account
 
-    if not resource_type:
-        resource_type = Ref.Resource_Type(account.name)
-
     if variable_dict:
-        resource_type_uuid = resource_type.compile()["uuid"]
-        res, err = client.resource_types.read(id=resource_type_uuid)
+        account_uuid = account.compile()["uuid"]
+        res, err = client.account.resource_types_list(account_uuid)
         if err:
             LOG.error(err)
             sys.exit(-1)
 
-        resource_type_payload = res.json()
-
+        resource_type_payload = res.json().get("entities", [])[0]
         cred_attr_list = (
-            resource_type_payload.get("spec", {})
+            resource_type_payload.get("status", {})
             .get("resources", {})
             .get("schema_list", {})
         )
@@ -157,6 +153,9 @@ def dynamic_cred(
                 cred_attr_copy["value"] = variable_dict.pop(var_name)
 
             cred_attr_copy.pop("uuid", None)
+            cred_attr_copy.pop("message_list", None)
+            cred_attr_copy.pop("state", None)
+            cred_attr_copy.get("attrs", None).pop("secret_reference", None)
             variable_list.append(cred_attr_copy)
 
         if variable_dict:
