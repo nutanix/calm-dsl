@@ -31,6 +31,21 @@ def create_environment(env_payload):
     env_payload.pop("status", None)
 
     env_name = env_payload["spec"]["name"]
+
+    # Adding uuid to creds
+    cred_name_uuid_map = {}
+    for cred in env_payload["spec"]["resources"].get("credential_definition_list", []):
+        cred["uuid"] = str(uuid.uuid4())
+        cred_name_uuid_map[cred["name"]] = cred["uuid"]
+
+    # Adding uuid readiness-probe
+    for sub in env_payload["spec"]["resources"].get("substrate_definition_list", []):
+        try:
+            cred_ref_obj = sub["readiness_probe"]["login_credential_local_reference"]
+            cred_ref_obj["uuid"] = cred_name_uuid_map[cred_ref_obj["name"]]
+        except Exception:
+            pass
+
     LOG.info("Creating environment '{}'".format(env_name))
     res, err = client.environment.create(env_payload)
     if err:
