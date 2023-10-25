@@ -134,7 +134,13 @@ def dynamic_cred(
             LOG.error(err)
             sys.exit(-1)
 
-        resource_type_payload = res.json().get("entities", [])[0]
+        resource_type_list = res.json().get("entities", [])
+
+        if len(resource_type_list) == 0:
+            LOG.error("No resource types found in account")
+            sys.exit("No resource types found in account")
+
+        resource_type_payload = resource_type_list[0]
         cred_attr_list = (
             resource_type_payload.get("status", {})
             .get("resources", {})
