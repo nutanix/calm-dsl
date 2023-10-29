@@ -1,5 +1,6 @@
 import sys
 import json
+import os
 
 from calm.dsl.db.table_config import ResourceTypeCache
 from calm.dsl.builtins.models.ndb import (
@@ -17,11 +18,13 @@ from calm.dsl.builtins.models.helper import common as common_helper
 from calm.dsl.constants import CACHE
 from calm.dsl.store import Cache
 from calm.dsl.tools import get_escaped_quotes_string
+from calm.dsl.decompile.file_handler import get_local_dir
 
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
 KEY_SEPERATOR = "_"
+NDB_FILES = []
 
 entities_map = {
     NutanixDBConst.Attrs.DATABASE: {
@@ -84,7 +87,7 @@ tags_map = {
 }
 
 
-def set_ndb_calm_reference(inarg_var_name, inarg_var_value):
+def set_ndb_calm_reference(inarg_var_name, inarg_var_value, secret_file_name=""):
 
     # Adding backslash if quotes present in string
     inarg_var_value = get_escaped_quotes_string(inarg_var_value)
@@ -133,7 +136,12 @@ def set_ndb_calm_reference(inarg_var_name, inarg_var_value):
             )
             return {"value": [], "type": "Non_Ref"}
     else:
-        return {"value": inarg_var_value, "type": "Non_Ref"}
+        _type = "Non_Ref"
+        if secret_file_name:
+            create_file_from_file_name(secret_file_name)
+            inarg_var_value = secret_file_name
+            _type = "Non_Ref_Secret"
+        return {"value": inarg_var_value, "type": _type}
 
 
 def create_ndb_task_user_attrs(
@@ -171,6 +179,8 @@ def create_ndb_task_user_attrs(
 
     for inarg in inarg_list:
         modified_var_name = ""
+        secret_file_name = ""
+        modified_task_name = task_name.lower().replace(" ", "_")
         if len(inarg["name"]) > len(rt_task) + 2:
             modified_var_name = inarg["name"][len(rt_task) + 2 :]
 
@@ -180,10 +190,19 @@ def create_ndb_task_user_attrs(
                 HIDDEN_SUFFIX
             )
         ):
+            if inarg.get("type", "") == "SECRET":
+                secret_file_name = "{}_{}_{}_{}".format(
+                    NutanixDBConst.NDB,
+                    modified_task_name,
+                    DatabaseServer.name,
+                    database_server_reverse_field_map[modified_var_name],
+                )
             database_server_attrs[
                 database_server_reverse_field_map[modified_var_name]
             ] = set_ndb_calm_reference(
-                database_server_reverse_field_map[modified_var_name], inarg["value"]
+                database_server_reverse_field_map[modified_var_name],
+                inarg["value"],
+                secret_file_name,
             )
         elif (
             modified_var_name in database_reverse_field_map
@@ -191,10 +210,19 @@ def create_ndb_task_user_attrs(
                 HIDDEN_SUFFIX
             )
         ):
+            if inarg.get("type", "") == "SECRET":
+                secret_file_name = "{}_{}_{}_{}".format(
+                    NutanixDBConst.NDB,
+                    modified_task_name,
+                    Database.name,
+                    database_reverse_field_map[modified_var_name],
+                )
             database_attrs[
                 database_reverse_field_map[modified_var_name]
             ] = set_ndb_calm_reference(
-                database_reverse_field_map[modified_var_name], inarg["value"]
+                database_reverse_field_map[modified_var_name],
+                inarg["value"],
+                secret_file_name,
             )
         elif (
             modified_var_name in time_machine_reverse_field_map
@@ -202,10 +230,19 @@ def create_ndb_task_user_attrs(
                 HIDDEN_SUFFIX
             )
         ):
+            if inarg.get("type", "") == "SECRET":
+                secret_file_name = "{}_{}_{}_{}".format(
+                    NutanixDBConst.NDB,
+                    modified_task_name,
+                    TimeMachine.name,
+                    time_machine_reverse_field_map[modified_var_name],
+                )
             time_machine_attrs[
                 time_machine_reverse_field_map[modified_var_name]
             ] = set_ndb_calm_reference(
-                time_machine_reverse_field_map[modified_var_name], inarg["value"]
+                time_machine_reverse_field_map[modified_var_name],
+                inarg["value"],
+                secret_file_name,
             )
         elif modified_var_name in tag_reverse_field_map and not tag_reverse_field_map[
             modified_var_name
@@ -415,3 +452,28 @@ def get_schema_file_and_user_attrs(task_name, attrs, account_name):
             action_name, resource_type_cached_data["name"]
         )
     )
+
+
+def create_file_from_file_name(file_name):
+    """create a file on local directory and add to global file stack for given file name"""
+    file_loc = os.path.join(get_local_dir(), file_name)
+
+    # Storing empty value in the file
+    with open(file_loc, "w+") as fd:
+        fd.write("")
+
+    NDB_FILES.append(file_name)
+
+
+def get_NDB_files():
+    """Returns the NDB files created for NDB secrets value"""
+
+    global NDB_FILES
+    return NDB_FILES
+
+
+def init_NDB_globals():
+    """Reinitialises global vars used for NDB secrets value"""
+
+    global NDB_FILES
+    NDB_FILES = []

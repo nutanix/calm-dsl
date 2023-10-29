@@ -12,6 +12,8 @@ from calm.dsl.decompile.credential import (
     get_cred_files,
     get_cred_var_name,
 )
+from calm.dsl.decompile.ndb import get_NDB_files
+
 from calm.dsl.decompile.decompile_helpers import process_variable_name
 from calm.dsl.builtins import CalmEndpoint as Endpoint
 from calm.dsl.builtins.models.runbook import RunbookType, runbook
@@ -95,6 +97,7 @@ def render_runbook_template(
         )
     secret_files = get_secret_variable_files()
     secret_files.extend(get_cred_files())
+    secret_files.extend(get_NDB_files())
     if not (variables or tasks):
         return ""
     import_status = False
