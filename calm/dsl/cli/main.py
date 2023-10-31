@@ -13,6 +13,7 @@ from calm.dsl.providers import get_provider, get_provider_types
 from calm.dsl.api import get_api_client, get_resource_api
 from calm.dsl.log import get_logging_handle
 from calm.dsl.config import get_context
+from calm.dsl.config.env_config import EnvConfig
 from calm.dsl.store import Cache
 from calm.dsl.constants import DSL_CONFIG
 from calm.dsl.builtins.models.utils import set_compile_secrets_flag
@@ -308,7 +309,7 @@ def compile():
     """Compile blueprint to json / yaml"""
 
     # Setting this to make sure during compile secrets are not printed
-    set_compile_secrets_flag(False)
+    set_compile_secrets_flag(EnvConfig.is_compile_secret())
 
 
 @main.group(cls=FeatureFlagGroup)

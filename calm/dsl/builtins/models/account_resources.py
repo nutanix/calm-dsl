@@ -196,9 +196,9 @@ class AccountResources:
                     sys.exit("Mandatory variable not provided")
 
                 auth_schema["value"] = (
-                    variable_list_values[label_dict_key]
-                    if is_compile_secrets() and auth_schema["type"] == "SECRET"
-                    else ""
+                    ""
+                    if auth_schema["type"] == "SECRET" and not is_compile_secrets()
+                    else variable_list_values[label_dict_key]
                 )
 
                 if auth_schema["type"] == "SECRET":
