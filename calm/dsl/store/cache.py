@@ -160,7 +160,17 @@ class Cache:
 
         def sync_tables(tables):
             for table in tables:
-                table.sync()
+                try:
+                    LOG.debug(
+                        "Syncing cache for '{}' table".format(table.get_cache_type())
+                    )
+                    table.sync()
+                except Exception as exp:
+                    LOG.error(
+                        "Cache sync failed for '{}' table".format(
+                            table.get_cache_type()
+                        )
+                    )
                 click.echo(".", nl=False, err=True)
 
         cache_table_map = cls.get_cache_tables(sync_version=True)
