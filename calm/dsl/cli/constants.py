@@ -293,6 +293,16 @@ class ACP:
                 "left_hand_side": {"entity_type": "custom_provider"},
                 "right_hand_side": {"collection": "ALL"},
             },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "distributed_virtual_switch"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "vm_recovery_point"},
+                "right_hand_side": {"collection": "ALL"},
+            },
         ]
 
         OPERATOR = [
@@ -314,6 +324,16 @@ class ACP:
             {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "custom_provider"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "distributed_virtual_switch"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "vm_recovery_point"},
                 "right_hand_side": {"collection": "ALL"},
             },
         ]
@@ -364,6 +384,16 @@ class ACP:
                 "left_hand_side": {"entity_type": "custom_provider"},
                 "right_hand_side": {"collection": "ALL"},
             },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "vm_recovery_point"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "distributed_virtual_switch"},
+                "right_hand_side": {"collection": "ALL"},
+            },
         ]
 
         PROJECT_ADMIN = [
@@ -391,16 +421,6 @@ class ACP:
                 "operator": "IN",
                 "right_hand_side": {"uuid_list": []},
                 "left_hand_side": {"entity_type": "project"},
-            },
-            {
-                "operator": "IN",
-                "right_hand_side": {"collection": "ALL"},
-                "left_hand_side": {"entity_type": "user"},
-            },
-            {
-                "operator": "IN",
-                "right_hand_side": {"collection": "ALL"},
-                "left_hand_side": {"entity_type": "user_group"},
             },
             {
                 "operator": "IN",
@@ -441,6 +461,21 @@ class ACP:
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "custom_provider"},
                 "right_hand_side": {"collection": "ALL"},
+            },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "vm_recovery_point"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "distributed_virtual_switch"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "report_config"},
+                "right_hand_side": {"collection": "SELF_OWNED"},
             },
         ]
 
@@ -494,22 +529,6 @@ class ACP:
             },
         },
         {
-            "permission": "view_user",
-            "filter": {
-                "operator": "IN",
-                "right_hand_side": {"collection": "ALL"},
-                "left_hand_side": {"entity_type": "user"},
-            },
-        },
-        {
-            "permission": "view_user_group",
-            "filter": {
-                "operator": "IN",
-                "right_hand_side": {"collection": "ALL"},
-                "left_hand_side": {"entity_type": "user_group"},
-            },
-        },
-        {
             "permission": "view_role",
             "filter": {
                 "operator": "IN",
@@ -558,7 +577,7 @@ class ACP:
             },
         },
         {
-            "permission": "view_image",
+            "permission": "view_resource_type",
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "resource_type"},
@@ -566,10 +585,93 @@ class ACP:
             },
         },
         {
-            "permission": "view_image",
+            "permission": "view_custom_provider",
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "custom_provider"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+        },
+        {
+            "permission": "view_vm_recovery_point",
+            "filter": {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "vm_recovery_point"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+        },
+        {
+            "permission": "view_virtual_switch",
+            "filter": {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "distributed_virtual_switch"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+        },
+        {
+            "permission": "View_report_config",
+            "filter": {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "report_config"},
+                "right_hand_side": {"collection": "SELF_OWNED"},
+            },
+        },
+    ]
+
+    CUSTOM_ROLE_SPECIFIC_COLLAB_FILTER = [
+        {
+            "permission": "view_user",
+            "filter": {
+                "operator": "IN",
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "user"},
+            },
+        },
+        {
+            "permission": "view_virtual_machine",
+            "filter": {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "vm"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+        },
+        {
+            "permission": "view_user_group",
+            "filter": {
+                "operator": "IN",
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "user_group"},
+            },
+        },
+        {
+            "permission": "view_blueprint",
+            "filter": {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "blueprint"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+        },
+        {
+            "permission": "view_environment",
+            "filter": {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "environment"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+        },
+        {
+            "permission": "view_marketplace_item",
+            "filter": {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "marketplace_item"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+        },
+        {
+            "permission": "view_runbook",
+            "filter": {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "runbook"},
                 "right_hand_side": {"collection": "ALL"},
             },
         },
@@ -591,3 +693,54 @@ class ACP:
             }
         ],
     }
+
+    # The entities in this collection are by default collab enabled
+    PROJECT_COLLAB_CONTEXT = {
+        "scope_filter_expression_list": [
+            {
+                "operator": "IN",
+                "left_hand_side": "PROJECT",
+                "right_hand_side": {"uuid_list": []},
+            }
+        ],
+        "entity_filter_expression_list": [
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "blueprint"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "environment"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "marketplace_item"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+            {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "runbook"},
+                "right_hand_side": {"collection": "ALL"},
+            },
+        ],
+    }
+
+    PROJECT_ADMIN_SPECIFIC_COLLAB_FILTER = [
+        {
+            "operator": "IN",
+            "left_hand_side": {"entity_type": "vm"},
+            "right_hand_side": {"collection": "ALL"},
+        },
+        {
+            "operator": "IN",
+            "right_hand_side": {"collection": "ALL"},
+            "left_hand_side": {"entity_type": "user"},
+        },
+        {
+            "operator": "IN",
+            "right_hand_side": {"collection": "ALL"},
+            "left_hand_side": {"entity_type": "user_group"},
+        },
+    ]
