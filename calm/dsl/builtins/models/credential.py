@@ -127,6 +127,9 @@ def dynamic_cred(
     kwargs["cred_class"] = "dynamic"
     kwargs["account"] = account
 
+    if not resource_type:
+        resource_type = Ref.Resource_Type(account.name)
+
     if variable_dict:
         account_uuid = account.compile()["uuid"]
         res, err = client.account.resource_types_list(account_uuid)
