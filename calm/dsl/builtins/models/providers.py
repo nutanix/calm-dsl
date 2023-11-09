@@ -11,6 +11,22 @@ class AccountProviderType(EntityType):
     __schema_name__ = "AccountProvider"
     __openapi_type__ = "app_account_provider"
 
+    @classmethod
+    def pre_decompile(mcls, cdict, context=[], prefix=""):
+
+        for _i in cdict.get("subnet_references", []):
+            _i["kind"] = "subnet"
+        cdict["subnet_reference_list"] = cdict.pop("subnet_references", [])
+
+        for _i in cdict.get("cluster_references", []):
+            _i["kind"] = "cluster"
+        cdict["cluster_reference_list"] = cdict.pop("cluster_references", [])
+
+        if cdict.get("default_subnet_reference", {}):
+            cdict["default_subnet_reference"]["kind"] = "subnet"
+
+        return cdict
+
 
 class AccountProviderValidator(PropertyValidator, openapi_type="app_account_provider"):
     __default__ = None

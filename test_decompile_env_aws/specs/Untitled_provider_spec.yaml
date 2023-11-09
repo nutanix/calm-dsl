@@ -1,0 +1,34 @@
+availability_zone_reference: null
+backup_policy: null
+cluster_reference: null
+name: vm-@@{calm_array_index}@@-@@{calm_time}@@
+resources:
+  account_uuid: e8c72001-e53b-f749-7254-e84f4abba73f
+  associate_public_ip_address: true
+  availability_zone: ''
+  block_device_map:
+    data_disk_list: []
+    root_disk:
+      delete_on_termination: true
+      device_name: ''
+      iops: 100
+      size_gb: 8
+      snapshot_id: ''
+      type: ''
+      volume_type: GP2
+    type: ''
+  image_id: ''
+  instance_initiated_shutdown_behavior: ''
+  instance_profile_name: ''
+  instance_type: ''
+  key_name: ''
+  private_ip_address: ''
+  region: ''
+  security_group_list: []
+  state: RUNNING
+  subnet_id: ''
+  tag_list: []
+  type: ''
+  user_data: ''
+  vpc_id: ''
+type: PROVISION_AWS_VM

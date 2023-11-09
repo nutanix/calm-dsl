@@ -1,0 +1,6 @@
+{% macro vmware_provider(obj) %}
+    Provider.Vmware(
+        {% if obj.account_reference %}account=Ref.Account("{{obj.account_reference}}"),{% endif %}
+    ),
+{% endmacro %}
+{{ vmware_provider(obj) }}

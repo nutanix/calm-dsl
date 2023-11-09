@@ -4,7 +4,12 @@ from black import format_str, FileMode
 from calm.dsl.log import get_logging_handle
 from calm.dsl.decompile.bp_file_helper import render_bp_file_template
 from calm.dsl.decompile.runbook import render_runbook_template
-from calm.dsl.decompile.file_handler import init_bp_dir, init_runbook_dir
+from calm.dsl.decompile.file_handler import (
+    init_bp_dir,
+    init_runbook_dir,
+    init_environment_dir,
+)
+from calm.dsl.decompile.environments import render_environment_template
 
 LOG = get_logging_handle(__name__)
 
@@ -21,6 +26,13 @@ def create_runbook_file(dir_name, runbook_data):
     runbook_path = os.path.join(dir_name, "runbook.py")
     with open(runbook_path, "w") as fd:
         fd.write(runbook_data)
+
+
+def create_environment_file(dir_name, environment_data):
+
+    environment_path = os.path.join(dir_name, "environment.py")
+    with open(environment_path, "w") as fd:
+        fd.write(environment_data)
 
 
 def create_bp_dir(
@@ -73,3 +85,27 @@ def create_runbook_dir(
     runbook_data = format_str(runbook_data, mode=FileMode())
     LOG.info("Creating runbook file")
     create_runbook_file(runbook_dir, runbook_data)
+
+
+def create_environment_dir(
+    environment_cls=None,
+    environment_dir=None,
+    metadata_obj=None,
+    credentials=None,
+):
+    if not environment_dir:
+        environment_dir = os.path.join(os.getcwd(), environment_cls.__name__)
+
+    LOG.info("Creating environment directory")
+    _, _, _, _ = init_environment_dir(environment_dir)
+    LOG.info("Rendering environment file template")
+    environment_data = render_environment_template(
+        environment_cls=environment_cls,
+        credentials=credentials,
+        metadata_obj=metadata_obj,
+    )
+
+    LOG.info("Formatting environment file using black")
+    environment_data = format_str(environment_data, mode=FileMode())
+    LOG.info("Creating environment file")
+    create_environment_file(environment_dir, environment_data)

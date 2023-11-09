@@ -1,12 +1,13 @@
 import click
 
-from .main import get, delete, create, update, compile
+from .main import get, delete, create, update, compile, decompile
 from .environments import (
     create_environment_from_dsl_file,
     get_environment_list,
     delete_environment,
     update_environment_from_dsl_file,
     compile_environment_command,
+    decompile_environment_command,
 )
 
 from calm.dsl.log import get_logging_handle
@@ -156,3 +157,34 @@ def _compile_environment_command(env_file, project_name, out):
     """Compiles a DSL (Python) environment into JSON or YAML"""
 
     compile_environment_command(env_file, project_name, out)
+
+
+@decompile.command("environment", experimental=True)
+@click.option(
+    "--name",
+    "-n",
+    "name",
+    default=None,
+    help="Environment name",
+)
+@click.option(
+    "--file",
+    "-f",
+    "environment_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to Environment file",
+)
+@click.option("--project", "-p", "project_name", help="Project name")
+@click.option(
+    "--dir",
+    "-d",
+    "environment_dir",
+    default=None,
+    help="Environment directory location used for placing decompiled entities",
+)
+def _decompile_environment_command(
+    name, environment_file, project_name, environment_dir
+):
+    """Decompiles environment present on server or json file"""
+
+    decompile_environment_command(name, environment_file, project_name, environment_dir)

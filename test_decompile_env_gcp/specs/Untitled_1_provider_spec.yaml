@@ -1,0 +1,68 @@
+resources:
+  account_uuid: 1423621a-99ee-35be-e6d1-8f51d6986f41
+  blankDisks: []
+  canIpForward: false
+  description: ''
+  disks:
+  - autoDelete: true
+    boot: true
+    deviceName: ''
+    diskEncryptionKey: {}
+    disk_type: PERSISTENT
+    initializeParams:
+      diskName: ''
+      diskSizeGb: -1
+      diskType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/diskTypes/hyperdisk-throughput
+      sourceImage: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/images/centos-7
+      sourceImageEncryptionKey: {}
+      type: ''
+    interface: ''
+    mode: ''
+    source: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/disks/bdisk2-0-231103-044630
+    type: ''
+  guestCustomization: {}
+  labelFingerprint: ''
+  labels: []
+  machineType: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/zones/us-central1-c/machineTypes/a2-highgpu-1g
+  metadata:
+    fingerprint: ''
+    items: []
+    type: ''
+  minCpuPlatform: ''
+  name: test-vm-1
+  networkInterfaces:
+  - accessConfigs:
+    - config_type: ONE_TO_ONE_NAT
+      name: test
+      natIP: ''
+      type: ''
+    aliasIpRanges: []
+    associatePublicIP: true
+    network: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/global/networks/default
+    networkIP: ''
+    subnetwork: https://www.googleapis.com/compute/v1/projects/nucalm-devopos/regions/us-central1/subnetworks/default
+    type: ''
+  scheduling:
+    automaticRestart: true
+    onHostMaintenance: TERMINATE
+    preemptible: false
+    type: ''
+  serviceAccounts:
+  - email: 108048128720-compute@developer.gserviceaccount.com
+    scopes:
+    - https://www.googleapis.com/auth/devstorage.read_only
+    - https://www.googleapis.com/auth/logging.write
+    - https://www.googleapis.com/auth/monitoring.write
+    - https://www.googleapis.com/auth/servicecontrol
+    - https://www.googleapis.com/auth/service.management.readonly
+    - https://www.googleapis.com/auth/trace.append
+    type: ''
+  sshKeys: []
+  tags:
+    fingerprint: ''
+    items:
+    - ldap
+    type: ''
+  type: ''
+  zone: us-central1-c
+type: PROVISION_GCP_VM

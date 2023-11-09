@@ -2,6 +2,7 @@ import sys
 import uuid
 import click
 import json
+import os
 import time
 import arrow
 from prettytable import PrettyTable
@@ -9,12 +10,22 @@ from ruamel import yaml
 
 from calm.dsl.config import get_context
 from calm.dsl.api import get_api_client
-from calm.dsl.builtins import create_environment_payload, Environment
+from calm.dsl.builtins import (
+    create_environment_payload,
+    Environment,
+    get_valid_identifier,
+    MetadataType,
+    CredentialType,
+)
 from calm.dsl.builtins.models.helper.common import get_project
+from calm.dsl.decompile.main import init_decompile_context
+from calm.dsl.decompile.decompile_render import create_environment_dir
+from calm.dsl.decompile.file_handler import get_environment_dir
 from calm.dsl.tools import get_module_from_file
 from calm.dsl.store import Cache
 from calm.dsl.constants import CACHE
 from calm.dsl.log import get_logging_handle
+from calm.dsl.builtins.models.environment import EnvironmentType
 
 from .utils import (
     get_name_query,
@@ -549,6 +560,96 @@ def delete_environment(environment_name, project_name, no_cache_update=False):
         LOG.info("Updating environments cache ...")
         Cache.delete_one(entity_type=CACHE.ENTITY.ENVIRONMENT, uuid=environment_id)
         LOG.info("[Done]")
+
+
+def decompile_environment_command(
+    name, environment_file, project, environment_dir=None
+):
+    """helper to decompile environment"""
+    if name and environment_file:
+        LOG.error(
+            "Please provide either environment file location or server environment name"
+        )
+        sys.exit("Both environment name and file location provided.")
+    init_decompile_context()
+
+    if name:
+        decompile_environment_from_server(
+            name=name, environment_dir=environment_dir, project=project
+        )
+
+    elif environment_file:
+        decompile_environment_from_file(
+            filename=environment_file, environment_dir=environment_dir
+        )
+    else:
+        LOG.error(
+            "Please provide either environment file location or server environment name"
+        )
+        sys.exit("Environment name or file location not provided.")
+
+
+def decompile_environment_from_server(name, environment_dir, project):
+    """decompiles the environment by fetching it from server"""
+
+    client = get_api_client()
+    environment = get_environment(name, project)
+    environment_uuid = environment["status"]["uuid"]
+    res, err = client.environment.read(environment_uuid)
+    if err:
+        LOG.error(err)
+        sys.exit("Not able to decompile environment from server.")
+
+    environment = res.json()
+    _decompile_environment(
+        environment_payload=environment, environment_dir=environment_dir
+    )
+
+
+def decompile_environment_from_file(filename, environment_dir):
+    """decompile environment from local environment file"""
+
+    environment_payload = json.loads(open(filename).read())
+    _decompile_environment(
+        environment_payload=environment_payload, environment_dir=environment_dir
+    )
+
+
+def _decompile_environment(environment_payload, environment_dir):
+    """decompiles the environment from payload"""
+
+    environment_name = environment_payload["status"].get("name", "DslEnvironment")
+    environment_description = environment_payload["status"].get("description", "")
+
+    environment_metadata = environment_payload["metadata"]
+    # POP unnecessary keys
+    environment_metadata.pop("creation_time", None)
+    environment_metadata.pop("last_update_time", None)
+
+    metadata_obj = MetadataType.decompile(environment_metadata)
+
+    LOG.info("Decompiling environment {}".format(environment_name))
+    environment_cls = EnvironmentType.decompile(
+        environment_payload["status"]["resources"]
+    )
+
+    credentials = environment_cls.credentials
+
+    environment_cls.__name__ = get_valid_identifier(environment_name)
+    environment_cls.__doc__ = environment_description
+
+    create_environment_dir(
+        environment_cls=environment_cls,
+        environment_dir=environment_dir,
+        metadata_obj=metadata_obj,
+        credentials=credentials,
+    )
+    click.echo(
+        "\nSuccessfully decompiled. Directory location: {}. Environment location: {}".format(
+            highlight_text(get_environment_dir()),
+            highlight_text(os.path.join(get_environment_dir(), "environment.py")),
+        )
+    )
 
 
 def is_environment_exist(env_name, project_name):
