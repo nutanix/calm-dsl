@@ -12,6 +12,12 @@ properties:
     type: string
     maxLength: 1000
     default: ''
+  package_definition_list:
+    x-calm-dsl-display-name: packages
+    description: Package definitions for blueprint.
+    type: array
+    items:
+      $ref: '#/components/schemas/Package'
   environment_reference_list:
     type: array
     x-calm-dsl-min-version: 3.2.0
