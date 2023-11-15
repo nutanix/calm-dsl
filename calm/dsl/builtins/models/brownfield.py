@@ -4,6 +4,7 @@ from .entity import EntityType, Entity
 from .validator import PropertyValidator
 from .deployment import DeploymentType
 from .metadata_payload import get_metadata_obj
+from distutils.version import LooseVersion as LV
 
 from .helper import common as common_helper
 from calm.dsl.config import get_context
@@ -11,6 +12,7 @@ from calm.dsl.store import Cache
 from calm.dsl.api import get_api_client
 from calm.dsl.constants import CACHE, PROVIDER_ACCOUNT_TYPE_MAP
 from calm.dsl.log import get_logging_handle
+from calm.dsl.store import Version
 
 LOG = get_logging_handle(__name__)
 
@@ -303,6 +305,8 @@ def get_vmware_bf_vm_data(
 ):
     """Return vmware vm data matched with provided instacne details"""
 
+    CALM_VERSION = Version.get_version("Calm")
+
     client = get_api_client()
 
     params = {
@@ -331,7 +335,12 @@ def get_vmware_bf_vm_data(
         e_name = e_resources["instance_name"]
         e_id = e_resources["instance_id"]
         e_address = e_resources["address"]
-        e_address_list = e_resources["guest.ipAddress"]
+
+        # fixes: https://github.com/nutanix/calm-dsl/issues/226 (KeyError: 'guest.ipAddress')
+        if LV(CALM_VERSION) >= LV("3.3.0"):
+            e_address_list = e_resources["guest_ipaddress"]
+        else:
+            e_address_list = e_resources["guest.ipAddress"]
 
         if match_vm_data(
             vm_name=e_name,
