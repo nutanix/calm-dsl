@@ -643,7 +643,7 @@ def _decompile_bp(
     metadata_obj = MetadataType.decompile(blueprint_metadata)
 
     # Copying dsl_name_map to global client_attrs
-    if bp_payload["spec"]["resources"]["client_attrs"].get("None", {}):
+    if bp_payload["spec"]["resources"].get("client_attrs", {}).get("None", {}):
         init_dsl_metadata_map(bp_payload["spec"]["resources"]["client_attrs"]["None"])
 
     LOG.info("Decompiling blueprint {}".format(blueprint_name))

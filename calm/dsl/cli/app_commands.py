@@ -2,7 +2,18 @@ import click
 
 from calm.dsl.api import get_api_client
 
-from .main import main, get, describe, delete, run, watch, download, create, update
+from .main import (
+    main,
+    get,
+    describe,
+    delete,
+    run,
+    watch,
+    download,
+    create,
+    update,
+    decompile,
+)
 from .utils import Display, FeatureFlagGroup
 from .apps import (
     get_apps,
@@ -14,6 +25,9 @@ from .apps import (
     delete_app,
     download_runlog,
     create_app,
+    describe_app_actions_to_update,
+    decompile_app_migratable_bp,
+    update_app_migratable_bp,
 )
 from calm.dsl.log import get_logging_handle
 
@@ -102,6 +116,44 @@ def _create_app(
 def _get_apps(name, filter_by, limit, offset, quiet, all_items, out):
     """Get Apps, optionally filtered by a string"""
     get_apps(name, filter_by, limit, offset, quiet, all_items, out)
+
+
+@describe.command("app-migratable-entities")
+@click.argument("app_name")
+def _describe_app(app_name):
+    """Display app-actions to be migrated"""
+
+    describe_app_actions_to_update(app_name)
+
+
+@decompile.command("app-migratable-bp")
+@click.option(
+    "--dir",
+    "-d",
+    "bp_dir",
+    default=None,
+    help="Blueprint directory location used for placing decompiled entities",
+)
+@click.argument("app_name")
+def _decompile_app_migratable_bp(app_name, bp_dir):
+    """Decompile app-blueprint app-actions to be migrated"""
+
+    decompile_app_migratable_bp(app_name, bp_dir)
+
+
+@update.command("app-migratable-bp")
+@click.option(
+    "--file",
+    "-f",
+    "bp_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to Blueprint file",
+)
+@click.argument("app_name")
+def _update_app_migratable_bp(app_name, bp_file):
+    """update app-blueprint app-actions to be migrated"""
+
+    update_app_migratable_bp(app_name, bp_file)
 
 
 @describe.command("app")

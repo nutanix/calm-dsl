@@ -11,6 +11,10 @@ class ApplicationAPI(ResourceAPI):
         self.DOWNLOAD_RUNLOG = self.ITEM + "/app_runlogs/{}/output/download"
         self.ACTION_VARIABLE = self.ITEM + "/actions/{}/variables"
         self.RECOVERY_GROUPS_LIST = self.ITEM + "/recovery_groups/list"
+        self.BLUEPRINTS_ORIGINAL = self.ITEM + "/blueprints/original"
+        self.BLUEPRINT_ENTITIES_ESCRIPT_UPDATE = (
+            self.ITEM + "/blueprints/entities/update"
+        )
 
     def run_action(self, app_id, action_id, payload):
         return self.connection._call(
@@ -18,6 +22,21 @@ class ApplicationAPI(ResourceAPI):
             request_json=payload,
             verify=False,
             method=REQUEST.METHOD.POST,
+        )
+
+    def blueprints_original(self, app_id):
+        return self.connection._call(
+            self.BLUEPRINTS_ORIGINAL.format(app_id),
+            verify=False,
+            method=REQUEST.METHOD.GET,
+        )
+
+    def blueprints_entities_update(self, app_id, payload):
+        return self.connection._call(
+            self.BLUEPRINT_ENTITIES_ESCRIPT_UPDATE.format(app_id),
+            request_json=payload,
+            verify=False,
+            method=REQUEST.METHOD.PUT,
         )
 
     def run_patch(self, app_id, patch_id, payload):

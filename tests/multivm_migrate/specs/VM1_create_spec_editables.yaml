@@ -1,0 +1,16 @@
+name: false
+resources:
+  disk_list:
+    '0':
+      data_source_reference: false
+      device_properties:
+        device_type: false
+        disk_address:
+          adapter_type: false
+  guest_customization: false
+  memory_size_mib: false
+  nic_list:
+    '0':
+      subnet_reference: false
+  num_sockets: false
+  num_vcpus_per_socket: false

@@ -147,7 +147,7 @@ class PackageType(EntityType):
         elif package_type == "SUBSTRATE_IMAGE":
             disk_pkg_data = {
                 "name": cdict["name"],
-                "description": cdict["description"],
+                "description": cdict.get("description", ""),
                 "options": cdict["options"],
             }
             types = EntityTypeBase.get_entity_types()

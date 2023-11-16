@@ -7,10 +7,11 @@ import pytest
 from click.testing import CliRunner
 from calm.dsl.cli import main as cli
 
-from calm.dsl.cli.constants import APPLICATION, ERGON_TASK
+from calm.dsl.cli.constants import APPLICATION, ERGON_TASK, RUNLOG
 from calm.dsl.log import get_logging_handle
 from calm.dsl.api import get_client_handle_obj
 from calm.dsl.api.connection import REQUEST
+from calm.dsl.cli.main import get_api_client
 
 
 VPC_TUNNEL_NAME = "vpc_name_1"
@@ -100,6 +101,104 @@ class Application:
                 return platform_data_dict["status"]
 
         return None
+
+    def execute_actions(self, actions, app):
+        "This routine execute actions"
+        client = get_api_client()
+        app_uuid = app["metadata"]["uuid"]
+        app_spec = app["spec"]
+        LOG.info(
+            "Action Run Stage: Performing actions on application {}".format(app_uuid)
+        )
+        for action_name in actions:
+            calm_action_name = "action_" + action_name.lower()
+            LOG.info(
+                "Action Run Stage. Running action {} on application {}".format(
+                    action_name, app_uuid
+                )
+            )
+            action = next(
+                action
+                for action in app_spec["resources"]["action_list"]
+                if action["name"] == calm_action_name or action["name"] == action_name
+            )
+            if not action:
+                pytest.fail(
+                    "Action Run Stage: No action found matching name {}".format(
+                        action_name
+                    )
+                )
+
+            action_id = action["uuid"]
+
+            app.pop("status", None)
+            app["spec"] = {
+                "args": [],
+                "target_kind": "Application",
+                "target_uuid": app_uuid,
+            }
+            res, err = client.application.run_action(app_uuid, action_id, app)
+            if err:
+                pytest.fail(
+                    "Action Run Stage: running action failed [{}] - {}".format(
+                        err["code"], err["error"]
+                    )
+                )
+
+            response = res.json()
+            runlog_uuid = response["status"]["runlog_uuid"]
+            LOG.info(f"Runlog uuid of custom action triggered {runlog_uuid}")
+
+            url = client.application.ITEM.format(app_uuid) + "/app_runlogs/list"
+            payload = {"filter": "root_reference=={}".format(runlog_uuid)}
+
+            maxWait = 5 * 60
+            count = 0
+            poll_interval = 10
+            while count < maxWait:
+                # call status api
+                res, err = client.application.poll_action_run(url, payload)
+                if err:
+                    raise Exception("[{}] - {}".format(err["code"], err["error"]))
+                response = res.json()
+                entities = response["entities"]
+                wait_over = False
+                if len(entities):
+                    sorted_entities = sorted(
+                        entities, key=lambda x: int(x["metadata"]["creation_time"])
+                    )
+                    for runlog in sorted_entities:
+                        state = runlog["status"]["state"]
+                        if state in RUNLOG.FAILURE_STATES:
+                            pytest.fail(
+                                "Action Run Stage: action {} failed".format(action_name)
+                            )
+                            break
+                        elif state not in RUNLOG.TERMINAL_STATES:
+                            LOG.info(
+                                "Action Run Stage: Action {} is in process".format(
+                                    action_name
+                                )
+                            )
+                            break
+                        else:
+                            wait_over = True
+
+                if wait_over:
+                    LOG.info(
+                        "Action Run Stage: Action {} completed".format(action_name)
+                    )
+                    break
+
+                count += poll_interval
+                time.sleep(poll_interval)
+
+            if count >= maxWait:
+                pytest.fail(
+                    "Action Run Stage: action {} is not completed in 5 minutes".format(
+                        action_name
+                    )
+                )
 
 
 class Task:
