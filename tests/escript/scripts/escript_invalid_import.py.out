@@ -1,1 +1,1 @@
-Error in script: import of 'bs4' is unauthorized
+Error in script: Syntax Error at line 4 - import from module 'bs4' not allowed
