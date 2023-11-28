@@ -17,6 +17,7 @@ jobs:
       run:
         sudo apt-get -y install software-properties-common
         sudo add-apt-repository -y ppa:deadsnakes/ppa
+        sudo apt-get update
         sudo apt-get -y install python3.7 python3.7-{dev,venv,distutils}
     - name: black
       uses: psf/black@stable # Exclude list is not honored - https://github.com/psf/black/issues/1584
