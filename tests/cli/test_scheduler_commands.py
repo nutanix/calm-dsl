@@ -252,6 +252,8 @@ class TestSchedulerCommands:
 
         assert "job with name '{}' already exists".format(jobname) in msgs
 
+        scheduler.delete_job([jobname])
+
     @pytest.mark.scheduler
     @pytest.mark.parametrize("dsl_file", ["job_create_blank_name.py"])
     def test_job_name_blank(self, dsl_file):
@@ -328,6 +330,8 @@ class TestSchedulerCommands:
                 "Job List API did not return the job which was created as part of the test"
             )
 
+        scheduler.delete_job([job_name])
+
     @pytest.mark.scheduler
     @pytest.mark.parametrize("dsl_file", ["job_describe.py"])
     def test_job_describe(self, dsl_file):
@@ -365,6 +369,8 @@ class TestSchedulerCommands:
         job_response = res.json()
         LOG.info(job_response)
         assert job_response["resources"]["name"] == job_name
+
+        scheduler.delete_job([job_name])
 
     @pytest.mark.scheduler
     @pytest.mark.parametrize(
@@ -421,6 +427,103 @@ class TestSchedulerCommands:
             assert len(result) >= 1
             for record in result:
                 assert record["resources"]["state"] != JOBINSTANCES.STATES.FAILED
+
+        scheduler.delete_job([jobname])
+
+    @pytest.mark.scheduler
+    @pytest.mark.parametrize(
+        "dsl_file, dsl_runbook_file",
+        [("job_recurring_no_expiration_runbook.py", "runbook_variables.py")],
+    )
+    def test_recurring_rb_job_with_no_expiration(self, dsl_file, dsl_runbook_file):
+        """
+        Test for recurring runbook job scheduler with no expiration
+        """
+        current_path = os_lib.path.dirname(os_lib.path.realpath(__file__))
+        dsl_file = os_lib.path.dirname(current_path) + "/scheduler/" + dsl_file
+        LOG.info("Scheduler py file used {}".format(dsl_file))
+
+        # Create runbook
+        current_path = os_lib.path.dirname(os_lib.path.realpath(__file__))
+        dsl_file_name_for_runbook = dsl_file[dsl_file.rfind("/") :].replace("/", "")
+        runbook_name = dsl_file_name_for_runbook[: dsl_file_name_for_runbook.find(".")]
+        runbook_name_suffixed = "{}_{}".format(runbook_name, suffix())
+        runbook_file = (
+            os_lib.path.dirname(current_path) + "/scheduler/" + dsl_runbook_file
+        )
+
+        runbooks.create_runbook_command(
+            runbook_file, runbook_name_suffixed, description="", force=True
+        )
+        jobname = "test_job_scheduler" + suffix()
+        file_replace(
+            dsl_file,
+            r'"{}.*\n'.format(runbook_name),
+            r'"{}"\n'.format(runbook_name_suffixed),
+        )
+        result = scheduler.create_job_command(dsl_file, jobname, None, False)
+        assert result.get("resources").get("state") == "ACTIVE"
+
+        client = get_api_client()
+        job_get_res = scheduler.get_job(client, jobname, all=True)
+        res, err = client.job.read(job_get_res["metadata"]["uuid"])
+        job_response = res.json()
+        LOG.info(job_response)
+        schedule_info = job_response["resources"].get("schedule_info")
+
+        assert job_response["resources"]["name"] == jobname
+        assert job_response["resources"]["type"] == "RECURRING"
+        assert (
+            "expiry_time" not in schedule_info.keys()
+        ), "No expiration not set, hence failed"
+
+        scheduler.delete_job([jobname])
+
+    @pytest.mark.scheduler
+    @pytest.mark.parametrize("dsl_file", ["job_recurring_no_expiration_app_action.py"])
+    def test_recurring_app_job_with_no_expiration(self, dsl_file):
+        """
+        Test for recurring app job scheduler with no expiration
+        """
+        current_path = os_lib.path.dirname(os_lib.path.realpath(__file__))
+        dsl_file = os_lib.path.dirname(current_path) + "/scheduler/" + dsl_file
+        LOG.info("Scheduler py file used {}".format(dsl_file))
+
+        # Create blueprint
+        current_path = os_lib.path.dirname(os_lib.path.realpath(__file__))
+        dsl_file_name = dsl_file[dsl_file.rfind("/") :].replace("/", "")
+        bp_name = "{}_{}".format(dsl_file_name[: dsl_file_name.find(".")], suffix())
+
+        bp_file = os_lib.path.dirname(current_path) + "/scheduler/" + DSL_BP_FILE
+        client = get_api_client()
+        bps.create_blueprint_from_dsl(client, bp_file, bp_name, force_create=True)
+        app_name = "{}_{}".format(bp_name, suffix())
+        # Launch Blueprint
+        bps.launch_blueprint_simple(bp_name, app_name=app_name, patch_editables=False)
+
+        jobname = "test_job_scheduler" + suffix()
+        file_replace(
+            dsl_file,
+            r'"{}.*\n'.format(dsl_file_name[: dsl_file_name.find(".")]),
+            r'"{}"\n'.format(app_name),
+        )
+        result = scheduler.create_job_command(dsl_file, jobname, None, False)
+        assert result.get("resources").get("state") == "ACTIVE"
+
+        client = get_api_client()
+        job_get_res = scheduler.get_job(client, jobname, all=True)
+        res, err = client.job.read(job_get_res["metadata"]["uuid"])
+        job_response = res.json()
+        LOG.info(job_response)
+        schedule_info = job_response["resources"].get("schedule_info")
+
+        assert job_response["resources"]["name"] == jobname
+        assert job_response["resources"]["type"] == "RECURRING"
+        assert (
+            "expiry_time" not in schedule_info.keys()
+        ), "No expiration not set, hence failed"
+
+        scheduler.delete_job([jobname])
 
 
 # To create job by passing a custom job name

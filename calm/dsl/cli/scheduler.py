@@ -376,6 +376,7 @@ def describe_job_command(job_name, out):
         if expiry_time == "":
             click.echo("Ends: {}".format(highlight_text("Never")))
         else:
+            expiry_time = int(expiry_time)
             past = arrow.get(expiry_time).humanize()
             click.echo(
                 "Ends On: {} ({})".format(

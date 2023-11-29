@@ -135,10 +135,11 @@ def _create_recurring_job_schedule_payload(
 
     payload = {
         "schedule": schedule,
-        "expiry_time": str(expiry_time),
         "start_time": str(start_time),
         "time_zone": str(time_zone),
     }
+    if expiry_time:
+        payload["expiry_time"] = str(expiry_time)
 
     return _jobschedule_payload(**payload)
 
@@ -394,7 +395,12 @@ def set_one_time_schedule_info(start_time, time_zone="UTC"):
     return _create_one_time_job_schedule_payload(seconds_since_epoch, time_zone)
 
 
-def set_recurring_schedule_info(schedule, start_time, expiry_time, time_zone="UTC"):
+def set_recurring_schedule_info(
+    schedule, start_time, expiry_time=None, time_zone="UTC"
+):
+    """
+    To set no expiration for recurring job skip passing expiry_time parameter.
+    """
     # Get User timezone
     user_tz = ZoneInfo(time_zone)
     # Convert datetime string to datetime object
@@ -412,17 +418,20 @@ def set_recurring_schedule_info(schedule, start_time, expiry_time, time_zone="UT
     # Convert to Epoch
     seconds_since_epoch_start_time = int(datetime_obj_with_tz.timestamp())
 
-    datetime_obj = datetime.strptime(expiry_time, "%Y-%m-%d %H:%M:%S")
-    datetime_obj_with_tz = datetime(
-        datetime_obj.year,
-        datetime_obj.month,
-        datetime_obj.day,
-        datetime_obj.hour,
-        datetime_obj.minute,
-        datetime_obj.second,
-        tzinfo=user_tz,
-    )
-    seconds_since_epoch_expiry_time = int(datetime_obj_with_tz.timestamp())
+    if expiry_time:
+        datetime_obj = datetime.strptime(expiry_time, "%Y-%m-%d %H:%M:%S")
+        datetime_obj_with_tz = datetime(
+            datetime_obj.year,
+            datetime_obj.month,
+            datetime_obj.day,
+            datetime_obj.hour,
+            datetime_obj.minute,
+            datetime_obj.second,
+            tzinfo=user_tz,
+        )
+        seconds_since_epoch_expiry_time = int(datetime_obj_with_tz.timestamp())
+    else:
+        seconds_since_epoch_expiry_time = None
 
     return _create_recurring_job_schedule_payload(
         schedule,
