@@ -43,8 +43,6 @@ jobs:
     - name: Publish docker image to jfrog-artifactory
       if: ${{ github.event_name == 'push' && github.repository == 'nutanix/calm-dsl' && matrix.python-version == '3.7'}}
       run: |
-        export DOCKER_TLS_VERIFY=0
-        export DOCKER_CERT_PATH=/home/ubuntu/certs/
         docker login ${{ secrets.JFROG_REGISTRY }} -u ${{ secrets.JFROG_USERNAME }} -p ${{ secrets.JFROG_PASSWORD }}
         docker tag ntnx/calm-dsl:latest ${{ secrets.JFROG_REGISTRY }}/calm-dsl/ntnx_calm_dsl:unsigned_101
         docker push ${{ secrets.JFROG_REGISTRY }}/calm-dsl/ntnx_calm_dsl:unsigned_101
