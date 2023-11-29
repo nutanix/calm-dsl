@@ -20,7 +20,7 @@ jobs:
         sudo apt-get update
         sudo apt-get -y install python3.7 python3.7-{dev,venv,distutils}
     - name: black
-      uses: psf/black@stable # Exclude list is not honored - https://github.com/psf/black/issues/1584
+      uses: psf/black@stable # Black
       with:
         version: "22.6.0"
         options: "--check --extend-exclude tests/escript/scripts/"
