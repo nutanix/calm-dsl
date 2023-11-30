@@ -1,26 +1,26 @@
 {
   "status": {
     "description": "",
-    "uuid": "9ebe0d43-dab6-76c0-cf28-662d0c9134f2",
+    "uuid": "",
     "state": "ACTIVE",
     "message_list": [],
     "resources": {
       "infra_inclusion_list": [
         {
           "subnet_references": [
-            { "uuid": "7829d1ee-8523-4b24-b14b-173a01fe6e6f" }
+            { "uuid": "" }
           ],
           "type": "nutanix_pc",
           "cluster_references": [
-            { "uuid": "00060786-eb2b-206b-1fc3-ac1f6b6029c1" }
+            { "uuid": "" }
           ],
           "account_reference": {
             "kind": "account",
-            "name": "NTNX_LOCAL_AZ",
-            "uuid": "d267012b-3c2b-40a1-b457-b682e79c26ad"
+            "name": "",
+            "uuid": ""
           },
           "default_subnet_reference": {
-            "uuid": "7829d1ee-8523-4b24-b14b-173a01fe6e6f"
+            "uuid": ""
           }
         }
       ],
@@ -29,7 +29,7 @@
           "description": "",
           "action_list": [],
           "message_list": [],
-          "uuid": "eb13dac3-a010-dc36-ec6b-e6246bd93020",
+          "uuid": "",
           "state": "ACTIVE",
           "readiness_probe": {
             "connection_type": "SSH",
@@ -52,8 +52,8 @@
             "cluster_reference": {
               "kind": "cluster",
               "type": "",
-              "name": "auto_cluster_prod_4faf4699cdea",
-              "uuid": "00060786-eb2b-206b-1fc3-ac1f6b6029c1"
+              "name": "",
+              "uuid": ""
             },
             "resources": {
               "nic_list": [],
@@ -68,7 +68,7 @@
               "hardware_clock_timezone": "",
               "guest_customization": null,
               "type": "",
-              "account_uuid": "923d1552-07ef-44c5-8322-4b5bb6d23948",
+              "account_uuid": "",
               "boot_config": {
                 "boot_device": {
                   "type": "",
@@ -88,7 +88,7 @@
                     "kind": "image",
                     "type": "",
                     "name": "Centos7HadoopMaster",
-                    "uuid": "9c7fa711-cb07-4c6d-a96f-640012454864"
+                    "uuid": ""
                   },
                   "type": "",
                   "disk_size_mib": 0,
@@ -116,7 +116,7 @@
           "description": "",
           "state": "ACTIVE",
           "message_list": [],
-          "uuid": "6e95d39a-55d8-7674-de31-c714e2f1f9b7",
+          "uuid": "",
           "secret": {
             "attrs": { "is_secret_modified": false, "secret_reference": {} }
           },
@@ -135,25 +135,25 @@
       "infra_inclusion_list": [
         {
           "cluster_references": [
-            { "uuid": "00060786-eb2b-206b-1fc3-ac1f6b6029c1" }
+            { "uuid": "" }
           ],
           "default_subnet_reference": {
-            "uuid": "7829d1ee-8523-4b24-b14b-173a01fe6e6f"
+            "uuid": ""
           },
           "account_reference": {
             "kind": "account",
-            "uuid": "d267012b-3c2b-40a1-b457-b682e79c26ad"
+            "uuid": ""
           },
           "vpc_references": [],
           "subnet_references": [
-            { "uuid": "7829d1ee-8523-4b24-b14b-173a01fe6e6f" }
+            { "uuid": "" }
           ],
           "type": "nutanix_pc"
         }
       ],
       "substrate_definition_list": [
         {
-          "uuid": "eb13dac3-a010-dc36-ec6b-e6246bd93020",
+          "uuid": "",
           "action_list": [],
           "readiness_probe": {
             "connection_type": "SSH",
@@ -178,13 +178,13 @@
                 },
                 "boot_type": "LEGACY"
               },
-              "account_uuid": "923d1552-07ef-44c5-8322-4b5bb6d23948",
+              "account_uuid": "",
               "disk_list": [
                 {
                   "data_source_reference": {
                     "kind": "image",
                     "name": "Centos7HadoopMaster",
-                    "uuid": "9c7fa711-cb07-4c6d-a96f-640012454864"
+                    "uuid": ""
                   },
                   "device_properties": {
                     "disk_address": {
@@ -199,8 +199,8 @@
             "name": "vm-@@{calm_array_index}@@-@@{calm_time}@@",
             "categories": {},
             "cluster_reference": {
-              "name": "auto_cluster_prod_4faf4699cdea",
-              "uuid": "00060786-eb2b-206b-1fc3-ac1f6b6029c1"
+              "name": "",
+              "uuid": ""
             }
           },
           "variable_list": [],
@@ -210,7 +210,7 @@
       "credential_definition_list": [
         {
           "username": "admin",
-          "uuid": "6e95d39a-55d8-7674-de31-c714e2f1f9b7",
+          "uuid": "",
           "secret": { "attrs": { "is_secret_modified": false } },
           "cred_class": "static",
           "type": "PASSWORD",
@@ -224,15 +224,15 @@
   "metadata": {
     "owner_reference": {
       "kind": "user",
-      "uuid": "00000000-0000-0000-0000-000000000000",
+      "uuid": "",
       "name": "admin"
     },
     "kind": "environment",
-    "uuid": "9ebe0d43-dab6-76c0-cf28-662d0c9134f2",
+    "uuid": "",
     "project_reference": {
       "kind": "project",
       "name": "test_dsl_decompile",
-      "uuid": "08c85b81-65fd-4b5d-b674-6ace2b885280"
+      "uuid": ""
     },
     "spec_version": 2,
     "name": "test_decompile_env",
