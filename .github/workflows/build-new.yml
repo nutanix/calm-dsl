@@ -40,9 +40,12 @@ jobs:
       with:
         image: ntnx/calm-dsl
         run: calm
+    - name: Read VERSION file
+      id: getversion
+      run: echo "::set-output name=version::$(cat CalmVersion)"
     - name: Publish docker image to jfrog-artifactory
       if: ${{ github.event_name == 'push' && github.repository == 'nutanix/calm-dsl' && matrix.python-version == '3.7'}}
       run: |
         docker login ${{ secrets.JFROG_REGISTRY }} -u ${{ secrets.JFROG_USERNAME }} -p ${{ secrets.JFROG_PASSWORD }}
-        docker tag ntnx/calm-dsl:latest ${{ secrets.JFROG_REGISTRY }}/calm-dsl/ntnx_calm_dsl:unsigned_101
-        docker push ${{ secrets.JFROG_REGISTRY }}/calm-dsl/ntnx_calm_dsl:unsigned_101
+        docker tag ntnx/calm-dsl:latest ${{ secrets.JFROG_REGISTRY }}/calm-dsl/calm-dsl:v${{ steps.getversion.outputs.version }}
+        docker push ${{ secrets.JFROG_REGISTRY }}/calm-dsl/calm-dsl:v${{ steps.getversion.outputs.version }}
