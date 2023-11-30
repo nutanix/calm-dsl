@@ -1,0 +1,4 @@
+{% macro user(obj) %}
+      {% if obj.name %}Ref.User(name="{{obj.name}}"){% endif %}
+{% endmacro %}
+{{ user(obj) }}

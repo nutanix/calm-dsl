@@ -6,7 +6,7 @@ import traceback
 from distutils.version import LooseVersion as LV
 from click.testing import CliRunner
 from calm.dsl.api import get_api_client
-from calm.dsl.cli.quotas import _get_quota
+from calm.dsl.builtins.models.helper.quotas import _get_quota
 from calm.dsl.builtins.models.helper.common import get_project
 from calm.dsl.cli import main as cli
 from calm.dsl.builtins.models.metadata_payload import reset_metadata_obj

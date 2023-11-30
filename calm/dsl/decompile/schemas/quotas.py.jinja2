@@ -1,0 +1,4 @@
+{% macro quotas(obj) %}
+      {"vcpus":  {{obj.vcpus}}, "storage": {{obj.storage}}, "memory": {{obj.memory}}}
+{% endmacro %}
+{{ quotas(obj) }}

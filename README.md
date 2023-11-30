@@ -166,6 +166,9 @@ Use `calm get roles` to list all roles in PC. The below roles are relevant for C
   - If the project already has quotas set and enabled and there are no quotas in {project_file} then the original quotas in the projects would be persisted.
   - If the project doesn't have quotas enabled/set and the {project_file} has quotas then the quotas would be enabled and set in the project.
 - Note: While using `no-cache-update` flag in project create and update commands, user should not pass environment object in the project model. User should update the cache separately after creation/updation of projects. Feature is experimental and will be discontinued after [#184](https://github.com/nutanix/calm-dsl/issues/184) is fixed.
+- Decompile existing server project: `calm decompile project <project_name>`.
+- Decompile project from existing json file: `calm decompile project --file <json_file_location>`.
+- Decompile project to a location: `calm decompile project <project_name> --dir <project_dir>`. It will decompile project entities to `project_dir` location.
 
 ### Environments
 - Compile environment: `calm compile environment --file <env_file_location> --project <project_name>`. Command will print the compiled environment JSON. Look at sample file [here](examples/Environment/sample_environment.py)
@@ -176,6 +179,9 @@ Use `calm get roles` to list all roles in PC. The below roles are relevant for C
 - Update environment: `calm update environment <environment_name> --file <env_file_location> --project <project_name>`. Use `no-cache-update` flag to skip cache updations post operation.
 - List environments: `calm get environments --project <project_name>`. Get environments of project.
 - Delete environment: `calm delete environment <environment_name> --project <project_name>`. Use `no-cache-update` flag to skip cache updations post operation.
+- Decompile existing server environment: `calm decompile environment <environment_name> --project <project_name>`.
+- Decompile environment from existing json file: `calm decompile environment --file <json_file_location> --project <project_name>`.
+- Decompile environment to a location: `calm decompile environment <environment_name> --project <project_name> --dir <environment_dir>`. It will decompile environment entities to `environment_dir` location.
 
 ### Access Control Policies
 Access control policies ensures that a project member can access only the entities or perform only the actions defined in the role assigned to that project member.

@@ -8,8 +8,10 @@ from calm.dsl.decompile.file_handler import (
     init_bp_dir,
     init_runbook_dir,
     init_environment_dir,
+    init_project_dir,
 )
 from calm.dsl.decompile.environments import render_environment_template
+from calm.dsl.decompile.projects import render_project_template
 
 LOG = get_logging_handle(__name__)
 
@@ -26,6 +28,13 @@ def create_runbook_file(dir_name, runbook_data):
     runbook_path = os.path.join(dir_name, "runbook.py")
     with open(runbook_path, "w") as fd:
         fd.write(runbook_data)
+
+
+def create_project_file(dir_name, project_data):
+
+    project_path = os.path.join(dir_name, "project.py")
+    with open(project_path, "w") as fd:
+        fd.write(project_data)
 
 
 def create_environment_file(dir_name, environment_data):
@@ -85,6 +94,28 @@ def create_runbook_dir(
     runbook_data = format_str(runbook_data, mode=FileMode())
     LOG.info("Creating runbook file")
     create_runbook_file(runbook_dir, runbook_data)
+
+
+def create_project_dir(
+    project_cls=None,
+    project_dir=None,
+    credentials=None,
+):
+    if not project_dir:
+        project_dir = os.path.join(os.getcwd(), project_cls.__name__)
+
+    LOG.info("Creating project directory")
+    _, _, _, _ = init_project_dir(project_dir)
+    LOG.info("Rendering project file template")
+    project_data = render_project_template(
+        project_cls=project_cls,
+        credentials=credentials,
+    )
+
+    LOG.info("Formatting project file using black")
+    project_data = format_str(project_data, mode=FileMode())
+    LOG.info("Creating project file")
+    create_project_file(project_dir, project_data)
 
 
 def create_environment_dir(

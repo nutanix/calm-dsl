@@ -46,6 +46,26 @@ def make_runbook_dirs(runbook_dir):
     return (runbook_dir, local_dir, scripts_dir)
 
 
+def make_project_dirs(project_dir):
+
+    if not os.path.isdir(project_dir):
+        os.makedirs(project_dir)
+
+    local_dir = os.path.join(project_dir, LOCAL_DIR_KEY)
+    if not os.path.isdir(local_dir):
+        os.makedirs(local_dir)
+
+    spec_dir = os.path.join(project_dir, SPECS_DIR_KEY)
+    if not os.path.isdir(spec_dir):
+        os.makedirs(spec_dir)
+
+    scripts_dir = os.path.join(project_dir, SCRIPTS_DIR_KEY)
+    if not os.path.isdir(scripts_dir):
+        os.makedirs(scripts_dir)
+
+    return (project_dir, local_dir, spec_dir, scripts_dir)
+
+
 def make_environment_dirs(environment_dir):
 
     if not os.path.isdir(environment_dir):
@@ -82,6 +102,14 @@ def init_runbook_dir(runbook_dir):
     return (RUNBOOK_DIR, LOCAL_DIR, SCRIPTS_DIR)
 
 
+def init_project_dir(project_dir):
+
+    global LOCAL_DIR, SCRIPTS_DIR, SPECS_DIR, PROJECT_DIR
+    PROJECT_DIR, LOCAL_DIR, SPECS_DIR, SCRIPTS_DIR = make_project_dirs(project_dir)
+
+    return (PROJECT_DIR, LOCAL_DIR, SPECS_DIR, SCRIPTS_DIR)
+
+
 def init_environment_dir(environment_dir):
 
     global LOCAL_DIR, SCRIPTS_DIR, SPECS_DIR, ENVIRONMENT_DIR
@@ -98,6 +126,14 @@ def get_bp_dir():
 
 def get_runbook_dir():
     return RUNBOOK_DIR
+
+
+def get_project_dir():
+    return PROJECT_DIR
+
+
+def get_environment_dir():
+    return ENVIRONMENT_DIR
 
 
 def get_environment_dir():

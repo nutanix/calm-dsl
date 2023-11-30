@@ -9,8 +9,9 @@ from .projects import (
     delete_project,
     update_project_from_dsl,
     update_project_using_cli_switches,
+    decompile_project_command,
 )
-from .main import create, get, update, delete, describe, compile
+from .main import create, get, update, delete, describe, compile, decompile
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -62,6 +63,27 @@ def _get_projects(name, filter_by, limit, offset, quiet, out):
 def _compile_project_command(project_file, out):
     """Compiles a DSL (Python) project into JSON or YAML"""
     compile_project_command(project_file, out)
+
+
+@decompile.command("project", experimental=True)
+@click.argument("name", required=False)
+@click.option(
+    "--file",
+    "-f",
+    "project_file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    help="Path to Project file",
+)
+@click.option(
+    "--dir",
+    "-d",
+    "project_dir",
+    default=None,
+    help="Project directory location used for placing decompiled entities",
+)
+def _decompile_project_command(name, project_file, project_dir):
+    """Decompiles project present on server or json file"""
+    decompile_project_command(name, project_file, project_dir)
 
 
 @create.command("project")

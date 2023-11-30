@@ -1,4 +1,5 @@
 from inspect import getargs
+import os
 import time
 import click
 import arrow
@@ -19,7 +20,14 @@ from calm.dsl.tools import get_module_from_file
 from calm.dsl.log import get_logging_handle
 from calm.dsl.providers import get_provider
 from calm.dsl.builtins.models.helper.common import get_project
-from calm.dsl.cli.quotas import (
+from calm.dsl.builtins import (
+    get_valid_identifier,
+    MetadataType,
+)
+from calm.dsl.decompile.main import init_decompile_context
+from calm.dsl.decompile.decompile_render import create_project_dir
+from calm.dsl.decompile.file_handler import get_project_dir
+from calm.dsl.builtins.models.helper.quotas import (
     _set_quota_state,
     get_quota_uuid_at_project,
     create_quota_at_project,
@@ -27,6 +35,7 @@ from calm.dsl.cli.quotas import (
 )
 from calm.dsl.store import Cache, Version
 from calm.dsl.constants import CACHE, PROJECT_TASK, QUOTA
+from calm.dsl.builtins.models.project import ProjectType
 
 LOG = get_logging_handle(__name__)
 
@@ -1531,6 +1540,68 @@ def get_project_usage_payload(project_payload, old_project_payload):
     }
 
     return project_usage_payload
+
+
+def decompile_project_command(name, project_file, project_dir=None):
+    """helper to decompile project"""
+    if name and project_file:
+        LOG.error("Please provide either project file location or server project name")
+        sys.exit("Both project name and file location provided.")
+    init_decompile_context()
+
+    if name:
+        decompile_project_from_server(name=name, project_dir=project_dir)
+
+    elif project_file:
+        decompile_project_from_file(filename=project_file, project_dir=project_dir)
+    else:
+        LOG.error("Please provide either project file location or server project name")
+        sys.exit("Project name or file location not provided.")
+
+
+def decompile_project_from_server(name, project_dir):
+    """decompiles the project by fetching it from server"""
+
+    client = get_api_client()
+
+    LOG.info("Fetching project '{}' details".format(name))
+    project = get_project(name)
+
+    _decompile_project(project_payload=project, project_dir=project_dir)
+
+
+def decompile_project_from_file(filename, project_dir):
+    """decompile project from local project file"""
+
+    project_payload = json.loads(open(filename).read())
+    _decompile_project(project_payload=project_payload, project_dir=project_dir)
+
+
+def _decompile_project(project_payload, project_dir):
+    """decompiles the project from payload"""
+
+    try:
+        project_name = project_payload["status"].get("name", "DslProject")
+    except:
+        LOG.debug("Failed to get default project name.")
+    project_description = project_payload["status"].get("description", "")
+
+    LOG.info("Decompiling project {}".format(project_name))
+    project_cls = ProjectType.decompile(project_payload)
+
+    project_cls.__name__ = get_valid_identifier(project_name)
+    project_cls.__doc__ = project_description
+
+    create_project_dir(
+        project_cls=project_cls,
+        project_dir=project_dir,
+    )
+    click.echo(
+        "\nSuccessfully decompiled. Directory location: {}. Project location: {}".format(
+            highlight_text(get_project_dir()),
+            highlight_text(os.path.join(get_project_dir(), "project.py")),
+        )
+    )
 
 
 def get_projects_usage(project_name, filter={"filter": {}}):
