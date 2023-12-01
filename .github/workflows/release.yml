@@ -34,7 +34,7 @@ jobs:
         make docker
     - name: Read VERSION file
       id: getversion
-      run: echo "::set-output name=version::$(cat CalmVersion)"
+      run: echo "{version}={$(cat CalmVersion)}" >> $GITHUB_OUTPUT
     - name: Execute container
       uses: addnab/docker-run-action@v3
       with:
