@@ -1,4 +1,4 @@
-NAME    := ntnx/calm-dsl
+NAME    := calm-dsl
 VERSION := $(shell git describe --abbrev=0 --tags 2>/dev/null || cat CalmVersion)
 COMMIT  := $(shell git rev-parse --short HEAD)
 TAG     := $(shell git describe --abbrev=0 --tags --exact-match ${COMMIT} 2>/dev/null \
@@ -55,12 +55,6 @@ docker: dist
 	[ -S /var/run/docker.sock ] && \
 		docker build . --rm --file Dockerfile --tag ${NAME}:${TAG} --build-arg tag=${TAG} && \
 		docker tag ${NAME}:${TAG} ${NAME}:latest
-
-release-docker: dist
-
-	[ -S /var/run/docker.sock ] && \
-		docker build . --rm --file Dockerfile --tag ${NAME}:${TAG} --build-arg tag=${TAG} && \
-		docker tag ${NAME}:${TAG} ${NAME}:${RELEASE_VERSION}
 
 black:
 	black . --extend-exclude tests/escript/scripts/

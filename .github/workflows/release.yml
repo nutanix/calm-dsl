@@ -1,4 +1,4 @@
-name: Update release containers
+name: Setup & Build release containers
 on:
   push:
     branches:
@@ -9,17 +9,19 @@ on:
 
 jobs:
   build:
-
-    runs-on: [ubuntu-latest]
-
+    runs-on: self-hosted
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ['3.7']
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.7
-      uses: actions/setup-python@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
       with:
-        python-version: 3.7
+        python-version: ${{ matrix.python-version }}
     - name: black
-      uses: psf/black@stable
+      uses: psf/black@stable # Black
       with:
         version: "22.6.0"
         options: "--check --extend-exclude tests/escript/scripts/"
@@ -29,17 +31,18 @@ jobs:
         pip install virtualenv
     - name: Build docker image
       run: |
-        make release-docker
+        make docker
     - name: Read VERSION file
       id: getversion
       run: echo "::set-output name=version::$(cat CalmVersion)"
     - name: Execute container
       uses: addnab/docker-run-action@v3
       with:
-        image: ntnx/calm-dsl:v${{ steps.getversion.outputs.version }}
+        image: ntnx/calm-dsl
         run: calm
-    - name: Publish docker image
-      if: ${{ github.event_name == 'push' && github.repository == 'nutanix/calm-dsl'}}
+    - name: Publish docker image to jfrog-artifactory
+      if: ${{ github.event_name == 'push' && github.repository == 'nutanix/calm-dsl' && matrix.python-version == '3.7'}}
       run: |
-        docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-        docker push ntnx/calm-dsl:v${{ steps.getversion.outputs.version }}
+        docker login ${{ secrets.JFROG_REGISTRY }} -u ${{ secrets.JFROG_USERNAME }} -p ${{ secrets.JFROG_PASSWORD }}
+        docker tag ntnx/calm-dsl:latest ${{ secrets.JFROG_REGISTRY }}/calm-dsl/calm-dsl:v${{ steps.getversion.outputs.version }}
+        docker push ${{ secrets.JFROG_REGISTRY }}/calm-dsl/calm-dsl:v${{ steps.getversion.outputs.version }}
