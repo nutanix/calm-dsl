@@ -212,12 +212,205 @@ def describe_app(app_name, out):
 
     deployment_list = app["status"]["resources"]["deployment_list"]
     click.echo("Deployments [{}]:".format(highlight_text((len(deployment_list)))))
+
     for deployment in deployment_list:
-        click.echo(
-            "\t {} {}".format(
-                highlight_text(deployment["name"]), highlight_text(deployment["state"])
-            )
+
+        num_services = len(
+            deployment.get("substrate_configuration", {}).get("element_list", {})
         )
+        for i in range(num_services):
+            exta_suffix = ""
+            if num_services > 1:
+                exta_suffix = "[" + str(i) + "]"
+
+            temp_var = "[" + str(deployment["state"][i]) + "]"
+            click.echo(
+                "\t Service : {}{} {}".format(
+                    highlight_text(deployment["service_list"][0]["name"]),
+                    highlight_text(exta_suffix),
+                    highlight_text(temp_var),
+                )
+            )
+            click.echo("\t \t VM Details")
+            click.echo("\t \t \t Configuration")
+            click.echo(
+                "\t \t \t \t {:<15} : {}".format(
+                    "Name",
+                    highlight_text(deployment["substrate_configuration"]["name"]),
+                )
+            )
+            click.echo(
+                "\t \t \t \t {:<15} : {}".format(
+                    "IP Address",
+                    highlight_text(
+                        deployment["substrate_configuration"]["element_list"][i][
+                            "address"
+                        ]
+                    ),
+                )
+            )
+            click.echo(
+                "\t \t \t \t {:<15} : {}".format(
+                    "vCPUs",
+                    highlight_text(
+                        deployment["substrate_configuration"]["element_list"][i][
+                            "create_spec"
+                        ]["resources"]["num_vcpus_per_socket"]
+                    ),
+                )
+            )
+            click.echo(
+                "\t \t \t \t {:<15} : {}".format(
+                    "Cores",
+                    highlight_text(
+                        deployment["substrate_configuration"]["element_list"][i][
+                            "create_spec"
+                        ]["resources"]["num_sockets"]
+                    ),
+                )
+            )
+            click.echo(
+                "\t \t \t \t {:<15} : {} {}".format(
+                    "Memory",
+                    highlight_text(
+                        deployment["substrate_configuration"]["element_list"][i][
+                            "create_spec"
+                        ]["resources"]["memory_size_mib"]
+                        / 1024.0
+                    ),
+                    highlight_text("GB"),
+                )
+            )
+            click.echo(
+                "\t \t \t \t {:<15} : {}".format(
+                    "VM UUID",
+                    highlight_text(
+                        deployment["substrate_configuration"]["element_list"][i][
+                            "instance_id"
+                        ]
+                    ),
+                )
+            )
+            click.echo(
+                "\t \t \t \t {:<15} : {}".format(
+                    "Image",
+                    highlight_text(
+                        deployment["substrate_configuration"]["create_spec"][
+                            "resources"
+                        ]["disk_list"][0]["data_source_reference"]["uuid"]
+                    ),
+                )
+            )
+
+            click.echo("\t \t \t Network Adapters (NICs)")
+            if (
+                len(
+                    deployment["substrate_configuration"]["element_list"][i][
+                        "create_spec"
+                    ]["resources"]["nic_list"]
+                )
+                > 0
+            ):
+                for nic in deployment["substrate_configuration"]["element_list"][i][
+                    "create_spec"
+                ]["resources"]["nic_list"]:
+                    click.echo(
+                        "\t \t \t \t {:<15} : {}".format(
+                            "Type", highlight_text(nic["nic_type"])
+                        )
+                    )
+                for variable in deployment["substrate_configuration"]["element_list"][
+                    i
+                ]["variable_list"]:
+                    if variable["name"] == "mac_address":
+                        click.echo(
+                            "\t \t \t \t {:<15} : {}".format(
+                                "MAC Address", highlight_text(variable["value"])
+                            )
+                        )
+                for nic in deployment["substrate_configuration"]["element_list"][i][
+                    "create_spec"
+                ]["resources"]["nic_list"]:
+                    click.echo(
+                        "\t \t \t \t {:<15} : {}".format(
+                            "Subnet", highlight_text(nic["subnet_reference"]["name"])
+                        )
+                    )
+            else:
+                click.echo("\t \t \t \t {:<15} : ".format("Type"))
+                click.echo("\t \t \t \t {:<15} : ".format("MAC Address"))
+                click.echo("\t \t \t \t {:<15} : ".format("Subnet"))
+
+            if (
+                deployment["substrate_configuration"]["element_list"][i]["create_spec"][
+                    "cluster_reference"
+                ]
+                != None
+            ):
+                click.echo("\t \t \t Cluster Information")
+                click.echo(
+                    "\t \t \t \t {:<15} : {}".format(
+                        "Cluster UUID",
+                        highlight_text(
+                            deployment["substrate_configuration"]["element_list"][i][
+                                "create_spec"
+                            ]["cluster_reference"]["uuid"]
+                        ),
+                    )
+                )
+                click.echo(
+                    "\t \t \t \t {:<15} : {}".format(
+                        "Cluster Name",
+                        highlight_text(
+                            deployment["substrate_configuration"]["element_list"][i][
+                                "create_spec"
+                            ]["cluster_reference"]["name"]
+                        ),
+                    )
+                )
+            else:
+                click.echo("\t \t \t Cluster Information")
+                click.echo("\t \t \t \t {:<15} : ".format("Cluster UUID"))
+                click.echo("\t \t \t \t {:<15} : ".format("Cluster Name"))
+
+            categories = deployment["substrate_configuration"]["element_list"][i][
+                "create_spec"
+            ]["categories"]
+            if len(categories) > 0:
+                click.echo("\t \t \t Categories")
+                for key, value in categories.items():
+                    click.echo(
+                        "\t \t \t \t {:<15} : {}".format(key, highlight_text(value))
+                    )
+
+            if (
+                len(deployment["service_list"]) > 0
+                and len(
+                    deployment["service_list"][0]["element_list"][i]["variable_list"]
+                )
+                > 0
+            ):
+                click.echo("\t \t Variables")
+                for variable in deployment["service_list"][0]["element_list"][i][
+                    "variable_list"
+                ]:
+                    if (
+                        variable["type"] == "LOCAL" or variable["type"] == "HTTP_LOCAL"
+                    ) and variable["value"] != "":
+                        click.echo(
+                            "\t \t \t \t {:<15} : {}".format(
+                                variable["name"], highlight_text(variable["value"])
+                            )
+                        )
+                    elif variable["type"] == "SECRET":
+                        click.echo(
+                            "\t \t \t \t {:<15} : {}".format(
+                                variable["name"], highlight_text("********")
+                            )
+                        )
+                    else:
+                        click.echo("\t \t \t \t {:<15}".format(variable["name"]))
+            click.echo(" ")
 
     action_list = app["status"]["resources"]["action_list"]
     click.echo("App Actions [{}]:".format(highlight_text(len(action_list))))
