@@ -1,4 +1,4 @@
-NAME    := calm-dsl
+NAME    := ntnx/calm-dsl
 VERSION := $(shell git describe --abbrev=0 --tags 2>/dev/null || cat CalmVersion)
 COMMIT  := $(shell git rev-parse --short HEAD)
 TAG     := $(shell git describe --abbrev=0 --tags --exact-match ${COMMIT} 2>/dev/null \
