@@ -56,12 +56,6 @@ docker: dist
 		docker build . --rm --file Dockerfile --tag ${NAME}:${TAG} --build-arg tag=${TAG} && \
 		docker tag ${NAME}:${TAG} ${NAME}:latest
 
-release-docker: dist
-
-	[ -S /var/run/docker.sock ] && \
-		docker build . --rm --file Dockerfile --tag ${NAME}:${TAG} --build-arg tag=${TAG} && \
-		docker tag ${NAME}:${TAG} ${NAME}:${RELEASE_VERSION}
-
 black:
 	black . --extend-exclude tests/escript/scripts/
 
