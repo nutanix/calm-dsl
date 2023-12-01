@@ -113,7 +113,7 @@ def validate():
     "-t",
     "provider_type",
     type=click.Choice(get_provider_types()),
-    default="AHV_VM",
+    default=None,
     help="Provider type",
 )
 def validate_provider_spec(spec_file, provider_type):
@@ -121,6 +121,33 @@ def validate_provider_spec(spec_file, provider_type):
 
     with open(spec_file) as f:
         spec = yaml.safe_load(f.read())
+
+    if provider_type == None:
+        spec_type = spec.get("type", None)
+        recommended_type = "AHV_VM"
+
+        if spec_type == "PROVISION_AWS_VM":
+            recommended_type = "AWS_VM"
+        elif spec_type == "PROVISION_AZURE_VM":
+            recommended_type = "AZURE_VM"
+        elif spec_type == "PROVISION_GCP_VM":
+            recommended_type = "GCP_VM"
+        elif spec_type == "PROVISION_VMWARE_VM":
+            recommended_type = "VMWARE_VM"
+
+        if spec_type == None:
+            LOG.warning(
+                "You haven't chosen a provider type, so we'll proceed with '{}'.".format(
+                    recommended_type
+                )
+            )
+        else:
+            LOG.warning(
+                "You haven't chosen a provider type, and it should be '{}' according to your spec file, so we'll proceed with that.".format(
+                    recommended_type
+                )
+            )
+        provider_type = recommended_type
 
     try:
         Provider = get_provider(provider_type)
