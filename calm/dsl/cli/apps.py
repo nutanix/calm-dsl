@@ -269,9 +269,9 @@ def create_app(
     profile_name=None,
     patch_editables=True,
     launch_params=None,
+    watch=False,
 ):
     client = get_api_client()
-
     # Compile blueprint
     bp_payload = compile_blueprint(
         bp_file, brownfield_deployment_file=brownfield_deployment_file
@@ -318,7 +318,8 @@ def create_app(
 
     # Creating an app
     LOG.info("Creating app {}".format(app_name))
-    launch_blueprint_simple(
+    # if app_launch_state=1 implies blueprint launch is successful, app_launch_state=0 implies blueprint launch has failed
+    app_launch_state = launch_blueprint_simple(
         blueprint_name=bp_name,
         app_name=app_name,
         profile_name=profile_name,
@@ -333,6 +334,16 @@ def create_app(
         res, err = client.blueprint.delete(bp_uuid)
         if err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
+
+    # if app_launch_state=True that is if blueprint launch is successful then only we will enter in watch mode
+    if app_launch_state and watch:
+
+        def display_action(screen):
+            watch_app(app_name=app_name, screen=screen, poll_interval=10)
+            screen.wait_for_input(10.0)
+
+        Display.wrapper(display_action, watch=True)
+        LOG.info("Application with name: {} got created successfully".format(app_name))
 
 
 class RunlogNode(NodeMixin):

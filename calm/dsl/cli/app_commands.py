@@ -51,6 +51,13 @@ LOG = get_logging_handle(__name__)
     help="Path of Brownfield Deployment file",
 )
 @click.option(
+    "--watch",
+    "-w",
+    is_flag=True,
+    default=False,
+    help="Watch scrolling Application state",
+)
+@click.option(
     "--name", "-n", "app_name", default=None, help="Application name (Optional)"
 )
 @click.option(
@@ -72,6 +79,7 @@ def _create_app(
     brownfield_deployment_file,
     ignore_runtime_variables,
     launch_params,
+    watch,
 ):
     """Creates an application.
 
@@ -87,6 +95,7 @@ def _create_app(
         patch_editables=not ignore_runtime_variables,
         launch_params=launch_params,
         brownfield_deployment_file=brownfield_deployment_file,
+        watch=watch,
     )
 
 

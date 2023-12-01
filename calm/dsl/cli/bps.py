@@ -1816,11 +1816,12 @@ def launch_blueprint_simple(
     response = res.json()
     launch_req_id = response["status"]["request_id"]
 
-    poll_launch_status(client, blueprint_uuid, launch_req_id)
+    return poll_launch_status(client, blueprint_uuid, launch_req_id)
 
 
 def poll_launch_status(client, blueprint_uuid, launch_req_id):
     # Poll every 10 seconds on the app status, for 5 mins
+    # Return True for sucess and False for failure, as watch option depends on success or failure of application create option
     maxWait = 5 * 60
     count = 0
     while count < maxWait:
@@ -1845,16 +1846,19 @@ def poll_launch_status(client, blueprint_uuid, launch_req_id):
                     pc_ip, pc_port, app_uuid
                 )
             )
+            return True
             break
         elif app_state == "failure":
             LOG.debug("API response: {}".format(response))
             LOG.error("Failed to launch blueprint. Check API response above.")
+            return False
             break
         elif err:
             raise Exception("[{}] - {}".format(err["code"], err["error"]))
         LOG.info(app_state)
         count += 10
         time.sleep(10)
+    return False
 
 
 def delete_blueprint(blueprint_names):
