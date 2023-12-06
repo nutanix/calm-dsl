@@ -310,6 +310,9 @@ def create_acp(role, project, acp_users, acp_groups, name):
 
     elif role == "Developer":
         entity_filter_expression_list = ACP.ENTITY_FILTER_EXPRESSION_LIST.DEVELOPER
+        entity_filter_expression_list[4]["right_hand_side"]["uuid_list"] = [
+            project_uuid
+        ]
 
     elif role == "Consumer":
         entity_filter_expression_list = ACP.ENTITY_FILTER_EXPRESSION_LIST.CONSUMER
@@ -318,11 +321,13 @@ def create_acp(role, project, acp_users, acp_groups, name):
         entity_filter_expression_list = ACP.ENTITY_FILTER_EXPRESSION_LIST.OPERATOR
 
     else:
-        entity_filter_expression_list = get_filters_custom_role(role_uuid, client)
+        entity_filter_expression_list = get_filters_custom_role(
+            role_uuid, client, project_uuid
+        )
         project_collab_context[
             "entity_filter_expression_list"
         ] = get_filters_custom_role(
-            role_uuid, client, ACP.CUSTOM_ROLE_SPECIFIC_COLLAB_FILTER
+            role_uuid, client, None, ACP.CUSTOM_ROLE_SPECIFIC_COLLAB_FILTER
         )
 
     if cluster_uuids:
@@ -394,7 +399,9 @@ def create_acp(role, project, acp_users, acp_groups, name):
     watch_task(res["status"]["execution_context"]["task_uuid"])
 
 
-def get_filters_custom_role(role_uuid, client, custom_role_filter_dict=None):
+def get_filters_custom_role(
+    role_uuid, client, project_id=None, custom_role_filter_dict=None
+):
 
     role, err = client.role.read(id=role_uuid)
     if err:
@@ -411,12 +418,24 @@ def get_filters_custom_role(role_uuid, client, custom_role_filter_dict=None):
             if perm_name:
                 permission_names.add(perm_name.lower())
     entity_filter_expression_list = []
-    custom_role_filter_dict = (
-        ACP.CUSTOM_ROLE_PERMISSIONS_FILTERS if not custom_role_filter_dict else None
-    )
+    if not custom_role_filter_dict:
+        custom_role_filter_dict = ACP.CUSTOM_ROLE_PERMISSIONS_FILTERS
+        if project_id:
+            custom_role_filter_dict.append(
+                {
+                    "permissions": ["view_project"],
+                    "filter": {
+                        "operator": "IN",
+                        "right_hand_side": {"uuid_list": [project_id]},
+                        "left_hand_side": {"entity_type": "project"},
+                    },
+                }
+            )
     for perm_filter in custom_role_filter_dict:
-        if perm_filter.get("permission") in permission_names:
-            entity_filter_expression_list.append(perm_filter.get("filter"))
+        for permission in perm_filter.get("permissions"):
+            if permission in permission_names:
+                entity_filter_expression_list.append(perm_filter.get("filter"))
+                break
     return entity_filter_expression_list
 
 
