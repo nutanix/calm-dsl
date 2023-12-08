@@ -68,7 +68,7 @@ class HelloVmResources(AhvVmResources):
         AhvVmDisk.Disk.Scsi.cloneFromVMDiskPackage(CentosPackage, bootable=True),
     ]
     # TODO replace vpc, nic name from config
-    nics = [AhvVmNic.DirectNic.ingress(NETWORK1, vpc=VPC1)]
+    nics = [AhvVmNic.NormalNic.ingress(NETWORK1, vpc=VPC1)]
     # nics = [AhvVmNic.DirectNic.ingress(subnet="vlan.800", cluster="auto_cluster_prod_1a619308826b")]
 
     guest_customization = AhvVmGC.CloudInit(

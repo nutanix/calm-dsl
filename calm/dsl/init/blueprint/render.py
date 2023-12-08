@@ -86,16 +86,39 @@ def render_ahv_template(template, bp_name):
         )
         sys.exit(-1)
 
-    cluster_name = subnet_cache_data["cluster_name"]
     default_subnet = subnet_cache_data["name"]
-    LOG.info(
-        "Using Nutanix PC account {}, cluster {}, subnet {}".format(
-            account_name, cluster_name, default_subnet
+
+    if subnet_cache_data["subnet_type"] == "OVERLAY":
+        vpc_name = subnet_cache_data["vpc_name"]
+        cluster_data = account_cache_data.get("data", {}).get("clusters", {})
+        if cluster_data:
+            cluster_name = list({v: k for k, v in cluster_data.items()}.keys())[0]
+        else:
+            LOG.error(
+                "No clusters attached to {}(uuid = {})".format(
+                    account_name, account_uuid
+                )
+            )
+            sys.exit(-1)
+        LOG.info(
+            "Using Nutanix PC account: {}, vpc: {}, overlay_subnet: {}".format(
+                account_name, vpc_name, default_subnet
+            )
         )
-    )
+    else:
+        vpc_name = ""
+        cluster_name = subnet_cache_data["cluster_name"]
+        LOG.info(
+            "Using Nutanix PC account: {}, cluster: {}, subnet: {}".format(
+                account_name, cluster_name, default_subnet
+            )
+        )
     LOG.info("Rendering ahv template")
     text = template.render(
-        bp_name=bp_name, subnet_name=default_subnet, cluster_name=cluster_name
+        bp_name=bp_name,
+        subnet_name=default_subnet,
+        cluster_name=cluster_name,
+        vpc_name=vpc_name,
     )
 
     return text.strip() + os.linesep
@@ -173,8 +196,33 @@ def render_single_vm_bp_ahv_template(template, bp_name):
         )
         sys.exit(-1)
 
-    cluster_name = subnet_cache_data["cluster_name"]
     default_subnet = subnet_cache_data["name"]
+
+    if subnet_cache_data["subnet_type"] == "OVERLAY":
+        vpc_name = subnet_cache_data["vpc_name"]
+        cluster_data = account_cache_data.get("data", {}).get("clusters", {})
+        if cluster_data:
+            cluster_name = list({v: k for k, v in cluster_data.items()}.keys())[0]
+        else:
+            LOG.error(
+                "No clusters attached to {}(uuid = {})".format(
+                    account_name, account_uuid
+                )
+            )
+            sys.exit(-1)
+        LOG.info(
+            "Using Nutanix PC account: {}, vpc: {}, overlay_subnet: {}".format(
+                account_name, vpc_name, default_subnet
+            )
+        )
+    else:
+        vpc_name = ""
+        cluster_name = subnet_cache_data["cluster_name"]
+        LOG.info(
+            "Using Nutanix PC account: {}, cluster: {}, subnet: {}".format(
+                account_name, cluster_name, default_subnet
+            )
+        )
 
     # Fetch image for vm
     AhvVmProvider = get_provider("AHV_VM")
@@ -203,17 +251,13 @@ def render_single_vm_bp_ahv_template(template, bp_name):
         LOG.error("No Disk image found on account(uuid='{}')".format(account_uuid))
         sys.exit(-1)
 
-    LOG.info(
-        "Using Nutanix PC account {}, cluster {}, subnet {}".format(
-            account_name, cluster_name, default_subnet
-        )
-    )
     LOG.info("Rendering ahv template")
     text = template.render(
         bp_name=bp_name,
         subnet_name=default_subnet,
         cluster_name=cluster_name,
         vm_image=vm_image,
+        vpc_name=vpc_name,
     )
 
     return text.strip() + os.linesep
