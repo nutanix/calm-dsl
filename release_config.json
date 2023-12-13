@@ -1,0 +1,24 @@
+{
+    "releases": [
+      {
+        "product": "calm-dsl",
+        "version": "3.7.0",
+        "docUrl": [
+          {
+            "text": "Release Notes",
+            "href": "https://github.com/nutanix/calm-dsl/tree/master/release-notes/3.7.0"
+          }
+        ],
+        "exclude": [
+          ""
+        ],
+        "details": [
+          {
+            "fileName": "metadata.json",
+            "isMetadata": true,
+            "updateMetadata": false,
+          }
+        ]
+      }
+    ]
+  }
