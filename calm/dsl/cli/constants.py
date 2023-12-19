@@ -96,6 +96,7 @@ class POLICY:
         DISABLED = "DISABLED"
         DELETED = "DELETED"
         DRAFT = "DRAFT"
+        POLICY_EXEC = "POLICY_EXEC"
 
 
 class APPROVAL_REQUEST:

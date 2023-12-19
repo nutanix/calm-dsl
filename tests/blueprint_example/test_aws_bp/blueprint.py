@@ -12,6 +12,8 @@ from calm.dsl.builtins import *
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 POLICY_PROJECT = get_approval_project(DSL_CONFIG)
+POLICY_PROJECT_CONFIG = DSL_CONFIG["POLICY_PROJECTS"]["PROJECT1"]
+AWS_ACCOUNT = POLICY_PROJECT_CONFIG["ACCOUNTS"]["AWS"][0]
 
 # Secret Variables
 BP_CRED_root_PASSWORD = read_local_file(".tests/password")
@@ -36,6 +38,7 @@ class VM1(Substrate):
     os_type = "Linux"
     provider_type = "AWS_VM"
     provider_spec = read_provider_spec(os.path.join("specs", "VM1_provider_spec.yaml"))
+    provider_spec.spec.get("resources", {})["account_uuid"] = AWS_ACCOUNT.get("UUID")
     provider_spec_editables = read_spec(
         os.path.join("specs", "VM1_create_spec_editables.yaml")
     )

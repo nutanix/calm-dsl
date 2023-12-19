@@ -383,6 +383,38 @@ def poll_runlog_status(
     return state, reasons or []
 
 
+def poll_runlog_status_policy(
+    client, expected_states, url, payload, poll_interval=10, maxWait=300
+):
+    """
+    This routine polls policy for 5mins till the runlog gets into the expected state
+    Args:
+        client (obj): client object
+        expected_states (list): list of expected states
+        url (str): url to poll
+        payload (dict): payload used for polling
+    Returns:
+        (str, list): returns final state of the runlog and reasons list
+    """
+    count = 0
+    while count < maxWait:
+        res, err = client.application.poll_action_run(url, payload)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        response = res.json()
+        entity = response.get("entities")
+        LOG.info(json.dumps(response))
+        if entity:
+            state = entity[0]["status"]["state"]
+            reasons = entity[0]["status"]["reason_list"]
+            if state in expected_states:
+                break
+        count += poll_interval
+        time.sleep(poll_interval)
+
+    return state, reasons or []
+
+
 def get_escript_language_from_version(script_version="static"):
     """Gets escript language for dsl based on escript_version
     Args:

@@ -12,6 +12,10 @@ from tests.utils import get_approval_project
 from calm.dsl.log import get_logging_handle
 from calm.dsl.store import Version
 from calm.dsl.builtins import read_local_file
+from calm.dsl.cli.apps import _get_app
+from calm.dsl.api import get_api_client
+from calm.dsl.cli.constants import POLICY
+from tests.utils import poll_runlog_status_policy
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 POLICY_PROJECT = get_approval_project(DSL_CONFIG)
@@ -214,6 +218,7 @@ class TestPolicyCommands:
         self._test_dsl_policy_enable()
         self._create_and_launch_app(DSL_DAY2_BP)
         self._run_day2_action()
+        self._watch_patch_update_app()
         self._test_get_approval_requests()
         self._test_approve_policy()
 
@@ -666,4 +671,40 @@ class TestPolicyCommands:
                 "--ignore_runtime_variables",
             ],
         )
+        if result.exit_code:
+            cli_res_dict = {"Output": result.output, "Exception": str(result.exception)}
+            LOG.info(result.output)
+            LOG.debug(
+                "Cli Response: {}".format(
+                    json.dumps(cli_res_dict, indent=4, separators=(",", ": "))
+                )
+            )
+            pytest.fail("Update app failure")
+
         self.approval_request_name = "Day_two_operation App " + self.created_app_name
+
+    def _watch_patch_update_app(self):
+        """
+        This helper watches and does polling on policy status until it reaches to POLICY_EXEC stated
+        """
+        client = get_api_client()
+        app = _get_app(client, self.created_app_name)
+        app_id = app["metadata"]["uuid"]
+        url = client.application.ITEM.format(app_id) + "/app_runlogs/list"
+        payload = {"filter": "application_reference=={}".format(app_id)}
+        res, err = client.application.poll_action_run(url, payload)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+
+        response = res.json()
+        for entity in response.get("entities"):
+            if entity.get("status").get("name") == "patch_update1":
+                action_uuid = entity.get("metadata").get("uuid")
+                break
+
+        payload = {"filter": "root_reference=={}".format(action_uuid)}
+
+        state, reasons = poll_runlog_status_policy(
+            client, [POLICY.STATES.POLICY_EXEC], url, payload
+        )
+        LOG.info("POLICY Run state: {}\n{}".format(state, reasons))
