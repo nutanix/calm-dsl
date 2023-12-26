@@ -46,7 +46,16 @@ LOG = get_logging_handle(__name__)
     multiple=True,
     help="Search for accounts of specific provider",
     type=click.Choice(
-        ["aws", "k8s", "vmware", "azure", "gcp", "nutanix", "custom_provider"]
+        [
+            "aws",
+            "k8s",
+            "vmware",
+            "azure",
+            "gcp",
+            "nutanix",
+            "nutanix_pc",
+            "custom_provider",
+        ]
     ),
 )
 def _get_accounts(name, filter_by, limit, offset, quiet, all_items, account_type):
