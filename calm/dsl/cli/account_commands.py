@@ -133,7 +133,7 @@ def create_account_command(account_file, name, force, auto_verify):
         return
 
     if auto_verify:
-        verify_account(account_data["account_name"])
+        verify_account(account_data["name"])
 
 
 @compile.command("account")
