@@ -286,6 +286,8 @@ properties:
     {{ azurePublicIpInfo() | indent(4) }}
   type:
     type: string
+  enable_ip_forwarding:
+    type: boolean
 
 {%- endmacro %}
 
