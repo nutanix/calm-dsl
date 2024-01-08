@@ -11,6 +11,7 @@ from calm.dsl.builtins.models.metadata_payload import (
 )
 from calm.dsl.store import Version
 from distutils.version import LooseVersion as LV
+from tests.utils import get_local_az_overlay_details_from_dsl_config
 
 CRED_USERNAME = read_local_file(".tests/username")
 CRED_PASSWORD = read_local_file(".tests/password")
@@ -25,33 +26,6 @@ NTNX_LOCAL_ACCOUNT = DSL_CONFIG["ACCOUNTS"]["NTNX_LOCAL_AZ"]
 CALM_VERSION = Version.get_version("Calm")
 
 LOG = get_logging_handle(__name__)
-
-
-def get_local_az_overlay_details_from_dsl_config(config):
-    networks = config["ACCOUNTS"]["NUTANIX_PC"]
-    local_az_account = None
-    for account in networks:
-        if account.get("NAME") == "NTNX_LOCAL_AZ":
-            local_az_account = account
-            break
-    overlay_subnets_list = local_az_account.get("OVERLAY_SUBNETS", [])
-    vlan_subnets_list = local_az_account.get("SUBNETS", [])
-
-    cluster = ""
-    vpc = ""
-    overlay_subnet = ""
-
-    for subnet in overlay_subnets_list:
-        if subnet["NAME"] == "vpc_subnet_1" and subnet["VPC"] == "vpc_name_1":
-            overlay_subnet = subnet["NAME"]
-            vpc = subnet["VPC"]
-
-    for subnet in vlan_subnets_list:
-        if subnet["NAME"] == config["AHV"]["NETWORK"]["VLAN1211"]:
-            cluster = subnet["CLUSTER"]
-            break
-    return overlay_subnet, vpc, cluster
-
 
 NETWORK1, VPC1, CLUSTER1 = get_local_az_overlay_details_from_dsl_config(DSL_CONFIG)
 

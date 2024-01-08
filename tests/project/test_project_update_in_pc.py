@@ -2,6 +2,7 @@ import json
 
 from calm.dsl.builtins import Project
 from calm.dsl.builtins import Provider, Ref, read_local_file
+from tests.utils import get_local_az_overlay_details_from_dsl_config
 
 DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 ACCOUNTS = DSL_CONFIG["ACCOUNTS"]
@@ -29,6 +30,10 @@ K8S_ACCOUNT_NAME = K8S_ACCOUNT["NAME"]
 USER = DSL_CONFIG["USERS"][0]
 USER_NAME = USER["NAME"]
 
+VLAN_NETWORK = DSL_CONFIG["AHV"]["NETWORK"]["VLAN1211"]
+
+NETWORK1, VPC1, CLUSTER1 = get_local_az_overlay_details_from_dsl_config(DSL_CONFIG)
+
 
 class TestDslProject(Project):
     """Sample DSL Project"""
@@ -37,6 +42,15 @@ class TestDslProject(Project):
         Provider.Ntnx(
             account=Ref.Account(NTNX_ACCOUNT_NAME),
             subnets=[Ref.Subnet(name=NTNX_SUBNET, cluster=NTNX_SUBNET_CLUSTER)],
+        ),
+        Provider.Ntnx(
+            account=Ref.Account("NTNX_LOCAL_AZ"),
+            subnets=[
+                Ref.Subnet(name=VLAN_NETWORK, cluster=CLUSTER1),
+                Ref.Subnet(name=NETWORK1, vpc=VPC1),
+            ],
+            clusters=[Ref.Cluster(name=CLUSTER1, account_name="NTNX_LOCAL_AZ")],
+            vpcs=[Ref.Vpc(name=VPC1, account_name="NTNX_LOCAL_AZ")],
         ),
         Provider.Aws(account=Ref.Account(AWS_ACCOUNT_NAME)),
         Provider.Azure(account=Ref.Account(AZURE_ACCOUNT_NAME)),

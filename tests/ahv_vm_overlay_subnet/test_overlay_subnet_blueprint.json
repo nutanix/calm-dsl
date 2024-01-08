@@ -418,7 +418,7 @@
                             "nic_list": [
                                 {
                                     "network_function_nic_type": "INGRESS",
-                                    "nic_type": "DIRECT_NIC",
+                                    "nic_type": "NORMAL_NIC",
                                     "subnet_reference": {
                                         "kind": "subnet",
                                         "name": "vpc_subnet_1",
