@@ -13,7 +13,7 @@ from .variable import CalmVariable
 from .helper import common as common_helper
 
 from calm.dsl.log import get_logging_handle
-from calm.dsl.api.handle import get_api_client
+from calm.dsl.store import Cache
 from calm.dsl.builtins.models.ndb import (
     DatabaseServer,
     Database,
@@ -22,6 +22,7 @@ from calm.dsl.builtins.models.ndb import (
     Tag,
 )
 from calm.dsl.builtins.models.constants import NutanixDB as NutanixDBConst
+from calm.dsl.constants import CACHE
 
 LOG = get_logging_handle(__name__)
 
@@ -118,6 +119,25 @@ class TaskType(EntityType):
                     auth_obj["credential_local_reference"] = RefType.decompile(
                         auth_cred, prefix=prefix
                     )
+
+        tunnel_data = attrs.get("tunnel_reference", {})
+        if tunnel_data:
+            if not tunnel_data.get("name"):
+                cache_vpc_data = Cache.get_entity_data_using_uuid(
+                    CACHE.ENTITY.AHV_VPC, None, tunnel_uuid=tunnel_data["uuid"]
+                )
+
+                # Decompile should not fail
+                if not cache_vpc_data:
+                    LOG.info(
+                        "tunnel(uuid={}) used in task (name={}) not found".format(
+                            tunnel_data["uuid"], cdict["name"]
+                        )
+                    )
+                    attrs.pop("tunnel_reference", None)
+
+                else:
+                    tunnel_data["name"] = cache_vpc_data.get("tunnel_name")
 
         cdict["attrs"] = attrs
 
