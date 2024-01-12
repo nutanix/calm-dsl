@@ -119,7 +119,8 @@ class SubstrateType(EntityType):
                     if cls_deployment.substrate.name != str(cls):
                         continue
 
-                    environment = getattr(cls_profile, "environment", {})
+                    profile_envs = getattr(cls_profile, "environments", [])
+                    environment = profile_envs[0].get_dict() if profile_envs else dict()
                     if environment:
                         LOG.debug(
                             "Found environment {} associated to app-profile {}".format(
