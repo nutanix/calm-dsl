@@ -23,6 +23,7 @@ from .bps import (
     get_app,
     parse_launch_runtime_vars,
     parse_launch_params_attribute,
+    _decompile_bp,
 )
 from calm.dsl.log import get_logging_handle
 
@@ -1563,3 +1564,374 @@ def download_runlog(runlog_id, app_name, file_name):
         click.echo("Runlogs saved as {}".format(highlight_text(file_name)))
     else:
         LOG.error("[{}] - {}".format(err["code"], err["error"]))
+
+
+def update_app_migratable_bp(app_name, bp_file):
+    """
+    Updates app migratable blueprint
+    """
+
+    client = get_api_client()
+    params = {"filter": "name=={}".format(app_name)}
+    app_name_uuid_map = client.application.get_name_uuid_map(params)
+    app_uuid = app_name_uuid_map.get(app_name)
+    if not app_uuid:
+        LOG.error("Application with name {} not found".format(app_name))
+        sys.exit("Invalid app name")
+
+    bp_payload = compile_blueprint(bp_file)
+    remove_non_escript_actions_variables(bp_payload["spec"]["resources"])
+
+    client = get_api_client()
+    res, err = client.application.blueprints_entities_update(
+        app_id=app_uuid, payload=bp_payload
+    )
+    if err:
+        LOG.error("Application update failed for app {}".format(app_name))
+        sys.exit("[{}] - {}".format(err["code"], err["error"]))
+
+    res = res.json()
+    runlog_uuid = res["status"]["runlog_uuid"]
+    click.echo(
+        "Application update is successful. Got Action Runlog uuid: {}".format(
+            highlight_text(runlog_uuid)
+        )
+    )
+    if res["status"].get("message_list", []):
+        click.echo("Update messages:")
+        click.echo("\t", nl=False)
+        click.echo("\n\t".join(res["status"].get("message_list", [])))
+
+
+def decompile_app_migratable_bp(app_name, bp_dir):
+
+    client = get_api_client()
+    params = {"filter": "name=={}".format(app_name)}
+    app_name_uuid_map = client.application.get_name_uuid_map(params)
+    app_uuid = app_name_uuid_map.get(app_name)
+    if not app_uuid:
+        LOG.error("Application with name {} not found".format(app_name))
+        sys.exit("Invalid app name")
+
+    res, err = client.application.blueprints_original(app_uuid)
+    if err:
+        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit("[{}] - {}".format(err["code"], err["error"]))
+
+    res = res.json()
+    fix_missing_name_in_reference(res["spec"])
+    remove_non_escript_actions_variables(res["spec"]["resources"])
+    _decompile_bp(bp_payload=res, with_secrets=False, bp_dir=bp_dir)
+
+
+def fix_missing_name_in_reference(data):
+    """
+    Adds name field in missing references
+    """
+
+    uuid_name_map = {}
+    update_uuid_name_map_from_payload(data, uuid_name_map)
+    fill_name_in_refs(data, uuid_name_map)
+
+
+def update_uuid_name_map_from_payload(data, uuid_name_map):
+    if not isinstance(data, dict):
+        return
+
+    if data.get("name") and data.get("uuid"):
+        uuid_name_map[data["uuid"]] = data["name"]
+
+    for k, v in data.items():
+        if isinstance(v, dict):
+            if "reference" not in k:
+                update_uuid_name_map_from_payload(v, uuid_name_map)
+
+        elif isinstance(v, list):
+            for _lv in v:
+                update_uuid_name_map_from_payload(_lv, uuid_name_map)
+
+
+def fill_name_in_refs(data, uuid_name_map, force=False):
+    """
+    Fills the name in references using uuid_name_map.
+    Force parameter is used, if it object is ref object. ex: service_reference etc.
+    """
+
+    if not isinstance(data, dict):
+        return
+
+    if data.get("uuid") and not data.get("name"):
+        if data["uuid"] in uuid_name_map:
+            data["name"] = uuid_name_map[data["uuid"]]
+    elif force:
+        if data.get("uuid") and data["uuid"] in uuid_name_map:
+            data["name"] = uuid_name_map[data["uuid"]]
+
+    for k, v in data.items():
+        if isinstance(v, dict):
+            if "reference" in k:
+                fill_name_in_refs(v, uuid_name_map, True)
+            else:
+                fill_name_in_refs(v, uuid_name_map)
+
+        elif isinstance(v, list):
+            for _lv in v:
+                fill_name_in_refs(_lv, uuid_name_map)
+
+
+def get_runbook_payload_having_escript_task_vars_only(rb_payload):
+    escript_tasks = get_escript_tasks_in_runbook(rb_payload)
+    escript_variables = get_escript_vars_in_entity(rb_payload)
+
+    dag_task = [
+        _dag for _dag in rb_payload["task_definition_list"] if _dag["type"] == "DAG"
+    ]
+    dag_task = dag_task[0]
+    task_edges = []
+    for ind, _task in enumerate(escript_tasks[1:]):
+        task_edges.append(
+            {
+                "from_task_reference": {
+                    "kind": "app_task",
+                    "name": escript_tasks[ind]["name"],
+                },
+                "to_task_reference": {
+                    "kind": "app_task",
+                    "name": _task["name"],
+                },
+            }
+        )
+
+        if escript_tasks[ind].get("uuid"):
+            task_edges[-1]["from_task_reference"]["uuid"] = escript_tasks[ind]["uuid"]
+            task_edges[-1]["to_task_reference"]["uuid"] = _task["uuid"]
+
+    child_task_refs = []
+    for _task in escript_tasks:
+        child_task_refs.append({"kind": "app_task", "name": _task["name"]})
+        if _task.get("uuid"):
+            child_task_refs[-1]["uuid"] = _task["uuid"]
+
+    dag_task["child_tasks_local_reference_list"] = child_task_refs
+    dag_task["attrs"]["edges"] = task_edges
+    escript_tasks.insert(0, dag_task)
+    rb_payload["task_definition_list"] = escript_tasks
+    rb_payload["variable_list"] = escript_variables
+
+    return rb_payload, len(escript_tasks) > 1 or len(escript_variables) > 0
+
+
+def get_actions_having_escript_entities(action_list):
+    final_action_list = []
+    for _a in action_list:
+        (
+            _escript_runbook,
+            any_escript_entity_present,
+        ) = get_runbook_payload_having_escript_task_vars_only(_a["runbook"])
+        if not any_escript_entity_present:
+            continue
+
+        _a["runbook"] = _escript_runbook
+        final_action_list.append(_a)
+
+    return final_action_list
+
+
+def remove_non_escript_actions_variables(bp_payload):
+    """
+    Remove actions and variables that doesnt escript task/var
+    """
+
+    entity_list = [
+        "app_profile_list",
+        "credential_definition_list",
+        "substrate_definition_list",
+        "package_definition_list",
+        "service_definition_list",
+    ]
+    for _el in entity_list:
+        for _e in bp_payload.get(_el, []):
+            if "action_list" in _e:
+                _e["action_list"] = get_actions_having_escript_entities(
+                    _e["action_list"]
+                )
+
+            if "variable_list" in _e:
+                _e["variable_list"] = get_escript_vars_in_entity(_e)
+
+            if _el == "package_definition_list" and _e.get("type", "") == "DEB":
+                for pkg_runbook_name in ["install_runbook", "uninstall_runbook"]:
+                    (
+                        _e["options"][pkg_runbook_name],
+                        _,
+                    ) = get_runbook_payload_having_escript_task_vars_only(
+                        _e["options"].get(pkg_runbook_name, {})
+                    )
+
+
+def get_escript_tasks_in_runbook(runbook_payload):
+
+    task_list = []
+    for _task in runbook_payload["task_definition_list"]:
+        if _task["type"] in ["EXEC", "SET_VARIABLE"] and _task.get("attrs", {}).get(
+            "script_type", ""
+        ) in ["static", "static_py3"]:
+            task_list.append(_task)
+    return task_list
+
+
+def get_escript_vars_in_entity(runbook_payload):
+    final_variable_list = []
+    for _v in runbook_payload.get("variable_list", []):
+        if _v.get("options", {}).get("attrs", {}).get("script_type", "") in [
+            "static",
+            "static_py3",
+        ]:
+            final_variable_list.append(_v)
+    return final_variable_list
+
+
+def get_runbook_dependencies(runbook_payload):
+
+    dependencies = []
+    for _task in runbook_payload["task_definition_list"]:
+        if _task["type"] == "CALL_RUNBOOK":
+            dependencies.append(_task["attrs"]["runbook_reference"]["uuid"])
+    return dependencies
+
+
+def describe_app_actions_to_update(app_name):
+    """Displays blueprint data"""
+
+    DISPLAY_MAP = {
+        "service_definition_list": "Services",
+        "substrate_definition_list": "Substrates",
+        "app_profile_list": "Application Profiles",
+        "package_definition_list": "Packages",
+    }
+
+    client = get_api_client()
+    params = {"filter": "name=={}".format(app_name)}
+    app_name_uuid_map = client.application.get_name_uuid_map(params)
+    app_uuid = app_name_uuid_map.get(app_name)
+    if not app_uuid:
+        LOG.error("Application with name {} not found".format(app_name))
+        sys.exit("Invalid app name")
+
+    res, err = client.application.blueprints_original(app_uuid)
+    if err:
+        LOG.exception("[{}] - {}".format(err["code"], err["error"]))
+        sys.exit("[{}] - {}".format(err["code"], err["error"]))
+
+    res = res.json()
+    resources = res["status"]["resources"]
+
+    dependencies = {}
+    runbook_uuid_context = {}
+    runbook_containing_migratable_entities = []
+    for _key in resources.keys():
+        if _key in [
+            "service_definition_list",
+            "substrate_definition_list",
+            "app_profile_list",
+            "package_definition_list",
+        ]:
+            for _entity in resources[_key]:
+                if (
+                    _key == "package_definition_list"
+                    and _entity.get("type", "") == "DEB"
+                ):
+                    install_runbook = _entity["options"]["install_runbook"]
+                    uninstall_runbook = _entity["options"]["uninstall_runbook"]
+
+                    _entity["action_list"] = [
+                        {"name": "install_runbook", "runbook": install_runbook},
+                        {"name": "uninstall_runbook", "runbook": uninstall_runbook},
+                    ]
+
+                for _action in _entity.get("action_list", []):
+                    runbook_uuid = _action["runbook"]["uuid"]
+                    runbook_uuid_context[runbook_uuid] = "{}.{}.Action.{}".format(
+                        DISPLAY_MAP[_key], _entity["name"], _action["name"]
+                    )
+                    dependencies[runbook_uuid] = get_runbook_dependencies(
+                        _action["runbook"]
+                    )
+                    if get_escript_tasks_in_runbook(_action["runbook"]):
+                        runbook_containing_migratable_entities.append(runbook_uuid)
+                    elif get_escript_vars_in_entity(_action["runbook"]):
+                        runbook_containing_migratable_entities.append(runbook_uuid)
+
+    for _key in resources.keys():
+        if _key in [
+            "service_definition_list",
+            "substrate_definition_list",
+            "app_profile_list",
+            "package_definition_list",
+        ]:
+            print("\n{} [{}]:".format(DISPLAY_MAP[_key], len(resources[_key])))
+            for _entity in resources[_key]:
+                print("\t-> {}".format(highlight_text(_entity["name"])))
+                print("\t   Actions:")
+
+                any_action_to_be_modified = False
+                for _action in _entity.get("action_list", []):
+
+                    runbook_uuid = _action["runbook"]["uuid"]
+                    has_migratable_entities = (
+                        runbook_uuid in runbook_containing_migratable_entities
+                    )
+
+                    dependable_migratable_actions = []
+                    for _run_uuid in dependencies.get(runbook_uuid, []):
+                        if _run_uuid in runbook_containing_migratable_entities:
+                            dependable_migratable_actions.append(
+                                runbook_uuid_context[_run_uuid]
+                            )
+
+                    if has_migratable_entities or dependable_migratable_actions:
+                        any_action_to_be_modified = True
+                        print("\t\t-> {}".format(highlight_text(_action["name"])))
+                        if has_migratable_entities:
+                            print("\t\t   Tasks:")
+                            task_list = get_escript_tasks_in_runbook(_action["runbook"])
+                            migratable_task_names = [
+                                _task["name"] for _task in task_list
+                            ]
+
+                            if migratable_task_names:
+                                for _ind, _tname in enumerate(migratable_task_names):
+                                    print(
+                                        "\t\t\t{}. {}".format(
+                                            _ind, highlight_text(_tname)
+                                        )
+                                    )
+                            else:
+                                print("\t\t\t    No Tasks to be migrated")
+
+                            print("\t\t   Variables:")
+                            var_list = get_escript_vars_in_entity(_action["runbook"])
+                            migratable_var_names = [_var["name"] for _var in var_list]
+                            if migratable_var_names:
+                                for _ind, _tname in enumerate(migratable_var_names):
+                                    print(
+                                        "\t\t\t{}. {}".format(
+                                            _ind, highlight_text(_tname)
+                                        )
+                                    )
+                            else:
+                                print("\t\t\t    No Variables to be migrated")
+
+                        if dependable_migratable_actions:
+                            print("\t\t   Dependable actions to be migrated:")
+                            for _ind, _act_ctx in enumerate(
+                                dependable_migratable_actions
+                            ):
+                                print(
+                                    "\t\t\t{}. {}".format(
+                                        _ind, highlight_text(_act_ctx)
+                                    )
+                                )
+
+                if not any_action_to_be_modified:
+                    print("\t\t No actions found to be modified")

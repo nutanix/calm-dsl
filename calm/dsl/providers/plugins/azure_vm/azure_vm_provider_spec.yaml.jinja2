@@ -37,7 +37,7 @@ title: Azure Linux OS Configuration
 type: [object, "null"]
 properties:
   custom_data:
-    type: string
+    type: [string, "null"]
   disable_password_auth:
     type: boolean
     default: False
@@ -286,6 +286,12 @@ properties:
     {{ azurePublicIpInfo() | indent(4) }}
   type:
     type: string
+  enable_ip_forwarding:
+    type: boolean
+  asg_list:
+    type: array
+    items:
+      type: string
 
 {%- endmacro %}
 

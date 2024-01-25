@@ -647,7 +647,14 @@ class Ref:
                     "uuid": cache_cluster_data["uuid"],
                 }
             else:
-                cdict = AhvCluster(name).compile()
+                # set parent as it is used during cluster check for whitelisting
+                cluster_entity = AhvCluster(name)
+                try:
+                    cluster_entity.__parent__ = cls.__parent__
+                except:
+                    pass
+
+                cdict = cluster_entity.compile()
                 return {
                     "kind": "cluster",
                     "name": cdict["name"],

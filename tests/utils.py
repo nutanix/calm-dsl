@@ -7,10 +7,11 @@ import pytest
 from click.testing import CliRunner
 from calm.dsl.cli import main as cli
 
-from calm.dsl.cli.constants import APPLICATION, ERGON_TASK
+from calm.dsl.cli.constants import APPLICATION, ERGON_TASK, RUNLOG
 from calm.dsl.log import get_logging_handle
 from calm.dsl.api import get_client_handle_obj
 from calm.dsl.api.connection import REQUEST
+from calm.dsl.cli.main import get_api_client
 
 
 VPC_TUNNEL_NAME = "vpc_name_1"
@@ -100,6 +101,104 @@ class Application:
                 return platform_data_dict["status"]
 
         return None
+
+    def execute_actions(self, actions, app):
+        "This routine execute actions"
+        client = get_api_client()
+        app_uuid = app["metadata"]["uuid"]
+        app_spec = app["spec"]
+        LOG.info(
+            "Action Run Stage: Performing actions on application {}".format(app_uuid)
+        )
+        for action_name in actions:
+            calm_action_name = "action_" + action_name.lower()
+            LOG.info(
+                "Action Run Stage. Running action {} on application {}".format(
+                    action_name, app_uuid
+                )
+            )
+            action = next(
+                action
+                for action in app_spec["resources"]["action_list"]
+                if action["name"] == calm_action_name or action["name"] == action_name
+            )
+            if not action:
+                pytest.fail(
+                    "Action Run Stage: No action found matching name {}".format(
+                        action_name
+                    )
+                )
+
+            action_id = action["uuid"]
+
+            app.pop("status", None)
+            app["spec"] = {
+                "args": [],
+                "target_kind": "Application",
+                "target_uuid": app_uuid,
+            }
+            res, err = client.application.run_action(app_uuid, action_id, app)
+            if err:
+                pytest.fail(
+                    "Action Run Stage: running action failed [{}] - {}".format(
+                        err["code"], err["error"]
+                    )
+                )
+
+            response = res.json()
+            runlog_uuid = response["status"]["runlog_uuid"]
+            LOG.info(f"Runlog uuid of custom action triggered {runlog_uuid}")
+
+            url = client.application.ITEM.format(app_uuid) + "/app_runlogs/list"
+            payload = {"filter": "root_reference=={}".format(runlog_uuid)}
+
+            maxWait = 5 * 60
+            count = 0
+            poll_interval = 10
+            while count < maxWait:
+                # call status api
+                res, err = client.application.poll_action_run(url, payload)
+                if err:
+                    raise Exception("[{}] - {}".format(err["code"], err["error"]))
+                response = res.json()
+                entities = response["entities"]
+                wait_over = False
+                if len(entities):
+                    sorted_entities = sorted(
+                        entities, key=lambda x: int(x["metadata"]["creation_time"])
+                    )
+                    for runlog in sorted_entities:
+                        state = runlog["status"]["state"]
+                        if state in RUNLOG.FAILURE_STATES:
+                            pytest.fail(
+                                "Action Run Stage: action {} failed".format(action_name)
+                            )
+                            break
+                        elif state not in RUNLOG.TERMINAL_STATES:
+                            LOG.info(
+                                "Action Run Stage: Action {} is in process".format(
+                                    action_name
+                                )
+                            )
+                            break
+                        else:
+                            wait_over = True
+
+                if wait_over:
+                    LOG.info(
+                        "Action Run Stage: Action {} completed".format(action_name)
+                    )
+                    break
+
+                count += poll_interval
+                time.sleep(poll_interval)
+
+            if count >= maxWait:
+                pytest.fail(
+                    "Action Run Stage: action {} is not completed in 5 minutes".format(
+                        action_name
+                    )
+                )
 
 
 class Task:
@@ -253,3 +352,106 @@ def get_approval_project(config):
         raise exception("No Approval Policy Project Found")
     project_name = config.get("POLICY_PROJECTS", {}).get("PROJECT1", {}).get("NAME", "")
     return project_name
+
+
+def poll_runlog_status(
+    client, runlog_uuid, expected_states, poll_interval=10, maxWait=300
+):
+    """
+    This routine polls for 5mins till the runlog gets into the expected state
+    Args:
+        client (obj): client object
+        runlog_uuid (str): runlog id
+        expected_states (list): list of expected states
+    Returns:
+        (str, list): returns final state of the runlog and reasons list
+    """
+    count = 0
+    while count < maxWait:
+        res, err = client.runbook.poll_action_run(runlog_uuid)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        response = res.json()
+        LOG.debug(response)
+        state = response["status"]["state"]
+        reasons = response["status"]["reason_list"]
+        if state in expected_states:
+            break
+        count += poll_interval
+        time.sleep(poll_interval)
+
+    return state, reasons or []
+
+
+def poll_runlog_status_policy(
+    client, expected_states, url, payload, poll_interval=10, maxWait=300
+):
+    """
+    This routine polls policy for 5mins till the runlog gets into the expected state
+    Args:
+        client (obj): client object
+        expected_states (list): list of expected states
+        url (str): url to poll
+        payload (dict): payload used for polling
+    Returns:
+        (str, list): returns final state of the runlog and reasons list
+    """
+    count = 0
+    while count < maxWait:
+        res, err = client.application.poll_action_run(url, payload)
+        if err:
+            pytest.fail("[{}] - {}".format(err["code"], err["error"]))
+        response = res.json()
+        entity = response.get("entities")
+        LOG.info(json.dumps(response))
+        if entity:
+            state = entity[0]["status"]["state"]
+            reasons = entity[0]["status"]["reason_list"]
+            if state in expected_states:
+                break
+        count += poll_interval
+        time.sleep(poll_interval)
+
+    return state, reasons or []
+
+
+def get_escript_language_from_version(script_version="static"):
+    """Gets escript language for dsl based on escript_version
+    Args:
+        script_version(str): Escript version/type: static or static_Py3
+    Returns:
+        script_language(str): Escript DSL specific language:
+            python2- '', '.py2';
+            python3- '.py3';
+    """
+    if script_version == "static_py3":
+        script_language = ".py3"
+    else:
+        script_language = ""  # we can use .py2 as well for static versions
+    return script_language
+
+
+def get_local_az_overlay_details_from_dsl_config(config):
+    networks = config["ACCOUNTS"]["NUTANIX_PC"]
+    local_az_account = None
+    for account in networks:
+        if account.get("NAME") == "NTNX_LOCAL_AZ":
+            local_az_account = account
+            break
+    overlay_subnets_list = local_az_account.get("OVERLAY_SUBNETS", [])
+    vlan_subnets_list = local_az_account.get("SUBNETS", [])
+
+    cluster = ""
+    vpc = ""
+    overlay_subnet = ""
+
+    for subnet in overlay_subnets_list:
+        if subnet["NAME"] == "vpc_subnet_1" and subnet["VPC"] == "vpc_name_1":
+            overlay_subnet = subnet["NAME"]
+            vpc = subnet["VPC"]
+
+    for subnet in vlan_subnets_list:
+        if subnet["NAME"] == config["AHV"]["NETWORK"]["VLAN1211"]:
+            cluster = subnet["CLUSTER"]
+            break
+    return overlay_subnet, vpc, cluster

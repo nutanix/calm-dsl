@@ -38,9 +38,11 @@ def render_snapshot_config_template(cls, entity_context, CONFIG_SPEC_MAP):
         attrs["target_any_local_reference"]["name"]
     )
     user_attrs["num_of_replicas"] = attrs["num_of_replicas"]
-    if attrs.get("app_protection_policy_reference", None):
-        user_attrs["policy"] = attrs["app_protection_policy_reference"]["name"]
-    if attrs.get("app_protection_rule_reference", None):
-        user_attrs["rule"] = attrs["app_protection_rule_reference"]["name"]
+
+    # TODO fix App Protection policy model, decompilation is wrong and in compilation also metadata project is not considered
+    # if attrs.get("app_protection_policy_reference", {}).get("name", {}):
+    #     user_attrs["policy"] = attrs["app_protection_policy_reference"]["name"]
+    # if attrs.get("app_protection_rule_reference", {}).get("name", {}):
+    #     user_attrs["rule"] = attrs["app_protection_rule_reference"]["name"]
     text = render_template(schema_file="snapshot_config.py.jinja2", obj=user_attrs)
     return text.strip()

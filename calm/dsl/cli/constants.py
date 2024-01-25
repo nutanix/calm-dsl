@@ -96,6 +96,7 @@ class POLICY:
         DISABLED = "DISABLED"
         DELETED = "DELETED"
         DRAFT = "DRAFT"
+        POLICY_EXEC = "POLICY_EXEC"
 
 
 class APPROVAL_REQUEST:
@@ -214,6 +215,7 @@ class TASKS:
         POWERSHELL = "npsscript"
         SHELL = "sh"
         ESCRIPT = "static"
+        ESCRIPT_PY3 = "static_py3"
 
     class STATES:
         ACTIVE = "ACTIVE"

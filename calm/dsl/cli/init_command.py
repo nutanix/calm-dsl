@@ -11,6 +11,7 @@ from calm.dsl.config import (
     get_default_db_file,
     get_default_local_dir,
     get_default_connection_config,
+    get_default_log_config,
     init_context,
 )
 from calm.dsl.db import init_db_handle
@@ -22,9 +23,11 @@ from calm.dsl.store import Version
 from calm.dsl.constants import POLICY, STRATOS, DSL_CONFIG
 
 from .main import init, set
-from calm.dsl.log import get_logging_handle
+from calm.dsl.log import get_logging_handle, CustomLogging
 
 LOG = get_logging_handle(__name__)
+DEFAULT_CONNECTION_CONFIG = get_default_connection_config()
+DEFAULT_LOG_CONFIG = get_default_log_config()
 
 
 @init.command("dsl")
@@ -89,6 +92,33 @@ LOG = get_logging_handle(__name__)
     envvar="CALM_DSL_DEFAULT_PROJECT",
     help="Default project name used for entities",
 )
+@click.option(
+    "--log_level",
+    "-l",
+    envvar="CALM_DSL_LOG_LEVEL",
+    default=DEFAULT_LOG_CONFIG["level"],
+    help="Default log level",
+)
+@click.option(
+    "--retries-enabled/--retries-disabled",
+    "-re/-rd",
+    default=DEFAULT_CONNECTION_CONFIG["retries_enabled"],
+    help="Retries enabled/disabled for api connections",
+)
+@click.option(
+    "--connection-timeout",
+    "-ct",
+    type=int,
+    default=DEFAULT_CONNECTION_CONFIG["connection_timeout"],
+    help="Connection timeout for api connections",
+)
+@click.option(
+    "--read-timeout",
+    "-rt",
+    type=int,
+    default=DEFAULT_CONNECTION_CONFIG["read_timeout"],
+    help="Read timeout for api connections",
+)
 def initialize_engine(
     ip,
     port,
@@ -98,6 +128,10 @@ def initialize_engine(
     db_file,
     local_dir,
     config_file,
+    log_level,
+    retries_enabled,
+    connection_timeout,
+    read_timeout,
 ):
     """
     \b
@@ -124,6 +158,10 @@ def initialize_engine(
         db_file=db_file,
         local_dir=local_dir,
         config_file=config_file,
+        log_level=log_level,
+        retries_enabled=retries_enabled,
+        connection_timeout=connection_timeout,
+        read_timeout=read_timeout,
     )
     init_db()
     sync_cache()
@@ -149,6 +187,10 @@ def set_server_details(
     db_file,
     local_dir,
     config_file,
+    log_level,
+    retries_enabled,
+    connection_timeout,
+    read_timeout,
 ):
 
     if not (ip and port and username and password and project_name):
@@ -161,15 +203,6 @@ def set_server_details(
     project_name = project_name or click.prompt(
         "Project", default=DSL_CONFIG.EMPTY_PROJECT_NAME
     )
-
-    # Default log-level
-    log_level = "INFO"
-
-    # Default connection params
-    default_connection_config = get_default_connection_config()
-    retries_enabled = default_connection_config["retries_enabled"]
-    connection_timeout = default_connection_config["connection_timeout"]
-    read_timeout = default_connection_config["read_timeout"]
 
     # Do not prompt for init config variables, Take default values for init.ini file
     config_file = config_file or get_default_config_file()
@@ -284,6 +317,9 @@ def set_server_details(
     # Updating context for using latest config data
     LOG.info("Updating context for using latest config file data")
     init_context()
+
+    if log_level:
+        CustomLogging.set_verbose_level(getattr(CustomLogging, log_level))
 
 
 def init_db():

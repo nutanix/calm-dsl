@@ -475,6 +475,18 @@ properties:
         type: string
       type:
         type: string
+  recovery_point_reference:
+    type: [object, "null"]
+    properties:
+      uuid:
+        type: string
+      kind:
+        type: string
+        default: availability_zone
+      name:
+        type: string
+      type:
+        type: string
   availability_zone_reference:
     type: [object, "null"]
     properties:

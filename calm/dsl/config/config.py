@@ -4,6 +4,7 @@ from jinja2 import Environment, PackageLoader
 
 from .schema import validate_config
 from .init_config import get_init_config_handle
+from .constants import CONFIG
 from calm.dsl.tools import make_file_dir
 from calm.dsl.log import get_logging_handle
 
@@ -79,7 +80,7 @@ class ConfigFileParser:
         stratos_config = {}
         if "STRATOS" in self._CONFIG_PARSER_OBJECT:
             for k, v in self._CONFIG_PARSER_OBJECT.items("STRATOS"):
-                if k == "stratos_status":
+                if k == CONFIG.STRATOS.STATUS:
                     stratos_config[k] = self._CONFIG_PARSER_OBJECT[
                         "STRATOS"
                     ].getboolean(k)
@@ -103,11 +104,14 @@ class ConfigFileParser:
         connection_config = {}
         if "CONNECTION" in self._CONFIG_PARSER_OBJECT:
             for k, v in self._CONFIG_PARSER_OBJECT.items("CONNECTION"):
-                if k == "retries_enabled":
+                if k == CONFIG.CONNECTION.RETRIES_ENABLED:
                     connection_config[k] = self._CONFIG_PARSER_OBJECT[
                         "CONNECTION"
                     ].getboolean(k)
-                elif k in ["connection_timeout", "read_timeout"]:
+                elif k in [
+                    CONFIG.CONNECTION.CONNECTION_TIMEOUT,
+                    CONFIG.CONNECTION.READ_TIMEOUT,
+                ]:
                     connection_config[k] = self._CONFIG_PARSER_OBJECT[
                         "CONNECTION"
                     ].getint(k)

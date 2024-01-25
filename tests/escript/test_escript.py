@@ -11,11 +11,16 @@ from calm.dsl.log import get_logging_handle
 from calm.dsl.cli import runbooks
 from calm.dsl.api import get_api_client
 from calm.dsl.cli.constants import RUNLOG
+import json
+from calm.dsl.runbooks import read_local_file
+from tests.utils import get_escript_language_from_version
+
+DSL_CONFIG = json.loads(read_local_file(".tests/config.json"))
 
 
 LOG = get_logging_handle(__name__)
 
-RUNBOOK_DSL_FILE_NAME = "dsl_escript_runbook.py"
+RUNBOOK_DSL_FILE_NAME_PREFIX = "dsl_escript_runbook"
 
 
 def poll_runlog_status(
@@ -70,17 +75,48 @@ runbook_dsl_input = [
 # )
 
 
+def get_actual_script_status(client, runlog_uuid, script_name):
+    """parse given runbook execution status and provide
+    actual status map
+    """
+    res, err = client.runbook.list_runlogs(runlog_uuid)
+    if err:
+        return (RUNLOG.STATUS.FAILURE, err)
+    response = res.json()
+    entities = sorted(
+        response["entities"], key=lambda x: int(x["metadata"]["creation_time"])
+    )
+    exp_entity = None
+    for entity in entities:
+        if script_name in entity.get("status", {}).get("task_reference", {}).get(
+            "name", ""
+        ):
+            exp_entity = entity
+            break
+    if not exp_entity:
+        return (RUNLOG.STATUS.FAILURE, err)
+    script_status = exp_entity.get("status", {}).get("state", RUNLOG.STATUS.FAILURE)
+    LOG.info("Checking status and output for escript: {}".format(script_name))
+    res, err = client.runbook.runlog_output(runlog_uuid, exp_entity["metadata"]["uuid"])
+    response = res.json()
+    script_output = response["status"]["output_list"][0]["output"]
+    return (script_status, script_output)
+
+
+@pytest.mark.escript
 class TestEscript:
     def setup_class(self):
         """setup class method"""
         folder_path = os.path.dirname(os.path.abspath(__file__))
         escript_folder = os.path.join(folder_path, "scripts/")
         escript_files_list = sorted(os.listdir(escript_folder))
-        # {'scipt_file_name': (script_content, script_version, script_output, script_pass)} Eg:- {'escript1':('#python2;success\nprint "hi"', 'py3', 'hi\n', True)}
-        self.script_map = {}
+        # {'dsl_file_path': (script_name, script_content, script_version, script_output, script_pass)}
+        # Eg:- {'/path/to/dsl/file.py':('escript1', '#python2;success\nprint "hi"', 'py3', 'hi\n', True)}
+        self.script_dsl_file_map = {}
         for script in escript_files_list:
             if not script.endswith(".py"):
                 continue
+            script_name = script.split(".")[0]
             file_path = os.path.join(escript_folder, script)
             with open(file_path) as fd:
                 first_line = fd.readline()
@@ -92,13 +128,14 @@ class TestEscript:
                 else:
                     script_pass = True
                 if "python3" in first_line.lower() or "py3" in first_line.lower():
-                    script_version = "py3"
+                    script_version = "static_py3"
                 elif "python2" in first_line.lower() or "py2" in first_line.lower():
-                    script_version = "py2"
+                    script_version = "static"
                 else:
                     # default to python2 for now, pls fix python scripts
-                    script_version = "py2"
+                    script_version = "static"
                     script_content = first_line + "\n" + script_content
+            script_language = get_escript_language_from_version(script_version)
             try:
                 file_path = "{}.out".format(file_path)
                 with open(file_path) as fd:
@@ -106,34 +143,46 @@ class TestEscript:
             except IOError:
                 # skip output check if no out file in environment
                 script_output = None
-            self.script_map[script.split(".")[0]] = (
-                script_content,
-                script_version,
-                script_output,
-                script_pass,
+            provider = script.split(".")[0].split("_")
+            if len(provider) > 1:
+                provider = provider[1]
+            else:
+                provider = None
+            provider_config = DSL_CONFIG["provider"].get(provider, None)
+            if provider_config:
+                for replace_key, replace_item in provider_config.items():
+                    script_content = script_content.replace(replace_key, replace_item)
+            # Let's build a DSL file(s) for python scripts in scripts folder
+            filename = (
+                RUNBOOK_DSL_FILE_NAME_PREFIX + str(uuid.uuid4()).split("-")[0] + ".py"
             )
-        # Let's build a DSL file for python scripts in scripts folder
-        runbook_dsl_file = folder_path + "/dsl_file/" + RUNBOOK_DSL_FILE_NAME
-        with open(runbook_dsl_file, "w") as fd:
-            for line in runbook_dsl_input:
-                if "#scripts" in line:
-                    for val, script in self.script_map.items():
-                        fd.write("script_{}_{}='''".format(val, script[1]))
+            runbook_dsl_file = folder_path + "/dsl_file/" + filename
+            self.script_dsl_file_map[runbook_dsl_file] = (
+                script_name,  # python(escript) script content
+                script_content,  # python(escript) script content
+                script_version,  # python(escript) script version
+                script_output,  # python(escript) script output
+                script_pass,  # python(escript) script expected status
+                script_language,  # python(escript) script language
+            )
+            with open(runbook_dsl_file, "w") as fd:
+                for line in runbook_dsl_input:
+                    if "#scripts" in line:
+                        fd.write("script_{}_{}='''".format(script_name, script_version))
                         fd.write("\n")
-                        fd.write(script[0])
+                        fd.write(script_content)
                         fd.write("\n")
                         fd.write("'''")
                         fd.write("\n")
-                elif "#replace_task" in line:
-                    for val, script in self.script_map.items():
-                        task_ln = '    Task.Exec.escript(name="{}", script=script_{}_{})'.format(
-                            val, val, script[1]
+                    elif "#replace_task" in line:
+                        task_ln = '    Task.Exec.escript{}(name="{}", script=script_{}_{})'.format(
+                            script_language, script_name, script_name, script_version
                         )
                         fd.write(task_ln)
                         fd.write("\n")
-                else:
-                    fd.write(line)
-                    fd.write("\n")
+                    else:
+                        fd.write(line)
+                        fd.write("\n")
 
     def test_run_escript_via_runbook(self):
         """
@@ -155,85 +204,97 @@ class TestEscript:
         Error at line 3> name 'pi' is not defined
 
         """
-        print(self.script_map)
         client = get_api_client()
-        folder_path = os.path.dirname(os.path.abspath(__file__))
-        runbook_dsl_file = folder_path + "/dsl_file/" + RUNBOOK_DSL_FILE_NAME
-        LOG.info("runbook dsl file used {}".format(RUNBOOK_DSL_FILE_NAME))
-        runbook_name = "escript_runbook_{}".format(str(uuid.uuid4())[-12:])
-        # Create runbook
-        res = runbooks.create_runbook_command(
-            runbook_dsl_file, runbook_name, description="", force=True
-        )
-        try:
-            # Get runbook uuid
-            runbook_uuid = runbooks.get_runbook(client, runbook_name)["metadata"][
-                "uuid"
-            ]
-            # Execute runbook
-            res, err = client.runbook.run(runbook_uuid, {})
-            if err:
-                LOG.info("run: response: {}\n err: {}".format(res, err))
-                assert False, "Runbook execution failed"
-            response = res.json()
-            LOG.debug(">> Runbook execute response: {}".format(response))
-            runlog_uuid = response["status"]["runlog_uuid"]
-
-            # polling till runbook run gets to terminal state
-            state, reasons = poll_runlog_status(
-                client, runlog_uuid, RUNLOG.TERMINAL_STATES, maxWait=30
+        errors_map = {}
+        for runbook_dsl_file, script_details in self.script_dsl_file_map.items():
+            LOG.info("runbook dsl file used {}".format(runbook_dsl_file))
+            runbook_name = "runbook_{}_{}".format(
+                script_details[0], str(uuid.uuid4())[-12:]
             )
-            LOG.debug(">> Runbook Run state: {}\n{}".format(state, reasons))
-            # assert for overall runbook status
-            if all([val[3] for key, val in self.script_map.items()]):
-                expected_overall_status = RUNLOG.STATUS.SUCCESS
-            else:
-                expected_overall_status = RUNLOG.STATUS.FAILURE
-            assert state == expected_overall_status, reasons
-
-            # assert for overall task status ans output
-            res, err = client.runbook.list_runlogs(runlog_uuid)
-            response = res.json()
-            entities = sorted(
-                response["entities"], key=lambda x: int(x["metadata"]["creation_time"])
+            errors_map[runbook_name] = []
+            # Create runbook
+            res = runbooks.create_runbook_command(
+                runbook_dsl_file, runbook_name, description="", force=True
             )
-            for entity in entities:
-                script_name = (
-                    entity.get("status", {}).get("task_reference", {}).get("name", "")
-                )
-                script_status = entity.get("status", {}).get(
-                    "state", RUNLOG.STATUS.FAILURE
-                )
-                if script_name not in self.script_map.keys():
-                    continue
-                LOG.info(
-                    "Checking status and output for escript: {}".format(script_name)
-                )
-                res, err = client.runbook.runlog_output(
-                    runlog_uuid, entity["metadata"]["uuid"]
-                )
+            try:
+                # Get runbook uuid
+                runbook_uuid = runbooks.get_runbook(client, runbook_name)["metadata"][
+                    "uuid"
+                ]
+                # Execute runbook
+                res, err = client.runbook.run(runbook_uuid, {})
+                if err:
+                    LOG.info("run: response: {}\n err: {}".format(res, err))
+                    assert False, "Runbook execution failed"
                 response = res.json()
-                task_output = response["status"]["output_list"][0]["output"]
-                assert (
-                    self.script_map[script_name][2] == task_output
-                ), "Script: {}\nExpected output: {}\nActual output:{}".format(
-                    script_name, self.script_map[script_name][2], task_output
+                LOG.debug(">> Runbook execute response: {}".format(response))
+                runlog_uuid = response["status"]["runlog_uuid"]
+
+                # polling till runbook run gets to terminal state
+                state, reasons = poll_runlog_status(
+                    client, runlog_uuid, RUNLOG.TERMINAL_STATES, maxWait=30
                 )
-                expected_status = (
-                    RUNLOG.STATUS.SUCCESS
-                    if self.script_map[script_name][3]
-                    else RUNLOG.STATUS.FAILURE
+                LOG.debug(">> Runbook Run state: {}\n{}".format(state, reasons))
+                # assert for overall runbook status
+                if script_details[4]:
+                    expected_overall_status = [RUNLOG.STATUS.SUCCESS]
+                else:
+                    expected_overall_status = [
+                        RUNLOG.STATUS.FAILURE,
+                        RUNLOG.STATUS.ERROR,
+                    ]
+
+                # check for overall status
+                if state not in expected_overall_status:
+                    err_msg = """Runbook is in unexpected state
+                    Expected: {}
+                    Actual: {}
+                    """.format(
+                        expected_overall_status, state
+                    )
+                    if reasons:
+                        err_msg += "due to  {}".format(reasons)
+                    errors_map[runbook_name].append(err_msg)
+                actual_script_status, actual_script_output = get_actual_script_status(
+                    client, runlog_uuid, script_details[0]
                 )
-                assert (
-                    expected_status == script_status
-                ), "Script: {}\nExpected status:{}\nActual status: {}".format(
-                    script_name, expected_status, script_status
+                # check for script output
+                if script_details[3] != actual_script_output:
+                    err_msg = """Mismatch in Output:
+                    Expected output: {} 
+                    Actual output: {}
+                    """.format(
+                        script_details[3], actual_script_output
+                    )
+                    errors_map[runbook_name].append(err_msg)
+                # check for script status
+                if actual_script_status not in expected_overall_status:
+                    err_msg = """Mismatch in Status:
+                    Expected status: {} 
+                    Actual status: {}
+                    """.format(
+                        expected_overall_status, actual_script_status
+                    )
+                    errors_map[runbook_name].append(err_msg)
+                # delete runbook when no failures
+                if not errors_map[runbook_name]:
+                    runbooks.delete_runbook([runbook_name])
+                else:
+                    LOG.error("runbook: {} encountered error".format(runbook_name))
+            except Exception as error:
+                LOG.info(
+                    "Got below exception during test for runbook: {} created using dsl file: {}\n Exception: {}".format(
+                        runbook_name, runbook_dsl_file, error
+                    )
                 )
-                if expected_status != RUNLOG.STATUS.SUCCESS:
-                    # once task failed, next task won't be executed, so skip
-                    break
-        except Exception as error:
-            LOG.info("Got exception during test: {}".format(error))
-            assert False, error
-        finally:
-            runbooks.delete_runbook([runbook_name])
+                errors_map[runbook_name].append("Got exception: {}".format(error))
+        if any(errors_map.values()):
+            LOG.info("Got below exception during test")
+            for runbook, error in errors_map.items():
+                if error:
+                    LOG.error(
+                        "\nErrors of runbook: {} can be found below".format(runbook)
+                    )
+                    for err in error:
+                        LOG.error("{}".format(err))
+            assert False, errors_map

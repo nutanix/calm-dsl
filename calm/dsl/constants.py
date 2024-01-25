@@ -169,6 +169,9 @@ class PROVIDER:
         VMWARE = "VMWARE_VM"
         AWS = "AWS_VM"
 
+    class AHV:
+        VLAN_1211 = "vlan1211"
+
 
 class QUOTA(object):
     class STATE(object):

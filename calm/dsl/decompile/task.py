@@ -57,6 +57,9 @@ def render_task_template(
         elif script_type == "static":
             schema_file = "task_exec_escript.py.jinja2"
 
+        elif script_type == "static_py3":
+            schema_file = "task_exec_escript_py3.py.jinja2"
+
         elif script_type == "npsscript":
             schema_file = "task_exec_powershell.py.jinja2"
 
@@ -74,6 +77,9 @@ def render_task_template(
 
         elif script_type == "static":
             schema_file = "task_setvariable_escript.py.jinja2"
+
+        elif script_type == "static_py3":
+            schema_file = "task_setvariable_escript_py3.py.jinja2"
 
         elif script_type == "npsscript":
             schema_file = "task_setvariable_powershell.py.jinja2"
@@ -200,6 +206,9 @@ def render_task_template(
         elif script_type == "static":
             schema_file = "task_decision_escript.py.jinja2"
 
+        elif script_type == "static_py3":
+            schema_file = "task_decision_escript_py3.py.jinja2"
+
         elif script_type == "npsscript":
             schema_file = "task_decision_powershell.py.jinja2"
     elif cls.type == "WHILE_LOOP":
@@ -235,7 +244,7 @@ def create_script_file(script_type, script="", entity_context=""):
     elif script_type == "npsscript":
         file_name += ".ps1"
 
-    elif script_type == "static":
+    elif script_type in ["static", "static_py3"]:
         file_name += ".py"
 
     else:

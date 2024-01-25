@@ -49,3 +49,7 @@ class Version:
             res = res.json()
             pc_version = res["version"]
             cls.create("PC", pc_version)
+
+    @classmethod
+    def get_cache_type(cls):
+        return "Version"

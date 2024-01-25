@@ -1,0 +1,353 @@
+{
+    "endpoint_definition_list": [],
+    "credential_definition_list": [],
+    "client_attrs": {},
+    "runbook": {
+        "name": "DslAllEscriptTasks_runbook",
+        "description": "",
+        "main_task_local_reference": {
+            "kind": "app_task",
+            "name": "DslAllEscriptTasks_dag"
+        },
+        "task_definition_list": [
+            {
+                "name": "DslAllEscriptTasks_dag",
+                "description": "",
+                "type": "DAG",
+                "attrs": {
+                    "edges": [
+                        {
+                            "from_task_reference": {
+                                "kind": "app_task",
+                                "name": "escript_decision"
+                            },
+                            "to_task_reference": {
+                                "kind": "app_task",
+                                "name": "escript2_decision"
+                            }
+                        },
+                        {
+                            "from_task_reference": {
+                                "kind": "app_task",
+                                "name": "escript2_decision"
+                            },
+                            "to_task_reference": {
+                                "kind": "app_task",
+                                "name": "escript3_decision"
+                            }
+                        }
+                    ]
+                },
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "escript_decision"
+                    },
+                    {
+                        "kind": "app_task",
+                        "name": "escript2_decision"
+                    },
+                    {
+                        "kind": "app_task",
+                        "name": "escript3_decision"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "escript_decision_success_meta_task",
+                "description": "",
+                "type": "META",
+                "attrs": {},
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "escript_exec"
+                    },
+                    {
+                        "kind": "app_task",
+                        "name": "escript_setvar"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "escript_exec",
+                "description": "",
+                "type": "EXEC",
+                "attrs": {
+                    "script_type": "static",
+                    "script": "print(\"just printing...\")\n"
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "escript_setvar",
+                "description": "",
+                "type": "SET_VARIABLE",
+                "attrs": {
+                    "script_type": "static",
+                    "script": "print(\"var1=abc\")\n",
+                    "eval_variables": [
+                        "var1"
+                    ]
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "escript_decision_failure_meta_task",
+                "description": "",
+                "type": "META",
+                "attrs": {},
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "escript_exec_print"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "escript_exec_print",
+                "description": "",
+                "type": "EXEC",
+                "attrs": {
+                    "script_type": "static",
+                    "script": "print \"Decision else part\""
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "escript_decision",
+                "description": "",
+                "type": "DECISION",
+                "attrs": {
+                    "script_type": "static",
+                    "script": "exit(0)\n",
+                    "success_child_reference": {
+                        "kind": "app_task",
+                        "name": "escript_decision_success_meta_task"
+                    },
+                    "failure_child_reference": {
+                        "kind": "app_task",
+                        "name": "escript_decision_failure_meta_task"
+                    }
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "escript2_decision_success_meta_task",
+                "description": "",
+                "type": "META",
+                "attrs": {},
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "escript3_exec_print"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "escript3_exec_print",
+                "description": "",
+                "type": "EXEC",
+                "attrs": {
+                    "script_type": "static",
+                    "script": "print \"Decision if part\""
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "escript2_decision_failure_meta_task",
+                "description": "",
+                "type": "META",
+                "attrs": {},
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "escript2_exec"
+                    },
+                    {
+                        "kind": "app_task",
+                        "name": "escript2_setvar"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "escript2_exec",
+                "description": "",
+                "type": "EXEC",
+                "attrs": {
+                    "script_type": "static",
+                    "script": "print(\"just printing...\")\n"
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "escript2_setvar",
+                "description": "",
+                "type": "SET_VARIABLE",
+                "attrs": {
+                    "script_type": "static",
+                    "script": "print(\"var1=abc\")\n",
+                    "eval_variables": [
+                        "var1"
+                    ]
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "escript2_decision",
+                "description": "",
+                "type": "DECISION",
+                "attrs": {
+                    "script_type": "static",
+                    "script": "exit(1)\n",
+                    "success_child_reference": {
+                        "kind": "app_task",
+                        "name": "escript2_decision_success_meta_task"
+                    },
+                    "failure_child_reference": {
+                        "kind": "app_task",
+                        "name": "escript2_decision_failure_meta_task"
+                    }
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "escript3_decision_success_meta_task",
+                "description": "",
+                "type": "META",
+                "attrs": {},
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "escript3_exec"
+                    },
+                    {
+                        "kind": "app_task",
+                        "name": "escript3_setvar"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "escript3_exec",
+                "description": "",
+                "type": "EXEC",
+                "attrs": {
+                    "script_type": "static_py3",
+                    "script": "print(\"just printing...\")\n"
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "escript3_setvar",
+                "description": "",
+                "type": "SET_VARIABLE",
+                "attrs": {
+                    "script_type": "static_py3",
+                    "script": "print(\"var1=abc\")\n",
+                    "eval_variables": [
+                        "var1"
+                    ]
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "escript3_decision_failure_meta_task",
+                "description": "",
+                "type": "META",
+                "attrs": {},
+                "child_tasks_local_reference_list": [
+                    {
+                        "kind": "app_task",
+                        "name": "escript3_exec_print"
+                    }
+                ],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "escript3_exec_print",
+                "description": "",
+                "type": "EXEC",
+                "attrs": {
+                    "script_type": "static_py3",
+                    "script": "print(\"Decision else part\")"
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            },
+            {
+                "name": "escript3_decision",
+                "description": "",
+                "type": "DECISION",
+                "attrs": {
+                    "script_type": "static_py3",
+                    "script": "exit(0)\n",
+                    "success_child_reference": {
+                        "kind": "app_task",
+                        "name": "escript3_decision_success_meta_task"
+                    },
+                    "failure_child_reference": {
+                        "kind": "app_task",
+                        "name": "escript3_decision_failure_meta_task"
+                    }
+                },
+                "child_tasks_local_reference_list": [],
+                "variable_list": [],
+                "retries": "",
+                "timeout_secs": ""
+            }
+        ],
+        "variable_list": []
+    }
+}

@@ -1068,8 +1068,15 @@ class AhvVpcsCache(CacheTableBase):
     @classmethod
     def get_entity_data_using_uuid(cls, uuid, **kwargs):
 
+        query_obj = {}
+        if uuid:
+            query_obj["uuid"] = uuid
+
+        if kwargs.get("tunnel_uuid", ""):
+            query_obj["tunnel_uuid"] = kwargs.get("tunnel_uuid")
+
         try:
-            entity = super().get(cls.uuid == uuid)
+            entity = super().get(**query_obj)
             return entity.get_detail_dict()
 
         except DoesNotExist:

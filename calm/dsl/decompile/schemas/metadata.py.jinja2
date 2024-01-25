@@ -2,6 +2,8 @@
 class BpMetadata(Metadata):
 
     {% if obj.categories %}categories={{obj.categories}}{% endif %}
+    {% if obj.project_name %}project=Ref.Project("{{obj.project_name}}"){% endif %}
+
 {%- endmacro %}
 
 {{ metadata(obj) }}

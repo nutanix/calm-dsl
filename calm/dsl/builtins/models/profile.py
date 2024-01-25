@@ -38,6 +38,18 @@ class ProfileType(EntityType):
                 {"kind": "environment", "uuid": _eid} for _eid in env_uuids
             ]
 
+        # Dont support decompilation for other providers
+        configs = {"snapshot_config_list": [], "restore_config_list": []}
+        for _config in cdict.get("snapshot_config_list", []):
+            if _config.get("type") == "AHV_SNAPSHOT":
+                configs["snapshot_config_list"].append(_config)
+
+        for _config in cdict.get("restore_config_list", []):
+            if _config.get("type") == "AHV_RESTORE":
+                configs["restore_config_list"].append(_config)
+
+        cdict.update(configs)
+
         return cdict
 
     def compile(cls):
