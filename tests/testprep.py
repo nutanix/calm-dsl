@@ -505,6 +505,7 @@ def add_approval_details(config):
 
     add_project_details(config, "POLICY_PROJECTS", "test_approval_policy")
 
+
 def add_provider_constants(config):
     provider_config = {
         "provider": {
