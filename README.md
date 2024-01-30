@@ -192,8 +192,8 @@ Sample Project Flow for `Project Admin` users:
 - Update ACPs: `calm update acp "acp_developer_name" --project "project_name" --add_user "user_1" --remove_user "user_3" --add_group "group_1" --remove_group "group_3"`.
 
 ## Docker
- - Latest image: `docker pull ntnx/calm-dsl`
- - Run: `docker run -it ntnx/calm-dsl`
+ - Latest image: `docker pull nutanix/calm-dsl`
+ - Run: `docker run -it nutanix/calm-dsl`
 
 ## Dev Setup
 MacOS:
