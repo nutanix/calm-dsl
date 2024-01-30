@@ -1,0 +1,18 @@
+{
+    "releases": [
+      {
+        "product": "calm-dsl",
+        "version": "3.7.2.1",
+        "exclude": [
+          ""
+        ],
+        "details": [
+          {
+            "fileName": "metadata.json",
+            "isMetadata": true,
+            "updateMetadata": false
+          }
+        ]
+      }
+    ]
+  }
