@@ -104,6 +104,7 @@ def get_actual_script_status(client, runlog_uuid, script_name):
 
 
 @pytest.mark.escript
+@pytest.mark.nightly_380
 class TestEscript:
     def setup_class(self):
         """setup class method"""

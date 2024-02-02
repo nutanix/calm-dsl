@@ -35,6 +35,7 @@ PROJECT = DSL_CONFIG["PROJECTS"]["PROJECT1"]
 PROJECT_NAME = PROJECT["NAME"]
 
 
+@pytest.mark.nightly_380
 class TestMultiVmMigrate:
     app_helper = ApplicationHelper()
 
