@@ -193,11 +193,12 @@ Sample Project Flow for `Project Admin` users:
 
 ## Docker
  - For Self-Service(formerly Calm) version less than 3.7.2.1:
-    - Latest image: `docker pull ntnx/calm-dsl`
-    - Run: `docker run -it ntnx/calm-dsl`
+    - Latest image: `docker pull ntnx/calm-dsl:{tag}`
+    - Run: `docker run -it ntnx/calm-dsl:{tag}`
  - From Self-Service(formerly Calm) version 3.7.2.1 onwards:
-    - Latest image: `docker pull nutanix/calm-dsl`
-    - Run: `docker run -it nutanix/calm-dsl`
+    - Latest image: `docker pull nutanix/calm-dsl:{tag}`
+    - Run: `docker run -it nutanix/calm-dsl:{tag}`
+ - Note: Tag starts with `v`. Ex: `v3.7.2.1`, `v3.7.0`.
 
 ## Dev Setup
 MacOS:
