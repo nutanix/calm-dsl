@@ -457,7 +457,8 @@ class BrownfiedVmType(EntityType):
 
         environment = {}
         cls_profile = common_helper._walk_to_parent_with_given_type(cls, "ProfileType")
-        environment = getattr(cls_profile, "environment", {})
+        profile_envs = getattr(cls_profile, "environments", [])
+        environment = profile_envs[0].get_dict() if profile_envs else dict()
         if environment:
             LOG.debug(
                 "Found environment {} associated to app-profile {}".format(

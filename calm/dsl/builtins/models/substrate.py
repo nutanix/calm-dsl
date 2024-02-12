@@ -55,7 +55,8 @@ class SubstrateType(EntityType):
                     if cls_deployment.substrate.name != str(cls):
                         continue
 
-                    environment = getattr(cls_profile, "environment", {})
+                    profile_envs = getattr(cls_profile, "environments", [])
+                    environment = profile_envs[0].get_dict() if profile_envs else dict()
                     if environment:
                         LOG.debug(
                             "Found environment {} associated to app-profile {}".format(
@@ -113,21 +114,7 @@ class SubstrateType(EntityType):
         # If substrate is defined in blueprint file
         cls_bp = common_helper._walk_to_parent_with_given_type(cls, "BlueprintType")
         if cls_bp:
-            environment = {}
-            for cls_profile in cls_bp.profiles:
-                for cls_deployment in cls_profile.deployments:
-                    if cls_deployment.substrate.name != str(cls):
-                        continue
-
-                    profile_envs = getattr(cls_profile, "environments", [])
-                    environment = profile_envs[0].get_dict() if profile_envs else dict()
-                    if environment:
-                        LOG.debug(
-                            "Found environment {} associated to app-profile {}".format(
-                                environment.get("name"), cls_profile
-                            )
-                        )
-                    break
+            environment = cls.get_profile_environment()
 
             # If environment is given at profile level
             if environment:
