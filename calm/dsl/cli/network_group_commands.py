@@ -157,7 +157,10 @@ def _delete_network_group_tunnel(network_group_tunnel_names):
 def _reset_network_group_tunnel_vm(
     network_group_tunnel_vm_file, network_group_tunnel_name
 ):
-    """Deploy a new Tunnel VM for a Network Group Tunnel"""
+    """
+    Deploy a new Tunnel VM for a Network Group Tunnel.
+    Note: Orphan app will be deleted post reset.
+    """
 
     if network_group_tunnel_vm_file.endswith(".py"):
         create_network_group_tunnel_vm_from_dsl(

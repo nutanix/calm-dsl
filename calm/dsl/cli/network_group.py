@@ -631,11 +631,16 @@ def get_network_group_by_name(
     return network_group_json
 
 
-def create_network_group_tunnel_vm(tunnel_vm_payload, tunnel_name):
+def reset_network_group_tunnel_vm(tunnel_vm_payload, tunnel_name, delete_old_app=True):
 
     client = get_api_client()
 
     network_group_json = get_network_group_by_tunnel_name(tunnel_name)
+
+    # keep app_uuid for cleanup
+    app_uuid = (
+        network_group_json.get("status", {}).get("resources", {}).get("app_uuid", "")
+    )
 
     network_group_uuid = network_group_json.get("metadata", {}).get("uuid")
 
@@ -660,6 +665,19 @@ def create_network_group_tunnel_vm(tunnel_vm_payload, tunnel_name):
     network_group_json["spec"] = network_group_json["status"]
 
     watch_tunnel_creation(network_group_json, create_response)
+
+    LOG.info("Tunnel VM created successfully")
+
+    if delete_old_app and app_uuid:
+        res, err = client.application.delete(app_uuid)
+        if err:
+            LOG.error("Failed deleting old app after tunnel reset.")
+
+        LOG.info(
+            "Triggered delete of old app with uuid {0}, previously used for tunnel".format(
+                app_uuid
+            )
+        )
 
 
 def create_network_group_tunnel(payload):
@@ -789,7 +807,7 @@ def create_network_group_tunnel_vm_from_dsl(
     )
     LOG.debug("Payload: {}".format(network_group_tunnel_vm_payload))
 
-    network_group_json = create_network_group_tunnel_vm(
+    network_group_json = reset_network_group_tunnel_vm(
         network_group_tunnel_vm_payload, network_group_tunnel_name
     )
 
