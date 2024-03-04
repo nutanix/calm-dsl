@@ -32,6 +32,7 @@ from calm.dsl.builtins.models.helper.quotas import (
     get_quota_uuid_at_project,
     create_quota_at_project,
     set_quota_at_project,
+    read_quota_resources,
 )
 from calm.dsl.store import Cache, Version
 from calm.dsl.constants import CACHE, PROJECT_TASK, QUOTA
@@ -729,17 +730,30 @@ def describe_project(project_name, out):
     if not accounts:
         click.echo(highlight_text("No provider's account registered"))
 
-    quota_resources = project_resources.get("resource_domain", {}).get("resources", [])
+    project_uuid = project["metadata"]["uuid"]
+    quota_entities = {"project": project_uuid}
+
+    context_obj = get_context()
+    policy_config = context_obj.get_policy_config()
+
+    # Project level quota values are migrated to Quota API when policy engine is enabled
+    quota_resources = {}
+    if policy_config.get("policy_status", "False") == "False":
+        LOG.info("No Quota Values fetched as policy engine is disabled.")
+
+    # Reading project level quota from quota api if policy engine is enabled
+    else:
+        quota_resources = read_quota_resources(client, project_name, quota_entities)
+
     if quota_resources:
         click.echo("\nQuotas: \n-------")
-        for qr in quota_resources:
-            qk = qr["resource_type"]
-            qv = qr["limit"]
-            if qr["units"] == "BYTES":
+        for qk, qv in quota_resources.items():
+            qv = qv if qv != -1 else "NA"
+            if qv != "NA" and qk in QUOTA.RESOURCES_WITH_BYTES_UNIT:
                 qv = qv // 1073741824
                 qv = str(qv) + " (GiB)"
 
-            click.echo("\t{} : {}".format(qk, highlight_text(qv)))
+            click.echo("\t{} : {}".format(QUOTA.RESOURCES[qk], highlight_text(qv)))
 
 
 def delete_project(project_names, no_cache_update=False):

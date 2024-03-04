@@ -183,6 +183,10 @@ class QUOTA(object):
         CLUSTER = "cluster"
         PROJECT = "project"
 
+    RESOURCES = {"disk": "STORAGE", "vcpu": "VCPUS", "memory": "MEMORY"}
+
+    RESOURCES_WITH_BYTES_UNIT = ["disk", "memory"]
+
 
 class ENTITY:
     "Entity constants"
