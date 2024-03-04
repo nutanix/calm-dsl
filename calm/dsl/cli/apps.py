@@ -1963,7 +1963,10 @@ def remove_non_escript_actions_variables(bp_payload):
             if "variable_list" in _e:
                 _e["variable_list"] = get_escript_vars_in_entity(_e)
 
-            if _el == "package_definition_list" and _e.get("type", "") == "DEB":
+            if _el == "package_definition_list" and _e.get("type", "") in (
+                "DEB",
+                "CUSTOM",
+            ):
                 for pkg_runbook_name in ["install_runbook", "uninstall_runbook"]:
                     (
                         _e["options"][pkg_runbook_name],
