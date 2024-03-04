@@ -657,7 +657,12 @@ def delete_account(account_names):
         # TODO Fix case for custom providers
         if delete_accounts_uuids:
             for _acc_id in delete_accounts_uuids:
-                Cache.delete_one(entity_type=CACHE.ENTITY.ACCOUNT, uuid=_acc_id)
+                try:
+                    Cache.delete_one(entity_type=CACHE.ENTITY.ACCOUNT, uuid=_acc_id)
+                except Exception as ex:
+                    LOG.debug(
+                        "Cannot delete account from cache. Reason: {}".format(str(ex))
+                    )
             click.echo(".[Done]", err=True)
 
 
