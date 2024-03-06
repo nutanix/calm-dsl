@@ -9,6 +9,7 @@ class {{obj.name}}(AhvVmResources):
     {% if obj.gpus %}gpus = [{{obj.gpus}}]{% endif %}
     {% if obj.guest_customization %}guest_customization = {{obj.guest_customization}}{% endif %}
     {% if obj.serial_ports %}serial_ports = {{obj.serial_ports}}{% endif %}
+    {% if obj.boot_type %}boot_type = "{{obj.boot_type}}"{% endif %}
 {% endmacro %}
 
 {{ ahv_vm_resources(obj) }}

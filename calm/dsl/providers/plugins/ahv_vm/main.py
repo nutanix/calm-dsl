@@ -1538,6 +1538,8 @@ def create_spec(client):
             boot_type = AhvConstants.BOOT_TYPES[boot_types[res - 1]]
             if boot_type == AhvConstants.BOOT_TYPES["UEFI"]:
                 spec["resources"]["boot_config"]["boot_type"] = boot_type
+            elif boot_type == AhvConstants.BOOT_TYPES["UEFI SECURE BOOT"]:
+                spec["resources"]["boot_config"]["boot_type"] = boot_type
             click.echo("{} selected".format(highlight_text(boot_type)))
             break
 
