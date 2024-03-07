@@ -418,7 +418,14 @@ def publish_bp(
     "-p",
     "projects",
     multiple=True,
-    help="Projects for marketplace blueprint",
+    help="Add projects to marketplace blueprint",
+)
+@click.option(
+    "--remove-project",
+    "-rp",
+    "remove_projects",
+    multiple=True,
+    help="Remove projects from marketplace blueprint",
 )
 @click.option(
     "--all_projects",
@@ -427,7 +434,7 @@ def publish_bp(
     default=False,
     help="Approve bp to all projects",
 )
-def approve_bp(name, version, category, all_projects, projects=[]):
+def approve_bp(name, version, category, all_projects, projects=[], remove_projects=[]):
     """Approves a marketplace manager blueprint"""
 
     approve_marketplace_item(
@@ -437,6 +444,7 @@ def approve_bp(name, version, category, all_projects, projects=[]):
         category=category,
         all_projects=all_projects,
         type=MARKETPLACE_ITEM.TYPES.BLUEPRINT,
+        remove_projects=remove_projects,
     )
 
 

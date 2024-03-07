@@ -827,6 +827,8 @@ def publish_bp_to_marketplace_manager(
     app_group_uuid=None,
     icon_name=None,
     icon_file=None,
+    projects=[],
+    all_projects=False,
 ):
 
     client = get_api_client()
@@ -899,6 +901,33 @@ def publish_bp_to_marketplace_manager(
             }
         ]
 
+    if not bp_template["spec"]["resources"].get("project_reference_list", {}):
+        bp_template["spec"]["resources"]["project_reference_list"] = []
+
+    project_name_uuid_map = client.project.get_name_uuid_map(params={"length": 250})
+    if all_projects:
+        for k, v in project_name_uuid_map.items():
+            bp_template["spec"]["resources"]["project_reference_list"].append(
+                {
+                    "kind": "project",
+                    "name": k,
+                    "uuid": v,
+                }
+            )
+
+    else:
+        for _project in projects:
+            bp_template["spec"]["resources"]["project_reference_list"].append(
+                {
+                    "kind": "project",
+                    "name": _project,
+                    "uuid": project_name_uuid_map[_project],
+                }
+            )
+
+    if bp_template["spec"]["resources"].get("project_reference_list"):
+        LOG.warning(MARKETPLACE_ITEM.WARN_MSG)
+
     res, err = client.market_place.create(bp_template)
     LOG.debug("Api response: {}".format(res.json()))
     if err:
@@ -953,6 +982,8 @@ def publish_bp_as_new_marketplace_bp(
         with_secrets=with_secrets,
         icon_name=icon_name,
         icon_file=icon_file,
+        projects=projects,
+        all_projects=all_projects,
     )
 
     if publish_to_marketplace or auto_approve:
@@ -1053,6 +1084,8 @@ def publish_bp_as_existing_marketplace_bp(
         app_group_uuid=app_group_uuid,
         icon_name=icon_name,
         icon_file=icon_file,
+        projects=projects,
+        all_projects=all_projects,
     )
 
     if publish_to_marketplace or auto_approve:
@@ -1084,6 +1117,7 @@ def approve_marketplace_item(
     category=None,
     all_projects=False,
     type=None,
+    remove_projects=[],
 ):
 
     client = get_api_client()
@@ -1164,6 +1198,26 @@ def approve_marketplace_item(
                     "uuid": project_name_uuid_map[_project],
                 }
             )
+        for _project in remove_projects:
+            project_valid = False
+            for index, project_detail in enumerate(
+                item_data["spec"]["resources"]["project_reference_list"]
+            ):
+                if _project == project_detail["name"]:
+                    item_data["spec"]["resources"]["project_reference_list"].pop(index)
+                    project_valid = True
+                    break
+
+            # Validating the project association with MPI
+            if not project_valid:
+                LOG.error(
+                    "Project {} is not associated to Marketplace Item {}".format(
+                        _project, name
+                    )
+                )
+
+    if item_type == MARKETPLACE_ITEM.TYPES.BLUEPRINT:
+        LOG.warning(MARKETPLACE_ITEM.WARN_MSG)
 
     res, err = client.market_place.update(uuid=item_uuid, payload=item_data)
     if err:
@@ -1362,6 +1416,14 @@ def update_marketplace_item(
 
     if description:
         item_data["spec"]["description"] = description
+
+    item_type = MARKETPLACE_ITEM.TYPES.BLUEPRINT
+    CALM_VERSION = Version.get_version("Calm")
+    if LV(CALM_VERSION) >= LV("3.2.0"):
+        item_type = mpi_data["status"]["resources"]["type"]
+
+    if item_type == MARKETPLACE_ITEM.TYPES.BLUEPRINT:
+        LOG.warning(MARKETPLACE_ITEM.WARN_MSG)
 
     res, err = client.market_place.update(uuid=item_uuid, payload=item_data)
     if err:
@@ -1643,6 +1705,8 @@ def publish_runbook_to_marketplace_manager(
     app_group_uuid=None,
     icon_name=None,
     icon_file=None,
+    projects=[],
+    all_projects=False,
 ):
 
     client = get_api_client()
@@ -1696,6 +1760,30 @@ def publish_runbook_to_marketplace_manager(
             }
         ]
 
+    if not mpi_spec["spec"]["resources"].get("project_reference_list", {}):
+        mpi_spec["spec"]["resources"]["project_reference_list"] = []
+
+    project_name_uuid_map = client.project.get_name_uuid_map(params={"length": 250})
+    if all_projects:
+        for k, v in project_name_uuid_map.items():
+            mpi_spec["spec"]["resources"]["project_reference_list"].append(
+                {
+                    "kind": "project",
+                    "name": k,
+                    "uuid": v,
+                }
+            )
+
+    else:
+        for _project in projects:
+            mpi_spec["spec"]["resources"]["project_reference_list"].append(
+                {
+                    "kind": "project",
+                    "name": _project,
+                    "uuid": project_name_uuid_map[_project],
+                }
+            )
+
     res, err = client.market_place.create(mpi_spec)
     LOG.debug("Api response: {}".format(res.json()))
     if err:
@@ -1718,6 +1806,7 @@ def publish_runbook_as_new_marketplace_item(
     category=None,
     icon_name=None,
     icon_file=None,
+    all_projects=False,
 ):
 
     # Search whether this marketplace item exists or not
@@ -1750,6 +1839,8 @@ def publish_runbook_as_new_marketplace_item(
         with_endpoints=with_endpoints,
         icon_name=icon_name,
         icon_file=icon_file,
+        projects=projects,
+        all_projects=all_projects,
     )
 
     if publish_to_marketplace or auto_approve:
@@ -1763,6 +1854,7 @@ def publish_runbook_as_new_marketplace_item(
             version=version,
             projects=projects,
             category=category,
+            all_projects=all_projects,
         )
 
         if publish_to_marketplace:
@@ -1786,6 +1878,7 @@ def publish_runbook_as_existing_marketplace_item(
     category=None,
     icon_name=None,
     icon_file=None,
+    all_projects=False,
 ):
 
     LOG.info(
@@ -1851,6 +1944,8 @@ def publish_runbook_as_existing_marketplace_item(
         app_group_uuid=app_group_uuid,
         icon_name=icon_name,
         icon_file=icon_file,
+        projects=projects,
+        all_projects=all_projects,
     )
 
     if publish_to_marketplace or auto_approve:
@@ -1864,6 +1959,7 @@ def publish_runbook_as_existing_marketplace_item(
             version=version,
             projects=projects,
             category=category,
+            all_projects=all_projects,
         )
 
         if publish_to_marketplace:

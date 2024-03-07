@@ -125,7 +125,14 @@ def _describe_marketplace_runbook(name, out, version, source, app_state):
     "-p",
     "projects",
     multiple=True,
-    help="Projects for marketplace runbook",
+    help="Add projects to marketplace runbook",
+)
+@click.option(
+    "--remove-project",
+    "-rp",
+    "remove_projects",
+    multiple=True,
+    help="Remove projects from marketplace runbook",
 )
 @click.option(
     "--all_projects",
@@ -134,7 +141,9 @@ def _describe_marketplace_runbook(name, out, version, source, app_state):
     default=False,
     help="Approve runbook to all runbook",
 )
-def approve_runbook(name, version, category, all_projects, projects=[]):
+def approve_runbook(
+    name, version, category, all_projects, projects=[], remove_projects=[]
+):
     """Approves a marketplace manager runbook"""
 
     approve_marketplace_item(
@@ -144,6 +153,7 @@ def approve_runbook(name, version, category, all_projects, projects=[]):
         category=category,
         all_projects=all_projects,
         type=MARKETPLACE_ITEM.TYPES.RUNBOOK,
+        remove_projects=remove_projects,
     )
 
 
@@ -343,6 +353,13 @@ def _reject_marketplace_runbook(name, version):
 @click.option(
     "--icon_name", "-i", default=None, help="App icon name for marketplace runbook"
 )
+@click.option(
+    "--all_projects",
+    "-ap",
+    is_flag=True,
+    default=False,
+    help="Publishes runbook to all projects",
+)
 def publish_runbook(
     runbook_name,
     name,
@@ -357,6 +374,7 @@ def publish_runbook(
     auto_approve=False,
     icon_name=False,
     icon_file=None,
+    all_projects=False,
 ):
     """Publish a runbook to marketplace manager"""
 
@@ -378,6 +396,7 @@ def publish_runbook(
             auto_approve=auto_approve,
             icon_name=icon_name,
             icon_file=icon_file,
+            all_projects=all_projects,
         )
 
     else:
@@ -394,6 +413,7 @@ def publish_runbook(
             auto_approve=auto_approve,
             icon_name=icon_name,
             icon_file=icon_file,
+            all_projects=all_projects,
         )
 
 
