@@ -79,13 +79,13 @@ def WhileTask(endpoints=[linux_endpoint, windows_endpoint, http_endpoint]):
         with Task.Loop(
             10, name="Task7", loop_variable="iteration1", exit_condition=Status.SUCCESS
         ):
-            Task.Exec.escript(script="print 'test'")
+            Task.Exec.escript.py3(script="print('test')")
         with Task.Loop(
             10, name="Task8", loop_variable="iteration2", exit_condition=Status.SUCCESS
         ):
-            Task.Exec.escript(script="print 'test'")
-        Task.Exec.escript(script="print 'test'", name="Task9")
-        Task.Exec.escript(script="print 'test'", name="Task10")
+            Task.Exec.escript.py3(script="print('test')")
+        Task.Exec.escript.py3(script="print('test')", name="Task9")
+        Task.Exec.escript.py3(script="print('test')", name="Task10")
         Task.Exec.ssh(script="echo 'test'", name="Task11", target=endpoints[0])
         Task.Exec.ssh(script="echo 'test'", name="Task12", target=endpoints[0])
         Task.Exec.powershell(script="echo 'test'", name="Task13", target=endpoints[1])
@@ -96,9 +96,9 @@ def WhileTask(endpoints=[linux_endpoint, windows_endpoint, http_endpoint]):
 def WhileTaskLoopVariable(endpoints=[http_endpoint]):
     "Runbook Service example"
     with Task.Loop(10, name="Task1", loop_variable="iteration"):
-        Task.SetVariable.escript(
+        Task.SetVariable.escript.py3(
             name="SetVariableTask",
-            script='''print "iteration=random"''',
+            script="""print("iteration=random")""",
             variables=["iteration"],
         )
         with Task.Loop(10, name="Task2", loop_variable="iteration"):
@@ -118,4 +118,4 @@ def WhileTaskMacro():
     "Runbook Service example"
     var = Variable.Simple("3")  # noqa
     with Task.Loop("@@{var}@@", name="WhileTask", loop_variable="iteration"):
-        Task.Exec.escript(name="Exec", script='''print "test"''')
+        Task.Exec.escript.py3(name="Exec", script="""print("test")""")

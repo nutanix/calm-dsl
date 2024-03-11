@@ -72,18 +72,18 @@ def DecisionTask(endpoints=[linux_endpoint, windows_endpoint], default=False):
                 name="FAILURE4", script="echo 'FAILURE'", target=endpoints[1]
             )
 
-    with Task.Decision.escript(script="exit(0)") as d:
+    with Task.Decision.escript.py3(script="exit(0)") as d:
 
         if d.ok:
-            Task.Exec.escript(name="SUCCESS5", script="print 'SUCCESS'")
+            Task.Exec.escript.py3(name="SUCCESS5", script="print('SUCCESS')")
 
         else:
-            Task.Exec.escript(name="FAILURE5", script="print 'FAILURE'")
+            Task.Exec.escript.py3(name="FAILURE5", script="print('FAILURE')")
 
-    with Task.Decision.escript(script="exit(1)") as d:
+    with Task.Decision.escript.py3(script="exit(1)") as d:
 
         if d.ok:
-            Task.Exec.escript(name="SUCCESS6", script="print 'SUCCESS'")
+            Task.Exec.escript.py3(name="SUCCESS6", script="print('SUCCESS')")
 
         else:
-            Task.Exec.escript(name="FAILURE6", script="print 'FAILURE'")
+            Task.Exec.escript.py3(name="FAILURE6", script="print('FAILURE')")

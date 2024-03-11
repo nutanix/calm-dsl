@@ -8,17 +8,17 @@ from calm.dsl.runbooks import RunbookTask as Task, RunbookVariable as Variable
 
 
 code = """
-print "@@{var1}@@"
+print("@@{var1}@@")
 if "@@{var1}@@" == "test":
-    print "yes"
+    print("yes")
 else:
-    print "no"
-print "@@{var2}@@"
+    print("no")
+print("@@{var2}@@")
 if "@@{var2}@@" == "test":
-    print "yes"
+    print("yes")
 else:
-    print "no"
-print "Hello @@{firstname}@@ @@{lastname}@@"
+    print("no")
+print("Hello @@{firstname}@@ @@{lastname}@@")
 """
 
 
@@ -30,7 +30,7 @@ def DslRunbookWithVariables():
     var2 = Variable.Simple.Secret("test", runtime=True)  # noqa
     firstname = Variable.Simple("FIRSTNAME", runtime=True)  # noqa
     lastname = Variable.Simple("LASTNAME")  # noqa
-    Task.Exec.escript(name="Exec_Task", script=code)
+    Task.Exec.escript.py3(name="Exec_Task", script=code)
 
 
 def main():

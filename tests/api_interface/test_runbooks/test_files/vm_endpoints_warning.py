@@ -46,9 +46,9 @@ EndpointWithIPOutsideSubnet = Endpoint.Linux.vm(
 
 @runbook
 def VMEndpointWithIncorrectID(endpoints=[EndpointWithIncorrectId]):
-    Task.Exec.escript(
+    Task.Exec.escript.py3(
         name="EscriptTask",
-        script='''print "Escript Task is Successful"''',
+        script="""print("Escript Task is Successful")""",
         target=endpoints[0],
     )
     Task.Exec.ssh(
@@ -60,9 +60,9 @@ def VMEndpointWithIncorrectID(endpoints=[EndpointWithIncorrectId]):
 
 @runbook
 def VMEndpointWithNoIP(endpoints=[EndpointWithNoIP]):
-    Task.Exec.escript(
+    Task.Exec.escript.py3(
         name="EscriptTask",
-        script='''print "Escript Task is Successful"''',
+        script="""print("Escript Task is Successful")""",
         target=endpoints[0],
     )
     Task.Exec.ssh(
@@ -74,9 +74,9 @@ def VMEndpointWithNoIP(endpoints=[EndpointWithNoIP]):
 
 @runbook
 def VMEndpointWithIPOutsideSubnet(endpoints=[EndpointWithIPOutsideSubnet]):
-    Task.Exec.escript(
+    Task.Exec.escript.py3(
         name="EscriptTask",
-        script='''print "Escript Task is Successful"''',
+        script="""print("Escript Task is Successful")""",
         target=endpoints[0],
     )
     Task.Exec.ssh(
@@ -88,9 +88,9 @@ def VMEndpointWithIPOutsideSubnet(endpoints=[EndpointWithIPOutsideSubnet]):
 
 @runbook
 def VMEndpointWithOffState(endpoints=[EndpointWithOffState]):
-    Task.Exec.escript(
+    Task.Exec.escript.py3(
         name="EscriptTask",
-        script='''print "Escript Task is Successful"''',
+        script="""print("Escript Task is Successful")""",
         target=endpoints[0],
     )
     Task.Exec.ssh(
