@@ -666,6 +666,11 @@ class Ref:
             """return decompile class"""
 
             if cdict.get("uuid"):
+                if cdict["uuid"].startswith("@@{") and cdict["uuid"].endswith("}@@"):
+                    return cls.__new__(
+                        cls,
+                        name=cdict["uuid"],
+                    )
                 cache_data = Cache.get_entity_data_using_uuid(
                     entity_type=CACHE.ENTITY.AHV_CLUSTER, uuid=cdict["uuid"]
                 )
