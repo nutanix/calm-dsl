@@ -39,6 +39,9 @@ def get_apps(name, filter_by, limit, offset, quiet, all_items, out):
         filter_query = get_name_query([name])
     if filter_by:
         filter_query = filter_query + ";(" + filter_by + ")"
+    # deleted state filter works without paranthesis, using this as workaround until CALM-43342 is resolved
+    if filter_by == "_state==deleted":
+        filter_query = filter_query + ";" + filter_by
     if all_items:
         filter_query += get_states_filter(APPLICATION.STATES, state_key="_state")
     if filter_query.startswith(";"):
