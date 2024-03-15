@@ -1,0 +1,5 @@
+{%- macro power_action_runbook_task(obj) -%}
+{{obj.target_substrate}}.{{obj.action}}(name='{{obj.name}}', target=ref({{obj.target}}))
+{%- endmacro %}
+
+{{ power_action_runbook_task(obj) }}

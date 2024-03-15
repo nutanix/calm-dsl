@@ -23,7 +23,7 @@ from calm.dsl.builtins.models.ndb import (
     Tag,
 )
 from calm.dsl.builtins.models.constants import NutanixDB as NutanixDBConst
-from calm.dsl.constants import CACHE
+from calm.dsl.constants import CACHE, SUBSTRATE, PROVIDER, TASKS
 
 LOG = get_logging_handle(__name__)
 
@@ -431,6 +431,92 @@ def meta(name=None, child_tasks=None, edges=None, target=None):
     }
     if target:
         kwargs["target_any_local_reference"] = target
+
+    return _task_create(**kwargs)
+
+
+def vm_power_action_task(name=None, action_name=None, provider=None, target=None):
+    """
+    Create a VM POWER ON/OFF/RESTART task
+    Args:
+        name (str): Name for the task
+        provider (str): Type of provider
+        action_name (str): Valid power action name
+        target (Ref): Target entity reference
+    Returns:
+        (Task): DAG task
+    """
+    if action_name not in list(SUBSTRATE.VM_POWER_ACTIONS_REV.keys()):
+        LOG.error(
+            "{} is not a valid vm power on action {}".format(
+                list(SUBSTRATE.VM_POWER_ACTIONS_REV.keys())
+            )
+        )
+        sys.exit(-1)
+
+    # name follows UI naming convention for runbooks
+    kwargs = {
+        "name": name
+        or "SYS_GEN__{}_Operation_{}_".format(
+            PROVIDER.NAME[provider], SUBSTRATE.POWER_ACTION_CAMEL_CASE[action_name]
+        )
+        + str(uuid.uuid4())[:8],
+        "type": TASKS.TASK_TYPES.VM_OPERATION[provider],
+        "attrs": {
+            "operation_type": action_name,
+            "type": TASKS.TASK_TYPES.GENERIC_OPERATION,
+        },
+    }
+
+    if target:
+        kwargs["target_any_local_reference"] = _get_target_ref(target)
+
+    return _task_create(**kwargs)
+
+
+def check_login(name=None, readiness_probe=None, target=None):
+    """
+    Create a VM CHECK LOGIN task.
+    Args:
+        name (str): Name for the task
+        readiness_probe (dict): Compiled readiness probe data
+        target (Ref): Target entity reference
+    Returns:
+        (Task): DAG task
+    """
+
+    if not target:
+        LOG.error("Target not supplied")
+    if not readiness_probe:
+        LOG.error("Readiness probe not supplied")
+
+    substrate_name = "Substrate"  # Default substrate name
+    if isinstance(target, EntityType):
+        substrate_name = target.name or target.__name__
+    elif isinstance(target, RefType):
+        substrate_name = target.__self__.name or target.__self__.__name__
+    else:
+        raise ValueError("Target is not of ref or entity type")
+
+    # This follows UI naming convention for runbooks
+    name = (
+        name
+        or "SYS_GEN__check_login_for_" + substrate_name + "_" + str(uuid.uuid4())[:8]
+    )
+    kwargs = {
+        "name": name,
+        "type": TASKS.TASK_TYPES.CHECK_LOGIN,
+        "attrs": {
+            "retries": readiness_probe["retries"],
+            "dial_timeout": "",
+            "timeout": readiness_probe["delay_secs"],
+            "address": readiness_probe["address"],
+            "type": TASKS.TASK_TYPES.CHECK_LOGIN,
+            "sleep_time": "",
+        },
+    }
+
+    kwargs["target_any_local_reference"] = _get_target_ref(target)
 
     return _task_create(**kwargs)
 

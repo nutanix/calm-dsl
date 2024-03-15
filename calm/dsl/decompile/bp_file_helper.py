@@ -1,4 +1,6 @@
 import click
+import sys
+import traceback
 import os
 from io import StringIO
 import json
@@ -18,6 +20,7 @@ from calm.dsl.decompile.credential import render_credential_template, get_cred_f
 from calm.dsl.decompile.blueprint import render_blueprint_template
 from calm.dsl.decompile.metadata import render_metadata_template
 from calm.dsl.decompile.variable import get_secret_variable_files
+from calm.dsl.decompile.ref_dependency import update_entity_gui_dsl_name
 from calm.dsl.decompile.file_handler import get_local_dir
 from calm.dsl.builtins import BlueprintType, ServiceType, PackageType
 from calm.dsl.builtins import DeploymentType, ProfileType, SubstrateType
@@ -144,10 +147,10 @@ def render_bp_file_template(
             if contains_encrypted_secrets:
                 try:
                     secret_val = cred_file_dict[file_name]
-                except Exception:
-                    import pdb
-
-                    pdb.set_trace()
+                except Exception as exp:
+                    LOG.debug("Got traceback\n{}".format(traceback.format_exc()))
+                    LOG.error("Secret value not found due to {}".format(exp))
+                    sys.exit(-1)
             else:
                 secret_val = click.prompt(
                     "\nValue for {}".format(file_name),
@@ -161,6 +164,15 @@ def render_bp_file_template(
 
     dependepent_entities = []
     dependepent_entities = get_ordered_entities(entity_name_text_map, entity_edges)
+
+    # Setting dsl class and gui display name of entity in beginning.
+    # Case: when vm power actions are used in service level then dsl class name of substrate is needed.
+    # As service class is rendered before substrate we need to explicitly create substrate ui dsl map initially.
+    # This will help in targetting correct substrate to vm power actions
+    # TODO move all gui to dsl class mapping to entity.py
+    for k, v in enumerate(dependepent_entities):
+        update_entity_gui_dsl_name(v.get_gui_name(), v.__name__)
+
     # Rendering templates
     for k, v in enumerate(dependepent_entities):
         if isinstance(v, ServiceType):

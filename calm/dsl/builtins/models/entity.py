@@ -404,6 +404,12 @@ class EntityType(EntityTypeBase):
 
         update_dsl_metadata_map(entity_type, entity_name=ui_name, entity_obj=entity_obj)
 
+    def get_gui_name(cls):
+        """
+        Gives the ui name for entity class
+        """
+        return getattr(cls, "name", "") or cls.__name__
+
     def compile(cls):
 
         cls.pre_compile()

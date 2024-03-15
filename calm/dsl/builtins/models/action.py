@@ -3,9 +3,9 @@ import sys
 
 from .entity import EntityType, Entity
 from .validator import PropertyValidator
-from .task import create_call_rb
+from .task import create_call_rb, _get_target_ref
 from .runbook import runbook, runbook_create
-
+from calm.dsl.constants import SUBSTRATE
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -18,7 +18,51 @@ class ActionType(EntityType):
     __schema_name__ = "Action"
     __openapi_type__ = "app_action"
 
-    def __call__(cls, name=None):
+    def __call__(cls, name=None, target=None):
+        """
+        This function is called whenever ENTITY_TYPE.function_name() is invoked
+        and it returns a task of CALL_RUNBOOK type.
+
+        e.g. Service class having name SampleService defines a function "foo" then
+        each call to SampleService.foo() invokes this function.
+        """
+
+        if cls.name in list(SUBSTRATE.VM_POWER_ACTIONS_REV.keys()) and cls.runbook:
+            if not isinstance(name, str):
+                LOG.error("{} if not of type string".format(name))
+                sys.exit(-1)
+
+            # global import raises ImportError
+            from .substrate import SubstrateType
+
+            entity = cls.runbook.tasks[0].target_any_local_reference.__self__
+
+            # guard condition to only allow substrate level vm power actions
+            if isinstance(entity, SubstrateType):
+                substrate = entity
+                vm_power_action = getattr(
+                    substrate, SUBSTRATE.VM_POWER_ACTIONS_REV[cls.name], None
+                )
+                if not vm_power_action:
+                    LOG.error(
+                        "Action {} not implemented in substrate".format(
+                            SUBSTRATE.VM_POWER_ACTIONS_REV[cls.name]
+                        )
+                    )
+                    sys.exit(-1)
+                target_runbook = vm_power_action.runbook
+                task = create_call_rb(cls.runbook, name=name, target=target_runbook)
+                task.name = name or task.name
+                # setting default target to service coupled to a substrate
+                if not target:
+                    target = substrate.get_service_target()
+                    if not target:
+                        LOG.error("No service found to target")
+                        sys.exit(-1)
+
+                task.target_any_local_reference = _get_target_ref(target)
+                return task
+
         return create_call_rb(cls.runbook, name=name) if cls.runbook else None
 
     def assign_targets(cls, parent_entity):
@@ -121,6 +165,10 @@ class action(runbook):
             elif func_name in FRAGMENT:
                 ACTION_TYPE = "fragment"
                 action_name = FRAGMENT[func_name]
+                # Prevent accidental modification of target.
+                # Fragment actions have target ref to it's caller class.
+                for task in self.user_runbook.tasks:
+                    task.target_any_local_reference = cls.get_task_target()
 
         else:
             # `name` argument is only supported in non-system actions
@@ -155,6 +203,22 @@ class action(runbook):
                     ):
                         _task.exec_target_reference = _task.target_any_local_reference
                         _task.target_any_local_reference = self.task_target
+
+        # Import error if imported globally
+        from .substrate import SubstrateType
+
+        # Case for creating vm power action runbooks for a substrate
+        if isinstance(cls, SubstrateType) and action_name in list(
+            SUBSTRATE.VM_POWER_ACTIONS_REV.keys()
+        ):
+            if len(self.user_runbook.tasks) > 1:
+                LOG.error(
+                    "{} can't be overriden in {}".format(
+                        SUBSTRATE.VM_POWER_ACTIONS_REV[action_name], cls.__name__
+                    )
+                )
+                sys.exit(-1)
+            self.user_runbook = cls.create_power_action_runbook(action_name)
 
         # Finally create the action
         self.user_action = _action_create(

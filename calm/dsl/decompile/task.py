@@ -12,6 +12,11 @@ from calm.dsl.decompile.credential import (
 from calm.dsl.decompile.file_handler import get_scripts_dir, get_scripts_dir_key
 from calm.dsl.builtins import TaskType
 from calm.dsl.db.table_config import AccountCache
+from calm.dsl.constants import SUBSTRATE
+from calm.dsl.decompile.ref_dependency import (
+    get_entity_gui_dsl_name,
+    get_power_action_target_substrate,
+)
 
 from calm.dsl.builtins.models.task import EXIT_CONDITION_MAP
 from calm.dsl.log import get_logging_handle
@@ -188,14 +193,40 @@ def render_task_template(
             schema_file = "task_http_delete.py.jinja2"
 
     elif cls.type == "CALL_RUNBOOK":
+        is_power_action = False
         runbook = cls.attrs["runbook_reference"]
         runbook_name = getattr(runbook, "name", "") or runbook.__name__
-        user_attrs = {
-            "name": cls.name,
-            "action": RUNBOOK_ACTION_MAP[runbook_name],
-            "target": target.name,
-        }
-        schema_file = "task_call_runbook.py.jinja2"
+
+        # constructing user_attrs for power action runbooks of substrate
+        for action_name in list(SUBSTRATE.VM_POWER_ACTIONS_REV.keys()):
+            if action_name in runbook_name and "substrate" in runbook_name:
+                gui_substrate_name = get_power_action_target_substrate(runbook_name)
+
+                # mapping correct dsl class name using gui name found above
+                substrate = get_entity_gui_dsl_name(gui_substrate_name)
+                if not substrate:
+                    raise ValueError("Target substrate not found")
+                user_attrs = {
+                    "name": cls.name,
+                    "action": SUBSTRATE.VM_POWER_ACTIONS_REV[action_name],
+                    "target_substrate": substrate,
+                    "target": target.name,
+                }
+                is_power_action = True
+                break
+
+        # fallback to default user_attrs for backward compatibility
+        if not is_power_action:
+            user_attrs = {
+                "name": cls.name,
+                "action": RUNBOOK_ACTION_MAP[runbook_name],
+                "target": target.name,
+            }
+
+        if is_power_action:
+            schema_file = "task_power_action_call_runbook.py.jinja2"
+        else:
+            schema_file = "task_call_runbook.py.jinja2"
 
     elif cls.type == "CALL_CONFIG":
         config_name = cls.attrs["config_spec_reference"]

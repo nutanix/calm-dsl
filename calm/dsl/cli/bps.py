@@ -34,6 +34,7 @@ from calm.dsl.decompile.decompile_render import create_bp_dir
 from calm.dsl.decompile.file_handler import get_bp_dir
 from calm.dsl.decompile.bp_file_helper import decrypt_decompiled_secrets_file
 from calm.dsl.decompile.main import init_decompile_context
+from calm.dsl.api.util import vm_power_action_target_map
 
 from .utils import (
     get_name_query,
@@ -51,6 +52,7 @@ from calm.dsl.providers.plugins.ahv_vm.main import AhvNew
 from calm.dsl.constants import CACHE, DSL_CONFIG
 from calm.dsl.log import get_logging_handle
 from calm.dsl.builtins.models.calm_ref import Ref
+from calm.dsl.decompile.ref_dependency import update_power_action_target_substrate
 
 LOG = get_logging_handle(__name__)
 
@@ -574,13 +576,24 @@ def decompile_bp_from_server(name, with_secrets=False, prefix="", bp_dir=None):
     blueprint = get_blueprint(name)
     bp_uuid = blueprint["metadata"]["uuid"]
 
-    res, err = client.blueprint.export_file(bp_uuid)
+    exported_bp_res, err = client.blueprint.export_file(bp_uuid)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-    res = res.json()
+    exported_bp_res_payload = exported_bp_res.json()
+
+    kwargs = {
+        "reference_runbook_to_substrate_map": vm_power_action_target_map(
+            blueprint, exported_bp_res_payload
+        )
+    }
+
     _decompile_bp(
-        bp_payload=res, with_secrets=with_secrets, prefix=prefix, bp_dir=bp_dir
+        bp_payload=exported_bp_res_payload,
+        with_secrets=with_secrets,
+        prefix=prefix,
+        bp_dir=bp_dir,
+        **kwargs,
     )
 
 
@@ -593,18 +606,24 @@ def decompile_bp_from_server_with_secrets(
     blueprint = get_blueprint(name)
     bp_uuid = blueprint["metadata"]["uuid"]
 
-    res, err = client.blueprint.export_file(bp_uuid, passphrase)
+    exported_bp_res, err = client.blueprint.export_file(bp_uuid, passphrase)
     if err:
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
-    res = res.json()
+    exported_bp_res_payload = exported_bp_res.json()
+    kwargs = {
+        "reference_runbook_to_substrate_map": vm_power_action_target_map(
+            blueprint, exported_bp_res_payload
+        )
+    }
 
     _decompile_bp(
-        bp_payload=res,
+        bp_payload=exported_bp_res_payload,
         with_secrets=with_secrets,
         prefix=prefix,
         bp_dir=bp_dir,
         contains_encrypted_secrets=True,
+        **kwargs,
     )
 
 
@@ -625,10 +644,20 @@ def _decompile_bp(
     prefix="",
     bp_dir=None,
     contains_encrypted_secrets=False,
+    **kwargs,
 ):
     """decompiles the blueprint from payload"""
 
     init_decompile_context()
+
+    # reference_runbook_to_substrate_map will be used to update vm power action to it's substrate
+    reference_runbook_to_substrate_map = kwargs.get(
+        "reference_runbook_to_substrate_map", {}
+    )
+
+    if reference_runbook_to_substrate_map:
+        for rb_name, substrate_name in reference_runbook_to_substrate_map.items():
+            update_power_action_target_substrate(rb_name, substrate_name)
 
     blueprint = bp_payload["spec"]["resources"]
     blueprint_name = bp_payload["spec"].get("name", "DslBlueprint")

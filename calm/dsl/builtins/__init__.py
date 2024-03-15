@@ -59,7 +59,7 @@ from .models.ahv_vm import (
 )
 from .models.ahv_recovery_vm import AhvVmRecoveryResources, ahv_vm_recovery_spec
 
-from .models.substrate import Substrate, substrate, SubstrateType
+from .models.substrate import substrate, SubstrateType, Substrate
 from .models.deployment import Deployment, deployment, DeploymentType
 from .models.pod_deployment import PODDeployment, pod_deployment
 

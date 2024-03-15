@@ -36,6 +36,18 @@ class DeploymentType(EntityType):
 
         return super().decompile(cdict, context=context, prefix=prefix)
 
+    def get_service_ref(cls):
+        """get service class reference from deployment"""
+
+        package_ref = getattr(cls, "packages")
+        package_cls = []
+        for package in package_ref:
+            package_cls.append(package.__self__)
+        if package_cls:
+            # Target for package is service, retrieving service ref for a package
+            return package_cls[0].get_task_target()
+        return None
+
 
 class DeploymentValidator(PropertyValidator, openapi_type="app_blueprint_deployment"):
     __default__ = None

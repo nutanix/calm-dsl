@@ -7,6 +7,7 @@ from calm.dsl.decompile.task_tree import render_task_tree_template
 from calm.dsl.decompile.endpoint import render_endpoint
 from calm.dsl.decompile.variable import render_variable_template
 from calm.dsl.builtins import action, ActionType
+from calm.dsl.constants import SUBSTRATE
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -71,7 +72,12 @@ def render_action_template(
             )
         )
 
-    if not (variables or tasks):
+    # not returning power on actions, even if they don't have tasks, to include in
+    # substrate class after decompilation this is required to give valid reference
+    # to custom actions which use them in profile/service level
+    if not (variables or tasks) and (
+        cls.name not in list(SUBSTRATE.VM_POWER_ACTIONS.keys())
+    ):
         return ""
     # get rendered endpoints to be rendered by blueprint
     for ind, task in enumerate(runbook.tasks):

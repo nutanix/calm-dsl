@@ -7,7 +7,6 @@ from calm.dsl.decompile.readiness_probe import render_readiness_probe_template
 from calm.dsl.decompile.file_handler import get_specs_dir, get_specs_dir_key
 from calm.dsl.builtins import SubstrateType, get_valid_identifier
 from calm.dsl.decompile.ahv_vm import render_ahv_vm
-from calm.dsl.decompile.ref_dependency import update_substrate_name
 from calm.dsl.store import Cache
 from calm.dsl.log import get_logging_handle
 
@@ -36,9 +35,6 @@ def render_substrate_template(
     gui_display_name = getattr(cls, "name", "") or cls.__name__
     if gui_display_name != cls.__name__:
         user_attrs["gui_display_name"] = gui_display_name
-
-    # updating ui and dsl name mapping
-    update_substrate_name(gui_display_name, cls.__name__)
 
     provider_spec_editables = user_attrs.get("provider_spec_editables", {})
     create_spec_editables = provider_spec_editables.get("create_spec", {})
@@ -115,10 +111,14 @@ def render_substrate_template(
     # Actions
     action_list = []
     system_actions = {v: k for k, v in SubstrateType.ALLOWED_FRAGMENT_ACTIONS.items()}
+    power_actions = {v: k for k, v in SubstrateType.ALLOWED_SYSTEM_ACTIONS.items()}
     for action in user_attrs.get("actions", []):
         if action.__name__ in list(system_actions.keys()):
             action.name = system_actions[action.__name__]
             action.__name__ = system_actions[action.__name__]
+        elif action.__name__ in list(power_actions.keys()):
+            action.name = power_actions[action.__name__]
+            action.__name__ = power_actions[action.__name__]
         action_list.append(
             render_action_template(
                 action, entity_context, context=context, secrets_dict=secrets_dict

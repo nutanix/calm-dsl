@@ -2,9 +2,10 @@ from .decompile_helpers import process_variable_name
 
 SERVICE_NAME_MAP = {}
 PROFILE_NAME_MAP = {}
-SUBSTRATE_NAME_MAP = {}
+ENTITY_GUI_DSL_NAME_MAP = {}
 PACKAGE_NAME_MAP = {}
 DEPLOYMENT_NAME_MAP = {}
+POWER_ACTION_SUBSTRATE_MAP = {}
 
 
 def get_service_name(name):
@@ -34,17 +35,16 @@ def update_profile_name(ui_name, dsl_name):
     PROFILE_NAME_MAP[ui_name] = dsl_name
 
 
-def get_substrate_name(name):
-    """returns the class name used for entity ref"""
+def get_entity_gui_dsl_name(ui_name):
 
-    global SUBSTRATE_NAME_MAP
-    return SUBSTRATE_NAME_MAP.get(name, None)
+    global ENTITY_GUI_DSL_NAME_MAP
+    return ENTITY_GUI_DSL_NAME_MAP.get(ui_name, None)
 
 
-def update_substrate_name(ui_name, dsl_name):
+def update_entity_gui_dsl_name(ui_name, dsl_name):
 
-    global SUBSTRATE_NAME_MAP
-    SUBSTRATE_NAME_MAP[ui_name] = dsl_name
+    global ENTITY_GUI_DSL_NAME_MAP
+    ENTITY_GUI_DSL_NAME_MAP[ui_name] = dsl_name
 
 
 def get_package_name(name):
@@ -77,12 +77,27 @@ def update_deployment_name(ui_name, dsl_name):
     DEPLOYMENT_NAME_MAP[ui_name] = dsl_name
 
 
+def get_power_action_target_substrate(runbook_name):
+    """returns the substrate name used for power action runbook"""
+
+    global POWER_ACTION_SUBSTRATE_MAP
+    return POWER_ACTION_SUBSTRATE_MAP.get(runbook_name, None)
+
+
+def update_power_action_target_substrate(runbook_name, substrate_name):
+    """updates power action runbook name to substrate name mapping"""
+
+    global POWER_ACTION_SUBSTRATE_MAP
+    POWER_ACTION_SUBSTRATE_MAP[runbook_name] = substrate_name
+
+
 def init_ref_dependency_globals():
 
-    global SERVICE_NAME_MAP, PROFILE_NAME_MAP, SUBSTRATE_NAME_MAP, PACKAGE_NAME_MAP, DEPLOYMENT_NAME_MAP
+    global SERVICE_NAME_MAP, PROFILE_NAME_MAP, ENTITY_GUI_DSL_NAME_MAP, PACKAGE_NAME_MAP, DEPLOYMENT_NAME_MAP, POWER_ACTION_SUBSTRATE_MAP
 
     SERVICE_NAME_MAP = {}
     PROFILE_NAME_MAP = {}
-    SUBSTRATE_NAME_MAP = {}
+    ENTITY_GUI_DSL_NAME_MAP = {}
     PACKAGE_NAME_MAP = {}
     DEPLOYMENT_NAME_MAP = {}
+    POWER_ACTION_SUBSTRATE_MAP = {}

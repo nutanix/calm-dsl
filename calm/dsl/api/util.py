@@ -498,3 +498,172 @@ def patch_secrets(resources, secret_map, secret_variables, existing_secrets=[]):
                 variable["value"] = secret
 
     return resources
+
+
+def _create_task_name_substrate_map(bp_payload, entity_type, **kwargs):
+    vm_power_action_uuid_substrate_map = kwargs.get(
+        "vm_power_action_uuid_substrate_map", {}
+    )
+    task_name_substrate_map = kwargs.get("task_name_substrate_map", {})
+
+    entity_list = bp_payload["spec"]["resources"][entity_type]
+    for entity in entity_list:
+        entity_name = entity.get("name")
+        for action in entity.get("action_list", []):
+            action_name = action.get("name")
+            runbook = action.get("runbook", {})
+            if not runbook:
+                continue
+            for task in runbook.get("task_definition_list", []):
+                task_name = task.get("name")
+                if task.get("type", "") == "CALL_RUNBOOK" and task.get("attrs", {}):
+                    uuid = task["attrs"]["runbook_reference"].get("uuid", "")
+                    if not uuid:
+                        continue
+                    task_name_substrate_map[
+                        "{}_{}_{}".format(entity_name, action_name, task_name)
+                    ] = vm_power_action_uuid_substrate_map.get(uuid, "")
+
+        for config in entity.get("patch_list", []):
+            config_name = config.get("name")
+            runbook = config.get("runbook", {})
+            if not runbook:
+                continue
+            for task in runbook.get("task_definition_list", []):
+                task_name = task.get("name")
+                if task.get("type", "") == "CALL_RUNBOOK" and task.get("attrs", {}):
+                    uuid = task["attrs"]["runbook_reference"].get("uuid", "")
+                    if not uuid:
+                        continue
+                    task_name_substrate_map[
+                        "{}_{}_{}".format(entity_name, config_name, task_name)
+                    ] = vm_power_action_uuid_substrate_map.get(uuid, "")
+
+
+def _create_reference_runbook_substrate_map(exported_bp_payload, entity_type, **kwargs):
+    reference_runbook_to_substrate_map = kwargs.get(
+        "reference_runbook_to_substrate_map", {}
+    )
+    task_name_substrate_map = kwargs.get("task_name_substrate_map", {})
+
+    entity_list = exported_bp_payload["spec"]["resources"][entity_type]
+    for entity in entity_list:
+        entity_name = entity.get("name")
+        for action in entity.get("action_list", []):
+            action_name = action.get("name")
+            runbook = action.get("runbook", {})
+            if not runbook:
+                continue
+            for task in runbook.get("task_definition_list", []):
+                task_name = task.get("name")
+                if task.get("type", "") == "CALL_RUNBOOK" and task.get("attrs", {}):
+                    rb_name = task["attrs"]["runbook_reference"].get("name", "")
+                    task_ref = "{}_{}_{}".format(entity_name, action_name, task_name)
+                    if (
+                        task_ref in task_name_substrate_map
+                        and task_name_substrate_map[task_ref]
+                    ):
+                        reference_runbook_to_substrate_map[
+                            rb_name
+                        ] = task_name_substrate_map[task_ref]
+
+        for config in entity.get("patch_list", []):
+            config_name = config.get("name")
+            runbook = config.get("runbook", {})
+            if not runbook:
+                continue
+            for task in runbook.get("task_definition_list", []):
+                task_name = task.get("name")
+                if task.get("type", "") == "CALL_RUNBOOK" and task.get("attrs", {}):
+                    rb_name = task["attrs"]["runbook_reference"].get("name", "")
+                    if not rb_name:
+                        continue
+                    task_ref = "{}_{}_{}".format(entity_name, config_name, task_name)
+                    if (
+                        task_ref in task_name_substrate_map
+                        and task_name_substrate_map[task_ref]
+                    ):
+                        reference_runbook_to_substrate_map[
+                            rb_name
+                        ] = task_name_substrate_map[task_ref]
+
+
+def vm_power_action_target_map(bp_payload, exported_bp_payload):
+    """
+    Args:
+        bp_payload (dict): bp payload response from client.blueprint.read call
+        exported_bp_payload (dict): bp payload response from client.blueprint.export_file call
+
+        exported_bp_payload contains actual runbook name as reference which is called for any vm power action.
+        This payload only contains spec but power action reside in 'status' of res payload.
+        So, substrate of actual runbook name can't be found directly.
+
+        bp_payload contains 'status' of res so substrate can be fetched from it. In this payload,
+        runbook name is alias to actual runbook used as reference for vm power action. So,
+        runbook uuid will be consumed to establish link between runbook reference and it's substrate.
+
+    Algo:
+        Step 1: Create a map of power action runbook uuid and it's parent substrate
+        Step 2: Create map of task name calling above rb and substrate name by consuming rb uuid
+                rb uuid links task name -> rb uuid -> substrate name
+        Step 3: Create map of actual rb name calling above rb in exported bp_payload to substrate name
+                task name will be consumed in this process.
+                rb name -> task name -> substrate name
+
+    Returns:
+        reference_runbook_to_substrate_map (dict): runbook name to substrate name map for vm
+        power action runbook used as reference inside a task, e.g.
+         reference_runbook_to_substrate_map = {
+            "rb_name1": substrate_name
+            "rb_name2": substrate2_name
+        }
+    """
+
+    # holds vm power action uuid to it's parent substrate name mapping
+    vm_power_action_uuid_substrate_map = {}
+    """
+        vm_power_action_uuid_substrate_map = {
+            "<power_action_uuid>": substrate_name
+        }
+    """
+
+    # holds target substrate for referenced power action runbook of a task
+    task_name_substrate_map = {}
+    """
+        task_name_substrate_map = {
+            "<profile_name>_<action_name>_<task_name>": substrate_name
+        }
+        "<profile_name>_<action_name>_<task_name>" key is used to uniquely identify a task even if they are of same name
+    """
+
+    # task name to substrate map holds target substrate for referenced power action runbook of a task
+    reference_runbook_to_substrate_map = {}
+    """
+        reference_runbook_to_substrate_map = {
+            "rb_name1": substrate_name,
+            "rb_name2": substrate2_name
+        }
+    """
+
+    substrate_def_list = bp_payload["status"]["resources"]["substrate_definition_list"]
+    for substrate in substrate_def_list:
+        substrate_name = substrate.get("name")
+        for action in substrate.get("action_list", []):
+            runbook_id = action.get("runbook", {}).get("uuid", "")
+            vm_power_action_uuid_substrate_map[runbook_id] = substrate_name
+
+    kwargs = {
+        "vm_power_action_uuid_substrate_map": vm_power_action_uuid_substrate_map,
+        "task_name_substrate_map": task_name_substrate_map,
+        "reference_runbook_to_substrate_map": reference_runbook_to_substrate_map,
+    }
+    entity_type_list = ["service_definition_list", "app_profile_list"]
+    for entity_type in entity_type_list:
+        _create_task_name_substrate_map(bp_payload, entity_type, **kwargs)
+
+    for entity_type in entity_type_list:
+        _create_reference_runbook_substrate_map(
+            exported_bp_payload, entity_type, **kwargs
+        )
+
+    return reference_runbook_to_substrate_map

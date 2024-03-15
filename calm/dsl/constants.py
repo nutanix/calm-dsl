@@ -172,6 +172,14 @@ class PROVIDER:
     class AHV:
         VLAN_1211 = "vlan1211"
 
+    NAME = {
+        TYPE.AHV: "Nutanix",
+        TYPE.VMWARE: "Vmware",
+        TYPE.AWS: "Aws",
+        TYPE.AZURE: "Azure",
+        TYPE.GCP: "Gcp",
+    }
+
 
 class QUOTA(object):
     class STATE(object):
@@ -207,3 +215,58 @@ class ENTITY:
 class DSL_CONFIG:
     EMPTY_PROJECT_NAME = "-"
     EMPTY_PROJECT_MESSAGE = "Project configuration not available. Use command `calm set config -pj <project_name>` to set it."
+
+
+class SUBSTRATE:
+    POWER_ON = "action_poweron"
+    POWER_OFF = "action_poweroff"
+    RESTART = "action_restart"
+    CHECK_LOGIN = "action_check_login"
+    VM_POWER_ACTIONS = {
+        "__vm_power_on__": POWER_ON,
+        "__vm_power_off__": POWER_OFF,
+        "__vm_restart__": RESTART,
+        "__vm_check_login__": CHECK_LOGIN,
+    }
+    VM_POWER_ACTIONS_REV = dict((v, k) for k, v in VM_POWER_ACTIONS.items())
+    POWER_ACTION_CAMEL_CASE = {
+        POWER_ON: "PowerOn",
+        POWER_OFF: "PowerOff",
+        RESTART: "Restart",
+    }
+
+
+class TASKS:
+    class TASK_TYPES:
+        GENERIC_OPERATION = "GENERIC_OPERATION"
+        VMOPERATION_NUTANIX = "VMOPERATION_NUTANIX"
+        VMOPERATION_VCENTER = "VMOPERATION_VCENTER"
+        VMOPERATION_AWS_VM = "VMOPERATION_AWS_VM"
+        VMOPERATION_AZURE_VM = "VMOPERATION_AZURE_VM"
+        VMOPERATION_GCP_VM = "VMOPERATION_GCP_VM"
+        PROVISION_NUTANIX = "PROVISION_NUTANIX"
+        PROVISION_VCENTER = "PROVISION_VCENTER"
+        ROVISION_AWS_VM = "PROVISION_AWS_VM"
+        PROVISION_GCP_VM = "PROVISION_GCP_VM"
+
+        UPDATE_NUTANIX = "UPDATE_NUTANIX"
+        CHECK_LOGIN = "CHECK_LOGIN"
+
+        VM_OPERATION = {
+            PROVIDER.TYPE.AHV: VMOPERATION_NUTANIX,
+            PROVIDER.TYPE.VMWARE: VMOPERATION_VCENTER,
+            PROVIDER.TYPE.AWS: VMOPERATION_AWS_VM,
+            PROVIDER.TYPE.AZURE: VMOPERATION_AZURE_VM,
+            PROVIDER.TYPE.GCP: VMOPERATION_GCP_VM,
+        }
+
+
+class READINESS_PROBE:
+    ADDRESS = {
+        PROVIDER.TYPE.AHV: "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
+        PROVIDER.TYPE.VMWARE: "@@{platform.ipAddressList[0]}@@",
+        PROVIDER.TYPE.AWS: "@@{public_ip_address}@@",
+        PROVIDER.TYPE.AZURE: "@@{platform.publicIPAddressList[0]}@@",
+        PROVIDER.TYPE.GCP: "@@{platform.networkInterfaces[0].accessConfigs[0].natIP}@@",
+        PROVIDER.TYPE.AHV: "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
+    }
