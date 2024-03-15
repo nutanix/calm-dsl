@@ -5,6 +5,7 @@ import json
 import re
 import uuid
 from json import JSONEncoder
+from datetime import datetime
 
 import arrow
 import click
@@ -25,6 +26,7 @@ from .bps import (
     parse_launch_params_attribute,
     _decompile_bp,
 )
+from calm.dsl.constants import CONFIG_TYPE
 from calm.dsl.log import get_logging_handle
 
 LOG = get_logging_handle(__name__)
@@ -1550,33 +1552,94 @@ def get_snapshot_name_arg(config, config_task_id):
         default=default_value,
         show_default=False,
     )
-    return {"name": "snapshot_name", "value": val, "task_uuid": config_task_id}
+    action_args = [{"name": "snapshot_name", "value": val, "task_uuid": config_task_id}]
+    if config["type"] == CONFIG_TYPE.SNAPSHOT.VMWARE:
+        choices = {
+            1: "1. Crash Consistent",
+            2: "2. Snapshot VM Memory",
+            3: "3. Enable Snapshot Quiesce",
+        }
+        default_idx = 1
+        click.echo("Choose from given snapshot type: ")
+        for choice in choices.values():
+            click.echo("\t{}".format(highlight_text(repr(choice))))
+        selected_val = click.prompt(
+            "Selected Snapshot Type [{}]".format(highlight_text(repr(default_idx))),
+            default=default_idx,
+            show_default=False,
+        )
+        if selected_val not in choices:
+            LOG.error(
+                "Invalid value {}, not present in choices: {}".format(
+                    selected_val, choices.keys()
+                )
+            )
+            sys.exit("Use valid choices from {}".format(choices.keys()))
+
+        action_args_choices_map = {
+            2: {
+                "name": "vm_memory_snapshot_enabled",
+                "value": "true",
+                "task_uuid": config_task_id,
+            },
+            3: {
+                "name": "snapshot_quiesce_enabled",
+                "value": "true",
+                "task_uuid": config_task_id,
+            },
+        }
+
+        # check action args of crash consistent
+        if selected_val != 1:
+            action_args.append(action_args_choices_map[selected_val])
+
+    return action_args
 
 
-def get_recovery_point_group_arg(config, config_task_id, recovery_groups):
+def get_recovery_point_group_arg(config, config_task_id, recovery_groups, config_type):
     choices = {}
     for i, rg in enumerate(recovery_groups):
-        choices[i + 1] = {
-            "label": "{}. {} [Created On: {} Expires On: {}]".format(
-                i + 1,
-                rg["status"]["name"],
-                time.strftime(
-                    "%Y-%m-%d %H:%M:%S",
-                    time.gmtime(
-                        rg["status"]["recovery_point_info_list"][0]["creation_time"]
-                        // 1000000
+        if config_type == CONFIG_TYPE.RESTORE.AHV:
+            choices[i + 1] = {
+                "label": "{}. {} [Created On: {} Expires On: {}]".format(
+                    i + 1,
+                    rg["status"]["name"],
+                    time.strftime(
+                        "%Y-%m-%d %H:%M:%S",
+                        time.gmtime(
+                            rg["status"]["recovery_point_info_list"][0]["creation_time"]
+                            // 1000000
+                        ),
+                    ),
+                    time.strftime(
+                        "%Y-%m-%d %H:%M:%S",
+                        time.gmtime(
+                            rg["status"]["recovery_point_info_list"][0][
+                                "expiration_time"
+                            ]
+                            // 1000000
+                        ),
                     ),
                 ),
-                time.strftime(
-                    "%Y-%m-%d %H:%M:%S",
-                    time.gmtime(
-                        rg["status"]["recovery_point_info_list"][0]["expiration_time"]
-                        // 1000000
-                    ),
+                "uuid": rg["status"]["uuid"],
+            }
+        elif config_type == CONFIG_TYPE.RESTORE.VMWARE:
+            # Defining it separately for vmware because snapshots taken don't have any expiry
+            created_time = rg["status"]["recovery_point_info_list"][0][
+                "snapshot_create_time"
+            ]
+            created_time = datetime.strptime(
+                created_time, "%Y-%m-%dT%H:%M:%S.%fZ"
+            ).replace(microsecond=0)
+            created_time.strftime("%Y-%m-%d %H:%M:%S")
+            choices[i + 1] = {
+                "label": "{}. {} [Created On: {}]".format(
+                    i + 1,
+                    rg["status"]["name"],
+                    created_time,
                 ),
-            ),
-            "uuid": rg["status"]["uuid"],
-        }
+                "uuid": rg["status"]["uuid"],
+            }
     if not choices:
         LOG.error(
             "No recovery group found. Please take a snapshot before running restore action"
@@ -1662,9 +1725,9 @@ def run_actions(
                 for config in config_list
                 if config["uuid"] == task["attrs"]["config_spec_reference"]["uuid"]
             )
-            if config["type"] == "AHV_SNAPSHOT":
-                action_args.append(get_snapshot_name_arg(config, task["uuid"]))
-            elif config["type"] == "AHV_RESTORE":
+            if config["type"] in CONFIG_TYPE.SNAPSHOT.TYPE:
+                action_args.extend(get_snapshot_name_arg(config, task["uuid"]))
+            elif config["type"] in CONFIG_TYPE.RESTORE.TYPE:
                 substrate_id = next(
                     (
                         dep["substrate_configuration"]["uuid"]
@@ -1682,7 +1745,7 @@ def run_actions(
                     raise Exception("[{}] - {}".format(err["code"], err["error"]))
                 action_args.append(
                     get_recovery_point_group_arg(
-                        config, task["uuid"], res.json()["entities"]
+                        config, task["uuid"], res.json()["entities"], config["type"]
                     )
                 )
 

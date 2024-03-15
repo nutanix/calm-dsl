@@ -11,6 +11,7 @@ from calm.dsl.config import get_context
 from calm.dsl.constants import STRATOS
 from calm.dsl.log import get_logging_handle
 from calm.dsl.tools.utils import make_file_dir
+from calm.dsl.builtins.models.helper.common import get_project
 
 LOG = get_logging_handle(__name__)
 VPC_LINUX_EP_PATH = "tests/tunnel_endpoints/linux_endpoint.py"
@@ -406,6 +407,55 @@ def add_vpc_details(config):
     add_tunnel_details(config)
 
 
+def add_protection_policy_details(config, config_header, project_name):
+    """Adds protection policy details of vmware/ahv snapshot projects for tests"""
+
+    client = get_api_client()
+    LOG.info("Fetching protection policies")
+    params = {"length": 20, "offset": 0}
+    if project_name:
+        project = get_project(project_name)
+        params["filter"] = "project_reference=={}".format(project["metadata"]["uuid"])
+    res, err = client.app_protection_policy.list(params)
+    if err:
+        LOG.error(err)
+        return
+    res = res.json()["entities"]
+    if not res:
+        LOG.warning("No protection policy found for project {}".format(project_name))
+        return
+
+    config[config_header]["PROJECT1"]["SNAPSHOT_POLICY"] = []
+    for entity in res:
+        name = entity["status"]["name"]
+        for rule in entity["status"]["resources"]["app_protection_rule_list"]:
+            rule_name = rule["name"]
+        snapshot_policy_details = {"NAME": name, "RULE": rule_name}
+        config[config_header]["PROJECT1"]["SNAPSHOT_POLICY"].append(
+            snapshot_policy_details
+        )
+
+
+def add_vmw_snapshot_policy(config):
+    """Adds vmware snapshot policy project if it exists for tests"""
+
+    project_name = "test_vmw_snapshot_policy_project"
+    project_exists = check_project_exists(project_name)
+    if project_exists:
+        add_project_details(config, "VMW_SNAPSHOT_PROJECTS", project_name)
+        add_protection_policy_details(config, "VMW_SNAPSHOT_PROJECTS", project_name)
+
+
+def add_ahv_snapshot_policy(config):
+    """Adds ahv snapshot policy project if it exists for tests"""
+
+    project_name = "test_snapshot_policy_project"
+    project_exists = check_project_exists(project_name)
+    if project_exists:
+        add_project_details(config, "AHV_SNAPSHOT_PROJECTS", project_name)
+        add_protection_policy_details(config, "AHV_SNAPSHOT_PROJECTS", project_name)
+
+
 def add_rerun_report_portal(config):
     config["reportportal"] = {
         "run_name": "runname",
@@ -542,6 +592,8 @@ add_directory_service_users(config)
 add_directory_service_user_groups(config)
 add_project_details(config)
 add_vpc_details(config)
+add_ahv_snapshot_policy(config)
+add_vmw_snapshot_policy(config)
 add_rerun_report_portal(config)
 add_vpc_endpoints(config)
 add_approval_details(config)

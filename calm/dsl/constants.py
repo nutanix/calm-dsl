@@ -27,6 +27,7 @@ class CACHE:
         POLICY_EVENT = "policy_event"
         POLICY_ACTION_TYPE = "policy_action_type"
         POLICY_ATTRIBUTES = "policy_attributes"
+        PROTECTION_POLICY = "app_protection_policy"
 
     API_ENTITY_KIND_MAP = {
         "cluster": ENTITY.AHV_CLUSTER,
@@ -268,5 +269,24 @@ class READINESS_PROBE:
         PROVIDER.TYPE.AWS: "@@{public_ip_address}@@",
         PROVIDER.TYPE.AZURE: "@@{platform.publicIPAddressList[0]}@@",
         PROVIDER.TYPE.GCP: "@@{platform.networkInterfaces[0].accessConfigs[0].natIP}@@",
-        PROVIDER.TYPE.AHV: "@@{platform.status.resources.nic_list[0].ip_endpoint_list[0].ip}@@",
+    }
+
+
+class CONFIG_TYPE:
+    class SNAPSHOT:
+        AHV = "AHV_SNAPSHOT"
+        VMWARE = "VMWARE_SNAPSHOT"
+        TYPE = [AHV, VMWARE]
+
+    class RESTORE:
+        AHV = "AHV_RESTORE"
+        VMWARE = "VMWARE_RESTORE"
+        TYPE = [AHV, VMWARE]
+
+    CONFIG_TYPE_MAP = {
+        "AHV_VM_snapshot": SNAPSHOT.AHV,
+        "VMWARE_VM_snapshot": SNAPSHOT.VMWARE,
+        "AHV_VM_restore": RESTORE.AHV,
+        "VMWARE_VM_restore": RESTORE.VMWARE,
+        "patch": "PATCH",
     }

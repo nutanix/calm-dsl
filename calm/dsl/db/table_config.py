@@ -84,6 +84,22 @@ class CacheTableBase(BaseModel):
         )
 
     @classmethod
+    def get_detail_dict_list(cls, qeury_obj):
+        """
+        This helper returns multiple matching instance for a given query
+        Args:
+            query_obj (pewee.ModelSelect object): containing multiple matching instance
+            object for a query
+        Returns:
+            entity_details (list): list of dict containing each entity data fetched from database
+        """
+        raise NotImplementedError(
+            "'get_detail_dict_list' helper not implemented for {} table".format(
+                cls.get_cache_type()
+            )
+        )
+
+    @classmethod
     def get_provider_plugin(self, provider_type="AHV_VM"):
         """returns the provider plugin"""
 
@@ -2885,7 +2901,7 @@ class AhvNetworkFunctionChain(CacheTableBase):
 
 
 class AppProtectionPolicyCache(CacheTableBase):
-    __cache_type__ = "app_protection_policy"
+    __cache_type__ = CACHE.ENTITY.PROTECTION_POLICY
     feature_min_version = "3.3.0"
     is_policy_required = False
     name = CharField()
@@ -2908,6 +2924,13 @@ class AppProtectionPolicyCache(CacheTableBase):
             "project_name": self.project_name,
             "last_update_time": self.last_update_time,
         }
+
+    @classmethod
+    def get_detail_dict_list(cls, query_obj, *args, **kwargs):
+        entity_details = []
+        for entity in query_obj:
+            entity_details.append(entity.get_detail_dict())
+        return entity_details
 
     @classmethod
     def clear(cls):
@@ -3038,6 +3061,15 @@ class AppProtectionPolicyCache(CacheTableBase):
 
         except DoesNotExist:
             return None
+
+    @classmethod
+    def get_entity_data_using_uuid(cls, uuid, **kwargs):
+        try:
+            query_obj = super().select().where(cls.uuid == uuid)
+            return cls.get_detail_dict_list(query_obj)
+
+        except DoesNotExist:
+            return dict()
 
     class Meta:
         database = dsl_database

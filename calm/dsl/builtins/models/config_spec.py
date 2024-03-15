@@ -15,6 +15,8 @@ from calm.dsl.log import get_logging_handle
 from .runbook import runbook_create
 from .action import _action_create
 from calm.dsl.builtins import get_valid_identifier
+from calm.dsl.constants import PROVIDER
+from calm.dsl.store import Cache
 
 LOG = get_logging_handle(__name__)
 
@@ -244,7 +246,79 @@ class PatchConfigSpecType(ConfigSpecType):
 
 
 class SnapshotConfigSpecType(ConfigSpecType):
-    pass
+    def compile(cls):
+        cdict = super().compile()
+        rule_ref = {}
+        snapshot_location_type = None
+        policy = None
+        policy_ref = getattr(cls, "policy")
+        if policy_ref:
+            policy = policy_ref.compile()
+        if policy:
+            rule = policy.pop("rule_uuid", None)
+
+            # Reading protection policy data from cache, required if no rule is present in above policy reference
+            protection_policy_cache_data = Cache.get_entity_data_using_uuid(
+                entity_type="app_protection_policy",
+                uuid=policy.get("uuid"),
+            )
+
+            if not protection_policy_cache_data:
+                LOG.error(
+                    "Protection Policy {} not found. Please run: calm update cache".format(
+                        policy.get("name")
+                    )
+                )
+                sys.exit(
+                    "Protection policy {} does not exist".format(policy.get("name"))
+                )
+
+            protection_rule_list = []
+
+            for _policy in protection_policy_cache_data:
+                protection_rule_list.append(
+                    {
+                        "uuid": _policy["rule_uuid"],
+                        "name": _policy["rule_name"],
+                        "rule_type": _policy.get("rule_type", ""),
+                    }
+                )
+
+            rule_ref["kind"] = "app_protection_rule"
+
+            # if no rule is given, pick first rule specified in policy
+            if not rule:
+                if protection_rule_list and isinstance(protection_rule_list, list):
+                    rule_ref["uuid"] = protection_rule_list[0]["uuid"]
+                    rule_ref["name"] = protection_rule_list[0]["name"]
+                    if protection_rule_list["rule_type"] == "Remote":
+                        snapshot_location_type = "REMOTE"
+            else:
+                for pr in protection_rule_list:
+                    if pr.get("uuid") == rule:
+                        rule_ref["uuid"] = rule
+                        rule_ref["name"] = pr.get("name")
+                        if pr.get("rule_type", "") == "Remote":
+                            snapshot_location_type = "REMOTE"
+
+            if "uuid" not in rule_ref:
+                LOG.error(
+                    "No Protection Rule {} found under Protection Policy {}".format(
+                        rule, policy["name"]
+                    )
+                )
+                sys.exit("Invalid protection rule")
+
+        if (
+            cdict["attrs_list"][0].get("snapshot_location_type")
+            and snapshot_location_type
+        ):
+            cdict["attrs_list"][0]["snapshot_location_type"] = snapshot_location_type
+        if policy:
+            cdict["attrs_list"][0]["app_protection_policy_reference"] = policy
+            cdict["attrs_list"][0]["app_protection_rule_reference"] = rule_ref
+
+        return cdict
 
 
 class RestoreConfigSpecType(ConfigSpecType):
@@ -298,8 +372,54 @@ def patch_config_create(
     return _config_create(config_type="patch", **kwargs)
 
 
+def _update_ahv_snapshot_config(attrs, snapshot_location_type, **kwargs):
+    attrs["snapshot_location_type"] = snapshot_location_type
+
+
+def _update_vmw_snapshot_config(attrs, **kwargs):
+    attrs["snapshot_name"] = ""
+    attrs["vm_memory_snapshot_enabled"] = ""
+    attrs["snapshot_description"] = ""
+    attrs["snapshot_quiesce_enabled"] = ""
+
+    snapshot_description = CalmVariable.Simple(
+        "", name="snapshot_description", runtime=True, is_mandatory=True
+    )
+    vm_memory_snapshot_enabled = CalmVariable.Simple(
+        "false", name="vm_memory_snapshot_enabled", runtime=True, is_mandatory=True
+    )
+    snapshot_quiesce_enabled = CalmVariable.Simple(
+        "false", name="snapshot_quiesce_enabled", runtime=True, is_mandatory=True
+    )
+    updated_variables = [
+        snapshot_description,
+        vm_memory_snapshot_enabled,
+        snapshot_quiesce_enabled,
+    ]
+    kwargs["variables"].extend(updated_variables)
+
+
+def _update_ahv_restore_config(
+    attrs, snapshot_location_type, delete_vm_post_restore, **kwargs
+):
+    attrs["delete_vm_post_restore"] = delete_vm_post_restore
+    attrs["snapshot_location_type"] = snapshot_location_type
+    delete_vm_post_restore = CalmVariable.Simple(
+        str(delete_vm_post_restore).lower(),
+        name="delete_vm_post_restore",
+        runtime=True,
+        is_mandatory=True,
+    )
+    kwargs["variables"].append(delete_vm_post_restore)
+
+
+def _update_vmw_restore_config(attrs, **kwargs):
+    attrs["suppress_power_on"] = "true"
+
+
 def snapshot_config_create(
     name,
+    provider,
     target=None,
     snapshot_type="CRASH_CONSISTENT",
     num_of_replicas="ONE",
@@ -308,57 +428,19 @@ def snapshot_config_create(
     policy=None,
     description="",
 ):
-    rule_ref = {}
-    if policy:
-        rule = policy.pop("rule_uuid", None)
-        client = get_api_client()
-        res, err = client.app_protection_policy.read(id=policy.get("uuid"))
-        if err:
-            LOG.error("[{}] - {}".format(err["code"], err["error"]))
-            sys.exit("Unable to retrieve protection policy details")
-
-        res = res.json()
-        protection_rule_list = res["status"]["resources"]["app_protection_rule_list"]
-
-        rule_ref["kind"] = "app_protection_rule"
-        if not rule:
-            if protection_rule_list and isinstance(protection_rule_list, list):
-                rule_ref["uuid"] = protection_rule_list[0]["uuid"]
-                rule_ref["name"] = protection_rule_list[0]["name"]
-                if protection_rule_list[0].get(
-                    "remote_snapshot_retention_policy", None
-                ):
-                    snapshot_location_type = "REMOTE"
-        else:
-            for pr in protection_rule_list:
-                if pr.get("uuid") == rule:
-                    rule_ref["uuid"] = rule
-                    rule_ref["name"] = pr.get("name")
-                    if pr.get("remote_snapshot_retention_policy", None):
-                        snapshot_location_type = "REMOTE"
-
-        if "uuid" not in rule_ref:
-            LOG.error(
-                "No Protection Rule {} found under Protection Policy {}".format(
-                    rule, res["metadata"]["name"]
-                )
-            )
-            sys.exit("Invalid protection rule")
-
+    # Only AHV support snapshot location. VMWARE doesn't support snapshot location
+    # therefore not setting snapshot location in config reference for VMWARE
     if config_references:
-        for config_ref in config_references:
-            config_ref.__self__.attrs_list[0][
-                "snapshot_location_type"
-            ] = snapshot_location_type
+        if provider == PROVIDER.TYPE.AHV:
+            for config_ref in config_references:
+                config_ref.__self__.attrs_list[0][
+                    "snapshot_location_type"
+                ] = snapshot_location_type
 
     attrs = {
         "target_any_local_reference": target,
-        "snapshot_location_type": snapshot_location_type,
         "num_of_replicas": num_of_replicas,
     }
-    if policy:
-        attrs["app_protection_policy_reference"] = policy
-        attrs["app_protection_rule_reference"] = rule_ref
     snapshot_name = CalmVariable.Simple(
         name, name="snapshot_name", runtime=True, is_mandatory=True
     )
@@ -372,12 +454,20 @@ def snapshot_config_create(
         "type": "",  # Set at profile level during compile
         "variables": [snapshot_name, snapshot_type],
         "config_references": config_references,
+        "policy": policy,
     }
+
+    if provider == PROVIDER.TYPE.AHV:
+        _update_ahv_snapshot_config(attrs, snapshot_location_type)
+    elif provider == PROVIDER.TYPE.VMWARE:
+        _update_vmw_snapshot_config(attrs, **kwargs)
+
     return _config_create(config_type="snapshot", **kwargs)
 
 
 def restore_config_create(
     name,
+    provider,
     target,
     snapshot_location_type="LOCAL",
     delete_vm_post_restore=False,
@@ -385,23 +475,25 @@ def restore_config_create(
 ):
     attrs = {
         "target_any_local_reference": target,
-        "delete_vm_post_restore": delete_vm_post_restore,
-        "snapshot_location_type": snapshot_location_type,
     }
+
     snapshot_uuids = CalmVariable.Simple(
         "", name="snapshot_uuids", runtime=True, is_mandatory=True
     )
-    delete_vm_post_restore = CalmVariable.Simple(
-        str(delete_vm_post_restore).lower(),
-        name="delete_vm_post_restore",
-        runtime=True,
-        is_mandatory=True,
-    )
+
     kwargs = {
         "name": name,
         "description": description,
         "attrs_list": [attrs],
         "type": "",  # Set at profile level based on target
-        "variables": [snapshot_uuids, delete_vm_post_restore],
+        "variables": [snapshot_uuids],
     }
+
+    if provider == PROVIDER.TYPE.AHV:
+        _update_ahv_restore_config(
+            attrs, snapshot_location_type, delete_vm_post_restore, **kwargs
+        )
+    elif provider == PROVIDER.TYPE.VMWARE:
+        _update_vmw_restore_config(attrs, **kwargs)
+
     return _config_create(config_type="restore", **kwargs)

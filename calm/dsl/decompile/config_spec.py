@@ -3,6 +3,7 @@ import json
 
 from calm.dsl.decompile.render import render_template
 from calm.dsl.builtins import ConfigSpecType, get_valid_identifier
+from calm.dsl.constants import PROVIDER
 from calm.dsl.log import get_logging_handle
 from calm.dsl.builtins import ConfigAttrs
 from calm.dsl.decompile.action import render_action_template
@@ -26,7 +27,17 @@ def render_restore_config_template(cls, entity_context):
     user_attrs["target"] = get_valid_identifier(
         attrs["target_any_local_reference"]["name"]
     )
-    user_attrs["delete_vm_post_restore"] = attrs["delete_vm_post_restore"]
+    user_attrs["description"] = attrs.get("snapshot_description", "")
+    user_attrs["delete_vm_post_restore"] = attrs.get("delete_vm_post_restore", None)
+
+    if _user_attrs["type"] == "AHV_RESTORE":
+        user_attrs["provider"] = "Ahv"
+        user_attrs["delete_vm_post_restore"] = attrs["delete_vm_post_restore"]
+    elif _user_attrs["type"] == "VMWARE_RESTORE":
+        user_attrs["provider"] = "Vmware"
+    else:
+        LOG.warning("Given snapshot type not supported for decompilation")
+
     text = render_template(schema_file="restore_config.py.jinja2", obj=user_attrs)
     return text.strip()
 
@@ -47,12 +58,20 @@ def render_snapshot_config_template(cls, entity_context, CONFIG_SPEC_MAP):
         attrs["target_any_local_reference"]["name"]
     )
     user_attrs["num_of_replicas"] = attrs["num_of_replicas"]
+    user_attrs["description"] = attrs.get("snapshot_description", "")
+    user_attrs["snapshot_location_type"] = attrs.get("snapshot_location_type", None)
 
-    # TODO fix App Protection policy model, decompilation is wrong and in compilation also metadata project is not considered
-    # if attrs.get("app_protection_policy_reference", {}).get("name", {}):
-    #     user_attrs["policy"] = attrs["app_protection_policy_reference"]["name"]
-    # if attrs.get("app_protection_rule_reference", {}).get("name", {}):
-    #     user_attrs["rule"] = attrs["app_protection_rule_reference"]["name"]
+    if _user_attrs["type"] == "AHV_SNAPSHOT":
+        user_attrs["provider"] = "Ahv"
+    elif _user_attrs["type"] == "VMWARE_SNAPSHOT":
+        user_attrs["provider"] = "Vmware"
+    else:
+        LOG.warning("Given snapshot type not supported for decompilation")
+
+    if attrs.get("app_protection_policy_reference", {}).get("name", {}):
+        user_attrs["policy"] = attrs["app_protection_policy_reference"]["name"]
+    if attrs.get("app_protection_rule_reference", {}).get("name", {}):
+        user_attrs["rule"] = attrs["app_protection_rule_reference"]["name"]
     text = render_template(schema_file="snapshot_config.py.jinja2", obj=user_attrs)
     return text.strip()
 

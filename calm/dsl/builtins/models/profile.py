@@ -10,6 +10,7 @@ from .runbook import runbook_create
 from .config_spec import SnapshotConfigSpecType, RestoreConfigSpecType
 from calm.dsl.log import get_logging_handle
 from .config_spec import PatchConfigSpecType
+from calm.dsl.constants import PROVIDER, CONFIG_TYPE
 
 
 LOG = get_logging_handle(__name__)
@@ -41,11 +42,11 @@ class ProfileType(EntityType):
         # Dont support decompilation for other providers
         configs = {"snapshot_config_list": [], "restore_config_list": []}
         for _config in cdict.get("snapshot_config_list", []):
-            if _config.get("type") == "AHV_SNAPSHOT":
+            if _config.get("type") in CONFIG_TYPE.SNAPSHOT.TYPE:
                 configs["snapshot_config_list"].append(_config)
 
         for _config in cdict.get("restore_config_list", []):
-            if _config.get("type") == "AHV_RESTORE":
+            if _config.get("type") in CONFIG_TYPE.RESTORE.TYPE:
                 configs["restore_config_list"].append(_config)
 
         cdict.update(configs)
@@ -57,11 +58,7 @@ class ProfileType(EntityType):
         # description attribute in profile gives bp launch error: https://jira.nutanix.com/browse/CALM-19380
         cdict.pop("description", None)
 
-        config_type_map = {
-            "restore": "AHV_RESTORE",
-            "snapshot": "AHV_SNAPSHOT",
-            "patch": "PATCH",
-        }
+        config_type_map = CONFIG_TYPE.CONFIG_TYPE_MAP
         config_action_prefix_map = {"restore": "Restore_", "snapshot": "Snapshot_"}
         action_names = list(map(lambda x: x.name, cdict["action_list"]))
 
@@ -91,7 +88,11 @@ class ProfileType(EntityType):
                     cdict["deployment_create_list"][0]
                 )
             deployment = config.attrs_list[0]["target_any_local_reference"].__self__
-            if deployment.substrate.__self__.provider_type == "AHV_VM":
+            if deployment.substrate.__self__.provider_type == PROVIDER.TYPE.AHV:
+                config_type = PROVIDER.TYPE.AHV + "_" + config_type
+                config.type = config_type_map[config_type]
+            elif deployment.substrate.__self__.provider_type == PROVIDER.TYPE.VMWARE:
+                config_type = PROVIDER.TYPE.VMWARE + "_" + config_type
                 config.type = config_type_map[config_type]
             else:
                 LOG.error(

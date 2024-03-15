@@ -354,6 +354,15 @@ def compile_blueprint(bp_file, brownfield_deployment_file=None):
             if "action_list" in package:
                 del package["action_list"]
 
+        # Remove policy_reference after compiling as it is invalid in blueprint payload
+        for profile in cdict.get("app_profile_list", []):
+            for config in profile.get("snapshot_config_list", []):
+                config.pop("policy_reference", "")
+            for config in profile.get("restore_config_list", []):
+                config.pop("policy_reference", "")
+            for config in profile.get("patch_list", []):
+                config.pop("policy_reference", "")
+
     return bp_payload
 
 
@@ -582,6 +591,10 @@ def decompile_bp_from_server(name, with_secrets=False, prefix="", bp_dir=None):
 
     exported_bp_res_payload = exported_bp_res.json()
 
+    # adding metadata payload from 'blueprint' payload to response of 'export blueprint'
+    # because 'export blueprint' response doesn't have project reference, while 'blueprint' has project reference info.
+    exported_bp_res_payload["metadata"] = blueprint["metadata"]
+
     # Filter out system created tasks in patch config
     filter_patch_config_tasks(exported_bp_res_payload["spec"]["resources"])
 
@@ -614,6 +627,10 @@ def decompile_bp_from_server_with_secrets(
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     exported_bp_res_payload = exported_bp_res.json()
+
+    # adding metadata payload from 'blueprint' payload to response of 'export blueprint'
+    # because 'export blueprint' response doesn't have project reference, while 'blueprint' has project reference info.
+    exported_bp_res_payload["metadata"] = blueprint["metadata"]
 
     # Filter out system created tasks in patch config
     filter_patch_config_tasks(exported_bp_res_payload["spec"]["resources"])
@@ -1132,7 +1149,7 @@ def get_protection_policy_rule(
     subnet_cluster_map,
     substrate_list,
 ):
-    """returns protection policy, protection rule tuple from cli_prompt"""
+    """returns protection policy, protection rule tuple from cli_prompt for ahv"""
 
     snapshot_config = next(
         (
@@ -1342,6 +1359,160 @@ def get_protection_policy_rule(
                 )
                 rule_choices[i] = {"label": label, "rule": rule}
                 i += 1
+
+    if not rule_choices:
+        LOG.error(
+            "No matching protection rules found under protection policy {}. Please add the rules using UI to continue".format(
+                selected_policy_name
+            )
+        )
+        sys.exit("No protection rules found")
+    click.echo("")
+    click.echo("Choose from given choices: ")
+    for choice in rule_choices.values():
+        click.echo("\t{}".format(highlight_text(repr(choice["label"]))))
+
+    selected_rule = click.prompt(
+        "Protection Rule for '{}' [{}]".format(
+            snapshot_config["name"], highlight_text(repr(default_rule_idx))
+        ),
+        default=default_rule_idx,
+        show_default=False,
+    )
+    if selected_rule not in rule_choices:
+        LOG.error("Invalid value '{}' for protection rule".format(selected_rule))
+        sys.exit("Invalid protection rule")
+    return selected_policy, rule_choices[selected_rule]["rule"]
+
+
+def get_protection_policy_rule_vmware(
+    protection_policy_uuid,
+    protection_rule_uuid,
+    snapshot_config_uuid,
+    app_profile,
+    protection_policies,
+    substrate_list,
+    vmware_account,
+):
+    """returns protection policy, protection rule tuple from cli_prompt for vmware"""
+
+    snapshot_config = next(
+        (
+            config
+            for config in app_profile["snapshot_config_list"]
+            if config["uuid"] == snapshot_config_uuid
+        ),
+        None,
+    )
+    if not snapshot_config:
+        LOG.err(
+            "No snapshot config with uuid {} found in App Profile {}".format(
+                snapshot_config_uuid, app_profile["name"]
+            )
+        )
+        sys.exit("Snapshot config {} not found".format(snapshot_config_uuid))
+    is_local_snapshot = True
+    config_target = snapshot_config["attrs_list"][0]["target_any_local_reference"]
+    target_substrate_reference = next(
+        (
+            deployment["substrate_local_reference"]
+            for deployment in app_profile["deployment_create_list"]
+            if deployment["uuid"] == config_target["uuid"]
+        ),
+        None,
+    )
+    if not target_substrate_reference:
+        LOG.error(
+            "No deployment with uuid {} found under app profile {}".format(
+                config_target, app_profile["name"]
+            )
+        )
+        sys.exit("Deployment {} not found".format(config_target))
+
+    host_uuids = set()
+    for substrate in substrate_list:
+        host_uuids.add(substrate.get("create_spec", {}).get("host"))
+
+    default_policy = ""
+    policy_choices = {}
+    for policy in protection_policies:
+        if (
+            is_local_snapshot and policy["resources"]["rule_type"].lower() != "remote"
+        ) or (
+            not is_local_snapshot
+            and policy["resources"]["rule_type"].lower() != "local"
+        ):
+            policy_choices[policy["name"]] = policy
+        if (not default_policy and policy["resources"]["is_default"]) or (
+            protection_policy_uuid == policy["uuid"]
+        ):
+            default_policy = policy["name"]
+    if not policy_choices:
+        LOG.error(
+            "No protection policy found under this project. Please add one from the UI"
+        )
+        sys.exit("No protection policy found")
+    if not default_policy or default_policy not in policy_choices:
+        default_policy = list(policy_choices.keys())[0]
+    click.echo("")
+    click.echo("Choose from given choices: ")
+    for choice in policy_choices.keys():
+        click.echo("\t{}".format(highlight_text(repr(choice))))
+
+    selected_policy_name = click.prompt(
+        "Protection Policy for '{}' [{}]".format(
+            snapshot_config["name"], highlight_text(repr(default_policy))
+        ),
+        default=default_policy,
+        show_default=False,
+    )
+    if selected_policy_name not in policy_choices:
+        LOG.error(
+            "Invalid value '{}' for protection policy".format(selected_policy_name)
+        )
+        sys.exit("Invalid protection policy")
+
+    selected_policy = policy_choices[selected_policy_name]
+    ordered_site_list = selected_policy["resources"]["ordered_availability_site_list"]
+    account_uuid = vmware_account.get("account_reference", {}).get("uuid")
+    account_name = vmware_account.get("account_reference", {}).get("name")
+
+    # reading vmware clusters associated with given account
+    VMWProvider = get_provider("VMWARE_VM")
+    VMWObj = VMWProvider.get_api_obj()
+    clusters = VMWObj.clusters(account_uuid)
+
+    if not clusters:
+        LOG.error(
+            "Cannot find the cluster associated with account {} (uuid={})".format(
+                account_name, account_uuid
+            )
+        )
+        sys.exit("Cluster not found")
+
+    cluster = clusters[0]
+    cluster_idx = -1
+    for i, site in enumerate(ordered_site_list):
+        if site["infra_inclusion_list"]["cluster_references"][0]["name"] == cluster:
+            cluster_idx = i
+            break
+    if cluster_idx < 0:
+        LOG.error(
+            "Unable to find cluster {} in protection policy {}".format(
+                cluster, selected_policy_name
+            )
+        )
+        sys.exit("Cluster not found")
+
+    default_rule_idx, i = 1, 1
+    rule_choices = {}
+    label = "Snapshot no expiry. Target cluster: {}".format(cluster)
+
+    for rule in selected_policy["resources"]["app_protection_rule_list"]:
+        source_cluster_idx = rule["first_availability_site_index"]
+        if source_cluster_idx == cluster_idx:
+            rule_choices[i] = {"label": label, "rule": rule}
+            i += 1
 
     if not rule_choices:
         LOG.error(
@@ -1746,28 +1917,16 @@ def launch_blueprint_simple(
                 ntnx_acc = next(
                     (acc for acc in infra_list if acc["type"] == "nutanix_pc"), None
                 )
-                if not ntnx_acc:
+                vmware_acc = next(
+                    (acc for acc in infra_list if acc["type"] == "vmware"), None
+                )
+
+                if not (ntnx_acc or vmware_acc):
                     LOG.error(
-                        "No nutanix account found associated with the environment"
+                        "No nutanix/vmware account found associated with the environment"
                     )
-                    sys.exit("No nutanix account found in environment")
-                ahv_new = AhvNew(client.connection)
-                filter_query = "_entity_id_=in={}".format(
-                    "|".join(subnet["uuid"] for subnet in ntnx_acc["subnet_references"])
-                )
-                subnets = ahv_new.subnets(
-                    filter_query=filter_query,
-                    account_uuid=ntnx_acc["account_reference"]["uuid"],
-                )
-                subnet_cluster_map = [
-                    {
-                        "cluster_name": subnet["status"]["cluster_reference"]["name"],
-                        "cluster_uuid": subnet["status"]["cluster_reference"]["uuid"],
-                        "subnet_name": subnet["status"]["name"],
-                        "subnet_uuid": subnet["metadata"]["uuid"],
-                    }
-                    for subnet in subnets["entities"]
-                ]
+                    sys.exit("No nutanix/vmware account found in environment")
+
                 protection_policy = snapshot_config["value"]["attrs_list"][0][
                     "app_protection_policy_reference"
                 ]
@@ -1775,15 +1934,54 @@ def launch_blueprint_simple(
                     "app_protection_rule_reference"
                 ]
 
-                protection_policy, protection_rule = get_protection_policy_rule(
-                    protection_policy,
-                    protection_rule,
-                    snapshot_config["uuid"],
-                    app_profile,
-                    protection_policies,
-                    subnet_cluster_map,
-                    substrate_list,
-                )
+                if ntnx_acc:
+                    ahv_new = AhvNew(client.connection)
+                    filter_query = "_entity_id_=in={}".format(
+                        "|".join(
+                            subnet["uuid"] for subnet in ntnx_acc["subnet_references"]
+                        )
+                    )
+                    subnets = ahv_new.subnets(
+                        filter_query=filter_query,
+                        account_uuid=ntnx_acc["account_reference"]["uuid"],
+                    )
+                    subnet_cluster_map = [
+                        {
+                            "cluster_name": subnet["status"]["cluster_reference"][
+                                "name"
+                            ],
+                            "cluster_uuid": subnet["status"]["cluster_reference"][
+                                "uuid"
+                            ],
+                            "subnet_name": subnet["status"]["name"],
+                            "subnet_uuid": subnet["metadata"]["uuid"],
+                        }
+                        for subnet in subnets["entities"]
+                        if subnet["status"].get("cluster_reference", {})
+                    ]
+                    protection_policy, protection_rule = get_protection_policy_rule(
+                        protection_policy,
+                        protection_rule,
+                        snapshot_config["uuid"],
+                        app_profile,
+                        protection_policies,
+                        subnet_cluster_map,
+                        substrate_list,
+                    )
+
+                elif vmware_acc:
+                    (
+                        protection_policy,
+                        protection_rule,
+                    ) = get_protection_policy_rule_vmware(
+                        protection_policy,
+                        protection_rule,
+                        snapshot_config["uuid"],
+                        app_profile,
+                        protection_policies,
+                        substrate_list,
+                        vmware_acc,
+                    )
 
                 snapshot_config_obj = next(
                     (
