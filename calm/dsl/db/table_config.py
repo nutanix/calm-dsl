@@ -4684,10 +4684,21 @@ class NDB_TagCache(CacheTableBase):
 class VersionTable(BaseModel):
     name = CharField()
     version = CharField()
+    pc_ip = CharField()
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
+    @classmethod
+    def get_entity_data(cls, name):
+        query_obj = {"name": name}
+
+        try:
+            entity = super().get(**query_obj)
+            return entity.get_detail_dict()
+        except DoesNotExist:
+            return dict()
+
     def get_detail_dict(self):
-        return {"name": self.name, "version": self.version}
+        return {"name": self.name, "pc_ip": self.pc_ip, "version": self.version}
 
 
 def highlight_text(text, **kwargs):

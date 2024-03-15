@@ -10,9 +10,9 @@ from prettytable import PrettyTable
 
 # TODO - move providers to separate file
 from calm.dsl.providers import get_provider, get_provider_types
-from calm.dsl.api import get_api_client, get_resource_api
+from calm.dsl.api import get_api_client, get_resource_api, reset_api_handle
 from calm.dsl.log import get_logging_handle
-from calm.dsl.config import get_context
+from calm.dsl.config import get_context, get_default_config_file
 from calm.dsl.config.env_config import EnvConfig
 from calm.dsl.store import Cache
 from calm.dsl.constants import DSL_CONFIG
@@ -21,6 +21,8 @@ from calm.dsl.builtins.models.utils import set_compile_secrets_flag
 from .version_validator import validate_version
 from .click_options import simple_verbosity_option, show_trace_option
 from .utils import FeatureFlagGroup, highlight_text
+from calm.dsl.store import Version
+from calm.dsl.config.init_config import get_init_config_handle
 
 CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
 
@@ -75,14 +77,23 @@ def main(ctx, config_file, sync):
     except Exception:
         LOG.debug("Could not validate version")
         pass
-    if config_file:
-        ContextObj = get_context()
-        ContextObj.update_config_file_context(config_file=config_file)
 
     # This is added to ensure non compile commands has secrets in the dictionary.
     set_compile_secrets_flag(True)
 
+    old_pc_ip = Version.get_version_data("PC").get("pc_ip")
+    config_file = config_file or get_default_config_file()
     ContextObj = get_context()
+    ContextObj.update_config_file_context(config_file=config_file)
+    server_config = ContextObj.get_server_config()
+    reset_api_handle()
+
+    if old_pc_ip != server_config["pc_ip"]:
+        LOG.info("Host IP changed")
+        LOG.warning(
+            "Cache contains data from other instance. Please use --sync/-s with the invoked command."
+        )
+
     project_config = ContextObj.get_project_config()
     project_name = project_config.get("name")
 

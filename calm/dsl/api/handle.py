@@ -138,3 +138,9 @@ def get_api_client():
         update_api_client(host=pc_ip, port=pc_port, auth=(username, password))
 
     return _API_CLIENT_HANDLE
+
+
+def reset_api_handle():
+    """Resets global api client object (_API_CLIENT_HANDLE) to None"""
+    global _API_CLIENT_HANDLE
+    _API_CLIENT_HANDLE = None
