@@ -7,6 +7,8 @@ from . import util
 from .util import (
     strip_secrets,
     patch_secrets,
+    strip_patch_config_tasks,
+    add_patch_config_tasks,
 )
 from calm.dsl.log import get_logging_handle
 
@@ -191,6 +193,8 @@ class BlueprintAPI(ResourceAPI):
             bp_resources, secret_map, secret_variables, object_lists=object_lists
         )
 
+        # Removing patch config tasks before uploading
+        profile_patch_config_tasks = strip_patch_config_tasks(bp_resources)
         for obj_index, obj in enumerate(
             bp_resources.get("substrate_definition_list", []) or []
         ):
@@ -210,9 +214,22 @@ class BlueprintAPI(ResourceAPI):
         if err:
             return res, err
 
-        # Add secrets and update bp
+        # Add secrets, patch config tasks and update bp
         bp = res.json()
+        service_name_uuid_map = {}
+        app_profile_list = bp["status"].get("resources", {}).get("app_profile_list", [])
+        for service in (
+            bp["status"].get("resources", {}).get("service_definition_list", [])
+        ):
+            service_name_uuid_map[service["name"]] = service["uuid"]
         del bp["status"]
+
+        add_patch_config_tasks(
+            bp["spec"]["resources"],
+            app_profile_list,
+            profile_patch_config_tasks,
+            service_name_uuid_map,
+        )
 
         patch_secrets(bp["spec"]["resources"], secret_map, secret_variables)
 
@@ -273,6 +290,9 @@ class BlueprintAPI(ResourceAPI):
             not_stripped_secrets=not_stripped_secrets,
         )
 
+        # Removing patch config tasks before uploading
+        profile_patch_config_tasks = strip_patch_config_tasks(bp_resources)
+
         for obj_index, obj in enumerate(
             bp_resources.get("substrate_definition_list", []) or []
         ):
@@ -299,9 +319,22 @@ class BlueprintAPI(ResourceAPI):
         if err:
             return res, err
 
-        # Add secrets and update bp
+        # Add secrets, patch config tasks and update bp
         bp = res.json()
+        service_name_uuid_map = {}
+        app_profile_list = bp["status"].get("resources", {}).get("app_profile_list", [])
+        for service in (
+            bp["status"].get("resources", {}).get("service_definition_list", [])
+        ):
+            service_name_uuid_map[service["name"]] = service["uuid"]
         del bp["status"]
+
+        add_patch_config_tasks(
+            bp["spec"]["resources"],
+            app_profile_list,
+            profile_patch_config_tasks,
+            service_name_uuid_map,
+        )
 
         LOG.info("Patching newly created/updated secrets")
         for k in secret_map:

@@ -98,6 +98,11 @@ properties:
         additionalProperties: true
         type: object
         x-calm-dsl-type: dict
+  action_list:
+    x-calm-dsl-display-name: actions
+    type: array
+    items:
+      $ref: '#/components/schemas/Action'
 {%- endmacro %}
 
 {% macro AhvDiskRulesetSchema() -%}

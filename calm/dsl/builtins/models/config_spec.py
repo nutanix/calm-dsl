@@ -12,6 +12,9 @@ from .variable import CalmVariable
 from calm.dsl.api import get_resource_api, get_api_client
 from calm.dsl.config import get_context
 from calm.dsl.log import get_logging_handle
+from .runbook import runbook_create
+from .action import _action_create
+from calm.dsl.builtins import get_valid_identifier
 
 LOG = get_logging_handle(__name__)
 
@@ -29,6 +32,16 @@ class UpdateConfig:
 class ConfigSpecType(EntityType):
     __schema_name__ = "ConfigSpec"
     __openapi_type__ = "app_config_spec"
+
+    @classmethod
+    def pre_decompile(mcls, cdict, context, prefix=""):
+        cdict = super().pre_decompile(cdict, context, prefix=prefix)
+
+        # Calling pre_decompile of PatchConfigSpecType for patch configs
+        if cdict.get("type", "") == "PATCH":
+            cdict = PatchConfigSpecType.pre_decompile(cdict, context, prefix=prefix)
+
+        return cdict
 
     def get_ref(cls, kind=None):
         """Note: app_blueprint_deployment kind to be used for pod deployment"""
@@ -127,12 +140,107 @@ class ConfigSpecType(EntityType):
             "pre_defined_nic_list": nic_data,
             "pre_defined_categories": categories_data,
         }
+
+        # Setting actions attribute to PatchConfigSpecType to compile actions
+        if isinstance(cls, PatchConfigSpecType):
+            actions = attrs.get_config_actions()
+            cls.set_actions(actions)
+
         cdict["attrs_list"][0]["data"] = data
         return cdict
 
 
 class PatchConfigSpecType(ConfigSpecType):
-    pass
+    @classmethod
+    def pre_decompile(mcls, cdict, context, prefix=""):
+        patch_attr_data = cdict["attrs_list"][0]["data"]
+        actions = []
+        patch_action_data = cdict.get("runbook", {})
+        if patch_action_data:
+            patch_action_data.pop("uuid", "")
+            patch_action_data.get("main_task_local_reference", {}).pop("uuid", "")
+            task_definition_list = patch_action_data.get("task_definition_list", [])
+            for tdl in task_definition_list:
+                # Removing additional attributes
+                tdl.pop("uuid", "")
+                tdl.get("target_any_local_reference", {}).pop("uuid", "")
+                for child in tdl.get("child_tasks_local_reference_list", []):
+                    child.pop("uuid", "")
+                for edge in tdl.get("attrs", {}).get("edges", []):
+                    edge.get("from_task_reference", {}).pop("uuid", "")
+                    edge.get("to_task_reference", {}).pop("uuid", "")
+
+            action_name = "custom_app_edit_action"
+            if len(task_definition_list) > 1:
+                action_name = task_definition_list[1].get("name", action_name)
+
+            actions = [
+                _action_create(
+                    **{
+                        "name": get_valid_identifier(action_name),
+                        "description": "",
+                        "critical": True,
+                        "type": "user",
+                        "runbook": patch_action_data,
+                    }
+                ).get_dict()
+            ]
+
+        kwargs = {
+            "nic_delete": patch_attr_data.get("nic_delete_allowed", False),
+            "categories_delete": patch_attr_data.get(
+                "categories_delete_allowed", False
+            ),
+            "categories_add": patch_attr_data.get("categories_add_allowed", False),
+            "disk_delete": patch_attr_data.get("disk_delete_allowed", False),
+            "disks": patch_attr_data["pre_defined_disk_list"],
+            "nics": patch_attr_data["pre_defined_nic_list"],
+            "categories": patch_attr_data["pre_defined_categories"],
+            "numsocket": patch_attr_data["num_sockets_ruleset"],
+            "memory": patch_attr_data["memory_size_mib_ruleset"],
+            "vcpu": patch_attr_data["num_vcpus_per_socket_ruleset"],
+            "action_list": actions,
+        }
+
+        cdict["patch_attrs"] = [kwargs]
+        cdict.pop("runbook", "")
+        return cdict
+
+    def compile(cls):
+        cdict = super().compile()
+
+        attrs = getattr(cls, "attrs_list")[0] if getattr(cls, "attrs_list") else None
+        try:
+            target_deployment = attrs["target_any_local_reference"]
+            services_ref = target_deployment.__self__.get_service_ref()
+        except:
+            LOG.error("No deployment target set for patch config")
+            sys.exit(-1)
+
+        if not services_ref:
+            LOG.error("No service to target patch config actions.")
+            sys.exit(-1)
+
+        # there will be a single action in the patch_config
+        actions = getattr(cls, "action_list", [])
+        if len(actions) > 1:
+            LOG.error("Single action is allowed at patch_config")
+            sys.exit(-1)
+
+        if actions:
+            actions = actions[0].get_dict()
+            config_runbook = actions["runbook"]
+            for tdl in config_runbook["task_definition_list"]:
+                tdl["uuid"] = str(uuid.uuid4())
+                tdl["target_any_local_reference"] = services_ref.get_dict()
+
+            cdict["runbook"] = config_runbook
+
+        return cdict
+
+    @classmethod
+    def set_actions(cls, actions):
+        setattr(cls, "action_list", actions)
 
 
 class SnapshotConfigSpecType(ConfigSpecType):

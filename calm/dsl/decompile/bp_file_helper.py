@@ -26,6 +26,8 @@ from calm.dsl.builtins import BlueprintType, ServiceType, PackageType
 from calm.dsl.builtins import DeploymentType, ProfileType, SubstrateType
 from calm.dsl.builtins import get_valid_identifier
 from calm.dsl.log import get_logging_handle
+from calm.dsl.builtins import ConfigAttrs
+from calm.dsl.decompile.config_spec import render_config_attr_template
 
 
 LOG = get_logging_handle(__name__)
@@ -117,6 +119,10 @@ def render_bp_file_template(
         deployments.extend(profile.deployments)
         for dep in deployments:
             add_edges(entity_edges, dep.get_ref().name, profile.get_ref().name)
+        for patch_config_attr in profile.patch_list:
+            entity_name_text_map[
+                get_valid_identifier(patch_config_attr.patch_attrs[0].__name__)
+            ] = patch_config_attr.patch_attrs[0]
 
     for deployment in deployments:
         entity_name_text_map[deployment.get_ref().name] = deployment
@@ -165,6 +171,22 @@ def render_bp_file_template(
     dependepent_entities = []
     dependepent_entities = get_ordered_entities(entity_name_text_map, entity_edges)
 
+    # Constructing map of patch attribute class name to update config name
+    patch_attr_update_config_map = {}
+    for k, v in enumerate(dependepent_entities):
+        if isinstance(v, ProfileType):
+            if not v.patch_list:
+                continue
+            for update_config in v.patch_list:
+                patch_attr_name = update_config.patch_attrs[0].__name__
+                update_config_name = get_valid_identifier(update_config.__name__)
+                patch_attr_update_config_map[patch_attr_name] = update_config_name
+
+    # Constructing reverse map of above
+    update_config_patch_attr_map = dict(
+        (v, k) for k, v in patch_attr_update_config_map.items()
+    )
+
     # Setting dsl class and gui display name of entity in beginning.
     # Case: when vm power actions are used in service level then dsl class name of substrate is needed.
     # As service class is rendered before substrate we need to explicitly create substrate ui dsl map initially.
@@ -180,6 +202,15 @@ def render_bp_file_template(
                 v, secrets_dict, endpoints=endpoints, ep_list=ep_list
             )
 
+        elif isinstance(v, ConfigAttrs):
+            dependepent_entities[k] = render_config_attr_template(
+                v,
+                patch_attr_update_config_map,
+                secrets_dict,
+                endpoints=endpoints,
+                ep_list=ep_list,
+            )
+
         elif isinstance(v, PackageType):
             dependepent_entities[k] = render_package_template(
                 v, secrets_dict, endpoints=endpoints, ep_list=ep_list
@@ -187,7 +218,11 @@ def render_bp_file_template(
 
         elif isinstance(v, ProfileType):
             dependepent_entities[k] = render_profile_template(
-                v, secrets_dict, endpoints=endpoints, ep_list=ep_list
+                v,
+                update_config_patch_attr_map,
+                secrets_dict,
+                endpoints=endpoints,
+                ep_list=ep_list,
             )
 
         elif isinstance(v, DeploymentType):
@@ -214,7 +249,7 @@ def render_bp_file_template(
 
     blueprint = render_blueprint_template(cls)
 
-    # Rendere blueprint metadata
+    # Render blueprint metadata
     metadata_str = render_metadata_template(metadata_obj)
 
     user_attrs.update(

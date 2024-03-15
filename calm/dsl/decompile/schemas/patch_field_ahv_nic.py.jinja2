@@ -1,0 +1,6 @@
+{%- macro patch_field_ahv_nic(obj) %}
+{% if obj.operation == "delete" %}PatchField.Ahv.Nics.{{obj.operation}}(index={{obj.index}}){% endif %}
+{% if obj.operation == "add" %}PatchField.Ahv.Nics.{{obj.operation}}({{obj.nic_data}}){% endif %}
+{%- endmacro %}
+
+{{ patch_field_ahv_nic(obj) }}

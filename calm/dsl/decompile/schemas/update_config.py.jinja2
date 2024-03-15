@@ -1,0 +1,5 @@
+{%- macro patch_config(obj) %}
+AppEdit.UpdateConfig(name='{{obj.name}}', target=ref({{obj.target}}), patch_attrs={{obj.patch_attr}})
+{%- endmacro %}
+
+{{ patch_config(obj) }}

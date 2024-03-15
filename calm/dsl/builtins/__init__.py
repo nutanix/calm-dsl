@@ -63,7 +63,7 @@ from .models.substrate import substrate, SubstrateType, Substrate
 from .models.deployment import Deployment, deployment, DeploymentType
 from .models.pod_deployment import PODDeployment, pod_deployment
 
-from .models.config_attrs import AhvUpdateConfigAttrs, PatchDataField
+from .models.config_attrs import AhvUpdateConfigAttrs, PatchDataField, ConfigAttrs
 from .models.app_protection import AppProtection
 from .models.config_spec import ConfigSpecType
 from .models.app_edit import AppEdit
@@ -297,4 +297,7 @@ __all__ = [
     "TimeMachine",
     "Tag",
     "PostgresDatabaseOutputVariables",
+    "AhvUpdateConfigAttrs",
+    "PatchField",
+    "AppEdit",
 ]

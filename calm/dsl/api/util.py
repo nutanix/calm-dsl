@@ -1,4 +1,5 @@
 import copy
+import sys
 
 from calm.dsl.log import get_logging_handle
 
@@ -667,3 +668,195 @@ def vm_power_action_target_map(bp_payload, exported_bp_payload):
         )
 
     return reference_runbook_to_substrate_map
+
+
+def strip_patch_config_tasks(resources):
+    """
+    Strips out patch config tasks from patch list
+    Args:
+        resources (dict): resources dict of blueprint
+    Returns:
+        profile_patch_config_tasks (dict): dictionary of dictionary containing
+        user defined tasks at patch config level for each profile.
+
+        e.g. if Profile1 contains patch_config1, patch_config2 having 3 and 2 user defined tasks respectively like:
+            Profile1 -> patch_config1 -> Task1, Task2, Task3
+                        patch_config2 -> Task4, Task5
+
+        then return value of this function is:
+            profile_patch_config_tasks = {
+                "Profile1": {
+                    “patch_config1” : [Task1, Task2, Task3],
+                    "patch_config2" : [Task4, Task5]
+                }
+            }
+    """
+
+    # contains list of dictionary of patch list for multiple profile
+    profile_patch_config_tasks = {}
+
+    for profile in resources.get("app_profile_list"):
+        # dictionary to hold muliple patch config to it's tasks mapping
+        patch_config_task_list_map = {}
+
+        for patch_config in profile.get("patch_list"):
+            tasks = patch_config.get("runbook", {}).pop("task_definition_list", [])
+            patch_config_task_list_map[patch_config.get("name")] = tasks
+
+            # Strips out runbook holding patch config tasks in patch list
+            patch_config.pop("runbook", "")
+
+        profile_patch_config_tasks[profile.get("name")] = patch_config_task_list_map
+
+    return profile_patch_config_tasks
+
+
+def add_patch_config_tasks(
+    resources,
+    app_profile_list,
+    profile_patch_config_tasks,
+    service_name_uuid_map,
+):
+    """
+    Adds patch config tasks to patch list payload for each profile in bp.
+
+    Args:
+        resources (dict): resources fetch from "spec" of bp payload
+        app_profile_list (list): profile list fetched from "status" of bp payload
+        (because system defined patch config tasks are present in status)
+        profile_patch_config_tasks (list): returned from strip_patch_config_tasks function call.
+        Contains user defined patch config tasks from patch list for all profile.
+        service_name_uuid_map (dict): service name to its uuid map
+
+    Step1: Reads patch config runbook from app_profile_list containing system defined
+    patch config tasks.
+    Step2: Update this runbook with user defined tasks
+    Step3: Attach this runbook to patch config runbook of resources fetched from spec
+    """
+
+    for profile in app_profile_list:
+
+        # profile level map holding task name uuid map for each config
+        cur_profile_task_name_uuid_map = {}
+        """
+            cur_profile_task_name_uuid_map = {
+                "patch_config1": {
+                    "task1": "<uuid>",
+                    "task2": "<uuid>",
+                    "task3": "<uuid>"
+                },
+                "patch_config2": {
+                    "task4": "<uuid>",
+                    "task5": "<uuid>",
+                }
+            }
+        """
+
+        # holds patch config tasks for current profile
+        patch_config_task_list_map = profile_patch_config_tasks.get(profile["name"], {})
+
+        # iterate over all tasks in patch list and create task_name_uuid_map_list
+        for config_name, task_list in patch_config_task_list_map.items():
+            task_name_uuid_map = {}
+            # cur_profile_patch_config_tasks[config_name] = task_list
+            for _task in task_list:
+                task_name_uuid_map[_task["name"]] = _task["uuid"]
+
+            cur_profile_task_name_uuid_map[config_name] = task_name_uuid_map
+
+        # append patch config tasks to system defined tasks in patch config
+        for patch_config in profile.get("patch_list"):
+            patch_config_runbook = patch_config.get("runbook", {})
+            if not patch_config_runbook:
+                continue
+
+            # removing additional attributes of patch runbook
+            patch_config_runbook.pop("state", "")
+            patch_config_runbook.pop("message_list", "")
+
+            system_tasks = patch_config_runbook.get("task_definition_list", [])
+            system_dag_task = system_tasks[0]
+            config_name = patch_config.get("name")
+
+            for custom_task in patch_config_task_list_map[config_name]:
+                if "target_any_local_reference" in custom_task:
+                    service_name = custom_task["target_any_local_reference"]["name"]
+                    service_uuid = service_name_uuid_map.get(service_name, None)
+                    if not service_uuid:
+                        LOG.error(
+                            "Service {} not added properly in blueprint.".format(
+                                service_name
+                            )
+                        )
+                        sys.exit(-1)
+                    custom_task["target_any_local_reference"]["uuid"] = service_uuid
+
+                # add all patch config tasks to task definition list
+                if custom_task["type"] != "DAG":
+                    system_tasks.append(custom_task)
+                    system_dag_task["child_tasks_local_reference_list"].append(
+                        {
+                            "kind": "app_task",
+                            "name": custom_task["name"],
+                            "uuid": custom_task["uuid"],
+                        }
+                    )
+
+                # create edge from patch config dag to tasks
+                elif custom_task["type"] == "DAG":
+
+                    user_first_task_name = custom_task[
+                        "child_tasks_local_reference_list"
+                    ][0]["name"]
+
+                    # edge from patch config dag to first task
+                    first_edge = {
+                        "from_task_reference": {
+                            "kind": "app_task",
+                            "uuid": system_dag_task["child_tasks_local_reference_list"][
+                                0
+                            ]["uuid"],
+                        },
+                        "to_task_reference": {
+                            "kind": "app_task",
+                            "name": user_first_task_name,
+                            "uuid": cur_profile_task_name_uuid_map[config_name][
+                                user_first_task_name
+                            ],
+                        },
+                    }
+
+                    # remaining edges from first task to rest of tasks
+                    user_task_edges = custom_task["attrs"]["edges"]
+                    for edge in user_task_edges:
+                        task_name = edge["from_task_reference"]["name"]
+                        edge["from_task_reference"][
+                            "uuid"
+                        ] = cur_profile_task_name_uuid_map[config_name][task_name]
+                        task_name = edge["to_task_reference"]["name"]
+                        edge["to_task_reference"][
+                            "uuid"
+                        ] = cur_profile_task_name_uuid_map[config_name][task_name]
+                    system_dag_task["attrs"]["edges"] = [first_edge]
+                    system_dag_task["attrs"]["edges"].extend(user_task_edges)
+
+            for task in system_tasks:
+                # removing additional attributes
+                task.pop("state", "")
+                task.pop("message_list", "")
+
+    # profile level counter
+    profile_idx = 0
+
+    # attaching updated patch runbook to patch runbook in spec
+    for profile in resources.get("app_profile_list", []):
+        # patch list counter
+        idx = 0
+
+        for patch_config in profile.get("patch_list", []):
+            patch_config["runbook"] = app_profile_list[profile_idx]["patch_list"][idx][
+                "runbook"
+            ]
+            idx += 1
+
+        profile_idx += 1

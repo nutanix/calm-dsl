@@ -1977,6 +1977,8 @@ def remove_non_escript_actions_variables(bp_payload):
                     ) = get_runbook_payload_having_escript_task_vars_only(
                         _e["options"].get(pkg_runbook_name, {})
                     )
+            if "patch_list" in _e:
+                _e["patch_list"] = get_actions_having_escript_entities(_e["patch_list"])
 
 
 def get_escript_tasks_in_runbook(runbook_payload):
@@ -2072,6 +2074,19 @@ def describe_app_actions_to_update(app_name):
                     elif get_escript_vars_in_entity(_action["runbook"]):
                         runbook_containing_migratable_entities.append(runbook_uuid)
 
+                for _action in _entity.get("patch_list", []):
+                    runbook_uuid = _action["runbook"]["uuid"]
+                    runbook_uuid_context[runbook_uuid] = "{}.{}.Action.{}".format(
+                        DISPLAY_MAP[_key], _entity["name"], _action["name"]
+                    )
+                    dependencies[runbook_uuid] = get_runbook_dependencies(
+                        _action["runbook"]
+                    )
+                    if get_escript_tasks_in_runbook(_action["runbook"]):
+                        runbook_containing_migratable_entities.append(runbook_uuid)
+                    elif get_escript_vars_in_entity(_action["runbook"]):
+                        runbook_containing_migratable_entities.append(runbook_uuid)
+
     for _key in resources.keys():
         if _key in [
             "service_definition_list",
@@ -2086,6 +2101,65 @@ def describe_app_actions_to_update(app_name):
 
                 any_action_to_be_modified = False
                 for _action in _entity.get("action_list", []):
+
+                    runbook_uuid = _action["runbook"]["uuid"]
+                    has_migratable_entities = (
+                        runbook_uuid in runbook_containing_migratable_entities
+                    )
+
+                    dependable_migratable_actions = []
+                    for _run_uuid in dependencies.get(runbook_uuid, []):
+                        if _run_uuid in runbook_containing_migratable_entities:
+                            dependable_migratable_actions.append(
+                                runbook_uuid_context[_run_uuid]
+                            )
+
+                    if has_migratable_entities or dependable_migratable_actions:
+                        any_action_to_be_modified = True
+                        print("\t\t-> {}".format(highlight_text(_action["name"])))
+                        if has_migratable_entities:
+                            print("\t\t   Tasks:")
+                            task_list = get_escript_tasks_in_runbook(_action["runbook"])
+                            migratable_task_names = [
+                                _task["name"] for _task in task_list
+                            ]
+
+                            if migratable_task_names:
+                                for _ind, _tname in enumerate(migratable_task_names):
+                                    print(
+                                        "\t\t\t{}. {}".format(
+                                            _ind, highlight_text(_tname)
+                                        )
+                                    )
+                            else:
+                                print("\t\t\t    No Tasks to be migrated")
+
+                            print("\t\t   Variables:")
+                            var_list = get_escript_vars_in_entity(_action["runbook"])
+                            migratable_var_names = [_var["name"] for _var in var_list]
+                            if migratable_var_names:
+                                for _ind, _tname in enumerate(migratable_var_names):
+                                    print(
+                                        "\t\t\t{}. {}".format(
+                                            _ind, highlight_text(_tname)
+                                        )
+                                    )
+                            else:
+                                print("\t\t\t    No Variables to be migrated")
+
+                        if dependable_migratable_actions:
+                            print("\t\t   Dependable actions to be migrated:")
+                            for _ind, _act_ctx in enumerate(
+                                dependable_migratable_actions
+                            ):
+                                print(
+                                    "\t\t\t{}. {}".format(
+                                        _ind, highlight_text(_act_ctx)
+                                    )
+                                )
+
+                # Printing migratable tasks, variables, actions in patch config
+                for _action in _entity.get("patch_list", []):
 
                     runbook_uuid = _action["runbook"]["uuid"]
                     has_migratable_entities = (

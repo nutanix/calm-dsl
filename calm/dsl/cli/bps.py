@@ -582,6 +582,9 @@ def decompile_bp_from_server(name, with_secrets=False, prefix="", bp_dir=None):
 
     exported_bp_res_payload = exported_bp_res.json()
 
+    # Filter out system created tasks in patch config
+    filter_patch_config_tasks(exported_bp_res_payload["spec"]["resources"])
+
     kwargs = {
         "reference_runbook_to_substrate_map": vm_power_action_target_map(
             blueprint, exported_bp_res_payload
@@ -611,6 +614,10 @@ def decompile_bp_from_server_with_secrets(
         raise Exception("[{}] - {}".format(err["code"], err["error"]))
 
     exported_bp_res_payload = exported_bp_res.json()
+
+    # Filter out system created tasks in patch config
+    filter_patch_config_tasks(exported_bp_res_payload["spec"]["resources"])
+
     kwargs = {
         "reference_runbook_to_substrate_map": vm_power_action_target_map(
             blueprint, exported_bp_res_payload
@@ -1988,3 +1995,67 @@ def patch_bp_if_required(
             return new_blueprint["metadata"]["name"], new_blueprint
 
     return blueprint_name, None
+
+
+def filter_patch_config_tasks(bp_payload):
+    """
+    Removes system tasks that are not required in decompiled patch configs
+    """
+
+    for profile in bp_payload.get("app_profile_list", []):
+        for patch_config in profile.get("patch_list", []):
+            rb_payload = patch_config.get("runbook", None)
+            if not rb_payload:
+                continue
+
+            system_dag_task = [
+                _task
+                for _task in rb_payload["task_definition_list"]
+                if _task["type"] == "DAG"
+            ][0]
+
+            patch_meta_task = [
+                _task
+                for _task in rb_payload["task_definition_list"]
+                if _task["type"] == "PATCH_META"
+            ][0]
+
+            # stores names of user defined tasks. Used to filter out system tasks.
+            runbook_child_names = set()
+            runbook_edges = []  # stores edges of user defined tasks
+            runbook_tasks = []  # stores list of user defined tasks
+            dag_childs = (
+                []
+            )  # stores child task local reference list of user defined tasks
+            user_dag_target = (
+                {}
+            )  # stores target of user dag that will be created. It will be same target as of user defined task.
+
+            # system dag task contains reference of user defined tasks and patch meta task in
+            # it's edges. So, to extract user defined tasks we will exclude patch meta task.
+            for _edge in system_dag_task.get("attrs", {}).get("edges", []):
+                if _edge["from_task_reference"]["name"] != patch_meta_task["name"]:
+                    runbook_edges.append(deepcopy(_edge))
+                runbook_child_names.add(_edge["to_task_reference"]["name"])
+
+            for _task in rb_payload["task_definition_list"]:
+                if _task["name"] in runbook_child_names:
+                    dag_childs.append({"kind": "app_task", "name": _task["name"]})
+                    runbook_tasks.append(_task)
+                    # Target of user dag and user defined task will be same.
+                    user_dag_target = _task["target_any_local_reference"]
+
+            # updating runbook with user defined tasks if present
+            if runbook_tasks:
+                # using system dag task to create user defined task
+                user_dag = system_dag_task
+                user_dag["child_tasks_local_reference_list"] = dag_childs
+                user_dag["target_any_local_reference"] = user_dag_target
+                user_dag["attrs"]["edges"] = runbook_edges
+                runbook_tasks.insert(0, user_dag)
+                rb_payload["task_definition_list"] = runbook_tasks
+
+            # case when user defined tasks are absent then there is no need to
+            # decompile runbook hence popping it out.
+            else:
+                patch_config.pop("runbook", "")
