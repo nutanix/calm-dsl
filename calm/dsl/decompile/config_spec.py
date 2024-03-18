@@ -9,6 +9,7 @@ from calm.dsl.builtins import ConfigAttrs
 from calm.dsl.decompile.action import render_action_template
 from calm.dsl.decompile.ahv_vm_disk import render_ahv_vm_disk
 from calm.dsl.decompile.ahv_vm_nic import render_ahv_vm_nic
+from calm.dsl.decompile.ref_dependency import get_entity_gui_dsl_name
 
 LOG = get_logging_handle(__name__)
 
@@ -24,9 +25,11 @@ def render_restore_config_template(cls, entity_context):
     user_attrs = dict()
     user_attrs["name"] = _user_attrs["name"] or cls.__name__
     attrs = _user_attrs["attrs_list"][0]
-    user_attrs["target"] = get_valid_identifier(
-        attrs["target_any_local_reference"]["name"]
-    )
+    user_attrs["target"] = attrs["target_any_local_reference"]["name"]
+
+    # Mapping target to it's corresponding dsl class
+    user_attrs["target"] = get_entity_gui_dsl_name(user_attrs["target"])
+
     user_attrs["description"] = attrs.get("snapshot_description", "")
     user_attrs["delete_vm_post_restore"] = attrs.get("delete_vm_post_restore", None)
 
@@ -54,9 +57,11 @@ def render_snapshot_config_template(cls, entity_context, CONFIG_SPEC_MAP):
         _user_attrs["config_references"][0].name
     ]["local_name"]
     attrs = _user_attrs["attrs_list"][0]
-    user_attrs["target"] = get_valid_identifier(
-        attrs["target_any_local_reference"]["name"]
-    )
+    user_attrs["target"] = attrs["target_any_local_reference"]["name"]
+
+    # Mapping target to it's corresponding dsl class
+    user_attrs["target"] = get_entity_gui_dsl_name(user_attrs["target"])
+
     user_attrs["num_of_replicas"] = attrs["num_of_replicas"]
     user_attrs["description"] = attrs.get("snapshot_description", "")
     user_attrs["snapshot_location_type"] = attrs.get("snapshot_location_type", None)
@@ -126,9 +131,10 @@ def render_update_config_template(cls, patch_attr_name):
     user_attrs = dict()
     user_attrs["name"] = _user_attrs["name"] or cls.__name__
     attrs = _user_attrs["attrs_list"][0]
-    user_attrs["target"] = get_valid_identifier(
-        attrs["target_any_local_reference"]["name"]
-    )
+    user_attrs["target"] = attrs["target_any_local_reference"]["name"]
+
+    # Mapping target to it's corresponding dsl class
+    user_attrs["target"] = get_entity_gui_dsl_name(user_attrs["target"])
     user_attrs["patch_attr"] = patch_attr_name
 
     text = render_template(schema_file="update_config.py.jinja2", obj=user_attrs)

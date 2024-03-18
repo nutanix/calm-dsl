@@ -151,6 +151,13 @@ class ConfigSpecType(EntityType):
         cdict["attrs_list"][0]["data"] = data
         return cdict
 
+    def post_compile(cls, cdict):
+        cdict = super().post_compile(cdict)
+
+        # Remove policy_reference after compiling as it is invalid in blueprint payload
+        cdict.pop("policy_reference", "")
+        return cdict
+
 
 class PatchConfigSpecType(ConfigSpecType):
     @classmethod

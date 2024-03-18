@@ -354,15 +354,6 @@ def compile_blueprint(bp_file, brownfield_deployment_file=None):
             if "action_list" in package:
                 del package["action_list"]
 
-        # Remove policy_reference after compiling as it is invalid in blueprint payload
-        for profile in cdict.get("app_profile_list", []):
-            for config in profile.get("snapshot_config_list", []):
-                config.pop("policy_reference", "")
-            for config in profile.get("restore_config_list", []):
-                config.pop("policy_reference", "")
-            for config in profile.get("patch_list", []):
-                config.pop("policy_reference", "")
-
     return bp_payload
 
 
