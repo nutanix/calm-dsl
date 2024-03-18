@@ -89,10 +89,12 @@ class ProfileType(EntityType):
                 )
             deployment = config.attrs_list[0]["target_any_local_reference"].__self__
             if deployment.substrate.__self__.provider_type == PROVIDER.TYPE.AHV:
-                config_type = PROVIDER.TYPE.AHV + "_" + config_type
+                if config_type != "patch":
+                    config_type = PROVIDER.TYPE.AHV + "_" + config_type
                 config.type = config_type_map[config_type]
             elif deployment.substrate.__self__.provider_type == PROVIDER.TYPE.VMWARE:
-                config_type = PROVIDER.TYPE.VMWARE + "_" + config_type
+                if config_type != "patch":
+                    config_type = PROVIDER.TYPE.VMWARE + "_" + config_type
                 config.type = config_type_map[config_type]
             else:
                 LOG.error(

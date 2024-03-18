@@ -1,3 +1,4 @@
+import types
 from .decompile_helpers import process_variable_name
 
 SERVICE_NAME_MAP = {}
@@ -82,6 +83,13 @@ def get_power_action_target_substrate(runbook_name):
 
     global POWER_ACTION_SUBSTRATE_MAP
     return POWER_ACTION_SUBSTRATE_MAP.get(runbook_name, None)
+
+
+def get_power_action_substrate_map():
+    global POWER_ACTION_SUBSTRATE_MAP
+
+    # returning immutable proxy of dict to prevent modification of original dict.
+    return types.MappingProxyType(POWER_ACTION_SUBSTRATE_MAP)
 
 
 def update_power_action_target_substrate(runbook_name, substrate_name):

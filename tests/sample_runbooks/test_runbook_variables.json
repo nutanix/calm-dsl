@@ -32,8 +32,8 @@
                 "description": "",
                 "type": "EXEC",
                 "attrs": {
-                    "script_type": "static",
-                    "script": "\nprint \"@@{var1}@@\"\nif \"@@{var1}@@\" == \"test\":\n    print \"yes\"\nelse:\n    print \"no\"\nprint \"@@{var2}@@\"\nif \"@@{var2}@@\" == \"test\":\n    print \"yes\"\nelse:\n    print \"no\"\nprint \"Hello @@{firstname}@@ @@{lastname}@@\"\n"
+                    "script_type": "static_py3",
+                    "script": "\nprint(\"@@{var1}@@\")\nif \"@@{var1}@@\" == \"test\":\n    print(\"yes\")\nelse:\n    print(\"no\")\nprint(\"@@{var2}@@\")\nif \"@@{var2}@@\" == \"test\":\n    print(\"yes\")\nelse:\n    print(\"no\")\nprint(\"Hello @@{firstname}@@ @@{lastname}@@\")\n"
                 },
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],

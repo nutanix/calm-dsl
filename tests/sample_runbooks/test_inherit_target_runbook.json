@@ -47,8 +47,8 @@
                 "description": "",
                 "type": "EXEC",
                 "attrs": {
-                    "script_type": "static",
-                    "script": "print 'Decision Task is Successful'"
+                    "script_type": "static_py3",
+                    "script": "print('Decision Task is Successful')"
                 },
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],

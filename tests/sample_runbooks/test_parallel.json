@@ -103,8 +103,8 @@
                 "description": "",
                 "type": "EXEC",
                 "attrs": {
-                    "script_type": "static",
-                    "script": "print \"Start\"\nsleep(20)\nprint \"End\""
+                    "script_type": "static_py3",
+                    "script": "print(\"Start\")\nsleep(20)\nprint(\"End\")"
                 },
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
@@ -116,8 +116,8 @@
                 "description": "",
                 "type": "EXEC",
                 "attrs": {
-                    "script_type": "static",
-                    "script": "print \"Start\"\nsleep(20)\nprint \"End\""
+                    "script_type": "static_py3",
+                    "script": "print(\"Start\")\nsleep(20)\nprint(\"End\")"
                 },
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
@@ -129,8 +129,8 @@
                 "description": "",
                 "type": "EXEC",
                 "attrs": {
-                    "script_type": "static",
-                    "script": "print \"Start\"\nsleep(20)\nprint \"End\""
+                    "script_type": "static_py3",
+                    "script": "print(\"Start\")\nsleep(20)\nprint(\"End\")"
                 },
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
@@ -142,8 +142,8 @@
                 "description": "",
                 "type": "EXEC",
                 "attrs": {
-                    "script_type": "static",
-                    "script": "print \"Start\"\nsleep(20)\nprint \"End\""
+                    "script_type": "static_py3",
+                    "script": "print(\"Start\")\nsleep(20)\nprint(\"End\")"
                 },
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
@@ -155,8 +155,8 @@
                 "description": "",
                 "type": "EXEC",
                 "attrs": {
-                    "script_type": "static",
-                    "script": "print \"Start\"\nsleep(20)\nprint \"End\""
+                    "script_type": "static_py3",
+                    "script": "print(\"Start\")\nsleep(20)\nprint(\"End\")"
                 },
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
@@ -168,8 +168,8 @@
                 "description": "",
                 "type": "EXEC",
                 "attrs": {
-                    "script_type": "static",
-                    "script": "print \"Start\"\nsleep(20)\nprint \"End\""
+                    "script_type": "static_py3",
+                    "script": "print(\"Start\")\nsleep(20)\nprint(\"End\")"
                 },
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],

@@ -62,8 +62,8 @@
                 "description": "",
                 "type": "EXEC",
                 "attrs": {
-                    "script_type": "static",
-                    "script": "print 'Inside loop1 @@{loop_var}@@'"
+                    "script_type": "static_py3",
+                    "script": "print('Inside loop1 @@{loop_var}@@')"
                 },
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
@@ -109,8 +109,8 @@
                 "description": "",
                 "type": "EXEC",
                 "attrs": {
-                    "script_type": "static",
-                    "script": "print 'Inside loop2 @@{iteration}@@'"
+                    "script_type": "static_py3",
+                    "script": "print('Inside loop2 @@{iteration}@@')"
                 },
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
