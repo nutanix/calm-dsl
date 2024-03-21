@@ -658,7 +658,12 @@ def vm_power_action_target_map(bp_payload, exported_bp_payload):
         "task_name_substrate_map": task_name_substrate_map,
         "reference_runbook_to_substrate_map": reference_runbook_to_substrate_map,
     }
-    entity_type_list = ["service_definition_list", "app_profile_list"]
+    entity_type_list = [
+        "substrate_definition_list",
+        "service_definition_list",
+        "app_profile_list",
+        "package_definition_list",
+    ]
     for entity_type in entity_type_list:
         _create_task_name_substrate_map(bp_payload, entity_type, **kwargs)
 
