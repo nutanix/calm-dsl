@@ -140,7 +140,8 @@ def get_api_client():
     return _API_CLIENT_HANDLE
 
 
-def reset_api_handle():
-    """Resets global api client object (_API_CLIENT_HANDLE) to None"""
+def reset_api_client_handle():
+    """resets global api client object (_API_CLIENT_HANDLE)"""
+
     global _API_CLIENT_HANDLE
     _API_CLIENT_HANDLE = None

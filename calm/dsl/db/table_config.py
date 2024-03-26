@@ -4720,6 +4720,12 @@ class VersionTable(BaseModel):
     last_update_time = DateTimeField(default=datetime.datetime.now())
 
     @classmethod
+    def clear(cls):
+        """removes entire data from table"""
+        for db_entity in cls.select():
+            db_entity.delete_instance()
+
+    @classmethod
     def get_entity_data(cls, name):
         query_obj = {"name": name}
 
