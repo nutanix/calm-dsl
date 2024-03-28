@@ -962,7 +962,7 @@ class EscriptTaskType:
             tunnel=None,
             **kwargs,
         ):
-            return exec_task_escript(
+            return exec_task_escript_py3(
                 script=script,
                 filename=filename,
                 name=name,
@@ -986,7 +986,7 @@ class EscriptTaskType:
             tunnel=None,
             **kwargs,
         ):
-            return decision_task_escript(
+            return decision_task_escript_py3(
                 script=script,
                 filename=filename,
                 name=name,
@@ -1011,7 +1011,7 @@ class EscriptTaskType:
             tunnel=None,
             **kwargs,
         ):
-            return set_variable_task_escript(
+            return set_variable_task_escript_py3(
                 script=script,
                 filename=filename,
                 name=name,

@@ -507,9 +507,9 @@ def import_task(task_file, name, description, out_vars, force):
     ):
         if task_file.endswith(".sh"):
             script_type = TASKS.SCRIPT_TYPES.SHELL
-        elif task_file.endswith(".escript") or task_file.endswith(".escript.py2"):
+        elif task_file.endswith(".escript.py2"):
             script_type = TASKS.SCRIPT_TYPES.ESCRIPT
-        elif task_file.endswith(".escript.py3"):
+        elif task_file.endswith(".escript") or task_file.endswith(".escript.py3"):
             script_type = TASKS.SCRIPT_TYPES.ESCRIPT_PY3
         elif task_file.endswith(".ps1"):
             script_type = TASKS.SCRIPT_TYPES.POWERSHELL
