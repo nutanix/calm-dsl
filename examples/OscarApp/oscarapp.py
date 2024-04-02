@@ -137,31 +137,31 @@ class OscarPackage(Package):
             cred=CentOsCreds,
         )
 
-        CalmTask.SetVariable.escript(
+        CalmTask.SetVariable.escript.py3(
             name="02CreateAlert",
             filename="scripts/oscar/package_install/02CreateAlert.py",
             variables=["ALERT_UUID"],
         )
 
-        CalmTask.SetVariable.escript(
+        CalmTask.SetVariable.escript.py3(
             name="03GetAlertUid",
             filename="scripts/oscar/package_install/03GetAlertUid.py",
             variables=["ALERT_UID"],
         )
 
-        CalmTask.SetVariable.escript(
+        CalmTask.SetVariable.escript.py3(
             name="04GetTriggerTypes",
             filename="scripts/oscar/package_install/04GetTriggerTypes.py",
             variables=["ALERT_TRIGGER_UUID"],
         )
 
-        CalmTask.SetVariable.escript(
+        CalmTask.SetVariable.escript.py3(
             name="05GetActionTypes",
             filename="scripts/oscar/package_install/05GetActionTypes.py",
             variables=["ACTION_VMAMA_UUID", "ACTION_RA_UUID", "ACTION_EA_UUID"],
         )
 
-        CalmTask.SetVariable.escript(
+        CalmTask.SetVariable.escript.py3(
             name="06CreatePlaybook",
             filename="scripts/oscar/package_install/06CreatePlaybook.py",
             variables=["PLAYBOOK_UUID"],
@@ -176,12 +176,12 @@ class OscarPackage(Package):
             cred=CentOsCreds,
         )
 
-        CalmTask.Exec.escript(
+        CalmTask.Exec.escript.py3(
             name="02DeleteAlert",
             filename="scripts/oscar/package_uninstall/02DeleteAlert.py",
         )
 
-        CalmTask.Exec.escript(
+        CalmTask.Exec.escript.py3(
             name="03DeletePlaybook",
             filename="scripts/oscar/package_uninstall/03DeletePlaybook.py",
         )
@@ -224,12 +224,12 @@ class Era_PostgreSQL_DB(Substrate):
     @action
     def __pre_create__():
 
-        CalmTask.SetVariable.escript(
+        CalmTask.SetVariable.escript.py3(
             name="1GetClusterID",
             filename="scripts/postgres/precreate/1GetClusterID.py",
             variables=["CLUSTER_ID"],
         )
-        CalmTask.SetVariable.escript(
+        CalmTask.SetVariable.escript.py3(
             name="2GetProfileIDs",
             filename="scripts/postgres/precreate/2GetProfileIDs.py",
             variables=[
@@ -240,22 +240,22 @@ class Era_PostgreSQL_DB(Substrate):
                 "TIMESTAMP",
             ],
         )
-        CalmTask.SetVariable.escript(
+        CalmTask.SetVariable.escript.py3(
             name="3GetSLAID",
             filename="scripts/postgres/precreate/3GetSLAID.py",
             variables=["SLA_ID", "DB_NAME"],
         )
-        CalmTask.SetVariable.escript(
+        CalmTask.SetVariable.escript.py3(
             name="4ProvisionDB",
             filename="scripts/postgres/precreate/4ProvisionDB.py",
             variables=["CREATE_OPERATION_ID"],
         )
-        CalmTask.SetVariable.escript(
+        CalmTask.SetVariable.escript.py3(
             name="5MonitorOperation",
             filename="scripts/postgres/precreate/5MonitorOperation.py",
             variables=["DB_ENTITY_NAME"],
         )
-        CalmTask.SetVariable.escript(
+        CalmTask.SetVariable.escript.py3(
             name="6GetDatabaseInfo",
             filename="scripts/postgres/precreate/6GetDatabaseInfo.py",
             variables=["DB_SERVER_IP", "DB_ID", "DB_SERVER_ID"],
@@ -264,21 +264,21 @@ class Era_PostgreSQL_DB(Substrate):
     @action
     def __post_delete__():
 
-        CalmTask.SetVariable.escript(
+        CalmTask.SetVariable.escript.py3(
             name="1CleanupDB",
             filename="scripts/postgres/postdelete/1CleanupDB.py",
             variables=["CLEANUP_OPERATION_ID"],
         )
-        CalmTask.Exec.escript(
+        CalmTask.Exec.escript.py3(
             name="2MonitorCleanupOp",
             filename="scripts/postgres/postdelete/2MonitorCleanupOp.py",
         )
-        CalmTask.SetVariable.escript(
+        CalmTask.SetVariable.escript.py3(
             name="3DeregisterDBServer",
             filename="scripts/postgres/postdelete/3DeregisterDBServer.py",
             variables=["DEREGISTER_OPERATION_ID"],
         )
-        CalmTask.Exec.escript(
+        CalmTask.Exec.escript.py3(
             name="4MonitorDeregOp",
             filename="scripts/postgres/postdelete/4MonitorDeregOp.py",
         )

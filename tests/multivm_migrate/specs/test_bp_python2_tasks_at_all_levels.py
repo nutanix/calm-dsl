@@ -29,9 +29,9 @@ BP_CRED_akhil_cred = basic_cred(
 class Service1(Service):
 
     service_var = CalmVariable.WithOptions.FromTask(
-        CalmTask.Exec.escript.py2(
+        CalmTask.Exec.escript.py3(
             name="",
-            script='print "akhil"',
+            script='print ("akhil")',
         ),
         label="",
         is_mandatory=False,
@@ -50,9 +50,9 @@ class Service1(Service):
             runtime=False,
             description="",
         )
-        CalmTask.Exec.escript.py2(
+        CalmTask.Exec.escript.py3(
             name="service_action_task",
-            script='print "@@{service_var}@@"',
+            script='print ("@@{service_var}@@")',
             target=ref(Service1),
         )
 
@@ -98,34 +98,34 @@ class Service_VM(Substrate):
     @action
     def __pre_create__():
 
-        CalmTask.Exec.escript.py2(
+        CalmTask.Exec.escript.py3(
             name="Python 2 precreate",
-            script='print "precreate"',
+            script='print ("precreate")',
             target=ref(Service_VM),
         )
 
     @action
     def post_action_create():
 
-        CalmTask.Exec.escript.py2(
+        CalmTask.Exec.escript.py3(
             name="python 2 post create",
-            script='print "post create"',
+            script='print ("post create")',
             target=ref(Service_VM),
         )
 
     @action
     def __post_delete__():
 
-        CalmTask.SetVariable.escript.py2(
+        CalmTask.SetVariable.escript.py3(
             name="python 2 set var",
-            script='print "var=postdelete"',
+            script='print ("var=postdelete")',
             target=ref(Service_VM),
             variables=["var"],
         )
 
-        CalmTask.Exec.escript.py2(
+        CalmTask.Exec.escript.py3(
             name="python 2 post delete",
-            script='print "@@{var}@@"',
+            script='print ("@@{var}@@")',
             target=ref(Service_VM),
         )
 
@@ -137,25 +137,25 @@ class Package1(Package):
     @action
     def __install__():
 
-        CalmTask.Exec.escript.py2(
+        CalmTask.Exec.escript.py3(
             name="python2 package install",
-            script='print "package_install"',
+            script='print ("package_install")',
             target=ref(Service1),
         )
 
     @action
     def __uninstall__():
 
-        CalmTask.SetVariable.escript.py2(
+        CalmTask.SetVariable.escript.py3(
             name="python2 package uninstall set var",
-            script='print "pack_var=package_unainsta"',
+            script='print ("pack_var=package_unainsta")',
             target=ref(Service1),
             variables=["pack_var"],
         )
 
-        CalmTask.Exec.escript.py2(
+        CalmTask.Exec.escript.py3(
             name="python 2 package uninstall read",
-            script='print "@@{pack_var}@@"',
+            script='print ("@@{pack_var}@@")',
             target=ref(Service1),
         )
 
@@ -177,7 +177,7 @@ class Default(Profile):
     deployments = [_8488e0af_deployment]
 
     profile_level_var = CalmVariable.WithOptions.FromTask(
-        CalmTask.Exec.escript.py2(name="", script='print "profile level var"'),
+        CalmTask.Exec.escript.py3(name="", script='print ("profile level var")'),
         label="",
         is_mandatory=False,
         is_hidden=False,
@@ -188,8 +188,8 @@ class Default(Profile):
     def pythonaction(name="python action"):
 
         profile_level_action_var = CalmVariable.WithOptions.FromTask(
-            CalmTask.Exec.escript.py2(
-                name="", script='print "profile_level_action_var"'
+            CalmTask.Exec.escript.py3(
+                name="", script='print ("profile_level_action_var")'
             ),
             label="",
             is_mandatory=False,
@@ -198,30 +198,30 @@ class Default(Profile):
         )
         with parallel() as p0:
             with branch(p0):
-                CalmTask.Exec.escript.py2(
+                CalmTask.Exec.escript.py3(
                     name="read_profile_level_var",
-                    script='print "@@{profile_level_var}@@"',
+                    script='print ("@@{profile_level_var}@@")',
                     target=ref(Service1),
                 )
 
-                CalmTask.Exec.escript.py2(
+                CalmTask.Exec.escript.py3(
                     name="read profile level action var",
-                    script='print "@@{profile_level_action_var}@@"',
+                    script='print ("@@{profile_level_action_var}@@")',
                     target=ref(Service1),
                 )
 
                 Service1.service_action(name="read service action")
 
-                CalmTask.SetVariable.escript.py2(
+                CalmTask.SetVariable.escript.py3(
                     name="set var in profile level",
-                    script='print "profile_var=akhil"',
+                    script='print ("profile_var=akhil")',
                     target=ref(Service1),
                     variables=["profile_var"],
                 )
 
-                CalmTask.Exec.escript.py2(
+                CalmTask.Exec.escript.py3(
                     name="read set var in profile level",
-                    script='print "@@{profile_var}@@"',
+                    script='print ("@@{profile_var}@@")',
                     target=ref(Service1),
                 )
 

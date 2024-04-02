@@ -115,16 +115,16 @@ class HelloSubstrate(Substrate):
     def __pre_create__():
 
         # Step 1
-        Task.Exec.escript(
-            name="Task1", script="print 'Pre Create task runs before VM is created'"
+        Task.Exec.escript.py3(
+            name="Task1", script="print ('Pre Create task runs before VM is created')"
         )
 
     @action
     def __post_delete__():
 
         # Step 1
-        Task.Exec.escript(
-            name="Task1", script="print 'Post delete task runs after VM is deleted'"
+        Task.Exec.escript.py3(
+            name="Task1", script="print ('Post delete task runs after VM is deleted')"
         )
 
 

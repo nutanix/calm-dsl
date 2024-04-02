@@ -868,8 +868,8 @@
                                     "name": "ExistingVM"
                                 },
                                 "attrs": {
-                                    "script_type": "static",
-                                    "script": "print 'Hello!'"
+                                    "script_type": "static_py3",
+                                    "script": "print ('Hello!')"
                                 },
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
@@ -1545,8 +1545,8 @@
                     "options": {
                         "type": "EXEC",
                         "attrs": {
-                            "script_type": "static",
-                            "script": "print '0'",
+                            "script_type": "static_py3",
+                            "script": "print ('0')",
                             "type": "EXEC"
                         }
                     },
@@ -1572,8 +1572,8 @@
                     "options": {
                         "type": "EXEC",
                         "attrs": {
-                            "script_type": "static",
-                            "script": "print '30/02/2019'",
+                            "script_type": "static_py3",
+                            "script": "print ('30/02/2019')",
                             "type": "EXEC"
                         }
                     },
@@ -1599,8 +1599,8 @@
                     "options": {
                         "type": "EXEC",
                         "attrs": {
-                            "script_type": "static",
-                            "script": "print '22:35:00'",
+                            "script_type": "static_py3",
+                            "script": "print ('22:35:00')",
                             "type": "EXEC"
                         }
                     },
@@ -1626,8 +1626,8 @@
                     "options": {
                         "type": "EXEC",
                         "attrs": {
-                            "script_type": "static",
-                            "script": "print '30/02/2019 - 22:35:00'",
+                            "script_type": "static_py3",
+                            "script": "print ('30/02/2019 - 22:35:00')",
                             "type": "EXEC"
                         }
                     },
@@ -1649,8 +1649,8 @@
                     "options": {
                         "type": "EXEC",
                         "attrs": {
-                            "script_type": "static",
-                            "script": "print 'x\ny'",
+                            "script_type": "static_py3",
+                            "script": "print ('x\ny')",
                             "type": "EXEC"
                         }
                     },
@@ -1716,8 +1716,8 @@
                     "options": {
                         "type": "EXEC",
                         "attrs": {
-                            "script_type": "static",
-                            "script": "print '0,1'",
+                            "script_type": "static_py3",
+                            "script": "print ('0,1')",
                             "type": "EXEC"
                         }
                     },
@@ -1743,8 +1743,8 @@
                     "options": {
                         "type": "EXEC",
                         "attrs": {
-                            "script_type": "static",
-                            "script": "print '30/02/2019,31/06/2019'",
+                            "script_type": "static_py3",
+                            "script": "print ('30/02/2019,31/06/2019')",
                             "type": "EXEC"
                         }
                     },
@@ -1770,8 +1770,8 @@
                     "options": {
                         "type": "EXEC",
                         "attrs": {
-                            "script_type": "static",
-                            "script": "print '22:35:00,10:35:00'",
+                            "script_type": "static_py3",
+                            "script": "print ('22:35:00,10:35:00')",
                             "type": "EXEC"
                         }
                     },
@@ -1797,8 +1797,8 @@
                     "options": {
                         "type": "EXEC",
                         "attrs": {
-                            "script_type": "static",
-                            "script": "print '30/02/2019 - 22:35:00,31/06/2019 - 10:35:00'",
+                            "script_type": "static_py3",
+                            "script": "print ('30/02/2019 - 22:35:00,31/06/2019 - 10:35:00')",
                             "type": "EXEC"
                         }
                     },
@@ -1820,8 +1820,8 @@
                     "options": {
                         "type": "EXEC",
                         "attrs": {
-                            "script_type": "static",
-                            "script": "print 'var36=x\ny,a\nb'",
+                            "script_type": "static_py3",
+                            "script": "print ('var36=x\ny,a\nb')",
                             "type": "EXEC"
                         }
                     },
@@ -2359,8 +2359,8 @@
                                     "name": "MySQLService"
                                 },
                                 "attrs": {
-                                    "script_type": "static",
-                                    "script": "print 'Hello World!'"
+                                    "script_type": "static_py3",
+                                    "script": "print ('Hello World!')"
                                 },
                                 "child_tasks_local_reference_list": [],
                                 "variable_list": [],
@@ -2376,8 +2376,8 @@
                                     "name": "MySQLService"
                                 },
                                 "attrs": {
-                                    "script_type": "static",
-                                    "script": "print 'var1=test'",
+                                    "script_type": "static_py3",
+                                    "script": "print ('var1=test')",
                                     "eval_variables": [
                                         "var1"
                                     ]

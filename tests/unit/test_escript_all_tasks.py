@@ -13,38 +13,38 @@ from calm.dsl.builtins import CalmTask as CalmVarTask, Metadata
 def DslAllEscriptTasks(endpoints=[], default=False):
     "Runbook example with All Escript Type Tasks"
 
-    with CalmTask.Decision.escript(
+    with CalmTask.Decision.escript.py3(
         name="escript_decision",
         filename=os.path.join("scripts", "escript_decision_true.py"),
     ) as d:
         if d.ok:
-            CalmTask.Exec.escript(
+            CalmTask.Exec.escript.py3(
                 name="escript_exec", filename=os.path.join("scripts", "escript_exec.py")
             )
-            CalmTask.SetVariable.escript(
+            CalmTask.SetVariable.escript.py3(
                 name="escript_setvar",
                 filename=os.path.join("scripts", "escript_setvariable.py"),
                 variables=["var1"],
             )
         else:
-            CalmTask.Exec.escript(
-                name="escript_exec_print", script='''print "Decision else part"'''
+            CalmTask.Exec.escript.py3(
+                name="escript_exec_print", script="""print ("Decision else part")"""
             )
 
-    with CalmTask.Decision.escript.py2(
+    with CalmTask.Decision.escript.py3(
         name="escript2_decision",
         filename=os.path.join("scripts", "escript_decision_false.py"),
     ) as d:
         if d.ok:
-            CalmTask.Exec.escript.py2(
-                name="escript3_exec_print", script='''print "Decision if part"'''
+            CalmTask.Exec.escript.py3(
+                name="escript3_exec_print", script="""print ("Decision if part")"""
             )
         else:
-            CalmTask.Exec.escript.py2(
+            CalmTask.Exec.escript.py3(
                 name="escript2_exec",
                 filename=os.path.join("scripts", "escript_exec.py"),
             )
-            CalmTask.SetVariable.escript.py2(
+            CalmTask.SetVariable.escript.py3(
                 name="escript2_setvar",
                 filename=os.path.join("scripts", "escript_setvariable.py"),
                 variables=["var1"],

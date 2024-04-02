@@ -101,7 +101,7 @@ class ExistingVM(Substrate):
 
     @action
     def __pre_create__():
-        CalmTask.Exec.escript(name="Pre Create Task", script="print 'Hello!'")
+        CalmTask.Exec.escript.py3(name="Pre Create Task", script="print ('Hello!')")
 
 
 class LampDeployment(Deployment):
@@ -303,31 +303,31 @@ class DefaultProfile(Profile):
         description="var25 description",
     )
     var26 = CalmVariable.WithOptions.FromTask.int(
-        CalmTask.Exec.escript(script="print '0'"),
+        CalmTask.Exec.escript.py3(script="print ('0')"),
         label="var26_label",
         validate_regex=True,
         description="var26 description",
     )
     var27 = CalmVariable.WithOptions.FromTask.date(
-        CalmTask.Exec.escript(script="print '30/02/2019'"),
+        CalmTask.Exec.escript.py3(script="print ('30/02/2019')"),
         label="var27_label",
         validate_regex=True,
         description="var27 description",
     )
     var28 = CalmVariable.WithOptions.FromTask.time(
-        CalmTask.Exec.escript(script="print '22:35:00'"),
+        CalmTask.Exec.escript.py3(script="print ('22:35:00')"),
         label="var28_label",
         validate_regex=True,
         description="var28 description",
     )
     var29 = CalmVariable.WithOptions.FromTask.datetime(
-        CalmTask.Exec.escript(script="print '30/02/2019 - 22:35:00'"),
+        CalmTask.Exec.escript.py3(script="print ('30/02/2019 - 22:35:00')"),
         label="var29_label",
         validate_regex=True,
         description="var29 description",
     )
     var30 = CalmVariable.WithOptions.FromTask.multiline(
-        CalmTask.Exec.escript(script="print 'x\ny'"),
+        CalmTask.Exec.escript.py3(script="print ('x\ny')"),
         label="var30_label",
         description="var30 description",
     )
@@ -346,33 +346,33 @@ class DefaultProfile(Profile):
         description="var31 description",
     )
     var32 = CalmVariable.WithOptions.FromTask.Array.int(
-        CalmTask.Exec.escript(script="print '0,1'"),
+        CalmTask.Exec.escript.py3(script="print ('0,1')"),
         label="var32_label",
         validate_regex=True,
         description="var32 description",
     )
     var33 = CalmVariable.WithOptions.FromTask.Array.date(
-        CalmTask.Exec.escript(script="print '30/02/2019,31/06/2019'"),
+        CalmTask.Exec.escript.py3(script="print ('30/02/2019,31/06/2019')"),
         label="var33_label",
         validate_regex=True,
         description="var33 description",
     )
     var34 = CalmVariable.WithOptions.FromTask.Array.time(
-        CalmTask.Exec.escript(script="print '22:35:00,10:35:00'"),
+        CalmTask.Exec.escript.py3(script="print ('22:35:00,10:35:00')"),
         label="var28_label",
         validate_regex=True,
         description="var34 description",
     )
     var35 = CalmVariable.WithOptions.FromTask.Array.datetime(
-        CalmTask.Exec.escript(
-            script="print '30/02/2019 - 22:35:00,31/06/2019 - 10:35:00'"
+        CalmTask.Exec.escript.py3(
+            script="print ('30/02/2019 - 22:35:00,31/06/2019 - 10:35:00')"
         ),
         label="var35_label",
         validate_regex=True,
         description="var35 description",
     )
     var36 = CalmVariable.WithOptions.FromTask.Array.multiline(
-        CalmTask.Exec.escript(script="print 'var36=x\ny,a\nb'"),
+        CalmTask.Exec.escript.py3(script="print ('var36=x\ny,a\nb')"),
         label="var36_label",
         description="var36 description",
     )
@@ -458,11 +458,11 @@ class DefaultProfile(Profile):
         CalmTask.Delay(delay_seconds=60, target=ref(MySQLService), name="Delay")
         CalmTask.Scaling.scale_in(1, target=LampDeployment, name="Scale in Lamp")
         with parallel():
-            CalmTask.Exec.escript(
-                "print 'Hello World!'", name="Test Escript", target=ref(MySQLService)
+            CalmTask.Exec.escript.py3(
+                "print ('Hello World!')", name="Test Escript", target=ref(MySQLService)
             )
-            CalmTask.SetVariable.escript(
-                script="print 'var1=test'",
+            CalmTask.SetVariable.escript.py3(
+                script="print ('var1=test')",
                 name="Test Setvar Escript",
                 variables=["var1"],
                 target=ref(MySQLService),

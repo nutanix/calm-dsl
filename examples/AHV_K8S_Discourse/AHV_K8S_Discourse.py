@@ -80,7 +80,7 @@ class DiscourseContainer(Service):
 
     @action
     def sample_action():
-        CalmTask.Exec.escript(name="Sample Task", script="print 'Hello!'")
+        CalmTask.Exec.escript.py3(name="Sample Task", script="print ('Hello!')")
 
 
 class DiscourseDeployment(PODDeployment):

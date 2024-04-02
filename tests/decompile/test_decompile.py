@@ -116,7 +116,7 @@ class AHVVMforMySQL(Substrate):
     @action
     def __pre_create__():
 
-        CalmTask.SetVariable.escript(
+        CalmTask.SetVariable.escript.py3(
             name="Pre_create task1",
             script='nic_var={"uuid": "eab99eb7-302f-4e1a-a1a4-5cc901fb9259"}',
             target=ref(AHVVMforMySQL),
@@ -222,11 +222,11 @@ class DefaultProfile(Profile):
         )
         PHPService.test_action(name="Call Runbook Task")
         with parallel:
-            CalmTask.Exec.escript(
-                "print 'Hello World!'", name="Test Escript", target=ref(MySQLService)
+            CalmTask.Exec.escript.py3(
+                "print ('Hello World!')", name="Test Escript", target=ref(MySQLService)
             )
-            CalmTask.SetVariable.escript(
-                script="print 'var1=test'",
+            CalmTask.SetVariable.escript.py3(
+                script="print ('var1=test')",
                 name="Test Setvar Escript",
                 variables=["var1"],
                 target=ref(MySQLService),

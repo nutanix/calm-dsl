@@ -1,2 +1,2 @@
-# python2;failure
+# python3;failure
 pnt

@@ -38,12 +38,12 @@ def DslLogsCleanupRunbook(endpoints=[DslLinuxEndpoint]):
             )
             Task.Exec.escript(
                 name="FinalOutput",
-                script="print 'logs size changed from @@{size_before_cleanup}@@ => @@{size_after_cleanup}@@'",
+                script="print ('logs size changed from @@{size_before_cleanup}@@ => @@{size_after_cleanup}@@')",
                 target=endpoints[0],
             )
 
         else:
-            Task.Exec.escript(script='''print "Given Logs Directory doesn't exists"''')
+            Task.Exec.escript.py3(script='''print ("Given Logs Directory doesn't exists")''')
 
 
 def main():

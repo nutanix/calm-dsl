@@ -25,4 +25,4 @@ def NDBSnapshotCreate():
     )
 
     # Escript task to print output variables from above snapshot action
-    Task.Exec.escript(name="Print Outputs", script="print '@@{myplatformdata}@@'")
+    Task.Exec.escript.py3(name="Print Outputs", script="print ('@@{myplatformdata}@@')")

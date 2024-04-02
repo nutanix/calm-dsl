@@ -50,7 +50,7 @@ class VMSubstrate(Substrate):
 
     @action
     def __pre_create__():
-        CalmTask.SetVariable.escript(
+        CalmTask.SetVariable.escript.py3(
             name="Pre_create task1",
             filename=os.path.join("scripts", "pre_create_script.py"),
             target=ref(VMSubstrate),

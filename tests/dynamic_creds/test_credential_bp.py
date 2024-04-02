@@ -84,8 +84,8 @@ class ExistingVM(Substrate):
 
     @action
     def __pre_create__():
-        CalmTask.Exec.escript(
-            name="Pre Create Task", script="print 'Pre Create task for ExistingVM'"
+        CalmTask.Exec.escript.py3(
+            name="Pre Create Task", script="print ('Pre Create task for ExistingVM')"
         )
 
 

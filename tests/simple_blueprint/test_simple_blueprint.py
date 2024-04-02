@@ -57,7 +57,7 @@ class MySQLDeployment(SimpleDeployment):
 
     @action
     def __pre_create__():
-        Task.Exec.escript(name="Pre Create Task", script="print 'Hello!'")
+        Task.Exec.escript.py3(name="Pre Create Task", script="print ('Hello!')")
 
     # Custom service actions
     @action

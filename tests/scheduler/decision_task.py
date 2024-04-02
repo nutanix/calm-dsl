@@ -40,9 +40,9 @@ def DslDecisionRunbook(endpoints=[endpoint]):
     ) as d:
 
         if d.ok:
-            Task.Exec.escript(
-                name="Task1", script="print 'Decision Task is Successful'"
+            Task.Exec.escript.py3(
+                name="Task1", script="print ('Decision Task is Successful')"
             )
 
         else:
-            Task.Exec.escript(name="Task2", script="print 'Decision Task Failed'")
+            Task.Exec.escript.py3(name="Task2", script="print ('Decision Task Failed')")

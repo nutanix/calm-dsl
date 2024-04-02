@@ -1567,8 +1567,8 @@
                                             "name": "MySQLDeploymentSubstrate"
                                         },
                                         "attrs": {
-                                            "script_type": "static",
-                                            "script": "print 'Hello!'"
+                                            "script_type": "static_py3",
+                                            "script": "print ('Hello!')"
                                         },
                                         "child_tasks_local_reference_list": [],
                                         "variable_list": [],

@@ -80,7 +80,7 @@
                 "description": "",
                 "type": "EXEC",
                 "attrs": {
-                    "script_type": "static",
+                    "script_type": "static_py3",
                     "script": "print(\"just printing...\")\n"
                 },
                 "child_tasks_local_reference_list": [],
@@ -93,7 +93,7 @@
                 "description": "",
                 "type": "SET_VARIABLE",
                 "attrs": {
-                    "script_type": "static",
+                    "script_type": "static_py3",
                     "script": "print(\"var1=abc\")\n",
                     "eval_variables": [
                         "var1"
@@ -124,8 +124,8 @@
                 "description": "",
                 "type": "EXEC",
                 "attrs": {
-                    "script_type": "static",
-                    "script": "print \"Decision else part\""
+                    "script_type": "static_py3",
+                    "script": "print (\"Decision else part\")"
                 },
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
@@ -137,7 +137,7 @@
                 "description": "",
                 "type": "DECISION",
                 "attrs": {
-                    "script_type": "static",
+                    "script_type": "static_py3",
                     "script": "exit(0)\n",
                     "success_child_reference": {
                         "kind": "app_task",
@@ -173,8 +173,8 @@
                 "description": "",
                 "type": "EXEC",
                 "attrs": {
-                    "script_type": "static",
-                    "script": "print \"Decision if part\""
+                    "script_type": "static_py3",
+                    "script": "print (\"Decision if part\")"
                 },
                 "child_tasks_local_reference_list": [],
                 "variable_list": [],
@@ -205,7 +205,7 @@
                 "description": "",
                 "type": "EXEC",
                 "attrs": {
-                    "script_type": "static",
+                    "script_type": "static_py3",
                     "script": "print(\"just printing...\")\n"
                 },
                 "child_tasks_local_reference_list": [],
@@ -218,7 +218,7 @@
                 "description": "",
                 "type": "SET_VARIABLE",
                 "attrs": {
-                    "script_type": "static",
+                    "script_type": "static_py3",
                     "script": "print(\"var1=abc\")\n",
                     "eval_variables": [
                         "var1"
@@ -234,7 +234,7 @@
                 "description": "",
                 "type": "DECISION",
                 "attrs": {
-                    "script_type": "static",
+                    "script_type": "static_py3",
                     "script": "exit(1)\n",
                     "success_child_reference": {
                         "kind": "app_task",

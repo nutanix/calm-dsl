@@ -102,7 +102,7 @@ class Default(Profile):
             target=ref(Service1),
             tunnel=Ref.Tunnel(name="NewNetworkGroupTunnel2"),
         )
-        CalmTask.SetVariable.escript(
+        CalmTask.SetVariable.escript.py3(
             name="SetVariableTaskWithTunnel",
             filename=os.path.join(
                 "scripts",
@@ -112,7 +112,7 @@ class Default(Profile):
             variables=["var1"],
             tunnel=Ref.Tunnel(name="NewNetworkGroupTunnel2"),
         )
-        CalmTask.Exec.escript(
+        CalmTask.Exec.escript.py3(
             name="Task3",
             filename=os.path.join(
                 "scripts", "Profile_Default_Action_TestProfileAction_Task_Task3.py"

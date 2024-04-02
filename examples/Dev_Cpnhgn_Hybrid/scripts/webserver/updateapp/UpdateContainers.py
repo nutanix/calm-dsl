@@ -25,10 +25,10 @@ if @@{calm_array_index}@@ == 0:
   resp = urlreq(url, verb='PATCH', auth='BASIC', user=kube_user, passwd=kube_pass, params=json.dumps(payload), headers=headers)
 
   if resp.ok:
-    print json.dumps(json.loads(resp.content), indent=4)
+    print (json.dumps(json.loads(resp.content), indent=4))
   else:
-    print "Patch K8S Deployment request failed", json.dumps(json.loads(resp.content), indent=4)
+    print ("Patch K8S Deployment request failed", json.dumps(json.loads(resp.content), indent=4))
     exit(1)
 
 else:
-  print "calm_array_index is not 0, skipping."
+  print ("calm_array_index is not 0, skipping.")

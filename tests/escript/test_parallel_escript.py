@@ -87,10 +87,7 @@ def get_escript_version_status(escript):
 class TestEscript:
     @pytest.mark.parametrize(
         "escript, parallel_count",
-        [
-            pytest.param("parallel_escript_py3.py", 60),
-            pytest.param("parallel_escript_py2.py", 60),
-        ],
+        [pytest.param("parallel_escript_py3.py", 60)],
     )
     def test_run_parallel_escript_via_runbook(self, escript, parallel_count):
         """

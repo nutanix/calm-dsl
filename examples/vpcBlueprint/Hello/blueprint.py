@@ -195,7 +195,7 @@ class HelloSubstrate(Substrate):
     @action
     def __pre_create__():
 
-        CalmTask.Exec.escript(
+        CalmTask.Exec.escript.py3(
             name="Task1",
             filename=os.path.join(
                 "scripts",
@@ -207,7 +207,7 @@ class HelloSubstrate(Substrate):
     @action
     def __post_delete__():
 
-        CalmTask.Exec.escript(
+        CalmTask.Exec.escript.py3(
             name="Task1",
             filename=os.path.join(
                 "scripts",
