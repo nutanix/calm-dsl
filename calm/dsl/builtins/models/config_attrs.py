@@ -21,19 +21,23 @@ class AhvDiskRuleset(EntityType):
 
     @classmethod
     def decompile(mcls, cdict, context=[], prefix=""):
-        disk_operation = cdict.pop("disk_operation", "")
-        operation = cdict.pop("operation", "")
-        editable = cdict.pop("editable", False)
-        value = cdict.pop("value", "")
-        max_value = cdict.pop("max_value", "")
-        min_value = cdict.pop("min_value", "")
+        disk_operation = cdict.pop("operation", "")
         index = cdict.pop("index", "")
+        disk_details = cdict.get("disk_size_mib", {})
+        operation = ""
+        editable = False
+        if disk_details:
+            editable = disk_details.pop("editable", False)
+            operation = disk_details.pop("operation", "")
+            max_value = disk_details.pop("max_value", "")
+            min_value = disk_details.pop("min_value", "")
 
         # creating valid disk size dictionary
-        disk_size = cdict.get("disk_size_mib", {}).get("value", "")
+        disk_size = disk_details.get("value", "")
         if disk_size:
             cdict["disk_size_mib"] = int(disk_size)
 
+        value = str(disk_size) if disk_size else ""
         disk_value = AhvDiskType.decompile(cdict, context=context, prefix=prefix)
 
         kwargs = {

@@ -17,6 +17,7 @@ from .action import _action_create
 from calm.dsl.builtins import get_valid_identifier
 from calm.dsl.constants import PROVIDER
 from calm.dsl.store import Cache
+from calm.dsl.builtins.models.config_attrs import ahv_disk_ruleset, ahv_nic_ruleset
 
 LOG = get_logging_handle(__name__)
 
@@ -55,14 +56,29 @@ class ConfigSpecType(EntityType):
             cdict.pop("patch_attrs", None)
             return cdict
         attrs = cdict.pop("patch_attrs")[0]
+        target = cdict["attrs_list"][0]["target_any_local_reference"]
+
+        resource_categories = (
+            target.__self__.substrate.__self__.provider_spec.categories
+        )
         categories_data = []
         categories = attrs.categories
+
+        # attaching pre defined categories if no categories are supplied.
+        if not categories:
+            for key, value in resource_categories.items():
+                val = {}
+                val["operation"] = "modify"
+                val["value"] = "{}:{}".format(key, value)
+                categories_data.append(val)
+
         for op_category in categories:
             for op in op_category["val"]:
                 val = {}
                 val["operation"] = op_category["operation"]
                 val["value"] = op
                 categories_data.append(val)
+
         memory = attrs.memory
         if memory.min_value:
             memory.min_value = memory.min_value * 1024
@@ -70,9 +86,27 @@ class ConfigSpecType(EntityType):
             memory.max_value = memory.max_value * 1024
         if memory.value:
             memory.value = str(int(float(memory.value) * 1024))
-        target = cdict["attrs_list"][0]["target_any_local_reference"]
+
+        resource_disks = (
+            target.__self__.substrate.__self__.provider_spec.resources.disks
+        )
         disk_data = []
         disks = attrs.disks
+
+        # attaching pre defined resource disks if no disks are supplied.
+        if not disks:
+            for idx, _disk in enumerate(resource_disks):
+                _disk = _disk.compile()
+                kwargs = {
+                    "disk_operation": "modify",
+                    "operation": "",
+                    "index": idx,
+                    "editable": False,
+                }
+                _value = _disk.get("disk_size_mib", 0)
+                kwargs["value"] = str(_value // 1024)
+                disks.append(ahv_disk_ruleset(**kwargs))
+
         adapter_name_index_map = {}
         for disk in disks:
             if disk.disk_operation in ["delete", "modify"]:
@@ -112,8 +146,17 @@ class ConfigSpecType(EntityType):
                 val["disk_size_mib"]["max_value"] = disk.max_value * 1024
             val.pop("bootable", None)
             disk_data.append(val)
+
+        resource_nics = target.__self__.substrate.__self__.provider_spec.resources.nics
         nic_data = []
         nics = attrs.nics
+
+        # attaching pre defined nics if no nics are supplied.
+        if not nics:
+            for idx, _ in enumerate(resource_nics):
+                kwargs = {"operation": "modify", "index": str(idx), "editable": False}
+                nics.append(ahv_nic_ruleset(**kwargs))
+
         counter = 1
         for nic in nics:
             if nic.operation in ["delete", "modify"]:
@@ -194,6 +237,9 @@ class PatchConfigSpecType(ConfigSpecType):
                     }
                 ).get_dict()
             ]
+
+        for idx, _disk in enumerate(patch_attr_data.get("pre_defined_disk_list", [])):
+            _disk["index"] = idx
 
         kwargs = {
             "nic_delete": patch_attr_data.get("nic_delete_allowed", False),

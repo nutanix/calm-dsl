@@ -100,8 +100,19 @@ def render_patch_field_ahv_disk(cls):
     _user_attrs = cls.get_user_attrs()
     disk_value = cls.disk_value
 
-    if cls.operation == "add":
+    if cls.disk_operation == "add":
         _user_attrs["disk_data"] = render_ahv_vm_disk(disk_value, {})
+
+    # converting values from miB to giB
+    _user_attrs["value"] = (
+        str(int(_user_attrs["value"]) // 1024) if _user_attrs["value"] else ""
+    )
+    _user_attrs["max_val"] = (
+        str(int(_user_attrs["max_value"]) // 1024) if _user_attrs["max_value"] else ""
+    )
+    _user_attrs["min_val"] = (
+        str(int(_user_attrs["min_value"]) // 1024) if _user_attrs["min_value"] else ""
+    )
 
     text = render_template(
         schema_file="patch_field_ahv_disk.py.jinja2", obj=_user_attrs
@@ -218,9 +229,11 @@ def render_config_attr_template(
         )
 
     user_attrs["actions"] = action_list
-    user_attrs["category_list"] = ", ".join(category_list)
+    user_attrs["category_list"] = ", ".join(
+        category for category in category_list if category
+    )
     user_attrs["disk_list"] = ", ".join(disk_list)
-    user_attrs["nic_list"] = ", ".join(nic_list)
+    user_attrs["nic_list"] = ", ".join(nic for nic in nic_list if nic)
 
     text = render_template("update_config_attr.py.jinja2", obj=user_attrs)
 
