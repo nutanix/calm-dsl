@@ -109,7 +109,7 @@ def _import_task(task_file, name, description, out_vars, force):
     (-f | --file) supports:\n
 
     \t.sh           - Shell script file\n
-    \t.escript      - Escript file(python2)\n
+    \t.escript      - Escript file(python3)\n
     \t.escript.py2  - Escript file(python2)\n
     \t.escript.py3  - Escript file(python3)\n
     \t.ps1          - Powershell Script File\n
