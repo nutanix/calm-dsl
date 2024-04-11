@@ -77,6 +77,9 @@ def render_task_template(
         elif script_type == "npsscript":
             schema_file = "task_exec_powershell.py.jinja2"
 
+        elif script_type == "python_remote":
+            schema_file = "task_exec_python.py.jinja2"
+
     elif cls.type == "SET_VARIABLE":
         variables = cls.attrs.get("eval_variables", None)
         if variables:
@@ -97,6 +100,9 @@ def render_task_template(
 
         elif script_type == "npsscript":
             schema_file = "task_setvariable_powershell.py.jinja2"
+
+        elif script_type == "python_remote":
+            schema_file = "task_setvariable_python.py.jinja2"
 
     elif cls.type == "DELAY":
         if hasattr(cls, "attrs"):
@@ -262,6 +268,10 @@ def render_task_template(
 
         elif script_type == "npsscript":
             schema_file = "task_decision_powershell.py.jinja2"
+
+        elif script_type == "python_remote":
+            schema_file = "task_decision_python.py.jinja2"
+
     elif cls.type == "WHILE_LOOP":
         exit_condition_type = cls.attrs["exit_condition_type"]
         for key in EXIT_CONDITION_MAP:
@@ -295,7 +305,7 @@ def create_script_file(script_type, script="", entity_context=""):
     elif script_type == "npsscript":
         file_name += ".ps1"
 
-    elif script_type in ["static", "static_py3"]:
+    elif script_type in ["static", "static_py3", "python_remote"]:
         file_name += ".py"
 
     else:

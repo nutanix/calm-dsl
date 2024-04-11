@@ -611,6 +611,29 @@ def exec_task_powershell(
     )
 
 
+def exec_task_python(
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    target_endpoint=None,
+    cred=None,
+    depth=2,
+    **kwargs,
+):
+    return _exec_create(
+        "python_remote",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        target_endpoint=target_endpoint,
+        cred=cred,
+        depth=depth,
+        **kwargs,
+    )
+
+
 def exec_task_ssh_runbook(
     script=None, filename=None, name=None, target=None, cred=None, depth=2, **kwargs
 ):
@@ -667,6 +690,34 @@ def exec_task_powershell_runbook(
     )
 
 
+def exec_task_python_runbook(
+    script=None, filename=None, name=None, target=None, cred=None, depth=2, **kwargs
+):
+    """
+    This function is used to create exec task with python_remote target
+    Args:
+        script(str): Script which needs to be run
+        filename(str): file which has script
+        name(str): Task name
+        target(Entity/Ref): Entity/Ref that is the target for this task
+        cred (Entity/Ref): Entity/Ref that is the cred for this task
+        depth (int): Number of times to look back in call stack, will be used to locate filename specified
+        :keyword inherit_target (bool): True if target needs to be inherited.
+    Returns:
+        obj: Exec task object
+    """
+    return _exec_create(
+        "python_remote",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        cred=cred,
+        depth=depth,
+        **kwargs,
+    )
+
+
 def decision_task_ssh(
     script=None, filename=None, name=None, target=None, cred=None, depth=2, **kwargs
 ):
@@ -713,6 +764,34 @@ def decision_task_powershell(
     """
     return _decision_create(
         "npsscript",
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        cred=cred,
+        depth=depth,
+        **kwargs,
+    )
+
+
+def decision_task_python(
+    script=None, filename=None, name=None, target=None, cred=None, depth=2, **kwargs
+):
+    """
+    This function is used to create decision task with python_remote target
+    Args:
+        script(str): Script which needs to be run
+        filename(str): file which has script
+        name(str): Task name
+        target(Entity/Ref): Entity/Ref that is the target for this task
+        cred (Entity/Ref): Entity/Ref that is the cred for this task
+        depth (int): Number of times to look back in call stack, will be used to locate filename specified
+        :keyword inherit_target (bool): True if target needs to be inherited.
+    Returns:
+        obj: Decision task object
+    """
+    return _decision_create(
+        "python_remote",
         script=script,
         filename=filename,
         name=name,
@@ -938,6 +1017,43 @@ def set_variable_task_powershell(
         obj: Set variable task object
     """
     task = exec_task_powershell(
+        script=script,
+        filename=filename,
+        name=name,
+        target=target,
+        target_endpoint=target_endpoint,
+        depth=depth,
+        cred=cred,
+        **kwargs,
+    )
+    return _set_variable_create(task, variables)
+
+
+def set_variable_task_python(
+    script=None,
+    filename=None,
+    name=None,
+    target=None,
+    target_endpoint=None,
+    variables=None,
+    depth=3,
+    cred=None,
+    **kwargs,
+):
+    """
+    This function is used to create set variable task with python_remote target
+    Args:
+        script(str): Script which needs to be run
+        filename(str): file which has script
+        name(str): Task name
+        target(Entity/Ref): Entity/Ref that is the target for this task
+        cred (Entity/Ref): Entity/Ref that is the cred for this task
+        depth (int): Number of times to look back in call stack, will be used to locate filename specified
+        :keyword inherit_target (bool): True if target needs to be inherited.
+    Returns:
+        obj: Set variable task object
+    """
+    task = exec_task_python(
         script=script,
         filename=filename,
         name=name,
@@ -1822,6 +1938,7 @@ class BaseTask:
         ssh = set_variable_task_ssh
         powershell = set_variable_task_powershell
         escript = EscriptTaskType.SetVariableTask
+        python = set_variable_task_python
 
     class Delay:
         def __new__(cls, delay_seconds=None, name=None, target=None):
@@ -1840,6 +1957,7 @@ class CalmTask(BaseTask):
         ssh = exec_task_ssh
         powershell = exec_task_powershell
         escript = EscriptTaskType.ExecTask
+        python = exec_task_python
 
     class ConfigExec:
         def __new__(cls, config, name=None):
@@ -1859,6 +1977,7 @@ class RunbookTask(BaseTask):
         ssh = decision_task_ssh
         powershell = decision_task_powershell
         escript = EscriptTaskType.DecisionTask
+        python = decision_task_python
 
     class Exec:
         def __new__(cls, *args, **kwargs):
@@ -1867,6 +1986,7 @@ class RunbookTask(BaseTask):
         ssh = exec_task_ssh_runbook
         powershell = exec_task_powershell_runbook
         escript = EscriptTaskType.ExecTask
+        python = exec_task_python_runbook
 
     class ResourceTypeOperationTask:
         def __new__(

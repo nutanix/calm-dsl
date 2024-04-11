@@ -218,6 +218,7 @@ class TASKS:
         SHELL = "sh"
         ESCRIPT = "static"
         ESCRIPT_PY3 = "static_py3"
+        PYTHON = "python_remote"
 
     class STATES:
         ACTIVE = "ACTIVE"

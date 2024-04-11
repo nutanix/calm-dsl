@@ -82,7 +82,7 @@ def _delete_task(task_names):
     "task_file",
     type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
     required=True,
-    help="Path of task file (.sh, .escript, .escript.py2, .escript.py3, .ps1)",
+    help="Path of task file (.sh, .escript, .escript.py2, .escript.py3, .ps1, .python)",
 )
 @click.option("--name", "-n", default=None, help="Task Library item name (Optional)")
 @click.option(
@@ -113,6 +113,7 @@ def _import_task(task_file, name, description, out_vars, force):
     \t.escript.py2  - Escript file(python2)\n
     \t.escript.py3  - Escript file(python3)\n
     \t.ps1          - Powershell Script File\n
+    \t.python       - Python Script File(python3)\n
 
     Note:\n
         To import Set-Variable task, use --out-vars="OUT1,OUT2".
