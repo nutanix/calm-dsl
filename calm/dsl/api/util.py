@@ -700,11 +700,11 @@ def strip_patch_config_tasks(resources):
     # contains list of dictionary of patch list for multiple profile
     profile_patch_config_tasks = {}
 
-    for profile in resources.get("app_profile_list"):
+    for profile in resources.get("app_profile_list", []):
         # dictionary to hold muliple patch config to it's tasks mapping
         patch_config_task_list_map = {}
 
-        for patch_config in profile.get("patch_list"):
+        for patch_config in profile.get("patch_list", []):
             tasks = patch_config.get("runbook", {}).pop("task_definition_list", [])
             patch_config_task_list_map[patch_config.get("name")] = tasks
 
@@ -770,7 +770,7 @@ def add_patch_config_tasks(
             cur_profile_task_name_uuid_map[config_name] = task_name_uuid_map
 
         # append patch config tasks to system defined tasks in patch config
-        for patch_config in profile.get("patch_list"):
+        for patch_config in profile.get("patch_list", []):
             patch_config_runbook = patch_config.get("runbook", {})
             if not patch_config_runbook:
                 continue
