@@ -26,18 +26,23 @@ class AhvDiskRuleset(EntityType):
         disk_details = cdict.get("disk_size_mib", {})
         operation = ""
         editable = False
+        disk_size = ""
+        max_value = ""
+        min_value = ""
+        value = ""
+
         if disk_details:
             editable = disk_details.pop("editable", False)
             operation = disk_details.pop("operation", "")
             max_value = disk_details.pop("max_value", "")
             min_value = disk_details.pop("min_value", "")
+            # creating valid disk size dictionary
+            disk_size = disk_details.get("value", "")
 
-        # creating valid disk size dictionary
-        disk_size = disk_details.get("value", "")
         if disk_size:
             cdict["disk_size_mib"] = int(disk_size)
+            value = str(disk_size) if disk_size else ""
 
-        value = str(disk_size) if disk_size else ""
         disk_value = AhvDiskType.decompile(cdict, context=context, prefix=prefix)
 
         kwargs = {
