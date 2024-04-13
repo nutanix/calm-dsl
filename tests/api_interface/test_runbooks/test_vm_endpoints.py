@@ -5,7 +5,7 @@ from distutils.version import LooseVersion as LV
 from calm.dsl.store import Version
 from calm.dsl.cli.main import get_api_client
 from calm.dsl.cli.constants import ENDPOINT
-from utils import read_test_config, change_uuids
+from utils import read_test_config, change_uuids, add_account_uuid
 
 LinuxVMStaticAHVEpPayload = read_test_config(
     file_name="linux_vm_static_ahv_ep_payload.json"
@@ -44,6 +44,9 @@ class TestVMEndpoints:
         """Endpoint for VM crud"""
         client = get_api_client()
         endpoint = change_uuids(EndpointPayload, {})
+        res, err = add_account_uuid(EndpointPayload)
+        if not res:
+            pytest.fail(err)
 
         # Endpoint Create
         print(">> Creating endpoint")
@@ -107,12 +110,20 @@ class TestVMEndpoints:
         print(">> Downloading endpoint (uuid={})".format(ep_uuid))
         file_path = client.endpoint.export_file(ep_uuid, passphrase="test_passphrase")
 
+        project_list_params = {"filter": "name=={}".format("default")}
+        res, err = client.project.list(params=project_list_params)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        response = res.json()
+        default_project_uuid = response["entities"][0]["metadata"]["uuid"]
+        print(">> Default project uuid: {}".format(default_project_uuid))
+
         # upload the endpoint
         print(">> Uploading endpoint (uuid={})".format(ep_uuid))
         res, err = client.endpoint.import_file(
             file_path,
             ep_name + "-uploaded",
-            ep["metadata"].get("project_reference", {}).get("uuid", ""),
+            default_project_uuid,
             passphrase="test_passphrase",
         )
         if err:
@@ -155,6 +166,9 @@ class TestVMEndpoints:
         """Endpoint for VM crud"""
         client = get_api_client()
         endpoint = change_uuids(EndpointPayload, {})
+        res, err = add_account_uuid(EndpointPayload)
+        if not res:
+            pytest.fail(err)
 
         # Endpoint Create
         print(">> Creating endpoint")
@@ -218,12 +232,20 @@ class TestVMEndpoints:
         print(">> Downloading endpoint (uuid={})".format(ep_uuid))
         file_path = client.endpoint.export_file(ep_uuid, passphrase="test_passphrase")
 
+        project_list_params = {"filter": "name=={}".format("default")}
+        res, err = client.project.list(params=project_list_params)
+        if err:
+            raise Exception("[{}] - {}".format(err["code"], err["error"]))
+        response = res.json()
+        default_project_uuid = response["entities"][0]["metadata"]["uuid"]
+        print(">> Default project uuid: {}".format(default_project_uuid))
+
         # upload the endpoint
         print(">> Uploading endpoint (uuid={})".format(ep_uuid))
         res, err = client.endpoint.import_file(
             file_path,
             ep_name + "-uploaded",
-            ep["metadata"].get("project_reference", {}).get("uuid", ""),
+            default_project_uuid,
             passphrase="test_passphrase",
         )
         if err:

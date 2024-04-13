@@ -34,9 +34,9 @@
             "uuid": "b248f749-aef0-47ee-ae04-515993464d0b"
         },
         "account_reference": {
-            "kind": "account",
-            "name": "Vmware 1"
-        },
+          "kind": "account",
+          "name": "NTNX_LOCAL_AZ"
+      },
         "filter_type": "static",
         "subnet": "10.0.0.0/8"
       }

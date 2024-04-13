@@ -562,3 +562,23 @@ def update_tunnel_and_project(tunnel_reference, project, endpoint_payload):
     if resources.get("tunnel_reference", {}):
         resources["tunnel_reference"]["uuid"] = tunnel_reference.get("uuid")
         resources["tunnel_reference"]["name"] = tunnel_reference.get("name")
+
+
+def add_account_uuid(endpoint_payload):
+    payload = {"length": 250, "offset": 0}
+    client = get_api_client()
+
+    account_name_uuid_map = client.account.get_name_uuid_map(payload)
+    account_ref = endpoint_payload["spec"]["resources"]["attrs"]["account_reference"]
+
+    if account_ref.get("name", None):
+        account_uuid = account_name_uuid_map.get(account_ref["name"], None)
+        if not account_uuid:
+            err_msg = "Unable to fetch account uuid for {}".format(account_ref["name"])
+            return False, err_msg
+
+        account_ref["uuid"] = account_uuid
+        return True, None
+    else:
+        err_msg = "Unable to fetch account name from given account reference"
+        return False, err_msg
