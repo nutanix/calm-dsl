@@ -248,12 +248,12 @@ class PatchConfigSpecType(ConfigSpecType):
             ),
             "categories_add": patch_attr_data.get("categories_add_allowed", False),
             "disk_delete": patch_attr_data.get("disk_delete_allowed", False),
-            "disks": patch_attr_data["pre_defined_disk_list"],
-            "nics": patch_attr_data["pre_defined_nic_list"],
-            "categories": patch_attr_data["pre_defined_categories"],
-            "numsocket": patch_attr_data["num_sockets_ruleset"],
-            "memory": patch_attr_data["memory_size_mib_ruleset"],
-            "vcpu": patch_attr_data["num_vcpus_per_socket_ruleset"],
+            "disks": patch_attr_data.get("pre_defined_disk_list", []),
+            "nics": patch_attr_data.get("pre_defined_nic_list", []),
+            "categories": patch_attr_data.get("pre_defined_categories", []),
+            "numsocket": patch_attr_data.get("num_sockets_ruleset", {}),
+            "memory": patch_attr_data.get("memory_size_mib_ruleset", {}),
+            "vcpu": patch_attr_data.get("num_vcpus_per_socket_ruleset", {}),
             "action_list": actions,
         }
 
