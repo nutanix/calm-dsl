@@ -54,21 +54,29 @@ def render_environment_template(
     }
 
     rendered_substrates_list = []
+
+    # holds substrate class names to include in decompiled 'Environment' class
     substrates_list = []
+
     substrate_name_counter = 1
+
     if environment_cls.substrates:
         for substrate in environment_cls.substrates:
-            if substrate.name in substrates_list:
+            if substrate.__name__ in substrates_list:
                 new_name = "{}_{}".format(substrate.name, str(substrate_name_counter))
-                substrates_list.append(new_name)
-
-                substrate.__name__ = new_name
+                substrate.__name__ = get_valid_identifier(
+                    new_name
+                )  # creating valid python class name for substrate
                 rendered_substrates_list.append(render_substrate_template(substrate))
-
+                substrates_list.append(substrate.__name__)
                 substrate_name_counter += 1
             else:
+                substrate.__name__ = get_valid_identifier(
+                    substrate.name
+                )  # creating valid python class name for substrate
                 rendered_substrates_list.append(render_substrate_template(substrate))
-                substrates_list.append(substrate.name)
+                substrates_list.append(substrate.__name__)
+
     user_attrs["substrates"] = rendered_substrates_list
     user_attrs["substrates_list"] = substrates_list
 

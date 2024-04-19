@@ -4,9 +4,9 @@
       {% if obj.subnet_reference_list %}subnets=[
       {%- for subnet in obj.subnet_reference_list %}
         Ref.Subnet(
-          {% if subnet.name %}name="{{subnet.name}}",{% endif %}
-          {% if subnet.cluster %}cluster="{{subnet.cluster}}",{% endif %}
-        ){%- endfor %}
+          {% if subnet.name %}name="{{subnet.name}}"{% endif %}
+          {% if subnet.cluster %}, cluster="{{subnet.cluster}}"{% endif %}
+        ),{%- endfor %}
       ],{% endif %}
     ),
 {% endmacro %}
