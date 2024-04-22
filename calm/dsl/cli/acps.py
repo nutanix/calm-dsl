@@ -281,12 +281,6 @@ def create_acp(role, project, acp_users, acp_groups, name):
     cluster_uuids = list(set(whiltelisted_clusters) | set(cluster_uuids))
     # Default context for acp
     default_context = ACP.DEFAULT_CONTEXT
-    project_collab_context = ACP.PROJECT_COLLAB_CONTEXT
-
-    # Setting project uuid in project collab context
-    project_collab_context["scope_filter_expression_list"][0]["right_hand_side"][
-        "uuid_list"
-    ] = [project_uuid]
 
     # Setting project uuid in default context
     default_context["scope_filter_expression_list"][0]["right_hand_side"][
@@ -303,11 +297,6 @@ def create_acp(role, project, acp_users, acp_groups, name):
             project_uuid
         ]
 
-        # Adding vm filter for collab context. This is applicable only for project admin
-        project_collab_context["entity_filter_expression_list"].extend(
-            ACP.PROJECT_ADMIN_SPECIFIC_COLLAB_FILTER
-        )
-
     elif role == "Developer":
         entity_filter_expression_list = ACP.ENTITY_FILTER_EXPRESSION_LIST.DEVELOPER
         entity_filter_expression_list[4]["right_hand_side"]["uuid_list"] = [
@@ -321,14 +310,7 @@ def create_acp(role, project, acp_users, acp_groups, name):
         entity_filter_expression_list = ACP.ENTITY_FILTER_EXPRESSION_LIST.OPERATOR
 
     else:
-        entity_filter_expression_list = get_filters_custom_role(
-            role_uuid, client, project_uuid
-        )
-        project_collab_context[
-            "entity_filter_expression_list"
-        ] = get_filters_custom_role(
-            role_uuid, client, None, ACP.CUSTOM_ROLE_SPECIFIC_COLLAB_FILTER
-        )
+        entity_filter_expression_list = get_filters_custom_role(role_uuid, client)
 
     if cluster_uuids:
         entity_filter_expression_list.append(
@@ -359,7 +341,6 @@ def create_acp(role, project, acp_users, acp_groups, name):
         context_list.append(
             {"entity_filter_expression_list": entity_filter_expression_list}
         )
-    context_list.append(project_collab_context)
 
     acp_payload = {
         "acp": {
@@ -399,9 +380,7 @@ def create_acp(role, project, acp_users, acp_groups, name):
     watch_task(res["status"]["execution_context"]["task_uuid"])
 
 
-def get_filters_custom_role(
-    role_uuid, client, project_id=None, custom_role_filter_dict=None
-):
+def get_filters_custom_role(role_uuid, client):
 
     role, err = client.role.read(id=role_uuid)
     if err:
@@ -418,24 +397,9 @@ def get_filters_custom_role(
             if perm_name:
                 permission_names.add(perm_name.lower())
     entity_filter_expression_list = []
-    if not custom_role_filter_dict:
-        custom_role_filter_dict = ACP.CUSTOM_ROLE_PERMISSIONS_FILTERS
-        if project_id:
-            custom_role_filter_dict.append(
-                {
-                    "permissions": ["view_project"],
-                    "filter": {
-                        "operator": "IN",
-                        "right_hand_side": {"uuid_list": [project_id]},
-                        "left_hand_side": {"entity_type": "project"},
-                    },
-                }
-            )
-    for perm_filter in custom_role_filter_dict:
-        for permission in perm_filter.get("permissions"):
-            if permission in permission_names:
-                entity_filter_expression_list.append(perm_filter.get("filter"))
-                break
+    for perm_filter in ACP.CUSTOM_ROLE_PERMISSIONS_FILTERS:
+        if perm_filter.get("permission") in permission_names:
+            entity_filter_expression_list.append(perm_filter.get("filter"))
     return entity_filter_expression_list
 
 
