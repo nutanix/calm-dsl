@@ -49,7 +49,7 @@ def render_task_template(
     target = getattr(cls, "target_any_local_reference", None)
     endpoint_target = getattr(cls, "exec_target_reference", None)
     if endpoint_target:  # if target is endpoint target then use that
-        user_attrs["target"] = render_ref_template(endpoint_target)
+        user_attrs["target_endpoint"] = render_ref_template(endpoint_target)
     elif target:  # target will be modified to have correct name(DSL name)
         user_attrs["target"] = render_ref_template(target)
 

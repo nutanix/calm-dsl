@@ -121,7 +121,12 @@ def render_substrate_template(
             action.__name__ = power_actions[action.__name__]
         action_list.append(
             render_action_template(
-                action, entity_context, context=context, secrets_dict=secrets_dict
+                action,
+                entity_context,
+                context=context,
+                secrets_dict=secrets_dict,
+                endpoints=endpoints,
+                ep_list=ep_list,
             )
         )
 
