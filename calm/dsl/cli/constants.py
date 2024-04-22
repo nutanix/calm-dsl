@@ -269,11 +269,6 @@ class ACP:
             },
             {
                 "operator": "IN",
-                "right_hand_side": {"uuid_list": []},
-                "left_hand_side": {"entity_type": "project"},
-            },
-            {
-                "operator": "IN",
                 "left_hand_side": {"entity_type": "app_task"},
                 "right_hand_side": {"collection": "SELF_OWNED"},
             },
@@ -485,7 +480,7 @@ class ACP:
 
     CUSTOM_ROLE_PERMISSIONS_FILTERS = [
         {
-            "permissions": ["view_image"],
+            "permission": "view_image",
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "image"},
@@ -493,7 +488,7 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_app_icon"],
+            "permission": "view_app_icon",
             "filter": {
                 "operator": "IN",
                 "right_hand_side": {"collection": "ALL"},
@@ -501,7 +496,7 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_name_category", "create_or_update_name_category"],
+            "permission": "view_name_category",
             "filter": {
                 "operator": "IN",
                 "right_hand_side": {"collection": "ALL"},
@@ -509,7 +504,15 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_environment"],
+            "permission": "create_or_update_name_category",
+            "filter": {
+                "operator": "IN",
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "category"},
+            },
+        },
+        {
+            "permission": "view_environment",
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "environment"},
@@ -517,7 +520,7 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_marketplace_item"],
+            "permission": "view_marketplace_item",
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "marketplace_item"},
@@ -525,7 +528,7 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_role"],
+            "permission": "view_role",
             "filter": {
                 "operator": "IN",
                 "right_hand_side": {"collection": "ALL"},
@@ -533,7 +536,7 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_directory_service", "search_directory_service"],
+            "permission": "view_directory_service",
             "filter": {
                 "operator": "IN",
                 "right_hand_side": {"collection": "ALL"},
@@ -541,7 +544,15 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_identity_provider"],
+            "permission": "search_directory_service",
+            "filter": {
+                "operator": "IN",
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "directory_service"},
+            },
+        },
+        {
+            "permission": "view_identity_provider",
             "filter": {
                 "operator": "IN",
                 "right_hand_side": {"collection": "ALL"},
@@ -549,7 +560,7 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_app_task"],
+            "permission": "view_app_task",
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "app_task"},
@@ -557,7 +568,7 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_app_variable"],
+            "permission": "view_app_variable",
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "app_variable"},
@@ -565,7 +576,7 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_resource_type"],
+            "permission": "view_resource_type",
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "resource_type"},
@@ -573,7 +584,7 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_custom_provider"],
+            "permission": "view_custom_provider",
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "custom_provider"},
@@ -581,7 +592,7 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_vm_recovery_point"],
+            "permission": "view_vm_recovery_point",
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "vm_recovery_point"},
@@ -589,7 +600,7 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_virtual_switch"],
+            "permission": "view_virtual_switch",
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "distributed_virtual_switch"},
@@ -597,7 +608,7 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_report_config"],
+            "permission": "View_report_config",
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "report_config"},
@@ -608,7 +619,7 @@ class ACP:
 
     CUSTOM_ROLE_SPECIFIC_COLLAB_FILTER = [
         {
-            "permissions": ["view_user"],
+            "permission": "view_user",
             "filter": {
                 "operator": "IN",
                 "right_hand_side": {"collection": "ALL"},
@@ -616,7 +627,7 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_virtual_machine"],
+            "permission": "view_virtual_machine",
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "vm"},
@@ -624,7 +635,7 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_user_group"],
+            "permission": "view_user_group",
             "filter": {
                 "operator": "IN",
                 "right_hand_side": {"collection": "ALL"},
@@ -632,7 +643,7 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_blueprint"],
+            "permission": "view_blueprint",
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "blueprint"},
@@ -640,7 +651,7 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_environment"],
+            "permission": "view_environment",
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "environment"},
@@ -648,7 +659,7 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_marketplace_item"],
+            "permission": "view_marketplace_item",
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "marketplace_item"},
@@ -656,7 +667,7 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_runbook"],
+            "permission": "view_runbook",
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "runbook"},
