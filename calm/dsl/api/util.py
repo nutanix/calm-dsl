@@ -377,31 +377,34 @@ def strip_vmware_secrets(
     obj = obj["create_spec"]["resources"]["guest_customization"]
     vmware_secrets_context = "create_spec.resources.guest_customization.windows_data"
 
-    if "windows_data" in obj:
+    if obj.get("windows_data", {}):
         path_list.append("windows_data")
         obj = obj["windows_data"]
+        if not obj:
+            return
+
         vmware_secrets_admin_context = (
             vmware_secrets_context
-            + obj["windows_data"]
+            + "windows_data"
             + ".password."
-            + obj["password"]["name"]
+            + obj["password"].get("name", "")
         )
         filtered_decompiled_vmware_secrets = get_secrets_from_context(
             decompiled_secrets, vmware_secrets_admin_context
         )
 
         # Check for admin_password
-        if "password" in obj:
+        if obj.get("password", {}):
             if is_secret_modified(
                 filtered_decompiled_vmware_secrets,
-                obj["password"]["name"],
-                obj["password"]["value"],
+                obj["password"].get("name", ""),
+                obj["password"].get("value", None),
             ):
                 secret_variables.append(
                     (
                         path_list + ["password"],
                         obj["password"].pop("value", ""),
-                        obj["password"]["name"],
+                        obj["password"].get("name", ""),
                     )
                 )
                 obj["password"]["attrs"] = {
@@ -410,26 +413,26 @@ def strip_vmware_secrets(
                 }
             else:
                 not_stripped_secrets.append(
-                    (path_list + ["password"], obj["password"]["value"])
+                    (path_list + ["password"], obj["password"].get("value", ""))
                 )
-
-        vmware_secrets_domain_context = (
-            vmware_secrets_context
-            + obj["windows_data"]
-            + ".domain_password."
-            + obj["domain_password"]
-        )
-        filtered_decompiled_vmware_secrets = get_secrets_from_context(
-            decompiled_secrets, vmware_secrets_domain_context
-        )
 
         # Now check for domain password
         if obj.get("is_domain", False):
-            if "domain_password" in obj:
+            if obj.get("domain_password", {}):
+                vmware_secrets_domain_context = (
+                    vmware_secrets_context
+                    + "windows_data"
+                    + ".domain_password."
+                    + obj["domain_password"].get("name", "")
+                )
+
+                filtered_decompiled_vmware_secrets = get_secrets_from_context(
+                    decompiled_secrets, vmware_secrets_domain_context
+                )
                 if is_secret_modified(
                     filtered_decompiled_vmware_secrets,
-                    obj["domain_password"]["name"],
-                    obj["domain_password"]["value"],
+                    obj["domain_password"].get("name", ""),
+                    obj["domain_password"].get("value", None),
                 ):
                     secret_variables.append(
                         (
