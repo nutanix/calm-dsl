@@ -269,11 +269,6 @@ class ACP:
             },
             {
                 "operator": "IN",
-                "right_hand_side": {"uuid_list": []},
-                "left_hand_side": {"entity_type": "project"},
-            },
-            {
-                "operator": "IN",
                 "left_hand_side": {"entity_type": "app_task"},
                 "right_hand_side": {"collection": "SELF_OWNED"},
             },
@@ -297,16 +292,6 @@ class ACP:
                 "left_hand_side": {"entity_type": "custom_provider"},
                 "right_hand_side": {"collection": "ALL"},
             },
-            {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "distributed_virtual_switch"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-            {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "vm_recovery_point"},
-                "right_hand_side": {"collection": "ALL"},
-            },
         ]
 
         OPERATOR = [
@@ -328,16 +313,6 @@ class ACP:
             {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "custom_provider"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-            {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "distributed_virtual_switch"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-            {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "vm_recovery_point"},
                 "right_hand_side": {"collection": "ALL"},
             },
         ]
@@ -388,16 +363,6 @@ class ACP:
                 "left_hand_side": {"entity_type": "custom_provider"},
                 "right_hand_side": {"collection": "ALL"},
             },
-            {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "vm_recovery_point"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-            {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "distributed_virtual_switch"},
-                "right_hand_side": {"collection": "ALL"},
-            },
         ]
 
         PROJECT_ADMIN = [
@@ -425,6 +390,16 @@ class ACP:
                 "operator": "IN",
                 "right_hand_side": {"uuid_list": []},
                 "left_hand_side": {"entity_type": "project"},
+            },
+            {
+                "operator": "IN",
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "user"},
+            },
+            {
+                "operator": "IN",
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "user_group"},
             },
             {
                 "operator": "IN",
@@ -466,26 +441,11 @@ class ACP:
                 "left_hand_side": {"entity_type": "custom_provider"},
                 "right_hand_side": {"collection": "ALL"},
             },
-            {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "vm_recovery_point"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-            {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "distributed_virtual_switch"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-            {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "report_config"},
-                "right_hand_side": {"collection": "SELF_OWNED"},
-            },
         ]
 
     CUSTOM_ROLE_PERMISSIONS_FILTERS = [
         {
-            "permissions": ["view_image"],
+            "permission": "view_image",
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "image"},
@@ -493,7 +453,7 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_app_icon"],
+            "permission": "view_app_icon",
             "filter": {
                 "operator": "IN",
                 "right_hand_side": {"collection": "ALL"},
@@ -501,7 +461,7 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_name_category", "create_or_update_name_category"],
+            "permission": "view_name_category",
             "filter": {
                 "operator": "IN",
                 "right_hand_side": {"collection": "ALL"},
@@ -509,7 +469,15 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_environment"],
+            "permission": "create_or_update_name_category",
+            "filter": {
+                "operator": "IN",
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "category"},
+            },
+        },
+        {
+            "permission": "view_environment",
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "environment"},
@@ -517,7 +485,7 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_marketplace_item"],
+            "permission": "view_marketplace_item",
             "filter": {
                 "operator": "IN",
                 "left_hand_side": {"entity_type": "marketplace_item"},
@@ -525,90 +493,7 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_role"],
-            "filter": {
-                "operator": "IN",
-                "right_hand_side": {"collection": "ALL"},
-                "left_hand_side": {"entity_type": "role"},
-            },
-        },
-        {
-            "permissions": ["view_directory_service", "search_directory_service"],
-            "filter": {
-                "operator": "IN",
-                "right_hand_side": {"collection": "ALL"},
-                "left_hand_side": {"entity_type": "directory_service"},
-            },
-        },
-        {
-            "permissions": ["view_identity_provider"],
-            "filter": {
-                "operator": "IN",
-                "right_hand_side": {"collection": "ALL"},
-                "left_hand_side": {"entity_type": "identity_provider"},
-            },
-        },
-        {
-            "permissions": ["view_app_task"],
-            "filter": {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "app_task"},
-                "right_hand_side": {"collection": "SELF_OWNED"},
-            },
-        },
-        {
-            "permissions": ["view_app_variable"],
-            "filter": {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "app_variable"},
-                "right_hand_side": {"collection": "SELF_OWNED"},
-            },
-        },
-        {
-            "permissions": ["view_resource_type"],
-            "filter": {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "resource_type"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-        },
-        {
-            "permissions": ["view_custom_provider"],
-            "filter": {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "custom_provider"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-        },
-        {
-            "permissions": ["view_vm_recovery_point"],
-            "filter": {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "vm_recovery_point"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-        },
-        {
-            "permissions": ["view_virtual_switch"],
-            "filter": {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "distributed_virtual_switch"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-        },
-        {
-            "permissions": ["view_report_config"],
-            "filter": {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "report_config"},
-                "right_hand_side": {"collection": "SELF_OWNED"},
-            },
-        },
-    ]
-
-    CUSTOM_ROLE_SPECIFIC_COLLAB_FILTER = [
-        {
-            "permissions": ["view_user"],
+            "permission": "view_user",
             "filter": {
                 "operator": "IN",
                 "right_hand_side": {"collection": "ALL"},
@@ -616,15 +501,7 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_virtual_machine"],
-            "filter": {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "vm"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-        },
-        {
-            "permissions": ["view_user_group"],
+            "permission": "view_user_group",
             "filter": {
                 "operator": "IN",
                 "right_hand_side": {"collection": "ALL"},
@@ -632,34 +509,66 @@ class ACP:
             },
         },
         {
-            "permissions": ["view_blueprint"],
+            "permission": "view_role",
             "filter": {
                 "operator": "IN",
-                "left_hand_side": {"entity_type": "blueprint"},
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "role"},
+            },
+        },
+        {
+            "permission": "view_directory_service",
+            "filter": {
+                "operator": "IN",
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "directory_service"},
+            },
+        },
+        {
+            "permission": "search_directory_service",
+            "filter": {
+                "operator": "IN",
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "directory_service"},
+            },
+        },
+        {
+            "permission": "view_identity_provider",
+            "filter": {
+                "operator": "IN",
+                "right_hand_side": {"collection": "ALL"},
+                "left_hand_side": {"entity_type": "identity_provider"},
+            },
+        },
+        {
+            "permission": "view_app_task",
+            "filter": {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "app_task"},
+                "right_hand_side": {"collection": "SELF_OWNED"},
+            },
+        },
+        {
+            "permission": "view_app_variable",
+            "filter": {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "app_variable"},
+                "right_hand_side": {"collection": "SELF_OWNED"},
+            },
+        },
+        {
+            "permission": "view_image",
+            "filter": {
+                "operator": "IN",
+                "left_hand_side": {"entity_type": "resource_type"},
                 "right_hand_side": {"collection": "ALL"},
             },
         },
         {
-            "permissions": ["view_environment"],
+            "permission": "view_image",
             "filter": {
                 "operator": "IN",
-                "left_hand_side": {"entity_type": "environment"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-        },
-        {
-            "permissions": ["view_marketplace_item"],
-            "filter": {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "marketplace_item"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-        },
-        {
-            "permissions": ["view_runbook"],
-            "filter": {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "runbook"},
+                "left_hand_side": {"entity_type": "custom_provider"},
                 "right_hand_side": {"collection": "ALL"},
             },
         },
@@ -681,54 +590,3 @@ class ACP:
             }
         ],
     }
-
-    # The entities in this collection are by default collab enabled
-    PROJECT_COLLAB_CONTEXT = {
-        "scope_filter_expression_list": [
-            {
-                "operator": "IN",
-                "left_hand_side": "PROJECT",
-                "right_hand_side": {"uuid_list": []},
-            }
-        ],
-        "entity_filter_expression_list": [
-            {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "blueprint"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-            {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "environment"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-            {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "marketplace_item"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-            {
-                "operator": "IN",
-                "left_hand_side": {"entity_type": "runbook"},
-                "right_hand_side": {"collection": "ALL"},
-            },
-        ],
-    }
-
-    PROJECT_ADMIN_SPECIFIC_COLLAB_FILTER = [
-        {
-            "operator": "IN",
-            "left_hand_side": {"entity_type": "vm"},
-            "right_hand_side": {"collection": "ALL"},
-        },
-        {
-            "operator": "IN",
-            "right_hand_side": {"collection": "ALL"},
-            "left_hand_side": {"entity_type": "user"},
-        },
-        {
-            "operator": "IN",
-            "right_hand_side": {"collection": "ALL"},
-            "left_hand_side": {"entity_type": "user_group"},
-        },
-    ]
